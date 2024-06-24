@@ -49,6 +49,14 @@ function incrementCount(row) {
     }, 5000);
 }
 
+document.getElementById('full-screen-button').addEventListener('click', () => {
+ try {
+    document.body.requestFullscreen();
+ } catch (e) {
+    console.error('document.body.requestFullscreen();', e);
+ }
+});
+
 document.getElementById('reset-button').addEventListener('click', () => {
     counts.fill(0);
     for (let i = 1; i <= 4; i++) {
