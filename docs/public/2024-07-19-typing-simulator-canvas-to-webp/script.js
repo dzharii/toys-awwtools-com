@@ -17,6 +17,10 @@ let typingInterval;
 const lineHeight = 20;
 const maxWidth = canvas.width - 20;
 
+// Fill the canvas with white color
+ctx.fillStyle = '#FFFFFF';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
     const words = text.split(' ');
     let line = '';
