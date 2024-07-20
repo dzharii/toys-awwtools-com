@@ -18,7 +18,8 @@ const lineHeight = 20;
 const maxWidth = canvas.width - 20;
 
 // Fill the canvas with white color
-ctx.fillStyle = '#FFFFFF';
+const backgroundColor = '#AFFFFF';
+ctx.fillStyle = backgroundColor;
 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
@@ -43,7 +44,8 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
 
 // Function to draw text on the canvas
 function drawText(text) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = backgroundColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.font = '16px Arial';
     ctx.fillStyle = '#000';
 
