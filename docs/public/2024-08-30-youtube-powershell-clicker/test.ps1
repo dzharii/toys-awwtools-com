@@ -31,7 +31,7 @@ function Click-AutomationElement {
 while ($true) { 
     try {
         # Wait for the browser window to be available
-        Start-Sleep -Seconds 10
+        Start-Sleep -Seconds 3
 
         # Find all windows on the desktop
         $desktop = [System.Windows.Automation.AutomationElement]::RootElement
