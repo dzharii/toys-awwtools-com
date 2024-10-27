@@ -8,11 +8,10 @@
         body {
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            font-family: Arial, sans-serif;
             background-color: #f0f0f0;
+            padding: 20px;
         }
         #experiment {
             padding: 20px;
@@ -38,11 +37,40 @@
         #computed-styles-table tr:nth-child(even) {
             background-color: #f9f9f9;
         }
+        #test-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        #test-button:hover {
+            background-color: #0056b3;
+        }
+        #test-results {
+            width: 70%;
+            margin-top: 20px;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body>
+    <h1>CSS Style Experimentation Page</h1>
+    <p>This page allows you to experiment with modifying CSS properties dynamically using JavaScript. Below, we have a "Hello World" element whose styles are modified dynamically, and a table that shows all computed CSS properties for that element.</p>
+    
     <div id="experiment">Hello World</div>
+    
+    <h2>Computed CSS Properties</h2>
+    <p>The table below lists all the computed CSS properties for the "Hello World" element after the JavaScript has dynamically modified some of its styles. The computed properties represent the final values that the browser calculates after applying all styles, including those set by default, inline, and external stylesheets.</p>
+    
     <table id="computed-styles-table">
+        <caption>Computed CSS Properties for the Experiment Element</caption>
         <thead>
             <tr>
                 <th>Property</th>
@@ -53,6 +81,11 @@
             <!-- Computed styles will be dynamically inserted here -->
         </tbody>
     </table>
+    
+    <button id="test-button">Run CSS Support Test</button>
+    
+    <div id="test-results"></div>
+    
     <script>
         // Get the element we want to experiment with
         var element = document.getElementById('experiment');
@@ -89,6 +122,84 @@
             // Append the row to the table body
             computedStylesBody.appendChild(row);
         }
+
+        // CSS properties and values to test
+        var cssProp = {
+            'display': ['block', 'inline', 'flex', 'grid', 'table', 'inline-block', 'none', 'contents', 'run-in']
+        };
+
+        // Get the button and the result container
+        var testButton = document.getElementById('test-button');
+        var testResults = document.getElementById('test-results');
+
+        // Add event listener to the button
+        testButton.addEventListener('click', function() {
+            // Clear previous results
+            testResults.innerHTML = '';
+
+            // Create a table for the results
+            var resultsTable = document.createElement('table');
+            resultsTable.style.width = '100%';
+            resultsTable.style.borderCollapse = 'collapse';
+            resultsTable.style.marginTop = '20px';
+            resultsTable.style.backgroundColor = '#ffffff';
+
+            // Create table header
+            var thead = document.createElement('thead');
+            var headerRow = document.createElement('tr');
+            var propHeader = document.createElement('th');
+            propHeader.textContent = 'Property';
+            var valueHeader = document.createElement('th');
+            valueHeader.textContent = 'Value';
+            var supportHeader = document.createElement('th');
+            supportHeader.textContent = 'Is Supported';
+
+            headerRow.appendChild(propHeader);
+            headerRow.appendChild(valueHeader);
+            headerRow.appendChild(supportHeader);
+            thead.appendChild(headerRow);
+            resultsTable.appendChild(thead);
+
+            // Create table body
+            var tbody = document.createElement('tbody');
+
+            // Iterate through each CSS property and its possible values
+            for (var prop in cssProp) {
+                if (cssProp.hasOwnProperty(prop)) {
+                    var values = cssProp[prop];
+                    for (var j = 0; j < values.length; j++) {
+                        var value = values[j];
+                        var isSupported = CSS.supports(prop, value);
+
+                        // Create a new row for each property-value pair
+                        var row = document.createElement('tr');
+
+                        // Create cells for property name, value, and support status
+                        var propertyCell = document.createElement('td');
+                        propertyCell.textContent = prop;
+                        var valueCell = document.createElement('td');
+                        valueCell.textContent = value;
+                        var supportCell = document.createElement('td');
+                        supportCell.textContent = isSupported ? 'Yes' : 'No';
+                        supportCell.style.color = isSupported ? 'green' : 'red';
+
+                        // Append cells to the row
+                        row.appendChild(propertyCell);
+                        row.appendChild(valueCell);
+                        row.appendChild(supportCell);
+
+                        // Append the row to the table body
+                        tbody.appendChild(row);
+                    }
+                }
+            }
+
+            // Append the table body to the results table
+            resultsTable.appendChild(tbody);
+
+            // Append the results table to the test results container
+            testResults.appendChild(resultsTable);
+        });
     </script>
 </body>
 </html>
