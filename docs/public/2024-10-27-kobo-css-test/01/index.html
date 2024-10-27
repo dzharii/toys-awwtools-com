@@ -67,6 +67,19 @@
             margin-top: 10px;
             font-weight: bold;
         }
+
+        /* CSS for Test Log Area */
+        #test_log {
+            border: 1px solid blue;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: #e6f7ff;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        #test_log_log_content {
+            white-space: pre-wrap;
+        }
     </style>
 </head>
 <body>
@@ -74,6 +87,11 @@
     <div id="error_log">
         <strong>Error Log:</strong>
         <div id="log_content"></div>
+    </div>
+
+    <div id="test_log">
+        <strong>Test Log:</strong>
+        <pre id="test_log_log_content"></pre>
     </div>
 
     <table width="100%" border="1" cellpadding="10" cellspacing="0">
@@ -144,12 +162,21 @@
                     <div id="fibonacci_result" class="test003_result">Result: </div>
                 </form>
                 <script>
-                    // JavaScript to calculate Fibonacci number using an iterative approach
+                    // JavaScript to calculate Fibonacci number using an iterative approach and log test steps
                     document.addEventListener("DOMContentLoaded", function() {
+                        function logTestStep(testName, message) {
+                            var logContent = document.getElementById("test_log_log_content");
+                            if (logContent) {
+                                var currentTime = new Date().toTimeString().split(' ')[0];
+                                logContent.textContent += "[" + currentTime + "] [" + testName + "] " + message + "\n";
+                            }
+                        }
+
                         function fibonacci(n) {
+                            logTestStep("Fibonacci Calculation", "Calculating Fibonacci for n = " + n);
                             if (n <= 1) return n;
-                            let a = 0, b = 1, temp;
-                            for (let i = 2; i <= n; i++) {
+                            var a = 0, b = 1, temp;
+                            for (var i = 2; i <= n; i++) {
                                 temp = a + b;
                                 a = b;
                                 b = temp;
@@ -159,19 +186,26 @@
 
                         var fibonacciButton = document.getElementById("fibonacci_button");
                         if (fibonacciButton) {
+                            logTestStep("Fibonacci Calculation", "Fibonacci button found.");
                             fibonacciButton.addEventListener("click", function() {
+                                logTestStep("Fibonacci Calculation", "Fibonacci button clicked.");
                                 var inputElement = document.getElementById("fibonacci_input");
                                 var resultElement = document.getElementById("fibonacci_result");
                                 if (inputElement && resultElement) {
                                     var n = parseInt(inputElement.value);
                                     if (!isNaN(n) && n >= 0) {
+                                        logTestStep("Fibonacci Calculation", "Valid input received: " + n);
                                         var result = fibonacci(n);
                                         resultElement.textContent = "Result: " + result;
+                                        logTestStep("Fibonacci Calculation", "Fibonacci result calculated: " + result);
                                     } else {
                                         resultElement.textContent = "Result: Please enter a valid non-negative number.";
+                                        logTestStep("Fibonacci Calculation", "Invalid input received.");
                                     }
                                 }
                             });
+                        } else {
+                            logTestStep("Fibonacci Calculation", "Fibonacci button not found.");
                         }
                     });
                 </script>
