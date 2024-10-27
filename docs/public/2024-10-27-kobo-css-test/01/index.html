@@ -9,9 +9,40 @@
         .test001 {
             text-align: left;
         }
+
+        /* CSS for dynamic element (test001_label) */
+        #test001_label {
+            border: 1px solid black;
+            padding: 8pt;
+            transition: border 0.3s ease;
+        }
+        .changed {
+            border: 3px solid black;
+        }
+
+        /* CSS for logging area */
+        #error_log {
+            border: 1px solid red;
+            padding: 10px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .error-entry {
+            margin-bottom: 10px;
+            padding: 5px;
+            border-bottom: 1px solid #ccc;
+        }
     </style>
 </head>
 <body>
+    <!-- Logging Area -->
+    <div id="error_log">
+        <strong>Error Log:</strong>
+        <div id="log_content"></div>
+    </div>
+
     <table width="100%" border="1" cellpadding="10" cellspacing="0">
        <!-- BEGIN TEST 001 --> 
         <tr>
@@ -29,6 +60,7 @@
                     var test001_label = document.getElementById("test001_label");
                     if (test001_label) {
                         test001_label.textContent = "World";
+                        test001_label.classList.add("changed");
                     }
                 });
               </script>
@@ -40,5 +72,38 @@
         <!-- END TEST 001 --> 
 
     </table>
+
+    <script>
+        // Global error handler to log errors in the logging area
+        window.addEventListener("error", function(event) {
+            try {
+                var logContent = document.getElementById("log_content");
+                if (logContent) {
+                    // Get the current time in HH:MM:SS format
+                    var currentTime = new Date().toTimeString().split(' ')[0];
+
+                    // Create a new div element for the error entry
+                    var errorEntry = document.createElement("div");
+                    errorEntry.classList.add("error-entry");
+
+                    // Build the error message
+                    var message = "<strong>Time:</strong> " + currentTime + "<br>" +
+                                  "<strong>Error:</strong> " + (event.message ? event.message : "Unknown error") + "<br>" +
+                                  "<strong>Source:</strong> " + (event.filename ? event.filename : "Unknown source") + "<br>" +
+                                  "<strong>Line:</strong> " + (event.lineno ? event.lineno : "Unknown line") + ", Column: " + (event.colno ? event.colno : "Unknown column");
+
+                    // Set the inner HTML of the error entry
+                    errorEntry.innerHTML = message;
+
+                    // Append the error entry to the log content
+                    logContent.appendChild(errorEntry);
+                }
+            } catch (loggingError) {
+                console.error("Logging error occurred: ", loggingError);
+            }
+
+            event.preventDefault(); // Prevent the default browser error handling
+        });
+    </script>
 </body>
 </html>
