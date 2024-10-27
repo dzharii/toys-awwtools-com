@@ -1,3 +1,21 @@
+
+
+
+
+## Fork!
+
+In this implementation I have replaced to-markdown with turndown, plus implemented more consistent table pasting logic. 
+
+I have found this to be very funny:
+
+ 
+
+
+
+
+
+# Original Readme:
+
 clipboard2markdown
 ==================
 
@@ -59,5 +77,3 @@ is based on [Bootstrap](http://getbootstrap.com/).
 Released under the MIT License. See the [LICENSE](LICENSE) file
 for details.
 
-[license-image]: https://img.shields.io/npm/l/markdownlint.svg
-[license-url]: http://opensource.org/licenses/MIT
