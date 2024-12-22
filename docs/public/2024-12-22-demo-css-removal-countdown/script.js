@@ -51,7 +51,7 @@ function countdownAndRemove() {
     const elementNameDisplay = document.getElementById('element-name');
     elementNameDisplay.textContent = elementName;
 
-    let timeLeft = 10;
+    let timeLeft = 5;
     const interval = setInterval(() => {
         timerDisplay.textContent = timeLeft;
         if (timeLeft-- <= 0) {
