@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kanji Matching Game</title>
+  <style>
+    /* Overall page styles */
+    body {
+      font-family: sans-serif;
+      background: #f0f4f7;
+      margin: 0;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      margin: 0.5em;
+    }
+    /* Top sentence display area */
+    #top-sentences {
+      width: 90%;
+      max-width: 800px;
+      padding: 10px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
+      margin-bottom: 15px;
+      position: relative;
+      overflow: hidden;
+      height: 80px;
+    }
+    #sentence-display, #translation-display {
+      position: absolute;
+      width: 100%;
+      transition: opacity 1s ease;
+    }
+    .hidden {
+      opacity: 0;
+    }
+    .visible {
+      opacity: 1;
+    }
+    /* Score and reset button area */
+    #controls {
+      width: 90%;
+      max-width: 800px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    #score {
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+    #reset-btn {
+      padding: 8px 16px;
+      font-size: 1em;
+      border: none;
+      background: #007acc;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #reset-btn:hover {
+      background: #005fa3;
+    }
+    /* Grid container */
+    #grid-container {
+      display: grid;
+      grid-template-columns: repeat(20, 1fr);
+      gap: 2px;
+      width: 90%;
+      max-width: 800px;
+    }
+    /* Each grid cell */
+    .grid-cell {
+      background: #fff;
+      border: 1px solid #ccc;
+      text-align: center;
+      line-height: 1.2;
+      font-size: 1.2em;
+      cursor: pointer;
+      user-select: none;
+      padding: 10px 0;
+      transition: background 0.3s, transform 0.3s;
+    }
+    /* Highlight when selected */
+    .selected {
+      background: #d0eaff;
+      transform: scale(1.1);
+    }
+    /* Matched cells are greyed out */
+    .matched {
+      background: #e0e0e0;
+      color: #888;
+      cursor: default;
+    }
+    /* Error animation (shake) */
+    .error {
+      animation: shake 0.4s;
+      background: #ffd6d6 !important;
+    }
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      20% { transform: translateX(-5px); }
+      40% { transform: translateX(5px); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
+      100% { transform: translateX(0); }
+    }
+    /* Correct match animation */
+    .correct {
+      animation: correctFlash 0.5s;
+    }
+    @keyframes correctFlash {
+      0% { background: #b9f6ca; }
+      100% { background: #fff; }
+    }
+    /* Simple confetti effect elements */
+    .confetti {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: red;
+      opacity: 0.8;
+      pointer-events: none;
+      animation: confettiFall 1s linear forwards;
+    }
+    @keyframes confettiFall {
+      0% {
+        transform: translate(0, 0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(0, 50px) rotate(360deg);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Kanji Matching Game</h1>
+  <!-- Top area for sentence display -->
+  <div id="top-sentences">
+    <div id="sentence-display" class="visible"></div>
+    <div id="translation-display" class="visible" style="top: 40px; font-size:0.9em; color:#555;"></div>
+  </div>
+  <!-- Score and Reset Button -->
+  <div id="controls">
+    <div id="score">Score: 0 | Pairs Found: 0 / 12</div>
+    <button id="reset-btn">Reset Game</button>
+  </div>
+  <!-- Grid container -->
+  <div id="grid-container"></div>
+
+  <script>
+    // ========================
+    // Data Definitions
+    // ========================
+
+    // List of valid two-kanji compounds with sample sentences & translations.
+    // Feel free to extend this list.
+    const validPairs = [
+      { compound: "日本", first: "日", second: "本", 
+        sentence: "私は日本に行きたいです。", translation: "I want to go to Japan." },
+      { compound: "大学", first: "大", second: "学", 
+        sentence: "彼は有名な大学に通っています。", translation: "He attends a famous university." },
+      { compound: "電話", first: "電", second: "話", 
+        sentence: "電話が鳴っています。", translation: "The telephone is ringing." },
+      { compound: "学校", first: "学", second: "校", 
+        sentence: "学校で新しい友達ができました。", translation: "I made new friends at school." },
+      { compound: "先生", first: "先", second: "生", 
+        sentence: "先生はとても優しいです。", translation: "The teacher is very kind." },
+      { compound: "火山", first: "火", second: "山", 
+        sentence: "火山が噴火しました。", translation: "The volcano erupted." },
+      { compound: "空港", first: "空", second: "港", 
+        sentence: "空港までタクシーで行きます。", translation: "I will go to the airport by taxi." },
+      { compound: "未来", first: "未", second: "来", 
+        sentence: "未来は明るいです。", translation: "The future is bright." },
+      { compound: "経済", first: "経", second: "済", 
+        sentence: "経済が急速に発展しています。", translation: "The economy is rapidly developing." },
+      { compound: "銀行", first: "銀", second: "行", 
+        sentence: "銀行で口座を開設しました。", translation: "I opened an account at the bank." },
+      { compound: "物語", first: "物", second: "語", 
+        sentence: "昔々、素晴らしい物語がありました。", translation: "Once upon a time, there was a wonderful story." },
+      { compound: "新聞", first: "新", second: "聞", 
+        sentence: "毎朝新聞を読みます。", translation: "I read the newspaper every morning." }
+    ];
+    const totalPairs = validPairs.length;
+
+    // Gather all mission kanji from valid pairs into a Set (to avoid decoys that are mission letters)
+    const missionKanjiSet = new Set();
+    validPairs.forEach(pair => {
+      missionKanjiSet.add(pair.first);
+      missionKanjiSet.add(pair.second);
+    });
+
+    // List of decoy kanji (excluding any used in the valid pairs)
+    const allDecoys = [
+      "一", "二", "三", "四", "五", "六", "七", "八", "九", "十",
+      "上", "下", "中", "川", "林", "雨", "風", "花", "鳥", "虫",
+      "車", "国", "人", "子", "女", "男", "小", "明", "暗", "白",
+      "黒", "赤", "星", "海", "森", "音", "楽", "美", "新"  // note: "新" is in a valid pair so we will filter it out
+    ].filter(kanji => !missionKanjiSet.has(kanji));
+
+    // List of sentences to rotate in the top area.
+    // Here we mix the sentences from our valid pairs.
+    const sentenceList = validPairs.map(pair => ({
+      sentence: pair.sentence,
+      translation: pair.translation
+    }));
+
+    // ========================
+    // Game State Variables
+    // ========================
+    const GRID_SIZE = 20;  // 20x20 grid (400 cells)
+    const TOTAL_CELLS = GRID_SIZE * GRID_SIZE;
+    let gridData = []; // will hold objects { kanji: string, type: "mission" or "decoy", matched: bool }
+    let selectedCells = []; // indices of currently selected cells
+    let score = 0;
+    let pairsFound = 0;
+    let sentenceIndex = 0;
+    let sentenceInterval; // for rotating sentences
+
+    const gridContainer = document.getElementById("grid-container");
+    const scoreDisplay = document.getElementById("score");
+    const sentenceDisplay = document.getElementById("sentence-display");
+    const translationDisplay = document.getElementById("translation-display");
+    const resetBtn = document.getElementById("reset-btn");
+
+    // ========================
+    // Initialize and Setup Game
+    // ========================
+    function initGame() {
+      // Clear any existing intervals or grid cells
+      clearInterval(sentenceInterval);
+      gridContainer.innerHTML = "";
+      gridData = new Array(TOTAL_CELLS);
+      selectedCells = [];
+      score = 0;
+      pairsFound = 0;
+      updateScoreDisplay();
+
+      // Create an array of available cell indices
+      let availableIndices = [];
+      for (let i = 0; i < TOTAL_CELLS; i++) {
+        availableIndices.push(i);
+      }
+
+      // Place each valid pair randomly on the grid.
+      validPairs.forEach(pair => {
+        // For each pair, randomly pick two distinct positions.
+        for (let i = 0; i < 2; i++) {
+          // Randomly pick an index from availableIndices
+          const randIndex = Math.floor(Math.random() * availableIndices.length);
+          const cellIndex = availableIndices.splice(randIndex, 1)[0];
+          // Save the cell with its mission kanji
+          gridData[cellIndex] = { 
+            kanji: (i === 0 ? pair.first : pair.second),
+            type: "mission",
+            matched: false
+          };
+        }
+      });
+
+      // Fill remaining cells with decoy kanji (pick at random from decoy list)
+      for (let i = 0; i < TOTAL_CELLS; i++) {
+        if (!gridData[i]) {
+          const randomDecoy = allDecoys[Math.floor(Math.random() * allDecoys.length)];
+          gridData[i] = {
+            kanji: randomDecoy,
+            type: "decoy",
+            matched: false
+          };
+        }
+      }
+
+      // Render the grid
+      renderGrid();
+
+      // Start the top sentence rotation (every minute = 60000ms)
+      updateSentence();
+      sentenceInterval = setInterval(updateSentence, 60000);
+    }
+
+    // Render grid cells based on gridData
+    function renderGrid() {
+      gridContainer.innerHTML = "";
+      gridData.forEach((cellData, index) => {
+        const cellDiv = document.createElement("div");
+        cellDiv.classList.add("grid-cell");
+        cellDiv.textContent = cellData.kanji;
+        cellDiv.dataset.index = index;
+        // Add click event listener
+        cellDiv.addEventListener("click", onCellClick);
+        gridContainer.appendChild(cellDiv);
+      });
+    }
+
+    // ========================
+    // Event Handlers
+    // ========================
+    function onCellClick(e) {
+      const cellDiv = e.currentTarget;
+      const index = parseInt(cellDiv.dataset.index);
+      const cellData = gridData[index];
+
+      // If cell is already matched or already selected, ignore.
+      if (cellData.matched || cellDiv.classList.contains("selected")) return;
+
+      // Play click sound
+      playClickSound();
+
+      // Mark as selected visually
+      cellDiv.classList.add("selected");
+      selectedCells.push(index);
+
+      // If two cells are selected, check for a valid match.
+      if (selectedCells.length === 2) {
+        checkSelectedCells();
+      }
+    }
+
+    // ========================
+    // Matching Logic
+    // ========================
+    function checkSelectedCells() {
+      const [index1, index2] = selectedCells;
+      const cell1 = gridData[index1];
+      const cell2 = gridData[index2];
+      const cellDiv1 = gridContainer.children[index1];
+      const cellDiv2 = gridContainer.children[index2];
+
+      // Check against all valid pairs.
+      let matchFound = false;
+      validPairs.forEach(pair => {
+        // Allow matching in any order.
+        if (
+          ( (cell1.kanji === pair.first && cell2.kanji === pair.second) ||
+            (cell1.kanji === pair.second && cell2.kanji === pair.first) )
+        ) {
+          matchFound = true;
+        }
+      });
+
+      if (matchFound) {
+        // Correct match: add animation, play sound, update score and mark as matched.
+        cellDiv1.classList.add("correct");
+        cellDiv2.classList.add("correct");
+        playSuccessSound();
+        // Create a little confetti effect on each cell.
+        createConfetti(cellDiv1);
+        createConfetti(cellDiv2);
+
+        // Mark the cells as matched.
+        gridData[index1].matched = true;
+        gridData[index2].matched = true;
+        cellDiv1.classList.add("matched");
+        cellDiv2.classList.add("matched");
+        // Remove the "selected" class so they are no longer highlighted.
+        cellDiv1.classList.remove("selected");
+        cellDiv2.classList.remove("selected");
+
+        // Update score and pairs found.
+        score += 2; // one point per kanji
+        pairsFound++;
+        updateScoreDisplay();
+
+        // Check for game completion.
+        if (pairsFound === totalPairs) {
+          setTimeout(() => {
+            alert("Congratulations! You have found all matches!");
+          }, 300);
+        }
+      } else {
+        // Incorrect match: add error animation (shake), play error sound, then reset selection.
+        cellDiv1.classList.add("error");
+        cellDiv2.classList.add("error");
+        playErrorSound();
+        // After a short delay, remove error and selected classes.
+        setTimeout(() => {
+          cellDiv1.classList.remove("error", "selected");
+          cellDiv2.classList.remove("error", "selected");
+        }, 400);
+      }
+      // Clear the selectedCells array regardless.
+      selectedCells = [];
+    }
+
+    // ========================
+    // UI Update Functions
+    // ========================
+    function updateScoreDisplay() {
+      scoreDisplay.textContent = `Score: ${score} | Pairs Found: ${pairsFound} / ${totalPairs}`;
+    }
+
+    // Sentence rotation with fade in/out.
+    function updateSentence() {
+      // Cycle through the sentenceList array.
+      const { sentence, translation } = sentenceList[sentenceIndex];
+      // Fade out current sentences
+      sentenceDisplay.classList.remove("visible");
+      sentenceDisplay.classList.add("hidden");
+      translationDisplay.classList.remove("visible");
+      translationDisplay.classList.add("hidden");
+
+      setTimeout(() => {
+        // Update text content
+        sentenceDisplay.textContent = sentence;
+        translationDisplay.textContent = translation;
+        // Fade in
+        sentenceDisplay.classList.remove("hidden");
+        sentenceDisplay.classList.add("visible");
+        translationDisplay.classList.remove("hidden");
+        translationDisplay.classList.add("visible");
+      }, 1000);
+
+      // Update index for next round
+      sentenceIndex = (sentenceIndex + 1) % sentenceList.length;
+    }
+
+    // ========================
+    // Sound Effects using Web Audio API
+    // ========================
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playTone(frequency, duration) {
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.frequency.value = frequency;
+      oscillator.type = "sine";
+      oscillator.start();
+      gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+      oscillator.stop(audioCtx.currentTime + duration);
+    }
+    function playClickSound() {
+      playTone(440, 0.1); // A short beep
+    }
+    function playSuccessSound() {
+      playTone(880, 0.15); // Higher tone for success
+    }
+    function playErrorSound() {
+      playTone(220, 0.2); // Lower tone for error
+    }
+
+    // ========================
+    // Confetti Effect (Simple Implementation)
+    // ========================
+    function createConfetti(cellDiv) {
+      // Create a few small divs that animate downward.
+      for (let i = 0; i < 5; i++) {
+        const confetti = document.createElement("div");
+        confetti.classList.add("confetti");
+        // Random color
+        confetti.style.background = `hsl(${Math.random()*360}, 70%, 60%)`;
+        // Position randomly within the cell.
+        confetti.style.left = Math.random() * 100 + "%";
+        confetti.style.top = "0%";
+        cellDiv.appendChild(confetti);
+        // Remove confetti after animation
+        setTimeout(() => {
+          confetti.remove();
+        }, 1000);
+      }
+    }
+
+    // ========================
+    // Reset Button Handler
+    // ========================
+    resetBtn.addEventListener("click", () => {
+      initGame();
+    });
+
+    // ========================
+    // Start the Game!
+    // ========================
+    initGame();
+  </script>
+</body>
+</html>
