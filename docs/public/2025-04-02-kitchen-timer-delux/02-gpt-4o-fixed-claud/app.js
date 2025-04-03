@@ -1,246 +1,368 @@
-__FILE::app.nomodule.js
+// Global variables
+let tiles = [];
+let globalSettings = {
+  is24Hour: false,
+  shakeAnimation: true,
+  titleAnimation: true,
+  notifications: true
+};
+
+const tilesContainer = document.getElementById('tilesContainer');
+const searchBar = document.getElementById('searchBar');
+const exportButton = document.getElementById('exportData');
+
+// Global Settings Elements
+const toggleTimeFormat = document.getElementById('toggleTimeFormat');
+const toggleShakeAnimation = document.getElementById('toggleShakeAnimation');
+const toggleTitleAnimation = document.getElementById('toggleTitleAnimation');
+const toggleNotifications = document.getElementById('toggleNotifications');
+
+// Load settings from localStorage
+function loadGlobalSettings() {
+  const settings = localStorage.getItem('globalSettings');
+  if (settings) {
+    globalSettings = JSON.parse(settings);
+    toggleTimeFormat.checked = globalSettings.is24Hour;
+    toggleShakeAnimation.checked = globalSettings.shakeAnimation;
+    toggleTitleAnimation.checked = globalSettings.titleAnimation;
+    toggleNotifications.checked = globalSettings.notifications;
+  }
+}
+
+// Save settings to localStorage
+function saveGlobalSettings() {
+  localStorage.setItem('globalSettings', JSON.stringify(globalSettings));
+}
+
+// Convert seconds to time string (hh:mm:ss or 12-hour format if needed)
+function formatTime(seconds) {
+  let hrs = Math.floor(seconds / 3600);
+  let mins = Math.floor((seconds % 3600) / 60);
+  let secs = seconds % 60;
+  let formatted = [hrs, mins, secs].map(num => num.toString().padStart(2, '0')).join(':');
+  return formatted;
+}
+
+// Update browser tab title for notifications
+function updateTabTitle(message) {
+  if (globalSettings.titleAnimation) {
+    document.title = message;
+    setTimeout(() => {
+      document.title = "Kitchen Timer Tiles";
+    }, 3000);
+  }
+}
+
+// Merge predefined tiles with modifications from localStorage
+function loadTiles() {
+  const modifiedTiles = JSON.parse(localStorage.getItem('modifiedTiles')) || {};
+  // Create deep copy of predefinedTiles
+  tiles = predefinedTiles.map(tile => {
+    if (modifiedTiles[tile.id]) {
+      return { ...tile, ...modifiedTiles[tile.id], modified: true };
+    }
+    return { ...tile, modified: false };
+  });
+}
+
+// Save modifications to localStorage
+function saveTileModification(tile) {
+  const modifiedTiles = JSON.parse(localStorage.getItem('modifiedTiles')) || {};
+  modifiedTiles[tile.id] = tile;
+  localStorage.setItem('modifiedTiles', JSON.stringify(modifiedTiles));
+}
+
+// Render all tiles
+function renderTiles(filter = "") {
+  tilesContainer.innerHTML = "";
+  tiles.filter(tile => {
+    const searchLower = filter.toLowerCase();
+    return tile.title.toLowerCase().includes(searchLower) ||
+           tile.description.toLowerCase().includes(searchLower) ||
+           tile.category.toLowerCase().includes(searchLower);
+  }).forEach(tile => {
+    const tileElem = createTileElement(tile);
+    tilesContainer.appendChild(tileElem);
+  });
+}
+
+// Create individual tile DOM element
+function createTileElement(tile) {
+  const tileDiv = document.createElement('div');
+  tileDiv.className = 'tile';
+  if (tile.modified) {
+    tileDiv.classList.add('modified');
+  }
+
+  // Tile Header
+  const headerDiv = document.createElement('div');
+  headerDiv.className = 'tile-header';
+  const iconSpan = document.createElement('span');
+  iconSpan.className = 'tile-icon';
+  iconSpan.textContent = tile.icon;
+  const titleSpan = document.createElement('span');
+  titleSpan.className = 'tile-title';
+  titleSpan.textContent = tile.title;
+  const categorySpan = document.createElement('span');
+  categorySpan.className = 'tile-category';
+  categorySpan.textContent = tile.category;
+  headerDiv.appendChild(iconSpan);
+  headerDiv.appendChild(titleSpan);
+  headerDiv.appendChild(categorySpan);
+
+  // Description
+  const descriptionP = document.createElement('p');
+  descriptionP.className = 'tile-description';
+  descriptionP.textContent = tile.description;
+
+  // Timer Display
+  const timerDisplay = document.createElement('div');
+  timerDisplay.className = 'timer-display';
+  timerDisplay.textContent = formatTime(tile.initialTime);
+
+  // Timer Controls
+  const controlsDiv = document.createElement('div');
+  controlsDiv.className = 'timer-controls';
+  const startBtn = document.createElement('button');
+  startBtn.textContent = 'Start';
+  const pauseBtn = document.createElement('button');
+  pauseBtn.textContent = 'Pause';
+  const resetBtn = document.createElement('button');
+  resetBtn.textContent = 'Reset';
+  controlsDiv.appendChild(startBtn);
+  controlsDiv.appendChild(pauseBtn);
+  controlsDiv.appendChild(resetBtn);
+
+  // Edit Button
+  const editBtn = document.createElement('button');
+  editBtn.className = 'edit-button';
+  editBtn.textContent = 'Edit';
+
+  // Links Section
+  const linksDiv = document.createElement('div');
+  linksDiv.className = 'tile-links';
+  renderLinks(tile, linksDiv, false);
+
+  // Assemble tile
+  tileDiv.appendChild(headerDiv);
+  tileDiv.appendChild(descriptionP);
+  tileDiv.appendChild(timerDisplay);
+  tileDiv.appendChild(controlsDiv);
+  tileDiv.appendChild(editBtn);
+  tileDiv.appendChild(linksDiv);
+
+  // Timer Variables
+  let timerValue = tile.initialTime;
+  let timerInterval = null;
+  let isEditing = false;
+
+  // Timer functions
+  startBtn.addEventListener('click', () => {
+    if (timerInterval) return;
+    timerInterval = setInterval(() => {
+      if (timerValue > 0) {
+        timerValue--;
+        timerDisplay.textContent = formatTime(timerValue);
+      } else {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        if (globalSettings.shakeAnimation) {
+          tileDiv.classList.add('shake');
+          setTimeout(() => tileDiv.classList.remove('shake'), 500);
+        }
+        updateTabTitle("Timer Completed! ⏰");
+        if (globalSettings.notifications && Notification.permission === "granted") {
+          new Notification("Timer Completed!", { body: tile.title });
+        }
+      }
+    }, 1000);
+  });
+
+  pauseBtn.addEventListener('click', () => {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+    timerValue = tile.initialTime;
+    timerDisplay.textContent = formatTime(timerValue);
+  });
+
+  // Toggle Edit Mode
+  editBtn.addEventListener('click', () => {
+    isEditing = !isEditing;
+    // Clear current links section and re-render in appropriate mode
+    linksDiv.innerHTML = "";
+    if (isEditing) {
+      // Create editable timer value input
+      const timerInput = document.createElement('input');
+      timerInput.type = 'number';
+      timerInput.className = 'editable-field';
+      timerInput.value = tile.initialTime;
+      timerInput.addEventListener('change', (e) => {
+        const newTime = parseInt(e.target.value, 10);
+        if (!isNaN(newTime) && newTime > 0) {
+          tile.initialTime = newTime;
+          timerValue = newTime;
+          timerDisplay.textContent = formatTime(timerValue);
+          saveTileModification(tile);
+        }
+      });
+      tileDiv.insertBefore(timerInput, timerDisplay.nextSibling);
+      // Render links in edit mode
+      renderLinks(tile, linksDiv, true);
+      editBtn.textContent = 'Save';
+    } else {
+      // Remove editable input if exists
+      const inputField = tileDiv.querySelector('.editable-field');
+      if (inputField) {
+        tileDiv.removeChild(inputField);
+      }
+      // Collect link updates
+      updateLinksFromEdit(tile, linksDiv);
+      // Re-render links in read-only mode
+      linksDiv.innerHTML = "";
+      renderLinks(tile, linksDiv, false);
+      editBtn.textContent = 'Edit';
+      tile.modified = true;
+      tileDiv.classList.add('modified');
+      saveTileModification(tile);
+    }
+  });
+
+  return tileDiv;
+}
+
+// Render links for a tile; if editable is true, render input fields
+function renderLinks(tile, container, editable) {
+  container.innerHTML = "";
+  if (editable) {
+    // For each existing link, render editable inputs
+    tile.links.forEach((link, index) => {
+      const linkDiv = document.createElement('div');
+      linkDiv.className = 'link-edit';
+
+      const titleInput = document.createElement('input');
+      titleInput.type = 'text';
+      titleInput.placeholder = 'Title';
+      titleInput.value = link.title;
+      titleInput.dataset.index = index;
+
+      const urlInput = document.createElement('input');
+      urlInput.type = 'url';
+      urlInput.placeholder = 'HTTPS URL';
+      urlInput.value = link.url;
+      urlInput.dataset.index = index;
+
+      // Button to remove link
+      const removeBtn = document.createElement('button');
+      removeBtn.textContent = 'Remove';
+      removeBtn.addEventListener('click', () => {
+        tile.links.splice(index, 1);
+        renderLinks(tile, container, true);
+      });
+
+      linkDiv.appendChild(titleInput);
+      linkDiv.appendChild(urlInput);
+      linkDiv.appendChild(removeBtn);
+      container.appendChild(linkDiv);
+    });
+    // Button to add new link
+    const addLinkBtn = document.createElement('button');
+    addLinkBtn.textContent = 'Add Link';
+    addLinkBtn.addEventListener('click', () => {
+      tile.links.push({
+        title: '',
+        url: '',
+        lastUpdated: new Date().toISOString()
+      });
+      renderLinks(tile, container, true);
+    });
+    container.appendChild(addLinkBtn);
+  } else {
+    // Render links as clickable hyperlinks
+    tile.links.forEach(link => {
+      const linkElem = document.createElement('a');
+      linkElem.href = link.url;
+      linkElem.textContent = link.title;
+      linkElem.target = '_blank';
+      container.appendChild(linkElem);
+    });
+  }
+}
+
+// Update tile links from editable inputs
+function updateLinksFromEdit(tile, container) {
+  const inputs = container.querySelectorAll('.link-edit');
+  tile.links = Array.from(inputs).map(linkDiv => {
+    const titleInput = linkDiv.querySelector('input[type="text"]');
+    const urlInput = linkDiv.querySelector('input[type="url"]');
+    return {
+      title: titleInput.value,
+      url: urlInput.value,
+      lastUpdated: new Date().toISOString()
+    };
+  });
+}
+
+// Fuzzy search implementation (simple case-insensitive substring search)
+searchBar.addEventListener('input', (e) => {
+  const query = e.target.value;
+  renderTiles(query);
+});
+
+// Global settings event listeners
+toggleTimeFormat.addEventListener('change', (e) => {
+  globalSettings.is24Hour = e.target.checked;
+  saveGlobalSettings();
+  renderTiles(searchBar.value);
+});
+
+toggleShakeAnimation.addEventListener('change', (e) => {
+  globalSettings.shakeAnimation = e.target.checked;
+  saveGlobalSettings();
+});
+
+toggleTitleAnimation.addEventListener('change', (e) => {
+  globalSettings.titleAnimation = e.target.checked;
+  saveGlobalSettings();
+});
+
+toggleNotifications.addEventListener('change', (e) => {
+  globalSettings.notifications = e.target.checked;
+  saveGlobalSettings();
+});
+
+// Export Data Functionality
+exportButton.addEventListener('click', () => {
+  // Merge current state
+  const mergedData = JSON.stringify(tiles, null, 2);
+  const blob = new Blob([mergedData], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'exported_tiles.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// Request Notification permission on load if notifications are enabled
+if (globalSettings.notifications && Notification.permission !== "granted") {
+  Notification.requestPermission();
+}
+
+// Initialization
+function init() {
+  loadGlobalSettings();
+  loadTiles();
+  renderTiles();
+}
+
+init();
 
-document.addEventListener('DOMContentLoaded', function() {
-  const predefinedTiles = window.predefinedTiles;
-  const utils = window.kitchenUtils;
-
-  const searchInput = document.getElementById('search-input');
-  const tilesContainer = document.getElementById('tiles-container');
-  const timerTileTemplate = document.getElementById('timer-tile-template');
-  const exportDataBtn = document.getElementById('export-data');
-  const settingsToggle = document.getElementById('settings-toggle');
-  const settingsPanel = document.getElementById('settings-panel');
-  const timeFormatSelect = document.getElementById('time-format');
-  const shakeAnimationToggle = document.getElementById('shake-animation');
-  const titleAnimationToggle = document.getElementById('title-animation');
-  const webNotificationsToggle = document.getElementById('web-notifications');
-  const searchClear = document.getElementById('search-clear');
-
-  let allTiles = [];
-  let intervalIds = {};
-  let settings = {
-    timeFormat: '24h',
-    shakeAnimation: true,
-    titleAnimation: true,
-    webNotifications: false
-  };
-
-  function loadSettings() {
-    const saved = localStorage.getItem('kitchenTimerSettings');
-    if (saved) Object.assign(settings, JSON.parse(saved));
-    timeFormatSelect.value = settings.timeFormat;
-    shakeAnimationToggle.checked = settings.shakeAnimation;
-    titleAnimationToggle.checked = settings.titleAnimation;
-    webNotificationsToggle.checked = settings.webNotifications;
-  }
-
-  function saveSettings() {
-    localStorage.setItem('kitchenTimerSettings', JSON.stringify(settings));
-  }
-
-  function loadTiles() {
-    const saved = localStorage.getItem('kitchenTimerTiles');
-    const userTiles = saved ? JSON.parse(saved) : [];
-    const tileMap = new Map(userTiles.map(t => [t.id, t]));
-    allTiles = predefinedTiles.map(t => tileMap.get(t.id) || t);
-    userTiles.forEach(t => {
-      if (!allTiles.find(p => p.id === t.id)) allTiles.push(t);
-    });
-  }
-
-  function saveTiles() {
-    localStorage.setItem('kitchenTimerTiles', JSON.stringify(allTiles));
-  }
-
-  function formatDisplay(value) {
-    const [h, m, s] = value.split(':').map(Number);
-    if (settings.timeFormat === '12h') {
-      const period = h >= 12 ? 'PM' : 'AM';
-      const displayH = h % 12 || 12;
-      return `${displayH}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')} ${period}`;
-    }
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  }
-
-  function renderTiles(tiles) {
-    tilesContainer.innerHTML = '';
-    if (!tiles.length) {
-      const noResults = document.createElement('div');
-      noResults.className = 'no-results';
-      noResults.textContent = 'No timers found.';
-      tilesContainer.appendChild(noResults);
-      return;
-    }
-
-    tiles.forEach(tile => {
-      const el = timerTileTemplate.content.cloneNode(true).querySelector('.timer-tile');
-      el.dataset.id = tile.id;
-      el.querySelector('.tile-icon').textContent = tile.icon;
-      el.querySelector('.tile-title').textContent = tile.title;
-      el.querySelector('.tile-category').textContent = tile.category;
-      el.querySelector('.tile-origin').textContent = tile.origin === 'user-modified' ? '(Modified)' : '';
-      el.querySelector('.tile-description').textContent = tile.description;
-      el.querySelector('.timer-display').textContent = formatDisplay(tile.timerValue);
-      el.querySelector('.timer-edit-input').value = tile.timerValue;
-      renderLinks(tile.links, el);
-      setupTileListeners(el, tile);
-      tilesContainer.appendChild(el);
-    });
-  }
-
-  function renderLinks(links, el) {
-    const list = el.querySelector('.tile-links-list');
-    list.innerHTML = '';
-    if (!links || !links.length) {
-      const msg = document.createElement('p');
-      msg.textContent = 'No links added yet.';
-      list.appendChild(msg);
-      return;
-    }
-    links.forEach(link => {
-      const a = document.createElement('a');
-      a.href = link.url;
-      a.textContent = link.title;
-      a.target = '_blank';
-      list.appendChild(a);
-    });
-  }
-
-  function setupTileListeners(el, tile) {
-    const tileId = tile.id;
-    const display = el.querySelector('.timer-display');
-    const input = el.querySelector('.timer-edit-input');
-    const editBtn = el.querySelector('.tile-edit');
-    const startBtn = el.querySelector('.timer-start');
-    const pauseBtn = el.querySelector('.timer-pause');
-    const resetBtn = el.querySelector('.timer-reset');
-
-    let currentValue = utils.parseTimeToSeconds(tile.timerValue);
-
-    startBtn.onclick = () => {
-      if (intervalIds[tileId]) clearInterval(intervalIds[tileId]);
-      const startTime = Date.now();
-      const initial = currentValue;
-
-      intervalIds[tileId] = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        currentValue = Math.max(0, initial - elapsed);
-        display.textContent = formatDisplay(utils.formatSecondsToTime(currentValue));
-        if (currentValue <= 0) {
-          clearInterval(intervalIds[tileId]);
-          if (settings.shakeAnimation) el.classList.add('shake-animation');
-          if (settings.titleAnimation) animateTitle(tile.title);
-          if (settings.webNotifications && 'Notification' in window && Notification.permission === 'granted') {
-            new Notification(`${tile.title} Done!`, { body: `${tile.description}` });
-          }
-        }
-      }, 1000);
-    };
-
-    pauseBtn.onclick = () => {
-      clearInterval(intervalIds[tileId]);
-    };
-
-    resetBtn.onclick = () => {
-      clearInterval(intervalIds[tileId]);
-      currentValue = utils.parseTimeToSeconds(tile.timerValue);
-      display.textContent = formatDisplay(tile.timerValue);
-    };
-
-    editBtn.onclick = () => {
-      const editing = el.querySelector('.timer-edit-container').classList.toggle('hidden') === false;
-      display.classList.toggle('hidden');
-      if (editing) {
-        editBtn.textContent = 'Save';
-        if (intervalIds[tileId]) clearInterval(intervalIds[tileId]);
-      } else {
-        editBtn.textContent = 'Edit';
-        const newVal = input.value.trim();
-        tile.timerValue = newVal;
-        currentValue = utils.parseTimeToSeconds(newVal);
-        display.textContent = formatDisplay(newVal);
-        tile.origin = 'user-modified';
-        saveTiles();
-        renderLinks(tile.links, el);
-        el.querySelector('.tile-origin').textContent = '(Modified)';
-      }
-    };
-  }
-
-  function animateTitle(text) {
-    const original = document.title;
-    let i = 0;
-    const interval = setInterval(() => {
-      document.title = i % 2 ? `⏰ ${text}` : original;
-      i++;
-    }, 1000);
-    setTimeout(() => {
-      clearInterval(interval);
-      document.title = original;
-    }, 10000);
-  }
-
-  function initSearch() {
-    searchInput.addEventListener('input', () => {
-      const term = searchInput.value.trim().toLowerCase();
-      const filtered = term ? utils.fuzzySearch(allTiles, term) : allTiles;
-      searchClear.classList.toggle('hidden', !term);
-      renderTiles(filtered);
-    });
-    searchClear.addEventListener('click', () => {
-      searchInput.value = '';
-      searchClear.classList.add('hidden');
-      renderTiles(allTiles);
-    });
-  }
-
-  function initSettingsPanel() {
-    settingsToggle.addEventListener('click', () => {
-      settingsPanel.classList.toggle('hidden');
-    });
-
-    timeFormatSelect.addEventListener('change', () => {
-      settings.timeFormat = timeFormatSelect.value;
-      saveSettings();
-      renderTiles(allTiles);
-    });
-
-    shakeAnimationToggle.addEventListener('change', () => {
-      settings.shakeAnimation = shakeAnimationToggle.checked;
-      saveSettings();
-    });
-
-    titleAnimationToggle.addEventListener('change', () => {
-      settings.titleAnimation = titleAnimationToggle.checked;
-      saveSettings();
-    });
-
-    webNotificationsToggle.addEventListener('change', () => {
-      settings.webNotifications = webNotificationsToggle.checked;
-      if (settings.webNotifications && Notification.permission !== 'granted') {
-        Notification.requestPermission();
-      }
-      saveSettings();
-    });
-  }
-
-  function initExport() {
-    exportDataBtn.addEventListener('click', () => {
-      const blob = new Blob([JSON.stringify(allTiles, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `kitchen-timers-${new Date().toISOString().slice(0, 10)}.json`;
-      link.click();
-      URL.revokeObjectURL(url);
-    });
-  }
-
-  // Bootstrap
-  loadSettings();
-  loadTiles();
-  renderTiles(allTiles);
-  initSearch();
-  initSettingsPanel();
-  initExport();
-});
