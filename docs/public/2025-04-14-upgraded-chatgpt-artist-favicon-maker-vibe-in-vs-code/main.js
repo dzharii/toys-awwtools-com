@@ -49,7 +49,7 @@ window.addEventListener("DOMContentLoaded", function () {
       // Add click event to open ChatGPT link
       canvas.addEventListener("click", async () => {
         const base64Image = await getCanvasBase64(canvas);
-        const prompt = `Create masterpiece canvas in the gallery from this base64 encoded PNG; very fancy elite painting, elite gallery. Encoded PNG: ${base64Image}`;
+        const prompt = `Use image tool! Create masterpiece canvas in the gallery from this base64-encoded PNG; very fancy elite painting, elite gallery. Decode the encoded png, understand what is inside. Encoded PNG: ${base64Image}`;
         const url = `https://chatgpt.com/?q=${encodeURIComponent(prompt)}`;
         window.open(url, "_blank");
       });
