@@ -1,28 +1,147 @@
 class CanvasEmoji {
   constructor(ctx) {
     this.ctx = ctx;
-    this.canvas = ctx.canvas;
-    this.emojis = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇"];
+    this.emojis = [
+      "😀",
+      "😁",
+      "😂",
+      "🤣",
+      "😃",
+      "😄",
+      "😅",
+      "😆",
+      "😉",
+      "😊",
+      "😋",
+      "😎",
+      "😍",
+      "😘",
+      "🥰",
+      "😗",
+      "😙",
+      "😚",
+      "🙂",
+      "🤗",
+      "🤩",
+      "🤔",
+      "🤨",
+      "😐",
+      "😑",
+      "😶",
+      "🙄",
+      "😏",
+      "😣",
+      "😥",
+      "😮",
+      "🤐",
+      "😯",
+      "😪",
+      "😫",
+      "🥱",
+      "😴",
+      "😌",
+      "😛",
+      "😜",
+      "😝",
+      "🤤",
+      "😒",
+      "😓",
+      "😔",
+      "😕",
+      "🙃",
+      "🤑",
+      "😲",
+      "🥴",
+      "🥺",
+      "😢",
+      "😭",
+      "😱",
+      "😖",
+      "😞",
+      "😟",
+      "😤",
+      "😬",
+      "🤯",
+      "😰",
+      "😨",
+      "😧",
+      "😦",
+      "😈",
+      "👿",
+      "👻",
+      "💀",
+      "👽",
+      "🤖",
+      "🎃",
+      "👹",
+      "👺",
+      "😺",
+      "😸",
+      "😹",
+      "😻",
+      "😼",
+      "😽",
+      "🙀",
+    ];
+    this.currentEmoji = null;
+    this.backgroundColor = null;
+    this.currentBackgroundGenerator = null;
   }
 
   drawRandomEmoji() {
-    const emoji = this.emojis[Math.floor(Math.random() * this.emojis.length)];
-    this.ctx.fillStyle = "silver";
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    const canvas = this.ctx.canvas;
+    const width = canvas.width;
+    const height = canvas.height;
+
+    // Clear the canvas
+    this.ctx.clearRect(0, 0, width, height);
+
+    // Select a random background generator
+    const generatorIndex = Math.floor(
+      Math.random() * window.backgroundGenerators.length
+    );
+    this.currentBackgroundGenerator =
+      window.backgroundGenerators[generatorIndex];
+
+    // Apply background pattern
+    this.currentBackgroundGenerator.impl(this.ctx);
+
+    // Select and draw a random emoji
+    const emojiIndex = Math.floor(Math.random() * this.emojis.length);
+    this.currentEmoji = this.emojis[emojiIndex];
+
+    // Center the emoji
+    this.ctx.font = "40px sans-serif";
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
-    this.ctx.font = "48px sans-serif";
-    this.ctx.fillText(emoji, this.canvas.width / 2, this.canvas.height / 2);
+
+    // Draw the emoji
+    this.ctx.fillText(this.currentEmoji, width / 2, height / 2);
+  }
+
+  getCurrentEmoji() {
+    return this.currentEmoji;
+  }
+
+  getBackgroundInfo() {
+    return this.currentBackgroundGenerator
+      ? {
+          name: this.currentBackgroundGenerator.name,
+          description: this.currentBackgroundGenerator.description,
+        }
+      : null;
   }
 
   getImageDataAsUint8Array() {
-    const dataURL = this.canvas.toDataURL("image/png");
-    const base64 = dataURL.split(",")[1];
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    return bytes;
+    return new Promise((resolve) => {
+      const canvas = this.ctx.canvas;
+      canvas.toBlob((blob) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          resolve(new Uint8Array(reader.result));
+        };
+        reader.readAsArrayBuffer(blob);
+      }, "image/png");
+    });
   }
 }
