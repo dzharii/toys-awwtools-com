@@ -275,6 +275,7 @@ const backgroundGenerators = [
       }
     },
   },
+  // more background generators can be added here:
 ];
 
 // Make the array available globally
