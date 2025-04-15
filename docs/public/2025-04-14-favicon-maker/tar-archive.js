@@ -1,78 +1,93 @@
 class TarArchive {
   constructor() {
-    this.files = [];
+    this.fileData = [];
+    this.fileDataLength = 0;
   }
 
-  addFile(fileName, data) {
-    const mtime = Math.floor(Date.now() / 1000);
-    const header = this._createTarHeader(fileName, data.length, mtime);
-    const body = this._padTo512(data);
-    this.files.push(header, body);
+  addFile(fileName, fileData) {
+    const headerBuffer = this._createTarHeader(fileName, fileData.length);
+    this.fileData.push(headerBuffer);
+    this.fileDataLength += headerBuffer.length;
+
+    // Convert file data to Uint8Array if it's not already
+    let dataBuffer;
+    if (fileData instanceof Uint8Array) {
+      dataBuffer = fileData;
+    } else {
+      // Handle string data
+      const textEncoder = new TextEncoder();
+      dataBuffer = textEncoder.encode(fileData);
+    }
+
+    this.fileData.push(dataBuffer);
+    this.fileDataLength += dataBuffer.length;
+
+    // Add padding to make the total size a multiple of 512 bytes
+    const paddingLength = 512 - (dataBuffer.length % 512 || 512);
+    if (paddingLength > 0 && paddingLength < 512) {
+      const paddingBuffer = new Uint8Array(paddingLength);
+      this.fileData.push(paddingBuffer);
+      this.fileDataLength += paddingBuffer.length;
+    }
+  }
+
+  _createTarHeader(fileName, fileSize) {
+    const buffer = new Uint8Array(512);
+    const encoder = new TextEncoder();
+
+    // File name
+    encoder.encodeInto(fileName, buffer);
+
+    // File mode
+    const mode = "100664 \0";
+    encoder.encodeInto(mode, buffer.subarray(100));
+
+    // UID and GID
+    const uid = "0 \0";
+    encoder.encodeInto(uid, buffer.subarray(108));
+    const gid = "0 \0";
+    encoder.encodeInto(gid, buffer.subarray(116));
+
+    // File size
+    const sizeStr = fileSize.toString(8).padStart(11, "0") + " ";
+    encoder.encodeInto(sizeStr, buffer.subarray(124));
+
+    // Last modification time
+    const mtime =
+      Math.floor(Date.now() / 1000)
+        .toString(8)
+        .padStart(11, "0") + " ";
+    encoder.encodeInto(mtime, buffer.subarray(136));
+
+    // Checksum placeholder
+    encoder.encodeInto("        ", buffer.subarray(148));
+
+    // Type flag (0 = normal file)
+    buffer[156] = 48;
+
+    // Calculate checksum
+    let checksum = 0;
+    for (let i = 0; i < 512; i++) {
+      checksum += buffer[i];
+    }
+    const checksumStr = checksum.toString(8).padStart(6, "0") + "\0 ";
+    encoder.encodeInto(checksumStr, buffer.subarray(148));
+
+    return buffer;
   }
 
   getBlob() {
-    const end = new Uint8Array(1024);
-    const fullData = this._concatUint8Arrays([...this.files, end]);
-    return new Blob([fullData], { type: "application/x-tar" });
-  }
+    const endBlocks = new Uint8Array(1024); // Two blocks of zeros at the end
+    const finalBuffer = new Uint8Array(this.fileDataLength + endBlocks.length);
 
-  _padString(str, length) {
-    return str.padStart(length, "0");
-  }
-
-  _writeString(buffer, str, offset, length) {
-    for (let i = 0; i < length; i++) {
-      buffer[offset + i] = i < str.length ? str.charCodeAt(i) : 0;
-    }
-  }
-
-  _createTarHeader(fileName, fileSize, mtime) {
-    const header = new Uint8Array(512);
-    this._writeString(header, fileName, 0, 100);
-    this._writeString(header, this._padString("644", 7), 100, 7);
-    header[107] = 0;
-    this._writeString(header, this._padString("0", 7), 108, 7);
-    header[115] = 0;
-    this._writeString(header, this._padString("0", 7), 116, 7);
-    header[123] = 0;
-    this._writeString(
-      header,
-      this._padString(fileSize.toString(8), 11),
-      124,
-      11
-    );
-    header[135] = 0;
-    this._writeString(header, this._padString(mtime.toString(8), 11), 136, 11);
-    header[147] = 0;
-    for (let i = 148; i < 156; i++) header[i] = 32;
-    header[156] = "0".charCodeAt(0);
-    this._writeString(header, "ustar", 257, 5);
-    this._writeString(header, "00", 263, 2);
-    let checksum = 0;
-    for (let i = 0; i < 512; i++) {
-      checksum += header[i];
-    }
-    this._writeString(header, this._padString(checksum.toString(8), 6), 148, 6);
-    header[154] = 0;
-    header[155] = 32;
-    return header;
-  }
-
-  _padTo512(data) {
-    const remainder = data.length % 512;
-    if (remainder === 0) return data;
-    const padding = new Uint8Array(512 - remainder);
-    return new Uint8Array([...data, ...padding]);
-  }
-
-  _concatUint8Arrays(arrays) {
-    const totalLength = arrays.reduce((sum, arr) => sum + arr.length, 0);
-    const result = new Uint8Array(totalLength);
     let offset = 0;
-    arrays.forEach((arr) => {
-      result.set(arr, offset);
-      offset += arr.length;
-    });
-    return result;
+    for (const data of this.fileData) {
+      finalBuffer.set(data, offset);
+      offset += data.length;
+    }
+
+    finalBuffer.set(endBlocks, offset);
+
+    return new Blob([finalBuffer], { type: "application/x-tar" });
   }
 }

@@ -56,14 +56,15 @@ window.addEventListener("DOMContentLoaded", function () {
   });
 
   // Download all emojis as a tar archive
-  document.getElementById("downloadBtn").addEventListener("click", () => {
+  document.getElementById("downloadBtn").addEventListener("click", async () => {
     const tar = new TarArchive();
 
     // Add each emoji as a separate file to the archive
-    emojiCanvases.forEach(({ emojiDrawer }, index) => {
-      const pngData = emojiDrawer.getImageDataAsUint8Array();
-      tar.addFile(`emoji_${index + 1}.png`, pngData);
-    });
+    for (let i = 0; i < emojiCanvases.length; i++) {
+      const { emojiDrawer } = emojiCanvases[i];
+      const pngData = await emojiDrawer.getImageDataAsUint8Array();
+      tar.addFile(`emoji_${i + 1}.png`, pngData);
+    }
 
     // Create and trigger download
     const blob = tar.getBlob();
