@@ -797,7 +797,152 @@ const backgroundGenerators = [
       ctx.restore(); // Restore rotation
     },
   },
+  // more patterns with transparency and color variations can be added here:
 ];
+
+// Adding more background patterns with transparency and color variations
+backgroundGenerators.push(
+  {
+    name: "Transparent Gradient Waves",
+    description: "Wavy gradient lines with varying transparency",
+    impl: function (ctx) {
+      const width = ctx.canvas.width;
+      const height = ctx.canvas.height;
+      const waveCount = 5 + Math.floor(Math.random() * 5);
+      const hue = Math.floor(Math.random() * 360);
+
+      for (let i = 0; i < waveCount; i++) {
+        const gradient = ctx.createLinearGradient(0, 0, width, height);
+        gradient.addColorStop(0, `hsla(${hue}, 70%, 80%, 0.1)`);
+        gradient.addColorStop(1, `hsla(${(hue + 60) % 360}, 70%, 80%, 0.1)`);
+
+        ctx.fillStyle = gradient;
+        ctx.globalAlpha = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(0, (i * height) / waveCount);
+        ctx.bezierCurveTo(
+          width / 4,
+          (i * height) / waveCount + 20,
+          (3 * width) / 4,
+          (i * height) / waveCount - 20,
+          width,
+          (i * height) / waveCount
+        );
+        ctx.lineTo(width, height);
+        ctx.lineTo(0, height);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    },
+  },
+  {
+    name: "Transparent Polygons",
+    description: "Random polygons with varying transparency",
+    impl: function (ctx) {
+      const width = ctx.canvas.width;
+      const height = ctx.canvas.height;
+      const polygonCount = 10 + Math.floor(Math.random() * 10);
+      const hue = Math.floor(Math.random() * 360);
+
+      for (let i = 0; i < polygonCount; i++) {
+        const vertices = 3 + Math.floor(Math.random() * 5);
+        const alpha = 0.1 + Math.random() * 0.3;
+        ctx.fillStyle = `hsla(${(hue + i * 20) % 360}, 70%, 70%, ${alpha})`;
+
+        ctx.beginPath();
+        for (let j = 0; j < vertices; j++) {
+          const angle = (j / vertices) * Math.PI * 2;
+          const x = width / 2 + Math.cos(angle) * (Math.random() * width * 0.4);
+          const y =
+            height / 2 + Math.sin(angle) * (Math.random() * height * 0.4);
+          if (j === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fill();
+      }
+    },
+  },
+  {
+    name: "Transparent Rings",
+    description: "Concentric rings with varying transparency",
+    impl: function (ctx) {
+      const width = ctx.canvas.width;
+      const height = ctx.canvas.height;
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const ringCount = 5 + Math.floor(Math.random() * 5);
+      const hue = Math.floor(Math.random() * 360);
+
+      for (let i = 0; i < ringCount; i++) {
+        const radius = (i + 1) * (Math.min(width, height) / (2 * ringCount));
+        const alpha = 0.1 + Math.random() * 0.3;
+        ctx.strokeStyle = `hsla(${(hue + i * 30) % 360}, 70%, 70%, ${alpha})`;
+        ctx.lineWidth = 5;
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    },
+  },
+  {
+    name: "Transparent Rectangles",
+    description: "Overlapping rectangles with transparency",
+    impl: function (ctx) {
+      const width = ctx.canvas.width;
+      const height = ctx.canvas.height;
+      const rectCount = 10 + Math.floor(Math.random() * 10);
+      const hue = Math.floor(Math.random() * 360);
+
+      for (let i = 0; i < rectCount; i++) {
+        const x = Math.random() * width;
+        const y = Math.random() * height;
+        const rectWidth = 50 + Math.random() * 100;
+        const rectHeight = 50 + Math.random() * 100;
+        const alpha = 0.1 + Math.random() * 0.3;
+        ctx.fillStyle = `hsla(${(hue + i * 15) % 360}, 70%, 70%, ${alpha})`;
+
+        ctx.fillRect(x, y, rectWidth, rectHeight);
+      }
+    },
+  },
+  {
+    name: "Transparent Stars",
+    description: "Random stars with transparency",
+    impl: function (ctx) {
+      const width = ctx.canvas.width;
+      const height = ctx.canvas.height;
+      const starCount = 20 + Math.floor(Math.random() * 20);
+      const hue = Math.floor(Math.random() * 360);
+
+      for (let i = 0; i < starCount; i++) {
+        const x = Math.random() * width;
+        const y = Math.random() * height;
+        const radius = 10 + Math.random() * 20;
+        const alpha = 0.1 + Math.random() * 0.3;
+        ctx.fillStyle = `hsla(${(hue + i * 10) % 360}, 70%, 70%, ${alpha})`;
+
+        ctx.beginPath();
+        for (let j = 0; j < 5; j++) {
+          const angle = (j / 5) * Math.PI * 2;
+          const innerRadius = radius / 2;
+          const outerX = x + Math.cos(angle) * radius;
+          const outerY = y + Math.sin(angle) * radius;
+          const innerX = x + Math.cos(angle + Math.PI / 5) * innerRadius;
+          const innerY = y + Math.sin(angle + Math.PI / 5) * innerRadius;
+          if (j === 0) ctx.moveTo(outerX, outerY);
+          else ctx.lineTo(outerX, outerY);
+          ctx.lineTo(innerX, innerY);
+        }
+        ctx.closePath();
+        ctx.fill();
+      }
+    },
+  }
+  // Add more patterns here...
+);
 
 // Make the array available globally
 window.backgroundGenerators = backgroundGenerators;
