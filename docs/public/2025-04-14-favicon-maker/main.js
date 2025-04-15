@@ -77,6 +77,17 @@ window.addEventListener("DOMContentLoaded", function () {
     URL.revokeObjectURL(link.href);
   });
 
+  // Theme toggle logic
+  const themeToggle = document.getElementById("themeToggle");
+  themeToggle.addEventListener("click", () => {
+    document.body.classList.toggle("dark-theme");
+    if (document.body.classList.contains("dark-theme")) {
+      themeToggle.textContent = "Switch to Light Theme";
+    } else {
+      themeToggle.textContent = "Switch to Dark Theme";
+    }
+  });
+
   // Initialize the grid
   updateGridLayout();
 });
