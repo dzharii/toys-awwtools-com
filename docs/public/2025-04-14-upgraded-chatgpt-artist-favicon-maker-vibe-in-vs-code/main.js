@@ -43,16 +43,20 @@ window.addEventListener("DOMContentLoaded", function () {
       const emojiDrawer = new CanvasEmoji(ctx);
 
       emojiDrawer.drawRandomEmoji();
-      emojiGrid.appendChild(canvas);
-      emojiCanvases.push({ canvas, emojiDrawer });
 
-      // Add click event to open ChatGPT link
-      canvas.addEventListener("click", async () => {
-        const base64Image = await getCanvasBase64(canvas);
-        const prompt = `Use image tool! Create masterpiece canvas in the gallery from this base64-encoded PNG; very fancy elite painting, elite gallery. Decode the encoded png, understand what is inside. Encoded PNG: ${base64Image}`;
-        const url = `https://chatgpt.com/?q=${encodeURIComponent(prompt)}`;
-        window.open(url, "_blank");
+      // Create a link element wrapping the canvas
+      const link = document.createElement("a");
+      link.target = "_blank";
+
+      // Generate the ChatGPT link dynamically
+      getCanvasBase64(canvas).then((base64Image) => {
+        const prompt = `Use image tool! Create masterpiece canvas in the gallery from this base64-encoded PNG; very fancy elite painting, elite gallery. Using python, Decode the encoded png. You will save it as /mnt/data/base_image.png.  Then use image tool to generate image using this file. Encoded PNG: ${base64Image}`;
+        link.href = `https://chatgpt.com/?q=${encodeURIComponent(prompt)}`;
       });
+
+      link.appendChild(canvas);
+      emojiGrid.appendChild(link);
+      emojiCanvases.push({ canvas, emojiDrawer });
     }
   }
 
