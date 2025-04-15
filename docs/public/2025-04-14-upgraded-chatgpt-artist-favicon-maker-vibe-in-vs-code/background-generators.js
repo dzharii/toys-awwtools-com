@@ -4,8 +4,8 @@ const backgroundGenerators = [
     name: "Soft Gradient",
     description: "Smooth gradient with soft pastel colors",
     impl: function (ctx) {
-      const width = ctx.canvas.width;
-      const height = ctx.canvas.height;
+      const width = ctx.canvas.width; // Now 32
+      const height = ctx.canvas.height; // Now 32
 
       // Choose random soft colors
       const hue1 = Math.floor(Math.random() * 360);
@@ -30,8 +30,8 @@ const backgroundGenerators = [
     name: "Dotted Pattern",
     description: "Small scattered dots with varying opacity",
     impl: function (ctx) {
-      const width = ctx.canvas.width;
-      const height = ctx.canvas.height;
+      const width = ctx.canvas.width; // Now 32
+      const height = ctx.canvas.height; // Now 32
 
       // Set background
       ctx.fillStyle = "rgba(245, 245, 245, 1)";
@@ -42,13 +42,13 @@ const backgroundGenerators = [
       const dotColor = `hsla(${hue}, 70%, 75%, 0.6)`;
 
       // Generate dots
-      const dotCount = 20 + Math.floor(Math.random() * 40);
+      const dotCount = 5 + Math.floor(Math.random() * 10); // Reduced count
       ctx.fillStyle = dotColor;
 
       for (let i = 0; i < dotCount; i++) {
         const x = Math.random() * width;
         const y = Math.random() * height;
-        const radius = 0.5 + Math.random() * 1.5;
+        const radius = 0.5 + Math.random() * 1; // Smaller radius
         const alpha = 0.1 + Math.random() * 0.4;
 
         ctx.globalAlpha = alpha;
@@ -65,8 +65,8 @@ const backgroundGenerators = [
     name: "Subtle Grid",
     description: "Light grid pattern with thin lines",
     impl: function (ctx) {
-      const width = ctx.canvas.width;
-      const height = ctx.canvas.height;
+      const width = ctx.canvas.width; // Now 32
+      const height = ctx.canvas.height; // Now 32
 
       // Set background
       ctx.fillStyle = "rgba(248, 248, 248, 1)";
@@ -75,7 +75,7 @@ const backgroundGenerators = [
       // Choose grid color and properties
       const hue = Math.floor(Math.random() * 360);
       const gridColor = `hsla(${hue}, 30%, 60%, 0.1)`;
-      const gridSize = 5 + Math.floor(Math.random() * 5);
+      const gridSize = 4; // Reduced grid size
 
       ctx.strokeStyle = gridColor;
       ctx.lineWidth = 0.5;

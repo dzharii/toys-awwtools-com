@@ -311,8 +311,8 @@ class CanvasEmoji {
 
   drawRandomEmoji() {
     const canvas = this.ctx.canvas;
-    const width = canvas.width;
-    const height = canvas.height;
+    const width = canvas.width; // Now 32
+    const height = canvas.height; // Now 32
 
     // Clear the canvas
     this.ctx.clearRect(0, 0, width, height);
@@ -332,7 +332,7 @@ class CanvasEmoji {
     this.currentEmoji = this.emojis[emojiIndex];
 
     // Center the emoji
-    this.ctx.font = "40px sans-serif";
+    this.ctx.font = "20px sans-serif"; // Adjusted font size for 32x32
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
 

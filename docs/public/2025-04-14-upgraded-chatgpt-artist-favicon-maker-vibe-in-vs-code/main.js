@@ -32,20 +32,39 @@ window.addEventListener("DOMContentLoaded", function () {
     emojiCanvases = [];
 
     // Update grid CSS
-    emojiGrid.style.gridTemplateColumns = `repeat(${cols}, 64px)`;
+    emojiGrid.style.gridTemplateColumns = `repeat(${cols}, 32px)`; // Updated to 32px
 
     // Create new grid of canvases
     for (let i = 0; i < rows * cols; i++) {
       const canvas = document.createElement("canvas");
-      canvas.width = 64;
-      canvas.height = 64;
+      canvas.width = 32; // Updated to 32
+      canvas.height = 32; // Updated to 32
       const ctx = canvas.getContext("2d");
       const emojiDrawer = new CanvasEmoji(ctx);
 
       emojiDrawer.drawRandomEmoji();
       emojiGrid.appendChild(canvas);
       emojiCanvases.push({ canvas, emojiDrawer });
+
+      // Add click event to open ChatGPT link
+      canvas.addEventListener("click", async () => {
+        const base64Image = await getCanvasBase64(canvas);
+        const prompt = `Create masterpiece canvas in the gallery from this base64 encoded PNG; very fancy elite painting, elite gallery. Encoded PNG: ${base64Image}`;
+        const url = `https://chatgpt.com/?q=${encodeURIComponent(prompt)}`;
+        window.open(url, "_blank");
+      });
     }
+  }
+
+  // Helper function to get base64 content of a canvas
+  function getCanvasBase64(canvas) {
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(",")[1]); // Extract base64 content
+        reader.readAsDataURL(blob);
+      });
+    });
   }
 
   // Regenerate all emojis in the grid
@@ -53,28 +72,6 @@ window.addEventListener("DOMContentLoaded", function () {
     emojiCanvases.forEach(({ emojiDrawer }) => {
       emojiDrawer.drawRandomEmoji();
     });
-  });
-
-  // Download all emojis as a tar archive
-  document.getElementById("downloadBtn").addEventListener("click", async () => {
-    const tar = new TarArchive();
-
-    // Add each emoji as a separate file to the archive
-    for (let i = 0; i < emojiCanvases.length; i++) {
-      const { emojiDrawer } = emojiCanvases[i];
-      const pngData = await emojiDrawer.getImageDataAsUint8Array();
-      tar.addFile(`emoji_${i + 1}.png`, pngData);
-    }
-
-    // Create and trigger download
-    const blob = tar.getBlob();
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "emoji_grid.tar";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(link.href);
   });
 
   // Theme toggle logic
