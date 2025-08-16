@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Calendar Estimate Tool</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Prevent layout shift: system fonts, fixed toolbar/editor heights in CSS -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header id="toolbar" role="region" aria-label="Calendar viewport controls">
+    <div class="toolbar-group">
+      <label for="viewportFrom" class="label">From</label>
+      <input id="viewportFrom" type="month" aria-label="Viewport start month" />
+      <label for="viewportTo" class="label">To</label>
+      <input id="viewportTo" type="month" aria-label="Viewport end month" />
+    </div>
+    <div class="toolbar-group">
+      <button id="todayBtn" type="button" class="btn" aria-label="Jump to current month">Today</button>
+      <label class="switch">
+        <input id="fitToggle" type="checkbox" />
+        <span class="switch-label">Fit to ranges</span>
+      </label>
+    </div>
+  </header>
+
+  <main id="main" role="main">
+    <section id="editorSection" aria-label="Range Editor">
+      <h2 class="panel-title">Range Editor</h2>
+      <div id="editorWrapper">
+        <!-- Colored overlay behind the editor for per-line backgrounds -->
+        <div id="editorOverlay" aria-hidden="true"></div>
+        <div
+          id="editorInput"
+          class="contenteditable"
+          contenteditable="true"
+          spellcheck="false"
+          aria-multiline="true"
+          role="textbox"
+          aria-label="Enter one range per line as beginDate separator endDate optional description. Example: 2024-11-01 - 2025-02-28 Season wrap"
+        >2024-11-01 - 2025-02-28 Season wrap
+3/10/2025 - 3/21/2025 Sprint 5
+# You can add comments with #. Add more ranges below.
+</div>
+      </div>
+      <div id="editorError" role="status" aria-live="polite"></div>
+    </section>
+
+    <aside id="rightColumn">
+      <section id="statsPanel" aria-label="Statistics">
+        <h2 class="panel-title">Statistics</h2>
+        <div class="stats-header" aria-hidden="true">
+          <div class="col desc">Range</div>
+          <div class="col metric">Days</div>
+          <div class="col metric">Workdays</div>
+          <div class="col metric">Weekends</div>
+          <div class="col metric">Holidays</div>
+        </div>
+        <div id="statsList" class="stats-list" aria-live="off"></div>
+        <div id="statsFooter" class="stats-footer" aria-label="Grand totals">
+          <div class="col desc">Total</div>
+          <div class="col metric" id="totalDays">0</div>
+          <div class="col metric" id="totalWorkdays">0</div>
+          <div class="col metric" id="totalWeekends">0</div>
+          <div class="col metric" id="totalHolidays">0</div>
+        </div>
+      </section>
+
+      <section id="holidayPanel" aria-label="Holidays">
+        <h2 class="panel-title">U.S. Holidays</h2>
+        <div id="holidayLoadError" class="inline-banner" hidden>
+          Holiday list failed to load. Using minimal fallback.
+        </div>
+        <div id="holidayList" class="holiday-list"></div>
+        <div class="holiday-add">
+          <h3 class="sub-title">Add custom blocking date</h3>
+          <div class="row">
+            <label for="customDate" class="label">Date</label>
+            <input type="date" id="customDate" aria-label="Custom holiday date" />
+          </div>
+          <div class="row">
+            <label for="customName" class="label">Label</label>
+            <input type="text" id="customName" aria-label="Custom holiday label" placeholder="e.g., Team offsite" />
+          </div>
+          <button id="addCustomHoliday" type="button" class="btn">Add</button>
+          <div id="customHolidayList" class="custom-list" aria-label="Custom blocking dates"></div>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <section id="calendarPanel" aria-label="Calendar">
+    <div id="monthsStrip" class="months-strip" tabindex="0" aria-label="Scrollable calendar months"></div>
+  </section>
+
+  <script src="colors.js"></script>
+  <script src="holidays.us.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
+

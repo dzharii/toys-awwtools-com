@@ -1,0 +1,344 @@
+/* Base reset and layout */
+:root{
+  --bg: #0b0f14;
+  --panel: #0f1720;
+  --text: #e6edf3;
+  --muted: #b7c0c7;
+  --border: #1f2a37;
+  --error-bg: #fee2e2;
+  --error-text: #7f1d1d;
+  --invalid-line: #fde7e7;
+  --draft-line: #1f2937;
+  --holiday-badge: #f59e0b;
+  --today-ring: #22c55e;
+  --stripe-dark: rgba(0,0,0,.25);
+  --stripe-light: rgba(255,255,255,.25);
+  --focus: #93c5fd;
+  --day-size: 2.25rem; /* width/height of day cells */
+  --month-gap: 1rem;
+  --toolbar-height: 56px;
+  --editor-error-height: 28px;
+  --font-ui: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+}
+
+/* Support reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body{
+  margin:0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#toolbar{
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .5rem 1rem;
+  padding: .5rem 1rem;
+  height: var(--toolbar-height);
+  background: linear-gradient(180deg, #0f1720 0%, #0b1118 100%);
+  border-bottom: 1px solid var(--border);
+}
+
+.toolbar-group{
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+}
+.label{ color: var(--muted); font-size:.9rem; }
+.btn{
+  background:#1f2937;
+  color:#e6edf3;
+  border:1px solid var(--border);
+  border-radius:.6rem;
+  padding:.5rem .75rem;
+  cursor:pointer;
+}
+.btn:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+.switch{ display:flex; align-items:center; gap:.5rem; cursor:pointer; }
+.switch input{ width:1.25rem; height:1.25rem; accent-color:#22c55e; }
+.switch-label{ user-select:none; }
+
+#main{
+  display:grid;
+  grid-template-columns: minmax(480px, 1fr) minmax(320px, 400px);
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.panel-title{
+  margin:0 0 .5rem 0;
+  font-size:1.15rem;
+  color:#c9d7e3;
+}
+
+#editorSection{
+  display:flex;
+  flex-direction:column;
+  min-height: 420px;
+}
+
+#editorWrapper{
+  position: relative;
+  border:1px solid var(--border);
+  border-radius:.75rem;
+  background: #0c131c;
+  overflow: auto;
+  max-height: 360px;
+  min-height: 240px;
+}
+
+#editorOverlay{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  /* line blocks injected dynamically */
+}
+
+.contenteditable{
+  position: relative;
+  z-index: 1;
+  padding: .75rem;
+  font-size: 1.05rem;
+  line-height: 1.7rem;
+  min-height: 240px;
+  white-space: pre; /* per-line editing; avoid wraps for alignment */
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  caret-color: #cbd5e1;
+  outline: none;
+}
+.contenteditable:focus-visible{
+  box-shadow: 0 0 0 2px var(--focus) inset;
+}
+
+#editorError{
+  height: var(--editor-error-height); /* fixed to avoid layout shift */
+  padding: .25rem .5rem;
+  margin-top: .5rem;
+  border-radius:.5rem;
+  background: transparent;
+  color: var(--error-text);
+}
+
+/* Statistics panel */
+#rightColumn{
+  display:flex;
+  flex-direction:column;
+  gap:1rem;
+}
+#statsPanel{
+  border:1px solid var(--border);
+  border-radius:.75rem;
+  background:#0c131c;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  min-height: 240px;
+}
+.stats-header, .stats-footer{
+  display:grid;
+  grid-template-columns: 1fr repeat(4, 5.75rem);
+  gap:.25rem;
+  padding:.5rem .5rem;
+  background:#0f1720;
+  border-bottom:1px solid var(--border);
+}
+.stats-footer{
+  border-top:1px solid var(--border);
+  border-bottom:none;
+}
+.stats-list{
+  font-size: 1.05rem;
+  line-height: 1.7rem;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  overflow: hidden; /* scrolling synced with editor */
+  position: relative;
+  min-height: 160px;
+}
+.stats-row{
+  display:grid;
+  grid-template-columns: 1fr repeat(4, 5.75rem);
+  gap:.25rem;
+  padding: 0 .5rem;
+}
+.stats-row .desc{
+  overflow:hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stats-row.highlight{ outline:2px dashed #94a3b8; outline-offset:-2px; }
+
+.col.desc{ color:#e6edf3; }
+.col.metric{ text-align:right; color:#cbd5e1; }
+
+/* Holidays panel */
+#holidayPanel{
+  border:1px solid var(--border);
+  border-radius:.75rem;
+  background:#0c131c;
+  overflow:hidden;
+}
+.inline-banner{
+  background:#3b1a1a;
+  color:#fecaca;
+  padding:.5rem .75rem;
+  border-bottom:1px solid #7f1d1d;
+}
+.holiday-list{
+  max-height: 220px;
+  overflow:auto;
+  padding:.5rem .5rem;
+  border-bottom:1px solid var(--border);
+}
+.holiday-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:.5rem;
+  padding:.25rem .25rem;
+}
+.holiday-item label{ flex:1; }
+.holiday-item input[type="checkbox"]{ width:1.1rem; height:1.1rem; accent-color:#22c55e; }
+
+.holiday-add{
+  padding:.5rem;
+  display:flex;
+  flex-direction:column;
+  gap:.5rem;
+}
+.holiday-add .row{
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+}
+.custom-list .custom-item{
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+  padding:.25rem .25rem;
+}
+
+/* Calendar */
+#calendarPanel{
+  margin-top: .5rem;
+  border-top:1px solid var(--border);
+  padding: .75rem 1rem 1rem 1rem;
+}
+.months-strip{
+  display:flex;
+  align-items:flex-start;
+  gap: var(--month-gap);
+  overflow-x: auto;
+  padding-bottom:.5rem;
+}
+.month{
+  min-width: calc(var(--day-size) * 7);
+  background:#0c131c;
+  border:1px solid var(--border);
+  border-radius:.75rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,.18);
+}
+.month-header{
+  padding:.5rem .5rem;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.month-grid{
+  display:grid;
+  grid-template-columns: repeat(7, var(--day-size));
+  grid-auto-rows: var(--day-size);
+  padding:.25rem;
+  gap:.25rem;
+}
+.weekday{
+  font-size:.8rem;
+  color:#9fb0be;
+  text-align:center;
+}
+.day{
+  position: relative;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  padding:.25rem;
+  border-radius:.5rem;
+  background:#0f1720;
+  color:#d8e1e8;
+  border:1px solid #101822;
+  outline:none;
+}
+.day:focus-visible{ box-shadow:0 0 0 2px var(--focus) inset; }
+.day .num{ font-weight:600; }
+.day.today{ outline:2px solid var(--today-ring); }
+.day.other-month{ opacity:.25; }
+.day.holiday .badge{
+  position:absolute;
+  left:.25rem; top:.25rem;
+  width:.45rem; height:.45rem; border-radius:50%;
+  background: var(--holiday-badge);
+}
+.day .stripe{
+  position:absolute; inset:0; border-radius:.5rem; pointer-events:none;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0 6px,
+    rgba(255,255,255,.18) 6px 12px
+  );
+  mix-blend-mode: overlay;
+}
+
+/* Range highlighting tokens set inline as style (bg/fg) */
+.day.cover-1{ border-width:0; }
+.day.cover-2plus{ border-width:0; }
+
+/* Overlay lines (behind editor) */
+.line-overlay{
+  position:absolute;
+  left:0; right:0;
+  height: 1.7rem; /* must match editor line-height */
+  padding-left: .5rem; padding-right:.5rem;
+}
+.line-overlay.invalid{
+  background: var(--invalid-line);
+  border-top:1px solid rgba(0,0,0,.05);
+  border-bottom:1px solid rgba(0,0,0,.05);
+}
+.line-overlay.valid{
+  /* colors injected inline */
+}
+.line-overlay.hover{
+  outline: 2px dashed #94a3b8;
+  outline-offset: -2px;
+}
+
+/* Utility */
+.hidden{ display:none !important; }
+
+/* Inputs */
+input[type="month"], input[type="date"], input[type="text"]{
+  background:#0b1118; color:#e6edf3; border:1px solid var(--border);
+  border-radius:.5rem; padding:.4rem .5rem;
+}
+input[type="text"]::placeholder{ color:#6b7280; }
+
+/* Focus rings for everything */
+:where(button, input, [contenteditable="true"]):focus-visible{
+  outline:2px solid var(--focus);
+  outline-offset:2px;
+}
+
