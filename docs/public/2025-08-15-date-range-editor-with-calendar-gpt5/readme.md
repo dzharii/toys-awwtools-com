@@ -1,7 +1,9 @@
 # Specification: Web-based Calendar Estimate Tool
 Date: 2025-08-15
 
-https://chatgpt.com/c/68a014ce-b964-832d-a2d1-db0b9b9fe402
+SPEC: https://chatgpt.com/c/68a014ce-b964-832d-a2d1-db0b9b9fe402
+
+IMPL 01: https://chatgpt.com/g/g-9UBPT4QKi-web-developer-toys/c/68a01c13-bfec-8322-ad19-08e8903c0dab
 
 
 
