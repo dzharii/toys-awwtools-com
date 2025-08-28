@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>EchoPing v1</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body data-theme="light">
+  <header class="site-header">
+    <div class="brand">
+      <span aria-hidden="true">📎</span>
+      <h1 class="app-title">EchoPing</h1>
+    </div>
+    <nav class="actions">
+      <button class="btn" id="copyLinkTop" aria-label="Copy current link">Copy Link</button>
+      <button class="btn" id="themeToggleTop" aria-label="Toggle theme">Toggle Theme</button>
+    </nav>
+  </header>
+
+  <div id="err" class="err" role="status" aria-live="polite"></div>
+
+  <main id="app">
+    <!-- VIEW MODE -->
+    <article id="view" class="card view" hidden>
+      <header class="view-head">
+        <div class="meta">
+          <span id="vh-name" class="author"></span>
+          <time id="vh-time" class="time muted" datetime=""></time>
+        </div>
+        <div class="view-actions">
+          <button class="btn" id="copyLinkView" aria-label="Copy current link">Copy Link</button>
+          <button class="btn" id="editBtn" aria-label="Edit this post">Edit</button>
+          <button class="btn" id="themeToggleView" aria-label="Toggle theme">Toggle Theme</button>
+        </div>
+      </header>
+
+      <section class="content">
+        <div id="vh-text" class="text"></div>
+        <div id="vh-media" class="media"></div>
+      </section>
+    </article>
+
+    <!-- COMPOSE MODE -->
+    <section id="compose" class="compose" hidden>
+      <div class="compose-grid">
+        <form id="composeForm" class="card form" autocomplete="off" novalidate>
+          <fieldset class="field">
+            <label class="label" for="n">Name</label>
+            <input class="input" id="n" type="text" placeholder="Your display name">
+          </fieldset>
+
+          <fieldset class="field">
+            <label class="label" for="t">Text</label>
+            <textarea class="input" id="t" rows="10" placeholder="Write your post text. Links auto-link only if https..."></textarea>
+            <p class="muted small">Newlines are preserved. Links/images must be https.</p>
+          </fieldset>
+
+          <fieldset class="field">
+            <label class="label" for="imgUrl">Images</label>
+            <div class="row">
+              <input class="input" id="imgUrl" type="url" inputmode="url" placeholder="https://site/image.jpg">
+              <button class="btn" id="addImgBtn" type="button" aria-label="Add image">Add</button>
+            </div>
+            <ul id="imgList" class="img-list" aria-live="polite"></ul>
+          </fieldset>
+
+          <fieldset class="field">
+            <label class="label" for="ytUrl">YouTube URL (optional)</label>
+            <input class="input" id="ytUrl" type="url" inputmode="url" placeholder="https://youtu.be/dQw4w9WgXcQ or https://www.youtube.com/watch?v=...">
+            <p class="muted small" id="ytHint">Parsed ID: <span id="ytIdPreview" class="mono">—</span></p>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend class="label">Timestamp</legend>
+            <div class="row">
+              <label><input type="radio" name="tsMode" value="now" checked> Now</label>
+              <label><input type="radio" name="tsMode" value="custom"> Custom ISO</label>
+            </div>
+            <input class="input" id="tsCustom" type="text" placeholder="2025-08-28T10:15:00Z" disabled>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend class="label">Theme</legend>
+            <div class="row">
+              <label><input type="radio" name="theme" value="light" checked> Light</label>
+              <label><input type="radio" name="theme" value="dark"> Dark</label>
+            </div>
+          </fieldset>
+
+          <div class="row two">
+            <fieldset class="field">
+              <label class="label" for="w">Max Width (px)</label>
+              <input class="input" id="w" type="number" min="320" max="4096" step="1" value="1024">
+            </fieldset>
+            <fieldset class="field">
+              <label class="label" for="f">Base Font Size (px)</label>
+              <input class="input" id="f" type="number" min="12" max="48" step="1" value="24">
+            </fieldset>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn primary" id="generateBtn" type="button" aria-label="Generate shareable link">Generate link</button>
+            <button class="btn" id="loadBtn" type="button" aria-label="Load from URL">Load from URL</button>
+            <button class="btn danger" id="clearBtn" type="button" aria-label="Clear form">Clear</button>
+          </div>
+        </form>
+
+        <aside class="card preview">
+          <div class="preview-head">
+            <h2 class="label">Live preview</h2>
+          </div>
+          <article id="preview" class="preview-body">
+            <!-- Live-rendered using same renderer as View -->
+            <header class="view-head">
+              <div class="meta">
+                <span id="pv-name" class="author"></span>
+                <time id="pv-time" class="time muted" datetime=""></time>
+              </div>
+            </header>
+            <section class="content">
+              <div id="pv-text" class="text"></div>
+              <div id="pv-media" class="media"></div>
+            </section>
+          </article>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <noscript>
+    <div class="err">EchoPing requires JavaScript to function.</div>
+  </noscript>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
+
