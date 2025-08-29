@@ -193,7 +193,7 @@ const Editor = (()=>{
   const titleBase = document.title;
   let rafId = 0; let lastSecond = -1;
   const pop = document.getElementById('ctrl-pop');
-  let popForId = null; let popPinned = false; let hoverToken = false; let hoverPop = false; let hideT = 0;
+  let popForId = null; let popPinned = false;
 
   function getLines(){
     return Array.from(el.children).filter(n=> n.classList.contains('line'));
@@ -258,16 +258,22 @@ const Editor = (()=>{
 
     // Append before text
     if(before) line.appendChild(document.createTextNode(before));
-    // Token span: mark kind so CSS can decide whether to draw markers
-    const token = document.createElement('span'); token.className = 'token'; token.setAttribute('data-id', id); token.setAttribute('contenteditable','true'); token.setAttribute('data-kind', parsed.kind);
+    // Token span containing the original characters; divide into h/m/s groups for decorative markers
+    const token = document.createElement('span'); token.className = 'token'; token.setAttribute('data-id', id); token.setAttribute('contenteditable','true');
+    // Split durText into groups based on formatted ms to decide which markers to show
     const fmt = Parser.formatMs(ms);
-    if(parsed.kind === 'units'){
-      const sp = document.createElement('span'); sp.className = 't units'; sp.textContent = durText; token.appendChild(sp);
-    } else {
-      fmt.parts.forEach((p, idx)=>{
-        const sp = document.createElement('span'); sp.className = 't '+p.mark; sp.textContent = p.num; token.appendChild(sp);
-        if(idx < fmt.parts.length-1) token.appendChild(document.createTextNode(' '));
+    // Recreate visible groups but using the original durText characters; fallback to raw
+    // For robustness, just place durText as-is, and for markers use the computed parts count to attach classes to slices if lengths match
+    // Simple approach: create one span per part with the raw durText split by spaces/colons
+    const rawParts = durText.split(/\s+/);
+    if(fmt.parts.length === rawParts.length){
+      rawParts.forEach((rp, idx)=>{
+        const sp = document.createElement('span'); sp.className = 't '+fmt.parts[idx].mark; sp.textContent = rp.trim(); token.appendChild(sp);
+        if(idx < rawParts.length-1) token.appendChild(document.createTextNode(' '));
       });
+    } else {
+      // Fallback: single span but mark seconds for decoration
+      const sp = document.createElement('span'); sp.className = 't s'; sp.textContent = durText; token.appendChild(sp);
     }
 
     // Overtime display via data attribute so it doesn't alter text content
@@ -333,28 +339,7 @@ const Editor = (()=>{
 
   function renderAll(){ getLines().forEach(ensureLineStructure); updateTitleBadge(); }
 
-  function renderLineById(id){ const line = findLineById(id); if(line){
-      // If user is editing label text on this line, avoid tearing DOM.
-      const sel = document.getSelection && document.getSelection();
-      const editingHere = sel && sel.anchorNode && (sel.anchorNode.nodeType===1? sel.anchorNode.closest('.line')===line : sel.anchorNode.parentElement && sel.anchorNode.parentElement.closest('.line')===line);
-      const insideToken = editingHere && (sel.anchorNode.nodeType===1? sel.anchorNode.closest('.token') : sel.anchorNode.parentElement && sel.anchorNode.parentElement.closest('.token'));
-      if(editingHere && !insideToken){
-        softUpdateLine(id);
-      } else {
-        ensureLineStructure(line);
-      }
-      updateTitleBadge();
-    } }
-
-  function softUpdateLine(id){
-    const line = findLineById(id); if(!line) return; const st = Store.get(id); if(!st) return;
-    updateStatusClasses(line, st.status);
-    const token = line.querySelector('.token'); if(!token) return;
-    if(st.status==='finished' || st.status==='overtime'){
-      const elapsed = st.finishedAtMs ? now() - st.finishedAtMs : 0;
-      token.setAttribute('data-over', '+'+overFormat(elapsed)); token.classList.add('pulse');
-    } else { token.removeAttribute('data-over'); token.classList.remove('pulse'); }
-  }
+  function renderLineById(id){ const line = findLineById(id); if(line){ ensureLineStructure(line); updateTitleBadge(); } }
 
   function findLineById(id){ return getLines().find(l => l.getAttribute('data-id') === id); }
 
@@ -367,13 +352,7 @@ const Editor = (()=>{
     elems.forEach(e=> pop.appendChild(e));
     pop.hidden = false; popForId = id; positionPopover(token);
   }
-  function hidePopover(){
-    if(popPinned) return;
-    clearTimeout(hideT);
-    hideT = setTimeout(()=>{
-      if(!hoverToken && !hoverPop){ pop.hidden = true; popForId = null; }
-    }, 180);
-  }
+  function hidePopover(){ if(popPinned) return; pop.hidden = true; popForId = null; }
   function positionPopover(token){
     const r = token.getBoundingClientRect();
     let top = window.scrollY + r.top - (pop.offsetHeight || 40) - 8;
@@ -475,17 +454,13 @@ const Editor = (()=>{
     }
   }
 
-  function onInput(e){ // re-render only the active line
-    const sel = document.getSelection && document.getSelection();
-    let line = null;
-    if(sel && sel.anchorNode){
-      line = sel.anchorNode.nodeType===1 ? sel.anchorNode.closest('.line') : sel.anchorNode.parentElement && sel.anchorNode.parentElement.closest('.line');
-    }
-    if(!line){
-      // fallback to event target proximity
-      line = (e.target && e.target.closest) ? e.target.closest('.line') : null;
-    }
+  function onInput(e){ // re-render only the affected line
+    const line = (e.target && e.target.closest) ? e.target.closest('.line') : null;
     if(!line) return;
+    // sanitize: strip any accidental elements within the line, keep text only
+    const txt = line.textContent || '';
+    line.innerHTML = '';
+    line.textContent = txt;
     ensureLineStructure(line);
     saveDocDebounced();
   }
@@ -550,10 +525,8 @@ const Editor = (()=>{
     el.addEventListener('keyup', handleActiveState);
     el.addEventListener('click', handleActiveState);
     el.addEventListener('paste', onPaste);
-    el.addEventListener('mouseover', (e)=>{ const t = e.target.closest && e.target.closest('.token'); if(t){ hoverToken = true; showPopoverFor(t.getAttribute('data-id')); } });
-    el.addEventListener('mouseout', (e)=>{ const t = e.target.closest && e.target.closest('.token'); if(t){ hoverToken = false; hidePopover(); } });
-    pop.addEventListener('mouseenter', ()=>{ hoverPop = true; clearTimeout(hideT); });
-    pop.addEventListener('mouseleave', ()=>{ hoverPop = false; hidePopover(); });
+    el.addEventListener('mouseover', (e)=>{ const t = e.target.closest && e.target.closest('.token'); if(t){ showPopoverFor(t.getAttribute('data-id')); } });
+    el.addEventListener('mouseleave', ()=> hidePopover());
     window.addEventListener('scroll', ()=>{ if(popForId){ const token = findTokenById(popForId); if(token) positionPopover(token); } }, { passive: true });
     window.addEventListener('resize', ()=>{ if(popForId){ const token = findTokenById(popForId); if(token) positionPopover(token); } });
     window.addEventListener('click', ()=> AudioMod.unlock(), { once: true });
