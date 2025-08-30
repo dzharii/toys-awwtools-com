@@ -369,8 +369,22 @@
   renderer.domElement.addEventListener('webglcontextlost', function (e) { e.preventDefault(); });
   renderer.domElement.addEventListener('webglcontextrestored', function () {});
 
-  var scene = new THREE.Scene();
-  var camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 50);
+  var scene = new THREE.Scene();
+  // HDR environment for reflections
+  try {
+    var pmrem = new THREE.PMREMGenerator(renderer);
+    pmrem.compileEquirectangularShader();
+    if (THREE.RGBELoader) {
+      new THREE.RGBELoader()
+        .setDataType(THREE.UnsignedByteType)
+        .load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r146/examples/textures/equirectangular/royal_esplanade_1k.hdr', function (hdr) {
+          var env = pmrem.fromEquirectangular(hdr).texture;
+          scene.environment = env;
+          hdr.dispose(); pmrem.dispose();
+        });
+    }
+  } catch (e) {}
+  var camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 50);
   camera.position.set(2.4, 1.5, 3.4);
 
   // Core lighting: ambient + hemisphere
@@ -392,7 +406,10 @@
 
   // Glass sphere — tuned for visibility
   var outerGeo = new THREE.SphereGeometry(R, 96, 96);
-  var glassMat = new THREE.MeshPhysicalMaterial({
+  var glassMat = new THREE.MeshPhysicalMaterial({
+    transmission: 0.95,
+    thickness: 0.45,
+    ior: 1.2,
     transparent: true,
     opacity: 0.42,
     roughness: 0.18,
@@ -401,7 +418,14 @@
     clearcoatRoughness: 0.3,
     reflectivity: 0.6,
     color: new THREE.Color(0x13325a),
-    depthWrite: false // key: panels remain visible through glass
+    depthWrite: false, // key: panels remain visible through glass
+    // polished values for premium glass look
+    opacity: 1.0,
+    roughness: 0.08,
+    metalness: 0.0,
+    clearcoatRoughness: 0.15,
+    color: new THREE.Color(0x0f213d),
+    envMapIntensity: 1.2
   });
   var outerSphere = new THREE.Mesh(outerGeo, glassMat);
   outerSphere.renderOrder = 1;
@@ -482,10 +506,10 @@
   // Neon pedestal ring
   var ring = new THREE.Mesh(
     new THREE.TorusGeometry(0.62, 0.05, 32, 96),
-    new THREE.MeshStandardMaterial({
-      color: 0x0c1222, emissive: 0x2ee6ff, emissiveIntensity: 0.9, metalness: 0.4, roughness: 0.3
-    })
-  );
+    new THREE.MeshStandardMaterial({
+      color: 0x0c1222, emissive: 0x2ee6ff, emissiveIntensity: 0.9, metalness: 0.4, roughness: 0.3, envMapIntensity: 0.8
+    })
+  );
   ring.position.y = 0.06; root.add(ring);
 
   // Desk (warm) and LED under-glow disc
@@ -510,8 +534,26 @@
     ].join('\n'),
     transparent: true, blending: THREE.AdditiveBlending, depthWrite: false
   });
-  var glow = new THREE.Mesh(new THREE.CircleGeometry(1.4, 64), glowMat);
-  glow.rotation.x = -Math.PI/2; glow.position.y = 0.03; root.add(glow);
+  var glow = new THREE.Mesh(new THREE.CircleGeometry(1.4, 64), glowMat);
+  glow.rotation.x = -Math.PI/2; glow.position.y = 0.03; root.add(glow);
+
+  // Soft contact shadow to better ground the sphere
+  var shadowMat = new THREE.ShaderMaterial({
+    uniforms: {},
+    vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+    fragmentShader: [
+      'varying vec2 vUv;',
+      'void main(){',
+      '  vec2 c = vUv - 0.5;',
+      '  float d = length(c)*2.0;',
+      '  float a = smoothstep(1.2, 0.2, d);',
+      '  gl_FragColor = vec4(0.0,0.0,0.0, a*0.35);',
+      '}'
+    ].join('\n'),
+    transparent: true, depthWrite: false
+  });
+  var contactShadow = new THREE.Mesh(new THREE.CircleGeometry(1.2, 64), shadowMat);
+  contactShadow.rotation.x = -Math.PI/2; contactShadow.position.y = 0.029; root.add(contactShadow);
 
   // ---------- Panels ----------
   var panels = [];
@@ -552,11 +594,20 @@
 
   var bloom = new THREE.UnrealBloomPass(
     new THREE.Vector2(container.clientWidth, container.clientHeight),
-    1.1,   // stronger glow
-    0.8,
-    0.18   // lower threshold
+    0.95,
+    0.7,
+    0.2
   );
-  composer.addPass(bloom);
+  composer.addPass(bloom);
+
+  // FXAA anti-aliasing (last pass)
+  var fxaa = null;
+  if (THREE.FXAAShader) {
+    fxaa = new THREE.ShaderPass(THREE.FXAAShader);
+    var prInit = clamp(window.devicePixelRatio || 1, 1, 2);
+    fxaa.material.uniforms['resolution'].value.set(1/(container.clientWidth*prInit), 1/(container.clientHeight*prInit));
+    composer.addPass(fxaa);
+  }
 
   // ---------- Animation ----------
   var last = performance.now() / 1000;
@@ -590,9 +641,12 @@
     var pr = clamp(window.devicePixelRatio || 1, 1, 2);
     renderer.setPixelRatio(pr); renderer.setSize(w, h, false);
     camera.aspect = w / h; camera.updateProjectionMatrix();
-    composer.setSize(w, h); bloom.setSize(w, h);
-    for (var i = 0; i < panels.length; i++) { panels[i].setCanvasSize(); panels[i].draw(); }
-  });
+    composer.setSize(w, h); bloom.setSize(w, h);
+    if (typeof fxaa !== 'undefined' && fxaa) {
+      fxaa.material.uniforms['resolution'].value.set(1/(w*pr), 1/(h*pr));
+    }
+    for (var i = 0; i < panels.length; i++) { panels[i].setCanvasSize(); panels[i].draw(); }
+  });
 
   window.addEventListener('keydown', function (e) {
     if (e.code === 'Space') { paused = !paused; for (var i = 0; i < panels.length; i++) panels[i].setPaused(paused); }
