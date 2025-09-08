@@ -1,5 +1,14 @@
 ## BWT + MTF + RLE + Huffman
 
+
+
+> our goal is to integrate compression implementation in the todo_intergrate.js. read context from todo_helpers.md . you
+> will need to create a new implementation file "echo-compress.js" the file must be includes via html script tag in legacy way as a global functions. for functions in the moduce add prefix echoc_ ; integrate this module with existing  index.html and app.js, make sure the intergration is correct
+
+
+
+
+
 # TextZip technical specification
 
 ## Scope
