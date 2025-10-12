@@ -1,0 +1,267 @@
+/* ================================
+   Romanday Eight-Day Calendar UI
+   ================================ */
+
+/* Color system */
+:root {
+  --bg: #ffffff;
+  --fg: #111111;
+  --fg-dim: #6b7280; /* gray-500 */
+  --accent: #2563eb; /* blue-600 */
+  --rule: rgba(17, 17, 17, 0.12);
+
+  --surface: #f9fafb;
+  --shadow: 0 1px 2px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+
+  --radius: 16px;
+
+  --seg-on: var(--accent);
+  --seg-off: color-mix(in srgb, var(--accent) 18%, transparent);
+  --seg-stroke: color-mix(in srgb, var(--accent) 30%, #000 0%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0e12;
+    --fg: #e5e7eb;
+    --fg-dim: #9aa4b2; /* 20% boost */
+    --accent: #60a5fa; /* blue-400/300 */
+    --rule: rgba(229, 231, 235, 0.14);
+    --surface: #11161c;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 4px 20px rgba(0,0,0,0.3);
+
+    --seg-on: var(--accent);
+    --seg-off: color-mix(in srgb, var(--accent) 22%, transparent);
+    --seg-stroke: color-mix(in srgb, var(--accent) 40%, #fff 0%);
+  }
+}
+
+/* Global base */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+html, body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  font-size: 16px;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.app-header, .app-footer {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--rule);
+}
+.app-footer {
+  border-top: 1px solid var(--rule);
+  border-bottom: none;
+  color: var(--fg-dim);
+}
+.app-title {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: 0.2px;
+}
+
+/* Layout */
+.app-grid {
+  display: grid;
+  grid-template-columns: 2fr 3fr; /* ~40/60 split */
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+.pane {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-3);
+  min-height: 220px;
+}
+
+/* Clock pane */
+.clock {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+.clock-svg {
+  max-width: 720px;
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,0.04));
+}
+.clock-text {
+  margin-top: var(--space-2);
+  color: var(--fg-dim);
+}
+
+/* Seven segment styling */
+.segment {
+  fill: var(--seg-off);
+  stroke: var(--seg-stroke);
+  stroke-width: 1;
+  rx: 6;
+  ry: 6;
+  transition: fill 140ms ease-out, opacity 140ms ease-out;
+}
+.segment.on {
+  fill: var(--seg-on);
+}
+.colon-dot {
+  fill: var(--seg-on);
+  opacity: 1;
+  transition: opacity 140ms ease-out;
+}
+.colon-dot.off {
+  opacity: 0.18;
+}
+
+/* Reduced motion: no blink animation (JS respects this too) */
+@media (prefers-reduced-motion: reduce) {
+  .colon-dot {
+    transition: none;
+    opacity: 1 !important;
+  }
+}
+
+/* Calendar pane */
+.current-date-line {
+  margin-bottom: var(--space-2);
+  font-weight: 600;
+}
+.week-header {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0;
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: var(--space-2);
+}
+.week-header .weekday {
+  padding: 10px 6px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--fg-dim);
+  border-right: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--surface) 90%, var(--bg) 10%);
+}
+.week-header .weekday:last-child {
+  border-right: none;
+}
+.week-header .weekday.current {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  font-weight: 700;
+}
+
+/* Year calendar grid of months */
+.year-calendar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+.month {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: var(--space-1);
+}
+.month-title {
+  font-weight: 700;
+  font-size: 16px;
+}
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0;
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg);
+}
+.month-grid .cell {
+  min-height: 40px;
+  padding: 6px;
+  border-right: 1px solid var(--rule);
+  border-top: 1px solid var(--rule);
+  position: relative;
+}
+.month-grid .cell:nth-child(-n+8) { /* first row border-top shown already by container border */
+  border-top: none;
+}
+.month-grid .cell:nth-child(8n) {
+  border-right: none;
+}
+.cell.blank {
+  background: color-mix(in srgb, var(--bg) 94%, var(--fg) 6%);
+}
+.cell .num {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 12px;
+  color: var(--fg-dim);
+}
+.cell.today {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.cell:focus-within,
+.cell:focus {
+  z-index: 1;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent) inset;
+}
+
+/* Responsiveness */
+@media (max-width: 1100px) {
+  .app-grid {
+    grid-template-columns: 1.2fr 1.8fr;
+  }
+}
+@media (max-width: 900px) {
+  .year-calendar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 720px) {
+  .app-grid {
+    grid-template-columns: 1fr;
+  }
+  .pane-clock {
+    order: -1; /* stack clock above calendar */
+  }
+  .month-grid .cell {
+    min-height: 44px; /* keep tap target >= 40px */
+  }
+}
+
+/* Utilities */
+.visually-hidden {
+  position: absolute !important;
+  height: 1px; width: 1px;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+/* Fine rules for separators */
+hr.rule {
+  border: none;
+  border-top: 1px solid var(--rule);
+  margin: var(--space-2) 0;
+}
+
