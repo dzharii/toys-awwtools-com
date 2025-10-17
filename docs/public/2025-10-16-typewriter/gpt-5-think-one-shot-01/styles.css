@@ -1,0 +1,155 @@
+/* --- Reset-ish, minimal --- */
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  height: 100%;
+  color: #1a1a1a;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  background: #e9ecef;
+}
+
+/* Background Layer: subtle geometric SVG via data URI so we remain offline */
+#background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'>\
+  <defs>\
+    <linearGradient id='g' x1='0' x2='1' y1='0' y2='1'>\
+      <stop offset='0%' stop-color='%23f7f9fb'/>\
+      <stop offset='100%' stop-color='%23eef2f6'/>\
+    </linearGradient>\
+    <pattern id='p' width='40' height='40' patternUnits='userSpaceOnUse'>\
+      <path d='M0 40 L40 0 M-10 10 L10 -10 M30 50 L50 30' stroke='%23dbe3ec' stroke-width='1' opacity='0.35'/>\
+    </pattern>\
+  </defs>\
+  <rect width='100%' height='100%' fill='url(%23g)'/>\
+  <rect width='100%' height='100%' fill='url(%23p)' opacity='0.45'/>\
+</svg>");
+  background-size: cover;
+  background-repeat: repeat;
+  filter: contrast(100%) brightness(100%);
+}
+
+/* Controls (top-right) */
+#controls {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(3px);
+  border: 1px solid rgba(0,0,0,0.05);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  border-radius: 12px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#controls label {
+  font-size: 0.9rem;
+  color: #333;
+}
+#controls select {
+  appearance: none;
+  padding: 6px 10px;
+  border: 1px solid #c7d0da;
+  border-radius: 10px;
+  background: linear-gradient(#fff, #f6f8fb);
+  color: #222;
+  font-weight: 600;
+  outline: none;
+}
+#controls select:focus {
+  box-shadow: 0 0 0 3px rgba(60, 132, 244, 0.25);
+  border-color: #3c84f4;
+}
+
+/* Paper container centers textarea and allows page to extend upward */
+#paper-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-top: 40px; /* small breathing room at top */
+  padding-bottom: 340px; /* space so the fixed keyboard doesn't overlap paper */
+}
+
+/* Paper (textarea) styled as a sheet */
+#paper {
+  width: min(80vw, 860px);
+  min-height: 9.5em; /* ~5 lines default (1.9em line-height) */
+  line-height: 1.9;
+  resize: none;
+  overflow: hidden; /* we'll grow height instead of scrolling internally */
+  border: 1px solid #cbd5e1;
+  background:
+    radial-gradient(ellipse at top, rgba(255,255,255,0.85), rgba(255,255,255,0.9)),
+    #fff;
+  color: #111827;
+  padding: 24px 28px;
+  border-radius: 12px;
+  box-shadow:
+    0 40px 80px rgba(0,0,0,0.07),
+    0 6px 16px rgba(0,0,0,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+  caret-color: #0f172a;
+  font-size: 18px;
+  outline: none;
+}
+#paper::placeholder {
+  color: #94a3b8;
+}
+
+/* Fixed pseudo-3D keyboard */
+#typewriter {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  pointer-events: auto;
+  padding: 12px 12px 10px;
+}
+
+#keyboard {
+  width: 100%;
+  height: 300px;
+  display: block;
+  filter: drop-shadow(0 24px 40px rgba(0,0,0,0.18));
+}
+
+/* Pseudo-3D key styles */
+.key {
+  fill: url(#keyGrad);
+  stroke: #6b7280;
+  stroke-width: 1.2;
+  rx: 8;
+  filter: url(#keyShadow);
+  transition: transform 90ms ease, fill 90ms ease, stroke 90ms ease;
+}
+.keycap-label {
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  font-weight: 800;
+  font-size: 14px;
+  fill: #111827;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Pressed/active visual */
+.key.active {
+  transform: translateY(2px);
+  fill: url(#keyGradActive);
+  stroke: #374151;
+}
+
+/* Accessibility / reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .key { transition: none; }
+}
+

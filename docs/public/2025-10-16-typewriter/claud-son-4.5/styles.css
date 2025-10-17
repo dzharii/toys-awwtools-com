@@ -1,0 +1,296 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Courier New', monospace;
+  overflow-x: hidden;
+  background-color: #1a1a1a;
+  color: #333;
+  position: relative;
+  min-height: 100vh;
+  padding-bottom: 380px; /* Space for fixed keyboard */
+}
+
+/* Background Layer */
+#background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background:
+    linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  opacity: 0.3;
+}
+
+#background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600"><defs><linearGradient id="bg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23667eea;stop-opacity:0.1"/><stop offset="100%" style="stop-color:%23764ba2;stop-opacity:0.1"/></linearGradient></defs><polygon points="0,0 400,100 0,300" fill="url(%23bg1)"/><polygon points="800,0 400,200 800,400" fill="url(%23bg1)"/><polygon points="0,600 300,400 600,600" fill="url(%23bg1)"/><polygon points="800,600 500,400 800,300" fill="url(%23bg1)"/></svg>');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.5;
+}
+
+/* Controls */
+#controls {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 15px 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#controls label {
+  font-weight: bold;
+  font-size: 14px;
+  color: #333;
+}
+
+#sound-select {
+  padding: 8px 12px;
+  border: 2px solid #667eea;
+  border-radius: 6px;
+  background: white;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+#sound-select:hover {
+  border-color: #764ba2;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+#sound-select:focus {
+  border-color: #764ba2;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+/* Paper Container */
+#paper-container {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+  min-height: calc(100vh - 380px);
+}
+
+#paper {
+  width: 80%;
+  max-width: 900px;
+  min-height: 400px;
+  padding: 40px 50px;
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+  line-height: 1.8;
+  background: #fafafa;
+  background-image:
+    repeating-linear-gradient(
+      transparent,
+      transparent 31px,
+      #e0e0e0 31px,
+      #e0e0e0 32px
+    );
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  resize: none;
+  outline: none;
+  color: #1a1a1a;
+  overflow-y: auto;
+  transition: box-shadow 0.3s ease;
+}
+
+#paper:focus {
+  box-shadow:
+    0 15px 40px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 0 0 3px rgba(102, 126, 234, 0.3);
+}
+
+#paper::placeholder {
+  color: #aaa;
+}
+
+/* Typewriter Keyboard */
+#typewriter {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: linear-gradient(to bottom, #2a2a2a 0%, #1a1a1a 100%);
+  padding: 20px;
+  box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.5);
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#keyboard {
+  width: 100%;
+  max-width: 1200px;
+  height: auto;
+}
+
+/* SVG Keys */
+.key {
+  fill: url(#keyGradient);
+  stroke: #999;
+  stroke-width: 2;
+  cursor: pointer;
+  filter: drop-shadow(3px 3px 5px rgba(0, 0, 0, 0.4));
+  transition: all 0.05s ease;
+}
+
+.key:hover {
+  fill: #e8e8e8;
+  filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.5));
+}
+
+.key.active {
+  fill: url(#keyActiveGradient);
+  filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.6));
+  transform: translateY(2px);
+}
+
+.key-label {
+  font-family: 'Courier New', monospace;
+  font-size: 24px;
+  font-weight: bold;
+  fill: #333;
+  pointer-events: none;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+/* Special key styles */
+.key-space {
+  fill: url(#keyGradient);
+}
+
+.key-enter {
+  fill: url(#keyGradient);
+}
+
+.key-backspace,
+.key-tab,
+.key-caps,
+.key-shift {
+  fill: url(#keyGradient);
+}
+
+/* Active state for all keys */
+.key.active + .key-label {
+  fill: #1a1a1a;
+}
+
+/* Responsive Design */
+@media (max-width: 1400px) {
+  #keyboard {
+    max-width: 1000px;
+  }
+}
+
+@media (max-width: 1200px) {
+  #keyboard {
+    max-width: 900px;
+  }
+
+  .key-label {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 900px) {
+  #paper {
+    width: 90%;
+    padding: 30px 35px;
+    font-size: 16px;
+  }
+
+  #keyboard {
+    max-width: 100%;
+  }
+
+  .key-label {
+    font-size: 18px;
+  }
+
+  #controls {
+    top: 10px;
+    right: 10px;
+    padding: 10px 15px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
+  body {
+    padding-bottom: 300px;
+  }
+
+  #paper {
+    width: 95%;
+    padding: 20px;
+    font-size: 14px;
+  }
+
+  #typewriter {
+    padding: 10px;
+  }
+
+  .key-label {
+    font-size: 14px;
+  }
+
+  #controls {
+    position: relative;
+    top: 0;
+    right: 0;
+    margin: 10px;
+  }
+}
+
+/* Scrollbar Styling */
+#paper::-webkit-scrollbar {
+  width: 10px;
+}
+
+#paper::-webkit-scrollbar-track {
+  background: #e0e0e0;
+  border-radius: 5px;
+}
+
+#paper::-webkit-scrollbar-thumb {
+  background: #999;
+  border-radius: 5px;
+}
+
+#paper::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* Animation for paper growth */
+#paper {
+  transition: height 0.2s ease-out;
+}
