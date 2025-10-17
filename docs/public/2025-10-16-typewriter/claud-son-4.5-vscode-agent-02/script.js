@@ -6,6 +6,14 @@
 // Initialize Audio Context
 let audioContext = null;
 let currentProfile = 'classic';
+let volumeLevel = 'medium'; // 'low', 'medium', 'high'
+
+// Volume multipliers
+const volumeMultipliers = {
+  low: 0.3,
+  medium: 0.7,
+  high: 1.0
+};
 
 // Initialize audio context on first user interaction
 function initAudioContext() {
@@ -102,12 +110,105 @@ function playKeySound(profile) {
       oscType = 'triangle';
       duration = 0.06;
       break;
+
+    // ===== NEW IMPRESSIVE SOUND PROFILES =====
+
+    case 'laser':
+      // Sci-fi laser shot
+      freq = 1800;
+      gainValue = 0.15;
+      oscType = 'sawtooth';
+      duration = 0.08;
+      // Frequency sweep down
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.exponentialRampToValueAtTime(800, now + duration);
+      break;
+
+    case 'thunder':
+      // Deep rumbling thunder
+      freq = 40;
+      gainValue = 0.35;
+      oscType = 'sawtooth';
+      duration = 0.2;
+      break;
+
+    case 'cricket':
+      // Chirping cricket sound
+      freq = 3000;
+      gainValue = 0.08;
+      oscType = 'square';
+      duration = 0.02;
+      break;
+
+    case 'submarine':
+      // Sonar ping
+      freq = 500;
+      gainValue = 0.2;
+      oscType = 'sine';
+      duration = 0.3;
+      // Reverb-like decay
+      break;
+
+    case 'glitch':
+      // Digital glitch/corruption
+      freq = 50 + Math.random() * 3000;
+      gainValue = 0.18;
+      oscType = ['square', 'sawtooth'][Math.floor(Math.random() * 2)];
+      duration = 0.02 + Math.random() * 0.03;
+      break;
+
+    case 'annoying-beep':
+      // ANNOYING: High-pitched persistent beep
+      freq = 4000;
+      gainValue = 0.4;
+      oscType = 'square';
+      duration = 0.15;
+      break;
+
+    case 'annoying-buzz':
+      // ANNOYING: Mosquito-like buzz
+      freq = 8000;
+      gainValue = 0.35;
+      oscType = 'sawtooth';
+      duration = 0.1;
+      break;
+
+    case 'annoying-siren':
+      // ANNOYING: Alarm siren sweep
+      freq = 800;
+      gainValue = 0.45;
+      oscType = 'square';
+      duration = 0.2;
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.linearRampToValueAtTime(1200, now + duration);
+      break;
+
+    case 'whisper':
+      // Gentle whisper-like noise
+      freq = 2000 + Math.random() * 1000;
+      gainValue = 0.03;
+      oscType = 'triangle';
+      duration = 0.1;
+      break;
+
+    case 'orchestra':
+      // Rich orchestral hit
+      freq = 220;
+      gainValue = 0.25;
+      oscType = 'triangle';
+      duration = 0.12;
+      // Add harmonics simulation
+      break;
   }
 
   osc.type = oscType;
-  osc.frequency.setValueAtTime(freq, now);
+  if (!osc.frequency.value) {
+    osc.frequency.setValueAtTime(freq, now);
+  }
 
-  gain.gain.setValueAtTime(gainValue, now);
+  // Apply volume multiplier
+  const finalGain = gainValue * volumeMultipliers[volumeLevel];
+  gain.gain.setValueAtTime(finalGain, now);
   gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
   osc.connect(gain);
@@ -127,7 +228,9 @@ function playDing() {
   osc.frequency.setValueAtTime(880, now);
   osc.frequency.exponentialRampToValueAtTime(660, now + 0.3);
 
-  gain.gain.setValueAtTime(0.2, now);
+  const finalGain = 0.2 * volumeMultipliers[volumeLevel];
+  gain.gain.setValueAtTime(finalGain, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
   gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
 
   osc.connect(gain);
@@ -364,6 +467,27 @@ document.getElementById('sound-select').addEventListener('change', (e) => {
 });
 
 // ==========================================
+// Volume Control
+// ==========================================
+
+document.querySelectorAll('.volume-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    const selectedVolume = e.target.getAttribute('data-volume');
+
+    // Update volume level
+    volumeLevel = selectedVolume;
+
+    // Update active button styling
+    document.querySelectorAll('.volume-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+
+    // Play a sample sound at new volume
+    initAudioContext();
+    playKeySound(currentProfile);
+  });
+});
+
+// ==========================================
 // Initialize Paper Focus
 // ==========================================
 
@@ -415,4 +539,11 @@ if ('ontouchstart' in window) {
 
 console.log('🎹 Typewriter Experience Loaded');
 console.log('📝 Click on the paper or use your keyboard to start typing');
-console.log('🔊 Sound profiles available:', ['classic', 'soft', 'clacky', 'thud', 'beep', 'random', 'boom', 'vintage', 'bubbly', 'metallic', 'woody']);
+console.log('🔊 Sound profiles available:', [
+  'classic', 'soft', 'clacky', 'thud', 'beep', 'random',
+  'boom', 'vintage', 'bubbly', 'metallic', 'woody',
+  'laser', 'thunder', 'cricket', 'submarine', 'glitch',
+  'annoying-beep', 'annoying-buzz', 'annoying-siren',
+  'whisper', 'orchestra'
+]);
+console.log('🔊 Volume levels: low (30%), medium (70%), high (100%)');
