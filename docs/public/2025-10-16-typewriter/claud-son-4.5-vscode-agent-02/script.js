@@ -176,42 +176,24 @@ function unhighlightKey(key) {
 }
 
 // ==========================================
-// Paper Growth Logic
-// ==========================================
-
-function adjustPaperHeight() {
-  const paper = document.getElementById('paper');
-
-  // Reset height to auto to get accurate scrollHeight
-  paper.style.height = 'auto';
-
-  // Set height to scrollHeight + some padding
-  const newHeight = Math.max(400, paper.scrollHeight + 20);
-  paper.style.height = newHeight + 'px';
-  
-  // Update line numbers
-  updateLineNumbers();
-}
-
-// ==========================================
 // Line Numbers
 // ==========================================
 
 function updateLineNumbers() {
   const paper = document.getElementById('paper');
   const lineNumbers = document.getElementById('line-numbers');
-  
+
   const lines = paper.value.split('\n');
   const lineCount = lines.length;
-  
+
   let numbersHTML = '';
   for (let i = 1; i <= lineCount; i++) {
     numbersHTML += i + '<br>';
   }
-  
+
   lineNumbers.innerHTML = numbersHTML;
-  
-  // Sync scroll position
+
+  // Sync line numbers position with paper scroll (READ only, don't set scroll)
   lineNumbers.style.top = (40 - paper.scrollTop) + 'px';
 }
 
@@ -232,7 +214,7 @@ function handleTyping(char, isEnter = false) {
     paper.selectionStart = paper.selectionEnd = start + 1;
 
     playDing();
-    adjustPaperHeight();
+    updateLineNumbers();
   } else if (char) {
     // Handle regular character
     playKeySound(currentProfile);
@@ -274,7 +256,6 @@ document.addEventListener('keydown', (e) => {
     playKeySound(currentProfile);
   } else if (key === 'Backspace') {
     playKeySound(currentProfile);
-    adjustPaperHeight();
   } else if (key.length === 1) {
     // Regular character
     handleTyping(key, false);
@@ -285,9 +266,9 @@ document.addEventListener('keyup', (e) => {
   unhighlightKey(e.key);
 });
 
-// Handle textarea input for height adjustment
+// Handle textarea input for line number updates
 document.getElementById('paper').addEventListener('input', () => {
-  adjustPaperHeight();
+  updateLineNumbers();
 });
 
 // Handle textarea scroll for line numbers sync
@@ -329,7 +310,7 @@ document.querySelectorAll('.key').forEach(keyElement => {
       }
 
       playKeySound(currentProfile);
-      adjustPaperHeight();
+      updateLineNumbers();
     } else if (keyData === 'Tab') {
       const start = paper.selectionStart;
       const end = paper.selectionEnd;
@@ -354,7 +335,7 @@ document.querySelectorAll('.key').forEach(keyElement => {
       paper.selectionStart = paper.selectionEnd = start + char.length;
 
       playKeySound(currentProfile);
-      adjustPaperHeight();
+      updateLineNumbers();
     }
 
     // Keep focus on paper
@@ -389,7 +370,6 @@ document.getElementById('sound-select').addEventListener('change', (e) => {
 window.addEventListener('load', () => {
   const paper = document.getElementById('paper');
   paper.focus();
-  adjustPaperHeight();
   updateLineNumbers();
 });
 
