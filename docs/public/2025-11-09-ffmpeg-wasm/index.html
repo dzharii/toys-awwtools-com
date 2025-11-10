@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browser Video Converter · FFmpeg WASM</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <noscript>
+    <div class="noscript-warning">
+      This application requires JavaScript to run FFmpeg WASM and IndexedDB. Please enable JavaScript.
+    </div>
+  </noscript>
+
+  <header class="app-header">
+    <div>
+      <h1>Browser Video Converter</h1>
+      <p>All processing happens on your device using FFmpeg WASM &amp; Dexie.</p>
+    </div>
+    <div class="header-status" id="workerStatus">Initializing…</div>
+  </header>
+
+  <main class="app-layout">
+    <section class="primary-column">
+      <section class="card controls-panel">
+        <div class="control-row">
+          <label class="button primary">
+            <span>Select video</span>
+            <input id="fileInput" type="file" accept="video/*">
+          </label>
+          <div class="file-name" id="fileName">No file selected</div>
+        </div>
+
+        <div class="control-row preset-row">
+          <label for="presetSelect">Preset</label>
+          <select id="presetSelect" aria-label="Conversion preset"></select>
+        </div>
+
+        <div class="actions">
+          <button id="convertButton" class="button accent" disabled type="button">Convert</button>
+          <div class="progress" aria-live="polite" aria-label="Conversion progress">
+            <div class="progress-bar" id="progressBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+          </div>
+        </div>
+
+        <div class="status-message" id="statusMessage">Upload a video to begin.</div>
+      </section>
+
+      <section class="video-columns">
+        <div class="card video-pane">
+          <div class="pane-header">
+            <div>
+              <h2>Original video</h2>
+              <p id="originalMeta">Nothing loaded</p>
+            </div>
+          </div>
+          <video id="originalVideo" controls preload="metadata" playsinline></video>
+        </div>
+
+        <div class="card video-pane">
+          <div class="pane-header">
+            <div>
+              <h2>Converted output</h2>
+              <p id="outputMeta">Conversion pending</p>
+            </div>
+            <button class="button ghost" id="downloadButton" disabled type="button">Download</button>
+          </div>
+          <video id="outputVideo" controls preload="metadata" playsinline></video>
+        </div>
+      </section>
+    </section>
+
+    <aside class="card gallery-panel">
+      <div class="pane-header">
+        <div>
+          <h2>Recent conversions</h2>
+          <p>Stored locally (last 20)</p>
+        </div>
+        <button class="button ghost" id="refreshGalleryButton" type="button">Refresh</button>
+      </div>
+      <div class="gallery-empty" id="galleryEmpty">No saved videos yet.</div>
+      <ul class="gallery-list" id="galleryList" aria-live="polite"></ul>
+    </aside>
+  </main>
+</body>
+</html>
