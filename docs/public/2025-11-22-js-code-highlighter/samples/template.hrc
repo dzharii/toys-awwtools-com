@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Template HRC File
+  
+  Use this as a starting point to create syntax highlighting for your own language.
+  
+  Steps:
+  1. Copy this file to samples/yourlang.hrc
+  2. Replace "template" with your language name
+  3. Add your syntax rules
+  4. Update app.js to load the scheme
+  5. Add to the language dropdown in index.html
+-->
+<hrc>
+  <!-- File type prototype - defines how to detect this file type -->
+  <prototype name="template" group="custom" description="Template Language">
+    <!-- Match files by extension -->
+    <filename>/\.tpl$/i</filename>
+    <!-- Match files by first line (optional) -->
+    <firstline>/^#!.*template/i</firstline>
+  </prototype>
+
+  <!-- Type definition - contains the actual syntax rules -->
+  <type name="template">
+    <!-- Main scheme - the entry point for highlighting -->
+    <scheme name="template">
+      
+      <!-- COMMENTS -->
+      <!-- Single-line comment -->
+      <regexp match="#.*$" region="def:Comment"/>
+      
+      <!-- Multi-line comment -->
+      <block start="/\/\*/" end="/\*\//" scheme="CommentContent" region="def:Comment"/>
+      
+      
+      <!-- STRINGS -->
+      <!-- Double-quoted strings -->
+      <block start="/&quot;/" end="/&quot;/" scheme="StringContent" region="def:String"/>
+      
+      <!-- Single-quoted strings -->
+      <block start="/&apos;/" end="/&apos;/" scheme="StringContent" region="def:String"/>
+      
+      
+      <!-- NUMBERS -->
+      <!-- Hexadecimal numbers -->
+      <regexp match="/\b0[xX][0-9a-fA-F]+\b/" region="def:NumberHex"/>
+      
+      <!-- Decimal and floating point numbers -->
+      <regexp match="/\b\d+\.?\d*([eE][+-]?\d+)?\b/" region="def:NumberFloat"/>
+      
+      
+      <!-- KEYWORDS -->
+      <!-- Language keywords -->
+      <keywords region="def:Keyword">
+        <word name="if"/>
+        <word name="else"/>
+        <word name="while"/>
+        <word name="for"/>
+        <word name="return"/>
+        <word name="break"/>
+        <word name="continue"/>
+        <word name="function"/>
+        <word name="var"/>
+        <word name="let"/>
+        <word name="const"/>
+      </keywords>
+      
+      <!-- Constants -->
+      <keywords region="def:Constant">
+        <word name="true"/>
+        <word name="false"/>
+        <word name="null"/>
+      </keywords>
+      
+      <!-- Built-in types -->
+      <keywords region="def:Type">
+        <word name="int"/>
+        <word name="float"/>
+        <word name="string"/>
+        <word name="bool"/>
+      </keywords>
+      
+      <!-- Built-in functions -->
+      <keywords region="def:Function">
+        <word name="print"/>
+        <word name="println"/>
+        <word name="len"/>
+        <word name="range"/>
+      </keywords>
+      
+      
+      <!-- PATTERNS -->
+      <!-- Function definitions: function name(...) -->
+      <regexp match="/\bfunction\s+([a-zA-Z_]\w*)\s*\(/" 
+              region0="def:Keyword" 
+              region1="def:Function"/>
+      
+      <!-- Function calls: name(...) -->
+      <regexp match="/\b([a-zA-Z_]\w*)\s*\(/" 
+              region1="def:Function"/>
+      
+      
+      <!-- OPERATORS AND SYMBOLS -->
+      <!-- Operators -->
+      <regexp match="/[\+\-\*\/\%\=\&lt;\&gt;\!\&amp;\|\^\~]/" region="def:Operator"/>
+      
+      <!-- Symbols and delimiters -->
+      <regexp match="/[\(\)\[\]\{\}\;\,\:\.]/" region="def:Symbol"/>
+      
+      
+      <!-- Add more rules as needed -->
+      
+    </scheme>
+    
+    <!-- Helper schemes for nested content -->
+    
+    <!-- String content - handles escape sequences -->
+    <scheme name="StringContent">
+      <!-- Basic escape sequences -->
+      <regexp match="/\\[\\&quot;&apos;nrtbfv0]/" region="def:Escape"/>
+      
+      <!-- Hex escape sequences -->
+      <regexp match="/\\x[0-9a-fA-F]{2}/" region="def:Escape"/>
+      
+      <!-- Unicode escape sequences -->
+      <regexp match="/\\u[0-9a-fA-F]{4}/" region="def:Escape"/>
+    </scheme>
+    
+    <!-- Comment content - highlights TODO, FIXME, etc. -->
+    <scheme name="CommentContent">
+      <regexp match="/\bTODO\b/" region="def:TODO"/>
+      <regexp match="/\bFIXME\b/" region="def:TODO"/>
+      <regexp match="/\bNOTE\b/" region="def:TODO"/>
+      <regexp match="/\bXXX\b/" region="def:TODO"/>
+    </scheme>
+    
+  </type>
+</hrc>

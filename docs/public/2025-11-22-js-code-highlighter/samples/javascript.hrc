@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hrc>
+  <prototype name="javascript" group="scripts" description="JavaScript">
+    <filename>/\.(js|mjs|cjs)$/i</filename>
+    <firstline>/^#!\s*\/.*\b(node|javascript)/i</firstline>
+  </prototype>
+
+  <type name="javascript">
+    <scheme name="javascript">
+      <!-- Single-line comments -->
+      <regexp match="//.*$" region="def:Comment"/>
+      
+      <!-- Multi-line comments -->
+      <block start="/\/\*/" end="/\*\//" scheme="Comment" region="def:Comment"/>
+      
+      <!-- Strings with double quotes -->
+      <block start="/&quot;/" end="/&quot;/" scheme="String" region="def:String"/>
+      
+      <!-- Strings with single quotes -->
+      <block start="/&apos;/" end="/&apos;/" scheme="String" region="def:String"/>
+      
+      <!-- Template literals -->
+      <block start="/`/" end="/`/" scheme="TemplateLiteral" region="def:String"/>
+      
+      <!-- Regular expressions -->
+      <regexp match="/\/(?![*\/])([^\/\\\r\n]|\\.)+\/[gimsuvy]*/" region="def:String"/>
+      
+      <!-- Numbers -->
+      <regexp match="/\b0[xX][0-9a-fA-F]+\b/" region="def:NumberHex"/>
+      <regexp match="/\b0[oO][0-7]+\b/" region="def:NumberOct"/>
+      <regexp match="/\b0[bB][01]+\b/" region="def:NumberBin"/>
+      <regexp match="/\b\d+\.?\d*([eE][+-]?\d+)?\b/" region="def:NumberFloat"/>
+      
+      <!-- Keywords -->
+      <keywords region="def:Keyword">
+        <word name="break"/>
+        <word name="case"/>
+        <word name="catch"/>
+        <word name="class"/>
+        <word name="const"/>
+        <word name="continue"/>
+        <word name="debugger"/>
+        <word name="default"/>
+        <word name="delete"/>
+        <word name="do"/>
+        <word name="else"/>
+        <word name="export"/>
+        <word name="extends"/>
+        <word name="finally"/>
+        <word name="for"/>
+        <word name="function"/>
+        <word name="if"/>
+        <word name="import"/>
+        <word name="in"/>
+        <word name="instanceof"/>
+        <word name="let"/>
+        <word name="new"/>
+        <word name="return"/>
+        <word name="super"/>
+        <word name="switch"/>
+        <word name="this"/>
+        <word name="throw"/>
+        <word name="try"/>
+        <word name="typeof"/>
+        <word name="var"/>
+        <word name="void"/>
+        <word name="while"/>
+        <word name="with"/>
+        <word name="yield"/>
+        <word name="async"/>
+        <word name="await"/>
+        <word name="static"/>
+        <word name="get"/>
+        <word name="set"/>
+      </keywords>
+      
+      <!-- Constants -->
+      <keywords region="def:Constant">
+        <word name="true"/>
+        <word name="false"/>
+        <word name="null"/>
+        <word name="undefined"/>
+        <word name="NaN"/>
+        <word name="Infinity"/>
+      </keywords>
+      
+      <!-- Built-in objects -->
+      <keywords region="def:Type">
+        <word name="Array"/>
+        <word name="Boolean"/>
+        <word name="Date"/>
+        <word name="Error"/>
+        <word name="Function"/>
+        <word name="JSON"/>
+        <word name="Math"/>
+        <word name="Number"/>
+        <word name="Object"/>
+        <word name="Promise"/>
+        <word name="RegExp"/>
+        <word name="String"/>
+        <word name="Symbol"/>
+        <word name="Map"/>
+        <word name="Set"/>
+        <word name="WeakMap"/>
+        <word name="WeakSet"/>
+      </keywords>
+      
+      <!-- Function names -->
+      <regexp match="/\b([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/" region0="def:Function" region1="def:Function"/>
+      
+      <!-- Operators -->
+      <regexp match="/[\+\-\*\/\%\=\&lt;\&gt;\!\&amp;\|\^\~\?]/" region="def:Operator"/>
+      
+      <!-- Symbols -->
+      <regexp match="/[\(\)\[\]\{\}\;\,\.]/" region="def:Symbol"/>
+    </scheme>
+    
+    <scheme name="Comment">
+      <regexp match="/\bTODO\b/" region="def:TODO"/>
+      <regexp match="/\bFIXME\b/" region="def:TODO"/>
+      <regexp match="/\bNOTE\b/" region="def:TODO"/>
+    </scheme>
+    
+    <scheme name="String">
+      <regexp match="/\\[\\&quot;&apos;nrtbfv0]/" region="def:Escape"/>
+      <regexp match="/\\x[0-9a-fA-F]{2}/" region="def:Escape"/>
+      <regexp match="/\\u[0-9a-fA-F]{4}/" region="def:Escape"/>
+    </scheme>
+    
+    <scheme name="TemplateLiteral">
+      <regexp match="/\\[\\`nrtbfv0]/" region="def:Escape"/>
+      <block start="/\$\{/" end="/\}/" scheme="javascript" region="def:Special"/>
+    </scheme>
+  </type>
+</hrc>

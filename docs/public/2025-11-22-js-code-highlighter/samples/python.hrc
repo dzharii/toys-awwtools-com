@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hrc>
+  <prototype name="python" group="scripts" description="Python">
+    <filename>/\.py$/i</filename>
+    <firstline>/^#!\s*\/.*\b(python|python3)/i</firstline>
+  </prototype>
+
+  <type name="python">
+    <scheme name="python">
+      <!-- Comments -->
+      <regexp match="/#.*$/" region="def:Comment"/>
+      
+      <!-- Triple-quoted strings -->
+      <block start="/&quot;&quot;&quot;/" end="/&quot;&quot;&quot;/" scheme="StringContent" region="def:String"/>
+      <block start="/&apos;&apos;&apos;/" end="/&apos;&apos;&apos;/" scheme="StringContent" region="def:String"/>
+      
+      <!-- Regular strings -->
+      <block start="/&quot;/" end="/&quot;/" scheme="StringContent" region="def:String"/>
+      <block start="/&apos;/" end="/&apos;/" scheme="StringContent" region="def:String"/>
+      
+      <!-- Raw strings -->
+      <block start="/r&quot;/" end="/&quot;/" scheme="StringContent" region="def:String"/>
+      <block start="/r&apos;/" end="/&apos;/" scheme="StringContent" region="def:String"/>
+      
+      <!-- Numbers -->
+      <regexp match="/\b0[xX][0-9a-fA-F]+\b/" region="def:NumberHex"/>
+      <regexp match="/\b0[oO][0-7]+\b/" region="def:NumberOct"/>
+      <regexp match="/\b0[bB][01]+\b/" region="def:NumberBin"/>
+      <regexp match="/\b\d+\.?\d*([eE][+-]?\d+)?[jJ]?\b/" region="def:NumberFloat"/>
+      
+      <!-- Keywords -->
+      <keywords region="def:Keyword">
+        <word name="and"/>
+        <word name="as"/>
+        <word name="assert"/>
+        <word name="async"/>
+        <word name="await"/>
+        <word name="break"/>
+        <word name="class"/>
+        <word name="continue"/>
+        <word name="def"/>
+        <word name="del"/>
+        <word name="elif"/>
+        <word name="else"/>
+        <word name="except"/>
+        <word name="finally"/>
+        <word name="for"/>
+        <word name="from"/>
+        <word name="global"/>
+        <word name="if"/>
+        <word name="import"/>
+        <word name="in"/>
+        <word name="is"/>
+        <word name="lambda"/>
+        <word name="nonlocal"/>
+        <word name="not"/>
+        <word name="or"/>
+        <word name="pass"/>
+        <word name="raise"/>
+        <word name="return"/>
+        <word name="try"/>
+        <word name="while"/>
+        <word name="with"/>
+        <word name="yield"/>
+      </keywords>
+      
+      <!-- Constants -->
+      <keywords region="def:Constant">
+        <word name="True"/>
+        <word name="False"/>
+        <word name="None"/>
+      </keywords>
+      
+      <!-- Built-in functions -->
+      <keywords region="def:Function">
+        <word name="abs"/>
+        <word name="all"/>
+        <word name="any"/>
+        <word name="bin"/>
+        <word name="bool"/>
+        <word name="chr"/>
+        <word name="dict"/>
+        <word name="dir"/>
+        <word name="enumerate"/>
+        <word name="filter"/>
+        <word name="float"/>
+        <word name="format"/>
+        <word name="hex"/>
+        <word name="input"/>
+        <word name="int"/>
+        <word name="isinstance"/>
+        <word name="len"/>
+        <word name="list"/>
+        <word name="map"/>
+        <word name="max"/>
+        <word name="min"/>
+        <word name="oct"/>
+        <word name="open"/>
+        <word name="ord"/>
+        <word name="pow"/>
+        <word name="print"/>
+        <word name="range"/>
+        <word name="reversed"/>
+        <word name="round"/>
+        <word name="set"/>
+        <word name="sorted"/>
+        <word name="str"/>
+        <word name="sum"/>
+        <word name="tuple"/>
+        <word name="type"/>
+        <word name="zip"/>
+      </keywords>
+      
+      <!-- Decorators -->
+      <regexp match="/@[a-zA-Z_][a-zA-Z0-9_]*/" region="def:Directive"/>
+      
+      <!-- Function definitions -->
+      <regexp match="/\bdef\s+([a-zA-Z_][a-zA-Z0-9_]*)/" region0="def:Keyword" region1="def:Function"/>
+      
+      <!-- Class definitions -->
+      <regexp match="/\bclass\s+([a-zA-Z_][a-zA-Z0-9_]*)/" region0="def:Keyword" region1="def:Type"/>
+      
+      <!-- Operators -->
+      <regexp match="/[\+\-\*\/\%\=\&lt;\&gt;\!\&amp;\|\^\~]/" region="def:Operator"/>
+      
+      <!-- Symbols -->
+      <regexp match="/[\(\)\[\]\{\}\;\,\:\.]/" region="def:Symbol"/>
+      
+      <!-- self keyword -->
+      <regexp match="/\bself\b/" region="def:VarStrong"/>
+      <regexp match="/\bcls\b/" region="def:VarStrong"/>
+    </scheme>
+    
+    <scheme name="StringContent">
+      <regexp match="/\\[\\&quot;&apos;nrtbfv0]/" region="def:Escape"/>
+      <regexp match="/\\x[0-9a-fA-F]{2}/" region="def:Escape"/>
+      <regexp match="/\\u[0-9a-fA-F]{4}/" region="def:Escape"/>
+      <regexp match="/\\U[0-9a-fA-F]{8}/" region="def:Escape"/>
+    </scheme>
+  </type>
+</hrc>
