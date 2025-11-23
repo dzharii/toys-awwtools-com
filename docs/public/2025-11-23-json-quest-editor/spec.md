@@ -2,6 +2,10 @@
 Date: 2025-11-23
 https://chatgpt.com/c/69236e99-03b0-832c-bc26-65ed94fe0aff
 
+![image-20251123144513003](spec.assets/image-20251123144513003.png)
+
+![image-20251123144435192](spec.assets/image-20251123144435192.png)
+
 
 
 **A01 Overview 01**
