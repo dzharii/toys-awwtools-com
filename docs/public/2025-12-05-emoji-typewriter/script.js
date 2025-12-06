@@ -675,6 +675,120 @@ const unicodeControls = [
 const baseUpper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const baseLower = 'abcdefghijklmnopqrstuvwxyz';
 const baseDigits = '0123456789';
+const wordPattern = /[\p{L}\p{N}]+/gu;
+
+function isLetter(char) {
+  return /\p{L}/u.test(char);
+}
+
+function isUpper(char) {
+  return isLetter(char) && char === char.toUpperCase() && char !== char.toLowerCase();
+}
+
+function isLower(char) {
+  return isLetter(char) && char === char.toLowerCase() && char !== char.toUpperCase();
+}
+
+function isDigit(char) {
+  return /\p{N}/u.test(char);
+}
+
+function splitWords(line) {
+  wordPattern.lastIndex = 0;
+  const words = [];
+  let match;
+  while ((match = wordPattern.exec(line)) !== null) {
+    words.push(match[0]);
+  }
+  return words;
+}
+
+function transformLines(text, transformer) {
+  const lines = text.split('\n');
+  return lines.map(transformer).join('\n');
+}
+
+function capitalizeWord(word) {
+  if (!word) return '';
+  const [first, ...rest] = Array.from(word);
+  return first.toUpperCase() + rest.join('').toLowerCase();
+}
+
+function toNormalText(text) {
+  return transformLines(text, (line) => {
+    if (!line) return line;
+    let working = line.replace(/[_-]+/g, ' ');
+    let result = '';
+    for (let i = 0; i < working.length; i += 1) {
+      const current = working[i];
+      const next = working[i + 1];
+      const nextNext = working[i + 2];
+      result += current;
+      if (!next) continue;
+      const boundary =
+        (isLower(current) && isUpper(next)) ||
+        (isUpper(current) && isUpper(next) && nextNext && isLower(nextNext)) ||
+        (isDigit(current) && isLetter(next));
+      if (boundary) {
+        result += ' ';
+      }
+    }
+    result = result.replace(/\s+/g, ' ').trim();
+    if (!result) return result;
+    const words = result.split(' ');
+    const normalized = words.map(word => {
+      if (/^\p{L}+$/u.test(word) && word === word.toUpperCase()) {
+        return word;
+      }
+      return word.toLowerCase();
+    }).join(' ');
+    // If nothing changed, keep the original line to avoid unwanted splits.
+    return normalized || line;
+  });
+}
+
+function toSnakeCase(text) {
+  return transformLines(text, (line) => {
+    const words = splitWords(line);
+    if (!words.length) return line;
+    return words.map(w => w.toLowerCase()).join('_');
+  });
+}
+
+function toKebabCase(text) {
+  return transformLines(text, (line) => {
+    const words = splitWords(line);
+    if (!words.length) return line;
+    return words.map(w => w.toLowerCase()).join('-');
+  });
+}
+
+function toCamelCase(text) {
+  return transformLines(text, (line) => {
+    const words = splitWords(line);
+    if (!words.length) return line;
+    const lowered = words.map(w => w.toLowerCase());
+    return lowered.map((word, idx) => (idx === 0 ? word : capitalizeWord(word))).join('');
+  });
+}
+
+function toPascalCase(text) {
+  return transformLines(text, (line) => {
+    const words = splitWords(line);
+    if (!words.length) return line;
+    return words.map(w => capitalizeWord(w.toLowerCase())).join('');
+  });
+}
+
+function toTitleCase(text) {
+  const normalized = toNormalText(text);
+  return normalized.split('\n').map(line => {
+    if (!line) return line;
+    const words = line.split(/\s+/);
+    if (!words.length) return line;
+    return words.map(word => capitalizeWord(word)).join(' ');
+  }).join('\n');
+}
 
 function createAlphabetMap(styledUpper, styledLower, styledDigits = '') {
   const map = {};
@@ -736,6 +850,7 @@ const formattingStyles = [
     id: 'bold',
     name: 'Bold',
     kind: 'alphabet',
+    group: 'unicode',
     map: createAlphabetMap(
       '𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝐉𝐊𝐋𝐌𝐍𝐎𝐏𝐐𝐑𝐒𝐓𝐔𝐕𝐖𝐗𝐘𝐙',
       '𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳',
@@ -746,6 +861,7 @@ const formattingStyles = [
     id: 'italic',
     name: 'Italic',
     kind: 'alphabet',
+    group: 'unicode',
     map: createAlphabetMap(
       '𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍',
       '𝑎𝑏𝑐𝑑𝑒𝑓𝑔ℎ𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑞𝑟𝑠𝑡𝑢𝑣𝑤𝑥𝑦𝑧'
@@ -755,6 +871,7 @@ const formattingStyles = [
     id: 'bold-italic',
     name: 'Bold Italic',
     kind: 'alphabet',
+    group: 'unicode',
     map: createAlphabetMap(
       '𝑨𝑩𝑪𝑫𝑬𝑭𝑮𝑯𝑰𝑱𝑲𝑳𝑴𝑵𝑶𝑷𝑸𝑹𝑺𝑻𝑼𝑽𝑾𝑿𝒀𝒁',
       '𝒂𝒃𝒄𝒅𝒆𝒇𝒈𝒉𝒊𝒋𝒌𝒍𝒎𝒏𝒐𝒑𝒒𝒓𝒔𝒕𝒖𝒗𝒘𝒙𝒚𝒛'
@@ -764,6 +881,7 @@ const formattingStyles = [
     id: 'bold-sans',
     name: 'Bold Sans',
     kind: 'alphabet',
+    group: 'unicode',
     map: createAlphabetMap(
       '𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭',
       '𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇',
@@ -774,6 +892,7 @@ const formattingStyles = [
     id: 'monospace',
     name: 'Monospace',
     kind: 'alphabet',
+    group: 'unicode',
     map: createAlphabetMap(
       '𝙰𝙱𝙲𝙳𝙴𝙵𝙶𝙷𝙸𝙹𝙺𝙻𝙼𝙽𝙾𝙿𝚀𝚁𝚂𝚃𝚄𝚅𝚆𝚇𝚈𝚉',
       '𝚊𝚋𝚌𝚍𝚎𝚏𝚐𝚑𝚒𝚓𝚔𝚕𝚖𝚗𝚘𝚙𝚚𝚛𝚜𝚝𝚞𝚟𝚠𝚡𝚢𝚣',
@@ -784,6 +903,7 @@ const formattingStyles = [
     id: 'double-struck',
     name: 'Double Struck',
     kind: 'alphabet',
+    group: 'unicode',
     map: createAlphabetMap(
       '𝔸𝔹ℂ𝔻𝔼𝔽𝔾ℍ𝕀𝕁𝕂𝕃𝕄ℕ𝕆ℙℚℝ𝕊𝕋𝕌𝕍𝕎𝕏𝕐ℤ',
       '𝕒𝕓𝕔𝕕𝕖𝕗𝕘𝕙𝕚𝕛𝕜𝕝𝕞𝕟𝕠𝕡𝕢𝕣𝕤𝕥𝕦𝕧𝕨𝕩𝕪𝕫',
@@ -794,6 +914,7 @@ const formattingStyles = [
     id: 'script',
     name: 'Script',
     kind: 'alphabet',
+    group: 'unicode',
     map: createAlphabetMap(
       '𝒜ℬ𝒞𝒟ℰℱ𝒢ℋℐ𝒥𝒦ℒℳ𝒩𝒪𝒫𝒬ℛ𝒮𝒯𝒰𝒱𝒲𝒳𝒴𝒵',
       '𝒶𝒷𝒸𝒹ℯ𝒻𝓰𝒽𝒾𝒿𝓀𝓁𝓂𝓃𝑜𝓅𝓆𝓇𝓈𝓉𝓊𝓋𝓌𝓍𝓎𝓏'
@@ -803,24 +924,92 @@ const formattingStyles = [
     id: 'small-caps',
     name: 'Small Caps',
     kind: 'alphabet',
+    group: 'unicode',
     map: createSmallCapsMap()
   },
   {
     id: 'underline',
     name: 'Underline',
     kind: 'combining',
+    group: 'unicode',
     combining: '\u0332'
   },
   {
     id: 'strikethrough',
     name: 'Strikethrough',
     kind: 'combining',
+    group: 'unicode',
     combining: '\u0336'
   },
   {
     id: 'plain',
     name: 'Plain',
-    kind: 'plain'
+    kind: 'plain',
+    group: 'unicode'
+  },
+  {
+    id: 'normal-text',
+    name: 'normal text',
+    label: 'normal text',
+    group: 'case',
+    tooltip: 'WhereAreMySocks → where are my socks (selection only)',
+    handler: (text) => toNormalText(text)
+  },
+  {
+    id: 'snake-case',
+    name: 'snake_case',
+    label: 'snake_case',
+    group: 'case',
+    tooltip: 'Where are my socks → where_are_my_socks',
+    handler: (text) => toSnakeCase(text)
+  },
+  {
+    id: 'kebab-case',
+    name: 'kebab-case',
+    label: 'kebab-case',
+    group: 'case',
+    tooltip: 'Where are my socks → where-are-my-socks',
+    handler: (text) => toKebabCase(text)
+  },
+  {
+    id: 'camel-case',
+    name: 'camelCase',
+    label: 'camelCase',
+    group: 'case',
+    tooltip: 'where are my socks → whereAreMySocks',
+    handler: (text) => toCamelCase(text)
+  },
+  {
+    id: 'pascal-case',
+    name: 'PascalCase',
+    label: 'PascalCase',
+    group: 'case',
+    tooltip: 'hello pascal → HelloPascal',
+    handler: (text) => toPascalCase(text)
+  },
+  {
+    id: 'title-case',
+    name: 'Title Case',
+    label: 'Title Case',
+    group: 'case',
+    tooltip: 'where_are_my_socks → Where Are My Socks',
+    handler: (text) => toTitleCase(text)
+  },
+  {
+    id: 'upper-case',
+    name: 'UPPERCASE',
+    label: 'UPPERCASE',
+    group: 'case',
+    tooltip: 'snake_case → SNAKE_CASE',
+    handler: (text) => text.toUpperCase()
+  },
+  {
+    id: 'lower-case',
+    name: 'lowercase',
+    label: 'lowercase',
+    group: 'case',
+    tooltip: 'HelloWorld → helloworld',
+    handler: (text) => text.toLowerCase()
   }
 ];
 
@@ -898,7 +1087,9 @@ function applyFormatting(styleId) {
   if (!style) return;
 
   let transformer = null;
-  if (style.kind === 'alphabet') {
+  if (style.handler) {
+    transformer = style.handler;
+  } else if (style.kind === 'alphabet') {
     transformer = (text) => formatWithMap(text, style.map);
   } else if (style.kind === 'combining') {
     transformer = (text) => applyCombiningMarks(text, style.combining);
@@ -911,26 +1102,45 @@ function applyFormatting(styleId) {
 }
 
 function formattingLabel(style) {
-  const sample = style.preview || style.name;
+  const sample = style.label || style.preview || style.name;
   if (style.kind === 'alphabet') return formatWithMap(sample, style.map);
   if (style.kind === 'combining') return applyCombiningMarks(sample, style.combining);
   if (style.kind === 'plain') return sample;
-  return style.name;
+  return sample;
 }
 
 function renderFormattingPane() {
   if (!formattingButtonsContainer) return;
   formattingButtonsContainer.innerHTML = '';
-  formattingStyles.forEach(style => {
-    const btn = document.createElement('button');
-    btn.className = 'formatting-btn';
-    btn.type = 'button';
-    btn.dataset.styleId = style.id;
-    btn.setAttribute('aria-label', `${style.name} formatting`);
-    const label = formattingLabel(style);
-    btn.innerHTML = `<div class="formatting-label">${label}</div><small>${style.name}</small>`;
-    btn.addEventListener('click', () => applyFormatting(style.id));
-    formattingButtonsContainer.appendChild(btn);
+  const groups = [
+    { id: 'unicode', title: 'Unicode styles' },
+    { id: 'case', title: 'Case helpers' }
+  ];
+
+  groups.forEach(group => {
+    const styles = formattingStyles.filter(style => style.group === group.id);
+    if (!styles.length) return;
+    const header = document.createElement('div');
+    header.className = 'formatting-group-title';
+    header.textContent = group.title;
+    formattingButtonsContainer.appendChild(header);
+
+    styles.forEach(style => {
+      const btn = document.createElement('button');
+      btn.className = 'formatting-btn';
+      btn.type = 'button';
+      btn.dataset.styleId = style.id;
+      btn.setAttribute('aria-label', `${style.name} formatting`);
+      if (style.tooltip) {
+        btn.title = `${style.tooltip} (select text first)`;
+      } else {
+        btn.title = 'Works on selected text';
+      }
+      const label = formattingLabel(style);
+      btn.innerHTML = `<div class="formatting-label">${label}</div><small>${style.name}</small>`;
+      btn.addEventListener('click', () => applyFormatting(style.id));
+      formattingButtonsContainer.appendChild(btn);
+    });
   });
   updateFormattingButtonsState();
 }
