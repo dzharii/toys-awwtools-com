@@ -211,22 +211,25 @@ const paper = document.getElementById('paper');
 const lineNumbers = document.getElementById('line-numbers');
 const soundSelect = document.getElementById('sound-select');
 const volumeButtons = Array.from(document.querySelectorAll('.volume-btn'));
-const modeButtons = Array.from(document.querySelectorAll('.mode-btn'));
 const searchInput = document.getElementById('emoji-search');
 const helpName = document.getElementById('help-name');
 const helpCode = document.getElementById('help-code');
 const helpDescription = document.getElementById('help-description');
 const helpExample = document.getElementById('help-example');
+const statusBadge = document.getElementById('status-badge');
+const unicodeGrid = document.getElementById('unicode-grid');
 
 const appStoreKey = 'b4fc7cc1-eb82-4bd9-acac-22c34004adf5';
 const RECENT_KEY = 'recentEmojis';
-const RECENT_LIMIT = 10;
 
-let currentMode = 'emoji';
 let emojiPage = 0;
 let searchQuery = '';
 let recentEmojis = [];
 let currentEmojiResults = [];
+const defaultRecents = [
+  '😀', '😍', '👍', '✨', '🔥', '🥳', '🤔', '🤯', '🎉', '😊', '🌈',
+  '🤣', '🤗', '🥰', '🙌'
+];
 
 const emojiLookup = new Map();
 if (typeof emojiData !== 'undefined' && Array.isArray(emojiData)) {
@@ -242,10 +245,10 @@ if (typeof emojiData !== 'undefined' && Array.isArray(emojiData)) {
 // ==========================================
 function buildKeycaps() {
   const rects = Array.from(document.querySelectorAll('#keyboard .key'));
-  return rects.map((rect, index) => {
+  return rects.map((rect) => {
     const label = rect.nextElementSibling;
     const row = rect.parentElement ? rect.parentElement.id : '';
-    return { rect, label, row, index };
+    return { rect, label, row };
   });
 }
 
@@ -258,10 +261,10 @@ const rows = {
   'row-5': keycaps.filter(k => k.row === 'row-5')
 };
 
-const recentSlots = rows['row-1'].slice(0, RECENT_LIMIT);
-const blockedSlots = rows['row-1'].slice(RECENT_LIMIT);
+const recentSlots = rows['row-1'];
 const paletteSlots = [...rows['row-2'], ...rows['row-3'], ...rows['row-4']];
 const actionSlots = rows['row-5'];
+const RECENT_LIMIT = recentSlots.length;
 
 function setKeycap(cap, { label, role = 'inactive', value = '', helpId = '' }) {
   if (!cap || !cap.rect || !cap.label) return;
@@ -294,12 +297,18 @@ function updateLineNumbers() {
   lineNumbers.style.top = (40 - paper.scrollTop) + 'px';
 }
 
-function insertAtCursor(text) {
+function insertAtCursor(text, { replaceSelection = true } = {}) {
   const start = paper.selectionStart;
   const end = paper.selectionEnd;
   const current = paper.value;
-  paper.value = current.substring(0, start) + text + current.substring(end);
-  paper.selectionStart = paper.selectionEnd = start + text.length;
+  if (!replaceSelection && start !== end) {
+    paper.selectionStart = paper.selectionEnd = end;
+  }
+  const insertStart = replaceSelection ? start : paper.selectionStart;
+  const insertEnd = replaceSelection ? end : paper.selectionStart;
+  paper.value = current.substring(0, insertStart) + text + current.substring(insertEnd);
+  const newPos = insertStart + text.length;
+  paper.selectionStart = paper.selectionEnd = newPos;
   updateLineNumbers();
   paper.focus();
 }
@@ -364,6 +373,20 @@ function saveToLocalStorage(key, data) {
 }
 
 // ==========================================
+// Status badge
+// ==========================================
+let statusTimeout = null;
+function showStatus(message) {
+  if (!statusBadge) return;
+  statusBadge.textContent = message;
+  statusBadge.style.display = 'block';
+  clearTimeout(statusTimeout);
+  statusTimeout = setTimeout(() => {
+    statusBadge.style.display = 'none';
+  }, 2200);
+}
+
+// ==========================================
 // Emoji helpers
 // ==========================================
 function getRandomEmojis(count) {
@@ -395,7 +418,7 @@ function updateRecents(emoji) {
 
 function renderRecents() {
   recentSlots.forEach((cap, index) => {
-    const emoji = recentEmojis[index];
+    const emoji = recentEmojis[index] || defaultRecents[index] || defaultRecents[index % defaultRecents.length];
     if (emoji) {
       setKeycap(cap, { label: emoji, role: 'recent-emoji', value: emoji });
     } else {
@@ -423,6 +446,7 @@ function renderEmojiPalette() {
   });
 
   const actionKey = actionSlots[0];
+  if (!actionKey) return;
   if (currentEmojiResults.length > paletteCapacity) {
     setKeycap(actionKey, {
       label: `More ${emojiPage + 1}/${pageCount}`,
@@ -452,15 +476,17 @@ const unicodeControls = [
     id: 'lrm',
     label: 'LRM',
     insert: '\u200E',
+    kind: 'insert',
     name: 'Left-to-Right Mark',
     code: 'U+200E',
-    description: 'Invisible hint that nudges surrounding text into left-to-right direction.',
+    description: 'Invisible hint that nudges surrounding text into left-to-right order. Best used before/after mixed-script segments.',
     example: 'Use between mixed scripts: abc\u200Eעברית'
   },
   {
     id: 'rlm',
     label: 'RLM',
     insert: '\u200F',
+    kind: 'insert',
     name: 'Right-to-Left Mark',
     code: 'U+200F',
     description: 'Invisible hint that nudges surrounding text into right-to-left order.',
@@ -468,116 +494,132 @@ const unicodeControls = [
   },
   {
     id: 'lri',
-    label: 'LRI',
+    label: 'LRI/PDI',
     insert: '\u2066',
+    closing: '\u2069',
+    kind: 'wrap',
     name: 'Left-to-Right Isolate',
-    code: 'U+2066',
-    description: 'Starts a left-to-right isolated run that stays separate from surrounding bidi text.',
-    example: 'Start isolate then PDI: \u2066abc\u2069 + عربي'
+    code: 'U+2066 ... U+2069',
+    description: 'Starts a left-to-right isolated run. Select text and click to wrap it; otherwise inserts an isolate starter so you can type then close with PDI.',
+    example: 'Select text → wrap with LRI ... PDI to keep it LTR in RTL context.'
   },
   {
     id: 'rli',
-    label: 'RLI',
+    label: 'RLI/PDI',
     insert: '\u2067',
+    closing: '\u2069',
+    kind: 'wrap',
     name: 'Right-to-Left Isolate',
-    code: 'U+2067',
-    description: 'Starts a right-to-left isolated run. Close it with PDI.',
+    code: 'U+2067 ... U+2069',
+    description: 'Starts a right-to-left isolated run. Select text first to wrap; otherwise inserts a starter so you can type then close later.',
     example: '\u2067عربي\u2069 inside Latin text'
   },
   {
     id: 'fsi',
-    label: 'FSI',
+    label: 'FSI/PDI',
     insert: '\u2068',
+    closing: '\u2069',
+    kind: 'wrap',
     name: 'First Strong Isolate',
-    code: 'U+2068',
-    description: 'Isolate whose direction follows the first strong character inside.',
+    code: 'U+2068 ... U+2069',
+    description: 'Direction decided by the first strong character. Wrapping a selection keeps it isolated from surrounding text.',
     example: '\u2068123 عربى\u2069 chooses RTL because of the strong letter'
   },
   {
     id: 'pdi',
     label: 'PDI',
     insert: '\u2069',
+    kind: 'insert',
     name: 'Pop Directional Isolate',
     code: 'U+2069',
-    description: 'Ends an isolate started by LRI, RLI, or FSI.',
-    example: 'Wrap isolates: \u2066abc\u2069 then \u2067عربي\u2069'
+    description: 'Closes an isolate. Insert after an LRI/RLI/FSI run. Does not replace your selection.',
+    example: '...then finish with PDI to exit the isolated run.'
   },
   {
     id: 'vs15',
     label: 'VS15',
     insert: '\uFE0E',
+    kind: 'suffix',
     name: 'Variation Selector 15',
     code: 'U+FE0E',
-    description: 'Requests text presentation for characters that support emoji/text styles.',
-    example: 'Example: ❤\uFE0E asks for text style'
+    description: 'Requests text presentation for emoji-capable characters. Select a symbol then click to append, or click after typing.',
+    example: '❤\uFE0E asks for text style'
   },
   {
     id: 'vs16',
     label: 'VS16',
     insert: '\uFE0F',
+    kind: 'suffix',
     name: 'Variation Selector 16',
     code: 'U+FE0F',
-    description: 'Requests emoji presentation when supported.',
-    example: 'Example: ❤\uFE0F asks for emoji style'
+    description: 'Requests emoji presentation. Works after supported symbols.',
+    example: '❤\uFE0F asks for emoji style'
   },
   {
     id: 'zwj',
     label: 'ZWJ',
     insert: '\u200D',
+    kind: 'insert',
     name: 'Zero Width Joiner',
     code: 'U+200D',
-    description: 'Joins emoji to build a single glyph when the platform supports the sequence.',
+    description: 'Joins emoji to build a single glyph when the platform supports the sequence. Insert between emoji; does not replace selection.',
     example: 'Example: 👩\u200D💻 becomes a technologist emoji'
   },
   {
     id: 'zwnj',
     label: 'ZWNJ',
     insert: '\u200C',
+    kind: 'insert',
     name: 'Zero Width Non-Joiner',
     code: 'U+200C',
-    description: 'Prevents joining in scripts where joining is automatic. Breaks ligatures.',
+    description: 'Prevents joining/ligatures. Insert between letters or emoji. Keeps current selection intact.',
     example: 'Insert between joining letters to stop the join.'
   },
   {
     id: 'tone',
     label: 'Tone',
     insert: '\u{1F3FD}',
+    kind: 'suffix',
     name: 'Skin Tone Modifier',
     code: 'U+1F3FD',
-    description: 'Apply after certain emoji (people, hands) to request a medium skin tone.',
-    example: '👍\u{1F3FD} applies tone to thumbs up'
+    description: 'Apply after people/hand emoji. Select the base emoji then click to append the tone. Without a selection, it inserts as-is.',
+    example: 'Select 👍 then click Tone to get 👍🏽'
   },
   {
     id: 'nbsp',
     label: 'NBSP',
     insert: '\u00A0',
+    kind: 'insert',
     name: 'No-Break Space',
     code: 'U+00A0',
-    description: 'Space that prevents line breaks.',
+    description: 'Space that prevents line breaks. Does not replace selection.',
     example: 'Keeps words together: hello\u00A0world'
   },
   {
     id: 'nnbsp',
     label: 'NNBSP',
     insert: '\u202F',
+    kind: 'insert',
     name: 'Narrow No-Break Space',
     code: 'U+202F',
-    description: 'Narrower non-breaking space where supported.',
-    example: 'Useful around units: 10\u202Fkg'
+    description: 'Narrower non-breaking space. Good for units.',
+    example: '10\u202Fkg'
   },
   {
     id: 'ls',
     label: 'LS',
     insert: '\u2028',
+    kind: 'insert',
     name: 'Line Separator',
     code: 'U+2028',
-    description: 'Unicode line break character.',
+    description: 'Unicode line break character. Keeps selection untouched.',
     example: 'Acts like a line break: first\u2028second'
   },
   {
     id: 'ps',
     label: 'PS',
     insert: '\u2029',
+    kind: 'insert',
     name: 'Paragraph Separator',
     code: 'U+2029',
     description: 'Paragraph break control character.',
@@ -587,6 +629,7 @@ const unicodeControls = [
     id: 'shy',
     label: 'SHY',
     insert: '\u00AD',
+    kind: 'insert',
     name: 'Soft Hyphen',
     code: 'U+00AD',
     description: 'Optional hyphen that appears only when a line breaks.',
@@ -596,56 +639,39 @@ const unicodeControls = [
     id: 'zwsp',
     label: 'ZWSP',
     insert: '\u200B',
+    kind: 'insert',
     name: 'Zero Width Space',
     code: 'U+200B',
-    description: 'Invisible break opportunity without a visible space.',
+    description: 'Invisible break opportunity without a visible space. Does not replace selection.',
     example: 'Place between words to allow wrapping without a space.'
   },
   {
     id: 'keycap',
     label: 'Keycap',
-    insert: '#\u20E3',
+    insert: '\u20E3',
+    kind: 'suffix',
     name: 'Keycap Combining Mark',
-    code: 'Digit + U+20E3',
-    description: 'Combines with digits, *, # to form keycap emoji on some platforms.',
-    example: 'Try 1\u20E3 2\u20E3 or #\u20E3'
+    code: 'Digit/*/# + U+20E3',
+    description: 'Select a digit, #, or * then click to append the enclosing keycap mark. Without a selection it inserts the mark by itself.',
+    example: 'Select "1" then click Keycap to get 1️⃣'
   },
   {
     id: 'flag',
     label: 'RI Pair',
     insert: '\u{1F1FA}\u{1F1F8}',
+    kind: 'insert',
     name: 'Regional Indicator Pair',
     code: 'U+1F1FA U+1F1F8',
-    description: 'Regional indicator symbols combine in pairs to form flags.',
+    description: 'Regional indicators combine in pairs to form flags. Select two letters (A-Z) and type their indicators for a flag; click inserts 🇺🇸 as an example.',
     example: '🇺🇸 is U+1F1FA U+1F1F8. Pair any two indicators.'
   }
 ];
 
-function renderUnicodePalette() {
-  const controlSlots = [...recentSlots, ...paletteSlots, ...actionSlots];
-  controlSlots.forEach((cap, index) => {
-    const control = unicodeControls[index];
-    if (control) {
-      setKeycap(cap, {
-        label: control.label,
-        role: 'control',
-        value: control.insert,
-        helpId: control.id
-      });
-    } else {
-      setKeycap(cap, { label: '', role: 'inactive', value: '' });
-    }
-  });
-}
-
-// ==========================================
-// Help pane
-// ==========================================
 function resetHelpPane() {
   helpName.textContent = 'Select a control to see details';
   helpCode.textContent = 'U+—';
-  helpDescription.textContent = 'Use the Unicode controls mode to explore invisible marks, joins, and presentation hints.';
-  helpExample.textContent = 'Emoji Typewriter keeps your cursor active so you can try sequences right away.';
+  helpDescription.textContent = 'Unicode controls insert invisible helpers. Select text first when you want wrapping or suffix behavior.';
+  helpExample.textContent = 'Hover a control to preview, then click to insert. Wrapping controls will wrap selected text.';
 }
 
 function showControlHelp(controlId) {
@@ -662,36 +688,73 @@ function showEmojiHelp(emoji) {
   if (!entry) return;
   helpName.textContent = entry.label;
   helpCode.textContent = `U+${entry.hexcode}`;
-  helpDescription.textContent = 'Click to insert emoji at the cursor. Use search to narrow results.';
+  helpDescription.textContent = 'Click to insert emoji at the cursor. Search filters the lower rows; recents stay pinned on top.';
   helpExample.textContent = `${emoji}  tags: ${entry.tags ? entry.tags.join(', ') : 'emoji'}`;
 }
 
 // ==========================================
-// Mode rendering
+// Unicode controls rendering and behavior
 // ==========================================
-function renderMode() {
-  resetAllKeycaps();
-  if (currentMode === 'emoji') {
-    searchInput.disabled = false;
-    searchInput.placeholder = 'Search emoji';
-    renderRecents();
-    renderEmojiPalette();
-    resetHelpPane();
-  } else {
-    searchInput.disabled = true;
-    searchInput.placeholder = 'Search disabled in Unicode mode';
-    renderUnicodePalette();
-    resetHelpPane();
+function applyControl(control) {
+  if (!control) return;
+  const selectionText = paper.value.substring(paper.selectionStart, paper.selectionEnd);
+
+  if (control.kind === 'wrap') {
+    if (selectionText.length > 0) {
+      const wrapped = `${control.insert}${selectionText}${control.closing || ''}`;
+      insertAtCursor(wrapped);
+    } else {
+      insertAtCursor(control.insert + (control.closing ? control.closing : ''));
+    }
+    playKeySound();
+    return;
   }
+
+  if (control.kind === 'suffix') {
+    if (selectionText.length > 0) {
+      insertAtCursor(selectionText + control.insert);
+    } else {
+      insertAtCursor(control.insert);
+    }
+    playKeySound();
+    return;
+  }
+
+  // insert kind: do not replace selection, just insert after it
+  const hadSelection = selectionText.length > 0;
+  insertAtCursor(control.insert, { replaceSelection: !hadSelection });
+  if (hadSelection) {
+    showStatus('Inserted control without replacing your selection (invisible mark).');
+  }
+  playKeySound();
 }
 
-function setMode(mode) {
-  currentMode = mode;
-  modeButtons.forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.mode === mode);
+function renderUnicodeGrid() {
+  if (!unicodeGrid) return;
+  unicodeGrid.innerHTML = '';
+  unicodeControls.forEach(control => {
+    const btn = document.createElement('button');
+    btn.className = 'control-chip';
+    btn.type = 'button';
+    btn.setAttribute('data-control-id', control.id);
+    btn.innerHTML = `<strong>${control.label}</strong><small>${control.name}</small>`;
+    btn.addEventListener('mouseenter', () => showControlHelp(control.id));
+    btn.addEventListener('focus', () => showControlHelp(control.id));
+    btn.addEventListener('click', () => {
+      applyControl(control);
+      showControlHelp(control.id);
+    });
+    unicodeGrid.appendChild(btn);
   });
-  emojiPage = 0;
-  renderMode();
+}
+
+// ==========================================
+// Mode rendering (emoji keyboard only)
+// ==========================================
+function renderPalette() {
+  resetAllKeycaps();
+  renderRecents();
+  renderEmojiPalette();
 }
 
 // ==========================================
@@ -710,10 +773,6 @@ function handleKeycapPress(cap) {
     playKeySound();
     updateRecents(value);
     renderRecents();
-  } else if (role === 'control') {
-    insertAtCursor(value);
-    playKeySound();
-    showControlHelp(cap.rect.dataset.helpId);
   } else if (role === 'page') {
     emojiPage += 1;
     const capacity = Math.max(1, Math.ceil(currentEmojiResults.length / paletteSlots.length));
@@ -734,9 +793,7 @@ function handleKeycapPress(cap) {
 
 function handleKeycapHover(cap) {
   const role = cap.rect.dataset.role;
-  if (role === 'control') {
-    showControlHelp(cap.rect.dataset.helpId);
-  } else if ((role === 'emoji' || role === 'recent-emoji') && cap.rect.dataset.value) {
+  if ((role === 'emoji' || role === 'recent-emoji') && cap.rect.dataset.value) {
     showEmojiHelp(cap.rect.dataset.value);
   }
 }
@@ -746,14 +803,7 @@ keycaps.forEach(cap => {
   cap.rect.addEventListener('mouseup', () => cap.rect.classList.remove('active'));
   cap.rect.addEventListener('mouseleave', () => cap.rect.classList.remove('active'));
   cap.rect.addEventListener('mouseenter', () => handleKeycapHover(cap));
-});
-
-blockedSlots.forEach(cap => {
-  cap.rect.classList.add('inactive');
-  cap.label.textContent = '';
-  cap.rect.dataset.role = 'inactive';
-  cap.rect.style.pointerEvents = 'none';
-  cap.label.style.pointerEvents = 'none';
+  cap.rect.addEventListener('contextmenu', e => e.preventDefault());
 });
 
 // ==========================================
@@ -803,11 +853,6 @@ volumeButtons.forEach(btn => {
   });
 });
 
-modeButtons.forEach(btn => {
-  btn.addEventListener('click', () => setMode(btn.dataset.mode));
-});
-
-// Debounced search input
 let searchTimeout = null;
 if (searchInput) {
   searchInput.addEventListener('input', (e) => {
@@ -828,11 +873,9 @@ window.addEventListener('load', () => {
   recentEmojis = loadFromLocalStorage(RECENT_KEY) || [];
   paper.focus();
   updateLineNumbers();
-  setMode('emoji');
+  renderPalette();
+  renderUnicodeGrid();
 });
-
-// Prevent context menu on keys
-keycaps.forEach(cap => cap.rect.addEventListener('contextmenu', e => e.preventDefault()));
 
 // Touch support
 if ('ontouchstart' in window) {

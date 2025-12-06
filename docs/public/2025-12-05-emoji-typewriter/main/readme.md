@@ -5,9 +5,9 @@ A playful single-page app that merges the typewriter experience with an emoji pa
 
 ## What it does
 - Keeps the classic paper, line numbers, and bottom SVG keyboard from the Typewriter Experience.
-- Adds a palette switcher with two modes: **Emoji** and **Unicode Controls**.
-- Emoji mode shows recent emoji and an inline search box on the top row, with searchable emoji filling the remaining keys. Clicking inserts at the caret and updates recents.
-- Unicode mode repurposes the keys for control characters (bidi isolates, variation selectors, ZWJ/ZWNJ, NBSP, SHY, keycap builder, and more) with inline help in the right-hand pane.
+- Emoji keyboard stays visible at the bottom; the first row is recents, lower rows follow search results.
+- Search lives in the floating keyboard-side panel and filters the emoji on the keyboard without hiding recents.
+- Unicode controls live in the same floating panel as buttons (bidi isolates, variation selectors, ZWJ/ZWNJ, NBSP, SHY, keycap builder, tone, flags). Hover to read; click to insert or wrap a selection.
 - Uses the original Web Audio API sound engine with selectable profiles and volume buttons.
 - Persists recent emoji via the same localStorage key as the standalone emoji picker (`b4fc7cc1-eb82-4bd9-acac-22c34004adf5`).
 
@@ -16,9 +16,9 @@ Open `index.html` in a modern browser. Everything is self contained; no server i
 
 ## Key interactions
 - Type normally on the paper with your hardware keyboard; Enter plays the ding, Tab inserts spaces, and sounds match the selected profile.
-- Click the bottom keys to insert emoji or control characters; the paper keeps focus so you can keep typing.
-- Use the mode toggle in the top-right controls to switch between Emoji and Unicode Controls.
-- Hover control keys to read explanations in the help pane; emoji hovers show name and codepoint briefly.
+- Click keyboard keys to insert emoji. Search from the floating panel filters the lower rows; recents stay pinned up top.
+- Use Unicode control buttons in the floating panel: wrapping controls (LRI/RLI/FSI) will wrap any selected text; suffix controls (VS15, VS16, Tone, Keycap) append to a selection; insert-only controls drop an invisible mark without replacing selections and show a small notice.
+- Hover a control to read how it behaves; emoji hovers show name and codepoint briefly; the main notes live to the left of the paper for quick reference.
 
 ## Files
 - `index.html` – layout for background, controls, paper, help pane, and SVG keyboard with embedded search field.
