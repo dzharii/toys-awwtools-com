@@ -1,4 +1,4 @@
-# Typewriter Unicode Formatting
+# Typewriter Text Modification Group
 Date: 2025-12-05
 A00 Purpose and context 00
 This specification describes a new set of text transformation helpers to be added to the existing Unicode Formatting pane in the typewriter project. The new helpers target software development use cases: they convert selected text between common identifier styles such as snake_case, kebab-case, camelCase, PascalCase, and normal human readable text, as well as plain upper and lower casing. These helpers are not Unicode “fonts”; they are structural transformations on characters and separators, but they live in the same pane as the Unicode styles because they operate on selected text in the same way.
