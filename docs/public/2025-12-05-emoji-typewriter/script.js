@@ -34,134 +34,76 @@ function playKeySound(profile = currentProfile) {
 
   switch (profile) {
     case 'classic':
-      freq = 180;
-      gainValue = 0.15;
-      oscType = 'square';
-      duration = 0.05;
-      break;
-    case 'soft':
-      freq = 140;
-      gainValue = 0.05;
-      oscType = 'sine';
-      duration = 0.08;
-      break;
-    case 'clacky':
-      freq = 300;
+      freq = 220;
       gainValue = 0.12;
       oscType = 'square';
-      duration = 0.04;
-      break;
-    case 'thud':
-      freq = 90;
-      gainValue = 0.25;
-      oscType = 'sawtooth';
-      duration = 0.08;
-      break;
-    case 'beep':
-      freq = 600;
-      gainValue = 0.08;
-      oscType = 'sine';
       duration = 0.06;
       break;
-    case 'random':
-      freq = 100 + Math.random() * 600;
-      gainValue = 0.08 + Math.random() * 0.1;
-      oscType = ['sine', 'square', 'triangle'][Math.floor(Math.random() * 3)];
-      duration = 0.04 + Math.random() * 0.04;
-      break;
-    case 'boom':
-      freq = 55;
-      gainValue = 0.3;
+    case 'soft':
+      freq = 170;
+      gainValue = 0.06;
       oscType = 'sine';
-      duration = 0.15;
+      duration = 0.08;
       break;
-    case 'vintage':
-      freq = 220;
-      gainValue = 0.18;
+    case 'wood':
+      freq = 180;
+      gainValue = 0.09;
       oscType = 'triangle';
       duration = 0.07;
       break;
-    case 'bubbly':
-      freq = 800;
-      gainValue = 0.1;
+    case 'bubble':
+      freq = 520;
+      gainValue = 0.08;
       oscType = 'sine';
-      duration = 0.03;
-      break;
-    case 'metallic':
-      freq = 1200;
-      gainValue = 0.12;
-      oscType = 'triangle';
       duration = 0.04;
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.exponentialRampToValueAtTime(400, now + duration);
       break;
-    case 'woody':
-      freq = 150;
-      gainValue = 0.2;
+    case 'glass':
+      freq = 880;
+      gainValue = 0.06;
+      oscType = 'sine';
+      duration = 0.05;
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.exponentialRampToValueAtTime(720, now + duration);
+      break;
+    case 'harp':
+      freq = 640;
+      gainValue = 0.08;
       oscType = 'triangle';
       duration = 0.06;
-      break;
-    case 'laser':
-      freq = 1800;
-      gainValue = 0.15;
-      oscType = 'sawtooth';
-      duration = 0.08;
       osc.frequency.setValueAtTime(freq, now);
-      osc.frequency.exponentialRampToValueAtTime(800, now + duration);
+      osc.frequency.exponentialRampToValueAtTime(440, now + duration);
       break;
-    case 'thunder':
-      freq = 40;
-      gainValue = 0.35;
-      oscType = 'sawtooth';
-      duration = 0.2;
-      break;
-    case 'cricket':
-      freq = 3000;
-      gainValue = 0.08;
+    case 'lofi':
+      freq = 130;
+      gainValue = 0.07;
       oscType = 'square';
-      duration = 0.02;
+      duration = 0.05;
       break;
-    case 'submarine':
-      freq = 500;
-      gainValue = 0.2;
+    case 'paper':
+      freq = 120;
+      gainValue = 0.12;
       oscType = 'sine';
-      duration = 0.3;
-      break;
-    case 'glitch':
-      freq = 50 + Math.random() * 3000;
-      gainValue = 0.18;
-      oscType = ['square', 'sawtooth'][Math.floor(Math.random() * 2)];
-      duration = 0.02 + Math.random() * 0.03;
-      break;
-    case 'annoying-beep':
-      freq = 4000;
-      gainValue = 0.4;
-      oscType = 'square';
-      duration = 0.15;
-      break;
-    case 'annoying-buzz':
-      freq = 8000;
-      gainValue = 0.35;
-      oscType = 'sawtooth';
-      duration = 0.1;
-      break;
-    case 'annoying-siren':
-      freq = 800;
-      gainValue = 0.45;
-      oscType = 'square';
-      duration = 0.2;
+      duration = 0.09;
       osc.frequency.setValueAtTime(freq, now);
-      osc.frequency.linearRampToValueAtTime(1200, now + duration);
+      osc.frequency.linearRampToValueAtTime(95, now + duration);
       break;
-    case 'whisper':
-      freq = 2000 + Math.random() * 1000;
-      gainValue = 0.03;
+    case 'chime':
+      freq = 780;
+      gainValue = 0.07;
       oscType = 'triangle';
-      duration = 0.1;
+      duration = 0.07;
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.exponentialRampToValueAtTime(620, now + duration);
       break;
-    case 'orchestra':
-      freq = 220;
-      gainValue = 0.25;
-      oscType = 'triangle';
-      duration = 0.12;
+    case 'vintage':
+      freq = 210;
+      gainValue = 0.1;
+      oscType = 'square';
+      duration = 0.07;
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.exponentialRampToValueAtTime(180, now + duration);
       break;
     default:
       break;
