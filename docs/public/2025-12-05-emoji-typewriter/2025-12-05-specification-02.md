@@ -105,22 +105,22 @@ Multi line selections are allowed and should work, but underline and strikethrou
 J00 Validation to do list 00
 This to do list is for both the coding agent and humans to use as an acceptance checklist to verify that the Unicode Formatting pane behaves as specified and integrates cleanly into the existing project.
 
-* [ ] Confirm that a visible “Unicode Formatting” pane is present on the left side of the bottom keyboard band and matches the overall typewriter style.
-* [ ] Confirm that the pane contains a vertical list of style buttons with readable spacing and scrolling if needed.
-* [ ] Confirm that each style button label is rendered using the same Unicode style that the button applies to selected text.
-* [ ] Confirm that clicking any style button when no text is selected in the paper does not modify the document and does not throw errors.
-* [ ] Confirm that selecting a word or phrase and then clicking the Bold style button replaces only the selected text with a bold Unicode alphabet version.
-* [ ] Confirm that selecting text and clicking the Italic style button replaces only the selection with a Unicode italic alphabet version.
-* [ ] Confirm that Bold Italic, Bold Sans, Monospace, Double Struck, Script, and Small Caps styles each apply their respective Unicode mappings to the selected text.
-* [ ] Confirm that alphabet based styles change only letters and digits and leave spaces, punctuation, emoji, and control characters unchanged.
-* [ ] Confirm that the Underline style adds combining underline marks to each non newline character in the selection, visually underlining the text.
-* [ ] Confirm that the Strikethrough style adds combining strike marks to each non newline character in the selection, visually striking through the text.
-* [ ] Confirm that applying the Plain style to styled text converts bold, italic, script, double struck, monospace, and similar letters back to basic ASCII where mappings exist.
-* [ ] Confirm that the Plain style removes underline and strikethrough combining marks from the selected text.
-* [ ] Confirm that selections spanning multiple lines can be styled and that line breaks are preserved in place.
-* [ ] Confirm that after a formatting button is clicked, focus returns to the paper and the user can continue typing without extra clicks.
-* [ ] Confirm that formatting actions do not interfere with emoji insertion or Unicode control insertion behavior.
-* [ ] Confirm that formatting actions do not break the existing sound system and that optional key sounds do not feel out of place.
-* [ ] Confirm that no JavaScript errors appear in the console when repeatedly selecting text, applying styles, and using Plain to clear them.
-* [ ] Confirm that the app still works correctly when opened from a file URL with no network connection.
-* [ ] Confirm that the layout remains usable and visually coherent on smaller viewports, with the Unicode Formatting pane still accessible alongside the keyboard.
+- [ ] Confirm that a visible “Unicode Formatting” pane is present on the left side of the bottom keyboard band and matches the overall typewriter style.
+- [ ] Confirm that the pane contains a vertical list of style buttons with readable spacing and scrolling if needed.
+- [ ] Confirm that each style button label is rendered using the same Unicode style that the button applies to selected text.
+- [ ] Confirm that clicking any style button when no text is selected in the paper does not modify the document and does not throw errors.
+- [ ] Confirm that selecting a word or phrase and then clicking the Bold style button replaces only the selected text with a bold Unicode alphabet version.
+- [ ] Confirm that selecting text and clicking the Italic style button replaces only the selection with a Unicode italic alphabet version.
+- [ ] Confirm that Bold Italic, Bold Sans, Monospace, Double Struck, Script, and Small Caps styles each apply their respective Unicode mappings to the selected text.
+- [ ] Confirm that alphabet based styles change only letters and digits and leave spaces, punctuation, emoji, and control characters unchanged.
+- [ ] Confirm that the Underline style adds combining underline marks to each non newline character in the selection, visually underlining the text.
+- [ ] Confirm that the Strikethrough style adds combining strike marks to each non newline character in the selection, visually striking through the text.
+- [ ] Confirm that applying the Plain style to styled text converts bold, italic, script, double struck, monospace, and similar letters back to basic ASCII where mappings exist.
+- [ ] Confirm that the Plain style removes underline and strikethrough combining marks from the selected text.
+- [ ] Confirm that selections spanning multiple lines can be styled and that line breaks are preserved in place.
+- [ ] Confirm that after a formatting button is clicked, focus returns to the paper and the user can continue typing without extra clicks.
+- [ ] Confirm that formatting actions do not interfere with emoji insertion or Unicode control insertion behavior.
+- [ ] Confirm that formatting actions do not break the existing sound system and that optional key sounds do not feel out of place.
+- [ ] Confirm that no JavaScript errors appear in the console when repeatedly selecting text, applying styles, and using Plain to clear them.
+- [ ] Confirm that the app still works correctly when opened from a file URL with no network connection.
+- [ ] Confirm that the layout remains usable and visually coherent on smaller viewports, with the Unicode Formatting pane still accessible alongside the keyboard.
