@@ -218,6 +218,7 @@ const helpDescription = document.getElementById('help-description');
 const helpExample = document.getElementById('help-example');
 const statusBadge = document.getElementById('status-badge');
 const unicodeGrid = document.getElementById('unicode-grid');
+const formattingButtonsContainer = document.getElementById('formatting-buttons');
 
 const appStoreKey = 'b4fc7cc1-eb82-4bd9-acac-22c34004adf5';
 const RECENT_KEY = 'recentEmojis';
@@ -310,6 +311,7 @@ function insertAtCursor(text, { replaceSelection = true } = {}) {
   const newPos = insertStart + text.length;
   paper.selectionStart = paper.selectionEnd = newPos;
   updateLineNumbers();
+  updateFormattingButtonsState();
   paper.focus();
 }
 
@@ -667,6 +669,282 @@ const unicodeControls = [
   }
 ];
 
+// ==========================================
+// Unicode formatting pane
+// ==========================================
+const baseUpper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const baseLower = 'abcdefghijklmnopqrstuvwxyz';
+const baseDigits = '0123456789';
+
+function createAlphabetMap(styledUpper, styledLower, styledDigits = '') {
+  const map = {};
+  const upperChars = Array.from(styledUpper);
+  const lowerChars = Array.from(styledLower);
+  const digitChars = Array.from(styledDigits);
+  baseUpper.split('').forEach((char, index) => {
+    if (upperChars[index]) map[char] = upperChars[index];
+  });
+  baseLower.split('').forEach((char, index) => {
+    if (lowerChars[index]) map[char] = lowerChars[index];
+  });
+  baseDigits.split('').forEach((char, index) => {
+    if (digitChars[index]) map[char] = digitChars[index];
+  });
+  return map;
+}
+
+function createSmallCapsMap() {
+  const lookup = {
+    a: 'ᴀ',
+    b: 'ʙ',
+    c: 'ᴄ',
+    d: 'ᴅ',
+    e: 'ᴇ',
+    f: 'ꜰ',
+    g: 'ɢ',
+    h: 'ʜ',
+    i: 'ɪ',
+    j: 'ᴊ',
+    k: 'ᴋ',
+    l: 'ʟ',
+    m: 'ᴍ',
+    n: 'ɴ',
+    o: 'ᴏ',
+    p: 'ᴘ',
+    q: 'ꝗ',
+    r: 'ʀ',
+    s: 'ꜱ',
+    t: 'ᴛ',
+    u: 'ᴜ',
+    v: 'ᴠ',
+    w: 'ᴡ',
+    x: 'ˣ',
+    y: 'ʏ',
+    z: 'ᴢ'
+  };
+  const map = {};
+  baseLower.split('').forEach((char, index) => {
+    const styled = lookup[char] || char.toUpperCase();
+    map[char] = styled;
+    map[baseUpper[index]] = styled;
+  });
+  return map;
+}
+
+const formattingStyles = [
+  {
+    id: 'bold',
+    name: 'Bold',
+    kind: 'alphabet',
+    map: createAlphabetMap(
+      '𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝐉𝐊𝐋𝐌𝐍𝐎𝐏𝐐𝐑𝐒𝐓𝐔𝐕𝐖𝐗𝐘𝐙',
+      '𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳',
+      '𝟎𝟏𝟐𝟑𝟒𝟓𝟔𝟕𝟖𝟗'
+    )
+  },
+  {
+    id: 'italic',
+    name: 'Italic',
+    kind: 'alphabet',
+    map: createAlphabetMap(
+      '𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍',
+      '𝑎𝑏𝑐𝑑𝑒𝑓𝑔ℎ𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑞𝑟𝑠𝑡𝑢𝑣𝑤𝑥𝑦𝑧'
+    )
+  },
+  {
+    id: 'bold-italic',
+    name: 'Bold Italic',
+    kind: 'alphabet',
+    map: createAlphabetMap(
+      '𝑨𝑩𝑪𝑫𝑬𝑭𝑮𝑯𝑰𝑱𝑲𝑳𝑴𝑵𝑶𝑷𝑸𝑹𝑺𝑻𝑼𝑽𝑾𝑿𝒀𝒁',
+      '𝒂𝒃𝒄𝒅𝒆𝒇𝒈𝒉𝒊𝒋𝒌𝒍𝒎𝒏𝒐𝒑𝒒𝒓𝒔𝒕𝒖𝒗𝒘𝒙𝒚𝒛'
+    )
+  },
+  {
+    id: 'bold-sans',
+    name: 'Bold Sans',
+    kind: 'alphabet',
+    map: createAlphabetMap(
+      '𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭',
+      '𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇',
+      '𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵'
+    )
+  },
+  {
+    id: 'monospace',
+    name: 'Monospace',
+    kind: 'alphabet',
+    map: createAlphabetMap(
+      '𝙰𝙱𝙲𝙳𝙴𝙵𝙶𝙷𝙸𝙹𝙺𝙻𝙼𝙽𝙾𝙿𝚀𝚁𝚂𝚃𝚄𝚅𝚆𝚇𝚈𝚉',
+      '𝚊𝚋𝚌𝚍𝚎𝚏𝚐𝚑𝚒𝚓𝚔𝚕𝚖𝚗𝚘𝚙𝚚𝚛𝚜𝚝𝚞𝚟𝚠𝚡𝚢𝚣',
+      '𝟶𝟷𝟸𝟹𝟺𝟻𝟼𝟽𝟾𝟿'
+    )
+  },
+  {
+    id: 'double-struck',
+    name: 'Double Struck',
+    kind: 'alphabet',
+    map: createAlphabetMap(
+      '𝔸𝔹ℂ𝔻𝔼𝔽𝔾ℍ𝕀𝕁𝕂𝕃𝕄ℕ𝕆ℙℚℝ𝕊𝕋𝕌𝕍𝕎𝕏𝕐ℤ',
+      '𝕒𝕓𝕔𝕕𝕖𝕗𝕘𝕙𝕚𝕛𝕜𝕝𝕞𝕟𝕠𝕡𝕢𝕣𝕤𝕥𝕦𝕧𝕨𝕩𝕪𝕫',
+      '𝟘𝟙𝟚𝟛𝟜𝟝𝟞𝟟𝟠𝟡'
+    )
+  },
+  {
+    id: 'script',
+    name: 'Script',
+    kind: 'alphabet',
+    map: createAlphabetMap(
+      '𝒜ℬ𝒞𝒟ℰℱ𝒢ℋℐ𝒥𝒦ℒℳ𝒩𝒪𝒫𝒬ℛ𝒮𝒯𝒰𝒱𝒲𝒳𝒴𝒵',
+      '𝒶𝒷𝒸𝒹ℯ𝒻𝓰𝒽𝒾𝒿𝓀𝓁𝓂𝓃𝑜𝓅𝓆𝓇𝓈𝓉𝓊𝓋𝓌𝓍𝓎𝓏'
+    )
+  },
+  {
+    id: 'small-caps',
+    name: 'Small Caps',
+    kind: 'alphabet',
+    map: createSmallCapsMap()
+  },
+  {
+    id: 'underline',
+    name: 'Underline',
+    kind: 'combining',
+    combining: '\u0332'
+  },
+  {
+    id: 'strikethrough',
+    name: 'Strikethrough',
+    kind: 'combining',
+    combining: '\u0336'
+  },
+  {
+    id: 'plain',
+    name: 'Plain',
+    kind: 'plain'
+  }
+];
+
+const reverseFormatLookup = {};
+formattingStyles.forEach(style => {
+  if (!style.map) return;
+  Object.entries(style.map).forEach(([baseChar, styledChar]) => {
+    if (!reverseFormatLookup[styledChar]) {
+      reverseFormatLookup[styledChar] = baseChar;
+    }
+  });
+});
+
+function formatWithMap(text, map) {
+  let result = '';
+  for (const char of text) {
+    result += map[char] || char;
+  }
+  return result;
+}
+
+function applyCombiningMarks(text, combiningChar) {
+  let result = '';
+  for (const char of text) {
+    if (char === '\n' || char === '\r') {
+      result += char;
+      continue;
+    }
+    if (/\s/.test(char)) {
+      result += char;
+      continue;
+    }
+    result += char + combiningChar;
+  }
+  return result;
+}
+
+function stripCombiningMarks(text) {
+  return text.replace(/[\u0332\u0336]/g, '');
+}
+
+function formatToPlain(text) {
+  const cleaned = stripCombiningMarks(text);
+  let result = '';
+  for (const char of cleaned) {
+    result += reverseFormatLookup[char] || char;
+  }
+  return result;
+}
+
+function transformSelection(transformer) {
+  const start = paper.selectionStart;
+  const end = paper.selectionEnd;
+  if (start === end) {
+    showStatus('Select text on the paper to format.');
+    updateFormattingButtonsState();
+    paper.focus();
+    return;
+  }
+  const before = paper.value.substring(0, start);
+  const target = paper.value.substring(start, end);
+  const after = paper.value.substring(end);
+  const replacement = transformer(target);
+  paper.value = before + replacement + after;
+  paper.selectionStart = start;
+  paper.selectionEnd = start + replacement.length;
+  updateLineNumbers();
+  updateFormattingButtonsState();
+  paper.focus();
+  playKeySound();
+}
+
+function applyFormatting(styleId) {
+  const style = formattingStyles.find(item => item.id === styleId);
+  if (!style) return;
+
+  let transformer = null;
+  if (style.kind === 'alphabet') {
+    transformer = (text) => formatWithMap(text, style.map);
+  } else if (style.kind === 'combining') {
+    transformer = (text) => applyCombiningMarks(text, style.combining);
+  } else if (style.kind === 'plain') {
+    transformer = (text) => formatToPlain(text);
+  }
+
+  if (!transformer) return;
+  transformSelection(transformer);
+}
+
+function formattingLabel(style) {
+  const sample = style.preview || style.name;
+  if (style.kind === 'alphabet') return formatWithMap(sample, style.map);
+  if (style.kind === 'combining') return applyCombiningMarks(sample, style.combining);
+  if (style.kind === 'plain') return sample;
+  return style.name;
+}
+
+function renderFormattingPane() {
+  if (!formattingButtonsContainer) return;
+  formattingButtonsContainer.innerHTML = '';
+  formattingStyles.forEach(style => {
+    const btn = document.createElement('button');
+    btn.className = 'formatting-btn';
+    btn.type = 'button';
+    btn.dataset.styleId = style.id;
+    btn.setAttribute('aria-label', `${style.name} formatting`);
+    const label = formattingLabel(style);
+    btn.innerHTML = `<div class="formatting-label">${label}</div><small>${style.name}</small>`;
+    btn.addEventListener('click', () => applyFormatting(style.id));
+    formattingButtonsContainer.appendChild(btn);
+  });
+  updateFormattingButtonsState();
+}
+
+function updateFormattingButtonsState() {
+  if (!formattingButtonsContainer) return;
+  const disabled = paper.selectionStart === paper.selectionEnd;
+  const buttons = Array.from(formattingButtonsContainer.querySelectorAll('.formatting-btn'));
+  buttons.forEach(btn => {
+    btn.classList.toggle('disabled', disabled);
+    btn.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+  });
+}
+
 function resetHelpPane() {
   helpName.textContent = 'Select a control to see details';
   helpCode.textContent = 'U+—';
@@ -833,6 +1111,9 @@ document.addEventListener('keyup', (e) => {
 
 paper.addEventListener('input', updateLineNumbers);
 paper.addEventListener('scroll', updateLineNumbers);
+paper.addEventListener('select', updateFormattingButtonsState);
+paper.addEventListener('keyup', () => updateFormattingButtonsState());
+paper.addEventListener('mouseup', () => setTimeout(updateFormattingButtonsState, 0));
 
 // ==========================================
 // Controls
@@ -875,6 +1156,7 @@ window.addEventListener('load', () => {
   updateLineNumbers();
   renderPalette();
   renderUnicodeGrid();
+  renderFormattingPane();
 });
 
 // Touch support
