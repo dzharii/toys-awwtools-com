@@ -294,7 +294,7 @@ function updateLineNumbers() {
     html += i + '<br>';
   }
   lineNumbers.innerHTML = html;
-  lineNumbers.style.top = (40 - paper.scrollTop) + 'px';
+  lineNumbers.style.transform = `translateY(${-paper.scrollTop}px)`;
 }
 
 function insertAtCursor(text, { replaceSelection = true } = {}) {
