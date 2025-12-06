@@ -1,0 +1,573 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Courier New', monospace;
+  overflow-x: hidden;
+  background-color: #1a1a1a;
+  color: #333;
+  position: relative;
+  min-height: 100vh;
+  padding-bottom: 380px; /* Space for fixed keyboard */
+}
+
+/* Background Layer */
+#background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background:
+    linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  opacity: 0.3;
+}
+
+#background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600"><defs><linearGradient id="bg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23667eea;stop-opacity:0.1"/><stop offset="100%" style="stop-color:%23764ba2;stop-opacity:0.1"/></linearGradient></defs><polygon points="0,0 400,100 0,300" fill="url(%23bg1)"/><polygon points="800,0 400,200 800,400" fill="url(%23bg1)"/><polygon points="0,600 300,400 600,600" fill="url(%23bg1)"/><polygon points="800,600 500,400 800,300" fill="url(%23bg1)"/></svg>');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.5;
+}
+
+/* Controls */
+#controls {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 15px 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+#controls label {
+  font-weight: bold;
+  font-size: 14px;
+  color: #333;
+}
+
+#sound-select {
+  padding: 8px 12px;
+  border: 2px solid #667eea;
+  border-radius: 6px;
+  background: white;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+#sound-select:hover {
+  border-color: #764ba2;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+#sound-select:focus {
+  border-color: #764ba2;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+/* Volume Controls */
+#volume-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 0;
+  padding-left: 0;
+  border-left: none;
+  border-top: 2px solid #ddd;
+  padding-top: 10px;
+}
+
+#volume-controls label {
+  font-weight: bold;
+  font-size: 14px;
+  color: #333;
+}
+
+.volume-btn {
+  padding: 6px 14px;
+  border: 2px solid #999;
+  border-radius: 5px;
+  background: white;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  color: #666;
+}
+
+.volume-btn:hover {
+  border-color: #667eea;
+  background: #f0f0ff;
+  color: #333;
+}
+
+.volume-btn.active {
+  border-color: #667eea;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+.volume-btn:active {
+  transform: scale(0.95);
+}
+
+/* Workspace Layout */
+#workspace {
+  display: flex;
+  gap: 30px;
+  padding: 40px 20px;
+  min-height: calc(100vh - 380px);
+  position: relative;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+/* Paper Container */
+#paper-container {
+  flex: 1;
+  max-width: 900px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+#line-numbers {
+  position: absolute;
+  left: -50px;
+  top: 10px;
+  padding: 40px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+  line-height: 1.8;
+  color: #999;
+  text-align: right;
+  user-select: none;
+  pointer-events: none;
+  z-index: 2;
+  width: 35px;
+}
+
+#paper {
+  width: 100%;
+  min-height: 500px;
+  padding: 40px 50px 40px 50px;
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+  line-height: 1.8;
+  background: #fafafa;
+  background-image:
+    repeating-linear-gradient(
+      transparent,
+      transparent 31px,
+      #e0e0e0 31px,
+      #e0e0e0 32px
+    );
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  resize: none;
+  outline: none;
+  color: #1a1a1a;
+  overflow-y: scroll;
+  transition: box-shadow 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+#paper:focus {
+  box-shadow:
+    0 15px 40px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 0 0 3px rgba(102, 126, 234, 0.3);
+}
+
+#paper::placeholder {
+  color: #aaa;
+}
+
+/* Help Pane */
+#help-pane {
+  width: 320px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid #d6d6d6;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  padding: 18px;
+  font-family: 'Courier New', monospace;
+}
+
+.help-header {
+  margin-bottom: 12px;
+}
+
+.help-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #222;
+}
+
+.help-subtitle {
+  font-size: 13px;
+  color: #666;
+}
+
+.help-body {
+  background: linear-gradient(180deg, #fdfdfd 0%, #f5f5f7 100%);
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+#help-name {
+  font-size: 17px;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+#help-code {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+#help-description {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.help-example-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #777;
+  margin-bottom: 6px;
+}
+
+#help-example {
+  background: #1a1a1a;
+  color: #f7f7f7;
+  border-radius: 4px;
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* Typewriter Keyboard */
+#typewriter {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: linear-gradient(to bottom, #2a2a2a 0%, #1a1a1a 100%);
+  padding: 20px;
+  box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.5);
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#keyboard-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+#keyboard {
+  width: 100%;
+  max-width: 1200px;
+  height: auto;
+}
+
+/* SVG Keys */
+.key {
+  fill: url(#keyGradient);
+  stroke: #999;
+  stroke-width: 2;
+  cursor: pointer;
+  filter: drop-shadow(3px 3px 5px rgba(0, 0, 0, 0.4));
+  transition: all 0.05s ease;
+}
+
+.key:hover {
+  fill: #e8e8e8;
+  filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.5));
+}
+
+.key.active {
+  fill: url(#keyActiveGradient);
+  filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.6));
+  transform: translateY(2px);
+}
+
+.key-label {
+  font-family: 'Courier New', monospace;
+  font-size: 24px;
+  font-weight: bold;
+  fill: #333;
+  pointer-events: none;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.key.inactive {
+  fill: #ebebeb;
+  cursor: default;
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.key.inactive + .key-label {
+  fill: #b5b5b5;
+}
+
+/* Special key styles */
+.key-space {
+  fill: url(#keyGradient);
+}
+
+.key-enter {
+  fill: url(#keyGradient);
+}
+
+.key-backspace,
+.key-tab,
+.key-caps,
+.key-shift {
+  fill: url(#keyGradient);
+}
+
+/* Active state for all keys */
+.key.active + .key-label {
+  fill: #1a1a1a;
+}
+
+#search-container {
+  pointer-events: auto;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+}
+
+#emoji-search {
+  width: 100%;
+  height: 100%;
+  border: 2px solid #c7c7c7;
+  border-radius: 6px;
+  padding: 14px 14px;
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  background: linear-gradient(180deg, #fdfdfd 0%, #f0f0f0 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 2px 6px rgba(0, 0, 0, 0.15);
+  color: #333;
+}
+
+#emoji-search:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+#emoji-search:disabled {
+  background: #efefef;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.mode-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+#mode-switch {
+  width: 100%;
+  border-top: 2px solid #ddd;
+  padding-top: 8px;
+}
+
+#mode-switch label {
+  font-weight: bold;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 4px;
+  display: inline-block;
+}
+
+.mode-btn {
+  padding: 6px 10px;
+  border: 2px solid #999;
+  border-radius: 6px;
+  background: white;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mode-btn.active {
+  border-color: #667eea;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+}
+
+.mode-btn:hover {
+  border-color: #764ba2;
+}
+
+/* Responsive Design */
+@media (max-width: 1400px) {
+  #keyboard {
+    max-width: 1000px;
+  }
+}
+
+@media (max-width: 1200px) {
+  #keyboard {
+    max-width: 900px;
+  }
+
+  .key-label {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 900px) {
+  #workspace {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #help-pane {
+    width: 100%;
+    max-width: 900px;
+  }
+
+  #paper {
+    width: 90%;
+    padding: 30px 35px;
+    font-size: 16px;
+  }
+
+  #keyboard {
+    max-width: 100%;
+  }
+
+  .key-label {
+    font-size: 18px;
+  }
+
+  #controls {
+    top: 10px;
+    right: 10px;
+    padding: 10px 15px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #volume-controls {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: none;
+    border-top: 2px solid #ddd;
+    padding-top: 8px;
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  body {
+    padding-bottom: 300px;
+  }
+
+  #paper {
+    width: 95%;
+    padding: 20px;
+    font-size: 14px;
+  }
+
+  #typewriter {
+    padding: 10px;
+  }
+
+  .key-label {
+    font-size: 14px;
+  }
+
+  #controls {
+    position: relative;
+    top: 0;
+    right: 0;
+    margin: 10px;
+  }
+
+  .volume-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+}
+
+/* Scrollbar Styling */
+#paper::-webkit-scrollbar {
+  width: 14px;
+  background: transparent;
+}
+
+#paper::-webkit-scrollbar-track {
+  background: #e8e8e8;
+  border-radius: 0;
+  border-left: 1px solid #d0d0d0;
+}
+
+#paper::-webkit-scrollbar-thumb {
+  background: #a0a0a0;
+  border-radius: 0;
+  border: 2px solid #e8e8e8;
+}
+
+#paper::-webkit-scrollbar-thumb:hover {
+  background: #808080;
+}
+
+#paper::-webkit-scrollbar-thumb:active {
+  background: #606060;
+}
+
+/* Firefox scrollbar styling */
+#paper {
+  scrollbar-width: thin;
+  scrollbar-color: #a0a0a0 #e8e8e8;
+}
+
+/* Animation for paper growth */
+#paper {
+  transition: height 0.2s ease-out;
+}
