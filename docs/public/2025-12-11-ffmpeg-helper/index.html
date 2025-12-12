@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f172a" />
+    <title>FFmpeg Helper</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="title-row">
+        <h1>FFmpeg Helper</h1>
+        <span id="offlineReadyBadge" class="badge hidden" aria-live="polite">Offline ready</span>
+        <span id="offlineBadge" class="badge hidden" aria-live="polite">Offline</span>
+      </div>
+      <p class="subtitle">
+        Build reusable ffmpeg commands for Android Termux. This page never runs ffmpeg — it only generates command
+        lines.
+      </p>
+      <button id="updateBanner" class="update-banner hidden" type="button" aria-live="polite">
+        Update available — tap to reload
+      </button>
+    </header>
+
+    <main class="main">
+      <details class="howto" id="howto">
+        <summary>How to use</summary>
+        <div class="howto-body">
+          <p>
+            Android browsers cannot reveal real filesystem paths. Pick files to get their names, then set base
+            directories that Termux can access. The helper combines your base dirs with file names to form paths.
+          </p>
+          <ul>
+            <li>Typical input base dir: <code>/storage/emulated/0/Download</code></li>
+            <li>Typical output base dir: <code>/storage/emulated/0/Movies</code></li>
+            <li>Termux home: <code>/data/data/com.termux/files/home</code></li>
+          </ul>
+          <p>
+            Placeholders like <code>{inputPath}</code> and <code>{outputPath}</code> are expanded per selected file.
+            Copy commands and paste them into Termux bash.
+          </p>
+        </div>
+      </details>
+
+      <section class="card settings" aria-label="Settings">
+        <h2>Settings</h2>
+        <div class="field">
+          <label for="inputBaseDir">Input base directory</label>
+          <input id="inputBaseDir" type="text" placeholder="/storage/emulated/0/Download" autocomplete="off" />
+          <div class="hint">Used directly in commands. Must match a real Termux‑visible path.</div>
+        </div>
+
+        <div class="field">
+          <label for="outputBaseDir">Output base directory</label>
+          <input id="outputBaseDir" type="text" placeholder="/storage/emulated/0/Movies" autocomplete="off" />
+          <div class="hint">Used directly in commands. Must match a real Termux‑visible path.</div>
+        </div>
+
+        <div class="field">
+          <label for="outputPattern">Output filename pattern</label>
+          <input id="outputPattern" type="text" placeholder="{inputBaseName}_out{inputExt}" autocomplete="off" />
+          <div class="chips" role="group" aria-label="Insert placeholder">
+            <button class="chip" type="button" data-insert="{inputBaseName}">{inputBaseName}</button>
+            <button class="chip" type="button" data-insert="{index1}">{index1}</button>
+            <button class="chip" type="button" data-insert="{inputExt}">{inputExt}</button>
+            <button class="chip" type="button" data-insert="{inputFileName}">{inputFileName}</button>
+          </div>
+          <div class="hint">
+            Generates <code>{outputFileName}</code>. Example: <code id="outputExample">—</code>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field half">
+            <label for="ffmpegBinary">ffmpeg binary</label>
+            <input id="ffmpegBinary" type="text" placeholder="ffmpeg" autocomplete="off" />
+            <div class="hint">If templates start with <code>ffmpeg</code>, this value is used instead.</div>
+          </div>
+
+          <div class="field half">
+            <label for="quoteMode">Quote mode</label>
+            <select id="quoteMode">
+              <option value="auto">Auto (quote when needed)</option>
+              <option value="on">Always quote</option>
+              <option value="off">Never quote</option>
+            </select>
+            <div class="hint">Affects placeholders like <code>{inputPath}</code> and <code>{outputPath}</code>.</div>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field half">
+            <label for="outputFormat">Output format</label>
+            <select id="outputFormat">
+              <option value="plain">Plain commands</option>
+              <option value="script">Bash script</option>
+              <option value="oneliner">One‑liner (&&)</option>
+            </select>
+          </div>
+          <div class="field half">
+            <label for="sortMode">Sort templates</label>
+            <select id="sortMode">
+              <option value="category">Category</option>
+              <option value="label">Label</option>
+              <option value="favorites">Favorites first</option>
+              <option value="recent">Recently used</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="reset-row">
+          <button id="resetSettings" class="secondary" type="button">Reset settings</button>
+          <button id="resetTemplates" class="secondary" type="button">Reset user templates</button>
+          <button id="resetFavorites" class="secondary" type="button">Clear favorites</button>
+        </div>
+
+        <details class="data">
+          <summary>Data import/export</summary>
+          <div class="data-body">
+            <button id="exportData" type="button">Export JSON backup</button>
+            <label class="file-button">
+              Import JSON backup
+              <input id="importData" type="file" accept="application/json" />
+            </label>
+          </div>
+        </details>
+      </section>
+
+      <section class="card sources" aria-label="Source files">
+        <h2>Source files</h2>
+        <div class="toggle-row" role="radiogroup" aria-label="Source mode">
+          <label><input type="radio" name="sourceMode" value="picker" checked /> Picker</label>
+          <label><input type="radio" name="sourceMode" value="manual" /> Manual list</label>
+        </div>
+
+        <div id="pickerBlock" class="block">
+          <label for="sourceFiles" class="file-button">
+            Choose files
+            <input id="sourceFiles" type="file" multiple />
+          </label>
+          <div id="selectedFiles" class="selected-files" aria-live="polite">No files selected.</div>
+        </div>
+
+        <div id="manualBlock" class="block hidden">
+          <label for="manualFiles">File names (one per line)</label>
+          <textarea
+            id="manualFiles"
+            rows="5"
+            placeholder="movie.mp4&#10;clip 01.mov"
+            autocomplete="off"
+          ></textarea>
+          <div class="hint">Used as‑is. The picker is ignored in manual mode.</div>
+        </div>
+
+        <div class="preview">
+          <div class="preview-row">
+            <div class="preview-label">Input path preview</div>
+            <div id="inputPreview" class="preview-value">—</div>
+          </div>
+          <div class="preview-row">
+            <div class="preview-label">Output path preview</div>
+            <div id="outputPreview" class="preview-value">—</div>
+          </div>
+          <ul id="warnings" class="warnings"></ul>
+        </div>
+      </section>
+
+      <section class="templates" aria-label="Templates">
+        <div class="templates-header">
+          <h2>Templates</h2>
+          <div class="templates-actions">
+            <input id="search" type="search" placeholder="Search templates…" autocomplete="off" />
+            <button id="favoritesFilter" class="secondary" type="button" aria-pressed="false">Favorites</button>
+            <button id="newTemplate" type="button">New template</button>
+          </div>
+        </div>
+        <div id="templateList" class="template-list"></div>
+      </section>
+
+      <details id="diagnostics" class="diagnostics hidden">
+        <summary>Diagnostics</summary>
+        <pre id="diagnosticsLog"></pre>
+      </details>
+    </main>
+
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+    <dialog id="templateEditor" class="dialog">
+      <form method="dialog" id="templateForm">
+        <h3 id="templateEditorTitle">New template</h3>
+        <input id="templateId" type="hidden" />
+        <div class="field">
+          <label for="templateLabel">Label *</label>
+          <input id="templateLabel" type="text" required autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="templateDescription">Description</label>
+          <textarea id="templateDescription" rows="2" autocomplete="off"></textarea>
+        </div>
+        <div class="field-row">
+          <div class="field half">
+            <label for="templateCategory">Category</label>
+            <input id="templateCategory" type="text" placeholder="Video" autocomplete="off" />
+          </div>
+          <div class="field half">
+            <label for="templateTags">Tags (comma)</label>
+            <input id="templateTags" type="text" placeholder="h264,transcode" autocomplete="off" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="templateBody">Command body *</label>
+          <textarea id="templateBody" rows="6" required autocomplete="off"></textarea>
+          <div class="hint">
+            Allowed placeholders:
+            <code>{inputPath}</code>, <code>{outputPath}</code>, <code>{inputBaseName}</code>,
+            <code>{inputExt}</code>, <code>{inputFileName}</code>, <code>{outputFileName}</code>,
+            <code>{index}</code>, <code>{index1}</code>, <code>{inputBaseDir}</code>, <code>{outputBaseDir}</code>,
+            <code>{ffmpegBinary}</code>, plus any params you add.
+          </div>
+        </div>
+        <div class="field">
+          <label><input id="templateDangerous" type="checkbox" /> Dangerous (requires confirm on copy)</label>
+        </div>
+
+        <div class="params">
+          <div class="params-header">
+            <div>Parameters</div>
+            <button id="addParam" class="secondary" type="button">Add param</button>
+          </div>
+          <div id="paramsList"></div>
+        </div>
+
+        <div class="preview-mini">
+          <div class="preview-label">Live preview (first file)</div>
+          <pre id="templatePreview">Select a file to preview.</pre>
+        </div>
+
+        <menu class="dialog-actions">
+          <button id="deleteTemplate" class="secondary hidden" type="button">Delete</button>
+          <button id="cloneTemplate" class="secondary hidden" type="button">Clone</button>
+          <button value="cancel" class="secondary">Cancel</button>
+          <button id="saveTemplate" value="default">Save</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="importDialog" class="dialog">
+      <form method="dialog" id="importForm">
+        <h3>Import backup</h3>
+        <p>Choose how to apply the imported data.</p>
+        <label><input type="radio" name="importMode" value="merge" checked /> Merge (imported wins on id collisions)</label>
+        <label><input type="radio" name="importMode" value="replace" /> Replace current user data</label>
+        <menu class="dialog-actions">
+          <button value="cancel" class="secondary">Cancel</button>
+          <button id="confirmImport" value="default">Import</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <script id="builtinTemplates" type="application/xml">
+      <templates schemaVersion="1">
+        <template id="h264-crf" label="Transcode to H.264 MP4 (CRF)" category="Video" tags="h264,transcode,mp4">
+          <description>High‑quality H.264 MP4 with adjustable CRF.</description>
+          <params>
+            <param id="crf" label="CRF" type="number" default="20" min="0" max="51" step="1" />
+            <param id="preset" label="Preset" type="text" default="medium" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -c:v libx264 -preset {preset} -crf {crf} -c:a aac -b:a 128k {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="h265-crf" label="Transcode to H.265/HEVC MP4 (CRF)" category="Video" tags="h265,hevc,transcode,mp4">
+          <description>Smaller files with HEVC. Slower encode.</description>
+          <params>
+            <param id="crf" label="CRF" type="number" default="28" min="0" max="51" step="1" />
+            <param id="preset" label="Preset" type="text" default="slow" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -c:v libx265 -preset {preset} -crf {crf} -c:a aac -b:a 128k {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="extract-aac" label="Extract audio to AAC (m4a)" category="Audio" tags="audio,extract,aac,m4a">
+          <description>Pull audio stream into an M4A container.</description>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -vn -c:a aac -b:a 160k {outputBaseDir}/{inputBaseName}.m4a
+          ]]></body>
+        </template>
+
+        <template id="extract-mp3" label="Extract audio to MP3" category="Audio" tags="audio,extract,mp3">
+          <description>Convert audio track to MP3.</description>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -vn -c:a libmp3lame -q:a 2 {outputBaseDir}/{inputBaseName}.mp3
+          ]]></body>
+        </template>
+
+        <template id="trim-copy" label="Trim segment (copy streams)" category="Video" tags="trim,cut,copy">
+          <description>Extract a segment without re‑encoding.</description>
+          <params>
+            <param id="start" label="Start (hh:mm:ss)" type="text" default="00:00:00" />
+            <param id="duration" label="Duration (hh:mm:ss)" type="text" default="00:00:10" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -ss {start} -i {inputPath} -t {duration} -c copy {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="speed-change" label="Change speed" category="Video" tags="speed,setpts,atempo">
+          <description>Speed up or slow down video and audio.</description>
+          <params>
+            <param id="factor" label="Speed factor" type="number" default="2.0" step="0.1" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -filter_complex "[0:v]setpts=PTS/{factor}[v];[0:a]atempo={factor}[a]" -map "[v]" -map "[a]" {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="scale-height" label="Scale to height" category="Video" tags="scale,resize,1080p">
+          <description>Resize keeping aspect ratio.</description>
+          <params>
+            <param id="height" label="Height" type="number" default="1080" step="2" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -vf "scale=-2:{height}" -c:v libx264 -crf 20 -preset medium -c:a copy {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="gif-from-video" label="Create GIF from video" category="Video" tags="gif,palette,fps">
+          <description>Two‑pass palette method for better GIF quality.</description>
+          <params>
+            <param id="start" label="Start" type="text" default="00:00:00" />
+            <param id="duration" label="Duration" type="text" default="00:00:05" />
+            <param id="fps" label="FPS" type="number" default="12" step="1" />
+            <param id="width" label="Width" type="number" default="480" step="2" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -ss {start} -t {duration} -i {inputPath} -vf "fps={fps},scale={width}:-1:flags=lanczos,palettegen" /tmp/palette.png
+ffmpeg -y -ss {start} -t {duration} -i {inputPath} -i /tmp/palette.png -lavfi "fps={fps},scale={width}:-1:flags=lanczos[x];[x][1:v]paletteuse" {outputBaseDir}/{inputBaseName}.gif
+          ]]></body>
+        </template>
+
+        <template id="extract-frames" label="Extract frames to JPEGs" category="Video" tags="frames,images,jpeg">
+          <description>Export frames at a fixed FPS.</description>
+          <params>
+            <param id="fps" label="FPS" type="number" default="1" step="0.5" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -vf "fps={fps}" {outputBaseDir}/{inputBaseName}-frame-%03d.jpg
+          ]]></body>
+        </template>
+
+        <template id="thumbnail" label="Create thumbnail at time" category="Video" tags="thumbnail,poster">
+          <description>Grab a single frame as a thumbnail.</description>
+          <params>
+            <param id="time" label="Time (hh:mm:ss)" type="text" default="00:00:01" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -ss {time} -i {inputPath} -frames:v 1 {outputBaseDir}/{inputBaseName}-thumb.jpg
+          ]]></body>
+        </template>
+
+        <template id="concat-demuxer" label="Concat via list.txt" category="Video" tags="concat,join">
+          <description>Join files using the concat demuxer (requires a list file).</description>
+          <body><![CDATA[
+ffmpeg -y -f concat -safe 0 -i {inputBaseName}_list.txt -c copy {outputPath}
+          ]]></body>
+          <notes>Create a list file with lines like: file 'part1.mp4'</notes>
+        </template>
+
+        <template id="probe" label="Probe metadata (ffprobe)" category="Utility" tags="probe,metadata,ffprobe">
+          <description>Show stream and codec info.</description>
+          <body><![CDATA[
+ffprobe -hide_banner -i {inputPath}
+          ]]></body>
+        </template>
+      </templates>
+    </script>
+
+    <script src="main.js"></script>
+  </body>
+</html>
