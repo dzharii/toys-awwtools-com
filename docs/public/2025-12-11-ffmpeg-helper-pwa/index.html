@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#0ea5e9">
+  <title>ffhelper</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>ffhelper <span class="pill">offline</span></h1>
+    <div class="actions">
+      <button id="editToggle" class="secondary">Edit templates</button>
+      <button id="resetBtn" class="danger">Reset</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="section-row top">
+      <section class="panel" id="inputPanel">
+        <div class="status-row" style="justify-content: space-between;">
+          <h2>Inputs</h2>
+          <div class="tabs" aria-label="Input mode">
+            <button class="tab active" data-mode="paste">Paste paths</button>
+            <button class="tab" data-mode="files">Pick files</button>
+          </div>
+        </div>
+        <div id="pasteMode">
+          <label for="pathPaste">Termux paths (one per line)</label>
+          <textarea id="pathPaste" placeholder="/storage/emulated/0/DCIM/Camera/clip.mp4"></textarea>
+          <div class="small">Always quoted for bash. Multi-line paste supported.</div>
+        </div>
+        <div id="fileMode" class="hidden">
+          <div class="inline">
+            <div>
+              <label for="filePicker">Pick files</label>
+              <input id="filePicker" type="file" multiple webkitdirectory>
+              <div id="dropZone" class="drop-zone">
+                <div class="drop-title">Drop files here (desktop)</div>
+                <div class="small">Drag multiple files to add inputs.</div>
+              </div>
+            </div>
+            <div>
+              <label for="assumedDir">Assumed input directory (when only names are available)</label>
+              <div class="input-with-action">
+                <input id="assumedDir" type="text" placeholder="/storage/emulated/0/Download">
+                <button id="pickAssumedDir" type="button" class="secondary small-btn">Pick folder</button>
+              </div>
+              <div class="small">Used when the browser only exposes file names.</div>
+            </div>
+          </div>
+          <div class="small" id="fileModeStatus"></div>
+        </div>
+        <div class="divider"></div>
+        <div class="inline">
+          <div>
+            <label for="termuxRoot">Termux storage root</label>
+            <div class="input-with-action">
+              <input id="termuxRoot" type="text">
+              <button id="pickTermuxRoot" type="button" class="secondary small-btn">Pick folder</button>
+            </div>
+            <div class="small">Picker fills a folder name on desktop; edit to match Termux.</div>
+          </div>
+          <div>
+            <label for="outputDir">Output directory</label>
+            <div class="input-with-action">
+              <input id="outputDir" type="text">
+              <button id="pickOutputDir" type="button" class="secondary small-btn">Pick folder</button>
+            </div>
+          </div>
+        </div>
+        <div class="inline">
+          <div>
+            <label for="prefix">Prefix</label>
+            <input id="prefix" type="text" placeholder="out_">
+          </div>
+          <div>
+            <label for="suffix">Suffix</label>
+            <input id="suffix" type="text" placeholder="_compressed">
+          </div>
+          <div>
+            <label for="outExt">Output extension (no dot)</label>
+            <input id="outExt" type="text" placeholder="mp4">
+          </div>
+        </div>
+        <div class="inline">
+          <div>
+            <label>Conflict behavior</label>
+            <div class="flex-row">
+              <label><input type="radio" name="conflict" value="overwrite"> overwrite (-y)</label>
+              <label><input type="radio" name="conflict" value="safe"> safe suffix</label>
+              <label><input type="radio" name="conflict" value="fail"> fail if exists</label>
+            </div>
+          </div>
+          <div>
+            <label>Preview</label>
+            <div class="input-preview" id="pathPreview"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Variables</h2>
+        <div id="variableList" class="grid"></div>
+        <div class="small">Variables come from the template XML and persist automatically.</div>
+      </section>
+    </div>
+
+    <section class="panel templates-section">
+      <div class="status-row">
+        <h2>Templates</h2>
+        <div class="flex-row">
+          <span class="badge" id="resultCount">0</span>
+          <label class="flex-row" style="gap:4px;"><input type="checkbox" id="favoriteToggle"> favorites only</label>
+        </div>
+      </div>
+      <div class="inline">
+        <div>
+          <label for="searchBox">Search title, tags, notes</label>
+          <input id="searchBox" type="text" placeholder="search...">
+        </div>
+        <div>
+          <label>Active tag</label>
+          <div id="activeTag" class="chip hidden"></div>
+          <div id="tagList" class="tag-list"></div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="template-list" id="templateList"></div>
+    </section>
+
+    <section class="panel hidden" id="editorPanel">
+      <div class="status-row">
+        <h2>Template editor</h2>
+        <div class="tabs">
+          <button class="tab active" data-editor="form">Form</button>
+          <button class="tab" data-editor="xml">XML</button>
+        </div>
+      </div>
+      <div id="formEditor">
+        <div class="inline">
+          <div>
+            <label for="templateSelect">Select template</label>
+            <select id="templateSelect"></select>
+          </div>
+          <div>
+            <label for="editTitle">Title</label>
+            <input id="editTitle" type="text">
+          </div>
+          <div>
+            <label for="editTags">Tags (comma)</label>
+            <input id="editTags" type="text">
+          </div>
+        </div>
+        <div class="inline">
+          <div>
+            <label for="editType">Type</label>
+            <select id="editType">
+              <option value="command">command</option>
+              <option value="script">script</option>
+            </select>
+          </div>
+          <div>
+            <label for="editNotes">Notes</label>
+            <input id="editNotes" type="text">
+          </div>
+        </div>
+        <label for="editBody">Body</label>
+        <textarea id="editBody" spellcheck="false"></textarea>
+        <div class="template-footer">
+          <button id="saveTemplate">Save template</button>
+          <div class="pill-small" id="previewLabel">Live preview uses current inputs and variables.</div>
+        </div>
+        <pre class="rendered" id="formPreview"></pre>
+      </div>
+      <div id="xmlEditor" class="hidden">
+        <label for="xmlArea">XML</label>
+        <textarea id="xmlArea" spellcheck="false"></textarea>
+        <div class="template-footer">
+          <button id="validateXml" class="secondary">Validate</button>
+          <button id="saveXml">Save XML</button>
+          <button id="exportXml" class="secondary">Export</button>
+        </div>
+        <div id="xmlStatus" class="small"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast">Copied</div>
+  <input id="dirPicker" type="file" webkitdirectory multiple class="hidden" aria-hidden="true">
+
+  <script id="default-templates" type="application/xml">
+<ffhelper version="1">
+  <spec>
+    <title>ffhelper</title>
+    <termuxInputRoot>/storage/emulated/0</termuxInputRoot>
+    <defaultOutputDir>/storage/emulated/0/Movies/exports</defaultOutputDir>
+    <defaultOutExt>mp4</defaultOutExt>
+  </spec>
+
+  <variables>
+    <var id="crf" type="number" label="CRF" default="23" min="0" max="51" />
+    <var id="preset" type="select" label="Preset" default="medium" options="ultrafast,superfast,veryfast,faster,fast,medium,slow,slower,veryslow" />
+    <var id="start" type="text" label="Start" default="00:00:00" />
+    <var id="duration" type="text" label="Duration" default="00:00:10" />
+    <var id="scaleWidth" type="number" label="Scale width" default="1080" min="64" max="4096" />
+    <var id="timestamp" type="text" label="Timestamp" default="00:00:03" />
+    <var id="gifDuration" type="number" label="GIF seconds" default="5" min="1" max="30" />
+    <var id="gifFps" type="number" label="GIF fps" default="12" min="1" max="60" />
+    <var id="gifWidth" type="number" label="GIF width" default="480" min="64" max="2048" />
+    <var id="audioBitrate" type="number" label="Audio kbps" default="160" min="48" max="320" />
+    <var id="listFile" type="text" label="List file" default="list.txt" />
+    <var id="volumeBoost" type="number" label="Volume boost" default="3" min="1" max="12" />
+    <var id="frameRate" type="number" label="Frame rate" default="24" min="1" max="120" />
+    <var id="telegramCrf" type="number" label="Telegram CRF" default="23" min="0" max="51" />
+    <var id="barsSeconds" type="number" label="Bars seconds" default="5" min="1" max="60" />
+  </variables>
+
+  <templates>
+    <template id="h264_crf" type="command">
+      <title>H.264 CRF transcode</title>
+      <tags>video,compress,phone</tags>
+      <body>ffmpeg -hide_banner {{overwriteFlag}}-i {{in}} -c:v libx264 -preset {{var:preset}} -crf {{var:crf}} -c:a aac -b:a {{var:audioBitrate}}k {{out}}</body>
+      <notes>Default sharing preset.</notes>
+    </template>
+
+    <template id="h265_crf" type="command">
+      <title>H.265 CRF transcode</title>
+      <tags>video,compress</tags>
+      <body>ffmpeg -hide_banner {{overwriteFlag}}-i {{in}} -c:v libx265 -preset {{var:preset}} -crf {{var:crf}} -c:a aac -b:a {{var:audioBitrate}}k {{out}}</body>
+      <notes>Smaller files, slower encode.</notes>
+    </template>
+
+    <template id="extract_m4a" type="command">
+      <title>Extract audio to m4a</title>
+      <tags>audio,extract</tags>
+      <body>ffmpeg -hide_banner {{overwriteFlag}}-i {{in}} -vn -c:a aac -b:a {{var:audioBitrate}}k {{out}}</body>
+      <notes>Set output extension to m4a.</notes>
+    </template>
+
+    <template id="extract_mp3" type="command">
+      <title>Extract audio to mp3</title>
+      <tags>audio,extract</tags>
+      <body>ffmpeg -hide_banner {{overwriteFlag}}-i {{in}} -vn -c:a libmp3lame -b:a {{var:audioBitrate}}k {{out}}</body>
+      <notes>Use when players need mp3.</notes>
+    </template>
+
+    <template id="scale_1080" type="command">
+      <title>Scale to 1080p</title>
+      <tags>video,scale</tags>
+      <body>ffmpeg -hide_banner {{overwriteFlag}}-i {{in}} -vf "scale=-2:{{var:scaleWidth}}" -c:v libx264 -crf {{var:crf}} -preset {{var:preset}} -c:a copy {{out}}</body>
+      <notes>Keeps aspect ratio, caps height.</notes>
+    </template>
+
+    <template id="trim_reencode" type="command">
+      <title>Trim start + duration</title>
+      <tags>video,trim</tags>
+      <body>ffmpeg -hide_banner {{overwriteFlag}}-ss {{var:start}} -i {{in}} -t {{var:duration}} -c:v libx264 -preset {{var:preset}} -crf {{var:crf}} -c:a aac -b:a {{var:audioBitrate}}k {{out}}</body>
+      <notes>Re-encodes trimmed segment.</notes>
+    </template>
+
+    <template id="screenshot" type="command">
+      <title>Screenshot at timestamp</title>
+      <tags>image,frame</tags>
+      <body>ffmpeg -hide_banner {{overwriteFlag}}-ss {{var:timestamp}} -i {{in}} -frames:v 1 -q:v 2 {{out}}</body>
+      <notes>Set output extension to jpg or png.</notes>
+    </template>
+
+    <template id="gif_preview" type="script">
+      <title>GIF preview</title>
+      <tags>gif,preview</tags>
+      <body><![CDATA[
+#!/usr/bin/env bash
+set -euo pipefail
+
+IN={{in}}
+OUT={{out}}
+PALETTE="${OUT%.*}_palette.png"
+
+ffmpeg -y -hide_banner -ss 0 -t {{var:gifDuration}} -i "$IN" -vf "fps={{var:gifFps}},scale={{var:gifWidth}}:-1:flags=lanczos" -y "$PALETTE"
+ffmpeg -y -hide_banner -ss 0 -t {{var:gifDuration}} -i "$IN" -i "$PALETTE" -filter_complex "fps={{var:gifFps}},scale={{var:gifWidth}}:-1:flags=lanczos[x];[x][1:v]paletteuse" "$OUT"
+      ]]></body>
+      <notes>Palette-based GIF with width + duration controls.</notes>
+    </template>
+
+    <template id="rotate_90" type="command">
+      <title>Rotate 90 degrees</title>
+      <tags>rotate,fix</tags>
+      <body>ffmpeg -hide_banner {{overwriteFlag}}-i {{in}} -vf "transpose=1" -c:a copy {{out}}</body>
+      <notes>Transpose=1 equals 90° clockwise.</notes>
+    </template>
+
+    <template id="loudnorm_aac" type="command">
+      <title>Normalize audio loudness</title>
+      <tags>audio,loudnorm</tags>
+      <body>ffmpeg -hide_banner {{overwriteFlag}}-i {{in}} -c:v copy -af loudnorm=I=-16:LRA=11:TP=-1.5 -c:a aac -b:a {{var:audioBitrate}}k {{out}}</body>
+      <notes>One-pass EBU R128 style loudnorm.</notes>
+    </template>
+
+    <template id="concat_list" type="command">
+      <title>Concat from list file</title>
+      <tags>concat,list</tags>
+      <body>ffmpeg -hide_banner {{overwriteFlag}}-f concat -safe 0 -i "{{var:listFile}}" -c copy {{out}}</body>
+      <notes>List file with file 'x.mp4' lines.</notes>
+    </template>
+
+    <template id="batch_h264" type="script">
+      <title>Batch H.264 transcode loop</title>
+      <tags>video,compress,batch</tags>
+      <body><![CDATA[
+#!/usr/bin/env bash
+set -euo pipefail
+
+OUT_DIR={{outDir}}
+mkdir -p "$OUT_DIR"
+
+for IN in {{inputs}}; do
+  STEM="$(basename "$IN")"
+  STEM="${STEM%.*}"
+  OUT_PATH="$OUT_DIR/{{prefix}}${STEM}{{suffix}}.{{outExt}}"
+  ffmpeg -hide_banner {{overwriteFlag}}-i "$IN" -c:v libx264 -preset {{var:preset}} -crf {{var:crf}} -c:a aac -b:a {{var:audioBitrate}}k "$OUT_PATH"
+done
+      ]]></body>
+      <notes>One paste runs all inputs.</notes>
+    </template>
+
+    <template id="telegram_720" type="command">
+      <title>Telegram 720p share</title>
+      <tags>video,compress,share</tags>
+      <body>ffmpeg -hide_banner {{overwriteFlag}}-i {{in}} -vf "scale=-2:720" -r 30 -c:v libx265 -preset slow -crf {{var:telegramCrf}} -c:a aac -b:a 48k {{out}}</body>
+      <notes>From ffmpeg-recipes quick share preset.</notes>
+    </template>
+
+    <template id="quick_normalize_video" type="command">
+      <title>Quick normalize video</title>
+      <tags>audio,normalize</tags>
+      <body>ffmpeg -hide_banner {{overwriteFlag}}-i {{in}} -c:v copy -af dynaudnorm,volume={{var:volumeBoost}} {{out}}</body>
+      <notes>Based on ffmpeg-recipes dynaudnorm.</notes>
+    </template>
+
+    <template id="reduce_fps" type="command">
+      <title>Reduce frame rate</title>
+      <tags>video,fps</tags>
+      <body>ffmpeg -hide_banner {{overwriteFlag}}-i {{in}} -movflags +faststart -filter:v fps={{var:frameRate}} {{out}}</body>
+      <notes>Matches snippet from ffmpeg-recipes.</notes>
+    </template>
+
+    <template id="android_faststart" type="command">
+      <title>Android faststart transcode</title>
+      <tags>android,share</tags>
+      <body>ffmpeg -hide_banner {{overwriteFlag}}-i {{in}} -c:v libx264 -c:a aac -movflags +faststart {{out}}</body>
+      <notes>From ffmpeg-recipes convert for Android.</notes>
+    </template>
+
+    <template id="smpte_bars" type="command">
+      <title>SMPTE bars generator</title>
+      <tags>generator,lavfi</tags>
+      <body>ffmpeg -hide_banner -f lavfi -i smptebars=size=640x480 -t {{var:barsSeconds}} {{out}}</body>
+      <notes>Inspired by ffmpeg-samples2 tutorial.</notes>
+    </template>
+
+    <template id="extract_frames" type="script">
+      <title>Extract frames to folder</title>
+      <tags>frames,image</tags>
+      <body><![CDATA[
+#!/usr/bin/env bash
+set -euo pipefail
+
+IN={{in}}
+OUT_DIR="{{outDir}}/{{stem}}_frames"
+mkdir -p "$OUT_DIR"
+ffmpeg -hide_banner -i "$IN" -q:v 1 -r {{var:frameRate}} -f image2 "$OUT_DIR/image-%02d.jpeg"
+      ]]></body>
+      <notes>From ffmpeg-snippets frame extractor.</notes>
+    </template>
+  </templates>
+</ffhelper>
+  </script>
+
+  <script src="main.js"></script>
+</body>
+</html>
