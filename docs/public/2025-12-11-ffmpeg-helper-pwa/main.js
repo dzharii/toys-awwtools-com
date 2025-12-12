@@ -136,10 +136,28 @@
       console.warn('Directory picker failed, falling back', e);
     }
     const input = $('#dirPicker');
-    if (!input) return;
+    if (!input || !('webkitdirectory' in input)) {
+      showToast('Folder picker not supported here — type path manually');
+      const field = $('#' + kind);
+      field?.focus();
+      return;
+    }
     input.dataset.kind = kind;
     input.value = '';
     input.click();
+  }
+
+  function initPickerSupport() {
+    const input = $('#dirPicker');
+    const supportsWebkitDir = !!input && ('webkitdirectory' in input);
+    const supportsDir = !!window.showDirectoryPicker || supportsWebkitDir;
+    if (supportsDir) return;
+    ['pickAssumedDir', 'pickTermuxRoot', 'pickOutputDir'].forEach((id) => {
+      const btn = $('#' + id);
+      if (!btn) return;
+      btn.disabled = true;
+      btn.title = 'Folder picker not supported in this browser';
+    });
   }
 
   function initDropZone() {
@@ -828,6 +846,7 @@
     hydrateInputs();
     bindInputs();
     initTabs();
+    initPickerSupport();
     initDropZone();
     renderVariableInputs();
     renderTagList();
@@ -835,6 +854,11 @@
     updatePreview();
     initEditorTabs();
     registerServiceWorker();
+
+    const advanced = $('#advancedOutput');
+    if (advanced && window.matchMedia('(min-width: 900px)').matches) {
+      advanced.open = true;
+    }
   }
 
   document.addEventListener('DOMContentLoaded', init);
