@@ -44,6 +44,31 @@
         </div>
       </details>
 
+      <details class="howto" id="tips">
+        <summary>FFmpeg tips</summary>
+        <div class="howto-body">
+          <ul>
+            <li><code>-i</code> sets the input. Most commands start with <code>ffmpeg -i {inputPath}</code>.</li>
+            <li><code>-c copy</code> (or <code>-c:v copy -c:a copy</code>) rewraps without re‑encoding.</li>
+            <li><code>-map 0</code> keeps all streams (extra audio tracks, subtitles).</li>
+            <li>
+              Trimming: <code>-ss</code> start time, <code>-t</code> duration, or <code>-to</code> end time. Use
+              <code>-c copy</code> for fast cuts when possible.
+            </li>
+            <li>
+              Quality: <code>-crf</code> controls size/quality (x264 typical 18–23, x265 typical 24–30). Lower is
+              better quality and larger files. <code>-preset</code> trades speed for compression.
+            </li>
+            <li>
+              Filtergraphs often need quotes: <code>-vf "fieldmatch,yadif,decimate"</code>. Use straight quotes.
+            </li>
+            <li>
+              In bash loops, add <code>-nostdin</code> before <code>-i</code> to avoid interactive stdin issues.
+            </li>
+          </ul>
+        </div>
+      </details>
+
       <section class="card settings" aria-label="Settings">
         <h2>Settings</h2>
         <div class="field">
@@ -374,6 +399,284 @@ ffmpeg -y -f concat -safe 0 -i {inputBaseName}_list.txt -c copy {outputPath}
           <description>Show stream and codec info.</description>
           <body><![CDATA[
 ffprobe -hide_banner -i {inputPath}
+          ]]></body>
+        </template>
+
+        <template id="rewrap-copy" label="Rewrap / remux (copy all streams)" category="Video" tags="remux,rewrap,copy">
+          <description>Change container without re‑encoding. Keeps all streams.</description>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -c copy -map 0 {outputPath}
+          ]]></body>
+          <notes>Set output extension via Output pattern (e.g., {inputBaseName}.mp4).</notes>
+        </template>
+
+        <template id="faststart-remux" label="Enable faststart (copy streams)" category="Video" tags="faststart,streaming,remux">
+          <description>Move metadata to file start for faster streaming playback.</description>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -c copy -movflags +faststart {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="h264-android" label="H.264 MP4 for Android (faststart)" category="Video" tags="h264,android,mp4,faststart">
+          <description>Compatible MP4 with yuv420p pixel format and faststart.</description>
+          <params>
+            <param id="crf" label="CRF" type="number" default="20" min="0" max="51" step="1" />
+            <param id="preset" label="Preset" type="text" default="slow" />
+            <param id="ab" label="Audio bitrate" type="text" default="128k" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -c:v libx264 -pix_fmt yuv420p -preset {preset} -crf {crf} -c:a aac -b:a {ab} -movflags +faststart {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="telegram-720p" label="Telegram‑friendly 720p HEVC" category="Video" tags="telegram,720p,h265,share">
+          <description>Downscale to 720p, HEVC video, AAC audio, higher volume.</description>
+          <params>
+            <param id="crf" label="CRF" type="number" default="23" min="0" max="51" step="1" />
+            <param id="preset" label="Preset" type="text" default="slow" />
+            <param id="volume" label="Volume gain" type="number" default="5.0" step="0.1" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -vf "scale=-2:720" -r 30 -c:v libx265 -preset {preset} -crf {crf} -c:a aac -b:a 48k -af "volume={volume}" {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="set-fps" label="Change FPS (re‑encode)" category="Video" tags="fps,rate">
+          <description>Convert to a target framerate.</description>
+          <params>
+            <param id="fps" label="FPS" type="number" default="24" step="1" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -filter:v fps={fps} -c:v libx264 -crf 20 -preset medium -c:a copy {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="rotate" label="Rotate video (transpose)" category="Video" tags="rotate,transpose">
+          <description>Rotate by 90/180/270 using transpose values 0–3.</description>
+          <params>
+            <param id="transpose" label="Transpose" type="number" default="1" min="0" max="3" step="1" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -vf "transpose={transpose}" -c:a copy {outputPath}
+          ]]></body>
+          <notes>0=90CCW+VFlip, 1=90CW, 2=90CCW, 3=90CW+VFlip.</notes>
+        </template>
+
+        <template id="crop" label="Crop video" category="Video" tags="crop,resize">
+          <description>Crop to width/height at x/y offset.</description>
+          <params>
+            <param id="width" label="Width" type="text" default="iw" />
+            <param id="height" label="Height" type="text" default="ih" />
+            <param id="x" label="X" type="text" default="0" />
+            <param id="y" label="Y" type="text" default="0" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -vf "crop={width}:{height}:{x}:{y}" -c:v libx264 -crf 20 -preset medium -c:a copy {outputPath}
+          ]]></body>
+          <notes>Use iw/ih for input size, or numbers.</notes>
+        </template>
+
+        <template id="flip" label="Flip video (hflip/vflip)" category="Video" tags="flip,hflip,vflip">
+          <description>Apply a flip filter.</description>
+          <params>
+            <param id="flipFilter" label="Filter" type="text" default="hflip" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -vf "{flipFilter}" -c:a copy {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="deinterlace-yadif" label="Deinterlace (yadif)" category="Video" tags="deinterlace,yadif">
+          <description>Deinterlace and re‑encode to H.264.</description>
+          <params>
+            <param id="crf" label="CRF" type="number" default="20" min="0" max="51" step="1" />
+            <param id="preset" label="Preset" type="text" default="slow" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -vf "yadif,format=yuv420p" -c:v libx264 -preset {preset} -crf {crf} -c:a copy {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="inverse-telecine" label="Inverse telecine" category="Video" tags="telecine,fieldmatch,decimate">
+          <description>Reconstruct frames from telecined source.</description>
+          <params>
+            <param id="crf" label="CRF" type="number" default="20" min="0" max="51" step="1" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -c:v libx264 -vf "fieldmatch,yadif,decimate" -crf {crf} -c:a copy {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="split-segments" label="Split into segments (copy)" category="Video" tags="segment,split,copy">
+          <description>Split file into fixed‑length parts without re‑encoding.</description>
+          <params>
+            <param id="segmentTime" label="Segment seconds" type="number" default="60" step="1" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -c copy -map 0 -f segment -segment_time {segmentTime} -reset_timestamps 1 {outputBaseDir}/{inputBaseName}-part-%03d{inputExt}
+          ]]></body>
+        </template>
+
+        <template id="remove-audio" label="Remove audio (video only)" category="Video" tags="noaudio,strip">
+          <description>Keep video stream, drop audio.</description>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -c:v copy -an {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="strip-video-copy-audio" label="Strip video (audio only, copy)" category="Audio" tags="audio-only,copy">
+          <description>Remove video, keep audio stream.</description>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -vn -c:a copy {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="extract-wav" label="Extract audio to WAV (PCM)" category="Audio" tags="audio,extract,wav,pcm">
+          <description>Convert audio track to WAV.</description>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -vn -c:a pcm_s16le {outputBaseDir}/{inputBaseName}.wav
+          ]]></body>
+        </template>
+
+        <template id="volume-gain" label="Increase volume" category="Audio" tags="volume,boost">
+          <description>Adjust overall volume by a factor.</description>
+          <params>
+            <param id="gain" label="Gain factor" type="number" default="3.0" step="0.1" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -c:v copy -af "volume={gain}" {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="normalize-loudnorm-video" label="Normalize loudness (loudnorm)" category="Audio" tags="loudnorm,normalize">
+          <description>EBU R128 loudness normalization.</description>
+          <params>
+            <param id="I" label="Target I (LUFS)" type="number" default="-16" step="1" />
+            <param id="LRA" label="LRA" type="number" default="11" step="1" />
+            <param id="TP" label="True peak" type="number" default="-1.5" step="0.1" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -c:v copy -af "loudnorm=I={I}:LRA={LRA}:TP={TP}" {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="mute-segment" label="Mute audio segment" category="Audio" tags="mute,volume,segment">
+          <description>Silence audio between start and end seconds.</description>
+          <params>
+            <param id="start" label="Start (s)" type="number" default="0" step="1" />
+            <param id="end" label="End (s)" type="number" default="10" step="1" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -vcodec copy -af "volume=enable='between(t,{start},{end})':volume=0" {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="delay-audio" label="Delay audio" category="Audio" tags="delay,itsoffset">
+          <description>Delay audio by N seconds (positive delays audio later).</description>
+          <params>
+            <param id="offset" label="Offset (s)" type="number" default="3.84" step="0.01" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -itsoffset {offset} -i {inputPath} -map 0:v -map 1:a -c:v copy -c:a copy {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="delay-video" label="Delay video" category="Video" tags="delay,itsoffset">
+          <description>Delay video by N seconds (positive delays video later).</description>
+          <params>
+            <param id="offset" label="Offset (s)" type="number" default="3.84" step="0.01" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -itsoffset {offset} -i {inputPath} -map 1:v -map 0:a -c:v copy -c:a copy {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="subtitle-srt-to-ass" label="Convert SRT to ASS" category="Subtitles" tags="subtitles,srt,ass">
+          <description>Convert subtitles to .ass for burning.</description>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} {outputBaseDir}/{inputBaseName}.ass
+          ]]></body>
+        </template>
+
+        <template id="subtitle-burn-ass" label="Burn ASS subtitles" category="Subtitles" tags="subtitles,burn,ass">
+          <description>Burn subtitles into video frames.</description>
+          <params>
+            <param id="subAssPath" label="ASS path" type="text" default="subs.ass" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -vf "ass={subAssPath}" {outputPath}
+          ]]></body>
+          <notes>Convert SRT to ASS first if needed.</notes>
+        </template>
+
+        <template id="subtitle-embed-movtext" label="Embed subtitles (mov_text)" category="Subtitles" tags="subtitles,embed,mp4">
+          <description>Embed a subtitle file into MP4/MKV.</description>
+          <params>
+            <param id="subtitlePath" label="Subtitle path" type="text" default="subs.srt" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -i {subtitlePath} -c copy -c:s mov_text {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="watermark-image" label="Overlay image watermark" category="Watermark" tags="watermark,overlay,image">
+          <description>Overlay a PNG/JPG watermark in the top‑right corner.</description>
+          <params>
+            <param id="watermarkPath" label="Watermark path" type="text" default="watermark.png" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -i {watermarkPath} -filter_complex "overlay=main_w-overlay_w-5:5" {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="watermark-text" label="Centered text watermark" category="Watermark" tags="watermark,text,drawtext">
+          <description>Add centered semi‑transparent text.</description>
+          <params>
+            <param id="text" label="Text" type="text" default="WATERMARK" />
+            <param id="fontSize" label="Font size" type="number" default="36" step="1" />
+            <param id="alpha" label="Alpha (0‑1)" type="number" default="0.4" step="0.05" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -vf "drawtext=text='{text}':fontsize={fontSize}:fontcolor=white@{alpha}:x=(w-text_w)/2:y=(h-text_h)/2" {outputPath}
+          ]]></body>
+          <notes>Avoid apostrophes in text or edit the filter manually.</notes>
+        </template>
+
+        <template id="hstack-two" label="Stack two videos horizontally" category="Composite" tags="hstack,side-by-side">
+          <description>Combine current file with another video (second path is manual).</description>
+          <params>
+            <param id="input2Path" label="Second input path" type="text" default="second.mp4" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -i {input2Path} -filter_complex hstack=inputs=2 {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="vstack-two" label="Stack two videos vertically" category="Composite" tags="vstack,top-bottom">
+          <description>Combine current file with another video (second path is manual).</description>
+          <params>
+            <param id="input2Path" label="Second input path" type="text" default="second.mp4" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -i {input2Path} -filter_complex vstack=inputs=2 {outputPath}
+          ]]></body>
+        </template>
+
+        <template id="idet" label="Detect interlacing (idet)" category="Utility" tags="idet,interlace,analyze">
+          <description>Analyze interlacing; no output file is produced.</description>
+          <body><![CDATA[
+ffmpeg -i {inputPath} -filter:v idet -f null -
+          ]]></body>
+          <notes>Runs analysis only. Look at console output in Termux.</notes>
+        </template>
+
+        <template id="set-title" label="Set metadata title" category="Utility" tags="metadata,title">
+          <description>Replace title metadata while copying streams.</description>
+          <params>
+            <param id="title" label="Title" type="text" default="My Title" />
+          </params>
+          <body><![CDATA[
+ffmpeg -y -i {inputPath} -map_metadata -1 -metadata title="{title}" -c copy {outputPath}
           ]]></body>
         </template>
       </templates>
