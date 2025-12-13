@@ -15,11 +15,21 @@
     return point.matrixTransform(svg.getScreenCTM().inverse());
   }
 
-  function updateViewBox(svg) {
+  function updateViewBox(svg, onZoom) {
     svg.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+
+    // Calculate zoom level (assuming initial width 1000)
+    // Zoom = 1 when width is 1000.
+    // Zoom = 2 when width is 500.
+    const zoom = 1000 / viewBox.w;
+    B.state.zoom = zoom;
+
+    if (onZoom) {
+      onZoom(zoom);
+    }
   }
 
-  function initZoom() {
+  function initZoom(onZoom) {
     const svg = dom.get('svgRoot');
     if (!svg) return;
 
@@ -33,35 +43,16 @@
       e.preventDefault();
       const w = viewBox.w;
       const h = viewBox.h;
-      const mx = e.offsetX; // Mouse relative to SVG element
-      const my = e.offsetY;
 
-      // We need to zoom towards the mouse pointer.
-      // But since we are manipulating viewBox, it's a bit tricky with just offsetX/Y if the SVG is scaled by CSS.
-      // Let's use a simpler approach: Zoom towards center of view, or use the point logic.
+      // Limit zoom range
+      // Max zoom (closest): width 100 -> zoom 10
+      // Min zoom (farthest): width 2000 -> zoom 0.5
 
-      const dw = w * Math.sign(e.deltaY) * 0.1;
-      const dh = h * Math.sign(e.deltaY) * 0.1;
-
-      // Clamp zoom
-      if (viewBox.w + dw < 100 || viewBox.w + dw > 2000) return;
-
-      // Simple center zoom for now to be robust
-      // viewBox.x -= dw / 2;
-      // viewBox.y -= dh / 2;
-      // viewBox.w += dw;
-      // viewBox.h += dh;
-
-      // Mouse-centric zoom
-      // 1. Get mouse position in SVG coordinates *before* zoom
-      // We can't easily get exact SVG coords without CTM, but we can approximate if we assume the SVG fills the container.
-      // Let's stick to a robust center-zoom or simple pan-zoom.
-
-      // Let's try the standard viewBox zoom logic
       const scaleFactor = e.deltaY > 0 ? 1.1 : 0.9;
-
-      // New width and height
       const newW = viewBox.w * scaleFactor;
+
+      if (newW < 100 || newW > 2000) return;
+
       const newH = viewBox.h * scaleFactor;
 
       // Mouse position ratio within the element
@@ -75,7 +66,7 @@
       viewBox.w = newW;
       viewBox.h = newH;
 
-      updateViewBox(svg);
+      updateViewBox(svg, onZoom);
     }, { passive: false });
 
     svg.addEventListener('mousedown', (e) => {
@@ -101,7 +92,7 @@
       viewBox.x -= dx * scaleX;
       viewBox.y -= dy * scaleY;
 
-      updateViewBox(svg);
+      updateViewBox(svg, onZoom);
     });
 
     window.addEventListener('mouseup', () => {

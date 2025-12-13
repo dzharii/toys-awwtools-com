@@ -37,7 +37,6 @@
     initReducedMotion();
     B.animCharacter.startIdle();
     B.uiInput.wire();
-    if (B.zoom) B.zoom.initZoom();
 
     function applyLayout(text) {
       const hint = dom.get('inputHint');
@@ -53,6 +52,15 @@
       } else {
         B.renderBrain.render(plan, { first: !B.state.hasBrain });
       }
+    }
+
+    if (B.zoom) {
+      B.zoom.initZoom((zoomLevel) => {
+        // Re-apply layout with current text when zoom changes
+        // Debounce slightly to avoid thrashing?
+        // For now, direct call for responsiveness
+        applyLayout(B.state.text);
+      });
     }
 
     B.uiInput.onTextChange((text) => {

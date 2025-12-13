@@ -38,6 +38,7 @@
     cavityMetrics: null,
     reducedMotion: false,
     wiggle: false,
+    zoom: 1,
     __inits: {},
   };
 

@@ -10,8 +10,13 @@
   const svgNS = 'http://www.w3.org/2000/svg';
 
   function chooseDensity(len) {
-    if (len <= cfg.density.level1Max) return 1;
-    if (len <= cfg.density.level2Max) return 2;
+    // Adjust effective length based on zoom
+    // If zoom is high, we want to behave as if text is longer (to trigger higher density)
+    const zoom = Math.max(1, B.state.zoom || 1);
+    const effectiveLen = len * Math.sqrt(zoom);
+
+    if (effectiveLen <= cfg.density.level1Max) return 1;
+    if (effectiveLen <= cfg.density.level2Max) return 2;
     return 3;
   }
 
@@ -47,9 +52,15 @@
   }
 
   function computeFontSize(len, metrics) {
+    const zoom = Math.max(1, B.state.zoom || 1);
     const base = Math.sqrt(metrics.area || 40000) * 0.9;
     const size = base / Math.sqrt(Math.max(1, len * 0.8));
-    return util.clamp(size, cfg.fonts.minSize, cfg.fonts.maxSize);
+
+    // Scale font size down as zoom increases
+    // "Scaled 2x slower" -> size / sqrt(zoom)
+    const zoomedSize = size / Math.sqrt(zoom);
+
+    return util.clamp(zoomedSize, cfg.fonts.minSize, cfg.fonts.maxSize);
   }
 
   function layoutText(text) {
