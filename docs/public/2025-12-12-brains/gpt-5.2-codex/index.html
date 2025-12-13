@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Put a thought in my head</title>
+    <meta
+      name="description"
+      content="A tiny SVG toy: type anything and watch your text become the brain by coiling into a hollow cartoon head."
+    />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/character.css" />
+    <link rel="stylesheet" href="css/ui.css" />
+  </head>
+
+  <body>
+    <main class="app" role="main">
+      <header class="top">
+        <h1 class="title">Put a thought in my head</h1>
+        <p class="subtitle">Type anything. It becomes the brain.</p>
+      </header>
+
+      <section class="hero" aria-label="Cartoon head with empty cavity that fills with your text">
+        <svg
+          id="toySvg"
+          class="toy"
+          viewBox="0 0 820 520"
+          role="img"
+          aria-label="A cartoon profile head with a visible hollow skull cavity"
+        >
+          <defs>
+            <linearGradient id="cavityGrad" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0" stop-color="#fbfbff" />
+              <stop offset="1" stop-color="#eef0ff" />
+            </linearGradient>
+
+            <filter id="softShadow" x="-40%" y="-40%" width="180%" height="180%">
+              <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0d1630" flood-opacity="0.25" />
+            </filter>
+          </defs>
+
+          <g id="character" class="character">
+            <!-- Neck / shoulder -->
+            <path
+              class="skin"
+              d="M160 430c40-60 80-78 120-78 48 0 84 18 120 54 22 22 44 26 78 26 34 0 62-6 88-20 12-6 24-5 30 2 8 8 6 22-6 30-34 24-76 36-122 36-54 0-92-10-126-44-30-30-54-44-78-44-30 0-56 14-88 60-10 14-26 18-40 10-14-10-18-30-6-46z"
+            />
+
+            <!-- Head outer silhouette -->
+            <path
+              id="headOutline"
+              class="skin outline"
+              d="M180 170c30-58 82-98 150-114 76-18 172 10 234 78 54 58 66 142 34 210-26 56-74 96-142 114-70 18-148 8-206-30-32-20-54-46-70-78-20-42-22-124 0-180z"
+              filter="url(#softShadow)"
+            />
+
+            <!-- Cavity stage (empty vibe) -->
+            <g id="cavityStage">
+              <path id="cavityPath" class="cavity" d="M322 138c88-56 214-42 280 44 56 72 50 170-8 232-58 64-166 84-246 52-86-34-126-128-94-214 14-38 36-76 68-114z" />
+              <path class="cavity-fill" d="M322 138c88-56 214-42 280 44 56 72 50 170-8 232-58 64-166 84-246 52-86-34-126-128-94-214 14-38 36-76 68-114z" />
+
+              <g id="emptyOverlay" class="empty-overlay" aria-hidden="true">
+                <text class="empty-text" x="445" y="290" text-anchor="middle">nothing in there</text>
+                <path class="cobweb" d="M388 206c18 8 38 10 58 8m-46 20c16 8 34 10 52 8m-58 18c18 10 40 12 64 8" />
+                <g class="dust">
+                  <circle cx="380" cy="286" r="2.2" />
+                  <circle cx="508" cy="240" r="1.8" />
+                  <circle cx="478" cy="344" r="1.5" />
+                  <circle cx="420" cy="350" r="1.4" />
+                  <circle cx="546" cy="304" r="2" />
+                </g>
+              </g>
+            </g>
+
+            <!-- Brain lives here (clipped to cavity) -->
+            <g id="brainHost"></g>
+
+            <!-- Skull rim stays above brain -->
+            <g id="skullRim">
+              <path
+                class="rim"
+                d="M322 138c88-56 214-42 280 44 56 72 50 170-8 232-58 64-166 84-246 52-86-34-126-128-94-214 14-38 36-76 68-114z"
+              />
+              <path
+                class="rim-highlight"
+                d="M340 150c78-46 190-34 246 40 48 62 46 146-2 202"
+              />
+            </g>
+
+            <!-- Face -->
+            <path class="nose" d="M238 232c26-20 54-26 78-20 16 4 18 22 0 28-20 6-34 14-46 28-14 16-44-8-32-36z" />
+            <path class="mouth" d="M246 290c36 18 74 16 112-6" />
+
+            <g class="eye" transform="translate(264 216)">
+              <ellipse class="eye-white" cx="0" cy="0" rx="26" ry="18" />
+              <circle id="pupil" class="pupil" cx="6" cy="2" r="8.5" />
+              <path id="eyelid" class="eyelid" d="M-28 0c8-18 20-26 28-26s20 8 28 26c-18-10-38-10-56 0z" />
+              <path class="eye-outline" d="M-28 0c8-18 20-26 28-26s20 8 28 26c-18-10-38-10-56 0z" />
+            </g>
+          </g>
+        </svg>
+
+        <div id="fatalError" class="fatal-error" hidden>
+          <strong>Oops.</strong>
+          <span id="fatalErrorMsg">Something failed to load.</span>
+        </div>
+      </section>
+
+      <section class="controls">
+        <label class="label" for="brainInput">Load brain cells</label>
+        <textarea
+          id="brainInput"
+          class="input"
+          rows="3"
+          placeholder="Type a thought, a URL, a reminder…"
+          autocomplete="off"
+          spellcheck="false"
+        ></textarea>
+        <p id="inputHint" class="hint">Try: a single letter, a short phrase, a URL, or a whole paragraph.</p>
+
+        <div class="toggles">
+          <label class="toggle">
+            <input id="wiggleMode" type="checkbox" />
+            Wiggle mode
+          </label>
+          <label class="toggle">
+            <input id="reducedMotion" type="checkbox" />
+            Reduced motion
+          </label>
+        </div>
+
+        <div class="meter" aria-label="Brain occupancy meter">
+          <div class="meter-top">
+            <span class="meter-label">Brain occupancy</span>
+            <span id="meterPct" class="meter-pct">0%</span>
+          </div>
+          <div class="meter-track">
+            <div id="meterFill" class="meter-fill" style="width: 0%"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <small>
+        Tip: open DevTools and run <code>BrainJoke.debug.runSmokeTests()</code> or press <code>D</code> for debug overlay.
+      </small>
+    </footer>
+
+    <script src="js/00-namespace.js"></script>
+    <script src="js/01-dom.js"></script>
+    <script src="js/02-scene.js"></script>
+    <script src="js/03-anim-character.js"></script>
+    <script src="js/04-ui-input.js"></script>
+    <script src="js/05-geometry.js"></script>
+    <script src="js/06-pathgen.js"></script>
+    <script src="js/07-text-layout.js"></script>
+    <script src="js/08-render-brain.js"></script>
+    <script src="js/09-scheduler.js"></script>
+    <script src="js/10-debug.js"></script>
+    <script src="js/99-bootstrap.js"></script>
+  </body>
+</html>
+
