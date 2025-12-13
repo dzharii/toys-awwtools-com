@@ -10,12 +10,12 @@
       accent: '#7a5cff',
     },
     density: {
-      level1Max: 28,
-      level2Max: 120,
+      level1Max: 60,
+      level2Max: 200,
     },
     fonts: {
-      minSize: 14,
-      maxSize: 88,
+      minSize: 24,
+      maxSize: 240,
     },
     animation: {
       inflateDuration: 260,

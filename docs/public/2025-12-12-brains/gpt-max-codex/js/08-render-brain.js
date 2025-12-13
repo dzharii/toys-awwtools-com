@@ -33,12 +33,30 @@
     const textPath = document.createElementNS(svgNS, 'textPath');
     textPath.setAttribute('href', `#${pathId}`);
     textPath.setAttribute('startOffset', '2%');
-    const minLen = segment.length * 0.35;
-    const maxLen = segment.length * 0.96;
-    const desired = fontSize * (segment.text.length + 2);
-    const targetLength = Math.min(maxLen, Math.max(minLen, desired));
-    textPath.setAttribute('textLength', targetLength.toFixed(1));
-    textPath.setAttribute('lengthAdjust', 'spacing');
+
+    // Relaxed constraints for larger head
+    const minLen = segment.length * 0.1;
+    const maxLen = segment.length * 0.98;
+    const desired = fontSize * (segment.text.length * 0.6); // Approximate width per char
+
+    // If text is very short, don't stretch it too much
+    // If text is long, ensure it fits
+
+    // We use method="align" if supported, or just spacing
+    textPath.setAttribute('lengthAdjust', 'spacingAndGlyphs');
+
+    // Only set textLength if we have a reasonable target
+    // If the path is huge and text is small, let it flow naturally?
+    // But we want it to fill the path somewhat.
+
+    // Let's try removing textLength for short text to avoid "disappearing" glitch
+    // if the browser can't stretch it properly.
+
+    if (segment.text.length > 5) {
+       const targetLength = Math.min(maxLen, Math.max(minLen, desired));
+       textPath.setAttribute('textLength', targetLength.toFixed(1));
+    }
+
     textPath.textContent = segment.text || ' ';
 
     text.appendChild(textPath);
@@ -70,8 +88,9 @@
 
     const instance = document.createElementNS(svgNS, 'g');
     instance.classList.add('brain-text-instance', 'brain-reflow');
-    instance.style.opacity = '0';
-    instance.style.transform = options.first ? 'scale(0.84)' : 'scale(1.02)';
+    // Start visible immediately to prevent "disappearing" frame
+    instance.style.opacity = '1';
+    instance.style.transform = options.first ? 'scale(0.95)' : 'scale(1)';
 
     plan.segments.forEach((segment) => {
       const { path, text } = makeSegmentNodes(segment, plan.fontSize);
@@ -80,17 +99,19 @@
     });
 
     layer.appendChild(instance);
+
     // fade previous instance
     if (activeInstance) {
-      activeInstance.style.opacity = '0';
-      activeInstance.style.transform = 'scale(0.96)';
-      setTimeout(() => activeInstance && activeInstance.remove(), cfg.animation.fadeDuration + 60);
+      // Remove immediately to prevent overlap/clutter
+      activeInstance.remove();
     }
 
-    requestAnimationFrame(() => {
-      instance.style.opacity = '1';
-      instance.style.transform = 'scale(1)';
-    });
+    // Optional: animate entrance if it's the very first time
+    if (options.first) {
+       requestAnimationFrame(() => {
+         instance.style.transform = 'scale(1)';
+       });
+    }
 
     activeInstance = instance;
     B.state.hasBrain = true;

@@ -22,7 +22,10 @@
       const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
       use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#cavity-path');
       use.setAttribute('href', '#cavity-path');
-      use.setAttribute('fill', 'white');
+      // Force white fill for the mask, overriding any gradient on the path
+      use.style.fill = 'white';
+      use.style.stroke = 'none';
+      use.style.opacity = '1';
       mask.appendChild(use);
     }
     return mask;

@@ -1,49 +1,53 @@
 (function (B) {
   if (!B.guardInit('pathgen')) return;
 
-  const templates = {
-    1: [
-      [0.1, 0.62],
-      [0.36, 0.28],
-      [0.8, 0.34],
-      [0.86, 0.58],
-      [0.6, 0.76],
-      [0.2, 0.64],
-    ],
-    2: [
-      [0.12, 0.64],
-      [0.32, 0.42],
-      [0.66, 0.28],
-      [0.86, 0.44],
-      [0.76, 0.62],
-      [0.44, 0.7],
-      [0.2, 0.54],
-    ],
-    3: [
-      [
-        [0.12, 0.24],
-        [0.4, 0.18],
-        [0.78, 0.26],
-        [0.84, 0.48],
-        [0.58, 0.58],
-        [0.24, 0.5],
-      ],
-      [
-        [0.14, 0.68],
-        [0.42, 0.72],
-        [0.78, 0.8],
-        [0.74, 0.92],
-        [0.4, 0.88],
-        [0.18, 0.72],
-      ],
-    ],
-  };
+  // Helper to generate a snake-like path that fills the box
+  function generateSnake(box, density) {
+    const points = [];
 
-  function scalePoint(pt, box) {
-    return {
-      x: box.x + pt[0] * box.width,
-      y: box.y + pt[1] * box.height,
-    };
+    // Density determines rows
+    // Level 1: 3 rows (big text)
+    // Level 2: 6 rows
+    // Level 3: 10 rows
+    const rows = density === 1 ? 3 : (density === 2 ? 6 : 10);
+
+    // Inset slightly more to be safe
+    const safeW = box.width * 0.9;
+    const safeH = box.height * 0.9;
+    const startX = box.x + (box.width - safeW) / 2;
+    const startY = box.y + (box.height - safeH) / 2;
+
+    const rowHeight = safeH / rows;
+
+    for (let r = 0; r < rows; r++) {
+      const y = startY + (r + 0.5) * rowHeight;
+      const isRight = r % 2 === 0;
+
+      // Add points across the row
+      const steps = 8;
+      for (let s = 0; s <= steps; s++) {
+        const t = s / steps;
+        const xT = isRight ? t : (1 - t);
+        const x = startX + xT * safeW;
+
+        // Add a gentle wave
+        const wave = Math.sin(t * Math.PI * 1.5) * (rowHeight * 0.1);
+
+        points.push({ x, y: y + wave });
+      }
+
+      // Add a turning point if not the last row
+      if (r < rows - 1) {
+        const nextY = startY + (r + 1.5) * rowHeight;
+        const turnX = isRight ? (startX + safeW) : startX;
+        // Control point for turn?
+        // We just add points, the spline handles the curve.
+        // Add an intermediate point for the turn
+        points.push({ x: turnX, y: (y + nextY) / 2 });
+      }
+    }
+
+    return points;
   }
 
   function catmullRomToBezier(points) {
@@ -65,20 +69,22 @@
     return path.join(' ');
   }
 
-  function buildPath(points, box) {
-    const scaled = points.map((pt) => scalePoint(pt, box));
-    return catmullRomToBezier(scaled);
-  }
-
   function generatePathsForDensity(densityLevel, cavityMetrics) {
     const metrics = cavityMetrics || B.state.cavityMetrics;
     if (!metrics) return [];
+
     const box = metrics.insetBox || metrics.bbox;
-    const template = templates[densityLevel] || templates[2];
-    if (Array.isArray(template[0][0])) {
-      return template.map((points) => buildPath(points, box));
+    const points = generateSnake(box, densityLevel);
+
+    // Ensure we have enough points
+    if (!points || points.length < 2) {
+       // Fallback to a simple line across center
+       const cy = box.y + box.height / 2;
+       return [`M${box.x} ${cy} L${box.x + box.width} ${cy}`];
     }
-    return [buildPath(template, box)];
+
+    const d = catmullRomToBezier(points);
+    return [d];
   }
 
   B.pathgen = { generatePathsForDensity };

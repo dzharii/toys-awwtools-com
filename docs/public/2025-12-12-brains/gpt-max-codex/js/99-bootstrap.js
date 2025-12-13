@@ -37,6 +37,7 @@
     initReducedMotion();
     B.animCharacter.startIdle();
     B.uiInput.wire();
+    if (B.zoom) B.zoom.initZoom();
 
     function applyLayout(text) {
       const hint = dom.get('inputHint');
