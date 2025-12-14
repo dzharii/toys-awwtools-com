@@ -51,6 +51,8 @@ const state = {
 };
 
 const els = {
+  topbar: document.getElementById("topbar"),
+  controlBar: document.getElementById("control-bar"),
   openFolder: document.getElementById("open-folder"),
   emptyOpen: document.getElementById("empty-open-folder"),
   emptyPanel: document.getElementById("empty-panel"),
@@ -126,6 +128,20 @@ function formatBytes(bytes) {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+}
+
+function hashPath(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (h * 31 + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h).toString(36);
+}
+
+function makeFileId(path) {
+  const safe = path.replace(/[^a-zA-Z0-9]+/g, "-").replace(/-{2,}/g, "-").replace(/^-+|-+$/g, "") || "file";
+  const hash = hashPath(path);
+  return `file-${safe}-${hash}`;
 }
 
 function countLines(text) {
@@ -234,6 +250,8 @@ function updateControlBar() {
     els.openFolder.title = "Folder picker not supported";
     els.emptyOpen.title = "Folder picker not supported";
   }
+
+  updateOffsets();
 }
 
 function updateSidebarVisibility() {
@@ -246,6 +264,13 @@ function updateEmptyOverlay() {
   const isEmpty = state.phase === "empty";
   els.emptyPanel.classList.toggle("hidden", !isEmpty);
   els.main.classList.toggle("inactive", isEmpty);
+}
+
+function updateOffsets() {
+  const topHeight = els.topbar?.getBoundingClientRect().height || 0;
+  const controlHeight = els.controlBar?.getBoundingClientRect().height || 0;
+  document.documentElement.style.setProperty("--control-offset", `${topHeight}px`);
+  document.documentElement.style.setProperty("--stack-offset", `${topHeight + controlHeight}px`);
 }
 
 function showEmptySupportMessage() {
@@ -388,7 +413,7 @@ async function readAndStoreFile(file, path, extHint) {
   const lineCount = countLines(text);
   const ext = extHint || (path.split(".").pop() || "");
   const language = languageFromExt(ext);
-  const id = `f${state.seq++}`;
+  const id = makeFileId(path);
   const record = {
     id,
     path,
@@ -410,8 +435,8 @@ async function readAndStoreFile(file, path, extHint) {
   state.aggregate.totalLines += lineCount;
   state.aggregate.languages[language] = (state.aggregate.languages[language] || 0) + lineCount;
   updateLargest(record);
-  insertIntoTree(record);
   renderFileSection(record);
+  insertIntoTree(record);
   updateControlBar();
   maybeWarnMemory();
   state.progress.phaseLabel = "Scanning";
@@ -458,19 +483,29 @@ function renderDirectoryTree() {
   const fragment = document.createDocumentFragment();
   let index = 0;
   function renderNode(node, depth) {
-    const row = document.createElement("div");
+    const isFile = node.type === "file";
+    const row = document.createElement(isFile ? "a" : "div");
     row.className = `tree-item ${node.type}`;
     row.style.paddingLeft = `${depth * 14}px`;
     row.setAttribute("role", "treeitem");
     row.tabIndex = 0;
     row.dataset.nodeId = node.path || node.fileId || "";
     row.dataset.index = index++;
-    if (node.type === "file") {
+    const currentHash = decodeURIComponent(location.hash.slice(1) || "");
+    if (isFile) {
+      row.href = `#${node.fileId}`;
       row.dataset.fileId = node.fileId;
-      row.setAttribute("aria-selected", node.fileId === state.activeFileId ? "true" : "false");
-      row.classList.toggle("active", node.fileId === state.activeFileId);
+      const isActive = node.fileId === state.activeFileId || node.fileId === currentHash;
+      if (isActive) {
+        row.setAttribute("aria-current", "location");
+      } else {
+        row.removeAttribute("aria-current");
+      }
+      row.classList.toggle("active", isActive);
+      row.addEventListener("click", () => setActiveFile(node.fileId));
     } else {
       row.setAttribute("aria-expanded", node.expanded ? "true" : "false");
+      row.addEventListener("click", () => handleTreeClick(node));
     }
     const caret = document.createElement("span");
     caret.className = "caret";
@@ -480,7 +515,6 @@ function renderDirectoryTree() {
     label.textContent = node.name || "root";
     row.appendChild(caret);
     row.appendChild(label);
-    row.addEventListener("click", () => handleTreeClick(node));
     fragment.appendChild(row);
     if (node.type === "dir" && node.expanded) {
       node.children.forEach(child => renderNode(child, depth + 1));
@@ -494,27 +528,16 @@ function renderDirectoryTree() {
 }
 
 function handleTreeClick(node) {
-  if (node.type === "dir") {
-    node.expanded = !node.expanded;
-    renderDirectoryTree();
-  } else if (node.type === "file") {
-    scrollToFile(node.fileId);
-  }
-}
-
-function scrollToFile(fileId) {
-  const el = document.querySelector(`[data-file-id="${fileId}"]`);
-  if (el) {
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
-    setActiveFile(fileId);
-  }
+  if (node.type !== "dir") return;
+  node.expanded = !node.expanded;
+  renderDirectoryTree();
 }
 
 function renderFileSection(file) {
   const section = document.createElement("section");
   section.className = "file-section";
   section.dataset.fileId = file.id;
-  section.id = `file-${file.id}`;
+  section.id = file.id;
   const header = document.createElement("div");
   header.className = "file-header";
   const path = document.createElement("div");
@@ -547,6 +570,10 @@ function renderFileSection(file) {
   section.appendChild(header);
   section.appendChild(pre);
   els.fileContainer.appendChild(section);
+  if (location.hash.slice(1) === file.id) {
+    section.scrollIntoView({ behavior: "auto", block: "start" });
+    setActiveFile(file.id);
+  }
   attachObserver(section);
 }
 
@@ -589,6 +616,16 @@ function updateActiveLine() {
   const approxLine = Math.max(1, Math.round(scrollTop / lineHeight) + 1);
   const path = section.querySelector(".file-path")?.textContent || fileId;
   els.activeIndicator.innerHTML = `<span>Active:</span> <span class="value" title="${path}">${path}</span><span>Line ${approxLine}</span>`;
+}
+
+function handleHashChange() {
+  const targetId = decodeURIComponent(location.hash.slice(1));
+  if (!targetId) return;
+  const section = document.getElementById(targetId);
+  if (section) {
+    section.scrollIntoView({ behavior: "auto", block: "start" });
+    setActiveFile(section.dataset.fileId);
+  }
 }
 
 function maybeWarnMemory() {
@@ -808,7 +845,14 @@ function handleTreeKeydown(e) {
     e.preventDefault();
     const nodeId = document.activeElement?.dataset?.fileId || document.activeElement?.dataset?.nodeId;
     const node = findNodeById(state.tree, nodeId);
-    if (node) handleTreeClick(node);
+    if (node) {
+      if (node.type === "file") {
+        location.hash = `#${node.fileId}`;
+        setActiveFile(node.fileId);
+      } else {
+        handleTreeClick(node);
+      }
+    }
   }
 }
 
@@ -887,6 +931,7 @@ function applyStatsToggle() {
 function init() {
   document.documentElement.style.setProperty("--sidebar-width", `${state.sidebar.width}px`);
   applyDisplaySettings();
+  updateOffsets();
   showEmptySupportMessage();
   updateSidebarVisibility();
   updateControlBar();
@@ -925,6 +970,8 @@ function init() {
   els.supportPanel.addEventListener("click", e => { if (e.target === els.supportPanel) closeSupportPanel(); });
 
   document.addEventListener("keydown", maybeYieldEmptyEnter);
+  window.addEventListener("resize", updateOffsets);
+  window.addEventListener("hashchange", handleHashChange);
   renderDirectoryTree();
 }
 
