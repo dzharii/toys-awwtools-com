@@ -1,3 +1,6 @@
+2025-12-14
+Codex CLI 5.1 High
+
 A00 Project intent and description (rev 03)
 
 This project is a static, local-first web app that loads a source code folder and renders the whole codebase as one scrollable page with fast search and jump navigation. The goal is to make read-only code exploration faster than using an IDE for common "find and trace" work, while keeping the user oriented at all times. The user must always know which file they are viewing, where they are inside it, and what the file contains at a glance.
