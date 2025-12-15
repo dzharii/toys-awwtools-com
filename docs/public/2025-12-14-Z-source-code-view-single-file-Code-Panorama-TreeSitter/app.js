@@ -16,6 +16,15 @@ const defaults = {
 
 const TREE_SITTER_ASSET_BASE = "lib/web-tree-sitter-v0.26.3";
 const TREE_SITTER_STORAGE_KEY = "code-panorama-tree-sitter";
+const TREE_SITTER_LANGUAGES = {
+  c: { file: "tree-sitter-c-v0.24.1.wasm" },
+  cpp: { file: "tree-sitter-cpp-v0.23.4.wasm" },
+  bash: { file: "tree-sitter-bash-v0.25.1.wasm" },
+  csharp: { file: "tree-sitter-c_sharp-v0.23.1.wasm" },
+  javascript: { file: "tree-sitter-javascript-v0.25.0.wasm" },
+  json: { file: "tree-sitter-json-v0.24.8.wasm" },
+  scala: { file: "tree-sitter-scala-v0.24.0.wasm" }
+};
 
 const state = {
   phase: "empty", // empty | loading | loaded | cancelled
@@ -153,7 +162,7 @@ function loadTreeSitterState() {
     parser: null,
     Parser: null,
     Language: null,
-    languages: { c: null, cpp: null },
+    languages: Object.keys(TREE_SITTER_LANGUAGES).reduce((acc, key) => ({ ...acc, [key]: null }), {}),
     parseHandle: null,
     parseHandleType: null,
     wantInit: false
@@ -1251,14 +1260,15 @@ async function loadTreeSitterLanguage(kind) {
   const ts = state.treeSitter;
   if (!ts.ready || !ts.Language) return null;
   if (ts.languages[kind]) return ts.languages[kind];
-  const filename = kind === "c" ? "tree-sitter-c-v0.24.1.wasm" : "tree-sitter-cpp-v0.23.4.wasm";
+  const config = TREE_SITTER_LANGUAGES[kind];
+  if (!config?.file) return null;
   try {
-    const lang = await ts.Language.load(`${TREE_SITTER_ASSET_BASE}/${filename}`);
+    const lang = await ts.Language.load(`${TREE_SITTER_ASSET_BASE}/${config.file}`);
     ts.error = null;
     ts.languages[kind] = lang;
     return lang;
   } catch (err) {
-    ts.error = kind === "c" ? "C grammar missing" : "C++ grammar missing";
+    ts.error = `${kind} grammar missing`;
     addLog("tree-sitter", `error: ${ts.error}`);
     renderTreeSitterPanel();
     return null;
@@ -1302,6 +1312,11 @@ function getTreeSitterLanguage(file) {
     const cppLines = state.aggregate.languages["C++"] || 0;
     return cLines >= cppLines ? "c" : "cpp";
   }
+  if (lower.endsWith(".cs")) return "csharp";
+  if (lower.endsWith(".js") || lower.endsWith(".mjs") || lower.endsWith(".cjs") || lower.endsWith(".jsx") || lower.endsWith(".ts") || lower.endsWith(".tsx")) return "javascript";
+  if (lower.endsWith(".json")) return state.settings.includeJson ? "json" : null;
+  if (lower.endsWith(".sh") || lower.endsWith(".bash")) return "bash";
+  if (lower.endsWith(".scala")) return "scala";
   return null;
 }
 
@@ -1325,7 +1340,7 @@ function maybeAutoParseActiveFile() {
   }
   const lang = getTreeSitterLanguage(file);
   if (!lang) {
-    renderTreeSitterPanel("No C/C++ structure for this file.");
+    renderTreeSitterPanel("Tree-sitter not available for this file.");
     return;
   }
   const tooLarge = file.size > state.settings.maxFileSize;
@@ -1375,8 +1390,8 @@ async function runTreeSitterParse(file, lang, force) {
     if (!language) return;
     ts.parser.setLanguage(language);
     const tree = ts.parser.parse(file.text);
-    const outline = buildOutlineModel(tree, file);
-    const includes = buildIncludeList(tree);
+    const outline = buildOutlineModel(tree, file, lang);
+    const includes = buildIncludeList(tree, lang);
     if (!force && state.activeFileId !== file.id) return;
     ts.cache[file.id] = { outline, includes, parsedAt: Date.now() };
     placeTreeSitterMarkers(file, outline);
@@ -1408,29 +1423,124 @@ function extractNodeName(node) {
   return fallback[0]?.text || "<anonymous>";
 }
 
-function buildOutlineModel(tree, file) {
+function buildOutlineModel(tree, file, lang) {
   const outline = [];
-  const kinds = [
-    "function_definition",
-    "struct_specifier",
-    "class_specifier",
-    "union_specifier",
-    "enum_specifier",
-    "type_definition",
-    "preproc_def",
-    "preproc_function_def"
-  ];
-  const nodes = tree.rootNode.descendantsOfType(kinds);
+  const configs = {
+    c: {
+      types: [
+        "function_definition",
+        "struct_specifier",
+        "class_specifier",
+        "union_specifier",
+        "enum_specifier",
+        "type_definition",
+        "preproc_def",
+        "preproc_function_def"
+      ],
+      map: type => {
+        if (type === "function_definition") return "function";
+        if (type === "enum_specifier") return "enum";
+        if (type === "type_definition") return "typedef";
+        if (type === "preproc_def" || type === "preproc_function_def") return "macro";
+        if (type === "struct_specifier" || type === "class_specifier" || type === "union_specifier") return "struct";
+        return null;
+      }
+    },
+    cpp: {
+      types: [
+        "function_definition",
+        "struct_specifier",
+        "class_specifier",
+        "union_specifier",
+        "enum_specifier",
+        "type_definition",
+        "preproc_def",
+        "preproc_function_def"
+      ],
+      map: type => {
+        if (type === "function_definition") return "function";
+        if (type === "enum_specifier") return "enum";
+        if (type === "type_definition") return "typedef";
+        if (type === "preproc_def" || type === "preproc_function_def") return "macro";
+        if (type === "struct_specifier" || type === "class_specifier" || type === "union_specifier") return "struct";
+        return null;
+      }
+    },
+    javascript: {
+      types: [
+        "function_declaration",
+        "method_definition",
+        "class_declaration",
+        "generator_function",
+        "lexical_declaration",
+        "export_statement",
+        "export_clause",
+        "arrow_function"
+      ],
+      map: type => {
+        if (type === "function_declaration" || type === "generator_function" || type === "arrow_function") return "function";
+        if (type === "method_definition") return "method";
+        if (type === "class_declaration") return "class";
+        if (type === "lexical_declaration") return "const";
+        if (type === "export_statement" || type === "export_clause") return "export";
+        return null;
+      }
+    },
+    bash: {
+      types: ["function_definition"],
+      map: () => "function"
+    },
+    csharp: {
+      types: [
+        "method_declaration",
+        "class_declaration",
+        "struct_declaration",
+        "interface_declaration",
+        "enum_declaration",
+        "constructor_declaration",
+        "property_declaration"
+      ],
+      map: type => {
+        if (type === "method_declaration" || type === "constructor_declaration") return "method";
+        if (type === "class_declaration") return "class";
+        if (type === "struct_declaration") return "struct";
+        if (type === "interface_declaration") return "interface";
+        if (type === "enum_declaration") return "enum";
+        if (type === "property_declaration") return "property";
+        return null;
+      }
+    },
+    json: {
+      types: ["pair"],
+      map: () => "key"
+    },
+    scala: {
+      types: [
+        "class_definition",
+        "object_definition",
+        "trait_definition",
+        "method_definition",
+        "function_definition",
+        "val_definition",
+        "var_definition"
+      ],
+      map: type => {
+        if (type === "class_definition") return "class";
+        if (type === "object_definition") return "object";
+        if (type === "trait_definition") return "trait";
+        if (type === "method_definition" || type === "function_definition") return "function";
+        if (type === "val_definition") return "val";
+        if (type === "var_definition") return "var";
+        return null;
+      }
+    }
+  };
+  const config = configs[lang] || configs.c;
+  const nodes = tree.rootNode.descendantsOfType(config.types);
   nodes.forEach((node, idx) => {
-    const type = node.type;
-    let kind = null;
-    if (type === "function_definition") kind = "function";
-    else if (type === "enum_specifier") kind = "enum";
-    else if (type === "type_definition") kind = "typedef";
-    else if (type === "preproc_def" || type === "preproc_function_def") kind = "macro";
-    else if (type === "struct_specifier" || type === "class_specifier" || type === "union_specifier") kind = "struct";
+    const kind = config.map(node.type);
     if (!kind) return;
-    const name = extractNodeName(node);
+    const name = lang === "json" ? (node.child(0)?.text || extractNodeName(node)) : extractNodeName(node);
     outline.push({
       kind,
       name,
@@ -1442,7 +1552,8 @@ function buildOutlineModel(tree, file) {
   return outline;
 }
 
-function buildIncludeList(tree) {
+function buildIncludeList(tree, lang) {
+  if (lang !== "c" && lang !== "cpp") return [];
   const includes = [];
   const nodes = tree.rootNode.descendantsOfType("preproc_include");
   nodes.forEach(node => {
@@ -1500,10 +1611,10 @@ function renderTreeSitterPanel(statusText) {
     if (ts.error) status = ts.error;
     else if (ts.loading) status = "Loading Tree-sitter…";
     else if (state.phase !== "loaded") status = "Available after load completes.";
-    else if (!file) status = "Open a C/C++ file to parse.";
+    else if (!file) status = "Open a supported file to parse.";
     else {
       const lang = getTreeSitterLanguage(file);
-      if (!lang) status = "No C/C++ structure for this file.";
+      if (!lang) status = "Tree-sitter not available for this file.";
       else if (file.size > state.settings.maxFileSize && !outline.length) status = "File too large to parse automatically. Click Parse to try.";
       else if (ts.parsing || ts.pendingFileId === file?.id) status = "Parsing active file…";
       else if (!outline.length && !includes.length) status = cache ? "Parsed but no outline items found." : "Click Parse to build an outline for this file.";
