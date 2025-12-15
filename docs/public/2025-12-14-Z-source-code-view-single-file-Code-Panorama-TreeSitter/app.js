@@ -192,6 +192,27 @@ function formatBytes(bytes) {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 }
 
+function setButtonLabel(button, icon, text) {
+  if (!button) return;
+  button.innerHTML = "";
+  const emoji = document.createElement("span");
+  emoji.className = "btn-emoji";
+  emoji.textContent = icon;
+  const label = document.createElement("span");
+  label.className = "btn-label";
+  label.textContent = text;
+  button.append(emoji, label);
+}
+
+function copyFileSource(file) {
+  if (!file) return;
+  const parts = file.path.split(".");
+  const ext = parts.length > 1 ? parts.pop() || "" : "";
+  const lang = ext && /^[a-zA-Z0-9#+-]+$/.test(ext) ? ext.toLowerCase() : "";
+  const snippet = `File \`${file.path}\`:\n\`\`\`${lang}\n${file.text}\n\`\`\`\n`;
+  navigator.clipboard?.writeText(snippet);
+}
+
 function hashPath(str) {
   let h = 0;
   for (let i = 0; i < str.length; i++) {
@@ -284,7 +305,6 @@ function updateControlBar() {
     els.controlStatus.title = "";
     els.controlActions.classList.add("hidden");
     els.activeIndicator.textContent = "Active: none";
-    els.openFolder.textContent = "Open folder";
   } else if (state.phase === "loading") {
     const phaseLabel = state.cancelled ? "Cancelling" : (state.progress.phaseLabel || "Scanning");
     const text = `${phaseLabel} • dirs ${p.dirsVisited} • files included ${p.filesIncluded} • read ${p.filesRead} • skipped ${p.skipped} • errors ${p.errors} • bytes ${formatBytes(p.bytesRead)} • lines ${p.linesRead}`;
@@ -292,13 +312,11 @@ function updateControlBar() {
     els.controlStatus.title = `${p.bytesRead} bytes read`;
     els.controlActions.classList.remove("hidden");
     els.activeIndicator.textContent = "Active: loading…";
-    els.openFolder.textContent = "Open folder";
   } else {
     const text = `Summary • files ${a.loadedFiles} • lines ${a.totalLines} • bytes ${formatBytes(a.totalBytes)} • skipped ${a.skippedFiles} • errors ${state.progress.errors}`;
     els.controlStatus.textContent = text;
     els.controlStatus.title = `${a.totalBytes} bytes loaded`;
     els.controlActions.classList.remove("hidden");
-    els.openFolder.textContent = "Load another";
     const activeFile = state.files.find(f => f.id === state.activeFileId);
     els.activeIndicator.innerHTML = `<span>Active:</span> <span class="value" title="${activeFile ? activeFile.path : "none"}">${activeFile ? activeFile.path : "none"}</span>`;
   }
@@ -323,6 +341,16 @@ function updateControlBar() {
     els.emptyOpen.title = "Folder picker not supported";
   }
 
+  const openLabel = state.phase === "loaded" ? "Load another" : "Open folder";
+  setButtonLabel(els.openFolder, "📂", openLabel);
+  setButtonLabel(els.emptyOpen, "📂", "Open folder");
+  setButtonLabel(els.fallbackPicker, "🗂️", "Use file picker");
+  setButtonLabel(els.emptyFallback, "🗂️", "Use file picker");
+  setButtonLabel(els.cancelLoad, "⛔", "Cancel");
+  setButtonLabel(els.statsBtn, "📊", "Stats");
+  setButtonLabel(els.logToggle, "📜", "Log");
+  if (els.treeBtn) setButtonLabel(els.treeBtn, "🌳", "Tree-sitter");
+
   updateOffsets();
 }
 
@@ -343,6 +371,26 @@ function updateOffsets() {
   const controlHeight = els.controlBar?.getBoundingClientRect().height || 0;
   document.documentElement.style.setProperty("--control-offset", `${topHeight}px`);
   document.documentElement.style.setProperty("--stack-offset", `${topHeight + controlHeight}px`);
+}
+
+function updateSidebarPinLabel() {
+  const pinned = state.sidebar.pinned;
+  setButtonLabel(els.sidebarPin, pinned ? "📌" : "📍", pinned ? "Unpin" : "Pin");
+}
+
+function applyStaticButtonLabels() {
+  setButtonLabel(els.settingsToggle, "⚙️", "Settings");
+  setButtonLabel(els.settingsClose, "✖️", "Close");
+  setButtonLabel(els.settingsSave, "💾", "Save settings");
+  setButtonLabel(els.statsClose, "✖️", "Close");
+  setButtonLabel(els.logClose, "✖️", "Close");
+  setButtonLabel(els.supportClose, "✖️", "Close");
+  setButtonLabel(els.supportLink, "🛟", "Browser support");
+  updateSidebarPinLabel();
+  if (els.tsClose) setButtonLabel(els.tsClose, "✖️", "Close");
+  if (els.tsMinimize) setButtonLabel(els.tsMinimize, "➖", "Minimize");
+  if (els.tsParse) setButtonLabel(els.tsParse, "🧠", "Parse");
+  if (els.tsChip) els.tsChip.textContent = "🌳 Tree-sitter";
 }
 
 function showEmptySupportMessage() {
@@ -606,12 +654,18 @@ function handleTreeClick(node) {
 }
 
 function renderFileSection(file) {
-  const section = document.createElement("section");
+  const section = document.createElement("details");
   section.className = "file-section";
   section.dataset.fileId = file.id;
   section.id = file.id;
+  section.open = true;
+  const summary = document.createElement("summary");
+  summary.className = "file-summary";
   const header = document.createElement("div");
   header.className = "file-header";
+  const toggle = document.createElement("span");
+  toggle.className = "file-toggle";
+  toggle.textContent = "▾";
   const path = document.createElement("div");
   path.className = "file-path";
   path.textContent = file.path;
@@ -622,14 +676,26 @@ function renderFileSection(file) {
   const stats = document.createElement("span");
   stats.className = "stat";
   stats.textContent = `${file.lineCount} lines • ${formatBytes(file.size)}`;
-  const copyBtn = document.createElement("button");
-  copyBtn.className = "ghost tiny";
-  copyBtn.textContent = "Copy path";
-  copyBtn.addEventListener("click", () => navigator.clipboard?.writeText(file.path));
+  const copyPathBtn = document.createElement("button");
+  copyPathBtn.className = "ghost tiny";
+  setButtonLabel(copyPathBtn, "🔗", "Copy path");
+  copyPathBtn.addEventListener("click", e => {
+    e.stopPropagation();
+    navigator.clipboard?.writeText(file.path);
+  });
+  const copySourceBtn = document.createElement("button");
+  copySourceBtn.className = "ghost tiny";
+  setButtonLabel(copySourceBtn, "📋", "Copy source");
+  copySourceBtn.addEventListener("click", e => {
+    e.stopPropagation();
+    copyFileSource(file);
+  });
   const fileActions = document.createElement("div");
   fileActions.className = "file-actions";
-  fileActions.appendChild(copyBtn);
+  fileActions.appendChild(copySourceBtn);
+  fileActions.appendChild(copyPathBtn);
 
+  header.appendChild(toggle);
   header.appendChild(path);
   header.appendChild(language);
   header.appendChild(stats);
@@ -639,10 +705,12 @@ function renderFileSection(file) {
   pre.textContent = file.text;
   if (!state.settings.wrap) pre.classList.add("nowrap");
 
-  section.appendChild(header);
+  summary.appendChild(header);
+  section.appendChild(summary);
   section.appendChild(pre);
   els.fileContainer.appendChild(section);
   if (location.hash.slice(1) === file.id) {
+    section.open = true;
     section.scrollIntoView({ behavior: "auto", block: "start" });
     setActiveFile(file.id);
   }
@@ -673,6 +741,8 @@ function setActiveFile(fileId) {
   if (file) {
     els.activeIndicator.innerHTML = `<span>Active:</span> <span class="value" title="${file.path}">${file.path}</span>`;
     updateActiveLine();
+    const section = document.querySelector(`[data-file-id="${fileId}"]`);
+    if (section && section.tagName === "DETAILS") section.open = true;
   }
   handleActiveFileChange();
 }
@@ -719,7 +789,11 @@ function finishLoad() {
     if (state.aggregate.loadedFiles === 0) {
       els.noFiles.classList.remove("hidden");
       els.noFiles.innerHTML = `No supported source files found. <button class="link-button" id="no-files-open-settings">Open settings</button>`;
-      document.getElementById("no-files-open-settings")?.addEventListener("click", openSettings);
+      const settingsBtn = document.getElementById("no-files-open-settings");
+      if (settingsBtn) {
+        setButtonLabel(settingsBtn, "⚙️", "Open settings");
+        settingsBtn.addEventListener("click", openSettings);
+      }
     }
   }
   updateControlBar();
@@ -887,7 +961,7 @@ function toggleSidebarPin() {
   state.sidebar.pinned = !state.sidebar.pinned;
   els.sidebar.classList.toggle("unpinned", !state.sidebar.pinned);
   els.sidebar.classList.toggle("pinned", state.sidebar.pinned);
-  els.sidebarPin.textContent = state.sidebar.pinned ? "Unpin" : "Pin";
+  updateSidebarPinLabel();
 }
 
 function openSidebarOverlay() {
@@ -1496,7 +1570,7 @@ function renderTreeSitterIncludes(items) {
     if (item.targetFileId) {
       const jump = document.createElement("button");
       jump.className = "ghost tiny";
-      jump.textContent = "Open";
+      setButtonLabel(jump, "🔗", "Open");
       jump.addEventListener("click", () => {
         location.hash = `#${item.targetFileId}`;
         setActiveFile(item.targetFileId);
@@ -1508,6 +1582,8 @@ function renderTreeSitterIncludes(items) {
 }
 
 function scrollToOutlineItem(item) {
+  const section = document.querySelector(`[data-file-id="${item.fileId}"]`);
+  if (section && section.tagName === "DETAILS") section.open = true;
   const marker = document.getElementById(item.anchorId);
   if (marker) {
     marker.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -1520,6 +1596,7 @@ function scrollToOutlineItem(item) {
 function scrollToApproxLine(fileId, line) {
   const section = document.querySelector(`[data-file-id="${fileId}"]`);
   if (!section) return;
+  if (section.tagName === "DETAILS") section.open = true;
   const pre = section.querySelector("pre");
   const header = section.querySelector(".file-header");
   const lineHeight = parseFloat(getComputedStyle(pre).lineHeight) || 18;
@@ -1536,6 +1613,7 @@ function init() {
   showEmptySupportMessage();
   updateSidebarVisibility();
   updateControlBar();
+  applyStaticButtonLabels();
 
   els.openFolder.addEventListener("click", pickFolder);
   els.emptyOpen.addEventListener("click", pickFolder);
