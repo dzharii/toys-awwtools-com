@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bloom Filter Editor</title>
+  <link rel="stylesheet" href="bloom-editor.css">
+</head>
+<body>
+  <div class="page">
+    <header class="page-header">
+      <p class="eyebrow">Bloom filter utility</p>
+      <h1>Bloom Filter Editor</h1>
+      <p class="lede">Configure, train, and export a Bloom filter. Every control explains itself—no external docs required.</p>
+      <div class="status-row">
+        <span id="status-banner" class="status-pill status-idle">No filter created yet.</span>
+        <div class="status-metrics">
+          <div class="stat">
+            <span class="stat-label">Session entries (n)</span>
+            <span id="stat-count">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Memory footprint</span>
+            <span id="stat-size">–</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Current expected FPP</span>
+            <span id="stat-fpp">–</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Last action</span>
+            <span id="stat-last">Waiting</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section class="panel" id="settings-panel">
+      <div class="panel-header">
+        <h2>Settings</h2>
+        <p>Target an error rate, set an expected item count, and override m (bits) or k (hashes) if you want finer control.</p>
+      </div>
+      <div class="settings-grid">
+        <label class="field">
+          <span class="label">Target false positive rate (p)</span>
+          <input id="input-target-p" type="number" min="0.0000001" max="0.5" step="0.0001" inputmode="decimal">
+          <small>Lower p means a bigger filter but fewer false positives.</small>
+        </label>
+        <label class="field">
+          <span class="label">Expected items (n<sub>expected</sub>)</span>
+          <input id="input-expected-n" type="number" min="1" step="1" inputmode="numeric">
+          <small>How many unique values you plan to insert; used for suggestions.</small>
+        </label>
+        <div class="field readonly">
+          <span class="label">Suggested size (m)</span>
+          <div id="suggested-m" class="value-box">–</div>
+          <small>Calculated bits needed to hit the target p for n<sub>expected</sub>.</small>
+        </div>
+        <div class="field readonly">
+          <span class="label">Suggested hashes (k)</span>
+          <div id="suggested-k" class="value-box">–</div>
+          <small>Number of hash functions that balances speed and accuracy.</small>
+        </div>
+        <label class="field">
+          <span class="label">Override m (bits)</span>
+          <input id="input-m" type="number" min="1" step="1" inputmode="numeric">
+          <small>Manual bit count. Must be positive and not absurdly large.</small>
+        </label>
+        <label class="field">
+          <span class="label">Override k (hash count)</span>
+          <input id="input-k" type="number" min="1" step="1" inputmode="numeric">
+          <small>Manual hash function count. Higher k cuts errors but slows inserts/tests.</small>
+        </label>
+        <div class="field readonly">
+          <span class="label">Resulting error @ current n</span>
+          <div id="computed-fpp" class="value-box">–</div>
+          <small>Expected false positive probability with the current entries.</small>
+        </div>
+        <div class="field readonly">
+          <span class="label">Memory footprint</span>
+          <div id="computed-size" class="value-box">–</div>
+          <small>Bits, bytes, and KiB/MiB for the current configuration.</small>
+        </div>
+      </div>
+      <p id="param-error" class="error-inline" role="alert"></p>
+    </section>
+
+    <section class="panel actions-panel">
+      <div class="panel-header">
+        <h2>Actions</h2>
+        <p>Create a filter, load one from disk, or download your progress as JSON.</p>
+      </div>
+      <div class="actions-grid">
+        <button id="btn-create" class="primary">Create Bloom filter</button>
+        <label class="upload">
+          <input type="file" id="input-upload" accept="application/json">
+          <span>Upload JSON</span>
+          <small>Restores a saved filter and metadata.</small>
+        </label>
+        <button id="btn-download" class="ghost" disabled>Download JSON</button>
+        <div class="field readonly">
+          <span class="label">Loaded file</span>
+          <div id="loaded-file" class="value-box">None</div>
+          <small>Tracks which JSON is active.</small>
+        </div>
+      </div>
+      <p id="action-message" class="status-message">Ready.</p>
+    </section>
+
+    <section class="panel trainer-panel">
+      <div class="panel-header">
+        <h2>Incremental training</h2>
+        <p>Paste newline-separated strings. Empty lines are ignored, duplicates in the same batch are skipped.</p>
+      </div>
+      <div class="trainer-controls">
+        <button id="btn-add" class="primary" disabled>Add to Bloom filter</button>
+        <span class="hint-inline">Adds all non-empty lines, then clears the box on success.</span>
+      </div>
+      <textarea id="textarea-values" rows="12" placeholder="one value per line"></textarea>
+      <div class="trainer-footer">
+        <div>
+          <strong>Tip:</strong> Keep this area large—it's intended for bulk pastes.
+        </div>
+        <div id="add-result" class="status-pill status-idle">Nothing added yet.</div>
+      </div>
+    </section>
+
+    <section class="panel sample-panel">
+      <div class="panel-header">
+        <h2>Usage example</h2>
+        <p>Shows how to reconstruct and query the current filter in client-side code.</p>
+      </div>
+      <pre id="code-sample" class="code-block">// Create or load a Bloom filter to see a tailored example.</pre>
+    </section>
+
+    <section class="panel log-panel">
+      <div class="panel-header">
+        <h2>Log</h2>
+        <p>Structured activity feed. Mirrors console output.</p>
+      </div>
+      <div id="log-panel" class="log-container" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <script type="module" src="bloom-editor.js"></script>
+</body>
+</html>
