@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Closest Number to Zero Visualizer | LeetCode 2239</title>
+  <style>
+    :root {
+      --bg: #05070f;
+      --panel: #0c1220;
+      --panel-2: #0f1628;
+      --accent: #56ffd3;
+      --accent-2: #66a8ff;
+      --accent-3: #ff7ac2;
+      --text: #dce8ff;
+      --muted: #9ab0d6;
+      --glow: 0 0 25px rgba(86, 255, 211, 0.4);
+      --radius: 16px;
+      --shadow: 0 14px 60px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.05);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: radial-gradient(circle at 20% 20%, rgba(86,255,211,0.08), transparent 35%), radial-gradient(circle at 80% 0%, rgba(102,168,255,0.08), transparent 35%), var(--bg);
+      color: var(--text);
+      font-family: 'Space Grotesk', 'Manrope', 'Segoe UI', 'Helvetica Neue', sans-serif;
+      letter-spacing: 0.01em;
+    }
+    body[data-reduced="true"] * { animation-duration: 0s !important; transition-duration: 0ms !important; }
+    a { color: var(--accent-2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .background-grid {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.35), transparent 55%);
+      z-index: 0;
+    }
+    main { position: relative; z-index: 1; }
+    .shell {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 18px 120px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+    .card {
+      background: linear-gradient(140deg, rgba(12,18,32,0.92), rgba(15,22,40,0.95));
+      border: 1px solid rgba(255,255,255,0.04);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 20% 10%, rgba(86,255,211,0.12), transparent 25%), radial-gradient(circle at 80% 0%, rgba(102,168,255,0.12), transparent 30%);
+      opacity: 0.75;
+    }
+    .card > * { position: relative; z-index: 1; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .eyebrow { color: var(--accent); font-weight: 600; letter-spacing: 0.08em; font-size: 13px; text-transform: uppercase; }
+    h1,h2,h3 { margin: 8px 0; font-weight: 700; letter-spacing: -0.01em; }
+    h1 { font-size: clamp(32px, 4vw, 46px); line-height: 1.1; }
+    h2 { font-size: 24px; }
+    h3 { font-size: 18px; }
+    p { margin: 6px 0 12px; color: var(--muted); line-height: 1.6; }
+    .muted { color: var(--muted); }
+    .tag {
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn {
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(120deg, rgba(86,255,211,0.16), rgba(102,168,255,0.14));
+      color: #0b1728;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+      box-shadow: var(--glow);
+    }
+    .btn.secondary {
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+      box-shadow: none;
+    }
+    .btn.ghost { border-style: dashed; background: transparent; color: var(--text); }
+    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 10px 40px rgba(86,255,211,0.25); }
+    .btn:active { transform: translateY(0); }
+    .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .spacer { flex: 1; }
+    .grid { display: grid; gap: 16px; }
+    .hero {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      padding: 24px;
+      border-radius: var(--radius);
+      background: linear-gradient(160deg, rgba(10,14,24,0.95), rgba(12,18,32,0.9));
+      border: 1px solid rgba(255,255,255,0.05);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 70% 10%, rgba(86,255,211,0.18), transparent 35%), radial-gradient(circle at 20% 0%, rgba(102,168,255,0.14), transparent 35%);
+    }
+    .hero > * { position: relative; z-index: 1; }
+    .hero-visual {
+      position: relative;
+      min-height: 280px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+    .hero-visual svg, .hero-visual .hero-chips {
+      position: absolute;
+      inset: 0;
+    }
+    .hero-visual .zero-beacon {
+      position: absolute;
+      left: 50%;
+      top: 55%;
+      transform: translate(-50%, -50%);
+      width: 86px;
+      height: 86px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(86,255,211,0.35), rgba(86,255,211,0.08));
+      border: 1px solid rgba(86,255,211,0.6);
+      box-shadow: 0 0 50px rgba(86,255,211,0.5), inset 0 0 18px rgba(86,255,211,0.22);
+      display: grid;
+      place-items: center;
+      color: #0c1220;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+    .hero-copy small { color: var(--muted); }
+    .hero-chips {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 12px;
+      padding: 20px;
+      bottom: 0;
+    }
+    .chip {
+      position: relative;
+      padding: 10px 12px;
+      min-width: 54px;
+      border-radius: 14px;
+      background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.04));
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--text);
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 10px 35px rgba(0,0,0,0.4);
+      cursor: pointer;
+      transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease, background 150ms ease;
+    }
+    .chip:hover { transform: translateY(-2px); border-color: rgba(86,255,211,0.35); }
+    .chip input {
+      width: 72px;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font: inherit;
+      text-align: center;
+      outline: none;
+    }
+    .chip .remove {
+      border: none;
+      background: rgba(255,255,255,0.05);
+      color: var(--muted);
+      border-radius: 8px;
+      cursor: pointer;
+      padding: 4px 6px;
+      font-size: 12px;
+    }
+    .chip .badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      letter-spacing: 0.04em;
+    }
+    .chip[data-state="current"] { border-color: rgba(102,168,255,0.7); box-shadow: 0 0 0 1px rgba(102,168,255,0.4), 0 10px 30px rgba(102,168,255,0.25); }
+    .chip[data-state="best"] { border-color: rgba(86,255,211,0.8); box-shadow: 0 0 0 1px rgba(86,255,211,0.6), 0 12px 36px rgba(86,255,211,0.25); }
+    .chip[data-state="tie"] { border-color: rgba(255,122,194,0.7); box-shadow: 0 0 0 1px rgba(255,122,194,0.4); }
+    .chip[data-state="winner"] { background: linear-gradient(120deg, rgba(86,255,211,0.2), rgba(102,168,255,0.22)); box-shadow: 0 14px 40px rgba(86,255,211,0.3); }
+    .chip[data-state="eliminated"] { opacity: 0.6; }
+    .chip[data-state="current"]::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent, rgba(102,168,255,0.15), transparent);
+      border-radius: 14px;
+      animation: sweep 1400ms linear infinite;
+      pointer-events: none;
+    }
+    .chip[data-state="best"], .chip[data-state="winner"] { animation: bestPulse 2400ms ease-in-out infinite; }
+    [data-tie="true"] { animation: tieFlash 900ms ease-in-out infinite; }
+    @keyframes bestPulse { 0% { transform: translateY(0); } 50% { transform: translateY(-2px) scale(1.01); } 100% { transform: translateY(0); } }
+    @keyframes tieFlash { 0%, 100% { box-shadow: 0 0 0 1px rgba(255,122,194,0.5); } 50% { box-shadow: 0 0 0 6px rgba(255,122,194,0.15); } }
+    @keyframes sweep { 0% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+    .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    .chip .crown {
+      width: 18px; height: 18px; border-radius: 6px;
+      background: radial-gradient(circle, rgba(255,215,128,0.9), rgba(255,173,64,0.8));
+      color: #1d1200; font-weight: 900; font-size: 12px;
+      display: grid; place-items: center;
+      box-shadow: 0 0 15px rgba(255,215,128,0.55);
+    }
+    .chip .tie-dot {
+      width: 10px; height: 10px; border-radius: 50%; background: var(--accent-3); box-shadow: 0 0 12px rgba(255,122,194,0.5);
+    }
+    .input-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin: 10px 0;
+    }
+    .input-row input[type="number"] {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 15px;
+      width: 120px;
+    }
+    .input-row input.invalid { border-color: #ff7ac2; animation: wiggle 260ms ease; }
+    @keyframes wiggle { 0% { transform: translateX(0); } 25% { transform: translateX(-3px); } 50% { transform: translateX(3px); } 75% { transform: translateX(-3px); } 100% { transform: translateX(0); } }
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+      margin: 16px 0;
+    }
+    .visual {
+      background: linear-gradient(160deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    .visual h3 { margin-top: 0; }
+    .number-line svg { width: 100%; height: 140px; }
+    .bars { display: flex; align-items: flex-end; gap: 10px; height: 160px; }
+    .bar {
+      flex: 1;
+      min-width: 22px;
+      background: linear-gradient(180deg, rgba(86,255,211,0.26), rgba(102,168,255,0.35));
+      border-radius: 12px 12px 6px 6px;
+      position: relative;
+      transition: transform 200ms ease, opacity 200ms ease;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+    }
+    .bar span {
+      position: absolute;
+      bottom: 6px; left: 50%;
+      transform: translateX(-50%);
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .bar[data-state="winner"] { box-shadow: 0 0 0 1px rgba(86,255,211,0.6), 0 14px 35px rgba(86,255,211,0.25); }
+    .bar[data-state="tie"] { box-shadow: 0 0 0 1px rgba(255,122,194,0.55); }
+    .status {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+    }
+    .status .tile {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.03);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-height: 72px;
+    }
+    .status .value { font-size: 22px; font-weight: 800; color: var(--accent); }
+    .explain {
+      background: rgba(12,18,32,0.6);
+      border: 1px dashed rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 12px;
+      min-height: 80px;
+      color: var(--text);
+    }
+    .mini-diagram {
+      width: 100%;
+      height: 180px;
+    }
+    .mini-diagram circle { fill: rgba(255,255,255,0.05); stroke: rgba(255,255,255,0.08); }
+    .mini-diagram text { fill: var(--text); font-size: 12px; font-weight: 700; }
+    .scale {
+      position: relative;
+      height: 160px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .scale .arm {
+      position: absolute;
+      width: 80%;
+      height: 6px;
+      background: linear-gradient(90deg, rgba(86,255,211,0.4), rgba(102,168,255,0.35));
+      top: 50%; left: 10%;
+      transform-origin: center;
+      border-radius: 6px;
+      box-shadow: 0 0 18px rgba(86,255,211,0.25);
+      transition: transform 280ms ease;
+    }
+    .scale .pan {
+      position: absolute;
+      width: 120px;
+      height: 18px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      top: calc(50% + 6px);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      transition: transform 280ms ease;
+    }
+    .scale .pan.left { left: 8%; }
+    .scale .pan.right { right: 8%; }
+    .gauge {
+      height: 12px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .gauge .fill {
+      height: 100%;
+      width: 60%;
+      background: linear-gradient(90deg, rgba(86,255,211,0.4), rgba(102,168,255,0.45));
+      box-shadow: 0 6px 18px rgba(86,255,211,0.25);
+    }
+    .code-block {
+      background: #0b0f1c;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 12px;
+      font-family: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', Consolas, monospace;
+      color: #cde1ff;
+      position: relative;
+    }
+    .code-block button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+    pre { margin: 0; white-space: pre-wrap; }
+    .share-card {
+      background: linear-gradient(160deg, rgba(86,255,211,0.08), rgba(102,168,255,0.07));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 14px;
+      min-height: 160px;
+    }
+    .share-card .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    .footer {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 24px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .alert {
+      color: #ff9abf;
+      font-weight: 700;
+    }
+    .hero-meta { display: grid; gap: 8px; }
+    .timeline {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .timeline .dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      transition: background 160ms ease, transform 160ms ease;
+    }
+    .timeline .dot.active { background: var(--accent); transform: scale(1.15); box-shadow: 0 0 8px rgba(86,255,211,0.6); }
+    @media (max-width: 820px) {
+      .hero { padding: 18px; }
+      .hero-visual { min-height: 240px; }
+      .bars { height: 120px; }
+    }
+  </style>
+</head>
+<body data-reduced="false">
+  <div class="background-grid" aria-hidden="true"></div>
+  <main class="shell">
+    <section class="hero" aria-label="Closest number to zero hero demo">
+      <div class="hero-copy">
+        <div class="eyebrow">LeetCode 2239 • Visual Guide</div>
+        <h1>Closest to Zero, <span style="color: var(--accent);">visually obvious</span>.</h1>
+        <p>Watch the scan sweep, see ties flash, and remember: when absolute distances tie, the larger value wins. Everything here glows, moves, and stays accessible.</p>
+        <div class="row">
+          <button class="btn" id="scroll-playground">Open playground</button>
+          <button class="btn secondary" id="hero-pause">Pause loop</button>
+          <div class="tag"><span aria-hidden="true">✨</span> Graphics-first • Playable • Premium motion</div>
+        </div>
+        <div class="divider"></div>
+        <div class="hero-meta">
+          <div class="row">
+            <span class="pill">Auto demo</span>
+            <span class="muted">Loop cycles through scan → tie moment → winner snap.</span>
+          </div>
+          <div class="timeline" aria-hidden="true" id="hero-timeline"></div>
+          <div class="muted" id="hero-status">Loading loop…</div>
+        </div>
+      </div>
+      <div class="hero-visual" id="hero-visual" aria-live="polite">
+        <div class="zero-beacon" aria-hidden="true">0</div>
+        <svg id="hero-lines" viewBox="0 0 800 260" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="hero-chips" id="hero-chips" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <section class="card" id="problem">
+      <div class="row">
+        <div class="pill">Problem</div>
+        <div class="pill">Tie-break spotlight</div>
+        <div class="pill">Always O(n)</div>
+      </div>
+      <h2>Find the closest number to zero</h2>
+      <p>If multiple values share the same absolute distance to 0, choose the larger value. Everything on this page exists to make that rule memorable.</p>
+      <div class="status">
+        <div class="tile">
+          <span class="muted">Input</span>
+          <span class="value" id="status-input">[3, -4, 2, -1]</span>
+        </div>
+        <div class="tile">
+          <span class="muted">Winner</span>
+          <span class="value" id="status-winner">2</span>
+        </div>
+        <div class="tile">
+          <span class="muted">Tie-break rule</span>
+          <span class="value">Larger value wins ties</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="playground">
+      <div class="row">
+        <div class="pill">Interactive playground</div>
+        <span class="muted">Edit numbers inline, shuffle, randomize, or load presets. Step through or view instantly.</span>
+      </div>
+      <div class="input-row">
+        <input aria-label="Add number" type="number" id="add-number" placeholder="Add number">
+        <button class="btn" id="add-btn">Add</button>
+        <button class="btn secondary" id="shuffle-btn">Shuffle</button>
+        <button class="btn secondary" id="random-btn">Randomize</button>
+        <div class="row" id="preset-buttons"></div>
+      </div>
+      <div class="row">
+        <div class="tag">Mode</div>
+        <button class="btn secondary" data-mode="instant" id="mode-instant">Instant</button>
+        <button class="btn secondary" data-mode="step" id="mode-step">Step</button>
+        <div class="spacer"></div>
+        <button class="btn ghost" id="step-prev">Back</button>
+        <button class="btn secondary" id="step-next">Step</button>
+        <button class="btn ghost" id="step-reset">Reset</button>
+      </div>
+      <div class="divider"></div>
+      <div class="row" aria-live="polite">
+        <div class="tag">Array</div>
+        <div id="chip-list" class="row" role="list" aria-label="Number chips"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+        <div class="visual number-line">
+          <h3>Number line</h3>
+          <svg id="number-line" viewBox="0 0 800 160" preserveAspectRatio="xMidYMid meet" aria-label="Number line visualization"></svg>
+        </div>
+        <div class="visual">
+          <h3>Distance bars</h3>
+          <div class="bars" id="bars"></div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="row">
+        <div class="tag">Explain it to me</div>
+        <div class="explain" id="explain-panel">Hover or focus a chip to see why it wins or loses.</div>
+      </div>
+    </section>
+
+    <section class="card" id="how">
+      <div class="row">
+        <div class="pill">How it works</div>
+        <span class="muted">Single pass, track best value + absolute distance.</span>
+      </div>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); align-items: center;">
+        <svg class="mini-diagram" viewBox="0 0 420 200" aria-label="Algorithm node map">
+          <defs>
+            <marker id="arrow" markerWidth="10" markerHeight="10" refX="5" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="#66a8ff"></path>
+            </marker>
+          </defs>
+          <rect x="24" y="24" width="90" height="36" rx="10" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)"></rect>
+          <text x="30" y="46">for value in nums</text>
+          <rect x="160" y="24" width="110" height="36" rx="10" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)"></rect>
+          <text x="170" y="46">abs(value)</text>
+          <rect x="310" y="24" width="90" height="36" rx="10" fill="rgba(86,255,211,0.12)" stroke="rgba(86,255,211,0.5)"></rect>
+          <text x="320" y="46">best?</text>
+          <path d="M114 42 L160 42" stroke="#66a8ff" stroke-width="2" marker-end="url(#arrow)"></path>
+          <path d="M270 42 L310 42" stroke="#66a8ff" stroke-width="2" marker-end="url(#arrow)"></path>
+          <rect x="60" y="110" width="130" height="36" rx="10" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)"></rect>
+          <text x="70" y="132">abs smaller?</text>
+          <rect x="230" y="110" width="130" height="36" rx="10" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)"></rect>
+          <text x="240" y="132">tie? take larger</text>
+          <path d="M355 42 Q 390 70 360 110" stroke="#66a8ff" stroke-width="2" marker-end="url(#arrow)" fill="none"></path>
+          <path d="M125 110 Q 120 74 80 60" stroke="#66a8ff" stroke-width="2" marker-end="url(#arrow)" fill="none"></path>
+          <path d="M195 128 L230 128" stroke="#66a8ff" stroke-width="2" marker-end="url(#arrow)"></path>
+        </svg>
+        <div>
+          <h3>State model</h3>
+          <p class="muted">We track four things: current index, candidate value, absolute distance, and the best-so-far. In step mode, you see the cursor move and the best chip pulse.</p>
+          <ul style="color: var(--text); padding-left: 18px; line-height: 1.6;">
+            <li>Candidate beats best if |x| is smaller.</li>
+            <li>On a tie of |x|, choose the larger number.</li>
+            <li>One scan over the array: O(n) time, O(1) extra space.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="tie-spotlight">
+      <div class="row">
+        <div class="pill">Tie-break spotlight</div>
+        <span class="muted">Pick k and watch -k vs k. The larger number wins ties.</span>
+      </div>
+      <div class="input-row">
+        <label for="tie-value" class="muted">Choose k</label>
+        <input type="number" id="tie-value" value="4" min="1" max="50">
+        <button class="btn secondary" id="tie-generate">Show tie</button>
+        <span class="alert" id="tie-alert" aria-live="polite"></span>
+      </div>
+      <div class="row">
+        <div class="scale" aria-live="polite">
+          <div class="arm" id="tie-arm"></div>
+          <div class="pan left" id="tie-left"></div>
+          <div class="pan right" id="tie-right"></div>
+        </div>
+        <div class="visual" style="flex:1;">
+          <h3>Outcome</h3>
+          <p id="tie-outcome">k wins ties because it is numerically larger.</p>
+          <div class="row" id="tie-chips"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="complexity">
+      <div class="row">
+        <div class="pill">Complexity</div>
+        <span class="muted">Single linear sweep with constant memory.</span>
+      </div>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); align-items: center;">
+        <div>
+          <h3>Time</h3>
+          <div class="gauge"><div class="fill" style="width: 90%;"></div></div>
+          <p class="muted">O(n): we visit each chip exactly once.</p>
+        </div>
+        <div>
+          <h3>Space</h3>
+          <div class="gauge"><div class="fill" style="width: 16%;"></div></div>
+          <p class="muted">O(1): tracking best value and its distance only.</p>
+        </div>
+        <div>
+          <h3>Reliability cues</h3>
+          <p class="muted">Winner locks in with a glow + crown, ties double flash, reduced motion replaces flashes with solid highlights.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="code">
+      <div class="row">
+        <div class="pill">Code showcase</div>
+        <span class="muted">Copy-ready, deterministic, mirrors the visuals.</span>
+      </div>
+      <div class="row">
+        <button class="btn secondary" data-lang="js" id="lang-js">JavaScript</button>
+        <button class="btn secondary" data-lang="py" id="lang-py">Python</button>
+      </div>
+      <div class="code-block" id="code-block">
+        <button class="btn secondary" id="copy-code">Copy</button>
+        <pre id="code-text"></pre>
+      </div>
+    </section>
+
+    <section class="card" id="share">
+      <div class="row">
+        <div class="pill">Share / CTA</div>
+        <span class="muted">Link encodes the array + mode. Card previews your current state.</span>
+      </div>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); align-items: center;">
+        <div class="share-card" id="share-card" aria-live="polite"></div>
+        <div class="row">
+          <button class="btn" id="copy-link">Copy share link</button>
+          <button class="btn secondary" id="download-card">Download card</button>
+          <span class="muted" id="share-status"></span>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div>Built for devs who learn by seeing + touching. Fully keyboard friendly.</div>
+      <div class="row">
+        <label class="row" style="cursor: pointer;">
+          <input type="checkbox" id="reduced-toggle">
+          <span>Reduced motion</span>
+        </label>
+        <a href="#top">Back to top</a>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    const chipListEl = document.getElementById('chip-list');
+    const numberLineEl = document.getElementById('number-line');
+    const barsEl = document.getElementById('bars');
+    const explainEl = document.getElementById('explain-panel');
+    const statusInputEl = document.getElementById('status-input');
+    const statusWinnerEl = document.getElementById('status-winner');
+    const shareCardEl = document.getElementById('share-card');
+    const shareStatusEl = document.getElementById('share-status');
+    const reducedToggleEl = document.getElementById('reduced-toggle');
+    const heroChipsEl = document.getElementById('hero-chips');
+    const heroLinesEl = document.getElementById('hero-lines');
+    const heroStatusEl = document.getElementById('hero-status');
+    const heroTimelineEl = document.getElementById('hero-timeline');
+
+    const presets = {
+      mixed: [3, -4, 2, -1, 7],
+      tie: [-2, 2, 5],
+      positive: [9, 6, 3, 2],
+      negative: [-8, -5, -2, -1],
+      withZero: [0, 5, -7, 3]
+    };
+
+    const state = {
+      values: presets.mixed.slice(),
+      mode: 'instant',
+      currentIndex: 0,
+      trace: [],
+      reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+      heroPaused: false,
+      lang: 'js'
+    };
+
+    const codeSnippets = {
+      js: `function findClosestNumber(nums) {
+  let best = nums[0];
+  for (const value of nums) {
+    const bestAbs = Math.abs(best);
+    const absValue = Math.abs(value);
+    const beatsBest = absValue < bestAbs || (absValue === bestAbs && value > best);
+    if (beatsBest) best = value;
+  }
+  return best;
+}`,
+      py: `def findClosestNumber(nums):
+    best = nums[0]
+    for value in nums:
+        best_abs = abs(best)
+        abs_value = abs(value)
+        beats_best = abs_value < best_abs or (abs_value == best_abs and value > best)
+        if beats_best:
+            best = value
+    return best`
+    };
+
+    function getQueryState() {
+      const params = new URLSearchParams(location.search);
+      if (params.has('arr')) {
+        const arrRaw = params.get('arr').split(',').map(x => parseInt(x, 10)).filter(n => !Number.isNaN(n));
+        if (arrRaw.length) state.values = arrRaw;
+      }
+      if (params.get('mode') === 'step') state.mode = 'step';
+    }
+
+    function serializeState() {
+      const params = new URLSearchParams();
+      params.set('arr', state.values.join(','));
+      params.set('mode', state.mode);
+      const base = location.origin === 'null' ? location.pathname : (location.origin + location.pathname);
+      return base + '?' + params.toString();
+    }
+
+    function computeTrace(values) {
+      if (!values.length) return { best: null, bestAbs: null, steps: [] };
+      let bestVal = values[0];
+      let bestAbs = Math.abs(values[0]);
+      const steps = [{
+        index: 0,
+        value: values[0],
+        abs: Math.abs(values[0]),
+        previousBest: null,
+        previousAbs: Infinity,
+        tie: false,
+        replaced: true,
+        best: bestVal,
+        bestAbs
+      }];
+      for (let i = 1; i < values.length; i++) {
+        const value = values[i];
+        const abs = Math.abs(value);
+        const prevBest = bestVal;
+        const prevAbs = bestAbs;
+        const tie = abs === prevAbs;
+        let replaced = false;
+        if (abs < bestAbs || (tie && value > bestVal)) {
+          bestVal = value;
+          bestAbs = abs;
+          replaced = true;
+        }
+        steps.push({ index: i, value, abs, previousBest: prevBest, previousAbs: prevAbs, tie, replaced, best: bestVal, bestAbs });
+      }
+      return { best: bestVal, bestAbs, steps };
+    }
+
+    function bestIndexAtStep(stepIndex) {
+      if (!state.trace.steps.length) return -1;
+      const step = state.trace.steps[Math.min(stepIndex, state.trace.steps.length - 1)];
+      const target = step.best;
+      let chosen = 0;
+      for (let i = 0; i <= step.index; i++) {
+        if (state.values[i] === target && Math.abs(state.values[i]) === Math.abs(target)) chosen = i;
+      }
+      return chosen;
+    }
+
+    function bestIndexBefore(stepIndex) {
+      if (!state.trace.steps.length) return -1;
+      if (stepIndex <= 0) return -1;
+      const target = state.trace.steps[stepIndex - 1].best;
+      let chosen = 0;
+      for (let i = 0; i < stepIndex; i++) {
+        if (state.values[i] === target && Math.abs(state.values[i]) === Math.abs(target)) chosen = i;
+      }
+      return chosen;
+    }
+
+    function renderChips() {
+      chipListEl.innerHTML = '';
+      const stepIndex = state.mode === 'step' ? state.currentIndex : state.trace.steps.length - 1;
+      const bestIndex = bestIndexAtStep(stepIndex);
+      const step = state.trace.steps[stepIndex] || {};
+      const tieIndices = [];
+      if (state.mode === 'step' && state.trace.steps[state.currentIndex]?.tie) {
+        tieIndices.push(state.currentIndex);
+        const prevIdx = bestIndexBefore(state.currentIndex);
+        if (prevIdx >= 0) tieIndices.push(prevIdx);
+      } else if (state.mode !== 'step' && state.trace.bestAbs !== null) {
+        const bestAbs = Math.abs(state.trace.best);
+        state.values.forEach((v, i) => {
+          if (i !== bestIndex && Math.abs(v) === bestAbs) tieIndices.push(i);
+        });
+      }
+      state.values.forEach((value, idx) => {
+        const chip = document.createElement('div');
+        chip.className = 'chip';
+        chip.setAttribute('role', 'group');
+        chip.setAttribute('tabindex', '0');
+        chip.dataset.index = idx;
+        let chipState = '';
+        if (idx === bestIndex) chipState = state.trace.steps[idx]?.replaced ? 'winner' : 'best';
+        if (state.mode === 'step' && idx === state.currentIndex && chipState !== 'winner') chipState = 'current';
+        chip.dataset.state = chipState;
+        if (tieIndices.includes(idx)) chip.dataset.tie = 'true';
+        else chip.removeAttribute('data-tie');
+        const abs = Math.abs(value);
+        const bestAbs = Math.abs(state.trace.best ?? value);
+        let reason = `Value ${value}, absolute ${abs}.`;
+        if (tieIndices.includes(idx)) reason += ' Tied distance.';
+        if (idx === bestIndex) reason += ' Current best candidate.';
+        if (chipState === 'winner') reason += ' Became winner here.';
+        if (abs < bestAbs) reason += ' Closer to zero.';
+        chip.setAttribute('aria-label', reason);
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.value = value;
+        input.setAttribute('aria-label', `Edit value ${value}`);
+        input.addEventListener('change', (e) => updateValue(idx, parseInt(e.target.value, 10)));
+        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
+        chip.appendChild(input);
+        if (chipState === 'winner' || chipState === 'best') {
+          const crown = document.createElement('div');
+          crown.className = 'crown';
+          crown.title = 'Best candidate';
+          crown.textContent = '★';
+          chip.appendChild(crown);
+        }
+        if (tieIndices.includes(idx)) {
+          const tieDot = document.createElement('div');
+          tieDot.className = 'tie-dot';
+          tieDot.title = 'Tie distance';
+          chip.appendChild(tieDot);
+        }
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove';
+        removeBtn.textContent = '×';
+        removeBtn.setAttribute('aria-label', `Remove ${value}`);
+        removeBtn.addEventListener('click', (ev) => { ev.stopPropagation(); removeValue(idx); });
+        chip.addEventListener('mouseenter', () => updateExplain(idx));
+        chip.addEventListener('focus', () => updateExplain(idx));
+        chip.addEventListener('mouseleave', () => explainEl.textContent = 'Hover or focus a chip to see why it wins or loses.');
+        chip.addEventListener('blur', () => explainEl.textContent = 'Hover or focus a chip to see why it wins or loses.');
+        chip.appendChild(removeBtn);
+        chipListEl.appendChild(chip);
+      });
+    }
+
+    function renderStatus() {
+      statusInputEl.textContent = '[' + state.values.join(', ') + ']';
+      statusWinnerEl.textContent = state.trace.best !== null ? state.trace.best : '—';
+    }
+
+    function renderNumberLine() {
+      const w = 800, h = 160;
+      const maxAbs = Math.max(1, ...state.values.map(v => Math.abs(v)));
+      const center = w / 2;
+      const spread = maxAbs * 1.2;
+      const mapX = (v) => center + (v / spread) * (w / 2 - 40);
+      const stepIndex = state.mode === 'step' ? state.currentIndex : state.trace.steps.length - 1;
+      const bestIndex = bestIndexAtStep(stepIndex);
+      const current = stepIndex;
+      const tieIndices = [];
+      if (state.mode === 'step' && state.trace.steps[state.currentIndex]?.tie) {
+        tieIndices.push(state.currentIndex);
+        const prevIdx = bestIndexBefore(state.currentIndex);
+        if (prevIdx >= 0) tieIndices.push(prevIdx);
+      } else if (state.mode !== 'step' && state.trace.bestAbs !== null) {
+        const bestAbs = Math.abs(state.trace.best);
+        state.values.forEach((v, i) => {
+          if (i !== bestIndex && Math.abs(v) === bestAbs) tieIndices.push(i);
+        });
+      }
+      const ticks = [];
+      for (let t = -spread; t <= spread; t += spread / 4) ticks.push(Math.round(t));
+      const tickLines = ticks.map(t => {
+        const x = mapX(t);
+        return `<line x1="${x}" y1="${h/2 - 8}" x2="${x}" y2="${h/2 + 8}" stroke="rgba(255,255,255,0.3)" stroke-width="1" />` +
+               `<text x="${x}" y="${h/2 + 22}" fill="#9ab0d6" font-size="10" text-anchor="middle">${t}</text>`;
+      }).join('');
+      const rays = state.values.map((v, i) => {
+        const x = mapX(v);
+        const color = tieIndices.includes(i) ? 'rgba(255,122,194,0.8)' : (i === bestIndex ? 'rgba(86,255,211,0.9)' : 'rgba(102,168,255,0.5)');
+        const opacity = state.mode === 'step' && i > current ? 0.35 : 0.85;
+        return `<line x1="${center}" y1="${h/2}" x2="${x}" y2="${h/2 - 40}" stroke="${color}" stroke-width="${i === bestIndex ? 3 : 1.5}" stroke-linecap="round" opacity="${opacity}"/>`;
+      }).join('');
+      const markers = state.values.map((v, i) => {
+        const x = mapX(v);
+        const stateLabel = i === bestIndex ? 'winner' : i === current ? 'current' : '';
+        const fill = tieIndices.includes(i) ? 'rgba(255,122,194,0.9)' : (i === bestIndex ? 'rgba(86,255,211,0.9)' : i === current ? 'rgba(102,168,255,0.8)' : 'rgba(255,255,255,0.5)');
+        return `<g>
+          <circle cx="${x}" cy="${h/2 - 40}" r="${i === bestIndex ? 11 : 8}" fill="${fill}" opacity="${state.mode === 'step' && i > current ? 0.5 : 1}" />
+          <text x="${x}" y="${h/2 - 44}" text-anchor="middle" fill="#0c1220" font-size="9" font-weight="800">${v}</text>
+          ${stateLabel === 'winner' ? `<circle cx="${x}" cy="${h/2 - 40}" r="16" fill="none" stroke="rgba(86,255,211,0.5)" stroke-width="2"/>` : ''}
+        </g>`;
+      }).join('');
+      numberLineEl.innerHTML = `
+        <rect x="20" y="${h/2 - 2}" width="${w-40}" height="4" rx="2" fill="rgba(255,255,255,0.1)"></rect>
+        <circle cx="${center}" cy="${h/2}" r="12" fill="rgba(86,255,211,0.2)" stroke="rgba(86,255,211,0.6)" stroke-width="2"></circle>
+        ${tickLines}
+        ${rays}
+        ${markers}
+      `;
+    }
+
+    function renderBars() {
+      barsEl.innerHTML = '';
+      const stepIndex = state.mode === 'step' ? state.currentIndex : state.trace.steps.length - 1;
+      const bestIndex = bestIndexAtStep(stepIndex);
+      const tieIndices = [];
+      if (state.mode === 'step' && state.trace.steps[state.currentIndex]?.tie) {
+        tieIndices.push(state.currentIndex);
+        const prevIdx = bestIndexBefore(state.currentIndex);
+        if (prevIdx >= 0) tieIndices.push(prevIdx);
+      } else if (state.mode !== 'step' && state.trace.bestAbs !== null) {
+        const bestAbs = Math.abs(state.trace.best);
+        state.values.forEach((v, i) => {
+          if (i !== bestIndex && Math.abs(v) === bestAbs) tieIndices.push(i);
+        });
+      }
+      const maxAbs = Math.max(1, ...state.values.map(v => Math.abs(v)));
+      state.values.forEach((v, i) => {
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        const height = (Math.abs(v) / maxAbs) * 100 + 20;
+        bar.style.height = height + 'px';
+        let barState = i === bestIndex ? 'winner' : '';
+        if (tieIndices.includes(i) && barState !== 'winner') barState = 'tie';
+        bar.dataset.state = barState;
+        if (tieIndices.includes(i)) bar.dataset.tie = 'true';
+        else bar.removeAttribute('data-tie');
+        bar.tabIndex = 0;
+        const label = document.createElement('span');
+        label.textContent = Math.abs(v);
+        bar.appendChild(label);
+        bar.title = `|${v}| = ${Math.abs(v)}`;
+        bar.addEventListener('mouseenter', () => updateExplain(i));
+        bar.addEventListener('focus', () => updateExplain(i));
+        barsEl.appendChild(bar);
+      });
+    }
+
+    function updateExplain(index) {
+      if (index < 0 || !state.values.length) {
+        explainEl.textContent = 'Add values to start exploring.';
+        return;
+      }
+      const value = state.values[index];
+      const stepBefore = Math.max(0, state.mode === 'step' ? state.currentIndex : state.trace.steps.length - 1);
+      const bestIndex = bestIndexAtStep(stepBefore);
+      const bestValue = state.values[bestIndex];
+      const abs = Math.abs(value);
+      const bestAbs = Math.abs(bestValue);
+      let verdict = '';
+      if (abs < bestAbs) {
+        verdict = `${value} beats current best ${bestValue} because ${abs} < ${bestAbs}.`;
+      } else if (abs === bestAbs && value > bestValue) {
+        verdict = `${value} wins the tie because it is larger than ${bestValue}.`;
+      } else if (abs === bestAbs) {
+        verdict = `${value} ties on distance but loses because ${value} < ${bestValue}.`;
+      } else {
+        verdict = `${value} loses because ${abs} > ${bestAbs}.`;
+      }
+      explainEl.textContent = `Value ${value} → |${value}|=${abs}. Best so far ${bestValue} (|best|=${bestAbs}). ${verdict}`;
+    }
+
+    function updateValue(index, newVal) {
+      if (Number.isNaN(newVal)) return;
+      state.values[index] = newVal;
+      recalc();
+      renderAll();
+    }
+
+    function removeValue(index) {
+      state.values.splice(index, 1);
+      if (!state.values.length) state.values = [0];
+      state.currentIndex = Math.min(state.currentIndex, state.values.length - 1);
+      recalc();
+      renderAll();
+    }
+
+    function addValue(val) {
+      if (Number.isNaN(val)) {
+        const input = document.getElementById('add-number');
+        shareStatusEl.textContent = 'Enter a number before adding.';
+        input.classList.add('invalid');
+        setTimeout(() => input.classList.remove('invalid'), 420);
+        return;
+      }
+      state.values.push(val);
+      recalc();
+      renderAll();
+    }
+
+    function shuffleValues() {
+      for (let i = state.values.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [state.values[i], state.values[j]] = [state.values[j], state.values[i]];
+      }
+      recalc();
+      renderAll();
+    }
+
+    function randomValues() {
+      const length = Math.floor(Math.random() * 4) + 4;
+      const arr = [];
+      let forcedTie = Math.random() > 0.6;
+      let tieVal = Math.floor(Math.random() * 6) + 1;
+      for (let i = 0; i < length; i++) {
+        const num = Math.floor(Math.random() * 19) - 9;
+        arr.push(num);
+      }
+      if (forcedTie) arr.splice(0, 2, tieVal * -1, tieVal);
+      state.values = arr;
+      state.currentIndex = 0;
+      recalc();
+      renderAll();
+    }
+
+    function setPreset(key) {
+      state.values = presets[key].slice();
+      state.currentIndex = 0;
+      recalc();
+      renderAll();
+    }
+
+    function renderPresets() {
+      const presetRow = document.getElementById('preset-buttons');
+      presetRow.innerHTML = '';
+      Object.entries({
+        mixed: 'Preset: mixed',
+        tie: 'Preset: tie',
+        positive: 'All positive',
+        negative: 'All negative',
+        withZero: 'Includes 0'
+      }).forEach(([key, label]) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn ghost';
+        btn.textContent = label;
+        btn.addEventListener('click', () => setPreset(key));
+        presetRow.appendChild(btn);
+      });
+    }
+
+    function recalc() {
+      state.trace = computeTrace(state.values);
+    }
+
+    function renderAll() {
+      renderChips();
+      renderStatus();
+      renderNumberLine();
+      renderBars();
+      const explainIndex = state.mode === 'instant' ? bestIndexAtStep(state.trace.steps.length - 1) : Math.min(state.currentIndex, state.values.length - 1);
+      updateExplain(explainIndex);
+      renderShareCard();
+      renderTieSpotlight();
+      renderCode();
+      updateModeButtons();
+      buildTimeline();
+    }
+
+    function updateModeButtons() {
+      document.querySelectorAll('[data-mode]').forEach(btn => {
+        const active = btn.dataset.mode === state.mode;
+        btn.style.background = active ? 'linear-gradient(120deg, rgba(86,255,211,0.2), rgba(102,168,255,0.2))' : 'rgba(255,255,255,0.05)';
+        btn.style.color = active ? '#0b1728' : varText();
+      });
+    }
+
+    function varText() { return getComputedStyle(document.body).getPropertyValue('--text'); }
+
+    function stepNext() {
+      state.mode = 'step';
+      if (state.currentIndex < state.values.length - 1) {
+        state.currentIndex += 1;
+      }
+      renderAll();
+    }
+
+    function stepPrev() {
+      state.mode = 'step';
+      if (state.currentIndex > 0) state.currentIndex -= 1;
+      renderAll();
+    }
+
+    function stepReset() {
+      state.mode = 'step';
+      state.currentIndex = 0;
+      renderAll();
+    }
+
+    function setMode(mode) {
+      state.mode = mode;
+      if (mode === 'instant') state.currentIndex = state.values.length - 1;
+      else state.currentIndex = 0;
+      renderAll();
+    }
+
+    function renderShareCard() {
+      const stepIndex = state.mode === 'step' ? state.currentIndex : state.trace.steps.length - 1;
+      const bestIndex = bestIndexAtStep(stepIndex);
+      const bestValue = state.values[bestIndex];
+      const hasTie = state.values.some((v, i) => i !== bestIndex && Math.abs(v) === Math.abs(bestValue));
+      const chips = state.values.map((v, i) => {
+        const badge = i === bestIndex ? '<span class="badge">winner</span>' : (hasTie && Math.abs(v) === Math.abs(bestValue) ? '<span class="badge">tie</span>' : '');
+        return `<div class="chip" data-state="${i === bestIndex ? 'winner' : ''}" aria-label="${v}">${v}${badge}</div>`;
+      }).join('');
+      shareCardEl.innerHTML = `
+        <div class="row">
+          <div class="pill">Share card</div>
+          <span class="muted">Array → [${state.values.join(', ')}]</span>
+        </div>
+        <h3>Winner: ${bestValue}${hasTie ? ' (won a tie)' : ''}</h3>
+        <div class="chips">${chips}</div>
+      `;
+    }
+
+    function downloadCard() {
+      const link = document.createElement('a');
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400">
+        <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0c1220"/><stop offset="100%" stop-color="#0f1628"/></linearGradient></defs>
+        <rect width="800" height="400" fill="url(#bg)"/>
+        <text x="30" y="50" fill="#56ffd3" font-family="Space Grotesk, Manrope, sans-serif" font-size="18" font-weight="700">LeetCode 2239 • Closest to Zero</text>
+        <text x="30" y="90" fill="#dce8ff" font-size="32" font-family="Space Grotesk, Manrope, sans-serif" font-weight="800">Winner: ${state.trace.best}</text>
+        <text x="30" y="130" fill="#9ab0d6" font-size="16">Array: [${state.values.join(', ')}]</text>
+        ${state.values.map((v, i) => {
+          const x = 40 + i * 120;
+          const y = 220;
+          const isBest = v === state.trace.best && Math.abs(v) === Math.abs(state.trace.best);
+          return `<g>
+            <rect x="${x}" y="${y-30}" width="100" height="60" rx="14" fill="${isBest ? '#56ffd320' : '#ffffff0c'}" stroke="${isBest ? '#56ffd3' : '#ffffff22'}" stroke-width="2"></rect>
+            <text x="${x+50}" y="${y+8}" text-anchor="middle" fill="#dce8ff" font-size="18" font-family="Space Grotesk, Manrope, sans-serif" font-weight="700">${v}</text>
+            ${isBest ? `<text x="${x+50}" y="${y+26}" text-anchor="middle" fill="#56ffd3" font-size="12" font-weight="700">winner</text>` : ''}
+          </g>`;
+        }).join('')}
+      </svg>`;
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      link.href = URL.createObjectURL(blob);
+      link.download = 'closest-to-zero-share-card.svg';
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }
+
+    function copyLink() {
+      const url = serializeState();
+      navigator.clipboard?.writeText(url).then(() => {
+        shareStatusEl.textContent = 'Link copied.';
+      }).catch(() => {
+        shareStatusEl.textContent = 'Copy failed. Manually copy: ' + url;
+      });
+    }
+
+    function renderCode() {
+      document.getElementById('code-text').textContent = codeSnippets[state.lang];
+      document.querySelectorAll('[data-lang]').forEach(btn => {
+        const active = btn.dataset.lang === state.lang;
+        btn.style.background = active ? 'linear-gradient(120deg, rgba(86,255,211,0.2), rgba(102,168,255,0.2))' : 'rgba(255,255,255,0.05)';
+        btn.style.color = active ? '#0b1728' : varText();
+      });
+    }
+
+    function copyCode() {
+      const code = codeSnippets[state.lang];
+      navigator.clipboard?.writeText(code).then(() => {
+        shareStatusEl.textContent = 'Code copied.';
+      }).catch(() => {
+        shareStatusEl.textContent = 'Copy blocked.';
+      });
+    }
+
+    function renderTieSpotlight() {
+      const kInput = document.getElementById('tie-value');
+      let k = parseInt(kInput.value, 10);
+      if (Number.isNaN(k) || k <= 0) { k = 1; kInput.value = '1'; }
+      const leftVal = -k;
+      const rightVal = k;
+      const arm = document.getElementById('tie-arm');
+      const leftPan = document.getElementById('tie-left');
+      const rightPan = document.getElementById('tie-right');
+      const chips = document.getElementById('tie-chips');
+      chips.innerHTML = '';
+      const leftChip = document.createElement('div');
+      leftChip.className = 'chip';
+      leftChip.textContent = leftVal;
+      const rightChip = document.createElement('div');
+      rightChip.className = 'chip';
+      rightChip.textContent = rightVal;
+      rightChip.dataset.state = 'winner';
+      chips.append(leftChip, rightChip);
+      const tilt = -10; // left pan up when right wins
+      arm.style.transform = `rotate(${tilt}deg)`;
+      leftPan.style.transform = 'translateY(-6px)';
+      rightPan.style.transform = 'translateY(8px)';
+      leftPan.textContent = leftVal;
+      rightPan.textContent = rightVal + ' ✓';
+      document.getElementById('tie-outcome').textContent = `${rightVal} wins ties because it is larger than ${leftVal}.`;
+      document.getElementById('tie-alert').textContent = 'Memorize: distance tie → choose the larger number.';
+    }
+
+    function applyReducedMotion(flag) {
+      document.body.dataset.reduced = flag ? 'true' : 'false';
+      reducedToggleEl.checked = flag;
+      state.heroPaused = flag;
+      if (flag && heroInterval) { clearInterval(heroInterval); heroInterval = null; }
+      if (!flag && !heroInterval) { startHeroLoop(); }
+    }
+
+    function buildTimeline() {
+      heroTimelineEl.innerHTML = '';
+      const steps = state.trace.steps.length || 5;
+      for (let i = 0; i < steps; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        if (state.mode === 'instant' ? i === steps - 1 : i === state.currentIndex) dot.classList.add('active');
+        heroTimelineEl.appendChild(dot);
+      }
+    }
+
+    // Hero mini demo loop
+    const heroSequences = [
+      { values: [5, -2, 7, -1, 3], label: 'Clear winner: -1 beats |others|' },
+      { values: [-5, 5, -2, 2, 1], label: 'Tie moment: -2 vs 2 → 2 wins tie' },
+      { values: [6, -1, 4, -1, 8], label: 'Zero not present; closest distance is 1' }
+    ];
+    let heroInterval = null;
+    const heroState = { seq: 0, step: 0 };
+
+    function renderHero() {
+      const sequence = heroSequences[heroState.seq];
+      const trace = computeTrace(sequence.values);
+      const step = Math.min(heroState.step, trace.steps.length - 1);
+      const bestIndex = bestIndexAt(step, sequence.values, trace.steps);
+      heroChipsEl.innerHTML = '';
+      sequence.values.forEach((v, i) => {
+        const chip = document.createElement('div');
+        chip.className = 'chip';
+        chip.textContent = v;
+        let stateName = '';
+        if (i === bestIndex) stateName = 'winner';
+        if (i === step) stateName = 'current';
+        chip.dataset.state = stateName;
+        heroChipsEl.appendChild(chip);
+      });
+      drawHeroLines(sequence.values, step, bestIndex);
+      heroStatusEl.textContent = sequence.label;
+    }
+
+    function bestIndexAt(stepIndex, arr, steps) {
+      const target = steps[stepIndex].best;
+      let chosen = 0;
+      for (let i = 0; i <= stepIndex; i++) {
+        if (arr[i] === target && Math.abs(arr[i]) === Math.abs(target)) chosen = i;
+      }
+      return chosen;
+    }
+
+    function drawHeroLines(values, stepIndex, bestIndex) {
+      const w = 800, h = 260;
+      const maxAbs = Math.max(1, ...values.map(v => Math.abs(v)));
+      const center = w / 2;
+      const spread = maxAbs * 1.2;
+      const mapX = (v) => center + (v / spread) * (w / 2 - 50);
+      const lines = values.map((v, i) => {
+        const x = mapX(v);
+        const opacity = i > stepIndex ? 0.3 : 1;
+        const stroke = i === bestIndex ? 'rgba(86,255,211,0.9)' : 'rgba(102,168,255,0.6)';
+        return `<line x1="${center}" y1="${h/2+20}" x2="${x}" y2="${h/2-20}" stroke="${stroke}" stroke-width="${i === bestIndex ? 3 : 1.6}" opacity="${opacity}" />`;
+      }).join('');
+      heroLinesEl.innerHTML = `
+        <rect x="20" y="${h/2 + 18}" width="${w-40}" height="4" rx="2" fill="rgba(255,255,255,0.1)"></rect>
+        ${lines}
+      `;
+    }
+
+    function startHeroLoop() {
+      if (heroInterval) clearInterval(heroInterval);
+      heroState.step = 0;
+      heroInterval = setInterval(() => {
+        if (state.heroPaused) return;
+        const sequence = heroSequences[heroState.seq];
+        const trace = computeTrace(sequence.values);
+        heroState.step++;
+        if (heroState.step >= trace.steps.length) {
+          heroState.step = 0;
+          heroState.seq = (heroState.seq + 1) % heroSequences.length;
+        }
+        renderHero();
+      }, 1200);
+      renderHero();
+    }
+
+    function setupEvents() {
+      document.getElementById('add-btn').addEventListener('click', () => {
+        const val = parseInt(document.getElementById('add-number').value, 10);
+        addValue(val);
+      });
+      document.getElementById('add-number').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const val = parseInt(e.target.value, 10);
+          addValue(val);
+        }
+      });
+      document.getElementById('shuffle-btn').addEventListener('click', shuffleValues);
+      document.getElementById('random-btn').addEventListener('click', randomValues);
+      document.getElementById('mode-instant').addEventListener('click', () => setMode('instant'));
+      document.getElementById('mode-step').addEventListener('click', () => setMode('step'));
+      document.getElementById('step-next').addEventListener('click', stepNext);
+      document.getElementById('step-prev').addEventListener('click', stepPrev);
+      document.getElementById('step-reset').addEventListener('click', stepReset);
+      document.getElementById('copy-link').addEventListener('click', copyLink);
+      document.getElementById('download-card').addEventListener('click', downloadCard);
+      document.getElementById('copy-code').addEventListener('click', copyCode);
+      document.getElementById('lang-js').addEventListener('click', () => { state.lang = 'js'; renderCode(); });
+      document.getElementById('lang-py').addEventListener('click', () => { state.lang = 'py'; renderCode(); });
+      document.getElementById('tie-generate').addEventListener('click', renderTieSpotlight);
+      reducedToggleEl.addEventListener('change', (e) => { state.reducedMotion = e.target.checked; applyReducedMotion(state.reducedMotion); });
+      document.getElementById('scroll-playground').addEventListener('click', () => document.getElementById('playground').scrollIntoView({ behavior: 'smooth' }));
+      document.getElementById('hero-pause').addEventListener('click', () => {
+        state.heroPaused = !state.heroPaused;
+        document.getElementById('hero-pause').textContent = state.heroPaused ? 'Resume loop' : 'Pause loop';
+      });
+      document.getElementById('hero-visual').addEventListener('mouseenter', () => state.heroPaused = true);
+      document.getElementById('hero-visual').addEventListener('mouseleave', () => state.heroPaused = false);
+      window.addEventListener('keydown', (e) => {
+        const activeTag = document.activeElement?.tagName;
+        if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') return;
+        if (e.key === 'ArrowRight') stepNext();
+        if (e.key === 'ArrowLeft') stepPrev();
+      });
+    }
+
+    function init() {
+      getQueryState();
+      renderPresets();
+      recalc();
+      applyReducedMotion(state.reducedMotion);
+      renderAll();
+      setupEvents();
+      if (!state.reducedMotion) startHeroLoop();
+      renderHero();
+    }
+
+    init();
+  </script>
+</body>
+</html>
