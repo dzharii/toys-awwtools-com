@@ -126,6 +126,7 @@ const els = {
 
 let observer;
 let scrollHandler;
+let highlightObserver;
 
 function createRootNode() {
   return { name: "", type: "dir", children: [], expanded: true, path: "" };
@@ -253,6 +254,19 @@ function languageFromExt(ext) {
     yaml: "YAML", yml: "YAML", toml: "TOML", ini: "INI", xml: "XML", json: "JSON"
   };
   return lookup[ext.toLowerCase()] || ext.toUpperCase() || "Text";
+}
+
+function highlightLanguageFromExt(ext) {
+  if (!ext) return "";
+  const lookup = {
+    js: "javascript", ts: "typescript", jsx: "jsx", tsx: "tsx", mjs: "javascript", cjs: "javascript",
+    c: "c", h: "c", cc: "cpp", cpp: "cpp", hpp: "cpp",
+    cs: "csharp", java: "java", scala: "scala", kt: "kotlin", go: "go", rs: "rust",
+    py: "python", rb: "ruby", php: "php", swift: "swift", m: "objectivec", mm: "objectivec",
+    html: "html", css: "css", scss: "scss", md: "markdown", txt: "plaintext", sh: "bash", ps1: "powershell",
+    yaml: "yaml", yml: "yaml", toml: "toml", ini: "ini", xml: "xml", json: "json"
+  };
+  return lookup[ext.toLowerCase()] || "";
 }
 
 function maybeYield(lastYieldRef) {
@@ -542,15 +556,18 @@ async function readAndStoreFile(file, path, extHint) {
   const lineCount = countLines(text);
   const ext = extHint || (path.split(".").pop() || "");
   const language = languageFromExt(ext);
+  const highlightLanguage = highlightLanguageFromExt(ext);
   const id = makeFileId(path);
   const record = {
     id,
     path,
     segments: path.split(/[\\/]/),
+    ext,
     size: file.size,
     modified: file.lastModified ? new Date(file.lastModified) : null,
     text,
     language,
+    highlightLanguage,
     lineCount,
     charCount,
     status: "loaded"
@@ -711,7 +728,10 @@ function renderFileSection(file) {
   header.appendChild(fileActions);
 
   const pre = document.createElement("pre");
-  pre.textContent = file.text;
+  const code = document.createElement("code");
+  if (file.highlightLanguage) code.classList.add(`language-${file.highlightLanguage}`);
+  code.textContent = file.text;
+  pre.appendChild(code);
   if (!state.settings.wrap) pre.classList.add("nowrap");
 
   summary.appendChild(header);
@@ -740,6 +760,37 @@ function attachObserver(section) {
     scrollHandler = () => updateActiveLine();
     window.addEventListener("scroll", scrollHandler, { passive: true });
   }
+  const code = section.querySelector("code");
+  if (code) observeHighlightBlock(code);
+}
+
+function observeHighlightBlock(code) {
+  if (!highlightObserver) {
+    highlightObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const target = entry.target;
+        if (target.dataset.highlighted === "true" || target.classList.contains("hljs")) {
+          highlightObserver.unobserve(target);
+          return;
+        }
+        highlightCodeBlock(target);
+        highlightObserver.unobserve(target);
+      });
+    }, { rootMargin: "0px 0px -20% 0px", threshold: 0.1 });
+  }
+  highlightObserver.observe(code);
+}
+
+function highlightCodeBlock(code) {
+  const hljs = window.hljs;
+  if (!hljs || !code) return;
+  try {
+    hljs.highlightElement(code);
+  } catch (err) {
+    console.warn("Highlight.js failed to highlight a block", err);
+  }
+  if (!code.dataset.highlighted) code.dataset.highlighted = "true";
 }
 
 function setActiveFile(fileId) {
