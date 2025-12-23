@@ -294,8 +294,13 @@ function isFileHidden(fileId) {
   return state.hiddenFiles.has(fileId);
 }
 
+function getFileSection(fileId) {
+  if (!fileId) return null;
+  return document.querySelector(`.file-section[data-file-id="${fileId}"]`);
+}
+
 function applyFileVisibility(fileId) {
-  const section = document.querySelector(`[data-file-id="${fileId}"]`);
+  const section = getFileSection(fileId);
   if (!section) return;
   section.classList.toggle("is-hidden", isFileHidden(fileId));
 }
@@ -981,7 +986,7 @@ function setActiveFile(fileId) {
   if (file) {
     els.activeIndicator.innerHTML = `<span>Active:</span> <span class="value" title="${file.path}">${file.path}</span>`;
     updateActiveLine();
-    const section = document.querySelector(`[data-file-id="${fileId}"]`);
+    const section = getFileSection(fileId);
     if (section && section.tagName === "DETAILS") section.open = true;
   }
   handleActiveFileChange();
@@ -990,10 +995,11 @@ function setActiveFile(fileId) {
 function updateActiveLine() {
   const fileId = state.activeFileId;
   if (!fileId) return;
-  const section = document.querySelector(`[data-file-id="${fileId}"]`);
+  const section = getFileSection(fileId);
   if (!section) return;
   if (section.classList.contains("is-hidden")) return;
   const pre = section.querySelector("pre");
+  if (!pre) return;
   const rect = pre.getBoundingClientRect();
   const scrollTop = Math.max(0, -rect.top);
   const lineHeight = parseFloat(getComputedStyle(pre).lineHeight) || 18;
@@ -1806,7 +1812,7 @@ function buildIncludeList(tree, lang) {
 }
 
 function placeTreeSitterMarkers(file, outline) {
-  const section = document.querySelector(`[data-file-id="${file.id}"]`);
+  const section = getFileSection(file.id);
   if (!section) return;
   const pre = section.querySelector("pre");
   if (!pre) return;
@@ -1929,7 +1935,7 @@ function renderTreeSitterIncludes(items) {
 
 function scrollToOutlineItem(item) {
   if (isFileHidden(item.fileId)) return;
-  const section = document.querySelector(`[data-file-id="${item.fileId}"]`);
+  const section = getFileSection(item.fileId);
   if (section && section.tagName === "DETAILS") section.open = true;
   const marker = document.getElementById(item.anchorId);
   if (marker) {
@@ -1942,7 +1948,7 @@ function scrollToOutlineItem(item) {
 
 function scrollToApproxLine(fileId, line) {
   if (isFileHidden(fileId)) return;
-  const section = document.querySelector(`[data-file-id="${fileId}"]`);
+  const section = getFileSection(fileId);
   if (!section) return;
   if (section.tagName === "DETAILS") section.open = true;
   const pre = section.querySelector("pre");
