@@ -55,6 +55,7 @@ const state = {
   scanning: false,
   cancelled: false,
   activeFileId: null,
+  hiddenFiles: new Set(),
   tocSelection: new Set(),
   treeSitter: loadTreeSitterState(),
   support: {
@@ -125,6 +126,8 @@ const els = {
   tocSelectAll: document.getElementById("toc-select-all"),
   tocReset: document.getElementById("toc-reset"),
   tocCopy: document.getElementById("toc-copy"),
+  tocHide: document.getElementById("toc-hide"),
+  tocShow: document.getElementById("toc-show"),
   tocList: document.getElementById("toc-list"),
   tocEmpty: document.getElementById("toc-empty"),
   fileContainer: document.getElementById("file-container"),
@@ -287,6 +290,16 @@ function highlightLanguageFromExt(ext) {
   return lookup[ext.toLowerCase()] || "";
 }
 
+function isFileHidden(fileId) {
+  return state.hiddenFiles.has(fileId);
+}
+
+function applyFileVisibility(fileId) {
+  const section = document.querySelector(`[data-file-id="${fileId}"]`);
+  if (!section) return;
+  section.classList.toggle("is-hidden", isFileHidden(fileId));
+}
+
 function getTocFilesInOrder() {
   return [...state.files].sort((a, b) => a.path.localeCompare(b.path));
 }
@@ -316,6 +329,8 @@ function renderTableOfContents() {
   files.forEach(file => {
     const li = document.createElement("li");
     li.className = "toc-item";
+    const isHidden = isFileHidden(file.id);
+    if (isHidden) li.classList.add("is-hidden");
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.className = "toc-checkbox";
@@ -329,13 +344,15 @@ function renderTableOfContents() {
       }
       updateTocControls();
     });
-    const link = document.createElement("a");
-    link.className = "toc-link";
-    link.href = `#${file.id}`;
-    link.textContent = file.path;
-    link.addEventListener("click", () => setActiveFile(file.id));
+    const label = document.createElement(isHidden ? "span" : "a");
+    label.className = isHidden ? "toc-text" : "toc-link";
+    label.textContent = file.path;
+    if (!isHidden) {
+      label.href = `#${file.id}`;
+      label.addEventListener("click", () => setActiveFile(file.id));
+    }
     li.appendChild(checkbox);
-    li.appendChild(link);
+    li.appendChild(label);
     fragment.appendChild(li);
   });
   els.tocList.appendChild(fragment);
@@ -343,12 +360,15 @@ function renderTableOfContents() {
 }
 
 function updateTocControls() {
-  if (!els.tocSelectAll || !els.tocReset || !els.tocCopy) return;
+  if (!els.tocSelectAll || !els.tocReset || !els.tocCopy || !els.tocHide || !els.tocShow) return;
   const total = state.files.length;
   const selected = state.tocSelection.size;
+  const noneSelected = selected === 0 || total === 0;
   els.tocSelectAll.disabled = total === 0 || selected === total;
-  els.tocReset.disabled = total === 0 || selected === 0;
-  els.tocCopy.disabled = total === 0 || selected === 0;
+  els.tocReset.disabled = noneSelected;
+  els.tocCopy.disabled = noneSelected;
+  els.tocHide.disabled = noneSelected;
+  els.tocShow.disabled = noneSelected;
 }
 
 function setAllTocCheckboxes(checked) {
@@ -376,6 +396,44 @@ function copySelectedFiles() {
   if (!selectedFiles.length) return;
   const content = selectedFiles.map(file => buildMarkdownSnippet(file)).join("");
   copyTextToClipboard(content);
+}
+
+function hideSelectedFiles() {
+  if (!state.tocSelection.size) return;
+  state.tocSelection.forEach(fileId => {
+    state.hiddenFiles.add(fileId);
+    applyFileVisibility(fileId);
+  });
+  renderDirectoryTree();
+  renderTableOfContents();
+  ensureActiveFileVisible();
+}
+
+function showSelectedFiles() {
+  if (!state.tocSelection.size) return;
+  state.tocSelection.forEach(fileId => {
+    state.hiddenFiles.delete(fileId);
+    applyFileVisibility(fileId);
+  });
+  renderDirectoryTree();
+  renderTableOfContents();
+  ensureActiveFileVisible();
+}
+
+function ensureActiveFileVisible() {
+  if (state.activeFileId && !isFileHidden(state.activeFileId)) {
+    updateActiveLine();
+    return;
+  }
+  const next = state.files.find(file => !isFileHidden(file.id));
+  if (next) {
+    setActiveFile(next.id);
+    return;
+  }
+  state.activeFileId = null;
+  renderDirectoryTree();
+  if (els.activeIndicator) els.activeIndicator.textContent = "Active: none";
+  handleActiveFileChange();
 }
 
 function maybeYield(lastYieldRef) {
@@ -420,6 +478,7 @@ function resetStateForLoad() {
   state.seq = 0;
   state.cancelled = false;
   state.activeFileId = null;
+  state.hiddenFiles = new Set();
   state.tocSelection = new Set();
   els.fileContainer.innerHTML = "";
   renderTableOfContents();
@@ -742,25 +801,32 @@ function renderDirectoryTree() {
   let index = 0;
   function renderNode(node, depth) {
     const isFile = node.type === "file";
-    const row = document.createElement(isFile ? "a" : "div");
+    const isHidden = isFile && isFileHidden(node.fileId);
+    const row = document.createElement(isFile && !isHidden ? "a" : "div");
     row.className = `tree-item ${node.type}`;
+    if (isHidden) row.classList.add("is-hidden");
     row.style.paddingLeft = `${depth * 14}px`;
     row.setAttribute("role", "treeitem");
-    row.tabIndex = 0;
+    row.tabIndex = isFile && isHidden ? -1 : 0;
     row.dataset.nodeId = node.path || node.fileId || "";
     row.dataset.index = index++;
     const currentHash = decodeURIComponent(location.hash.slice(1) || "");
     if (isFile) {
-      row.href = `#${node.fileId}`;
       row.dataset.fileId = node.fileId;
-      const isActive = node.fileId === state.activeFileId || node.fileId === currentHash;
-      if (isActive) {
-        row.setAttribute("aria-current", "location");
-      } else {
+      const isActive = !isHidden && (node.fileId === state.activeFileId || node.fileId === currentHash);
+      if (isHidden) {
+        row.setAttribute("aria-disabled", "true");
         row.removeAttribute("aria-current");
+      } else {
+        row.href = `#${node.fileId}`;
+        if (isActive) {
+          row.setAttribute("aria-current", "location");
+        } else {
+          row.removeAttribute("aria-current");
+        }
+        row.addEventListener("click", () => setActiveFile(node.fileId));
       }
       row.classList.toggle("active", isActive);
-      row.addEventListener("click", () => setActiveFile(node.fileId));
     } else {
       row.setAttribute("aria-expanded", node.expanded ? "true" : "false");
       row.addEventListener("click", () => handleTreeClick(node));
@@ -794,6 +860,7 @@ function handleTreeClick(node) {
 function renderFileSection(file) {
   const section = document.createElement("details");
   section.className = "file-section";
+  if (isFileHidden(file.id)) section.classList.add("is-hidden");
   section.dataset.fileId = file.id;
   section.id = file.id;
   section.open = true;
@@ -907,6 +974,7 @@ function highlightCodeBlock(code) {
 
 function setActiveFile(fileId) {
   if (!fileId || state.activeFileId === fileId) return;
+  if (isFileHidden(fileId)) return;
   state.activeFileId = fileId;
   renderDirectoryTree();
   const file = state.files.find(f => f.id === fileId);
@@ -924,6 +992,7 @@ function updateActiveLine() {
   if (!fileId) return;
   const section = document.querySelector(`[data-file-id="${fileId}"]`);
   if (!section) return;
+  if (section.classList.contains("is-hidden")) return;
   const pre = section.querySelector("pre");
   const rect = pre.getBoundingClientRect();
   const scrollTop = Math.max(0, -rect.top);
@@ -936,6 +1005,7 @@ function updateActiveLine() {
 function handleHashChange() {
   const targetId = decodeURIComponent(location.hash.slice(1));
   if (!targetId) return;
+  if (isFileHidden(targetId)) return;
   const section = document.getElementById(targetId);
   if (section) {
     section.scrollIntoView({ behavior: "auto", block: "start" });
@@ -1153,7 +1223,7 @@ function collapseSidebarOverlay() {
 }
 
 function handleTreeKeydown(e) {
-  const items = Array.from(els.treeContainer.querySelectorAll(".tree-item"));
+  const items = Array.from(els.treeContainer.querySelectorAll(".tree-item:not(.is-hidden)"));
   if (!items.length) return;
   const active = document.activeElement.classList.contains("tree-item") ? items.indexOf(document.activeElement) : 0;
   if (e.key === "ArrowDown") {
@@ -1170,6 +1240,7 @@ function handleTreeKeydown(e) {
     const node = findNodeById(state.tree, nodeId);
     if (node) {
       if (node.type === "file") {
+        if (isFileHidden(node.fileId)) return;
         location.hash = `#${node.fileId}`;
         setActiveFile(node.fileId);
       } else {
@@ -1857,6 +1928,7 @@ function renderTreeSitterIncludes(items) {
 }
 
 function scrollToOutlineItem(item) {
+  if (isFileHidden(item.fileId)) return;
   const section = document.querySelector(`[data-file-id="${item.fileId}"]`);
   if (section && section.tagName === "DETAILS") section.open = true;
   const marker = document.getElementById(item.anchorId);
@@ -1869,6 +1941,7 @@ function scrollToOutlineItem(item) {
 }
 
 function scrollToApproxLine(fileId, line) {
+  if (isFileHidden(fileId)) return;
   const section = document.querySelector(`[data-file-id="${fileId}"]`);
   if (!section) return;
   if (section.tagName === "DETAILS") section.open = true;
@@ -1926,6 +1999,8 @@ function init() {
   if (els.tocSelectAll) els.tocSelectAll.addEventListener("click", handleTocSelectAll);
   if (els.tocReset) els.tocReset.addEventListener("click", handleTocResetSelection);
   if (els.tocCopy) els.tocCopy.addEventListener("click", copySelectedFiles);
+  if (els.tocHide) els.tocHide.addEventListener("click", hideSelectedFiles);
+  if (els.tocShow) els.tocShow.addEventListener("click", showSelectedFiles);
 
   if (els.treeBtn) els.treeBtn.addEventListener("click", handleTreeButtonClick);
   if (els.tsClose) els.tsClose.addEventListener("click", closeTreeSitterWindow);
