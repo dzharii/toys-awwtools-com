@@ -55,6 +55,7 @@ const state = {
   scanning: false,
   cancelled: false,
   activeFileId: null,
+  tocSelection: new Set(),
   treeSitter: loadTreeSitterState(),
   support: {
     directoryPicker: typeof window.showDirectoryPicker === "function",
@@ -119,6 +120,13 @@ const els = {
   treePlaceholder: document.getElementById("tree-placeholder"),
   main: document.getElementById("main"),
   fallbackMessage: document.getElementById("fallback-message"),
+  tocPanel: document.getElementById("toc-panel"),
+  tocCount: document.getElementById("toc-count"),
+  tocSelectAll: document.getElementById("toc-select-all"),
+  tocReset: document.getElementById("toc-reset"),
+  tocCopy: document.getElementById("toc-copy"),
+  tocList: document.getElementById("toc-list"),
+  tocEmpty: document.getElementById("toc-empty"),
   fileContainer: document.getElementById("file-container"),
   statusBanner: document.getElementById("status-banner"),
   noFiles: document.getElementById("no-files")
@@ -127,6 +135,7 @@ const els = {
 let observer;
 let scrollHandler;
 let highlightObserver;
+let tocRenderHandle;
 
 function createRootNode() {
   return { name: "", type: "dir", children: [], expanded: true, path: "" };
@@ -214,13 +223,22 @@ function setButtonLabel(button, icon, text) {
   button.append(emoji, label);
 }
 
-function copyFileSource(file) {
-  if (!file) return;
+function buildMarkdownSnippet(file) {
+  if (!file) return "";
   const parts = file.path.split(".");
   const ext = parts.length > 1 ? parts.pop() || "" : "";
   const lang = ext && /^[a-zA-Z0-9#+-]+$/.test(ext) ? ext.toLowerCase() : "";
-  const snippet = `File \`${file.path}\`:\n\`\`\`${lang}\n${file.text}\n\`\`\`\n`;
-  navigator.clipboard?.writeText(snippet);
+  return `File \`${file.path}\`:\n\`\`\`${lang}\n${file.text}\n\`\`\`\n`;
+}
+
+function copyTextToClipboard(text) {
+  if (!text) return;
+  navigator.clipboard?.writeText(text);
+}
+
+function copyFileSource(file) {
+  if (!file) return;
+  copyTextToClipboard(buildMarkdownSnippet(file));
 }
 
 function hashPath(str) {
@@ -269,6 +287,97 @@ function highlightLanguageFromExt(ext) {
   return lookup[ext.toLowerCase()] || "";
 }
 
+function getTocFilesInOrder() {
+  return [...state.files].sort((a, b) => a.path.localeCompare(b.path));
+}
+
+function scheduleTocRender() {
+  if (tocRenderHandle) return;
+  tocRenderHandle = requestAnimationFrame(() => {
+    tocRenderHandle = null;
+    renderTableOfContents();
+  });
+}
+
+function renderTableOfContents() {
+  if (!els.tocList || !els.tocCount || !els.tocEmpty) return;
+  const files = getTocFilesInOrder();
+  els.tocCount.textContent = `${files.length} file${files.length === 1 ? "" : "s"}`;
+  els.tocList.innerHTML = "";
+  if (!files.length) {
+    els.tocEmpty.classList.remove("hidden");
+    els.tocList.classList.add("hidden");
+    updateTocControls();
+    return;
+  }
+  els.tocEmpty.classList.add("hidden");
+  els.tocList.classList.remove("hidden");
+  const fragment = document.createDocumentFragment();
+  files.forEach(file => {
+    const li = document.createElement("li");
+    li.className = "toc-item";
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "toc-checkbox";
+    checkbox.checked = state.tocSelection.has(file.id);
+    checkbox.setAttribute("aria-label", `Select ${file.path}`);
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) {
+        state.tocSelection.add(file.id);
+      } else {
+        state.tocSelection.delete(file.id);
+      }
+      updateTocControls();
+    });
+    const link = document.createElement("a");
+    link.className = "toc-link";
+    link.href = `#${file.id}`;
+    link.textContent = file.path;
+    link.addEventListener("click", () => setActiveFile(file.id));
+    li.appendChild(checkbox);
+    li.appendChild(link);
+    fragment.appendChild(li);
+  });
+  els.tocList.appendChild(fragment);
+  updateTocControls();
+}
+
+function updateTocControls() {
+  if (!els.tocSelectAll || !els.tocReset || !els.tocCopy) return;
+  const total = state.files.length;
+  const selected = state.tocSelection.size;
+  els.tocSelectAll.disabled = total === 0 || selected === total;
+  els.tocReset.disabled = total === 0 || selected === 0;
+  els.tocCopy.disabled = total === 0 || selected === 0;
+}
+
+function setAllTocCheckboxes(checked) {
+  if (!els.tocList) return;
+  const boxes = els.tocList.querySelectorAll("input[type='checkbox']");
+  boxes.forEach(box => {
+    box.checked = checked;
+  });
+}
+
+function handleTocSelectAll() {
+  state.tocSelection = new Set(state.files.map(file => file.id));
+  setAllTocCheckboxes(true);
+  updateTocControls();
+}
+
+function handleTocResetSelection() {
+  state.tocSelection.clear();
+  setAllTocCheckboxes(false);
+  updateTocControls();
+}
+
+function copySelectedFiles() {
+  const selectedFiles = getTocFilesInOrder().filter(file => state.tocSelection.has(file.id));
+  if (!selectedFiles.length) return;
+  const content = selectedFiles.map(file => buildMarkdownSnippet(file)).join("");
+  copyTextToClipboard(content);
+}
+
 function maybeYield(lastYieldRef) {
   const now = performance.now();
   if (now - lastYieldRef.value > 16) {
@@ -311,7 +420,9 @@ function resetStateForLoad() {
   state.seq = 0;
   state.cancelled = false;
   state.activeFileId = null;
+  state.tocSelection = new Set();
   els.fileContainer.innerHTML = "";
+  renderTableOfContents();
   renderDirectoryTree();
   updateControlBar();
   updateSidebarVisibility();
@@ -583,6 +694,7 @@ async function readAndStoreFile(file, path, extHint) {
   updateLargest(record);
   renderFileSection(record);
   insertIntoTree(record);
+  scheduleTocRender();
   updateControlBar();
   maybeWarnMemory();
   state.progress.phaseLabel = "Scanning";
@@ -860,6 +972,7 @@ function finishLoad() {
   state.treeSitter.wantInit = true;
   maybeInitTreeSitterRuntime();
   maybeAutoParseActiveFile();
+  scheduleTocRender();
 }
 
 function maybeYieldEmptyEnter(e) {
@@ -1810,6 +1923,10 @@ function init() {
   els.supportClose.addEventListener("click", closeSupportPanel);
   els.supportPanel.addEventListener("click", e => { if (e.target === els.supportPanel) closeSupportPanel(); });
 
+  if (els.tocSelectAll) els.tocSelectAll.addEventListener("click", handleTocSelectAll);
+  if (els.tocReset) els.tocReset.addEventListener("click", handleTocResetSelection);
+  if (els.tocCopy) els.tocCopy.addEventListener("click", copySelectedFiles);
+
   if (els.treeBtn) els.treeBtn.addEventListener("click", handleTreeButtonClick);
   if (els.tsClose) els.tsClose.addEventListener("click", closeTreeSitterWindow);
   if (els.tsMinimize) els.tsMinimize.addEventListener("click", minimizeTreeSitterWindow);
@@ -1835,6 +1952,7 @@ function init() {
   window.addEventListener("resize", handleViewportResize);
   window.addEventListener("hashchange", handleHashChange);
   renderDirectoryTree();
+  renderTableOfContents();
   updateTreeSitterWindowUI();
 }
 
