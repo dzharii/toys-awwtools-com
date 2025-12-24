@@ -16,6 +16,11 @@ const defaults = {
 
 const TREE_SITTER_ASSET_BASE = "lib/web-tree-sitter-v0.26.3";
 const TREE_SITTER_STORAGE_KEY = "code-panorama-tree-sitter";
+const SEARCH_CAP = 200;
+const SEARCH_SLICE_BUDGET = 10;
+const SEARCH_LIVE_DEBOUNCE = 250;
+const SEARCH_EXPLICIT_MIN = 2;
+const SEARCH_LIVE_MIN = 3;
 const TREE_SITTER_LANGUAGES = {
   c: { file: "tree-sitter-c-v0.24.1.wasm" },
   cpp: { file: "tree-sitter-cpp-v0.23.4.wasm" },
@@ -58,6 +63,17 @@ const state = {
   hiddenFiles: new Set(),
   tocSelection: new Set(),
   treeSitter: loadTreeSitterState(),
+  search: {
+    running: false,
+    runId: 0,
+    results: [],
+    rendered: 0,
+    partial: false,
+    capped: false,
+    progress: { processed: 0, total: 0 },
+    activeRun: null,
+    liveTimer: null
+  },
   support: {
     directoryPicker: typeof window.showDirectoryPicker === "function",
     webkitDirectory: "webkitdirectory" in document.createElement("input")
@@ -121,6 +137,22 @@ const els = {
   treePlaceholder: document.getElementById("tree-placeholder"),
   main: document.getElementById("main"),
   fallbackMessage: document.getElementById("fallback-message"),
+  codeSearchPanel: document.getElementById("code-search-panel"),
+  codeSearchStatus: document.getElementById("code-search-status"),
+  codeSearchMode: document.getElementById("code-search-mode"),
+  codeSearchScope: document.getElementById("code-search-scope"),
+  codeSearchQuery: document.getElementById("code-search-query"),
+  codeSearchCase: document.getElementById("code-search-case"),
+  codeSearchLive: document.getElementById("code-search-live"),
+  codeSearchRun: document.getElementById("code-search-run"),
+  codeSearchCancel: document.getElementById("code-search-cancel"),
+  codeSearchError: document.getElementById("code-search-error"),
+  codeSearchErrorMessage: document.getElementById("code-search-error-message"),
+  codeSearchErrorDetail: document.getElementById("code-search-error-detail"),
+  codeSearchResultsMeta: document.getElementById("code-search-results-meta"),
+  codeSearchUnavailable: document.getElementById("code-search-unavailable"),
+  codeSearchCap: document.getElementById("code-search-cap"),
+  codeSearchResultsList: document.getElementById("code-search-results-list"),
   tocPanel: document.getElementById("toc-panel"),
   tocCount: document.getElementById("toc-count"),
   tocSelectAll: document.getElementById("toc-select-all"),
@@ -441,6 +473,431 @@ function ensureActiveFileVisible() {
   handleActiveFileChange();
 }
 
+function parseHashValue(hash) {
+  const raw = decodeURIComponent((hash || "").replace(/^#/, ""));
+  if (!raw) return { fileId: "", line: null };
+  const match = raw.match(/^([^@]+)@(\d+)$/);
+  if (match) {
+    return { fileId: match[1], line: parseInt(match[2], 10) };
+  }
+  return { fileId: raw, line: null };
+}
+
+function ensureFileVisible(fileId) {
+  if (!fileId || !isFileHidden(fileId)) return false;
+  state.hiddenFiles.delete(fileId);
+  applyFileVisibility(fileId);
+  renderDirectoryTree();
+  renderTableOfContents();
+  return true;
+}
+
+function navigateToFileLine(fileId, line) {
+  if (!fileId || !Number.isFinite(line)) return;
+  ensureFileVisible(fileId);
+  const hash = `#${fileId}@${line}`;
+  if (location.hash === hash) {
+    handleHashChange();
+  } else {
+    location.hash = hash;
+  }
+}
+
+function setSearchError(message, detail) {
+  if (!els.codeSearchError) return;
+  const hasMessage = !!message;
+  els.codeSearchError.classList.toggle("hidden", !hasMessage);
+  if (els.codeSearchErrorMessage) els.codeSearchErrorMessage.textContent = message || "";
+  if (els.codeSearchErrorDetail) {
+    const hasDetail = !!detail;
+    els.codeSearchErrorDetail.textContent = detail || "";
+    els.codeSearchErrorDetail.classList.toggle("hidden", !hasDetail);
+  }
+}
+
+function clearSearchError() {
+  setSearchError("", "");
+}
+
+function updateSearchSummary() {
+  if (!els.codeSearchStatus) return;
+  if (state.search.running) {
+    const progress = state.search.progress || { processed: 0, total: 0 };
+    let text = "Searching...";
+    if (progress.total > 0) {
+      text += ` ${progress.processed}/${progress.total} files`;
+    }
+    els.codeSearchStatus.textContent = text;
+  } else {
+    const count = state.search.results.length;
+    els.codeSearchStatus.textContent = `${count} match${count === 1 ? "" : "es"}`;
+  }
+}
+
+function updateSearchResultsMeta() {
+  if (!els.codeSearchResultsMeta) return;
+  els.codeSearchResultsMeta.textContent = state.search.partial ? "Partial results" : "";
+}
+
+function updateSearchCapNotice() {
+  if (!els.codeSearchCap) return;
+  els.codeSearchCap.classList.toggle("hidden", !state.search.capped);
+}
+
+function updateSearchButtons() {
+  if (!els.codeSearchRun || !els.codeSearchCancel) return;
+  const running = state.search.running;
+  els.codeSearchCancel.classList.toggle("hidden", !running);
+  els.codeSearchCancel.disabled = !running;
+}
+
+function updateSearchAvailability() {
+  const isLoaded = state.phase === "loaded";
+  const controls = [
+    els.codeSearchMode,
+    els.codeSearchScope,
+    els.codeSearchQuery,
+    els.codeSearchCase,
+    els.codeSearchLive,
+    els.codeSearchRun
+  ].filter(Boolean);
+  controls.forEach(control => {
+    control.disabled = !isLoaded;
+  });
+  if (!isLoaded && state.search.running) {
+    cancelSearchRun("reset");
+  }
+  if (els.codeSearchUnavailable) {
+    els.codeSearchUnavailable.classList.toggle("hidden", isLoaded);
+  }
+  if (els.codeSearchResultsList) {
+    els.codeSearchResultsList.classList.toggle("hidden", !isLoaded);
+  }
+  if (!isLoaded) {
+    if (els.codeSearchCap) els.codeSearchCap.classList.add("hidden");
+  } else {
+    updateSearchCapNotice();
+  }
+  updateSearchButtons();
+}
+
+function resetSearchPanel() {
+  cancelSearchRun("reset");
+  state.search.results = [];
+  state.search.rendered = 0;
+  state.search.partial = false;
+  state.search.capped = false;
+  state.search.progress = { processed: 0, total: 0 };
+  if (state.search.liveTimer) {
+    clearTimeout(state.search.liveTimer);
+    state.search.liveTimer = null;
+  }
+  if (els.codeSearchPanel) els.codeSearchPanel.open = false;
+  if (els.codeSearchMode) els.codeSearchMode.value = "text";
+  if (els.codeSearchScope) els.codeSearchScope.value = "all";
+  if (els.codeSearchQuery) els.codeSearchQuery.value = "";
+  if (els.codeSearchCase) els.codeSearchCase.checked = false;
+  if (els.codeSearchLive) els.codeSearchLive.checked = false;
+  if (els.codeSearchResultsList) els.codeSearchResultsList.innerHTML = "";
+  clearSearchError();
+  updateSearchResultsMeta();
+  updateSearchCapNotice();
+  updateSearchSummary();
+  updateSearchAvailability();
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function formatRegexErrorDetail(err) {
+  if (!err) return "";
+  const raw = typeof err === "string" ? err : err.message || "";
+  const line = raw.split("\n")[0];
+  if (line.length > 120) return `${line.slice(0, 117)}...`;
+  return line;
+}
+
+function validateSearchQuery(rawQuery, opts) {
+  const trimmed = rawQuery.trim();
+  const minLength = opts.minLength || SEARCH_EXPLICIT_MIN;
+  if (trimmed.length < minLength) {
+    if (opts.showMinLengthError) {
+      setSearchError("Enter at least 2 characters.");
+    } else {
+      clearSearchError();
+    }
+    return { ok: false, trimmed };
+  }
+  if (opts.mode === "regex") {
+    try {
+      new RegExp(trimmed, opts.caseSensitive ? "" : "i");
+    } catch (err) {
+      setSearchError("Invalid regular expression.", formatRegexErrorDetail(err));
+      return { ok: false, trimmed };
+    }
+  }
+  clearSearchError();
+  return { ok: true, trimmed };
+}
+
+function buildSearchMatcher(query, mode, caseSensitive) {
+  if (mode === "regex") {
+    return { type: "regex", regex: new RegExp(query, caseSensitive ? "" : "i") };
+  }
+  const hasWildcard = query.includes("*");
+  if (hasWildcard) {
+    const regexSource = query.split("*").map(escapeRegExp).join(".*");
+    return { type: "regex", regex: new RegExp(regexSource, caseSensitive ? "" : "i") };
+  }
+  return { type: "text", query, caseSensitive };
+}
+
+function matchLine(line, matcher) {
+  if (matcher.type === "text") {
+    const haystack = matcher.caseSensitive ? line : line.toLowerCase();
+    const needle = matcher.caseSensitive ? matcher.query : matcher.query.toLowerCase();
+    const start = haystack.indexOf(needle);
+    if (start === -1) return null;
+    return { start, end: start + needle.length };
+  }
+  const match = matcher.regex.exec(line);
+  if (!match) return null;
+  return { start: match.index, end: match.index + match[0].length };
+}
+
+function getSearchScopeFiles(scope) {
+  const files = scope === "visible"
+    ? state.files.filter(file => !isFileHidden(file.id))
+    : state.files.slice();
+  return files.sort((a, b) => a.path.localeCompare(b.path));
+}
+
+function buildSnippetLines(lines, lineIndex) {
+  const start = Math.max(0, lineIndex - 3);
+  const end = Math.min(lines.length - 1, lineIndex + 3);
+  const snippet = [];
+  for (let i = start; i <= end; i += 1) {
+    snippet.push({ number: i + 1, text: lines[i], isMatch: i === lineIndex });
+  }
+  return snippet;
+}
+
+function appendSearchResults() {
+  if (!els.codeSearchResultsList) return;
+  if (state.search.rendered >= state.search.results.length) return;
+  const fragment = document.createDocumentFragment();
+  for (let i = state.search.rendered; i < state.search.results.length; i += 1) {
+    fragment.appendChild(buildSearchResultCard(state.search.results[i]));
+  }
+  els.codeSearchResultsList.appendChild(fragment);
+  state.search.rendered = state.search.results.length;
+}
+
+function buildSearchResultCard(result) {
+  const card = document.createElement("div");
+  card.className = "code-search-result";
+  card.setAttribute("role", "listitem");
+
+  const header = document.createElement("div");
+  header.className = "code-search-result-header";
+
+  const fileLink = document.createElement("a");
+  fileLink.className = "code-search-result-link";
+  fileLink.href = `#${result.fileId}@${result.lineNumber}`;
+  fileLink.textContent = result.path;
+  fileLink.addEventListener("click", event => {
+    event.preventDefault();
+    navigateToFileLine(result.fileId, result.lineNumber);
+  });
+
+  const lineLink = document.createElement("a");
+  lineLink.className = "code-search-result-link";
+  lineLink.href = `#${result.fileId}@${result.lineNumber}`;
+  lineLink.textContent = `Line ${result.lineNumber}`;
+  lineLink.addEventListener("click", event => {
+    event.preventDefault();
+    navigateToFileLine(result.fileId, result.lineNumber);
+  });
+
+  header.appendChild(fileLink);
+  header.appendChild(lineLink);
+
+  const preview = document.createElement("div");
+  preview.className = "code-search-preview";
+
+  result.snippet.forEach(line => {
+    const row = document.createElement("div");
+    row.className = "code-search-line";
+    if (line.isMatch) row.classList.add("is-match");
+    row.addEventListener("click", () => navigateToFileLine(result.fileId, line.number));
+
+    const number = document.createElement("span");
+    number.className = "code-search-line-number";
+    number.textContent = line.number;
+
+    const text = document.createElement("span");
+    text.className = "code-search-line-text";
+    if (line.isMatch && Number.isFinite(result.matchStart) && Number.isFinite(result.matchEnd) && result.matchEnd > result.matchStart) {
+      const before = line.text.slice(0, result.matchStart);
+      const matchText = line.text.slice(result.matchStart, result.matchEnd);
+      const after = line.text.slice(result.matchEnd);
+      if (before) text.appendChild(document.createTextNode(before));
+      const highlight = document.createElement("span");
+      highlight.className = "code-search-match";
+      highlight.textContent = matchText;
+      text.appendChild(highlight);
+      if (after) text.appendChild(document.createTextNode(after));
+    } else {
+      text.textContent = line.text;
+    }
+
+    row.appendChild(number);
+    row.appendChild(text);
+    preview.appendChild(row);
+  });
+
+  card.appendChild(header);
+  card.appendChild(preview);
+  return card;
+}
+
+function finishSearchRun() {
+  state.search.running = false;
+  state.search.activeRun = null;
+  updateSearchSummary();
+  updateSearchButtons();
+  updateSearchResultsMeta();
+  updateSearchCapNotice();
+}
+
+function cancelSearchRun(reason) {
+  if (!state.search.running && !state.search.activeRun) return;
+  state.search.running = false;
+  state.search.activeRun = null;
+  if (reason === "user") {
+    state.search.partial = true;
+  }
+  updateSearchSummary();
+  updateSearchButtons();
+  updateSearchResultsMeta();
+}
+
+function runSearchSlice(run) {
+  if (!state.search.running || state.search.runId !== run.id) return;
+  const start = performance.now();
+  let appended = false;
+  while (run.fileIndex < run.files.length) {
+    if (!state.search.running || state.search.runId !== run.id) return;
+    const file = run.files[run.fileIndex];
+    if (!run.lines) run.lines = file.text.split("\n");
+    while (run.lineIndex < run.lines.length) {
+      if (performance.now() - start > SEARCH_SLICE_BUDGET) {
+        if (appended) appendSearchResults();
+        updateSearchSummary();
+        setTimeout(() => runSearchSlice(run), 0);
+        return;
+      }
+      const lineText = run.lines[run.lineIndex];
+      const match = matchLine(lineText, run.matcher);
+      if (match) {
+        const result = {
+          fileId: file.id,
+          path: file.path,
+          lineNumber: run.lineIndex + 1,
+          matchStart: match.start,
+          matchEnd: match.end,
+          snippet: buildSnippetLines(run.lines, run.lineIndex)
+        };
+        state.search.results.push(result);
+        appended = true;
+        if (state.search.results.length >= SEARCH_CAP) {
+          state.search.capped = true;
+          appendSearchResults();
+          finishSearchRun();
+          return;
+        }
+      }
+      run.lineIndex += 1;
+    }
+    run.fileIndex += 1;
+    run.lineIndex = 0;
+    run.lines = null;
+    state.search.progress.processed = run.fileIndex;
+  }
+  if (appended) appendSearchResults();
+  finishSearchRun();
+}
+
+function startSearchRun(source) {
+  if (state.phase !== "loaded") return;
+  const rawQuery = els.codeSearchQuery?.value || "";
+  const mode = els.codeSearchMode?.value || "text";
+  const scope = els.codeSearchScope?.value || "all";
+  const caseSensitive = !!els.codeSearchCase?.checked;
+  const minLength = source === "live" ? SEARCH_LIVE_MIN : SEARCH_EXPLICIT_MIN;
+  const showMinLengthError = source !== "live";
+  const validation = validateSearchQuery(rawQuery, {
+    minLength,
+    showMinLengthError,
+    mode,
+    caseSensitive
+  });
+  if (!validation.ok) return;
+  if (source !== "live" && state.search.liveTimer) {
+    clearTimeout(state.search.liveTimer);
+    state.search.liveTimer = null;
+  }
+
+  cancelSearchRun("new");
+  state.search.runId += 1;
+  state.search.running = true;
+  state.search.partial = false;
+  state.search.capped = false;
+  state.search.results = [];
+  state.search.rendered = 0;
+  state.search.progress = { processed: 0, total: 0 };
+  if (els.codeSearchResultsList) els.codeSearchResultsList.innerHTML = "";
+  updateSearchResultsMeta();
+  updateSearchCapNotice();
+  updateSearchButtons();
+
+  const files = getSearchScopeFiles(scope);
+  state.search.progress.total = files.length;
+  updateSearchSummary();
+
+  if (!files.length) {
+    finishSearchRun();
+    return;
+  }
+
+  const matcher = buildSearchMatcher(validation.trimmed, mode, caseSensitive);
+  const run = {
+    id: state.search.runId,
+    files,
+    fileIndex: 0,
+    lineIndex: 0,
+    lines: null,
+    matcher
+  };
+  state.search.activeRun = run;
+  setTimeout(() => runSearchSlice(run), 0);
+}
+
+function scheduleLiveSearch() {
+  if (!els.codeSearchLive?.checked) return;
+  if (state.search.liveTimer) {
+    clearTimeout(state.search.liveTimer);
+  }
+  if (state.search.running) {
+    cancelSearchRun("new");
+  }
+  state.search.liveTimer = setTimeout(() => {
+    state.search.liveTimer = null;
+    startSearchRun("live");
+  }, SEARCH_LIVE_DEBOUNCE);
+}
+
 function maybeYield(lastYieldRef) {
   const now = performance.now();
   if (now - lastYieldRef.value > 16) {
@@ -488,6 +945,7 @@ function resetStateForLoad() {
   els.fileContainer.innerHTML = "";
   renderTableOfContents();
   renderDirectoryTree();
+  resetSearchPanel();
   updateControlBar();
   updateSidebarVisibility();
   hideBanner();
@@ -550,6 +1008,7 @@ function updateControlBar() {
   if (els.treeBtn) setButtonLabel(els.treeBtn, "🌳", "Tree-sitter");
 
   updateOffsets();
+  updateSearchAvailability();
 }
 
 function updateSidebarVisibility() {
@@ -922,10 +1381,15 @@ function renderFileSection(file) {
   section.appendChild(summary);
   section.appendChild(pre);
   els.fileContainer.appendChild(section);
-  if (location.hash.slice(1) === file.id) {
+  const target = parseHashValue(location.hash);
+  if (target.fileId === file.id) {
     section.open = true;
-    section.scrollIntoView({ behavior: "auto", block: "start" });
-    setActiveFile(file.id);
+    if (target.line) {
+      scrollToApproxLine(file.id, target.line, "auto");
+    } else {
+      section.scrollIntoView({ behavior: "auto", block: "start" });
+      setActiveFile(file.id);
+    }
   }
   attachObserver(section);
 }
@@ -1009,14 +1473,18 @@ function updateActiveLine() {
 }
 
 function handleHashChange() {
-  const targetId = decodeURIComponent(location.hash.slice(1));
+  const target = parseHashValue(location.hash);
+  const targetId = target.fileId;
   if (!targetId) return;
-  if (isFileHidden(targetId)) return;
+  if (isFileHidden(targetId)) ensureFileVisible(targetId);
   const section = document.getElementById(targetId);
-  if (section) {
-    section.scrollIntoView({ behavior: "auto", block: "start" });
-    setActiveFile(section.dataset.fileId);
+  if (!section) return;
+  if (target.line) {
+    scrollToApproxLine(targetId, target.line);
+    return;
   }
+  section.scrollIntoView({ behavior: "auto", block: "start" });
+  setActiveFile(section.dataset.fileId);
 }
 
 function maybeWarnMemory() {
@@ -1946,7 +2414,7 @@ function scrollToOutlineItem(item) {
   scrollToApproxLine(item.fileId, item.line);
 }
 
-function scrollToApproxLine(fileId, line) {
+function scrollToApproxLine(fileId, line, behavior = "smooth") {
   if (isFileHidden(fileId)) return;
   const section = getFileSection(fileId);
   if (!section) return;
@@ -1956,7 +2424,7 @@ function scrollToApproxLine(fileId, line) {
   const lineHeight = parseFloat(getComputedStyle(pre).lineHeight) || 18;
   const headerHeight = header?.getBoundingClientRect().height || 0;
   const top = pre.getBoundingClientRect().top + window.scrollY + Math.max(0, (line - 1) * lineHeight);
-  window.scrollTo({ top: top - headerHeight - 16, behavior: "smooth" });
+  window.scrollTo({ top: top - headerHeight - 16, behavior });
   setActiveFile(fileId);
 }
 
@@ -2007,6 +2475,53 @@ function init() {
   if (els.tocCopy) els.tocCopy.addEventListener("click", copySelectedFiles);
   if (els.tocHide) els.tocHide.addEventListener("click", hideSelectedFiles);
   if (els.tocShow) els.tocShow.addEventListener("click", showSelectedFiles);
+
+  if (els.codeSearchPanel) {
+    els.codeSearchPanel.addEventListener("toggle", () => {
+      if (els.codeSearchPanel.open && els.codeSearchQuery && !els.codeSearchQuery.disabled) {
+        els.codeSearchQuery.focus();
+        els.codeSearchQuery.select();
+      }
+    });
+  }
+  if (els.codeSearchRun) els.codeSearchRun.addEventListener("click", () => startSearchRun("explicit"));
+  if (els.codeSearchCancel) els.codeSearchCancel.addEventListener("click", () => cancelSearchRun("user"));
+  if (els.codeSearchQuery) {
+    els.codeSearchQuery.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        startSearchRun("explicit");
+      }
+    });
+    els.codeSearchQuery.addEventListener("input", () => {
+      if (els.codeSearchLive?.checked) scheduleLiveSearch();
+    });
+  }
+  if (els.codeSearchMode) {
+    els.codeSearchMode.addEventListener("change", () => {
+      if (els.codeSearchLive?.checked) scheduleLiveSearch();
+    });
+  }
+  if (els.codeSearchScope) {
+    els.codeSearchScope.addEventListener("change", () => {
+      if (els.codeSearchLive?.checked) scheduleLiveSearch();
+    });
+  }
+  if (els.codeSearchCase) {
+    els.codeSearchCase.addEventListener("change", () => {
+      if (els.codeSearchLive?.checked) scheduleLiveSearch();
+    });
+  }
+  if (els.codeSearchLive) {
+    els.codeSearchLive.addEventListener("change", () => {
+      if (!els.codeSearchLive.checked && state.search.liveTimer) {
+        clearTimeout(state.search.liveTimer);
+        state.search.liveTimer = null;
+        return;
+      }
+      if (els.codeSearchLive.checked) scheduleLiveSearch();
+    });
+  }
 
   if (els.treeBtn) els.treeBtn.addEventListener("click", handleTreeButtonClick);
   if (els.tsClose) els.tsClose.addEventListener("click", closeTreeSitterWindow);
