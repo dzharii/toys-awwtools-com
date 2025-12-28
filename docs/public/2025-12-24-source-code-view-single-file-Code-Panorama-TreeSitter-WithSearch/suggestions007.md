@@ -980,3 +980,186 @@ body {
   };
 })(); 
 ```
+
+
+
+## Appendix ZB01: Acceptance validation checklist
+
+-  A00 Document control
+  -  A00.1 Checklist applies to the Preview Window for TOC hover previews only (central Table of contents list).
+  -  A00.2 Checklist is evaluated against observable UI behavior, DOM behavior, and event handling (not code style).
+-  B00 Target surface and trigger wiring
+  -  B00.1 Preview triggers on pointer hover over a TOC Entry row in the central Table of contents list.
+    -  B00.1.1 Hover is recognized when the pointer enters the file row, including padding around the text (not text-only hover).
+    -  B00.1.2 Trigger does not require click.
+    -  B00.1.3 Clicking the TOC Entry still performs its original action and is not blocked by preview logic.
+  -  B00.2 Event wiring supports dynamically added TOC entries.
+    -  B00.2.1 No per-row listener requirement for new rows; behavior works after TOC updates (filtering, incremental load, re-render).
+  -  B00.3 Preview behavior is not enabled on the left Navigator tree (unless explicitly extended later).
+    -  B00.3.1 Hovering items in Navigator tree produces no preview.
+-  C00 File identifier mapping and eligibility
+  -  C00.1 Each TOC Entry deterministically maps to a canonical file identifier (for example, file path string).
+    -  C00.1.1 The identifier is stable across incremental loading and TOC re-renders.
+    -  C00.1.2 The identifier used for preview matches the identifier used by the rendered file content element(s).
+  -  C00.2 Source Content Element discovery is deterministic and stable.
+    -  C00.2.1 For a given file identifier, the system can locate the corresponding Source Content Element via a single defined query strategy.
+    -  C00.2.2 The query strategy works even when files are loaded out of order.
+  -  C00.3 Loaded-state gating is enforced.
+    -  C00.3.1 If Source Content Element does not exist, file is treated as not Loaded.
+    -  C00.3.2 If Source Content Element exists but is empty/unrendered, file is treated as not Loaded.
+    -  C00.3.3 If mapping fails (cannot derive identifier), treat as not Loaded.
+    -  C00.3.4 When not Loaded, the system does nothing visible (no window, no tooltip, no placeholder, no spinner).
+-  D00 Timing, debounce, and flicker control
+  -  D00.1 Open delay filters accidental passes.
+    -  D00.1.1 Preview does not open until hover persists for 150ms on an eligible (Loaded) entry.
+    -  D00.1.2 If pointer leaves entry before 150ms completes, preview does not open.
+  -  D00.2 Switch delay supports scanning.
+    -  D00.2.1 When a preview is already visible and the user hovers a different eligible entry, content switches with no more than 75ms additional delay.
+    -  D00.2.2 Switching does not recreate the preview window (same instance reused).
+  -  D00.3 Loaded-state is checked at correct times.
+    -  D00.3.1 Loaded-state is checked immediately on hover start (or as part of scheduling).
+    -  D00.3.2 Loaded-state is checked again immediately before opening (after delay) to avoid stale opens.
+-  E00 Single Preview Window instance rule
+  -  E00.1 At most one Preview Window exists at any time.
+    -  E00.1.1 Hovering new eligible entries updates the existing window.
+    -  E00.1.2 No duplicate windows appear under rapid hover, re-hover, or TOC updates.
+  -  E00.2 Dismissal removes the window or makes it fully inert.
+    -  E00.2.1 If removed: DOM node is not present after dismissal.
+    -  E00.2.2 If retained: it does not intercept pointer events, does not display, and does not affect layout.
+-  F00 Content cloning and isolation
+  -  F00.1 Preview content comes from cloning existing rendered DOM only.
+    -  F00.1.1 The preview does not trigger any file loading, parsing, or rendering pipeline.
+    -  F00.1.2 The preview does not fetch via network or load via iframe.
+  -  F00.2 Deep clone is used for the Source Content Element (or defined stable descendant).
+    -  F00.2.1 The cloned content is inserted into the preview content area.
+    -  F00.2.2 The preview shows a snapshot of the rendered file content at clone time.
+  -  F00.3 Original DOM is not mutated by preview.
+    -  F00.3.1 Interacting with preview does not alter the original Source Content Element.
+    -  F00.3.2 Selecting text in preview does not impact selection state in the original content beyond normal browser behavior.
+  -  F00.4 Snapshot behavior is correct during re-render.
+    -  F00.4.1 If the app replaces/re-renders Source Content Element while preview is open, preview does not auto-refresh.
+    -  F00.4.2 Next hover-triggered open/switch uses the newly rendered content (new clone) if Loaded.
+-  G00 Preview header and labeling
+  -  G00.1 Header displays file name or file path for the hovered entry.
+    -  G00.1.1 The label matches the TOC entry text (or canonical representation).
+  -  G00.2 Fallback label behavior.
+    -  G00.2.1 If label cannot be derived, header shows "Preview" (exact string).
+-  H00 Scroll, selection, and pointer interaction within preview
+  -  H00.1 Content area is scrollable.
+    -  H00.1.1 Vertical scroll works for long content.
+    -  H00.1.2 Horizontal scroll works when code lines exceed width (if applicable to rendering).
+  -  H00.2 Page scroll behavior is acceptable.
+    -  H00.2.1 When pointer is over preview content, scroll wheel scrolls the preview content (not the page) while the preview can scroll.
+    -  H00.2.2 At scroll boundaries, default browser propagation is acceptable (no custom scroll trapping required).
+  -  H00.3 Text selection works inside preview content.
+    -  H00.3.1 User can select and copy text from preview.
+    -  H00.3.2 Header remains non-selectable if that is part of the existing component behavior.
+  -  H00.4 Pointer transitions do not cause premature dismissal.
+    -  H00.4.1 User can move pointer from TOC entry into preview without the preview disappearing.
+    -  H00.4.2 Hover is considered active if pointer is in either the TOC entry or the preview window.
+-  I00 Geometry, placement, and viewport constraints
+  -  I00.1 Preview window stays fully within viewport.
+    -  I00.1.1 No overflow beyond right edge of visible screen.
+    -  I00.1.2 No overflow beyond left edge of visible screen.
+    -  I00.1.3 No overflow beyond top edge of visible screen.
+    -  I00.1.4 No overflow beyond bottom edge of visible screen.
+  -  I00.2 Default and minimum sizing.
+    -  I00.2.1 Default size is 420px x 280px.
+    -  I00.2.2 Minimum size is 260px x 160px.
+  -  I00.3 Maximum sizing respects margins.
+    -  I00.3.1 Width <= viewport width - 16px.
+    -  I00.3.2 Height <= viewport height - 16px.
+    -  I00.3.3 Effective margin is 8px from each edge.
+  -  I00.4 Positioning relative to hovered entry is correct.
+    -  I00.4.1 Uses 10px gap from the hovered entry where possible.
+    -  I00.4.2 Prefers right side if space permits.
+    -  I00.4.3 Otherwise prefers left side if space permits.
+    -  I00.4.4 Otherwise clamps horizontally to fit within viewport.
+    -  I00.4.5 Prefers below entry if space permits.
+    -  I00.4.6 Otherwise prefers above entry if space permits.
+    -  I00.4.7 Otherwise clamps vertically to fit within viewport.
+    -  I00.4.8 Overlap with the entry is allowed if clamping is required; viewport containment wins.
+  -  I00.5 Edge-case placement scenarios are verified.
+    -  I00.5.1 Hover entry near bottom of viewport: preview clamps and internal scroll is used.
+    -  I00.5.2 Hover entry near top of viewport: preview positions below or clamps correctly.
+    -  I00.5.3 Hover entry near right edge: preview uses left side or clamps.
+    -  I00.5.4 Hover entry near left edge: preview uses right side or clamps.
+-  J00 Dismissal and lifetime
+  -  J00.1 Auto-dismiss on inactivity.
+    -  J00.1.1 Preview auto-dismisses after 9000ms of inactivity.
+    -  J00.1.2 Inactivity timer starts when preview becomes visible.
+  -  J00.2 Timer reset conditions are correct.
+    -  J00.2.1 Pointer enters preview header resets timer.
+    -  J00.2.2 Pointer moves within preview content resets timer.
+    -  J00.2.3 Pointer enters currently hovered eligible TOC entry resets timer.
+    -  J00.2.4 Pointer moves within currently hovered eligible TOC entry resets timer.
+  -  J00.3 Outside-click dismissal works.
+    -  J00.3.1 Clicking outside the preview dismisses immediately.
+    -  J00.3.2 Clicking inside the preview does not dismiss.
+    -  J00.3.3 Outside-click listener is removed on destroy (no leaks, no duplicate handlers).
+  -  J00.4 Leave behavior does not immediately dismiss.
+    -  J00.4.1 Leaving TOC entry does not immediately dismiss if pointer is moving toward preview.
+    -  J00.4.2 Leaving both TOC entry and preview allows dismissal only via inactivity timeout or outside click.
+-  K00 Switching rules and unloaded-file handling while visible
+  -  K00.1 Switching to another Loaded file updates the preview.
+    -  K00.1.1 Header label updates to the new file.
+    -  K00.1.2 Content updates to a new clone from the new file's Source Content Element.
+    -  K00.1.3 Window instance is reused; no recreate flicker.
+  -  K00.2 Hovering an unloaded file while preview is visible does not break the preview.
+    -  K00.2.1 Preview does not switch to empty content.
+    -  K00.2.2 Preview either remains showing previous Loaded file or remains unchanged until an eligible hover occurs.
+    -  K00.2.3 No placeholder/spinner appears for the unloaded target.
+  -  K00.3 Rapid hover across entries does not produce incorrect opens.
+    -  K00.3.1 Sweeping across entries without pausing 150ms on any single eligible entry opens no preview.
+    -  K00.3.2 Switching between two eligible entries repeatedly does not create multiple windows.
+-  L00 Interaction with incremental loading
+  -  L00.1 No preview when file not yet loaded.
+    -  L00.1.1 Hovering unloaded entry results in no visible changes.
+  -  L00.2 File becomes loaded during hover.
+    -  L00.2.1 If file becomes loaded before open delay completes and pointer is still on the same entry, preview opens.
+    -  L00.2.2 If pointer leaves before the file becomes loaded or before open delay completes, preview does not open.
+  -  L00.3 Loaded check is not "sticky" across files.
+    -  L00.3.1 A Loaded result for one file is not reused for another file (no cross-file false positives).
+-  M00 Robustness, failure modes, and safety
+  -  M00.1 Defensive error handling.
+    -  M00.1.1 Any internal error during mapping, lookup, or cloning fails closed (no preview) and does not break TOC clicks.
+    -  M00.1.2 Errors do not leave partially attached preview DOM that blocks interaction.
+  -  M00.2 Cleanup and leak prevention.
+    -  M00.2.1 On destroy, timers are cleared.
+    -  M00.2.2 On destroy, pointer capture (if used) is released or becomes irrelevant after removal.
+    -  M00.2.3 Document-level outside-click handler is removed on destroy.
+    -  M00.2.4 Reopening preview after destroy behaves normally (no duplicate listeners, no accelerated timers).
+  -  M00.3 Z-index and overlay correctness.
+    -  M00.3.1 Preview appears above TOC and code panes (not hidden behind scroll containers).
+    -  M00.3.2 Preview does not block TOC interaction except where it physically overlaps.
+  -  M00.4 Accessibility minimums (behavioral).
+    -  M00.4.1 Preview window has a dialog role or equivalent semantics consistent with existing component.
+    -  M00.4.2 Preview does not trap focus unexpectedly (no forced focus changes).
+-  N00 Acceptance scenario coverage (end-to-end)
+  -  N00.1 Rapid scan workflow.
+    -  N00.1.1 Hover multiple Loaded entries sequentially; preview switches smoothly and remains within viewport.
+    -  N00.1.2 Click a TOC entry while preview is visible; click behavior works and preview does not prevent navigation.
+  -  N00.2 Deep read workflow.
+    -  N00.2.1 Open preview for a Loaded file; move pointer into preview; scroll; select text; copy.
+    -  N00.2.2 Stop interacting; confirm auto-dismiss at ~9000ms.
+  -  N00.3 Unloaded-file workflow.
+    -  N00.3.1 Hover unloaded file: no preview.
+    -  N00.3.2 After app loads that file, hover again: preview opens normally.
+  -  N00.4 Compare-two-files workflow.
+    -  N00.4.1 Hover file A (Loaded), then hover file B (Loaded), then back to A; preview content updates each time.
+  -  N00.5 Dismissal workflow.
+    -  N00.5.1 With preview visible, click outside: preview dismisses immediately.
+    -  N00.5.2 With preview visible, click inside: preview stays.
+    -  N00.5.3 After dismissal, hover an eligible entry: preview opens again normally.
+-  O00 Explicit exclusions verification
+  -  O00.1 No loading indicators for preview.
+    -  O00.1.1 No spinners, skeletons, or placeholders appear when hovering unloaded entries.
+  -  O00.2 No multiple windows.
+    -  O00.2.1 Cannot produce two visible preview windows by any sequence of hovers/clicks.
+  -  O00.3 No iframe usage.
+    -  O00.3.1 Preview content is not loaded via iframe or external document.
+  -  O00.4 No pinning or keyboard features.
+    -  O00.4.1 No pin button present.
+    -  O00.4.2 No keyboard shortcut toggles preview behavior.
+  -  O00.5 No special link tracking.
+    -  O00.5.1 Clicking links inside preview behaves as default browser behavior (no custom tracking/rewriting).
