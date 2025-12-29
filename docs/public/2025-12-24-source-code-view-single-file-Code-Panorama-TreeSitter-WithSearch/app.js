@@ -21,6 +21,16 @@ const SEARCH_SLICE_BUDGET = 10;
 const SEARCH_LIVE_DEBOUNCE = 250;
 const SEARCH_EXPLICIT_MIN = 2;
 const SEARCH_LIVE_MIN = 3;
+const PREVIEW_OPEN_DELAY = 150;
+const PREVIEW_SWITCH_DELAY = 75;
+const PREVIEW_INACTIVE_MS = 9000;
+const PREVIEW_DEFAULT_WIDTH = 420;
+const PREVIEW_DEFAULT_HEIGHT = 280;
+const PREVIEW_MIN_WIDTH = 260;
+const PREVIEW_MIN_HEIGHT = 160;
+const PREVIEW_VIEWPORT_MARGIN = 8;
+const PREVIEW_GAP = 10;
+const PREVIEW_CACHE_LIMIT = 12;
 const TREE_SITTER_LANGUAGES = {
   c: { file: "tree-sitter-c-v0.24.1.wasm" },
   cpp: { file: "tree-sitter-cpp-v0.23.4.wasm" },
@@ -79,6 +89,17 @@ const state = {
     webkitDirectory: "webkitdirectory" in document.createElement("input")
   },
   seq: 0
+};
+
+const previewState = {
+  window: null,
+  visibleFileId: null,
+  pending: null,
+  hoverEntry: null,
+  hoverFileId: null,
+  hoverLoaded: false,
+  lastPlacement: null,
+  cache: new Map()
 };
 
 const els = {
@@ -366,6 +387,8 @@ function renderTableOfContents() {
   files.forEach(file => {
     const li = document.createElement("li");
     li.className = "toc-item";
+    li.dataset.fileId = file.id;
+    li.dataset.filePath = file.path;
     const isHidden = isFileHidden(file.id);
     if (isHidden) li.classList.add("is-hidden");
     const checkbox = document.createElement("input");
@@ -385,6 +408,8 @@ function renderTableOfContents() {
     label.className = isHidden ? "toc-text" : "toc-link";
     label.textContent = file.path;
     if (!isHidden) {
+      label.dataset.fileId = file.id;
+      label.dataset.filePath = file.path;
       label.href = `#${file.id}`;
       label.addEventListener("click", () => setActiveFile(file.id));
     }
@@ -455,6 +480,667 @@ function showSelectedFiles() {
   renderDirectoryTree();
   renderTableOfContents();
   ensureActiveFileVisible();
+}
+
+function clamp(n, min, max) {
+  return Math.min(max, Math.max(min, n));
+}
+
+function rectOf(el) {
+  const r = el.getBoundingClientRect();
+  return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: r.width, height: r.height };
+}
+
+function makeTextSpan(className, text) {
+  const span = document.createElement("span");
+  span.className = className;
+  span.textContent = text;
+  return span;
+}
+
+class PreviewWindow {
+  constructor(options = {}) {
+    this.state = {
+      x: 40,
+      y: 40,
+      width: options.width ?? PREVIEW_DEFAULT_WIDTH,
+      height: options.height ?? PREVIEW_DEFAULT_HEIGHT,
+      minWidth: options.minWidth ?? PREVIEW_MIN_WIDTH,
+      minHeight: options.minHeight ?? PREVIEW_MIN_HEIGHT,
+      margin: options.margin ?? PREVIEW_VIEWPORT_MARGIN,
+      gap: options.gap ?? PREVIEW_GAP,
+      destroyAfterMs: options.destroyAfterMs ?? PREVIEW_INACTIVE_MS
+    };
+
+    this._destroyTimer = null;
+    this._activePointerId = null;
+    this._drag = null;
+    this._resize = null;
+    this._teardownOutsideClick = null;
+    this.onDestroy = null;
+
+    this.root = document.createElement("div");
+    this.root.className = "pw-root";
+    this.root.setAttribute("role", "dialog");
+    this.root.setAttribute("aria-label", "Preview");
+
+    this.header = document.createElement("div");
+    this.header.className = "pw-header";
+
+    this.title = makeTextSpan("pw-title", "Preview");
+    this.header.appendChild(this.title);
+
+    this.content = document.createElement("div");
+    this.content.className = "pw-content";
+
+    this.root.appendChild(this.header);
+    this.root.appendChild(this.content);
+
+    document.body.appendChild(this.root);
+
+    this.setupDragHandlers();
+    this.setupResizeHandlers();
+    this.installActivityListeners();
+    this.updateGeometry();
+    this.scheduleDestroy(this.state.destroyAfterMs);
+  }
+
+  installActivityListeners() {
+    const bump = () => this.bumpActivity();
+    this.root.addEventListener("pointerenter", bump);
+    this.root.addEventListener("pointermove", bump);
+    this.root.addEventListener("wheel", bump, { passive: true });
+  }
+
+  bumpActivity() {
+    this.scheduleDestroy(this.state.destroyAfterMs);
+  }
+
+  destroy() {
+    this.stopResize();
+    this.cancelDrag();
+    if (this._destroyTimer) {
+      clearTimeout(this._destroyTimer);
+      this._destroyTimer = null;
+    }
+    if (this.root && this.root.isConnected) {
+      this.root.remove();
+    }
+    if (this._teardownOutsideClick) {
+      this._teardownOutsideClick();
+      this._teardownOutsideClick = null;
+    }
+    if (typeof this.onDestroy === "function") {
+      this.onDestroy();
+    }
+  }
+
+  scheduleDestroy(ms) {
+    if (this._destroyTimer) clearTimeout(this._destroyTimer);
+    this._destroyTimer = setTimeout(() => this.destroy(), ms);
+  }
+
+  setTitle(text) {
+    this.title.textContent = text || "Preview";
+  }
+
+  loadContent(node) {
+    this.content.replaceChildren();
+    if (!node) return;
+    this.content.appendChild(node);
+  }
+
+  positionWindowNearElement(el, options = {}) {
+    const r = rectOf(el);
+    const gap = this.state.gap;
+    const margin = this.state.margin;
+    const resizeToFit = options.resizeToFit !== false;
+    const preferRight = options.preferRight !== false;
+
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    const minW = this.state.minWidth;
+    const minH = this.state.minHeight;
+    const maxW = Math.max(0, vw - margin * 2);
+    const maxH = Math.max(0, vh - margin * 2);
+
+    if (!resizeToFit) {
+      const width = clamp(this.state.width, minW, maxW);
+      const height = clamp(this.state.height, minH, maxH);
+      const rightSpace = (vw - margin) - r.right;
+      const leftSpace = r.left - margin;
+      const belowSpace = (vh - margin) - r.bottom;
+      const aboveSpace = r.top - margin;
+
+      let x;
+      let y;
+
+      if (preferRight && rightSpace >= width + gap) x = r.right + gap;
+      else if (leftSpace >= width + gap) x = r.left - width - gap;
+      else x = clamp(r.left, margin, vw - width - margin);
+
+      if (belowSpace >= height + gap) y = r.bottom + gap;
+      else if (aboveSpace >= height + gap) y = r.top - height - gap;
+      else y = clamp(r.top, margin, vh - height - margin);
+
+      this.state.x = clamp(x, margin, vw - width - margin);
+      this.state.y = clamp(y, margin, vh - height - margin);
+      this.state.width = width;
+      this.state.height = height;
+      this.updateGeometry();
+      return;
+    }
+
+    const rightSpace = (vw - margin) - r.right - gap;
+    const leftSpace = r.left - margin - gap;
+
+    let useRight;
+    if (preferRight && rightSpace >= minW) {
+      useRight = true;
+    } else if (rightSpace >= minW && leftSpace < minW) {
+      useRight = true;
+    } else if (leftSpace >= minW) {
+      useRight = false;
+    } else {
+      useRight = rightSpace >= leftSpace;
+    }
+
+    let width = useRight ? rightSpace : leftSpace;
+    width = clamp(width, minW, maxW);
+    const height = clamp(maxH, minH, maxH);
+
+    let x = useRight ? r.right + gap : r.left - width - gap;
+    x = clamp(x, margin, vw - width - margin);
+    const y = clamp(margin, margin, vh - height - margin);
+
+    this.state.x = x;
+    this.state.y = y;
+    this.state.width = width;
+    this.state.height = height;
+    this.updateGeometry();
+  }
+
+  updateGeometry() {
+    const { x, y, width, height } = this.state;
+    this.root.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+    this.root.style.width = `${Math.round(width)}px`;
+    this.root.style.height = `${Math.round(height)}px`;
+  }
+
+  clampToViewport() {
+    const next = this.applyResizeConstraints({
+      x: this.state.x,
+      y: this.state.y,
+      width: this.state.width,
+      height: this.state.height
+    });
+    this.state.x = next.x;
+    this.state.y = next.y;
+    this.state.width = next.width;
+    this.state.height = next.height;
+    this.updateGeometry();
+  }
+
+  applyResizeConstraints(next) {
+    const margin = this.state.margin;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    const maxW = Math.max(0, vw - margin * 2);
+    const maxH = Math.max(0, vh - margin * 2);
+
+    const w = clamp(next.width, this.state.minWidth, maxW);
+    const h = clamp(next.height, this.state.minHeight, maxH);
+
+    const x = clamp(next.x, margin, vw - w - margin);
+    const y = clamp(next.y, margin, vh - h - margin);
+
+    return { x, y, width: w, height: h };
+  }
+
+  setupDragHandlers() {
+    const onPointerDown = e => {
+      if (e.button !== 0) return;
+      if (this._resize) return;
+
+      this._activePointerId = e.pointerId;
+      this.header.setPointerCapture(e.pointerId);
+
+      this._drag = {
+        startX: e.clientX,
+        startY: e.clientY,
+        startWinX: this.state.x,
+        startWinY: this.state.y
+      };
+
+      this.bumpActivity();
+      e.preventDefault();
+    };
+
+    const onPointerMove = e => {
+      if (!this._drag) return;
+      if (e.pointerId !== this._activePointerId) return;
+
+      const dx = e.clientX - this._drag.startX;
+      const dy = e.clientY - this._drag.startY;
+
+      const next = this.applyResizeConstraints({
+        x: this._drag.startWinX + dx,
+        y: this._drag.startWinY + dy,
+        width: this.state.width,
+        height: this.state.height
+      });
+
+      this.state.x = next.x;
+      this.state.y = next.y;
+      this.updateGeometry();
+      e.preventDefault();
+    };
+
+    const onPointerUp = e => {
+      if (!this._drag) return;
+      if (e.pointerId !== this._activePointerId) return;
+
+      this.cancelDrag();
+      e.preventDefault();
+    };
+
+    const onPointerCancel = e => {
+      if (!this._drag) return;
+      if (e.pointerId !== this._activePointerId) return;
+
+      this.cancelDrag();
+    };
+
+    this.header.addEventListener("pointerdown", onPointerDown);
+    this.header.addEventListener("pointermove", onPointerMove);
+    this.header.addEventListener("pointerup", onPointerUp);
+    this.header.addEventListener("pointercancel", onPointerCancel);
+
+    this._teardownOutsideClick = this._installOutsideClickToDismiss();
+  }
+
+  cancelDrag() {
+    this._drag = null;
+    this._activePointerId = null;
+  }
+
+  setupResizeHandlers() {
+    const handleSize = 10;
+
+    const getHitRegion = e => {
+      const r = this.root.getBoundingClientRect();
+      const x = e.clientX - r.left;
+      const y = e.clientY - r.top;
+
+      const onLeft = x >= 0 && x <= handleSize;
+      const onRight = x >= r.width - handleSize && x <= r.width;
+      const onTop = y >= 0 && y <= handleSize;
+      const onBottom = y >= r.height - handleSize && y <= r.height;
+
+      if (onTop && onLeft) return "nw";
+      if (onTop && onRight) return "ne";
+      if (onBottom && onLeft) return "sw";
+      if (onBottom && onRight) return "se";
+      if (onTop) return "n";
+      if (onBottom) return "s";
+      if (onLeft) return "w";
+      if (onRight) return "e";
+      return null;
+    };
+
+    const applyCursorClass = region => {
+      this.root.classList.remove(
+        "pw-resize-cursor-n",
+        "pw-resize-cursor-s",
+        "pw-resize-cursor-e",
+        "pw-resize-cursor-w",
+        "pw-resize-cursor-ne",
+        "pw-resize-cursor-nw",
+        "pw-resize-cursor-se",
+        "pw-resize-cursor-sw"
+      );
+      if (!region) return;
+      this.root.classList.add(`pw-resize-cursor-${region}`);
+    };
+
+    const onPointerMoveHover = e => {
+      if (this._resize) return;
+      const region = getHitRegion(e);
+      applyCursorClass(region);
+    };
+
+    const onPointerDown = e => {
+      if (e.button !== 0) return;
+      const region = getHitRegion(e);
+      if (!region) return;
+
+      this.startResize(e, region);
+      e.preventDefault();
+    };
+
+    const onPointerMove = e => {
+      if (!this._resize) return;
+      if (e.pointerId !== this._resize.pointerId) return;
+      this.performResize(e);
+      e.preventDefault();
+    };
+
+    const onPointerUp = e => {
+      if (!this._resize) return;
+      if (e.pointerId !== this._resize.pointerId) return;
+      this.stopResize();
+      e.preventDefault();
+    };
+
+    const onPointerCancel = e => {
+      if (!this._resize) return;
+      if (e.pointerId !== this._resize.pointerId) return;
+      this.cancelResize();
+    };
+
+    this.root.addEventListener("pointermove", onPointerMoveHover);
+    this.root.addEventListener("pointerdown", onPointerDown);
+    this.root.addEventListener("pointermove", onPointerMove);
+    this.root.addEventListener("pointerup", onPointerUp);
+    this.root.addEventListener("pointercancel", onPointerCancel);
+  }
+
+  startResize(e, region) {
+    this._resize = {
+      pointerId: e.pointerId,
+      region,
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      start: { x: this.state.x, y: this.state.y, width: this.state.width, height: this.state.height }
+    };
+
+    this.root.setPointerCapture(e.pointerId);
+    this.bumpActivity();
+  }
+
+  performResize(e) {
+    const rz = this._resize;
+    if (!rz) return;
+
+    const dx = e.clientX - rz.startClientX;
+    const dy = e.clientY - rz.startClientY;
+
+    let next = { ...rz.start };
+
+    const hasN = rz.region.includes("n");
+    const hasS = rz.region.includes("s");
+    const hasW = rz.region.includes("w");
+    const hasE = rz.region.includes("e");
+
+    if (hasE) next.width = rz.start.width + dx;
+    if (hasS) next.height = rz.start.height + dy;
+
+    if (hasW) {
+      next.width = rz.start.width - dx;
+      next.x = rz.start.x + dx;
+    }
+    if (hasN) {
+      next.height = rz.start.height - dy;
+      next.y = rz.start.y + dy;
+    }
+
+    next = this.applyResizeConstraints(next);
+
+    this.state.x = next.x;
+    this.state.y = next.y;
+    this.state.width = next.width;
+    this.state.height = next.height;
+    this.updateGeometry();
+  }
+
+  stopResize() {
+    this._resize = null;
+  }
+
+  cancelResize() {
+    const rz = this._resize;
+    if (!rz) return;
+
+    const snap = this.applyResizeConstraints(rz.start);
+    this.state.x = snap.x;
+    this.state.y = snap.y;
+    this.state.width = snap.width;
+    this.state.height = snap.height;
+    this.updateGeometry();
+
+    this._resize = null;
+  }
+
+  _installOutsideClickToDismiss() {
+    const onPointerDown = e => {
+      if (!this.root.isConnected) return;
+      if (this.root.contains(e.target)) return;
+      this.destroy();
+    };
+
+    document.addEventListener("pointerdown", onPointerDown, true);
+    return () => document.removeEventListener("pointerdown", onPointerDown, true);
+  }
+}
+
+function ensurePreviewWindow() {
+  if (previewState.window && previewState.window.root.isConnected) {
+    return { win: previewState.window, created: false, usedLastPlacement: false };
+  }
+  const win = new PreviewWindow();
+  const usedLastPlacement = applyLastPlacement(win);
+  win.onDestroy = () => {
+    storePreviewPlacement(win);
+    previewState.window = null;
+    previewState.visibleFileId = null;
+    clearPendingPreview();
+  };
+  previewState.window = win;
+  return { win, created: true, usedLastPlacement };
+}
+
+function destroyPreviewWindow() {
+  if (!previewState.window) return;
+  storePreviewPlacement(previewState.window);
+  previewState.window.destroy();
+  previewState.window = null;
+  previewState.visibleFileId = null;
+  clearPendingPreview();
+}
+
+function clearPreviewCache() {
+  previewState.cache.clear();
+}
+
+function prunePreviewCache() {
+  if (previewState.cache.size <= PREVIEW_CACHE_LIMIT) return;
+  const entries = [...previewState.cache.entries()].sort((a, b) => a[1].lastUsed - b[1].lastUsed);
+  const excess = entries.length - PREVIEW_CACHE_LIMIT;
+  for (let i = 0; i < excess; i += 1) {
+    previewState.cache.delete(entries[i][0]);
+  }
+}
+
+function getPreviewSourceElement(fileId) {
+  const section = getFileSection(fileId);
+  if (!section) return null;
+  const pre = section.querySelector("pre");
+  if (!pre) return null;
+  const code = pre.querySelector("code");
+  if (!code) return null;
+  const text = code.textContent || "";
+  if (!text) {
+    const file = state.files.find(item => item.id === fileId);
+    if (file && file.size > 0) return null;
+  }
+  return pre;
+}
+
+function getPreviewClone(fileId, sourceEl) {
+  const cached = previewState.cache.get(fileId);
+  if (cached && cached.source === sourceEl && cached.clone) {
+    cached.lastUsed = Date.now();
+    return cached.clone;
+  }
+  const clone = sourceEl.cloneNode(true);
+  previewState.cache.set(fileId, { source: sourceEl, clone, lastUsed: Date.now() });
+  prunePreviewCache();
+  return clone;
+}
+
+function getPreviewLabel(entry, fileId) {
+  if (entry?.dataset?.filePath) return entry.dataset.filePath;
+  const label = entry?.querySelector?.(".toc-link, .toc-text, .node-label");
+  if (label?.textContent) return label.textContent.trim();
+  if (entry?.textContent) return entry.textContent.trim();
+  const file = state.files.find(item => item.id === fileId);
+  return file?.path || "Preview";
+}
+
+function clearPendingPreview() {
+  if (previewState.pending?.timer) {
+    clearTimeout(previewState.pending.timer);
+  }
+  previewState.pending = null;
+}
+
+function storePreviewPlacement(win) {
+  if (!win) return;
+  previewState.lastPlacement = {
+    x: win.state.x,
+    y: win.state.y,
+    width: win.state.width,
+    height: win.state.height
+  };
+}
+
+function applyLastPlacement(win) {
+  if (!previewState.lastPlacement) return false;
+  const { x, y, width, height } = previewState.lastPlacement;
+  win.state.x = x;
+  win.state.y = y;
+  win.state.width = width;
+  win.state.height = height;
+  win.updateGeometry();
+  win.clampToViewport();
+  storePreviewPlacement(win);
+  return true;
+}
+
+function showPreviewForEntry(entry, fileId, opts = {}) {
+  const source = getPreviewSourceElement(fileId);
+  if (!source) return false;
+  const { win, created, usedLastPlacement } = ensurePreviewWindow();
+  win.setTitle(getPreviewLabel(entry, fileId));
+  win.loadContent(getPreviewClone(fileId, source));
+  const shouldPosition = opts.position && !(created && usedLastPlacement);
+  if (shouldPosition) {
+    win.positionWindowNearElement(entry, { resizeToFit: true, preferRight: true });
+  }
+  win.bumpActivity();
+  previewState.visibleFileId = fileId;
+  previewState.hoverLoaded = true;
+  storePreviewPlacement(win);
+  return true;
+}
+
+function schedulePreviewOpen(entry, fileId, delayMs, opts = {}) {
+  clearPendingPreview();
+  const timer = setTimeout(() => {
+    if (!previewState.pending) return;
+    if (previewState.pending.entry !== entry || previewState.pending.fileId !== fileId) return;
+    previewState.pending = null;
+    if (!entry.isConnected) return;
+    if (previewState.hoverEntry !== entry || previewState.hoverFileId !== fileId) return;
+    try {
+      showPreviewForEntry(entry, fileId, opts);
+    } catch (err) {
+      console.warn("Preview open failed", err);
+    }
+  }, delayMs);
+  previewState.pending = { entry, fileId, timer, opts };
+}
+
+function getPreviewAnchorFromEvent(event) {
+  const anchor = event.target.closest("a[data-file-id]");
+  if (!anchor) return null;
+  if (els.tocList?.contains(anchor) || els.treeContainer?.contains(anchor)) {
+    return anchor;
+  }
+  return null;
+}
+
+function handlePreviewPointerOver(event) {
+  if (event.pointerType && event.pointerType !== "mouse") return;
+  try {
+    const entry = getPreviewAnchorFromEvent(event);
+    if (!entry || entry.contains(event.relatedTarget)) return;
+    const fileId = entry.dataset.fileId;
+    if (!fileId) return;
+    clearPendingPreview();
+    previewState.hoverEntry = entry;
+    previewState.hoverFileId = fileId;
+    previewState.hoverLoaded = Boolean(getPreviewSourceElement(fileId));
+    if (previewState.window && previewState.visibleFileId === fileId) {
+      if (previewState.hoverLoaded) previewState.window.bumpActivity();
+      return;
+    }
+    if (previewState.window && previewState.hoverLoaded) {
+      previewState.window.bumpActivity();
+    }
+    const delay = previewState.window ? PREVIEW_SWITCH_DELAY : PREVIEW_OPEN_DELAY;
+    schedulePreviewOpen(entry, fileId, delay, { position: !previewState.window });
+  } catch (err) {
+    console.warn("Preview hover failed", err);
+  }
+}
+
+function handlePreviewPointerOut(event) {
+  if (event.pointerType && event.pointerType !== "mouse") return;
+  try {
+    const entry = getPreviewAnchorFromEvent(event);
+    if (!entry || entry.contains(event.relatedTarget)) return;
+    if (previewState.hoverEntry !== entry) return;
+    previewState.hoverEntry = null;
+    previewState.hoverFileId = null;
+    previewState.hoverLoaded = false;
+    clearPendingPreview();
+  } catch (err) {
+    console.warn("Preview hover cleanup failed", err);
+  }
+}
+
+function handlePreviewPointerMove(event) {
+  if (event.pointerType && event.pointerType !== "mouse") return;
+  try {
+    if (!previewState.window) return;
+    const entry = getPreviewAnchorFromEvent(event);
+    if (!entry || entry !== previewState.hoverEntry) return;
+    if (previewState.hoverLoaded) previewState.window.bumpActivity();
+  } catch (err) {
+    console.warn("Preview hover activity failed", err);
+  }
+}
+
+function setupHoverPreview() {
+  if (els.tocList) {
+    els.tocList.addEventListener("pointerover", handlePreviewPointerOver);
+    els.tocList.addEventListener("pointerout", handlePreviewPointerOut);
+    els.tocList.addEventListener("pointermove", handlePreviewPointerMove);
+  }
+  if (els.treeContainer) {
+    els.treeContainer.addEventListener("pointerover", handlePreviewPointerOver);
+    els.treeContainer.addEventListener("pointerout", handlePreviewPointerOut);
+    els.treeContainer.addEventListener("pointermove", handlePreviewPointerMove);
+  }
+}
+
+function handlePreviewViewportResize() {
+  if (!previewState.window || !previewState.window.root.isConnected) return;
+  previewState.window.clampToViewport();
+  storePreviewPlacement(previewState.window);
 }
 
 function ensureActiveFileVisible() {
@@ -911,6 +1597,8 @@ function resetStateForLoad() {
   state.phase = "empty";
   state.files = [];
   state.tree = createRootNode();
+  destroyPreviewWindow();
+  clearPreviewCache();
   cancelPendingTreeSitterParse();
   state.treeSitter.cache = {};
   state.treeSitter.markers = {};
@@ -1277,6 +1965,7 @@ function renderDirectoryTree() {
     const currentHash = decodeURIComponent(location.hash.slice(1) || "");
     if (isFile) {
       row.dataset.fileId = node.fileId;
+      row.dataset.filePath = node.path || "";
       const isActive = !isHidden && (node.fileId === state.activeFileId || node.fileId === currentHash);
       if (isHidden) {
         row.setAttribute("aria-disabled", "true");
@@ -2475,6 +3164,7 @@ function init() {
   if (els.tocCopy) els.tocCopy.addEventListener("click", copySelectedFiles);
   if (els.tocHide) els.tocHide.addEventListener("click", hideSelectedFiles);
   if (els.tocShow) els.tocShow.addEventListener("click", showSelectedFiles);
+  setupHoverPreview();
 
   if (els.codeSearchPanel) {
     els.codeSearchPanel.addEventListener("toggle", () => {
@@ -2546,6 +3236,8 @@ function init() {
   document.addEventListener("keydown", maybeYieldEmptyEnter);
   window.addEventListener("resize", updateOffsets);
   window.addEventListener("resize", handleViewportResize);
+  window.addEventListener("resize", handlePreviewViewportResize);
+  window.addEventListener("scroll", handlePreviewViewportResize, { passive: true });
   window.addEventListener("hashchange", handleHashChange);
   renderDirectoryTree();
   renderTableOfContents();
