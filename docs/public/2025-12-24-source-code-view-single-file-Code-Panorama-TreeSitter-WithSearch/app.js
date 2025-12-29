@@ -31,6 +31,8 @@ const PREVIEW_MIN_HEIGHT = 160;
 const PREVIEW_VIEWPORT_MARGIN = 8;
 const PREVIEW_GAP = 10;
 const PREVIEW_CACHE_LIMIT = 12;
+const PREVIEW_INITIAL_WIDTH_RATIO = 0.6;
+const PREVIEW_INITIAL_HEIGHT_RATIO = 0.5;
 const TREE_SITTER_LANGUAGES = {
   c: { file: "tree-sitter-c-v0.24.1.wasm" },
   cpp: { file: "tree-sitter-cpp-v0.23.4.wasm" },
@@ -931,6 +933,9 @@ function ensurePreviewWindow() {
   }
   const win = new PreviewWindow();
   const usedLastPlacement = applyLastPlacement(win);
+  if (!usedLastPlacement) {
+    setInitialPreviewPlacement(win);
+  }
   win.onDestroy = () => {
     storePreviewPlacement(win);
     previewState.window = null;
@@ -999,11 +1004,59 @@ function getPreviewLabel(entry, fileId) {
   return file?.path || "Preview";
 }
 
+function getPreviewTitle(entry, fileId) {
+  const label = getPreviewLabel(entry, fileId);
+  if (!label) return "PREVIEW";
+  const parts = label.split(/[\\/]/).filter(Boolean);
+  const name = parts.length ? parts[parts.length - 1] : label;
+  return `PREVIEW: ${name}`;
+}
+
 function clearPendingPreview() {
   if (previewState.pending?.timer) {
     clearTimeout(previewState.pending.timer);
   }
   previewState.pending = null;
+}
+
+function getVisiblePaneMetrics() {
+  const margin = PREVIEW_VIEWPORT_MARGIN;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const pane = els.main;
+  if (!pane) {
+    return { top: margin, height: Math.max(0, vh - margin * 2), width: Math.max(0, vw - margin * 2) };
+  }
+  const rect = pane.getBoundingClientRect();
+  const top = clamp(rect.top, margin, vh - margin);
+  const bottom = clamp(rect.bottom, margin, vh - margin);
+  const height = Math.max(0, bottom - top);
+  const width = Math.max(0, Math.min(rect.width, vw - margin * 2));
+  return { top, height, width };
+}
+
+function setInitialPreviewPlacement(win) {
+  if (!win) return;
+  const margin = win.state.margin;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const maxW = Math.max(0, vw - margin * 2);
+  const maxH = Math.max(0, vh - margin * 2);
+
+  const pane = getVisiblePaneMetrics();
+  const width = clamp(pane.width * PREVIEW_INITIAL_WIDTH_RATIO, win.state.minWidth, maxW);
+  const height = clamp(pane.height * PREVIEW_INITIAL_HEIGHT_RATIO, win.state.minHeight, maxH);
+
+  const x = clamp(vw - margin - width, margin, vw - width - margin);
+  const y = clamp(pane.top + (pane.height - height) / 2, margin, vh - height - margin);
+
+  win.state.x = x;
+  win.state.y = y;
+  win.state.width = width;
+  win.state.height = height;
+  win.updateGeometry();
+  win.clampToViewport();
+  storePreviewPlacement(win);
 }
 
 function storePreviewPlacement(win) {
@@ -1029,16 +1082,12 @@ function applyLastPlacement(win) {
   return true;
 }
 
-function showPreviewForEntry(entry, fileId, opts = {}) {
+function showPreviewForEntry(entry, fileId) {
   const source = getPreviewSourceElement(fileId);
   if (!source) return false;
-  const { win, created, usedLastPlacement } = ensurePreviewWindow();
-  win.setTitle(getPreviewLabel(entry, fileId));
+  const { win } = ensurePreviewWindow();
+  win.setTitle(getPreviewTitle(entry, fileId));
   win.loadContent(getPreviewClone(fileId, source));
-  const shouldPosition = opts.position && !(created && usedLastPlacement);
-  if (shouldPosition) {
-    win.positionWindowNearElement(entry, { resizeToFit: true, preferRight: true });
-  }
   win.bumpActivity();
   previewState.visibleFileId = fileId;
   previewState.hoverLoaded = true;
@@ -1046,7 +1095,7 @@ function showPreviewForEntry(entry, fileId, opts = {}) {
   return true;
 }
 
-function schedulePreviewOpen(entry, fileId, delayMs, opts = {}) {
+function schedulePreviewOpen(entry, fileId, delayMs) {
   clearPendingPreview();
   const timer = setTimeout(() => {
     if (!previewState.pending) return;
@@ -1055,12 +1104,12 @@ function schedulePreviewOpen(entry, fileId, delayMs, opts = {}) {
     if (!entry.isConnected) return;
     if (previewState.hoverEntry !== entry || previewState.hoverFileId !== fileId) return;
     try {
-      showPreviewForEntry(entry, fileId, opts);
+      showPreviewForEntry(entry, fileId);
     } catch (err) {
       console.warn("Preview open failed", err);
     }
   }, delayMs);
-  previewState.pending = { entry, fileId, timer, opts };
+  previewState.pending = { entry, fileId, timer };
 }
 
 function getPreviewAnchorFromEvent(event) {
@@ -1091,7 +1140,7 @@ function handlePreviewPointerOver(event) {
       previewState.window.bumpActivity();
     }
     const delay = previewState.window ? PREVIEW_SWITCH_DELAY : PREVIEW_OPEN_DELAY;
-    schedulePreviewOpen(entry, fileId, delay, { position: !previewState.window });
+    schedulePreviewOpen(entry, fileId, delay);
   } catch (err) {
     console.warn("Preview hover failed", err);
   }
