@@ -86,6 +86,9 @@ const state = {
     activeRun: null,
     liveTimer: null
   },
+  preview: {
+    enabled: true
+  },
   support: {
     directoryPicker: typeof window.showDirectoryPicker === "function",
     webkitDirectory: "webkitdirectory" in document.createElement("input")
@@ -137,6 +140,7 @@ const els = {
   logClose: document.getElementById("log-close"),
   logBody: document.getElementById("log-body"),
   treeBtn: document.getElementById("tree-button"),
+  previewToggle: document.getElementById("preview-toggle"),
   tsWindow: document.getElementById("ts-window"),
   tsTitleBar: document.getElementById("ts-titlebar"),
   tsClose: document.getElementById("ts-close"),
@@ -1009,7 +1013,7 @@ function getPreviewTitle(entry, fileId) {
   if (!label) return "PREVIEW";
   const parts = label.split(/[\\/]/).filter(Boolean);
   const name = parts.length ? parts[parts.length - 1] : label;
-  return `PREVIEW: ${name}`;
+  return `👀 PREVIEW: ${name}`;
 }
 
 function clearPendingPreview() {
@@ -1123,6 +1127,7 @@ function getPreviewAnchorFromEvent(event) {
 
 function handlePreviewPointerOver(event) {
   if (event.pointerType && event.pointerType !== "mouse") return;
+  if (!state.preview.enabled) return;
   try {
     const entry = getPreviewAnchorFromEvent(event);
     if (!entry || entry.contains(event.relatedTarget)) return;
@@ -1148,6 +1153,7 @@ function handlePreviewPointerOver(event) {
 
 function handlePreviewPointerOut(event) {
   if (event.pointerType && event.pointerType !== "mouse") return;
+  if (!state.preview.enabled) return;
   try {
     const entry = getPreviewAnchorFromEvent(event);
     if (!entry || entry.contains(event.relatedTarget)) return;
@@ -1163,6 +1169,7 @@ function handlePreviewPointerOut(event) {
 
 function handlePreviewPointerMove(event) {
   if (event.pointerType && event.pointerType !== "mouse") return;
+  if (!state.preview.enabled) return;
   try {
     if (!previewState.window) return;
     const entry = getPreviewAnchorFromEvent(event);
@@ -1190,6 +1197,14 @@ function handlePreviewViewportResize() {
   if (!previewState.window || !previewState.window.root.isConnected) return;
   previewState.window.clampToViewport();
   storePreviewPlacement(previewState.window);
+}
+
+function setPreviewEnabled(enabled) {
+  state.preview.enabled = enabled;
+  if (!enabled) {
+    destroyPreviewWindow();
+  }
+  updateControlBar();
 }
 
 function ensureActiveFileVisible() {
@@ -1728,6 +1743,11 @@ function updateControlBar() {
     els.treeBtn.disabled = !hasFiles;
     els.treeBtn.classList.toggle("active", state.treeSitter.window.open || state.treeSitter.window.minimized);
   }
+  if (els.previewToggle) {
+    els.previewToggle.disabled = !hasFiles;
+    els.previewToggle.classList.toggle("active", state.preview.enabled);
+    els.previewToggle.setAttribute("aria-pressed", state.preview.enabled ? "true" : "false");
+  }
 
   if (!state.support.directoryPicker) {
     els.openFolder.title = "Folder picker not supported";
@@ -1743,6 +1763,7 @@ function updateControlBar() {
   setButtonLabel(els.statsBtn, "📊", "Stats");
   setButtonLabel(els.logToggle, "📜", "Log");
   if (els.treeBtn) setButtonLabel(els.treeBtn, "🌳", "Tree-sitter");
+  if (els.previewToggle) setButtonLabel(els.previewToggle, "👀", "Preview");
 
   updateOffsets();
   updateSearchAvailability();
@@ -3263,6 +3284,9 @@ function init() {
   }
 
   if (els.treeBtn) els.treeBtn.addEventListener("click", handleTreeButtonClick);
+  if (els.previewToggle) {
+    els.previewToggle.addEventListener("click", () => setPreviewEnabled(!state.preview.enabled));
+  }
   if (els.tsClose) els.tsClose.addEventListener("click", closeTreeSitterWindow);
   if (els.tsMinimize) els.tsMinimize.addEventListener("click", minimizeTreeSitterWindow);
   if (els.tsParse) els.tsParse.addEventListener("click", () => {
