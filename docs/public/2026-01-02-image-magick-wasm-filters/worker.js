@@ -142,6 +142,14 @@ function send(message, transfer) {
   self.postMessage(message);
 }
 
+function hasMethod(target, method) {
+  return typeof target?.[method] === "function";
+}
+
+function warnMissingMethod(widgetId, method) {
+  logEvent("WORKER", "warn", "Method unavailable", { widgetId, method });
+}
+
 function detectCapabilities() {
   const proto = MagickImage.prototype;
   return {
@@ -272,6 +280,12 @@ function processJob(job) {
     send({ type: "job-progress", token: job.token, widgetId: job.widgetId, stage: "Encoding" });
     const bytes = image.write(outputFormat.format, (data) => data);
     const outputBytes = bytes instanceof Uint8Array ? bytes.slice() : bytes;
+    const outputSize =
+      outputBytes && typeof outputBytes.byteLength === "number"
+        ? outputBytes.byteLength
+        : typeof outputBytes.length === "number"
+        ? outputBytes.length
+        : 0;
     send(
       {
         type: "job-complete",
@@ -290,7 +304,7 @@ function processJob(job) {
       widgetId: job.widgetId,
       width,
       height,
-      outputBytes: outputBytes?.length ?? outputBytes?.byteLength,
+      outputBytes: outputSize,
       format: outputFormat.label,
     });
   });
@@ -488,14 +502,22 @@ function applyVignetteTilt(image, params) {
     applyTiltShift(image, params);
   }
   if (params.mode === "vignette" || params.mode === "both") {
-    const minDim = Math.min(image.width, image.height);
-    const radius = (params.vignetteRadius / 100) * (minDim / 2);
-    const sigma = 0.5 + (params.vignetteStrength / 100) * 10;
-    image.vignette(radius, sigma, 0, 0);
+    if (hasMethod(image, "vignette")) {
+      const minDim = Math.min(image.width, image.height);
+      const radius = (params.vignetteRadius / 100) * (minDim / 2);
+      const sigma = 0.5 + (params.vignetteStrength / 100) * 10;
+      image.vignette(radius, sigma, 0, 0);
+    } else {
+      warnMissingMethod("vignette-tilt", "vignette");
+    }
   }
 }
 
 function applyTiltShift(image, params) {
+  if (!hasMethod(image, "draw")) {
+    warnMissingMethod("vignette-tilt", "draw");
+    return;
+  }
   const width = image.width;
   const height = image.height;
   const focusHeight = (params.focusHeight / 100) * height;
@@ -504,6 +526,10 @@ function applyTiltShift(image, params) {
   const bottom = clamp(focusCenter + focusHeight / 2, 0, height);
 
   const mask = image.clone();
+  if (!hasMethod(mask, "read")) {
+    warnMissingMethod("vignette-tilt", "read");
+    return;
+  }
   mask.read(MagickColors.White, width, height);
   mask.draw(new DrawableFillColor(MagickColors.Black), new DrawableRectangle(0, top, width, bottom));
   if (params.feather > 0) {
@@ -523,17 +549,43 @@ function applyEdgeEmboss(image, params) {
   if (params.mode === "edge") {
     const radius = 1 + detail * 2;
     const sigma = 0.5 + detail * 2;
-    image.cannyEdge(radius, sigma, percent(10 + strength * 40), percent(50 + strength * 40));
+    if (hasMethod(image, "cannyEdge")) {
+      image.cannyEdge(radius, sigma, percent(10 + strength * 40), percent(50 + strength * 40));
+    } else if (hasMethod(image, "edge")) {
+      image.edge(radius);
+    } else {
+      warnMissingMethod("edge-emboss", "cannyEdge");
+    }
   } else if (typeof image.emboss === "function") {
     try {
       image.emboss(1 + detail * 2, 0.5 + strength * 2);
     } catch (error) {
-      image.cannyEdge(1 + detail * 2, 1 + detail * 2, percent(10), percent(60));
-      image.negate();
+      if (hasMethod(image, "cannyEdge")) {
+        image.cannyEdge(1 + detail * 2, 1 + detail * 2, percent(10), percent(60));
+        if (hasMethod(image, "negate")) {
+          image.negate();
+        } else {
+          warnMissingMethod("edge-emboss", "negate");
+        }
+      } else if (hasMethod(image, "edge")) {
+        image.edge(1 + detail * 2);
+      } else {
+        warnMissingMethod("edge-emboss", "cannyEdge");
+      }
     }
   } else {
-    image.cannyEdge(1 + detail * 2, 1 + detail * 2, percent(10), percent(60));
-    image.negate();
+    if (hasMethod(image, "cannyEdge")) {
+      image.cannyEdge(1 + detail * 2, 1 + detail * 2, percent(10), percent(60));
+      if (hasMethod(image, "negate")) {
+        image.negate();
+      } else {
+        warnMissingMethod("edge-emboss", "negate");
+      }
+    } else if (hasMethod(image, "edge")) {
+      image.edge(1 + detail * 2);
+    } else {
+      warnMissingMethod("edge-emboss", "cannyEdge");
+    }
   }
 }
 
@@ -581,7 +633,13 @@ function applyPixelate(image, params) {
   image.resize(downWidth, downHeight, FilterType.Point);
   image.resize(origWidth, origHeight, filter);
   if (params.preserveEdges) {
-    image.adaptiveSharpen(0.5, 0.5);
+    if (hasMethod(image, "adaptiveSharpen")) {
+      image.adaptiveSharpen(0.5, 0.5);
+    } else if (hasMethod(image, "sharpen")) {
+      image.sharpen(0.5, 0.5);
+    } else {
+      warnMissingMethod("pixelate", "adaptiveSharpen");
+    }
   }
 }
 
@@ -754,11 +812,19 @@ function applyStylize(image, params) {
   const radius = 1 + (params.amount / 100) * 4;
   const sigma = 0.5 + (params.detail / 100) * 2;
   if (params.mode === "charcoal") {
-    image.charcoal(radius, sigma);
+    if (hasMethod(image, "charcoal")) {
+      image.charcoal(radius, sigma);
+    } else {
+      warnMissingMethod("stylize", "charcoal");
+    }
   } else if (typeof image.sketch === "function") {
     image.sketch(radius, sigma, 0);
   } else {
-    image.charcoal(radius, sigma);
+    if (hasMethod(image, "charcoal")) {
+      image.charcoal(radius, sigma);
+    } else {
+      warnMissingMethod("stylize", "charcoal");
+    }
   }
 }
 
@@ -768,12 +834,20 @@ function applyMotion(image, params) {
     image.rotationalBlur(params.strength);
   } else {
     const radius = Math.max(1, params.strength / 10);
-    image.motionBlur(radius, Math.max(0.1, params.strength / 6), params.angle);
+    if (hasMethod(image, "motionBlur")) {
+      image.motionBlur(radius, Math.max(0.1, params.strength / 6), params.angle);
+    } else {
+      warnMissingMethod("motion", "motionBlur");
+    }
   }
 }
 
 function applyWatermark(image, params) {
   if (!params.text) return;
+  if (!hasMethod(image, "draw")) {
+    warnMissingMethod("watermark", "draw");
+    return;
+  }
   const text = params.text;
   const pointSize = params.size;
   const color = colorFromHex(params.color, params.opacity);
@@ -793,17 +867,25 @@ function applyWatermark(image, params) {
 
   if (params.shadow) {
     const shadowLayer = image.clone();
-    shadowLayer.read(MagickColors.Transparent, image.width, image.height);
-    const shadowColor = colorFromHex("#000000", Math.min(80, params.opacity));
-    shadowLayer.draw(
-      new DrawableFontPointSize(pointSize),
-      new DrawableFillColor(shadowColor),
-      new DrawableText(position.x + params.shadowOffset, position.y + params.shadowOffset, text)
-    );
-    if (params.shadowBlur > 0) {
-      shadowLayer.gaussianBlur(0, params.shadowBlur);
+    if (hasMethod(shadowLayer, "read")) {
+      shadowLayer.read(MagickColors.Transparent, image.width, image.height);
+      const shadowColor = colorFromHex("#000000", Math.min(80, params.opacity));
+      if (hasMethod(shadowLayer, "draw")) {
+        shadowLayer.draw(
+          new DrawableFontPointSize(pointSize),
+          new DrawableFillColor(shadowColor),
+          new DrawableText(position.x + params.shadowOffset, position.y + params.shadowOffset, text)
+        );
+      } else {
+        warnMissingMethod("watermark", "draw");
+      }
+      if (params.shadowBlur > 0) {
+        shadowLayer.gaussianBlur(0, params.shadowBlur);
+      }
+      image.composite(shadowLayer, CompositeOperator.Over);
+    } else {
+      warnMissingMethod("watermark", "read");
     }
-    image.composite(shadowLayer, CompositeOperator.Over);
   }
 
   image.draw(
@@ -877,7 +959,11 @@ function applyPortraitPop(image, params) {
   } else {
     image.sharpen(1.0, 1.0);
   }
-  image.vignette(params.vignette / 10, 5, 0, 0);
+  if (hasMethod(image, "vignette")) {
+    image.vignette(params.vignette / 10, 5, 0, 0);
+  } else {
+    warnMissingMethod("portrait-pop", "vignette");
+  }
 }
 
 function applyVintageFilm(image, params) {
@@ -889,14 +975,32 @@ function applyVintageFilm(image, params) {
   if (params.grain > 0) {
     image.addNoise(NoiseType.Gaussian, params.grain / 100);
   }
-  image.vignette(0, 5 + strength * 5, 0, 0);
+  if (hasMethod(image, "vignette")) {
+    image.vignette(0, 5 + strength * 5, 0, 0);
+  } else {
+    warnMissingMethod("vintage-film", "vignette");
+  }
 }
 
 function applyComicPoster(image, params) {
   const edge = image.clone();
   const edgeStrength = params.edgeStrength / 100;
-  edge.cannyEdge(1 + edgeStrength * 2, 1 + edgeStrength * 2, percent(10), percent(70));
-  edge.negate();
+  let hasEdgeOverlay = false;
+  if (hasMethod(edge, "cannyEdge")) {
+    edge.cannyEdge(1 + edgeStrength * 2, 1 + edgeStrength * 2, percent(10), percent(70));
+    if (hasMethod(edge, "negate")) {
+      edge.negate();
+    }
+    hasEdgeOverlay = true;
+  } else if (hasMethod(edge, "edge")) {
+    edge.edge(1 + edgeStrength * 2);
+    if (hasMethod(edge, "negate")) {
+      edge.negate();
+    }
+    hasEdgeOverlay = true;
+  } else {
+    warnMissingMethod("comic-poster", "cannyEdge");
+  }
 
   const settings = new QuantizeSettings();
   settings.colors = params.colors;
@@ -909,7 +1013,9 @@ function applyComicPoster(image, params) {
     settings.ditherMethod = DitherMethod.No;
   }
   image.quantize(settings);
-  image.composite(edge, CompositeOperator.Multiply);
+  if (hasEdgeOverlay) {
+    image.composite(edge, CompositeOperator.Multiply);
+  }
 }
 
 function applyTealOrange(image, params) {
@@ -921,6 +1027,10 @@ function applyTealOrange(image, params) {
   image.evaluate(Channels.Red, EvaluateOperator.Multiply, red);
   image.evaluate(Channels.Blue, EvaluateOperator.Multiply, blue);
   if (params.vignette) {
-    image.vignette(0, 5, 0, 0);
+    if (hasMethod(image, "vignette")) {
+      image.vignette(0, 5, 0, 0);
+    } else {
+      warnMissingMethod("teal-orange", "vignette");
+    }
   }
 }
