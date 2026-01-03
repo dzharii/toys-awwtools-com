@@ -43,6 +43,79 @@ const state = {
   ready: false,
 };
 
+const LOG_LEVELS = {
+  error: 0,
+  warn: 1,
+  info: 2,
+  verbose: 3,
+  debug: 4,
+};
+const DEFAULT_LOG_LEVEL = "info";
+
+function normalizeLogLevel(level) {
+  if (!level) return DEFAULT_LOG_LEVEL;
+  const key = String(level).toLowerCase();
+  return LOG_LEVELS[key] === undefined ? DEFAULT_LOG_LEVEL : key;
+}
+
+let workerLogLevel = normalizeLogLevel(self.WORKER_LOG_LEVEL || DEFAULT_LOG_LEVEL);
+self.WORKER_LOG_LEVEL = workerLogLevel;
+
+function shouldLog(level) {
+  const normalized = normalizeLogLevel(level);
+  return LOG_LEVELS[normalized] <= LOG_LEVELS[workerLogLevel];
+}
+
+function formatLogValue(value) {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string") {
+    return value.replace(/'/g, "\\'").replace(/\n/g, "\\n");
+  }
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  try {
+    return JSON.stringify(value);
+  } catch (error) {
+    return String(value);
+  }
+}
+
+function formatLog(moduleName, level, message, fields) {
+  const levelName = normalizeLogLevel(level).toUpperCase();
+  const prefix = `[${moduleName}][${levelName}]`;
+  const parts = fields
+    ? Object.entries(fields)
+        .filter(([, value]) => value !== undefined && value !== null)
+        .map(([key, value]) => `${key}='${formatLogValue(value)}'`)
+    : [];
+  return parts.length ? `${prefix} ${message} ${parts.join(" ")}` : `${prefix} ${message}`;
+}
+
+function logEvent(moduleName, level, message, fields) {
+  if (!shouldLog(level)) return;
+  const line = formatLog(moduleName, level, message, fields);
+  const method = level === "error" ? "error" : level === "warn" ? "warn" : "log";
+  console[method](line);
+  try {
+    self.postMessage({
+      type: "worker-log",
+      level: normalizeLogLevel(level),
+      module: moduleName,
+      message,
+      fields,
+    });
+  } catch (error) {
+    // Ignore log forwarding failures.
+  }
+}
+
+function setWorkerLogLevel(level) {
+  workerLogLevel = normalizeLogLevel(level);
+  self.WORKER_LOG_LEVEL = workerLogLevel;
+  logEvent("WORKER", "info", "Worker log level updated", { level: workerLogLevel });
+}
+
 function percent(value) {
   return new Percentage(value);
 }
@@ -58,11 +131,15 @@ function colorFromHex(hex, opacity = 100) {
 }
 
 function send(message, transfer) {
-  if (transfer) {
-    self.postMessage(message, transfer);
-  } else {
-    self.postMessage(message);
+  if (transfer && transfer.length) {
+    try {
+      self.postMessage(message, transfer);
+      return;
+    } catch (error) {
+      logEvent("WORKER", "warn", "Transfer failed, retrying without transfer", { error: error.message });
+    }
   }
+  self.postMessage(message);
 }
 
 function detectCapabilities() {
@@ -88,12 +165,16 @@ function detectCapabilities() {
 }
 
 async function initialize() {
+  logEvent("WORKER", "info", "Initializing ImageMagick");
   try {
     await initializeImageMagick(wasmUrl);
     state.ready = true;
-    send({ type: "ready", capabilities: detectCapabilities() });
+    const capabilities = detectCapabilities();
+    send({ type: "ready", capabilities });
+    logEvent("WORKER", "info", "ImageMagick ready", { capabilities });
   } catch (error) {
     send({ type: "init-error", error: error.message || "Failed to initialize" });
+    logEvent("WORKER", "error", "ImageMagick init failed", { error: error.message });
   }
 }
 
@@ -101,13 +182,28 @@ initialize();
 
 self.addEventListener("message", (event) => {
   const { type } = event.data;
+  if (type === "set-log-level") {
+    setWorkerLogLevel(event.data.level);
+    return;
+  }
   if (type === "set-source") {
     state.source = event.data.source;
     state.queue = [];
+    logEvent("WORKER", "info", "Source set", {
+      sourceId: state.source?.id,
+      name: state.source?.name,
+      sizeBytes: state.source?.bytes?.byteLength,
+      mime: state.source?.mime,
+    });
     return;
   }
   if (type === "process") {
     state.queue.push(event.data.job);
+    logEvent("WORKER", "verbose", "Job queued", {
+      token: event.data.job?.token,
+      widgetId: event.data.job?.widgetId,
+      queueLength: state.queue.length,
+    });
     processQueue();
   }
 });
@@ -116,6 +212,11 @@ function processQueue() {
   if (!state.ready || state.processing || state.queue.length === 0) return;
   const job = state.queue.shift();
   state.processing = true;
+  logEvent("WORKER", "verbose", "Processing job", {
+    token: job.token,
+    widgetId: job.widgetId,
+    queueLength: state.queue.length,
+  });
   processJob(job)
     .catch((error) => {
       send({
@@ -123,6 +224,11 @@ function processQueue() {
         token: job.token,
         widgetId: job.widgetId,
         error: error.message || "Processing failed",
+      });
+      logEvent("WORKER", "error", "Job failed", {
+        token: job.token,
+        widgetId: job.widgetId,
+        error: error.message,
       });
     })
     .finally(() => {
@@ -134,14 +240,24 @@ function processQueue() {
 function processJob(job) {
   if (!state.source) {
     send({ type: "job-error", token: job.token, widgetId: job.widgetId, error: "No source loaded" });
+    logEvent("WORKER", "warn", "Job rejected, no source", { token: job.token, widgetId: job.widgetId });
     return Promise.resolve();
   }
 
   send({ type: "job-started", token: job.token, widgetId: job.widgetId });
   const sourceBytes = state.source.bytes;
+  logEvent("WORKER", "info", "Job started", {
+    token: job.token,
+    widgetId: job.widgetId,
+    sourceId: state.source.id,
+    sourceBytes: sourceBytes?.byteLength,
+    outputFormat: job.outputFormat,
+  });
 
   return ImageMagick.read(sourceBytes, (image) => {
     send({ type: "job-progress", token: job.token, widgetId: job.widgetId, stage: "Processing" });
+    logEvent("WORKER", "verbose", "Applying effect", { widgetId: job.widgetId, token: job.token });
+    logEvent("WORKER", "debug", "Job params", { widgetId: job.widgetId, params: job.params });
     applyEffect(image, job);
     const outputFormat = formatMap[job.outputFormat] || formatMap.png;
 
@@ -154,6 +270,7 @@ function processJob(job) {
 
     send({ type: "job-progress", token: job.token, widgetId: job.widgetId, stage: "Encoding" });
     const bytes = image.write(outputFormat.format, (data) => data);
+    const outputBytes = bytes instanceof Uint8Array ? bytes.slice() : bytes;
     send(
       {
         type: "job-complete",
@@ -161,17 +278,31 @@ function processJob(job) {
         widgetId: job.widgetId,
         width,
         height,
-        bytes,
+        bytes: outputBytes,
         mime: outputFormat.mime,
         formatLabel: outputFormat.label,
       },
-      [bytes.buffer]
+      outputBytes?.buffer ? [outputBytes.buffer] : undefined
     );
+    logEvent("WORKER", "info", "Job complete", {
+      token: job.token,
+      widgetId: job.widgetId,
+      width,
+      height,
+      outputBytes: outputBytes?.byteLength,
+      format: outputFormat.label,
+    });
   });
 }
 
 function applyOutputSettings(image, outputFormat, settings) {
   if (!settings) return;
+  logEvent("WORKER", "verbose", "Applying output settings", {
+    format: outputFormat.label,
+    quality: settings.quality,
+    strip: settings.strip,
+    progressive: settings.progressive,
+  });
   if (settings.strip) {
     image.strip();
   }
@@ -288,6 +419,7 @@ function applyEffect(image, job) {
       // No extra effect, just output settings.
       break;
     default:
+      logEvent("WORKER", "warn", "Unknown widget id", { widgetId: job.widgetId });
       break;
   }
 }

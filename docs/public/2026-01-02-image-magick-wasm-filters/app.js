@@ -36,17 +36,79 @@ const appState = {
   appMode: "NoSource",
 };
 
-function logDiag(message) {
+const LOG_LEVELS = {
+  error: 0,
+  warn: 1,
+  info: 2,
+  verbose: 3,
+  debug: 4,
+};
+const DEFAULT_LOG_LEVEL = "info";
+const LOG_BUFFER_LIMIT = 200;
+
+function normalizeLogLevel(level) {
+  if (!level) return DEFAULT_LOG_LEVEL;
+  const key = String(level).toLowerCase();
+  return LOG_LEVELS[key] === undefined ? DEFAULT_LOG_LEVEL : key;
+}
+
+window.APP_LOG_LEVEL = normalizeLogLevel(window.APP_LOG_LEVEL || DEFAULT_LOG_LEVEL);
+
+function shouldLog(level) {
+  const current = normalizeLogLevel(window.APP_LOG_LEVEL);
+  const normalized = normalizeLogLevel(level);
+  return LOG_LEVELS[normalized] <= LOG_LEVELS[current];
+}
+
+function formatLogValue(value) {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string") {
+    return value.replace(/'/g, "\\'").replace(/\n/g, "\\n");
+  }
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  try {
+    return JSON.stringify(value);
+  } catch (error) {
+    return String(value);
+  }
+}
+
+function formatLog(moduleName, level, message, fields) {
+  const levelName = normalizeLogLevel(level).toUpperCase();
+  const prefix = `[${moduleName}][${levelName}]`;
+  const parts = fields
+    ? Object.entries(fields)
+        .filter(([, value]) => value !== undefined && value !== null)
+        .map(([key, value]) => `${key}='${formatLogValue(value)}'`)
+    : [];
+  return parts.length ? `${prefix} ${message} ${parts.join(" ")}` : `${prefix} ${message}`;
+}
+
+function appendLogLine(line) {
   const time = new Date().toLocaleTimeString();
-  appState.log.push(`[${time}] ${message}`);
-  if (appState.log.length > 120) {
+  appState.log.push(`[${time}] ${line}`);
+  if (appState.log.length > LOG_BUFFER_LIMIT) {
     appState.log.shift();
   }
   elements.diagLog.textContent = appState.log.join("\n");
 }
 
+function logEvent(moduleName, level, message, fields) {
+  if (!shouldLog(level)) return;
+  const line = formatLog(moduleName, level, message, fields);
+  appendLogLine(line);
+  const method = level === "error" ? "error" : level === "warn" ? "warn" : "log";
+  console[method](line);
+}
+
 function setAppMode(mode, errorMessage) {
+  const previous = appState.appMode;
   appState.appMode = mode;
+  if (previous !== mode) {
+    logEvent("STATE", "info", "App mode updated", { from: previous, to: mode });
+  }
   if (mode === "ProcessingWasmUnavailable") {
     elements.runtimeStatus.textContent = "WASM unavailable";
   } else if (mode === "SourceLoaded") {
@@ -59,6 +121,7 @@ function setAppMode(mode, errorMessage) {
   if (errorMessage) {
     appState.lastError = errorMessage;
     elements.diagError.textContent = errorMessage;
+    logEvent("STATE", "error", "App error set", { error: errorMessage });
   }
 }
 
@@ -77,6 +140,7 @@ function formatMegapixels(width, height) {
 }
 
 function clearSourceState() {
+  logEvent("INGEST", "info", "Clearing source state");
   if (appState.source?.previewUrl) {
     URL.revokeObjectURL(appState.source.previewUrl);
   }
@@ -148,7 +212,7 @@ class WorkerClient {
     this.capabilities = {};
     this.worker.addEventListener("message", (event) => this.handleMessage(event.data));
     this.worker.addEventListener("error", (event) => {
-      logDiag(`Worker error: ${event.message}`);
+      logEvent("WORKER", "error", "Worker error", { message: event.message });
       this.ready = false;
       appState.workerReady = false;
       elements.diagWorker.textContent = "Error";
@@ -159,6 +223,7 @@ class WorkerClient {
         widget.setError("Unavailable in this build.");
       });
     });
+    logEvent("WORKER", "info", "Worker client created");
   }
 
   onMessage(callback) {
@@ -173,8 +238,20 @@ class WorkerClient {
     }
   }
 
+  setLogLevel(level) {
+    const normalized = normalizeLogLevel(level);
+    this.post({ type: "set-log-level", level: normalized });
+    logEvent("WORKER", "info", "Worker log level updated", { level: normalized });
+  }
+
   setSource(source) {
     this.sourceId = source.id;
+    logEvent("WORKER", "info", "Setting source in worker", {
+      sourceId: source.id,
+      name: source.name,
+      sizeBytes: source.size,
+      mime: source.mime,
+    });
     const payload = {
       type: "set-source",
       source: {
@@ -185,11 +262,12 @@ class WorkerClient {
       },
     };
     this.post(payload, [source.bytes.buffer]);
-    logDiag(`Source bytes sent to worker (${source.name}).`);
+    logEvent("WORKER", "verbose", "Source bytes transferred to worker", { name: source.name });
   }
 
   enqueue(job) {
     this.queue.push(job);
+    logEvent("SCHED", "verbose", "Job enqueued", { token: job.token, widgetId: job.widgetId });
     this.processQueue();
   }
 
@@ -197,6 +275,7 @@ class WorkerClient {
     if (!this.ready || this.busy || this.queue.length === 0) return;
     const job = this.queue.shift();
     this.busy = true;
+    logEvent("SCHED", "verbose", "Dispatching job to worker", { token: job.token, widgetId: job.widgetId });
     this.post({ type: "process", job });
   }
 
@@ -209,7 +288,8 @@ class WorkerClient {
       elements.diagWasm.textContent = "Ready";
       elements.diagWorker.textContent = "Ready";
       setAppMode(appState.source ? "SourceLoaded" : "NoSource");
-      logDiag("Worker ready.");
+      logEvent("WORKER", "info", "Worker ready", { capabilities: this.capabilities });
+      this.setLogLevel(window.APP_LOG_LEVEL);
       applyCapabilities();
       this.processQueue();
       return;
@@ -222,7 +302,7 @@ class WorkerClient {
       elements.diagWasm.textContent = "Error";
       elements.diagWorker.textContent = "Error";
       setAppMode("ProcessingWasmUnavailable", message.error || "WASM initialization failed");
-      logDiag(`WASM init error: ${message.error}`);
+      logEvent("WORKER", "error", "WASM init error", { error: message.error });
       appState.widgets.forEach((widget) => {
         widget.setEnabled(false);
         widget.setStatus("error", "Unavailable in this build.");
@@ -231,8 +311,13 @@ class WorkerClient {
       return;
     }
 
+    if (message.type === "worker-log") {
+      logEvent(message.module || "WORKER", message.level || "info", message.message || "Worker log", message.fields);
+      return;
+    }
+
     if (message.type === "job-started") {
-      logDiag(`Job started: ${message.token}`);
+      logEvent("JOB", "info", "Job started", { token: message.token, widgetId: message.widgetId });
       this.callbacks.forEach((cb) => cb(message));
       return;
     }
@@ -245,7 +330,7 @@ class WorkerClient {
     if (message.type === "job-complete") {
       this.busy = false;
       this.processQueue();
-      logDiag(`Job complete: ${message.token}`);
+      logEvent("JOB", "info", "Job complete", { token: message.token, widgetId: message.widgetId });
       this.callbacks.forEach((cb) => cb(message));
       return;
     }
@@ -253,10 +338,12 @@ class WorkerClient {
     if (message.type === "job-error") {
       this.busy = false;
       this.processQueue();
-      logDiag(`Job error: ${message.token} - ${message.error}`);
+      logEvent("JOB", "error", "Job error", { token: message.token, widgetId: message.widgetId, error: message.error });
       this.callbacks.forEach((cb) => cb(message));
       return;
     }
+
+    logEvent("WORKER", "warn", "Unknown worker message", { type: message.type });
   }
 }
 
@@ -267,6 +354,7 @@ class Scheduler {
 
   schedule(widget, reason) {
     widget.state.dirty = true;
+    logEvent("SCHED", "verbose", "Schedule requested", { widgetId: widget.def.id, reason });
     if (!appState.source) {
       widget.setStatus("idle", "Load an image to enable.");
       return;
@@ -307,6 +395,12 @@ class Scheduler {
     const outputFormat = widget.getOutputFormat();
     const outputSettings = widget.getOutputSettings();
 
+    logEvent("JOB", "info", "Dispatching job", {
+      token,
+      widgetId: widget.def.id,
+      outputFormat,
+    });
+
     this.workerClient.enqueue({
       token,
       widgetId: widget.def.id,
@@ -337,6 +431,7 @@ class Widget {
       outputFormat: def.defaultOutputFormat || "png",
       error: null,
       supported: true,
+      enabled: false,
     };
     this.controls = new Map();
     this.buildCard();
@@ -581,6 +676,7 @@ class Widget {
     const current = this.state.params[id];
     if (current === value) return;
     this.state.params[id] = value;
+    logEvent("WIDGET", "verbose", "Param updated", { widgetId: this.def.id, param: id, value });
     if (this.def.onParamChange) {
       this.def.onParamChange(this, id, value);
     }
@@ -624,13 +720,21 @@ class Widget {
   }
 
   setEligible(isEligible) {
+    if (this.state.isEligible === isEligible) return;
     this.state.isEligible = isEligible;
+    logEvent("WIDGET", "verbose", "Visibility updated", { widgetId: this.def.id, isEligible });
     if (isEligible) {
       this.scheduler.schedule(this, "visible");
     }
   }
 
   setEnabled(enabled) {
+    if (this.state.enabled === enabled) {
+      // No-op when state is unchanged.
+    } else {
+      logEvent("WIDGET", "verbose", "Enabled toggled", { widgetId: this.def.id, enabled });
+    }
+    this.state.enabled = enabled;
     this.controls.forEach((info) => {
       info.input.disabled = !enabled;
       if (info.textInput) info.textInput.disabled = !enabled;
@@ -666,6 +770,7 @@ class Widget {
     if (message) {
       this.errorBox.textContent = message;
       this.errorBox.hidden = false;
+      logEvent("WIDGET", "error", "Widget error", { widgetId: this.def.id, error: message });
     } else {
       this.errorBox.hidden = true;
     }
@@ -697,6 +802,13 @@ class Widget {
       this.downloadButton.disabled = false;
     }
     this.setStatus("ready", "Ready");
+    logEvent("WIDGET", "info", "Output updated", {
+      widgetId: this.def.id,
+      width: payload.width,
+      height: payload.height,
+      sizeBytes: payload.bytes?.byteLength,
+      format: payload.label,
+    });
   }
 
   updateCli() {
@@ -716,12 +828,18 @@ class Widget {
 
   copyCli() {
     const text = this.cliBlock.textContent;
-    navigator.clipboard.writeText(text).then(() => {
-      this.statusText.textContent = "CLI copied";
-      setTimeout(() => {
-        this.statusText.textContent = "Ready";
-      }, 1200);
-    });
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        this.statusText.textContent = "CLI copied";
+        setTimeout(() => {
+          this.statusText.textContent = "Ready";
+        }, 1200);
+        logEvent("CLI", "info", "CLI copied", { widgetId: this.def.id });
+      })
+      .catch((error) => {
+        logEvent("CLI", "error", "CLI copy failed", { widgetId: this.def.id, error: error.message });
+      });
   }
 
   download() {
@@ -744,6 +862,7 @@ class Widget {
     document.body.appendChild(link);
     link.click();
     link.remove();
+    logEvent("WIDGET", "info", "Download triggered", { widgetId: this.def.id, filename });
   }
 
   resetDefaults() {
@@ -753,6 +872,7 @@ class Widget {
     this.bumpRevision();
     this.clearOutput();
     this.setError(null);
+    logEvent("WIDGET", "info", "Defaults restored", { widgetId: this.def.id });
     if (this.def.id === "chroma-key") {
       updateChromaPreviewBackground();
     }
@@ -775,6 +895,17 @@ class Widget {
 
 const workerClient = new WorkerClient();
 const scheduler = new Scheduler(workerClient);
+
+function setAppLogLevel(level) {
+  const normalized = normalizeLogLevel(level);
+  window.APP_LOG_LEVEL = normalized;
+  logEvent("APP", "info", "App log level updated", { level: normalized });
+  if (workerClient.ready) {
+    workerClient.setLogLevel(normalized);
+  }
+}
+
+window.setAppLogLevel = setAppLogLevel;
 
 workerClient.onMessage((message) => {
   if (message.type === "job-complete") {
@@ -2580,6 +2711,7 @@ function buildWidgets() {
   if (workerClient.ready) {
     applyCapabilities();
   }
+  logEvent("APP", "info", "Widgets built", { count: appState.widgets.length });
 }
 
 Widget.prototype.addCropOverlay = function addCropOverlay() {
@@ -2845,6 +2977,7 @@ Widget.prototype.addPerspectiveOverlay = function addPerspectiveOverlay() {
 };
 
 async function decodeImage(file) {
+  logEvent("INGEST", "verbose", "Decoding image", { name: file.name, sizeBytes: file.size, type: file.type });
   const blobUrl = URL.createObjectURL(file);
   const image = new Image();
   image.src = blobUrl;
@@ -2852,14 +2985,17 @@ async function decodeImage(file) {
   const width = image.naturalWidth;
   const height = image.naturalHeight;
   URL.revokeObjectURL(blobUrl);
+  logEvent("INGEST", "verbose", "Decode complete", { name: file.name, width, height });
   return { width, height };
 }
 
 async function handleFile(file) {
+  logEvent("INGEST", "info", "Handling file", { name: file.name, sizeBytes: file.size, type: file.type });
   if (!file.type.startsWith("image/")) {
     elements.ingestMessage.textContent = "That file is not a supported image type.";
     setAppMode("SourceError", "Unsupported file type");
     clearSourceState();
+    logEvent("INGEST", "warn", "Unsupported file type", { name: file.name, type: file.type });
     return;
   }
 
@@ -2871,6 +3007,7 @@ async function handleFile(file) {
     elements.ingestMessage.textContent = "Could not decode this image. Try another file.";
     setAppMode("SourceError", "Image decode failed");
     clearSourceState();
+    logEvent("INGEST", "error", "Decode failed", { name: file.name, error: error.message });
     return;
   }
   const megaPixels = (width * height) / 1_000_000;
@@ -2878,10 +3015,24 @@ async function handleFile(file) {
     elements.ingestMessage.textContent = `Image is too large (${megaPixels.toFixed(1)} MP). Resize below ${MAX_MEGAPIXELS} MP.`;
     setAppMode("SourceError", "Image exceeds pixel budget");
     clearSourceState();
+    logEvent("INGEST", "warn", "Image exceeds pixel budget", {
+      name: file.name,
+      megapixels: megaPixels.toFixed(2),
+      limit: MAX_MEGAPIXELS,
+    });
     return;
   }
 
-  const arrayBuffer = await file.arrayBuffer();
+  let arrayBuffer;
+  try {
+    arrayBuffer = await file.arrayBuffer();
+  } catch (error) {
+    elements.ingestMessage.textContent = "Could not read this file. Try another file.";
+    setAppMode("SourceError", "File read failed");
+    clearSourceState();
+    logEvent("INGEST", "error", "File read failed", { name: file.name, error: error.message });
+    return;
+  }
   const bytes = new Uint8Array(arrayBuffer);
   const sourceUrl = URL.createObjectURL(file);
 
@@ -2899,6 +3050,13 @@ async function handleFile(file) {
     previewUrl: sourceUrl,
     bytes,
   };
+  logEvent("INGEST", "info", "Source loaded", {
+    sourceId: appState.source.id,
+    name: file.name,
+    sizeBytes: bytes.byteLength,
+    width,
+    height,
+  });
 
   const sourcePlaceholder = elements.sourceFrame.querySelector(".placeholder");
   if (sourcePlaceholder) {
@@ -2944,7 +3102,10 @@ function setupIngestion() {
     event.preventDefault();
     elements.dropZone.classList.remove("hover");
     const file = event.dataTransfer.files[0];
-    if (file) handleFile(file);
+    if (file) {
+      logEvent("INGEST", "info", "File dropped", { name: file.name, sizeBytes: file.size, type: file.type });
+      handleFile(file);
+    }
   });
   elements.dropZone.addEventListener("click", () => elements.fileInput.click());
   elements.dropZone.addEventListener("keydown", (event) => {
@@ -2956,7 +3117,10 @@ function setupIngestion() {
 
   elements.fileInput.addEventListener("change", (event) => {
     const file = event.target.files[0];
-    if (file) handleFile(file);
+    if (file) {
+      logEvent("INGEST", "info", "File selected", { name: file.name, sizeBytes: file.size, type: file.type });
+      handleFile(file);
+    }
   });
 }
 
@@ -2964,7 +3128,7 @@ function setupResetAll() {
   elements.resetAll.addEventListener("click", () => {
     if (!confirm("Reset all widgets to defaults?")) return;
     appState.widgets.forEach((widget) => widget.resetDefaults());
-    logDiag("Reset all widgets.");
+    logEvent("APP", "info", "Reset all widgets");
   });
 }
 
@@ -2992,6 +3156,10 @@ function applyCapabilities() {
       widget.setStatus("error", "Unavailable in this build.");
       widget.setError("Unavailable in this build.");
       widget.previewPlaceholder.textContent = "Unavailable in this build.";
+      logEvent("CAPS", "warn", "Widget disabled due to missing capability", {
+        widgetId: widget.def.id,
+        capability: feature,
+      });
     }
     if (widget.def.id === "motion") {
       const biasControl = widget.controls.get("bias");
@@ -3012,8 +3180,15 @@ workerClient.onMessage((message) => {
     if (!widget) return;
     if (widget.state.latestToken !== message.token) return;
     widget.setStatus("running", message.stage || "Processing...");
+    logEvent("JOB", "verbose", "Job progress", {
+      token: message.token,
+      widgetId: message.widgetId,
+      stage: message.stage,
+    });
   }
 });
+
+logEvent("APP", "info", "App initialized", { logLevel: window.APP_LOG_LEVEL });
 
 setupIngestion();
 setupResetAll();
