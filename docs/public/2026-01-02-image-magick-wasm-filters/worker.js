@@ -217,7 +217,8 @@ function processQueue() {
     widgetId: job.widgetId,
     queueLength: state.queue.length,
   });
-  processJob(job)
+  Promise.resolve()
+    .then(() => processJob(job))
     .catch((error) => {
       send({
         type: "job-error",
@@ -289,7 +290,7 @@ function processJob(job) {
       widgetId: job.widgetId,
       width,
       height,
-      outputBytes: outputBytes?.byteLength,
+      outputBytes: outputBytes?.length ?? outputBytes?.byteLength,
       format: outputFormat.label,
     });
   });
