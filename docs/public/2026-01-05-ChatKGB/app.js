@@ -475,7 +475,7 @@ class RuleKeyword {
     hasTransformation() {
         return this.transforms.length > 0 || !!this.linkKeyword;
     }
-    applyTransformation(words, tags) {
+    applyTransformation(words, tags, avoidReply = "") {
         this.trace =
             TRACE_PREFIX + 'selected keyword: ' + this.keyword + '\n' +
             TRACE_PREFIX + 'input: ' + join(words) + '\n';
@@ -500,8 +500,6 @@ class RuleKeyword {
         }
 
         let rule = this.transforms[r];
-        const reassemblyRule = rule.reassemblyRules[rule.nextReassemblyRule];
-
         this.trace += TRACE_PREFIX + 'matching decompose pattern: (' + join(rule.decomposition) + ')\n';
         this.trace += TRACE_PREFIX + 'decomposition parts: ';
         for (let id = 0; id < constituents.length; ++id) {
@@ -510,39 +508,84 @@ class RuleKeyword {
             this.trace += (id + 1) + ':"' + constituents[id] + '"';
         }
         this.trace += '\n';
-        this.trace += TRACE_PREFIX + 'selected reassemble rule: (' + join(reassemblyRule) + ')\n';
 
-        rule.nextReassemblyRule++;
-        if (rule.nextReassemblyRule === rule.reassemblyRules.length) {
-            rule.nextReassemblyRule = 0;
-        }
-
-        if (reassemblyRule.length === 1 && reassemblyRule[0] === "NEWKEY") {
-            return [ACTION_NEWKEY];
-        }
-
-        if (reassemblyRule.length === 2 && reassemblyRule[0] === '=') {
-            return [ACTION_LINKKEY, words, reassemblyRule[1]];
-        }
-
-        // is it the special-case reassembly rule '( PRE ( reassembly ) ( =reference ) )'
-        // (note: this is the only reassemblyRule that is still in a list)
-        if (reassemblyRule.length !== 0 && reassemblyRule[0] === "(") {
-            console.assert(reassemblyRule[1] === "PRE");
-            console.assert(reassemblyRule[2] === "(");
-            let reassembly = [];
-            let i = 3;
-            while (reassemblyRule[i] !== ")") {
-                reassembly.push(reassemblyRule[i++]);
+        const resolveReassembly = (reassemblyRule) => {
+            if (reassemblyRule.length === 1 && reassemblyRule[0] === "NEWKEY") {
+                return { action: ACTION_NEWKEY };
             }
-            i += 3; // skip ')', '(' and '='
-            let link = reassemblyRule[i];
-            words = reassemble(reassembly, constituents);
-            return [ACTION_LINKKEY, words, link];
+
+            if (reassemblyRule.length === 2 && reassemblyRule[0] === '=') {
+                return { action: ACTION_LINKKEY, words, link: reassemblyRule[1] };
+            }
+
+            // is it the special-case reassembly rule '( PRE ( reassembly ) ( =reference ) )'
+            // (note: this is the only reassemblyRule that is still in a list)
+            if (reassemblyRule.length !== 0 && reassemblyRule[0] === "(") {
+                console.assert(reassemblyRule[1] === "PRE");
+                console.assert(reassemblyRule[2] === "(");
+                let reassembly = [];
+                let i = 3;
+                while (reassemblyRule[i] !== ")") {
+                    reassembly.push(reassemblyRule[i++]);
+                }
+                i += 3; // skip ')', '(' and '='
+                let link = reassemblyRule[i];
+                const newWords = reassemble(reassembly, constituents);
+                return { action: ACTION_LINKKEY, words: newWords, link };
+            }
+
+            const newWords = reassemble(reassemblyRule, constituents);
+            return { action: ACTION_COMPLETE, words: newWords };
+        };
+
+        let attempts = 0;
+        const total = rule.reassemblyRules.length;
+        let selectedReassembly = null;
+        let selectedResult = null;
+        let skippedDuplicate = false;
+        let duplicateReply = "";
+
+        while (attempts < total) {
+            const reassemblyRule = rule.reassemblyRules[rule.nextReassemblyRule];
+            rule.nextReassemblyRule = (rule.nextReassemblyRule + 1) % total;
+            const result = resolveReassembly(reassemblyRule);
+
+            if (avoidReply && result.action === ACTION_COMPLETE) {
+                const candidate = join(result.words);
+                if (candidate === avoidReply) {
+                    if (!skippedDuplicate) {
+                        duplicateReply = candidate;
+                    }
+                    skippedDuplicate = true;
+                    attempts += 1;
+                    continue;
+                }
+            }
+
+            selectedReassembly = reassemblyRule;
+            selectedResult = result;
+            break;
         }
 
-        words = reassemble(reassemblyRule, constituents);
-        return [ACTION_COMPLETE, words];
+        if (!selectedReassembly) {
+            if (avoidReply && skippedDuplicate) {
+                return [ACTION_NEWKEY, words, "", { dedup: 'NEWKEY', duplicateReply }];
+            }
+            selectedReassembly = rule.reassemblyRules[0];
+            selectedResult = resolveReassembly(selectedReassembly);
+        }
+
+        this.trace += TRACE_PREFIX + 'selected reassemble rule: (' + join(selectedReassembly) + ')\n';
+
+        let meta = null;
+        if (avoidReply && skippedDuplicate) {
+            meta = {
+                dedup: selectedResult.action === ACTION_NEWKEY ? 'NEWKEY' : 'ADVANCED',
+                duplicateReply
+            };
+        }
+
+        return [selectedResult.action, selectedResult.words, selectedResult.link, meta];
     }
     toString() {
         let sexp = "(";
@@ -688,6 +731,8 @@ class nullTracer {
     decompFailed(useNomatchMessage) {}
     newkeyFailed() {}
     usingNone(s) {}
+    safetyNotice(t) {}
+    dedupNotice(t) {}
     text() {
         return '';
     }
@@ -717,6 +762,12 @@ class preTracer extends nullTracer {
     decompFailed(useNomatchMessage) {}
     newkeyFailed() {}
     usingNone(s) {}
+    safetyNotice(t) {
+        this.traceBuffer.push(t);
+    }
+    dedupNotice(t) {
+        this.traceBuffer.push(t);
+    }
     text() {
         return '';
     }
@@ -816,6 +867,12 @@ class Tracer extends nullTracer {
         this.txt += TRACE_PREFIX + 'response is the next remark from the NONE rule\n';
         this.scrip += s;
     }
+    safetyNotice(t) {
+        this.txt += TRACE_PREFIX + t + '\n';
+    }
+    dedupNotice(t) {
+        this.txt += TRACE_PREFIX + t + '\n';
+    }
     text() {
         return this.txt;
     }
@@ -857,6 +914,7 @@ class Eliza {
             "REPEAT THAT, CLEARLY."
         ];
         this.transformationLimit = transformationLimit;
+        this.lastOfficerReply = "";
     }
 
     // return ELIZA's response to the given input string
@@ -868,6 +926,26 @@ class Eliza {
         this.limit = (this.limit % 4) + 1;
         this.tracer.limit(this.limit, this.noMatchMessages[this.limit - 1]);
 
+        const avoidReply = this.lastOfficerReply;
+        const finalizeReply = (reply) => {
+            this.lastOfficerReply = reply;
+            return reply;
+        };
+
+        let pendingDedup = null;
+        let dedupLogged = false;
+        const noteDedup = (message) => {
+            if (!dedupLogged) {
+                this.tracer.dedupNotice(message);
+                dedupLogged = true;
+            }
+        };
+        const flushPendingDedup = () => {
+            if (pendingDedup === 'NEWKEY') {
+                noteDedup('DEDUP: repeated last reply, NEWKEY');
+                pendingDedup = null;
+            }
+        };
         let keystack = [];
         let topRank = 0;
         for (let i = 0; i < words.length; i++) {
@@ -907,46 +985,81 @@ class Eliza {
         if (keystack.length === 0) {
             if (this.limit === 4 && this.memoryRule.memoryExists()) {
                 this.tracer.usingMemory(this.memoryRule.toString());
-                return "ON FILE: " + this.memoryRule.recallMemory();
+                const memoryReply = "ON FILE: " + this.memoryRule.recallMemory();
+                if (memoryReply === avoidReply) {
+                    pendingDedup = 'NONE';
+                } else {
+                    return finalizeReply(memoryReply);
+                }
             }
         }
 
         let transformationCount = 0;
+        const INTERNAL_HARD_CAP = 10000;
+        const LINK_DEPTH_LIMIT = 100;
+        let linkDepth = 0;
+        let linkSeen = new Set();
         globalInterruptElizaResponse = false;
         while (keystack.length > 0) {
             await delay();
             if (globalInterruptElizaResponse) {
                 globalInterruptElizaResponse = false;
-                return '-- RESPONSE INTERRUPTED BY OPERATOR --';
+                flushPendingDedup();
+                return finalizeReply('-- RESPONSE INTERRUPTED BY OPERATOR --');
             }
             const topKeyword = keystack.shift();
             this.tracer.preTransform(topKeyword, words);
 
             if (!this.rules.has(topKeyword)) {
                 this.tracer.unknownKey(topKeyword, true);
-                return this.noMatchMessages[this.limit - 1];
+                flushPendingDedup();
+                return finalizeReply(this.noMatchMessages[this.limit - 1]);
             }
 
-            if (this.transformationLimit !== 0 && transformationCount++ > this.transformationLimit) {
-                return `-- TRANSFORMATION LIMIT REACHED (*MAXTRAN ${this.transformationLimit}) --`;
+            transformationCount += 1;
+            if (this.transformationLimit !== 0) {
+                if (transformationCount > this.transformationLimit) {
+                    flushPendingDedup();
+                    return finalizeReply(`-- TRANSFORMATION LIMIT REACHED (*MAXTRAN ${this.transformationLimit}) --`);
+                }
+            } else if (transformationCount > INTERNAL_HARD_CAP) {
+                this.tracer.safetyNotice('SAFETY: transformation hard cap reached, falling back to NONE');
+                break;
             }
 
             const rule = this.rules.get(topKeyword);
             this.memoryRule.createMemory(topKeyword, words, this.tags);
             this.tracer.createMemory(this.memoryRule.traceText());
 
-            const [ action, response, link ] = rule.applyTransformation(words, this.tags);
+            const [ action, response, link, meta ] = rule.applyTransformation(words, this.tags, avoidReply);
             this.tracer.transform(rule.traceText(), rule.toString());
+            if (meta && meta.dedup === 'ADVANCED') {
+                noteDedup('DEDUP: repeated last reply, advanced reassembly');
+            } else if (meta && meta.dedup === 'NEWKEY') {
+                pendingDedup = 'NEWKEY';
+            }
             if (action === ACTION_COMPLETE) {
-                return join(response);
+                flushPendingDedup();
+                return finalizeReply(join(response));
             }
 
             if (action === ACTION_INAPPLICABLE) {
                 this.tracer.decompFailed(true);
-                return this.noMatchMessages[this.limit - 1];
+                flushPendingDedup();
+                return finalizeReply(this.noMatchMessages[this.limit - 1]);
             }
 
             if (action === ACTION_LINKKEY) {
+                if (linkSeen.has(link)) {
+                    this.tracer.safetyNotice(`SAFETY: link-cycle detected at keyword ${link}, falling back to NONE`);
+                    break;
+                }
+                linkSeen.add(link);
+                linkDepth += 1;
+                if (linkDepth > LINK_DEPTH_LIMIT) {
+                    this.tracer.safetyNotice('SAFETY: excessive link depth, falling back to NONE');
+                    break;
+                }
                 words = response;
                 keystack.unshift(link);
             }
@@ -958,10 +1071,21 @@ class Eliza {
         }
 
         const noneRule = this.rules.get(SPECIAL_RULE_NONE);
-        const [ action, response ] = noneRule.applyTransformation(words, this.tags);
-        console.assert(action === ACTION_COMPLETE);
+        let [ action, response, , meta ] = noneRule.applyTransformation(words, this.tags, avoidReply);
+        if (pendingDedup) {
+            noteDedup('DEDUP: repeated last reply, NONE fallback');
+            pendingDedup = null;
+        } else if (meta && meta.dedup === 'ADVANCED') {
+            noteDedup('DEDUP: repeated last reply, advanced reassembly');
+        } else if (meta && meta.dedup === 'NEWKEY') {
+            noteDedup('DEDUP: repeated last reply, NONE fallback');
+        }
         this.tracer.usingNone(noneRule.toString());
-        return join(response);
+        if (action === ACTION_NEWKEY && meta && meta.duplicateReply) {
+            return finalizeReply(meta.duplicateReply);
+        }
+        console.assert(action === ACTION_COMPLETE);
+        return finalizeReply(join(response));
     }
 }
 
@@ -1005,69 +1129,132 @@ START
     ((0 MY NAME IS 0)
         (PRESENT DOCUMENTS FOR 5.)
         (RECORDING NAME: 5.)
-        (CONFIRM SPELLING OF 5.))
+        (CONFIRM SPELLING OF 5.)
+        (NEWKEY))
     ((0 NAME IS 0)
         (PRESENT DOCUMENTS FOR 4.)
-        (CONFIRM SPELLING OF 4.))
+        (CONFIRM SPELLING OF 4.)
+        (NEWKEY))
     ((0 NAME 0)
-        (STATE YOUR FULL NAME.)))
+        (STATE YOUR FULL NAME.)
+        (PROVIDE YOUR FULL NAME.)
+        (NEWKEY)))
 
 (I 70
     ((0 I AM 0)
         (STATE YOUR STATUS AS 4.)
         (PROVIDE IDENTIFICATION FOR 4.)
-        (ON WHAT AUTHORITY ARE YOU 4.))
+        (ON WHAT AUTHORITY ARE YOU 4.)
+        (NEWKEY))
     ((0 I WORK AT 0)
         (PROVIDE CREDENTIALS FROM 5.)
         (STATE YOUR ROLE AT 5.)
-        (WHO VERIFIED YOUR POSITION AT 5.))
+        (WHO VERIFIED YOUR POSITION AT 5.)
+        (NEWKEY))
     ((0 I LIVE IN 0)
         (PROVIDE ADDRESS DOCUMENTS FOR 5.)
         (LIST YOUR REGISTERED RESIDENCE IN 5.)
-        (WHO CAN CONFIRM YOUR RESIDENCE IN 5.))
+        (WHO CAN CONFIRM YOUR RESIDENCE IN 5.)
+        (NEWKEY))
+    ((0 I WANT TO BUY 0)
+        (STATE THE ITEM YOU INTEND TO BUY.)
+        (WHO AUTHORIZED THE PURCHASE OF 6.)
+        (PROVIDE DOCUMENTS FOR THE PURCHASE OF 6.)
+        (NEWKEY))
     ((0 I WANT 0)
         (WHY DO YOU WANT 4.)
         (STATE YOUR INTENT REGARDING 4.)
-        (WHO AUTHORIZED THIS REQUEST FOR 4.))
+        (WHO AUTHORIZED THIS REQUEST FOR 4.)
+        (NEWKEY))
     ((0 I WILL NOT 0)
         (NONCOMPLIANCE NOTED. EXPLAIN 5.)
-        (YOU WILL COMPLY. PROVIDE REASON FOR 5.))
+        (YOU WILL COMPLY. PROVIDE REASON FOR 5.)
+        (NEWKEY))
     ((0 I CANNOT 0)
         (WHY CAN YOU NOT 4.)
         (WHAT PREVENTS YOU FROM 4.)
-        (DOCUMENT THE OBSTACLE TO 4.))
+        (DOCUMENT THE OBSTACLE TO 4.)
+        (NEWKEY))
     ((0 I 0)
-        (STATE FACTS.)))
+        (STATE FACTS.)
+        (PROVIDE DETAILS.)
+        (CLARIFY YOUR STATEMENT.)
+        (REPORT YOUR ACTIONS.)
+        (DOCUMENT THIS CLAIM.)
+        (NEWKEY)))
 
 (I'M 70
     ((0 I'M 0)
         (STATE YOUR STATUS AS 3.)
         (PROVIDE IDENTIFICATION FOR 3.)
-        (ON WHAT AUTHORITY ARE YOU 3.)))
+        (ON WHAT AUTHORITY ARE YOU 3.)
+        (NEWKEY)))
 
 (WORK 60
     ((0 WORK 0)
         (WHERE DO YOU WORK.)
         (WHO SUPERVISES YOUR WORK.)
-        (PROVIDE DOCUMENTS FROM YOUR WORKPLACE.)))
+        (PROVIDE DOCUMENTS FROM YOUR WORKPLACE.)
+        (NEWKEY)))
 
 (LIVE 60
     ((0 LIVE 0)
         (STATE YOUR REGISTERED ADDRESS.)
         (WHO ELSE LIVES THERE.)
-        (HOW LONG HAVE YOU LIVED THERE.)))
+        (HOW LONG HAVE YOU LIVED THERE.)
+        (NEWKEY)))
 
 (WANT 55
     ((0 WANT 0)
         (WHY DO YOU WANT 3.)
         (WHO AUTHORIZED YOUR REQUEST FOR 3.)
-        (PROVIDE DETAILS ABOUT 3.)))
+        (PROVIDE DETAILS ABOUT 3.)
+        (NEWKEY)))
+
+(BUY 55
+    ((0 BUY 0)
+        (WHY ARE YOU BUYING 3.)
+        (WHO AUTHORIZED THE PURCHASE OF 3.)
+        (STATE THE PURPOSE OF BUYING 3.)
+        (PROVIDE DOCUMENTS FOR 3.)
+        (NEWKEY)))
+
+(AMAZON 55
+    ((0 AMAZON 0)
+        (WHY AMAZON.)
+        (WHO PLACED THE ORDER.)
+        (PROVIDE THE ORDER DETAILS.)
+        (PROVIDE RECEIPTS.)
+        (NEWKEY)))
+
+(SLEEP 55
+    ((0 SLEEP 0)
+        (STATE WHY YOU REQUIRE SLEEP.)
+        (HOW LONG WILL YOU SLEEP.)
+        (WHO APPROVED THIS REST.)
+        (PROVIDE SCHEDULE DETAILS.)
+        (NEWKEY)))
+
+(PRODUCTIVE 55
+    ((0 PRODUCTIVE 0)
+        (DEFINE PRODUCTIVE IN THIS CONTEXT.)
+        (HOW WILL THIS MAKE YOU PRODUCTIVE.)
+        (PROVIDE MEASURABLE RESULTS.)
+        (NEWKEY)))
+
+(COMFORTABLE 55
+    ((0 COMFORTABLE 0)
+        (DEFINE THE COMFORT YOU SEEK.)
+        (WHY IS THIS COMFORT REQUIRED.)
+        (PROVIDE DETAILS ABOUT THIS COMFORT.)
+        (NEWKEY)))
 
 (MAYBE 50
     ((0)
         (DO NOT EVADE. STATE FACTS.)
         (GIVE A DEFINITE ANSWER.)
-        (UNCERTAINTY IS NOT ACCEPTABLE.)))
+        (UNCERTAINTY IS NOT ACCEPTABLE.)
+        (NEWKEY)))
 
 (PERHAPS 50
     (=MAYBE))
@@ -1076,90 +1263,106 @@ START
     ((0)
         (GUESSING IS NOT A STATEMENT.)
         (BE CERTAIN.)
-        (PROVIDE FACTS.)))
+        (PROVIDE FACTS.)
+        (NEWKEY)))
 
 (SURE 50
     ((0 NOT SURE 0)
         (YOU ARE NOT SURE. WHY.)
         (STATE WHAT YOU KNOW.)
-        (PROCEED WITH CERTAINTY.))
+        (PROCEED WITH CERTAINTY.)
+        (NEWKEY))
     ((0)
-        (CERTAINTY REQUIRED.)))
+        (CERTAINTY REQUIRED.)
+        (NEWKEY)))
 
 (YOU 40
     ((0 YOU 0)
         (DO NOT QUESTION THE OFFICER.)
         (STATE YOUR OWN ACTIONS.)
-        (ANSWER FOR YOURSELF.)))
+        (ANSWER FOR YOURSELF.)
+        (NEWKEY)))
 
 (THEY 40
     ((0 THEY 0)
         (WHO ARE THEY.)
         (NAME NAMES.)
-        (IDENTIFY THEM BY ROLE.)))
+        (IDENTIFY THEM BY ROLE.)
+        (NEWKEY)))
 
 (EVERYONE 40
     ((0 EVERYONE 0)
         (WHO EXACTLY.)
         (LIST NAMES.)
-        (HOW MANY ARE WE DISCUSSING.)))
+        (HOW MANY ARE WE DISCUSSING.)
+        (NEWKEY)))
 
 (NOBODY 40
     ((0 NOBODY 0)
         (NOBODY. NAME WHO WAS PRESENT.)
         (PROVIDE SPECIFICS.)
-        (WHO WAS INVOLVED.)))
+        (WHO WAS INVOLVED.)
+        (NEWKEY)))
 
 (YESTERDAY 30
     ((0 YESTERDAY 0)
         (PROVIDE THE DATE FOR YESTERDAY.)
         (STATE THE INCIDENT FROM YESTERDAY.)
-        (WHO WAS PRESENT YESTERDAY.)))
+        (WHO WAS PRESENT YESTERDAY.)
+        (NEWKEY)))
 
 (BEFORE 30
     ((0 BEFORE 0)
         (STATE THE DATE BEFORE 3.)
         (WHAT HAPPENED BEFORE 3.)
-        (BEFORE WHEN.)))
+        (BEFORE WHEN.)
+        (NEWKEY)))
 
 (AFTER 30
     ((0 AFTER 0)
         (STATE WHAT HAPPENED AFTER 3.)
         (AFTER WHICH EVENT.)
-        (GIVE A DATE AFTER 3.)))
+        (GIVE A DATE AFTER 3.)
+        (NEWKEY)))
 
 (ALWAYS 30
     ((0 ALWAYS 0)
         (ALWAYS. GIVE A SPECIFIC INCIDENT.)
         (STATE ONE EXAMPLE.)
-        (WHEN DID THIS ALWAYS OCCUR.)))
+        (WHEN DID THIS ALWAYS OCCUR.)
+        (NEWKEY)))
 
 (NEVER 30
     ((0 NEVER 0)
         (NEVER. PROVIDE A SPECIFIC TIME.)
         (STATE ONE EXAMPLE.)
-        (WHEN WAS THE LAST OCCURRENCE.)))
+        (WHEN WAS THE LAST OCCURRENCE.)
+        (NEWKEY)))
 
 (NO 20
     ((0 NO 0)
         (REFUSAL NOTED. EXPLAIN.)
         (WHY NOT.)
-        (YOU WILL ANSWER.)))
+        (YOU WILL ANSWER.)
+        (NEWKEY)))
 
 (YES 20
     ((0 YES 0)
         (CONFIRM YOUR ANSWER.)
         (PROVIDE DETAILS FOR YES.)
-        (YES. EXPLAIN.)))
+        (YES. EXPLAIN.)
+        (NEWKEY)))
 
 (CANNOT 20
     ((0 I CANNOT 0)
         (WHY CAN YOU NOT 4.)
         (WHAT PREVENTS YOU FROM 4.)
-        (DOCUMENT THE OBSTACLE TO 4.))
+        (DOCUMENT THE OBSTACLE TO 4.)
+        (NEWKEY))
     ((0 CANNOT 0)
         (WHY CAN YOU NOT 3.)
-        (PROVIDE DETAILS.)))
+        (PROVIDE DETAILS.)
+        (NEWKEY)))
 
 (CAN'T 20
     (=CANNOT))
@@ -1170,16 +1373,19 @@ START
 (WILL 20
     ((0 I WILL NOT 0)
         (NONCOMPLIANCE NOTED. EXPLAIN 5.)
-        (YOU WILL COMPLY.))
+        (YOU WILL COMPLY.)
+        (NEWKEY))
     ((0 WILL 0)
         (STATE YOUR INTENT.)
-        (WHO ORDERED THIS.)))
+        (WHO ORDERED THIS.)
+        (NEWKEY)))
 
 (MY 10
     ((0 MY 0)
         (STATE WHY YOUR 3 IS RELEVANT.)
         (DOCUMENT YOUR 3.)
-        (PROVIDE EVIDENCE FOR YOUR 3.))
+        (PROVIDE EVIDENCE FOR YOUR 3.)
+        (NEWKEY))
     ((0)
         (NEWKEY)))
 `;
