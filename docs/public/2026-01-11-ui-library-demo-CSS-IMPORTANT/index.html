@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookmarklet UI Library - Demo & Testing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 16px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .demo-section {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .demo-section h2 {
+            font-size: 24px;
+            margin-bottom: 16px;
+            color: #333;
+        }
+
+        .demo-section p {
+            color: #666;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .demo-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .demo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .demo-button:active {
+            transform: translateY(0);
+        }
+
+        .code-block {
+            background: #f5f5f5;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            color: #333;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            padding-left: 24px;
+            position: relative;
+            color: #666;
+        }
+
+        .feature-list li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #4caf50;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Bookmarklet UI Library</h1>
+            <p>Modern, lightweight UI components for bookmarklets with Shadow DOM isolation</p>
+        </div>
+
+        <div class="demo-section">
+            <h2>🎯 Features</h2>
+            <ul class="feature-list">
+                <li>Shadow DOM isolation - no CSS conflicts with host page</li>
+                <li>Modern, minimal design with smooth animations</li>
+                <li>Draggable windows with title bars</li>
+                <li>Non-blocking notifications with auto-dismiss</li>
+                <li>Custom styled dialogs (alert, confirm, prompt)</li>
+                <li>Color picker component with clipboard integration</li>
+                <li>Promise-based API for async operations</li>
+                <li>All CSS embedded - single file, zero dependencies</li>
+                <li>Lightweight and optimized for bookmarklets</li>
+            </ul>
+        </div>
+
+        <div class="demo-section">
+            <h2>💬 Dialogs</h2>
+            <p>Replace browser's native alert(), confirm(), and prompt() with beautiful custom dialogs.</p>
+            <div class="button-grid">
+                <button class="demo-button" onclick="demoAlert()">Show Alert</button>
+                <button class="demo-button" onclick="demoConfirm()">Show Confirm</button>
+                <button class="demo-button" onclick="demoPrompt()">Show Prompt</button>
+                <button class="demo-button" onclick="demoPromptMultiline()">Multiline Prompt</button>
+            </div>
+            <div class="code-block">
+                // Alert<br>
+                await BookmarkletUI.alert('This is a custom alert!', 'Alert Title');<br><br>
+
+                // Confirm<br>
+                const result = await BookmarkletUI.confirm('Are you sure?', 'Confirm');<br><br>
+
+                // Prompt<br>
+                const input = await BookmarkletUI.prompt('Enter your name:', 'John Doe');
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🪟 Windows</h2>
+            <p>Create draggable windows with custom content. Perfect for displaying information or complex UIs.</p>
+            <div class="button-grid">
+                <button class="demo-button" onclick="demoSimpleWindow()">Simple Window</button>
+                <button class="demo-button" onclick="demoInfoWindow()">Info Window</button>
+                <button class="demo-button" onclick="demoMultipleWindows()">Multiple Windows</button>
+                <button class="demo-button" onclick="demoHtmlContent()">HTML Content</button>
+            </div>
+            <div class="code-block">
+                const win = new BookmarkletUI.Window({<br>
+                &nbsp;&nbsp;title: 'My Window',<br>
+                &nbsp;&nbsp;content: '&lt;p&gt;Window content&lt;/p&gt;',<br>
+                &nbsp;&nbsp;width: '400px',<br>
+                &nbsp;&nbsp;draggable: true<br>
+                });<br>
+                win.appendTo(document.body);
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🔔 Notifications</h2>
+            <p>Non-blocking toast notifications that auto-dismiss. Perfect for status messages.</p>
+            <div class="button-grid">
+                <button class="demo-button" onclick="demoNotifySuccess()">Success Notification</button>
+                <button class="demo-button" onclick="demoNotifyError()">Error Notification</button>
+                <button class="demo-button" onclick="demoNotifyInfo()">Info Notification</button>
+                <button class="demo-button" onclick="demoNotifyWarning()">Warning Notification</button>
+            </div>
+            <div class="code-block">
+                BookmarkletUI.Utils.notify('Operation successful!', 'success', 3000);
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🎨 Color Picker</h2>
+            <p>Interactive color picker with copy-to-clipboard functionality.</p>
+            <div class="button-grid">
+                <button class="demo-button" onclick="demoColorPicker()">Open Color Picker</button>
+                <button class="demo-button" onclick="demoColorPickerCallback()">Color Picker with Callback</button>
+            </div>
+            <div class="code-block">
+                const picker = new BookmarkletUI.ColorPicker({<br>
+                &nbsp;&nbsp;title: 'Choose Color',<br>
+                &nbsp;&nbsp;defaultColor: '#667eea',<br>
+                &nbsp;&nbsp;showCopyButton: true,<br>
+                &nbsp;&nbsp;onSelect: (color) => console.log('Selected:', color)<br>
+                });<br>
+                picker.appendTo(document.body);
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🔧 Utilities</h2>
+            <p>Helper functions for common tasks.</p>
+            <div class="button-grid">
+                <button class="demo-button" onclick="demoCopyToClipboard()">Copy to Clipboard</button>
+                <button class="demo-button" onclick="demoShowInfo()">Show Info Grid</button>
+                <button class="demo-button" onclick="demoCustomDialog()">Custom Dialog Buttons</button>
+            </div>
+            <div class="code-block">
+                // Copy text<br>
+                BookmarkletUI.Utils.copyToClipboard('Hello World');<br><br>
+
+                // Show info grid<br>
+                BookmarkletUI.Utils.showInfo('Page Info', {<br>
+                &nbsp;&nbsp;'Title': document.title,<br>
+                &nbsp;&nbsp;'URL': location.href<br>
+                });
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>📋 Integration Example</h2>
+            <p>Example of how to integrate into a bookmarklet:</p>
+            <div class="code-block">
+                javascript:(function() {<br>
+                &nbsp;&nbsp;try {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;// Embed the BookmarkletUI library code here<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;const BookmarkletUI = (function() { /* ... library code ... */ })();<br>
+                <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;// Use it in your bookmarklet<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;(async () => {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const name = await BookmarkletUI.prompt('Enter your name:');<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (name) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;await BookmarkletUI.alert(`Hello, ${name}!`);<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;})();<br>
+                &nbsp;&nbsp;} catch (err) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;console.error('Bookmarklet error:', err);<br>
+                &nbsp;&nbsp;}<br>
+                })();
+            </div>
+        </div>
+    </div>
+
+    <script src="bookmarklet-ui-library.js"></script>
+    <script>
+        // Demo functions
+        async function demoAlert() {
+            await BookmarkletUI.alert('This is a beautiful custom alert dialog!', 'Alert Demo');
+        }
+
+        async function demoConfirm() {
+            const result = await BookmarkletUI.confirm('Do you want to continue with this action?', 'Confirm Demo');
+            BookmarkletUI.Utils.notify(
+                result ? 'You clicked OK!' : 'You clicked Cancel!',
+                result ? 'success' : 'info'
+            );
+        }
+
+        async function demoPrompt() {
+            const name = await BookmarkletUI.prompt('What is your name?', 'John Doe', 'Prompt Demo');
+            if (name !== null) {
+                await BookmarkletUI.alert(`Hello, ${name}!`, 'Greeting');
+            }
+        }
+
+        async function demoPromptMultiline() {
+            const text = await BookmarkletUI.prompt(
+                'Enter your message:',
+                'Line 1\nLine 2\nLine 3',
+                'Multiline Input',
+                { multiline: true }
+            );
+            if (text !== null) {
+                BookmarkletUI.Utils.notify(`Received ${text.length} characters`, 'info');
+            }
+        }
+
+        function demoSimpleWindow() {
+            const win = new BookmarkletUI.Window({
+                title: 'Simple Window',
+                content: '<p>This is a draggable window!</p><p>Try dragging it by the title bar.</p>',
+                width: '400px'
+            });
+            win.appendTo(document.body);
+        }
+
+        function demoInfoWindow() {
+            BookmarkletUI.Utils.showInfo('Page Information', {
+                'Title': document.title,
+                'URL': location.href,
+                'User Agent': navigator.userAgent.substring(0, 50) + '...',
+                'Viewport': `${window.innerWidth}x${window.innerHeight}`,
+                'Color Depth': screen.colorDepth + ' bits'
+            }, {
+                showCopyButton: true
+            });
+        }
+
+        function demoMultipleWindows() {
+            for (let i = 1; i <= 3; i++) {
+                setTimeout(() => {
+                    const win = new BookmarkletUI.Window({
+                        title: `Window ${i}`,
+                        content: `<p>This is window number ${i}</p><p>Drag me around!</p>`,
+                        width: '300px',
+                        x: 100 + (i * 50),
+                        y: 100 + (i * 50)
+                    });
+                    win.appendTo(document.body);
+                }, i * 200);
+            }
+        }
+
+        function demoHtmlContent() {
+            const content = document.createElement('div');
+            content.innerHTML = `
+                <h3 style="margin-bottom: 12px;">Rich Content</h3>
+                <p style="margin-bottom: 8px;">This window contains rich HTML content.</p>
+                <ul style="margin-left: 20px; margin-bottom: 12px;">
+                    <li>Item 1</li>
+                    <li>Item 2</li>
+                    <li>Item 3</li>
+                </ul>
+                <button class="demo-btn" style="padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    Click Me
+                </button>
+            `;
+
+            content.querySelector('.demo-btn').addEventListener('click', () => {
+                BookmarkletUI.Utils.notify('Button clicked!', 'success', 2000);
+            });
+
+            const win = new BookmarkletUI.Window({
+                title: 'HTML Content Demo',
+                content: content,
+                width: '400px'
+            });
+            win.appendTo(document.body);
+        }
+
+        function demoNotifySuccess() {
+            BookmarkletUI.Utils.notify('Operation completed successfully!', 'success', 3000);
+        }
+
+        function demoNotifyError() {
+            BookmarkletUI.Utils.notify('An error occurred during the operation.', 'error', 3000);
+        }
+
+        function demoNotifyInfo() {
+            BookmarkletUI.Utils.notify('Here is some information for you.', 'info', 3000);
+        }
+
+        function demoNotifyWarning() {
+            BookmarkletUI.Utils.notify('Warning: Please review this action.', 'warning', 3000);
+        }
+
+        function demoColorPicker() {
+            const picker = new BookmarkletUI.ColorPicker({
+                title: 'Color Picker Demo',
+                defaultColor: '#667eea',
+                showCopyButton: true,
+                x: 100,
+                y: 100
+            });
+            picker.appendTo(document.body);
+        }
+
+        function demoColorPickerCallback() {
+            const picker = new BookmarkletUI.ColorPicker({
+                title: 'Select a Color',
+                defaultColor: '#ff6b6b',
+                showCopyButton: true,
+                onSelect: (color) => {
+                    BookmarkletUI.Utils.notify(`You selected: ${color}`, 'success', 3000);
+                },
+                onChange: (color) => {
+                    console.log('Color changed:', color);
+                },
+                x: 150,
+                y: 150
+            });
+            picker.appendTo(document.body);
+        }
+
+        function demoCopyToClipboard() {
+            const text = 'Hello from Bookmarklet UI Library!';
+            const success = BookmarkletUI.Utils.copyToClipboard(text);
+            BookmarkletUI.Utils.notify(
+                success ? 'Text copied to clipboard!' : 'Failed to copy text',
+                success ? 'success' : 'error',
+                2000
+            );
+        }
+
+        async function demoCustomDialog() {
+            const dialog = new BookmarkletUI.Dialog({
+                title: 'Choose an Option',
+                message: 'Select one of the options below:',
+                buttons: [
+                    {
+                        text: 'Option A',
+                        className: 'bm-button-success',
+                        value: 'A'
+                    },
+                    {
+                        text: 'Option B',
+                        className: 'bm-button-primary',
+                        value: 'B'
+                    },
+                    {
+                        text: 'Cancel',
+                        className: 'bm-button-secondary',
+                        value: null
+                    }
+                ]
+            });
+            dialog.appendTo(document.body);
+            const result = await dialog.wait();
+            if (result) {
+                BookmarkletUI.Utils.notify(`You selected: Option ${result}`, 'info', 2000);
+            }
+        }
+
+        function demoShowInfo() {
+            const selection = window.getSelection().toString();
+            BookmarkletUI.Utils.showInfo('Text Analysis', {
+                'Selected Text': selection || '(none)',
+                'Length': selection.length + ' characters',
+                'Words': selection.trim().split(/\s+/).filter(w => w).length,
+                'Lines': selection.split('\n').length
+            }, {
+                showCopyButton: true,
+                x: 200,
+                y: 200
+            });
+        }
+    </script>
+</body>
+
+</html>
