@@ -1,0 +1,1315 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<document version="1.0" standard="C99" xml:lang="en">
+
+  <textFormatting>
+    <policy id="fmt.minimal.html" name="Minimal inline HTML in text nodes">
+      <scope>
+        <allowedIn>summary</allowedIn>
+        <allowedIn>description</allowedIn>
+        <allowedIn>notes</allowedIn>
+        <allowedIn>constraints</allowedIn>
+        <allowedIn>returns</allowedIn>
+      </scope>
+      <allowedTags>
+        <tag name="p" kind="block"/>
+        <tag name="strong" kind="inline"/>
+        <tag name="em" kind="inline"/>
+        <tag name="code" kind="inline"/>
+        <tag name="a" kind="inline"/>
+        <tag name="br" kind="inline"/>
+      </allowedTags>
+      <restrictions>
+        <r>No tags beyond allowedTags.</r>
+        <r>Prefer &lt;code&gt; blocks for code samples.</r>
+      </restrictions>
+    </policy>
+  </textFormatting>
+
+  <category id="numeric.parsing.formatting.utilities" name="Numeric parsing, integer formatting helpers, and general utilities">
+    <summary><![CDATA[
+<p>
+Core runtime services and numeric conversion helpers: memory allocation and cleanup, program termination hooks,
+environment queries, pseudo-random number generation, robust numeric parsing from strings, and generic searching/sorting.
+This category also includes integer-width portable parsing helpers from <code>inttypes.h</code> for maximum-width integers.
+</p>
+<p>
+Treat these APIs as low-level building blocks. Prefer explicit error checking for all conversions and allocations,
+avoid undefined behavior from overflow, and be careful with process-wide side effects (environment variables, <code>system</code>,
+global PRNG state, and exit handlers). For conversions, prefer the <code>strto*</code> family over <code>atoi</code>-style functions
+because the <code>strto*</code> functions provide error detection and end-pointer reporting.
+</p>
+]]></summary>
+
+    <keywords>
+      <kw>stdlib</kw>
+      <kw>inttypes</kw>
+      <kw>malloc</kw>
+      <kw>free</kw>
+      <kw>realloc</kw>
+      <kw>calloc</kw>
+      <kw>exit</kw>
+      <kw>atexit</kw>
+      <kw>getenv</kw>
+      <kw>system</kw>
+      <kw>rand</kw>
+      <kw>srand</kw>
+      <kw>strtol</kw>
+      <kw>strtoll</kw>
+      <kw>strtoul</kw>
+      <kw>strtoull</kw>
+      <kw>strtod</kw>
+      <kw>qsort</kw>
+      <kw>bsearch</kw>
+      <kw>strtoimax</kw>
+      <kw>strtoumax</kw>
+    </keywords>
+
+    <notes>
+      <note id="n.numeric.alloc_overflow" severity="important" topic="allocation_overflow">
+        <description><![CDATA[
+<p>
+When computing allocation sizes, guard against overflow in <code>count * size</code>. Overflow can wrap to a small value,
+leading to undersized allocations and out-of-bounds writes.
+</p>
+]]></description>
+      </note>
+      <note id="n.numeric.conversion_errno" severity="important" topic="strto_error_handling">
+        <description><![CDATA[
+<p>
+For <code>strto*</code> conversions, set <code>errno = 0</code> before the call and then check:
+(1) whether the end pointer advanced (at least one digit/char converted),
+(2) whether <code>errno == ERANGE</code> to detect overflow/underflow,
+(3) whether there is unexpected trailing text.
+</p>
+]]></description>
+      </note>
+      <note id="n.numeric.prng_quality" severity="warning" topic="rand_quality">
+        <description><![CDATA[
+<p>
+<code>rand</code>/<code>srand</code> provide a simple pseudo-random generator with implementation-defined quality and period.
+Do not use for security-sensitive randomness. For non-security uses, document your seeding and distribution approach.
+</p>
+]]></description>
+      </note>
+      <note id="n.numeric.qsort_cmp" severity="important" topic="qsort_comparator">
+        <description><![CDATA[
+<p>
+The comparator for <code>qsort</code>/<code>bsearch</code> must define a strict weak ordering and must not overflow.
+Prefer comparisons using relational operators rather than subtracting integers.
+</p>
+]]></description>
+      </note>
+      <note id="n.numeric.system_side_effects" severity="warning" topic="system">
+        <description><![CDATA[
+<p>
+<code>system</code> invokes a command processor with environment-dependent semantics and security implications.
+Avoid on untrusted input. Prefer dedicated APIs outside the C standard library for controlled process execution.
+</p>
+]]></description>
+      </note>
+    </notes>
+
+    <header id="hdr.stdlib" name="stdlib.h">
+      <summary><![CDATA[
+<p>
+General utilities: dynamic memory management, program termination and cleanup hooks, environment queries, command execution,
+pseudo-random numbers, numeric parsing, absolute value helpers, quotient/remainder helpers, and generic algorithms.
+</p>
+]]></summary>
+
+      <function id="fn.malloc" name="malloc" kind="function">
+        <signature>void *malloc(size_t size);</signature>
+        <summary><![CDATA[
+<p>Allocates <code>size</code> bytes of uninitialized storage.</p>
+]]></summary>
+        <parameters>
+          <param id="p.malloc.size" name="size" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Number of bytes to allocate.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.malloc.zero" severity="info">
+                <description><![CDATA[
+<p>If <code>size</code> is 0, the return value may be NULL or a unique pointer that can be passed to <code>free</code>.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="void *">
+            <description><![CDATA[
+<p>Pointer to allocated memory, or NULL if allocation fails.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.malloc.uninitialized" severity="important" topic="initialization">
+            <description><![CDATA[
+<p>The allocated bytes are uninitialized. Initialize before reading.</p>
+]]></description>
+          </note>
+        </notes>
+        <examples>
+          <example id="ex.malloc.allocate_array_checked" lang="c99">
+            <title>Allocate an array with overflow check</title>
+            <code><![CDATA[
+#include <stdlib.h>
+#include <stddef.h>
+
+int *alloc_ints(size_t count) {
+    if (count > (SIZE_MAX / sizeof(int))) {
+        return NULL;
+    }
+    return (int *)malloc(count * sizeof(int));
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.calloc" name="calloc" kind="function">
+        <signature>void *calloc(size_t nmemb, size_t size);</signature>
+        <summary><![CDATA[
+<p>Allocates space for <code>nmemb</code> objects of <code>size</code> bytes each and zero-initializes the result.</p>
+]]></summary>
+        <parameters>
+          <param id="p.calloc.nmemb" name="nmemb" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Number of elements.</p>
+]]></description>
+          </param>
+          <param id="p.calloc.size" name="size" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Size of each element in bytes.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.calloc.overflow" severity="important">
+                <description><![CDATA[
+<p>Allocation size is <code>nmemb * size</code>. Guard against overflow before relying on the allocation.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="void *">
+            <description><![CDATA[
+<p>Pointer to zeroed storage, or NULL on failure.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.calloc.zeroed" severity="info" topic="zero_init">
+            <description><![CDATA[
+<p>The returned block is filled with zero bytes, which is suitable for zero-initializing many plain data types and pointers.</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.realloc" name="realloc" kind="function">
+        <signature>void *realloc(void *ptr, size_t size);</signature>
+        <summary><![CDATA[
+<p>Resizes the allocation pointed to by <code>ptr</code> to <code>size</code> bytes, possibly moving it.</p>
+]]></summary>
+        <parameters>
+          <param id="p.realloc.ptr" name="ptr" direction="inout" type="void *">
+            <description><![CDATA[
+<p>Existing allocation from <code>malloc</code>/<code>calloc</code>/<code>realloc</code>, or NULL to behave like <code>malloc</code>.</p>
+]]></description>
+          </param>
+          <param id="p.realloc.size" name="size" direction="in" type="size_t">
+            <description><![CDATA[
+<p>New size in bytes. If 0 and <code>ptr</code> is not NULL, behavior is implementation-defined (often frees and returns NULL).</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="void *">
+            <description><![CDATA[
+<p>Pointer to resized block (may differ from <code>ptr</code>), or NULL on failure (original block remains allocated and unchanged).</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.realloc.pattern" severity="important" topic="safe_usage">
+            <description><![CDATA[
+<p>Use a temporary pointer: assign the result to a new variable before updating the original pointer to avoid losing the original on failure.</p>
+]]></description>
+          </note>
+        </notes>
+        <examples>
+          <example id="ex.realloc.safe_grow" lang="c99">
+            <title>Grow a buffer safely</title>
+            <code><![CDATA[
+#include <stdlib.h>
+#include <stddef.h>
+
+int grow(void **p, size_t *cap, size_t new_cap) {
+    void *tmp = realloc(*p, new_cap);
+    if (!tmp && new_cap != 0) {
+        return 0;
+    }
+    *p = tmp;
+    *cap = new_cap;
+    return 1;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.free" name="free" kind="function">
+        <signature>void free(void *ptr);</signature>
+        <summary><![CDATA[
+<p>Frees memory allocated by <code>malloc</code>/<code>calloc</code>/<code>realloc</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.free.ptr" name="ptr" direction="in" type="void *">
+            <description><![CDATA[
+<p>Pointer to allocated memory, or NULL (a no-op).</p>
+]]></description>
+            <constraints>
+              <constraint id="c.free.valid" severity="important">
+                <description><![CDATA[
+<p><code>ptr</code> must be NULL or a pointer previously returned by allocation functions and not already freed.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="void">
+            <description><![CDATA[
+<p>No return value.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.free.use_after_free" severity="important" topic="lifetime">
+            <description><![CDATA[
+<p>After freeing, do not use the pointer value. A common defensive pattern is to set pointers to NULL after freeing.</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.abort" name="abort" kind="function">
+        <signature>void abort(void);</signature>
+        <summary><![CDATA[
+<p>Terminates the program abnormally, typically generating a diagnostic.</p>
+]]></summary>
+        <parameters/>
+        <returns>
+          <return type="void">
+            <description><![CDATA[
+<p>Does not return.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.abort.flush" severity="info" topic="buffers">
+            <description><![CDATA[
+<p>Output buffers may or may not be flushed; do not rely on buffered output being written.</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.exit" name="exit" kind="function">
+        <signature>void exit(int status);</signature>
+        <summary><![CDATA[
+<p>Terminates the program normally, performing cleanup such as flushing streams and running exit handlers.</p>
+]]></summary>
+        <parameters>
+          <param id="p.exit.status" name="status" direction="in" type="int">
+            <description><![CDATA[
+<p>Exit status, typically <code>EXIT_SUCCESS</code> or <code>EXIT_FAILURE</code>.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="void">
+            <description><![CDATA[
+<p>Does not return.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.exit.handlers" severity="important" topic="atexit">
+            <description><![CDATA[
+<p>Runs functions registered with <code>atexit</code> (in reverse registration order) and flushes/ closes standard I/O streams.</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.atexit" name="atexit" kind="function">
+        <signature>int atexit(void (*func)(void));</signature>
+        <summary><![CDATA[
+<p>Registers <code>func</code> to be called at normal program termination (via <code>exit</code> or returning from <code>main</code>).</p>
+]]></summary>
+        <parameters>
+          <param id="p.atexit.func" name="func" direction="in" type="void (*)(void)">
+            <description><![CDATA[
+<p>Function pointer with signature <code>void func(void)</code>.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.atexit.restrictions" severity="important">
+                <description><![CDATA[
+<p>Exit handlers should avoid complex I/O or reliance on other subsystems that may already be partially shut down.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>0 on success, non-zero if registration fails (for example due to resource limits).</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.atexit.cleanup" lang="c99">
+            <title>Register a simple cleanup hook</title>
+            <code><![CDATA[
+#include <stdlib.h>
+#include <stdio.h>
+
+static void cleanup(void) {
+    /* Keep cleanup small and robust. */
+    fputs("cleanup\n", stderr);
+}
+
+int main(void) {
+    if (atexit(cleanup) != 0) {
+        fputs("atexit failed\n", stderr);
+        return 1;
+    }
+    return 0;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.getenv" name="getenv" kind="function">
+        <signature>char *getenv(const char *name);</signature>
+        <summary><![CDATA[
+<p>Returns the value of the environment variable <code>name</code>, or NULL if it is not set.</p>
+]]></summary>
+        <parameters>
+          <param id="p.getenv.name" name="name" direction="in" type="const char *">
+            <description><![CDATA[
+<p>NUL-terminated environment variable name.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="char *">
+            <description><![CDATA[
+<p>Pointer to the value string owned by the environment, or NULL if not found. The pointer may be invalidated by environment changes.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.getenv.copy" severity="important" topic="lifetime">
+            <description><![CDATA[
+<p>Copy the returned value if you need to keep it. Avoid modifying the returned string.</p>
+]]></description>
+          </note>
+        </notes>
+        <examples>
+          <example id="ex.getenv_optional" lang="c99">
+            <title>Read an optional environment variable</title>
+            <code><![CDATA[
+#include <stdlib.h>
+#include <stdio.h>
+
+const char *get_log_level(void) {
+    const char *v = getenv("LOG_LEVEL");
+    return v ? v : "info";
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.system" name="system" kind="function">
+        <signature>int system(const char *string);</signature>
+        <summary><![CDATA[
+<p>Passes <code>string</code> to the host environment command processor. If <code>string</code> is NULL, tests for command processor availability.</p>
+]]></summary>
+        <parameters>
+          <param id="p.system.string" name="string" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Command string to execute, or NULL to query availability.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.system.untrusted" severity="warning">
+                <description><![CDATA[
+<p>Do not execute untrusted or partially trusted command strings. Avoid interpolating user input into commands.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>
+If <code>string</code> is NULL, returns non-zero if a command processor is available, 0 otherwise.
+If executed, returns an implementation-defined status code; -1 typically indicates a failure to invoke the processor.
+</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.rand" name="rand" kind="function">
+        <signature>int rand(void);</signature>
+        <summary><![CDATA[
+<p>Returns a pseudo-random integer in the range 0 to <code>RAND_MAX</code> (inclusive).</p>
+]]></summary>
+        <parameters/>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Pseudo-random value in [0, RAND_MAX].</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.rand.uniform" severity="warning" topic="distribution">
+            <description><![CDATA[
+<p>
+Using <code>rand() % n</code> can introduce modulo bias unless <code>n</code> divides <code>RAND_MAX + 1</code>.
+If you care about uniformity, use rejection sampling.
+</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.srand" name="srand" kind="function">
+        <signature>void srand(unsigned int seed);</signature>
+        <summary><![CDATA[
+<p>Seeds the pseudo-random generator used by <code>rand</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.srand.seed" name="seed" direction="in" type="unsigned int">
+            <description><![CDATA[
+<p>Seed value. The mapping from seed to sequence is implementation-defined.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="void">
+            <description><![CDATA[
+<p>No return value.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.rand.uniform_range" lang="c99">
+            <title>Uniform random in [0, n) using rejection sampling</title>
+            <code><![CDATA[
+#include <stdlib.h>
+#include <limits.h>
+
+int rand_below(int n) {
+    if (n <= 0) return 0;
+
+    /* Use unsigned arithmetic to avoid overflow. */
+    unsigned int bound = (unsigned int)n;
+    unsigned int rmax = (unsigned int)RAND_MAX;
+
+    /* Largest multiple of bound within [0, RAND_MAX]. */
+    unsigned int limit = (rmax / bound) * bound;
+
+    unsigned int r;
+    do {
+        r = (unsigned int)rand();
+    } while (r >= limit);
+
+    return (int)(r % bound);
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.strtol" name="strtol" kind="function">
+        <signature>long strtol(const char *nptr, char **endptr, int base);</signature>
+        <summary><![CDATA[
+<p>Parses a signed long integer from <code>nptr</code> using the given <code>base</code>, with error detection and end-pointer reporting.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strtol.nptr" name="nptr" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Input string. Leading whitespace is skipped; an optional sign is accepted.</p>
+]]></description>
+          </param>
+          <param id="p.strtol.endptr" name="endptr" direction="out" type="char **">
+            <description><![CDATA[
+<p>
+If non-NULL, <code>*endptr</code> is set to the first character after the parsed number.
+If no conversion occurs, <code>*endptr</code> is set to <code>nptr</code>.
+</p>
+]]></description>
+          </param>
+          <param id="p.strtol.base" name="base" direction="in" type="int">
+            <description><![CDATA[
+<p>
+Base for conversion: 0, or a value from 2 to 36. If 0, base is inferred from prefixes: "0x"/"0X" for hex, leading "0" for octal, otherwise decimal.
+</p>
+]]></description>
+            <constraints>
+              <constraint id="c.strtol.base_range" severity="important">
+                <description><![CDATA[
+<p><code>base</code> must be 0 or in [2, 36].</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="long">
+            <description><![CDATA[
+<p>Converted value on success. On overflow/underflow, returns <code>LONG_MAX</code>/<code>LONG_MIN</code> and sets <code>errno</code> to <code>ERANGE</code>.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.strtol.parse_checked" lang="c99">
+            <title>Parse an int with full validation</title>
+            <code><![CDATA[
+#include <stdlib.h>
+#include <errno.h>
+#include <limits.h>
+
+int parse_int_strict(const char *s, int *out) {
+    errno = 0;
+    char *end = NULL;
+
+    long v = strtol(s, &end, 10);
+
+    if (end == s) return 0;               /* no digits */
+    if (*end != '\0') return 0;           /* trailing junk */
+    if (errno == ERANGE) return 0;        /* overflow/underflow */
+    if (v < INT_MIN || v > INT_MAX) return 0;
+
+    *out = (int)v;
+    return 1;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.strtoll" name="strtoll" kind="function">
+        <signature>long long strtoll(const char *nptr, char **endptr, int base);</signature>
+        <summary><![CDATA[
+<p>Parses a signed long long integer from <code>nptr</code> with the same semantics as <code>strtol</code>, but with a wider result type.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strtoll.nptr" name="nptr" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Input string.</p>
+]]></description>
+          </param>
+          <param id="p.strtoll.endptr" name="endptr" direction="out" type="char **">
+            <description><![CDATA[
+<p>End pointer reporting as in <code>strtol</code>.</p>
+]]></description>
+          </param>
+          <param id="p.strtoll.base" name="base" direction="in" type="int">
+            <description><![CDATA[
+<p>Base (0 or 2..36).</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="long long">
+            <description><![CDATA[
+<p>Converted value; on overflow/underflow returns <code>LLONG_MAX</code>/<code>LLONG_MIN</code> and sets <code>errno</code> to <code>ERANGE</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.strtoul" name="strtoul" kind="function">
+        <signature>unsigned long strtoul(const char *nptr, char **endptr, int base);</signature>
+        <summary><![CDATA[
+<p>Parses an unsigned long integer from <code>nptr</code>, with error detection and end-pointer reporting.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strtoul.nptr" name="nptr" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Input string. Leading whitespace is skipped; an optional sign may be present (a leading '-' yields an implementation-defined converted value modulo the type).</p>
+]]></description>
+          </param>
+          <param id="p.strtoul.endptr" name="endptr" direction="out" type="char **">
+            <description><![CDATA[
+<p>End pointer reporting as in <code>strtol</code>.</p>
+]]></description>
+          </param>
+          <param id="p.strtoul.base" name="base" direction="in" type="int">
+            <description><![CDATA[
+<p>Base (0 or 2..36).</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="unsigned long">
+            <description><![CDATA[
+<p>Converted value; on overflow returns <code>ULONG_MAX</code> and sets <code>errno</code> to <code>ERANGE</code>.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.strtoul.negative" severity="warning" topic="sign">
+            <description><![CDATA[
+<p>
+If you require strict non-negative input, reject a leading '-' explicitly before calling, and verify <code>endptr</code> and trailing text.
+</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.strtoull" name="strtoull" kind="function">
+        <signature>unsigned long long strtoull(const char *nptr, char **endptr, int base);</signature>
+        <summary><![CDATA[
+<p>Parses an unsigned long long integer from <code>nptr</code>, with the same semantics as <code>strtoul</code> but a wider result type.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strtoull.nptr" name="nptr" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Input string.</p>
+]]></description>
+          </param>
+          <param id="p.strtoull.endptr" name="endptr" direction="out" type="char **">
+            <description><![CDATA[
+<p>End pointer reporting as in <code>strtol</code>.</p>
+]]></description>
+          </param>
+          <param id="p.strtoull.base" name="base" direction="in" type="int">
+            <description><![CDATA[
+<p>Base (0 or 2..36).</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="unsigned long long">
+            <description><![CDATA[
+<p>Converted value; on overflow returns <code>ULLONG_MAX</code> and sets <code>errno</code> to <code>ERANGE</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.strtod" name="strtod" kind="function">
+        <signature>double strtod(const char *nptr, char **endptr);</signature>
+        <summary><![CDATA[
+<p>Parses a double-precision floating-point value from <code>nptr</code>, with end-pointer reporting and range error signaling.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strtod.nptr" name="nptr" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Input string. Leading whitespace is skipped. Locale may affect decimal point interpretation.</p>
+]]></description>
+          </param>
+          <param id="p.strtod.endptr" name="endptr" direction="out" type="char **">
+            <description><![CDATA[
+<p>End pointer reporting as in <code>strtol</code>.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>
+Converted value. On overflow sets <code>errno</code> to <code>ERANGE</code> and returns +/-HUGE_VAL.
+On underflow may set <code>errno</code> and return 0.0.
+</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.strtod.locale" severity="important" topic="locale">
+            <description><![CDATA[
+<p>Decimal point may be locale-dependent. If you need locale-independent parsing, document assumptions or manage locale explicitly.</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.strtof" name="strtof" kind="function">
+        <signature>float strtof(const char *nptr, char **endptr);</signature>
+        <summary><![CDATA[
+<p>Parses a single-precision float from <code>nptr</code>, analogous to <code>strtod</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strtof.nptr" name="nptr" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Input string.</p>
+]]></description>
+          </param>
+          <param id="p.strtof.endptr" name="endptr" direction="out" type="char **">
+            <description><![CDATA[
+<p>End pointer reporting.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Converted value; sets <code>errno</code> to <code>ERANGE</code> on overflow/underflow as applicable.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.strtold" name="strtold" kind="function">
+        <signature>long double strtold(const char *nptr, char **endptr);</signature>
+        <summary><![CDATA[
+<p>Parses a long double from <code>nptr</code>, analogous to <code>strtod</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strtold.nptr" name="nptr" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Input string.</p>
+]]></description>
+          </param>
+          <param id="p.strtold.endptr" name="endptr" direction="out" type="char **">
+            <description><![CDATA[
+<p>End pointer reporting.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Converted value; sets <code>errno</code> to <code>ERANGE</code> on overflow/underflow as applicable.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.abs" name="abs" kind="function">
+        <signature>int abs(int j);</signature>
+        <summary><![CDATA[
+<p>Returns the absolute value of <code>j</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.abs.j" name="j" direction="in" type="int">
+            <description><![CDATA[
+<p>Input integer.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.abs.intmin" severity="important">
+                <description><![CDATA[
+<p>If <code>j</code> is <code>INT_MIN</code>, the absolute value may not be representable; behavior is undefined.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Absolute value of <code>j</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.labs" name="labs" kind="function">
+        <signature>long int labs(long int j);</signature>
+        <summary><![CDATA[
+<p>Returns the absolute value of a long integer.</p>
+]]></summary>
+        <parameters>
+          <param id="p.labs.j" name="j" direction="in" type="long int">
+            <description><![CDATA[
+<p>Input long integer.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.labs.longmin" severity="important">
+                <description><![CDATA[
+<p>If <code>j</code> is <code>LONG_MIN</code>, the absolute value may be unrepresentable; behavior is undefined.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="long int">
+            <description><![CDATA[
+<p>Absolute value.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.llabs" name="llabs" kind="function">
+        <signature>long long int llabs(long long int j);</signature>
+        <summary><![CDATA[
+<p>Returns the absolute value of a long long integer.</p>
+]]></summary>
+        <parameters>
+          <param id="p.llabs.j" name="j" direction="in" type="long long int">
+            <description><![CDATA[
+<p>Input long long integer.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.llabs.llongmin" severity="important">
+                <description><![CDATA[
+<p>If <code>j</code> is <code>LLONG_MIN</code>, the absolute value may be unrepresentable; behavior is undefined.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="long long int">
+            <description><![CDATA[
+<p>Absolute value.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.div" name="div" kind="function">
+        <signature>div_t div(int numer, int denom);</signature>
+        <summary><![CDATA[
+<p>Computes quotient and remainder of integer division.</p>
+]]></summary>
+        <parameters>
+          <param id="p.div.numer" name="numer" direction="in" type="int">
+            <description><![CDATA[
+<p>Numerator.</p>
+]]></description>
+          </param>
+          <param id="p.div.denom" name="denom" direction="in" type="int">
+            <description><![CDATA[
+<p>Denominator.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.div.zero" severity="important">
+                <description><![CDATA[
+<p><code>denom</code> must not be 0.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="div_t">
+            <description><![CDATA[
+<p>Structure with fields <code>quot</code> and <code>rem</code>.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.div.signs" severity="info" topic="semantics">
+            <description><![CDATA[
+<p>The sign of the remainder follows the sign rules for C integer division. Use these helpers for clarity and consistency.</p>
+]]></description>
+          </note>
+        </notes>
+        <examples>
+          <example id="ex.div.qr" lang="c99">
+            <title>Compute quotient and remainder explicitly</title>
+            <code><![CDATA[
+#include <stdlib.h>
+
+int mod_positive(int x, int m) {
+    div_t d = div(x, m);
+    /* Example normalization to a non-negative remainder. */
+    if (d.rem < 0) d.rem += (m > 0 ? m : -m);
+    return d.rem;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.ldiv" name="ldiv" kind="function">
+        <signature>ldiv_t ldiv(long int numer, long int denom);</signature>
+        <summary><![CDATA[
+<p>Computes quotient and remainder for long integer division.</p>
+]]></summary>
+        <parameters>
+          <param id="p.ldiv.numer" name="numer" direction="in" type="long int">
+            <description><![CDATA[
+<p>Numerator.</p>
+]]></description>
+          </param>
+          <param id="p.ldiv.denom" name="denom" direction="in" type="long int">
+            <description><![CDATA[
+<p>Denominator (must not be 0).</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="ldiv_t">
+            <description><![CDATA[
+<p>Structure with fields <code>quot</code> and <code>rem</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.lldiv" name="lldiv" kind="function">
+        <signature>lldiv_t lldiv(long long int numer, long long int denom);</signature>
+        <summary><![CDATA[
+<p>Computes quotient and remainder for long long integer division.</p>
+]]></summary>
+        <parameters>
+          <param id="p.lldiv.numer" name="numer" direction="in" type="long long int">
+            <description><![CDATA[
+<p>Numerator.</p>
+]]></description>
+          </param>
+          <param id="p.lldiv.denom" name="denom" direction="in" type="long long int">
+            <description><![CDATA[
+<p>Denominator (must not be 0).</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="lldiv_t">
+            <description><![CDATA[
+<p>Structure with fields <code>quot</code> and <code>rem</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.qsort" name="qsort" kind="function">
+        <signature>void qsort(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *));</signature>
+        <summary><![CDATA[
+<p>Sorts an array of <code>nmemb</code> elements of size <code>size</code> using the provided comparator.</p>
+]]></summary>
+        <parameters>
+          <param id="p.qsort.base" name="base" direction="inout" type="void *">
+            <description><![CDATA[
+<p>Pointer to the first element of the array to sort.</p>
+]]></description>
+          </param>
+          <param id="p.qsort.nmemb" name="nmemb" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Number of elements in the array.</p>
+]]></description>
+          </param>
+          <param id="p.qsort.size" name="size" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Size of each element in bytes.</p>
+]]></description>
+          </param>
+          <param id="p.qsort.compar" name="compar" direction="in" type="int (*)(const void *, const void *)">
+            <description><![CDATA[
+<p>
+Comparator: returns &lt;0 if first element is "less", 0 if equal, &gt;0 if "greater".
+Must be consistent and must impose a strict weak ordering.
+</p>
+]]></description>
+            <constraints>
+              <constraint id="c.qsort.compar_safe" severity="important">
+                <description><![CDATA[
+<p>Avoid subtraction-based comparisons that can overflow. Compare with relational operators.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="void">
+            <description><![CDATA[
+<p>No return value.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.qsort.int_safe_cmp" lang="c99">
+            <title>Sort integers with a safe comparator</title>
+            <code><![CDATA[
+#include <stdlib.h>
+
+static int cmp_int(const void *a, const void *b) {
+    int x = *(const int *)a;
+    int y = *(const int *)b;
+    if (x < y) return -1;
+    if (x > y) return 1;
+    return 0;
+}
+
+void sort_ints(int *arr, size_t n) {
+    qsort(arr, n, sizeof(arr[0]), cmp_int);
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.bsearch" name="bsearch" kind="function">
+        <signature>void *bsearch(const void *key, const void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *));</signature>
+        <summary><![CDATA[
+<p>Searches a sorted array for <code>key</code> using binary search and the provided comparator.</p>
+]]></summary>
+        <parameters>
+          <param id="p.bsearch.key" name="key" direction="in" type="const void *">
+            <description><![CDATA[
+<p>Pointer to the key to search for (as interpreted by the comparator).</p>
+]]></description>
+          </param>
+          <param id="p.bsearch.base" name="base" direction="in" type="const void *">
+            <description><![CDATA[
+<p>Pointer to the first element of the sorted array.</p>
+]]></description>
+          </param>
+          <param id="p.bsearch.nmemb" name="nmemb" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Number of elements in the array.</p>
+]]></description>
+          </param>
+          <param id="p.bsearch.size" name="size" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Size of each element in bytes.</p>
+]]></description>
+          </param>
+          <param id="p.bsearch.compar" name="compar" direction="in" type="int (*)(const void *, const void *)">
+            <description><![CDATA[
+<p>Comparator with the same ordering as used for sorting.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.bsearch.sorted" severity="important">
+                <description><![CDATA[
+<p>The array must already be sorted according to <code>compar</code>. Otherwise, results are undefined.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="void *">
+            <description><![CDATA[
+<p>Pointer to a matching element, or NULL if not found.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.bsearch.find_int" lang="c99">
+            <title>Binary search in a sorted int array</title>
+            <code><![CDATA[
+#include <stdlib.h>
+
+static int cmp_int_key(const void *key, const void *elem) {
+    int x = *(const int *)key;
+    int y = *(const int *)elem;
+    if (x < y) return -1;
+    if (x > y) return 1;
+    return 0;
+}
+
+int contains_int(const int *arr, size_t n, int value) {
+    return bsearch(&value, arr, n, sizeof(arr[0]), cmp_int_key) != NULL;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.stdlib.category_note" name="_category_note" kind="internal_note">
+        <summary><![CDATA[
+<p>
+This header entry includes only the stdlib.h functions you listed: allocation, termination hooks, environment/system, rand/srand,
+numeric parsing (strto*), abs/labs/llabs, div/ldiv/lldiv, qsort/bsearch. Other stdlib.h functions exist but are out of scope here.
+</p>
+]]></summary>
+      </function>
+
+    </header>
+
+    <header id="hdr.inttypes" name="inttypes.h">
+      <summary><![CDATA[
+<p>
+Portable parsing helpers for maximum-width integers. These are useful when you want the widest standard integer types
+(<code>intmax_t</code>, <code>uintmax_t</code>) without choosing a specific width.
+Includes both byte string and wide string variants.
+</p>
+]]></summary>
+
+      <function id="fn.strtoimax" name="strtoimax" kind="function">
+        <signature>intmax_t strtoimax(const char *nptr, char **endptr, int base);</signature>
+        <summary><![CDATA[
+<p>Parses a signed maximum-width integer from a byte string, analogous to <code>strtoll</code> but returning <code>intmax_t</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strtoimax.nptr" name="nptr" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Input string.</p>
+]]></description>
+          </param>
+          <param id="p.strtoimax.endptr" name="endptr" direction="out" type="char **">
+            <description><![CDATA[
+<p>End pointer reporting as in <code>strtol</code>.</p>
+]]></description>
+          </param>
+          <param id="p.strtoimax.base" name="base" direction="in" type="int">
+            <description><![CDATA[
+<p>Base (0 or 2..36).</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="intmax_t">
+            <description><![CDATA[
+<p>Converted value; on overflow/underflow returns <code>INTMAX_MAX</code>/<code>INTMAX_MIN</code> and sets <code>errno</code> to <code>ERANGE</code>.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.strtoimax.strict" lang="c99">
+            <title>Strict parse to intmax_t with trailing text rejection</title>
+            <code><![CDATA[
+#include <inttypes.h>
+#include <errno.h>
+
+int parse_intmax_strict(const char *s, intmax_t *out) {
+    errno = 0;
+    char *end = NULL;
+
+    intmax_t v = strtoimax(s, &end, 10);
+
+    if (end == s) return 0;
+    if (*end != '\0') return 0;
+    if (errno == ERANGE) return 0;
+
+    *out = v;
+    return 1;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.strtoumax" name="strtoumax" kind="function">
+        <signature>uintmax_t strtoumax(const char *nptr, char **endptr, int base);</signature>
+        <summary><![CDATA[
+<p>Parses an unsigned maximum-width integer from a byte string, analogous to <code>strtoull</code> but returning <code>uintmax_t</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strtoumax.nptr" name="nptr" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Input string.</p>
+]]></description>
+          </param>
+          <param id="p.strtoumax.endptr" name="endptr" direction="out" type="char **">
+            <description><![CDATA[
+<p>End pointer reporting.</p>
+]]></description>
+          </param>
+          <param id="p.strtoumax.base" name="base" direction="in" type="int">
+            <description><![CDATA[
+<p>Base (0 or 2..36).</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="uintmax_t">
+            <description><![CDATA[
+<p>Converted value; on overflow returns <code>UINTMAX_MAX</code> and sets <code>errno</code> to <code>ERANGE</code>.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.strtoumax.negative" severity="warning" topic="sign">
+            <description><![CDATA[
+<p>If you require strictly unsigned syntax, reject a leading '-' before calling and enforce full-consumption via <code>endptr</code>.</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.wcstoimax" name="wcstoimax" kind="function">
+        <signature>intmax_t wcstoimax(const wchar_t *nptr, wchar_t **endptr, int base);</signature>
+        <summary><![CDATA[
+<p>Parses a signed maximum-width integer from a wide string, analogous to <code>strtoimax</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcstoimax.nptr" name="nptr" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>Input wide string.</p>
+]]></description>
+          </param>
+          <param id="p.wcstoimax.endptr" name="endptr" direction="out" type="wchar_t **">
+            <description><![CDATA[
+<p>End pointer reporting for wide strings.</p>
+]]></description>
+          </param>
+          <param id="p.wcstoimax.base" name="base" direction="in" type="int">
+            <description><![CDATA[
+<p>Base (0 or 2..36).</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="intmax_t">
+            <description><![CDATA[
+<p>Converted value; on overflow/underflow returns <code>INTMAX_MAX</code>/<code>INTMAX_MIN</code> and sets <code>errno</code> to <code>ERANGE</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcstoumax" name="wcstoumax" kind="function">
+        <signature>uintmax_t wcstoumax(const wchar_t *nptr, wchar_t **endptr, int base);</signature>
+        <summary><![CDATA[
+<p>Parses an unsigned maximum-width integer from a wide string, analogous to <code>strtoumax</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcstoumax.nptr" name="nptr" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>Input wide string.</p>
+]]></description>
+          </param>
+          <param id="p.wcstoumax.endptr" name="endptr" direction="out" type="wchar_t **">
+            <description><![CDATA[
+<p>End pointer reporting for wide strings.</p>
+]]></description>
+          </param>
+          <param id="p.wcstoumax.base" name="base" direction="in" type="int">
+            <description><![CDATA[
+<p>Base (0 or 2..36).</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="uintmax_t">
+            <description><![CDATA[
+<p>Converted value; on overflow returns <code>UINTMAX_MAX</code> and sets <code>errno</code> to <code>ERANGE</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.inttypes.category_note" name="_category_note" kind="internal_note">
+        <summary><![CDATA[
+<p>
+This header entry includes the inttypes.h parsing functions you listed: <code>strtoimax</code>, <code>strtoumax</code>, <code>wcstoimax</code>, <code>wcstoumax</code>.
+Other inttypes.h facilities (format macros and printf/scanf support for fixed-width types) are out of scope here.
+</p>
+]]></summary>
+      </function>
+
+    </header>
+
+  </category>
+
+</document>
+

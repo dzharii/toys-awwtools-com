@@ -1,0 +1,1546 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<document version="1.0" standard="C99" xml:lang="en">
+
+  <textFormatting>
+    <policy id="fmt.minimal.html" name="Minimal inline HTML in text nodes">
+      <scope>
+        <allowedIn>summary</allowedIn>
+        <allowedIn>description</allowedIn>
+        <allowedIn>notes</allowedIn>
+        <allowedIn>constraints</allowedIn>
+        <allowedIn>returns</allowedIn>
+      </scope>
+      <allowedTags>
+        <tag name="p" kind="block"/>
+        <tag name="strong" kind="inline"/>
+        <tag name="em" kind="inline"/>
+        <tag name="code" kind="inline"/>
+        <tag name="a" kind="inline"/>
+        <tag name="br" kind="inline"/>
+      </allowedTags>
+      <restrictions>
+        <r>No tags beyond allowedTags.</r>
+        <r>Prefer &lt;code&gt; blocks for code samples.</r>
+      </restrictions>
+    </policy>
+  </textFormatting>
+
+  <category id="io.file.console" name="File and console input-output (byte and wide)">
+    <summary><![CDATA[
+<p>
+Standard I/O for files and streams: opening/closing, buffered reads and writes, seeking, temporary files, buffering control,
+formatted I/O, and basic console helpers. The wide I/O subset provides the analogous operations for wide characters and wide strings.
+</p>
+<p>
+Use these APIs for portable file and console I/O. Prefer bounded operations where available (for example <code>snprintf</code>,
+explicit buffer sizes, and checked return values). Treat all I/O as fallible: check for NULL pointers, EOF, short reads/writes,
+and error returns. Be explicit about text vs binary modes when portability matters (for example, use "rb"/"wb" on platforms where
+they differ).
+</p>
+]]></summary>
+
+    <keywords>
+      <kw>stdio</kw>
+      <kw>FILE</kw>
+      <kw>stream</kw>
+      <kw>buffering</kw>
+      <kw>fopen</kw>
+      <kw>fread</kw>
+      <kw>fwrite</kw>
+      <kw>fgets</kw>
+      <kw>printf</kw>
+      <kw>snprintf</kw>
+      <kw>tmpfile</kw>
+      <kw>seek</kw>
+      <kw>wide</kw>
+      <kw>wchar</kw>
+    </keywords>
+
+    <notes>
+      <note id="n.io.text_vs_binary" severity="important" topic="portability">
+        <description><![CDATA[
+<p>
+On some platforms, text and binary modes differ (for example newline translation). Use "rb"/"wb" if you need byte-exact behavior.
+</p>
+]]></description>
+      </note>
+      <note id="n.io.buffering" severity="important" topic="buffering">
+        <description><![CDATA[
+<p>
+Most streams are buffered. Output may not appear until a flush, newline, buffer fill, or close. Use <code>fflush</code> to force output.
+</p>
+]]></description>
+      </note>
+      <note id="n.io.errors" severity="important" topic="error_handling">
+        <description><![CDATA[
+<p>
+Many functions signal failure via NULL, EOF, or a negative value. Always check return values. For diagnosing errors, the
+<code>errno</code> value is commonly set and <code>perror</code> can print a message based on it.
+</p>
+]]></description>
+      </note>
+      <note id="n.io.partial_io" severity="important" topic="short_reads_writes">
+        <description><![CDATA[
+<p>
+Short reads and short writes are normal for many streams. <code>fread</code> and <code>fwrite</code> return counts and may be less than requested.
+You must loop if you require "all bytes" semantics.
+</p>
+]]></description>
+      </note>
+    </notes>
+
+    <header id="hdr.stdio" name="stdio.h">
+      <summary><![CDATA[
+<p>
+Byte-oriented stream I/O based on <code>FILE *</code> streams. Includes file operations, buffering control, formatted output,
+and basic character and line I/O.
+</p>
+]]></summary>
+
+      <function id="fn.fopen" name="fopen" kind="function">
+        <signature>FILE *fopen(const char *filename, const char *mode);</signature>
+        <summary><![CDATA[
+<p>Opens a file and returns a stream handle, or NULL on failure.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fopen.filename" name="filename" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Path to the file to open. Must be a NUL-terminated string.</p>
+]]></description>
+          </param>
+          <param id="p.fopen.mode" name="mode" direction="in" type="const char *">
+            <description><![CDATA[
+<p>
+Open mode string, such as "r", "w", "a", optionally with "+" and optionally with "b" (for example "rb", "w+b").
+Mode details are defined by the C standard with some implementation-defined extensions.
+</p>
+]]></description>
+            <constraints>
+              <constraint id="c.fopen.mode_valid" severity="important">
+                <description><![CDATA[
+<p>Pass a valid mode string. If you need byte-exact I/O portability, include "b" where supported.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="FILE *">
+            <description><![CDATA[
+<p>Stream pointer on success, NULL on failure.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.fopen.read_all_bytes" lang="c99">
+            <title>Open in binary mode and read entire file into memory</title>
+            <code><![CDATA[
+#include <stdio.h>
+#include <stdlib.h>
+
+unsigned char *read_entire_file(const char *path, size_t *out_size) {
+    *out_size = 0;
+
+    FILE *f = fopen(path, "rb");
+    if (!f) return NULL;
+
+    if (fseek(f, 0, SEEK_END) != 0) {
+        fclose(f);
+        return NULL;
+    }
+
+    long end = ftell(f);
+    if (end < 0) {
+        fclose(f);
+        return NULL;
+    }
+    if (fseek(f, 0, SEEK_SET) != 0) {
+        fclose(f);
+        return NULL;
+    }
+
+    size_t n = (size_t)end;
+    unsigned char *buf = (unsigned char *)malloc(n ? n : 1u);
+    if (!buf) {
+        fclose(f);
+        return NULL;
+    }
+
+    size_t got = fread(buf, 1u, n, f);
+    if (got != n) {
+        free(buf);
+        fclose(f);
+        return NULL;
+    }
+
+    fclose(f);
+    *out_size = n;
+    return buf;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.fclose" name="fclose" kind="function">
+        <signature>int fclose(FILE *stream);</signature>
+        <summary><![CDATA[
+<p>Flushes and closes a stream. After this call, <code>stream</code> must not be used.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fclose.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Open stream pointer. Passing NULL is invalid.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.fclose.nonnull" severity="important">
+                <description><![CDATA[
+<p><code>stream</code> must be a valid open stream pointer.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>0 on success, EOF on failure (for example if a flush fails).</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.fclose.failure" severity="important" topic="write_errors">
+            <description><![CDATA[
+<p>On output streams, check <code>fclose</code> return value because buffered data may fail to flush at close time.</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.fflush" name="fflush" kind="function">
+        <signature>int fflush(FILE *stream);</signature>
+        <summary><![CDATA[
+<p>Flushes buffered output for <code>stream</code>. If <code>stream</code> is NULL, flushes all open output streams.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fflush.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Stream to flush, or NULL to flush all output streams.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>0 on success, EOF on failure.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.fflush.input" severity="info" topic="input_streams">
+            <description><![CDATA[
+<p>Flushing input streams has implementation-defined behavior. Use <code>fflush</code> primarily for output streams.</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.fread" name="fread" kind="function">
+        <signature>size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);</signature>
+        <summary><![CDATA[
+<p>Reads up to <code>nmemb</code> items of size <code>size</code> into <code>ptr</code> from <code>stream</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fread.ptr" name="ptr" direction="out" type="void *">
+            <description><![CDATA[
+<p>Destination buffer with room for <code>size * nmemb</code> bytes.</p>
+]]></description>
+          </param>
+          <param id="p.fread.size" name="size" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Item size in bytes. If 0, no bytes are read and 0 is returned.</p>
+]]></description>
+          </param>
+          <param id="p.fread.nmemb" name="nmemb" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Number of items to read. If 0, no bytes are read and 0 is returned.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.fread.overflow" severity="important">
+                <description><![CDATA[
+<p>Ensure <code>size * nmemb</code> does not overflow and matches the destination capacity.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+          <param id="p.fread.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Input stream.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="size_t">
+            <description><![CDATA[
+<p>Number of items successfully read (not bytes). If less than <code>nmemb</code>, either EOF occurred or an error occurred.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.fread.loop_exact" lang="c99">
+            <title>Read exactly N bytes by looping</title>
+            <code><![CDATA[
+#include <stdio.h>
+#include <stddef.h>
+
+int read_exact(FILE *f, void *buf, size_t n) {
+    unsigned char *p = (unsigned char *)buf;
+    size_t off = 0;
+
+    while (off < n) {
+        size_t got = fread(p + off, 1u, n - off, f);
+        if (got == 0) {
+            /* EOF or error; caller can consult errno or other diagnostics if desired. */
+            return 0;
+        }
+        off += got;
+    }
+    return 1;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.fwrite" name="fwrite" kind="function">
+        <signature>size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);</signature>
+        <summary><![CDATA[
+<p>Writes up to <code>nmemb</code> items of size <code>size</code> from <code>ptr</code> to <code>stream</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fwrite.ptr" name="ptr" direction="in" type="const void *">
+            <description><![CDATA[
+<p>Source buffer containing <code>size * nmemb</code> bytes.</p>
+]]></description>
+          </param>
+          <param id="p.fwrite.size" name="size" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Item size in bytes. If 0, no bytes are written and 0 is returned.</p>
+]]></description>
+          </param>
+          <param id="p.fwrite.nmemb" name="nmemb" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Number of items to write. If 0, no bytes are written and 0 is returned.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.fwrite.overflow" severity="important">
+                <description><![CDATA[
+<p>Ensure <code>size * nmemb</code> does not overflow and reflects the actual buffer size.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+          <param id="p.fwrite.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Output stream.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="size_t">
+            <description><![CDATA[
+<p>Number of items successfully written. If less than <code>nmemb</code>, an error occurred.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.fwrite.loop_exact" lang="c99">
+            <title>Write exactly N bytes by looping and flushing at the end</title>
+            <code><![CDATA[
+#include <stdio.h>
+#include <stddef.h>
+
+int write_exact(FILE *f, const void *buf, size_t n) {
+    const unsigned char *p = (const unsigned char *)buf;
+    size_t off = 0;
+
+    while (off < n) {
+        size_t put = fwrite(p + off, 1u, n - off, f);
+        if (put == 0) {
+            return 0;
+        }
+        off += put;
+    }
+
+    /* Optional: force output now rather than later. */
+    if (fflush(f) == EOF) {
+        return 0;
+    }
+    return 1;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.fseek" name="fseek" kind="function">
+        <signature>int fseek(FILE *stream, long offset, int whence);</signature>
+        <summary><![CDATA[
+<p>Moves the file position indicator for <code>stream</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fseek.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Stream to seek.</p>
+]]></description>
+          </param>
+          <param id="p.fseek.offset" name="offset" direction="in" type="long">
+            <description><![CDATA[
+<p>Offset in bytes relative to <code>whence</code>.</p>
+]]></description>
+          </param>
+          <param id="p.fseek.whence" name="whence" direction="in" type="int">
+            <description><![CDATA[
+<p>One of <code>SEEK_SET</code>, <code>SEEK_CUR</code>, <code>SEEK_END</code>.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>0 on success, non-zero on failure.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.fseek.text_streams" severity="info" topic="text_streams">
+            <description><![CDATA[
+<p>
+Seeking in text streams can have restrictions on some platforms. For portable random access, prefer binary mode where appropriate.
+</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.ftell" name="ftell" kind="function">
+        <signature>long ftell(FILE *stream);</signature>
+        <summary><![CDATA[
+<p>Returns the current file position indicator for <code>stream</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.ftell.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Stream to query.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="long">
+            <description><![CDATA[
+<p>Current position as a <code>long</code>, or -1L on failure.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.ftell.limit" severity="info" topic="large_files">
+            <description><![CDATA[
+<p>
+Because the return type is <code>long</code>, very large file offsets may not be representable on some platforms.
+</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.rewind" name="rewind" kind="function">
+        <signature>void rewind(FILE *stream);</signature>
+        <summary><![CDATA[
+<p>Sets the file position to the beginning of the stream and clears error indicators.</p>
+]]></summary>
+        <parameters>
+          <param id="p.rewind.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Stream to rewind.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="void">
+            <description><![CDATA[
+<p>No return value. If you need error reporting, use <code>fseek(stream, 0, SEEK_SET)</code> and check the result.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.remove" name="remove" kind="function">
+        <signature>int remove(const char *filename);</signature>
+        <summary><![CDATA[
+<p>Deletes the named file (or removes a directory where supported by the implementation).</p>
+]]></summary>
+        <parameters>
+          <param id="p.remove.filename" name="filename" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Path to remove.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>0 on success, non-zero on failure.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.rename" name="rename" kind="function">
+        <signature>int rename(const char *oldname, const char *newname);</signature>
+        <summary><![CDATA[
+<p>Renames a file. Semantics around overwriting and cross-filesystem moves are implementation-defined.</p>
+]]></summary>
+        <parameters>
+          <param id="p.rename.oldname" name="oldname" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Existing path.</p>
+]]></description>
+          </param>
+          <param id="p.rename.newname" name="newname" direction="in" type="const char *">
+            <description><![CDATA[
+<p>New path.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>0 on success, non-zero on failure.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.rename.atomicity" severity="info" topic="atomicity">
+            <description><![CDATA[
+<p>
+Atomicity is not guaranteed by the C standard. If you need atomic replace semantics, document platform expectations explicitly.
+</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.tmpfile" name="tmpfile" kind="function">
+        <signature>FILE *tmpfile(void);</signature>
+        <summary><![CDATA[
+<p>Creates a temporary binary file opened for update ("wb+"). The file is removed automatically when closed.</p>
+]]></summary>
+        <parameters/>
+        <returns>
+          <return type="FILE *">
+            <description><![CDATA[
+<p>Stream pointer on success, NULL on failure.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.tmpfile.spool" lang="c99">
+            <title>Spool data to a temporary file and then read it back</title>
+            <code><![CDATA[
+#include <stdio.h>
+#include <string.h>
+
+int roundtrip_temp(void) {
+    FILE *t = tmpfile();
+    if (!t) return 0;
+
+    const char msg[] = "hello\n";
+    if (fwrite(msg, 1u, sizeof(msg) - 1u, t) != sizeof(msg) - 1u) {
+        fclose(t);
+        return 0;
+    }
+
+    rewind(t);
+
+    char buf[16];
+    if (!fgets(buf, (int)sizeof(buf), t)) {
+        fclose(t);
+        return 0;
+    }
+
+    fclose(t);
+    return (strcmp(buf, "hello\n") == 0) ? 1 : 0;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.tmpnam" name="tmpnam" kind="function">
+        <signature>char *tmpnam(char *s);</signature>
+        <summary><![CDATA[
+<p>Generates a name for a temporary file. The result is a string; the file is not created.</p>
+]]></summary>
+        <parameters>
+          <param id="p.tmpnam.s" name="s" direction="out" type="char *">
+            <description><![CDATA[
+<p>Optional destination buffer (at least <code>L_tmpnam</code> bytes). If NULL, returns a pointer to internal static storage.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.tmpnam.race" severity="warning">
+                <description><![CDATA[
+<p>
+Temporary name generation without creating the file is inherently vulnerable to race conditions. Prefer <code>tmpfile</code> when possible.
+</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="char *">
+            <description><![CDATA[
+<p>Pointer to the generated name (either <code>s</code> or internal storage), or NULL on failure.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.setvbuf" name="setvbuf" kind="function">
+        <signature>int setvbuf(FILE *stream, char *buf, int mode, size_t size);</signature>
+        <summary><![CDATA[
+<p>Controls buffering for a stream. Must be called before I/O on the stream (other than possible initial open operations).</p>
+]]></summary>
+        <parameters>
+          <param id="p.setvbuf.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Stream whose buffering behavior is to be configured.</p>
+]]></description>
+          </param>
+          <param id="p.setvbuf.buf" name="buf" direction="in" type="char *">
+            <description><![CDATA[
+<p>
+User-provided buffer, or NULL to have the implementation allocate one. If provided, it must remain valid until buffering is changed again or the stream is closed.
+</p>
+]]></description>
+          </param>
+          <param id="p.setvbuf.mode" name="mode" direction="in" type="int">
+            <description><![CDATA[
+<p>One of <code>_IOFBF</code> (full), <code>_IOLBF</code> (line), <code>_IONBF</code> (none).</p>
+]]></description>
+          </param>
+          <param id="p.setvbuf.size" name="size" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Buffer size in bytes (meaningful for buffered modes).</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>0 on success, non-zero on failure.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.setvbuf.timing" severity="important" topic="when_to_call">
+            <description><![CDATA[
+<p>Call <code>setvbuf</code> immediately after opening a stream, before any reads or writes, to avoid implementation-defined behavior.</p>
+]]></description>
+          </note>
+        </notes>
+        <examples>
+          <example id="ex.setvbuf.line_buffer_stdout" lang="c99">
+            <title>Force line buffering for stdout when writing to a console</title>
+            <code><![CDATA[
+#include <stdio.h>
+
+void configure_stdout(void) {
+    /* If this fails, program can still proceed with default buffering. */
+    (void)setvbuf(stdout, NULL, _IOLBF, 0);
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.setbuf" name="setbuf" kind="function">
+        <signature>void setbuf(FILE *stream, char *buf);</signature>
+        <summary><![CDATA[
+<p>Legacy buffering helper: equivalent to <code>setvbuf(stream, buf, buf ? _IOFBF : _IONBF, BUFSIZ)</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.setbuf.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Stream to configure.</p>
+]]></description>
+          </param>
+          <param id="p.setbuf.buf" name="buf" direction="in" type="char *">
+            <description><![CDATA[
+<p>User buffer of at least <code>BUFSIZ</code> bytes, or NULL to disable buffering.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="void">
+            <description><![CDATA[
+<p>No return value. Use <code>setvbuf</code> if you need error reporting or precise control.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fprintf" name="fprintf" kind="function">
+        <signature>int fprintf(FILE *stream, const char *format, ...);</signature>
+        <summary><![CDATA[
+<p>Writes formatted output to <code>stream</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fprintf.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Output stream.</p>
+]]></description>
+          </param>
+          <param id="p.fprintf.format" name="format" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Format string. Must be NUL-terminated.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.printf.format_security" severity="important">
+                <description><![CDATA[
+<p>Never pass untrusted input as the format string. Use a fixed format and pass untrusted data as arguments.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of characters printed, or a negative value on output error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.printf" name="printf" kind="function">
+        <signature>int printf(const char *format, ...);</signature>
+        <summary><![CDATA[
+<p>Writes formatted output to <code>stdout</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.printf.format" name="format" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Format string.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of characters printed, or a negative value on error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.snprintf" name="snprintf" kind="function">
+        <signature>int snprintf(char *s, size_t n, const char *format, ...);</signature>
+        <summary><![CDATA[
+<p>Formats into a byte buffer of capacity <code>n</code>, ensuring at most <code>n</code> bytes are written including the terminating NUL.</p>
+]]></summary>
+        <parameters>
+          <param id="p.snprintf.s" name="s" direction="out" type="char *">
+            <description><![CDATA[
+<p>Destination buffer. May be NULL if <code>n</code> is 0 to query required size.</p>
+]]></description>
+          </param>
+          <param id="p.snprintf.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Capacity of <code>s</code> in bytes, including space for the terminating NUL.</p>
+]]></description>
+          </param>
+          <param id="p.snprintf.format" name="format" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Format string.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>
+Number of characters that would have been written excluding the terminating NUL. If the return value is at least <code>n</code>,
+output was truncated. A negative value indicates an encoding or output error.
+</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.snprintf.safe_build" lang="c99">
+            <title>Build a message with truncation detection</title>
+            <code><![CDATA[
+#include <stdio.h>
+#include <stddef.h>
+
+int build_msg(char *buf, size_t cap, const char *name, int code) {
+    int r = snprintf(buf, cap, "name=%s code=%d", name, code);
+    if (r < 0) return 0;
+    if ((size_t)r >= cap) {
+        /* Truncated. Caller can allocate more if needed. */
+        return 0;
+    }
+    return 1;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.vfprintf" name="vfprintf" kind="function">
+        <signature>int vfprintf(FILE *stream, const char *format, va_list arg);</signature>
+        <summary><![CDATA[
+<p>Varargs-list form of <code>fprintf</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.vfprintf.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Output stream.</p>
+]]></description>
+          </param>
+          <param id="p.vfprintf.format" name="format" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Format string.</p>
+]]></description>
+          </param>
+          <param id="p.vfprintf.arg" name="arg" direction="in" type="va_list">
+            <description><![CDATA[
+<p>Argument list from <code>va_start</code>.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Characters printed, or negative value on error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.vprintf" name="vprintf" kind="function">
+        <signature>int vprintf(const char *format, va_list arg);</signature>
+        <summary><![CDATA[
+<p>Varargs-list form of <code>printf</code>, writing to <code>stdout</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.vprintf.format" name="format" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Format string.</p>
+]]></description>
+          </param>
+          <param id="p.vprintf.arg" name="arg" direction="in" type="va_list">
+            <description><![CDATA[
+<p>Argument list.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Characters printed, or negative value on error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.vsnprintf" name="vsnprintf" kind="function">
+        <signature>int vsnprintf(char *s, size_t n, const char *format, va_list arg);</signature>
+        <summary><![CDATA[
+<p>Varargs-list form of <code>snprintf</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.vsnprintf.s" name="s" direction="out" type="char *">
+            <description><![CDATA[
+<p>Destination buffer (may be NULL if <code>n</code> is 0 to query size).</p>
+]]></description>
+          </param>
+          <param id="p.vsnprintf.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Buffer capacity in bytes.</p>
+]]></description>
+          </param>
+          <param id="p.vsnprintf.format" name="format" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Format string.</p>
+]]></description>
+          </param>
+          <param id="p.vsnprintf.arg" name="arg" direction="in" type="va_list">
+            <description><![CDATA[
+<p>Argument list.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Would-have-written count excluding NUL, truncated if >= n, negative on error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fputs" name="fputs" kind="function">
+        <signature>int fputs(const char *s, FILE *stream);</signature>
+        <summary><![CDATA[
+<p>Writes a NUL-terminated string to <code>stream</code> (does not automatically append a newline).</p>
+]]></summary>
+        <parameters>
+          <param id="p.fputs.s" name="s" direction="in" type="const char *">
+            <description><![CDATA[
+<p>NUL-terminated string to write (terminator is not written).</p>
+]]></description>
+          </param>
+          <param id="p.fputs.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Output stream.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-negative on success, EOF on error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.puts" name="puts" kind="function">
+        <signature>int puts(const char *s);</signature>
+        <summary><![CDATA[
+<p>Writes a string to <code>stdout</code> followed by a newline.</p>
+]]></summary>
+        <parameters>
+          <param id="p.puts.s" name="s" direction="in" type="const char *">
+            <description><![CDATA[
+<p>NUL-terminated string to write.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-negative on success, EOF on error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fputc" name="fputc" kind="function">
+        <signature>int fputc(int c, FILE *stream);</signature>
+        <summary><![CDATA[
+<p>Writes a byte (converted to unsigned char) to <code>stream</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fputc.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Byte value to write, passed as int.</p>
+]]></description>
+          </param>
+          <param id="p.fputc.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Output stream.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Written character (as unsigned char promoted to int) on success, EOF on error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.putc" name="putc" kind="function_or_macro">
+        <signature>int putc(int c, FILE *stream);</signature>
+        <summary><![CDATA[
+<p>Equivalent to <code>fputc</code> but may be implemented as a macro.</p>
+]]></summary>
+        <parameters>
+          <param id="p.putc.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Byte value to write.</p>
+]]></description>
+          </param>
+          <param id="p.putc.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Output stream.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Written character on success, EOF on error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.putchar" name="putchar" kind="function_or_macro">
+        <signature>int putchar(int c);</signature>
+        <summary><![CDATA[
+<p>Writes a byte to <code>stdout</code>. Often implemented as a macro calling <code>putc(c, stdout)</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.putchar.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Byte value to write.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Written character on success, EOF on error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fgets" name="fgets" kind="function">
+        <signature>char *fgets(char *s, int n, FILE *stream);</signature>
+        <summary><![CDATA[
+<p>
+Reads at most <code>n - 1</code> bytes into <code>s</code> from <code>stream</code>, stopping after a newline or EOF, and NUL-terminates.
+If a newline is read, it is included in the buffer.
+</p>
+]]></summary>
+        <parameters>
+          <param id="p.fgets.s" name="s" direction="out" type="char *">
+            <description><![CDATA[
+<p>Destination buffer to receive the line, NUL-terminated on success.</p>
+]]></description>
+          </param>
+          <param id="p.fgets.n" name="n" direction="in" type="int">
+            <description><![CDATA[
+<p>Buffer capacity in bytes. Must be greater than 0 for a useful read.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.fgets.n_positive" severity="important">
+                <description><![CDATA[
+<p>If <code>n</code> is 0 or negative, behavior is undefined or implementation-defined. Pass a positive size.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+          <param id="p.fgets.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Input stream.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="char *">
+            <description><![CDATA[
+<p>Returns <code>s</code> on success. Returns NULL if no characters were read due to EOF or error.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.fgets.read_lines" lang="c99">
+            <title>Read lines safely and detect truncation</title>
+            <code><![CDATA[
+#include <stdio.h>
+#include <string.h>
+
+void read_lines(FILE *in) {
+    char buf[256];
+
+    while (fgets(buf, (int)sizeof(buf), in)) {
+        size_t len = strlen(buf);
+
+        /* If no newline and buffer filled, the line may be longer than the buffer. */
+        if (len > 0 && buf[len - 1u] != '\n' && len == sizeof(buf) - 1u) {
+            /* Truncated line fragment. Handle continuation if needed. */
+        }
+
+        /* Process buf (includes newline if present). */
+    }
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.fgetc" name="fgetc" kind="function">
+        <signature>int fgetc(FILE *stream);</signature>
+        <summary><![CDATA[
+<p>Reads the next byte from <code>stream</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fgetc.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Input stream.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Returns the byte as an unsigned char converted to int, or EOF on end-of-file or error.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.fgetc.eof" severity="important" topic="eof_vs_byte">
+            <description><![CDATA[
+<p>
+Because valid bytes are 0..UCHAR_MAX and EOF is negative, always store the result in an <code>int</code>, not a <code>char</code>.
+</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.getc" name="getc" kind="function_or_macro">
+        <signature>int getc(FILE *stream);</signature>
+        <summary><![CDATA[
+<p>Equivalent to <code>fgetc</code> but may be implemented as a macro.</p>
+]]></summary>
+        <parameters>
+          <param id="p.getc.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Input stream.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Next byte as unsigned char promoted to int, or EOF.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.getchar" name="getchar" kind="function_or_macro">
+        <signature>int getchar(void);</signature>
+        <summary><![CDATA[
+<p>Reads the next byte from <code>stdin</code>. Often implemented as a macro calling <code>getc(stdin)</code>.</p>
+]]></summary>
+        <parameters/>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Next byte as unsigned char promoted to int, or EOF.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ungetc" name="ungetc" kind="function">
+        <signature>int ungetc(int c, FILE *stream);</signature>
+        <summary><![CDATA[
+<p>
+Pushes a byte back onto the input stream so it will be returned by the next read operation.
+This is commonly used for one-character lookahead in parsers.
+</p>
+]]></summary>
+        <parameters>
+          <param id="p.ungetc.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Byte to push back. If <code>c</code> is EOF, the operation fails and EOF is returned.</p>
+]]></description>
+          </param>
+          <param id="p.ungetc.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Input stream to push back onto.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Returns the pushed-back character on success, EOF on failure.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.ungetc.guarantee" severity="info" topic="pushback_depth">
+            <description><![CDATA[
+<p>
+The standard guarantees at least one character of pushback if <code>c</code> is not EOF. Additional pushbacks may work but are implementation-defined.
+</p>
+]]></description>
+          </note>
+          <note id="n.ungetc.buffering" severity="important" topic="stream_position">
+            <description><![CDATA[
+<p>After pushing back a character, the file position and buffering semantics can be subtle. Use it narrowly for lookahead.</p>
+]]></description>
+          </note>
+        </notes>
+        <examples>
+          <example id="ex.ungetc.peek_nonspace" lang="c99">
+            <title>Skip whitespace then put back the first non-space byte</title>
+            <code><![CDATA[
+#include <stdio.h>
+#include <ctype.h>
+
+int skip_spaces_and_peek(FILE *in) {
+    int ch;
+    do {
+        ch = fgetc(in);
+        if (ch == EOF) return EOF;
+    } while (isspace((unsigned char)ch));
+
+    /* Put it back so caller can read it again. */
+    if (ungetc(ch, in) == EOF) return EOF;
+    return ch;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.perror" name="perror" kind="function">
+        <signature>void perror(const char *s);</signature>
+        <summary><![CDATA[
+<p>Prints <code>s</code>, a colon and space (implementation-defined formatting), and a message corresponding to the current <code>errno</code>, then a newline.</p>
+]]></summary>
+        <parameters>
+          <param id="p.perror.s" name="s" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Prefix string. If NULL or empty, an implementation-defined behavior prints just the error message.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="void">
+            <description><![CDATA[
+<p>No return value.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.perror.errno" severity="important" topic="diagnostics">
+            <description><![CDATA[
+<p>
+Call <code>perror</code> soon after the failing operation, before another library call can change <code>errno</code>.
+</p>
+]]></description>
+          </note>
+        </notes>
+        <examples>
+          <example id="ex.perror.open_fail" lang="c99">
+            <title>Diagnose a failed fopen</title>
+            <code><![CDATA[
+#include <stdio.h>
+
+int try_open(const char *path) {
+    FILE *f = fopen(path, "rb");
+    if (!f) {
+        perror("fopen");
+        return 0;
+    }
+    fclose(f);
+    return 1;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.stdio.category_note" name="_category_note" kind="internal_note">
+        <summary><![CDATA[
+<p>
+This category includes the stdio.h functions you specified. Other standard stdio facilities exist (for example <code>feof</code>, <code>ferror</code>,
+<code>clearerr</code>, <code>fscanf</code>, <code>fgets</code> variants, and more) and can be added as separate entries if desired.
+</p>
+]]></summary>
+      </function>
+
+    </header>
+
+    <header id="hdr.wchar_wide_io" name="wchar.h (wide I/O subset)">
+      <summary><![CDATA[
+<p>
+Wide-character I/O functions that mirror basic stdio operations for wide characters and wide strings. These functions operate on <code>FILE *</code>
+streams but read and write <code>wchar_t</code> data (via <code>wint_t</code> return types where EOF must be representable).
+</p>
+]]></summary>
+
+      <notes>
+        <note id="n.wideio.weof" severity="important" topic="weof">
+          <description><![CDATA[
+<p>
+Wide character input functions return <code>wint_t</code> and use <code>WEOF</code> to signal end-of-file or error. Store results in <code>wint_t</code>.
+</p>
+]]></description>
+        </note>
+        <note id="n.wideio.locale" severity="important" topic="locale">
+          <description><![CDATA[
+<p>
+Wide I/O interpretation depends on the current locale and the stream orientation. Document your locale assumptions when portability matters.
+</p>
+]]></description>
+        </note>
+      </notes>
+
+      <function id="fn.fgetwc" name="fgetwc" kind="function">
+        <signature>wint_t fgetwc(FILE *stream);</signature>
+        <summary><![CDATA[
+<p>Reads the next wide character from <code>stream</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fgetwc.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Input stream.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wint_t">
+            <description><![CDATA[
+<p>Next wide character as <code>wint_t</code>, or <code>WEOF</code> on end-of-file or error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fputwc" name="fputwc" kind="function">
+        <signature>wint_t fputwc(wchar_t wc, FILE *stream);</signature>
+        <summary><![CDATA[
+<p>Writes wide character <code>wc</code> to <code>stream</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fputwc.wc" name="wc" direction="in" type="wchar_t">
+            <description><![CDATA[
+<p>Wide character to write.</p>
+]]></description>
+          </param>
+          <param id="p.fputwc.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Output stream.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wint_t">
+            <description><![CDATA[
+<p>Written wide character (as <code>wint_t</code>) on success, or <code>WEOF</code> on error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.getwc" name="getwc" kind="function_or_macro">
+        <signature>wint_t getwc(FILE *stream);</signature>
+        <summary><![CDATA[
+<p>Equivalent to <code>fgetwc</code> but may be implemented as a macro.</p>
+]]></summary>
+        <parameters>
+          <param id="p.getwc.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Input stream.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wint_t">
+            <description><![CDATA[
+<p>Next wide character, or <code>WEOF</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.putwc" name="putwc" kind="function_or_macro">
+        <signature>wint_t putwc(wchar_t wc, FILE *stream);</signature>
+        <summary><![CDATA[
+<p>Equivalent to <code>fputwc</code> but may be implemented as a macro.</p>
+]]></summary>
+        <parameters>
+          <param id="p.putwc.wc" name="wc" direction="in" type="wchar_t">
+            <description><![CDATA[
+<p>Wide character to write.</p>
+]]></description>
+          </param>
+          <param id="p.putwc.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Output stream.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wint_t">
+            <description><![CDATA[
+<p>Written wide character on success, or <code>WEOF</code> on error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.getwchar" name="getwchar" kind="function_or_macro">
+        <signature>wint_t getwchar(void);</signature>
+        <summary><![CDATA[
+<p>Reads the next wide character from <code>stdin</code>.</p>
+]]></summary>
+        <parameters/>
+        <returns>
+          <return type="wint_t">
+            <description><![CDATA[
+<p>Next wide character, or <code>WEOF</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.putwchar" name="putwchar" kind="function_or_macro">
+        <signature>wint_t putwchar(wchar_t wc);</signature>
+        <summary><![CDATA[
+<p>Writes wide character <code>wc</code> to <code>stdout</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.putwchar.wc" name="wc" direction="in" type="wchar_t">
+            <description><![CDATA[
+<p>Wide character to write.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wint_t">
+            <description><![CDATA[
+<p>Written wide character on success, or <code>WEOF</code> on error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fgetws" name="fgetws" kind="function">
+        <signature>wchar_t *fgetws(wchar_t *s, int n, FILE *stream);</signature>
+        <summary><![CDATA[
+<p>
+Reads at most <code>n - 1</code> wide characters into <code>s</code>, stopping after a newline or EOF, and NUL-terminates.
+If a newline is read, it is included.
+</p>
+]]></summary>
+        <parameters>
+          <param id="p.fgetws.s" name="s" direction="out" type="wchar_t *">
+            <description><![CDATA[
+<p>Destination wide buffer to receive the line.</p>
+]]></description>
+          </param>
+          <param id="p.fgetws.n" name="n" direction="in" type="int">
+            <description><![CDATA[
+<p>Capacity in wide characters. Must be positive.</p>
+]]></description>
+          </param>
+          <param id="p.fgetws.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Input stream.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wchar_t *">
+            <description><![CDATA[
+<p>Returns <code>s</code> on success, NULL if no characters were read due to EOF or error.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.fgetws.read_wlines" lang="c99">
+            <title>Read wide lines safely</title>
+            <code><![CDATA[
+#include <wchar.h>
+#include <stdio.h>
+
+void read_wlines(FILE *in) {
+    wchar_t buf[256];
+
+    while (fgetws(buf, (int)(sizeof(buf) / sizeof(buf[0])), in)) {
+        /* Process buf; it includes newline if present. */
+    }
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.fputws" name="fputws" kind="function">
+        <signature>int fputws(const wchar_t *s, FILE *stream);</signature>
+        <summary><![CDATA[
+<p>Writes a NUL-terminated wide string to <code>stream</code> (does not automatically append a newline).</p>
+]]></summary>
+        <parameters>
+          <param id="p.fputws.s" name="s" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>Wide string to write (terminator is not written).</p>
+]]></description>
+          </param>
+          <param id="p.fputws.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Output stream.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-negative on success, or EOF on error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ungetwc" name="ungetwc" kind="function">
+        <signature>wint_t ungetwc(wint_t wc, FILE *stream);</signature>
+        <summary><![CDATA[
+<p>Pushes a wide character back onto the input stream so it will be returned by the next wide read.</p>
+]]></summary>
+        <parameters>
+          <param id="p.ungetwc.wc" name="wc" direction="in" type="wint_t">
+            <description><![CDATA[
+<p>Wide character to push back. If <code>wc</code> is <code>WEOF</code>, the operation fails.</p>
+]]></description>
+          </param>
+          <param id="p.ungetwc.stream" name="stream" direction="in" type="FILE *">
+            <description><![CDATA[
+<p>Input stream.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wint_t">
+            <description><![CDATA[
+<p>Pushed-back character on success, or <code>WEOF</code> on failure.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.ungetwc.guarantee" severity="info" topic="pushback_depth">
+            <description><![CDATA[
+<p>As with <code>ungetc</code>, only limited pushback is guaranteed by the standard. Use narrowly for lookahead.</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.wideio.category_note" name="_category_note" kind="internal_note">
+        <summary><![CDATA[
+<p>
+This header entry includes only the wide I/O functions you specified. The full <code>wchar.h</code> header also contains wide string and conversion
+functions that belong in the strings/raw-memory category.
+</p>
+]]></summary>
+      </function>
+
+    </header>
+
+  </category>
+
+</document>
+
