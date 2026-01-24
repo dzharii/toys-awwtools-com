@@ -27,7 +27,6 @@ Daily folder is NEWS-YYYY-MM-DD where YYYY-MM-DD is computed in America/Los_Ange
 
 A03.01 Safety constraints
 The agent must only read and write files inside the repository.
-The agent must not run shell commands, modify OS settings, or execute downloaded code.
 The agent must not introduce innerHTML.
 
 A04.01 Template read-only rule
