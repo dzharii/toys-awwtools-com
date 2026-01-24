@@ -1,0 +1,289 @@
+﻿Multi-line string literal
+URL: [https://programming-idioms.org/idiom/48/multi-line-string-literal](https://programming-idioms.org/idiom/48/multi-line-string-literal)
+Description: Assign a string literal composed of multiple lines using implicit string literal concatenation.
+
+```c
+const char* s =
+    "Huey\n"
+    "Dewey\n"
+    "Louie\n";
+```
+
+Split a space-separated string
+URL: [https://programming-idioms.org/idiom/49/split-a-space-separated-string](https://programming-idioms.org/idiom/49/split-a-space-separated-string)
+Description: Split a mutable string into space-separated tokens using the standard C tokenizer.
+
+```c
+#include <string.h>
+#include <stddef.h>
+
+size_t split_spaces(char* s, char** tokens, size_t max_tokens) {
+    size_t count = 0;
+    char* token = strtok(s, " ");
+
+    while (token && count < max_tokens) {
+        tokens[count++] = token;
+        token = strtok(NULL, " ");
+    }
+    return count;
+}
+```
+
+Make an infinite loop
+URL: [https://programming-idioms.org/idiom/50/make-an-infinite-loop](https://programming-idioms.org/idiom/50/make-an-infinite-loop)
+Description: Execute a loop without a termination condition.
+
+```c
+for (;;) {
+    /* loop forever */
+}
+```
+
+Join a list of strings
+URL: [https://programming-idioms.org/idiom/53/join-a-list-of-strings](https://programming-idioms.org/idiom/53/join-a-list-of-strings)
+Description: Concatenate an array of strings into a single buffer using a fixed separator.
+
+```c
+#include <string.h>
+#include <stddef.h>
+
+void join_strings(
+    const char** parts,
+    size_t count,
+    const char* separator,
+    char* output,
+    size_t output_size
+) {
+    output[0] = '\0';
+
+    for (size_t i = 0; i < count; ++i) {
+        if (i > 0) {
+            strncat(output, separator, output_size - strlen(output) - 1);
+        }
+        strncat(output, parts[i], output_size - strlen(output) - 1);
+    }
+}
+```
+
+Compute sum of integers
+URL: [https://programming-idioms.org/idiom/54/compute-sum-of-integers](https://programming-idioms.org/idiom/54/compute-sum-of-integers)
+Description: Compute the sum of all elements in an integer array.
+
+```c
+#include <stddef.h>
+
+int sum_ints(const int* array, size_t count) {
+    int sum = 0;
+    for (size_t i = 0; i < count; ++i) {
+        sum += array[i];
+    }
+    return sum;
+}
+```
+
+Convert integer to string
+URL: [https://programming-idioms.org/idiom/55/convert-integer-to-string](https://programming-idioms.org/idiom/55/convert-integer-to-string)
+Description: Convert an integer value to its decimal string representation.
+
+```c
+#include <stdio.h>
+#include <stddef.h>
+
+void int_to_string(int value, char* buffer, size_t buffer_size) {
+    snprintf(buffer, buffer_size, "%d", value);
+}
+```
+
+Extract file content to a string
+URL: [https://programming-idioms.org/idiom/58/extract-file-content-to-a-string](https://programming-idioms.org/idiom/58/extract-file-content-to-a-string)
+Description: Read the entire contents of a file into a dynamically allocated string using standard C I/O.
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+char* read_file_to_string(const char* path) {
+    FILE* file = fopen(path, "rb");
+    if (!file) {
+        return NULL;
+    }
+
+    fseek(file, 0, SEEK_END);
+    long size = ftell(file);
+    rewind(file);
+
+    char* buffer = (char*)malloc((size_t)size + 1);
+    if (!buffer) {
+        fclose(file);
+        return NULL;
+    }
+
+    fread(buffer, 1, (size_t)size, file);
+    buffer[size] = '\0';
+
+    fclose(file);
+    return buffer;
+}
+```
+
+Write to standard error stream
+URL: [https://programming-idioms.org/idiom/59/write-to-standard-error-stream](https://programming-idioms.org/idiom/59/write-to-standard-error-stream)
+Description: Print a formatted message to the standard error stream.
+
+```c
+#include <stdio.h>
+
+void report_negative(int x) {
+    fprintf(stderr, "%d is negative\n", x);
+}
+```
+
+Read command line argument
+URL: [https://programming-idioms.org/idiom/60/read-command-line-argument](https://programming-idioms.org/idiom/60/read-command-line-argument)
+Description: Read the first command-line argument after the program name.
+
+```c
+int main(int argc, char* argv[]) {
+    if (argc > 1) {
+        const char* arg = argv[1];
+        (void)arg;
+    }
+    return 0;
+}
+```
+
+Get current date
+URL: [https://programming-idioms.org/idiom/61/get-current-date](https://programming-idioms.org/idiom/61/get-current-date)
+Description: Retrieve the current date and time using the standard C time type.
+
+```c
+#include <time.h>
+
+time_t now(void) {
+    return time(NULL);
+}
+```
+
+Find substring position
+URL: [https://programming-idioms.org/idiom/62/find-substring-position](https://programming-idioms.org/idiom/62/find-substring-position)
+Description: Find the byte index of the first occurrence of a substring within a string.
+
+```c
+#include <string.h>
+#include <stddef.h>
+
+int find_substring_index(const char* s, const char* sub) {
+    const char* pos = strstr(s, sub);
+    if (!pos) {
+        return -1;
+    }
+    return (int)(pos - s);
+}
+```
+
+Format decimal number
+URL: [https://programming-idioms.org/idiom/65/format-decimal-number](https://programming-idioms.org/idiom/65/format-decimal-number)
+Description: Convert a fractional value in the range [0,1] into a percentage string with one decimal digit.
+
+```c
+#include <stdio.h>
+#include <stddef.h>
+
+void format_percentage(double value, char* buffer, size_t buffer_size) {
+    snprintf(buffer, buffer_size, "%.1f%%", value * 100.0);
+}
+```
+
+Binomial coefficient "n choose k"
+URL: [https://programming-idioms.org/idiom/67/binomial-coefficient-n-choose-k](https://programming-idioms.org/idiom/67/binomial-coefficient-n-choose-k)
+Description: Compute the binomial coefficient using an iterative integer method.
+
+```c
+unsigned long long binomial(unsigned int n, unsigned int k) {
+    if (k > n) {
+        return 0;
+    }
+    if (k > n - k) {
+        k = n - k;
+    }
+
+    unsigned long long result = 1;
+    for (unsigned int i = 1; i <= k; ++i) {
+        result = result * (n - k + i) / i;
+    }
+    return result;
+}
+```
+
+Seed random generator
+URL: [https://programming-idioms.org/idiom/69/seed-random-generator](https://programming-idioms.org/idiom/69/seed-random-generator)
+Description: Initialize the pseudo-random number generator with a fixed seed.
+
+```c
+#include <stdlib.h>
+
+void seed_random(unsigned int seed) {
+    srand(seed);
+}
+```
+
+Use clock as random generator seed
+URL: [https://programming-idioms.org/idiom/70/use-clock-as-random-generator-seed](https://programming-idioms.org/idiom/70/use-clock-as-random-generator-seed)
+Description: Seed the pseudo-random number generator using the current system time.
+
+```c
+#include <stdlib.h>
+#include <time.h>
+
+void seed_random_with_time(void) {
+    srand((unsigned int)time(NULL));
+}
+```
+
+Echo program implementation
+URL: [https://programming-idioms.org/idiom/71/echo-program-implementation](https://programming-idioms.org/idiom/71/echo-program-implementation)
+Description: Print all command-line arguments except the program name, separated by spaces.
+
+```c
+#include <stdio.h>
+
+int main(int argc, char* argv[]) {
+    for (int i = 1; i < argc; ++i) {
+        printf("%s", argv[i]);
+        if (i + 1 < argc) {
+            printf(" ");
+        }
+    }
+    printf("\n");
+    return 0;
+}
+```
+
+Compute GCD
+URL: [https://programming-idioms.org/idiom/74/compute-gcd](https://programming-idioms.org/idiom/74/compute-gcd)
+Description: Compute the greatest common divisor of two non-negative integers using the Euclidean algorithm.
+
+```c
+unsigned int gcd(unsigned int a, unsigned int b) {
+    while (b != 0) {
+        unsigned int r = a % b;
+        a = b;
+        b = r;
+    }
+    return a;
+}
+```
+
+Compute LCM
+URL: [https://programming-idioms.org/idiom/75/compute-lcm](https://programming-idioms.org/idiom/75/compute-lcm)
+Description: Compute the least common multiple of two non-negative integers using GCD.
+
+```c
+unsigned int lcm(unsigned int a, unsigned int b) {
+    if (a == 0 || b == 0) {
+        return 0;
+    }
+    return (a / gcd(a, b)) * b;
+}
+```
+

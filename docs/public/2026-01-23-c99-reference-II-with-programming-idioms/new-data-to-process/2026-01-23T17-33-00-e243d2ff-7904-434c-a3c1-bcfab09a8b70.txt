@@ -1,0 +1,162 @@
+﻿Recursive factorial (simple)
+URL: [https://programming-idioms.org/idiom/31/recursive-factorial-simple](https://programming-idioms.org/idiom/31/recursive-factorial-simple)
+Description: Compute the factorial of a non-negative integer using a simple recursive definition.
+
+```c
+unsigned int factorial(unsigned int n) {
+    if (n == 0) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+```
+
+Integer exponentiation by squaring
+URL: [https://programming-idioms.org/idiom/32/integer-exponentiation-by-squaring](https://programming-idioms.org/idiom/32/integer-exponentiation-by-squaring)
+Description: Compute the power of a non-negative integer base raised to a non-negative integer exponent using exponentiation by squaring.
+
+```c
+unsigned int int_pow(unsigned int base, unsigned int exp) {
+    if (exp == 0) {
+        return 1;
+    }
+    if ((exp & 1U) == 0) {
+        return int_pow(base * base, exp / 2);
+    }
+    return base * int_pow(base * base, (exp - 1) / 2);
+}
+```
+
+Extract a substring
+URL: [https://programming-idioms.org/idiom/38/extract-a-substring](https://programming-idioms.org/idiom/38/extract-a-substring)
+Description: Extract a substring from a string using byte indices, allocating a new null-terminated string.
+
+```c
+#include <stdlib.h>
+#include <string.h>
+
+char* substring(const char* s, size_t start, size_t end) {
+    if (end <= start) {
+        return NULL;
+    }
+
+    size_t len = end - start;
+    char* result = (char*)malloc(len + 1);
+    if (!result) {
+        return NULL;
+    }
+
+    memcpy(result, s + start, len);
+    result[len] = '\0';
+    return result;
+}
+```
+
+Check if string contains a word
+URL: [https://programming-idioms.org/idiom/39/check-if-string-contains-a-word](https://programming-idioms.org/idiom/39/check-if-string-contains-a-word)
+Description: Check whether a string contains another string as a substring.
+
+```c
+#include <stdbool.h>
+#include <string.h>
+
+bool contains_substring(const char* s, const char* word) {
+    return strstr(s, word) != NULL;
+}
+```
+
+Reverse a string
+URL: [https://programming-idioms.org/idiom/41/reverse-a-string](https://programming-idioms.org/idiom/41/reverse-a-string)
+Description: Create a new string containing the characters of the input string in reverse byte order. Multibyte encodings are not preserved.
+
+```c
+#include <stdlib.h>
+#include <string.h>
+
+char* reverse_string(const char* s) {
+    size_t len = strlen(s);
+    char* result = (char*)malloc(len + 1);
+    if (!result) {
+        return NULL;
+    }
+
+    for (size_t i = 0; i < len; ++i) {
+        result[i] = s[len - 1 - i];
+    }
+    result[len] = '\0';
+    return result;
+}
+```
+
+Continue outer loop
+URL: [https://programming-idioms.org/idiom/42/continue-outer-loop](https://programming-idioms.org/idiom/42/continue-outer-loop)
+Description: Iterate over one array and skip elements that appear in another array using a controlled loop structure.
+
+```c
+#include <stddef.h>
+#include <stdio.h>
+#include <stdbool.h>
+
+void print_unique(const int* a, size_t a_count, const int* b, size_t b_count) {
+    for (size_t i = 0; i < a_count; ++i) {
+        bool found = false;
+        for (size_t j = 0; j < b_count; ++j) {
+            if (a[i] == b[j]) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            printf("%d\n", a[i]);
+        }
+    }
+}
+```
+
+Break outer loop
+URL: [https://programming-idioms.org/idiom/43/break-outer-loop](https://programming-idioms.org/idiom/43/break-outer-loop)
+Description: Search a 2D integer matrix and stop immediately when a negative value is found.
+
+```c
+#include <stddef.h>
+#include <stdio.h>
+#include <stdbool.h>
+
+bool find_negative(
+    const int* matrix,
+    size_t rows,
+    size_t cols,
+    int* out_value
+) {
+    for (size_t r = 0; r < rows; ++r) {
+        for (size_t c = 0; c < cols; ++c) {
+            int value = matrix[r * cols + c];
+            if (value < 0) {
+                *out_value = value;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+```
+
+Pause execution for 5 seconds
+URL: [https://programming-idioms.org/idiom/45/pause-execution-for-5-seconds](https://programming-idioms.org/idiom/45/pause-execution-for-5-seconds)
+Description: Pause program execution for approximately five seconds using only standard C time facilities.
+
+```c
+#include <time.h>
+
+void sleep_seconds(unsigned int seconds) {
+    time_t start = time(NULL);
+    while (difftime(time(NULL), start) < seconds) {
+        /* busy wait */
+    }
+}
+
+void pause_five_seconds(void) {
+    sleep_seconds(5);
+}
+```
+

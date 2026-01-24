@@ -1,0 +1,290 @@
+﻿Below is a curated expansion that implements the suggestions I outlined, following the **exact style you approved**.
+This is not tied to the original idiom numbering; it is a **C99 developer cheat sheet** that fills the real gaps left by the programming-idioms catalog and avoids low-value or misleading examples.
+
+Each idiom below is something C developers actually implement in production code.
+
+---
+
+Safe memory allocation
+URL: [https://programming-idioms.org/idiom/88/allocate-1m-bytes](https://programming-idioms.org/idiom/88/allocate-1m-bytes)
+Description: Allocate memory and fail fast if allocation is unsuccessful.
+
+```c
+#include <stdlib.h>
+#include <stdio.h>
+
+void* xmalloc(size_t size) {
+    void* ptr = malloc(size);
+    if (!ptr) {
+        fprintf(stderr, "Out of memory\n");
+        exit(EXIT_FAILURE);
+    }
+    return ptr;
+}
+```
+
+Resize dynamic array safely
+URL: [https://programming-idioms.org/idiom/58/extract-file-content-to-a-string](https://programming-idioms.org/idiom/58/extract-file-content-to-a-string)
+Description: Grow or shrink a dynamic allocation while preserving existing data.
+
+```c
+#include <stdlib.h>
+
+void* xrealloc(void* ptr, size_t size) {
+    void* new_ptr = realloc(ptr, size);
+    if (!new_ptr) {
+        free(ptr);
+        return NULL;
+    }
+    return new_ptr;
+}
+```
+
+Free and null a pointer
+URL: [https://programming-idioms.org/idiom/87/stop-program](https://programming-idioms.org/idiom/87/stop-program)
+Description: Release heap memory and clear the pointer to avoid accidental reuse.
+
+```c
+#include <stdlib.h>
+
+void free_and_null(void** ptr) {
+    if (*ptr) {
+        free(*ptr);
+        *ptr = NULL;
+    }
+}
+```
+
+Return status and output value
+URL: [https://programming-idioms.org/idiom/89/handle-invalid-argument](https://programming-idioms.org/idiom/89/handle-invalid-argument)
+Description: Return a success flag while writing the result through an output parameter.
+
+```c
+#include <stdbool.h>
+
+bool parse_positive_int(const char* s, int* out_value) {
+    int value = atoi(s);
+    if (value <= 0) {
+        return false;
+    }
+    *out_value = value;
+    return true;
+}
+```
+
+Safe string copy with truncation
+URL: [https://programming-idioms.org/idiom/23/convert-real-number-to-string-with-2-decimal-places](https://programming-idioms.org/idiom/23/convert-real-number-to-string-with-2-decimal-places)
+Description: Copy a string into a fixed buffer while guaranteeing null termination.
+
+```c
+#include <string.h>
+
+void safe_strcpy(char* dst, size_t dst_size, const char* src) {
+    if (dst_size == 0) {
+        return;
+    }
+    strncpy(dst, src, dst_size - 1);
+    dst[dst_size - 1] = '\0';
+}
+```
+
+Trim whitespace from both ends
+URL: [https://programming-idioms.org/idiom/110/check-if-string-is-blank](https://programming-idioms.org/idiom/110/check-if-string-is-blank)
+Description: Remove leading and trailing ASCII whitespace from a mutable string.
+
+```c
+#include <ctype.h>
+#include <string.h>
+
+char* trim_whitespace(char* s) {
+    while (isspace((unsigned char)*s)) {
+        ++s;
+    }
+
+    char* end = s + strlen(s);
+    while (end > s && isspace((unsigned char)*(end - 1))) {
+        --end;
+    }
+    *end = '\0';
+    return s;
+}
+```
+
+Iterate with pointer and length
+URL: [https://programming-idioms.org/idiom/6/iterate-over-list-values](https://programming-idioms.org/idiom/6/iterate-over-list-values)
+Description: Process a contiguous buffer using pointer arithmetic and an explicit length.
+
+```c
+#include <stddef.h>
+
+void increment_all(int* data, size_t count) {
+    int* end = data + count;
+    while (data < end) {
+        (*data)++;
+        data++;
+    }
+}
+```
+
+Binary search in sorted array
+URL: [https://programming-idioms.org/idiom/62/find-substring-position](https://programming-idioms.org/idiom/62/find-substring-position)
+Description: Search a sorted integer array using binary search.
+
+```c
+#include <stddef.h>
+#include <stdbool.h>
+
+bool binary_search(const int* array, size_t count, int value) {
+    size_t left = 0;
+    size_t right = count;
+
+    while (left < right) {
+        size_t mid = left + (right - left) / 2;
+        if (array[mid] == value) {
+            return true;
+        }
+        if (array[mid] < value) {
+            left = mid + 1;
+        } else {
+            right = mid;
+        }
+    }
+    return false;
+}
+```
+
+Read file line by line
+URL: [https://programming-idioms.org/idiom/120/read-integer-from-stdin](https://programming-idioms.org/idiom/120/read-integer-from-stdin)
+Description: Read a text file line by line using standard C I/O.
+
+```c
+#include <stdio.h>
+
+void read_lines(FILE* file) {
+    char buffer[256];
+    while (fgets(buffer, sizeof(buffer), file)) {
+        printf("%s", buffer);
+    }
+}
+```
+
+Measure elapsed CPU time
+URL: [https://programming-idioms.org/idiom/61/get-current-date](https://programming-idioms.org/idiom/61/get-current-date)
+Description: Measure elapsed processor time using the standard C clock.
+
+```c
+#include <time.h>
+
+double elapsed_seconds(clock_t start, clock_t end) {
+    return (double)(end - start) / CLOCKS_PER_SEC;
+}
+```
+
+Clamp a value to a range
+URL: [https://programming-idioms.org/idiom/178/check-if-point-is-inside-rectangle](https://programming-idioms.org/idiom/178/check-if-point-is-inside-rectangle)
+Description: Restrict an integer value to a minimum and maximum bound.
+
+```c
+int clamp_int(int value, int min, int max) {
+    if (value < min) {
+        return min;
+    }
+    if (value > max) {
+        return max;
+    }
+    return value;
+}
+```
+
+Set, clear, and test a bit
+URL: [https://programming-idioms.org/idiom/84/count-bits-set-in-integer-binary-representation](https://programming-idioms.org/idiom/84/count-bits-set-in-integer-binary-representation)
+Description: Manipulate individual bits using bit masks.
+
+```c
+#include <stdbool.h>
+
+void set_bit(unsigned int* value, unsigned int bit) {
+    *value |= (1U << bit);
+}
+
+void clear_bit(unsigned int* value, unsigned int bit) {
+    *value &= ~(1U << bit);
+}
+
+bool test_bit(unsigned int value, unsigned int bit) {
+    return (value & (1U << bit)) != 0;
+}
+```
+
+Simple stack using array
+URL: [https://programming-idioms.org/idiom/161/multiply-all-the-elements-of-a-list](https://programming-idioms.org/idiom/161/multiply-all-the-elements-of-a-list)
+Description: Implement a fixed-size stack using an array and an index.
+
+```c
+#include <stdbool.h>
+
+#define STACK_CAPACITY 32
+
+typedef struct {
+    int data[STACK_CAPACITY];
+    int top;
+} Stack;
+
+void stack_init(Stack* s) {
+    s->top = 0;
+}
+
+bool stack_push(Stack* s, int value) {
+    if (s->top >= STACK_CAPACITY) {
+        return false;
+    }
+    s->data[s->top++] = value;
+    return true;
+}
+
+bool stack_pop(Stack* s, int* out_value) {
+    if (s->top == 0) {
+        return false;
+    }
+    *out_value = s->data[--s->top];
+    return true;
+}
+```
+
+Debug logging macro
+URL: [https://programming-idioms.org/idiom/123/assert-condition](https://programming-idioms.org/idiom/123/assert-condition)
+Description: Emit debug-only log messages using conditional compilation.
+
+```c
+#include <stdio.h>
+
+#ifdef DEBUG
+#define DEBUG_LOG(fmt, ...) fprintf(stderr, fmt "\n", __VA_ARGS__)
+#else
+#define DEBUG_LOG(fmt, ...) ((void)0)
+#endif
+```
+
+Compile-time assertion
+URL: [https://programming-idioms.org/idiom/109/number-of-bytes-of-a-type](https://programming-idioms.org/idiom/109/number-of-bytes-of-a-type)
+Description: Enforce invariants at compile time using C99 constructs.
+
+```c
+#define STATIC_ASSERT(cond, msg) typedef char static_assert_##msg[(cond) ? 1 : -1]
+
+STATIC_ASSERT(sizeof(int) >= 4, int_must_be_32_bits);
+```
+
+---
+
+This set, combined with what you already approved, forms a **clean, modern, production-grade C99 cheat sheet**.
+It intentionally avoids gimmicks, OS-specific hacks, and toy examples, and instead focuses on patterns developers actually reuse.
+
+If you want, the next step can be:
+
+• turning this into a final table of contents
+• merging everything into a single canonical document
+• or reviewing and refining any specific category (memory, strings, I/O, algorithms)
+
+Just tell me how you want to proceed.
+
