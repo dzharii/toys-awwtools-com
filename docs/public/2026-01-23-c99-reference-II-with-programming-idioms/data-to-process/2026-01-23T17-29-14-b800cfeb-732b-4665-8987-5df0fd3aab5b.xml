@@ -1,4 +1,3 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
 <document version="1.0" standard="C99" xml:lang="en">
 
   <textFormatting>
@@ -294,8 +293,8 @@ while ((c = *p++) != 0) {
           <title>Example</title>
           <code><![CDATA[
 char out[256];
-char *w = out;
-char *e = out + sizeof out;
+char* w = out;
+char* e = out + sizeof out;
 
 w += snprintf(w, (size_t)(e - w), "x=%d ", x);
 w += snprintf(w, (size_t)(e - w), "y=%d", y);
@@ -305,13 +304,13 @@ w += snprintf(w, (size_t)(e - w), "y=%d", y);
     </function>
 
     <function id="fn.idiom.id-0003" name="idiom: &quot;Close on success, free on failure&quot; with ownership transfer" kind="idiom">
-      <signature>char *buf = malloc(n);</signature>
+      <signature>char* buf = malloc(n);</signature>
       <summary><![CDATA[<p>Setting the local to 0 after transfer prevents double-free in a shared cleanup block.</p>]]></summary>
       <examples>
         <example id="ex.id-0003.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-char *buf = malloc(n);
+char* buf = malloc(n);
 if (!buf) return -1;
 
 *out = buf;   /* transfer ownership */
@@ -345,27 +344,27 @@ void repeat_action(int* value) {
     </function>
 
     <function id="fn.idiom.id-0005" name="idiom: &quot;Flexible array member&quot; for variable-sized structs (C99 feature)" kind="idiom">
-      <signature>typedef struct c99lc_stack_char_fla {</signature>
+      <signature>typedef struct stack_char_fla {</signature>
       <summary><![CDATA[<p>Fixed-capacity character stack using flexible array member.<br>Provides a simple LIFO container for character data with allocation at creation time.</p><p>Compact bitset using uint8_t array with flexible array member.<br>Stores bits packed into bytes, providing efficient storage for boolean flags.<br>Bit indices are zero-based; bit i resides in items[i/8] at position (i%8).</p><p>This keeps header and payload contiguous and cache-friendly.</p>]]></summary>
       <examples>
         <example id="ex.id-0005.1" lang="c99">
           <title>Example 1</title>
           <code><![CDATA[
-typedef struct c99lc_stack_char_fla {
+typedef struct stack_char_fla {
     size_t capacity; /* maximum number of characters the stack can hold */
     size_t count; /* current number of characters in the stack */
     char items[]; /* flexible array member for character storage */
-} c99lc_stack_char_fla;
+} stack_char_fla;
 ]]></code>
         </example>
         <example id="ex.id-0005.2" lang="c99">
           <title>Example 2</title>
           <code><![CDATA[
-typedef struct c99lc_bitset {
+typedef struct bitset {
     size_t bytes_capacity; /* number of bytes allocated in items[] */
     size_t bits_capacity; /* maximum number of bits that can be stored */
     uint8_t items[]; /* flexible array member for bit storage */
-} c99lc_bitset;
+} bitset;
 ]]></code>
         </example>
         <example id="ex.id-0005.3" lang="c99">
@@ -376,7 +375,7 @@ struct Msg {
     unsigned char data[];   /* flexible array */
 };
 
-struct Msg *m = malloc(sizeof *m + payload_len);
+struct Msg* m = malloc(sizeof *m + payload_len);
 m->len = payload_len;
 memcpy(m->data, payload, payload_len);
 ]]></code>
@@ -475,13 +474,13 @@ if (rc) return rc;
     </function>
 
     <function id="fn.idiom.id-0012" name="idiom: &quot;Sentinel at end&quot; arrays for tables of variable length" kind="idiom">
-      <signature>struct KV { const char *k; int v; };</signature>
+      <signature>struct KV { const char* k; int v; };</signature>
       <summary><![CDATA[<p>This avoids separately storing a count and is very readable for static tables.</p>]]></summary>
       <examples>
         <example id="ex.id-0012.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-struct KV { const char *k; int v; };
+struct KV { const char* k; int v; };
 
 static const struct KV kvs[] = {
     { "alpha", 1 },
@@ -489,7 +488,7 @@ static const struct KV kvs[] = {
     { 0, 0 },          /* sentinel */
 };
 
-for (const struct KV *p = kvs; p->k; ++p) { /* ... */ }
+for (const struct KV* p = kvs; p->k; ++p) { /* ... */ }
 ]]></code>
         </example>
       </examples>
@@ -513,15 +512,15 @@ n = w;
     </function>
 
     <function id="fn.idiom.id-0014" name="idiom: &quot;User data&quot; callbacks (poor man&apos;s closures)" kind="idiom">
-      <signature>typedef int (*visit_fn)(void *user, const struct Node *n);</signature>
+      <signature>typedef int (*visit_fn)(void* user, const struct Node* n);</signature>
       <summary><![CDATA[<p>This is the idiomatic C way to carry context into callbacks.</p>]]></summary>
       <examples>
         <example id="ex.id-0014.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-typedef int (*visit_fn)(void *user, const struct Node *n);
+typedef int (*visit_fn)(void* user, const struct Node* n);
 
-int walk(const struct Node *root, visit_fn fn, void *user);
+int walk(const struct Node* root, visit_fn fn, void* user);
 ]]></code>
         </example>
       </examples>
@@ -558,13 +557,13 @@ while (fgets(line, sizeof line, fp)) {
     </function>
 
     <function id="fn.idiom.id-0017" name="idiom: `memchr` as a fast &quot;find delimiter in bytes&quot;" kind="idiom">
-      <signature>const unsigned char *q = memchr(p, &apos;\n&apos;, (size_t)(end - p));</signature>
+      <signature>const unsigned char* q = memchr(p, &apos;\n&apos;, (size_t)(end - p));</signature>
       <summary><![CDATA[<p>Useful for scanning non-null-terminated buffers, unlike <code>strchr</code>.</p>]]></summary>
       <examples>
         <example id="ex.id-0017.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-const unsigned char *q = memchr(p, '\n', (size_t)(end - p));
+const unsigned char* q = memchr(p, '\n', (size_t)(end - p));
 if (q) { /* found */ }
 ]]></code>
         </example>
@@ -585,13 +584,13 @@ size_t off = offsetof(struct S, member);
     </function>
 
     <function id="fn.idiom.id-0019" name="idiom: `realloc` with a temporary to avoid losing the original pointer on failure" kind="idiom">
-      <signature>void *tmp = realloc(p, n);</signature>
+      <signature>void* tmp = realloc(p, n);</signature>
       <summary><![CDATA[<p>This is one of the highest-value C habits you can adopt.</p>]]></summary>
       <examples>
         <example id="ex.id-0019.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-void *tmp = realloc(p, n);
+void* tmp = realloc(p, n);
 if (!tmp) { /* p still valid */ return -1; }
 p = tmp;
 ]]></code>
@@ -614,13 +613,13 @@ if (m < 0 || (size_t)m >= dst_sz) { /* truncated or error */ }
     </function>
 
     <function id="fn.idiom.id-0021" name="idiom: `sscanf` is tempting, but `strto*` with end pointers composes better" kind="idiom">
-      <signature>char *end;</signature>
+      <signature>char* end;</signature>
       <summary><![CDATA[<p>This avoids format-string corner cases and gives you precise control.</p>]]></summary>
       <examples>
         <example id="ex.id-0021.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-char *end;
+char* end;
 long v = strtol(p, &end, 10);
 if (end == p) { /* not a number */ }
 p = end;
@@ -630,13 +629,13 @@ p = end;
     </function>
 
     <function id="fn.idiom.id-0022" name="idiom: `volatile` only for hardware/async boundaries, not for &quot;thread safety&quot;" kind="idiom">
-      <signature>volatile uint32_t *reg = (volatile uint32_t *)0x40000000u;</signature>
+      <signature>volatile uint32_t* reg = (volatile uint32_t*)0x40000000u;</signature>
       <summary><![CDATA[<p>This is a pattern you see in embedded C; the key is knowing that <code>volatile</code> is not a concurrency primitive.</p>]]></summary>
       <examples>
         <example id="ex.id-0022.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-volatile uint32_t *reg = (volatile uint32_t *)0x40000000u;
+volatile uint32_t* reg = (volatile uint32_t*)0x40000000u;
 *reg = 1;
 ]]></code>
         </example>
@@ -666,19 +665,63 @@ void abort_with_error(int code) {
     </function>
 
     <function id="fn.idiom.id-0024" name="idiom: Add LSB-first digit arrays with carry" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_digits_add_lsb_first(const unsigned char* a,</signature>
+      <signature>result digits_add_lsb_first(const unsigned char* a,</signature>
       <summary><![CDATA[<p>Adds two non-negative integers represented as base-10 digit arrays stored LSB-first.<br>Inputs:<br>a[0..a_size) and b[0..b_size) hold digits with a[0] the least significant digit.<br>Output:<br>Writes the sum into out[0..*out_size) also LSB-first.<br>On success returns C99LC_RESULT_SUCCESS and sets *out_size to the number of digits<br>written (never exceeding out_cap).<br>Failure cases:<br>- Any required pointer is NULL (a/b/out/out_size) while its size is &gt; 0.<br>- out_cap is insufficient for max(a_size, b_size) + 1 potential carry digit.<br>In these cases returns C99LC_RESULT_FAILED and leaves *out_size unmodified.<br>Notes:<br>- Digits must each be in the range [0,9]; behavior is undefined otherwise.<br>- Accepts zero-length operands (treated as value 0).<br>- This helper is allocation-free and intended for small / medium sized numbers<br>typical in coding challenge contexts.</p>]]></summary>
       <examples>
         <example id="ex.id-0024.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_digits_add_lsb_first(const unsigned char* a,
-    size_t a_size,
-    const unsigned char* b,
-    size_t b_size,
-    unsigned char* out,
-    size_t out_cap,
-    size_t* out_size);
+
+#include <stddef.h>
+
+typedef enum {
+    RESULT_SUCCESS = 0,
+    RESULT_FAILED = 1
+} result;
+
+static int digit_ok(unsigned char d) { return d <= 9; }
+
+result digits_add_lsb_first(const unsigned char* a,
+                            size_t a_size,
+                            const unsigned char* b,
+                            size_t b_size,
+                            unsigned char* out,
+                            size_t out_cap,
+                            size_t* out_size) {
+    if (!out_size) return RESULT_FAILED;
+    if ((a_size && !a) || (b_size && !b) || !out) return RESULT_FAILED;
+
+    size_t need = (a_size > b_size ? a_size : b_size) + 1;
+    if (out_cap < need) return RESULT_FAILED;
+
+    size_t i = 0;
+    unsigned carry = 0;
+
+    for (; i < a_size || i < b_size; ++i) {
+        unsigned da = 0, db = 0;
+        if (i < a_size) {
+            if (!digit_ok(a[i])) return RESULT_FAILED;
+            da = a[i];
+        }
+        if (i < b_size) {
+            if (!digit_ok(b[i])) return RESULT_FAILED;
+            db = b[i];
+        }
+
+        unsigned sum = da + db + carry;
+        out[i] = (unsigned char)(sum % 10u);
+        carry = sum / 10u;
+    }
+
+    if (carry) {
+        out[i++] = (unsigned char)carry;
+    } else if (i == 0) {
+        out[i++] = 0;
+    }
+
+    *out_size = i;
+    return RESULT_SUCCESS;
+}
 ]]></code>
         </example>
       </examples>
@@ -735,14 +778,43 @@ p = realloc(p, new_count * sizeof *p);
     </function>
 
     <function id="fn.idiom.id-0028" name="idiom: Array difference using binary search lookup" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL size_t c99lc_array_int_diff(</signature>
-      <summary><![CDATA[<p>Finds elements in source that are not present in sorted_lookup array.<br>Inputs:<br>- source[0..source_size): Array to search in.<br>- sorted_lookup[0..lookup_size): Sorted array of values to exclude.<br>- out[0..source_size): Destination buffer for difference elements.<br>Output:<br>- Writes elements from source not found in sorted_lookup into out.<br>- Returns the count of elements written to out.<br>Behavior:<br>- Returns 0 if source is NULL, source_size is 0, or sorted_lookup is NULL.<br>- sorted_lookup must be sorted in ascending order for correct results.<br>- Uses binary search for efficient lookup (O(log m) per element).<br>Example: source=[1,2,3,4], sorted_lookup=[2,4] -&gt; out=[1,3], returns 2.<br>Complexity: O(n log m) where n=source_size, m=lookup_size.</p>]]></summary>
+      <signature>size_t array_int_diff(</signature>
+      <summary><![CDATA[<p>Finds elements in source that are not present in sorted_lookup array.<br>Inputs:<br>- source[0..source_size): Array to search in.<br>- sorted_lookup[0..lookup_size): Sorted array of values to exclude.<br>- out[0..source_size): Destination buffer for difference elements.<br>Output:<br>- Writes elements from source not found in sorted_lookup into out.<br>- Returns the count of elements written to out.<br>Behavior:<br>- Returns 0 if source is NULL, source_size is 0, sorted_lookup is NULL, lookup_size is 0, or out is NULL.<br>- sorted_lookup must be sorted in ascending order for correct results.<br>- Uses binary search for efficient lookup (O(log m) per element).<br>Example: source=[1,2,3,4], sorted_lookup=[2,4] -&gt; out=[1,3], returns 2.<br>Complexity: O(n log m) where n=source_size, m=lookup_size.</p>]]></summary>
       <examples>
         <example id="ex.id-0028.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL size_t c99lc_array_int_diff(
-    const int* source, size_t source_size, const int* sorted_lookup, size_t lookup_size, int* out);
+
+#include <stddef.h>
+
+static int sorted_contains_int(const int* xs, size_t n, int v) {
+    size_t lo = 0, hi = n;
+    while (lo < hi) {
+        size_t mid = lo + (hi - lo) / 2;
+        int x = xs[mid];
+        if (x == v) return 1;
+        if (x < v) lo = mid + 1;
+        else hi = mid;
+    }
+    return 0;
+}
+
+size_t array_int_diff(const int* source,
+                      size_t source_size,
+                      const int* sorted_lookup,
+                      size_t lookup_size,
+                      int* out) {
+    if (!out || !source || source_size == 0 || !sorted_lookup || lookup_size == 0) return 0;
+
+    size_t w = 0;
+    for (size_t i = 0; i < source_size; ++i) {
+        int v = source[i];
+        if (!sorted_contains_int(sorted_lookup, lookup_size, v)) {
+            out[w++] = v;
+        }
+    }
+    return w;
+}
 ]]></code>
         </example>
       </examples>
@@ -897,7 +969,7 @@ unsigned long long binomial(unsigned int n, unsigned int k) {
 
     unsigned long long result = 1;
     for (unsigned int i = 1; i <= k; ++i) {
-        result = result * (n - k + i) / i;
+        result = result* (n - k + i) / i;
     }
     return result;
 }
@@ -1077,60 +1149,66 @@ void call_external(void) {
     </function>
 
     <function id="fn.idiom.id-0043" name="idiom: Character stack with flexible array member" kind="idiom">
-      <signature>typedef struct c99lc_stack_char_fla {</signature>
+      <signature>typedef struct stack_char_fla {</signature>
       <summary><![CDATA[<p>Fixed-capacity character stack using flexible array member.<br>Provides a simple LIFO container for character data with allocation at creation time.</p><p>Creates a character stack with specified capacity.<br>Returns NULL on allocation failure or if capacity is 0.</p><p>Destroys a character stack and frees its memory.<br>Safe to call with NULL pointer.</p><p>Returns the current number of characters in the stack.<br>Returns 0 if stack is NULL.</p><p>Pushes a character onto the stack.<br>Returns true on success, false if stack is NULL or at capacity.</p><p>Pops a character from the stack and stores it in *out.<br>Returns true on success, false if stack is NULL, empty, or out is NULL.</p>]]></summary>
       <examples>
         <example id="ex.id-0043.1" lang="c99">
-          <title>Example 1</title>
+          <title>Example</title>
           <code><![CDATA[
-typedef struct c99lc_stack_char_fla {
-    size_t capacity; /* maximum number of characters the stack can hold */
-    size_t count; /* current number of characters in the stack */
-    char items[]; /* flexible array member for character storage */
-} c99lc_stack_char_fla;
-]]></code>
-        </example>
-        <example id="ex.id-0043.2" lang="c99">
-          <title>Example 2</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL c99lc_stack_char_fla* c99lc_stack_char_fla_create(size_t capacity);
-]]></code>
-        </example>
-        <example id="ex.id-0043.3" lang="c99">
-          <title>Example 3</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL void c99lc_stack_char_fla_destroy(c99lc_stack_char_fla* stack);
-]]></code>
-        </example>
-        <example id="ex.id-0043.4" lang="c99">
-          <title>Example 4</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL size_t c99lc_stack_char_fla_count(const c99lc_stack_char_fla* stack);
-]]></code>
-        </example>
-        <example id="ex.id-0043.5" lang="c99">
-          <title>Example 5</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL bool c99lc_stack_char_fla_push(c99lc_stack_char_fla* stack, char c);
-]]></code>
-        </example>
-        <example id="ex.id-0043.6" lang="c99">
-          <title>Example 6</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL bool c99lc_stack_char_fla_pop(c99lc_stack_char_fla* stack, char* out);
+
+#include <stddef.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+typedef struct stack_char_fla {
+    size_t capacity;
+    size_t count;
+    char items[];
+} stack_char_fla;
+
+stack_char_fla* stack_char_fla_create(size_t capacity) {
+    if (capacity == 0) return NULL;
+    stack_char_fla* s = (stack_char_fla*)malloc(sizeof(*s) + capacity * sizeof(s->items[0]));
+    if (!s) return NULL;
+    s->capacity = capacity;
+    s->count = 0;
+    return s;
+}
+
+void stack_char_fla_destroy(stack_char_fla* stack) {
+    free(stack);
+}
+
+size_t stack_char_fla_count(const stack_char_fla* stack) {
+    return stack ? stack->count : 0;
+}
+
+bool stack_char_fla_push(stack_char_fla* stack, char c) {
+    if (!stack) return false;
+    if (stack->count >= stack->capacity) return false;
+    stack->items[stack->count++] = c;
+    return true;
+}
+
+bool stack_char_fla_pop(stack_char_fla* stack, char* out) {
+    if (!stack || !out) return false;
+    if (stack->count == 0) return false;
+    *out = stack->items[--stack->count];
+    return true;
+}
 ]]></code>
         </example>
       </examples>
     </function>
 
     <function id="fn.idiom.id-0044" name="idiom: Check for overflow before multiply/add (portable pattern)" kind="idiom">
-      <signature>if (b != 0 &amp;&amp; a &gt; SIZE_MAX / b) return -1;   /* a*b would overflow */</signature>
+      <signature>if (b != 0 &amp;&amp; a &gt; SIZE_MAX / b) return -1; /* a*b would overflow */</signature>
       <summary><![CDATA[<p>This is the reliable, standard way (no compiler builtins).</p>]]></summary>
       <examples>
         <example id="ex.id-0044.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-if (b != 0 && a > SIZE_MAX / b) return -1;   /* a*b would overflow */
+if (b != 0 && a > SIZE_MAX / b) return -1;   /* a * b would overflow */
 
 if (a > SIZE_MAX - b) return -1;            /* a+b would overflow */
 ]]></code>
@@ -1224,13 +1302,16 @@ bool addition_overflows(int a, int b) {
     </function>
 
     <function id="fn.idiom.id-0048" name="idiom: Check if integer is even" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL unsigned char c99lc_integers_is_even(int num);</signature>
+      <signature>unsigned char integers_is_even(int num);</signature>
       <summary><![CDATA[<p>Returns 1 if num is even, otherwise 0.<br>Handles negative and positive values consistently.</p>]]></summary>
       <examples>
         <example id="ex.id-0048.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL unsigned char c99lc_integers_is_even(int num);
+
+unsigned char integers_is_even(int num) {
+    return (unsigned char)((num & 1) == 0);
+}
 ]]></code>
         </example>
       </examples>
@@ -1337,7 +1418,7 @@ bool is_numeric(const char* s) {
     }
 
     while (*s) {
-        if (!isdigit((unsigned char)*s)) {
+        if (!isdigit((unsigned char) * s)) {
             return false;
         }
         ++s;
@@ -1366,7 +1447,7 @@ bool is_numeric(const char* s) {
 
 bool is_blank(const char* s) {
     while (*s) {
-        if (!isspace((unsigned char)*s)) {
+        if (!isspace((unsigned char) * s)) {
             return false;
         }
         ++s;
@@ -1379,14 +1460,28 @@ bool is_blank(const char* s) {
     </function>
 
     <function id="fn.idiom.id-0054" name="idiom: Check palindrome in byte array" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL unsigned char c99lc_array_u8_is_palindrome(const unsigned char* a,</signature>
+      <signature>unsigned char array_u8_is_palindrome(const unsigned char* a,</signature>
       <summary><![CDATA[<p>Returns 1 if a[0..n) forms a palindrome when read from index 0 to n-1.<br>Behavior:<br>- Returns 1 for n == 0 or n == 1 (empty and single-element sequences are palindromes).<br>- Returns 0 if a is NULL and n &gt; 0.<br>Intended for digit arrays or general byte sequences.</p>]]></summary>
       <examples>
         <example id="ex.id-0054.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL unsigned char c99lc_array_u8_is_palindrome(const unsigned char* a,
-    size_t n);
+
+#include <stddef.h>
+
+unsigned char array_u8_is_palindrome(const unsigned char* a, size_t n) {
+    if (!a && n) return 0;
+    if (n <= 1) return 1;
+
+    size_t i = 0;
+    size_t j = n - 1;
+    while (i < j) {
+        if (a[i] != a[j]) return 0;
+        ++i;
+        --j;
+    }
+    return 1;
+}
 ]]></code>
         </example>
       </examples>
@@ -1651,7 +1746,7 @@ const char* choose_value(int condition) {
           <title>Example</title>
           <code><![CDATA[
 #define OFFSETOF(type, member) ((size_t)&(((type *)0)->member))
-#define CONTAINER_OF(ptr, type, member) ((type *)((char *)(ptr) - OFFSETOF(type, member)))
+#define CONTAINER_OF(ptr, type, member) ((type *)((char*)(ptr) - OFFSETOF(type, member)))
 ]]></code>
         </example>
       </examples>
@@ -1758,14 +1853,48 @@ void format_two_decimals(double value, char* buffer, size_t buffer_size) {
     </function>
 
     <function id="fn.idiom.id-0071" name="idiom: Convert string to camelCase" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL size_t c99lc_string_to_camel_case(</signature>
+      <signature>size_t string_to_camel_case(</signature>
       <summary><![CDATA[<p>Converts source string to camelCase by capitalizing letters after spaces and lowercasing others.<br>Writes result into buffer[0..buffer_capacity), returns number of characters written.<br>Only alphabetic characters are copied; spaces and other characters are skipped.<br>First character is always lowercase if it's alphabetic.<br>Parameters:<br>- source: null-terminated input string<br>- buffer: destination buffer for camelCase result<br>- buffer_capacity: maximum characters to write (excluding null terminator)<br>Returns: number of characters written, or 0 if source/buffer is NULL or buffer_capacity is 0.<br>Complexity: O(n) where n is strlen(source).</p>]]></summary>
       <examples>
         <example id="ex.id-0071.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL size_t c99lc_string_to_camel_case(
-    const char* source, char* buffer, size_t buffer_capacity);
+
+#include <stddef.h>
+#include <ctype.h>
+
+size_t string_to_camel_case(const char* source, char* buffer, size_t buffer_capacity) {
+    if (!source || !buffer || buffer_capacity == 0) return 0;
+
+    size_t w = 0;
+    int cap_next = 0;
+
+    for (const unsigned char* p = (const unsigned char*)source; *p; ++p) {
+        if (isspace(*p)) {
+            cap_next = 1;
+            continue;
+        }
+        if (!isalpha(*p)) {
+            continue;
+        }
+
+        unsigned char ch = *p;
+        if (w == 0) {
+            ch = (unsigned char)tolower(ch);
+        } else if (cap_next) {
+            ch = (unsigned char)toupper(ch);
+        } else {
+            ch = (unsigned char)tolower(ch);
+        }
+        cap_next = 0;
+
+        if (w >= buffer_capacity) break;
+        buffer[w++] = (char)ch;
+    }
+
+    buffer[w < buffer_capacity ? w : buffer_capacity - 1] = '\0';
+    return w;
+}
 ]]></code>
         </example>
       </examples>
@@ -1816,13 +1945,27 @@ int string_to_int_base(const char* s, int base) {
     </function>
 
     <function id="fn.idiom.id-0074" name="idiom: Copy string into buffer with capacity and null-terminate" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL int c99lc_helloworld_into(char* out, size_t out_cap);</signature>
+      <signature>int helloworld_into(char* out, size_t out_cap);</signature>
       <summary><![CDATA[<p>Copies "Hello, World!" into out and null-terminates.<br>Returns bytes written excluding the terminator, or 0 if out is NULL or out_cap is 0.</p>]]></summary>
       <examples>
         <example id="ex.id-0074.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL int c99lc_helloworld_into(char* out, size_t out_cap);
+
+#include <stddef.h>
+#include <string.h>
+
+int helloworld_into(char* out, size_t out_cap) {
+    static const char kMsg[] = "Hello, World!";
+    if (!out || out_cap == 0) return 0;
+
+    size_t n = sizeof(kMsg) - 1;
+    if (n >= out_cap) n = out_cap - 1;
+
+    memcpy(out, kMsg, n);
+    out[n] = '\0';
+    return (int)n;
+}
 ]]></code>
         </example>
       </examples>
@@ -1853,13 +1996,27 @@ void count_down(void) {
     </function>
 
     <function id="fn.idiom.id-0076" name="idiom: Count decimal digits in integer" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL size_t c99lc_integers_count_digits(int x);</signature>
+      <signature>size_t integers_count_digits(int x);</signature>
       <summary><![CDATA[<p>Counts the number of decimal digits in x.<br>Example: 0 -&gt; 1, 90991 -&gt; 5; ignores the sign for negative inputs.</p>]]></summary>
       <examples>
         <example id="ex.id-0076.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL size_t c99lc_integers_count_digits(int x);
+
+#include <stddef.h>
+
+size_t integers_count_digits(int x) {
+    long long v = (long long)x;
+    if (v < 0) v = -v;
+    if (v == 0) return 1;
+
+    size_t n = 0;
+    while (v) {
+        v /= 10;
+        ++n;
+    }
+    return n;
+}
 ]]></code>
         </example>
       </examples>
@@ -1892,7 +2049,7 @@ unsigned int popcount(uint32_t value) {
         <example id="ex.id-0077.2" lang="c99">
           <title>Example 2</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL int c99lc_integers_count_set_bits(int number);
+ int integers_count_set_bits(int number);
 ]]></code>
         </example>
       </examples>
@@ -2230,43 +2387,92 @@ const char* executable_name(const char* argv0) {
     </function>
 
     <function id="fn.idiom.id-0093" name="idiom: Date struct with year/month/day fields" kind="idiom">
-      <signature>typedef struct c99lc_reasonable_date {</signature>
+      <signature>typedef struct reasonable_date {</signature>
       <summary><![CDATA[<p>Date helpers</p>]]></summary>
       <examples>
         <example id="ex.id-0093.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-typedef struct c99lc_reasonable_date {
+typedef struct reasonable_date {
     uint32_t year;
     uint32_t month;
     uint32_t day;
-} c99lc_reasonable_date;
+} reasonable_date;
 ]]></code>
         </example>
       </examples>
     </function>
 
     <function id="fn.idiom.id-0094" name="idiom: Days in month with leap-year adjustment" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL uint32_t c99lc_date_days_in_month(uint32_t year, uint32_t month);</signature>
+      <signature>uint32_t date_days_in_month(uint32_t year, uint32_t month);</signature>
       <summary><![CDATA[<p>Returns the number of days in the given month of year.<br>Returns 0 if month is out of range 1..12.</p>]]></summary>
       <examples>
         <example id="ex.id-0094.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL uint32_t c99lc_date_days_in_month(uint32_t year, uint32_t month);
+
+#include <stdint.h>
+
+static int date_is_leap_year(uint32_t year) {
+    return (year % 4u == 0u) && ((year % 100u != 0u) || (year % 400u == 0u));
+}
+
+uint32_t date_days_in_month(uint32_t year, uint32_t month) {
+    static const uint8_t days[] = { 31,28,31,30,31,30,31,31,30,31,30,31 };
+    if (month < 1u || month > 12u) return 0;
+
+    uint32_t d = (uint32_t)days[month - 1u];
+    if (month == 2u && date_is_leap_year(year)) d = 29;
+    return d;
+}
 ]]></code>
         </example>
       </examples>
     </function>
 
     <function id="fn.idiom.id-0095" name="idiom: Days since 1971-01-01 for date" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL uint32_t c99lc_date_days_since_1971(const c99lc_reasonable_date* d);</signature>
+      <signature>uint32_t date_days_since_1971(const reasonable_date* d);</signature>
       <summary><![CDATA[<p>Counts days since 1971-01-01 for date d.<br>Returns 0 if d is NULL; assumes d contains a valid date.</p>]]></summary>
       <examples>
         <example id="ex.id-0095.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL uint32_t c99lc_date_days_since_1971(const c99lc_reasonable_date* d);
+
+#include <stdint.h>
+
+typedef struct reasonable_date {
+    uint32_t year;
+    uint32_t month;
+    uint32_t day;
+} reasonable_date;
+
+static int date_is_leap_year(uint32_t year) {
+    return (year % 4u == 0u) && ((year % 100u != 0u) || (year % 400u == 0u));
+}
+
+static uint32_t date_days_in_month(uint32_t year, uint32_t month) {
+    static const uint8_t days[] = { 31,28,31,30,31,30,31,31,30,31,30,31 };
+    uint32_t d = (uint32_t)days[month - 1u];
+    if (month == 2u && date_is_leap_year(year)) d = 29;
+    return d;
+}
+
+uint32_t date_days_since_1971(const reasonable_date* d) {
+    if (!d) return 0;
+
+    uint32_t days = 0;
+
+    for (uint32_t y = 1971u; y < d->year; ++y) {
+        days += (uint32_t)(date_is_leap_year(y) ? 366u : 365u);
+    }
+
+    for (uint32_t m = 1u; m < d->month; ++m) {
+        days += date_days_in_month(d->year, m);
+    }
+
+    days += (d->day > 0u ? (d->day - 1u) : 0u);
+    return days;
+}
 ]]></code>
         </example>
       </examples>
@@ -2348,13 +2554,27 @@ const char* planet = "Earth";
     </function>
 
     <function id="fn.idiom.id-0099" name="idiom: Deduplicate sorted array in place" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL size_t c99lc_array_int_dedup_sorted(int* array, size_t size);</signature>
+      <signature>size_t array_int_dedup_sorted(int* array, size_t size);</signature>
       <summary><![CDATA[<p>Removes consecutive duplicate elements from a sorted int array in place.<br>Input: array[0..size) must be sorted in ascending order.<br>Output: Unique elements are compacted at the beginning of array.<br>Returns: The new size (count of distinct elements).<br>Behavior:<br>- Returns 0 if array is NULL or size is 0.<br>- Returns 1 if size is 1.<br>- Does not modify elements beyond the returned size.<br>Example: [1,1,2,3,3,3,4] becomes [1,2,3,4] and returns 4.<br>Complexity: O(n) where n is size.</p>]]></summary>
       <examples>
         <example id="ex.id-0099.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL size_t c99lc_array_int_dedup_sorted(int* array, size_t size);
+
+#include <stddef.h>
+
+size_t array_int_dedup_sorted(int* array, size_t size) {
+    if (!array || size == 0) return 0;
+    if (size == 1) return 1;
+
+    size_t w = 1;
+    for (size_t r = 1; r < size; ++r) {
+        if (array[r] != array[w - 1]) {
+            array[w++] = array[r];
+        }
+    }
+    return w;
+}
 ]]></code>
         </example>
       </examples>
@@ -2435,48 +2655,82 @@ struct Config cfg = {
     </function>
 
     <function id="fn.idiom.id-0103" name="idiom: Detect zero digit in base-10 representation" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL unsigned char c99lc_integers_has_zero_digit(int num);</signature>
+      <signature>unsigned char integers_has_zero_digit(int num);</signature>
       <summary><![CDATA[<p>Returns 1 if the base-10 representation of num contains at least one '0' digit, else 0.<br>Behavior:<br>- 0 returns 1 (its only digit is zero).<br>- Negative values are examined by their absolute value.<br>Examples: 101 -&gt; 1, 123 -&gt; 0, 909 -&gt; 1.<br>Complexity: O(d) where d is the number of decimal digits.</p>]]></summary>
       <examples>
         <example id="ex.id-0103.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL unsigned char c99lc_integers_has_zero_digit(int num);
+
+unsigned char integers_has_zero_digit(int num) {
+    long long v = (long long)num;
+    if (v < 0) v = -v;
+    if (v == 0) return 1;
+
+    while (v) {
+        if ((v % 10) == 0) return 1;
+        v /= 10;
+    }
+    return 0;
+}
 ]]></code>
         </example>
       </examples>
     </function>
 
     <function id="fn.idiom.id-0104" name="idiom: Dynamic int array with capacity growth" kind="idiom">
-      <signature>typedef struct c99lc_leaf_values {</signature>
+      <signature>typedef struct leaf_values {</signature>
       <summary><![CDATA[<p>Lightweight dynamic array for ints</p><p>Allocates a growable array of int with initial_capacity (1 if 0).<br>Returns NULL on allocation failure.</p><p>Appends item to the end of the vector, growing capacity as needed.<br>If reallocation fails the push is dropped.</p><p>Frees the vector and its storage.<br>Safe to call with NULL.</p>]]></summary>
       <examples>
         <example id="ex.id-0104.1" lang="c99">
-          <title>Example 1</title>
+          <title>Example</title>
           <code><![CDATA[
-typedef struct c99lc_leaf_values {
+
+#include <stddef.h>
+#include <stdlib.h>
+
+typedef struct leaf_values {
     size_t size;
     size_t capacity;
     int* items;
-} c99lc_leaf_values;
-]]></code>
-        </example>
-        <example id="ex.id-0104.2" lang="c99">
-          <title>Example 2</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL c99lc_leaf_values* c99lc_leaf_values_create(size_t initial_capacity);
-]]></code>
-        </example>
-        <example id="ex.id-0104.3" lang="c99">
-          <title>Example 3</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL void c99lc_leaf_values_push(c99lc_leaf_values* lv, int item);
-]]></code>
-        </example>
-        <example id="ex.id-0104.4" lang="c99">
-          <title>Example 4</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL void c99lc_leaf_values_destroy(c99lc_leaf_values* lv);
+} leaf_values;
+
+leaf_values* leaf_values_create(size_t initial_capacity) {
+    if (initial_capacity == 0) initial_capacity = 1;
+
+    leaf_values* lv = (leaf_values*)malloc(sizeof(*lv));
+    if (!lv) return NULL;
+
+    lv->items = (int*)malloc(initial_capacity * sizeof(*lv->items));
+    if (!lv->items) {
+        free(lv);
+        return NULL;
+    }
+
+    lv->size = 0;
+    lv->capacity = initial_capacity;
+    return lv;
+}
+
+void leaf_values_push(leaf_values* lv, int item) {
+    if (!lv) return;
+
+    if (lv->size == lv->capacity) {
+        size_t new_cap = lv->capacity ? (lv->capacity * 2) : 1;
+        int* tmp = (int*)realloc(lv->items, new_cap * sizeof(*lv->items));
+        if (!tmp) return;
+        lv->items = tmp;
+        lv->capacity = new_cap;
+    }
+
+    lv->items[lv->size++] = item;
+}
+
+void leaf_values_destroy(leaf_values* lv) {
+    if (!lv) return;
+    free(lv->items);
+    free(lv);
+}
 ]]></code>
         </example>
       </examples>
@@ -2681,54 +2935,134 @@ int find_substring_index(const char* s, const char* sub) {
     </function>
 
     <function id="fn.idiom.id-0111" name="idiom: Fixed-capacity positive decimal digit buffer (LSB-first)" kind="idiom">
-      <signature>typedef struct c99lc_digits_positive_int_buffer {</signature>
+      <signature>typedef struct digits_positive_int_buffer {</signature>
       <summary><![CDATA[<p>Fixed-capacity positive decimal digit buffer.<br>Represents a non-negative integer in base-10 with digits stored least-significant first.<br>Intended for problems like LeetCode 989 (Add to Array-Form of Integer) to avoid dynamic<br>allocation in intermediate steps.<br>Invariants:<br>- size in [1, capacity] when representing a value.<br>- digits[i] in [0,9].</p><p>Initializes buf with external storage digits[0..capacity).<br>After init the represented value is 0 (size==1, digits[0]==0).<br>Returns C99LC_RESULT_FAILED if arguments invalid (buf==NULL, digits==NULL, capacity==0).</p><p>Parses non-negative integer k into buf (overwriting previous contents).<br>Requires k&gt;=0 and buf previously initialized. Returns C99LC_RESULT_FAILED on NULL buf or<br>if capacity insufficient (when k has more digits than capacity).</p><p>Loads digits from a big-endian array src[0..n) (as typically provided by LeetCode where<br>the first element is the most significant digit). Fails if n==0, buf NULL, or n&gt;capacity.</p><p>Adds two buffers a and b storing LSB-first digits and writes result into out.<br>Fails if out capacity &lt; max(a.size,b.size)+1 or any pointer NULL. Out may alias neither a nor b.</p><p>Writes big-endian int array of the number in buf into dst[0..dst_cap). On success sets *out_size.<br>Fails if dst_cap &lt; buf-&gt;size. dst and buf must be non-null.</p>]]></summary>
       <examples>
         <example id="ex.id-0111.1" lang="c99">
-          <title>Example 1</title>
+          <title>Example</title>
           <code><![CDATA[
-typedef struct c99lc_digits_positive_int_buffer {
-    size_t size; /* number of used digits */
-    size_t capacity; /* total available slots in digits[] */
-    unsigned char* digits; /* LSB-first digit storage */
-} c99lc_digits_positive_int_buffer;
-]]></code>
-        </example>
-        <example id="ex.id-0111.2" lang="c99">
-          <title>Example 2</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_digits_positive_int_init(
-    c99lc_digits_positive_int_buffer* buf, unsigned char* digits_mem, size_t capacity);
-]]></code>
-        </example>
-        <example id="ex.id-0111.3" lang="c99">
-          <title>Example 3</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_digits_positive_int_from_int(
-    c99lc_digits_positive_int_buffer* buf, int k);
-]]></code>
-        </example>
-        <example id="ex.id-0111.4" lang="c99">
-          <title>Example 4</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_digits_positive_int_from_big_endian_array(
-    c99lc_digits_positive_int_buffer* buf, const int* src, size_t n);
-]]></code>
-        </example>
-        <example id="ex.id-0111.5" lang="c99">
-          <title>Example 5</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_digits_positive_int_add(
-    const c99lc_digits_positive_int_buffer* a,
-    const c99lc_digits_positive_int_buffer* b,
-    c99lc_digits_positive_int_buffer* out);
-]]></code>
-        </example>
-        <example id="ex.id-0111.6" lang="c99">
-          <title>Example 6</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_digits_positive_int_to_big_endian_int_array(
-    const c99lc_digits_positive_int_buffer* buf, int* dst, size_t dst_cap, size_t* out_size);
+
+#include <stddef.h>
+#include <stdint.h>
+
+typedef enum {
+    RESULT_SUCCESS = 0,
+    RESULT_FAILED = 1
+} result;
+
+typedef struct digits_positive_int_buffer {
+    size_t size;
+    size_t capacity;
+    unsigned char* digits;
+} digits_positive_int_buffer;
+
+result digits_positive_int_init(digits_positive_int_buffer* buf,
+                                unsigned char* digits_mem,
+                                size_t capacity) {
+    if (!buf || !digits_mem || capacity == 0) return RESULT_FAILED;
+    buf->size = 1;
+    buf->capacity = capacity;
+    buf->digits = digits_mem;
+    buf->digits[0] = 0;
+    return RESULT_SUCCESS;
+}
+
+result digits_positive_int_from_int(digits_positive_int_buffer* buf, int k) {
+    if (!buf || !buf->digits || buf->capacity == 0) return RESULT_FAILED;
+    if (k < 0) return RESULT_FAILED;
+
+    unsigned int v = (unsigned int)k;
+    if (v == 0) {
+        buf->digits[0] = 0;
+        buf->size = 1;
+        return RESULT_SUCCESS;
+    }
+
+    size_t i = 0;
+    while (v && i < buf->capacity) {
+        buf->digits[i++] = (unsigned char)(v % 10u);
+        v /= 10u;
+    }
+
+    if (v != 0) return RESULT_FAILED;
+    buf->size = i;
+    return RESULT_SUCCESS;
+}
+
+result digits_positive_int_from_big_endian_array(digits_positive_int_buffer* buf,
+                                                 const int* src,
+                                                 size_t n) {
+    if (!buf || !buf->digits || !src || n == 0 || n > buf->capacity) return RESULT_FAILED;
+
+    for (size_t i = 0; i < n; ++i) {
+        int d = src[n - 1 - i];
+        if (d < 0 || d > 9) return RESULT_FAILED;
+        buf->digits[i] = (unsigned char)d;
+    }
+
+    buf->size = n;
+    while (buf->size > 1 && buf->digits[buf->size - 1] == 0) buf->size--;
+    return RESULT_SUCCESS;
+}
+
+result digits_positive_int_add(const digits_positive_int_buffer* a,
+                               const digits_positive_int_buffer* b,
+                               digits_positive_int_buffer* out) {
+    if (!a || !b || !out || !out->digits) return RESULT_FAILED;
+    if (a->size == 0 || b->size == 0) return RESULT_FAILED;
+    if (out == a || out == b) return RESULT_FAILED;
+
+    size_t need = (a->size > b->size ? a->size : b->size) + 1;
+    if (out->capacity < need) return RESULT_FAILED;
+
+    size_t i = 0;
+    unsigned carry = 0;
+
+    for (; i < a->size || i < b->size; ++i) {
+        unsigned da = 0, db = 0;
+        if (i < a->size) {
+            unsigned char d = a->digits[i];
+            if (d > 9) return RESULT_FAILED;
+            da = d;
+        }
+        if (i < b->size) {
+            unsigned char d = b->digits[i];
+            if (d > 9) return RESULT_FAILED;
+            db = d;
+        }
+
+        unsigned sum = da + db + carry;
+        out->digits[i] = (unsigned char)(sum % 10u);
+        carry = sum / 10u;
+    }
+
+    if (carry) {
+        out->digits[i++] = (unsigned char)carry;
+    }
+    if (i == 0) {
+        out->digits[i++] = 0;
+    }
+
+    out->size = i;
+    return RESULT_SUCCESS;
+}
+
+result digits_positive_int_to_big_endian_int_array(const digits_positive_int_buffer* buf,
+                                                   int* dst,
+                                                   size_t dst_cap,
+                                                   size_t* out_size) {
+    if (!buf || !buf->digits || !dst || !out_size) return RESULT_FAILED;
+    if (buf->size == 0 || dst_cap < buf->size) return RESULT_FAILED;
+
+    for (size_t i = 0; i < buf->size; ++i) {
+        unsigned char d = buf->digits[buf->size - 1 - i];
+        if (d > 9) return RESULT_FAILED;
+        dst[i] = (int)d;
+    }
+
+    *out_size = buf->size;
+    return RESULT_SUCCESS;
+}
 ]]></code>
         </example>
       </examples>
@@ -3009,13 +3343,13 @@ bool square_checked(int value, int* result) {
     </function>
 
     <function id="fn.idiom.id-0123" name="idiom: Hex dump loop that is careful about signedness" kind="idiom">
-      <signature>const unsigned char *b = buf;</signature>
+      <signature>const unsigned char* b = buf;</signature>
       <summary><![CDATA[<p>Casting avoids <code>char</code> sign surprises.</p>]]></summary>
       <examples>
         <example id="ex.id-0123.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-const unsigned char *b = buf;
+const unsigned char* b = buf;
 for (size_t i = 0; i < n; ++i) printf("%02X", (unsigned)b[i]);
 ]]></code>
         </example>
@@ -3082,13 +3416,26 @@ void int_to_hex(unsigned int value, char* buffer, size_t buffer_size) {
     </function>
 
     <function id="fn.idiom.id-0126" name="idiom: Increment decimal digit array in place" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL void c99lc_digits_increment(unsigned char* digits, size_t digits_size);</signature>
+      <signature>void digits_increment(unsigned char* digits, size_t digits_size);</signature>
       <summary><![CDATA[<p>Increments a big-endian decimal digit array in place by 1.<br>Digits must be in [0,9]; carry ripples from the least significant end.</p>]]></summary>
       <examples>
         <example id="ex.id-0126.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL void c99lc_digits_increment(unsigned char* digits, size_t digits_size);
+
+#include <stddef.h>
+
+void digits_increment(unsigned char* digits, size_t digits_size) {
+    if (!digits || digits_size == 0) return;
+
+    for (size_t i = digits_size; i-- > 0;) {
+        if (digits[i] < 9) {
+            digits[i] = (unsigned char)(digits[i] + 1);
+            return;
+        }
+        digits[i] = 0;
+    }
+}
 ]]></code>
         </example>
       </examples>
@@ -3111,7 +3458,7 @@ unsigned int int_pow(unsigned int base, unsigned int exp) {
         return 1;
     }
     if ((exp & 1U) == 0) {
-        return int_pow(base * base, exp / 2);
+        return int_pow(base *base, exp / 2);
     }
     return base * int_pow(base * base, (exp - 1) / 2);
 }
@@ -3121,13 +3468,23 @@ unsigned int int_pow(unsigned int base, unsigned int exp) {
     </function>
 
     <function id="fn.idiom.id-0128" name="idiom: Interleave halves of array" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL void c99lc_array_int_interleave_halves(int* dst, const int* src, size_t n);</signature>
+      <signature>void array_int_interleave_halves(int* dst, const int* src, size_t n);</signature>
       <summary><![CDATA[<p>Interleave halves of an int array.<br>Input:  src holds 2*n ints as [x1, x2, ..., xn, y1, y2, ..., yn].<br>Output: dst becomes [x1, y1, x2, y2, ..., xn, yn].<br>No allocation; no-op if pointers are NULL or n==0.</p>]]></summary>
       <examples>
         <example id="ex.id-0128.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL void c99lc_array_int_interleave_halves(int* dst, const int* src, size_t n);
+
+#include <stddef.h>
+
+void array_int_interleave_halves(int* dst, const int* src, size_t n) {
+    if (!dst || !src || n == 0) return;
+
+    for (size_t i = 0; i < n; ++i) {
+        dst[2 * i] = src[i];
+        dst[2 * i + 1] = src[n + i];
+    }
+}
 ]]></code>
         </example>
       </examples>
@@ -3235,14 +3592,29 @@ void join_strings(
     </function>
 
     <function id="fn.idiom.id-0132" name="idiom: Join integer from LSB-first digit array" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL int c99lc_integers_join_digits_from_array(const unsigned char* src_array,</signature>
+      <signature>int integers_join_digits_from_array(const unsigned char* src_array,</signature>
       <summary><![CDATA[<p>Reconstructs an integer from digits stored LSB-first in src_array.<br>Returns 0 if src_array is NULL or src_array_size is 0.</p>]]></summary>
       <examples>
         <example id="ex.id-0132.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL int c99lc_integers_join_digits_from_array(const unsigned char* src_array,
-    size_t src_array_size);
+
+#include <stddef.h>
+
+int integers_join_digits_from_array(const unsigned char* src_array, size_t src_array_size) {
+    if (!src_array || src_array_size == 0) return 0;
+
+    int value = 0;
+    int place = 1;
+
+    for (size_t i = 0; i < src_array_size; ++i) {
+        unsigned char d = src_array[i];
+        if (d > 9) return 0;
+        value += (int)d * place;
+        place *= 10;
+    }
+    return value;
+}
 ]]></code>
         </example>
       </examples>
@@ -3291,13 +3663,19 @@ int launch_program(const char* command) {
     </function>
 
     <function id="fn.idiom.id-0135" name="idiom: Leap year check (Gregorian 4/100/400 rule)" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL bool c99lc_date_is_leap_year(uint32_t year);</signature>
+      <signature>bool date_is_leap_year(uint32_t year);</signature>
       <summary><![CDATA[<p>Returns true if year is a Gregorian leap year.<br>Applies the 4, 100, 400 rule.</p>]]></summary>
       <examples>
         <example id="ex.id-0135.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL bool c99lc_date_is_leap_year(uint32_t year);
+
+#include <stdint.h>
+#include <stdbool.h>
+
+bool date_is_leap_year(uint32_t year) {
+    return (year % 4u == 0u) && ((year % 100u != 0u) || (year % 400u == 0u));
+}
 ]]></code>
         </example>
       </examples>
@@ -3318,7 +3696,7 @@ C99_LEETCODE_PUBLIC_DECL bool c99lc_date_is_leap_year(uint32_t year);
 #include <dirent.h>
 
 int list_directory(const char* path) {
-    DIR* dir = opendir(path);
+    DIR *dir = opendir(path);
     if (!dir) {
         return -1;
     }
@@ -3337,14 +3715,14 @@ int list_directory(const char* path) {
     </function>
 
     <function id="fn.idiom.id-0137" name="idiom: Local static for expensive one-time setup inside a function" kind="idiom">
-      <signature>const char *lookup(int k) {</signature>
+      <signature>const char* lookup(int k) {</signature>
       <summary><![CDATA[<p>This avoids repeated initialization and keeps the table close to the code that uses it.</p>]]></summary>
       <examples>
         <example id="ex.id-0137.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-const char *lookup(int k) {
-    static const char *tbl[] = { "zero", "one", "two" };
+const char* lookup(int k) {
+    static const char* tbl[] = { "zero", "one", "two" };
     return (k >= 0 && k < (int)(sizeof tbl / sizeof tbl[0])) ? tbl[k] : "unknown";
 }
 ]]></code>
@@ -3503,128 +3881,263 @@ size_t bytes_of(int value) {
     </function>
 
     <function id="fn.idiom.id-0145" name="idiom: Packed bitset with test/set/clear" kind="idiom">
-      <signature>typedef struct c99lc_bitset {</signature>
+      <signature>typedef struct bitset {</signature>
       <summary><![CDATA[<p>Compact bitset using uint8_t array with flexible array member.<br>Stores bits packed into bytes, providing efficient storage for boolean flags.<br>Bit indices are zero-based; bit i resides in items[i/8] at position (i%8).</p><p>Creates a bitset capable of storing up to bits_capacity bits.<br>All bits are initialized to 0.<br>Returns NULL on allocation failure or if bits_capacity is 0.<br>Complexity: O(n) where n = (bits_capacity + 7) / 8.</p><p>Destroys a bitset and frees its memory.<br>Safe to call with NULL pointer.</p><p>Tests whether the bit at bit_index is set (1) or clear (0).<br>Returns true if the bit is set, false otherwise.<br>Behavior is undefined if bit_index &gt;= bitset-&gt;bits_capacity or bitset is NULL.<br>Complexity: O(1).</p><p>Sets the bit at bit_index to 1.<br>Behavior is undefined if bit_index &gt;= bitset-&gt;bits_capacity or bitset is NULL.<br>Complexity: O(1).</p><p>Clears the bit at bit_index to 0.<br>Behavior is undefined if bit_index &gt;= bitset-&gt;bits_capacity or bitset is NULL.<br>Complexity: O(1).</p>]]></summary>
       <examples>
         <example id="ex.id-0145.1" lang="c99">
-          <title>Example 1</title>
+          <title>Example</title>
           <code><![CDATA[
-typedef struct c99lc_bitset {
-    size_t bytes_capacity; /* number of bytes allocated in items[] */
-    size_t bits_capacity; /* maximum number of bits that can be stored */
-    uint8_t items[]; /* flexible array member for bit storage */
-} c99lc_bitset;
-]]></code>
-        </example>
-        <example id="ex.id-0145.2" lang="c99">
-          <title>Example 2</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL c99lc_bitset* c99lc_bitset_create(size_t bits_capacity);
-]]></code>
-        </example>
-        <example id="ex.id-0145.3" lang="c99">
-          <title>Example 3</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL void c99lc_bitset_destroy(c99lc_bitset* bitset);
-]]></code>
-        </example>
-        <example id="ex.id-0145.4" lang="c99">
-          <title>Example 4</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL bool c99lc_bitset_test(const c99lc_bitset* bitset, size_t bit_index);
-]]></code>
-        </example>
-        <example id="ex.id-0145.5" lang="c99">
-          <title>Example 5</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL void c99lc_bitset_set(c99lc_bitset* bitset, size_t bit_index);
-]]></code>
-        </example>
-        <example id="ex.id-0145.6" lang="c99">
-          <title>Example 6</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL void c99lc_bitset_clear(c99lc_bitset* bitset, size_t bit_index);
+
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct bitset {
+    size_t bytes_capacity;
+    size_t bits_capacity;
+    uint8_t items[];
+} bitset;
+
+static size_t bitset_bytes_for_bits(size_t bits_capacity) {
+    return (bits_capacity + 7u) / 8u;
+}
+
+bitset* bitset_create(size_t bits_capacity) {
+    if (bits_capacity == 0) return NULL;
+
+    size_t bytes = bitset_bytes_for_bits(bits_capacity);
+    bitset* bs = (bitset*)malloc(sizeof(*bs) + bytes * sizeof(bs->items[0]));
+    if (!bs) return NULL;
+
+    bs->bytes_capacity = bytes;
+    bs->bits_capacity = bits_capacity;
+    memset(bs->items, 0, bytes);
+    return bs;
+}
+
+void bitset_destroy(bitset* bs) {
+    free(bs);
+}
+
+bool bitset_test(const bitset* bs, size_t bit_index) {
+    if (!bs || bit_index >= bs->bits_capacity) return false;
+    size_t byte_i = bit_index / 8u;
+    unsigned shift = (unsigned)(bit_index % 8u);
+    return (bs->items[byte_i] & (uint8_t)(1u << shift)) != 0;
+}
+
+void bitset_set(bitset* bs, size_t bit_index) {
+    if (!bs || bit_index >= bs->bits_capacity) return;
+    size_t byte_i = bit_index / 8u;
+    unsigned shift = (unsigned)(bit_index % 8u);
+    bs->items[byte_i] |= (uint8_t)(1u << shift);
+}
+
+void bitset_clear(bitset* bs, size_t bit_index) {
+    if (!bs || bit_index >= bs->bits_capacity) return;
+    size_t byte_i = bit_index / 8u;
+    unsigned shift = (unsigned)(bit_index % 8u);
+    bs->items[byte_i] &= (uint8_t)~(uint8_t)(1u << shift);
+}
 ]]></code>
         </example>
       </examples>
     </function>
 
     <function id="fn.idiom.id-0146" name="idiom: Parenthesis classification and matching" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL bool c99lc_char_is_open_paren(char ch);</signature>
+      <signature>bool char_is_open_paren(char ch);</signature>
       <summary><![CDATA[<p>Returns true if the character is an opening parenthesis: '(', '{', or '['.<br>Returns false for any other character.</p><p>Returns true if the character is a closing parenthesis: ')', '}', or ']'.<br>Returns false for any other character.</p><p>Returns the matching parenthesis for the given character.<br>Maps '(' to ')', '{' to '}', '[' to ']' and vice versa.<br>Returns '\0' if the character is not a recognized parenthesis.</p>]]></summary>
       <examples>
         <example id="ex.id-0146.1" lang="c99">
-          <title>Example 1</title>
+          <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL bool c99lc_char_is_open_paren(char ch);
-]]></code>
-        </example>
-        <example id="ex.id-0146.2" lang="c99">
-          <title>Example 2</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL bool c99lc_char_is_close_paren(char ch);
-]]></code>
-        </example>
-        <example id="ex.id-0146.3" lang="c99">
-          <title>Example 3</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL char c99lc_char_paren_reverse(char ch);
+
+#include <stdbool.h>
+
+bool char_is_open_paren(char ch) {
+    return ch == '(' || ch == '{' || ch == '[';
+}
+
+bool char_is_close_paren(char ch) {
+    return ch == ')' || ch == '}' || ch == ']';
+}
+
+char char_paren_reverse(char ch) {
+    switch (ch) {
+        case '(': return ')';
+        case ')': return '(';
+        case '{': return '}';
+        case '}': return '{';
+        case '[': return ']';
+        case ']': return '[';
+        default: return '\0';
+    }
+}
 ]]></code>
         </example>
       </examples>
     </function>
 
     <function id="fn.idiom.id-0147" name="idiom: Parse integer digits to LSB-first array" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL void c99lc_integers_parse_digits_to_array(</signature>
+      <signature>void integers_parse_digits_to_array(</signature>
       <summary><![CDATA[<p>Decomposes source into decimal digits written LSB-first into dest_array.<br>Writes up to dest_array_size digits; negative numbers produce absolute digits.</p>]]></summary>
       <examples>
         <example id="ex.id-0147.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL void c99lc_integers_parse_digits_to_array(
-    int source, unsigned char* dest_array, size_t dest_array_size);
+
+#include <stddef.h>
+
+void integers_parse_digits_to_array(int source, unsigned char* dest_array, size_t dest_array_size) {
+    if (!dest_array || dest_array_size == 0) return;
+
+    long long v = (long long)source;
+    if (v < 0) v = -v;
+
+    for (size_t i = 0; i < dest_array_size; ++i) {
+        dest_array[i] = (unsigned char)(v % 10);
+        v /= 10;
+        if (v == 0) {
+            for (size_t j = i + 1; j < dest_array_size; ++j) dest_array[j] = 0;
+            return;
+        }
+    }
+}
 ]]></code>
         </example>
       </examples>
     </function>
 
     <function id="fn.idiom.id-0148" name="idiom: Parse ISO date string YYYY-MM-DD with validation" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_reasonable_date_parse_from_string(</signature>
+      <signature>result reasonable_date_parse_from_string(</signature>
       <summary><![CDATA[<p>Parses "YYYY-MM-DD" into out and validates month and day ranges.<br>Returns C99LC_RESULT_SUCCESS on success, otherwise C99LC_RESULT_FAILED.</p>]]></summary>
       <examples>
         <example id="ex.id-0148.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_reasonable_date_parse_from_string(
-    const char* date_string, c99lc_reasonable_date* out);
+
+#include <stddef.h>
+#include <stdint.h>
+#include <ctype.h>
+
+typedef enum {
+    RESULT_SUCCESS = 0,
+    RESULT_FAILED = 1
+} result;
+
+typedef struct reasonable_date {
+    uint32_t year;
+    uint32_t month;
+    uint32_t day;
+} reasonable_date;
+
+static int date_is_leap_year(uint32_t year) {
+    return (year % 4u == 0u) && ((year % 100u != 0u) || (year % 400u == 0u));
+}
+
+static uint32_t date_days_in_month(uint32_t year, uint32_t month) {
+    static const uint8_t days[] = { 31,28,31,30,31,30,31,31,30,31,30,31 };
+    if (month < 1u || month > 12u) return 0;
+    uint32_t d = (uint32_t)days[month - 1u];
+    if (month == 2u && date_is_leap_year(year)) d = 29;
+    return d;
+}
+
+static int parse_2(const char* s, uint32_t* out) {
+    if (!isdigit((unsigned char)s[0]) || !isdigit((unsigned char)s[1])) return 0;
+    *out = (uint32_t)((s[0] - '0') * 10 + (s[1] - '0'));
+    return 1;
+}
+
+static int parse_4(const char* s, uint32_t* out) {
+    uint32_t v = 0;
+    for (int i = 0; i < 4; ++i) {
+        if (!isdigit((unsigned char)s[i])) return 0;
+        v = v * 10u + (uint32_t)(s[i] - '0');
+    }
+    *out = v;
+    return 1;
+}
+
+result reasonable_date_parse_from_string(const char* date_string, reasonable_date* out) {
+    if (!date_string || !out) return RESULT_FAILED;
+
+    if (!(date_string[0] && date_string[1] && date_string[2] && date_string[3] &&
+          date_string[4] == '-' &&
+          date_string[5] && date_string[6] &&
+          date_string[7] == '-' &&
+          date_string[8] && date_string[9] &&
+          date_string[10] == '\0')) {
+        return RESULT_FAILED;
+    }
+
+    uint32_t y = 0, m = 0, d = 0;
+    if (!parse_4(date_string + 0, &y)) return RESULT_FAILED;
+    if (!parse_2(date_string + 5, &m)) return RESULT_FAILED;
+    if (!parse_2(date_string + 8, &d)) return RESULT_FAILED;
+
+    uint32_t dim = date_days_in_month(y, m);
+    if (dim == 0 || d < 1u || d > dim) return RESULT_FAILED;
+
+    out->year = y;
+    out->month = m;
+    out->day = d;
+    return RESULT_SUCCESS;
+}
 ]]></code>
         </example>
       </examples>
     </function>
 
     <function id="fn.idiom.id-0149" name="idiom: Parse uint32 from ASCII decimal string (validated)" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_integer_parse_uint32_from_string(</signature>
+      <signature>result integer_parse_uint32_from_string(</signature>
       <summary><![CDATA[<p>Parses ASCII decimal digits from input[0..input_size) into *out.<br>Fails on non-digits or empty input; returns a C99LC_RESULT_* code.</p>]]></summary>
       <examples>
         <example id="ex.id-0149.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL c99lc_result c99lc_integer_parse_uint32_from_string(
-    const char* input, size_t input_size, uint32_t* out);
+
+#include <stddef.h>
+#include <stdint.h>
+
+typedef enum {
+    RESULT_SUCCESS = 0,
+    RESULT_FAILED = 1
+} result;
+
+result integer_parse_uint32_from_string(const char* input, size_t input_size, uint32_t* out) {
+    if (!out) return RESULT_FAILED;
+    if (!input || input_size == 0) return RESULT_FAILED;
+
+    uint32_t v = 0;
+    for (size_t i = 0; i < input_size; ++i) {
+        unsigned char c = (unsigned char)input[i];
+        if (c < (unsigned char)'0' || c > (unsigned char)'9') return RESULT_FAILED;
+        uint32_t digit = (uint32_t)(c - (unsigned char)'0');
+
+        if (v > (UINT32_MAX - digit) / 10u) return RESULT_FAILED;
+        v = v * 10u + digit;
+    }
+
+    *out = v;
+    return RESULT_SUCCESS;
+}
 ]]></code>
         </example>
       </examples>
     </function>
 
     <function id="fn.idiom.id-0150" name="idiom: Parse with `strtol` and keep the end pointer in the loop header" kind="idiom">
-      <signature>for (char *p = s; *p; ) {</signature>
+      <signature>for (char* p = s; *p; ) {</signature>
       <summary><![CDATA[<p>This is a robust skeleton for numeric tokenization.</p>]]></summary>
       <examples>
         <example id="ex.id-0150.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-for (char *p = s; *p; ) {
-    char *end;
+for (char* p = s; *p; ) {
+    char* end;
     long v = strtol(p, &end, 10);
     if (end == p) break;     /* no progress */
     /* use v */
@@ -3785,7 +4298,7 @@ void increment_all(int* data, size_t count) {
         <example id="ex.id-0156.2" lang="c99">
           <title>Example 2</title>
           <code><![CDATA[
-for (int *p = a, *e = a + n; p != e; ++p) {
+for (int* p = a, *e = a + n; p != e; ++p) {
     *p += 1;
 }
 ]]></code>
@@ -3817,7 +4330,7 @@ return -1;
           <title>Example</title>
           <code><![CDATA[
 printf("n=%zu\n", n);
-printf("p=%p\n", (void *)p);
+printf("p=%p\n", (void*)p);
 ]]></code>
         </example>
       </examples>
@@ -3872,13 +4385,28 @@ int main(void) {
     </function>
 
     <function id="fn.idiom.id-0161" name="idiom: Print integer array with brackets" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL void c99lc_print_integer_array(const unsigned char* a, size_t n);</signature>
+      <signature>void print_integer_array(const unsigned char* a, size_t n);</signature>
       <summary><![CDATA[<p>Prints digits as "[d0, d1, ...]\n" to stdout.<br>Safe to call with NULL pointer (prints an empty list).</p>]]></summary>
       <examples>
         <example id="ex.id-0161.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL void c99lc_print_integer_array(const unsigned char* a, size_t n);
+
+#include <stddef.h>
+#include <stdio.h>
+
+void print_integer_array(const unsigned char* a, size_t n) {
+    putchar('[');
+    if (a && n) {
+        for (size_t i = 0; i < n; ++i) {
+            if (i) printf(", ");
+            printf("%u", (unsigned)a[i]);
+        }
+    }
+    putchar(']');
+    putchar('
+');
+}
 ]]></code>
         </example>
       </examples>
@@ -3916,7 +4444,7 @@ void print_pairs(const int* array, size_t count) {
         <example id="ex.id-0163.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-#define C99_LEETCODE_PUBLIC_DECL extern
+#define extern
 ]]></code>
         </example>
       </examples>
@@ -4133,14 +4661,15 @@ void* xrealloc(void* ptr, size_t size) {
     </function>
 
     <function id="fn.idiom.id-0172" name="idiom: Result code enum for success/failure" kind="idiom">
-      <signature>typedef int c99lc_result;</signature>
+      <signature>typedef int result;</signature>
       <summary><![CDATA[]]></summary>
       <examples>
         <example id="ex.id-0172.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-typedef int c99lc_result;
-enum { C99LC_RESULT_SUCCESS = 0, C99LC_RESULT_FAILED = 1 };
+
+typedef int result;
+enum { RESULT_SUCCESS = 0, RESULT_FAILED = 1 };
 ]]></code>
         </example>
       </examples>
@@ -4172,19 +4701,20 @@ void print_fraction_exponent(double value) {
     </function>
 
     <function id="fn.idiom.id-0174" name="idiom: Return static string literal" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL const char* c99lc_helloworld(void);</signature>
+      <signature>const char* helloworld(void);</signature>
       <summary><![CDATA[<p>Returns a pointer to a constant, null-terminated "Hello, World!" string.<br>Storage duration is static; caller must not free the returned pointer.</p><p>Returns the library version string such as "0.1".<br>String has static storage duration; caller must not free it.</p>]]></summary>
       <examples>
         <example id="ex.id-0174.1" lang="c99">
-          <title>Example 1</title>
+          <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL const char* c99lc_helloworld(void);
-]]></code>
-        </example>
-        <example id="ex.id-0174.2" lang="c99">
-          <title>Example 2</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL const char* c99lc_version(void);
+
+const char* helloworld(void) {
+    return "Hello, World!";
+}
+
+const char* version(void) {
+    return "1.0.0";
+}
 ]]></code>
         </example>
       </examples>
@@ -4247,7 +4777,7 @@ bool find_in_matrix(
         <example id="ex.id-0175.3" lang="c99">
           <title>Example 3</title>
           <code><![CDATA[
-int parse(const char *s, struct Result *out);
+int parse(const char* s, struct Result* out);
 ]]></code>
         </example>
       </examples>
@@ -4295,7 +4825,7 @@ char* reverse_string(const char* s) {
         </note>
       </notes>
       <examples>
-        <example id="ex.id-0177.1" lang="c99">
+<example id="ex.id-0177.1" lang="c99">
           <title>Example 1</title>
           <code><![CDATA[
 #include <stddef.h>
@@ -4312,12 +4842,6 @@ void reverse_ints(int* array, size_t count) {
         --right;
     }
 }
-]]></code>
-        </example>
-        <example id="ex.id-0177.2" lang="c99">
-          <title>Example 2</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL void c99lc_array_int_reverse_in_place(int* array, size_t array_size);
 ]]></code>
         </example>
       </examples>
@@ -4339,19 +4863,47 @@ for (size_t i = n; i-- > 0; ) {
     </function>
 
     <function id="fn.idiom.id-0179" name="idiom: Roman numeral conversion (char map + subtractive parse)" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL int c99lc_roman_char_to_int(char ch);</signature>
+      <signature>int roman_char_to_int(char ch);</signature>
       <summary><![CDATA[<p>Maps a single Roman numeral character to its integer value.<br>Returns 0 for unsupported characters.</p><p>Converts a Roman numeral string using standard subtractive notation.<br>Returns 0 for NULL or for a string that contributes no valid symbols.</p>]]></summary>
       <examples>
         <example id="ex.id-0179.1" lang="c99">
-          <title>Example 1</title>
+          <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL int c99lc_roman_char_to_int(char ch);
-]]></code>
-        </example>
-        <example id="ex.id-0179.2" lang="c99">
-          <title>Example 2</title>
-          <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL int c99lc_roman_to_int(const char* s);
+
+int roman_char_to_int(char ch) {
+    switch (ch) {
+        case 'I': return 1;
+        case 'V': return 5;
+        case 'X': return 10;
+        case 'L': return 50;
+        case 'C': return 100;
+        case 'D': return 500;
+        case 'M': return 1000;
+        default: return 0;
+    }
+}
+
+int roman_to_int(const char* s) {
+    if (!s) return 0;
+
+    int total = 0;
+    int prev = 0;
+    int seen = 0;
+
+    for (const char* p = s; *p; ++p) {
+        int v = roman_char_to_int(*p);
+        if (v == 0) continue;
+        seen = 1;
+        if (v > prev && prev > 0) {
+            total += v - 2 * prev;
+        } else {
+            total += v;
+        }
+        prev = v;
+    }
+
+    return seen ? total : 0;
+}
 ]]></code>
         </example>
       </examples>
@@ -4571,8 +5123,8 @@ bool stack_pop(Stack* s, int* out_value) {
           <code><![CDATA[
 int f(void) {
     int rc = -1;
-    FILE *fp = 0;
-    void *buf = 0;
+    FILE* fp = 0;
+    void* buf = 0;
 
     fp = fopen("x", "rb");
     if (!fp) goto out;
@@ -4597,13 +5149,13 @@ out:
     </function>
 
     <function id="fn.idiom.id-0189" name="idiom: Size-in, size-out for buffers (and report required size)" kind="idiom">
-      <signature>int encode(char *dst, size_t dst_sz, size_t *out_sz);</signature>
+      <signature>int encode(char* dst, size_t dst_sz, size_t* out_sz);</signature>
       <summary><![CDATA[<p>On overflow, set <code>*out_sz</code> to the needed size and return an error.</p>]]></summary>
       <examples>
         <example id="ex.id-0189.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-int encode(char *dst, size_t dst_sz, size_t *out_sz);
+int encode(char* dst, size_t dst_sz, size_t* out_sz);
 ]]></code>
         </example>
       </examples>
@@ -4611,7 +5163,7 @@ int encode(char *dst, size_t dst_sz, size_t *out_sz);
 
     <function id="fn.idiom.id-0190" name="idiom: Sort by a comparator (qsort/bsearch)" kind="idiom">
       <signature>int compare_ints(const void* a, const void* b) {</signature>
-      <summary><![CDATA[<p>Sort an array of integers using qsort with a custom comparator.</p><p>Sort an array of structures by an integer field using qsort and a comparator.</p><p>Comparison function for int arrays compatible with qsort and bsearch.<br>Returns negative if *a &lt; *b, zero if *a == *b, positive if *a &gt; *b.<br>Avoids overflow by using subtraction comparison idiom.<br>Example: qsort(array, size, sizeof(int), c99lc_array_int_compare);<br>Complexity: O(1).</p>]]></summary>
+      <summary><![CDATA[<p>Sort an array of integers using qsort with a custom comparator.</p><p>Sort an array of structures by an integer field using qsort and a comparator.</p><p>Comparison function for int arrays compatible with qsort and bsearch.<br>Returns negative if *a &lt; *b, zero if *a == *b, positive if *a &gt; *b.<br>Avoids overflow by using subtraction comparison idiom.<br>Example: qsort(array, size, sizeof(int), array_int_compare);<br>Complexity: O(1).</p>]]></summary>
       <notes>
         <note id="note.id-0190.1" severity="info" topic="source">
           <description><![CDATA[<p>Source: <a href="https://programming-idioms.org/idiom/100/sort-by-a-comparator">https://programming-idioms.org/idiom/100/sort-by-a-comparator</a></p>]]></description>
@@ -4674,7 +5226,13 @@ void sort_items(Item* items, size_t count) {
         <example id="ex.id-0190.3" lang="c99">
           <title>Example 3</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL int c99lc_array_int_compare(const void* a, const void* b);
+#include <stddef.h>
+
+int array_int_compare(const void* a, const void* b) {
+    int x = *(const int*)a;
+    int y = *(const int*)b;
+    return (x > y) - (x < y);
+}
 ]]></code>
         </example>
       </examples>
@@ -4694,6 +5252,7 @@ C99_LEETCODE_PUBLIC_DECL int c99lc_array_int_compare(const void* a, const void* 
           <code><![CDATA[
 void foo(void) {
 #include "foobody.txt"
+
 }
 ]]></code>
         </example>
@@ -4795,7 +5354,7 @@ void format_planets(int count, char* buffer, size_t buffer_size) {
 #define CAT(a,b) CAT_(a,b)
 
 int CAT(tmp_, __LINE__);
-const char *msg = "line " STR(__LINE__);
+const char* msg = "line " STR(__LINE__);
 ]]></code>
         </example>
       </examples>
@@ -4828,14 +5387,24 @@ void dispatch(int c1, int c2, int c3) {
     </function>
 
     <function id="fn.idiom.id-0198" name="idiom: Sum digits in array" kind="idiom">
-      <signature>C99_LEETCODE_PUBLIC_DECL unsigned char c99lc_digits_sum(const unsigned char* digits,</signature>
+      <signature>unsigned char digits_sum(const unsigned char* digits,</signature>
       <summary><![CDATA[<p>Sums the decimal digits in digits[0..digits_size).<br>Returns 0 if digits is NULL or digits_size is 0.</p>]]></summary>
       <examples>
         <example id="ex.id-0198.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL unsigned char c99lc_digits_sum(const unsigned char* digits,
-    size_t digits_size);
+
+#include <stddef.h>
+
+unsigned char digits_sum(const unsigned char* digits, size_t digits_size) {
+    if (!digits || digits_size == 0) return 0;
+
+    unsigned sum = 0;
+    for (size_t i = 0; i < digits_size; ++i) {
+        sum += digits[i];
+    }
+    return (unsigned char)sum;
+}
 ]]></code>
         </example>
       </examples>
@@ -4863,7 +5432,7 @@ void swap_ints(int* a, int* b) {
         <example id="ex.id-0199.2" lang="c99">
           <title>Example 2</title>
           <code><![CDATA[
-C99_LEETCODE_PUBLIC_DECL void c99lc_util_swap_u32(uint32_t* a, uint32_t* b);
+ void util_swap_u32(uint32_t* a, uint32_t* b);
 ]]></code>
         </example>
         <example id="ex.id-0199.3" lang="c99">
@@ -4920,13 +5489,13 @@ bool is_empty(const char* s) {
     </function>
 
     <function id="fn.idiom.id-0202" name="idiom: The canonical &quot;walk a C string&quot; pointer loop" kind="idiom">
-      <signature>for (const unsigned char *p = (const unsigned char *)s; *p; ++p) {</signature>
+      <signature>for (const unsigned char* p = (const unsigned char*)s; *p; ++p) {</signature>
       <summary><![CDATA[<p>Using <code>unsigned char</code> avoids undefined behavior with the ctype family when chars are negative.</p>]]></summary>
       <examples>
         <example id="ex.id-0202.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-for (const unsigned char *p = (const unsigned char *)s; *p; ++p) {
+for (const unsigned char* p = (const unsigned char*)s; *p; ++p) {
     /* ... */
 }
 ]]></code>
@@ -4961,13 +5530,13 @@ for (i = 0, p = a; i < n; ++i, ++p) { /* ... */ }
     </function>
 
     <function id="fn.idiom.id-0205" name="idiom: Tokenize without `strtok` by using `strcspn` and manual slicing" kind="idiom">
-      <signature>for (char *p = s; *p; ) {</signature>
+      <signature>for (char* p = s; *p; ) {</signature>
       <summary><![CDATA[<p>No global state, re-entrant, and it works with custom delimiters.</p>]]></summary>
       <examples>
         <example id="ex.id-0205.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-for (char *p = s; *p; ) {
+for (char* p = s; *p; ) {
     p += strspn(p, " \t");
     size_t len = strcspn(p, " \t");
     if (len == 0) break;
@@ -5018,12 +5587,12 @@ const char* trim_prefix(const char* s, const char* prefix) {
 #include <string.h>
 
 char* trim_whitespace(char* s) {
-    while (isspace((unsigned char)*s)) {
+    while (isspace((unsigned char) * s)) {
         ++s;
     }
 
     char* end = s + strlen(s);
-    while (end > s && isspace((unsigned char)*(end - 1))) {
+    while (end > s && isspace((unsigned char) * (end - 1))) {
         --end;
     }
     *end = '\0';
@@ -5034,10 +5603,10 @@ char* trim_whitespace(char* s) {
         <example id="ex.id-0207.2" lang="c99">
           <title>Example 2</title>
           <code><![CDATA[
-char *p = s;
+char* p = s;
 while (*p == ' ' || *p == '\t') ++p;
 
-char *e = p + strlen(p);
+char* e = p + strlen(p);
 while (e > p && (e[-1] == ' ' || e[-1] == '\t' || e[-1] == '\n')) --e;
 *e = '\0';
 
@@ -5102,26 +5671,26 @@ fprintf(stderr, "%s:%d: failed\n", __FILE__, __LINE__);
     </function>
 
     <function id="fn.idiom.id-0211" name="idiom: Use `const` to document and enforce read-only inputs" kind="idiom">
-      <signature>int hash(const void *data, size_t n, uint32_t *out);</signature>
+      <signature>int hash(const void* data, size_t n, uint32_t* out);</signature>
       <summary><![CDATA[<p>This eliminates entire classes of accidental mutation bugs.</p>]]></summary>
       <examples>
         <example id="ex.id-0211.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-int hash(const void *data, size_t n, uint32_t *out);
+int hash(const void* data, size_t n, uint32_t* out);
 ]]></code>
         </example>
       </examples>
     </function>
 
     <function id="fn.idiom.id-0212" name="idiom: Use `restrict` (C99) when you can prove non-aliasing" kind="idiom">
-      <signature>void saxpy(float *restrict y, const float *restrict x, size_t n, float a);</signature>
+      <signature>void saxpy(float* restrict y, const float* restrict x, size_t n, float a);</signature>
       <summary><![CDATA[<p>It can unlock optimizations and documents a strong contract.</p>]]></summary>
       <examples>
         <example id="ex.id-0212.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-void saxpy(float *restrict y, const float *restrict x, size_t n, float a);
+void saxpy(float* restrict y, const float* restrict x, size_t n, float a);
 ]]></code>
         </example>
       </examples>
@@ -5200,7 +5769,7 @@ void report_negative(int x) {
     </function>
 
     <function id="fn.idiom.id-0217" name="idiom: X-macro tables: one list, many derived artifacts" kind="idiom">
-      <signature>X(RED)        \</signature>
+      <signature>X(RED) \</signature>
       <summary><![CDATA[<p>This avoids keeping enum, strings, and other metadata in sync by hand.</p>]]></summary>
       <examples>
         <example id="ex.id-0217.1" lang="c99">
@@ -5219,7 +5788,7 @@ enum Color { COLORS(X) };
 
 /* to-string */
 #define X(name) case name: return #name;
-const char *color_name(enum Color c) {
+const char* color_name(enum Color c) {
     switch (c) { COLORS(X) default: return "?"; }
 }
 #undef X
