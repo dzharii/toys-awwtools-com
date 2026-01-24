@@ -170,8 +170,8 @@
       this.headlinePrimary = null;
       /** @type {{type:'headline', level:number, text:string} | null} */
       this.headlineSecondary = null;
-      /** @type {{type:'headline', level:number, text:string} | null} */
-      this.byline = null;
+      /** @type {{type:'headline', level:number, text:string} | null} */
+      this.bylineEntry = null;
       /** @type {{type:'paragraph', text:string}[]} */
       this.paragraphList = [];
       /** @type {{type:'citation', text:string}[]} */
@@ -218,9 +218,9 @@
         this.logger.warn('byline() called with empty text');
         return this;
       }
-      this.byline = { type: 'headline', level: 4, text: t };
-      return this;
-    }
+      this.bylineEntry = { type: 'headline', level: 4, text: t };
+      return this;
+    }
 
     p(text) {
       const t = safeString(text).trim();
@@ -295,12 +295,12 @@
           text: this.headlinePrimary.text
         }));
       }
-      if (this.byline) {
-        // In sample, byline is wrapped in <p><span ...></span></p>
-        const pNode = el('p');
-        pNode.appendChild(el('span', { className: `headline hl${this.byline.level}`, text: this.byline.text }));
-        headWrap.appendChild(pNode);
-      }
+      if (this.bylineEntry) {
+        // In sample, byline is wrapped in <p><span ...></span></p>
+        const pNode = el('p');
+        pNode.appendChild(el('span', { className: `headline hl${this.bylineEntry.level}`, text: this.bylineEntry.text }));
+        headWrap.appendChild(pNode);
+      }
       if (this.headlineSecondary) {
         headWrap.appendChild(el('span', {
           className: `headline hl${this.headlineSecondary.level}`,
