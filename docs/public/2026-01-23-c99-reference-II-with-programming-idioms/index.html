@@ -14604,7 +14604,7 @@ out:
 
     <function id="fn.idiom.id-0188" name="idiom: Single-header library with implementation macro and feature toggles" kind="idiom">
       <signature>Single-header library with implementation macro and feature toggles</signature>
-      <summary><![CDATA[<p>c99-leetcode.h - v0.1 - single-header C99 utilities<br>Public Domain or MIT, your choice, see end of file.</p><p>Overview<br>Tiny stb-style header providing small, dependency-free helpers commonly<br>needed in coding challenge style problems: integer digit routines,<br>bit counting and parity, array reversal, Roman numeral conversion,<br>ASCII decimal parsing, a minimal int vector, and simple date helpers.</p><p>Design<br>- Single-header; include this file everywhere.<br>- In one translation unit: #define C99_LEETCODE_IMPLEMENTATION before include.<br>- Optional C99_LEETCODE_STATIC makes definitions 'static' in that TU.<br>- Optional C99_LEETCODE_NO_STDIO omits printf-based helpers.<br>- No hidden global state. Allocation hooks are provided but optional.</p><p>Build<br>In one source file:<br>#define C99_LEETCODE_IMPLEMENTATION<br>#include "c99-leetcode.h"<br>In all other files:<br>#include "c99-leetcode.h"</p>]]></summary>
+      <summary><![CDATA[<p>mylib.h - v0.1 - single-header C99 utilities<br>Public Domain or MIT, your choice, see end of file.</p><p>Overview<br>Tiny stb-style header providing small, dependency-free helpers commonly<br>needed in coding challenge style problems (inspired by LeetCode): integer digit routines,<br>bit counting and parity, array reversal, Roman numeral conversion,<br>ASCII decimal parsing, a minimal int vector, and simple date helpers.</p><p>Design<br>- Single-header; include this file everywhere.<br>- In one translation unit: #define MYLIB_IMPLEMENTATION before include.<br>- Optional MYLIB_STATIC makes definitions 'static' in that TU.<br>- Optional MYLIB_NO_STDIO omits printf-based helpers.<br>- No hidden global state. Allocation hooks are provided but optional.</p><p>Build<br>In one source file:<br>#define MYLIB_IMPLEMENTATION<br>#include "mylib.h"<br>In all other files:<br>#include "mylib.h"</p>]]></summary>
       <examples>
         <example id="ex.id-0188.1" lang="c99">
           <title>Example</title>
@@ -15347,6 +15347,196 @@ T *p = calloc(count, sizeof *p);
 int x = 0;
 int a[10] = {0};
 struct S s = {0};
+]]></code>
+        </example>
+      </examples>
+    </function>
+
+    <function id="fn.idiom.id-0221" name="idiom: Generic tuple types using macros" kind="idiom">
+      <signature>#define Tuple2(T1, T2)</signature>
+      <summary><![CDATA[<p>Create lightweight tuple types for returning multiple values from functions without needing explicit semantic names. C23 standardizes that tagged types with the same name and contents are compatible. Note: Breaks with pointer types due to preprocessor token pasting limitations.</p>]]></summary>
+      <notes>
+        <note id="note.id-0221.1" severity="info" topic="source">
+          <description><![CDATA[<p>Source: <a href="https://www.unix.dog/~yosh/blog/c-habits-for-me.html">https://www.unix.dog/~yosh/blog/c-habits-for-me.html</a></p>]]></description>
+        </note>
+        <note id="note.id-0221.2" severity="warning" topic="limitation">
+          <description><![CDATA[<p>Does not work with pointer types (e.g., <code>char*</code>) due to token pasting issues. Use typedef or explicit struct name as workaround.</p>]]></description>
+        </note>
+      </notes>
+      <examples>
+        <example id="ex.id-0221.1" lang="c99">
+          <title>Example</title>
+          <code><![CDATA[
+#define Tuple2(T1, T2)           \
+    struct Tuple2_##T1##_##T2 {  \
+        T1 a;                    \
+        T2 b;                    \
+    }
+
+/* Usage example */
+Tuple2(int, int) find_min_max(const int* array, size_t count) {
+    Tuple2(int, int) result = {array[0], array[0]};
+    for (size_t i = 1; i < count; i++) {
+        if (array[i] < result.a) result.a = array[i];
+        if (array[i] > result.b) result.b = array[i];
+    }
+    return result;
+}
+]]></code>
+        </example>
+      </examples>
+    </function>
+
+    <function id="fn.idiom.id-0222" name="idiom: Result/Maybe types for error handling" kind="idiom">
+      <signature>typedef struct MaybeBuffer {</signature>
+      <summary><![CDATA[<p>Simulate sum types using tagged unions for explicit error handling. The <code>ok</code> field acts as a discriminant, and callers must check it before accessing the value. This pattern encodes success/failure in the type system and pairs well with "parse, don't validate" approach.</p>]]></summary>
+      <notes>
+        <note id="note.id-0222.1" severity="info" topic="source">
+          <description><![CDATA[<p>Source: <a href="https://www.unix.dog/~yosh/blog/c-habits-for-me.html">https://www.unix.dog/~yosh/blog/c-habits-for-me.html</a></p>]]></description>
+        </note>
+      </notes>
+      <examples>
+        <example id="ex.id-0222.1" lang="c99">
+          <title>Example</title>
+          <code><![CDATA[
+#include <stdbool.h>
+#include <stddef.h>
+
+typedef enum {
+    ERR_NULL_INPUT,
+    ERR_INVALID_SIZE,
+    ERR_ALLOCATION_FAILED
+} ErrorCode;
+
+typedef struct {
+    char *data;
+    size_t size;
+} SafeBuffer;
+
+typedef struct {
+    bool ok;
+    union {
+        SafeBuffer val;
+        ErrorCode err;
+    };
+} MaybeBuffer;
+
+/* Parsing function that returns result type */
+MaybeBuffer parse_buffer(const char* input, size_t len) {
+    MaybeBuffer result;
+
+    if (!input) {
+        result.ok = false;
+        result.err = ERR_NULL_INPUT;
+        return result;
+    }
+
+    if (len == 0) {
+        result.ok = false;
+        result.err = ERR_INVALID_SIZE;
+        return result;
+    }
+
+    /* Parse and validate... */
+    result.ok = true;
+    result.val.data = (char*)input;
+    result.val.size = len;
+    return result;
+}
+
+/* Usage: caller must check ok */
+void process_data(const char* input, size_t len) {
+    MaybeBuffer buf = parse_buffer(input, len);
+    if (!buf.ok) {
+        /* Handle error: buf.err contains the error code */
+        return;
+    }
+
+    /* Safe to use: buf.val contains validated data */
+    SafeBuffer validated = buf.val;
+    /* Work with validated.data knowing invariants hold */
+}
+]]></code>
+        </example>
+      </examples>
+    </function>
+
+    <function id="fn.idiom.id-0223" name="idiom: Safe wrapper types encoding invariants" kind="idiom">
+      <signature>typedef struct SafeBuffer {</signature>
+      <summary><![CDATA[<p>Create wrapper types that can only be constructed through validation functions, encoding invariants in the type system itself. Once created, these types guarantee that their data has been validated and specific properties hold. Implements "parse, don't validate" philosophy.</p>]]></summary>
+      <notes>
+        <note id="note.id-0223.1" severity="info" topic="source">
+          <description><![CDATA[<p>Source: <a href="https://www.unix.dog/~yosh/blog/c-habits-for-me.html">https://www.unix.dog/~yosh/blog/c-habits-for-me.html</a></p>]]></description>
+        </note>
+      </notes>
+      <examples>
+        <example id="ex.id-0223.1" lang="c99">
+          <title>Example</title>
+          <code><![CDATA[
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+
+/* Safe wrapper type - can only be created through validated_buffer_create */
+typedef struct {
+    char *data;
+    size_t len;
+} ValidatedBuffer;
+
+typedef struct {
+    bool ok;
+    union {
+        ValidatedBuffer val;
+        int err_code;
+    };
+} MaybeValidatedBuffer;
+
+/* Constructor that enforces invariants */
+MaybeValidatedBuffer validated_buffer_create(const char* input, size_t len) {
+    MaybeValidatedBuffer result;
+
+    /* Validation: non-NULL, non-empty, null-terminated */
+    if (!input || len == 0 || input[len - 1] != '\0') {
+        result.ok = false;
+        result.err_code = -1;
+        return result;
+    }
+
+    /* Additional validation: check for invalid characters, etc. */
+    for (size_t i = 0; i < len - 1; i++) {
+        if (input[i] < 32 && input[i] != '\t' && input[i] != '\n') {
+            result.ok = false;
+            result.err_code = -2;
+            return result;
+        }
+    }
+
+    result.ok = true;
+    result.val.data = (char*)input;
+    result.val.len = len;
+    return result;
+}
+
+/* Functions accepting ValidatedBuffer know invariants hold */
+void process_validated(ValidatedBuffer buf) {
+    /* No need to re-check: we know buf.data is non-NULL,
+     * null-terminated, and contains only valid characters */
+    printf("Processing %zu bytes: %s\n", buf.len, buf.data);
+}
+
+void example_usage(void) {
+    const char* input = "Hello, world!\0";
+    MaybeValidatedBuffer maybe = validated_buffer_create(input, strlen(input) + 1);
+
+    if (!maybe.ok) {
+        printf("Validation failed: %d\n", maybe.err_code);
+        return;
+    }
+
+    /* Type system guarantees this is safe */
+    process_validated(maybe.val);
+}
 ]]></code>
         </example>
       </examples>
