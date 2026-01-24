@@ -2,74 +2,96 @@ Our outlet name is AI Gazette.
 
 Use read-only: `./news_sources.md`
 
-A00 Purpose
+Our outlet name is AI Gazette.
+
+Use read-only: ./news_sources.md
+
+A00.01 Purpose
 This file is the controlling instruction for an automated coding agent that must generate a daily, static "AI Gazette" newspaper page for Seattle, WA by searching the web for recent news, verifying sources, and writing the results into NEWS-YYYY-MM-DD/content.js using the existing DOM-only builder. The agent must complete a full daily issue generation run unless the user explicitly requests a narrower task.
 
-A01 Non-negotiable outcome for each run
+A01.01 Non-negotiable outcome for each run
 
-1) search for news on the web,
-2) select a diverse set of items,
-3) verify the URLs and dates,
-4) write the daily issue into NEWS-YYYY-MM-DD/content.js,
-5) ensure NEWS-YYYY-MM-DD/index.html renders the issue using local assets,
-6) update the root archive index.html to link to the daily issue.
+1. Search for news on the web.
+2. Select a diverse set of items.
+3. Verify the URLs and dates.
+4. Write the daily issue into NEWS-YYYY-MM-DD/content.js.
+5. Ensure NEWS-YYYY-MM-DD/index.html renders the issue using local assets.
+6. Update the root archive index.html to link to the daily issue.
 
-If the agent cannot meet minimum requirements, it must still publish the best-effort issue and force an on-page error banner to appear.
+If the agent cannot meet minimum requirements, it must still publish the best-effort issue and force an on-page error banner to appear using H00.
 
-A02 Repository layout and path rules
+A02.01 Repository layout and path rules
 All paths are relative to repository root.
 Template folder is _00_template and is read-only by default.
 Daily folder is NEWS-YYYY-MM-DD where YYYY-MM-DD is computed in America/Los_Angeles time.
 
-A03 Safety constraints
+A03.01 Safety constraints
 The agent must only read and write files inside the repository.
 The agent must not run shell commands, modify OS settings, or execute downloaded code.
 The agent must not introduce innerHTML.
 
-A04 Template read-only rule
+A04.01 Template read-only rule
 The agent must not edit any files under _00_template unless the user explicitly requests template changes.
 
-B00 Daily run algorithm (do this, in this order)
-B01 Determine the day
+B00.01 Daily run algorithm (do this, in this order)
+
+B01.01 Determine the day
 Compute current date in America/Los_Angeles as YYYY-MM-DD.
 Set DAILY_DIR = NEWS-YYYY-MM-DD.
 
-B02 Ensure DAILY_DIR exists and is initialized
+B02.01 Ensure DAILY_DIR exists and is initialized
 If DAILY_DIR does not exist, create it.
 Ensure these files exist in DAILY_DIR: index.html, main.js, styles.css, content.js.
 If any of index.html, main.js, styles.css, content.js are missing in DAILY_DIR, copy the missing file(s) from _00_template. Do not overwrite existing files.
 
+B03.01 Load categories and seeds
+Read categories and seed queries from ./news_sources.md (read-only).
+Do not read categories from any other path.
+Do not edit ./news_sources.md during a run.
 
-B04 Mandatory web research step (must not be skipped)
-For every category defined in DAILY_DIR/news_sources.md:
-1) Run multiple web searches using the category seed queries.
-2) Prefer the exact Seattle and date window terms first.
-3) Open candidate results and extract title, outlet, publication date, and canonical URL.
-4) Reject any result if the URL is not accessible, the date is not visible and confirmable, or it is clearly out of scope for Seattle and the category.
+B04.01 Mandatory web research step (must not be skipped)
+For every category defined in ./news_sources.md:
 
+1. Run multiple web searches using the category seed queries.
+2. Prefer the exact Seattle and date window terms first.
+3. Open candidate results and extract title, outlet, publication date, and canonical URL.
+4. Read enough of the page body to reliably extract concrete details (D00) for a higher-quality brief (B06).
+5. Reject any result if the URL is not accessible, the date is not visible and confirmable, or it is clearly out of scope for Seattle and the category.
 
-B05 Select items and enforce diversity
-The agent must publish at least 12 total items.
-Each category must have 2 to 4 items.
-The issue must use at least 6 distinct source domains.
-No single source domain may contribute more than 35% of total items.
-At least 3 categories must include items from at least 2 different domains.
+B05.01 Select items and enforce diversity and quality
+Minimums and diversity:
 
-If a category cannot reach 2 items after reasonable effort, publish 1 item and mark the issue incomplete using the error signaling in H00.
+1. Publish at least 12 total items.
+2. Each category must have 2 to 4 items.
+3. Use at least 6 distinct source domains.
+4. No single source domain may contribute more than 35% of total items.
+5. At least 3 categories must include items from at least 2 different domains.
 
-B06 Write NEWS-YYYY-MM-DD/content.js
+Quality gates (prefer substance over thin items):
+
+1. Prefer items with concrete specifics that support a meaningful brief: official announcements with specifics, meeting outcomes, timelines, project milestones, enforcement actions, budget decisions, service changes, measurable impacts.
+2. De-prioritize thin items: promos without specifics, pages without enough body text to extract at least one concrete detail, items where the publication date cannot be confirmed.
+3. Avoid duplicates: do not publish two items that describe the same underlying event or announcement unless the second source adds a new, confirmable detail. If a second source is kept, its brief must clearly state the additional detail it uniquely provides.
+
+Discussion and speculation handling:
+
+1. The issue may include non-official discussion, debate, or speculation only when it is explicitly present in the source text and is clearly attributed as such (for example, "Some residents told the outlet..." or "The article reports that critics argue...").
+2. Do not add the agent's own speculation. Do not present speculation as fact. Keep attribution inside the brief text.
+
+If a category cannot reach 2 items after reasonable effort, publish 1 item and mark the issue incomplete using H00.
+
+B06.01 Write NEWS-YYYY-MM-DD/content.js
 The agent must update DAILY_DIR/content.js to include all selected items and render without code changes to main.js.
 
 Builder constraints: the column builder supports at most two headlines per column. Therefore:
-1) Primary headline must be the category name.
-2) Secondary headline must be a short category deck, not an item title.
-3) Each item must be written using paragraphs only.
+
+1. Primary headline must be the category name.
+2. Secondary headline must be a short category deck, not an item title.
+3. Each item must be written using paragraphs only.
 
 Item format must be deterministic and two-paragraph per item:
-Paragraph 1: "Title: <title>. <one-sentence factual summary>"
-Paragraph 2: "Source: <outlet>, Date: <YYYY-MM-DD>, URL: <url>"
-
-Summaries must be factual, 1 sentence each, no speculation, no editorial language.
+Paragraph 1: "<Title> - <mini-brief written as fluent narrative, 3 to 5 sentences, 60 to 110 words total. The brief must naturally cover what happened and the key context a reader needs, without using labeled fields like 'who/what/when/where'. The brief must include at least one concrete detail (number, location, named agency/program, or specific milestone) drawn from the source. If the source includes debate, criticism, uncertainty, or speculation, it may be included only if explicitly attributed and clearly framed as discussion or opinion from the source. No invented details. No editorial language.>"
+Paragraph 2: "<Outlet> | Date: <YYYY-MM-DD> | URL: <canonical url>"
 
 Masthead must be:
 Title: "AI Gazette"
@@ -78,20 +100,22 @@ Subhead format (default):
 
 Weather is optional and omitted unless the user provides weather data.
 
-B07 Verify daily page renders local assets only
+B07.01 Verify daily page renders local assets only
 Ensure DAILY_DIR/index.html references only local styles.css, main.js, and content.js using relative paths within DAILY_DIR.
 DAILY_DIR/index.html must not reference _00_template.
 
-B08 Update root archive index.html
+B08.01 Update root archive index.html
 Update repository root index.html to link to DAILY_DIR/index.html.
 The archive must list all NEWS-YYYY-MM-DD folders newest first.
 The agent must only rewrite the content between these markers:
+
 <!-- AI_GAZETTE_ARCHIVE_BEGIN -->
+
 <!-- AI_GAZETTE_ARCHIVE_END -->
+
 If the markers do not exist, the agent must add them and then manage only the region between them.
 
-
-C01 Category: Seattle and Region
+C01.01 Category: Seattle and Region
 Preferred domains: kuow.org, crosscut.com, seattlemet.com, king5.com, kiro7.com
 Seeds:
 "Seattle news YYYY-MM-DD"
@@ -100,7 +124,7 @@ Seeds:
 "site:kuow.org Seattle YYYY-MM-DD"
 "site:crosscut.com Seattle YYYY-MM-DD"
 
-C02 Category: City and Policy
+C02.01 Category: City and Policy
 Preferred domains: seattle.gov, kingcounty.gov, wa.gov, publicola.com, crosscut.com
 Seeds:
 "Seattle City Council YYYY-MM-DD"
@@ -109,7 +133,7 @@ Seeds:
 "site:seattle.gov news release YYYY-MM-DD"
 "site:kingcounty.gov news YYYY-MM-DD"
 
-C03 Category: Transit and Infrastructure
+C03.01 Category: Transit and Infrastructure
 Preferred domains: soundtransit.org, wsdot.wa.gov, theurbanist.org, kuow.org, seattletimes.com (use only if accessible)
 Seeds:
 "Sound Transit announcement YYYY-MM-DD"
@@ -118,7 +142,7 @@ Seeds:
 "site:soundtransit.org news YYYY-MM-DD"
 "site:wsdot.wa.gov Seattle YYYY-MM-DD"
 
-C04 Category: Public Safety
+C04.01 Category: Public Safety
 Preferred domains: seattle.gov/police, kingcounty.gov, kiro7.com, king5.com, kuow.org
 Seeds:
 "Seattle police incident YYYY-MM-DD"
@@ -127,7 +151,7 @@ Seeds:
 "site:seattle.gov/police news YYYY-MM-DD"
 "site:king5.com Seattle police YYYY-MM-DD"
 
-C05 Category: Business and Tech
+C05.01 Category: Business and Tech
 Preferred domains: geekwire.com, seattleinno.com, bizjournals.com, kuow.org, crosscut.com
 Seeds:
 "Seattle startup funding YYYY-MM-DD"
@@ -136,7 +160,7 @@ Seeds:
 "site:geekwire.com YYYY-MM-DD Seattle"
 "Seattle business opening YYYY-MM-DD"
 
-C06 Category: Environment
+C06.01 Category: Environment
 Preferred domains: ecy.wa.gov, kingcounty.gov, washington.edu/news, kuow.org, crosscut.com
 Seeds:
 "Puget Sound environment YYYY-MM-DD"
@@ -145,7 +169,7 @@ Seeds:
 "site:ecy.wa.gov news YYYY-MM-DD"
 "site:washington.edu/news YYYY-MM-DD Seattle"
 
-C07 Category: Culture and Events
+C07.01 Category: Culture and Events
 Preferred domains: theevergrey.com, seattlemet.com, stranger.com, crosscut.com, knkx.org
 Seeds:
 "Seattle events YYYY-MM-DD"
@@ -154,7 +178,7 @@ Seeds:
 "site:theevergrey.com YYYY-MM-DD"
 "site:seattlemet.com YYYY-MM-DD"
 
-C08 Category: Sports
+C08.01 Category: Sports
 Preferred domains: mlb.com/mariners, seahawks.com, soundersfc.com, mynorthwest.com, espn.com (use only if dates are visible)
 Seeds:
 "Mariners news YYYY-MM-DD"
@@ -163,48 +187,65 @@ Seeds:
 "site:soundersfc.com YYYY-MM-DD"
 "site:seahawks.com YYYY-MM-DD"
 
-D00 Web extraction requirements
+D00.01 Web extraction requirements
 For each selected item, the agent must extract:
-Title (exact),
-Outlet name,
-Publication date (confirmable, convert to YYYY-MM-DD),
-Canonical URL (the final reachable URL).
 
-If any field is missing or cannot be confirmed, reject the item.
+1. Title (exact).
+2. Outlet name.
+3. Publication date (confirmable, convert to YYYY-MM-DD).
+4. Canonical URL (the final reachable URL).
+5. Core facts needed for a higher-quality mini-brief (from the page body, not just the headline): the main action/event, the primary actor(s), where/when, at least one concrete detail, and any stated next step or timeline (if present).
+6. If the page includes debate, criticism, uncertainty, or speculation, extract the exact framing needed to attribute it properly (who says it, and how the source characterizes it).
 
-E00 Link verification rules
+If any required field above is missing or cannot be confirmed, reject the item.
+
+E00.01 Link verification rules
 The agent must open each candidate URL and confirm:
-1) It loads without obvious blocking.
-2) The publication date is visible or present in metadata the agent can reliably read.
-3) The URL is stable (not a search result redirect).
 
-F00 Bias and inclusivity controls
+1. It loads without obvious blocking.
+2. The publication date is visible or present in metadata the agent can reliably read.
+3. The URL is stable (not a search result redirect).
+
+F00.01 Bias and inclusivity controls
 The agent must mix source types in the final issue:
-At least 2 items from official agencies (city, county, state, transit).
-At least 4 items from local journalism outlets.
-At least 2 items from public media or non-profit newsroom outlets.
 
-G00 Prohibitions
+1. At least 2 items from official agencies (city, county, state, transit).
+2. At least 4 items from local journalism outlets.
+3. At least 2 items from public media or non-profit newsroom outlets.
+
+G00.01 Prohibitions
 Do not use a single source for most of the issue.
 Do not include items without working URLs.
 Do not include items without dates.
-Do not include speculative language.
+Do not invent facts or add the agent's own speculation.
+Do not use speculative language unless it is explicitly present in the source and clearly attributed as discussion or opinion.
 
-H00 Incomplete issue error signaling (must still publish)
+H00.01 Incomplete issue error signaling (must still publish)
 If any of these cannot be satisfied: minimum total items, per-category minimum, source diversity, attribution completeness, URL verification, then:
-1) still write content.js with all valid items found,
-2) intentionally trigger the on-page error banner by causing a controlled validation failure in one column (for example, omit the primary headline in a dedicated final column titled "ERROR" by leaving it empty), and
-3) include in the first paragraph of the first column a short line listing violated constraints using these tokens exactly:
-MIN_ITEMS, SOURCE_DIVERSITY, ATTRIBUTION, URL_VERIFY.
 
-I00 Attribution requirements
+1. Still write content.js with all valid items found.
+2. Intentionally trigger the on-page error banner by causing a controlled validation failure in one dedicated final column, while still making the status readable. Use a final column where the primary headline is intentionally left empty to trigger validation, set the secondary headline to "STATUS", and place the incomplete notice as the first paragraph in that column.
+3. Include in the first paragraph of the first column a short line listing violated constraints using these tokens exactly:
+   MIN_ITEMS, SOURCE_DIVERSITY, ATTRIBUTION, URL_VERIFY.
+   Only include tokens that apply.
+
+I00.01 Attribution requirements
 DAILY_DIR/index.html must include an attribution footer crediting:
 "Newspaper Style Design Experiment" on CodePen by user "silkine" and stating the layout is adapted and content rendered via a DOM-based builder.
 Root index.html must include the same attribution once.
 
-J00 Success criteria (the agent must verify before stopping)
+J00.01 Success criteria (the agent must verify before stopping)
 The agent must not stop until all are true:
-1) DAILY_DIR exists and contains index.html, main.js, styles.css, content.js.
-2) content.js contains at least 12 items unless H00 triggered, and includes dates and URLs for every item.
-3) Source diversity requirements are met unless H00 triggered.
-4) Root index.html links to DAILY_DIR/index.html within the managed region.
+
+1. DAILY_DIR exists and contains index.html, main.js, styles.css, content.js.
+2. content.js contains at least 12 items unless H00 triggered, and includes dates and URLs for every item.
+3. Source diversity requirements are met unless H00 triggered.
+4. Root index.html links to DAILY_DIR/index.html within the managed region.
+
+K00.00 Voice example (implementation target)
+Before (too mechanical):
+"Title: Sound Transit announces opening day for light rail... Source: KUOW, Date..., URL..."
+
+After (fluent brief with attribution line):
+"Sound Transit announces an opening day for the Seattle-to-Bellevue light rail connection - The agency set a launch date after completing testing and pre-revenue service work. The opening will change rider transfers between Seattle and the Eastside and is expected to shift demand on key bus corridors feeding Link. Sound Transit said it will publish final rider guidance and service details ahead of opening."
+"KUOW | Date: 2026-01-23 | URL: https://..."
