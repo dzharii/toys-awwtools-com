@@ -3,10 +3,10 @@ Our outlet name is AI Gazette.
 Use read-only: `./news_sources.md`
 
 A00 Purpose
-This file is the controlling instruction for an automated coding agent that must generate a daily, static "AI Gazette" newspaper page for Seattle, WA by searching the web for recent news, verifying sources, and writing the results into NEWS-YYYY-MM-DD/content.js using the existing DOM-only builder. The agent must not stop after creating news_sources.md. The agent must complete a full daily issue generation run unless the user explicitly requests a narrower task.
+This file is the controlling instruction for an automated coding agent that must generate a daily, static "AI Gazette" newspaper page for Seattle, WA by searching the web for recent news, verifying sources, and writing the results into NEWS-YYYY-MM-DD/content.js using the existing DOM-only builder. The agent must complete a full daily issue generation run unless the user explicitly requests a narrower task.
 
 A01 Non-negotiable outcome for each run
-Unless the user explicitly says "only create news_sources.md" or "do not update content.js", the agent must:
+
 1) search for news on the web,
 2) select a diverse set of items,
 3) verify the URLs and dates,
@@ -36,12 +36,9 @@ Set DAILY_DIR = NEWS-YYYY-MM-DD.
 
 B02 Ensure DAILY_DIR exists and is initialized
 If DAILY_DIR does not exist, create it.
-Ensure these files exist in DAILY_DIR: index.html, main.js, styles.css, content.js, news_sources.md.
+Ensure these files exist in DAILY_DIR: index.html, main.js, styles.css, content.js.
 If any of index.html, main.js, styles.css, content.js are missing in DAILY_DIR, copy the missing file(s) from _00_template. Do not overwrite existing files.
 
-B03 Create or update DAILY_DIR/news_sources.md
-If news_sources.md does not exist, create it using the default categories and source policies in C00.
-If it exists, keep its category list and source policies unless the user explicitly requests changes.
 
 B04 Mandatory web research step (must not be skipped)
 For every category defined in DAILY_DIR/news_sources.md:
@@ -50,7 +47,6 @@ For every category defined in DAILY_DIR/news_sources.md:
 3) Open candidate results and extract title, outlet, publication date, and canonical URL.
 4) Reject any result if the URL is not accessible, the date is not visible and confirmable, or it is clearly out of scope for Seattle and the category.
 
-This step is mandatory even if the prompt mentions only "create news_sources.md". The agent must still populate the daily issue unless the user explicitly prohibited content generation.
 
 B05 Select items and enforce diversity
 The agent must publish at least 12 total items.
@@ -94,8 +90,6 @@ The agent must only rewrite the content between these markers:
 <!-- AI_GAZETTE_ARCHIVE_END -->
 If the markers do not exist, the agent must add them and then manage only the region between them.
 
-C00 Default categories and default sources (Seattle-focused)
-If creating news_sources.md from scratch, use this exact category list in this order and include at least these sources and seeds.
 
 C01 Category: Seattle and Region
 Preferred domains: kuow.org, crosscut.com, seattlemet.com, king5.com, kiro7.com
@@ -210,7 +204,7 @@ Root index.html must include the same attribution once.
 
 J00 Success criteria (the agent must verify before stopping)
 The agent must not stop until all are true:
-1) DAILY_DIR exists and contains index.html, main.js, styles.css, content.js, news_sources.md.
+1) DAILY_DIR exists and contains index.html, main.js, styles.css, content.js.
 2) content.js contains at least 12 items unless H00 triggered, and includes dates and URLs for every item.
 3) Source diversity requirements are met unless H00 triggered.
 4) Root index.html links to DAILY_DIR/index.html within the managed region.
