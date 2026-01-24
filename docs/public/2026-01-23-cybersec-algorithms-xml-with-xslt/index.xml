@@ -1,0 +1,412 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="index.xsl"?>
+<CyberDefenseAlgorithmCatalog schemaVersion="2.0">
+  <Schema>
+    <Field name="rank" type="int" description="1 = most used/important in typical production cyber defense; higher = less used/important overall"/>
+    <Field name="category" type="string" description="Detection category or operational function"/>
+    <Field name="name" type="string" description="Algorithm or well-known method name"/>
+    <Field name="family" type="string" description="Technique family"/>
+    <Field name="difficulty" type="enum{Low,Medium,High}" description="Implementation + tuning difficulty in real deployments"/>
+    <Field name="whatItDoes" type="string" description="Plain-language purpose"/>
+    <Field name="howItWorks" type="string" description="Mechanism/intuition at an implementation level"/>
+    <Field name="whereApplied" type="string" description="Where it commonly runs (endpoint, network sensor, email gateway, SIEM, data lake, etc.)"/>
+    <Field name="inputsOutputs" type="string" description="Typical inputs and outputs"/>
+    <Field name="commonUsage" type="string" description="Concrete security usage examples"/>
+    <Field name="alternatives" type="string" description="Common alternatives or close substitutes"/>
+    <Field name="notes" type="string" description="Operational caveats (FP/FN tradeoffs, scaling concerns, adversarial issues)"/>
+  </Schema>
+
+  <Algorithms>
+
+    <Algorithm rank="1" category="Network intrusion detection - multi-pattern payload scanning">
+      <name>Aho-Corasick</name>
+      <family>String matching / automata</family>
+      <difficulty>Medium</difficulty>
+      <whatItDoes>Matches many fixed signatures (strings/byte patterns) against traffic or content in a single pass.</whatItDoes>
+      <howItWorks>Builds a trie of patterns plus failure links (an automaton). Streaming bytes advance the state and report any pattern endings reached, enabling O(n) scanning with respect to input length.</howItWorks>
+      <whereApplied>Network IDS/IPS sensors, proxy content scanners, file scanners, high-throughput DPI pipelines.</whereApplied>
+      <inputsOutputs>Input: stream of bytes and a pattern set. Output: matched pattern IDs, offsets, and optionally matched substrings.</inputsOutputs>
+      <commonUsage>Snort/Suricata-style signature engines for payload strings, HTTP header tokens, exploit kit markers.</commonUsage>
+      <alternatives>Hyperscan-style regex engines, Boyer-Moore/KMP for fewer patterns, DFA-based regex compilation.</alternatives>
+      <notes>Great for exact strings; not sufficient alone for polymorphic threats. Memory grows with pattern count; careful with very large rule sets.</notes>
+    </Algorithm>
+
+    <Algorithm rank="2" category="Endpoint malware detection - known-bad file identification">
+      <name>Cryptographic hash matching (SHA-256 sets)</name>
+      <family>Content fingerprinting</family>
+      <difficulty>Low</difficulty>
+      <whatItDoes>Identifies exact known-bad (or known-good) files by comparing their cryptographic hashes to lists.</whatItDoes>
+      <howItWorks>Computes SHA-256 (or similar) of a file; checks membership in a database/set. Hash collisions are negligibly likely with modern hashes for practical defense.</howItWorks>
+      <whereApplied>EDR/AV engines, file reputation services, email gateways scanning attachments, sandbox pipelines.</whereApplied>
+      <inputsOutputs>Input: file bytes. Output: verdict or tag (known-bad/known-good/unknown) plus intelligence metadata.</inputsOutputs>
+      <commonUsage>Block known ransomware samples, prevent re-introducing previously cleaned malware, allowlist OS binaries.</commonUsage>
+      <alternatives>Fuzzy hashes (ssdeep, TLSH), YARA, behavioral detections, certificate reputation.</alternatives>
+      <notes>Trivially evaded by recompilation/packing; best as a fast first-pass filter and for recall on known samples.</notes>
+    </Algorithm>
+
+    <Algorithm rank="3" category="Endpoint malware detection - similarity / familying">
+      <name>Fuzzy hashing (ssdeep / CTPH)</name>
+      <family>Similarity hashing</family>
+      <difficulty>Medium</difficulty>
+      <whatItDoes>Finds near-duplicate files and groups variants that share substantial byte-level similarity.</whatItDoes>
+      <howItWorks>Splits content into chunks based on rolling hash triggers, hashes chunks, and compares resulting sequences with edit-distance-like scoring to estimate similarity.</howItWorks>
+      <whereApplied>Malware triage systems, threat intel pipelines, DFIR tooling, sandbox post-processing.</whereApplied>
+      <inputsOutputs>Input: file bytes. Output: fuzzy hash string and a similarity score vs other samples.</inputsOutputs>
+      <commonUsage>Cluster packed/unpacked variants, link phishing documents with minor edits, prioritize triage by grouping.</commonUsage>
+      <alternatives>TLSH, sdhash, LZJD, feature-vector similarity with embeddings, PE-feature clustering.</alternatives>
+      <notes>Attackers can reduce similarity with padding or structural changes; use with other features for robust familying.</notes>
+    </Algorithm>
+
+    <Algorithm rank="4" category="Content-based malware and memory scanning rules">
+      <name>YARA rule matching</name>
+      <family>Rule-based pattern matching</family>
+      <difficulty>Medium</difficulty>
+      <whatItDoes>Detects malware families or suspicious artifacts by matching combinations of strings/byte patterns plus boolean conditions.</whatItDoes>
+      <howItWorks>Evaluates rules composed of string literals/hex patterns/regex plus conditions (AND/OR, thresholds, metadata). Scans file or memory regions and triggers when conditions are satisfied.</howItWorks>
+      <whereApplied>EDR scanners, incident response triage, malware research pipelines, memory forensics.</whereApplied>
+      <inputsOutputs>Input: file/memory buffer and compiled rules. Output: matched rule names, matched strings, offsets, metadata.</inputsOutputs>
+      <commonUsage>Detect specific ransomware families, identify packers, match credential stealer configuration blocks.</commonUsage>
+      <alternatives>Raw signature engines, ML classifiers, sandbox behavior rules, sigma-like log rules for telemetry.</alternatives>
+      <notes>Rules require upkeep; brittle if overfit to exact bytes. Strong for transparent, auditable detections.</notes>
+    </Algorithm>
+
+    <Algorithm rank="5" category="Email security - spam/phishing text classification">
+      <name>Multinomial Naive Bayes</name>
+      <family>Supervised learning</family>
+      <difficulty>Low</difficulty>
+      <whatItDoes>Classifies messages (spam/phish/benign) using token frequency features.</whatItDoes>
+      <howItWorks>Assumes conditional independence of tokens given the class. Learns per-class token probabilities with smoothing; predicts the class with highest posterior probability.</howItWorks>
+      <whereApplied>Email gateways, SOC triage for reported emails, support ticket classifiers.</whereApplied>
+      <inputsOutputs>Input: tokenized text features (word/char n-grams), output: class label and probability score.</inputsOutputs>
+      <commonUsage>Baseline spam filters, phishing-lure detection based on language patterns, fast scoring at scale.</commonUsage>
+      <alternatives>Logistic regression, linear SVM, transformers, rule-based keyword/URL heuristics.</alternatives>
+      <notes>Works well with sparse text; can be fooled by adversarial obfuscation. Pair with URL/attachment and reputation signals.</notes>
+    </Algorithm>
+
+    <Algorithm rank="6" category="URL and domain detection - lexical classification">
+      <name>Logistic regression</name>
+      <family>Supervised learning</family>
+      <difficulty>Low</difficulty>
+      <whatItDoes>Scores URLs/domains/emails as malicious or benign using engineered features.</whatItDoes>
+      <howItWorks>Fits a linear model over features, uses sigmoid to output probabilities. Regularization controls overfitting; coefficients remain interpretable.</howItWorks>
+      <whereApplied>Web proxies, secure DNS, email gateways, SIEM enrichment services.</whereApplied>
+      <inputsOutputs>Input: lexical features (length, entropy, n-grams, TLD, digit ratio), output: probability and decision threshold.</inputsOutputs>
+      <commonUsage>Detect newly registered suspicious domains, typosquats, URL shortener abuse when reputation is unknown.</commonUsage>
+      <alternatives>GBDT (XGBoost/LightGBM), linear SVM, character CNNs, transformer encoders over URL tokens.</alternatives>
+      <notes>Strong baseline; needs careful feature hygiene to avoid leakage. Adversaries can adapt lexically, so blend with behavioral signals.</notes>
+    </Algorithm>
+
+    <Algorithm rank="7" category="High-accuracy tabular detection on rich telemetry">
+      <name>Gradient Boosted Decision Trees (XGBoost-style)</name>
+      <family>Ensembles</family>
+      <difficulty>High</difficulty>
+      <whatItDoes>Provides strong classification/ranking for malware, account takeover, and suspicious sessions using many heterogeneous features.</whatItDoes>
+      <howItWorks>Builds an additive ensemble of small trees sequentially, each correcting prior errors by optimizing a loss via gradient boosting; supports nonlinear interactions and missing values.</howItWorks>
+      <whereApplied>EDR backend scoring, UEBA services, fraud-like detection in auth logs, SOC alert prioritization.</whereApplied>
+      <inputsOutputs>Input: tabular features (counts, histograms, reputations, graph stats), output: score, rank, or label with feature importance.</inputsOutputs>
+      <commonUsage>Prioritize alerts, classify process trees, detect suspicious authentication patterns combining many signals.</commonUsage>
+      <alternatives>Random forest, LightGBM, CatBoost, neural networks on embeddings, rule ensembles.</alternatives>
+      <notes>Requires monitoring for drift and leakage; can be expensive to train/tune. Often wins on structured security data.</notes>
+    </Algorithm>
+
+    <Algorithm rank="8" category="Host and user behavior anomaly detection">
+      <name>Isolation Forest</name>
+      <family>Anomaly detection</family>
+      <difficulty>Medium</difficulty>
+      <whatItDoes>Detects outliers in multidimensional telemetry without needing labels.</whatItDoes>
+      <howItWorks>Randomly partitions data by feature splits; anomalies isolate in fewer splits, yielding higher anomaly scores.</howItWorks>
+      <whereApplied>UEBA pipelines, endpoint telemetry analytics, cloud audit log anomaly services.</whereApplied>
+      <inputsOutputs>Input: numeric/categorical-encoded features per entity/time window. Output: anomaly score and optional explanation by split paths.</inputsOutputs>
+      <commonUsage>Spot unusual login times/locations, rare process executions, abnormal data transfer volumes.</commonUsage>
+      <alternatives>LOF, One-Class SVM, robust z-score/MAD, autoencoders, PCA reconstruction.</alternatives>
+      <notes>Good general-purpose outlier detector; must handle seasonality and entity baselines carefully to reduce false positives.</notes>
+    </Algorithm>
+
+    <Algorithm rank="9" category="Time-series anomaly detection for rates and volumes">
+      <name>EWMA</name>
+      <family>Time-series detection</family>
+      <difficulty>Low</difficulty>
+      <whatItDoes>Flags changes in metrics (login rate, DNS volume, error counts) by smoothing and comparing to control limits.</whatItDoes>
+      <howItWorks>Maintains an exponentially weighted moving average; recent data has more weight. Alerts when the smoothed value deviates beyond thresholds derived from variance.</howItWorks>
+      <whereApplied>Monitoring/observability, network telemetry dashboards, SIEM metric alerts.</whereApplied>
+      <inputsOutputs>Input: metric time series. Output: smoothed series and alert triggers when limits exceeded.</inputsOutputs>
+      <commonUsage>Detect password spray bursts, scanning spikes, sudden outbound traffic increases.</commonUsage>
+      <alternatives>CUSUM, Holt-Winters, STL + residual thresholds, ARIMA, change-point detection methods.</alternatives>
+      <notes>Very deployable and cheap. Needs per-metric tuning; may miss complex multivariate attacks.</notes>
+    </Algorithm>
+
+    <Algorithm rank="10" category="Change detection in telemetry baselines">
+      <name>CUSUM</name>
+      <family>Time-series detection</family>
+      <difficulty>Medium</difficulty>
+      <whatItDoes>Detects persistent shifts in the mean level of a signal faster than simple thresholds.</whatItDoes>
+      <howItWorks>Accumulates positive and negative deviations from a reference value; when cumulative sum exceeds a decision threshold, signals a change.</howItWorks>
+      <whereApplied>NOC/SOC metric alerting, streaming detection for auth/network counters.</whereApplied>
+      <inputsOutputs>Input: time series with reference mean/variance. Output: change alarms and estimated change time.</inputsOutputs>
+      <commonUsage>Identify gradual credential stuffing ramps, slow exfiltration increases, persistent error-rate shifts from compromise.</commonUsage>
+      <alternatives>EWMA, Bayesian online change-point detection, Page-Hinkley test, ARIMA residual tests.</alternatives>
+      <notes>More sensitive to sustained shifts; can false-positive if seasonality not removed.</notes>
+    </Algorithm>
+
+    <Algorithm rank="11" category="Threat hunting search relevance over logs and artifacts">
+      <name>BM25</name>
+      <family>Information retrieval</family>
+      <difficulty>Medium</difficulty>
+      <whatItDoes>Ranks log/events/documents by relevance to a query for faster hunting and investigation.</whatItDoes>
+      <howItWorks>Scores documents by term frequency with saturation plus inverse document frequency; includes normalization for document length.</howItWorks>
+      <whereApplied>SIEM search backends, data lakes, case management search, intel repositories.</whereApplied>
+      <inputsOutputs>Input: query + indexed corpus. Output: ranked results with relevance scores.</inputsOutputs>
+      <commonUsage>Find rare commandlines, identify matches for TTP keywords, search across incident notes and alerts.</commonUsage>
+      <alternatives>TF-IDF cosine similarity, neural retrieval/embeddings, keyword boolean search, Lucene classic similarity.</alternatives>
+      <notes>Not a detector by itself, but critical for efficient hunting. Needs good tokenization for security strings.</notes>
+    </Algorithm>
+
+    <Algorithm rank="12" category="Near-duplicate detection for phishing pages and emails">
+      <name>SimHash</name>
+      <family>Locality-sensitive hashing</family>
+      <difficulty>Medium</difficulty>
+      <whatItDoes>Creates a compact fingerprint so similar documents have small Hamming distance, enabling fast clustering.</whatItDoes>
+      <howItWorks>Hashes features (tokens/ shingles) into bit vectors and sums weighted signs; final bits reflect the sign of sums. Similar inputs yield similar bit patterns.</howItWorks>
+      <whereApplied>Anti-phishing pipelines, web crawling intel, email similarity clustering.</whereApplied>
+      <inputsOutputs>Input: token features from HTML/text. Output: fixed-size hash; similarity via Hamming distance threshold.</inputsOutputs>
+      <commonUsage>Cluster phishing kit variants, deduplicate crawled landing pages, group repeated lure templates.</commonUsage>
+      <alternatives>MinHash, TLSH for binaries, embedding cosine similarity, shingling + Jaccard.</alternatives>
+      <notes>Adversaries can perturb features; use robust feature extraction (DOM structure, URLs, resources) to improve stability.</notes>
+    </Algorithm>
+
+    <Algorithm rank="13" category="Set membership and fast IOC screening">
+      <name>Bloom filter</name>
+      <family>Probabilistic data structures</family>
+      <difficulty>Low</difficulty>
+      <whatItDoes>Rapidly tests whether an indicator might be in a large set, using small memory.</whatItDoes>
+      <howItWorks>Multiple hash functions map an item to bits in a bit array. If any mapped bit is 0, the item is definitely not present; if all are 1, it is probably present (false positives possible).</howItWorks>
+      <whereApplied>DNS resolvers, proxies, endpoint agents, streaming enrichment services.</whereApplied>
+      <inputsOutputs>Input: item (domain/IP/hash) and filter. Output: maybe-in-set / not-in-set.</inputsOutputs>
+      <commonUsage>Screen billions of URLs against large blocklists, pre-filter candidates before costly reputation lookups.</commonUsage>
+      <alternatives>Cuckoo filter, standard hash sets, prefix tries for domains, roaring bitmaps.</alternatives>
+      <notes>False positives must be confirmed by a backing store. Tune size/hash count for expected volumes.</notes>
+    </Algorithm>
+
+    <Algorithm rank="14" category="Approximate frequency counting to find suspicious heavy hitters">
+      <name>Count-Min Sketch</name>
+      <family>Streaming/probabilistic</family>
+      <difficulty>Medium</difficulty>
+      <whatItDoes>Estimates frequencies of items in streams to find heavy hitters (top talkers, most common domains) cheaply.</whatItDoes>
+      <howItWorks>Uses multiple hash functions to update a 2D counter array; query returns the minimum across hashed counters, producing an overestimate with bounded error.</howItWorks>
+      <whereApplied>Network telemetry pipelines, SIEM streaming jobs, DDoS detection, DNS analytics.</whereApplied>
+      <inputsOutputs>Input: stream of keys (IP/domain/user). Output: approximate counts and top-k lists when paired with a heap.</inputsOutputs>
+      <commonUsage>Spot suddenly popular domains (possible beaconing C2), top scanning sources, unusually frequent auth failures.</commonUsage>
+      <alternatives>Misra-Gries, exact counting with sampling, HyperLogLog for distinct counts, sketches per time window.</alternatives>
+      <notes>Counts are approximate; choose width/depth for error bounds. Combine with windowing to catch bursts.</notes>
+    </Algorithm>
+
+    <Algorithm rank="15" category="Distinct counting for uniqueness anomalies">
+      <name>HyperLogLog</name>
+      <family>Streaming/probabilistic</family>
+      <difficulty>Medium</difficulty>
+      <whatItDoes>Estimates the number of distinct elements with low memory usage.</whatItDoes>
+      <howItWorks>Uses hashed values and tracks leading-zero patterns across registers; aggregates registers to estimate cardinality with known error characteristics.</howItWorks>
+      <whereApplied>Telemetry analytics, SIEM enrichment, DNS and web proxy monitoring.</whereApplied>
+      <inputsOutputs>Input: stream of items. Output: approximate distinct count (unique IPs/users/domains) per window/entity.</inputsOutputs>
+      <commonUsage>Detect host contacting unusually many unique domains (malware), abnormal unique destination IP counts (scanning).</commonUsage>
+      <alternatives>Exact sets, bitmap counting, KMV sketches, sampling.</alternatives>
+      <notes>Approximate; needs correct hashing and register sizing. Excellent for large-scale cardinality features.</notes>
+    </Algorithm>
+
+    <Algorithm rank="16" category="Typosquatting and brand-abuse detection">
+      <name>Damerau-Levenshtein distance</name>
+      <family>Edit distance</family>
+      <difficulty>Low</difficulty>
+      <whatItDoes>Measures how many edits (including transpositions) transform one string into another to flag lookalike domains.</whatItDoes>
+      <howItWorks>Dynamic programming computes minimal edit operations (insert/delete/substitute/transpose). Small distance indicates a likely typo or deliberate mimic.</howItWorks>
+      <whereApplied>Secure DNS, email gateway URL rewriting/inspection, brand protection services.</whereApplied>
+      <inputsOutputs>Input: candidate domain and protected brand/domain list. Output: distance score and nearest neighbor matches.</inputsOutputs>
+      <commonUsage>Detect paypaI.com-like substitutions, transposed characters, missing-dot tricks when normalized.</commonUsage>
+      <alternatives>Levenshtein, keyboard-distance models, n-gram similarity, homograph detection with IDN normalization.</alternatives>
+      <notes>Must normalize punycode/IDN and apply rules for confusables. Many benign near-matches exist; use WHOIS/age/reputation to reduce FPs.</notes>
+    </Algorithm>
+
+    <Algorithm rank="17" category="Behavioral sequence profiling for processes or sessions">
+      <name>Markov chain transition modeling</name>
+      <family>Sequence modeling</family>
+      <difficulty>Medium</difficulty>
+      <whatItDoes>Models typical transitions between events (API calls, commands, process states) and flags unusual paths.</whatItDoes>
+      <howItWorks>Estimates transition probabilities between states/events from historical data; scores new sequences by likelihood and alerts on low-probability transitions or paths.</howItWorks>
+      <whereApplied>Endpoint behavior analytics, cloud activity monitoring, application security telemetry.</whereApplied>
+      <inputsOutputs>Input: ordered event sequences. Output: likelihood scores, anomalous transition highlights.</inputsOutputs>
+      <commonUsage>Detect unusual parent-child process transitions, suspicious command sequences in admin tools.</commonUsage>
+      <alternatives>HMMs, n-gram models, RNN/LSTM, rule-based state machines.</alternatives>
+      <notes>State definition matters. Needs per-entity baselines to avoid flagging legitimate diversity across hosts/users.</notes>
+    </Algorithm>
+
+    <Algorithm rank="18" category="Unsupervised anomaly detection via reconstruction error">
+      <name>PCA reconstruction anomaly detection</name>
+      <family>Dimensionality reduction / statistics</family>
+      <difficulty>Medium</difficulty>
+      <whatItDoes>Detects anomalies when observations do not fit the dominant low-dimensional structure of normal data.</whatItDoes>
+      <howItWorks>Fits principal components on normal-ish data; projects observations into subspace and measures residual (reconstruction error). Large residual suggests anomaly.</howItWorks>
+      <whereApplied>Network flow analytics, UEBA, host metric anomaly detection, cloud audit feature sets.</whereApplied>
+      <inputsOutputs>Input: standardized numeric feature vectors. Output: reconstruction error score and sometimes component contributions.</inputsOutputs>
+      <commonUsage>Detect abnormal flow feature combinations, unusual resource usage patterns after compromise.</commonUsage>
+      <alternatives>Robust PCA, autoencoders, Isolation Forest, Gaussian mixtures.</alternatives>
+      <notes>Sensitive to scaling and seasonality. Works best when normal behavior is well captured by a few components.</notes>
+    </Algorithm>
+
+    <Algorithm rank="19" category="Deep anomaly detection for complex telemetry">
+      <name>Autoencoder anomaly detection</name>
+      <family>Deep learning</family>
+      <difficulty>High</difficulty>
+      <whatItDoes>Learns a compressed representation of normal behavior and flags events that reconstruct poorly.</whatItDoes>
+      <howItWorks>Trains an encoder-decoder network to reconstruct inputs. At inference, high reconstruction loss indicates deviation from learned patterns.</howItWorks>
+      <whereApplied>UEBA platforms, large-scale endpoint/cloud telemetry backends.</whereApplied>
+      <inputsOutputs>Input: normalized feature vectors (often with embeddings). Output: anomaly score from reconstruction loss, optional latent vectors.</inputsOutputs>
+      <commonUsage>Detect rare combinations of auth, device, and network attributes; identify unusual endpoint telemetry bursts.</commonUsage>
+      <alternatives>PCA/Robust PCA, Isolation Forest, VAEs, One-Class SVM.</alternatives>
+      <notes>Harder to explain; requires careful training data selection and drift monitoring. Attackers may attempt mimicry; combine with rules and intel.</notes>
+    </Algorithm>
+
+    <Algorithm rank="20" category="Graph-based detection on entity relationships">
+      <name>PageRank on security entity graphs</name>
+      <family>Graph algorithms</family>
+      <difficulty>Medium</difficulty>
+      <whatItDoes>Ranks nodes (domains, IPs, accounts, binaries) by influence/centrality to surface suspicious infrastructure.</whatItDoes>
+      <howItWorks>Iteratively propagates rank scores across edges; nodes receiving rank from many important neighbors gain higher rank. Variants weight edges by interaction strength or recency.</howItWorks>
+      <whereApplied>Threat intel graph analytics, SIEM enrichment graphs, botnet infrastructure mapping.</whereApplied>
+      <inputsOutputs>Input: directed/weighted graph. Output: node scores and ranked lists.</inputsOutputs>
+      <commonUsage>Prioritize domains heavily connected to known-malicious nodes, identify central C2 in observed communications.</commonUsage>
+      <alternatives>HITS, betweenness centrality, community detection (Louvain), GNN embeddings + classifiers.</alternatives>
+      <notes>Quality depends on graph construction and edge semantics. Beware of popularity bias in dense enterprise graphs.</notes>
+    </Algorithm>
+
+    <Algorithm rank="21" category="Campaign clustering and botnet/infrastructure grouping">
+      <name>Louvain community detection</name>
+      <family>Graph algorithms</family>
+      <difficulty>High</difficulty>
+      <whatItDoes>Finds communities (clusters) in large graphs to group related malicious entities and campaigns.</whatItDoes>
+      <howItWorks>Optimizes modularity by iteratively moving nodes between communities to improve score, then collapses communities and repeats hierarchically.</howItWorks>
+      <whereApplied>Threat intel platforms, SOC graph analytics, sinkhole and telemetry correlation systems.</whereApplied>
+      <inputsOutputs>Input: graph of entities and relations. Output: community assignments and hierarchy levels.</inputsOutputs>
+      <commonUsage>Group domains sharing hosting/IPs/certs, cluster accounts exhibiting shared access patterns, identify infrastructure reuse.</commonUsage>
+      <alternatives>Label propagation, spectral clustering, HDBSCAN on graph embeddings, connected components with edge filtering.</alternatives>
+      <notes>Non-deterministic variants and parameter sensitivity can affect stability. Requires careful edge weighting to avoid meaningless clusters.</notes>
+    </Algorithm>
+
+    <Algorithm rank="22" category="Alert fusion and multi-signal reasoning">
+      <name>Bayesian networks</name>
+      <family>Probabilistic graphical models</family>
+      <difficulty>High</difficulty>
+      <whatItDoes>Combines uncertain indicators into a unified probability of compromise or tactic occurrence.</whatItDoes>
+      <howItWorks>Represents dependencies between variables (signals, tactics) as a DAG with conditional probability tables; inference computes posterior probabilities given evidence.</howItWorks>
+      <whereApplied>Risk scoring engines, SOAR decision support, advanced correlation layers.</whereApplied>
+      <inputsOutputs>Input: observed signals as evidence. Output: posterior probabilities for hypotheses (compromise, malware family, tactic).</inputsOutputs>
+      <commonUsage>Fuse weak signals (rare login + new device + unusual DNS) into a stronger incident probability.</commonUsage>
+      <alternatives>Rule-based correlation, logistic regression stacking, Dempster-Shafer, ensemble voting.</alternatives>
+      <notes>Hard to build and maintain at scale; requires expert knowledge or learned structure and careful calibration.</notes>
+    </Algorithm>
+
+    <Algorithm rank="23" category="SIEM-style event correlation across time windows">
+      <name>Sliding-window joins and correlation rules</name>
+      <family>Streaming analytics</family>
+      <difficulty>Medium</difficulty>
+      <whatItDoes>Detects multi-step behaviors by correlating events that occur within a time window and share keys (host, user, IP).</whatItDoes>
+      <howItWorks>Maintains time-bounded state keyed by entity, joins event streams on keys, applies rule logic (sequence, counts, thresholds) to emit detections.</howItWorks>
+      <whereApplied>SIEM correlation engines, streaming pipelines (Flink/Spark), SOAR pre-processing.</whereApplied>
+      <inputsOutputs>Input: normalized event streams. Output: correlation alerts with supporting event bundles.</inputsOutputs>
+      <commonUsage>Process spawned by Office then PowerShell then network connection; multiple failed logins then success; rare admin action following new token issuance.</commonUsage>
+      <alternatives>CEP engines, sequence models (HMM/RNN), graph correlation, rule languages (Sigma translated to backend).</alternatives>
+      <notes>Highly effective and widely used, but can be noisy without good normalization and suppression logic.</notes>
+    </Algorithm>
+
+    <Algorithm rank="24" category="Regex-driven content and log scanning">
+      <name>NFA-based regular expression matching</name>
+      <family>Automata / pattern matching</family>
+      <difficulty>Medium</difficulty>
+      <whatItDoes>Finds flexible patterns in text and byte streams such as obfuscated commands, suspicious headers, or encoded payload fragments.</whatItDoes>
+      <howItWorks>Compiles regex to an NFA and simulates possible states while scanning input; matches when an accept state is reachable. Some engines convert to DFA for speed at memory cost.</howItWorks>
+      <whereApplied>WAFs, email gateways, log pipelines, DLP tools, IDS rule engines.</whereApplied>
+      <inputsOutputs>Input: text/bytes + regex patterns. Output: match spans and rule IDs.</inputsOutputs>
+      <commonUsage>Detect base64 PowerShell patterns, suspicious user-agent strings, SQL injection signatures, IOC formats in logs.</commonUsage>
+      <alternatives>DFA compilation, Aho-Corasick for fixed strings, parsing-based detectors, token/AST analysis.</alternatives>
+      <notes>Beware catastrophic backtracking in some engines; prefer safe regex engines for untrusted inputs.</notes>
+    </Algorithm>
+
+    <Algorithm rank="25" category="Approximate nearest neighbor for large-scale similarity search">
+      <name>Locality-Sensitive Hashing (LSH)</name>
+      <family>Approximate nearest neighbor</family>
+      <difficulty>High</difficulty>
+      <whatItDoes>Enables fast retrieval of similar artifacts (emails, binaries, URLs) from massive corpora.</whatItDoes>
+      <howItWorks>Uses hash functions that preserve similarity so that close items collide in buckets; queries search a small subset of buckets instead of the whole dataset.</howItWorks>
+      <whereApplied>Threat intel platforms, malware repositories, phishing page clustering at scale.</whereApplied>
+      <inputsOutputs>Input: vectors or shingles; output: candidate neighbor set and similarity scores after verification.</inputsOutputs>
+      <commonUsage>Find nearest known samples to a new malware binary representation, cluster new phishing kits by similarity to prior ones.</commonUsage>
+      <alternatives>HNSW/ANN indexes, MinHash/SimHash variants, vector databases with cosine similarity.</alternatives>
+      <notes>Engineering-heavy (indexing, tuning, memory). Needs second-stage exact scoring to confirm candidates.</notes>
+    </Algorithm>
+
+    <Algorithm rank="26" category="Clustering noisy security telemetry with variable density">
+      <name>HDBSCAN</name>
+      <family>Clustering</family>
+      <difficulty>High</difficulty>
+      <whatItDoes>Finds clusters and outliers in data where cluster densities differ, common in security telemetry.</whatItDoes>
+      <howItWorks>Builds a hierarchy of density-based clusters and extracts stable clusters; labels points not belonging to stable clusters as noise/outliers.</howItWorks>
+      <whereApplied>UEBA, incident deduplication, campaign clustering on embeddings.</whereApplied>
+      <inputsOutputs>Input: feature vectors or embeddings. Output: cluster labels, membership strengths, outlier scores.</inputsOutputs>
+      <commonUsage>Cluster similar alerts, group hosts with similar behavior, identify outlier sessions potentially malicious.</commonUsage>
+      <alternatives>DBSCAN, k-means, GMM, spectral clustering, clustering over graph embeddings.</alternatives>
+      <notes>Parameter selection and distance metric choice are critical. Works well when you expect noise and uneven cluster shapes.</notes>
+    </Algorithm>
+
+    <Algorithm rank="27" category="Binary malware similarity via compression-derived features">
+      <name>LZJD (Lempel-Ziv Jaccard Distance)</name>
+      <family>Similarity via compression</family>
+      <difficulty>High</difficulty>
+      <whatItDoes>Measures similarity between binaries by comparing sets of substrings derived from Lempel-Ziv parsing.</whatItDoes>
+      <howItWorks>Extracts dictionaries of LZ phrases from each file; computes Jaccard similarity between phrase sets to estimate shared structure even across some modifications.</howItWorks>
+      <whereApplied>Malware research and triage, sample clustering in malware repositories.</whereApplied>
+      <inputsOutputs>Input: file bytes. Output: distance/similarity scores and nearest neighbors.</inputsOutputs>
+      <commonUsage>Cluster malware families when hashes differ, find related samples in large collections.</commonUsage>
+      <alternatives>TLSH, ssdeep, sdhash, embedding-based similarity, PE-feature vector clustering.</alternatives>
+      <notes>Compute can be heavier than simple fuzzy hashes. Still vulnerable to heavy packing/obfuscation; combine with unpacking and behavioral signals.</notes>
+    </Algorithm>
+
+    <Algorithm rank="28" category="Ranking and prioritizing nodes/edges in attack graphs">
+      <name>Shortest path (Dijkstra) for attack-path scoring</name>
+      <family>Graph algorithms</family>
+      <difficulty>Medium</difficulty>
+      <whatItDoes>Finds least-cost paths between attacker entry points and critical assets to prioritize remediation and detections.</whatItDoes>
+      <howItWorks>Given nonnegative edge weights (exploitability, exposure, privilege), iteratively relaxes distances to compute shortest path tree from a source.</howItWorks>
+      <whereApplied>Attack path management tools, identity graph risk scoring, network segmentation planning.</whereApplied>
+      <inputsOutputs>Input: weighted graph + source nodes. Output: path costs and predecessor paths.</inputsOutputs>
+      <commonUsage>Identify most likely lateral movement routes, prioritize patching of nodes on lowest-cost paths.</commonUsage>
+      <alternatives>A* with heuristics, max-flow/min-cut for segmentation, Monte Carlo simulation of attacker movement.</alternatives>
+      <notes>Output quality depends on correct weights. Real environments need frequent updates as assets and permissions change.</notes>
+    </Algorithm>
+
+    <Algorithm rank="29" category="Distinctive token selection for security text models">
+      <name>Chi-square feature selection</name>
+      <family>Feature selection</family>
+      <difficulty>Low</difficulty>
+      <whatItDoes>Selects tokens that are statistically associated with malicious vs benign classes.</whatItDoes>
+      <howItWorks>Computes chi-square statistic between token presence and class label; keeps high-scoring tokens to reduce dimensionality and improve model focus.</howItWorks>
+      <whereApplied>Email and URL classifiers, log message classification, abuse report triage.</whereApplied>
+      <inputsOutputs>Input: labeled sparse token matrix. Output: selected feature list and scores.</inputsOutputs>
+      <commonUsage>Improve phishing classifier by keeping discriminative terms, reduce noise from rare irrelevant tokens.</commonUsage>
+      <alternatives>Mutual information, L1 regularization, embedded selection in tree models, PCA/LSA for text.</alternatives>
+      <notes>Simple and effective; must avoid leakage from environment-specific tokens (internal domains, user names) if generalization matters.</notes>
+    </Algorithm>
+
+    <Algorithm rank="30" category="Score calibration for alert triage at fixed precision levels">
+      <name>Isotonic regression calibration</name>
+      <family>Calibration</family>
+      <difficulty>Medium</difficulty>
+      <whatItDoes>Transforms model scores into calibrated probabilities to better set thresholds and estimate risk.</whatItDoes>
+      <howItWorks>Fits a nondecreasing piecewise-constant function mapping scores to observed outcome frequencies on validation data.</howItWorks>
+      <whereApplied>Risk scoring services, SOC prioritization layers, SOAR decision thresholds.</whereApplied>
+      <inputsOutputs>Input: raw scores + labels. Output: calibrated probability function and calibrated scores.</inputsOutputs>
+      <commonUsage>Set alert thresholds to achieve target false positive rates, produce interpretable risk probabilities.</commonUsage>
+      <alternatives>Platt scaling, beta calibration, temperature scaling (for deep models).</alternatives>
+      <notes>Needs representative validation data; calibration can degrade under drift. Recalibrate periodically.</notes>
+    </Algorithm>
+
+  </Algorithms>
+</CyberDefenseAlgorithmCatalog>
