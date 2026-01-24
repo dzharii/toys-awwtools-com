@@ -6,6 +6,13 @@ Our outlet name is AI Gazette.
 
 Use read-only: ./news_sources.md
 
+In content.js, always use backtick style javascript string literals, never single or double quote to define string literal. 
+
+Good example:
+```
+      .p(`KNKX | Date: 2026-01-13 | URL: https://www.knkx.org/arts-culture/2026-01-13/marvin-olivers-totem-poles-steinbrueck-park`)
+```
+
 A00.01 Purpose
 This file is the controlling instruction for an automated coding agent that must generate a daily, static "AI Gazette" newspaper page for Seattle, WA by searching the web for recent news, verifying sources, and writing the results into NEWS-YYYY-MM-DD/content.js using the existing DOM-only builder. The agent must complete a full daily issue generation run unless the user explicitly requests a narrower task.
 
