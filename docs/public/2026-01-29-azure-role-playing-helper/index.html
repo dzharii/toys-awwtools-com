@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CalmRBAC — Azure Role Assignment Helper</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="ambient"></div>
+    <main class="page">
+      <section class="card" aria-labelledby="app-title">
+        <header class="header">
+          <div class="brand-mark" aria-hidden="true"></div>
+          <div class="title-block">
+            <p class="eyebrow">CalmRBAC</p>
+            <h1 id="app-title">Azure role assignments, quietly clarified.</h1>
+          </div>
+        </header>
+
+        <section class="narrative" aria-label="Scenario">
+          <p class="sentence">
+            I am granting access to
+            <span class="wrap-group">
+              <span class="control-inline" data-default="managedIdentityUserAssigned">
+                <label class="sr-only" for="principal">Principal type</label>
+                <select id="principal"></select>
+              </span>
+            </span>
+            <span class="wrap-group phrase-workload" data-visibility="workload">
+              used by
+              <span class="control-inline" data-default="functions">
+                <label class="sr-only" for="workload">Workload</label>
+                <select id="workload"></select>
+              </span>
+            </span>.
+          </p>
+          <p class="sentence phrase-access" data-visibility="access">
+            I will use this access
+            <span class="wrap-group">
+              via
+              <span class="control-inline" data-default="portal">
+                <label class="sr-only" for="accessMethod">Access method</label>
+                <select id="accessMethod"></select>
+              </span>
+            </span>.
+          </p>
+          <p class="sentence">
+            <span class="phrase phrase-intent-a" data-visibility="access">I need to</span>
+            <span class="phrase phrase-intent-b" data-visibility="workload">The workload needs to</span>
+            <span class="wrap-group">
+              <span class="control-inline" data-default="read">
+                <label class="sr-only" for="intent">Intent</label>
+                <select id="intent"></select>
+              </span>
+            </span>
+            <span class="wrap-group">
+              from
+              <span class="control-inline" data-default="storage.blob">
+                <label class="sr-only" for="service">Target service</label>
+                <select id="service"></select>
+              </span>
+            </span>.
+          </p>
+          <p class="sentence">
+            The target lives in
+            <span class="control-inline" data-default="same">
+              <label class="sr-only" for="subscriptionRelation">Subscription relation</label>
+              <select id="subscriptionRelation"></select>
+            </span>.
+          </p>
+          <p class="sentence">
+            I want the assignment to stay as narrow as it reasonably can
+            <span class="wrap-group">
+              at
+              <span class="control-inline" data-default="">
+                <label class="sr-only" for="scope">Scope level</label>
+                <select id="scope"></select>
+              </span>
+              scope
+            </span>.
+          </p>
+        </section>
+
+        <section class="conditional" aria-label="Additional details">
+          <div class="divider"></div>
+          <div class="field-grid">
+            <div class="field">
+              <label for="targetName">Optional target name</label>
+              <span class="control-block" data-default="">
+                <input id="targetName" type="text" placeholder="e.g. images" />
+              </span>
+            </div>
+          </div>
+
+          <div class="field-grid cross" id="crossFields" aria-hidden="true">
+            <div class="field">
+              <label for="mySubscriptionId">My subscription ID</label>
+              <span class="control-block" data-default="">
+                <input id="mySubscriptionId" type="text" inputmode="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+              </span>
+            </div>
+            <div class="field">
+              <label for="targetSubscriptionId">Target subscription ID</label>
+              <span class="control-block" data-default="">
+                <input id="targetSubscriptionId" type="text" inputmode="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <section class="identifiers" aria-label="Identifiers">
+          <div class="divider"></div>
+          <header class="section-header">
+            <h2>Identifiers</h2>
+            <p class="section-hint">Used to generate the PowerShell and Bicep examples.</p>
+          </header>
+          <div class="field-grid identifiers-grid">
+            <div class="field">
+              <label for="principalIdSource">PrincipalId source</label>
+              <span class="control-block" data-default="paste">
+                <select id="principalIdSource"></select>
+              </span>
+            </div>
+            <div class="field" id="principalIdField">
+              <label for="principalId">PrincipalId (objectId)</label>
+              <span class="control-block" data-default="">
+                <input id="principalId" type="text" inputmode="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+              </span>
+            </div>
+            <div class="field is-hidden" id="principalIdExpressionField">
+              <label for="principalIdExpression">Bicep principalId expression</label>
+              <span class="control-block" data-default="">
+                <input id="principalIdExpression" type="text" placeholder="e.g. myUai.properties.principalId" />
+              </span>
+            </div>
+            <div class="field">
+              <label for="resourceGroupName">Target resource group name</label>
+              <span class="control-block" data-default="">
+                <input id="resourceGroupName" type="text" placeholder="e.g. rg-app-prod" />
+              </span>
+            </div>
+            <div class="field">
+              <label for="scopeResourceId">Scope resource ID (advanced)</label>
+              <span class="control-block" data-default="">
+                <input id="scopeResourceId" type="text" placeholder="/subscriptions/.../providers/..." />
+              </span>
+            </div>
+          </div>
+          <div class="field-grid identifiers-grid secondary" id="serviceIdentifiers">
+            <div class="field" data-services="storage.blob storage.files">
+              <label for="storageAccountName">Storage account name</label>
+              <span class="control-block" data-default="">
+                <input id="storageAccountName" type="text" placeholder="e.g. stprod001" />
+              </span>
+            </div>
+            <div class="field" data-services="storage.blob" data-scopes="container">
+              <label for="containerName">Container name</label>
+              <span class="control-block" data-default="">
+                <input id="containerName" type="text" placeholder="e.g. images" />
+              </span>
+            </div>
+            <div class="field" data-services="storage.files" data-scopes="share">
+              <label for="fileShareName">File share name</label>
+              <span class="control-block" data-default="">
+                <input id="fileShareName" type="text" placeholder="e.g. profiles" />
+              </span>
+            </div>
+            <div class="field" data-services="keyvault.secrets">
+              <label for="vaultName">Key Vault name</label>
+              <span class="control-block" data-default="">
+                <input id="vaultName" type="text" placeholder="e.g. kv-prod-01" />
+              </span>
+            </div>
+            <div class="field" data-services="servicebus">
+              <label for="serviceBusNamespace">Service Bus namespace</label>
+              <span class="control-block" data-default="">
+                <input id="serviceBusNamespace" type="text" placeholder="e.g. sb-ops-prod" />
+              </span>
+            </div>
+            <div class="field" data-services="servicebus" data-scopes="queue">
+              <label for="serviceBusQueue">Queue name</label>
+              <span class="control-block" data-default="">
+                <input id="serviceBusQueue" type="text" placeholder="e.g. orders" />
+              </span>
+            </div>
+            <div class="field" data-services="servicebus" data-scopes="topic subscription">
+              <label for="serviceBusTopic">Topic name</label>
+              <span class="control-block" data-default="">
+                <input id="serviceBusTopic" type="text" placeholder="e.g. billing" />
+              </span>
+            </div>
+            <div class="field" data-services="servicebus" data-scopes="subscription">
+              <label for="serviceBusSubscription">Subscription name</label>
+              <span class="control-block" data-default="">
+                <input id="serviceBusSubscription" type="text" placeholder="e.g. billing-prod" />
+              </span>
+            </div>
+            <div class="field" data-services="eventhubs">
+              <label for="eventHubsNamespace">Event Hubs namespace</label>
+              <span class="control-block" data-default="">
+                <input id="eventHubsNamespace" type="text" placeholder="e.g. eh-telemetry" />
+              </span>
+            </div>
+            <div class="field" data-services="eventhubs" data-scopes="eventhub consumergroup">
+              <label for="eventHubName">Event hub name</label>
+              <span class="control-block" data-default="">
+                <input id="eventHubName" type="text" placeholder="e.g. telemetry" />
+              </span>
+            </div>
+            <div class="field" data-services="eventhubs" data-scopes="consumergroup">
+              <label for="eventHubConsumerGroup">Consumer group name</label>
+              <span class="control-block" data-default="">
+                <input id="eventHubConsumerGroup" type="text" placeholder="e.g. analytics" />
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <section class="guidance" aria-live="polite" aria-atomic="true">
+          <header class="guidance-header">
+            <h2>Guidance</h2>
+            <p class="suggested" id="suggestedRole"></p>
+            <p class="summary-line" id="summaryLine"></p>
+            <p class="summary-note" id="summaryNote"></p>
+            <p class="guidance-hint">Generated and read-only.</p>
+            <p class="suggested-hint" id="suggestedHint"></p>
+          </header>
+          <div class="guidance-body" id="guidanceBody"></div>
+        </section>
+
+        <section class="diagram" aria-labelledby="diagram-title">
+          <header class="diagram-header">
+            <div>
+              <h2 id="diagram-title">Diagram</h2>
+              <p class="diagram-hint">Generated and read-only.</p>
+            </div>
+          </header>
+          <div class="diagram-resize" id="diagramResize">
+            <div class="diagram-canvas" id="diagramCanvas"></div>
+          </div>
+          <p class="sr-only" id="diagramAlt"></p>
+        </section>
+      </section>
+    </main>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>
