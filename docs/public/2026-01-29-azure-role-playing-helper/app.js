@@ -973,7 +973,7 @@
               <span class="code-panel-title">PowerShell (Az)</span>
               <button class="copy-btn" type="button" data-copy-target="code-powershell">Copy</button>
             </div>
-            <pre class="code-block" id="code-powershell"><code></code></pre>
+            <pre class="code-block" id="code-powershell"><code class="microlight"></code></pre>
           </div>
         </div>
         <div class="example-block">
@@ -984,7 +984,7 @@
               <span class="code-panel-title">Bicep</span>
               <button class="copy-btn" type="button" data-copy-target="code-bicep">Copy</button>
             </div>
-            <pre class="code-block" id="code-bicep"><code></code></pre>
+            <pre class="code-block" id="code-bicep"><code class="microlight"></code></pre>
           </div>
         </div>
       </section>
@@ -1580,6 +1580,10 @@
     if (elements.codeBicep) {
       const codeEl = elements.codeBicep.querySelector("code");
       if (codeEl) codeEl.textContent = bicep.code;
+    }
+
+    if (window.microlight && typeof window.microlight.reset === "function") {
+      window.microlight.reset();
     }
   }
 
