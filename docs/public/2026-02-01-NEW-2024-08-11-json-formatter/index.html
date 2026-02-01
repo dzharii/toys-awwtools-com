@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON Formatter</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app" aria-label="JSON formatter">
+    <header class="app-header">
+      <div>
+        <h1>JSON Formatter</h1>
+        <p class="subtitle">Validate, format, and navigate JSON with precision.</p>
+      </div>
+    </header>
+
+    <section class="controls">
+      <div class="settings" role="group" aria-label="Formatting options">
+        <label class="field" title="Output formatting mode">
+          <span>Mode</span>
+          <select id="mode-select">
+            <option value="pretty">Pretty</option>
+            <option value="compact">Compact</option>
+            <option value="minify">Minify</option>
+          </select>
+        </label>
+        <label class="field" title="Indent width in spaces">
+          <span>Indent</span>
+          <select id="indent-select">
+            <option value="2">2</option>
+            <option value="4">4</option>
+          </select>
+        </label>
+        <label class="toggle" title="Sort object keys lexicographically">
+          <input type="checkbox" id="sort-keys">
+          <span>Sort keys</span>
+        </label>
+        <span class="compact-hint" title="Keeps small arrays/objects on one line when short">Compact keeps small arrays/objects on one line.</span>
+      </div>
+      <div class="toolbar" role="toolbar" aria-label="Actions">
+        <button id="btn-format" type="button" class="tool-btn" aria-label="Format" title="Format">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 6h16M8 12h12M4 18h16" />
+          </svg>
+        </button>
+        <button id="btn-minify" type="button" class="tool-btn" aria-label="Minify" title="Minify">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M7 12h10M7 8l-3 4 3 4M17 8l3 4-3 4" />
+          </svg>
+        </button>
+        <button id="btn-copy-input" type="button" class="tool-btn" aria-label="Copy input" title="Copy input">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="9" y="7" width="10" height="12" rx="2" />
+            <rect x="5" y="5" width="10" height="12" rx="2" />
+          </svg>
+        </button>
+        <button id="btn-copy-output" type="button" class="tool-btn" aria-label="Copy output" title="Copy output">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="4" y="7" width="12" height="12" rx="2" />
+            <path d="M14 5h6v6M20 5l-8 8" />
+          </svg>
+        </button>
+        <button id="btn-clear-input" type="button" class="tool-btn" aria-label="Clear input" title="Clear input">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="5" y="5" width="14" height="14" rx="3" />
+            <path d="M8 8l8 8M16 8l-8 8" />
+          </svg>
+        </button>
+        <button id="btn-swap" type="button" class="tool-btn" aria-label="Swap output to input" title="Swap output to input">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M7 7h10M7 7l3-3M7 7l3 3" />
+            <path d="M17 17h-10M17 17l-3-3M17 17l-3 3" />
+          </svg>
+        </button>
+      </div>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="editors">
+      <div class="editor-pane" data-pane="input">
+        <div class="pane-header">
+          <div class="pane-title">Input</div>
+          <div class="caret-control" data-pane="input">
+            <button type="button" class="caret-display" aria-label="Input caret position">Ln 1:Col 1</button>
+            <div class="jump-editor" hidden>
+              <input type="text" class="jump-input" value="1:1" aria-label="Jump to line and column">
+              <button type="button" class="jump-go">Go</button>
+              <button type="button" class="jump-cancel">Cancel</button>
+              <span class="jump-error" role="alert"></span>
+            </div>
+          </div>
+        </div>
+        <div class="pane-status">
+          <div id="global-status" class="global-status" role="status" aria-live="polite">
+            <span class="status-icon" aria-hidden="true">-</span>
+            <span class="status-text">Empty</span>
+            <span class="status-location"></span>
+            <button id="btn-go-error" type="button" class="link-button" hidden>Go to error</button>
+          </div>
+          <details id="error-details" class="error-details" hidden>
+            <summary>Details</summary>
+            <pre id="error-raw"></pre>
+          </details>
+        </div>
+        <div class="editor-body">
+          <div class="gutter" data-pane="input" aria-hidden="true">
+            <div class="gutter-inner"></div>
+          </div>
+          <textarea id="input-editor" spellcheck="false" autocomplete="off" autocapitalize="off" wrap="off" placeholder="Paste or type JSON here..." aria-label="JSON input editor"></textarea>
+        </div>
+      </div>
+
+      <div class="editor-pane" data-pane="output">
+        <div class="pane-header">
+          <div class="pane-title">Output</div>
+          <div class="caret-control" data-pane="output">
+            <button type="button" class="caret-display" aria-label="Output caret position">Ln 1:Col 1</button>
+            <div class="jump-editor" hidden>
+              <input type="text" class="jump-input" value="1:1" aria-label="Jump to line and column">
+              <button type="button" class="jump-go">Go</button>
+              <button type="button" class="jump-cancel">Cancel</button>
+              <span class="jump-error" role="alert"></span>
+            </div>
+          </div>
+        </div>
+        <div class="editor-body">
+          <div class="gutter" data-pane="output" aria-hidden="true">
+            <div class="gutter-inner"></div>
+          </div>
+          <textarea id="output-editor" readonly spellcheck="false" wrap="off" placeholder="Formatted JSON appears here..." aria-label="Formatted JSON output editor"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <section id="summary-panel" class="summary-panel" hidden>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <span class="label">Top-level</span>
+          <span id="summary-type" class="value">--</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Input size</span>
+          <span id="summary-input" class="value">0</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Output size</span>
+          <span id="summary-output" class="value">0</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Node count</span>
+          <span id="summary-nodes" class="value">0</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Max depth</span>
+          <span id="summary-depth" class="value">0</span>
+        </div>
+      </div>
+      <div class="summary-duplicates">
+        <div class="duplicates-header">
+          <span class="label">Duplicate keys</span>
+          <span id="duplicates-status" class="value">--</span>
+        </div>
+        <div id="duplicates-list" class="duplicates-list"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

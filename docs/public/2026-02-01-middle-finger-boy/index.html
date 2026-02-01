@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Middle Finger Boy – Semantic SVG Art</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header" role="banner">
+        <div class="brand">
+            <div class="brand-mark" aria-hidden="true">🖕</div>
+            <div class="brand-text">
+                <div class="brand-title">Middle Finger Boy</div>
+                <div class="brand-subtitle">URL-controlled semantic SVG art</div>
+            </div>
+        </div>
+
+        <nav class="top-actions" aria-label="Top actions">
+            <button id="btnCopyLink" type="button" class="btn" aria-label="Copy share link">
+                Copy Share Link
+            </button>
+            <button id="btnReset" type="button" class="btn btn-ghost" aria-label="Reset parameters">
+                Reset
+            </button>
+        </nav>
+    </header>
+
+    <main id="main" class="layout" role="main">
+        <section class="panel" aria-label="Controls">
+            <h1 class="panel-title">Controls</h1>
+
+            <form id="controls" class="controls" autocomplete="off">
+                <label class="field">
+                    <span class="field-label">Speech Bubble Message</span>
+                    <input id="messageInput" name="message" class="input" type="text" inputmode="text"
+                        spellcheck="false" maxlength="200" aria-describedby="messageHelp" />
+                    <span id="messageHelp" class="help">
+                        Controlled via URL param <code>msg</code>. Max 200 characters.
+                    </span>
+                </label>
+
+                <label class="field">
+                    <span class="field-label">
+                        Middle Finger Extension: <output id="mfOutput">100</output>%
+                    </span>
+                    <input id="mfRange" name="mf" class="range" type="range" min="0" max="100" step="1"
+                        aria-label="Middle finger extension percentage" />
+                    <span class="help">
+                        Controlled via URL param <code>mf</code> (0 = folded, 100 = fully extended).
+                    </span>
+                </label>
+
+                <div class="row">
+                    <button type="submit" class="btn btn-primary" aria-label="Apply changes">
+                        Apply
+                    </button>
+                    <button id="btnAnimate" type="button" class="btn" aria-label="Toggle cloud animation">
+                        Pause Clouds
+                    </button>
+                </div>
+
+                <details class="details">
+                    <summary>URL Examples</summary>
+                    <div class="examples">
+                        <div><code>?msg=Hello%20World!&mf=100</code></div>
+                        <div><code>?msg=Chill%20out&mf=35</code></div>
+                        <div><code>?msg=Nice%20try&mf=0</code></div>
+                    </div>
+                </details>
+            </form>
+
+            <div class="note" role="note" aria-label="Info">
+                Fully semantic SVG with individually addressable parts. Clouds animate with parallax effect. Share links
+                always preserve your mf setting.
+            </div>
+        </section>
+
+        <section class="stage" aria-label="Artwork stage">
+            <figure class="canvas" aria-label="SVG artwork">
+                <svg id="artSvg" class="art" viewBox="0 0 800 1100" width="800" height="1100" role="img"
+                    aria-label="Cartoon boy with baseball cap showing middle finger gesture with speech bubble"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <!-- Sky gradient: bright blue at top, soft white at bottom -->
+                        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#3b9dff" />
+                            <stop offset="40%" stop-color="#7fc4ff" />
+                            <stop offset="75%" stop-color="#c8e6ff" />
+                            <stop offset="100%" stop-color="#f0f8ff" />
+                        </linearGradient>
+
+                        <!-- Skin gradient for depth -->
+                        <linearGradient id="skinGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#ffd5b0" />
+                            <stop offset="100%" stop-color="#f2b77e" />
+                        </linearGradient>
+
+                        <!-- Shirt gradient -->
+                        <linearGradient id="shirtGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#2d7af7" />
+                            <stop offset="100%" stop-color="#1a5dc9" />
+                        </linearGradient>
+
+                        <!-- Pants gradient -->
+                        <linearGradient id="pantsGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#2a5a9e" />
+                            <stop offset="100%" stop-color="#1a3f70" />
+                        </linearGradient>
+
+                        <!-- Cap gradient -->
+                        <linearGradient id="capGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#ff2d2d" />
+                            <stop offset="100%" stop-color="#cc1818" />
+                        </linearGradient>
+
+                        <!-- Soft shadow for character -->
+                        <filter id="charShadow" x="-20%" y="-10%" width="140%" height="130%">
+                            <feDropShadow dx="0" dy="12" stdDeviation="8" flood-color="#1a3f70" flood-opacity="0.25" />
+                        </filter>
+
+                        <!-- Bubble shadow -->
+                        <filter id="bubbleShadow" x="-25%" y="-25%" width="150%" height="150%">
+                            <feDropShadow dx="2" dy="4" stdDeviation="5" flood-color="#000" flood-opacity="0.15" />
+                        </filter>
+
+                        <!-- Cloud shadow -->
+                        <filter id="cloudShadow" x="-10%" y="-10%" width="120%" height="130%">
+                            <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#3b9dff" flood-opacity="0.15" />
+                        </filter>
+                    </defs>
+
+                    <!-- ============================================= -->
+                    <!-- A) BACKGROUND -->
+                    <!-- ============================================= -->
+                    <g id="bg" data-role="background">
+                        <rect id="sky" x="0" y="0" width="800" height="1100" fill="url(#skyGrad)" />
+                        <!-- Ground hint -->
+                        <ellipse id="ground-shadow" cx="400" cy="1050" rx="280" ry="30" fill="#1a5dc9" opacity="0.12" />
+                    </g>
+
+                    <!-- ============================================= -->
+                    <!-- B) CLOUDS (nested groups for animation) -->
+                    <!-- Outer wrapper = static position -->
+                    <!-- Inner group = animated drift -->
+                    <!-- ============================================= -->
+                    <g id="clouds" data-role="clouds">
+                        <!-- Cloud 1: large, slow, back layer -->
+                        <g id="cloud-1-wrapper" class="cloud-wrapper" transform="translate(50, 80)">
+                            <g id="cloud-1" class="cloud-inner" data-speed="0.5" filter="url(#cloudShadow)">
+                                <ellipse cx="60" cy="40" rx="50" ry="32" fill="#fff" opacity="0.95" />
+                                <ellipse cx="110" cy="35" rx="45" ry="28" fill="#fff" opacity="0.95" />
+                                <ellipse cx="155" cy="42" rx="40" ry="26" fill="#fff" opacity="0.95" />
+                                <ellipse cx="85" cy="55" rx="55" ry="30" fill="#fff" opacity="0.98" />
+                            </g>
+                        </g>
+
+                        <!-- Cloud 2: medium, faster -->
+                        <g id="cloud-2-wrapper" class="cloud-wrapper" transform="translate(500, 60)">
+                            <g id="cloud-2" class="cloud-inner" data-speed="0.8" filter="url(#cloudShadow)">
+                                <ellipse cx="50" cy="30" rx="40" ry="24" fill="#fff" opacity="0.92" />
+                                <ellipse cx="95" cy="28" rx="35" ry="22" fill="#fff" opacity="0.92" />
+                                <ellipse cx="130" cy="34" rx="32" ry="20" fill="#fff" opacity="0.92" />
+                                <ellipse cx="75" cy="45" rx="45" ry="24" fill="#fff" opacity="0.95" />
+                            </g>
+                        </g>
+
+                        <!-- Cloud 3: small, front layer, fastest -->
+                        <g id="cloud-3-wrapper" class="cloud-wrapper" transform="translate(280, 130)">
+                            <g id="cloud-3" class="cloud-inner" data-speed="1.2" filter="url(#cloudShadow)">
+                                <ellipse cx="35" cy="22" rx="28" ry="18" fill="#fff" opacity="0.88" />
+                                <ellipse cx="65" cy="20" rx="25" ry="16" fill="#fff" opacity="0.88" />
+                                <ellipse cx="90" cy="24" rx="22" ry="14" fill="#fff" opacity="0.88" />
+                                <ellipse cx="55" cy="32" rx="32" ry="18" fill="#fff" opacity="0.9" />
+                            </g>
+                        </g>
+
+                        <!-- Cloud 4: far back, very slow -->
+                        <g id="cloud-4-wrapper" class="cloud-wrapper" transform="translate(620, 160)">
+                            <g id="cloud-4" class="cloud-inner" data-speed="0.35" filter="url(#cloudShadow)">
+                                <ellipse cx="30" cy="18" rx="24" ry="14" fill="#fff" opacity="0.7" />
+                                <ellipse cx="55" cy="16" rx="20" ry="12" fill="#fff" opacity="0.7" />
+                                <ellipse cx="75" cy="20" rx="18" ry="11" fill="#fff" opacity="0.7" />
+                                <ellipse cx="45" cy="26" rx="28" ry="14" fill="#fff" opacity="0.75" />
+                            </g>
+                        </g>
+                    </g>
+
+                    <!-- ============================================= -->
+                    <!-- C) SPEECH BUBBLE (positioned dynamically) -->
+                    <!-- ============================================= -->
+                    <g id="bubble" data-role="bubble" filter="url(#bubbleShadow)">
+                        <path id="bubble-shape" fill="#ffffff" stroke="#2d2d2d" stroke-width="4"
+                            stroke-linejoin="round" />
+                        <path id="bubble-tail" fill="#ffffff" stroke="#2d2d2d" stroke-width="4"
+                            stroke-linejoin="round" />
+                        <!-- White fill patch to cover stroke intersection -->
+                        <path id="bubble-tail-fill" fill="#ffffff" stroke="none" />
+                        <g id="bubble-text" data-role="bubble-text">
+                            <text id="bubble-text-node" x="0" y="0" fill="#1a1a1a"
+                                font-family="'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive, sans-serif"
+                                font-size="32" font-weight="700" letter-spacing="0"></text>
+                        </g>
+                    </g>
+
+                    <!-- ============================================= -->
+                    <!-- D) CHARACTER -->
+                    <!-- ============================================= -->
+                    <g id="character" data-role="character" filter="url(#charShadow)">
+
+                        <!-- =========== D1) BODY / TORSO =========== -->
+                        <g id="torso" data-role="torso">
+                            <!-- Shirt body -->
+                            <path id="shirt" d="M400 420
+                   C340 420 285 450 260 500
+                   C235 550 230 620 240 690
+                   L245 720
+                   L555 720
+                   L560 690
+                   C570 620 565 550 540 500
+                   C515 450 460 420 400 420Z" fill="url(#shirtGrad)" />
+
+                            <!-- Shirt collar -->
+                            <path id="collar" d="M360 420 Q400 445 440 420 Q420 450 400 450 Q380 450 360 420Z"
+                                fill="#1a5dc9" />
+
+                            <!-- Shirt highlight -->
+                            <path id="shirt-highlight" d="M320 480 Q360 500 380 550 Q340 530 320 480Z" fill="#4a9aff"
+                                opacity="0.4" />
+                        </g>
+
+                        <!-- =========== D2) PANTS =========== -->
+                        <g id="pants" data-role="pants">
+                            <path id="pants-main" d="M245 715
+                   L250 900
+                   C250 920 270 930 295 930
+                   L340 930
+                   C360 930 375 920 375 905
+                   L380 780
+                   L400 780
+                   L420 780
+                   L425 905
+                   C425 920 440 930 460 930
+                   L505 930
+                   C530 930 550 920 550 900
+                   L555 715
+                   Z" fill="url(#pantsGrad)" />
+
+                            <!-- Pants center seam -->
+                            <line id="pants-seam" x1="400" y1="720" x2="400" y2="780" stroke="#163c72" stroke-width="2"
+                                opacity="0.5" />
+
+                            <!-- Belt -->
+                            <rect id="belt" x="248" y="710" width="304" height="18" rx="4" fill="#2a2a2a" />
+                            <rect id="belt-buckle" x="385" y="708" width="30" height="22" rx="3" fill="#d4a84b" />
+                        </g>
+
+                        <!-- =========== D3) SHOES =========== -->
+                        <g id="shoes" data-role="shoes">
+                            <g id="shoe-left">
+                                <path
+                                    d="M250 925 L250 960 Q250 980 270 985 L350 985 Q380 985 385 965 L385 930 Q385 920 370 920 L270 920 Q250 920 250 925Z"
+                                    fill="#d41920" />
+                                <path d="M265 925 L350 925 Q365 925 365 935 L265 935 Q250 935 265 925Z" fill="#fff"
+                                    opacity="0.9" />
+                                <ellipse cx="270" cy="970" rx="8" ry="6" fill="#fff" opacity="0.8" />
+                            </g>
+                            <g id="shoe-right">
+                                <path
+                                    d="M415 930 L415 965 Q415 985 435 985 L530 985 Q560 985 560 960 L560 925 Q560 920 540 920 L435 920 Q415 920 415 930Z"
+                                    fill="#d41920" />
+                                <path d="M430 925 L520 925 Q535 925 535 935 L430 935 Q415 935 430 925Z" fill="#fff"
+                                    opacity="0.9" />
+                                <ellipse cx="530" cy="970" rx="8" ry="6" fill="#fff" opacity="0.8" />
+                            </g>
+                        </g>
+
+                        <!-- =========== D4) NECK =========== -->
+                        <g id="neck" data-role="neck">
+                            <path
+                                d="M375 390 L375 430 Q375 445 400 445 Q425 445 425 430 L425 390 Q425 385 400 385 Q375 385 375 390Z"
+                                fill="url(#skinGrad)" />
+                        </g>
+
+                        <!-- =========== D5) HEAD =========== -->
+                        <g id="head" data-role="head">
+                            <!-- Face base -->
+                            <ellipse id="face" cx="400" cy="300" rx="95" ry="105" fill="url(#skinGrad)" />
+
+                            <!-- Ears -->
+                            <ellipse id="ear-left" cx="305" cy="310" rx="18" ry="25" fill="#f2b77e" />
+                            <ellipse id="ear-left-inner" cx="308" cy="310" rx="10" ry="15" fill="#e8a065"
+                                opacity="0.5" />
+                            <ellipse id="ear-right" cx="495" cy="310" rx="18" ry="25" fill="#f2b77e" />
+                            <ellipse id="ear-right-inner" cx="492" cy="310" rx="10" ry="15" fill="#e8a065"
+                                opacity="0.5" />
+
+                            <!-- Hair behind cap -->
+                            <path id="hair-back" d="M320 220 Q300 250 305 290 Q280 270 290 230 Q310 200 320 220Z
+                   M480 220 Q500 250 495 290 Q520 270 510 230 Q490 200 480 220Z" fill="#4a3728" />
+
+                            <!-- Eyebrows (angry/determined) -->
+                            <path id="brow-left" d="M340 265 Q365 255 390 265" stroke="#3a2a1e" stroke-width="6"
+                                stroke-linecap="round" fill="none" />
+                            <path id="brow-right" d="M410 265 Q435 255 460 265" stroke="#3a2a1e" stroke-width="6"
+                                stroke-linecap="round" fill="none" />
+
+                            <!-- Eyes -->
+                            <g id="eyes" data-role="eyes">
+                                <ellipse id="eye-left-white" cx="360" cy="295" rx="22" ry="18" fill="#fff" />
+                                <circle id="eye-left-iris" cx="365" cy="297" r="12" fill="#3d2314" />
+                                <circle id="eye-left-pupil" cx="367" cy="296" r="6" fill="#1a1a1a" />
+                                <circle id="eye-left-highlight" cx="370" cy="292" r="3" fill="#fff" />
+
+                                <ellipse id="eye-right-white" cx="440" cy="295" rx="22" ry="18" fill="#fff" />
+                                <circle id="eye-right-iris" cx="435" cy="297" r="12" fill="#3d2314" />
+                                <circle id="eye-right-pupil" cx="433" cy="296" r="6" fill="#1a1a1a" />
+                                <circle id="eye-right-highlight" cx="430" cy="292" r="3" fill="#fff" />
+                            </g>
+
+                            <!-- Nose -->
+                            <path id="nose" d="M400 310 Q410 335 400 350 Q390 335 400 310Z" fill="#e8a065"
+                                opacity="0.7" />
+
+                            <!-- Mouth (smirk) -->
+                            <path id="mouth" d="M365 370 Q400 395 445 365" stroke="#8a4a4a" stroke-width="5"
+                                stroke-linecap="round" fill="none" />
+                            <path id="mouth-corner" d="M445 365 Q455 360 458 355" stroke="#8a4a4a" stroke-width="4"
+                                stroke-linecap="round" fill="none" />
+
+                            <!-- Cheek blush -->
+                            <ellipse id="blush-left" cx="335" cy="345" rx="18" ry="10" fill="#ffb4a0" opacity="0.4" />
+                            <ellipse id="blush-right" cx="465" cy="345" rx="18" ry="10" fill="#ffb4a0" opacity="0.4" />
+
+                            <!-- ===== CAP ===== -->
+                            <g id="cap" data-role="cap">
+                                <!-- Cap dome -->
+                                <path id="cap-dome" d="M290 235
+                     Q290 170 400 160
+                     Q510 170 510 235
+                     Q510 250 490 255
+                     L310 255
+                     Q290 250 290 235Z" fill="url(#capGrad)" />
+
+                                <!-- Cap front panel (white) -->
+                                <path id="cap-panel" d="M350 175
+                     Q400 165 450 175
+                     Q460 200 455 225
+                     L345 225
+                     Q340 200 350 175Z" fill="#f8f8f8" />
+
+                                <!-- Cap brim -->
+                                <path id="cap-brim" d="M285 250
+                     Q280 260 285 270
+                     Q400 290 515 270
+                     Q520 260 515 250
+                     Q400 235 285 250Z" fill="#cc1818" />
+
+                                <!-- Cap brim underside shadow -->
+                                <path id="cap-brim-shadow" d="M300 255 Q400 268 500 255 Q400 275 300 255Z"
+                                    fill="#8a1010" opacity="0.4" />
+
+                                <!-- Cap button -->
+                                <circle id="cap-button" cx="400" cy="165" r="8" fill="#cc1818" stroke="#aa1010"
+                                    stroke-width="2" />
+                            </g>
+                        </g>
+
+                        <!-- =========== D6) LEFT ARM (relaxed at side) =========== -->
+                        <g id="arm-left" data-role="arm">
+                            <!-- Sleeve -->
+                            <path id="sleeve-left" d="M265 500
+                   Q240 530 230 580
+                   Q225 620 240 650
+                   Q260 660 280 650
+                   Q300 620 295 570
+                   Q290 530 280 500
+                   Z" fill="url(#shirtGrad)" />
+
+                            <!-- Left hand (relaxed) -->
+                            <g id="hand-left" data-role="hand">
+                                <ellipse id="hand-left-palm" cx="245" cy="685" rx="28" ry="35" fill="url(#skinGrad)" />
+                                <ellipse id="hand-left-thumb" cx="270" cy="670" rx="10" ry="16" fill="#f2b77e"
+                                    transform="rotate(30, 270, 670)" />
+                            </g>
+                        </g>
+
+                        <!-- =========== D7) RIGHT ARM + HAND (middle finger gesture) =========== -->
+                        <g id="arm-right" data-role="arm">
+                            <!-- Upper arm / sleeve -->
+                            <path id="sleeve-right" d="M535 500
+                   Q565 520 590 560
+                   Q620 610 620 650
+                   Q605 665 580 660
+                   Q555 650 540 600
+                   Q525 550 520 510
+                   Z" fill="url(#shirtGrad)" />
+
+                            <!-- Hand group with semantic finger structure -->
+                            <g id="hand-right" data-role="hand" transform="translate(560, 620)">
+
+                                <!-- Palm -->
+                                <path id="palm" d="M0 60
+                     Q-15 40 -10 10
+                     Q-5 -20 25 -30
+                     Q60 -35 80 -15
+                     Q95 5 90 45
+                     Q85 75 70 95
+                     Q50 115 25 115
+                     Q0 110 0 60Z" fill="url(#skinGrad)" />
+
+                                <!-- Palm shadow/depth -->
+                                <path id="palm-shadow" d="M15 80 Q40 85 60 75 Q50 100 25 100 Q10 95 15 80Z"
+                                    fill="#d9a070" opacity="0.4" />
+
+                                <!-- Thumb (tucked) -->
+                                <g id="thumb" data-role="finger" data-finger="thumb">
+                                    <ellipse cx="-5" cy="55" rx="18" ry="24" fill="#f2b77e"
+                                        transform="rotate(-25, -5, 55)" />
+                                    <ellipse cx="-15" cy="45" rx="12" ry="16" fill="#ffd5b0"
+                                        transform="rotate(-35, -15, 45)" />
+                                </g>
+
+                                <!-- Index finger (folded down) -->
+                                <g id="finger-index" data-role="finger" data-finger="index">
+                                    <path d="M10 -15 Q5 15 15 40 Q25 35 30 5 Q25 -20 10 -15Z" fill="#f2b77e" />
+                                </g>
+
+                                <!-- Ring finger (folded down) -->
+                                <g id="finger-ring" data-role="finger" data-finger="ring">
+                                    <path d="M55 -20 Q50 10 60 35 Q70 30 75 0 Q70 -25 55 -20Z" fill="#f2b77e" />
+                                </g>
+
+                                <!-- Pinky finger (folded down) -->
+                                <g id="finger-pinky" data-role="finger" data-finger="pinky">
+                                    <path d="M75 -10 Q72 15 80 35 Q88 32 92 8 Q88 -15 75 -10Z" fill="#f2b77e" />
+                                </g>
+
+                                <!-- ===== MIDDLE FINGER (segmented for animation) ===== -->
+                                <g id="finger-middle" data-role="finger" data-finger="middle">
+
+                                    <!-- Proximal segment (base) - pivot at y=0 -->
+                                    <g id="middle-prox" data-joint="mcp">
+                                        <rect id="middle-prox-shape" x="28" y="-55" width="28" height="55" rx="14"
+                                            fill="#f2b77e" />
+                                    </g>
+
+                                    <!-- Middle segment - pivot at y=-55 -->
+                                    <g id="middle-mid" data-joint="pip">
+                                        <rect id="middle-mid-shape" x="28" y="-105" width="28" height="55" rx="14"
+                                            fill="url(#skinGrad)" />
+                                    </g>
+
+                                    <!-- Distal segment + nail - pivot at y=-105 -->
+                                    <g id="middle-dist" data-joint="dip">
+                                        <rect id="middle-dist-shape" x="28" y="-145" width="28" height="45" rx="14"
+                                            fill="url(#skinGrad)" />
+                                        <!-- Fingernail -->
+                                        <rect id="nail" x="32" y="-142" width="20" height="16" rx="8" fill="#ffebe0" />
+                                        <rect id="nail-shine" x="35" y="-140" width="8" height="6" rx="3" fill="#fff"
+                                            opacity="0.6" />
+                                    </g>
+                                </g>
+
+                                <!-- Knuckle highlights -->
+                                <circle id="knuckle-1" cx="20" cy="-5" r="4" fill="#e8a065" opacity="0.4" />
+                                <circle id="knuckle-2" cx="42" cy="-10" r="5" fill="#e8a065" opacity="0.4" />
+                                <circle id="knuckle-3" cx="65" cy="-8" r="4" fill="#e8a065" opacity="0.4" />
+                            </g>
+                        </g>
+
+                    </g><!-- end character -->
+
+                    <!-- ============================================= -->
+                    <!-- E) HUD (debug info, optional) -->
+                    <!-- ============================================= -->
+                    <g id="hud" data-role="hud" opacity="0.85">
+                        <!-- Background drawn FIRST so text is on top -->
+                        <rect id="hud-bg" x="14" y="1045" width="180" height="40" rx="12" fill="#fff" opacity="0.8" />
+                        <text id="hudText" x="24" y="1073" fill="#1a1a1a"
+                            font-family="ui-monospace, 'SF Mono', Monaco, 'Courier New', monospace" font-size="20"
+                            font-weight="700">mf=100%</text>
+                    </g>
+
+                </svg>
+
+                <figcaption class="caption">
+                    💡 Share links like <code>?msg=Hello&mf=80</code> — the mf value is always preserved!
+                </figcaption>
+            </figure>
+        </section>
+    </main>
+
+    <footer class="site-footer" role="contentinfo">
+        <div class="footer-inner">
+            <div class="footer-note">
+                Pure HTML5 + CSS3 + JavaScript. No external libraries. Semantic SVG with stable IDs for animation.
+            </div>
+            <div class="footer-links" aria-label="Features">
+                <span class="pill">🎨 Semantic SVG</span>
+                <span class="pill">☁️ Animated clouds</span>
+                <span class="pill">🔗 Shareable URLs</span>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="app.js"></script>
+</body>
+
+</html>
