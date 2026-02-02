@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Levenshtein Distance: A Debugger-Style Walkthrough</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero-inner">
+        <p class="kicker">Interactive tutorial</p>
+        <h1>Levenshtein Distance, Step by Step</h1>
+        <p>
+          This page explains edit distance in plain language and lets you run a fixed reference implementation like a
+          debugger. Change the inputs, then watch the matrix and the code move together.
+        </p>
+        <div class="hero-controls">
+          <label class="toggle">
+            <input id="contrast-toggle" type="checkbox" />
+            <span>High contrast</span>
+          </label>
+          <button id="jump-to-sim" class="ghost" type="button">Jump to simulator</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <article>
+        <nav class="toc" aria-label="Table of contents">
+          <h2>Contents</h2>
+          <ol>
+            <li><a href="#what">What Levenshtein distance measures</a></li>
+            <li><a href="#operations">Allowed operations and costs</a></li>
+            <li><a href="#why-dp">Why dynamic programming is used</a></li>
+            <li><a href="#dp-definition">DP matrix definition</a></li>
+            <li><a href="#initialization">Initialization rules</a></li>
+            <li><a href="#recurrence">Recurrence formula</a></li>
+            <li><a href="#svg-explainer">Animated intuition</a></li>
+            <li><a href="#simulator">Debugger-style simulator</a></li>
+            <li><a href="#complexity">Time and space complexity</a></li>
+            <li><a href="#pitfalls">Common pitfalls</a></li>
+            <li><a href="#examples">Examples</a></li>
+            <li><a href="#edit-script">Optional edit script</a></li>
+            <li><a href="#c99-reference">C99 reference implementation</a></li>
+          </ol>
+        </nav>
+
+        <section id="what">
+          <h2>What Levenshtein distance measures</h2>
+          <p>
+            Levenshtein distance is the minimum number of single-character edits needed to transform one string into
+            another. It answers questions like, &quot;How many edits turn <em>cat</em> into <em>cut</em>?&quot; and gives a numeric
+            measure of similarity.
+          </p>
+        </section>
+
+        <section id="operations">
+          <h2>Allowed operations and costs</h2>
+          <ul class="plain-list">
+            <li><strong>Insert</strong> a character into the first string (cost 1).</li>
+            <li><strong>Delete</strong> a character from the first string (cost 1).</li>
+            <li><strong>Substitute</strong> one character for another (cost 0 if they match, else 1).</li>
+          </ul>
+          <p>
+            If you allow only these moves, the distance is the cheapest sequence of edits that turns string A into
+            string B.
+          </p>
+        </section>
+
+        <section id="why-dp">
+          <h2>Why dynamic programming is used</h2>
+          <p>
+            Trying every possible edit sequence is expensive. Dynamic programming (DP) stores answers to smaller
+            subproblems so each prefix pair is computed once, then reused.
+          </p>
+        </section>
+
+        <section id="dp-definition">
+          <h2>DP matrix definition</h2>
+          <p>
+            Let <code>dp[i][j]</code> be the edit distance between the first <code>i</code> characters of <code>a</code>
+            and the first <code>j</code> characters of <code>b</code>. The final answer is <code>dp[m][n]</code> where
+            <code>m = a.length</code> and <code>n = b.length</code>.
+          </p>
+
+          <figure class="matrix-figure">
+            <figcaption>Small DP grid with labeled axes</figcaption>
+            <table aria-label="Example DP grid">
+              <thead>
+                <tr>
+                  <th>a \\ b</th>
+                  <th>''</th>
+                  <th>c</th>
+                  <th>u</th>
+                  <th>t</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th>''</th>
+                  <td>0</td>
+                  <td>1</td>
+                  <td>2</td>
+                  <td>3</td>
+                </tr>
+                <tr>
+                  <th>c</th>
+                  <td>1</td>
+                  <td>0</td>
+                  <td>1</td>
+                  <td>2</td>
+                </tr>
+                <tr>
+                  <th>a</th>
+                  <td>2</td>
+                  <td>1</td>
+                  <td>1</td>
+                  <td>2</td>
+                </tr>
+                <tr>
+                  <th>t</th>
+                  <td>3</td>
+                  <td>2</td>
+                  <td>2</td>
+                  <td>1</td>
+                </tr>
+              </tbody>
+            </table>
+          </figure>
+        </section>
+
+        <section id="initialization">
+          <h2>Initialization rules</h2>
+          <p>
+            The first row and column compare a string with the empty prefix. It takes <code>i</code> deletions to turn a
+            length-<code>i</code> prefix into empty, and <code>j</code> insertions to build a length-<code>j</code>
+            prefix from empty.
+          </p>
+          <p class="link-out">
+            Ready to see it? <a href="#simulator">Jump to the simulator</a> and press Start.
+          </p>
+          <div class="concept-actions">
+            <button class="ghost" type="button" data-milestone="initRow">See init row</button>
+            <button class="ghost" type="button" data-milestone="initCol">See init col</button>
+          </div>
+        </section>
+
+        <section id="recurrence">
+          <h2>Recurrence formula</h2>
+          <p>
+            For each cell <code>dp[i][j]</code>, pick the cheapest of deleting, inserting, or substituting the last
+            character. That minimum becomes the new value in the matrix.
+          </p>
+          <pre class="formula" aria-label="Levenshtein recurrence">
+
+dp[i][j] = min(
+  dp[i-1][j] + 1,                      // delete
+  dp[i][j-1] + 1,                      // insert
+  dp[i-1][j-1] + (a[i-1] == b[j-1] ? 0 : 1)  // substitute
+)
+          </pre>
+          <p class="link-out">
+            Run the simulator to see each <code>dp[i][j]</code> computed and highlighted in the grid.
+          </p>
+          <div class="concept-actions">
+            <button class="ghost" type="button" data-milestone="main">Jump to main loops</button>
+          </div>
+        </section>
+
+        <section id="svg-explainer" class="svg-explainer">
+          <h2>Animated intuition</h2>
+          <p>
+            The next cell depends on three neighbors. The small animation below highlights the delete, insert, and
+            substitute candidates feeding the minimum.
+          </p>
+          <figure>
+            <svg viewBox="0 0 360 180" role="img" aria-label="Animated DP dependency diagram">
+              <defs>
+                <linearGradient id="gridFade" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#f7f1e8" />
+                  <stop offset="100%" stop-color="#f1e1d0" />
+                </linearGradient>
+              </defs>
+              <rect x="0" y="0" width="360" height="180" fill="url(#gridFade)" rx="14" />
+              <g class="grid">
+                <rect x="60" y="30" width="60" height="40" />
+                <rect x="120" y="30" width="60" height="40" />
+                <rect x="180" y="30" width="60" height="40" />
+                <rect x="60" y="70" width="60" height="40" />
+                <rect x="120" y="70" width="60" height="40" />
+                <rect x="180" y="70" width="60" height="40" />
+                <rect x="60" y="110" width="60" height="40" />
+                <rect x="120" y="110" width="60" height="40" />
+                <rect x="180" y="110" width="60" height="40" />
+              </g>
+              <g class="deps">
+                <rect class="dep dep-a" x="120" y="70" width="60" height="40" />
+                <rect class="dep dep-b" x="60" y="70" width="60" height="40" />
+                <rect class="dep dep-c" x="120" y="30" width="60" height="40" />
+              </g>
+              <rect class="current-cell" x="120" y="70" width="60" height="40" />
+              <circle class="cursor" cx="150" cy="90" r="6" />
+              <text x="250" y="55">delete</text>
+              <text x="250" y="85">insert</text>
+              <text x="250" y="115">substitute</text>
+            </svg>
+            <figcaption>Each step compares three candidate costs and writes the minimum into the current cell.</figcaption>
+          </figure>
+        </section>
+
+        <section id="simulator" class="simulator">
+          <header class="sim-header">
+            <div>
+              <h2>Debugger-style simulator</h2>
+              <p>
+                Change the inputs, then step through the fixed algorithm. The code listing does not change; only the
+                data does.
+              </p>
+            </div>
+            <div class="sim-header-actions">
+              <div class="sim-hint">
+                <strong>Hint:</strong> <span>dp[i][j] compares prefixes a[0..i) and b[0..j).</span>
+              </div>
+              <div class="focus-toggle" role="group" aria-label="Focus mode">
+                <span>Focus:</span>
+                <button type="button" data-focus="none" aria-pressed="true">All</button>
+                <button type="button" data-focus="code" aria-pressed="false">Code</button>
+                <button type="button" data-focus="matrix" aria-pressed="false">Matrix</button>
+                <button type="button" data-focus="watch" aria-pressed="false">Explanation</button>
+              </div>
+            </div>
+          </header>
+
+          <div class="sim-essential" role="group" aria-label="Essential simulator controls">
+            <div class="input-row">
+              <label>
+                String A
+                <input id="input-a" type="text" autocomplete="off" spellcheck="false" />
+              </label>
+              <label>
+                String B
+                <input id="input-b" type="text" autocomplete="off" spellcheck="false" />
+              </label>
+              <label>
+                Examples
+                <select id="example-select"></select>
+              </label>
+            </div>
+            <div class="control-row">
+              <button id="jump-start" type="button">Start</button>
+              <button id="step-forward" type="button">Step</button>
+              <button id="play" type="button">Play</button>
+              <label class="speed-control">
+                Speed
+                <input id="speed" type="range" min="0.25" max="4" step="0.25" value="1" />
+                <span id="speed-label">1x</span>
+              </label>
+              <button id="reset" class="ghost" type="button">Reset</button>
+            </div>
+            <div id="input-warning" class="warning" role="status" aria-live="polite"></div>
+          </div>
+
+          <details class="sim-advanced">
+            <summary>Advanced controls</summary>
+            <div class="advanced-grid">
+              <label>
+                Max length
+                <select id="max-length"></select>
+              </label>
+              <label>
+                Granularity
+                <select id="granularity">
+                  <option value="cell">Cell-level</option>
+                  <option value="row">Row-level</option>
+                </select>
+              </label>
+              <label class="checkbox">
+                <input id="compact-matrix" type="checkbox" />
+                <span>Compact matrix</span>
+              </label>
+              <fieldset>
+                <legend>Stop points</legend>
+                <label class="checkbox">
+                  <input id="bp-init" type="checkbox" checked />
+                  <span>After initialization</span>
+                </label>
+                <label class="checkbox">
+                  <input id="bp-row" type="checkbox" />
+                  <span>Start of each row</span>
+                </label>
+                <label class="checkbox">
+                  <input id="bp-cell" type="checkbox" checked />
+                  <span>Each cell assignment</span>
+                </label>
+                <label class="checkbox">
+                  <input id="bp-done" type="checkbox" checked />
+                  <span>Final answer</span>
+                </label>
+              </fieldset>
+              <div class="advanced-buttons">
+                <button id="step-back" type="button">Step back</button>
+                <button id="jump-end" type="button">End</button>
+                <button id="jump-init-row" class="ghost" type="button">Init row</button>
+                <button id="jump-init-col" class="ghost" type="button">Init col</button>
+                <button id="jump-main" class="ghost" type="button">Main loops</button>
+                <button id="jump-final" class="ghost" type="button">Final answer</button>
+              </div>
+            </div>
+
+            <div class="advanced-dev">
+              <h3>Developer checks</h3>
+              <p>Run a small set of correctness checks in your browser console or by clicking the button below.</p>
+              <button id="run-tests" type="button">Run tests</button>
+              <pre id="test-output" aria-live="polite"></pre>
+            </div>
+          </details>
+
+          <div class="sim-panes" data-layout="wide">
+            <section class="pane code-pane" aria-label="Reference code">
+              <div class="pane-header">
+                <div>
+                  <h3>Simulator code (JavaScript)</h3>
+                  <p class="pane-note">Line highlights map to the steps shown in the matrix.</p>
+                </div>
+                <button id="copy-code" class="ghost" type="button">Copy code</button>
+              </div>
+              <pre id="code" class="code-block" aria-live="polite"></pre>
+            </section>
+
+            <div class="pane-splitter" data-split="code" role="separator" aria-label="Resize code and matrix panels"></div>
+
+            <section class="pane matrix-pane" aria-label="DP matrix">
+              <div class="pane-header">
+                <div>
+                  <h3>DP matrix</h3>
+                  <p class="pane-note">Current cell and dependencies are highlighted.</p>
+                </div>
+                <div class="matrix-legend">
+                  <span class="legend-item current">Current</span>
+                  <span class="legend-item dep">Dependencies</span>
+                  <span class="legend-item path">Edit path</span>
+                </div>
+              </div>
+              <div id="matrix-costs" class="matrix-costs" aria-live="polite"></div>
+              <div id="matrix" class="matrix" role="grid" aria-label="Levenshtein DP matrix"></div>
+              <div class="matrix-note">
+                Values update as the code advances. Empty cells have not been computed yet.
+              </div>
+            </section>
+
+            <div class="pane-splitter" data-split="matrix" role="separator" aria-label="Resize matrix and explanation panels"></div>
+
+            <section class="pane watch-pane" aria-label="Watch and explanation">
+              <div class="pane-header">
+                <div>
+                  <h3>Watch + explanation</h3>
+                  <p class="pane-note">Key variables for the current step.</p>
+                </div>
+              </div>
+              <div id="watch" class="watch"></div>
+              <div id="explanation" class="explanation" aria-live="polite"></div>
+              <div class="edit-panel">
+                <button id="show-edits" class="ghost" type="button">Show edits</button>
+                <div id="edit-output" class="edit-output" aria-live="polite"></div>
+              </div>
+            </section>
+          </div>
+
+          <div class="sim-status">
+            <div class="progress">
+              Step <span id="step-current">0</span> of <span id="step-total">0</span>
+              <span class="divider">|</span>
+              Phase: <span id="phase-label">start</span>
+            </div>
+            <p class="sim-note">
+              The simulator executes the JavaScript above while following the same algorithm as the C99 reference
+              listing below.
+            </p>
+          </div>
+        </section>
+
+        <section id="complexity">
+          <h2>Time and space complexity</h2>
+          <p>
+            The DP algorithm fills an <code>(m + 1) x (n + 1)</code> matrix. That is <code>O(mn)</code> time and
+            <code>O(mn)</code> space. There are faster variants for special cases, but the classic method is reliable and
+            easy to reason about.
+          </p>
+        </section>
+
+        <section id="pitfalls">
+          <h2>Common pitfalls</h2>
+          <ul class="plain-list">
+            <li>Off-by-one errors when mapping indices to characters.</li>
+            <li>Forgetting to initialize the first row or column.</li>
+            <li>Mixing up <code>i</code>/<code>j</code> with character positions.</li>
+            <li>Ignoring how empty strings behave (they are valid inputs).</li>
+          </ul>
+        </section>
+
+        <section id="examples">
+          <h2>Examples</h2>
+          <p>
+            <strong>cat -> cut</strong> has distance 1 (one substitution: <code>a -> u</code>).
+          </p>
+          <p>
+            <strong>kitten -> sitting</strong> has distance 3 (substitute <code>k -> s</code>, substitute <code>e -> i</code>,
+            insert <code>g</code>).
+          </p>
+          <p class="link-out">
+            Use the Examples dropdown in the <a href="#simulator">simulator</a> to replay these cases.
+          </p>
+        </section>
+
+        <section id="edit-script">
+          <h2>Optional edit script</h2>
+          <p>
+            The simulator can show one valid sequence of edits by tracing backward through the matrix. Click &quot;Show
+            edits&quot; once the final answer is reached.
+          </p>
+          <p class="note">
+            Note: JavaScript strings are indexed by UTF-16 code units. Some emoji or accented characters count as two
+            positions. This simulator follows that standard for consistency with the reference code.
+          </p>
+          <div class="concept-actions">
+            <button class="ghost" type="button" data-milestone="done">Jump to final answer</button>
+          </div>
+        </section>
+
+        <section id="c99-reference">
+          <h2>C99 reference implementation</h2>
+          <p>
+            This listing is a clean C99 version of the same algorithm. The simulator uses JavaScript for execution so it
+            can run in the browser, but the structure mirrors this reference.
+          </p>
+          <div class="c99-block">
+            <div class="pane-header">
+              <h3>C99 reference code (read-only)</h3>
+              <button id="copy-c99" class="ghost" type="button">Copy C99 code</button>
+            </div>
+            <pre id="c99-code" class="code-block" aria-label="C99 reference implementation">
+#include <stddef.h>
+#include <stdlib.h>
+
+size_t levenshtein(const char *a, const char *b) {
+  size_t m = 0;
+  size_t n = 0;
+  while (a[m] != '\0') m++;
+  while (b[n] != '\0') n++;
+
+  size_t **dp = malloc((m + 1) * sizeof(size_t *));
+  for (size_t i = 0; i <= m; i++) {
+    dp[i] = malloc((n + 1) * sizeof(size_t));
+  }
+
+  dp[0][0] = 0;
+  for (size_t i = 1; i <= m; i++) dp[i][0] = i;
+  for (size_t j = 1; j <= n; j++) dp[0][j] = j;
+
+  for (size_t i = 1; i <= m; i++) {
+    for (size_t j = 1; j <= n; j++) {
+      size_t cost = (a[i - 1] == b[j - 1]) ? 0 : 1;
+      size_t del = dp[i - 1][j] + 1;
+      size_t ins = dp[i][j - 1] + 1;
+      size_t sub = dp[i - 1][j - 1] + cost;
+      size_t min = del < ins ? del : ins;
+      if (sub < min) min = sub;
+      dp[i][j] = min;
+    }
+  }
+
+  size_t result = dp[m][n];
+  for (size_t i = 0; i <= m; i++) free(dp[i]);
+  free(dp);
+  return result;
+}
+            </pre>
+          </div>
+        </section>
+      </article>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

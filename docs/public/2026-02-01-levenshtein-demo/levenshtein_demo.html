@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Levenshtein Distance Interactive Demo</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 2rem;
+      line-height: 1.5;
+    }
+    h1 {
+      font-size: 1.6rem;
+    }
+    .controls {
+      margin-bottom: 1.5rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    input[type="text"] {
+      width: 100%;
+      max-width: 20rem;
+      padding: 0.4rem;
+      font-size: 1rem;
+    }
+    button {
+      margin-top: 0.8rem;
+      padding: 0.4rem 0.8rem;
+      font-size: 1rem;
+    }
+    table {
+      border-collapse: collapse;
+      margin-top: 1.5rem;
+    }
+    th, td {
+      border: 1px solid #444;
+      width: 2.2rem;
+      height: 2.2rem;
+      text-align: center;
+    }
+    th {
+      background: #eee;
+      font-weight: normal;
+    }
+    td.active {
+      background: #cfe3ff;
+    }
+    td.done {
+      background: #e8e8e8;
+    }
+    .explanation {
+      margin-top: 1.5rem;
+      max-width: 40rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Levenshtein Distance Step by Step</h1>
+
+  <div class="controls">
+    <label>
+      Source string
+      <input id="source" type="text" value="cat">
+    </label>
+    <label>
+      Target string
+      <input id="target" type="text" value="cut">
+    </label>
+    <button id="start">Start</button>
+    <button id="next" disabled>Next step</button>
+    <button id="reset" disabled>Reset</button>
+  </div>
+
+  <div id="table"></div>
+
+  <div class="explanation" id="explanation"></div>
+
+  <script>
+    const tableContainer = document.getElementById('table');
+    const explanation = document.getElementById('explanation');
+    const startBtn = document.getElementById('start');
+    const nextBtn = document.getElementById('next');
+    const resetBtn = document.getElementById('reset');
+
+    let s = '';
+    let t = '';
+    let dp = [];
+    let i = 0;
+    let j = 0;
+
+    function buildTable() {
+      tableContainer.innerHTML = '';
+      const table = document.createElement('table');
+
+      const header = document.createElement('tr');
+      header.appendChild(document.createElement('th'));
+      header.appendChild(document.createElement('th'));
+      for (let col = 0; col < t.length; col++) {
+        const th = document.createElement('th');
+        th.textContent = t[col];
+        header.appendChild(th);
+      }
+      table.appendChild(header);
+
+      for (let row = 0; row <= s.length; row++) {
+        const tr = document.createElement('tr');
+        const th = document.createElement('th');
+        th.textContent = row === 0 ? '' : s[row - 1];
+        tr.appendChild(th);
+
+        for (let col = 0; col <= t.length; col++) {
+          const td = document.createElement('td');
+          td.textContent = dp[row][col];
+          td.id = `cell-${row}-${col}`;
+          tr.appendChild(td);
+        }
+        table.appendChild(tr);
+      }
+
+      tableContainer.appendChild(table);
+    }
+
+    function highlightCell(row, col) {
+      document.querySelectorAll('td').forEach(td => {
+        td.classList.remove('active');
+        if (td.classList.contains('done')) {
+          return;
+        }
+      });
+
+      const cell = document.getElementById(`cell-${row}-${col}`);
+      if (cell) {
+        cell.classList.add('active');
+      }
+    }
+
+    function step() {
+      if (i === 0 && j === 0) {
+        explanation.textContent = 'Base case dp[0][0] equals 0.';
+      } else if (i === 0) {
+        dp[i][j] = j;
+        explanation.textContent = `dp[0][${j}] equals ${j} by insertion.`;
+      } else if (j === 0) {
+        dp[i][j] = i;
+        explanation.textContent = `dp[${i}][0] equals ${i} by deletion.`;
+      } else {
+        const cost = s[i - 1] === t[j - 1] ? 0 : 1;
+        const del = dp[i - 1][j] + 1;
+        const ins = dp[i][j - 1] + 1;
+        const sub = dp[i - 1][j - 1] + cost;
+        dp[i][j] = Math.min(del, ins, sub);
+        explanation.textContent = `Compute dp[${i}][${j}]. Deletion ${del}, insertion ${ins}, substitution ${sub}. Choose ${dp[i][j]}.`;
+      }
+
+      const cell = document.getElementById(`cell-${i}-${j}`);
+      cell.textContent = dp[i][j];
+      cell.classList.remove('active');
+      cell.classList.add('done');
+
+      if (j < t.length) {
+        j++;
+      } else {
+        j = 0;
+        i++;
+      }
+
+      if (i <= s.length) {
+        highlightCell(i, j);
+      } else {
+        explanation.textContent += ` Final distance is ${dp[s.length][t.length]}.`;
+        nextBtn.disabled = true;
+      }
+    }
+
+    startBtn.onclick = () => {
+      s = document.getElementById('source').value;
+      t = document.getElementById('target').value;
+
+      dp = Array.from({ length: s.length + 1 }, () =>
+        Array(t.length + 1).fill(0)
+      );
+
+      i = 0;
+      j = 0;
+
+      buildTable();
+      highlightCell(0, 0);
+
+      nextBtn.disabled = false;
+      resetBtn.disabled = false;
+      explanation.textContent = 'Press Next step to compute the table.';
+    };
+
+    nextBtn.onclick = step;
+
+    resetBtn.onclick = () => {
+      tableContainer.innerHTML = '';
+      explanation.textContent = '';
+      nextBtn.disabled = true;
+      resetBtn.disabled = true;
+    };
+  </script>
+</body>
+</html>
