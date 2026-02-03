@@ -1,5 +1,111 @@
 2026-02-02
 
+A00 v00 Title and intent
+Create or update a single page offline C99 library reference by ensuring the embedded XML inside `index.html` contains complete coverage of all C99 standard library headers, macros, types, and function signatures listed in `suggestion005`. The work product is a modified `index.html` whose XML data blocks are comprehensive, internally consistent, and renderable by the existing vanilla JS renderer without changes to renderer code.
+
+A01 v00 Inputs and allowed files
+Only two files may be read to make decisions: `index.html` and `suggestion005`. No other files, web searches, external references, or additional standards documents may be used. The agent must treat `suggestion005` as the sole source of truth for what must exist, and must treat `index.html` as the sole target to modify.
+
+A02 v00 Scope of completeness
+The final `index.html` must include, in its embedded XML, definitions for every C99 header and every macro, type, and function signature specified by `suggestion005`. This includes families of overload-like variants (for example, float and long double variants, and complex variants) when they are separately named in `suggestion005`. If `suggestion005` lists multiple prototypes for a logical family, each separately named symbol must exist as its own function entry in the XML.
+
+A03 v00 Non goals
+Do not change HTML layout, CSS, or JavaScript behavior unless strictly required to keep the page functioning after XML changes. Do not refactor existing content for style unless the refactor is required to fix structural inconsistency introduced by your additions. Do not remove existing entries unless they are duplicates of the same symbol and you can preserve one canonical entry.
+
+A04 v00 What to edit in index.html
+All edits must be confined to the embedded XML blocks under the hidden `<section id="data">` area, inside `<script type="application/xml">...</script>` elements. Do not add new external dependencies. Do not add new script tags of other types. Do not introduce any `</script>` sequence inside the XML payload.
+
+A05 v00 Data model expectations
+The existing XML uses a structure similar to the provided example: `document`, `category`, `header`, and within headers, `function` entries with `signature`, `summary`, `parameters`, `returns`, `examples`, plus optional keywords and formatting policy blocks. New entries must follow the same schema patterns already present in `index.html`. If you encounter multiple schema patterns within `index.html`, prefer the most common pattern used for functions in that same header, and keep your additions consistent within that header.
+
+A06 v00 Matching and diff rules
+A symbol in `suggestion005` is considered present in `index.html` only if a function or macro entry exists whose `name` matches exactly (case sensitive) and whose header association is correct for C99. A symbol with the right name but placed under the wrong header must be corrected by moving it to the correct header. A symbol that exists but has an incomplete set of prototypes compared to `suggestion005` must be updated to include the missing prototypes in a way consistent with how similar multi-prototype entries are represented elsewhere in `index.html` (either as multiple `signature` lines within one entry if that is how the file does it, or as separate entries if the file uses one signature per entry).
+
+A07 v00 Placement rules for new content
+New content must be inserted into the most appropriate existing location in the XML hierarchy.
+
+If the header already exists in `index.html`, add missing symbols under that header. If the header does not exist, create a new `header` node under the best matching existing `category`, or create a new `category` if no existing category fits. Category naming should follow the style already used (descriptive, title case, and aligned to standard library groupings). Keep alphabetical ordering if the surrounding section is alphabetically ordered; otherwise keep the local ordering convention of that header.
+
+A08 v00 ID and naming conventions
+Every new XML node that requires an `id` must receive a unique `id` that does not collide with existing IDs in `index.html`.
+
+Follow the established naming style in the file. For example, functions appear to use IDs like `fn.isalnum` with `name="isalnum"`, and parameters use IDs like `p.isalnum.c`. Continue this pattern for new functions and parameters. If an existing header uses a different convention, match that header’s convention.
+
+A09 v00 Content requirements for each new symbol
+For every new function or macro introduced, you must include at minimum:
+
+A human readable signature block exactly matching what `suggestion005` provides for that symbol.
+A short summary explaining what it does in one paragraph.
+Parameter documentation that includes domain constraints and any C99 specific safety requirements (for example, integer domain rules, null pointer rules, locale dependence).
+Return value documentation.
+At least one example in C99 that is copy ready, compiles in principle, and demonstrates safe usage. The example should be minimal but must be meaningful and should include required headers.
+
+If `suggestion005` includes notes about undefined behavior domains, required casts, or special constants, those must appear in constraints notes.
+
+A10 v00 Macro and type entries
+If `suggestion005` includes macro definitions and types, represent them using the nearest existing pattern in `index.html`. If the XML schema includes a dedicated node type for macros or types, use it. If the schema only represents functions, then introduce an explicit representation consistent with current practice in the file (for example, `macro` nodes if present, or `definition` nodes if present). Do not invent a brand new representation unless there is no other workable choice; if you must invent one, it must be minimal, self describing, and must not break rendering (for example, by using existing generic nodes already rendered as text blocks).
+
+A11 v00 Example driven guidance using complex.h family
+`suggestion005` may include sequences like the following and they must be represented completely:
+
+double complex cacos(double complex z);
+float complex cacosf(float complex z);
+long double complex cacosl(long double complex z);
+double complex casin(double complex z);
+float complex casinf(float complex z);
+long double complex casinl(long double complex z);
+double complex catan(double complex z);
+float complex catanf(float complex z);
+long double complex catanl(long double complex z);
+double complex ccos(double complex z);
+float complex ccosf(float complex z);
+long double complex ccosl(long double complex z);
+double complex csin(double complex z);
+float complex csinf(float complex z);
+long double complex csinl(long double complex z);
+double complex ctan(double complex z);
+float complex ctanf(float complex z);
+long double complex ctanl(long double complex z);
+
+If `complex.h` exists, each of these must appear under it with correct signatures and consistent documentation patterns. If `complex.h` does not exist, you must add it under an appropriate category (for example, complex mathematics). Provide at least one example per logical family, but ensure each distinct symbol still has its own entry with at least summary, parameters, returns, and at least one example somewhere in that family. If the local convention in the file is one example per function, follow it.
+
+A12 v00 Quality and safety rules for added text
+Added text must remain within the allowed inline HTML policy already declared in the XML. Do not add unsupported tags. Prefer plain paragraphs and inline code. Use ASCII punctuation. Do not add excessively long prose; focus on deterministic rules, constraints, and safe usage.
+
+A13 v00 Renderer compatibility constraints
+Do not introduce XML constructs that the existing renderer is unlikely to handle. Before finalizing, ensure the XML remains well formed and that every opened tag is closed. Ensure that the XML inside the `<script type="application/xml">` remains valid XML and does not contain the literal sequence `</script>` anywhere.
+
+A14 v00 Validation steps the agent must perform
+Parse `index.html` and extract every embedded XML block under `<section id="data">`. Build a symbol index of all headers and all symbols currently defined, including function names and macro names and their signatures.
+
+Parse `suggestion005` and extract the canonical list of required headers and symbols with their signatures.
+
+Compute the set difference and classify each missing item as one of the following: missing header, missing symbol under existing header, wrong placement (symbol under wrong header), incomplete signature set, or duplicate conflicting definitions.
+
+Apply edits to `index.html` XML to resolve every classification until the diff is empty.
+
+After edits, re parse the modified XML and re run the diff to confirm zero missing items relative to `suggestion005`.
+
+A15 v00 Output requirements
+The agent must produce the updated `index.html` with all necessary XML modifications applied. The agent must also produce a concise change log describing what was added or moved. The change log must be deterministic and must include enough detail to review correctness, including header name and symbol name for each addition or move, and whether it was a new header, new symbol, moved symbol, or signature completion.
+
+A16 v00 Acceptance criteria
+All symbols listed in `suggestion005` exist in the embedded XML of `index.html` under the correct C99 header grouping.
+No duplicate symbol definitions remain that would confuse lookup or navigation.
+The embedded XML remains well formed and contains no `</script>` sequence.
+The existing page can still render the table of contents and content sections without requiring changes to the JavaScript renderer.
+Each newly added symbol has at least signature, summary, parameter constraints, returns, and at least one safe, copy ready C99 example (with the per family allowance described earlier only if consistent with local conventions).
+
+A17 v00 Failure handling
+If `suggestion005` contains an item that cannot be represented using the existing XML schema without risking renderer breakage, the agent must still include the item by using the most conservative representation that the renderer already displays as plain text content, while preserving header grouping and searchability. The agent must record this in the change log with the reason and the chosen representation.
+
+A18 v00 Deliverables checklist
+Updated `index.html` with embedded XML modified to satisfy `suggestion005`.
+A change log file or section (plain text) summarizing all modifications.
+
+---
+
+
 B.1 Diagnostics <assert.h>
 NDEBUG
 
