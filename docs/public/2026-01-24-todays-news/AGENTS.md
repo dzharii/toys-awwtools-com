@@ -88,6 +88,7 @@ Discussion and speculation handling:
 2. Do not add the agent's own speculation. Do not present speculation as fact. Keep attribution inside the brief text.
 
 If a category cannot reach 2 items after reasonable effort, publish 1 item and mark the issue incomplete using H00.
+Important: then number of items in category is unlimited, but items must be recent and fresh (1 - 2 days old max).
 
 B06.01 Write NEWS-YYYY-MM-DD/content.js
 The agent must update DAILY_DIR/content.js to include all selected items and render without code changes to main.js.
@@ -99,8 +100,11 @@ Builder constraints: the column builder supports at most two headlines per colum
 3. Each item must be written using paragraphs only.
 
 Item format must be deterministic and two-paragraph per item:
-Paragraph 1: "<Title> - <mini-brief written as fluent narrative, 3 to 5 sentences, 60 to 110 words total. The brief must naturally cover what happened and the key context a reader needs, without using labeled fields like 'who/what/when/where'. The brief must include at least one concrete detail (number, location, named agency/program, or specific milestone) drawn from the source. If the source includes debate, criticism, uncertainty, or speculation, it may be included only if explicitly attributed and clearly framed as discussion or opinion from the source. No invented details. No editorial language.>"
-Paragraph 2: "<Outlet> | Date: <YYYY-MM-DD> | URL: <canonical url>"
+Paragraph 1: "Title - mini-brief written as fluent narrative, 6 to 15 sentences. 
+The brief must naturally cover what happened and the key context a reader needs, without using labeled fields like 'who/what/when/where'. 
+The brief must include at least one concrete detail (number, location, named agency/program, or specific milestone) drawn from the source. 
+If the source includes debate, criticism, uncertainty, or speculation, it may be included only if explicitly attributed and clearly framed as discussion or opinion from the source. No invented details. No editorial language."
+Paragraph 2: "<Outlet> | Date: <YYYY-MM-DD> | URL: <canonical-url>"
 
 Masthead must be:
 Title: "AI Gazette"
@@ -256,5 +260,5 @@ Before (too mechanical):
 "Title: Sound Transit announces opening day for light rail... Source: KUOW, Date..., URL..."
 
 After (fluent brief with attribution line):
-"Sound Transit announces an opening day for the Seattle-to-Bellevue light rail connection - The agency set a launch date after completing testing and pre-revenue service work. The opening will change rider transfers between Seattle and the Eastside and is expected to shift demand on key bus corridors feeding Link. Sound Transit said it will publish final rider guidance and service details ahead of opening."
+"Sound Transit announces an opening day for the Seattle-to-Bellevue light rail connection - The agency set a launch date after completing testing and pre-revenue service work. The opening will change rider transfers between Seattle and the Eastside and is expected to shift demand on key bus corridors feeding Link. Sound Transit said it will publish final rider guidance and service details ahead of opening." (this item text can be longer)
 "KUOW | Date: 2026-01-23 | URL: https://..."
