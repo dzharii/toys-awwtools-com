@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Time and Date Expression Calculator</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="bg-orb bg-orb-a" aria-hidden="true"></div>
+    <div class="bg-orb bg-orb-b" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <div class="brand">
+        <p class="brand-eyebrow">Deterministic Demo</p>
+        <h1>Time and Date Calculator</h1>
+      </div>
+
+      <div class="controls-grid">
+        <label class="control">
+          <span>Time Zone</span>
+          <input id="timeZoneInput" list="zoneSuggestions" autocomplete="off" spellcheck="false" />
+          <datalist id="zoneSuggestions"></datalist>
+          <small id="timeZoneValidation" class="hint"></small>
+        </label>
+
+        <label class="control">
+          <span>Now Mode</span>
+          <select id="nowModeSelect">
+            <option value="fixed">Fixed now</option>
+            <option value="real">Real now</option>
+          </select>
+        </label>
+
+        <label class="control">
+          <span>Business Calendar</span>
+          <select id="calendarModeSelect">
+            <option value="weekday">Mon-Fri (no holidays)</option>
+            <option value="holidays">Holidays enabled (US 2026 sample)</option>
+          </select>
+        </label>
+
+        <label class="control checkbox-control">
+          <input id="resolverToggle" type="checkbox" />
+          <span>Enable place names</span>
+        </label>
+
+        <label class="control checkbox-control">
+          <input id="developerToggle" type="checkbox" />
+          <span>Developer details</span>
+        </label>
+
+        <div class="control now-preview-block">
+          <span>Effective now</span>
+          <output id="nowPreview">Loading...</output>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel editor-panel" aria-label="Expression editor">
+        <div class="panel-head">
+          <h2>Expression</h2>
+          <div class="status-group">
+            <span id="evaluatingBadge" class="badge subtle" hidden>Evaluating</span>
+            <span id="lineBadge" class="badge subtle">Line 1</span>
+          </div>
+        </div>
+
+        <div class="editor-wrap" id="editorWrap">
+          <pre id="editorHighlight" aria-hidden="true"></pre>
+          <textarea
+            id="expressionInput"
+            spellcheck="false"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            aria-label="Date expression input"
+            placeholder="Type an expression like: now + 1d"
+          ></textarea>
+        </div>
+      </section>
+
+      <section class="panel output-panel" aria-live="polite" aria-label="Result panel">
+        <div class="panel-head">
+          <h2>Result</h2>
+          <div id="fixtureBadge" class="badge subtle">Custom input</div>
+        </div>
+
+        <div id="idleState" class="state-block">
+          <p>Type an expression to evaluate.</p>
+          <div id="inlineExamples" class="chips" aria-label="Quick examples"></div>
+        </div>
+
+        <div id="successState" class="state-block" hidden>
+          <p id="primaryOutput" class="primary-output"></p>
+          <div class="meta-row">
+            <span id="typeBadge" class="badge success"></span>
+            <span id="zoneBadge" class="badge"></span>
+          </div>
+          <p id="secondaryOutput" class="secondary-output"></p>
+          <div id="explainPanel" class="explain-panel" hidden>
+            <h3>Explain</h3>
+            <ul id="explainList"></ul>
+          </div>
+        </div>
+
+        <div id="errorState" class="state-block" hidden>
+          <button id="errorMessageButton" class="error-message" type="button"></button>
+          <p class="error-code">Code: <code id="errorCode"></code></p>
+          <p class="error-location">Location: <code id="errorLocation"></code></p>
+          <ul id="errorHints" class="error-hints"></ul>
+        </div>
+      </section>
+    </main>
+
+    <section class="panel examples-panel" aria-label="Examples gallery">
+      <div class="panel-head">
+        <h2>Examples</h2>
+        <p class="hint">Loaded from fixture data when available.</p>
+      </div>
+      <div id="examplesByCategory" class="examples-grid"></div>
+    </section>
+
+    <section id="developerSection" class="panel developer-panel" hidden>
+      <div class="panel-head">
+        <h2>Developer Details</h2>
+      </div>
+      <div class="developer-grid">
+        <details open>
+          <summary>Tokens</summary>
+          <pre id="tokensDump"></pre>
+        </details>
+        <details open>
+          <summary>AST</summary>
+          <pre id="astDump"></pre>
+        </details>
+        <details open>
+          <summary>Raw Value</summary>
+          <pre id="valueDump"></pre>
+        </details>
+        <details open>
+          <summary>Effective Context</summary>
+          <pre id="contextDump"></pre>
+        </details>
+      </div>
+    </section>
+
+    <script type="module" src="./app/main.js"></script>
+  </body>
+</html>
