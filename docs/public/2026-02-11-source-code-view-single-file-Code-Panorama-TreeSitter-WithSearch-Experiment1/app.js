@@ -3332,6 +3332,53 @@ function updateLargest(file) {
   state.aggregate.largest = state.aggregate.largest.slice(0, 8);
 }
 
+function formatLineNumberParts(lineNumber) {
+  const value = Math.max(0, Number.isFinite(lineNumber) ? Math.floor(lineNumber) : 0);
+  const formatted = value.toLocaleString("en-US", {
+    useGrouping: true,
+    minimumIntegerDigits: 5
+  });
+  let firstSignificantDigit = -1;
+  for (let i = 0; i < formatted.length; i += 1) {
+    const ch = formatted[i];
+    if (ch >= "1" && ch <= "9") {
+      firstSignificantDigit = i;
+      break;
+    }
+  }
+  if (firstSignificantDigit < 0) {
+    firstSignificantDigit = formatted.length - 1;
+  }
+  return {
+    leading: formatted.slice(0, firstSignificantDigit),
+    significant: formatted.slice(firstSignificantDigit)
+  };
+}
+
+function buildLineNumberGutter(lineCount) {
+  const safeCount = Math.max(0, Number.isFinite(lineCount) ? Math.floor(lineCount) : 0);
+  const gutter = document.createElement("div");
+  gutter.className = "line-gutter";
+  gutter.setAttribute("aria-hidden", "true");
+  const fragment = document.createDocumentFragment();
+  for (let line = 1; line <= safeCount; line += 1) {
+    const row = document.createElement("div");
+    row.className = "line-gutter-row";
+    const parts = formatLineNumberParts(line);
+    const leading = document.createElement("span");
+    leading.className = "line-num-leading";
+    leading.textContent = parts.leading;
+    const significant = document.createElement("span");
+    significant.className = "line-num-significant";
+    significant.textContent = parts.significant;
+    row.appendChild(leading);
+    row.appendChild(significant);
+    fragment.appendChild(row);
+  }
+  gutter.appendChild(fragment);
+  return gutter;
+}
+
 function insertIntoTree(file) {
   let node = state.tree;
   const parts = file.segments;
@@ -3475,11 +3522,13 @@ function renderFileSection(file) {
   header.appendChild(fileActions);
 
   const pre = document.createElement("pre");
+  const gutter = buildLineNumberGutter(file.lineCount);
   const code = document.createElement("code");
   code.classList.add("microlight");
   code.dataset.hasBeenHighlighted = "false";
   code.dataset.refsDecorated = "false";
   code.textContent = file.text;
+  pre.appendChild(gutter);
   pre.appendChild(code);
   if (!state.settings.wrap) pre.classList.add("nowrap");
 
