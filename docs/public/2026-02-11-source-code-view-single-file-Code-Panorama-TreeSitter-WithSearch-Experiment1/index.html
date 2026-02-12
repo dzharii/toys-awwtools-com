@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Panorama</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar" id="topbar">
+    <div class="brand">
+      <div class="brand-mark">CP</div>
+      <div>
+        <div class="brand-title">Code Panorama</div>
+        <div class="brand-subtitle">Single-page code viewer</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button id="settings-toggle" class="ghost">Settings</button>
+    </div>
+  </header>
+
+  <section id="control-bar" class="control-bar">
+    <div id="control-status" class="status-chip">Ready</div>
+    <div class="control-actions" id="control-actions">
+      <button id="open-folder" class="primary">Open folder</button>
+      <button id="fallback-picker" class="secondary">Use file picker</button>
+      <input id="file-input" type="file" webkitdirectory directory multiple hidden>
+      <button id="cancel-load" class="ghost" disabled>Cancel</button>
+      <button id="stats-button" class="ghost" disabled>Stats</button>
+      <button id="log-toggle" class="ghost" disabled>Log</button>
+      <button id="tree-button" class="ghost" disabled>Tree-sitter</button>
+      <button id="preview-toggle" class="ghost" disabled>Preview</button>
+    </div>
+    <div class="active-indicator" id="active-indicator">Active: none</div>
+  </section>
+
+  <div class="app-shell">
+    <div id="empty-panel" class="empty-panel">
+      <div class="empty-card">
+        <div class="empty-title">No project loaded</div>
+        <div class="empty-body">
+          <p>Open a folder to load code locally and view it as one page.</p>
+          <p class="muted">Nothing is uploaded. Works best in Chrome or Edge.</p>
+          <div class="empty-actions">
+            <button id="empty-open-folder" class="primary large">Open folder</button>
+            <button id="empty-fallback" class="secondary">Use file picker</button>
+            <button id="support-link" class="link-button">Browser support</button>
+          </div>
+          <div id="empty-support" class="inline-warning hidden"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="sidebar-edge-handle" class="edge-handle" title="Open navigator"></div>
+    <aside id="sidebar" class="sidebar pinned hidden">
+      <div class="sidebar-header">
+        <div>
+          <div class="sidebar-title">Navigator</div>
+          <div class="sidebar-subtitle">Project tree</div>
+        </div>
+        <div class="sidebar-controls">
+          <button id="sidebar-pin" class="ghost tiny" title="Pin/unpin sidebar">Unpin</button>
+        </div>
+      </div>
+      <div id="sidebar-body" class="sidebar-body">
+        <div class="tree-section">
+          <div class="section-title">Project tree</div>
+          <div id="tree-container" class="tree" role="tree" tabindex="0"></div>
+          <div id="tree-placeholder" class="placeholder hidden">Loading project...</div>
+        </div>
+      </div>
+      <div id="sidebar-resize" class="resize-handle" title="Drag to resize"></div>
+    </aside>
+
+    <main id="main" class="main-pane">
+      <div id="status-banner" class="status-banner hidden"></div>
+      <div id="fallback-message" class="inline-warning hidden"></div>
+      <details id="code-search-panel" class="toc-panel code-search-panel">
+        <summary class="toc-summary">
+          <span class="toc-title">Code search</span>
+          <span class="toc-count" id="code-search-status">0 matches</span>
+        </summary>
+        <div class="toc-body code-search-body">
+          <div class="code-search-controls">
+            <select id="code-search-mode" class="code-search-select" aria-label="Search mode">
+              <option value="text">Text</option>
+              <option value="regex">Regular expression</option>
+            </select>
+            <select id="code-search-scope" class="code-search-select" aria-label="Search scope">
+              <option value="all">All files</option>
+              <option value="visible">Visible files</option>
+            </select>
+            <input id="code-search-query" class="code-search-input" type="text" placeholder="Search query" autocomplete="off" spellcheck="false">
+            <label class="inline-toggle code-search-toggle">
+              <input id="code-search-case" type="checkbox">
+              <span>Case sensitive</span>
+            </label>
+            <label class="inline-toggle code-search-toggle">
+              <input id="code-search-live" type="checkbox">
+              <span>Live typing</span>
+            </label>
+            <button id="code-search-run" class="primary tiny" type="button">Search</button>
+            <button id="code-search-cancel" class="secondary tiny hidden" type="button" disabled>Cancel</button>
+          </div>
+          <div id="code-search-error" class="code-search-error hidden">
+            <div id="code-search-error-message"></div>
+            <div id="code-search-error-detail" class="code-search-error-detail"></div>
+          </div>
+          <div class="code-search-results">
+            <div class="code-search-results-header">
+              <span class="code-search-results-title">Results</span>
+              <span id="code-search-results-meta" class="code-search-results-meta"></span>
+            </div>
+            <div id="code-search-unavailable" class="code-search-unavailable hidden">Available after load completes.</div>
+            <div id="code-search-cap" class="code-search-cap hidden">Showing first 200 matches.</div>
+            <div id="code-search-results-list" class="code-search-results-list" role="list"></div>
+          </div>
+        </div>
+      </details>
+      <details id="toc-panel" class="toc-panel">
+        <summary class="toc-summary">
+          <span class="toc-title">Table of contents</span>
+          <span class="toc-count" id="toc-count">0 files</span>
+        </summary>
+        <div class="toc-body">
+          <div class="toc-toolbar">
+            <div class="toc-selection">
+              <button id="toc-select-all" class="ghost tiny" type="button">Select all</button>
+              <button id="toc-reset" class="ghost tiny" type="button">Reset selection</button>
+            </div>
+            <div class="toc-separator"></div>
+            <div class="toc-actions">
+              <button id="toc-copy" class="primary tiny" type="button">Copy</button>
+              <button id="toc-hide" class="secondary tiny" type="button">Hide files</button>
+              <button id="toc-show" class="ghost tiny" type="button">Show files</button>
+            </div>
+          </div>
+          <div id="toc-empty" class="toc-empty">No files loaded.</div>
+          <ul id="toc-list" class="toc-list"></ul>
+        </div>
+      </details>
+      <div id="file-container" class="file-container"></div>
+      <div id="no-files" class="inline-warning hidden"></div>
+    </main>
+  </div>
+
+  <div id="ts-window" class="ts-window hidden" role="dialog" aria-label="Tree-sitter window">
+    <div id="ts-titlebar" class="ts-titlebar">
+      <div>
+        <div class="ts-title">Tree-sitter</div>
+        <div id="ts-subtitle" class="ts-subtitle">No active file</div>
+      </div>
+      <div class="ts-controls">
+        <button id="ts-parse" class="ghost tiny">Parse</button>
+        <button id="ts-minimize" class="ghost tiny">Minimize</button>
+        <button id="ts-close" class="ghost tiny">Close</button>
+      </div>
+    </div>
+    <div id="ts-body" class="ts-body">
+      <div id="ts-status" class="ts-status muted">Available after load completes.</div>
+      <div class="ts-section">
+        <div class="ts-section-title">Outline</div>
+        <div id="ts-outline" class="ts-list"></div>
+      </div>
+      <div class="ts-section">
+        <div class="ts-section-title">Includes</div>
+        <div id="ts-includes" class="ts-list"></div>
+      </div>
+    </div>
+    <div id="ts-resize" class="ts-resize-handle" title="Drag to resize"></div>
+  </div>
+  <div id="ts-chip" class="ts-chip hidden" title="Show Tree-sitter">Tree-sitter</div>
+
+  <section id="settings-panel" class="panel hidden" aria-hidden="true">
+    <div class="panel-content">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Settings</div>
+          <div class="panel-subtitle">Filtering and display</div>
+        </div>
+        <div>
+          <button id="settings-close" class="ghost tiny">Close</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <label for="ignore-list">Ignore directories (one per line)</label>
+          <textarea id="ignore-list" rows="4"></textarea>
+        </div>
+        <div class="field">
+          <label for="allow-list">Allowed extensions (one per line)</label>
+          <textarea id="allow-list" rows="4"></textarea>
+          <label class="inline-toggle">
+            <input id="json-toggle" type="checkbox">
+            <span>Include JSON</span>
+          </label>
+        </div>
+        <div class="field grid">
+          <div>
+            <label for="max-size">Max file size (KB)</label>
+            <input id="max-size" type="number" min="1" step="1">
+          </div>
+          <div>
+            <label for="memory-limit">Memory warn threshold (MB)</label>
+            <input id="memory-limit" type="number" min="1" step="1">
+          </div>
+        </div>
+        <div class="field inline">
+          <label class="inline-toggle">
+            <input id="wrap-toggle" type="checkbox">
+            <span>Wrap code</span>
+          </label>
+          <label class="inline-toggle">
+            <input id="stats-display" type="checkbox">
+            <span>Show stats banners</span>
+          </label>
+        </div>
+        <div class="field hint">
+          Changes apply to next load. Filters affect which files are read. Display toggles update immediately.
+        </div>
+      </div>
+      <div class="panel-footer">
+        <button id="settings-save" class="primary">Save settings</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="stats-panel" class="panel hidden" aria-hidden="true">
+    <div class="panel-content">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Project stats</div>
+          <div class="panel-subtitle">Breakdown</div>
+        </div>
+        <div>
+          <button id="stats-close" class="ghost tiny">Close</button>
+        </div>
+      </div>
+      <div class="panel-body" id="stats-body"></div>
+    </div>
+  </section>
+
+  <section id="support-panel" class="panel hidden" aria-hidden="true">
+    <div class="panel-content">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Browser support</div>
+          <div class="panel-subtitle">Folder access options</div>
+        </div>
+        <div>
+          <button id="support-close" class="ghost tiny">Close</button>
+        </div>
+      </div>
+      <div class="panel-body" id="support-body">
+        <p>This app works best in Chromium-based browsers with the File System Access API (Chrome, Edge).</p>
+        <p>If folder picker is unavailable, use the file picker. Select a folder with "Allow directory access" if offered.</p>
+        <p>No files are uploaded. All processing stays on your device.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="log-panel" class="panel hidden" aria-hidden="true">
+    <div class="panel-content">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Load log</div>
+          <div class="panel-subtitle">Skipped files and errors</div>
+        </div>
+        <div>
+          <button id="log-close" class="ghost tiny">Close</button>
+        </div>
+      </div>
+      <div class="panel-body log-body" id="log-body"></div>
+    </div>
+  </section>
+
+  <script src="lib/lib-asvd-microlight-0.0.7/microlight.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
