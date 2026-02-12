@@ -1,50 +1,58 @@
-const defaults = {
-  ignores: [".git", "node_modules", "dist", "build", "out", "target", "bin", "obj", ".idea", ".vscode"],
-  allow: [
-    "js", "ts", "jsx", "tsx", "mjs", "cjs",
-    "c", "h", "cc", "cpp", "hpp", "cs", "java", "scala", "kt", "go", "rs",
-    "py", "rb", "php", "swift", "m", "mm",
-    "html", "css", "scss", "md", "txt", "sh", "ps1",
-    "yaml", "yml", "toml", "ini", "xml"
-  ],
-  includeJson: false,
-  maxFileSize: 1024 * 1024,
-  memoryWarnBytes: 50 * 1024 * 1024,
-  wrap: true,
-  showStats: true
-};
-
-const TREE_SITTER_ASSET_BASE = "lib/web-tree-sitter-v0.26.3";
-const TREE_SITTER_STORAGE_KEY = "code-panorama-tree-sitter";
-const SEARCH_CAP = 200;
-const SEARCH_SLICE_BUDGET = 10;
-const SEARCH_LIVE_DEBOUNCE = 250;
-const SEARCH_EXPLICIT_MIN = 2;
-const SEARCH_LIVE_MIN = 3;
-const PREVIEW_OPEN_DELAY = 150;
-const PREVIEW_SWITCH_DELAY = 75;
-const PREVIEW_INACTIVE_MS = 9000;
-const PREVIEW_DEFAULT_WIDTH = 420;
-const PREVIEW_DEFAULT_HEIGHT = 280;
-const PREVIEW_MIN_WIDTH = 260;
-const PREVIEW_MIN_HEIGHT = 160;
-const PREVIEW_VIEWPORT_MARGIN = 8;
-const PREVIEW_GAP = 10;
-const PREVIEW_CACHE_LIMIT = 12;
-const PREVIEW_INITIAL_WIDTH_RATIO = 0.6;
-const PREVIEW_INITIAL_HEIGHT_RATIO = 0.5;
-const HIGHLIGHT_RETRY_DELAY_MS = 1800;
-const HIGHLIGHT_MAX_RETRIES = 3;
-const MICROLIGHT_PENDING_CLASS = "microlight-pending";
-const TREE_SITTER_LANGUAGES = {
-  c: { file: "tree-sitter-c-v0.24.1.wasm" },
-  cpp: { file: "tree-sitter-cpp-v0.23.4.wasm" },
-  bash: { file: "tree-sitter-bash-v0.25.1.wasm" },
-  csharp: { file: "tree-sitter-c_sharp-v0.23.1.wasm" },
-  javascript: { file: "tree-sitter-javascript-v0.25.0.wasm" },
-  json: { file: "tree-sitter-json-v0.24.8.wasm" },
-  scala: { file: "tree-sitter-scala-v0.24.0.wasm" }
-};
+import {
+  defaults,
+  TREE_SITTER_ASSET_BASE,
+  TREE_SITTER_STORAGE_KEY,
+  SEARCH_CAP,
+  SEARCH_SLICE_BUDGET,
+  SEARCH_LIVE_DEBOUNCE,
+  SEARCH_EXPLICIT_MIN,
+  SEARCH_LIVE_MIN,
+  PREVIEW_OPEN_DELAY,
+  PREVIEW_SWITCH_DELAY,
+  PREVIEW_INACTIVE_MS,
+  PREVIEW_DEFAULT_WIDTH,
+  PREVIEW_DEFAULT_HEIGHT,
+  PREVIEW_MIN_WIDTH,
+  PREVIEW_MIN_HEIGHT,
+  PREVIEW_VIEWPORT_MARGIN,
+  PREVIEW_GAP,
+  PREVIEW_CACHE_LIMIT,
+  PREVIEW_INITIAL_WIDTH_RATIO,
+  PREVIEW_INITIAL_HEIGHT_RATIO,
+  HIGHLIGHT_RETRY_DELAY_MS,
+  HIGHLIGHT_MAX_RETRIES,
+  MICROLIGHT_PENDING_CLASS,
+  TREE_SITTER_LANGUAGES
+} from "./modules/config.js";
+import { getDomElements } from "./modules/dom-elements.js";
+import {
+  createRootNode,
+  loadSettings as loadStoredSettings,
+  saveSettings as persistSettings,
+  loadTreeSitterState as loadStoredTreeSitterState,
+  saveTreeSitterState as persistTreeSitterState
+} from "./modules/persistence.js";
+import {
+  formatBytes,
+  setButtonLabel,
+  buildMarkdownSnippet,
+  copyTextToClipboard,
+  copyFileSource,
+  makeFileId,
+  countLines,
+  languageFromExt,
+  clamp,
+  rectOf,
+  makeTextSpan
+} from "./modules/file-helpers.js";
+import {
+  validateSearchQuery,
+  buildSearchMatcher,
+  matchLine,
+  buildSnippetLines
+} from "./modules/search-helpers.js";
+import { buildOutlineModel, buildIncludeList } from "./modules/tree-sitter-helpers.js";
+import { createCodeHighlighter } from "./modules/highlighter.js";
 
 const state = {
   phase: "empty", // empty | loading | loaded | cancelled
@@ -110,234 +118,36 @@ const previewState = {
   cache: new Map()
 };
 
-const els = {
-  topbar: document.getElementById("topbar"),
-  controlBar: document.getElementById("control-bar"),
-  openFolder: document.getElementById("open-folder"),
-  emptyOpen: document.getElementById("empty-open-folder"),
-  emptyPanel: document.getElementById("empty-panel"),
-  emptyFallback: document.getElementById("empty-fallback"),
-  supportLink: document.getElementById("support-link"),
-  supportPanel: document.getElementById("support-panel"),
-  supportClose: document.getElementById("support-close"),
-  fallbackPicker: document.getElementById("fallback-picker"),
-  fileInput: document.getElementById("file-input"),
-  cancelLoad: document.getElementById("cancel-load"),
-  settingsToggle: document.getElementById("settings-toggle"),
-  settingsPanel: document.getElementById("settings-panel"),
-  settingsClose: document.getElementById("settings-close"),
-  settingsSave: document.getElementById("settings-save"),
-  ignoreList: document.getElementById("ignore-list"),
-  allowList: document.getElementById("allow-list"),
-  jsonToggle: document.getElementById("json-toggle"),
-  maxSize: document.getElementById("max-size"),
-  memoryLimit: document.getElementById("memory-limit"),
-  wrapToggle: document.getElementById("wrap-toggle"),
-  statsDisplay: document.getElementById("stats-display"),
-  statsPanel: document.getElementById("stats-panel"),
-  statsClose: document.getElementById("stats-close"),
-  statsBody: document.getElementById("stats-body"),
-  statsBtn: document.getElementById("stats-button"),
-  logToggle: document.getElementById("log-toggle"),
-  logPanel: document.getElementById("log-panel"),
-  logClose: document.getElementById("log-close"),
-  logBody: document.getElementById("log-body"),
-  treeBtn: document.getElementById("tree-button"),
-  previewToggle: document.getElementById("preview-toggle"),
-  tsWindow: document.getElementById("ts-window"),
-  tsTitleBar: document.getElementById("ts-titlebar"),
-  tsClose: document.getElementById("ts-close"),
-  tsMinimize: document.getElementById("ts-minimize"),
-  tsParse: document.getElementById("ts-parse"),
-  tsBody: document.getElementById("ts-body"),
-  tsStatus: document.getElementById("ts-status"),
-  tsOutline: document.getElementById("ts-outline"),
-  tsIncludes: document.getElementById("ts-includes"),
-  tsSubtitle: document.getElementById("ts-subtitle"),
-  tsResize: document.getElementById("ts-resize"),
-  tsChip: document.getElementById("ts-chip"),
-  controlStatus: document.getElementById("control-status"),
-  controlActions: document.getElementById("control-actions"),
-  activeIndicator: document.getElementById("active-indicator"),
-  sidebar: document.getElementById("sidebar"),
-  sidebarPin: document.getElementById("sidebar-pin"),
-  sidebarEdge: document.getElementById("sidebar-edge-handle"),
-  sidebarResize: document.getElementById("sidebar-resize"),
-  treeContainer: document.getElementById("tree-container"),
-  treePlaceholder: document.getElementById("tree-placeholder"),
-  main: document.getElementById("main"),
-  fallbackMessage: document.getElementById("fallback-message"),
-  codeSearchPanel: document.getElementById("code-search-panel"),
-  codeSearchStatus: document.getElementById("code-search-status"),
-  codeSearchMode: document.getElementById("code-search-mode"),
-  codeSearchScope: document.getElementById("code-search-scope"),
-  codeSearchQuery: document.getElementById("code-search-query"),
-  codeSearchCase: document.getElementById("code-search-case"),
-  codeSearchLive: document.getElementById("code-search-live"),
-  codeSearchRun: document.getElementById("code-search-run"),
-  codeSearchCancel: document.getElementById("code-search-cancel"),
-  codeSearchError: document.getElementById("code-search-error"),
-  codeSearchErrorMessage: document.getElementById("code-search-error-message"),
-  codeSearchErrorDetail: document.getElementById("code-search-error-detail"),
-  codeSearchResultsMeta: document.getElementById("code-search-results-meta"),
-  codeSearchUnavailable: document.getElementById("code-search-unavailable"),
-  codeSearchCap: document.getElementById("code-search-cap"),
-  codeSearchResultsList: document.getElementById("code-search-results-list"),
-  tocPanel: document.getElementById("toc-panel"),
-  tocCount: document.getElementById("toc-count"),
-  tocSelectAll: document.getElementById("toc-select-all"),
-  tocReset: document.getElementById("toc-reset"),
-  tocCopy: document.getElementById("toc-copy"),
-  tocHide: document.getElementById("toc-hide"),
-  tocShow: document.getElementById("toc-show"),
-  tocList: document.getElementById("toc-list"),
-  tocEmpty: document.getElementById("toc-empty"),
-  fileContainer: document.getElementById("file-container"),
-  statusBanner: document.getElementById("status-banner"),
-  noFiles: document.getElementById("no-files")
-};
+const els = getDomElements(document);
 
 let observer;
 let scrollHandler;
-let highlightObserver;
-const highlightRetryTimers = new WeakMap();
+const codeHighlighter = createCodeHighlighter({
+  retryDelayMs: HIGHLIGHT_RETRY_DELAY_MS,
+  maxRetries: HIGHLIGHT_MAX_RETRIES,
+  pendingClassPrefix: MICROLIGHT_PENDING_CLASS,
+  getNextSequence: () => (state.seq += 1)
+});
 let tocRenderHandle;
 
-function createRootNode() {
-  return { name: "", type: "dir", children: [], expanded: true, path: "" };
-}
-
 function loadSettings() {
-  const saved = localStorage.getItem("code-panorama-settings");
-  if (saved) {
-    try {
-      const parsed = JSON.parse(saved);
-      return { ...defaults, ...parsed, ignores: parsed.ignores || defaults.ignores, allow: parsed.allow || defaults.allow };
-    } catch (err) {
-      console.warn("Failed to parse settings, using defaults", err);
-    }
-  }
-  return { ...defaults };
+  return loadStoredSettings(defaults);
 }
 
 function saveSettings() {
-  localStorage.setItem("code-panorama-settings", JSON.stringify(state.settings));
+  persistSettings(state.settings);
 }
 
 function loadTreeSitterState() {
-  const base = {
-    enabled: true,
-    window: { open: false, minimized: false, x: null, y: null, w: 360, h: 420, chipY: null },
-    ready: false,
-    loading: false,
-    parsing: false,
-    error: null,
-    cache: {},
-    markers: {},
-    pendingFileId: null,
-    parser: null,
-    Parser: null,
-    Language: null,
-    languages: Object.keys(TREE_SITTER_LANGUAGES).reduce((acc, key) => ({ ...acc, [key]: null }), {}),
-    parseHandle: null,
-    parseHandleType: null,
-    wantInit: false
-  };
-  const saved = localStorage.getItem(TREE_SITTER_STORAGE_KEY);
-  if (!saved) return base;
-  try {
-    const parsed = JSON.parse(saved);
-    const win = parsed.window || {};
-    base.window = {
-      open: !!win.open,
-      minimized: !!win.minimized,
-      x: Number.isFinite(win.x) ? win.x : null,
-      y: Number.isFinite(win.y) ? win.y : null,
-      w: Number.isFinite(win.w) ? win.w : 360,
-      h: Number.isFinite(win.h) ? win.h : 420,
-      chipY: Number.isFinite(win.chipY) ? win.chipY : null
-    };
-    base.wantInit = base.window.open || base.window.minimized;
-  } catch (err) {
-    console.warn("Failed to load Tree-sitter state", err);
-  }
-  return base;
+  return loadStoredTreeSitterState({
+    storageKey: TREE_SITTER_STORAGE_KEY,
+    languages: TREE_SITTER_LANGUAGES
+  });
 }
 
 function saveTreeSitterState() {
   const { window: win } = state.treeSitter;
-  localStorage.setItem(TREE_SITTER_STORAGE_KEY, JSON.stringify({ window: win }));
-}
-
-function formatBytes(bytes) {
-  if (!Number.isFinite(bytes)) return "0 B";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-}
-
-function setButtonLabel(button, icon, text) {
-  if (!button) return;
-  button.innerHTML = "";
-  const emoji = document.createElement("span");
-  emoji.className = "btn-emoji";
-  emoji.textContent = icon;
-  const label = document.createElement("span");
-  label.className = "btn-label";
-  label.textContent = text;
-  button.append(emoji, label);
-}
-
-function buildMarkdownSnippet(file) {
-  if (!file) return "";
-  const parts = file.path.split(".");
-  const ext = parts.length > 1 ? parts.pop() || "" : "";
-  const lang = ext && /^[a-zA-Z0-9#+-]+$/.test(ext) ? ext.toLowerCase() : "";
-  return `File \`${file.path}\`:\n\`\`\`${lang}\n${file.text}\n\`\`\`\n`;
-}
-
-function copyTextToClipboard(text) {
-  if (!text) return;
-  navigator.clipboard?.writeText(text);
-}
-
-function copyFileSource(file) {
-  if (!file) return;
-  copyTextToClipboard(buildMarkdownSnippet(file));
-}
-
-function hashPath(str) {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) {
-    h = (h * 31 + str.charCodeAt(i)) | 0;
-  }
-  return Math.abs(h).toString(36);
-}
-
-function makeFileId(path) {
-  const safe = path.replace(/[^a-zA-Z0-9]+/g, "-").replace(/-{2,}/g, "-").replace(/^-+|-+$/g, "") || "file";
-  const hash = hashPath(path);
-  return `file-${safe}-${hash}`;
-}
-
-function countLines(text) {
-  if (!text) return 0;
-  let count = 1;
-  for (let i = 0; i < text.length; i++) if (text[i] === "\n") count++;
-  return count;
-}
-
-function languageFromExt(ext) {
-  const lookup = {
-    js: "JavaScript", ts: "TypeScript", jsx: "JSX", tsx: "TSX", mjs: "JavaScript", cjs: "JavaScript",
-    c: "C", h: "C/C Header", cc: "C++", cpp: "C++", hpp: "C++ Header",
-    cs: "C#", java: "Java", scala: "Scala", kt: "Kotlin", go: "Go", rs: "Rust",
-    py: "Python", rb: "Ruby", php: "PHP", swift: "Swift", m: "Objective-C", mm: "Objective-C++",
-    html: "HTML", css: "CSS", scss: "SCSS", md: "Markdown", txt: "Text", sh: "Shell", ps1: "PowerShell",
-    yaml: "YAML", yml: "YAML", toml: "TOML", ini: "INI", xml: "XML", json: "JSON"
-  };
-  return lookup[ext.toLowerCase()] || ext.toUpperCase() || "Text";
+  persistTreeSitterState(win, { storageKey: TREE_SITTER_STORAGE_KEY });
 }
 
 function isFileHidden(fileId) {
@@ -477,22 +287,6 @@ function showSelectedFiles() {
   renderDirectoryTree();
   renderTableOfContents();
   ensureActiveFileVisible();
-}
-
-function clamp(n, min, max) {
-  return Math.min(max, Math.max(min, n));
-}
-
-function rectOf(el) {
-  const r = el.getBoundingClientRect();
-  return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: r.width, height: r.height };
-}
-
-function makeTextSpan(className, text) {
-  const span = document.createElement("span");
-  span.className = className;
-  span.textContent = text;
-  return span;
 }
 
 class PreviewWindow {
@@ -1347,81 +1141,11 @@ function resetSearchPanel() {
   updateSearchAvailability();
 }
 
-function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function formatRegexErrorDetail(err) {
-  if (!err) return "";
-  const raw = typeof err === "string" ? err : err.message || "";
-  const line = raw.split("\n")[0];
-  if (line.length > 120) return `${line.slice(0, 117)}...`;
-  return line;
-}
-
-function validateSearchQuery(rawQuery, opts) {
-  const trimmed = rawQuery.trim();
-  const minLength = opts.minLength || SEARCH_EXPLICIT_MIN;
-  if (trimmed.length < minLength) {
-    if (opts.showMinLengthError) {
-      setSearchError("Enter at least 2 characters.");
-    } else {
-      clearSearchError();
-    }
-    return { ok: false, trimmed };
-  }
-  if (opts.mode === "regex") {
-    try {
-      new RegExp(trimmed, opts.caseSensitive ? "" : "i");
-    } catch (err) {
-      setSearchError("Invalid regular expression.", formatRegexErrorDetail(err));
-      return { ok: false, trimmed };
-    }
-  }
-  clearSearchError();
-  return { ok: true, trimmed };
-}
-
-function buildSearchMatcher(query, mode, caseSensitive) {
-  if (mode === "regex") {
-    return { type: "regex", regex: new RegExp(query, caseSensitive ? "" : "i") };
-  }
-  const hasWildcard = query.includes("*");
-  if (hasWildcard) {
-    const regexSource = query.split("*").map(escapeRegExp).join(".*");
-    return { type: "regex", regex: new RegExp(regexSource, caseSensitive ? "" : "i") };
-  }
-  return { type: "text", query, caseSensitive };
-}
-
-function matchLine(line, matcher) {
-  if (matcher.type === "text") {
-    const haystack = matcher.caseSensitive ? line : line.toLowerCase();
-    const needle = matcher.caseSensitive ? matcher.query : matcher.query.toLowerCase();
-    const start = haystack.indexOf(needle);
-    if (start === -1) return null;
-    return { start, end: start + needle.length };
-  }
-  const match = matcher.regex.exec(line);
-  if (!match) return null;
-  return { start: match.index, end: match.index + match[0].length };
-}
-
 function getSearchScopeFiles(scope) {
   const files = scope === "visible"
     ? state.files.filter(file => !isFileHidden(file.id))
     : state.files.slice();
   return files.sort((a, b) => a.path.localeCompare(b.path));
-}
-
-function buildSnippetLines(lines, lineIndex) {
-  const start = Math.max(0, lineIndex - 3);
-  const end = Math.min(lines.length - 1, lineIndex + 3);
-  const snippet = [];
-  for (let i = start; i <= end; i += 1) {
-    snippet.push({ number: i + 1, text: lines[i], isMatch: i === lineIndex });
-  }
-  return snippet;
 }
 
 function appendSearchResults() {
@@ -1582,7 +1306,9 @@ function startSearchRun(source) {
     minLength,
     showMinLengthError,
     mode,
-    caseSensitive
+    caseSensitive,
+    onError: setSearchError,
+    onClearError: clearSearchError
   });
   if (!validation.ok) return;
   if (source !== "live" && state.search.liveTimer) {
@@ -1653,6 +1379,7 @@ function resetStateForLoad() {
   state.files = [];
   state.tree = createRootNode();
   destroyPreviewWindow();
+  codeHighlighter.disconnect();
   clearPreviewCache();
   cancelPendingTreeSitterParse();
   state.treeSitter.cache = {};
@@ -2162,75 +1889,7 @@ function attachObserver(section) {
 }
 
 function observeHighlightBlock(code) {
-  if (!highlightObserver) {
-    highlightObserver = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        const target = entry.target;
-        if (target.dataset.hasBeenHighlighted === "true") {
-          highlightObserver.unobserve(target);
-          return;
-        }
-        attemptHighlightBlock(target, 0);
-      });
-    }, { rootMargin: "0px 0px -20% 0px", threshold: 0.1 });
-  }
-  if (!code.dataset.hasBeenHighlighted) code.dataset.hasBeenHighlighted = "false";
-  highlightObserver.observe(code);
-}
-
-function clearHighlightRetry(code) {
-  const timer = highlightRetryTimers.get(code);
-  if (!timer) return;
-  clearTimeout(timer);
-  highlightRetryTimers.delete(code);
-}
-
-function scheduleHighlightRetry(code, attempt) {
-  if (!code || code.dataset.hasBeenHighlighted === "true") return;
-  clearHighlightRetry(code);
-  const delay = HIGHLIGHT_RETRY_DELAY_MS * (attempt + 1);
-  const timer = setTimeout(() => {
-    highlightRetryTimers.delete(code);
-    attemptHighlightBlock(code, attempt + 1);
-  }, delay);
-  highlightRetryTimers.set(code, timer);
-}
-
-function attemptHighlightBlock(code, attempt) {
-  if (!code) return;
-  if (code.dataset.hasBeenHighlighted === "true") {
-    clearHighlightRetry(code);
-    highlightObserver?.unobserve(code);
-    return;
-  }
-  const highlighted = highlightCodeBlock(code);
-  if (highlighted) {
-    clearHighlightRetry(code);
-    highlightObserver?.unobserve(code);
-    return;
-  }
-  if (attempt < HIGHLIGHT_MAX_RETRIES) {
-    scheduleHighlightRetry(code, attempt);
-  }
-}
-
-function highlightCodeBlock(code) {
-  const microlight = window.microlight;
-  if (!microlight || typeof microlight.reset !== "function" || !code) return false;
-  const tempClass = `${MICROLIGHT_PENDING_CLASS}-${(state.seq += 1)}`;
-  code.classList.add("microlight");
-  code.classList.add(tempClass);
-  try {
-    microlight.reset(tempClass);
-    code.dataset.hasBeenHighlighted = "true";
-    return true;
-  } catch (err) {
-    console.warn("Microlight failed to highlight a block", err);
-    return false;
-  } finally {
-    code.classList.remove(tempClass);
-  }
+  codeHighlighter.observe(code);
 }
 
 function setActiveFile(fileId) {
@@ -2892,7 +2551,7 @@ async function runTreeSitterParse(file, lang, force) {
     ts.parser.setLanguage(language);
     const tree = ts.parser.parse(file.text);
     const outline = buildOutlineModel(tree, file, lang);
-    const includes = buildIncludeList(tree, lang);
+    const includes = buildIncludeList(tree, lang, state.files);
     if (!force && state.activeFileId !== file.id) return;
     ts.cache[file.id] = { outline, includes, parsedAt: Date.now() };
     placeTreeSitterMarkers(file, outline);
@@ -2908,167 +2567,6 @@ async function runTreeSitterParse(file, lang, force) {
     ts.parseHandleType = null;
     renderTreeSitterPanel();
   }
-}
-
-function extractNodeName(node) {
-  const byField = ["name", "declarator", "declaration", "type"];
-  for (const field of byField) {
-    const candidate = node.childForFieldName?.(field);
-    if (candidate && candidate.text) {
-      const identifiers = candidate.descendantsOfType(["identifier", "type_identifier", "field_identifier"]);
-      if (identifiers.length) return identifiers[0].text;
-      if (candidate.text.trim()) return candidate.text.trim();
-    }
-  }
-  const fallback = node.descendantsOfType(["identifier", "type_identifier", "field_identifier"]);
-  return fallback[0]?.text || "<anonymous>";
-}
-
-function buildOutlineModel(tree, file, lang) {
-  const outline = [];
-  const configs = {
-    c: {
-      types: [
-        "function_definition",
-        "struct_specifier",
-        "class_specifier",
-        "union_specifier",
-        "enum_specifier",
-        "type_definition",
-        "preproc_def",
-        "preproc_function_def"
-      ],
-      map: type => {
-        if (type === "function_definition") return "function";
-        if (type === "enum_specifier") return "enum";
-        if (type === "type_definition") return "typedef";
-        if (type === "preproc_def" || type === "preproc_function_def") return "macro";
-        if (type === "struct_specifier" || type === "class_specifier" || type === "union_specifier") return "struct";
-        return null;
-      }
-    },
-    cpp: {
-      types: [
-        "function_definition",
-        "struct_specifier",
-        "class_specifier",
-        "union_specifier",
-        "enum_specifier",
-        "type_definition",
-        "preproc_def",
-        "preproc_function_def"
-      ],
-      map: type => {
-        if (type === "function_definition") return "function";
-        if (type === "enum_specifier") return "enum";
-        if (type === "type_definition") return "typedef";
-        if (type === "preproc_def" || type === "preproc_function_def") return "macro";
-        if (type === "struct_specifier" || type === "class_specifier" || type === "union_specifier") return "struct";
-        return null;
-      }
-    },
-    javascript: {
-      types: [
-        "function_declaration",
-        "method_definition",
-        "class_declaration",
-        "generator_function",
-        "lexical_declaration",
-        "export_statement",
-        "export_clause",
-        "arrow_function"
-      ],
-      map: type => {
-        if (type === "function_declaration" || type === "generator_function" || type === "arrow_function") return "function";
-        if (type === "method_definition") return "method";
-        if (type === "class_declaration") return "class";
-        if (type === "lexical_declaration") return "const";
-        if (type === "export_statement" || type === "export_clause") return "export";
-        return null;
-      }
-    },
-    bash: {
-      types: ["function_definition"],
-      map: () => "function"
-    },
-    csharp: {
-      types: [
-        "method_declaration",
-        "class_declaration",
-        "struct_declaration",
-        "interface_declaration",
-        "enum_declaration",
-        "constructor_declaration",
-        "property_declaration"
-      ],
-      map: type => {
-        if (type === "method_declaration" || type === "constructor_declaration") return "method";
-        if (type === "class_declaration") return "class";
-        if (type === "struct_declaration") return "struct";
-        if (type === "interface_declaration") return "interface";
-        if (type === "enum_declaration") return "enum";
-        if (type === "property_declaration") return "property";
-        return null;
-      }
-    },
-    json: {
-      types: ["pair"],
-      map: () => "key"
-    },
-    scala: {
-      types: [
-        "class_definition",
-        "object_definition",
-        "trait_definition",
-        "method_definition",
-        "function_definition",
-        "val_definition",
-        "var_definition"
-      ],
-      map: type => {
-        if (type === "class_definition") return "class";
-        if (type === "object_definition") return "object";
-        if (type === "trait_definition") return "trait";
-        if (type === "method_definition" || type === "function_definition") return "function";
-        if (type === "val_definition") return "val";
-        if (type === "var_definition") return "var";
-        return null;
-      }
-    }
-  };
-  const config = configs[lang] || configs.c;
-  const nodes = tree.rootNode.descendantsOfType(config.types);
-  nodes.forEach((node, idx) => {
-    const kind = config.map(node.type);
-    if (!kind) return;
-    const name = lang === "json" ? (node.child(0)?.text || extractNodeName(node)) : extractNodeName(node);
-    outline.push({
-      kind,
-      name,
-      line: node.startPosition.row + 1,
-      fileId: file.id,
-      anchorId: `${file.id}-ts-${kind}-${idx}`
-    });
-  });
-  return outline;
-}
-
-function buildIncludeList(tree, lang) {
-  if (lang !== "c" && lang !== "cpp") return [];
-  const includes = [];
-  const nodes = tree.rootNode.descendantsOfType("preproc_include");
-  nodes.forEach(node => {
-    const raw = node.text.trim();
-    const match = raw.match(/#\s*include\s*[<"]([^>"]+)[>"]/i);
-    const targetPath = match ? match[1] : null;
-    let targetFileId = null;
-    if (targetPath && raw.includes("\"")) {
-      const target = state.files.find(f => f.path.endsWith(targetPath));
-      if (target) targetFileId = target.id;
-    }
-    includes.push({ raw, targetPath, targetFileId });
-  });
-  return includes;
 }
 
 function placeTreeSitterMarkers(file, outline) {
