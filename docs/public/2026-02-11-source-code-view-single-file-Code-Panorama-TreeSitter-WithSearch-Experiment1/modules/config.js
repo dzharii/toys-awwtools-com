@@ -11,7 +11,8 @@ export const defaults = {
   maxFileSize: 1024 * 1024,
   memoryWarnBytes: 50 * 1024 * 1024,
   wrap: true,
-  showStats: true
+  showStats: true,
+  fileRefs: true
 };
 
 export const TREE_SITTER_ASSET_BASE = "lib/web-tree-sitter-v0.26.3";
@@ -36,6 +37,10 @@ export const PREVIEW_INITIAL_HEIGHT_RATIO = 0.5;
 export const HIGHLIGHT_RETRY_DELAY_MS = 1800;
 export const HIGHLIGHT_MAX_RETRIES = 3;
 export const MICROLIGHT_PENDING_CLASS = "microlight-pending";
+export const REFS_BUILD_SLICE_BUDGET = 8;
+export const REFS_MAX_TOKEN_LENGTH = 260;
+export const REFS_MAX_OCCURRENCES_PER_TARGET = 200;
+export const REFS_MAX_REFERENCING_FILES_SHOWN = 50;
 
 export const TREE_SITTER_LANGUAGES = {
   c: { file: "tree-sitter-c-v0.24.1.wasm" },

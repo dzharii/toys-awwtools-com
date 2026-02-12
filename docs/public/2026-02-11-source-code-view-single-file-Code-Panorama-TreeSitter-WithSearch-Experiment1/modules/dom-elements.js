@@ -23,6 +23,7 @@ export function getDomElements(doc = document) {
     memoryLimit: doc.getElementById("memory-limit"),
     wrapToggle: doc.getElementById("wrap-toggle"),
     statsDisplay: doc.getElementById("stats-display"),
+    fileRefsToggle: doc.getElementById("file-refs-toggle"),
     statsPanel: doc.getElementById("stats-panel"),
     statsClose: doc.getElementById("stats-close"),
     statsBody: doc.getElementById("stats-body"),
