@@ -12,7 +12,8 @@ export const defaults = {
   memoryWarnBytes: 50 * 1024 * 1024,
   wrap: true,
   showStats: true,
-  fileRefs: true
+  fileRefs: true,
+  symbolRefs: true
 };
 
 export const TREE_SITTER_ASSET_BASE = "lib/web-tree-sitter-v0.26.3";
@@ -41,6 +42,15 @@ export const REFS_BUILD_SLICE_BUDGET = 8;
 export const REFS_MAX_TOKEN_LENGTH = 260;
 export const REFS_MAX_OCCURRENCES_PER_TARGET = 200;
 export const REFS_MAX_REFERENCING_FILES_SHOWN = 50;
+export const SYMBOL_REFS_BUILD_SLICE_BUDGET = 8;
+export const SYMBOL_REFS_INCREMENTAL_DEBOUNCE_MS = 1500;
+export const SYMBOL_REFS_INCREMENTAL_BATCH_SIZE = 8;
+export const SYMBOL_REFS_PANEL_REFRESH_DEBOUNCE_MS = 200;
+export const SYMBOL_REFS_MAX_OCCURRENCES_PER_SYMBOL = 500;
+export const SYMBOL_REFS_MAX_REFERENCE_FILES_SHOWN = 50;
+export const SYMBOL_REFS_MAX_LINES_PER_FILE = 8;
+export const SYMBOL_REFS_MIN_IDENTIFIER_LENGTH = 2;
+export const SYMBOL_REFS_MIN_BRIDGE_LENGTH = 3;
 
 export const TREE_SITTER_LANGUAGES = {
   c: { file: "tree-sitter-c-v0.24.1.wasm" },

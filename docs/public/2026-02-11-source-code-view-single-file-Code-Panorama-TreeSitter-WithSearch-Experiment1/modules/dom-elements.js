@@ -24,6 +24,7 @@ export function getDomElements(doc = document) {
     wrapToggle: doc.getElementById("wrap-toggle"),
     statsDisplay: doc.getElementById("stats-display"),
     fileRefsToggle: doc.getElementById("file-refs-toggle"),
+    symbolRefsToggle: doc.getElementById("symbol-refs-toggle"),
     statsPanel: doc.getElementById("stats-panel"),
     statsClose: doc.getElementById("stats-close"),
     statsBody: doc.getElementById("stats-body"),

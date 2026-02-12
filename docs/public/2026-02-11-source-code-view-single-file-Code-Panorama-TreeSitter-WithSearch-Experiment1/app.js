@@ -26,6 +26,15 @@ import {
   REFS_MAX_TOKEN_LENGTH,
   REFS_MAX_OCCURRENCES_PER_TARGET,
   REFS_MAX_REFERENCING_FILES_SHOWN,
+  SYMBOL_REFS_BUILD_SLICE_BUDGET,
+  SYMBOL_REFS_INCREMENTAL_DEBOUNCE_MS,
+  SYMBOL_REFS_INCREMENTAL_BATCH_SIZE,
+  SYMBOL_REFS_PANEL_REFRESH_DEBOUNCE_MS,
+  SYMBOL_REFS_MAX_OCCURRENCES_PER_SYMBOL,
+  SYMBOL_REFS_MAX_REFERENCE_FILES_SHOWN,
+  SYMBOL_REFS_MAX_LINES_PER_FILE,
+  SYMBOL_REFS_MIN_IDENTIFIER_LENGTH,
+  SYMBOL_REFS_MIN_BRIDGE_LENGTH,
   TREE_SITTER_LANGUAGES
 } from "./modules/config.js";
 import { getDomElements } from "./modules/dom-elements.js";
@@ -65,6 +74,14 @@ import {
   resolveReferenceCandidate,
   buildLineStartOffsets
 } from "./modules/file-references.js";
+import {
+  isConfigLikeFile,
+  isSingleIdentifierText,
+  extractIdentifierAtOffset,
+  extractHeuristicSymbolsFromLine,
+  extractTreeSitterSymbolContribution,
+  createEmptySymbolContribution
+} from "./modules/symbol-references.js";
 
 function createInitialRefsState(enabled = true) {
   return {
@@ -83,6 +100,41 @@ function createInitialRefsState(enabled = true) {
     refsObserver: null,
     decoratedFiles: new Set(),
     extSet: createRefExtensionSet(defaults.allow)
+  };
+}
+
+function createInitialSymbolRefsState(enabled = true) {
+  return {
+    enabled: !!enabled,
+    indexVersion: 0,
+    index: { bySymbol: new Map() },
+    contributions: {
+      heuristicByFile: new Map(),
+      treeByFile: new Map(),
+      effectiveByFile: new Map()
+    },
+    build: {
+      running: false,
+      runId: 0,
+      pendingHandle: null,
+      stage: "idle", // idle | baseline | rebuild | incremental
+      progress: { processed: 0, total: 0 },
+      partial: false,
+      ready: false
+    },
+    incremental: {
+      pendingFileIds: new Set(),
+      debounceHandle: null,
+      batchHandle: null,
+      running: false
+    },
+    ui: {
+      activePanel: null,
+      activeSymbol: "",
+      activeSourceFileId: "",
+      renderedVersion: -1,
+      refreshHandle: null
+    }
   };
 }
 
@@ -133,6 +185,7 @@ const state = {
     enabled: true
   },
   refs: createInitialRefsState(defaults.fileRefs),
+  symbolRefs: createInitialSymbolRefsState(defaults.symbolRefs),
   support: {
     directoryPicker: typeof window.showDirectoryPicker === "function",
     webkitDirectory: "webkitdirectory" in document.createElement("input")
@@ -155,6 +208,7 @@ const els = getDomElements(document);
 
 state.refs.enabled = state.settings.fileRefs !== false;
 state.refs.extSet = createRefExtensionSet(state.settings.allow);
+state.symbolRefs.enabled = state.settings.symbolRefs !== false;
 
 let observer;
 let scrollHandler;
@@ -1410,6 +1464,779 @@ function maybeYield(lastYieldRef) {
   return Promise.resolve();
 }
 
+function createNormalizedSymbolContribution(file, contribution, source) {
+  const fallback = createEmptySymbolContribution(file, source);
+  const raw = contribution || fallback;
+  return {
+    fileId: file?.id || raw.fileId || "",
+    sourcePath: normalizeProjectPath(file?.path || raw.sourcePath || ""),
+    source: source || raw.source || "heuristic",
+    definitions: Array.isArray(raw.definitions) ? raw.definitions : [],
+    references: Array.isArray(raw.references) ? raw.references : []
+  };
+}
+
+function cancelSymbolReferenceBuild() {
+  const build = state.symbolRefs.build;
+  build.runId += 1;
+  build.running = false;
+  build.stage = "idle";
+  if (build.pendingHandle) {
+    clearTimeout(build.pendingHandle);
+    build.pendingHandle = null;
+  }
+}
+
+function cancelSymbolReferenceIncremental() {
+  const incremental = state.symbolRefs.incremental;
+  if (incremental.debounceHandle) {
+    clearTimeout(incremental.debounceHandle);
+    incremental.debounceHandle = null;
+  }
+  if (incremental.batchHandle) {
+    clearTimeout(incremental.batchHandle);
+    incremental.batchHandle = null;
+  }
+  incremental.pendingFileIds.clear();
+  incremental.running = false;
+}
+
+function destroySymbolReferencePanel() {
+  const ui = state.symbolRefs.ui;
+  if (ui.refreshHandle) {
+    clearTimeout(ui.refreshHandle);
+    ui.refreshHandle = null;
+  }
+  const win = ui.activePanel;
+  if (!win) return;
+  ui.activePanel = null;
+  ui.activeSymbol = "";
+  ui.activeSourceFileId = "";
+  ui.renderedVersion = -1;
+  win.destroy();
+}
+
+function resetSymbolReferenceStateForLoad() {
+  const enabled = state.settings.symbolRefs !== false;
+  cancelSymbolReferenceBuild();
+  cancelSymbolReferenceIncremental();
+  destroySymbolReferencePanel();
+  state.symbolRefs.enabled = enabled;
+  state.symbolRefs.indexVersion = 0;
+  state.symbolRefs.index = { bySymbol: new Map() };
+  state.symbolRefs.contributions = {
+    heuristicByFile: new Map(),
+    treeByFile: new Map(),
+    effectiveByFile: new Map()
+  };
+  state.symbolRefs.build.progress = { processed: 0, total: 0 };
+  state.symbolRefs.build.partial = false;
+  state.symbolRefs.build.ready = false;
+  if (enabled) attachSymbolReferenceDelegates();
+  else detachSymbolReferenceDelegates();
+}
+
+function attachSymbolReferenceDelegates() {
+  if (!els.fileContainer || els.fileContainer.dataset.symbolRefsDelegatesAttached === "true") return;
+  els.fileContainer.addEventListener("click", handleSymbolReferenceClick);
+  els.fileContainer.dataset.symbolRefsDelegatesAttached = "true";
+}
+
+function detachSymbolReferenceDelegates() {
+  if (!els.fileContainer || els.fileContainer.dataset.symbolRefsDelegatesAttached !== "true") return;
+  els.fileContainer.removeEventListener("click", handleSymbolReferenceClick);
+  delete els.fileContainer.dataset.symbolRefsDelegatesAttached;
+}
+
+function getSymbolContributionForFile(fileId) {
+  const treeContribution = state.symbolRefs.contributions.treeByFile.get(fileId);
+  if (treeContribution) return treeContribution;
+  return state.symbolRefs.contributions.heuristicByFile.get(fileId) || null;
+}
+
+function refreshEffectiveSymbolContribution(fileId) {
+  const effective = getSymbolContributionForFile(fileId);
+  if (effective) state.symbolRefs.contributions.effectiveByFile.set(fileId, effective);
+  else state.symbolRefs.contributions.effectiveByFile.delete(fileId);
+}
+
+function createSymbolIndexEntry(symbol) {
+  return {
+    symbol,
+    totalDefinitions: 0,
+    totalReferences: 0,
+    totalOccurrences: 0,
+    storedDetails: 0,
+    truncated: false,
+    definitionFiles: new Map(),
+    referenceFiles: new Map()
+  };
+}
+
+function shouldSkipWeakBridgeSymbol(symbol, bridgeClass, weakFileMap, treeDefinitionSymbols) {
+  if (bridgeClass !== "weak") return false;
+  if (treeDefinitionSymbols.has(symbol)) return false;
+  const files = weakFileMap.get(symbol);
+  return !files || files.size < 2;
+}
+
+function collectWeakBridgeStats(contribution, weakFileMap, treeDefinitionSymbols) {
+  const all = [...(contribution.definitions || []), ...(contribution.references || [])];
+  for (let i = 0; i < all.length; i += 1) {
+    const occ = all[i];
+    if (!occ || !occ.symbol) continue;
+    if (occ.role === "definition" && occ.source === "tree") {
+      treeDefinitionSymbols.add(occ.symbol);
+    }
+    if (occ.bridgeClass === "weak") {
+      const existing = weakFileMap.get(occ.symbol) || new Set();
+      existing.add(contribution.fileId);
+      weakFileMap.set(occ.symbol, existing);
+    }
+  }
+}
+
+function addSymbolOccurrenceToIndex(bySymbol, contribution, occurrence) {
+  if (!occurrence?.symbol) return;
+  let entry = bySymbol.get(occurrence.symbol);
+  if (!entry) {
+    entry = createSymbolIndexEntry(occurrence.symbol);
+    bySymbol.set(occurrence.symbol, entry);
+  }
+
+  const isDefinition = occurrence.role === "definition";
+  if (isDefinition) entry.totalDefinitions += 1;
+  else entry.totalReferences += 1;
+  entry.totalOccurrences += 1;
+
+  if (isDefinition) {
+    let bucket = entry.definitionFiles.get(contribution.fileId);
+    if (!bucket) {
+      bucket = { fileId: contribution.fileId, sourcePath: contribution.sourcePath, items: [] };
+      entry.definitionFiles.set(contribution.fileId, bucket);
+    }
+    if (entry.storedDetails < SYMBOL_REFS_MAX_OCCURRENCES_PER_SYMBOL) {
+      bucket.items.push({
+        lineNumber: occurrence.lineNumber,
+        startCol: occurrence.startCol,
+        endCol: occurrence.endCol,
+        kind: occurrence.kind,
+        source: occurrence.source || contribution.source
+      });
+      entry.storedDetails += 1;
+    } else {
+      entry.truncated = true;
+    }
+    return;
+  }
+
+  let refBucket = entry.referenceFiles.get(contribution.fileId);
+  if (!refBucket) {
+    refBucket = {
+      fileId: contribution.fileId,
+      sourcePath: contribution.sourcePath,
+      count: 0,
+      lineNumbers: [],
+      kindCounts: new Map()
+    };
+    entry.referenceFiles.set(contribution.fileId, refBucket);
+  }
+  refBucket.count += 1;
+  refBucket.kindCounts.set(occurrence.kind || "reference", (refBucket.kindCounts.get(occurrence.kind || "reference") || 0) + 1);
+  if (
+    !refBucket.lineNumbers.includes(occurrence.lineNumber) &&
+    refBucket.lineNumbers.length < SYMBOL_REFS_MAX_LINES_PER_FILE
+  ) {
+    if (entry.storedDetails < SYMBOL_REFS_MAX_OCCURRENCES_PER_SYMBOL) {
+      refBucket.lineNumbers.push(occurrence.lineNumber);
+      entry.storedDetails += 1;
+    } else {
+      entry.truncated = true;
+    }
+  }
+}
+
+function runSymbolIndexRebuildSlice(run) {
+  if (!state.symbolRefs.enabled || state.phase !== "loaded") return;
+  if (run.id !== state.symbolRefs.build.runId) return;
+
+  const start = performance.now();
+  try {
+    while (performance.now() - start <= SYMBOL_REFS_BUILD_SLICE_BUDGET) {
+      if (run.stage === "scan") {
+        if (run.fileIndex >= run.files.length) {
+          run.stage = "build";
+          run.fileIndex = 0;
+          state.symbolRefs.build.progress.processed = run.files.length;
+          continue;
+        }
+        collectWeakBridgeStats(run.files[run.fileIndex], run.weakFileMap, run.treeDefinitionSymbols);
+        run.fileIndex += 1;
+        state.symbolRefs.build.progress.processed = run.fileIndex;
+        continue;
+      }
+
+      if (run.stage === "build") {
+        if (run.fileIndex >= run.files.length) {
+          state.symbolRefs.index = { bySymbol: run.bySymbol };
+          state.symbolRefs.build.running = false;
+          state.symbolRefs.build.pendingHandle = null;
+          state.symbolRefs.build.stage = "idle";
+          state.symbolRefs.build.progress = { processed: run.files.length * 2, total: run.files.length * 2 };
+          if (run.reason === "baseline") state.symbolRefs.build.ready = true;
+          state.symbolRefs.indexVersion += 1;
+          scheduleSymbolReferencePanelRefresh();
+          updateControlBar();
+          if (typeof run.onComplete === "function") run.onComplete();
+          return;
+        }
+
+        const contribution = run.files[run.fileIndex];
+        const defs = contribution.definitions || [];
+        const refs = contribution.references || [];
+        for (let i = 0; i < defs.length; i += 1) {
+          const occ = defs[i];
+          if (shouldSkipWeakBridgeSymbol(occ.symbol, occ.bridgeClass, run.weakFileMap, run.treeDefinitionSymbols)) continue;
+          addSymbolOccurrenceToIndex(run.bySymbol, contribution, occ);
+        }
+        for (let i = 0; i < refs.length; i += 1) {
+          const occ = refs[i];
+          if (shouldSkipWeakBridgeSymbol(occ.symbol, occ.bridgeClass, run.weakFileMap, run.treeDefinitionSymbols)) continue;
+          addSymbolOccurrenceToIndex(run.bySymbol, contribution, occ);
+        }
+        run.fileIndex += 1;
+        state.symbolRefs.build.progress.processed = run.files.length + run.fileIndex;
+        continue;
+      }
+
+      break;
+    }
+  } catch (err) {
+    addLog("symbol-refs", `rebuild error: ${err?.message || err}`);
+    state.symbolRefs.build.partial = true;
+    state.symbolRefs.build.running = false;
+    state.symbolRefs.build.pendingHandle = null;
+    state.symbolRefs.build.stage = "idle";
+    updateControlBar();
+    if (typeof run.onComplete === "function") run.onComplete();
+    return;
+  }
+
+  state.symbolRefs.build.pendingHandle = setTimeout(() => runSymbolIndexRebuildSlice(run), 0);
+  updateControlBar();
+}
+
+function startSymbolIndexRebuild(reason = "baseline", onComplete = null) {
+  cancelSymbolReferenceBuild();
+  if (!state.symbolRefs.enabled || state.phase !== "loaded") return;
+  const files = [...state.symbolRefs.contributions.effectiveByFile.values()].sort((a, b) => a.sourcePath.localeCompare(b.sourcePath));
+  state.symbolRefs.build.runId += 1;
+  state.symbolRefs.build.running = true;
+  state.symbolRefs.build.stage = "rebuild";
+  state.symbolRefs.build.progress = { processed: 0, total: files.length * 2 };
+  const run = {
+    id: state.symbolRefs.build.runId,
+    reason,
+    stage: "scan",
+    files,
+    fileIndex: 0,
+    weakFileMap: new Map(),
+    treeDefinitionSymbols: new Set(),
+    bySymbol: new Map(),
+    onComplete
+  };
+  state.symbolRefs.build.pendingHandle = setTimeout(() => runSymbolIndexRebuildSlice(run), 0);
+  updateControlBar();
+}
+
+function runSymbolBaselineSlice(run) {
+  if (!state.symbolRefs.enabled || state.phase !== "loaded") return;
+  if (run.id !== state.symbolRefs.build.runId) return;
+
+  const start = performance.now();
+  try {
+    while (run.fileIndex < run.files.length) {
+      if (!run.file) {
+        run.file = run.files[run.fileIndex];
+        run.lines = run.file.text.split("\n");
+        run.lineIndex = 0;
+        run.isConfigFile = isConfigLikeFile(run.file.path);
+        run.contribution = createNormalizedSymbolContribution(run.file, null, "heuristic");
+      }
+
+      while (run.lineIndex < run.lines.length) {
+        if (performance.now() - start > SYMBOL_REFS_BUILD_SLICE_BUDGET) {
+          state.symbolRefs.build.progress.processed = run.fileIndex;
+          state.symbolRefs.build.pendingHandle = setTimeout(() => runSymbolBaselineSlice(run), 0);
+          updateControlBar();
+          return;
+        }
+        const lineNumber = run.lineIndex + 1;
+        const matches = extractHeuristicSymbolsFromLine(run.lines[run.lineIndex], {
+          lineNumber,
+          isConfigFile: run.isConfigFile,
+          minLength: SYMBOL_REFS_MIN_IDENTIFIER_LENGTH,
+          minBridgeLength: SYMBOL_REFS_MIN_BRIDGE_LENGTH
+        });
+        for (let i = 0; i < matches.length; i += 1) {
+          const item = matches[i];
+          if (item.role === "definition") run.contribution.definitions.push(item);
+          else run.contribution.references.push(item);
+        }
+        run.lineIndex += 1;
+      }
+
+      state.symbolRefs.contributions.heuristicByFile.set(run.file.id, run.contribution);
+      const cached = state.treeSitter.cache[run.file.id]?.symbolRefs;
+      if (cached) {
+        const normalized = createNormalizedSymbolContribution(run.file, cached, "tree");
+        state.symbolRefs.contributions.treeByFile.set(run.file.id, normalized);
+      }
+      refreshEffectiveSymbolContribution(run.file.id);
+
+      run.fileIndex += 1;
+      run.file = null;
+      run.lines = null;
+      run.contribution = null;
+      run.lineIndex = 0;
+      run.isConfigFile = false;
+      state.symbolRefs.build.progress.processed = run.fileIndex;
+    }
+  } catch (err) {
+    addLog("symbol-refs", `baseline error: ${err?.message || err}`);
+    state.symbolRefs.build.partial = true;
+  }
+
+  if (run.fileIndex >= run.files.length && run.id === state.symbolRefs.build.runId) {
+    state.symbolRefs.build.pendingHandle = null;
+    startSymbolIndexRebuild("baseline");
+  }
+}
+
+function scheduleSymbolReferenceBaselineBuild() {
+  cancelSymbolReferenceBuild();
+  cancelSymbolReferenceIncremental();
+  state.symbolRefs.index = { bySymbol: new Map() };
+  state.symbolRefs.indexVersion = 0;
+  state.symbolRefs.build.partial = false;
+  state.symbolRefs.build.ready = false;
+  state.symbolRefs.contributions.heuristicByFile.clear();
+  state.symbolRefs.contributions.treeByFile.clear();
+  state.symbolRefs.contributions.effectiveByFile.clear();
+  if (!state.symbolRefs.enabled || state.phase !== "loaded") {
+    updateControlBar();
+    return;
+  }
+
+  const files = state.files.slice().sort((a, b) => a.path.localeCompare(b.path));
+  state.symbolRefs.build.runId += 1;
+  state.symbolRefs.build.running = true;
+  state.symbolRefs.build.stage = "baseline";
+  state.symbolRefs.build.progress = { processed: 0, total: files.length };
+  const run = {
+    id: state.symbolRefs.build.runId,
+    files,
+    fileIndex: 0,
+    file: null,
+    lines: null,
+    lineIndex: 0,
+    isConfigFile: false,
+    contribution: null
+  };
+  state.symbolRefs.build.pendingHandle = setTimeout(() => runSymbolBaselineSlice(run), 0);
+  updateControlBar();
+}
+
+function scheduleSymbolReferenceIncrementalUpdate(fileId) {
+  if (!state.symbolRefs.enabled || !fileId || state.phase !== "loaded") return;
+  const incremental = state.symbolRefs.incremental;
+  incremental.pendingFileIds.add(fileId);
+  if (incremental.debounceHandle) clearTimeout(incremental.debounceHandle);
+  incremental.debounceHandle = setTimeout(() => {
+    incremental.debounceHandle = null;
+    incremental.batchHandle = setTimeout(runSymbolReferenceIncrementalBatch, 0);
+  }, SYMBOL_REFS_INCREMENTAL_DEBOUNCE_MS);
+}
+
+function runSymbolReferenceIncrementalBatch() {
+  const incremental = state.symbolRefs.incremental;
+  if (!state.symbolRefs.enabled || state.phase !== "loaded") return;
+  if (state.symbolRefs.build.running) {
+    incremental.batchHandle = setTimeout(runSymbolReferenceIncrementalBatch, 300);
+    return;
+  }
+
+  const pending = [...incremental.pendingFileIds].slice(0, SYMBOL_REFS_INCREMENTAL_BATCH_SIZE);
+  pending.forEach(id => incremental.pendingFileIds.delete(id));
+  if (!pending.length) {
+    incremental.running = false;
+    updateControlBar();
+    return;
+  }
+
+  incremental.running = true;
+  state.symbolRefs.build.running = true;
+  state.symbolRefs.build.stage = "incremental";
+  state.symbolRefs.build.progress = { processed: 0, total: pending.length };
+  updateControlBar();
+
+  try {
+    for (let i = 0; i < pending.length; i += 1) {
+      const fileId = pending[i];
+      const file = state.files.find(item => item.id === fileId);
+      if (!file) continue;
+      const cached = state.treeSitter.cache[fileId]?.symbolRefs;
+      if (cached) {
+        const normalized = createNormalizedSymbolContribution(file, cached, "tree");
+        state.symbolRefs.contributions.treeByFile.set(fileId, normalized);
+      } else {
+        state.symbolRefs.contributions.treeByFile.delete(fileId);
+      }
+      refreshEffectiveSymbolContribution(fileId);
+      state.symbolRefs.build.progress.processed = i + 1;
+    }
+  } catch (err) {
+    addLog("symbol-refs", `incremental error: ${err?.message || err}`);
+    state.symbolRefs.build.partial = true;
+  }
+
+  startSymbolIndexRebuild("incremental", () => {
+    incremental.running = false;
+    if (incremental.pendingFileIds.size > 0) {
+      incremental.batchHandle = setTimeout(runSymbolReferenceIncrementalBatch, 0);
+    } else {
+      incremental.batchHandle = null;
+      updateControlBar();
+    }
+  });
+}
+
+function getSymbolReferenceStatusText() {
+  if (!state.symbolRefs.enabled || state.phase !== "loaded") return "";
+  if (!state.symbolRefs.build.running) return "";
+  const progress = state.symbolRefs.build.progress;
+  const processed = Number.isFinite(progress.processed) ? progress.processed : 0;
+  const total = Number.isFinite(progress.total) ? progress.total : 0;
+  return `Indexing references • ${processed}/${total}`;
+}
+
+function ensureSymbolReferencePanelWindow() {
+  const existing = state.symbolRefs.ui.activePanel;
+  if (existing && existing.root?.isConnected) return existing;
+  const win = new PreviewWindow({
+    width: 460,
+    height: 360,
+    minWidth: 300,
+    minHeight: 220,
+    destroyAfterMs: PREVIEW_INACTIVE_MS
+  });
+  win.onDestroy = () => {
+    const ui = state.symbolRefs.ui;
+    if (ui.refreshHandle) {
+      clearTimeout(ui.refreshHandle);
+      ui.refreshHandle = null;
+    }
+    ui.activePanel = null;
+    ui.activeSymbol = "";
+    ui.activeSourceFileId = "";
+    ui.renderedVersion = -1;
+  };
+  state.symbolRefs.ui.activePanel = win;
+  return win;
+}
+
+function createSymbolReferenceActionButton(label, className, onClick) {
+  const btn = document.createElement("button");
+  btn.className = className;
+  btn.type = "button";
+  btn.textContent = label;
+  btn.addEventListener("click", onClick);
+  return btn;
+}
+
+function openSearchForSymbol(symbol) {
+  if (!symbol || !els.codeSearchQuery || !els.codeSearchPanel) return;
+  els.codeSearchPanel.open = true;
+  els.codeSearchQuery.value = symbol;
+  if (els.codeSearchScope) els.codeSearchScope.value = "all";
+  if (els.codeSearchMode) els.codeSearchMode.value = "text";
+  if (els.codeSearchLive) els.codeSearchLive.checked = false;
+  startSearchRun("explicit");
+}
+
+function buildSymbolReferencePanelContent(symbol, sourceFileId) {
+  const container = document.createElement("div");
+  container.className = "symbol-ref-panel";
+
+  const title = document.createElement("div");
+  title.className = "symbol-ref-title";
+  const titleCode = document.createElement("code");
+  titleCode.textContent = symbol;
+  title.appendChild(titleCode);
+  container.appendChild(title);
+
+  const entry = state.symbolRefs.index.bySymbol.get(symbol);
+  const totalRefs = entry?.totalReferences || 0;
+  const totalDefs = entry?.totalDefinitions || 0;
+  const refFiles = entry?.referenceFiles?.size || 0;
+  const defsText = totalDefs === 1 ? "1 definition" : `${totalDefs} definitions`;
+  const refsText = totalRefs === 1 ? "1 reference" : `${totalRefs} references`;
+  const summary = document.createElement("div");
+  summary.className = "symbol-ref-summary";
+  const partial = !state.symbolRefs.build.ready || state.symbolRefs.build.partial || state.symbolRefs.build.running;
+  summary.textContent = `${defsText} • ${refsText} in ${refFiles} file${refFiles === 1 ? "" : "s"} • ${partial ? "Partial index" : "Index ready"}`;
+  container.appendChild(summary);
+
+  const actions = document.createElement("div");
+  actions.className = "symbol-ref-actions";
+  actions.appendChild(createSymbolReferenceActionButton("Copy symbol", "secondary tiny", () => copyTextToClipboard(symbol)));
+  actions.appendChild(createSymbolReferenceActionButton("Open search", "ghost tiny", () => openSearchForSymbol(symbol)));
+  container.appendChild(actions);
+
+  const defsTitle = document.createElement("div");
+  defsTitle.className = "symbol-ref-meta";
+  defsTitle.textContent = "Definitions";
+  container.appendChild(defsTitle);
+
+  const defsList = document.createElement("div");
+  defsList.className = "symbol-ref-list";
+  const definitionRows = [];
+  if (entry?.definitionFiles) {
+    entry.definitionFiles.forEach(bucket => {
+      (bucket.items || []).forEach(item => {
+        definitionRows.push({
+          fileId: bucket.fileId,
+          sourcePath: bucket.sourcePath,
+          lineNumber: item.lineNumber,
+          kind: item.kind
+        });
+      });
+    });
+  }
+  definitionRows.sort((a, b) => a.sourcePath.localeCompare(b.sourcePath) || a.lineNumber - b.lineNumber);
+  if (!definitionRows.length) {
+    const empty = document.createElement("div");
+    empty.className = "symbol-ref-empty";
+    empty.textContent = "No definition found in indexed files.";
+    defsList.appendChild(empty);
+  } else {
+    definitionRows.forEach(row => {
+      const defRow = document.createElement("button");
+      defRow.className = "symbol-ref-row";
+      defRow.type = "button";
+      const path = document.createElement("div");
+      path.className = "symbol-ref-path";
+      path.textContent = row.sourcePath;
+      const meta = document.createElement("div");
+      meta.className = "symbol-ref-meta";
+      meta.textContent = `${row.kind} • line ${row.lineNumber}`;
+      defRow.appendChild(path);
+      defRow.appendChild(meta);
+      defRow.addEventListener("click", () => navigateToFileLine(row.fileId, row.lineNumber));
+      defsList.appendChild(defRow);
+    });
+  }
+  container.appendChild(defsList);
+
+  const refsTitle = document.createElement("div");
+  refsTitle.className = "symbol-ref-meta";
+  refsTitle.textContent = "References";
+  container.appendChild(refsTitle);
+
+  const refsList = document.createElement("div");
+  refsList.className = "symbol-ref-list";
+  const referenceRows = entry?.referenceFiles
+    ? [...entry.referenceFiles.values()]
+      .map(bucket => ({
+        fileId: bucket.fileId,
+        sourcePath: bucket.sourcePath,
+        count: bucket.count || 0,
+        lineNumbers: (bucket.lineNumbers || []).slice().sort((a, b) => a - b)
+      }))
+      .filter(row => !!row.fileId)
+      .sort((a, b) => b.count - a.count || a.sourcePath.localeCompare(b.sourcePath))
+    : [];
+
+  if (!referenceRows.length) {
+    const empty = document.createElement("div");
+    empty.className = "symbol-ref-empty";
+    empty.textContent = "No references found in indexed files.";
+    refsList.appendChild(empty);
+  } else {
+    const visibleRows = referenceRows.slice(0, SYMBOL_REFS_MAX_REFERENCE_FILES_SHOWN);
+    visibleRows.forEach(row => {
+      const refRow = document.createElement("div");
+      refRow.className = "symbol-ref-row";
+      const path = document.createElement("button");
+      path.className = "symbol-ref-path-button";
+      path.type = "button";
+      path.textContent = row.sourcePath;
+      path.addEventListener("click", () => {
+        const line = row.lineNumbers[0] || 1;
+        navigateToFileLine(row.fileId, line);
+      });
+      refRow.appendChild(path);
+
+      const meta = document.createElement("div");
+      meta.className = "symbol-ref-meta";
+      meta.textContent = `${row.count} hit${row.count === 1 ? "" : "s"}`;
+      refRow.appendChild(meta);
+
+      const lines = document.createElement("div");
+      lines.className = "symbol-ref-lines";
+      row.lineNumbers.forEach(line => {
+        const lineBtn = document.createElement("button");
+        lineBtn.className = "ghost tiny";
+        lineBtn.type = "button";
+        lineBtn.textContent = `L${line}`;
+        lineBtn.addEventListener("click", () => navigateToFileLine(row.fileId, line));
+        lines.appendChild(lineBtn);
+      });
+      const hiddenCount = row.count - row.lineNumbers.length;
+      if (hiddenCount > 0) {
+        const more = document.createElement("span");
+        more.className = "symbol-ref-meta";
+        more.textContent = `+${hiddenCount} more`;
+        lines.appendChild(more);
+      }
+      refRow.appendChild(lines);
+      refsList.appendChild(refRow);
+    });
+
+    if (referenceRows.length > SYMBOL_REFS_MAX_REFERENCE_FILES_SHOWN) {
+      const more = document.createElement("div");
+      more.className = "symbol-ref-meta";
+      more.textContent = `Showing first ${SYMBOL_REFS_MAX_REFERENCE_FILES_SHOWN} files of ${referenceRows.length}.`;
+      refsList.appendChild(more);
+    }
+  }
+
+  if (entry?.truncated) {
+    const trunc = document.createElement("div");
+    trunc.className = "symbol-ref-meta";
+    trunc.textContent = `Showing first ${SYMBOL_REFS_MAX_OCCURRENCES_PER_SYMBOL} detailed locations, total ${entry.totalOccurrences}.`;
+    refsList.appendChild(trunc);
+  }
+  container.appendChild(refsList);
+
+  if (!entry && sourceFileId) {
+    const noData = document.createElement("div");
+    noData.className = "symbol-ref-meta";
+    noData.textContent = "No indexed data for this symbol yet.";
+    container.appendChild(noData);
+  }
+
+  return container;
+}
+
+function openSymbolReferencePanel(anchorEl, symbol, sourceFileId) {
+  if (!state.symbolRefs.enabled || !symbol || !anchorEl) return;
+  const win = ensureSymbolReferencePanelWindow();
+  win.setTitle("Symbol references");
+  win.loadContent(buildSymbolReferencePanelContent(symbol, sourceFileId));
+  win.positionWindowNearElement(anchorEl, { resizeToFit: false, preferRight: true });
+  win.bumpActivity();
+  state.symbolRefs.ui.activeSymbol = symbol;
+  state.symbolRefs.ui.activeSourceFileId = sourceFileId || "";
+  state.symbolRefs.ui.renderedVersion = state.symbolRefs.indexVersion;
+}
+
+function scheduleSymbolReferencePanelRefresh() {
+  const ui = state.symbolRefs.ui;
+  if (!ui.activePanel || !ui.activeSymbol) return;
+  if (ui.refreshHandle) clearTimeout(ui.refreshHandle);
+  ui.refreshHandle = setTimeout(() => {
+    ui.refreshHandle = null;
+    if (!ui.activePanel || !ui.activePanel.root?.isConnected || !ui.activeSymbol) return;
+    ui.activePanel.loadContent(buildSymbolReferencePanelContent(ui.activeSymbol, ui.activeSourceFileId));
+    ui.activePanel.bumpActivity();
+    ui.renderedVersion = state.symbolRefs.indexVersion;
+  }, SYMBOL_REFS_PANEL_REFRESH_DEBOUNCE_MS);
+}
+
+function getCaretOffsetWithinCode(code, event) {
+  if (!code || !event) return null;
+  const x = event.clientX;
+  const y = event.clientY;
+  let node = null;
+  let offset = 0;
+
+  if (typeof document.caretPositionFromPoint === "function") {
+    const caret = document.caretPositionFromPoint(x, y);
+    node = caret?.offsetNode || null;
+    offset = caret?.offset || 0;
+  } else if (typeof document.caretRangeFromPoint === "function") {
+    const range = document.caretRangeFromPoint(x, y);
+    node = range?.startContainer || null;
+    offset = range?.startOffset || 0;
+  }
+
+  if (!node || !code.contains(node)) return null;
+  try {
+    const range = document.createRange();
+    range.setStart(code, 0);
+    range.setEnd(node, offset);
+    return range.toString().length;
+  } catch (err) {
+    return null;
+  }
+}
+
+function extractSymbolFromClick(event, code) {
+  const selection = window.getSelection ? window.getSelection() : null;
+  if (selection && !selection.isCollapsed) {
+    const selected = isSingleIdentifierText(selection.toString(), {
+      minLength: SYMBOL_REFS_MIN_IDENTIFIER_LENGTH
+    });
+    if (!selected) return null;
+    return selected;
+  }
+
+  const offset = getCaretOffsetWithinCode(code, event);
+  if (!Number.isFinite(offset)) return null;
+  const token = extractIdentifierAtOffset(code.textContent || "", offset, {
+    minLength: SYMBOL_REFS_MIN_IDENTIFIER_LENGTH
+  });
+  return token?.symbol || null;
+}
+
+function handleSymbolReferenceClick(event) {
+  if (!state.symbolRefs.enabled || state.phase !== "loaded") return;
+  if (event.defaultPrevented || event.button !== 0) return;
+  if (event.target?.closest?.(".pw-root")) return;
+  if (event.target?.closest?.(".file-ref")) return;
+
+  const code = event.target?.closest?.("pre code");
+  if (!code || !els.fileContainer.contains(code)) return;
+  const section = code.closest(".file-section");
+  const sourceFileId = section?.dataset?.fileId || "";
+  if (!sourceFileId) return;
+
+  const symbol = extractSymbolFromClick(event, code);
+  if (!symbol) return;
+  openSymbolReferencePanel(event.target instanceof Element ? event.target : code, symbol, sourceFileId);
+}
+
+function syncSymbolReferenceFeatureEnabled() {
+  state.symbolRefs.enabled = state.settings.symbolRefs !== false;
+  if (!state.symbolRefs.enabled) {
+    cancelSymbolReferenceBuild();
+    cancelSymbolReferenceIncremental();
+    destroySymbolReferencePanel();
+    detachSymbolReferenceDelegates();
+    state.symbolRefs.contributions.heuristicByFile.clear();
+    state.symbolRefs.contributions.treeByFile.clear();
+    state.symbolRefs.contributions.effectiveByFile.clear();
+    state.symbolRefs.index = { bySymbol: new Map() };
+    state.symbolRefs.build.ready = false;
+    updateControlBar();
+    return;
+  }
+
+  attachSymbolReferenceDelegates();
+  if (state.phase === "loaded") scheduleSymbolReferenceBaselineBuild();
+}
+
 function attachReferenceDelegates() {
   if (!els.fileContainer || els.fileContainer.dataset.refsDelegatesAttached === "true") return;
   els.fileContainer.addEventListener("click", handleReferenceTokenClick);
@@ -2077,6 +2904,7 @@ function resetStateForLoad() {
   codeHighlighter.disconnect();
   clearPreviewCache();
   resetReferenceStateForLoad();
+  resetSymbolReferenceStateForLoad();
   cancelPendingTreeSitterParse();
   state.treeSitter.cache = {};
   state.treeSitter.markers = {};
@@ -2135,9 +2963,10 @@ function updateControlBar() {
     els.controlActions.classList.remove("hidden");
     els.activeIndicator.textContent = "Active: loading…";
   } else {
-    const text = `Summary • files ${a.loadedFiles} • lines ${a.totalLines} • bytes ${formatBytes(a.totalBytes)} • skipped ${a.skippedFiles} • errors ${state.progress.errors}`;
+    const indexingText = getSymbolReferenceStatusText();
+    const text = indexingText || `Summary • files ${a.loadedFiles} • lines ${a.totalLines} • bytes ${formatBytes(a.totalBytes)} • skipped ${a.skippedFiles} • errors ${state.progress.errors}`;
     els.controlStatus.textContent = text;
-    els.controlStatus.title = `${a.totalBytes} bytes loaded`;
+    els.controlStatus.title = indexingText ? "Building project-wide symbol index" : `${a.totalBytes} bytes loaded`;
     els.controlActions.classList.remove("hidden");
     const activeFile = state.files.find(f => f.id === state.activeFileId);
     els.activeIndicator.innerHTML = `<span>Active:</span> <span class="value" title="${activeFile ? activeFile.path : "none"}">${activeFile ? activeFile.path : "none"}</span>`;
@@ -2674,8 +3503,13 @@ function finishLoad() {
     if (state.refs.enabled) {
       scheduleReferenceIndexBuild();
     }
+    if (state.symbolRefs.enabled) {
+      scheduleSymbolReferenceBaselineBuild();
+    }
   } else {
     cancelReferenceIndexBuild();
+    cancelSymbolReferenceBuild();
+    cancelSymbolReferenceIncremental();
   }
   updateControlBar();
   state.treeSitter.wantInit = true;
@@ -2702,6 +3536,7 @@ function closePanels() {
   closeLogPanel();
   closeSupportPanel();
   destroyReferencePanel();
+  destroySymbolReferencePanel();
 }
 
 function openSettings() {
@@ -2715,6 +3550,7 @@ function openSettings() {
   els.wrapToggle.checked = state.settings.wrap;
   els.statsDisplay.checked = state.settings.showStats;
   if (els.fileRefsToggle) els.fileRefsToggle.checked = state.settings.fileRefs !== false;
+  if (els.symbolRefsToggle) els.symbolRefsToggle.checked = state.settings.symbolRefs !== false;
 }
 
 function closeSettings() {
@@ -2731,8 +3567,10 @@ function saveSettingsFromForm() {
   state.settings.wrap = els.wrapToggle.checked;
   state.settings.showStats = els.statsDisplay.checked;
   state.settings.fileRefs = els.fileRefsToggle ? els.fileRefsToggle.checked : true;
+  state.settings.symbolRefs = els.symbolRefsToggle ? els.symbolRefsToggle.checked : true;
   saveSettings();
   syncReferenceFeatureEnabled();
+  syncSymbolReferenceFeatureEnabled();
   applyDisplaySettings();
   closeSettings();
 }
@@ -2970,6 +3808,12 @@ function applyFileRefsToggle() {
   state.settings.fileRefs = !!els.fileRefsToggle?.checked;
   saveSettings();
   syncReferenceFeatureEnabled();
+}
+
+function applySymbolRefsToggle() {
+  state.settings.symbolRefs = !!els.symbolRefsToggle?.checked;
+  saveSettings();
+  syncSymbolReferenceFeatureEnabled();
 }
 
 // Tree-sitter integration
@@ -3277,8 +4121,13 @@ async function runTreeSitterParse(file, lang, force) {
     const tree = ts.parser.parse(file.text);
     const outline = buildOutlineModel(tree, file, lang);
     const includes = buildIncludeList(tree, lang, state.files);
+    const symbolRefs = extractTreeSitterSymbolContribution(tree, file, lang, {
+      minLength: SYMBOL_REFS_MIN_IDENTIFIER_LENGTH,
+      minBridgeLength: SYMBOL_REFS_MIN_BRIDGE_LENGTH
+    });
     if (!force && state.activeFileId !== file.id) return;
-    ts.cache[file.id] = { outline, includes, parsedAt: Date.now() };
+    ts.cache[file.id] = { outline, includes, parsedAt: Date.now(), symbolRefs };
+    scheduleSymbolReferenceIncrementalUpdate(file.id);
     placeTreeSitterMarkers(file, outline);
     renderTreeSitterPanel();
   } catch (err) {
@@ -3465,6 +4314,7 @@ function init() {
   els.wrapToggle.addEventListener("change", applyWrapToggle);
   els.statsDisplay.addEventListener("change", applyStatsToggle);
   if (els.fileRefsToggle) els.fileRefsToggle.addEventListener("change", applyFileRefsToggle);
+  if (els.symbolRefsToggle) els.symbolRefsToggle.addEventListener("change", applySymbolRefsToggle);
   els.jsonToggle.addEventListener("change", () => { state.settings.includeJson = els.jsonToggle.checked; saveSettings(); });
 
   els.sidebarPin.addEventListener("click", toggleSidebarPin);
@@ -3573,6 +4423,7 @@ function init() {
   renderTableOfContents();
   updateTreeSitterWindowUI();
   syncReferenceFeatureEnabled();
+  syncSymbolReferenceFeatureEnabled();
 }
 
 document.addEventListener("DOMContentLoaded", init);
