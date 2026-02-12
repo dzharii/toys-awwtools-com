@@ -196,9 +196,11 @@ const state = {
 const previewState = {
   window: null,
   visibleFileId: null,
+  visibleLine: null,
   pending: null,
   hoverEntry: null,
   hoverFileId: null,
+  hoverLine: null,
   hoverLoaded: false,
   lastPlacement: null,
   cache: new Map()
@@ -819,6 +821,7 @@ function ensurePreviewWindow() {
     storePreviewPlacement(win);
     previewState.window = null;
     previewState.visibleFileId = null;
+    previewState.visibleLine = null;
     clearPendingPreview();
   };
   previewState.window = win;
@@ -831,6 +834,8 @@ function destroyPreviewWindow() {
   previewState.window.destroy();
   previewState.window = null;
   previewState.visibleFileId = null;
+  previewState.visibleLine = null;
+  previewState.hoverLine = null;
   clearPendingPreview();
 }
 
@@ -961,40 +966,109 @@ function applyLastPlacement(win) {
   return true;
 }
 
-function showPreviewForEntry(entry, fileId) {
+function getPreviewLineFromEntry(entry, fileId) {
+  const raw = entry?.dataset?.line;
+  if (!raw) return null;
+  const parsed = parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed < 1) return null;
+  const file = state.files.find(item => item.id === fileId);
+  if (!file || !Number.isFinite(file.lineCount) || parsed > file.lineCount) return null;
+  return parsed;
+}
+
+function clearPreviewLineMarker(root) {
+  if (!root?.querySelectorAll) return;
+  const markers = root.querySelectorAll(".ref-preview-marker");
+  markers.forEach(marker => marker.remove());
+}
+
+function clearPreviewLineMarkersInCache() {
+  previewState.cache.forEach(entry => {
+    if (!entry?.clone) return;
+    clearPreviewLineMarker(entry.clone);
+  });
+  if (previewState.window?.content) clearPreviewLineMarker(previewState.window.content);
+}
+
+function applyPreviewLineTarget(win, clone, fileId, lineNumber) {
+  if (!win || !clone || !Number.isFinite(lineNumber)) return;
+  const file = state.files.find(item => item.id === fileId);
+  if (!file || lineNumber < 1 || lineNumber > file.lineCount) return;
+  const pre = clone.matches?.("pre") ? clone : clone.querySelector?.("pre");
+  if (!pre) return;
+
+  const lineHeight = parseFloat(getComputedStyle(pre).lineHeight) || 18;
+  const markerTop = Math.max(0, (lineNumber - 1) * lineHeight);
+  const marker = document.createElement("div");
+  marker.className = "ref-preview-marker";
+  marker.style.top = `${markerTop}px`;
+  marker.style.height = `${Math.max(1, Math.round(lineHeight))}px`;
+  pre.appendChild(marker);
+
+  const content = win.content;
+  const targetOffset = pre.offsetTop + markerTop;
+  const centered = targetOffset - ((content.clientHeight - lineHeight) / 2);
+  const maxScroll = Math.max(0, content.scrollHeight - content.clientHeight);
+  content.scrollTop = clamp(centered, 0, maxScroll);
+}
+
+function showPreviewForEntry(entry, fileId, lineNumber = null) {
+  if (!state.preview.enabled) return false;
   const source = getPreviewSourceElement(fileId);
   if (!source) return false;
   const { win } = ensurePreviewWindow();
+  const clone = getPreviewClone(fileId, source);
+  clearPreviewLineMarkersInCache();
+  clearPreviewLineMarker(clone);
   win.setTitle(getPreviewTitle(entry, fileId));
-  win.loadContent(getPreviewClone(fileId, source));
+  win.loadContent(clone);
+  if (Number.isFinite(lineNumber)) {
+    applyPreviewLineTarget(win, clone, fileId, lineNumber);
+  } else {
+    win.content.scrollTop = 0;
+  }
   win.bumpActivity();
   previewState.visibleFileId = fileId;
+  previewState.visibleLine = Number.isFinite(lineNumber) ? lineNumber : null;
   previewState.hoverLoaded = true;
   storePreviewPlacement(win);
   return true;
 }
 
-function schedulePreviewOpen(entry, fileId, delayMs) {
+function schedulePreviewOpen(entry, fileId, lineNumber, delayMs) {
   clearPendingPreview();
   const timer = setTimeout(() => {
     if (!previewState.pending) return;
-    if (previewState.pending.entry !== entry || previewState.pending.fileId !== fileId) return;
+    if (
+      previewState.pending.entry !== entry ||
+      previewState.pending.fileId !== fileId ||
+      previewState.pending.lineNumber !== lineNumber
+    ) return;
     previewState.pending = null;
     if (!entry.isConnected) return;
-    if (previewState.hoverEntry !== entry || previewState.hoverFileId !== fileId) return;
+    if (
+      previewState.hoverEntry !== entry ||
+      previewState.hoverFileId !== fileId ||
+      previewState.hoverLine !== lineNumber
+    ) return;
+    if (!state.preview.enabled) return;
     try {
-      showPreviewForEntry(entry, fileId);
+      showPreviewForEntry(entry, fileId, lineNumber);
     } catch (err) {
       console.warn("Preview open failed", err);
     }
   }, delayMs);
-  previewState.pending = { entry, fileId, timer };
+  previewState.pending = { entry, fileId, lineNumber, timer };
 }
 
 function getPreviewAnchorFromEvent(event) {
   const anchor = event.target.closest("a[data-file-id]");
   if (!anchor) return null;
   if (els.tocList?.contains(anchor) || els.treeContainer?.contains(anchor)) {
+    return anchor;
+  }
+  const symbolPanelRoot = state.symbolRefs.ui.activePanel?.root || null;
+  if (symbolPanelRoot?.contains(anchor)) {
     return anchor;
   }
   return null;
@@ -1008,11 +1082,19 @@ function handlePreviewPointerOver(event) {
     if (!entry || entry.contains(event.relatedTarget)) return;
     const fileId = entry.dataset.fileId;
     if (!fileId) return;
+    const lineNumber = getPreviewLineFromEntry(entry, fileId);
     clearPendingPreview();
     previewState.hoverEntry = entry;
     previewState.hoverFileId = fileId;
+    previewState.hoverLine = lineNumber;
     previewState.hoverLoaded = Boolean(getPreviewSourceElement(fileId));
-    if (previewState.window && previewState.visibleFileId === fileId) {
+    if (!previewState.hoverLoaded) return;
+    const sameVisibleTarget = (
+      previewState.window &&
+      previewState.visibleFileId === fileId &&
+      previewState.visibleLine === lineNumber
+    );
+    if (sameVisibleTarget) {
       if (previewState.hoverLoaded) previewState.window.bumpActivity();
       return;
     }
@@ -1020,7 +1102,7 @@ function handlePreviewPointerOver(event) {
       previewState.window.bumpActivity();
     }
     const delay = previewState.window ? PREVIEW_SWITCH_DELAY : PREVIEW_OPEN_DELAY;
-    schedulePreviewOpen(entry, fileId, delay);
+    schedulePreviewOpen(entry, fileId, lineNumber, delay);
   } catch (err) {
     console.warn("Preview hover failed", err);
   }
@@ -1035,6 +1117,7 @@ function handlePreviewPointerOut(event) {
     if (previewState.hoverEntry !== entry) return;
     previewState.hoverEntry = null;
     previewState.hoverFileId = null;
+    previewState.hoverLine = null;
     previewState.hoverLoaded = false;
     clearPendingPreview();
   } catch (err) {
@@ -1055,17 +1138,17 @@ function handlePreviewPointerMove(event) {
   }
 }
 
+function attachHoverPreviewHandlers(container) {
+  if (!container || container.dataset.previewHoverBound === "true") return;
+  container.addEventListener("pointerover", handlePreviewPointerOver);
+  container.addEventListener("pointerout", handlePreviewPointerOut);
+  container.addEventListener("pointermove", handlePreviewPointerMove);
+  container.dataset.previewHoverBound = "true";
+}
+
 function setupHoverPreview() {
-  if (els.tocList) {
-    els.tocList.addEventListener("pointerover", handlePreviewPointerOver);
-    els.tocList.addEventListener("pointerout", handlePreviewPointerOut);
-    els.tocList.addEventListener("pointermove", handlePreviewPointerMove);
-  }
-  if (els.treeContainer) {
-    els.treeContainer.addEventListener("pointerover", handlePreviewPointerOver);
-    els.treeContainer.addEventListener("pointerout", handlePreviewPointerOut);
-    els.treeContainer.addEventListener("pointermove", handlePreviewPointerMove);
-  }
+  if (els.tocList) attachHoverPreviewHandlers(els.tocList);
+  if (els.treeContainer) attachHoverPreviewHandlers(els.treeContainer);
 }
 
 function handlePreviewViewportResize() {
@@ -1078,6 +1161,10 @@ function setPreviewEnabled(enabled) {
   state.preview.enabled = enabled;
   if (!enabled) {
     destroyPreviewWindow();
+    previewState.hoverEntry = null;
+    previewState.hoverFileId = null;
+    previewState.hoverLine = null;
+    previewState.hoverLoaded = false;
   }
   updateControlBar();
 }
@@ -1941,6 +2028,7 @@ function ensureSymbolReferencePanelWindow() {
     ui.activeSourceFileId = "";
     ui.renderedVersion = -1;
   };
+  attachHoverPreviewHandlers(win.root);
   state.symbolRefs.ui.activePanel = win;
   return win;
 }
@@ -2067,11 +2155,14 @@ function buildSymbolReferencePanelContent(symbol, sourceFileId) {
     visibleRows.forEach(row => {
       const refRow = document.createElement("div");
       refRow.className = "symbol-ref-row";
-      const path = document.createElement("button");
+      const path = document.createElement("a");
       path.className = "symbol-ref-path-button";
-      path.type = "button";
+      path.href = `#${row.fileId}`;
+      path.dataset.fileId = row.fileId;
+      path.dataset.filePath = row.sourcePath;
       path.textContent = row.sourcePath;
-      path.addEventListener("click", () => {
+      path.addEventListener("click", event => {
+        event.preventDefault();
         const line = row.lineNumbers[0] || 1;
         navigateToFileLine(row.fileId, line);
       });
@@ -2085,12 +2176,18 @@ function buildSymbolReferencePanelContent(symbol, sourceFileId) {
       const lines = document.createElement("div");
       lines.className = "symbol-ref-lines";
       row.lineNumbers.forEach(line => {
-        const lineBtn = document.createElement("button");
-        lineBtn.className = "ghost tiny";
-        lineBtn.type = "button";
-        lineBtn.textContent = `L${line}`;
-        lineBtn.addEventListener("click", () => navigateToFileLine(row.fileId, line));
-        lines.appendChild(lineBtn);
+        const lineLink = document.createElement("a");
+        lineLink.className = "symbol-ref-line-chip";
+        lineLink.href = `#${row.fileId}@${line}`;
+        lineLink.dataset.fileId = row.fileId;
+        lineLink.dataset.filePath = row.sourcePath;
+        lineLink.dataset.line = String(line);
+        lineLink.textContent = `L${line}`;
+        lineLink.addEventListener("click", event => {
+          event.preventDefault();
+          navigateToFileLine(row.fileId, line);
+        });
+        lines.appendChild(lineLink);
       });
       const hiddenCount = row.count - row.lineNumbers.length;
       if (hiddenCount > 0) {
