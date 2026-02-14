@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fancy Media Player</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app" data-state="empty">
+    <header id="top-strip">
+      <div class="top-left">
+        <button id="open-folder" class="btn btn-primary">Open folder</button>
+        <button id="rescan" class="btn" hidden>Re-scan</button>
+        <span id="scan-spinner" class="spinner" aria-hidden="true" hidden></span>
+        <span id="status-text">Open a folder to index audio files recursively. Files stay local.</span>
+        <span id="diag-text" class="diag" hidden></span>
+      </div>
+      <div class="top-right">
+        <span id="selection-count" class="selection-count" hidden>Selected: 0</span>
+        <button id="select-all" class="btn" disabled>Select all</button>
+        <button id="clear-selection" class="btn" disabled>Clear selection</button>
+        <button id="copy-paths" class="btn" disabled>Copy paths</button>
+        <button id="copy-names" class="btn" disabled>Copy names</button>
+        <button id="settings-toggle" class="btn">Settings</button>
+      </div>
+    </header>
+
+    <div id="error-banner" role="status" hidden>
+      <span id="error-text"></span>
+      <button id="error-action" class="link-btn" hidden>Re-open folder</button>
+      <button id="error-dismiss" class="link-btn">Dismiss</button>
+    </div>
+
+    <main id="main-layout">
+      <section id="playlist-pane" aria-label="Playlist">
+        <div id="playlist-header" class="playlist-grid" role="row">
+          <div class="col-check">Sel</div>
+          <div class="col-name">Name</div>
+          <div class="col-folder">Folder</div>
+          <div class="col-duration">Duration</div>
+          <div class="col-size">Size</div>
+          <div class="col-status">Status</div>
+        </div>
+        <div id="playlist-scroll" tabindex="0" role="grid" aria-label="Track list">
+          <div id="playlist-spacer"></div>
+          <div id="playlist-window"></div>
+        </div>
+      </section>
+
+      <section id="player-pane" aria-label="Player">
+        <div id="track-header">
+          <div class="track-main-row">
+            <div id="track-title">No track loaded</div>
+            <div id="track-size">--</div>
+          </div>
+          <div class="track-sub-row">
+            <div id="track-path">--</div>
+            <div id="track-duration">--:--</div>
+          </div>
+          <div id="player-note" hidden></div>
+          <img id="track-artwork" alt="Embedded artwork" hidden>
+        </div>
+
+        <div id="transport-row">
+          <button id="prev-track" class="btn icon-btn" disabled title="Previous">Prev</button>
+          <button id="play-pause" class="btn btn-primary icon-btn" disabled title="Play/Pause">Play</button>
+          <button id="next-track" class="btn icon-btn" disabled title="Next">Next</button>
+          <button id="stop-track" class="btn icon-btn" disabled title="Stop">Stop</button>
+          <label class="inline-control">Rate
+            <select id="playback-rate">
+              <option value="0.75">0.75x</option>
+              <option value="1">1.0x</option>
+              <option value="1.25">1.25x</option>
+              <option value="1.5">1.5x</option>
+              <option value="2">2.0x</option>
+            </select>
+          </label>
+        </div>
+
+        <div id="seek-row">
+          <span id="current-time">00:00</span>
+          <input id="seek" type="range" min="0" max="1000" value="0" disabled>
+          <span id="total-time">--:--</span>
+          <button id="mute-toggle" class="btn icon-btn" title="Mute">Mute</button>
+          <input id="volume" type="range" min="0" max="1" step="0.01" value="1">
+        </div>
+
+        <div id="viz-wrap">
+          <canvas id="viz-canvas" aria-label="Audio visualization"></canvas>
+        </div>
+      </section>
+    </main>
+
+    <section id="clipboard-fallback" hidden>
+      <div class="fallback-header">Clipboard write failed. Press Ctrl+C in this field:</div>
+      <textarea id="fallback-text" readonly></textarea>
+      <button id="fallback-close" class="btn">Close</button>
+    </section>
+
+    <div id="toast" hidden></div>
+
+    <aside id="settings-drawer" aria-label="Settings" aria-hidden="true">
+      <div class="drawer-header">
+        <strong>Settings</strong>
+        <button id="settings-close" class="btn">Close</button>
+      </div>
+      <div class="drawer-body">
+        <section class="settings-group">
+          <h3>Candidates</h3>
+          <div id="ext-chips" class="chips"></div>
+          <label>Ignore folder names (comma separated)
+            <input id="ignore-folders" type="text">
+          </label>
+          <label>Min file size (bytes)
+            <input id="min-size" type="number" min="0" step="1">
+          </label>
+          <div id="rescan-note" hidden>
+            Requires re-scan to include previously skipped folders.
+            <button id="rescan-inline" class="btn">Re-scan</button>
+          </div>
+          <div class="preset-row">
+            <button class="btn preset-size" data-bytes="0">0</button>
+            <button class="btn preset-size" data-bytes="51200">50 KiB</button>
+            <button class="btn preset-size" data-bytes="204800">200 KiB</button>
+            <button class="btn preset-size" data-bytes="1048576">1 MiB</button>
+          </div>
+        </section>
+
+        <section class="settings-group">
+          <h3>Duplicates</h3>
+          <label>Mode
+            <select id="dup-mode">
+              <option value="off">Off</option>
+              <option value="highlight">Highlight</option>
+              <option value="group">Group</option>
+              <option value="hide">Hide</option>
+            </select>
+          </label>
+          <label>Key
+            <select id="dup-key">
+              <option value="filename">Filename</option>
+              <option value="filenameNoExt">Filename no ext</option>
+              <option value="normalizedName">Normalized name</option>
+              <option value="tagTitleArtist">Tag title + artist</option>
+            </select>
+          </label>
+          <label>Playback
+            <select id="dup-playback">
+              <option value="playAll">Play all</option>
+              <option value="skipAfterFirstPlay">Skip after first play</option>
+              <option value="skipAlways">Skip always</option>
+            </select>
+          </label>
+          <label>Representative
+            <select id="dup-representative">
+              <option value="firstEncountered">First encountered</option>
+              <option value="preferredExtension">Preferred extension</option>
+              <option value="shortestPath">Shortest path</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="settings-group">
+          <h3>View</h3>
+          <label><input id="group-by-folder" type="checkbox"> Group by folder</label>
+          <label><input id="hide-unsupported" type="checkbox"> Hide unsupported/error</label>
+          <label>Default sort
+            <select id="default-sort">
+              <option value="traversal">Traversal</option>
+              <option value="filename">Filename</option>
+              <option value="duration">Duration</option>
+              <option value="size">Size</option>
+              <option value="tagTitle">Tag title</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="settings-group">
+          <h3>Playback</h3>
+          <label>Auto-advance
+            <select id="auto-advance">
+              <option value="nextPlayable">Next playable</option>
+              <option value="stopAtEnd">Stop at end</option>
+              <option value="loopTrack">Loop track</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="settings-group">
+          <h3>Metadata</h3>
+          <label>Extraction
+            <select id="meta-extraction">
+              <option value="off">Off</option>
+              <option value="basic">Basic</option>
+              <option value="artwork">Artwork</option>
+            </select>
+          </label>
+          <label>Extract when
+            <select id="meta-when">
+              <option value="onDemandVisible">On demand visible</option>
+              <option value="nowPlayingPlusLookahead">Now playing + lookahead</option>
+              <option value="backgroundAll">Background all</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="settings-group">
+          <h3>Export</h3>
+          <label>Path format
+            <select id="copy-format">
+              <option value="relative">Relative</option>
+              <option value="relativeQuoted">Relative quoted</option>
+            </select>
+          </label>
+          <label>Line endings
+            <select id="line-endings">
+              <option value="lf">LF</option>
+              <option value="crlf">CRLF</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="settings-group">
+          <h3>Diagnostics</h3>
+          <label><input id="debug-enabled" type="checkbox"> Show diagnostics</label>
+        </section>
+      </div>
+    </aside>
+  </div>
+
+  <video id="media-element" preload="metadata" crossorigin="anonymous"></video>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
