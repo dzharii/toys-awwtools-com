@@ -21,6 +21,7 @@ export const TREE_SITTER_STORAGE_KEY = "code-panorama-tree-sitter";
 export const SEARCH_CAP = 200;
 export const SEARCH_SLICE_BUDGET = 10;
 export const SEARCH_LIVE_DEBOUNCE = 250;
+export const TOC_FILTER_DEBOUNCE = 150;
 export const SEARCH_EXPLICIT_MIN = 2;
 export const SEARCH_LIVE_MIN = 3;
 export const PREVIEW_OPEN_DELAY = 150;
