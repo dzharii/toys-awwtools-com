@@ -1,3 +1,8 @@
+import {
+  getLineText,
+  isOccurrenceValidInLine
+} from "../symbol-ref-validation.js";
+
 export function createSymbolController(ctx) {
   const {
     state,
@@ -285,22 +290,39 @@ function addSymbolOccurrenceToIndex(bySymbol, contribution, occurrence) {
       sourcePath: contribution.sourcePath,
       count: 0,
       lineNumbers: [],
+      occurrences: [],
+      occurrenceKeys: new Set(),
       kindCounts: new Map()
     };
     entry.referenceFiles.set(contribution.fileId, refBucket);
   }
   refBucket.count += 1;
   refBucket.kindCounts.set(occurrence.kind || "reference", (refBucket.kindCounts.get(occurrence.kind || "reference") || 0) + 1);
-  if (
-    !refBucket.lineNumbers.includes(occurrence.lineNumber) &&
-    refBucket.lineNumbers.length < symbolRefsMaxLinesPerFile
-  ) {
-    if (entry.storedDetails < symbolRefsMaxOccurrencesPerSymbol) {
-      refBucket.lineNumbers.push(occurrence.lineNumber);
-      entry.storedDetails += 1;
-    } else {
-      entry.truncated = true;
-    }
+
+  const lineNumber = Number.isFinite(occurrence.lineNumber) ? Math.floor(occurrence.lineNumber) : 0;
+  if (lineNumber > 0 && !refBucket.lineNumbers.includes(lineNumber) && refBucket.lineNumbers.length < symbolRefsMaxLinesPerFile) {
+    refBucket.lineNumbers.push(lineNumber);
+  }
+
+  const startCol = Number.isFinite(occurrence.startCol) ? Math.floor(occurrence.startCol) : 0;
+  const endCol = Number.isFinite(occurrence.endCol) ? Math.floor(occurrence.endCol) : 0;
+  const source = occurrence.source || contribution.source || "heuristic";
+  const kind = occurrence.kind || "reference";
+  const occurrenceKey = `${lineNumber}:${startCol}:${endCol}:${kind}:${source}`;
+  if (refBucket.occurrenceKeys.has(occurrenceKey)) return;
+
+  if (entry.storedDetails < symbolRefsMaxOccurrencesPerSymbol) {
+    refBucket.occurrenceKeys.add(occurrenceKey);
+    refBucket.occurrences.push({
+      lineNumber: lineNumber || 1,
+      startCol: startCol || 0,
+      endCol: endCol || 0,
+      kind,
+      source
+    });
+    entry.storedDetails += 1;
+  } else {
+    entry.truncated = true;
   }
 }
 
@@ -615,6 +637,67 @@ function getSymbolReferenceStatusText() {
   return `Indexing references • ${processed}/${total}`;
 }
 
+function getLoadedFileById(fileId) {
+  return state.files.find(item => item.id === fileId) || null;
+}
+
+function getFileLinesForId(fileId, linesCache) {
+  if (!fileId || !linesCache) return null;
+  if (linesCache.has(fileId)) return linesCache.get(fileId);
+  const file = getLoadedFileById(fileId);
+  if (!file) {
+    linesCache.set(fileId, null);
+    return null;
+  }
+  const text = file.textFull || file.text || "";
+  const lines = text.split("\n");
+  const value = { file, lines };
+  linesCache.set(fileId, value);
+  return value;
+}
+
+function buildReferenceLineDisplay(row, symbol, linesCache) {
+  const fileData = getFileLinesForId(row.fileId, linesCache);
+  const rawOccurrences = Array.isArray(row.occurrences) ? row.occurrences : [];
+  const validOccurrences = fileData
+    ? rawOccurrences.filter(occ => {
+      const lineText = getLineText(fileData.lines, occ.lineNumber);
+      return isOccurrenceValidInLine(lineText, symbol, occ);
+    })
+    : [];
+
+  const preferredOccurrences = validOccurrences.some(occ => occ.source === "tree")
+    ? validOccurrences.filter(occ => occ.source === "tree")
+    : validOccurrences;
+
+  const firstOccurrenceByLine = new Map();
+  preferredOccurrences.forEach(occ => {
+    const line = Number.isFinite(occ.lineNumber) ? Math.floor(occ.lineNumber) : 0;
+    if (line < 1 || firstOccurrenceByLine.has(line)) return;
+    firstOccurrenceByLine.set(line, occ);
+  });
+
+  const validatedLines = [...firstOccurrenceByLine.keys()].sort((a, b) => a - b).slice(0, symbolRefsMaxLinesPerFile);
+  if (validatedLines.length) {
+    return {
+      lines: validatedLines,
+      firstOccurrenceByLine,
+      approximate: false
+    };
+  }
+
+  const fallbackLines = (row.lineNumbers || [])
+    .filter(line => Number.isFinite(line) && line > 0)
+    .map(line => Math.floor(line))
+    .sort((a, b) => a - b)
+    .slice(0, symbolRefsMaxLinesPerFile);
+  return {
+    lines: fallbackLines,
+    firstOccurrenceByLine: new Map(),
+    approximate: fallbackLines.length > 0
+  };
+}
+
 /**
  * Returns the symbol reference panel window, creating it when necessary.
  *
@@ -771,13 +854,15 @@ function buildSymbolReferencePanelContent(symbol, sourceFileId) {
 
   const refsList = document.createElement("div");
   refsList.className = "symbol-ref-list";
+  const fileLinesCache = new Map();
   const referenceRows = entry?.referenceFiles
     ? [...entry.referenceFiles.values()]
       .map(bucket => ({
         fileId: bucket.fileId,
         sourcePath: bucket.sourcePath,
         count: bucket.count || 0,
-        lineNumbers: (bucket.lineNumbers || []).slice().sort((a, b) => a - b)
+        lineNumbers: (bucket.lineNumbers || []).slice().sort((a, b) => a - b),
+        occurrences: (bucket.occurrences || []).slice()
       }))
       .filter(row => !!row.fileId)
       .sort((a, b) => b.count - a.count || a.sourcePath.localeCompare(b.sourcePath))
@@ -799,9 +884,10 @@ function buildSymbolReferencePanelContent(symbol, sourceFileId) {
       path.dataset.fileId = row.fileId;
       path.dataset.filePath = row.sourcePath;
       path.textContent = row.sourcePath;
+      const lineDisplay = buildReferenceLineDisplay(row, symbol, fileLinesCache);
       path.addEventListener("click", event => {
         event.preventDefault();
-        const line = row.lineNumbers[0] || 1;
+        const line = lineDisplay.lines[0] || 1;
         navigateToFileLine(row.fileId, line);
       });
       refRow.appendChild(path);
@@ -813,7 +899,7 @@ function buildSymbolReferencePanelContent(symbol, sourceFileId) {
 
       const lines = document.createElement("div");
       lines.className = "symbol-ref-lines";
-      row.lineNumbers.forEach(line => {
+      lineDisplay.lines.forEach(line => {
         const lineLink = document.createElement("a");
         lineLink.className = "symbol-ref-line-chip";
         lineLink.href = `#${row.fileId}@${line}`;
@@ -821,13 +907,23 @@ function buildSymbolReferencePanelContent(symbol, sourceFileId) {
         lineLink.dataset.filePath = row.sourcePath;
         lineLink.dataset.line = String(line);
         lineLink.textContent = `L${line}`;
+        const occurrence = lineDisplay.firstOccurrenceByLine.get(line);
+        if (Number.isFinite(occurrence?.startCol) && occurrence.startCol > 0) {
+          lineLink.dataset.startCol = String(Math.floor(occurrence.startCol));
+        }
+        if (Number.isFinite(occurrence?.endCol) && occurrence.endCol > 0) {
+          lineLink.dataset.endCol = String(Math.floor(occurrence.endCol));
+        }
+        if (lineDisplay.approximate) {
+          lineLink.title = "Approximate line";
+        }
         lineLink.addEventListener("click", event => {
           event.preventDefault();
           navigateToFileLine(row.fileId, line);
         });
         lines.appendChild(lineLink);
       });
-      const hiddenCount = row.count - row.lineNumbers.length;
+      const hiddenCount = row.count - lineDisplay.lines.length;
       if (hiddenCount > 0) {
         const more = document.createElement("span");
         more.className = "symbol-ref-meta";
