@@ -37,3 +37,5 @@ You select a folder (or files). Code Panorama scans recursively, filters to supp
 
 Code Panorama is a viewer by design. It is optimized for exploration and understanding, not editing. If your goal is to read a project with minimal friction and maximum context retention, it is built for that workflow.
 
+- Main file panes use line-accurate layout (no soft wrap) so gutter numbers and line-based navigation stay exact.
+

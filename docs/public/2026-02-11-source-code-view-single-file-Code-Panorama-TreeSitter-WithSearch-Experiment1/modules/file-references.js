@@ -1,3 +1,5 @@
+import { buildLineStartOffsets as buildLineStartOffsetsFromText } from "./line-index.js";
+
 const EXTRA_REF_EXTS = [
   "png", "jpg", "jpeg", "gif", "svg", "webp", "ico", "bmp",
   "ttf", "otf", "woff", "woff2", "eot",
@@ -294,10 +296,5 @@ export function resolveReferenceCandidate({ sourcePath, candidate, inventory }) 
 }
 
 export function buildLineStartOffsets(text) {
-  const offsets = [0];
-  const raw = text || "";
-  for (let i = 0; i < raw.length; i += 1) {
-    if (raw.charCodeAt(i) === 10) offsets.push(i + 1);
-  }
-  return offsets;
+  return buildLineStartOffsetsFromText(text);
 }

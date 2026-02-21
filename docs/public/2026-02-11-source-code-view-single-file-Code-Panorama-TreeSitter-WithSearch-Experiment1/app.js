@@ -56,7 +56,6 @@ import {
   copyTextToClipboard,
   copyFileSource,
   makeFileId,
-  countLines,
   languageFromExt,
   clamp,
   rectOf,
@@ -76,9 +75,15 @@ import {
   normalizeProjectPath,
   recordInventoryPath,
   extractReferenceCandidates,
-  resolveReferenceCandidate,
-  buildLineStartOffsets
+  resolveReferenceCandidate
 } from "./modules/file-references.js";
+import {
+  countLinesFromText,
+  buildLineStartOffsets,
+  lineNumberAtOffset,
+  offsetAtLineNumber,
+  buildGutterLineNumbers
+} from "./modules/line-index.js";
 import {
   isConfigLikeFile,
   isSingleIdentifierText,
@@ -1380,14 +1385,30 @@ function applyLastPlacement(win) {
   return true;
 }
 
+function getFileLineCount(file) {
+  if (!file) return 0;
+  const indexedCount = file.lineIndex?.lineCount;
+  if (Number.isFinite(indexedCount) && indexedCount >= 0) return indexedCount;
+  if (Number.isFinite(file.lineCount) && file.lineCount >= 0) return file.lineCount;
+  return 0;
+}
+
+function clampLineNumberForFile(file, lineNumber) {
+  const total = getFileLineCount(file);
+  if (!total) return 0;
+  const parsed = Number.isFinite(lineNumber) ? Math.floor(lineNumber) : 1;
+  return Math.min(total, Math.max(1, parsed));
+}
+
 function getPreviewLineFromEntry(entry, fileId) {
   const raw = entry?.dataset?.line;
   if (!raw) return null;
   const parsed = parseInt(raw, 10);
   if (!Number.isFinite(parsed) || parsed < 1) return null;
   const file = state.files.find(item => item.id === fileId);
-  if (!file || !Number.isFinite(file.lineCount) || parsed > file.lineCount) return null;
-  return parsed;
+  const clamped = clampLineNumberForFile(file, parsed);
+  if (!clamped) return null;
+  return clamped;
 }
 
 function clearPreviewLineMarker(root) {
@@ -1407,12 +1428,13 @@ function clearPreviewLineMarkersInCache() {
 function applyPreviewLineTarget(win, clone, fileId, lineNumber) {
   if (!win || !clone || !Number.isFinite(lineNumber)) return;
   const file = state.files.find(item => item.id === fileId);
-  if (!file || lineNumber < 1 || lineNumber > file.lineCount) return;
+  const safeLine = clampLineNumberForFile(file, lineNumber);
+  if (!safeLine) return;
   const pre = clone.matches?.("pre") ? clone : clone.querySelector?.("pre");
   if (!pre) return;
 
   const lineHeight = parseFloat(getComputedStyle(pre).lineHeight) || 18;
-  const markerTop = Math.max(0, (lineNumber - 1) * lineHeight);
+  const markerTop = Math.max(0, (safeLine - 1) * lineHeight);
   const marker = document.createElement("div");
   marker.className = "ref-preview-marker";
   marker.style.top = `${markerTop}px`;
@@ -1432,6 +1454,7 @@ function showPreviewForEntry(entry, fileId, lineNumber = null) {
   if (!source) return false;
   const { win } = ensurePreviewWindow();
   const clone = getPreviewClone(fileId, source);
+  clone.classList.toggle("nowrap", !state.settings.wrap);
   clearPreviewLineMarkersInCache();
   clearPreviewLineMarker(clone);
   win.setTitle(getPreviewTitle(entry, fileId));
@@ -1846,7 +1869,7 @@ function runSearchSlice(run) {
   while (run.fileIndex < run.files.length) {
     if (!state.search.running || state.search.runId !== run.id) return;
     const file = run.files[run.fileIndex];
-    if (!run.lines) run.lines = file.text.split("\n");
+    if (!run.lines) run.lines = (file.textFull || file.text || "").split("\n");
     while (run.lineIndex < run.lines.length) {
       if (performance.now() - start > SEARCH_SLICE_BUDGET) {
         if (appended) appendSearchResults();
@@ -2259,7 +2282,7 @@ function runSymbolBaselineSlice(run) {
     while (run.fileIndex < run.files.length) {
       if (!run.file) {
         run.file = run.files[run.fileIndex];
-        run.lines = run.file.text.split("\n");
+        run.lines = (run.file.textFull || run.file.text || "").split("\n");
         run.lineIndex = 0;
         run.isConfigFile = isConfigLikeFile(run.file.path);
         run.contribution = createNormalizedSymbolContribution(run.file, null, "heuristic");
@@ -2892,7 +2915,7 @@ function observeAllReferenceSections() {
 
 function buildReferenceRangesForFile(file, occurrences) {
   if (!file || !occurrences?.length) return [];
-  const lineOffsets = buildLineStartOffsets(file.text);
+  const lineOffsets = file.lineIndex?.offsets || buildLineStartOffsets(file.textFull || file.text || "");
   const ranges = [];
   for (let i = 0; i < occurrences.length; i += 1) {
     const occ = occurrences[i];
@@ -3089,7 +3112,7 @@ function runReferenceIndexSlice(run) {
       if (run.id !== state.refs.build.runId) return;
       const file = run.files[run.fileIndex];
       if (!run.lines) {
-        run.lines = file.text.split("\n");
+        run.lines = (file.textFull || file.text || "").split("\n");
         run.sourcePath = normalizeProjectPath(file.path);
       }
 
@@ -3721,8 +3744,10 @@ async function readAndStoreFile(file, path, extHint) {
     return;
   }
   if (state.cancelled) return;
-  const charCount = text.length;
-  const lineCount = countLines(text);
+  const textFull = text;
+  const charCount = textFull.length;
+  const lineOffsets = buildLineStartOffsets(textFull);
+  const lineCount = countLinesFromText(textFull);
   const ext = extHint || (path.split(".").pop() || "");
   const language = languageFromExt(ext);
   const id = makeFileId(path);
@@ -3733,7 +3758,12 @@ async function readAndStoreFile(file, path, extHint) {
     ext,
     size: file.size,
     modified: file.lastModified ? new Date(file.lastModified) : null,
-    text,
+    text: textFull,
+    textFull,
+    lineIndex: {
+      offsets: lineOffsets,
+      lineCount
+    },
     language,
     lineCount,
     charCount,
@@ -3790,14 +3820,16 @@ function formatLineNumberParts(lineNumber) {
 }
 
 function buildLineNumberGutter(lineCount) {
-  const safeCount = Math.max(0, Number.isFinite(lineCount) ? Math.floor(lineCount) : 0);
+  const lineNumbers = buildGutterLineNumbers(lineCount);
   const gutter = document.createElement("div");
   gutter.className = "line-gutter";
   gutter.setAttribute("aria-hidden", "true");
   const fragment = document.createDocumentFragment();
-  for (let line = 1; line <= safeCount; line += 1) {
+  for (let i = 0; i < lineNumbers.length; i += 1) {
+    const line = lineNumbers[i];
     const row = document.createElement("div");
     row.className = "line-gutter-row";
+    row.dataset.line = String(line);
     const parts = formatLineNumberParts(line);
     const leading = document.createElement("span");
     leading.className = "line-num-leading";
@@ -3961,10 +3993,10 @@ function renderFileSection(file) {
   code.classList.add("microlight");
   code.dataset.hasBeenHighlighted = "false";
   code.dataset.refsDecorated = "false";
-  code.textContent = file.text;
+  code.textContent = file.textFull || file.text || "";
   pre.appendChild(gutter);
   pre.appendChild(code);
-  if (!state.settings.wrap) pre.classList.add("nowrap");
+  pre.classList.add("nowrap");
 
   summary.appendChild(header);
   section.appendChild(summary);
@@ -3974,7 +4006,7 @@ function renderFileSection(file) {
   if (target.fileId === file.id) {
     section.open = true;
     if (target.line) {
-      scrollToApproxLine(file.id, target.line, "auto");
+      scrollToFileLine(file.id, target.line, "auto");
     } else {
       section.scrollIntoView({ behavior: "auto", block: "start" });
       setActiveFile(file.id);
@@ -4045,7 +4077,7 @@ function handleHashChange() {
   const section = document.getElementById(targetId);
   if (!section) return;
   if (target.line) {
-    scrollToApproxLine(targetId, target.line);
+    scrollToFileLine(targetId, target.line);
     return;
   }
   section.scrollIntoView({ behavior: "auto", block: "start" });
@@ -4160,8 +4192,8 @@ function saveSettingsFromForm() {
 }
 
 function applyDisplaySettings() {
-  const pres = document.querySelectorAll("pre");
-  pres.forEach(pre => pre.classList.toggle("nowrap", !state.settings.wrap));
+  const pres = document.querySelectorAll(".file-section pre");
+  pres.forEach(pre => pre.classList.add("nowrap"));
 }
 
 function openStatsPanel() {
@@ -4381,6 +4413,9 @@ function applyWrapToggle() {
   state.settings.wrap = els.wrapToggle.checked;
   saveSettings();
   applyDisplaySettings();
+  if (state.settings.wrap) {
+    showBanner("Main viewer keeps line-accurate numbering, so wrapping is disabled for file panes.", "info");
+  }
 }
 
 function applyStatsToggle() {
@@ -4742,7 +4777,7 @@ function ensureTreeSitterFileState(file) {
 
 function computeFileFingerprint(file) {
   if (!file) return "";
-  const hash = hashString(file.text || "");
+  const hash = hashString(file.textFull || file.text || "");
   return `${file.charCount || 0}:${file.lineCount || 0}:${hash}`;
 }
 
@@ -4751,7 +4786,7 @@ function runImmediateFileAnalysis(file) {
   const fileState = ensureTreeSitterFileState(file);
   if (!fileState || fileState.phase1Done) return;
 
-  const lines = file.text.split("\n");
+  const lines = (file.textFull || file.text || "").split("\n");
   const isConfigFile = isConfigLikeFile(file.path);
   const contribution = createNormalizedSymbolContribution(file, null, "heuristic");
   const refCandidates = [];
@@ -4828,7 +4863,7 @@ function enqueueFileForBackgroundParsing(file, reason = "loaded", force = false)
   if (reason === "active") {
     queue.pendingIds.unshift(file.id);
   } else {
-    const score = Number.isFinite(file.charCount) ? file.charCount : (file.text?.length || 0);
+    const score = Number.isFinite(file.charCount) ? file.charCount : ((file.textFull || file.text || "").length || 0);
     let inserted = false;
     for (let i = 0; i < queue.pendingIds.length; i += 1) {
       const current = getFileById(queue.pendingIds[i]);
@@ -4972,7 +5007,7 @@ async function runTreeSitterParseForFile(file, runId) {
       return;
     }
     ts.parser.setLanguage(language);
-    const tree = ts.parser.parse(file.text);
+    const tree = ts.parser.parse(file.textFull || file.text || "");
     const outline = buildOutlineModel(tree, file, lang);
     const includes = buildIncludeList(tree, lang, state.files);
     const symbolRefs = extractTreeSitterSymbolContribution(tree, file, lang, {
@@ -5234,20 +5269,64 @@ function scrollToOutlineItem(item) {
     setActiveFile(item.fileId);
     return;
   }
-  scrollToApproxLine(item.fileId, item.line);
+  scrollToFileLine(item.fileId, item.line);
 }
 
-function scrollToApproxLine(fileId, line, behavior = "smooth") {
+function resolveTextPositionAtOffset(root, offset) {
+  if (!root) return null;
+  const target = Number.isFinite(offset) ? Math.max(0, Math.floor(offset)) : 0;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let remaining = target;
+  let lastNode = null;
+  let node = walker.nextNode();
+  while (node) {
+    const value = node.nodeValue || "";
+    const length = value.length;
+    lastNode = node;
+    if (remaining <= length) {
+      return { node, offset: Math.min(length, remaining) };
+    }
+    remaining -= length;
+    node = walker.nextNode();
+  }
+  if (!lastNode) return null;
+  return { node: lastNode, offset: (lastNode.nodeValue || "").length };
+}
+
+function scrollToFileLine(fileId, line, behavior = "smooth") {
   if (isFileHidden(fileId)) return;
   const section = getFileSection(fileId);
   if (!section) return;
+  const file = state.files.find(item => item.id === fileId);
+  const safeLine = clampLineNumberForFile(file, line);
+  if (!safeLine) return;
   if (section.tagName === "DETAILS") section.open = true;
   const pre = section.querySelector("pre");
+  const code = section.querySelector("pre code");
   const header = section.querySelector(".file-header");
-  const lineHeight = parseFloat(getComputedStyle(pre).lineHeight) || 18;
   const headerHeight = header?.getBoundingClientRect().height || 0;
-  const top = pre.getBoundingClientRect().top + window.scrollY + Math.max(0, (line - 1) * lineHeight);
-  window.scrollTo({ top: top - headerHeight - 16, behavior });
+  const offsets = file?.lineIndex?.offsets || buildLineStartOffsets(file?.textFull || file?.text || "");
+  const initialOffset = offsetAtLineNumber(offsets, safeLine);
+  const normalizedLine = lineNumberAtOffset(offsets, initialOffset);
+  const offset = offsetAtLineNumber(offsets, normalizedLine || safeLine);
+  const pos = resolveTextPositionAtOffset(code, offset);
+
+  if (pos) {
+    const range = document.createRange();
+    range.setStart(pos.node, pos.offset);
+    range.setEnd(pos.node, pos.offset);
+    const rect = range.getClientRects()[0] || range.getBoundingClientRect();
+    if (rect && Number.isFinite(rect.top)) {
+      const top = rect.top + window.scrollY;
+      window.scrollTo({ top: Math.max(0, top - headerHeight - 16), behavior });
+      setActiveFile(fileId);
+      return;
+    }
+  }
+
+  const lineHeight = parseFloat(getComputedStyle(pre).lineHeight) || 18;
+  const fallbackTop = pre.getBoundingClientRect().top + window.scrollY + Math.max(0, (safeLine - 1) * lineHeight);
+  window.scrollTo({ top: Math.max(0, fallbackTop - headerHeight - 16), behavior });
   setActiveFile(fileId);
 }
 

@@ -1,3 +1,5 @@
+import { countLinesFromText } from "./line-index.js";
+
 const EXT_TO_LANGUAGE = {
   js: "JavaScript", ts: "TypeScript", jsx: "JSX", tsx: "TSX", mjs: "JavaScript", cjs: "JavaScript",
   c: "C", h: "C/C Header", cc: "C++", cpp: "C++", hpp: "C++ Header",
@@ -60,12 +62,7 @@ export function makeFileId(path) {
 }
 
 export function countLines(text) {
-  if (!text) return 0;
-  let count = 1;
-  for (let i = 0; i < text.length; i += 1) {
-    if (text[i] === "\n") count += 1;
-  }
-  return count;
+  return countLinesFromText(text);
 }
 
 export function languageFromExt(ext) {
