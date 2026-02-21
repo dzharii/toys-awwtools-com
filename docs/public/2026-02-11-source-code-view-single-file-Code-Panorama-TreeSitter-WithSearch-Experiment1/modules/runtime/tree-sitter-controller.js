@@ -1,3 +1,8 @@
+import {
+  clampLineNumberForFile,
+  getLineMetricsInPre
+} from "./line-navigation.js";
+
 export function createTreeSitterController(ctx) {
   const {
     state,
@@ -33,10 +38,7 @@ export function createTreeSitterController(ctx) {
     createNormalizedSymbolContribution,
     refreshEffectiveSymbolContribution,
     scheduleSymbolReferenceIncrementalUpdate,
-    offsetAtLineNumber,
-    lineNumberAtOffset,
-    isFileHidden,
-    buildLineStartOffsets
+    isFileHidden
   } = ctx;
 
   function clearTreeSitterQueueHandle() {
@@ -53,21 +55,6 @@ export function createTreeSitterController(ctx) {
     queue.handleType = null;
     ts.parseHandle = null;
     ts.parseHandleType = null;
-  }
-
-  function getFileLineCount(file) {
-    if (!file) return 0;
-    const indexedCount = file.lineIndex?.lineCount;
-    if (Number.isFinite(indexedCount) && indexedCount >= 0) return indexedCount;
-    if (Number.isFinite(file.lineCount) && file.lineCount >= 0) return file.lineCount;
-    return 0;
-  }
-
-  function clampLineNumberForFile(file, lineNumber) {
-    const total = getFileLineCount(file);
-    if (!total) return 0;
-    const parsed = Number.isFinite(lineNumber) ? Math.floor(lineNumber) : 1;
-    return Math.min(total, Math.max(1, parsed));
   }
 
   function clampTreeSitterWindow(win) {
@@ -1192,36 +1179,6 @@ function scrollToOutlineItem(item) {
 }
 
 /**
- * Resolves a text node/offset pair for a character offset within a rendered code container.
- *
- * @param {HTMLElement|null} root Root element containing text nodes.
- * @param {number} offset Character offset into the flattened text.
- * @returns {{node: Text, offset: number}|null} Text position for range-based scrolling, or null.
- */
-
-function resolveTextPositionAtOffset(root, offset) {
-  if (!root) return null;
-  const target = Number.isFinite(offset) ? Math.max(0, Math.floor(offset)) : 0;
-  const textNodeFilter = doc.defaultView?.NodeFilter?.SHOW_TEXT || NodeFilter.SHOW_TEXT;
-  const walker = doc.createTreeWalker(root, textNodeFilter);
-  let remaining = target;
-  let lastNode = null;
-  let node = walker.nextNode();
-  while (node) {
-    const value = node.nodeValue || "";
-    const length = value.length;
-    lastNode = node;
-    if (remaining <= length) {
-      return { node, offset: Math.min(length, remaining) };
-    }
-    remaining -= length;
-    node = walker.nextNode();
-  }
-  if (!lastNode) return null;
-  return { node: lastNode, offset: (lastNode.nodeValue || "").length };
-}
-
-/**
  * Scrolls the viewer to a specific file line using line-index offsets with a geometry fallback.
  *
  * @param {string} fileId File identifier.
@@ -1239,31 +1196,20 @@ function scrollToFileLine(fileId, line, behavior = "smooth") {
   if (!safeLine) return;
   if (section.tagName === "DETAILS") section.open = true;
   const pre = section.querySelector("pre");
+  if (!pre) return;
   const code = section.querySelector("pre code");
   const header = section.querySelector(".file-header");
   const headerHeight = header?.getBoundingClientRect().height || 0;
-  const offsets = file?.lineIndex?.offsets || buildLineStartOffsets(file?.textFull || file?.text || "");
-  const initialOffset = offsetAtLineNumber(offsets, safeLine);
-  const normalizedLine = lineNumberAtOffset(offsets, initialOffset);
-  const offset = offsetAtLineNumber(offsets, normalizedLine || safeLine);
-  const pos = resolveTextPositionAtOffset(code, offset);
-
-  if (pos) {
-    const range = doc.createRange();
-    range.setStart(pos.node, pos.offset);
-    range.setEnd(pos.node, pos.offset);
-    const rect = range.getClientRects()[0] || range.getBoundingClientRect();
-    if (rect && Number.isFinite(rect.top)) {
-      const top = rect.top + window.scrollY;
-      window.scrollTo({ top: Math.max(0, top - headerHeight - 16), behavior });
-      setActiveFile(fileId);
-      return;
-    }
-  }
-
-  const lineHeight = parseFloat(getComputedStyle(pre).lineHeight) || 18;
-  const fallbackTop = pre.getBoundingClientRect().top + window.scrollY + Math.max(0, (safeLine - 1) * lineHeight);
-  window.scrollTo({ top: Math.max(0, fallbackTop - headerHeight - 16), behavior });
+  const metrics = getLineMetricsInPre({
+    doc,
+    pre,
+    code,
+    file,
+    lineNumber: safeLine
+  });
+  if (!metrics) return;
+  const top = pre.getBoundingClientRect().top + window.scrollY + metrics.top;
+  window.scrollTo({ top: Math.max(0, top - headerHeight - 16), behavior });
   setActiveFile(fileId);
 }
 

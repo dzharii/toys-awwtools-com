@@ -71,10 +71,9 @@ import {
 import {
   countLinesFromText,
   buildLineStartOffsets,
-  lineNumberAtOffset,
-  offsetAtLineNumber,
   buildGutterLineNumbers
 } from "./line-index.js";
+import { clampLineNumberForFile } from "./runtime/line-navigation.js";
 import {
   isConfigLikeFile,
   isSingleIdentifierText,
@@ -449,10 +448,7 @@ function initRuntimeControllers() {
     createNormalizedSymbolContribution: (file, contribution, source) => createNormalizedSymbolContribution(file, contribution, source),
     refreshEffectiveSymbolContribution: fileId => refreshEffectiveSymbolContribution(fileId),
     scheduleSymbolReferenceIncrementalUpdate: fileId => scheduleSymbolReferenceIncrementalUpdate(fileId),
-    offsetAtLineNumber,
-    lineNumberAtOffset,
-    isFileHidden: fileId => isFileHidden(fileId),
-    buildLineStartOffsets
+    isFileHidden: fileId => isFileHidden(fileId)
   });
   ({
     updateTreeSitterWindowUI,
@@ -1395,12 +1391,15 @@ function updateActiveLine() {
   const section = getFileSection(fileId);
   if (!section) return;
   if (section.classList.contains("is-hidden")) return;
+  const file = state.files.find(item => item.id === fileId);
+  if (!file) return;
   const pre = section.querySelector("pre");
   if (!pre) return;
   const rect = pre.getBoundingClientRect();
-  const scrollTop = Math.max(0, -rect.top);
   const lineHeight = parseFloat(getComputedStyle(pre).lineHeight) || 18;
-  const approxLine = Math.max(1, Math.round(scrollTop / lineHeight) + 1);
+  const viewportProbeY = Math.min(Math.max(rect.top + lineHeight * 0.5, window.innerHeight * 0.35), rect.bottom - lineHeight * 0.5);
+  const scrollTop = Math.max(0, viewportProbeY - rect.top + pre.scrollTop);
+  const approxLine = clampLineNumberForFile(file, Math.floor(scrollTop / lineHeight) + 1) || 1;
   const path = section.querySelector(".file-path")?.textContent || fileId;
   els.activeIndicator.innerHTML = `<span>Active:</span> <span class="value" title="${path}">${path}</span><span>Line ${approxLine}</span>`;
 }

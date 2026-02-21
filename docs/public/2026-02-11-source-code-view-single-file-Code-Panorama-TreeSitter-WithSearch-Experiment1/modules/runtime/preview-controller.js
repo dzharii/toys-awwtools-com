@@ -1,4 +1,8 @@
 import { clamp, rectOf, makeTextSpan } from "../file-helpers.js";
+import {
+  clampLineNumberForFile,
+  getLineMetricsInPre
+} from "./line-navigation.js";
 
 export function createPreviewController({
   state,
@@ -621,21 +625,6 @@ export function createPreviewController({
     return true;
   }
 
-  function getFileLineCount(file) {
-    if (!file) return 0;
-    const indexedCount = file.lineIndex?.lineCount;
-    if (Number.isFinite(indexedCount) && indexedCount >= 0) return indexedCount;
-    if (Number.isFinite(file.lineCount) && file.lineCount >= 0) return file.lineCount;
-    return 0;
-  }
-
-  function clampLineNumberForFile(file, lineNumber) {
-    const total = getFileLineCount(file);
-    if (!total) return 0;
-    const parsed = Number.isFinite(lineNumber) ? Math.floor(lineNumber) : 1;
-    return Math.min(total, Math.max(1, parsed));
-  }
-
   function getPreviewLineFromEntry(entry, fileId) {
     const raw = entry?.dataset?.line;
     if (!raw) return null;
@@ -668,18 +657,27 @@ export function createPreviewController({
     if (!safeLine) return;
     const pre = clone.matches?.("pre") ? clone : clone.querySelector?.("pre");
     if (!pre) return;
+    const code = pre.querySelector("code");
+    const metrics = getLineMetricsInPre({
+      doc,
+      pre,
+      code,
+      file,
+      lineNumber: safeLine
+    });
+    if (!metrics) return;
 
-    const lineHeight = parseFloat(getComputedStyle(pre).lineHeight) || 18;
-    const markerTop = Math.max(0, (safeLine - 1) * lineHeight);
+    const markerTop = metrics.top;
+    const markerHeight = Math.max(1, Math.round(metrics.height));
     const marker = doc.createElement("div");
     marker.className = "ref-preview-marker";
     marker.style.top = `${markerTop}px`;
-    marker.style.height = `${Math.max(1, Math.round(lineHeight))}px`;
+    marker.style.height = `${markerHeight}px`;
     pre.appendChild(marker);
 
     const content = win.content;
     const targetOffset = pre.offsetTop + markerTop;
-    const centered = targetOffset - ((content.clientHeight - lineHeight) / 2);
+    const centered = targetOffset - ((content.clientHeight - markerHeight) / 2);
     const maxScroll = Math.max(0, content.scrollHeight - content.clientHeight);
     content.scrollTop = clamp(centered, 0, maxScroll);
   }
