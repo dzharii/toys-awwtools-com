@@ -1284,6 +1284,7 @@ function scrollToFileLine(fileId, line, behavior = "smooth") {
     pauseTreeSitterQueue,
     resumeTreeSitterQueue,
     getTreeSitterQueueStatusText,
+    updateTreeSitterParseButtonLabel,
     runImmediateFileAnalysis,
     enqueueFileForBackgroundParsing,
     prioritizeFileInParseQueue,

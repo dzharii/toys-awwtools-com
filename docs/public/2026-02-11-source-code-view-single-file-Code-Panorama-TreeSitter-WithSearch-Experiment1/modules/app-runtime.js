@@ -234,6 +234,7 @@ let cancelTreeSitterQueue = () => {};
 let pauseTreeSitterQueue = () => {};
 let resumeTreeSitterQueue = () => {};
 let getTreeSitterQueueStatusText = () => "";
+let updateTreeSitterParseButtonLabel = () => {};
 let runImmediateFileAnalysis = () => {};
 let enqueueFileForBackgroundParsing = () => {};
 let rebuildTreeSitterQueue = () => {};
@@ -469,6 +470,7 @@ function initRuntimeControllers() {
     pauseTreeSitterQueue,
     resumeTreeSitterQueue,
     getTreeSitterQueueStatusText,
+    updateTreeSitterParseButtonLabel,
     runImmediateFileAnalysis,
     enqueueFileForBackgroundParsing,
     rebuildTreeSitterQueue,
