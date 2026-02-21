@@ -52,6 +52,9 @@ export const SYMBOL_REFS_MAX_REFERENCE_FILES_SHOWN = 50;
 export const SYMBOL_REFS_MAX_LINES_PER_FILE = 8;
 export const SYMBOL_REFS_MIN_IDENTIFIER_LENGTH = 2;
 export const SYMBOL_REFS_MIN_BRIDGE_LENGTH = 3;
+export const TS_PARSE_SLICE_BUDGET = 8;
+export const TS_PARSE_FILES_PER_SLICE = 2;
+export const TS_QUEUE_STATUS_REFRESH_DEBOUNCE_MS = 100;
 
 export const TREE_SITTER_LANGUAGES = {
   c: { file: "tree-sitter-c-v0.24.1.wasm" },

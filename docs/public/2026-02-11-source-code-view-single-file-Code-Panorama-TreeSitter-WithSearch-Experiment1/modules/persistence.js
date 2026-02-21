@@ -36,6 +36,26 @@ export function loadTreeSitterState({ storageKey, languages, storage = localStor
     error: null,
     cache: {},
     markers: {},
+    fileStateById: {},
+    errors: [],
+    queue: {
+      pendingIds: [],
+      inProgressFileId: null,
+      paused: false,
+      runId: 0,
+      handle: null,
+      handleType: null
+    },
+    progress: {
+      eligibleTotal: 0,
+      completedPhase1: 0,
+      completedPhase2: 0,
+      skipped: 0,
+      failed: 0,
+      currentFilePath: "",
+      finalized: false,
+      tsUnavailable: false
+    },
     pendingFileId: null,
     parser: null,
     Parser: null,

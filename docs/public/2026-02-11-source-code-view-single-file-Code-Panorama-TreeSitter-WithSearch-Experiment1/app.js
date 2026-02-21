@@ -36,6 +36,9 @@ import {
   SYMBOL_REFS_MAX_LINES_PER_FILE,
   SYMBOL_REFS_MIN_IDENTIFIER_LENGTH,
   SYMBOL_REFS_MIN_BRIDGE_LENGTH,
+  TS_PARSE_SLICE_BUDGET,
+  TS_PARSE_FILES_PER_SLICE,
+  TS_QUEUE_STATUS_REFRESH_DEBOUNCE_MS,
   TREE_SITTER_LANGUAGES
 } from "./modules/config.js";
 import { getDomElements } from "./modules/dom-elements.js";
@@ -151,6 +154,32 @@ function createInitialTocFilterState() {
   };
 }
 
+function createInitialTreeSitterQueueState() {
+  return {
+    pendingIds: [],
+    pendingSet: new Set(),
+    inProgressFileId: null,
+    paused: false,
+    runId: 0,
+    handle: null,
+    handleType: null,
+    statusRefreshHandle: null
+  };
+}
+
+function createInitialTreeSitterProgressState() {
+  return {
+    eligibleTotal: 0,
+    completedPhase1: 0,
+    completedPhase2: 0,
+    skipped: 0,
+    failed: 0,
+    currentFilePath: "",
+    finalized: false,
+    tsUnavailable: false
+  };
+}
+
 const state = {
   phase: "empty", // empty | loading | loaded | cancelled
   files: [],
@@ -225,6 +254,7 @@ const els = getDomElements(document);
 state.refs.enabled = state.settings.fileRefs !== false;
 state.refs.extSet = createRefExtensionSet(state.settings.allow);
 state.symbolRefs.enabled = state.settings.symbolRefs !== false;
+normalizeTreeSitterRuntimeState();
 
 let observer;
 let scrollHandler;
@@ -254,6 +284,40 @@ function loadTreeSitterState() {
 function saveTreeSitterState() {
   const { window: win } = state.treeSitter;
   persistTreeSitterState(win, { storageKey: TREE_SITTER_STORAGE_KEY });
+}
+
+function normalizeTreeSitterRuntimeState() {
+  const ts = state.treeSitter;
+  ts.fileStateById = ts.fileStateById || {};
+  ts.errors = Array.isArray(ts.errors) ? ts.errors : [];
+  ts.progress = { ...createInitialTreeSitterProgressState(), ...(ts.progress || {}) };
+  const queue = ts.queue || {};
+  ts.queue = {
+    pendingIds: Array.isArray(queue.pendingIds) ? queue.pendingIds.slice() : [],
+    pendingSet: new Set(Array.isArray(queue.pendingIds) ? queue.pendingIds : []),
+    inProgressFileId: queue.inProgressFileId || null,
+    paused: !!queue.paused,
+    runId: Number.isFinite(queue.runId) ? queue.runId : 0,
+    handle: null,
+    handleType: null,
+    statusRefreshHandle: null
+  };
+}
+
+function clearTreeSitterQueueHandle() {
+  const ts = state.treeSitter;
+  const queue = ts.queue;
+  if (!queue) return;
+  if (queue.handle && queue.handleType === "idle" && typeof cancelIdleCallback === "function") {
+    cancelIdleCallback(queue.handle);
+  }
+  if (queue.handle && queue.handleType === "timeout") {
+    clearTimeout(queue.handle);
+  }
+  queue.handle = null;
+  queue.handleType = null;
+  ts.parseHandle = null;
+  ts.parseHandleType = null;
 }
 
 function isFileHidden(fileId) {
@@ -2681,7 +2745,7 @@ function syncSymbolReferenceFeatureEnabled() {
   }
 
   attachSymbolReferenceDelegates();
-  if (state.phase === "loaded") scheduleSymbolReferenceBaselineBuild();
+  if (state.phase === "loaded") startSymbolIndexRebuild("toggle");
 }
 
 function attachReferenceDelegates() {
@@ -3353,8 +3417,16 @@ function resetStateForLoad() {
   resetReferenceStateForLoad();
   resetSymbolReferenceStateForLoad();
   cancelPendingTreeSitterParse();
+  normalizeTreeSitterRuntimeState();
+  if (state.treeSitter.queue?.statusRefreshHandle) {
+    clearTimeout(state.treeSitter.queue.statusRefreshHandle);
+  }
   state.treeSitter.cache = {};
   state.treeSitter.markers = {};
+  state.treeSitter.fileStateById = {};
+  state.treeSitter.errors = [];
+  state.treeSitter.queue = createInitialTreeSitterQueueState();
+  state.treeSitter.progress = createInitialTreeSitterProgressState();
   state.treeSitter.pendingFileId = null;
   state.treeSitter.parsing = false;
   state.treeSitter.error = null;
@@ -3402,6 +3474,7 @@ function resetStateForLoad() {
 function updateControlBar() {
   const p = state.progress;
   const a = state.aggregate;
+  const parsingText = getTreeSitterQueueStatusText({ compact: true });
   if (state.phase === "empty") {
     els.controlStatus.textContent = "Ready";
     els.controlStatus.title = "";
@@ -3409,16 +3482,17 @@ function updateControlBar() {
     els.activeIndicator.textContent = "Active: none";
   } else if (state.phase === "loading") {
     const phaseLabel = state.cancelled ? "Cancelling" : (state.progress.phaseLabel || "Scanning");
-    const text = `${phaseLabel} • dirs ${p.dirsVisited} • files included ${p.filesIncluded} • read ${p.filesRead} • skipped ${p.skipped} • errors ${p.errors} • bytes ${formatBytes(p.bytesRead)} • lines ${p.linesRead}`;
+    const progressText = `${phaseLabel} • dirs ${p.dirsVisited} • files included ${p.filesIncluded} • read ${p.filesRead} • skipped ${p.skipped} • errors ${p.errors} • bytes ${formatBytes(p.bytesRead)} • lines ${p.linesRead}`;
+    const text = parsingText ? `${progressText} • ${parsingText}` : progressText;
     els.controlStatus.textContent = text;
     els.controlStatus.title = `${p.bytesRead} bytes read`;
     els.controlActions.classList.remove("hidden");
     els.activeIndicator.textContent = "Active: loading…";
   } else {
     const indexingText = getSymbolReferenceStatusText();
-    const text = indexingText || `Summary • files ${a.loadedFiles} • lines ${a.totalLines} • bytes ${formatBytes(a.totalBytes)} • skipped ${a.skippedFiles} • errors ${state.progress.errors}`;
+    const text = parsingText || indexingText || `Summary • files ${a.loadedFiles} • lines ${a.totalLines} • bytes ${formatBytes(a.totalBytes)} • skipped ${a.skippedFiles} • errors ${state.progress.errors}`;
     els.controlStatus.textContent = text;
-    els.controlStatus.title = indexingText ? "Building project-wide symbol index" : `${a.totalBytes} bytes loaded`;
+    els.controlStatus.title = parsingText ? "Background parsing status" : (indexingText ? "Building project-wide symbol index" : `${a.totalBytes} bytes loaded`);
     els.controlActions.classList.remove("hidden");
     const activeFile = state.files.find(f => f.id === state.activeFileId);
     els.activeIndicator.innerHTML = `<span>Active:</span> <span class="value" title="${activeFile ? activeFile.path : "none"}">${activeFile ? activeFile.path : "none"}</span>`;
@@ -3459,6 +3533,7 @@ function updateControlBar() {
   setButtonLabel(els.logToggle, "📜", "Log");
   if (els.treeBtn) setButtonLabel(els.treeBtn, "🌳", "Tree-sitter");
   if (els.previewToggle) setButtonLabel(els.previewToggle, "👀", "Preview");
+  updateTreeSitterParseButtonLabel();
 
   updateOffsets();
   updateSearchAvailability();
@@ -3499,7 +3574,7 @@ function applyStaticButtonLabels() {
   updateSidebarPinLabel();
   if (els.tsClose) setButtonLabel(els.tsClose, "✖️", "Close");
   if (els.tsMinimize) setButtonLabel(els.tsMinimize, "➖", "Minimize");
-  if (els.tsParse) setButtonLabel(els.tsParse, "🧠", "Parse");
+  updateTreeSitterParseButtonLabel();
   if (els.tsChip) els.tsChip.textContent = "🌳 Tree-sitter";
 }
 
@@ -3675,6 +3750,10 @@ async function readAndStoreFile(file, path, extHint) {
   updateLargest(record);
   renderFileSection(record);
   insertIntoTree(record);
+  runImmediateFileAnalysis(record);
+  enqueueFileForBackgroundParsing(record, "loaded");
+  state.treeSitter.wantInit = true;
+  maybeInitTreeSitterRuntime();
   scheduleTocRender();
   updateControlBar();
   maybeWarnMemory();
@@ -4005,17 +4084,21 @@ function finishLoad() {
       scheduleReferenceIndexBuild();
     }
     if (state.symbolRefs.enabled) {
-      scheduleSymbolReferenceBaselineBuild();
+      startSymbolIndexRebuild("baseline");
     }
+    finalizeTreeSitterQueueAfterLoad();
   } else {
     cancelReferenceIndexBuild();
     cancelSymbolReferenceBuild();
     cancelSymbolReferenceIncremental();
+    cancelTreeSitterQueue("load-cancelled", true);
   }
   updateControlBar();
-  state.treeSitter.wantInit = true;
-  maybeInitTreeSitterRuntime();
-  maybeAutoParseActiveFile();
+  if (state.phase === "loaded") {
+    state.treeSitter.wantInit = true;
+    maybeInitTreeSitterRuntime();
+    resumeTreeSitterQueue();
+  }
   scheduleTocRender();
 }
 
@@ -4288,6 +4371,7 @@ async function loadFromFileList(files) {
 
 function cancelLoad() {
   state.cancelled = true;
+  cancelTreeSitterQueue("user-cancel", true);
   els.cancelLoad.disabled = true;
   updateControlBar();
   showBanner("Cancelling…");
@@ -4372,16 +4456,17 @@ function openTreeSitterWindow() {
   state.treeSitter.window.open = true;
   state.treeSitter.window.minimized = false;
   state.treeSitter.wantInit = true;
+  state.treeSitter.queue.paused = false;
   updateTreeSitterWindowUI();
   updateControlBar();
   maybeInitTreeSitterRuntime();
-  maybeAutoParseActiveFile();
+  resumeTreeSitterQueue();
 }
 
 function closeTreeSitterWindow() {
   state.treeSitter.window.open = false;
   state.treeSitter.window.minimized = false;
-  cancelPendingTreeSitterParse();
+  pauseTreeSitterQueue();
   updateTreeSitterWindowUI();
   updateControlBar();
 }
@@ -4389,7 +4474,7 @@ function closeTreeSitterWindow() {
 function minimizeTreeSitterWindow() {
   state.treeSitter.window.minimized = true;
   state.treeSitter.window.open = true;
-  cancelPendingTreeSitterParse();
+  pauseTreeSitterQueue();
   updateTreeSitterWindowUI();
   updateControlBar();
 }
@@ -4400,7 +4485,7 @@ function restoreTreeSitterWindow() {
   updateTreeSitterWindowUI();
   updateControlBar();
   maybeInitTreeSitterRuntime();
-  maybeAutoParseActiveFile();
+  resumeTreeSitterQueue();
 }
 
 function handleTreeSitterDrag(e) {
@@ -4466,10 +4551,9 @@ function handleViewportResize() {
 async function maybeInitTreeSitterRuntime() {
   const ts = state.treeSitter;
   if (!ts.enabled || ts.ready || ts.loading || !ts.wantInit) return;
-  if (state.phase !== "loaded") return;
   ts.loading = true;
   ts.error = null;
-  renderTreeSitterPanel("Loading Tree-sitter…");
+  scheduleTreeSitterStatusRefresh();
   try {
     const mod = await import(`./${TREE_SITTER_ASSET_BASE}/web-tree-sitter.js`);
     ts.Parser = mod.Parser;
@@ -4477,12 +4561,15 @@ async function maybeInitTreeSitterRuntime() {
     await ts.Parser.init({ locateFile: () => `${TREE_SITTER_ASSET_BASE}/web-tree-sitter.wasm` });
     ts.parser = new ts.Parser();
     ts.ready = true;
+    ts.progress.tsUnavailable = false;
   } catch (err) {
     ts.error = err?.message || "Tree-sitter failed to load.";
+    ts.progress.tsUnavailable = true;
     addLog("tree-sitter", `error: ${ts.error}`);
+    pushTreeSitterError("(runtime)", ts.error);
   } finally {
     ts.loading = false;
-    renderTreeSitterPanel();
+    scheduleTreeSitterStatusRefresh();
   }
 }
 
@@ -4495,33 +4582,473 @@ async function loadTreeSitterLanguage(kind) {
   try {
     const lang = await ts.Language.load(`${TREE_SITTER_ASSET_BASE}/${config.file}`);
     ts.error = null;
+    ts.progress.tsUnavailable = false;
     ts.languages[kind] = lang;
     return lang;
   } catch (err) {
     ts.error = `${kind} grammar missing`;
+    pushTreeSitterError(kind, ts.error);
     addLog("tree-sitter", `error: ${ts.error}`);
-    renderTreeSitterPanel();
+    scheduleTreeSitterStatusRefresh();
     return null;
   }
 }
 
 function cancelPendingTreeSitterParse() {
+  cancelTreeSitterQueue("cancel-pending", false);
+}
+
+function cancelTreeSitterQueue(_reason = "cancel", clearPending = true) {
   const ts = state.treeSitter;
-  if (ts.parseHandle && ts.parseHandleType === "idle" && typeof cancelIdleCallback === "function") {
-    cancelIdleCallback(ts.parseHandle);
+  normalizeTreeSitterRuntimeState();
+  clearTreeSitterQueueHandle();
+  const queue = ts.queue;
+  queue.runId += 1;
+  queue.inProgressFileId = null;
+  if (clearPending) {
+    queue.pendingIds = [];
+    queue.pendingSet.clear();
+    queue.paused = true;
+    ts.progress.currentFilePath = "";
   }
-  if (ts.parseHandle && ts.parseHandleType === "timeout") {
-    clearTimeout(ts.parseHandle);
-  }
-  ts.parseHandle = null;
-  ts.parseHandleType = null;
   ts.pendingFileId = null;
   ts.parsing = false;
+  scheduleTreeSitterStatusRefresh();
+}
+
+function pauseTreeSitterQueue() {
+  const ts = state.treeSitter;
+  normalizeTreeSitterRuntimeState();
+  ts.queue.paused = true;
+  clearTreeSitterQueueHandle();
+  ts.parsing = false;
+  ts.pendingFileId = null;
+  scheduleTreeSitterStatusRefresh();
+}
+
+function resumeTreeSitterQueue() {
+  const ts = state.treeSitter;
+  normalizeTreeSitterRuntimeState();
+  ts.queue.paused = false;
+  scheduleTreeSitterQueueSlice();
+  scheduleTreeSitterStatusRefresh();
+}
+
+function scheduleTreeSitterStatusRefresh() {
+  const ts = state.treeSitter;
+  const queue = ts.queue;
+  if (!queue || queue.statusRefreshHandle) return;
+  queue.statusRefreshHandle = setTimeout(() => {
+    queue.statusRefreshHandle = null;
+    refreshTreeSitterProgress();
+    renderTreeSitterPanel();
+    updateControlBar();
+  }, TS_QUEUE_STATUS_REFRESH_DEBOUNCE_MS);
+}
+
+function pushTreeSitterError(path, error) {
+  const ts = state.treeSitter;
+  ts.errors.push({ path, error });
+  if (ts.errors.length > 200) ts.errors.splice(0, ts.errors.length - 200);
+}
+
+function refreshTreeSitterProgress() {
+  const ts = state.treeSitter;
+  const entries = Object.values(ts.fileStateById || {});
+  const progress = ts.progress || createInitialTreeSitterProgressState();
+  progress.eligibleTotal = entries.length;
+  progress.completedPhase1 = entries.filter(entry => entry.phase1Done).length;
+  progress.completedPhase2 = entries.filter(entry => entry.phase2Done).length;
+  progress.skipped = entries.filter(entry => entry.status === "skipped").length;
+  progress.failed = entries.filter(entry => entry.status === "error").length;
+  ts.progress = progress;
+}
+
+function getTreeSitterQueueStatusText({ compact = false } = {}) {
+  const ts = state.treeSitter;
+  const queue = ts.queue || createInitialTreeSitterQueueState();
+  const progress = ts.progress || createInitialTreeSitterProgressState();
+  const total = progress.eligibleTotal || state.aggregate.loadedFiles || 0;
+  if (!total) return "";
+  const done = Math.min(total, progress.completedPhase2 || 0);
+  const currentPath = progress.currentFilePath || "";
+  const failureText = progress.failed > 0 ? ` • errors ${progress.failed}` : "";
+  if (progress.tsUnavailable) {
+    return compact
+      ? `Tree-sitter unavailable • analyzed ${progress.completedPhase1}/${total}${failureText}`
+      : `Tree-sitter unavailable. Using lightweight analysis (${progress.completedPhase1}/${total})${failureText}`;
+  }
+  if (queue.paused) {
+    return compact
+      ? `Parsing paused • ${done}/${total}${failureText}`
+      : `Parsing paused at ${done}/${total}${failureText}`;
+  }
+  if (ts.loading) return compact ? "Loading Tree-sitter runtime…" : "Loading Tree-sitter runtime…";
+  if (ts.parsing || queue.inProgressFileId) {
+    return compact
+      ? `Parsing ${done}/${total}: ${currentPath || "..."}${failureText}`
+      : `Parsing ${done} of ${total}: ${currentPath || "..."}${failureText}`;
+  }
+  if (queue.pendingIds.length > 0) {
+    return compact
+      ? `Queued ${done}/${total} • remaining ${queue.pendingIds.length}${failureText}`
+      : `Queued ${done} of ${total} complete • remaining ${queue.pendingIds.length}${failureText}`;
+  }
+  if (done >= total) {
+    if (compact && progress.finalized && progress.failed === 0) return "";
+    const finalizedText = progress.finalized ? " • finalized" : "";
+    return compact
+      ? `Parsing complete • ${done}/${total}${failureText}${finalizedText}`
+      : `Parsing complete for ${done}/${total}${failureText}${finalizedText}`;
+  }
+  return compact ? `Analysis ${progress.completedPhase1}/${total}` : `Analysis progress: ${progress.completedPhase1}/${total}`;
+}
+
+function updateTreeSitterParseButtonLabel() {
+  if (!els.tsParse) return;
+  const ts = state.treeSitter;
+  const queue = ts.queue || createInitialTreeSitterQueueState();
+  const hasPending = queue.pendingIds.length > 0;
+  const isRunning = !!(ts.parsing || queue.inProgressFileId || queue.handle);
+  let label = "Parse";
+  if (state.aggregate.loadedFiles > 0) {
+    if (isRunning && !queue.paused) label = "Pause";
+    else if (queue.paused || hasPending) label = "Resume";
+    else label = "Rebuild";
+  }
+  setButtonLabel(els.tsParse, "🧠", label);
+}
+
+function ensureTreeSitterFileState(file) {
+  if (!file?.id) return null;
+  const ts = state.treeSitter;
+  let entry = ts.fileStateById[file.id];
+  if (entry) return entry;
+  entry = {
+    status: "queued",
+    lang: null,
+    lastParsedVersion: "",
+    phase1Done: false,
+    phase2Done: false,
+    outline: [],
+    includes: [],
+    symbolContribution: null,
+    refCandidates: [],
+    error: null
+  };
+  ts.fileStateById[file.id] = entry;
+  return entry;
+}
+
+function computeFileFingerprint(file) {
+  if (!file) return "";
+  const hash = hashString(file.text || "");
+  return `${file.charCount || 0}:${file.lineCount || 0}:${hash}`;
+}
+
+function runImmediateFileAnalysis(file) {
+  const ts = state.treeSitter;
+  const fileState = ensureTreeSitterFileState(file);
+  if (!fileState || fileState.phase1Done) return;
+
+  const lines = file.text.split("\n");
+  const isConfigFile = isConfigLikeFile(file.path);
+  const contribution = createNormalizedSymbolContribution(file, null, "heuristic");
+  const refCandidates = [];
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const lineNumber = index + 1;
+    const lineText = lines[index];
+    const matches = extractHeuristicSymbolsFromLine(lineText, {
+      lineNumber,
+      isConfigFile,
+      minLength: SYMBOL_REFS_MIN_IDENTIFIER_LENGTH,
+      minBridgeLength: SYMBOL_REFS_MIN_BRIDGE_LENGTH
+    });
+    for (let i = 0; i < matches.length; i += 1) {
+      const match = matches[i];
+      if (match.role === "definition") contribution.definitions.push(match);
+      else contribution.references.push(match);
+    }
+    const refs = extractReferenceCandidates(lineText, {
+      refExts: state.refs.extSet,
+      maxTokenLength: REFS_MAX_TOKEN_LENGTH,
+      enableBareFilename: false
+    });
+    if (refs.length) refCandidates.push({ lineNumber, candidates: refs });
+  }
+
+  state.symbolRefs.contributions.heuristicByFile.set(file.id, contribution);
+  refreshEffectiveSymbolContribution(file.id);
+  fileState.refCandidates = refCandidates;
+  fileState.phase1Done = true;
+  fileState.symbolContribution = contribution;
+  ts.progress.finalized = false;
+  refreshTreeSitterProgress();
+  scheduleTreeSitterStatusRefresh();
+}
+
+function getFileById(fileId) {
+  return state.files.find(file => file.id === fileId) || null;
+}
+
+function enqueueFileForBackgroundParsing(file, reason = "loaded", force = false) {
+  if (!file?.id) return;
+  const ts = state.treeSitter;
+  normalizeTreeSitterRuntimeState();
+  const queue = ts.queue;
+  const fileState = ensureTreeSitterFileState(file);
+  if (!fileState) return;
+
+  fileState.lang = getTreeSitterLanguage(file);
+  if (force) {
+    fileState.lastParsedVersion = "";
+    fileState.phase2Done = false;
+    fileState.status = "queued";
+    fileState.error = null;
+  } else {
+    const fingerprint = computeFileFingerprint(file);
+    if (fileState.status === "parsed" && fileState.lastParsedVersion === fingerprint) {
+      fileState.phase2Done = true;
+      refreshTreeSitterProgress();
+      return;
+    }
+  }
+
+  if (queue.pendingSet.has(file.id)) {
+    if (reason === "active") prioritizeFileInParseQueue(file.id);
+    return;
+  }
+
+  fileState.status = "queued";
+  fileState.error = null;
+  fileState.phase2Done = false;
+  ts.progress.finalized = false;
+
+  if (reason === "active") {
+    queue.pendingIds.unshift(file.id);
+  } else {
+    const score = Number.isFinite(file.charCount) ? file.charCount : (file.text?.length || 0);
+    let inserted = false;
+    for (let i = 0; i < queue.pendingIds.length; i += 1) {
+      const current = getFileById(queue.pendingIds[i]);
+      const currentScore = Number.isFinite(current?.charCount) ? current.charCount : (current?.text?.length || Number.MAX_SAFE_INTEGER);
+      if (score < currentScore) {
+        queue.pendingIds.splice(i, 0, file.id);
+        inserted = true;
+        break;
+      }
+    }
+    if (!inserted) queue.pendingIds.push(file.id);
+  }
+  queue.pendingSet.add(file.id);
+  refreshTreeSitterProgress();
+  scheduleTreeSitterQueueSlice();
+  scheduleTreeSitterStatusRefresh();
+}
+
+function prioritizeFileInParseQueue(fileId) {
+  if (!fileId) return;
+  const ts = state.treeSitter;
+  normalizeTreeSitterRuntimeState();
+  const queue = ts.queue;
+  if (queue.pendingSet.has(fileId)) {
+    queue.pendingIds = [fileId, ...queue.pendingIds.filter(id => id !== fileId)];
+    scheduleTreeSitterQueueSlice();
+    scheduleTreeSitterStatusRefresh();
+    return;
+  }
+  const file = getFileById(fileId);
+  const fileState = file ? ensureTreeSitterFileState(file) : null;
+  if (file && fileState && !fileState.phase2Done) {
+    enqueueFileForBackgroundParsing(file, "active");
+  }
+}
+
+function scheduleTreeSitterQueueSlice() {
+  const ts = state.treeSitter;
+  if (!ts.enabled) return;
+  normalizeTreeSitterRuntimeState();
+  const queue = ts.queue;
+  if (queue.paused || queue.handle || queue.pendingIds.length === 0) return;
+  const runId = queue.runId;
+  const runner = deadline => {
+    queue.handle = null;
+    queue.handleType = null;
+    runTreeSitterQueueSlice(runId, deadline).catch(err => {
+      addLog("tree-sitter", `queue error: ${err?.message || err}`);
+      scheduleTreeSitterStatusRefresh();
+    });
+  };
+  queue.handleType = typeof requestIdleCallback === "function" ? "idle" : "timeout";
+  if (queue.handleType === "idle") {
+    queue.handle = requestIdleCallback(runner, { timeout: 50 });
+  } else {
+    queue.handle = setTimeout(() => runner(null), 0);
+  }
+  ts.parseHandle = queue.handle;
+  ts.parseHandleType = queue.handleType;
+}
+
+async function runTreeSitterQueueSlice(runId, deadline) {
+  const ts = state.treeSitter;
+  const queue = ts.queue;
+  if (!queue || queue.paused || runId !== queue.runId) return;
+  const start = performance.now();
+  let processed = 0;
+  while (queue.pendingIds.length > 0) {
+    if (queue.paused || runId !== queue.runId) break;
+    if (processed >= TS_PARSE_FILES_PER_SLICE) break;
+    if (performance.now() - start > TS_PARSE_SLICE_BUDGET) break;
+    if (deadline && typeof deadline.timeRemaining === "function" && deadline.timeRemaining() <= 0) break;
+
+    const fileId = queue.pendingIds.shift();
+    queue.pendingSet.delete(fileId);
+    const file = getFileById(fileId);
+    if (!file) continue;
+    queue.inProgressFileId = fileId;
+    ts.pendingFileId = fileId;
+    ts.progress.currentFilePath = file.path;
+    ts.parsing = true;
+    scheduleTreeSitterStatusRefresh();
+    await runTreeSitterParseForFile(file, runId);
+    processed += 1;
+  }
+
+  if (runId !== queue.runId) return;
+  queue.inProgressFileId = null;
+  ts.pendingFileId = null;
+  ts.parsing = false;
+  if (!queue.pendingIds.length) ts.progress.currentFilePath = "";
+  if (queue.pendingIds.length > 0 && !queue.paused) {
+    scheduleTreeSitterQueueSlice();
+  } else if (state.phase === "loaded" && !ts.progress.finalized) {
+    ts.progress.finalized = true;
+    if (state.symbolRefs.enabled) startSymbolIndexRebuild("finalize");
+  }
+  scheduleTreeSitterStatusRefresh();
+}
+
+async function runTreeSitterParseForFile(file, runId) {
+  const ts = state.treeSitter;
+  if (!file) return;
+  const fileState = ensureTreeSitterFileState(file);
+  if (!fileState) return;
+  const lang = getTreeSitterLanguage(file);
+  const fingerprint = computeFileFingerprint(file);
+
+  fileState.lang = lang;
+  fileState.error = null;
+  ts.error = null;
+
+  if (!lang || !ts.enabled) {
+    fileState.status = "skipped";
+    fileState.phase2Done = true;
+    fileState.lastParsedVersion = fingerprint;
+    refreshTreeSitterProgress();
+    return;
+  }
+
+  try {
+    ts.wantInit = true;
+    await maybeInitTreeSitterRuntime();
+    if (runId !== ts.queue.runId) return;
+    if (!ts.ready || ts.error) {
+      ts.progress.tsUnavailable = true;
+      fileState.status = "skipped";
+      fileState.phase2Done = true;
+      fileState.lastParsedVersion = fingerprint;
+      refreshTreeSitterProgress();
+      return;
+    }
+    const language = await loadTreeSitterLanguage(lang);
+    if (runId !== ts.queue.runId) return;
+    if (!language) {
+      fileState.status = "error";
+      fileState.phase2Done = true;
+      fileState.error = `Grammar unavailable: ${lang}`;
+      pushTreeSitterError(file.path, fileState.error);
+      refreshTreeSitterProgress();
+      return;
+    }
+    ts.parser.setLanguage(language);
+    const tree = ts.parser.parse(file.text);
+    const outline = buildOutlineModel(tree, file, lang);
+    const includes = buildIncludeList(tree, lang, state.files);
+    const symbolRefs = extractTreeSitterSymbolContribution(tree, file, lang, {
+      minLength: SYMBOL_REFS_MIN_IDENTIFIER_LENGTH,
+      minBridgeLength: SYMBOL_REFS_MIN_BRIDGE_LENGTH
+    });
+    ts.cache[file.id] = { outline, includes, parsedAt: Date.now(), symbolRefs };
+    fileState.status = "parsed";
+    fileState.phase2Done = true;
+    fileState.lastParsedVersion = fingerprint;
+    fileState.outline = outline;
+    fileState.includes = includes;
+    fileState.symbolContribution = symbolRefs;
+
+    const normalized = createNormalizedSymbolContribution(file, symbolRefs, "tree");
+    state.symbolRefs.contributions.treeByFile.set(file.id, normalized);
+    refreshEffectiveSymbolContribution(file.id);
+    scheduleSymbolReferenceIncrementalUpdate(file.id);
+    if (state.activeFileId === file.id) placeTreeSitterMarkers(file, outline);
+    refreshTreeSitterProgress();
+  } catch (err) {
+    ts.error = "Parse error for this file.";
+    addLog(file.path, `tree-sitter parse error: ${err?.message || err}`);
+    const message = err?.message || String(err);
+    fileState.status = "error";
+    fileState.phase2Done = true;
+    fileState.error = message;
+    pushTreeSitterError(file.path, message);
+    refreshTreeSitterProgress();
+  }
+}
+
+function rebuildTreeSitterQueue() {
+  const ts = state.treeSitter;
+  cancelTreeSitterQueue("rebuild", true);
+  Object.values(ts.markers || {}).forEach(markers => {
+    if (!Array.isArray(markers)) return;
+    markers.forEach(marker => marker?.remove?.());
+  });
+  ts.cache = {};
+  ts.markers = {};
+  ts.fileStateById = {};
+  ts.errors = [];
+  ts.progress = createInitialTreeSitterProgressState();
+  ts.progress.finalized = false;
+  state.symbolRefs.contributions.heuristicByFile.clear();
+  state.symbolRefs.contributions.treeByFile.clear();
+  state.symbolRefs.contributions.effectiveByFile.clear();
+  state.files.forEach(file => {
+    runImmediateFileAnalysis(file);
+    enqueueFileForBackgroundParsing(file, "rebuild", true);
+  });
+  resumeTreeSitterQueue();
+}
+
+function finalizeTreeSitterQueueAfterLoad() {
+  const ts = state.treeSitter;
+  ts.progress.finalized = false;
+  state.files.forEach(file => {
+    const lang = getTreeSitterLanguage(file);
+    if (lang === "c" || lang === "cpp") {
+      enqueueFileForBackgroundParsing(file, "finalize", true);
+    }
+  });
+  if (!ts.queue.pendingIds.length && !ts.parsing) {
+    ts.progress.finalized = true;
+  }
+  resumeTreeSitterQueue();
 }
 
 function handleActiveFileChange() {
   updateTreeSitterSubtitle();
-  maybeAutoParseActiveFile();
+  prioritizeFileInParseQueue(state.activeFileId);
+  const file = state.files.find(f => f.id === state.activeFileId);
+  if (file && state.treeSitter.cache[file.id]) ensureTreeSitterMarkers(file);
+  renderTreeSitterPanel();
 }
 
 function updateTreeSitterSubtitle() {
@@ -4548,100 +5075,6 @@ function getTreeSitterLanguage(file) {
   if (lower.endsWith(".sh") || lower.endsWith(".bash")) return "bash";
   if (lower.endsWith(".scala")) return "scala";
   return null;
-}
-
-function maybeAutoParseActiveFile() {
-  const ts = state.treeSitter;
-  if (ts.pendingFileId && ts.pendingFileId !== state.activeFileId) {
-    cancelPendingTreeSitterParse();
-  }
-  if (!ts.window.open || ts.window.minimized) {
-    renderTreeSitterPanel();
-    return;
-  }
-  if (state.phase !== "loaded") {
-    renderTreeSitterPanel();
-    return;
-  }
-  const file = state.files.find(f => f.id === state.activeFileId);
-  if (!file) {
-    renderTreeSitterPanel();
-    return;
-  }
-  const lang = getTreeSitterLanguage(file);
-  if (!lang) {
-    renderTreeSitterPanel("Tree-sitter not available for this file.");
-    return;
-  }
-  const tooLarge = file.size > state.settings.maxFileSize;
-  if (tooLarge && !ts.cache[file.id]) {
-    renderTreeSitterPanel("File too large to parse automatically. Click Parse to try.");
-    return;
-  }
-  if (ts.cache[file.id]) {
-    renderTreeSitterPanel();
-    ensureTreeSitterMarkers(file);
-    return;
-  }
-  scheduleTreeSitterParse(lang, false);
-}
-
-function scheduleTreeSitterParse(lang, force) {
-  const file = state.files.find(f => f.id === state.activeFileId);
-  if (!file) return;
-  if (state.phase !== "loaded") {
-    renderTreeSitterPanel("Available after load completes.");
-    return;
-  }
-  const ts = state.treeSitter;
-  cancelPendingTreeSitterParse();
-  ts.pendingFileId = file.id;
-  ts.parseHandleType = typeof requestIdleCallback === "function" ? "idle" : "timeout";
-  renderTreeSitterPanel("Scheduling parse…");
-  const runner = () => runTreeSitterParse(file, lang, force);
-  if (ts.parseHandleType === "idle") {
-    ts.parseHandle = requestIdleCallback(runner);
-  } else {
-    ts.parseHandle = setTimeout(runner, 0);
-  }
-}
-
-async function runTreeSitterParse(file, lang, force) {
-  const ts = state.treeSitter;
-  if (ts.pendingFileId !== file.id && !force) return;
-  ts.error = null;
-  ts.parsing = true;
-  renderTreeSitterPanel("Parsing active file…");
-  try {
-    ts.wantInit = true;
-    await maybeInitTreeSitterRuntime();
-    if (!ts.ready || ts.error) return;
-    const language = await loadTreeSitterLanguage(lang);
-    if (!language) return;
-    ts.parser.setLanguage(language);
-    const tree = ts.parser.parse(file.text);
-    const outline = buildOutlineModel(tree, file, lang);
-    const includes = buildIncludeList(tree, lang, state.files);
-    const symbolRefs = extractTreeSitterSymbolContribution(tree, file, lang, {
-      minLength: SYMBOL_REFS_MIN_IDENTIFIER_LENGTH,
-      minBridgeLength: SYMBOL_REFS_MIN_BRIDGE_LENGTH
-    });
-    if (!force && state.activeFileId !== file.id) return;
-    ts.cache[file.id] = { outline, includes, parsedAt: Date.now(), symbolRefs };
-    scheduleSymbolReferenceIncrementalUpdate(file.id);
-    placeTreeSitterMarkers(file, outline);
-    renderTreeSitterPanel();
-  } catch (err) {
-    ts.error = "Parse error for this file.";
-    addLog(file.path, `tree-sitter parse error: ${err?.message || err}`);
-    renderTreeSitterPanel(ts.error);
-  } finally {
-    ts.parsing = false;
-    ts.pendingFileId = null;
-    ts.parseHandle = null;
-    ts.parseHandleType = null;
-    renderTreeSitterPanel();
-  }
 }
 
 function placeTreeSitterMarkers(file, outline) {
@@ -4682,18 +5115,12 @@ function renderTreeSitterPanel(statusText) {
   const includes = cache?.includes || [];
   let status = statusText || "";
   if (!status) {
-    if (ts.error) status = ts.error;
-    else if (ts.loading) status = "Loading Tree-sitter…";
-    else if (state.phase !== "loaded") status = "Available after load completes.";
-    else if (!file) status = "Open a supported file to parse.";
-    else {
-      const lang = getTreeSitterLanguage(file);
-      if (!lang) status = "Tree-sitter not available for this file.";
-      else if (file.size > state.settings.maxFileSize && !outline.length) status = "File too large to parse automatically. Click Parse to try.";
-      else if (ts.parsing || ts.pendingFileId === file?.id) status = "Parsing active file…";
-      else if (!outline.length && !includes.length) status = cache ? "Parsed but no outline items found." : "Click Parse to build an outline for this file.";
-      else status = "";
-    }
+    const queueStatus = getTreeSitterQueueStatusText({ compact: false });
+    if (queueStatus) status = queueStatus;
+    else if (ts.error) status = ts.error;
+    else if (!file) status = "No active file.";
+    else if (!getTreeSitterLanguage(file)) status = "Tree-sitter not available for this file. Lightweight analysis is available.";
+    else if (!outline.length && !includes.length) status = "Background parsing pending for this file.";
   }
   if (els.tsStatus) {
     els.tsStatus.textContent = status;
@@ -4701,6 +5128,37 @@ function renderTreeSitterPanel(statusText) {
   }
   renderTreeSitterOutline(outline);
   renderTreeSitterIncludes(includes);
+  renderTreeSitterErrorSummary();
+  updateTreeSitterParseButtonLabel();
+}
+
+function renderTreeSitterErrorSummary() {
+  if (!els.tsBody) return;
+  const ts = state.treeSitter;
+  let root = els.tsBody.querySelector(".ts-errors");
+  if (!ts.errors.length) {
+    if (root) root.remove();
+    return;
+  }
+  if (!root) {
+    root = document.createElement("details");
+    root.className = "ts-errors";
+    els.tsBody.appendChild(root);
+  }
+  root.open = false;
+  root.innerHTML = "";
+  const summary = document.createElement("summary");
+  summary.textContent = `Errors (${ts.errors.length})`;
+  root.appendChild(summary);
+  const list = document.createElement("ul");
+  const recent = ts.errors.slice(-20);
+  for (let i = 0; i < recent.length; i += 1) {
+    const item = recent[i];
+    const row = document.createElement("li");
+    row.textContent = `${item.path}: ${item.error}`;
+    list.appendChild(row);
+  }
+  root.appendChild(list);
 }
 
 function renderTreeSitterOutline(items) {
@@ -4926,14 +5384,21 @@ function init() {
   if (els.tsClose) els.tsClose.addEventListener("click", closeTreeSitterWindow);
   if (els.tsMinimize) els.tsMinimize.addEventListener("click", minimizeTreeSitterWindow);
   if (els.tsParse) els.tsParse.addEventListener("click", () => {
-    if (state.phase !== "loaded") {
-      renderTreeSitterPanel("Available after load completes.");
+    if (state.phase === "empty") {
+      renderTreeSitterPanel("Load a project to parse.");
       return;
     }
-    const file = state.files.find(f => f.id === state.activeFileId);
-    const lang = getTreeSitterLanguage(file);
-    if (file && lang) scheduleTreeSitterParse(lang, true);
-    renderTreeSitterPanel();
+    const queue = state.treeSitter.queue;
+    const running = !!(state.treeSitter.parsing || queue.inProgressFileId || queue.handle);
+    if (running && !queue.paused) {
+      pauseTreeSitterQueue();
+      return;
+    }
+    if (queue.paused || queue.pendingIds.length > 0) {
+      resumeTreeSitterQueue();
+      return;
+    }
+    rebuildTreeSitterQueue();
   });
   if (els.tsTitleBar) els.tsTitleBar.addEventListener("mousedown", handleTreeSitterDrag);
   if (els.tsResize) els.tsResize.addEventListener("mousedown", handleTreeSitterResize);
