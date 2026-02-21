@@ -109,7 +109,7 @@ const OUTLINE_CONFIGS = {
   }
 };
 
-export function extractNodeName(node) {
+function extractNodeName(node) {
   const byField = ["name", "declarator", "declaration", "type"];
   for (const field of byField) {
     const candidate = node.childForFieldName?.(field);

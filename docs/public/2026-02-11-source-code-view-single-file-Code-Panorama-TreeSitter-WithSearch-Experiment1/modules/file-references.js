@@ -1,5 +1,3 @@
-import { buildLineStartOffsets as buildLineStartOffsetsFromText } from "./line-index.js";
-
 const EXTRA_REF_EXTS = [
   "png", "jpg", "jpeg", "gif", "svg", "webp", "ico", "bmp",
   "ttf", "otf", "woff", "woff2", "eot",
@@ -124,7 +122,7 @@ export function normalizeProjectPath(rawPath) {
   return normalizeFromSegments(cleaned.split("/"));
 }
 
-export function dirnameProjectPath(rawPath) {
+function dirnameProjectPath(rawPath) {
   const normalized = normalizeProjectPath(rawPath);
   const parts = splitPath(normalized);
   if (!parts.length) return "";
@@ -132,7 +130,7 @@ export function dirnameProjectPath(rawPath) {
   return parts.join("/");
 }
 
-export function joinProjectPath(baseDir, refPath) {
+function joinProjectPath(baseDir, refPath) {
   const base = splitPath(baseDir || "");
   const ref = (refPath || "").replace(/\\/g, "/");
   if (ref.startsWith("/")) return normalizeProjectPath(ref.slice(1));
@@ -293,8 +291,4 @@ export function resolveReferenceCandidate({ sourcePath, candidate, inventory }) 
   if (!resolvedPaths.length) return fallback;
   if (resolvedPaths.length === 1) return { status: "resolved", resolvedPaths };
   return { status: "ambiguous", resolvedPaths };
-}
-
-export function buildLineStartOffsets(text) {
-  return buildLineStartOffsetsFromText(text);
 }

@@ -177,24 +177,24 @@ function detectTreeReferenceKind(node) {
   return "reference";
 }
 
-export function isSymbolStopWord(name, stopWords = DEFAULT_STOP_WORDS) {
+function isSymbolStopWord(name, stopWords = DEFAULT_STOP_WORDS) {
   if (!name) return true;
   return stopWords.has(toLower(name));
 }
 
-export function normalizeSymbolName(raw) {
+function normalizeSymbolName(raw) {
   const trimmed = String(raw || "").trim();
   return IDENTIFIER_FULL_RE.test(trimmed) ? trimmed : "";
 }
 
-export function isBridgeConstant(name, minBridgeLength = 3) {
+function isBridgeConstant(name, minBridgeLength = 3) {
   const safe = String(name || "").trim();
   if (safe.length < minBridgeLength) return false;
   if (!/^[A-Z][A-Z0-9_]*$/.test(safe)) return false;
   return safe.includes("_");
 }
 
-export function isValidSymbolName(name, opts = {}) {
+function isValidSymbolName(name, opts = {}) {
   const normalized = normalizeSymbolName(name);
   if (!normalized) return false;
   const minLength = Number.isFinite(opts.minLength) ? opts.minLength : 2;

@@ -1,5 +1,3 @@
-import { countLinesFromText } from "./line-index.js";
-
 const EXT_TO_LANGUAGE = {
   js: "JavaScript", ts: "TypeScript", jsx: "JSX", tsx: "TSX", mjs: "JavaScript", cjs: "JavaScript",
   c: "C", h: "C/C Header", cc: "C++", cpp: "C++", hpp: "C++ Header",
@@ -47,7 +45,7 @@ export function copyFileSource(file) {
   copyTextToClipboard(buildMarkdownSnippet(file));
 }
 
-function hashPath(str) {
+export function hashString(str) {
   let h = 0;
   for (let i = 0; i < str.length; i += 1) {
     h = (h * 31 + str.charCodeAt(i)) | 0;
@@ -55,14 +53,14 @@ function hashPath(str) {
   return Math.abs(h).toString(36);
 }
 
+function hashPath(str) {
+  return hashString(str);
+}
+
 export function makeFileId(path) {
   const safe = path.replace(/[^a-zA-Z0-9]+/g, "-").replace(/-{2,}/g, "-").replace(/^-+|-+$/g, "") || "file";
   const hash = hashPath(path);
   return `file-${safe}-${hash}`;
-}
-
-export function countLines(text) {
-  return countLinesFromText(text);
 }
 
 export function languageFromExt(ext) {

@@ -2,7 +2,7 @@ export function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-export function formatRegexErrorDetail(err) {
+function formatRegexErrorDetail(err) {
   if (!err) return "";
   const raw = typeof err === "string" ? err : err.message || "";
   const line = raw.split("\n")[0];
