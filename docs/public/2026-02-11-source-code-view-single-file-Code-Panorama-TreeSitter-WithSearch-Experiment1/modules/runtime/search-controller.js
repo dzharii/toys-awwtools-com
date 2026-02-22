@@ -2,7 +2,7 @@ import {
   validateSearchQuery,
   buildSearchMatcher,
   matchLine,
-  buildSnippetLines
+  buildSnippetLines,
 } from "../search-helpers.js";
 
 export function createSearchController({
@@ -15,13 +15,14 @@ export function createSearchController({
   searchExplicitMin,
   searchLiveMin,
   isFileHidden,
-  navigateToFileLine
+  navigateToFileLine,
 }) {
   function setSearchError(message, detail) {
     if (!els.codeSearchError) return;
     const hasMessage = !!message;
     els.codeSearchError.classList.toggle("hidden", !hasMessage);
-    if (els.codeSearchErrorMessage) els.codeSearchErrorMessage.textContent = message || "";
+    if (els.codeSearchErrorMessage)
+      els.codeSearchErrorMessage.textContent = message || "";
     if (els.codeSearchErrorDetail) {
       const hasDetail = !!detail;
       els.codeSearchErrorDetail.textContent = detail || "";
@@ -50,7 +51,9 @@ export function createSearchController({
 
   function updateSearchResultsMeta() {
     if (!els.codeSearchResultsMeta) return;
-    els.codeSearchResultsMeta.textContent = state.search.partial ? "Partial results" : "";
+    els.codeSearchResultsMeta.textContent = state.search.partial
+      ? "Partial results"
+      : "";
   }
 
   function updateSearchCapNotice() {
@@ -73,9 +76,9 @@ export function createSearchController({
       els.codeSearchQuery,
       els.codeSearchCase,
       els.codeSearchLive,
-      els.codeSearchRun
+      els.codeSearchRun,
     ].filter(Boolean);
-    controls.forEach(control => {
+    controls.forEach((control) => {
       control.disabled = !isLoaded;
     });
     if (!isLoaded && state.search.running) {
@@ -121,9 +124,10 @@ export function createSearchController({
   }
 
   function getSearchScopeFiles(scope) {
-    const files = scope === "visible"
-      ? state.files.filter(file => !isFileHidden(file.id))
-      : state.files.slice();
+    const files =
+      scope === "visible"
+        ? state.files.filter((file) => !isFileHidden(file.id))
+        : state.files.slice();
     return files.sort((a, b) => a.path.localeCompare(b.path));
   }
 
@@ -131,7 +135,11 @@ export function createSearchController({
     if (!els.codeSearchResultsList) return;
     if (state.search.rendered >= state.search.results.length) return;
     const fragment = doc.createDocumentFragment();
-    for (let i = state.search.rendered; i < state.search.results.length; i += 1) {
+    for (
+      let i = state.search.rendered;
+      i < state.search.results.length;
+      i += 1
+    ) {
       fragment.appendChild(buildSearchResultCard(state.search.results[i]));
     }
     els.codeSearchResultsList.appendChild(fragment);
@@ -150,7 +158,7 @@ export function createSearchController({
     fileLink.className = "code-search-result-link";
     fileLink.href = `#${result.fileId}@${result.lineNumber}`;
     fileLink.textContent = result.path;
-    fileLink.addEventListener("click", event => {
+    fileLink.addEventListener("click", (event) => {
       event.preventDefault();
       navigateToFileLine(result.fileId, result.lineNumber);
     });
@@ -159,7 +167,7 @@ export function createSearchController({
     lineLink.className = "code-search-result-link";
     lineLink.href = `#${result.fileId}@${result.lineNumber}`;
     lineLink.textContent = `Line ${result.lineNumber}`;
-    lineLink.addEventListener("click", event => {
+    lineLink.addEventListener("click", (event) => {
       event.preventDefault();
       navigateToFileLine(result.fileId, result.lineNumber);
     });
@@ -170,11 +178,13 @@ export function createSearchController({
     const preview = doc.createElement("div");
     preview.className = "code-search-preview";
 
-    result.snippet.forEach(line => {
+    result.snippet.forEach((line) => {
       const row = doc.createElement("div");
       row.className = "code-search-line";
       if (line.isMatch) row.classList.add("is-match");
-      row.addEventListener("click", () => navigateToFileLine(result.fileId, line.number));
+      row.addEventListener("click", () =>
+        navigateToFileLine(result.fileId, line.number),
+      );
 
       const number = doc.createElement("span");
       number.className = "code-search-line-number";
@@ -182,7 +192,12 @@ export function createSearchController({
 
       const text = doc.createElement("span");
       text.className = "code-search-line-text";
-      if (line.isMatch && Number.isFinite(result.matchStart) && Number.isFinite(result.matchEnd) && result.matchEnd > result.matchStart) {
+      if (
+        line.isMatch &&
+        Number.isFinite(result.matchStart) &&
+        Number.isFinite(result.matchEnd) &&
+        result.matchEnd > result.matchStart
+      ) {
         const before = line.text.slice(0, result.matchStart);
         const matchText = line.text.slice(result.matchStart, result.matchEnd);
         const after = line.text.slice(result.matchEnd);
@@ -234,7 +249,8 @@ export function createSearchController({
     while (run.fileIndex < run.files.length) {
       if (!state.search.running || state.search.runId !== run.id) return;
       const file = run.files[run.fileIndex];
-      if (!run.lines) run.lines = (file.textFull || file.text || "").split("\n");
+      if (!run.lines)
+        run.lines = (file.textFull || file.text || "").split("\n");
       while (run.lineIndex < run.lines.length) {
         if (performance.now() - start > searchSliceBudget) {
           if (appended) appendSearchResults();
@@ -251,7 +267,7 @@ export function createSearchController({
             lineNumber: run.lineIndex + 1,
             matchStart: match.start,
             matchEnd: match.end,
-            snippet: buildSnippetLines(run.lines, run.lineIndex)
+            snippet: buildSnippetLines(run.lines, run.lineIndex),
           };
           state.search.results.push(result);
           appended = true;
@@ -287,7 +303,7 @@ export function createSearchController({
       mode,
       caseSensitive,
       onError: setSearchError,
-      onClearError: clearSearchError
+      onClearError: clearSearchError,
     });
     if (!validation.ok) return;
     if (source !== "live" && state.search.liveTimer) {
@@ -324,7 +340,7 @@ export function createSearchController({
       fileIndex: 0,
       lineIndex: 0,
       lines: null,
-      matcher
+      matcher,
     };
     state.search.activeRun = run;
     setTimeout(() => runSearchSlice(run), 0);
@@ -355,6 +371,6 @@ export function createSearchController({
     updateSearchSummary,
     updateSearchResultsMeta,
     updateSearchCapNotice,
-    updateSearchButtons
+    updateSearchButtons,
   };
 }

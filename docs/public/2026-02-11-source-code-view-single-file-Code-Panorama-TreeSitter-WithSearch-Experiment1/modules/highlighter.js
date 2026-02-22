@@ -4,7 +4,7 @@ export function createCodeHighlighter({
   pendingClassPrefix = "microlight-pending",
   rootMargin = "0px",
   threshold = 0,
-  getNextSequence = () => Date.now()
+  getNextSequence = () => Date.now(),
 } = {}) {
   let observer = null;
   const retryTimers = new WeakMap();
@@ -20,7 +20,8 @@ export function createCodeHighlighter({
 
   function highlightCodeBlock(code) {
     const microlight = window.microlight;
-    if (!microlight || typeof microlight.reset !== "function" || !code) return false;
+    if (!microlight || typeof microlight.reset !== "function" || !code)
+      return false;
     const tempClass = `${pendingClassPrefix}-${getNextSequence()}`;
     code.classList.add("microlight");
     code.classList.add(tempClass);
@@ -69,23 +70,27 @@ export function createCodeHighlighter({
 
   function ensureObserver() {
     if (observer) return;
-    observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        const target = entry.target;
-        if (target.dataset.hasBeenHighlighted === "true") {
-          observer.unobserve(target);
-          return;
-        }
-        attemptHighlight(target, 0);
-      });
-    }, { rootMargin, threshold });
+    observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const target = entry.target;
+          if (target.dataset.hasBeenHighlighted === "true") {
+            observer.unobserve(target);
+            return;
+          }
+          attemptHighlight(target, 0);
+        });
+      },
+      { rootMargin, threshold },
+    );
   }
 
   function observe(code) {
     if (!code) return;
     ensureObserver();
-    if (!code.dataset.hasBeenHighlighted) code.dataset.hasBeenHighlighted = "false";
+    if (!code.dataset.hasBeenHighlighted)
+      code.dataset.hasBeenHighlighted = "false";
     observer.observe(code);
     const rect = code.getBoundingClientRect();
     const vh = window.innerHeight || document.documentElement.clientHeight || 0;
@@ -99,7 +104,7 @@ export function createCodeHighlighter({
       observer.disconnect();
       observer = null;
     }
-    activeTimers.forEach(timer => clearTimeout(timer));
+    activeTimers.forEach((timer) => clearTimeout(timer));
     activeTimers.clear();
   }
 
@@ -107,6 +112,6 @@ export function createCodeHighlighter({
     observe,
     disconnect,
     attemptHighlight,
-    highlightCodeBlock
+    highlightCodeBlock,
   };
 }

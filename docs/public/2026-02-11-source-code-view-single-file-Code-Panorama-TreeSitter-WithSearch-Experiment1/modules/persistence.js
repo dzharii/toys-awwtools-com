@@ -13,7 +13,7 @@ export function loadSettings(defaultSettings, storage = localStorage) {
         ...defaultSettings,
         ...parsed,
         ignores: parsed.ignores || defaultSettings.ignores,
-        allow: parsed.allow || defaultSettings.allow
+        allow: parsed.allow || defaultSettings.allow,
       };
     } catch (err) {
       console.warn("Failed to parse settings, using defaults", err);
@@ -26,10 +26,22 @@ export function saveSettings(settings, storage = localStorage) {
   storage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
 }
 
-export function loadTreeSitterState({ storageKey, languages, storage = localStorage }) {
+export function loadTreeSitterState({
+  storageKey,
+  languages,
+  storage = localStorage,
+}) {
   const base = {
     enabled: true,
-    window: { open: false, minimized: false, x: null, y: null, w: 360, h: 420, chipY: null },
+    window: {
+      open: false,
+      minimized: false,
+      x: null,
+      y: null,
+      w: 360,
+      h: 420,
+      chipY: null,
+    },
     ready: false,
     loading: false,
     parsing: false,
@@ -44,7 +56,7 @@ export function loadTreeSitterState({ storageKey, languages, storage = localStor
       paused: false,
       runId: 0,
       handle: null,
-      handleType: null
+      handleType: null,
     },
     progress: {
       eligibleTotal: 0,
@@ -54,16 +66,19 @@ export function loadTreeSitterState({ storageKey, languages, storage = localStor
       failed: 0,
       currentFilePath: "",
       finalized: false,
-      tsUnavailable: false
+      tsUnavailable: false,
     },
     pendingFileId: null,
     parser: null,
     Parser: null,
     Language: null,
-    languages: Object.keys(languages).reduce((acc, key) => ({ ...acc, [key]: null }), {}),
+    languages: Object.keys(languages).reduce(
+      (acc, key) => ({ ...acc, [key]: null }),
+      {},
+    ),
     parseHandle: null,
     parseHandleType: null,
-    wantInit: false
+    wantInit: false,
   };
   const saved = storage.getItem(storageKey);
   if (!saved) return base;
@@ -77,7 +92,7 @@ export function loadTreeSitterState({ storageKey, languages, storage = localStor
       y: Number.isFinite(win.y) ? win.y : null,
       w: Number.isFinite(win.w) ? win.w : 360,
       h: Number.isFinite(win.h) ? win.h : 420,
-      chipY: Number.isFinite(win.chipY) ? win.chipY : null
+      chipY: Number.isFinite(win.chipY) ? win.chipY : null,
     };
     base.wantInit = base.window.open || base.window.minimized;
   } catch (err) {
@@ -86,6 +101,9 @@ export function loadTreeSitterState({ storageKey, languages, storage = localStor
   return base;
 }
 
-export function saveTreeSitterState(windowState, { storageKey, storage = localStorage }) {
+export function saveTreeSitterState(
+  windowState,
+  { storageKey, storage = localStorage },
+) {
   storage.setItem(storageKey, JSON.stringify({ window: windowState }));
 }

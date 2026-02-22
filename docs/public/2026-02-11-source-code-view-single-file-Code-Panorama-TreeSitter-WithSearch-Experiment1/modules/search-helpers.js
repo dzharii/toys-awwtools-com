@@ -25,7 +25,10 @@ export function validateSearchQuery(rawQuery, opts) {
     try {
       new RegExp(trimmed, opts.caseSensitive ? "" : "i");
     } catch (err) {
-      opts.onError?.("Invalid regular expression.", formatRegexErrorDetail(err));
+      opts.onError?.(
+        "Invalid regular expression.",
+        formatRegexErrorDetail(err),
+      );
       return { ok: false, trimmed };
     }
   }
@@ -35,12 +38,18 @@ export function validateSearchQuery(rawQuery, opts) {
 
 export function buildSearchMatcher(query, mode, caseSensitive) {
   if (mode === "regex") {
-    return { type: "regex", regex: new RegExp(query, caseSensitive ? "" : "i") };
+    return {
+      type: "regex",
+      regex: new RegExp(query, caseSensitive ? "" : "i"),
+    };
   }
   const hasWildcard = query.includes("*");
   if (hasWildcard) {
     const regexSource = query.split("*").map(escapeRegExp).join(".*");
-    return { type: "regex", regex: new RegExp(regexSource, caseSensitive ? "" : "i") };
+    return {
+      type: "regex",
+      regex: new RegExp(regexSource, caseSensitive ? "" : "i"),
+    };
   }
   return { type: "text", query, caseSensitive };
 }
@@ -48,7 +57,9 @@ export function buildSearchMatcher(query, mode, caseSensitive) {
 export function matchLine(line, matcher) {
   if (matcher.type === "text") {
     const haystack = matcher.caseSensitive ? line : line.toLowerCase();
-    const needle = matcher.caseSensitive ? matcher.query : matcher.query.toLowerCase();
+    const needle = matcher.caseSensitive
+      ? matcher.query
+      : matcher.query.toLowerCase();
     const start = haystack.indexOf(needle);
     if (start === -1) return null;
     return { start, end: start + needle.length };

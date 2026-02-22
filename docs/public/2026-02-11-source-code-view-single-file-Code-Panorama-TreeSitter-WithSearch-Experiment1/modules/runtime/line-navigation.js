@@ -1,7 +1,4 @@
-import {
-  buildLineStartOffsets,
-  offsetAtLineNumber
-} from "../line-index.js";
+import { buildLineStartOffsets, offsetAtLineNumber } from "../line-index.js";
 
 /**
  * Returns the known line count for a file record.
@@ -13,7 +10,8 @@ export function getFileLineCount(file) {
   if (!file) return 0;
   const indexedCount = file.lineIndex?.lineCount;
   if (Number.isFinite(indexedCount) && indexedCount >= 0) return indexedCount;
-  if (Number.isFinite(file.lineCount) && file.lineCount >= 0) return file.lineCount;
+  if (Number.isFinite(file.lineCount) && file.lineCount >= 0)
+    return file.lineCount;
   return 0;
 }
 
@@ -42,7 +40,9 @@ export function getLineStartOffsetForFile(file, lineNumber) {
   if (!file) return 0;
   const safeLine = clampLineNumberForFile(file, lineNumber);
   if (!safeLine) return 0;
-  const offsets = file.lineIndex?.offsets || buildLineStartOffsets(file.textFull || file.text || "");
+  const offsets =
+    file.lineIndex?.offsets ||
+    buildLineStartOffsets(file.textFull || file.text || "");
   return offsetAtLineNumber(offsets, safeLine);
 }
 
@@ -88,13 +88,7 @@ export function resolveTextPositionAtOffset(root, offset, doc = document) {
  * @returns {{lineNumber:number, top:number, height:number}|null} Line metrics relative to pre scroll content.
  */
 export function getLineMetricsInPre(input) {
-  const {
-    doc = document,
-    pre,
-    code = null,
-    file,
-    lineNumber
-  } = input || {};
+  const { doc = document, pre, code = null, file, lineNumber } = input || {};
   if (!pre || !file) return null;
 
   const safeLine = clampLineNumberForFile(file, lineNumber);
@@ -104,11 +98,15 @@ export function getLineMetricsInPre(input) {
   if (row) {
     const rowRect = row.getBoundingClientRect();
     const preRect = pre.getBoundingClientRect();
-    const height = rowRect.height || parseFloat(getComputedStyle(row).lineHeight) || parseFloat(getComputedStyle(pre).lineHeight) || 18;
+    const height =
+      rowRect.height ||
+      parseFloat(getComputedStyle(row).lineHeight) ||
+      parseFloat(getComputedStyle(pre).lineHeight) ||
+      18;
     return {
       lineNumber: safeLine,
       top: Math.max(0, rowRect.top - preRect.top + pre.scrollTop),
-      height
+      height,
     };
   }
 
@@ -123,11 +121,12 @@ export function getLineMetricsInPre(input) {
       const rect = range.getClientRects()[0] || range.getBoundingClientRect();
       if (rect && Number.isFinite(rect.top)) {
         const preRect = pre.getBoundingClientRect();
-        const lineHeight = rect.height || parseFloat(getComputedStyle(pre).lineHeight) || 18;
+        const lineHeight =
+          rect.height || parseFloat(getComputedStyle(pre).lineHeight) || 18;
         return {
           lineNumber: safeLine,
           top: Math.max(0, rect.top - preRect.top + pre.scrollTop),
-          height: lineHeight
+          height: lineHeight,
         };
       }
     }
@@ -137,6 +136,6 @@ export function getLineMetricsInPre(input) {
   return {
     lineNumber: safeLine,
     top: Math.max(0, (safeLine - 1) * fallbackLineHeight),
-    height: fallbackLineHeight
+    height: fallbackLineHeight,
   };
 }

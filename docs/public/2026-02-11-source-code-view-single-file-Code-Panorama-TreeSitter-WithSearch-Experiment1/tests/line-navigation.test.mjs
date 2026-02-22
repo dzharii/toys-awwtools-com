@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import {
   getFileLineCount,
   clampLineNumberForFile,
-  getLineStartOffsetForFile
+  getLineStartOffsetForFile,
 } from "../modules/runtime/line-navigation.js";
 
 const sample = {
@@ -10,8 +10,8 @@ const sample = {
   lineCount: 4,
   lineIndex: {
     offsets: [0, 6, 11, 17],
-    lineCount: 4
-  }
+    lineCount: 4,
+  },
 };
 
 assert.equal(getFileLineCount(sample), 4);

@@ -50,7 +50,9 @@ export function splitLinesPreserveShape(text) {
 }
 
 export function buildGutterLineNumbers(lineCount) {
-  const total = Number.isFinite(lineCount) ? Math.max(0, Math.floor(lineCount)) : 0;
+  const total = Number.isFinite(lineCount)
+    ? Math.max(0, Math.floor(lineCount))
+    : 0;
   const out = new Array(total);
   for (let i = 0; i < total; i += 1) out[i] = i + 1;
   return out;

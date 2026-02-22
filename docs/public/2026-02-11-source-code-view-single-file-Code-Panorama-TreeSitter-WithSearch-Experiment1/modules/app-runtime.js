@@ -39,7 +39,7 @@ import {
   TS_PARSE_SLICE_BUDGET,
   TS_PARSE_FILES_PER_SLICE,
   TS_QUEUE_STATUS_REFRESH_DEBOUNCE_MS,
-  TREE_SITTER_LANGUAGES
+  TREE_SITTER_LANGUAGES,
 } from "./config.js";
 import { getDomElements } from "./dom-elements.js";
 import {
@@ -47,7 +47,7 @@ import {
   loadSettings as loadStoredSettings,
   saveSettings as persistSettings,
   loadTreeSitterState as loadStoredTreeSitterState,
-  saveTreeSitterState as persistTreeSitterState
+  saveTreeSitterState as persistTreeSitterState,
 } from "./persistence.js";
 import {
   formatBytes,
@@ -57,7 +57,7 @@ import {
   copyTextToClipboard,
   copyFileSource,
   makeFileId,
-  languageFromExt
+  languageFromExt,
 } from "./file-helpers.js";
 import { buildOutlineModel, buildIncludeList } from "./tree-sitter-helpers.js";
 import { createCodeHighlighter } from "./highlighter.js";
@@ -66,12 +66,12 @@ import {
   normalizeProjectPath,
   recordInventoryPath,
   extractReferenceCandidates,
-  resolveReferenceCandidate
+  resolveReferenceCandidate,
 } from "./file-references.js";
 import {
   countLinesFromText,
   buildLineStartOffsets,
-  buildGutterLineNumbers
+  buildGutterLineNumbers,
 } from "./line-index.js";
 import { clampLineNumberForFile } from "./runtime/line-navigation.js";
 import {
@@ -80,7 +80,7 @@ import {
   extractIdentifierAtOffset,
   extractHeuristicSymbolsFromLine,
   extractTreeSitterSymbolContribution,
-  createEmptySymbolContribution
+  createEmptySymbolContribution,
 } from "./symbol-references.js";
 import {
   createInitialRefsState,
@@ -90,7 +90,7 @@ import {
   createInitialTreeSitterProgressState,
   createInitialLoadProgressState,
   createInitialAggregateState,
-  normalizeTreeSitterRuntimeState
+  normalizeTreeSitterRuntimeState,
 } from "./runtime/runtime-context.js";
 import { createTocController } from "./runtime/toc-controller.js";
 import { createSearchController } from "./runtime/search-controller.js";
@@ -127,7 +127,7 @@ const state = {
   tocFilter: createInitialTocFilterState(),
   treeSitter: loadStoredTreeSitterState({
     storageKey: TREE_SITTER_STORAGE_KEY,
-    languages: TREE_SITTER_LANGUAGES
+    languages: TREE_SITTER_LANGUAGES,
   }),
   search: {
     running: false,
@@ -138,16 +138,16 @@ const state = {
     capped: false,
     progress: { processed: 0, total: 0 },
     activeRun: null,
-    liveTimer: null
+    liveTimer: null,
   },
   preview: { enabled: true },
   refs: createInitialRefsState(defaults.fileRefs),
   symbolRefs: createInitialSymbolRefsState(defaults.symbolRefs),
   support: {
     directoryPicker: typeof window.showDirectoryPicker === "function",
-    webkitDirectory: "webkitdirectory" in document.createElement("input")
+    webkitDirectory: "webkitdirectory" in document.createElement("input"),
   },
-  seq: 0
+  seq: 0,
 };
 
 let runtimeDoc = document;
@@ -164,7 +164,7 @@ const codeHighlighter = createCodeHighlighter({
   retryDelayMs: HIGHLIGHT_RETRY_DELAY_MS,
   maxRetries: HIGHLIGHT_MAX_RETRIES,
   pendingClassPrefix: MICROLIGHT_PENDING_CLASS,
-  getNextSequence: () => (state.seq += 1)
+  getNextSequence: () => (state.seq += 1),
 });
 
 let updateTocFilterMeta = () => {};
@@ -199,7 +199,13 @@ let setPreviewEnabled = () => {};
 let attachHoverPreviewHandlers = () => {};
 let createPreviewPanelWindow = () => null;
 
-let createNormalizedSymbolContribution = () => ({ fileId: "", sourcePath: "", source: "heuristic", definitions: [], references: [] });
+let createNormalizedSymbolContribution = () => ({
+  fileId: "",
+  sourcePath: "",
+  source: "heuristic",
+  definitions: [],
+  references: [],
+});
 let destroySymbolReferencePanel = () => {};
 let refreshEffectiveSymbolContribution = () => {};
 let resetSymbolReferenceStateForLoad = () => {};
@@ -263,11 +269,11 @@ function initRuntimeControllers() {
     tocFilterDebounceMs: TOC_FILTER_DEBOUNCE,
     buildMarkdownSnippet,
     copyTextToClipboard,
-    isFileHidden: fileId => isFileHidden(fileId),
-    applyFileVisibility: fileId => applyFileVisibility(fileId),
+    isFileHidden: (fileId) => isFileHidden(fileId),
+    applyFileVisibility: (fileId) => applyFileVisibility(fileId),
     renderDirectoryTree: () => renderDirectoryTree(),
     ensureActiveFileVisible: () => ensureActiveFileVisible(),
-    setActiveFile: fileId => setActiveFile(fileId)
+    setActiveFile: (fileId) => setActiveFile(fileId),
   });
   ({
     updateTocFilterMeta,
@@ -286,7 +292,7 @@ function initRuntimeControllers() {
     handleTocSegmentPointerOut,
     handleTocSegmentFocusIn,
     handleTocSegmentFocusOut,
-    handleTocSegmentExclusion
+    handleTocSegmentExclusion,
   } = toc);
 
   const search = createSearchController({
@@ -298,22 +304,22 @@ function initRuntimeControllers() {
     searchLiveDebounce: SEARCH_LIVE_DEBOUNCE,
     searchExplicitMin: SEARCH_EXPLICIT_MIN,
     searchLiveMin: SEARCH_LIVE_MIN,
-    isFileHidden: fileId => isFileHidden(fileId),
-    navigateToFileLine: (fileId, line) => navigateToFileLine(fileId, line)
+    isFileHidden: (fileId) => isFileHidden(fileId),
+    navigateToFileLine: (fileId, line) => navigateToFileLine(fileId, line),
   });
   ({
     updateSearchAvailability,
     resetSearchPanel,
     startSearchRun,
     cancelSearchRun,
-    scheduleLiveSearch
+    scheduleLiveSearch,
   } = search);
 
   const preview = createPreviewController({
     state,
     els,
     doc: runtimeDoc,
-    getFileSection: fileId => getFileSection(fileId),
+    getFileSection: (fileId) => getFileSection(fileId),
     updateControlBar: () => updateControlBar(),
     config: {
       openDelay: PREVIEW_OPEN_DELAY,
@@ -327,8 +333,8 @@ function initRuntimeControllers() {
       gap: PREVIEW_GAP,
       cacheLimit: PREVIEW_CACHE_LIMIT,
       initialWidthRatio: PREVIEW_INITIAL_WIDTH_RATIO,
-      initialHeightRatio: PREVIEW_INITIAL_HEIGHT_RATIO
-    }
+      initialHeightRatio: PREVIEW_INITIAL_HEIGHT_RATIO,
+    },
   });
   ({
     destroyPreviewWindow,
@@ -337,7 +343,7 @@ function initRuntimeControllers() {
     handlePreviewViewportResize,
     setPreviewEnabled,
     attachHoverPreviewHandlers,
-    createPanelWindow: createPreviewPanelWindow
+    createPanelWindow: createPreviewPanelWindow,
   } = preview);
 
   const symbol = createSymbolController({
@@ -361,11 +367,12 @@ function initRuntimeControllers() {
     previewInactiveMs: PREVIEW_INACTIVE_MS,
     addLog: (path, reason) => addLog(path, reason),
     updateControlBar: () => updateControlBar(),
-    startSearchRun: source => startSearchRun(source),
+    startSearchRun: (source) => startSearchRun(source),
     navigateToFileLine: (fileId, line) => navigateToFileLine(fileId, line),
-    createPreviewPanelWindow: options => createPreviewPanelWindow(options),
-    attachHoverPreviewHandlers: container => attachHoverPreviewHandlers(container),
-    copyTextToClipboard
+    createPreviewPanelWindow: (options) => createPreviewPanelWindow(options),
+    attachHoverPreviewHandlers: (container) =>
+      attachHoverPreviewHandlers(container),
+    copyTextToClipboard,
   });
   ({
     destroySymbolReferencePanel,
@@ -376,7 +383,7 @@ function initRuntimeControllers() {
     scheduleSymbolReferenceIncrementalUpdate,
     startSymbolIndexRebuild,
     getSymbolReferenceStatusText,
-    syncSymbolReferenceFeatureEnabled
+    syncSymbolReferenceFeatureEnabled,
   } = symbol);
 
   const references = createReferencesController({
@@ -389,12 +396,12 @@ function initRuntimeControllers() {
     resolveReferenceCandidate,
     buildLineStartOffsets,
     codeHighlighter,
-    getFileSection: fileId => getFileSection(fileId),
+    getFileSection: (fileId) => getFileSection(fileId),
     addLog: (path, reason) => addLog(path, reason),
-    setActiveFile: fileId => setActiveFile(fileId),
+    setActiveFile: (fileId) => setActiveFile(fileId),
     navigateToFileLine: (fileId, line) => navigateToFileLine(fileId, line),
-    ensureFileVisible: fileId => ensureFileVisible(fileId),
-    createPreviewPanelWindow: options => createPreviewPanelWindow(options),
+    ensureFileVisible: (fileId) => ensureFileVisible(fileId),
+    createPreviewPanelWindow: (options) => createPreviewPanelWindow(options),
     copyTextToClipboard,
     buildMarkdownSnippet,
     updateControlBar: () => updateControlBar(),
@@ -402,7 +409,7 @@ function initRuntimeControllers() {
     REFS_BUILD_SLICE_BUDGET,
     REFS_MAX_TOKEN_LENGTH,
     REFS_MAX_OCCURRENCES_PER_TARGET,
-    REFS_MAX_REFERENCING_FILES_SHOWN
+    REFS_MAX_REFERENCING_FILES_SHOWN,
   });
   ({
     destroyReferencePanel,
@@ -412,7 +419,7 @@ function initRuntimeControllers() {
     recordInventoryPathForRefs,
     observeReferenceSection,
     scheduleReferenceIndexBuild,
-    syncReferenceFeatureEnabled
+    syncReferenceFeatureEnabled,
   } = references);
   const treeSitter = createTreeSitterController({
     state,
@@ -442,13 +449,16 @@ function initRuntimeControllers() {
     normalizeTreeSitterRuntimeState,
     addLog: (path, reason) => addLog(path, reason),
     updateControlBar: () => updateControlBar(),
-    setActiveFile: fileId => setActiveFile(fileId),
-    getFileSection: fileId => getFileSection(fileId),
-    startSymbolIndexRebuild: reason => startSymbolIndexRebuild(reason),
-    createNormalizedSymbolContribution: (file, contribution, source) => createNormalizedSymbolContribution(file, contribution, source),
-    refreshEffectiveSymbolContribution: fileId => refreshEffectiveSymbolContribution(fileId),
-    scheduleSymbolReferenceIncrementalUpdate: fileId => scheduleSymbolReferenceIncrementalUpdate(fileId),
-    isFileHidden: fileId => isFileHidden(fileId)
+    setActiveFile: (fileId) => setActiveFile(fileId),
+    getFileSection: (fileId) => getFileSection(fileId),
+    startSymbolIndexRebuild: (reason) => startSymbolIndexRebuild(reason),
+    createNormalizedSymbolContribution: (file, contribution, source) =>
+      createNormalizedSymbolContribution(file, contribution, source),
+    refreshEffectiveSymbolContribution: (fileId) =>
+      refreshEffectiveSymbolContribution(fileId),
+    scheduleSymbolReferenceIncrementalUpdate: (fileId) =>
+      scheduleSymbolReferenceIncrementalUpdate(fileId),
+    isFileHidden: (fileId) => isFileHidden(fileId),
   });
   ({
     updateTreeSitterWindowUI,
@@ -473,7 +483,7 @@ function initRuntimeControllers() {
     finalizeTreeSitterQueueAfterLoad,
     handleActiveFileChange,
     scrollToFileLine,
-    renderTreeSitterPanel
+    renderTreeSitterPanel,
   } = treeSitter);
 
   const panels = createPanelsController({
@@ -483,9 +493,10 @@ function initRuntimeControllers() {
     formatBytes,
     persistSettings,
     syncReferenceFeatureEnabled: () => syncReferenceFeatureEnabled(),
-    syncSymbolReferenceFeatureEnabled: () => syncSymbolReferenceFeatureEnabled(),
+    syncSymbolReferenceFeatureEnabled: () =>
+      syncSymbolReferenceFeatureEnabled(),
     destroyReferencePanel: () => destroyReferencePanel(),
-    destroySymbolReferencePanel: () => destroySymbolReferencePanel()
+    destroySymbolReferencePanel: () => destroySymbolReferencePanel(),
   });
   ({
     closePanels,
@@ -499,7 +510,7 @@ function initRuntimeControllers() {
     openLogPanel,
     closeLogPanel,
     openSupportPanel,
-    closeSupportPanel
+    closeSupportPanel,
   } = panels);
 }
 
@@ -523,7 +534,7 @@ function ensureActiveFileVisible() {
     updateActiveLine();
     return;
   }
-  const next = state.files.find(file => !isFileHidden(file.id));
+  const next = state.files.find((file) => !isFileHidden(file.id));
   if (next) {
     setActiveFile(next.id);
     return;
@@ -568,7 +579,7 @@ function maybeYield(lastYieldRef) {
   const now = performance.now();
   if (now - lastYieldRef.value > 16) {
     lastYieldRef.value = now;
-    return new Promise(resolve => setTimeout(resolve, 0));
+    return new Promise((resolve) => setTimeout(resolve, 0));
   }
   return Promise.resolve();
 }
@@ -625,7 +636,6 @@ function resetStateForLoad() {
  *
  * @returns {void}
  */
-
 function updateControlBar() {
   const p = state.progress;
   const a = state.aggregate;
@@ -636,20 +646,31 @@ function updateControlBar() {
     els.controlActions.classList.add("hidden");
     els.activeIndicator.textContent = "Active: none";
   } else if (state.phase === "loading") {
-    const phaseLabel = state.cancelled ? "Cancelling" : (state.progress.phaseLabel || "Scanning");
+    const phaseLabel = state.cancelled
+      ? "Cancelling"
+      : state.progress.phaseLabel || "Scanning";
     const progressText = `${phaseLabel} • dirs ${p.dirsVisited} • files included ${p.filesIncluded} • read ${p.filesRead} • skipped ${p.skipped} • errors ${p.errors} • bytes ${formatBytes(p.bytesRead)} • lines ${p.linesRead}`;
-    const text = parsingText ? `${progressText} • ${parsingText}` : progressText;
+    const text = parsingText
+      ? `${progressText} • ${parsingText}`
+      : progressText;
     els.controlStatus.textContent = text;
     els.controlStatus.title = `${p.bytesRead} bytes read`;
     els.controlActions.classList.remove("hidden");
     els.activeIndicator.textContent = "Active: loading…";
   } else {
     const indexingText = getSymbolReferenceStatusText();
-    const text = parsingText || indexingText || `Summary • files ${a.loadedFiles} • lines ${a.totalLines} • bytes ${formatBytes(a.totalBytes)} • skipped ${a.skippedFiles} • errors ${state.progress.errors}`;
+    const text =
+      parsingText ||
+      indexingText ||
+      `Summary • files ${a.loadedFiles} • lines ${a.totalLines} • bytes ${formatBytes(a.totalBytes)} • skipped ${a.skippedFiles} • errors ${state.progress.errors}`;
     els.controlStatus.textContent = text;
-    els.controlStatus.title = parsingText ? "Background parsing status" : (indexingText ? "Building project-wide symbol index" : `${a.totalBytes} bytes loaded`);
+    els.controlStatus.title = parsingText
+      ? "Background parsing status"
+      : indexingText
+        ? "Building project-wide symbol index"
+        : `${a.totalBytes} bytes loaded`;
     els.controlActions.classList.remove("hidden");
-    const activeFile = state.files.find(f => f.id === state.activeFileId);
+    const activeFile = state.files.find((f) => f.id === state.activeFileId);
     els.activeIndicator.innerHTML = `<span>Active:</span> <span class="value" title="${activeFile ? activeFile.path : "none"}">${activeFile ? activeFile.path : "none"}</span>`;
   }
 
@@ -665,12 +686,18 @@ function updateControlBar() {
   els.logToggle.disabled = state.logs.length === 0;
   if (els.treeBtn) {
     els.treeBtn.disabled = !hasFiles;
-    els.treeBtn.classList.toggle("active", state.treeSitter.window.open || state.treeSitter.window.minimized);
+    els.treeBtn.classList.toggle(
+      "active",
+      state.treeSitter.window.open || state.treeSitter.window.minimized,
+    );
   }
   if (els.previewToggle) {
     els.previewToggle.disabled = !hasFiles;
     els.previewToggle.classList.toggle("active", state.preview.enabled);
-    els.previewToggle.setAttribute("aria-pressed", state.preview.enabled ? "true" : "false");
+    els.previewToggle.setAttribute(
+      "aria-pressed",
+      state.preview.enabled ? "true" : "false",
+    );
   }
 
   if (!state.support.directoryPicker) {
@@ -699,7 +726,6 @@ function updateControlBar() {
  *
  * @returns {void}
  */
-
 function updateSidebarVisibility() {
   const shouldShow = state.phase !== "empty";
   els.sidebar.classList.toggle("hidden", !shouldShow);
@@ -711,7 +737,6 @@ function updateSidebarVisibility() {
  *
  * @returns {void}
  */
-
 function updateEmptyOverlay() {
   const isEmpty = state.phase === "empty";
   els.emptyPanel.classList.toggle("hidden", !isEmpty);
@@ -723,12 +748,17 @@ function updateEmptyOverlay() {
  *
  * @returns {void}
  */
-
 function updateOffsets() {
   const topHeight = els.topbar?.getBoundingClientRect().height || 0;
   const controlHeight = els.controlBar?.getBoundingClientRect().height || 0;
-  document.documentElement.style.setProperty("--control-offset", `${topHeight}px`);
-  document.documentElement.style.setProperty("--stack-offset", `${topHeight + controlHeight}px`);
+  document.documentElement.style.setProperty(
+    "--control-offset",
+    `${topHeight}px`,
+  );
+  document.documentElement.style.setProperty(
+    "--stack-offset",
+    `${topHeight + controlHeight}px`,
+  );
 }
 
 /**
@@ -736,10 +766,13 @@ function updateOffsets() {
  *
  * @returns {void}
  */
-
 function updateSidebarPinLabel() {
   const pinned = state.sidebar.pinned;
-  setButtonLabel(els.sidebarPin, pinned ? "📌" : "📍", pinned ? "Unpin" : "Pin");
+  setButtonLabel(
+    els.sidebarPin,
+    pinned ? "📌" : "📍",
+    pinned ? "Unpin" : "Pin",
+  );
 }
 
 /**
@@ -747,7 +780,6 @@ function updateSidebarPinLabel() {
  *
  * @returns {void}
  */
-
 function applyStaticButtonLabels() {
   setButtonLabel(els.settingsToggle, "⚙️", "Settings");
   setButtonLabel(els.settingsClose, "✖️", "Close");
@@ -768,7 +800,6 @@ function applyStaticButtonLabels() {
  *
  * @returns {void}
  */
-
 function showEmptySupportMessage() {
   const target = document.getElementById("empty-support");
   if (state.support.directoryPicker) {
@@ -776,7 +807,8 @@ function showEmptySupportMessage() {
     target.textContent = "";
   } else {
     target.classList.remove("hidden");
-    target.textContent = "Folder picker not supported in this browser. Use file picker.";
+    target.textContent =
+      "Folder picker not supported in this browser. Use file picker.";
     els.emptyFallback.focus();
   }
 }
@@ -786,7 +818,6 @@ function showEmptySupportMessage() {
  *
  * @returns {void}
  */
-
 function hideBanner() {
   els.statusBanner.classList.add("hidden");
   els.statusBanner.textContent = "";
@@ -800,7 +831,6 @@ function hideBanner() {
  * @param {string} [kind="info"] Banner kind identifier.
  * @returns {void}
  */
-
 function showBanner(text, kind = "info") {
   els.statusBanner.dataset.kind = kind;
   els.statusBanner.classList.remove("hidden");
@@ -903,10 +933,9 @@ async function traverseDirectory(dirHandle, prefix) {
  * @param {string} name Segment name.
  * @returns {boolean} True if the segment should be ignored.
  */
-
 function shouldIgnore(name) {
   const lower = name.toLowerCase();
-  return state.settings.ignores.some(x => x.trim().toLowerCase() === lower);
+  return state.settings.ignores.some((x) => x.trim().toLowerCase() === lower);
 }
 
 /**
@@ -915,10 +944,9 @@ function shouldIgnore(name) {
  * @param {string} path Project path.
  * @returns {boolean} True if the path contains an ignored segment.
  */
-
 function pathHasIgnoredSegment(path) {
   const parts = path.split(/[\\/]/);
-  return parts.some(part => shouldIgnore(part));
+  return parts.some((part) => shouldIgnore(part));
 }
 
 /**
@@ -928,15 +956,20 @@ function pathHasIgnoredSegment(path) {
  * @param {number} size File size in bytes.
  * @returns {{allowed:boolean, reason?:string, ext?:string}} Allow decision and metadata.
  */
-
 function isAllowedFile(path, size) {
   const parts = path.split(".");
   const ext = parts.length > 1 ? parts.pop().toLowerCase() : "";
   if (!ext) return { allowed: false, reason: "no-extension" };
-  if (ext === "json" && !state.settings.includeJson) return { allowed: false, reason: "json-off" };
-  const allowSet = new Set(state.settings.allow.map(a => a.toLowerCase()).concat(state.settings.includeJson ? ["json"] : []));
+  if (ext === "json" && !state.settings.includeJson)
+    return { allowed: false, reason: "json-off" };
+  const allowSet = new Set(
+    state.settings.allow
+      .map((a) => a.toLowerCase())
+      .concat(state.settings.includeJson ? ["json"] : []),
+  );
   if (!allowSet.has(ext)) return { allowed: false, reason: "filtered" };
-  if (size > state.settings.maxFileSize) return { allowed: false, reason: "too-large" };
+  if (size > state.settings.maxFileSize)
+    return { allowed: false, reason: "too-large" };
   return { allowed: true, ext };
 }
 
@@ -990,7 +1023,7 @@ async function readAndStoreFile(file, path, extHint) {
   const charCount = textFull.length;
   const lineOffsets = buildLineStartOffsets(textFull);
   const lineCount = countLinesFromText(textFull);
-  const ext = extHint || (path.split(".").pop() || "");
+  const ext = extHint || path.split(".").pop() || "";
   const language = languageFromExt(ext);
   const id = makeFileId(path);
   const record = {
@@ -1004,12 +1037,12 @@ async function readAndStoreFile(file, path, extHint) {
     textFull,
     lineIndex: {
       offsets: lineOffsets,
-      lineCount
+      lineCount,
     },
     language,
     lineCount,
     charCount,
-    status: "loaded"
+    status: "loaded",
   };
   state.files.push(record);
   state.progress.filesRead += 1;
@@ -1018,7 +1051,8 @@ async function readAndStoreFile(file, path, extHint) {
   state.aggregate.loadedFiles += 1;
   state.aggregate.totalBytes += file.size;
   state.aggregate.totalLines += lineCount;
-  state.aggregate.languages[language] = (state.aggregate.languages[language] || 0) + lineCount;
+  state.aggregate.languages[language] =
+    (state.aggregate.languages[language] || 0) + lineCount;
   updateLargest(record);
   renderFileSection(record);
   insertIntoTree(record);
@@ -1038,7 +1072,6 @@ async function readAndStoreFile(file, path, extHint) {
  * @param {Object} file File record.
  * @returns {void}
  */
-
 function updateLargest(file) {
   state.aggregate.largest.push(file);
   state.aggregate.largest.sort((a, b) => b.size - a.size);
@@ -1051,12 +1084,14 @@ function updateLargest(file) {
  * @param {number} lineNumber 1-based line number.
  * @returns {{leading:string, significant:string}} Split formatted parts.
  */
-
 function formatLineNumberParts(lineNumber) {
-  const value = Math.max(0, Number.isFinite(lineNumber) ? Math.floor(lineNumber) : 0);
+  const value = Math.max(
+    0,
+    Number.isFinite(lineNumber) ? Math.floor(lineNumber) : 0,
+  );
   const formatted = value.toLocaleString("en-US", {
     useGrouping: true,
-    minimumIntegerDigits: 5
+    minimumIntegerDigits: 5,
   });
   let firstSignificantDigit = -1;
   for (let i = 0; i < formatted.length; i += 1) {
@@ -1071,7 +1106,7 @@ function formatLineNumberParts(lineNumber) {
   }
   return {
     leading: formatted.slice(0, firstSignificantDigit),
-    significant: formatted.slice(firstSignificantDigit)
+    significant: formatted.slice(firstSignificantDigit),
   };
 }
 
@@ -1081,7 +1116,6 @@ function formatLineNumberParts(lineNumber) {
  * @param {number} lineCount Number of lines in the file.
  * @returns {HTMLElement} Gutter element.
  */
-
 function buildLineNumberGutter(lineCount) {
   const lineNumbers = buildGutterLineNumbers(lineCount);
   const gutter = document.createElement("div");
@@ -1114,7 +1148,6 @@ function buildLineNumberGutter(lineCount) {
  * @param {Object} file File record.
  * @returns {void}
  */
-
 function insertIntoTree(file) {
   let node = state.tree;
   const parts = file.segments;
@@ -1122,11 +1155,24 @@ function insertIntoTree(file) {
     const name = parts[i];
     const isLast = i === parts.length - 1;
     if (isLast) {
-      node.children.push({ name, type: "file", fileId: file.id, path: file.path });
+      node.children.push({
+        name,
+        type: "file",
+        fileId: file.id,
+        path: file.path,
+      });
     } else {
-      let next = node.children.find(child => child.type === "dir" && child.name === name);
+      let next = node.children.find(
+        (child) => child.type === "dir" && child.name === name,
+      );
       if (!next) {
-        next = { name, type: "dir", children: [], expanded: false, path: node.path ? `${node.path}/${name}` : name };
+        next = {
+          name,
+          type: "dir",
+          children: [],
+          expanded: false,
+          path: node.path ? `${node.path}/${name}` : name,
+        };
         node.children.push(next);
       }
       node = next;
@@ -1142,7 +1188,6 @@ function insertIntoTree(file) {
  * @param {Object} node Tree node.
  * @returns {void}
  */
-
 function sortTree(node) {
   if (!node.children) return;
   node.children.sort((a, b) => {
@@ -1157,7 +1202,6 @@ function sortTree(node) {
  *
  * @returns {void}
  */
-
 function renderDirectoryTree() {
   els.treeContainer.innerHTML = "";
   const fragment = document.createDocumentFragment();
@@ -1169,7 +1213,6 @@ function renderDirectoryTree() {
    * @param {number} depth Visual nesting depth.
    * @returns {void}
    */
-
   function renderNode(node, depth) {
     const isFile = node.type === "file";
     const isHidden = isFile && isFileHidden(node.fileId);
@@ -1185,7 +1228,9 @@ function renderDirectoryTree() {
     if (isFile) {
       row.dataset.fileId = node.fileId;
       row.dataset.filePath = node.path || "";
-      const isActive = !isHidden && (node.fileId === state.activeFileId || node.fileId === currentHash);
+      const isActive =
+        !isHidden &&
+        (node.fileId === state.activeFileId || node.fileId === currentHash);
       if (isHidden) {
         row.setAttribute("aria-disabled", "true");
         row.removeAttribute("aria-current");
@@ -1213,13 +1258,14 @@ function renderDirectoryTree() {
     row.appendChild(label);
     fragment.appendChild(row);
     if (node.type === "dir" && node.expanded) {
-      node.children.forEach(child => renderNode(child, depth + 1));
+      node.children.forEach((child) => renderNode(child, depth + 1));
     }
   }
-  state.tree.children.forEach(child => renderNode(child, 0));
+  state.tree.children.forEach((child) => renderNode(child, 0));
   els.treeContainer.appendChild(fragment);
   const hasNodes = state.tree.children.length > 0;
-  els.treePlaceholder.textContent = state.phase === "loading" ? "Loading project..." : "No files loaded";
+  els.treePlaceholder.textContent =
+    state.phase === "loading" ? "Loading project..." : "No files loaded";
   els.treePlaceholder.classList.toggle("hidden", hasNodes);
 }
 
@@ -1229,7 +1275,6 @@ function renderDirectoryTree() {
  * @param {Object} node Tree node.
  * @returns {void}
  */
-
 function handleTreeClick(node) {
   if (node.type !== "dir") return;
   node.expanded = !node.expanded;
@@ -1242,7 +1287,6 @@ function handleTreeClick(node) {
  * @param {Object} file File record.
  * @returns {void}
  */
-
 function renderFileSection(file) {
   const section = document.createElement("details");
   section.className = "file-section";
@@ -1270,14 +1314,14 @@ function renderFileSection(file) {
   const copyPathBtn = document.createElement("button");
   copyPathBtn.className = "ghost tiny";
   setButtonLabel(copyPathBtn, "🔗", "Copy path");
-  copyPathBtn.addEventListener("click", e => {
+  copyPathBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     navigator.clipboard?.writeText(file.path);
   });
   const copySourceBtn = document.createElement("button");
   copySourceBtn.className = "ghost tiny";
   setButtonLabel(copySourceBtn, "📋", "Copy source");
-  copySourceBtn.addEventListener("click", e => {
+  copySourceBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     copyFileSource(file);
   });
@@ -1326,15 +1370,22 @@ function renderFileSection(file) {
  * @param {HTMLElement} section File section element.
  * @returns {void}
  */
-
 function attachObserver(section) {
   if (!observer) {
-    observer = new IntersectionObserver(entries => {
-      const visible = entries.filter(e => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-      if (visible.length === 0) return;
-      const fileId = visible[0].target.dataset.fileId;
-      setActiveFile(fileId);
-    }, { rootMargin: "-40% 0px -50% 0px", threshold: [0, 0.1, 0.25, 0.5, 0.75, 1] });
+    observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible.length === 0) return;
+        const fileId = visible[0].target.dataset.fileId;
+        setActiveFile(fileId);
+      },
+      {
+        rootMargin: "-40% 0px -50% 0px",
+        threshold: [0, 0.1, 0.25, 0.5, 0.75, 1],
+      },
+    );
   }
   observer.observe(section);
   if (!scrollHandler) {
@@ -1352,7 +1403,6 @@ function attachObserver(section) {
  * @param {HTMLElement} code Code element.
  * @returns {void}
  */
-
 function observeHighlightBlock(code) {
   codeHighlighter.observe(code);
 }
@@ -1363,13 +1413,12 @@ function observeHighlightBlock(code) {
  * @param {string} fileId File identifier.
  * @returns {void}
  */
-
 function setActiveFile(fileId) {
   if (!fileId || state.activeFileId === fileId) return;
   if (isFileHidden(fileId)) return;
   state.activeFileId = fileId;
   renderDirectoryTree();
-  const file = state.files.find(f => f.id === fileId);
+  const file = state.files.find((f) => f.id === fileId);
   if (file) {
     els.activeIndicator.innerHTML = `<span>Active:</span> <span class="value" title="${file.path}">${file.path}</span>`;
     updateActiveLine();
@@ -1384,22 +1433,25 @@ function setActiveFile(fileId) {
  *
  * @returns {void}
  */
-
 function updateActiveLine() {
   const fileId = state.activeFileId;
   if (!fileId) return;
   const section = getFileSection(fileId);
   if (!section) return;
   if (section.classList.contains("is-hidden")) return;
-  const file = state.files.find(item => item.id === fileId);
+  const file = state.files.find((item) => item.id === fileId);
   if (!file) return;
   const pre = section.querySelector("pre");
   if (!pre) return;
   const rect = pre.getBoundingClientRect();
   const lineHeight = parseFloat(getComputedStyle(pre).lineHeight) || 18;
-  const viewportProbeY = Math.min(Math.max(rect.top + lineHeight * 0.5, window.innerHeight * 0.35), rect.bottom - lineHeight * 0.5);
+  const viewportProbeY = Math.min(
+    Math.max(rect.top + lineHeight * 0.5, window.innerHeight * 0.35),
+    rect.bottom - lineHeight * 0.5,
+  );
   const scrollTop = Math.max(0, viewportProbeY - rect.top + pre.scrollTop);
-  const approxLine = clampLineNumberForFile(file, Math.floor(scrollTop / lineHeight) + 1) || 1;
+  const approxLine =
+    clampLineNumberForFile(file, Math.floor(scrollTop / lineHeight) + 1) || 1;
   const path = section.querySelector(".file-path")?.textContent || fileId;
   els.activeIndicator.innerHTML = `<span>Active:</span> <span class="value" title="${path}">${path}</span><span>Line ${approxLine}</span>`;
 }
@@ -1409,7 +1461,6 @@ function updateActiveLine() {
  *
  * @returns {void}
  */
-
 function handleHashChange() {
   const target = parseHashValue(location.hash);
   const targetId = target.fileId;
@@ -1430,11 +1481,13 @@ function handleHashChange() {
  *
  * @returns {void}
  */
-
 function maybeWarnMemory() {
   if (!state.settings.showStats) return;
   if (state.aggregate.totalBytes > state.settings.memoryWarnBytes) {
-    showBanner(`Loaded ${formatBytes(state.aggregate.totalBytes)} which exceeds the warning threshold. Consider cancelling if performance drops.`, "stats");
+    showBanner(
+      `Loaded ${formatBytes(state.aggregate.totalBytes)} which exceeds the warning threshold. Consider cancelling if performance drops.`,
+      "stats",
+    );
   }
 }
 
@@ -1443,13 +1496,14 @@ function maybeWarnMemory() {
  *
  * @returns {void}
  */
-
 function finishLoad() {
   state.scanning = false;
   els.cancelLoad.disabled = true;
   if (state.cancelled) {
     state.phase = "cancelled";
-    showBanner(`Loading cancelled. ${state.aggregate.loadedFiles} files loaded.`);
+    showBanner(
+      `Loading cancelled. ${state.aggregate.loadedFiles} files loaded.`,
+    );
   } else {
     state.phase = "loaded";
     if (state.aggregate.loadedFiles === 0) {
@@ -1493,7 +1547,6 @@ function finishLoad() {
  * @param {KeyboardEvent} e Key event.
  * @returns {void}
  */
-
 function maybeYieldEmptyEnter(e) {
   if (e.key === "Enter" && state.phase === "empty") {
     if (!els.emptyOpen.disabled) {
@@ -1523,21 +1576,23 @@ function addLog(path, reason) {
  *
  * @returns {void}
  */
-
 function setupSidebarResize() {
   let startX = 0;
   let startWidth = state.sidebar.width;
-  const move = e => {
+  const move = (e) => {
     const dx = e.clientX - startX;
     let newWidth = Math.min(520, Math.max(220, startWidth + dx));
     state.sidebar.width = newWidth;
-    document.documentElement.style.setProperty("--sidebar-width", `${newWidth}px`);
+    document.documentElement.style.setProperty(
+      "--sidebar-width",
+      `${newWidth}px`,
+    );
   };
   const up = () => {
     window.removeEventListener("mousemove", move);
     window.removeEventListener("mouseup", up);
   };
-  els.sidebarResize.addEventListener("mousedown", e => {
+  els.sidebarResize.addEventListener("mousedown", (e) => {
     startX = e.clientX;
     startWidth = state.sidebar.width;
     window.addEventListener("mousemove", move);
@@ -1550,7 +1605,6 @@ function setupSidebarResize() {
  *
  * @returns {void}
  */
-
 function toggleSidebarPin() {
   state.sidebar.pinned = !state.sidebar.pinned;
   els.sidebar.classList.toggle("unpinned", !state.sidebar.pinned);
@@ -1563,7 +1617,6 @@ function toggleSidebarPin() {
  *
  * @returns {void}
  */
-
 function openSidebarOverlay() {
   if (state.sidebar.pinned) return;
   clearTimeout(state.sidebar.collapseTimer);
@@ -1576,7 +1629,6 @@ function openSidebarOverlay() {
  *
  * @returns {void}
  */
-
 function collapseSidebarOverlay() {
   if (state.sidebar.pinned) return;
   state.sidebar.collapseTimer = setTimeout(() => {
@@ -1591,11 +1643,14 @@ function collapseSidebarOverlay() {
  * @param {KeyboardEvent} e Key event.
  * @returns {void}
  */
-
 function handleTreeKeydown(e) {
-  const items = Array.from(els.treeContainer.querySelectorAll(".tree-item:not(.is-hidden)"));
+  const items = Array.from(
+    els.treeContainer.querySelectorAll(".tree-item:not(.is-hidden)"),
+  );
   if (!items.length) return;
-  const active = document.activeElement.classList.contains("tree-item") ? items.indexOf(document.activeElement) : 0;
+  const active = document.activeElement.classList.contains("tree-item")
+    ? items.indexOf(document.activeElement)
+    : 0;
   if (e.key === "ArrowDown") {
     e.preventDefault();
     const next = Math.min(items.length - 1, active + 1);
@@ -1606,7 +1661,9 @@ function handleTreeKeydown(e) {
     items[prev].focus();
   } else if (e.key === "Enter") {
     e.preventDefault();
-    const nodeId = document.activeElement?.dataset?.fileId || document.activeElement?.dataset?.nodeId;
+    const nodeId =
+      document.activeElement?.dataset?.fileId ||
+      document.activeElement?.dataset?.nodeId;
     const node = findNodeById(state.tree, nodeId);
     if (node) {
       if (node.type === "file") {
@@ -1627,7 +1684,6 @@ function handleTreeKeydown(e) {
  * @param {string} id Node identifier.
  * @returns {Object|null} Matching node or null.
  */
-
 function findNodeById(node, id) {
   if ((node.path || node.fileId) === id) return node;
   if (node.children) {
@@ -1645,7 +1701,6 @@ function findNodeById(node, id) {
  * @param {Event} evt Input change event.
  * @returns {void}
  */
-
 function handleFileInput(evt) {
   const files = Array.from(evt.target.files || []);
   if (!files.length) return;
@@ -1701,7 +1756,6 @@ async function loadFromFileList(files) {
  *
  * @returns {void}
  */
-
 function cancelLoad() {
   state.cancelled = true;
   cancelTreeSitterQueue("user-cancel", true);
@@ -1715,13 +1769,15 @@ function cancelLoad() {
  *
  * @returns {void}
  */
-
 function applyWrapToggle() {
   state.settings.wrap = els.wrapToggle.checked;
   persistSettings(state.settings);
   applyDisplaySettings();
   if (state.settings.wrap) {
-    showBanner("Main viewer keeps line-accurate numbering, so wrapping is disabled for file panes.", "info");
+    showBanner(
+      "Main viewer keeps line-accurate numbering, so wrapping is disabled for file panes.",
+      "info",
+    );
   }
 }
 
@@ -1730,11 +1786,11 @@ function applyWrapToggle() {
  *
  * @returns {void}
  */
-
 function applyStatsToggle() {
   state.settings.showStats = els.statsDisplay.checked;
   persistSettings(state.settings);
-  if (!state.settings.showStats && els.statusBanner.dataset.kind === "stats") hideBanner();
+  if (!state.settings.showStats && els.statusBanner.dataset.kind === "stats")
+    hideBanner();
 }
 
 /**
@@ -1742,7 +1798,6 @@ function applyStatsToggle() {
  *
  * @returns {void}
  */
-
 function applyFileRefsToggle() {
   state.settings.fileRefs = !!els.fileRefsToggle?.checked;
   persistSettings(state.settings);
@@ -1754,22 +1809,22 @@ function applyFileRefsToggle() {
  *
  * @returns {void}
  */
-
 function applySymbolRefsToggle() {
   state.settings.symbolRefs = !!els.symbolRefsToggle?.checked;
   persistSettings(state.settings);
   syncSymbolReferenceFeatureEnabled();
 }
 
-
 /**
  * Wires DOM events, initializes feature UIs, and performs first-render startup synchronization.
  *
  * @returns {void}
  */
-
 function init() {
-  document.documentElement.style.setProperty("--sidebar-width", `${state.sidebar.width}px`);
+  document.documentElement.style.setProperty(
+    "--sidebar-width",
+    `${state.sidebar.width}px`,
+  );
   applyDisplaySettings();
   updateOffsets();
   showEmptySupportMessage();
@@ -1791,9 +1846,14 @@ function init() {
   els.settingsSave.addEventListener("click", saveSettingsFromForm);
   els.wrapToggle.addEventListener("change", applyWrapToggle);
   els.statsDisplay.addEventListener("change", applyStatsToggle);
-  if (els.fileRefsToggle) els.fileRefsToggle.addEventListener("change", applyFileRefsToggle);
-  if (els.symbolRefsToggle) els.symbolRefsToggle.addEventListener("change", applySymbolRefsToggle);
-  els.jsonToggle.addEventListener("change", () => { state.settings.includeJson = els.jsonToggle.checked; persistSettings(state.settings); });
+  if (els.fileRefsToggle)
+    els.fileRefsToggle.addEventListener("change", applyFileRefsToggle);
+  if (els.symbolRefsToggle)
+    els.symbolRefsToggle.addEventListener("change", applySymbolRefsToggle);
+  els.jsonToggle.addEventListener("change", () => {
+    state.settings.includeJson = els.jsonToggle.checked;
+    persistSettings(state.settings);
+  });
 
   els.sidebarPin.addEventListener("click", toggleSidebarPin);
   els.sidebarEdge.addEventListener("mouseenter", openSidebarOverlay);
@@ -1804,32 +1864,42 @@ function init() {
 
   els.statsBtn.addEventListener("click", openStatsPanel);
   els.statsClose.addEventListener("click", closeStatsPanel);
-  els.statsPanel.addEventListener("click", e => { if (e.target === els.statsPanel) closeStatsPanel(); });
+  els.statsPanel.addEventListener("click", (e) => {
+    if (e.target === els.statsPanel) closeStatsPanel();
+  });
 
   els.logToggle.addEventListener("click", openLogPanel);
   els.logClose.addEventListener("click", closeLogPanel);
-  els.logPanel.addEventListener("click", e => { if (e.target === els.logPanel) closeLogPanel(); });
+  els.logPanel.addEventListener("click", (e) => {
+    if (e.target === els.logPanel) closeLogPanel();
+  });
 
   els.supportLink.addEventListener("click", openSupportPanel);
   els.supportClose.addEventListener("click", closeSupportPanel);
-  els.supportPanel.addEventListener("click", e => { if (e.target === els.supportPanel) closeSupportPanel(); });
+  els.supportPanel.addEventListener("click", (e) => {
+    if (e.target === els.supportPanel) closeSupportPanel();
+  });
 
-  if (els.tocSelectAll) els.tocSelectAll.addEventListener("click", handleTocSelectAll);
-  if (els.tocReset) els.tocReset.addEventListener("click", handleTocResetSelection);
+  if (els.tocSelectAll)
+    els.tocSelectAll.addEventListener("click", handleTocSelectAll);
+  if (els.tocReset)
+    els.tocReset.addEventListener("click", handleTocResetSelection);
   if (els.tocCopy) els.tocCopy.addEventListener("click", copySelectedFiles);
   if (els.tocHide) els.tocHide.addEventListener("click", hideSelectedFiles);
   if (els.tocShow) els.tocShow.addEventListener("click", showSelectedFiles);
   if (els.tocFilterQuery) {
     els.tocFilterQuery.addEventListener("input", handleTocFilterInput);
-    els.tocFilterQuery.addEventListener("keydown", e => {
+    els.tocFilterQuery.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
         e.preventDefault();
         clearTocQuery();
       }
     });
   }
-  if (els.tocFilterClear) els.tocFilterClear.addEventListener("click", clearTocQuery);
-  if (els.tocExclusionsClear) els.tocExclusionsClear.addEventListener("click", clearTocExclusions);
+  if (els.tocFilterClear)
+    els.tocFilterClear.addEventListener("click", clearTocQuery);
+  if (els.tocExclusionsClear)
+    els.tocExclusionsClear.addEventListener("click", clearTocExclusions);
   if (els.tocList) {
     els.tocList.addEventListener("pointerover", handleTocSegmentPointerOver);
     els.tocList.addEventListener("pointerout", handleTocSegmentPointerOut);
@@ -1839,7 +1909,11 @@ function init() {
   }
   if (els.tocPanel) {
     els.tocPanel.addEventListener("toggle", () => {
-      if (els.tocPanel.open && els.tocFilterQuery && !els.tocFilterQuery.disabled) {
+      if (
+        els.tocPanel.open &&
+        els.tocFilterQuery &&
+        !els.tocFilterQuery.disabled
+      ) {
         els.tocFilterQuery.focus();
         els.tocFilterQuery.select();
       }
@@ -1849,16 +1923,26 @@ function init() {
 
   if (els.codeSearchPanel) {
     els.codeSearchPanel.addEventListener("toggle", () => {
-      if (els.codeSearchPanel.open && els.codeSearchQuery && !els.codeSearchQuery.disabled) {
+      if (
+        els.codeSearchPanel.open &&
+        els.codeSearchQuery &&
+        !els.codeSearchQuery.disabled
+      ) {
         els.codeSearchQuery.focus();
         els.codeSearchQuery.select();
       }
     });
   }
-  if (els.codeSearchRun) els.codeSearchRun.addEventListener("click", () => startSearchRun("explicit"));
-  if (els.codeSearchCancel) els.codeSearchCancel.addEventListener("click", () => cancelSearchRun("user"));
+  if (els.codeSearchRun)
+    els.codeSearchRun.addEventListener("click", () =>
+      startSearchRun("explicit"),
+    );
+  if (els.codeSearchCancel)
+    els.codeSearchCancel.addEventListener("click", () =>
+      cancelSearchRun("user"),
+    );
   if (els.codeSearchQuery) {
-    els.codeSearchQuery.addEventListener("keydown", e => {
+    els.codeSearchQuery.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
         startSearchRun("explicit");
@@ -1896,29 +1980,39 @@ function init() {
 
   if (els.treeBtn) els.treeBtn.addEventListener("click", handleTreeButtonClick);
   if (els.previewToggle) {
-    els.previewToggle.addEventListener("click", () => setPreviewEnabled(!state.preview.enabled));
+    els.previewToggle.addEventListener("click", () =>
+      setPreviewEnabled(!state.preview.enabled),
+    );
   }
   if (els.tsClose) els.tsClose.addEventListener("click", closeTreeSitterWindow);
-  if (els.tsMinimize) els.tsMinimize.addEventListener("click", minimizeTreeSitterWindow);
-  if (els.tsParse) els.tsParse.addEventListener("click", () => {
-    if (state.phase === "empty") {
-      renderTreeSitterPanel("Load a project to parse.");
-      return;
-    }
-    const queue = state.treeSitter.queue;
-    const running = !!(state.treeSitter.parsing || queue.inProgressFileId || queue.handle);
-    if (running && !queue.paused) {
-      pauseTreeSitterQueue();
-      return;
-    }
-    if (queue.paused || queue.pendingIds.length > 0) {
-      resumeTreeSitterQueue();
-      return;
-    }
-    rebuildTreeSitterQueue();
-  });
-  if (els.tsTitleBar) els.tsTitleBar.addEventListener("mousedown", handleTreeSitterDrag);
-  if (els.tsResize) els.tsResize.addEventListener("mousedown", handleTreeSitterResize);
+  if (els.tsMinimize)
+    els.tsMinimize.addEventListener("click", minimizeTreeSitterWindow);
+  if (els.tsParse)
+    els.tsParse.addEventListener("click", () => {
+      if (state.phase === "empty") {
+        renderTreeSitterPanel("Load a project to parse.");
+        return;
+      }
+      const queue = state.treeSitter.queue;
+      const running = !!(
+        state.treeSitter.parsing ||
+        queue.inProgressFileId ||
+        queue.handle
+      );
+      if (running && !queue.paused) {
+        pauseTreeSitterQueue();
+        return;
+      }
+      if (queue.paused || queue.pendingIds.length > 0) {
+        resumeTreeSitterQueue();
+        return;
+      }
+      rebuildTreeSitterQueue();
+    });
+  if (els.tsTitleBar)
+    els.tsTitleBar.addEventListener("mousedown", handleTreeSitterDrag);
+  if (els.tsResize)
+    els.tsResize.addEventListener("mousedown", handleTreeSitterResize);
   if (els.tsChip) {
     els.tsChip.addEventListener("click", restoreTreeSitterWindow);
     els.tsChip.addEventListener("mousedown", handleChipDrag);
@@ -1928,7 +2022,9 @@ function init() {
   window.addEventListener("resize", updateOffsets);
   window.addEventListener("resize", handleViewportResize);
   window.addEventListener("resize", handlePreviewViewportResize);
-  window.addEventListener("scroll", handlePreviewViewportResize, { passive: true });
+  window.addEventListener("scroll", handlePreviewViewportResize, {
+    passive: true,
+  });
   window.addEventListener("hashchange", handleHashChange);
   renderDirectoryTree();
   renderTableOfContents();

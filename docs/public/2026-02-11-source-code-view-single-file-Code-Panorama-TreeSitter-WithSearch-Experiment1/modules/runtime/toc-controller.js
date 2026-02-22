@@ -11,7 +11,7 @@ export function createTocController({
   applyFileVisibility,
   renderDirectoryTree,
   ensureActiveFileVisible,
-  setActiveFile
+  setActiveFile,
 }) {
   let tocRenderHandle = null;
 
@@ -20,7 +20,10 @@ export function createTocController({
   }
 
   function normalizeTocPath(value) {
-    return (value || "").replace(/\\/g, "/").replace(/\/+/g, "/").replace(/^\/+|\/+$/g, "");
+    return (value || "")
+      .replace(/\\/g, "/")
+      .replace(/\/+/g, "/")
+      .replace(/^\/+|\/+$/g, "");
   }
 
   function normalizeTocPrefix(value) {
@@ -46,7 +49,7 @@ export function createTocController({
       else source += escapeRegExp(ch);
     }
     const regex = new RegExp(`^${source}$`, "i");
-    return path => regex.test(path || "");
+    return (path) => regex.test(path || "");
   }
 
   function getOrBuildTocSegments(file) {
@@ -65,13 +68,13 @@ export function createTocController({
         lower: segment.toLowerCase(),
         index,
         prefix,
-        prefixLower: prefix.toLowerCase()
+        prefixLower: prefix.toLowerCase(),
       };
     });
     const built = {
       path: file.path,
       dirs: dirEntries,
-      fileName: fileName || file.path || ""
+      fileName: fileName || file.path || "",
     };
     state.tocFilter.segmentCache.set(file.id, built);
     return built;
@@ -81,7 +84,8 @@ export function createTocController({
     const normalized = normalizeTocPrefix(path);
     if (!normalized || !state.tocFilter.exclusions.size) return false;
     for (const prefix of state.tocFilter.exclusions) {
-      if (normalized === prefix || normalized.startsWith(`${prefix}/`)) return true;
+      if (normalized === prefix || normalized.startsWith(`${prefix}/`))
+        return true;
     }
     return false;
   }
@@ -96,13 +100,17 @@ export function createTocController({
   }
 
   function getTocSelectableFileIds() {
-    return new Set(getTocFilesInOrder().filter(file => isTocPathVisible(file.path)).map(file => file.id));
+    return new Set(
+      getTocFilesInOrder()
+        .filter((file) => isTocPathVisible(file.path))
+        .map((file) => file.id),
+    );
   }
 
   function getTocActionableSelectedFileIds() {
     const selected = new Set();
-    state.tocSelection.forEach(fileId => {
-      const file = state.files.find(item => item.id === fileId);
+    state.tocSelection.forEach((fileId) => {
+      const file = state.files.find((item) => item.id === fileId);
       if (!file || isTocPathExcluded(file.path)) return;
       selected.add(fileId);
     });
@@ -125,7 +133,8 @@ export function createTocController({
       els.tocFilterClear.disabled = !hasFiles || !hasQuery;
     }
     if (els.tocExclusionsClear) {
-      els.tocExclusionsClear.disabled = !hasFiles || state.tocFilter.exclusions.size === 0;
+      els.tocExclusionsClear.disabled =
+        !hasFiles || state.tocFilter.exclusions.size === 0;
     }
   }
 
@@ -144,13 +153,23 @@ export function createTocController({
 
   function resolveTocSegmentHoverKeyFromTarget(target) {
     if (!target?.closest) return "";
-    const segment = target.closest(".toc-segment[data-segment-lower][data-segment-index]");
+    const segment = target.closest(
+      ".toc-segment[data-segment-lower][data-segment-index]",
+    );
     if (segment) {
-      return getTocSegmentHoverKeyFromDataset(segment.dataset.segmentLower, segment.dataset.segmentIndex);
+      return getTocSegmentHoverKeyFromDataset(
+        segment.dataset.segmentLower,
+        segment.dataset.segmentIndex,
+      );
     }
-    const button = target.closest(".toc-segment-exclude[data-segment-lower][data-segment-index]");
+    const button = target.closest(
+      ".toc-segment-exclude[data-segment-lower][data-segment-index]",
+    );
     if (button) {
-      return getTocSegmentHoverKeyFromDataset(button.dataset.segmentLower, button.dataset.segmentIndex);
+      return getTocSegmentHoverKeyFromDataset(
+        button.dataset.segmentLower,
+        button.dataset.segmentIndex,
+      );
     }
     return "";
   }
@@ -158,7 +177,7 @@ export function createTocController({
   function applyTocSegmentHighlight() {
     if (!els.tocList) return;
     const segments = els.tocList.querySelectorAll(".toc-segment");
-    segments.forEach(segment => {
+    segments.forEach((segment) => {
       segment.classList.remove("is-global-hover");
       segment.style.removeProperty("--toc-segment-hue");
     });
@@ -168,11 +187,19 @@ export function createTocController({
     const segmentIndex = Number.parseInt(segmentIndexText, 10);
     if (!segmentLower || !Number.isFinite(segmentIndex)) return;
     const hue = hashString(`${segmentLower}:${segmentIndex}`) % 360;
-    segments.forEach(segment => {
+    segments.forEach((segment) => {
       if (segment.dataset.segmentLower !== segmentLower) return;
-      if (Number.parseInt(segment.dataset.segmentIndex || "", 10) !== segmentIndex) return;
+      if (
+        Number.parseInt(segment.dataset.segmentIndex || "", 10) !== segmentIndex
+      )
+        return;
       const row = segment.closest(".toc-item");
-      if (!row || row.classList.contains("is-filtered-out") || row.classList.contains("is-excluded")) return;
+      if (
+        !row ||
+        row.classList.contains("is-filtered-out") ||
+        row.classList.contains("is-excluded")
+      )
+        return;
       segment.classList.add("is-global-hover");
       segment.style.setProperty("--toc-segment-hue", `${hue}`);
     });
@@ -181,7 +208,7 @@ export function createTocController({
   function syncTocCheckboxesFromSelection() {
     if (!els.tocList) return;
     const rows = els.tocList.querySelectorAll(".toc-item");
-    rows.forEach(row => {
+    rows.forEach((row) => {
       const fileId = row.dataset.fileId;
       const box = row.querySelector(".toc-checkbox");
       if (!fileId || !box) return;
@@ -193,8 +220,8 @@ export function createTocController({
 
   function pruneTocSelectionForExclusions() {
     let changed = false;
-    state.tocSelection.forEach(fileId => {
-      const file = state.files.find(item => item.id === fileId);
+    state.tocSelection.forEach((fileId) => {
+      const file = state.files.find((item) => item.id === fileId);
       if (!file || !isTocPathExcluded(file.path)) return;
       state.tocSelection.delete(fileId);
       changed = true;
@@ -208,7 +235,7 @@ export function createTocController({
     const rows = els.tocList.querySelectorAll(".toc-item");
     let visibleCount = 0;
     let totalCount = 0;
-    rows.forEach(row => {
+    rows.forEach((row) => {
       totalCount += 1;
       const path = row.dataset.filePath || "";
       const excluded = isTocPathExcluded(path);
@@ -244,7 +271,8 @@ export function createTocController({
   }
 
   function scheduleTocFilterApply() {
-    if (state.tocFilter.debounceTimer) clearTimeout(state.tocFilter.debounceTimer);
+    if (state.tocFilter.debounceTimer)
+      clearTimeout(state.tocFilter.debounceTimer);
     state.tocFilter.debounceTimer = setTimeout(() => {
       state.tocFilter.debounceTimer = null;
       applyTocFiltersNow();
@@ -292,7 +320,10 @@ export function createTocController({
         excludeBtn.dataset.prefixLower = segment.prefixLower;
         excludeBtn.dataset.segmentLower = segment.lower;
         excludeBtn.dataset.segmentIndex = `${segment.index}`;
-        excludeBtn.setAttribute("aria-label", `Exclude folder ${segment.prefix}`);
+        excludeBtn.setAttribute(
+          "aria-label",
+          `Exclude folder ${segment.prefix}`,
+        );
         excludeBtn.title = `Exclude ${segment.prefix}`;
         wrapper.appendChild(excludeBtn);
       }
@@ -341,7 +372,7 @@ export function createTocController({
     els.tocEmpty.classList.add("hidden");
     els.tocList.classList.remove("hidden");
     const fragment = doc.createDocumentFragment();
-    files.forEach(file => {
+    files.forEach((file) => {
       const li = doc.createElement("li");
       li.className = "toc-item";
       li.dataset.fileId = file.id;
@@ -370,15 +401,23 @@ export function createTocController({
   }
 
   function updateTocControls() {
-    if (!els.tocSelectAll || !els.tocReset || !els.tocCopy || !els.tocHide || !els.tocShow) return;
+    if (
+      !els.tocSelectAll ||
+      !els.tocReset ||
+      !els.tocCopy ||
+      !els.tocHide ||
+      !els.tocShow
+    )
+      return;
     const selectableIds = getTocSelectableFileIds();
     const selectedActionableIds = getTocActionableSelectedFileIds();
     let selectedVisibleCount = 0;
-    selectedActionableIds.forEach(fileId => {
+    selectedActionableIds.forEach((fileId) => {
       if (selectableIds.has(fileId)) selectedVisibleCount += 1;
     });
     const noneSelected = selectedActionableIds.size === 0;
-    els.tocSelectAll.disabled = selectableIds.size === 0 || selectedVisibleCount === selectableIds.size;
+    els.tocSelectAll.disabled =
+      selectableIds.size === 0 || selectedVisibleCount === selectableIds.size;
     els.tocReset.disabled = state.tocSelection.size === 0;
     els.tocCopy.disabled = noneSelected;
     els.tocHide.disabled = noneSelected;
@@ -398,16 +437,21 @@ export function createTocController({
   }
 
   function copySelectedFiles() {
-    const selectedFiles = getTocFilesInOrder().filter(file => state.tocSelection.has(file.id) && !isTocPathExcluded(file.path));
+    const selectedFiles = getTocFilesInOrder().filter(
+      (file) =>
+        state.tocSelection.has(file.id) && !isTocPathExcluded(file.path),
+    );
     if (!selectedFiles.length) return;
-    const content = selectedFiles.map(file => buildMarkdownSnippet(file)).join("");
+    const content = selectedFiles
+      .map((file) => buildMarkdownSnippet(file))
+      .join("");
     copyTextToClipboard(content);
   }
 
   function hideSelectedFiles() {
     const selectedIds = getTocActionableSelectedFileIds();
     if (!selectedIds.size) return;
-    selectedIds.forEach(fileId => {
+    selectedIds.forEach((fileId) => {
       state.hiddenFiles.add(fileId);
       applyFileVisibility(fileId);
     });
@@ -419,7 +463,7 @@ export function createTocController({
   function showSelectedFiles() {
     const selectedIds = getTocActionableSelectedFileIds();
     if (!selectedIds.size) return;
-    selectedIds.forEach(fileId => {
+    selectedIds.forEach((fileId) => {
       state.hiddenFiles.delete(fileId);
       applyFileVisibility(fileId);
     });
@@ -465,7 +509,9 @@ export function createTocController({
   }
 
   function handleTocSegmentExclusion(event) {
-    const button = event.target.closest(".toc-segment-exclude[data-prefix-lower]");
+    const button = event.target.closest(
+      ".toc-segment-exclude[data-prefix-lower]",
+    );
     if (!button || !els.tocList?.contains(button)) return;
     event.preventDefault();
     event.stopPropagation();
@@ -494,6 +540,6 @@ export function createTocController({
     handleTocSegmentPointerOut,
     handleTocSegmentFocusIn,
     handleTocSegmentFocusOut,
-    handleTocSegmentExclusion
+    handleTocSegmentExclusion,
   };
 }

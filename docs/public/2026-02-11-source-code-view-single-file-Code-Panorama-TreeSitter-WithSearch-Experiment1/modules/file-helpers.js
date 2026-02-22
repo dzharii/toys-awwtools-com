@@ -1,17 +1,48 @@
 const EXT_TO_LANGUAGE = {
-  js: "JavaScript", ts: "TypeScript", jsx: "JSX", tsx: "TSX", mjs: "JavaScript", cjs: "JavaScript",
-  c: "C", h: "C/C Header", cc: "C++", cpp: "C++", hpp: "C++ Header",
-  cs: "C#", java: "Java", scala: "Scala", kt: "Kotlin", go: "Go", rs: "Rust",
-  py: "Python", rb: "Ruby", php: "PHP", swift: "Swift", m: "Objective-C", mm: "Objective-C++",
-  html: "HTML", css: "CSS", scss: "SCSS", md: "Markdown", txt: "Text", sh: "Shell", ps1: "PowerShell",
-  yaml: "YAML", yml: "YAML", toml: "TOML", ini: "INI", xml: "XML", json: "JSON"
+  js: "JavaScript",
+  ts: "TypeScript",
+  jsx: "JSX",
+  tsx: "TSX",
+  mjs: "JavaScript",
+  cjs: "JavaScript",
+  c: "C",
+  h: "C/C Header",
+  cc: "C++",
+  cpp: "C++",
+  hpp: "C++ Header",
+  cs: "C#",
+  java: "Java",
+  scala: "Scala",
+  kt: "Kotlin",
+  go: "Go",
+  rs: "Rust",
+  py: "Python",
+  rb: "Ruby",
+  php: "PHP",
+  swift: "Swift",
+  m: "Objective-C",
+  mm: "Objective-C++",
+  html: "HTML",
+  css: "CSS",
+  scss: "SCSS",
+  md: "Markdown",
+  txt: "Text",
+  sh: "Shell",
+  ps1: "PowerShell",
+  yaml: "YAML",
+  yml: "YAML",
+  toml: "TOML",
+  ini: "INI",
+  xml: "XML",
+  json: "JSON",
 };
 
 export function formatBytes(bytes) {
   if (!Number.isFinite(bytes)) return "0 B";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  if (bytes < 1024 * 1024 * 1024)
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 }
 
@@ -58,7 +89,11 @@ function hashPath(str) {
 }
 
 export function makeFileId(path) {
-  const safe = path.replace(/[^a-zA-Z0-9]+/g, "-").replace(/-{2,}/g, "-").replace(/^-+|-+$/g, "") || "file";
+  const safe =
+    path
+      .replace(/[^a-zA-Z0-9]+/g, "-")
+      .replace(/-{2,}/g, "-")
+      .replace(/^-+|-+$/g, "") || "file";
   const hash = hashPath(path);
   return `file-${safe}-${hash}`;
 }
@@ -74,7 +109,14 @@ export function clamp(n, min, max) {
 
 export function rectOf(el) {
   const r = el.getBoundingClientRect();
-  return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: r.width, height: r.height };
+  return {
+    left: r.left,
+    top: r.top,
+    right: r.right,
+    bottom: r.bottom,
+    width: r.width,
+    height: r.height,
+  };
 }
 
 export function makeTextSpan(className, text, doc = document) {

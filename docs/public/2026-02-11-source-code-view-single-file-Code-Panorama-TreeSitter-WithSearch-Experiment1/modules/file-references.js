@@ -1,7 +1,22 @@
 const EXTRA_REF_EXTS = [
-  "png", "jpg", "jpeg", "gif", "svg", "webp", "ico", "bmp",
-  "ttf", "otf", "woff", "woff2", "eot",
-  "mp3", "mp4", "webm", "wav", "map"
+  "png",
+  "jpg",
+  "jpeg",
+  "gif",
+  "svg",
+  "webp",
+  "ico",
+  "bmp",
+  "ttf",
+  "otf",
+  "woff",
+  "woff2",
+  "eot",
+  "mp3",
+  "mp4",
+  "webm",
+  "wav",
+  "map",
 ];
 
 const EXCLUDED_PREFIXES = ["http://", "https://", "data:", "blob:", "mailto:"];
@@ -11,8 +26,10 @@ const URL_RE = /\burl\(\s*(['"]?)([^'")\n]{1,260})\1\s*\)/gi;
 const REQUIRE_RE = /\brequire\s*\(\s*(['"])([^'"\\\n]{1,260})\1\s*\)/g;
 const FROM_RE = /\bfrom\s+(['"])([^'"\\\n]{1,260})\1/g;
 const IMPORT_CALL_RE = /\bimport\s*\(\s*(['"])([^'"\\\n]{1,260})\1\s*\)/g;
-const PATHLIKE_RE = /(^|[^A-Za-z0-9_])([A-Za-z0-9._~@-]+[\\/][A-Za-z0-9._~@\-\\/]*\.[A-Za-z0-9]{1,10})(?=$|[^A-Za-z0-9_])/g;
-const BARE_FILE_RE = /(^|[^A-Za-z0-9_])([A-Za-z0-9][A-Za-z0-9._-]{2,}\.[A-Za-z0-9]{1,10})(?=$|[^A-Za-z0-9_])/g;
+const PATHLIKE_RE =
+  /(^|[^A-Za-z0-9_])([A-Za-z0-9._~@-]+[\\/][A-Za-z0-9._~@\-\\/]*\.[A-Za-z0-9]{1,10})(?=$|[^A-Za-z0-9_])/g;
+const BARE_FILE_RE =
+  /(^|[^A-Za-z0-9_])([A-Za-z0-9][A-Za-z0-9._-]{2,}\.[A-Za-z0-9]{1,10})(?=$|[^A-Za-z0-9_])/g;
 
 function splitPath(path) {
   return (path || "").split("/").filter(Boolean);
@@ -34,7 +51,7 @@ function hasDomainShape(token) {
 function isExcludedByScheme(value) {
   const lower = (value || "").toLowerCase();
   if (lower.includes("://")) return true;
-  return EXCLUDED_PREFIXES.some(prefix => lower.startsWith(prefix));
+  return EXCLUDED_PREFIXES.some((prefix) => lower.startsWith(prefix));
 }
 
 function trimCandidate(raw) {
@@ -77,7 +94,14 @@ function shouldAcceptCandidate(token, refExts, opts = {}) {
 }
 
 function pushCandidate(list, seen, line, start, end, raw, refExts, opts) {
-  if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end <= start || end > line.length) return;
+  if (
+    !Number.isFinite(start) ||
+    !Number.isFinite(end) ||
+    start < 0 ||
+    end <= start ||
+    end > line.length
+  )
+    return;
   const normalized = normalizeForMatching(raw, opts.maxTokenLength);
   if (!normalized) return;
   if (!shouldAcceptCandidate(normalized, refExts, opts)) return;
@@ -89,7 +113,7 @@ function pushCandidate(list, seen, line, start, end, raw, refExts, opts) {
     normalized,
     normalizedPathLike: normalized,
     start,
-    end
+    end,
   });
 }
 
@@ -139,12 +163,15 @@ function joinProjectPath(baseDir, refPath) {
 
 export function createRefExtensionSet(allowExtensions = []) {
   const out = new Set();
-  (allowExtensions || []).forEach(ext => {
-    const normalized = String(ext || "").trim().toLowerCase().replace(/^\./, "");
+  (allowExtensions || []).forEach((ext) => {
+    const normalized = String(ext || "")
+      .trim()
+      .toLowerCase()
+      .replace(/^\./, "");
     if (normalized) out.add(normalized);
   });
   out.add("json");
-  EXTRA_REF_EXTS.forEach(ext => out.add(ext));
+  EXTRA_REF_EXTS.forEach((ext) => out.add(ext));
   return out;
 }
 
@@ -167,87 +194,89 @@ export function recordInventoryPath(inventory, rawPath) {
 
 export function extractReferenceCandidates(line, opts = {}) {
   const refExts = opts.refExts || new Set();
-  const maxTokenLength = Number.isFinite(opts.maxTokenLength) ? opts.maxTokenLength : 260;
+  const maxTokenLength = Number.isFinite(opts.maxTokenLength)
+    ? opts.maxTokenLength
+    : 260;
   const enableBareFilename = !!opts.enableBareFilename;
   const candidates = [];
   const seen = new Set();
   const safeLine = line || "";
 
-  collectByRegex(REQUIRE_RE, safeLine, match => {
+  collectByRegex(REQUIRE_RE, safeLine, (match) => {
     const raw = match[2] || "";
     const start = match.index + match[0].indexOf(raw);
     const end = start + raw.length;
     pushCandidate(candidates, seen, safeLine, start, end, raw, refExts, {
       maxTokenLength,
       allowSlashWithoutExt: true,
-      allowBare: true
+      allowBare: true,
     });
   });
 
-  collectByRegex(FROM_RE, safeLine, match => {
+  collectByRegex(FROM_RE, safeLine, (match) => {
     const raw = match[2] || "";
     const start = match.index + match[0].indexOf(raw);
     const end = start + raw.length;
     pushCandidate(candidates, seen, safeLine, start, end, raw, refExts, {
       maxTokenLength,
       allowSlashWithoutExt: true,
-      allowBare: true
+      allowBare: true,
     });
   });
 
-  collectByRegex(IMPORT_CALL_RE, safeLine, match => {
+  collectByRegex(IMPORT_CALL_RE, safeLine, (match) => {
     const raw = match[2] || "";
     const start = match.index + match[0].indexOf(raw);
     const end = start + raw.length;
     pushCandidate(candidates, seen, safeLine, start, end, raw, refExts, {
       maxTokenLength,
       allowSlashWithoutExt: true,
-      allowBare: true
+      allowBare: true,
     });
   });
 
-  collectByRegex(URL_RE, safeLine, match => {
+  collectByRegex(URL_RE, safeLine, (match) => {
     const raw = (match[2] || "").trim();
     const start = match.index + match[0].indexOf(match[2] || "");
     const end = start + (match[2] || "").length;
     pushCandidate(candidates, seen, safeLine, start, end, raw, refExts, {
       maxTokenLength,
       allowSlashWithoutExt: true,
-      allowBare: true
+      allowBare: true,
     });
   });
 
-  collectByRegex(QUOTED_RE, safeLine, match => {
+  collectByRegex(QUOTED_RE, safeLine, (match) => {
     const raw = match[2] || "";
     const start = match.index + 1;
     const end = start + raw.length;
     pushCandidate(candidates, seen, safeLine, start, end, raw, refExts, {
       maxTokenLength,
       allowSlashWithoutExt: true,
-      allowBare: true
+      allowBare: true,
     });
   });
 
-  collectByRegex(PATHLIKE_RE, safeLine, match => {
+  collectByRegex(PATHLIKE_RE, safeLine, (match) => {
     const raw = match[2] || "";
     const start = match.index + (match[1] || "").length;
     const end = start + raw.length;
     pushCandidate(candidates, seen, safeLine, start, end, raw, refExts, {
       maxTokenLength,
       allowSlashWithoutExt: false,
-      allowBare: false
+      allowBare: false,
     });
   });
 
   if (enableBareFilename) {
-    collectByRegex(BARE_FILE_RE, safeLine, match => {
+    collectByRegex(BARE_FILE_RE, safeLine, (match) => {
       const raw = match[2] || "";
       const start = match.index + (match[1] || "").length;
       const end = start + raw.length;
       pushCandidate(candidates, seen, safeLine, start, end, raw, refExts, {
         maxTokenLength,
         allowSlashWithoutExt: false,
-        allowBare: true
+        allowBare: true,
       });
     });
   }
@@ -256,19 +285,25 @@ export function extractReferenceCandidates(line, opts = {}) {
   return candidates;
 }
 
-export function resolveReferenceCandidate({ sourcePath, candidate, inventory }) {
+export function resolveReferenceCandidate({
+  sourcePath,
+  candidate,
+  inventory,
+}) {
   const fallback = { status: "missing", resolvedPaths: [] };
   const normalizedCandidate = normalizeForMatching(candidate, 260);
   if (!normalizedCandidate || !inventory) return fallback;
 
   const sourceDir = dirnameProjectPath(sourcePath || "");
   const hasSlash = normalizedCandidate.includes("/");
-  const startsRelative = normalizedCandidate.startsWith("./") || normalizedCandidate.startsWith("../");
+  const startsRelative =
+    normalizedCandidate.startsWith("./") ||
+    normalizedCandidate.startsWith("../");
   const startsRoot = normalizedCandidate.startsWith("/");
   const candidateNoRoot = normalizedCandidate.replace(/^\/+/, "");
 
   const matches = new Set();
-  const addIfExists = path => {
+  const addIfExists = (path) => {
     if (!path) return;
     const canonical = normalizeProjectPath(path);
     if (canonical && inventory.allPaths.has(canonical)) matches.add(canonical);
@@ -284,7 +319,7 @@ export function resolveReferenceCandidate({ sourcePath, candidate, inventory }) 
   } else {
     addIfExists(joinProjectPath(sourceDir, normalizedCandidate));
     const basenameMatches = inventory.byBasename.get(candidateNoRoot) || [];
-    basenameMatches.forEach(path => matches.add(path));
+    basenameMatches.forEach((path) => matches.add(path));
   }
 
   const resolvedPaths = [...matches].sort((a, b) => a.localeCompare(b));

@@ -90,6 +90,6 @@ export function getDomElements(doc = document) {
     tocEmpty: doc.getElementById("toc-empty"),
     fileContainer: doc.getElementById("file-container"),
     statusBanner: doc.getElementById("status-banner"),
-    noFiles: doc.getElementById("no-files")
+    noFiles: doc.getElementById("no-files"),
   };
 }

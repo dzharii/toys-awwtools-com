@@ -41,7 +41,9 @@ export function findBoundedSymbolInLine(lineText, symbol, fromIndex = 0) {
   const line = typeof lineText === "string" ? lineText : "";
   const token = typeof symbol === "string" ? symbol : "";
   if (!line || !token) return -1;
-  let cursor = Number.isFinite(fromIndex) ? Math.max(0, Math.floor(fromIndex)) : 0;
+  let cursor = Number.isFinite(fromIndex)
+    ? Math.max(0, Math.floor(fromIndex))
+    : 0;
   while (cursor <= line.length - token.length) {
     const idx = line.indexOf(token, cursor);
     if (idx < 0) return -1;
@@ -78,8 +80,12 @@ export function isOccurrenceValidInLine(lineText, symbol, occurrence) {
   const token = typeof symbol === "string" ? symbol : "";
   if (!line || !token) return false;
 
-  const startCol = Number.isFinite(occurrence?.startCol) ? Math.floor(occurrence.startCol) : 0;
-  const endCol = Number.isFinite(occurrence?.endCol) ? Math.floor(occurrence.endCol) : 0;
+  const startCol = Number.isFinite(occurrence?.startCol)
+    ? Math.floor(occurrence.startCol)
+    : 0;
+  const endCol = Number.isFinite(occurrence?.endCol)
+    ? Math.floor(occurrence.endCol)
+    : 0;
   if (startCol > 0 && endCol > startCol) {
     const start = startCol - 1;
     return hasBoundedSymbolAt(line, token, start);

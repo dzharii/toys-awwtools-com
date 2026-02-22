@@ -1,7 +1,7 @@
 import { clamp, rectOf, makeTextSpan } from "../file-helpers.js";
 import {
   clampLineNumberForFile,
-  getLineMetricsInPre
+  getLineMetricsInPre,
 } from "./line-navigation.js";
 
 export function createPreviewController({
@@ -10,7 +10,7 @@ export function createPreviewController({
   getFileSection,
   updateControlBar,
   doc = document,
-  config
+  config,
 }) {
   const {
     openDelay,
@@ -24,7 +24,7 @@ export function createPreviewController({
     gap,
     cacheLimit,
     initialWidthRatio,
-    initialHeightRatio
+    initialHeightRatio,
   } = config;
 
   const previewState = {
@@ -37,7 +37,7 @@ export function createPreviewController({
     hoverLine: null,
     hoverLoaded: false,
     lastPlacement: null,
-    cache: new Map()
+    cache: new Map(),
   };
 
   class PreviewWindow {
@@ -51,7 +51,7 @@ export function createPreviewController({
         minHeight: options.minHeight ?? minHeight,
         margin: options.margin ?? viewportMargin,
         gap: options.gap ?? gap,
-        destroyAfterMs: options.destroyAfterMs ?? inactiveMs
+        destroyAfterMs: options.destroyAfterMs ?? inactiveMs,
       };
 
       this._destroyTimer = null;
@@ -150,9 +150,9 @@ export function createPreviewController({
       if (!resizeToFit) {
         const width = clamp(this.state.width, minW, maxW);
         const height = clamp(this.state.height, minH, maxH);
-        const rightSpace = (vw - margin) - r.right;
+        const rightSpace = vw - margin - r.right;
         const leftSpace = r.left - margin;
-        const belowSpace = (vh - margin) - r.bottom;
+        const belowSpace = vh - margin - r.bottom;
         const aboveSpace = r.top - margin;
 
         let x;
@@ -174,7 +174,7 @@ export function createPreviewController({
         return;
       }
 
-      const rightSpace = (vw - margin) - r.right - winGap;
+      const rightSpace = vw - margin - r.right - winGap;
       const leftSpace = r.left - margin - winGap;
 
       let useRight;
@@ -215,7 +215,7 @@ export function createPreviewController({
         x: this.state.x,
         y: this.state.y,
         width: this.state.width,
-        height: this.state.height
+        height: this.state.height,
       });
       this.state.x = next.x;
       this.state.y = next.y;
@@ -242,7 +242,7 @@ export function createPreviewController({
     }
 
     setupDragHandlers() {
-      const onPointerDown = e => {
+      const onPointerDown = (e) => {
         if (e.button !== 0) return;
         if (this._resize) return;
 
@@ -253,14 +253,14 @@ export function createPreviewController({
           startX: e.clientX,
           startY: e.clientY,
           startWinX: this.state.x,
-          startWinY: this.state.y
+          startWinY: this.state.y,
         };
 
         this.bumpActivity();
         e.preventDefault();
       };
 
-      const onPointerMove = e => {
+      const onPointerMove = (e) => {
         if (!this._drag) return;
         if (e.pointerId !== this._activePointerId) return;
 
@@ -271,7 +271,7 @@ export function createPreviewController({
           x: this._drag.startWinX + dx,
           y: this._drag.startWinY + dy,
           width: this.state.width,
-          height: this.state.height
+          height: this.state.height,
         });
 
         this.state.x = next.x;
@@ -280,7 +280,7 @@ export function createPreviewController({
         e.preventDefault();
       };
 
-      const onPointerUp = e => {
+      const onPointerUp = (e) => {
         if (!this._drag) return;
         if (e.pointerId !== this._activePointerId) return;
 
@@ -288,7 +288,7 @@ export function createPreviewController({
         e.preventDefault();
       };
 
-      const onPointerCancel = e => {
+      const onPointerCancel = (e) => {
         if (!this._drag) return;
         if (e.pointerId !== this._activePointerId) return;
 
@@ -311,7 +311,7 @@ export function createPreviewController({
     setupResizeHandlers() {
       const handleSize = 10;
 
-      const getHitRegion = e => {
+      const getHitRegion = (e) => {
         const r = this.root.getBoundingClientRect();
         const x = e.clientX - r.left;
         const y = e.clientY - r.top;
@@ -332,7 +332,7 @@ export function createPreviewController({
         return null;
       };
 
-      const applyCursorClass = region => {
+      const applyCursorClass = (region) => {
         this.root.classList.remove(
           "pw-resize-cursor-n",
           "pw-resize-cursor-s",
@@ -341,19 +341,19 @@ export function createPreviewController({
           "pw-resize-cursor-ne",
           "pw-resize-cursor-nw",
           "pw-resize-cursor-se",
-          "pw-resize-cursor-sw"
+          "pw-resize-cursor-sw",
         );
         if (!region) return;
         this.root.classList.add(`pw-resize-cursor-${region}`);
       };
 
-      const onPointerMoveHover = e => {
+      const onPointerMoveHover = (e) => {
         if (this._resize) return;
         const region = getHitRegion(e);
         applyCursorClass(region);
       };
 
-      const onPointerDown = e => {
+      const onPointerDown = (e) => {
         if (e.button !== 0) return;
         const region = getHitRegion(e);
         if (!region) return;
@@ -362,21 +362,21 @@ export function createPreviewController({
         e.preventDefault();
       };
 
-      const onPointerMove = e => {
+      const onPointerMove = (e) => {
         if (!this._resize) return;
         if (e.pointerId !== this._resize.pointerId) return;
         this.performResize(e);
         e.preventDefault();
       };
 
-      const onPointerUp = e => {
+      const onPointerUp = (e) => {
         if (!this._resize) return;
         if (e.pointerId !== this._resize.pointerId) return;
         this.stopResize();
         e.preventDefault();
       };
 
-      const onPointerCancel = e => {
+      const onPointerCancel = (e) => {
         if (!this._resize) return;
         if (e.pointerId !== this._resize.pointerId) return;
         this.cancelResize();
@@ -395,7 +395,12 @@ export function createPreviewController({
         region,
         startClientX: e.clientX,
         startClientY: e.clientY,
-        start: { x: this.state.x, y: this.state.y, width: this.state.width, height: this.state.height }
+        start: {
+          x: this.state.x,
+          y: this.state.y,
+          width: this.state.width,
+          height: this.state.height,
+        },
       };
 
       this.root.setPointerCapture(e.pointerId);
@@ -456,7 +461,7 @@ export function createPreviewController({
     }
 
     _installOutsideClickToDismiss() {
-      const onPointerDown = e => {
+      const onPointerDown = (e) => {
         if (!this.root.isConnected) return;
         if (this.root.contains(e.target)) return;
         this.destroy();
@@ -469,7 +474,11 @@ export function createPreviewController({
 
   function ensurePreviewWindow() {
     if (previewState.window && previewState.window.root.isConnected) {
-      return { win: previewState.window, created: false, usedLastPlacement: false };
+      return {
+        win: previewState.window,
+        created: false,
+        usedLastPlacement: false,
+      };
     }
     const win = new PreviewWindow();
     const usedLastPlacement = applyLastPlacement(win);
@@ -504,7 +513,9 @@ export function createPreviewController({
 
   function prunePreviewCache() {
     if (previewState.cache.size <= cacheLimit) return;
-    const entries = [...previewState.cache.entries()].sort((a, b) => a[1].lastUsed - b[1].lastUsed);
+    const entries = [...previewState.cache.entries()].sort(
+      (a, b) => a[1].lastUsed - b[1].lastUsed,
+    );
     const excess = entries.length - cacheLimit;
     for (let i = 0; i < excess; i += 1) {
       previewState.cache.delete(entries[i][0]);
@@ -520,7 +531,7 @@ export function createPreviewController({
     if (!code) return null;
     const text = code.textContent || "";
     if (!text) {
-      const file = state.files.find(item => item.id === fileId);
+      const file = state.files.find((item) => item.id === fileId);
       if (file && file.size > 0) return null;
     }
     return pre;
@@ -533,7 +544,11 @@ export function createPreviewController({
       return cached.clone;
     }
     const clone = sourceEl.cloneNode(true);
-    previewState.cache.set(fileId, { source: sourceEl, clone, lastUsed: Date.now() });
+    previewState.cache.set(fileId, {
+      source: sourceEl,
+      clone,
+      lastUsed: Date.now(),
+    });
     prunePreviewCache();
     return clone;
   }
@@ -543,7 +558,7 @@ export function createPreviewController({
     const label = entry?.querySelector?.(".toc-link, .toc-text, .node-label");
     if (label?.textContent) return label.textContent.trim();
     if (entry?.textContent) return entry.textContent.trim();
-    const file = state.files.find(item => item.id === fileId);
+    const file = state.files.find((item) => item.id === fileId);
     return file?.path || "Preview";
   }
 
@@ -568,7 +583,11 @@ export function createPreviewController({
     const vh = window.innerHeight;
     const pane = els.main;
     if (!pane) {
-      return { top: margin, height: Math.max(0, vh - margin * 2), width: Math.max(0, vw - margin * 2) };
+      return {
+        top: margin,
+        height: Math.max(0, vh - margin * 2),
+        width: Math.max(0, vw - margin * 2),
+      };
     }
     const rect = pane.getBoundingClientRect();
     const top = clamp(rect.top, margin, vh - margin);
@@ -587,11 +606,23 @@ export function createPreviewController({
     const maxH = Math.max(0, vh - margin * 2);
 
     const pane = getVisiblePaneMetrics();
-    const width = clamp(pane.width * initialWidthRatio, win.state.minWidth, maxW);
-    const height = clamp(pane.height * initialHeightRatio, win.state.minHeight, maxH);
+    const width = clamp(
+      pane.width * initialWidthRatio,
+      win.state.minWidth,
+      maxW,
+    );
+    const height = clamp(
+      pane.height * initialHeightRatio,
+      win.state.minHeight,
+      maxH,
+    );
 
     const x = clamp(vw - margin - width, margin, vw - width - margin);
-    const y = clamp(pane.top + (pane.height - height) / 2, margin, vh - height - margin);
+    const y = clamp(
+      pane.top + (pane.height - height) / 2,
+      margin,
+      vh - height - margin,
+    );
 
     win.state.x = x;
     win.state.y = y;
@@ -608,7 +639,7 @@ export function createPreviewController({
       x: win.state.x,
       y: win.state.y,
       width: win.state.width,
-      height: win.state.height
+      height: win.state.height,
     };
   }
 
@@ -630,7 +661,7 @@ export function createPreviewController({
     if (!raw) return null;
     const parsed = parseInt(raw, 10);
     if (!Number.isFinite(parsed) || parsed < 1) return null;
-    const file = state.files.find(item => item.id === fileId);
+    const file = state.files.find((item) => item.id === fileId);
     const clamped = clampLineNumberForFile(file, parsed);
     if (!clamped) return null;
     return clamped;
@@ -639,20 +670,21 @@ export function createPreviewController({
   function clearPreviewLineMarker(root) {
     if (!root?.querySelectorAll) return;
     const markers = root.querySelectorAll(".ref-preview-marker");
-    markers.forEach(marker => marker.remove());
+    markers.forEach((marker) => marker.remove());
   }
 
   function clearPreviewLineMarkersInCache() {
-    previewState.cache.forEach(entry => {
+    previewState.cache.forEach((entry) => {
       if (!entry?.clone) return;
       clearPreviewLineMarker(entry.clone);
     });
-    if (previewState.window?.content) clearPreviewLineMarker(previewState.window.content);
+    if (previewState.window?.content)
+      clearPreviewLineMarker(previewState.window.content);
   }
 
   function applyPreviewLineTarget(win, clone, fileId, lineNumber) {
     if (!win || !clone || !Number.isFinite(lineNumber)) return;
-    const file = state.files.find(item => item.id === fileId);
+    const file = state.files.find((item) => item.id === fileId);
     const safeLine = clampLineNumberForFile(file, lineNumber);
     if (!safeLine) return;
     const pre = clone.matches?.("pre") ? clone : clone.querySelector?.("pre");
@@ -663,7 +695,7 @@ export function createPreviewController({
       pre,
       code,
       file,
-      lineNumber: safeLine
+      lineNumber: safeLine,
     });
     if (!metrics) return;
 
@@ -677,7 +709,7 @@ export function createPreviewController({
 
     const content = win.content;
     const targetOffset = pre.offsetTop + markerTop;
-    const centered = targetOffset - ((content.clientHeight - markerHeight) / 2);
+    const centered = targetOffset - (content.clientHeight - markerHeight) / 2;
     const maxScroll = Math.max(0, content.scrollHeight - content.clientHeight);
     content.scrollTop = clamp(centered, 0, maxScroll);
   }
@@ -714,14 +746,16 @@ export function createPreviewController({
         previewState.pending.entry !== entry ||
         previewState.pending.fileId !== fileId ||
         previewState.pending.lineNumber !== lineNumber
-      ) return;
+      )
+        return;
       previewState.pending = null;
       if (!entry.isConnected) return;
       if (
         previewState.hoverEntry !== entry ||
         previewState.hoverFileId !== fileId ||
         previewState.hoverLine !== lineNumber
-      ) return;
+      )
+        return;
       if (!state.preview.enabled) return;
       try {
         showPreviewForEntry(entry, fileId, lineNumber);
@@ -760,11 +794,10 @@ export function createPreviewController({
       previewState.hoverLine = lineNumber;
       previewState.hoverLoaded = Boolean(getPreviewSourceElement(fileId));
       if (!previewState.hoverLoaded) return;
-      const sameVisibleTarget = (
+      const sameVisibleTarget =
         previewState.window &&
         previewState.visibleFileId === fileId &&
-        previewState.visibleLine === lineNumber
-      );
+        previewState.visibleLine === lineNumber;
       if (sameVisibleTarget) {
         if (previewState.hoverLoaded) previewState.window.bumpActivity();
         return;
@@ -851,6 +884,6 @@ export function createPreviewController({
     handlePreviewViewportResize,
     setPreviewEnabled,
     attachHoverPreviewHandlers,
-    createPanelWindow
+    createPanelWindow,
   };
 }

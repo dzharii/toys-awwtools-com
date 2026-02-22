@@ -1,6 +1,15 @@
 const IDENT_CHAR_RE = /[A-Za-z0-9_]/;
 const IDENTIFIER_FULL_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
-const CONFIG_EXTS = new Set(["yaml", "yml", "ini", "toml", "env", "properties", "conf", "cfg"]);
+const CONFIG_EXTS = new Set([
+  "yaml",
+  "yml",
+  "ini",
+  "toml",
+  "env",
+  "properties",
+  "conf",
+  "cfg",
+]);
 
 const DEFAULT_STOP_WORDS = new Set([
   "if",
@@ -26,7 +35,7 @@ const DEFAULT_STOP_WORDS = new Set([
   "export",
   "default",
   "name",
-  "version"
+  "version",
 ]);
 
 const HEURISTIC_DEFINITION_PATTERNS = [
@@ -34,14 +43,20 @@ const HEURISTIC_DEFINITION_PATTERNS = [
   { regex: /\bfunction\s+([A-Za-z_][A-Za-z0-9_]*)\b/, kind: "function" },
   { regex: /\bclass\s+([A-Za-z_][A-Za-z0-9_]*)\b/, kind: "class" },
   { regex: /\b(?:def|func)\s+([A-Za-z_][A-Za-z0-9_]*)\b/, kind: "function" },
-  { regex: /\b(?:const|let|var)\s+([A-Za-z_][A-Za-z0-9_]*)\b/, kind: "variable" },
-  { regex: /\b(?:type|interface|enum|struct)\s+([A-Za-z_][A-Za-z0-9_]*)\b/, kind: "type" }
+  {
+    regex: /\b(?:const|let|var)\s+([A-Za-z_][A-Za-z0-9_]*)\b/,
+    kind: "variable",
+  },
+  {
+    regex: /\b(?:type|interface|enum|struct)\s+([A-Za-z_][A-Za-z0-9_]*)\b/,
+    kind: "type",
+  },
 ];
 
 const HEURISTIC_REFERENCE_PATTERNS = [
   { regex: /\b([A-Za-z_][A-Za-z0-9_]*)\s*\(/g, kind: "call" },
   { regex: /\b([A-Za-z_][A-Za-z0-9_]*)\s*\./g, kind: "member" },
-  { regex: /&\s*([A-Za-z_][A-Za-z0-9_]*)\b/g, kind: "reference" }
+  { regex: /&\s*([A-Za-z_][A-Za-z0-9_]*)\b/g, kind: "reference" },
 ];
 
 const TREE_SITTER_DEFINITION_TYPES = {
@@ -53,7 +68,7 @@ const TREE_SITTER_DEFINITION_TYPES = {
     enum_specifier: "enum",
     type_definition: "typedef",
     preproc_def: "macro",
-    preproc_function_def: "macro"
+    preproc_function_def: "macro",
   },
   cpp: {
     function_definition: "function",
@@ -63,7 +78,7 @@ const TREE_SITTER_DEFINITION_TYPES = {
     enum_specifier: "enum",
     type_definition: "typedef",
     preproc_def: "macro",
-    preproc_function_def: "macro"
+    preproc_function_def: "macro",
   },
   javascript: {
     function_declaration: "function",
@@ -71,10 +86,10 @@ const TREE_SITTER_DEFINITION_TYPES = {
     class_declaration: "class",
     generator_function: "function",
     lexical_declaration: "variable",
-    variable_declarator: "variable"
+    variable_declarator: "variable",
   },
   bash: {
-    function_definition: "function"
+    function_definition: "function",
   },
   csharp: {
     method_declaration: "method",
@@ -83,10 +98,10 @@ const TREE_SITTER_DEFINITION_TYPES = {
     interface_declaration: "interface",
     enum_declaration: "enum",
     constructor_declaration: "constructor",
-    property_declaration: "property"
+    property_declaration: "property",
   },
   json: {
-    pair: "key"
+    pair: "key",
   },
   scala: {
     class_definition: "class",
@@ -95,15 +110,15 @@ const TREE_SITTER_DEFINITION_TYPES = {
     method_definition: "method",
     function_definition: "function",
     val_definition: "value",
-    var_definition: "variable"
-  }
+    var_definition: "variable",
+  },
 };
 
 const TREE_SITTER_IDENTIFIER_TYPES = [
   "identifier",
   "type_identifier",
   "field_identifier",
-  "property_identifier"
+  "property_identifier",
 ];
 
 function toLower(value) {
@@ -138,7 +153,16 @@ function clampOffset(text, rawOffset) {
   return rawOffset;
 }
 
-function createOccurrence(name, lineNumber, startCol, endCol, kind, role, source, bridgeClass = "none") {
+function createOccurrence(
+  name,
+  lineNumber,
+  startCol,
+  endCol,
+  kind,
+  role,
+  source,
+  bridgeClass = "none",
+) {
   return {
     symbol: name,
     lineNumber,
@@ -147,7 +171,7 @@ function createOccurrence(name, lineNumber, startCol, endCol, kind, role, source
     kind,
     role,
     source,
-    bridgeClass
+    bridgeClass,
   };
 }
 
@@ -159,11 +183,14 @@ function pickNameNode(node) {
     const fieldNode = node.childForFieldName?.(fieldName);
     if (!fieldNode) continue;
     if (TREE_SITTER_IDENTIFIER_TYPES.includes(fieldNode.type)) return fieldNode;
-    const descendants = fieldNode.descendantsOfType?.(TREE_SITTER_IDENTIFIER_TYPES) || [];
+    const descendants =
+      fieldNode.descendantsOfType?.(TREE_SITTER_IDENTIFIER_TYPES) || [];
     if (descendants.length) return descendants[0];
-    if (fieldNode.text && IDENTIFIER_FULL_RE.test(fieldNode.text.trim())) return fieldNode;
+    if (fieldNode.text && IDENTIFIER_FULL_RE.test(fieldNode.text.trim()))
+      return fieldNode;
   }
-  const descendants = node.descendantsOfType?.(TREE_SITTER_IDENTIFIER_TYPES) || [];
+  const descendants =
+    node.descendantsOfType?.(TREE_SITTER_IDENTIFIER_TYPES) || [];
   if (descendants.length) return descendants[0];
   return null;
 }
@@ -172,7 +199,12 @@ function detectTreeReferenceKind(node) {
   const parentType = node?.parent?.type || "";
   if (!parentType) return "reference";
   if (parentType.includes("call")) return "call";
-  if (parentType.includes("member") || parentType.includes("field") || parentType.includes("property")) return "member";
+  if (
+    parentType.includes("member") ||
+    parentType.includes("field") ||
+    parentType.includes("property")
+  )
+    return "member";
   if (parentType.includes("import")) return "import";
   return "reference";
 }
@@ -199,7 +231,8 @@ function isValidSymbolName(name, opts = {}) {
   if (!normalized) return false;
   const minLength = Number.isFinite(opts.minLength) ? opts.minLength : 2;
   if (normalized.length < minLength) return false;
-  if (isSymbolStopWord(normalized, opts.stopWords || DEFAULT_STOP_WORDS)) return false;
+  if (isSymbolStopWord(normalized, opts.stopWords || DEFAULT_STOP_WORDS))
+    return false;
   return true;
 }
 
@@ -214,7 +247,11 @@ export function extractIdentifierAtOffset(text, rawOffset, opts = {}) {
   if (!safeText.length) return null;
   let offset = clampOffset(safeText, rawOffset);
 
-  if (!isIdentifierCharacter(safeText[offset]) && offset > 0 && isIdentifierCharacter(safeText[offset - 1])) {
+  if (
+    !isIdentifierCharacter(safeText[offset]) &&
+    offset > 0 &&
+    isIdentifierCharacter(safeText[offset - 1])
+  ) {
     offset -= 1;
   }
   if (!isIdentifierCharacter(safeText[offset])) return null;
@@ -223,7 +260,8 @@ export function extractIdentifierAtOffset(text, rawOffset, opts = {}) {
   while (start > 0 && isIdentifierCharacter(safeText[start - 1])) start -= 1;
 
   let end = offset + 1;
-  while (end < safeText.length && isIdentifierCharacter(safeText[end])) end += 1;
+  while (end < safeText.length && isIdentifierCharacter(safeText[end]))
+    end += 1;
 
   const symbol = safeText.slice(start, end);
   if (!isValidSymbolName(symbol, opts)) return null;
@@ -240,7 +278,7 @@ export function createEmptySymbolContribution(file, source = "heuristic") {
     sourcePath: file?.path || "",
     source,
     definitions: [],
-    references: []
+    references: [],
   };
 }
 
@@ -248,7 +286,9 @@ export function extractHeuristicSymbolsFromLine(line, context = {}) {
   const safeLine = String(line || "");
   const lineNumber = context.lineNumber || 1;
   const minLength = Number.isFinite(context.minLength) ? context.minLength : 2;
-  const minBridgeLength = Number.isFinite(context.minBridgeLength) ? context.minBridgeLength : 3;
+  const minBridgeLength = Number.isFinite(context.minBridgeLength)
+    ? context.minBridgeLength
+    : 3;
   const stopWords = context.stopWords || DEFAULT_STOP_WORDS;
   const isConfigFile = !!context.isConfigFile;
 
@@ -256,15 +296,45 @@ export function extractHeuristicSymbolsFromLine(line, context = {}) {
   const seen = new Set();
 
   if (isConfigFile) {
-    const keyMatch = safeLine.match(/^\s*([A-Za-z_][A-Za-z0-9_]{1,120})\s*(?::|=)/);
+    const keyMatch = safeLine.match(
+      /^\s*([A-Za-z_][A-Za-z0-9_]{1,120})\s*(?::|=)/,
+    );
     if (keyMatch) {
       const key = keyMatch[1];
       if (isValidSymbolName(key, { minLength, stopWords })) {
         const startCol = keyMatch[0].indexOf(key) + 1;
         const endCol = startCol + key.length;
-        const bridgeClass = isBridgeConstant(key, minBridgeLength) ? "strong" : "weak";
-        pushLineMatch(items, seen, createOccurrence(key, lineNumber, startCol, endCol, "key", "definition", "heuristic", bridgeClass));
-        pushLineMatch(items, seen, createOccurrence(key, lineNumber, startCol, endCol, "key", "reference", "heuristic", bridgeClass));
+        const bridgeClass = isBridgeConstant(key, minBridgeLength)
+          ? "strong"
+          : "weak";
+        pushLineMatch(
+          items,
+          seen,
+          createOccurrence(
+            key,
+            lineNumber,
+            startCol,
+            endCol,
+            "key",
+            "definition",
+            "heuristic",
+            bridgeClass,
+          ),
+        );
+        pushLineMatch(
+          items,
+          seen,
+          createOccurrence(
+            key,
+            lineNumber,
+            startCol,
+            endCol,
+            "key",
+            "reference",
+            "heuristic",
+            bridgeClass,
+          ),
+        );
       }
     }
   }
@@ -279,8 +349,23 @@ export function extractHeuristicSymbolsFromLine(line, context = {}) {
     if (start < 0) continue;
     const startCol = start + 1;
     const endCol = startCol + name.length;
-    const bridgeClass = isBridgeConstant(name, minBridgeLength) ? "strong" : "none";
-    pushLineMatch(items, seen, createOccurrence(name, lineNumber, startCol, endCol, defPattern.kind, "definition", "heuristic", bridgeClass));
+    const bridgeClass = isBridgeConstant(name, minBridgeLength)
+      ? "strong"
+      : "none";
+    pushLineMatch(
+      items,
+      seen,
+      createOccurrence(
+        name,
+        lineNumber,
+        startCol,
+        endCol,
+        defPattern.kind,
+        "definition",
+        "heuristic",
+        bridgeClass,
+      ),
+    );
   }
 
   for (let i = 0; i < HEURISTIC_REFERENCE_PATTERNS.length; i += 1) {
@@ -295,8 +380,23 @@ export function extractHeuristicSymbolsFromLine(line, context = {}) {
         const start = match.index + (offsetInMatch >= 0 ? offsetInMatch : 0);
         const startCol = start + 1;
         const endCol = startCol + name.length;
-        const bridgeClass = isBridgeConstant(name, minBridgeLength) ? "strong" : "none";
-        pushLineMatch(items, seen, createOccurrence(name, lineNumber, startCol, endCol, refPattern.kind, "reference", "heuristic", bridgeClass));
+        const bridgeClass = isBridgeConstant(name, minBridgeLength)
+          ? "strong"
+          : "none";
+        pushLineMatch(
+          items,
+          seen,
+          createOccurrence(
+            name,
+            lineNumber,
+            startCol,
+            endCol,
+            refPattern.kind,
+            "reference",
+            "heuristic",
+            bridgeClass,
+          ),
+        );
       }
       match = refPattern.regex.exec(safeLine);
     }
@@ -310,7 +410,20 @@ export function extractHeuristicSymbolsFromLine(line, context = {}) {
       const start = constantMatch.index;
       const startCol = start + 1;
       const endCol = startCol + name.length;
-      pushLineMatch(items, seen, createOccurrence(name, lineNumber, startCol, endCol, "constant", "reference", "heuristic", "strong"));
+      pushLineMatch(
+        items,
+        seen,
+        createOccurrence(
+          name,
+          lineNumber,
+          startCol,
+          endCol,
+          "constant",
+          "reference",
+          "heuristic",
+          "strong",
+        ),
+      );
     }
     constantMatch = constantRegex.exec(safeLine);
   }
@@ -318,12 +431,19 @@ export function extractHeuristicSymbolsFromLine(line, context = {}) {
   return items;
 }
 
-export function extractTreeSitterSymbolContribution(tree, file, lang, options = {}) {
+export function extractTreeSitterSymbolContribution(
+  tree,
+  file,
+  lang,
+  options = {},
+) {
   const contribution = createEmptySymbolContribution(file, "tree");
   if (!tree?.rootNode || !file?.id) return contribution;
 
   const minLength = Number.isFinite(options.minLength) ? options.minLength : 2;
-  const minBridgeLength = Number.isFinite(options.minBridgeLength) ? options.minBridgeLength : 3;
+  const minBridgeLength = Number.isFinite(options.minBridgeLength)
+    ? options.minBridgeLength
+    : 3;
   const stopWords = options.stopWords || DEFAULT_STOP_WORDS;
 
   const defMap = TREE_SITTER_DEFINITION_TYPES[lang] || {};
@@ -337,9 +457,12 @@ export function extractTreeSitterSymbolContribution(tree, file, lang, options = 
       const nameNode = pickNameNode(node);
       const name = normalizeSymbolName(nameNode?.text || "");
       if (!isValidSymbolName(name, { minLength, stopWords })) continue;
-      const startCol = (nameNode?.startPosition?.column ?? node.startPosition.column) + 1;
-      const endCol = (nameNode?.endPosition?.column ?? node.endPosition.column) + 1;
-      const lineNumber = (nameNode?.startPosition?.row ?? node.startPosition.row) + 1;
+      const startCol =
+        (nameNode?.startPosition?.column ?? node.startPosition.column) + 1;
+      const endCol =
+        (nameNode?.endPosition?.column ?? node.endPosition.column) + 1;
+      const lineNumber =
+        (nameNode?.startPosition?.row ?? node.startPosition.row) + 1;
       const definition = createOccurrence(
         name,
         lineNumber,
@@ -348,14 +471,16 @@ export function extractTreeSitterSymbolContribution(tree, file, lang, options = 
         defMap[node.type] || "definition",
         "definition",
         "tree",
-        isBridgeConstant(name, minBridgeLength) ? "strong" : "none"
+        isBridgeConstant(name, minBridgeLength) ? "strong" : "none",
       );
       contribution.definitions.push(definition);
       definitionPositionSet.add(`${lineNumber}:${startCol}:${name}`);
     }
   }
 
-  const identifierNodes = tree.rootNode.descendantsOfType(TREE_SITTER_IDENTIFIER_TYPES);
+  const identifierNodes = tree.rootNode.descendantsOfType(
+    TREE_SITTER_IDENTIFIER_TYPES,
+  );
   for (let i = 0; i < identifierNodes.length; i += 1) {
     const node = identifierNodes[i];
     const name = normalizeSymbolName(node.text || "");
@@ -372,7 +497,7 @@ export function extractTreeSitterSymbolContribution(tree, file, lang, options = 
       detectTreeReferenceKind(node),
       "reference",
       "tree",
-      isBridgeConstant(name, minBridgeLength) ? "strong" : "none"
+      isBridgeConstant(name, minBridgeLength) ? "strong" : "none",
     );
     contribution.references.push(reference);
   }

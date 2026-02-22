@@ -7,12 +7,11 @@ import { initAppRuntime } from "./modules/app-runtime.js";
  * @param {Document} [doc=document] Document to bind DOM queries to.
  * @returns {{els: Object, doc: Document}} Initialized app context bundle.
  */
-
 function createAppContext(doc = document) {
   const els = getDomElements(doc);
   return {
     els,
-    doc
+    doc,
   };
 }
 
@@ -22,7 +21,6 @@ function createAppContext(doc = document) {
  *
  * @returns {void}
  */
-
 function bootstrap() {
   const context = createAppContext(document);
   initAppRuntime(context);

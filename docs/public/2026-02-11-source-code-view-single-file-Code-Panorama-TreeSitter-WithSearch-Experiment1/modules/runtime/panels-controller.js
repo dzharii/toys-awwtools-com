@@ -8,7 +8,7 @@ export function createPanelsController(ctx) {
     syncReferenceFeatureEnabled,
     syncSymbolReferenceFeatureEnabled,
     destroyReferencePanel,
-    destroySymbolReferencePanel
+    destroySymbolReferencePanel,
   } = ctx;
 
   function closePanels() {
@@ -27,11 +27,15 @@ export function createPanelsController(ctx) {
     els.allowList.value = state.settings.allow.join("\n");
     els.jsonToggle.checked = state.settings.includeJson;
     els.maxSize.value = Math.round(state.settings.maxFileSize / 1024);
-    els.memoryLimit.value = Math.round(state.settings.memoryWarnBytes / (1024 * 1024));
+    els.memoryLimit.value = Math.round(
+      state.settings.memoryWarnBytes / (1024 * 1024),
+    );
     els.wrapToggle.checked = state.settings.wrap;
     els.statsDisplay.checked = state.settings.showStats;
-    if (els.fileRefsToggle) els.fileRefsToggle.checked = state.settings.fileRefs !== false;
-    if (els.symbolRefsToggle) els.symbolRefsToggle.checked = state.settings.symbolRefs !== false;
+    if (els.fileRefsToggle)
+      els.fileRefsToggle.checked = state.settings.fileRefs !== false;
+    if (els.symbolRefsToggle)
+      els.symbolRefsToggle.checked = state.settings.symbolRefs !== false;
   }
 
   function closeSettings() {
@@ -40,15 +44,27 @@ export function createPanelsController(ctx) {
   }
 
   function saveSettingsFromForm() {
-    state.settings.ignores = els.ignoreList.value.split("\n").map(v => v.trim()).filter(Boolean);
-    state.settings.allow = els.allowList.value.split("\n").map(v => v.trim()).filter(Boolean);
+    state.settings.ignores = els.ignoreList.value
+      .split("\n")
+      .map((v) => v.trim())
+      .filter(Boolean);
+    state.settings.allow = els.allowList.value
+      .split("\n")
+      .map((v) => v.trim())
+      .filter(Boolean);
     state.settings.includeJson = els.jsonToggle.checked;
-    state.settings.maxFileSize = Math.max(1, parseInt(els.maxSize.value || "1024", 10)) * 1024;
-    state.settings.memoryWarnBytes = Math.max(1, parseInt(els.memoryLimit.value || "50", 10)) * 1024 * 1024;
+    state.settings.maxFileSize =
+      Math.max(1, parseInt(els.maxSize.value || "1024", 10)) * 1024;
+    state.settings.memoryWarnBytes =
+      Math.max(1, parseInt(els.memoryLimit.value || "50", 10)) * 1024 * 1024;
     state.settings.wrap = els.wrapToggle.checked;
     state.settings.showStats = els.statsDisplay.checked;
-    state.settings.fileRefs = els.fileRefsToggle ? els.fileRefsToggle.checked : true;
-    state.settings.symbolRefs = els.symbolRefsToggle ? els.symbolRefsToggle.checked : true;
+    state.settings.fileRefs = els.fileRefsToggle
+      ? els.fileRefsToggle.checked
+      : true;
+    state.settings.symbolRefs = els.symbolRefsToggle
+      ? els.symbolRefsToggle.checked
+      : true;
     persistSettings(state.settings);
     syncReferenceFeatureEnabled();
     syncSymbolReferenceFeatureEnabled();
@@ -58,7 +74,7 @@ export function createPanelsController(ctx) {
 
   function applyDisplaySettings() {
     const pres = doc.querySelectorAll(".file-section pre");
-    pres.forEach(pre => pre.classList.add("nowrap"));
+    pres.forEach((pre) => pre.classList.add("nowrap"));
   }
 
   function openStatsPanel() {
@@ -71,7 +87,9 @@ export function createPanelsController(ctx) {
   function renderStatsPanel() {
     const body = els.statsBody;
     body.innerHTML = "";
-    const langEntries = Object.entries(state.aggregate.languages).sort((a, b) => b[1] - a[1]);
+    const langEntries = Object.entries(state.aggregate.languages).sort(
+      (a, b) => b[1] - a[1],
+    );
     const langBlock = doc.createElement("div");
     const langTitle = doc.createElement("h3");
     langTitle.textContent = "Top languages";
@@ -97,7 +115,7 @@ export function createPanelsController(ctx) {
       row.textContent = "No data";
       largestBlock.appendChild(row);
     } else {
-      state.aggregate.largest.forEach(f => {
+      state.aggregate.largest.forEach((f) => {
         const row = doc.createElement("div");
         row.textContent = `${f.path} — ${formatBytes(f.size)} • ${f.lineCount} lines`;
         row.title = f.path;
@@ -118,7 +136,10 @@ export function createPanelsController(ctx) {
     if (!state.logs.length) return;
     els.logPanel.classList.remove("hidden");
     els.logPanel.setAttribute("aria-hidden", "false");
-    els.logBody.textContent = state.logs.map(log => `${log.time} • ${log.path} • ${log.reason}`).join("\n") || "No entries.";
+    els.logBody.textContent =
+      state.logs
+        .map((log) => `${log.time} • ${log.path} • ${log.reason}`)
+        .join("\n") || "No entries.";
   }
 
   function closeLogPanel() {
@@ -148,6 +169,6 @@ export function createPanelsController(ctx) {
     openLogPanel,
     closeLogPanel,
     openSupportPanel,
-    closeSupportPanel
+    closeSupportPanel,
   };
 }
