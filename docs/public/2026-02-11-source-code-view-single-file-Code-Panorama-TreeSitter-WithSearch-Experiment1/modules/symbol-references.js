@@ -235,13 +235,17 @@ function isValidSymbolName(name, opts = {}) {
     return false;
   return true;
 }
-
+/**
+ * Validates that a text selection is exactly one usable identifier for symbol navigation.
+ */
 export function isSingleIdentifierText(text, opts = {}) {
   const normalized = normalizeSymbolName(text);
   if (!normalized) return null;
   return isValidSymbolName(normalized, opts) ? normalized : null;
 }
-
+/**
+ * Extracts identifier bounds and value around a text offset for click and hover symbol actions.
+ */
 export function extractIdentifierAtOffset(text, rawOffset, opts = {}) {
   const safeText = String(text || "");
   if (!safeText.length) return null;
@@ -267,11 +271,15 @@ export function extractIdentifierAtOffset(text, rawOffset, opts = {}) {
   if (!isValidSymbolName(symbol, opts)) return null;
   return { symbol, start, end };
 }
-
+/**
+ * Reports whether a file path should be treated as configuration-oriented for heuristic symbol handling.
+ */
 export function isConfigLikeFile(path) {
   return CONFIG_EXTS.has(getPathExtension(path));
 }
-
+/**
+ * Creates an empty symbol contribution record so downstream merge logic can remain shape-stable.
+ */
 export function createEmptySymbolContribution(file, source = "heuristic") {
   return {
     fileId: file?.id || "",
@@ -281,7 +289,9 @@ export function createEmptySymbolContribution(file, source = "heuristic") {
     references: [],
   };
 }
-
+/**
+ * Extracts heuristic symbol definitions and references from a single source line.
+ */
 export function extractHeuristicSymbolsFromLine(line, context = {}) {
   const safeLine = String(line || "");
   const lineNumber = context.lineNumber || 1;
@@ -430,7 +440,9 @@ export function extractHeuristicSymbolsFromLine(line, context = {}) {
 
   return items;
 }
-
+/**
+ * Extracts symbol contribution data from a Tree-sitter parse tree for one file.
+ */
 export function extractTreeSitterSymbolContribution(
   tree,
   file,

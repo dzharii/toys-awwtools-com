@@ -150,7 +150,9 @@ function extractNodeName(node) {
   ]);
   return fallback[0]?.text || "<anonymous>";
 }
-
+/**
+ * Builds a normalized outline model from a Tree-sitter parse tree for panel rendering and marker placement.
+ */
 export function buildOutlineModel(tree, file, lang) {
   const outline = [];
   const config = OUTLINE_CONFIGS[lang] || OUTLINE_CONFIGS.c;
@@ -172,7 +174,9 @@ export function buildOutlineModel(tree, file, lang) {
   });
   return outline;
 }
-
+/**
+ * Extracts include-like dependency entries from parse trees to support cross-file language analysis.
+ */
 export function buildIncludeList(tree, lang, files = []) {
   if (lang !== "c" && lang !== "cpp") return [];
   const includes = [];

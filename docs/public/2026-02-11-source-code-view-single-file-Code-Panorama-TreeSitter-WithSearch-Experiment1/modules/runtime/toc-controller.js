@@ -1,5 +1,14 @@
+/**
+ * Table-of-contents filtering and batch action runtime.
+ * Drives selection, exclusion, and bulk visibility operations across loaded files.
+ */
 import { escapeRegExp } from "../search-helpers.js";
-
+/**
+ * Creates table-of-contents filtering, selection, and bulk action behavior.
+ * Keeps TOC visibility rules, selection state, and batch operations aligned with current file visibility.
+ *
+ * @returns {Object} TOC rendering and interaction handlers.
+ */
 export function createTocController({
   state,
   els,

@@ -1,6 +1,12 @@
+/**
+ * Runtime state factories and normalization helpers.
+ * Centralizes default state shapes so controllers share consistent contracts.
+ */
 import { defaults } from "../config.js";
 import { createRefExtensionSet } from "../file-references.js";
-
+/**
+ * Creates default state for path-based file references, index progress, and reference panel UI.
+ */
 export function createInitialRefsState(
   enabled = true,
   allowList = defaults.allow,
@@ -23,7 +29,9 @@ export function createInitialRefsState(
     extSet: createRefExtensionSet(allowList),
   };
 }
-
+/**
+ * Creates default state for symbol indexing, incremental updates, and symbol panel UI.
+ */
 export function createInitialSymbolRefsState(enabled = true) {
   return {
     enabled: !!enabled,
@@ -58,7 +66,9 @@ export function createInitialSymbolRefsState(enabled = true) {
     },
   };
 }
-
+/**
+ * Creates default TOC filter, exclusion, and hover state containers.
+ */
 export function createInitialTocFilterState() {
   return {
     queryRaw: "",
@@ -69,7 +79,9 @@ export function createInitialTocFilterState() {
     segmentCache: new Map(),
   };
 }
-
+/**
+ * Creates default Tree-sitter queue bookkeeping, including pending sets and scheduler handles.
+ */
 export function createInitialTreeSitterQueueState() {
   return {
     pendingIds: [],
@@ -82,7 +94,9 @@ export function createInitialTreeSitterQueueState() {
     statusRefreshHandle: null,
   };
 }
-
+/**
+ * Creates progress counters used to report Tree-sitter analysis status.
+ */
 export function createInitialTreeSitterProgressState() {
   return {
     eligibleTotal: 0,
@@ -95,7 +109,9 @@ export function createInitialTreeSitterProgressState() {
     tsUnavailable: false,
   };
 }
-
+/**
+ * Creates aggregate load-progress state used by loading UI and diagnostics.
+ */
 export function createInitialLoadProgressState() {
   return {
     dirsVisited: 0,
@@ -109,7 +125,9 @@ export function createInitialLoadProgressState() {
     phaseLabel: "Idle",
   };
 }
-
+/**
+ * Creates aggregate repository stats used by summary, language, and largest-file views.
+ */
 export function createInitialAggregateState() {
   return {
     loadedFiles: 0,
@@ -120,7 +138,10 @@ export function createInitialAggregateState() {
     largest: [],
   };
 }
-
+/**
+ * Normalizes persisted Tree-sitter runtime data into the full in-memory shape required by controllers.
+ * Guarantees queue and progress containers exist before scheduling begins.
+ */
 export function normalizeTreeSitterRuntimeState(treeSitter) {
   const ts = treeSitter || {};
   ts.fileStateById = ts.fileStateById || {};

@@ -139,7 +139,9 @@ function normalizeFromSegments(segments) {
   }
   return out.join("/");
 }
-
+/**
+ * Normalizes repository-relative paths into a canonical slash-based form for matching and indexing.
+ */
 export function normalizeProjectPath(rawPath) {
   if (!rawPath) return "";
   const cleaned = rawPath.replace(/\\/g, "/").replace(/^\/+/, "");
@@ -160,7 +162,9 @@ function joinProjectPath(baseDir, refPath) {
   if (ref.startsWith("/")) return normalizeProjectPath(ref.slice(1));
   return normalizeFromSegments(base.concat(ref.split("/")));
 }
-
+/**
+ * Builds the allowlist of referenceable file extensions used by path candidate filters.
+ */
 export function createRefExtensionSet(allowExtensions = []) {
   const out = new Set();
   (allowExtensions || []).forEach((ext) => {
@@ -174,7 +178,9 @@ export function createRefExtensionSet(allowExtensions = []) {
   EXTRA_REF_EXTS.forEach((ext) => out.add(ext));
   return out;
 }
-
+/**
+ * Records canonical paths and basename indexes used during reference resolution.
+ */
 export function recordInventoryPath(inventory, rawPath) {
   if (!inventory || !rawPath) return "";
   const canonical = normalizeProjectPath(rawPath);
@@ -191,7 +197,10 @@ export function recordInventoryPath(inventory, rawPath) {
   }
   return canonical;
 }
-
+/**
+ * Extracts path-like reference candidates from a single line of source text.
+ * Returns de-duplicated candidates with source range information for UI linking.
+ */
 export function extractReferenceCandidates(line, opts = {}) {
   const refExts = opts.refExts || new Set();
   const maxTokenLength = Number.isFinite(opts.maxTokenLength)
@@ -284,7 +293,10 @@ export function extractReferenceCandidates(line, opts = {}) {
   candidates.sort((a, b) => a.start - b.start || a.end - b.end);
   return candidates;
 }
-
+/**
+ * Resolves one extracted candidate against project inventory and source path context.
+ * Returns normalized target metadata when a best match is found, otherwise unresolved status details.
+ */
 export function resolveReferenceCandidate({
   sourcePath,
   candidate,

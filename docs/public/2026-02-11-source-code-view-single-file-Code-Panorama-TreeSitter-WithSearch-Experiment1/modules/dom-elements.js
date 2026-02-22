@@ -1,3 +1,10 @@
+/**
+ * Collects and returns the DOM handles used by runtime modules.
+ * Centralizing selectors keeps UI wiring consistent and reduces repeated lookups.
+ *
+ * @param {Document} [doc=document] Document used for element queries.
+ * @returns {Object} Named DOM element references consumed by runtime controllers.
+ */
 export function getDomElements(doc = document) {
   return {
     topbar: doc.getElementById("topbar"),

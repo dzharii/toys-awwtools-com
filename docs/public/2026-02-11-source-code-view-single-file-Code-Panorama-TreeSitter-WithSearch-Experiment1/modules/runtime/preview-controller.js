@@ -1,9 +1,18 @@
+/**
+ * Hover preview runtime for symbols and references.
+ * Manages popup lifecycle, placement, and teardown so preview interactions stay responsive.
+ */
 import { clamp, rectOf, makeTextSpan } from "../file-helpers.js";
 import {
   clampLineNumberForFile,
   getLineMetricsInPre,
 } from "./line-navigation.js";
-
+/**
+ * Creates hover-preview behavior for symbols and reference targets across runtime panels.
+ * Handles delayed open, placement, resize or drag interactions, and safe teardown when context changes.
+ *
+ * @returns {Object} Preview lifecycle and event handlers consumed by runtime modules.
+ */
 export function createPreviewController({
   state,
   els,

@@ -1,3 +1,15 @@
+/**
+ * Support panel coordination for runtime UI sections.
+ * Keeps panel open and close behavior consistent across settings, logs, and diagnostics.
+ */
+
+/**
+ * Creates panel toggles and lifecycle handlers for support-side runtime panels.
+ * Returned handlers keep panel state transitions and control-bar labels synchronized.
+ *
+ * @param {Object} ctx Runtime dependencies and DOM handles.
+ * @returns {Object} Panel open and close handlers consumed by app runtime.
+ */
 export function createPanelsController(ctx) {
   const {
     state,

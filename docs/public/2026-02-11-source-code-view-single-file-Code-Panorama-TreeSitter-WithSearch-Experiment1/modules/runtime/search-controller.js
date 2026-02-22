@@ -1,10 +1,19 @@
+/**
+ * In-project code search runtime controller.
+ * Coordinates validation, incremental scanning, and result rendering for large repositories.
+ */
 import {
   validateSearchQuery,
   buildSearchMatcher,
   matchLine,
   buildSnippetLines,
 } from "../search-helpers.js";
-
+/**
+ * Creates in-repository code search behavior and incremental search execution flow.
+ * Maintains search UI state, cancellation semantics, and result rendering without blocking the main thread.
+ *
+ * @returns {Object} Search lifecycle methods and input handlers.
+ */
 export function createSearchController({
   state,
   els,

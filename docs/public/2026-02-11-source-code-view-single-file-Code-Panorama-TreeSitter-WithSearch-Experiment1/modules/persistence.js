@@ -1,9 +1,14 @@
 const SETTINGS_STORAGE_KEY = "code-panorama-settings";
-
+/**
+ * Creates the default root node for the in-memory project tree model.
+ */
 export function createRootNode() {
   return { name: "", type: "dir", children: [], expanded: true, path: "" };
 }
-
+/**
+ * Loads user settings from storage and merges them with defaults.
+ * Parse failures are non-fatal and fall back to provided defaults.
+ */
 export function loadSettings(defaultSettings, storage = localStorage) {
   const saved = storage.getItem(SETTINGS_STORAGE_KEY);
   if (saved) {
@@ -21,11 +26,15 @@ export function loadSettings(defaultSettings, storage = localStorage) {
   }
   return { ...defaultSettings };
 }
-
+/**
+ * Persists current user settings to storage.
+ */
 export function saveSettings(settings, storage = localStorage) {
   storage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
 }
-
+/**
+ * Loads persisted Tree-sitter UI state and normalizes missing fields to safe defaults.
+ */
 export function loadTreeSitterState({
   storageKey,
   languages,
@@ -100,7 +109,9 @@ export function loadTreeSitterState({
   }
   return base;
 }
-
+/**
+ * Persists Tree-sitter window state needed to restore UI placement between sessions.
+ */
 export function saveTreeSitterState(
   windowState,
   { storageKey, storage = localStorage },

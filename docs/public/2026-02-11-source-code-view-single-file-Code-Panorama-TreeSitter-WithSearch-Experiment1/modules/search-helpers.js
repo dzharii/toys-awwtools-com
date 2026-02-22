@@ -1,3 +1,6 @@
+/**
+ * Escapes regex metacharacters so text-mode queries can be converted into safe regular expressions.
+ */
 export function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -9,7 +12,10 @@ function formatRegexErrorDetail(err) {
   if (line.length > 120) return `${line.slice(0, 117)}...`;
   return line;
 }
-
+/**
+ * Validates search input and reports user-facing errors through provided callbacks.
+ * Invalid input returns a non-ok result without throwing.
+ */
 export function validateSearchQuery(rawQuery, opts) {
   const trimmed = rawQuery.trim();
   const minLength = opts.minLength || 2;
@@ -35,7 +41,9 @@ export function validateSearchQuery(rawQuery, opts) {
   opts.onClearError?.();
   return { ok: true, trimmed };
 }
-
+/**
+ * Builds a reusable matcher from query, mode, and case-sensitivity options.
+ */
 export function buildSearchMatcher(query, mode, caseSensitive) {
   if (mode === "regex") {
     return {
@@ -53,7 +61,9 @@ export function buildSearchMatcher(query, mode, caseSensitive) {
   }
   return { type: "text", query, caseSensitive };
 }
-
+/**
+ * Returns the first match range in a line for the prepared matcher, or null when no match exists.
+ */
 export function matchLine(line, matcher) {
   if (matcher.type === "text") {
     const haystack = matcher.caseSensitive ? line : line.toLowerCase();
@@ -68,7 +78,9 @@ export function matchLine(line, matcher) {
   if (!match) return null;
   return { start: match.index, end: match.index + match[0].length };
 }
-
+/**
+ * Produces contextual snippet lines around a match for search result previews.
+ */
 export function buildSnippetLines(lines, lineIndex) {
   const start = Math.max(0, lineIndex - 3);
   const end = Math.min(lines.length - 1, lineIndex + 3);
