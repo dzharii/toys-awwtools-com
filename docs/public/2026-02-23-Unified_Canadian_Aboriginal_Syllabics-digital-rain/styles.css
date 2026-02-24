@@ -76,7 +76,7 @@ canvas {
 
 .toolbar-grid {
   display: grid;
-  grid-template-columns: minmax(220px, 1.4fr) repeat(8, minmax(0, 1fr));
+  grid-template-columns: minmax(220px, 1.4fr) repeat(10, minmax(0, 1fr));
   gap: 8px;
   align-items: end;
 }
@@ -182,7 +182,7 @@ input:focus-visible,
 #editorPanel {
   padding: 12px;
   display: grid;
-  grid-template-rows: auto minmax(180px, 1fr) auto;
+  grid-template-rows: auto auto minmax(180px, 1fr) auto;
   gap: 10px;
   min-width: 0;
 }
@@ -217,6 +217,50 @@ input:focus-visible,
   color: var(--text);
 }
 
+.inline-panel {
+  border: 1px solid rgba(112, 255, 173, 0.15);
+  border-radius: 10px;
+  background: rgba(4, 7, 5, 0.36);
+  padding: 8px;
+}
+
+.inline-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.inline-panel-head button {
+  min-height: 26px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+#experimentPromptList {
+  display: grid;
+  gap: 6px;
+}
+
+.experiment-prompt {
+  border: 1px solid rgba(112, 255, 173, 0.12);
+  border-radius: 10px;
+  background: rgba(3, 6, 4, 0.35);
+  padding: 8px;
+}
+
+.experiment-prompt-title {
+  font-size: 12px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.experiment-prompt-body {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
 #editor {
   width: 100%;
   min-height: 0;
@@ -249,10 +293,28 @@ input:focus-visible,
 }
 
 #sidePanel {
-  display: grid;
-  grid-template-rows: minmax(200px, auto) minmax(120px, auto) minmax(180px, 1fr);
-  gap: var(--gap);
+  display: block;
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+  padding-right: 2px;
+}
+
+#sidePanel > section {
+  margin-bottom: var(--gap);
+}
+
+#sidePanel > section:last-child {
+  margin-bottom: 0;
+}
+
+.widget-toggle {
+  min-height: 28px;
+  padding: 0 8px;
+  font-size: 11px;
+  white-space: nowrap;
 }
 
 #palettePanel,
@@ -260,17 +322,43 @@ input:focus-visible,
 #help {
   padding: 12px;
   min-height: 0;
-  overflow: hidden;
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: 10px;
+  overflow: visible;
+  display: block;
+}
+
+#palettePanel > * + *,
+#macroPanel > * + *,
+#help > * + * {
+  margin-top: 10px;
 }
 
 #paletteGroups,
 #macroList,
 #helpBody {
   min-height: 0;
-  overflow: auto;
+  overflow: visible;
+  max-height: none;
+}
+
+#palettePanel.is-compact #paletteGroups {
+  display: none;
+}
+
+#macroPanel.is-compact .macro-controls,
+#macroPanel.is-compact #macroList {
+  display: none;
+}
+
+#help.is-collapsed #helpTabs,
+#help.is-collapsed #helpSearch,
+#help.is-collapsed #helpFilters,
+#help.is-collapsed #helpBody {
+  display: none;
+}
+
+#sidePanel.help-focused #palettePanel.is-compact,
+#sidePanel.help-focused #macroPanel.is-compact {
+  opacity: 0.95;
 }
 
 .palette-group {
@@ -373,7 +461,7 @@ input:focus-visible,
 }
 
 #help {
-  grid-template-rows: auto auto auto 1fr;
+  min-height: 240px;
 }
 
 #helpSearch {
@@ -396,6 +484,18 @@ input:focus-visible,
   margin: 0 0 8px;
   font-size: 13px;
   color: var(--text);
+}
+
+.help-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.help-cta-row button {
+  min-height: 30px;
+  font-size: 12px;
 }
 
 .help-section p,
@@ -488,6 +588,46 @@ input:focus-visible,
   color: var(--text-muted);
 }
 
+.tutorial-track {
+  border: 1px solid rgba(112, 255, 173, 0.12);
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: rgba(4, 6, 5, 0.35);
+}
+
+.tutorial-track:last-child {
+  margin-bottom: 0;
+}
+
+.tutorial-track-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.tutorial-track-title {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.tutorial-track-meta {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.tutorial-track-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tutorial-track-actions button {
+  min-height: 30px;
+  font-size: 11px;
+}
+
 .badge-ok {
   color: rgb(135, 255, 174);
 }
@@ -500,12 +640,209 @@ input:focus-visible,
   color: rgb(255, 154, 154);
 }
 
+#stageRestoreBar {
+  position: fixed;
+  left: 50%;
+  top: 10px;
+  transform: translateX(-50%);
+  z-index: 30;
+  width: min(860px, calc(100vw - 20px));
+  pointer-events: auto;
+}
+
+.stage-restore-inner {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+}
+
+.stage-label {
+  color: var(--text);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+#stageModeFlags {
+  min-width: 0;
+}
+
+#stageModeFlags .chip {
+  white-space: nowrap;
+}
+
+/* Stage mode fold/unfold choreography */
+#ui.ui-mode-stage-enter #editorPanel,
+#ui.ui-mode-stage #editorPanel,
+#ui.ui-mode-stage-exit #editorPanel {
+  transform-origin: top center;
+  transition: transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 220ms ease, clip-path 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+#ui.ui-mode-stage-enter #sidePanel,
+#ui.ui-mode-stage #sidePanel,
+#ui.ui-mode-stage-exit #sidePanel {
+  transform-origin: top center;
+  transition: transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1) 70ms, opacity 220ms ease 70ms, clip-path 420ms cubic-bezier(0.2, 0.8, 0.2, 1) 70ms;
+}
+
+#ui.ui-mode-stage-enter #topbar,
+#ui.ui-mode-stage #topbar,
+#ui.ui-mode-stage-exit #topbar {
+  transition: transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1) 120ms, opacity 180ms ease 120ms, max-height 300ms ease 120ms;
+  overflow: hidden;
+}
+
+#ui.ui-mode-stage-enter #editorPanel,
+#ui.ui-mode-stage #editorPanel {
+  opacity: 0;
+  transform: perspective(800px) rotateX(22deg) scaleY(0.18);
+  clip-path: inset(0 0 98% 0 round 14px);
+  pointer-events: none;
+}
+
+#ui.ui-mode-stage-enter #sidePanel,
+#ui.ui-mode-stage #sidePanel {
+  opacity: 0;
+  transform: perspective(800px) rotateX(16deg) scaleY(0.18);
+  clip-path: inset(0 0 98% 0 round 14px);
+  pointer-events: none;
+}
+
+#ui.ui-mode-stage-enter #topbar,
+#ui.ui-mode-stage #topbar {
+  transform: translateY(-8px) scaleY(0.92);
+  opacity: 0;
+  max-height: 0;
+  pointer-events: none;
+}
+
+#ui.ui-mode-stage #workspace {
+  opacity: 0.02;
+}
+
+#ui.ui-mode-stage::before {
+  background: radial-gradient(circle at 20% 14%, rgba(64, 255, 142, 0.04), transparent 60%),
+    radial-gradient(circle at 84% 86%, rgba(80, 199, 255, 0.04), transparent 52%),
+    rgba(0, 0, 0, 0.02);
+}
+
+#tutorialOverlay,
+#welcomeOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: auto;
+}
+
+#tutorialBackdrop,
+.welcome-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(2px);
+}
+
+#tutorialHighlight {
+  position: absolute;
+  border-radius: 12px;
+  border: 1px solid rgba(112, 255, 173, 0.45);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35), 0 0 22px rgba(112, 255, 173, 0.18);
+  pointer-events: none;
+  transition: top 180ms ease, left 180ms ease, width 180ms ease, height 180ms ease, opacity 150ms ease;
+}
+
+#tutorialCard {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  width: min(460px, calc(100vw - 28px));
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.tutorial-progress-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+#tutorialTitle {
+  margin: 0;
+  font-size: 18px;
+  color: var(--text);
+}
+
+#tutorialBody {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+#tutorialBody p {
+  margin: 0 0 8px;
+}
+
+#tutorialBody p:last-child {
+  margin-bottom: 0;
+}
+
+.tutorial-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tutorial-actions button {
+  min-height: 32px;
+  font-size: 12px;
+}
+
+#tutorialNextBtn {
+  border-color: rgba(112, 255, 173, 0.42);
+}
+
+#welcomeCard {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(560px, calc(100vw - 24px));
+  padding: 16px;
+}
+
+#welcomeCard h2 {
+  margin: 4px 0 8px;
+  color: var(--text);
+  font-size: 24px;
+}
+
+#welcomeCard p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+#welcomeActions {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#welcomeActions button {
+  min-height: 34px;
+}
+
 @media (max-width: 1200px) {
   .toolbar-grid {
-    grid-template-columns: minmax(220px, 1fr) repeat(4, minmax(0, 1fr));
+    grid-template-columns: minmax(220px, 1fr) repeat(5, minmax(0, 1fr));
   }
 
-  .toolbar-grid > *:nth-child(n + 6) {
+  .toolbar-grid > *:nth-child(n + 7) {
     grid-column: span 1;
   }
 
@@ -516,8 +853,11 @@ input:focus-visible,
   }
 
   #sidePanel {
+    display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: minmax(180px, 1fr) minmax(200px, 1fr);
+    overflow: hidden;
+    padding-right: 0;
   }
 
   #palettePanel {
@@ -533,6 +873,36 @@ input:focus-visible,
   #help {
     grid-column: 1 / span 2;
     grid-row: 2;
+    min-height: 0;
+  }
+
+  #palettePanel,
+  #macroPanel,
+  #help {
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 10px;
+  }
+
+  #palettePanel > * + *,
+  #macroPanel > * + *,
+  #help > * + * {
+    margin-top: 0;
+  }
+
+  #help {
+    grid-template-rows: auto auto auto auto 1fr;
+  }
+
+  #paletteGroups,
+  #macroList,
+  #helpBody {
+    overflow: auto;
+  }
+
+  #tutorialCard {
+    width: min(520px, calc(100vw - 20px));
   }
 }
 
@@ -565,6 +935,7 @@ input:focus-visible,
   }
 
   #sidePanel {
+    overflow: hidden;
     grid-template-columns: 1fr;
     grid-template-rows: minmax(160px, auto) minmax(130px, auto) minmax(180px, 1fr);
   }
@@ -575,10 +946,50 @@ input:focus-visible,
     grid-column: auto;
     grid-row: auto;
   }
+
+  .stage-restore-inner {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stage-label {
+    grid-column: 1 / span 2;
+  }
+
+  #stageModeFlags {
+    grid-column: 1 / span 2;
+  }
+
+  #tutorialCard {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    width: auto;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   * {
     scroll-behavior: auto;
+  }
+
+  #ui.ui-mode-stage-enter #editorPanel,
+  #ui.ui-mode-stage #editorPanel,
+  #ui.ui-mode-stage-exit #editorPanel,
+  #ui.ui-mode-stage-enter #sidePanel,
+  #ui.ui-mode-stage #sidePanel,
+  #ui.ui-mode-stage-exit #sidePanel,
+  #ui.ui-mode-stage-enter #topbar,
+  #ui.ui-mode-stage #topbar,
+  #ui.ui-mode-stage-exit #topbar,
+  #tutorialHighlight {
+    transition: none;
+  }
+
+  #ui.ui-mode-stage-enter #editorPanel,
+  #ui.ui-mode-stage #editorPanel,
+  #ui.ui-mode-stage-enter #sidePanel,
+  #ui.ui-mode-stage #sidePanel {
+    transform: none;
+    clip-path: inset(0 0 100% 0 round 14px);
   }
 }
