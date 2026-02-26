@@ -359,19 +359,24 @@
     const viewportSymbolRatio = viewportHeightPx / symbolHeightPx;
 
     const glyphWidthPx = measureMaxHexGlyphWidth(symbolEl);
-    const reelWidthPx = glyphWidthPx
-      ? Math.ceil(glyphWidthPx + Math.max(8, Math.min(16, glyphWidthPx * 0.9)))
+    const symbolCs = window.getComputedStyle(symbolEl);
+    const symbolPadLeftPx = parseFloat(symbolCs.paddingLeft) || 0;
+    const symbolPadRightPx = parseFloat(symbolCs.paddingRight) || 0;
+    const symbolPaddingXTotalPx = symbolPadLeftPx + symbolPadRightPx;
+    const highlightSafetyPx = glyphWidthPx ? Math.max(4, Math.min(8, glyphWidthPx * 0.22)) : 0;
+    const viewportContentWidthPx = glyphWidthPx
+      ? Math.ceil(glyphWidthPx + symbolPaddingXTotalPx + highlightSafetyPx)
       : 0;
 
     state.geometry.symbolHeightPx = symbolHeightPx;
     state.geometry.glyphWidthPx = glyphWidthPx;
-    state.geometry.reelWidthPx = reelWidthPx;
+    state.geometry.reelWidthPx = viewportContentWidthPx;
     state.geometry.viewportHeightPx = viewportHeightPx;
     state.geometry.centerTopPx = (viewportHeightPx - symbolHeightPx) / 2;
     state.geometry.viewportSymbolRatio = viewportSymbolRatio;
 
-    if (reelWidthPx > 0) {
-      document.documentElement.style.setProperty("--reel-fit-width", reelWidthPx + "px");
+    if (viewportContentWidthPx > 0) {
+      document.documentElement.style.setProperty("--reel-content-fit-width", viewportContentWidthPx + "px");
     }
     document.documentElement.style.setProperty("--debug-reel-viewport-symbol-ratio", viewportSymbolRatio.toFixed(3));
 
