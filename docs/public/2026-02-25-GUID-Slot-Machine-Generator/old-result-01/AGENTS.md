@@ -1,0 +1,1 @@
+You should ignore this folder. This is an old result archive.
