@@ -4,6 +4,10 @@
   const HEX = "0123456789abcdef";
   const GUID_MASK = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";
   const SETTINGS_KEY = "guid_slot_machine_settings_v2";
+  const LUCKY_SCORE_KEY = "guid_slot_machine_lucky_score_v1";
+  const HEX_WORDS_CACHE_KEY = "guid_slot_machine_hexwords_cache_v1";
+  const HEX_WORDS_SOURCE = "hexwords.txt";
+  const HEX_WORDS_LIST_MARKER = "And now, all 1196 words.";
   const COPY_FEEDBACK_MS = 1100;
   const STRIP_REPEAT_COUNT = 24;
   const CYCLE_SYMBOL_COUNT = HEX.length;
@@ -11,6 +15,11 @@
   const LANDING_REPEAT_INDEX = 12;
   const MIN_VIEWPORT_SYMBOL_RATIO = 2.35;
   const MAX_VIEWPORT_SYMBOL_RATIO = 3.8;
+  const LUCKY_MIN_TRIGGER_POINTS = 2;
+  const LUCKY_HIGHLIGHT_DELAY_MS = 90;
+  const LUCKY_HIGHLIGHT_MS = 900;
+  const LUCKY_BANNER_MS = 1500;
+  const LUCKY_CLEANUP_MS = 1650;
 
   const SPEED_PRESETS = {
     normal: {
@@ -76,6 +85,15 @@
     speedPill: document.getElementById("speed-pill"),
     displayPanel: document.querySelector(".display-panel"),
     generateBtnLabel: document.querySelector("#generate-btn .btn-label"),
+    guidMachine: document.querySelector(".guid-machine"),
+    scoreHud: document.getElementById("score-hud"),
+    luckyScoreValue: document.getElementById("lucky-score-value"),
+    luckyScoreDelta: document.getElementById("lucky-score-delta"),
+    luckyBanner: document.getElementById("lucky-banner"),
+    luckyBannerKicker: document.getElementById("lucky-banner-kicker"),
+    luckyBannerTitle: document.getElementById("lucky-banner-title"),
+    luckyBannerSub: document.getElementById("lucky-banner-sub"),
+    luckyParticles: document.getElementById("lucky-particles"),
   };
 
   const prefersReducedMotion =
@@ -108,6 +126,19 @@
     panelFlashTimer: 0,
     resizeTimer: 0,
     lastGeometryRatioWarning: "",
+    luckyScore: 0,
+    lucky: {
+      rewardTimer: 0,
+      cleanupTimer: 0,
+      hudBurstTimer: 0,
+      scoreDeltaTimer: 0,
+      lastRewardedRunId: 0,
+      activeRunId: 0,
+      activePayload: null,
+      hexWords: new Set(),
+      hexWordsReady: false,
+      hexWordsLoadTried: false,
+    },
   };
 
   init();
@@ -116,6 +147,9 @@
     buildDisplayDom();
     applySettingsToUi();
     updateButtons();
+    state.luckyScore = loadLuckyScore();
+    renderLuckyScore(state.luckyScore);
+    preloadHexWords();
 
     measureGeometry();
     resetReelsToNeutral();
@@ -418,8 +452,11 @@
     const runId = ++state.runId;
     cancelFrameLoop();
     clearPanelCelebration();
+    clearLuckyFeedbackVisuals();
     resetCopyFeedbackVisuals();
     clearTimeout(state.pillResetTimer);
+    state.lucky.activeRunId = runId;
+    state.lucky.activePayload = null;
 
     const geometryOk = measureGeometry();
     if (!geometryOk || !state.geometry.symbolHeightPx) {
@@ -708,6 +745,7 @@
     }
 
     celebrateDisplayPanel();
+    scheduleLuckyEvaluation(runId);
   }
 
   function cancelFrameLoop() {
@@ -838,6 +876,850 @@
     if (dom.displayPanel) {
       dom.displayPanel.classList.remove("is-celebrating");
     }
+  }
+
+  function loadLuckyScore() {
+    try {
+      const raw = localStorage.getItem(LUCKY_SCORE_KEY);
+      if (!raw) return 0;
+      const value = Number(raw);
+      if (!Number.isFinite(value) || value < 0) return 0;
+      return Math.floor(value);
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  function saveLuckyScore() {
+    try {
+      localStorage.setItem(LUCKY_SCORE_KEY, String(Math.max(0, Math.floor(state.luckyScore || 0))));
+    } catch (error) {
+      // Ignore storage failures.
+    }
+  }
+
+  function renderLuckyScore(value) {
+    if (!dom.luckyScoreValue) return;
+    dom.luckyScoreValue.textContent = String(Math.max(0, Math.floor(value || 0)));
+  }
+
+  function preloadHexWords() {
+    if (state.lucky.hexWordsLoadTried) return;
+    state.lucky.hexWordsLoadTried = true;
+
+    const cached = readCachedHexWords();
+    if (cached && cached.size) {
+      state.lucky.hexWords = cached;
+      state.lucky.hexWordsReady = true;
+    }
+
+    if (typeof fetch !== "function") {
+      if (!state.lucky.hexWordsReady) seedFallbackHexWords();
+      return;
+    }
+
+    fetch(HEX_WORDS_SOURCE, { cache: "no-store" })
+      .then((res) => (res && res.ok ? res.text() : Promise.reject(new Error("hexwords fetch failed"))))
+      .then((text) => {
+        const parsed = parseHexWordsText(text);
+        if (!parsed.size) return;
+        state.lucky.hexWords = parsed;
+        state.lucky.hexWordsReady = true;
+        cacheHexWords(parsed);
+      })
+      .catch(() => {
+        if (!state.lucky.hexWordsReady) seedFallbackHexWords();
+      });
+  }
+
+  function readCachedHexWords() {
+    try {
+      const raw = localStorage.getItem(HEX_WORDS_CACHE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return null;
+      const set = new Set();
+      for (const item of parsed) {
+        if (typeof item === "string" && /^[a-f0-9]{3,}$/i.test(item)) {
+          set.add(item.toLowerCase());
+        }
+      }
+      return set;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function cacheHexWords(hexWordSet) {
+    try {
+      const list = Array.from(hexWordSet).sort((a, b) => a.length - b.length || a.localeCompare(b));
+      localStorage.setItem(HEX_WORDS_CACHE_KEY, JSON.stringify(list));
+    } catch (error) {
+      // Ignore storage failures.
+    }
+  }
+
+  function seedFallbackHexWords() {
+    state.lucky.hexWords = new Set([
+      "deadbeef",
+      "cafebabe",
+      "c0ffee",
+      "f00d",
+      "f005ba11",
+      "ba5eba11",
+      "b01dface",
+      "defec8",
+      "face",
+      "feed",
+      "deaf",
+      "fade",
+    ]);
+    state.lucky.hexWordsReady = true;
+  }
+
+  function parseHexWordsText(text) {
+    const input = String(text || "");
+    const markerIndex = input.indexOf(HEX_WORDS_LIST_MARKER);
+    let listSection = input;
+    if (markerIndex >= 0) {
+      const markerEnd = input.indexOf("\n", markerIndex);
+      listSection = markerEnd >= 0 ? input.slice(markerEnd + 1) : input.slice(markerIndex + HEX_WORDS_LIST_MARKER.length);
+    }
+    const matches = listSection.toLowerCase().match(/\b[a-f0-9]{3,}\b/g) || [];
+    const set = new Set();
+    for (const token of matches) {
+      if (token.length >= 3) set.add(token);
+    }
+    return set;
+  }
+
+  function scheduleLuckyEvaluation(runId) {
+    clearTimeout(state.lucky.rewardTimer);
+    state.lucky.rewardTimer = window.setTimeout(() => {
+      if (runId !== state.runId || state.spinning) return;
+      evaluateLuckyResultForRun(runId);
+    }, LUCKY_HIGHLIGHT_DELAY_MS);
+  }
+
+  function evaluateLuckyResultForRun(runId) {
+    if (runId !== state.runId) return;
+    if (state.lucky.lastRewardedRunId === runId) return;
+
+    const guid = state.settledGuid || state.targetGuid;
+    if (!guid) return;
+
+    const reward = analyzeLuckyGuid(guid, runId);
+    if (!reward) return;
+
+    applyLuckyReward(reward);
+  }
+
+  function analyzeLuckyGuid(guid, runId) {
+    const analysis = buildGuidAnalysis(guid);
+    if (!analysis || analysis.hex.length !== 32) return null;
+
+    const matches = [];
+    pushMatches(matches, detectRepeatMatches(analysis));
+    pushMatches(matches, detectHexRunMatches(analysis));
+    pushMatches(matches, detectPalindromeMatches(analysis));
+    pushMatches(matches, detectRepeatedChunkMatches(analysis));
+    pushMatches(matches, detectDominanceMatches(analysis));
+    pushMatches(matches, detectHexWordMatches(analysis));
+
+    if (!matches.length) return null;
+
+    const uniqueMatches = dedupeMatches(matches);
+    const totalPoints = uniqueMatches.reduce((sum, match) => sum + Math.max(0, match.score || 0), 0);
+    if (totalPoints < LUCKY_MIN_TRIGGER_POINTS) return null;
+
+    const tier = tierForPoints(totalPoints);
+    const primaryMatch = choosePrimaryLuckyMatch(uniqueMatches, tier);
+    const label = buildLuckyLabel(primaryMatch, uniqueMatches, totalPoints, tier);
+    const highlightPositions = uniqueSortedNumbers(
+      uniqueMatches.flatMap((match) => Array.isArray(match.positions) ? match.positions : [])
+    );
+    const hexWordPositions = uniqueSortedNumbers(
+      uniqueMatches
+        .filter((match) => match.type === "hexword")
+        .flatMap((match) => Array.isArray(match.positions) ? match.positions : [])
+    );
+
+    return {
+      runId,
+      guid,
+      totalPoints,
+      tier,
+      matches: uniqueMatches,
+      primaryMatch,
+      label,
+      highlightPositions,
+      hexWordPositions,
+    };
+  }
+
+  function buildGuidAnalysis(guid) {
+    const mapToGuid = [];
+    let hex = "";
+    for (let i = 0; i < guid.length; i += 1) {
+      const ch = guid[i];
+      if (ch === "-") continue;
+      hex += ch.toLowerCase();
+      mapToGuid.push(i);
+    }
+    return {
+      guid,
+      hex,
+      mapToGuid,
+    };
+  }
+
+  function pushMatches(target, nextMatches) {
+    if (!Array.isArray(nextMatches)) return;
+    for (const match of nextMatches) {
+      if (match) target.push(match);
+    }
+  }
+
+  function detectRepeatMatches(analysis) {
+    const out = [];
+    const hex = analysis.hex;
+    let i = 0;
+    while (i < hex.length) {
+      let j = i + 1;
+      while (j < hex.length && hex[j] === hex[i]) j += 1;
+      const len = j - i;
+      if (len >= 2) {
+        let score = 1;
+        let label = "Double Hit";
+        let priority = 20;
+        let subtype = "pair";
+        if (len === 3) {
+          score = 4;
+          label = "Triple Lock";
+          priority = 32;
+          subtype = "triple";
+        } else if (len >= 4) {
+          score = 10 + Math.max(0, len - 4) * 2;
+          label = len >= 6 ? "Jackpot Rune" : "Quad Lock";
+          priority = 42 + Math.min(4, len - 4);
+          subtype = "quadplus";
+        }
+
+        const raw = hex.slice(i, j);
+        out.push({
+          type: "repeat",
+          subtype,
+          raw,
+          score,
+          priority,
+          label,
+          positions: analysisPositionsToGuid(analysis, i, j),
+          ranges: [{ analysisStart: i, analysisEnd: j }],
+          visualWeight: len,
+          key: "repeat:" + i + ":" + j + ":" + raw,
+        });
+      }
+      i = j;
+    }
+    return out;
+  }
+
+  function detectHexRunMatches(analysis) {
+    const out = [];
+    const hex = analysis.hex;
+    const vals = Array.from(hex, (ch) => hexIndex(ch));
+    let i = 0;
+    while (i < vals.length - 2) {
+      const diff = vals[i + 1] - vals[i];
+      if (diff !== 1 && diff !== -1) {
+        i += 1;
+        continue;
+      }
+      let j = i + 2;
+      while (j < vals.length && vals[j] - vals[j - 1] === diff) j += 1;
+      const len = j - i;
+      if (len >= 3) {
+        const score = len >= 5 ? 10 : len === 4 ? 5 : 2;
+        out.push({
+          type: "hexrun",
+          subtype: diff > 0 ? "ascending" : "descending",
+          raw: hex.slice(i, j),
+          score,
+          priority: 26 + Math.min(10, len),
+          label: "Hex Streak",
+          positions: analysisPositionsToGuid(analysis, i, j),
+          ranges: [{ analysisStart: i, analysisEnd: j }],
+          visualWeight: len,
+          key: "hexrun:" + i + ":" + j + ":" + diff,
+        });
+      }
+      i = j - 1;
+    }
+    return out;
+  }
+
+  function detectPalindromeMatches(analysis) {
+    const hex = analysis.hex;
+    const candidates = [];
+    const maxLen = Math.min(8, hex.length);
+    for (let len = maxLen; len >= 3; len -= 1) {
+      for (let start = 0; start + len <= hex.length; start += 1) {
+        const raw = hex.slice(start, start + len);
+        if (!isPalindrome(raw)) continue;
+        if (/^([0-9a-f])\1+$/.test(raw)) continue;
+        candidates.push({
+          type: "palindrome",
+          raw,
+          score: len >= 4 ? 5 : 2,
+          priority: 25 + len,
+          label: "Mirror Echo",
+          positions: analysisPositionsToGuid(analysis, start, start + len),
+          ranges: [{ analysisStart: start, analysisEnd: start + len }],
+          visualWeight: len,
+          key: "pal:" + start + ":" + (start + len) + ":" + raw,
+        });
+      }
+    }
+
+    const used = new Set();
+    const selected = [];
+    for (const candidate of candidates.sort(compareMatchPriority)) {
+      if (candidate.positions.some((p) => used.has(p))) continue;
+      selected.push(candidate);
+      for (const p of candidate.positions) used.add(p);
+    }
+    return selected;
+  }
+
+  function detectRepeatedChunkMatches(analysis) {
+    const hex = analysis.hex;
+    const candidates = [];
+    for (let len = 4; len >= 2; len -= 1) {
+      const map = new Map();
+      for (let start = 0; start + len <= hex.length; start += 1) {
+        const raw = hex.slice(start, start + len);
+        if (/^([0-9a-f])\1+$/.test(raw)) continue;
+        if (!map.has(raw)) map.set(raw, []);
+        map.get(raw).push(start);
+      }
+
+      for (const [raw, starts] of map.entries()) {
+        if (starts.length < 2) continue;
+        const spans = [];
+        let lastEnd = -1;
+        for (const start of starts) {
+          if (start < lastEnd) continue;
+          spans.push([start, start + len]);
+          lastEnd = start + len;
+          if (spans.length >= 3) break;
+        }
+        if (spans.length < 2) continue;
+
+        const positions = uniqueSortedNumbers(
+          spans.flatMap((span) => analysisPositionsToGuid(analysis, span[0], span[1]))
+        );
+        candidates.push({
+          type: "chunk",
+          raw,
+          score: 3,
+          priority: 22 + len,
+          label: "Replay Pattern",
+          positions,
+          ranges: spans.map((span) => ({ analysisStart: span[0], analysisEnd: span[1] })),
+          visualWeight: len,
+          key: "chunk:" + raw + ":" + spans.map((s) => s[0]).join(","),
+        });
+      }
+    }
+
+    const used = new Set();
+    const selected = [];
+    for (const candidate of candidates.sort(compareMatchPriority)) {
+      if (candidate.positions.some((p) => used.has(p))) continue;
+      selected.push(candidate);
+      for (const p of candidate.positions) used.add(p);
+    }
+    return selected;
+  }
+
+  function detectDominanceMatches(analysis) {
+    const buckets = new Map();
+    for (let i = 0; i < analysis.hex.length; i += 1) {
+      const ch = analysis.hex[i];
+      if (!buckets.has(ch)) buckets.set(ch, []);
+      buckets.get(ch).push(analysis.mapToGuid[i]);
+    }
+
+    let topChar = "";
+    let topPositions = [];
+    for (const [ch, positions] of buckets.entries()) {
+      if (positions.length > topPositions.length) {
+        topChar = ch;
+        topPositions = positions;
+      }
+    }
+    if (topPositions.length < 6) return [];
+
+    const score = topPositions.length >= 8 ? 7 : 4;
+    return [{
+      type: "dominance",
+      raw: topChar,
+      score,
+      priority: topPositions.length >= 8 ? 36 : 30,
+      label: topPositions.length >= 8 ? "Lucky Cluster" : "Dominant Sigil",
+      positions: uniqueSortedNumbers(topPositions),
+      ranges: [],
+      visualWeight: topPositions.length,
+      key: "dom:" + topChar + ":" + topPositions.length,
+      extra: { count: topPositions.length },
+    }];
+  }
+
+  function detectHexWordMatches(analysis) {
+    const words = state.lucky.hexWords;
+    if (!words || !words.size) return [];
+
+    const hex = analysis.hex;
+    const candidates = [];
+    const minLen = 4;
+    const maxLen = Math.min(12, hex.length);
+
+    for (let len = maxLen; len >= minLen; len -= 1) {
+      for (let start = 0; start + len <= hex.length; start += 1) {
+        const raw = hex.slice(start, start + len);
+        if (!words.has(raw)) continue;
+        const decoded = decodeHexWord(raw);
+        candidates.push({
+          type: "hexword",
+          raw,
+          decoded,
+          score: scoreForHexWord(raw),
+          priority: 44 + Math.min(12, len),
+          label: "Hex Word",
+          positions: analysisPositionsToGuid(analysis, start, start + len),
+          ranges: [{ analysisStart: start, analysisEnd: start + len }],
+          visualWeight: len + 6,
+          key: "hexword:" + start + ":" + (start + len) + ":" + raw,
+        });
+      }
+    }
+
+    const used = new Set();
+    const selected = [];
+    for (const candidate of candidates.sort(compareMatchPriority)) {
+      if (candidate.positions.some((p) => used.has(p))) continue;
+      selected.push(candidate);
+      for (const p of candidate.positions) used.add(p);
+      if (selected.length >= 2) break;
+    }
+    return selected;
+  }
+
+  function scoreForHexWord(raw) {
+    const len = String(raw || "").length;
+    if (len >= 9) return 12;
+    if (len >= 7) return 8;
+    if (len >= 5) return 5;
+    return 3;
+  }
+
+  function decodeHexWord(raw) {
+    const map = {
+      "0": "o",
+      "1": "l",
+      "5": "s",
+      "7": "t",
+      "8": "ate",
+    };
+    let out = "";
+    for (const ch of String(raw || "").toLowerCase()) {
+      out += Object.prototype.hasOwnProperty.call(map, ch) ? map[ch] : ch;
+    }
+    return out;
+  }
+
+  function analysisPositionsToGuid(analysis, start, endExclusive) {
+    const out = [];
+    for (let i = start; i < endExclusive; i += 1) {
+      if (analysis.mapToGuid[i] != null) out.push(analysis.mapToGuid[i]);
+    }
+    return out;
+  }
+
+  function dedupeMatches(matches) {
+    const seen = new Set();
+    const out = [];
+    for (const match of matches.sort(compareMatchPriority)) {
+      const key = match.key || [
+        match.type,
+        match.raw,
+        (match.positions || []).join(","),
+        match.score,
+      ].join("|");
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(match);
+    }
+    return out;
+  }
+
+  function compareMatchPriority(a, b) {
+    return (
+      (b.priority || 0) - (a.priority || 0) ||
+      (b.score || 0) - (a.score || 0) ||
+      ((b.positions && b.positions.length) || 0) - ((a.positions && a.positions.length) || 0) ||
+      String(a.key || "").localeCompare(String(b.key || ""))
+    );
+  }
+
+  function isPalindrome(str) {
+    const s = String(str || "");
+    for (let i = 0, j = s.length - 1; i < j; i += 1, j -= 1) {
+      if (s[i] !== s[j]) return false;
+    }
+    return true;
+  }
+
+  function choosePrimaryLuckyMatch(matches, tier) {
+    if (!matches.length) return null;
+    const sorted = matches.slice().sort(compareMatchPriority);
+    if (tier === "jackpot") {
+      const hexWord = sorted.find((m) => m.type === "hexword");
+      if (hexWord && hexWord.score >= 8) return hexWord;
+    }
+    return sorted[0];
+  }
+
+  function tierForPoints(points) {
+    if (points >= 15) return "jackpot";
+    if (points >= 8) return "epic";
+    if (points >= 4) return "standard";
+    return "small";
+  }
+
+  function buildLuckyLabel(primaryMatch, matches, totalPoints, tier) {
+    const distinctTypes = new Set(matches.map((m) => m.type));
+    const primary = primaryMatch || matches[0] || null;
+
+    let title = "Lucky Cluster";
+    let kicker = "Lucky GUID";
+    let sub = "+" + totalPoints + " points";
+
+    if (tier === "jackpot") {
+      title = "Jackpot Rune";
+      kicker = "Jackpot";
+    } else if (tier === "epic") {
+      title = "Epic Lucky GUID";
+      kicker = "Epic Hit";
+    }
+
+    if (distinctTypes.size >= 3 && tier !== "jackpot") {
+      title = "Lucky Cluster";
+      kicker = tier === "epic" ? "Epic Combo" : "Combo Hit";
+    }
+
+    if (primary) {
+      if (primary.type === "repeat") {
+        title = primary.label || (primary.subtype === "triple" ? "Triple Lock" : "Double Hit");
+        kicker = "Repeat Match";
+        sub = primary.raw + " • +" + totalPoints + " points";
+      } else if (primary.type === "hexrun") {
+        title = "Hex Streak";
+        kicker = primary.subtype === "descending" ? "Descending Run" : "Ascending Run";
+        sub = primary.raw + " • +" + totalPoints + " points";
+      } else if (primary.type === "palindrome") {
+        title = "Mirror Echo";
+        kicker = "Palindrome";
+        sub = primary.raw + " • +" + totalPoints + " points";
+      } else if (primary.type === "chunk") {
+        title = "Replay Pattern";
+        kicker = "Chunk Echo";
+        sub = primary.raw + " repeated • +" + totalPoints + " points";
+      } else if (primary.type === "dominance") {
+        title = primary.label || "Lucky Cluster";
+        kicker = "Symbol Dominance";
+        const count = primary.extra && primary.extra.count ? primary.extra.count : (primary.positions || []).length;
+        sub = primary.raw + " x" + count + " • +" + totalPoints + " points";
+      } else if (primary.type === "hexword") {
+        title = tier === "jackpot" ? "Jackpot Rune" : "Hex Word Found";
+        kicker = "Hex Word";
+        const decoded = primary.decoded && primary.decoded !== primary.raw ? primary.decoded : null;
+        sub = decoded
+          ? primary.raw + " (" + decoded + ") • +" + totalPoints + " points"
+          : primary.raw + " • +" + totalPoints + " points";
+      }
+    }
+
+    if (matches.some((m) => m.type === "hexword") && primary && primary.type !== "hexword") {
+      const hexWordMatch = matches.find((m) => m.type === "hexword");
+      if (hexWordMatch) {
+        const decoded = hexWordMatch.decoded && hexWordMatch.decoded !== hexWordMatch.raw ? hexWordMatch.decoded : hexWordMatch.raw;
+        sub = "Hex word " + decoded + " • +" + totalPoints + " points";
+      }
+    }
+
+    return { title, kicker, sub };
+  }
+
+  function applyLuckyReward(reward) {
+    if (!reward || reward.runId !== state.runId) return;
+    if (state.lucky.lastRewardedRunId === reward.runId) return;
+
+    state.lucky.lastRewardedRunId = reward.runId;
+    state.lucky.activePayload = reward;
+
+    awardLuckyScore(reward.totalPoints, reward.tier);
+    playLuckyVisuals(reward);
+
+    announce(
+      reward.label.title + ". " +
+      reward.totalPoints + " points awarded."
+    );
+  }
+
+  function awardLuckyScore(points, tier) {
+    const from = Math.max(0, Math.floor(state.luckyScore || 0));
+    const to = from + Math.max(0, Math.floor(points || 0));
+    state.luckyScore = to;
+    saveLuckyScore();
+    animateLuckyScoreValue(from, to, tier);
+    pulseScoreHud(points, tier);
+  }
+
+  function animateLuckyScoreValue(from, to, tier) {
+    if (!dom.luckyScoreValue) return;
+    if (from === to) {
+      renderLuckyScore(to);
+      return;
+    }
+    if (state.settings.reducedMotion) {
+      renderLuckyScore(to);
+      return;
+    }
+
+    if (state.lucky.scoreAnimRafId) {
+      window.cancelAnimationFrame(state.lucky.scoreAnimRafId);
+      state.lucky.scoreAnimRafId = 0;
+    }
+
+    const duration = tier === "jackpot" ? 760 : tier === "epic" ? 640 : 480;
+    const startAt = performance.now();
+
+    const tick = (now) => {
+      const t = Math.min(1, Math.max(0, (now - startAt) / duration));
+      const eased = 1 - Math.pow(1 - t, 3);
+      const current = Math.round(lerp(from, to, eased));
+      renderLuckyScore(current);
+      if (t < 1) {
+        state.lucky.scoreAnimRafId = window.requestAnimationFrame(tick);
+      } else {
+        state.lucky.scoreAnimRafId = 0;
+        renderLuckyScore(to);
+      }
+    };
+
+    state.lucky.scoreAnimRafId = window.requestAnimationFrame(tick);
+  }
+
+  function pulseScoreHud(points, tier) {
+    if (!dom.scoreHud) return;
+
+    clearTimeout(state.lucky.hudBurstTimer);
+    clearTimeout(state.lucky.scoreDeltaTimer);
+
+    dom.scoreHud.dataset.tier = tier;
+    dom.scoreHud.classList.remove("is-burst");
+    void dom.scoreHud.offsetWidth;
+    dom.scoreHud.classList.add("is-burst");
+
+    state.lucky.hudBurstTimer = window.setTimeout(() => {
+      dom.scoreHud.classList.remove("is-burst");
+    }, 680);
+
+    if (dom.luckyScoreDelta) {
+      dom.luckyScoreDelta.textContent = "+" + points;
+      dom.luckyScoreDelta.classList.remove("is-active");
+      void dom.luckyScoreDelta.offsetWidth;
+      dom.luckyScoreDelta.classList.add("is-active");
+      state.lucky.scoreDeltaTimer = window.setTimeout(() => {
+        if (dom.luckyScoreDelta) dom.luckyScoreDelta.classList.remove("is-active");
+      }, 800);
+    }
+  }
+
+  function playLuckyVisuals(reward) {
+    clearTimeout(state.lucky.cleanupTimer);
+
+    showLuckyBanner(reward);
+    applyLuckyHighlights(reward);
+    spawnLuckyParticles(reward);
+
+    state.lucky.cleanupTimer = window.setTimeout(() => {
+      if (state.runId !== reward.runId) return;
+      clearLuckyHighlightClasses();
+      hideLuckyBanner();
+      clearLuckyParticles();
+      if (dom.guidMachine) {
+        dom.guidMachine.classList.remove("has-lucky-glow");
+        dom.guidMachine.removeAttribute("data-lucky-tier");
+      }
+    }, LUCKY_CLEANUP_MS);
+  }
+
+  function showLuckyBanner(reward) {
+    if (!dom.luckyBanner) return;
+    dom.luckyBanner.setAttribute("aria-hidden", "false");
+    dom.luckyBanner.dataset.tier = reward.tier;
+    if (dom.luckyBannerKicker) dom.luckyBannerKicker.textContent = reward.label.kicker;
+    if (dom.luckyBannerTitle) dom.luckyBannerTitle.textContent = reward.label.title;
+    if (dom.luckyBannerSub) dom.luckyBannerSub.textContent = reward.label.sub;
+    dom.luckyBanner.classList.remove("is-active");
+    void dom.luckyBanner.offsetWidth;
+    dom.luckyBanner.classList.add("is-active");
+  }
+
+  function hideLuckyBanner() {
+    if (!dom.luckyBanner) return;
+    dom.luckyBanner.classList.remove("is-active");
+    dom.luckyBanner.setAttribute("aria-hidden", "true");
+  }
+
+  function applyLuckyHighlights(reward) {
+    clearLuckyHighlightClasses();
+
+    const highlightSet = new Set(reward.highlightPositions || []);
+    const hexWordSet = new Set(reward.hexWordPositions || []);
+    let order = 0;
+
+    for (const reel of state.reels) {
+      const guidIndex = reel.guidIndex;
+      if (!highlightSet.has(guidIndex)) continue;
+      reel.root.classList.add("is-lucky-match", "is-lucky-pulse");
+      if (reward.tier === "epic") reel.root.classList.add("is-lucky-epic");
+      if (reward.tier === "jackpot") reel.root.classList.add("is-lucky-jackpot");
+      if (hexWordSet.has(guidIndex)) reel.root.classList.add("is-hexword-match");
+      reel.root.style.setProperty("--lucky-delay", String(order * 22) + "ms");
+      order += 1;
+    }
+
+    if (dom.guidMachine) {
+      dom.guidMachine.dataset.luckyTier = reward.tier;
+      dom.guidMachine.classList.remove("has-lucky-glow");
+      if (reward.tier !== "small") {
+        void dom.guidMachine.offsetWidth;
+        dom.guidMachine.classList.add("has-lucky-glow");
+      }
+    }
+  }
+
+  function clearLuckyHighlightClasses() {
+    for (const reel of state.reels) {
+      reel.root.classList.remove(
+        "is-lucky-match",
+        "is-lucky-pulse",
+        "is-lucky-epic",
+        "is-lucky-jackpot",
+        "is-hexword-match"
+      );
+      reel.root.style.removeProperty("--lucky-delay");
+    }
+  }
+
+  function clearLuckyFeedbackVisuals() {
+    clearTimeout(state.lucky.rewardTimer);
+    clearTimeout(state.lucky.cleanupTimer);
+    clearTimeout(state.lucky.hudBurstTimer);
+    clearTimeout(state.lucky.scoreDeltaTimer);
+
+    if (state.lucky.scoreAnimRafId) {
+      window.cancelAnimationFrame(state.lucky.scoreAnimRafId);
+      state.lucky.scoreAnimRafId = 0;
+      renderLuckyScore(state.luckyScore);
+    }
+
+    clearLuckyHighlightClasses();
+    hideLuckyBanner();
+    clearLuckyParticles();
+    if (dom.guidMachine) {
+      dom.guidMachine.classList.remove("has-lucky-glow");
+      dom.guidMachine.removeAttribute("data-lucky-tier");
+    }
+    if (dom.scoreHud) {
+      dom.scoreHud.classList.remove("is-burst");
+      dom.scoreHud.removeAttribute("data-tier");
+    }
+    if (dom.luckyScoreDelta) {
+      dom.luckyScoreDelta.classList.remove("is-active");
+      dom.luckyScoreDelta.textContent = "";
+    }
+  }
+
+  function spawnLuckyParticles(reward) {
+    if (!dom.luckyParticles) return;
+    clearLuckyParticles();
+
+    const reduced = Boolean(state.settings.reducedMotion);
+    const countByTier = {
+      small: 0,
+      standard: reduced ? 4 : 8,
+      epic: reduced ? 6 : 14,
+      jackpot: reduced ? 8 : 20,
+    };
+    const count = countByTier[reward.tier] || 0;
+    if (!count) return;
+
+    const colors = particleColorsForTier(reward.tier);
+    for (let i = 0; i < count; i += 1) {
+      const p = document.createElement("span");
+      p.className = "lucky-particle " + (reduced ? "is-glint" : "is-live");
+      p.style.left = randomFloat(12, 88).toFixed(1) + "%";
+      p.style.top = randomFloat(36, 84).toFixed(1) + "%";
+      p.style.background = colors[i % colors.length];
+      p.style.width = (reduced ? 4 : randomInt(3, 6)) + "px";
+      p.style.height = (reduced ? 4 : randomInt(3, 6)) + "px";
+      p.style.setProperty("--dx", randomInt(-42, 42) + "px");
+      p.style.setProperty("--dy", randomInt(-48, -10) + "px");
+      p.style.setProperty("--r", randomInt(-220, 220) + "deg");
+      p.style.setProperty("--s", String((randomFloat(0.85, 1.35)).toFixed(2)));
+      dom.luckyParticles.appendChild(p);
+    }
+  }
+
+  function clearLuckyParticles() {
+    if (!dom.luckyParticles) return;
+    dom.luckyParticles.innerHTML = "";
+  }
+
+  function particleColorsForTier(tier) {
+    if (tier === "jackpot") {
+      return [
+        "rgba(255, 140, 107, 0.95)",
+        "rgba(255, 200, 87, 0.95)",
+        "rgba(255, 255, 255, 0.9)",
+      ];
+    }
+    if (tier === "epic") {
+      return [
+        "rgba(255, 200, 87, 0.94)",
+        "rgba(255, 241, 214, 0.9)",
+        "rgba(98, 216, 143, 0.85)",
+      ];
+    }
+    if (tier === "standard") {
+      return [
+        "rgba(122, 234, 166, 0.92)",
+        "rgba(214, 239, 255, 0.88)",
+      ];
+    }
+    return ["rgba(139, 215, 255, 0.84)"];
+  }
+
+  function uniqueSortedNumbers(values) {
+    const set = new Set();
+    for (const value of values || []) {
+      if (Number.isInteger(value)) set.add(value);
+    }
+    return Array.from(set).sort((a, b) => a - b);
   }
 
   function generateGuid() {
