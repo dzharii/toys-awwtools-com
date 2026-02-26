@@ -18,8 +18,8 @@
   const LUCKY_MIN_TRIGGER_POINTS = 2;
   const LUCKY_HIGHLIGHT_DELAY_MS = 90;
   const LUCKY_HIGHLIGHT_MS = 900;
-  const LUCKY_BANNER_MS = 1500;
-  const LUCKY_CLEANUP_MS = 1650;
+  const LUCKY_BANNER_MS = 3000;
+  const LUCKY_CLEANUP_MS = 1100;
 
   const SPEED_PRESETS = {
     normal: {
@@ -130,6 +130,7 @@
     lucky: {
       rewardTimer: 0,
       cleanupTimer: 0,
+      bannerTimer: 0,
       hudBurstTimer: 0,
       scoreDeltaTimer: 0,
       lastRewardedRunId: 0,
@@ -169,6 +170,8 @@
 
     window.addEventListener("resize", handleResize, { passive: true });
     window.addEventListener("orientationchange", handleResize, { passive: true });
+    document.addEventListener("pointerdown", handleLuckyDismissInteraction, { passive: true });
+    document.addEventListener("keydown", handleLuckyDismissInteraction);
 
     if (document.fonts && typeof document.fonts.ready === "object") {
       document.fonts.ready.then(() => {
@@ -1549,6 +1552,7 @@
 
   function playLuckyVisuals(reward) {
     clearTimeout(state.lucky.cleanupTimer);
+    clearTimeout(state.lucky.bannerTimer);
 
     showLuckyBanner(reward);
     applyLuckyHighlights(reward);
@@ -1556,14 +1560,18 @@
 
     state.lucky.cleanupTimer = window.setTimeout(() => {
       if (state.runId !== reward.runId) return;
-      clearLuckyHighlightClasses();
-      hideLuckyBanner();
+      clearLuckyTransientHighlightClasses();
       clearLuckyParticles();
       if (dom.guidMachine) {
         dom.guidMachine.classList.remove("has-lucky-glow");
         dom.guidMachine.removeAttribute("data-lucky-tier");
       }
     }, LUCKY_CLEANUP_MS);
+
+    state.lucky.bannerTimer = window.setTimeout(() => {
+      if (state.runId !== reward.runId) return;
+      hideLuckyBanner();
+    }, LUCKY_BANNER_MS);
   }
 
   function showLuckyBanner(reward) {
@@ -1582,6 +1590,8 @@
     if (!dom.luckyBanner) return;
     dom.luckyBanner.classList.remove("is-active");
     dom.luckyBanner.setAttribute("aria-hidden", "true");
+    clearTimeout(state.lucky.bannerTimer);
+    state.lucky.bannerTimer = 0;
   }
 
   function applyLuckyHighlights(reward) {
@@ -1625,9 +1635,32 @@
     }
   }
 
+  function clearLuckyTransientHighlightClasses() {
+    for (const reel of state.reels) {
+      reel.root.classList.remove("is-lucky-pulse");
+      reel.root.style.removeProperty("--lucky-delay");
+    }
+  }
+
+  function handleLuckyDismissInteraction(event) {
+    if (!dom.luckyBanner) return;
+    if (dom.luckyBanner.getAttribute("aria-hidden") === "true") return;
+
+    const type = event && event.type;
+    if (type === "keydown") {
+      const key = event.key || "";
+      if (key === "Shift" || key === "Control" || key === "Alt" || key === "Meta" || key === "CapsLock") {
+        return;
+      }
+    }
+
+    hideLuckyBanner();
+  }
+
   function clearLuckyFeedbackVisuals() {
     clearTimeout(state.lucky.rewardTimer);
     clearTimeout(state.lucky.cleanupTimer);
+    clearTimeout(state.lucky.bannerTimer);
     clearTimeout(state.lucky.hudBurstTimer);
     clearTimeout(state.lucky.scoreDeltaTimer);
 
