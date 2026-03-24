@@ -74,6 +74,8 @@ class StickyBoardApp {
         this.resultsPanel = /** @type {HTMLElement} */ (root.querySelector("#search-results"));
         this.resultsCopy = /** @type {HTMLElement} */ (root.querySelector("#search-results-copy"));
         this.resultsList = /** @type {HTMLOListElement} */ (root.querySelector("#search-results-list"));
+        this.heroNoteCount = /** @type {HTMLElement | null} */ (root.querySelector("#hero-note-count"));
+        this.heroAreaCount = /** @type {HTMLElement | null} */ (root.querySelector("#hero-area-count"));
 
         /** @type {CategoryMeta[]} */
         this.categories = [];
@@ -98,6 +100,7 @@ class StickyBoardApp {
         this.collectNotes();
         this.restoreState();
         this.renderCategoryOptions();
+        this.renderHeroCounts();
         this.bindEvents();
         this.notes.forEach((note) => this.setExpanded(note, false));
         this.applyState();
@@ -325,6 +328,16 @@ class StickyBoardApp {
         this.updateCategorySummary();
     }
 
+    renderHeroCounts() {
+        if (this.heroNoteCount) {
+            this.heroNoteCount.textContent = String(this.notes.length);
+        }
+
+        if (this.heroAreaCount) {
+            this.heroAreaCount.textContent = String(this.categories.length);
+        }
+    }
+
     applyState() {
         const query = normalizeText(this.state.query);
         const queryActive = query.length > 0;
@@ -349,7 +362,7 @@ class StickyBoardApp {
 
             if (note.bookmarkButton) {
                 note.bookmarkButton.setAttribute("aria-pressed", String(this.state.favorites.has(note.guid)));
-                note.bookmarkButton.textContent = this.state.favorites.has(note.guid) ? "Saved" : "Save note";
+                note.bookmarkButton.textContent = this.state.favorites.has(note.guid) ? "Bookmarked" : "Bookmark";
             }
 
             if (inScope) {
@@ -415,7 +428,7 @@ class StickyBoardApp {
             });
 
         if (this.state.favoritesOnly) {
-            fragment.append(this.createRemovableChip("Saved notes", "Exit saved-notes scope", "favorites", "favorites"));
+            fragment.append(this.createRemovableChip("Bookmarks", "Exit bookmarks scope", "favorites", "favorites"));
         }
 
         if (this.state.query) {
@@ -467,7 +480,7 @@ class StickyBoardApp {
         let message = "";
 
         if (!queryActive && this.state.favoritesOnly && this.state.favorites.size === 0) {
-            message = "No saved notes yet. Bookmark up to ten notes to create a personal quick-access view.";
+            message = "No bookmarks yet. Bookmark up to ten notes to create a personal quick-access view.";
         } else if (!queryActive && visibleCount === 0) {
             message = "No notes match the current filters.";
         } else if (queryActive && this.state.hideNonMatching && matchCount === 0) {
@@ -534,7 +547,7 @@ class StickyBoardApp {
         const isSaved = this.state.favorites.has(guid);
 
         if (!isSaved && this.state.favorites.size >= 10) {
-            this.showMessage("You can save up to ten notes. Remove one before adding another.");
+            this.showMessage("You can bookmark up to ten notes. Remove one before adding another.");
             return;
         }
 

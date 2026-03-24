@@ -7,6 +7,8 @@ Build-free HTML, CSS, and JavaScript reference board for Seattle links and opera
 - `index.html`: authored content source, category sections, and note articles
 - `style.css`: tactile board styling, responsive layout, deterministic note variants
 - `app.js`: progressive enhancement for category filters, favorites, search, and detail expansion
+- `icons/`: SVG favicon source plus generated PNG and ICO assets
+- `site.webmanifest`: manifest metadata for installed-icon support
 
 ## Current content
 
