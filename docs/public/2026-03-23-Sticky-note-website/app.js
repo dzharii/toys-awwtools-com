@@ -6,7 +6,8 @@
 
 const STORAGE_KEYS = {
     favorites: "sticky_board_favorites",
-    view: "sticky_board_view"
+    view: "sticky_board_view",
+    previewPosition: "sticky_board_preview_position"
 };
 
 /**
@@ -29,6 +30,7 @@ const STORAGE_KEYS = {
  * @property {HTMLElement | null} details
  * @property {HTMLButtonElement | null} bookmarkButton
  * @property {HTMLButtonElement | null} expandButton
+ * @property {string} previewUrl
  */
 
 class SafeStorage {
@@ -85,6 +87,7 @@ class StickyBoardApp {
         this.validGuids = new Set();
         this.validCategoryKeys = new Set();
         this.listFormatter = new Intl.ListFormat("en", { style: "short", type: "conjunction" });
+        this.previewController = null;
 
         this.state = {
             selectedCategories: new Set(),
@@ -102,6 +105,8 @@ class StickyBoardApp {
         this.renderCategoryOptions();
         this.renderHeroCounts();
         this.bindEvents();
+        this.previewController = new FloatingPreviewController(this.root, this.notes, this.storage);
+        this.previewController.init();
         this.notes.forEach((note) => this.setExpanded(note, false));
         this.applyState();
     }
@@ -134,6 +139,7 @@ class StickyBoardApp {
             const details = /** @type {HTMLElement | null} */ (element.querySelector(".note-details"));
             const bookmarkButton = /** @type {HTMLButtonElement | null} */ (element.querySelector(".bookmark-toggle"));
             const expandButton = /** @type {HTMLButtonElement | null} */ (element.querySelector(".expand-toggle"));
+            const previewUrl = element.dataset.previewUrl?.trim() ?? "";
             const bodyText = element.querySelector(".note-body")?.textContent?.trim() ?? "";
             const detailText = details?.textContent?.trim() ?? "";
             const linksText = [...element.querySelectorAll(".note-links a")]
@@ -150,7 +156,8 @@ class StickyBoardApp {
                 element,
                 details,
                 bookmarkButton,
-                expandButton
+                expandButton,
+                previewUrl
             };
 
             this.noteByGuid.set(guid, note);
@@ -396,6 +403,7 @@ class StickyBoardApp {
         this.renderEmptyState(queryActive, scopedNotes.length, matches.length, visibleCount);
         this.renderScopeSummary(queryActive, scopedNotes.length, matches.length, visibleCount);
         this.syncCategoryInputs();
+        this.previewController?.handleBoardStateChange();
         this.persistState();
     }
 
@@ -631,6 +639,451 @@ class StickyBoardApp {
     }
 }
 
+class FloatingPreviewController {
+    constructor(root, notes, storage) {
+        this.root = root;
+        this.notes = notes.filter((note) => note.previewUrl);
+        this.storage = storage;
+
+        this.window = /** @type {HTMLElement | null} */ (root.querySelector("#link-preview"));
+        this.dragHandle = /** @type {HTMLElement | null} */ (root.querySelector("#link-preview-drag-handle"));
+        this.title = /** @type {HTMLElement | null} */ (root.querySelector("#link-preview-title"));
+        this.host = /** @type {HTMLElement | null} */ (root.querySelector("#link-preview-host"));
+        this.openLink = /** @type {HTMLAnchorElement | null} */ (root.querySelector("#link-preview-open"));
+        this.closeButton = /** @type {HTMLButtonElement | null} */ (root.querySelector("#link-preview-close"));
+        this.frame = /** @type {HTMLIFrameElement | null} */ (root.querySelector("#link-preview-frame"));
+
+        this.desktopMedia = window.matchMedia("(hover: hover) and (pointer: fine)");
+        this.reducedMotionMedia = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+        this.activeNote = null;
+        this.pointerNote = null;
+        this.previewHovered = false;
+        this.currentUrl = "";
+        this.requestId = 0;
+        this.hoverTimer = 0;
+        this.preloadTimer = 0;
+        this.loadTimer = 0;
+        this.closeTimer = 0;
+        this.pendingRequest = null;
+        this.dragState = null;
+        this.preferredPosition = this.readPreferredPosition();
+    }
+
+    init() {
+        if (!this.window || !this.dragHandle || !this.title || !this.host || !this.openLink || !this.closeButton || !this.frame) {
+            return;
+        }
+
+        this.window.hidden = false;
+        this.window.setAttribute("aria-hidden", "true");
+
+        this.notes.forEach((note) => {
+            note.element.dataset.previewEnabled = "true";
+            note.element.addEventListener("pointerenter", () => this.handleNoteEnter(note));
+            note.element.addEventListener("pointerleave", (event) => this.handleNoteLeave(note, event));
+        });
+
+        this.window.addEventListener("pointerenter", () => {
+            this.previewHovered = true;
+            this.clearCloseTimer();
+        });
+
+        this.window.addEventListener("pointerleave", (event) => {
+            if (this.isWithinCluster(event.relatedTarget)) {
+                return;
+            }
+            this.previewHovered = false;
+            this.scheduleClose();
+        });
+
+        this.closeButton.addEventListener("click", () => this.hidePreview());
+        this.dragHandle.addEventListener("pointerdown", (event) => this.startDrag(event));
+        this.frame.addEventListener("load", () => this.handleFrameLoad());
+
+        window.addEventListener("resize", () => this.handleViewportChange());
+        window.addEventListener("scroll", () => this.handleViewportChange(), { passive: true });
+    }
+
+    handleBoardStateChange() {
+        if (!this.isEnabled()) {
+            this.hidePreview();
+            return;
+        }
+
+        if (this.activeNote?.element.hidden || this.pointerNote?.element.hidden) {
+            this.hidePreview();
+            return;
+        }
+
+        if (this.window?.classList.contains("is-open") && this.activeNote) {
+            this.applyPosition(this.resolvePosition(this.activeNote));
+        }
+    }
+
+    isEnabled() {
+        return this.desktopMedia.matches && window.innerWidth >= 1100 && window.innerHeight >= 720;
+    }
+
+    handleNoteEnter(note) {
+        if (!this.isEnabled() || note.element.hidden) {
+            return;
+        }
+
+        this.pointerNote = note;
+        this.clearCloseTimer();
+
+        if (this.activeNote === note && this.window?.classList.contains("is-open")) {
+            this.applyPosition(this.resolvePosition(note));
+            return;
+        }
+
+        this.beginPreviewIntent(note);
+    }
+
+    handleNoteLeave(note, event) {
+        if (this.pointerNote === note) {
+            this.pointerNote = null;
+        }
+
+        if (this.isWithinCluster(event.relatedTarget)) {
+            return;
+        }
+
+        this.scheduleClose();
+    }
+
+    isWithinCluster(target) {
+        return target instanceof Node && (this.window?.contains(target) || this.pointerNote?.element.contains(target));
+    }
+
+    beginPreviewIntent(note) {
+        this.cancelPendingIntent();
+
+        if (this.activeNote && this.activeNote !== note) {
+            this.concealWindow();
+        }
+
+        const request = {
+            id: ++this.requestId,
+            note,
+            url: note.previewUrl,
+            hoverReady: false,
+            loadReady: false
+        };
+
+        this.pendingRequest = request;
+
+        this.preloadTimer = window.setTimeout(() => {
+            if (this.pendingRequest?.id !== request.id || !this.frame) {
+                return;
+            }
+
+            this.frame.src = request.url;
+            this.loadTimer = window.setTimeout(() => {
+                if (this.pendingRequest?.id === request.id) {
+                    this.pendingRequest = null;
+                }
+            }, 5000);
+        }, 240);
+
+        this.hoverTimer = window.setTimeout(() => {
+            if (this.pendingRequest?.id !== request.id) {
+                return;
+            }
+
+            this.pendingRequest.hoverReady = true;
+            this.maybeReveal(request.id);
+        }, 1800);
+    }
+
+    handleFrameLoad() {
+        if (!this.pendingRequest) {
+            return;
+        }
+
+        window.clearTimeout(this.loadTimer);
+        this.pendingRequest.loadReady = true;
+        this.maybeReveal(this.pendingRequest.id);
+    }
+
+    maybeReveal(requestId) {
+        if (!this.pendingRequest || this.pendingRequest.id !== requestId || !this.window || !this.openLink || !this.title || !this.host) {
+            return;
+        }
+
+        if (!this.pendingRequest.hoverReady || !this.pendingRequest.loadReady || this.pointerNote !== this.pendingRequest.note || !this.isEnabled()) {
+            return;
+        }
+
+        const { note, url } = this.pendingRequest;
+        this.pendingRequest = null;
+        this.activeNote = note;
+        this.currentUrl = url;
+
+        this.title.textContent = note.title;
+        this.host.textContent = safeHost(url);
+        this.openLink.href = url;
+
+        this.applyPosition(this.resolvePosition(note));
+        this.window.classList.add("is-open");
+        this.window.setAttribute("aria-hidden", "false");
+    }
+
+    resolvePosition(note) {
+        const noteRect = note.element.getBoundingClientRect();
+        const size = this.measureWindow();
+        const gap = 18;
+        const candidates = [];
+
+        if (this.preferredPosition) {
+            const preferred = this.clampPosition(this.preferredPosition, size);
+            if (overlapArea(rectFromPosition(preferred, size), noteRect) < 24) {
+                return preferred;
+            }
+
+            candidates.push(preferred);
+        }
+
+        candidates.push(
+            { x: noteRect.right + gap, y: noteRect.top - 8 },
+            { x: noteRect.right + gap, y: noteRect.bottom - size.height },
+            { x: noteRect.left - size.width - gap, y: noteRect.top - 8 },
+            { x: noteRect.left - size.width - gap, y: noteRect.bottom - size.height },
+            { x: noteRect.left, y: noteRect.bottom + gap },
+            { x: noteRect.right - size.width, y: noteRect.bottom + gap },
+            { x: noteRect.left, y: noteRect.top - size.height - gap },
+            { x: noteRect.right - size.width, y: noteRect.top - size.height - gap }
+        );
+
+        let bestPosition = this.clampPosition(candidates[0], size);
+        let bestScore = Number.POSITIVE_INFINITY;
+
+        candidates.forEach((candidate) => {
+            const position = this.clampPosition(candidate, size);
+            const score = this.scorePosition(position, size, noteRect);
+            if (score < bestScore) {
+                bestScore = score;
+                bestPosition = position;
+            }
+        });
+
+        return bestPosition;
+    }
+
+    scorePosition(position, size, noteRect) {
+        const previewRect = rectFromPosition(position, size);
+        const overlap = overlapArea(previewRect, noteRect);
+        const noteCenterX = noteRect.left + noteRect.width / 2;
+        const noteCenterY = noteRect.top + noteRect.height / 2;
+        const previewCenterX = previewRect.left + previewRect.width / 2;
+        const previewCenterY = previewRect.top + previewRect.height / 2;
+        const distance = Math.hypot(noteCenterX - previewCenterX, noteCenterY - previewCenterY);
+
+        return overlap * 50 + distance;
+    }
+
+    measureWindow() {
+        const width = this.window ? this.window.offsetWidth : 464;
+        const height = this.window ? this.window.offsetHeight : 352;
+        return { width, height };
+    }
+
+    clampPosition(position, size) {
+        const padding = 16;
+        return {
+            x: clamp(position.x, padding, window.innerWidth - size.width - padding),
+            y: clamp(position.y, padding, window.innerHeight - size.height - padding)
+        };
+    }
+
+    applyPosition(position) {
+        if (!this.window) {
+            return;
+        }
+
+        const safePosition = this.clampPosition(position, this.measureWindow());
+        this.window.style.left = `${safePosition.x}px`;
+        this.window.style.top = `${safePosition.y}px`;
+    }
+
+    startDrag(event) {
+        if (!this.window || !this.dragHandle) {
+            return;
+        }
+
+        if (event.button !== 0) {
+            return;
+        }
+
+        const target = event.target;
+        if (target instanceof HTMLElement && target.closest("button, a")) {
+            return;
+        }
+
+        const rect = this.window.getBoundingClientRect();
+        this.dragState = {
+            pointerId: event.pointerId,
+            offsetX: event.clientX - rect.left,
+            offsetY: event.clientY - rect.top
+        };
+
+        this.previewHovered = true;
+        this.clearCloseTimer();
+        this.window.classList.add("is-dragging");
+        this.dragHandle.setPointerCapture(event.pointerId);
+        this.dragHandle.addEventListener("pointermove", this.handleDragMove);
+        this.dragHandle.addEventListener("pointerup", this.handleDragEnd);
+        this.dragHandle.addEventListener("pointercancel", this.handleDragEnd);
+    }
+
+    handleDragMove = (event) => {
+        if (!this.dragState || !this.window) {
+            return;
+        }
+
+        const size = this.measureWindow();
+        const nextPosition = this.clampPosition(
+            {
+                x: event.clientX - this.dragState.offsetX,
+                y: event.clientY - this.dragState.offsetY
+            },
+            size
+        );
+
+        this.applyPosition(nextPosition);
+    };
+
+    handleDragEnd = (event) => {
+        if (!this.dragState || !this.window || !this.dragHandle) {
+            return;
+        }
+
+        const rect = this.window.getBoundingClientRect();
+        this.preferredPosition = { x: rect.left, y: rect.top };
+        this.storage.write(STORAGE_KEYS.previewPosition, this.preferredPosition);
+
+        this.dragHandle.releasePointerCapture(this.dragState.pointerId);
+        this.dragHandle.removeEventListener("pointermove", this.handleDragMove);
+        this.dragHandle.removeEventListener("pointerup", this.handleDragEnd);
+        this.dragHandle.removeEventListener("pointercancel", this.handleDragEnd);
+        this.window.classList.remove("is-dragging");
+        this.dragState = null;
+
+        this.previewHovered = this.isPointInsidePreview(event.clientX, event.clientY);
+
+        if (!this.previewHovered) {
+            this.scheduleClose();
+        }
+    };
+
+    scheduleClose() {
+        this.clearCloseTimer();
+
+        if (this.pointerNote || this.previewHovered) {
+            return;
+        }
+
+        this.closeTimer = window.setTimeout(() => {
+            if (!this.pointerNote && !this.previewHovered) {
+                this.hidePreview();
+            }
+        }, 220);
+    }
+
+    clearCloseTimer() {
+        window.clearTimeout(this.closeTimer);
+    }
+
+    cancelPendingIntent() {
+        window.clearTimeout(this.hoverTimer);
+        window.clearTimeout(this.preloadTimer);
+        window.clearTimeout(this.loadTimer);
+        this.pendingRequest = null;
+    }
+
+    hidePreview() {
+        this.cancelPendingIntent();
+        this.clearCloseTimer();
+        this.pointerNote = null;
+        this.previewHovered = false;
+        this.activeNote = null;
+        this.currentUrl = "";
+
+        if (!this.window || !this.frame) {
+            return;
+        }
+
+        this.concealWindow();
+        this.frame.src = "about:blank";
+    }
+
+    concealWindow() {
+        if (!this.window) {
+            return;
+        }
+
+        this.window.classList.remove("is-open");
+        this.window.setAttribute("aria-hidden", "true");
+        this.activeNote = null;
+    }
+
+    handleViewportChange() {
+        if (!this.isEnabled()) {
+            this.hidePreview();
+            return;
+        }
+
+        if (this.window?.classList.contains("is-open")) {
+            const rect = this.window.getBoundingClientRect();
+            this.applyPosition({ x: rect.left, y: rect.top });
+        }
+    }
+
+    readPreferredPosition() {
+        const stored = this.storage.read(STORAGE_KEYS.previewPosition);
+        if (!stored || typeof stored.x !== "number" || typeof stored.y !== "number") {
+            return null;
+        }
+
+        return stored;
+    }
+
+    isPointInsidePreview(clientX, clientY) {
+        if (!this.window) {
+            return false;
+        }
+
+        const element = document.elementFromPoint(clientX, clientY);
+        return Boolean(element && this.window.contains(element));
+    }
+}
+
+function rectFromPosition(position, size) {
+    return {
+        left: position.x,
+        top: position.y,
+        width: size.width,
+        height: size.height,
+        right: position.x + size.width,
+        bottom: position.y + size.height
+    };
+}
+
+function overlapArea(a, b) {
+    const overlapWidth = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+    const overlapHeight = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+    return overlapWidth * overlapHeight;
+}
+
+function safeHost(url) {
+    try {
+        return new URL(url).hostname.replace(/^www\./, "");
+    } catch {
+        return url;
+    }
+}
+
 function normalizeText(value) {
     return value
         .toLowerCase()
@@ -638,6 +1091,10 @@ function normalizeText(value) {
         .replace(/\p{Diacritic}/gu, "")
         .replace(/\s+/g, " ")
         .trim();
+}
+
+function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
 }
 
 new StickyBoardApp().init();

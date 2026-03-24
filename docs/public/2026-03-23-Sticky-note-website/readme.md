@@ -29,6 +29,7 @@ Each note should keep:
 - a unique `data-guid`
 - a normalized `data-category`
 - optional normalized `data-tags`
+- optional `data-preview-url` for desktop floating preview support
 - a `.note-title`
 - a `.note-body`
 - a `.note-links` region
@@ -46,4 +47,5 @@ The JavaScript reads the DOM and derives:
 
 - Without JavaScript, the board still renders as readable static content.
 - With JavaScript, the page adds multi-select category filtering, saved notes with a ten-note limit, full-text search, strict hide-non-matching mode, and per-note or global detail expansion.
+- On desktop-sized fine-pointer layouts, notes with `data-preview-url` can open a delayed floating iframe preview window near the hovered note.
 - Favorites and active filter scope persist in local storage. Search text and expansion state do not.
