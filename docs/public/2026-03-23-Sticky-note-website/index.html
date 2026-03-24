@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Seattle Sticky Note Board</title>
+    <meta
+        name="description"
+        content="A build-free Seattle reference board presented as a tactile wall of sticky notes, with progressive enhancement for filtering, search, favorites, and expandable details."
+    >
+    <link rel="stylesheet" href="./style.css">
+    <script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+    <a class="skip-link" href="#board">Skip to board</a>
+    <div class="page-shell">
+        <header class="hero">
+            <p class="hero-kicker">Seattle personal ops portal</p>
+            <h1>Sticky-note board for practical city links</h1>
+            <p class="hero-summary">
+                This page is a hand-authored HTML board backed by a small JavaScript enhancement layer. The notes
+                below use a representative subset of <code>content.md</code>, so the page stays easy to extend by
+                duplicating a note and editing its metadata in place.
+            </p>
+            <div class="hero-meta">
+                <p>Progressive enhancement only: the board remains readable without script.</p>
+                <p>Source order stays intact: categories are real sections and notes are real articles.</p>
+            </div>
+        </header>
+
+        <aside class="control-bar" aria-label="Board tools">
+            <p class="fallback-note">
+                Filtering, favorites, and search load when JavaScript is available. The board content below remains
+                fully readable without it.
+            </p>
+
+            <div class="js-only controls-grid">
+                <section class="control-cluster" aria-labelledby="filters-heading">
+                    <div class="cluster-head">
+                        <h2 id="filters-heading">Focus</h2>
+                        <p>Choose one or more categories, or switch to saved notes only.</p>
+                    </div>
+                    <details class="filter-panel" id="category-panel">
+                        <summary>
+                            <span>Categories</span>
+                            <strong id="category-summary">All categories</strong>
+                        </summary>
+                        <div class="filter-panel-body" id="category-options" role="group" aria-label="Categories"></div>
+                    </details>
+                    <div class="scope-actions">
+                        <button type="button" class="toolbar-button" id="favorites-scope" aria-pressed="false">
+                            Saved notes <span id="favorites-count">0</span>/10
+                        </button>
+                        <button type="button" class="toolbar-button toolbar-button--ghost" id="reset-view">
+                            Reset view
+                        </button>
+                    </div>
+                </section>
+
+                <section class="control-cluster" aria-labelledby="search-heading">
+                    <div class="cluster-head">
+                        <h2 id="search-heading">Search</h2>
+                        <p>Search titles, visible content, and collapsed details within the current scope.</p>
+                    </div>
+                    <label class="search-field" for="search-input">
+                        <span class="visually-hidden">Search notes</span>
+                        <input
+                            id="search-input"
+                            name="search"
+                            type="search"
+                            autocomplete="off"
+                            placeholder="Search notes, links, or keywords"
+                        >
+                    </label>
+                    <div class="scope-actions">
+                        <label class="check-row" for="hide-non-matches">
+                            <input id="hide-non-matches" type="checkbox" disabled>
+                            <span>Hide non-matching notes</span>
+                        </label>
+                        <button type="button" class="toolbar-button toolbar-button--ghost" id="clear-search" hidden>
+                            Clear search
+                        </button>
+                    </div>
+                </section>
+
+                <section class="control-cluster" aria-labelledby="details-heading">
+                    <div class="cluster-head">
+                        <h2 id="details-heading">Details</h2>
+                        <p>Expand note details one at a time or across the current visible board.</p>
+                    </div>
+                    <div class="scope-actions">
+                        <button type="button" class="toolbar-button" id="expand-visible">Expand visible</button>
+                        <button type="button" class="toolbar-button toolbar-button--ghost" id="collapse-visible">
+                            Collapse visible
+                        </button>
+                    </div>
+                </section>
+            </div>
+
+            <div class="js-only live-row" aria-live="polite">
+                <div id="active-filters" class="active-filters" aria-label="Active filters"></div>
+                <p id="scope-summary" class="scope-summary">Showing all notes.</p>
+            </div>
+            <p id="app-message" class="app-message js-only" role="status" aria-live="polite" hidden></p>
+        </aside>
+
+        <section id="search-results" class="search-results js-only" aria-labelledby="search-results-title" hidden>
+            <div class="results-head">
+                <h2 id="search-results-title">Search results</h2>
+                <p id="search-results-copy"></p>
+            </div>
+            <ol id="search-results-list" class="results-list"></ol>
+        </section>
+
+        <main id="board" class="board" aria-label="Seattle sticky-note board">
+            <p id="board-empty" class="board-empty js-only" hidden></p>
+
+            <section
+                class="board-section"
+                data-category-key="emergency"
+                data-category-label="Critical Safety"
+                data-category-emoji="🚨"
+                data-category-description="Immediate awareness, official alerts, and incident reporting"
+                aria-labelledby="category-emergency"
+            >
+                <header class="section-header">
+                    <p class="section-kicker">🚨 Immediate awareness</p>
+                    <h2 id="category-emergency">Critical safety</h2>
+                    <p class="section-summary">The fastest paths to dispatch visibility, city alerts, and official reporting.</p>
+                </header>
+                <div class="notes-grid">
+                    <!-- Duplicate a note article, keep the GUID unique, and update data-category, title, body, links, and optional details. -->
+                    <article
+                        class="note note--compact"
+                        id="note-sea-911-live"
+                        data-guid="sea-911-live"
+                        data-category="emergency"
+                        data-tags="dispatch fire ems incidents live"
+                        aria-labelledby="title-sea-911-live"
+                    >
+                        <div class="note-surface">
+                            <header class="note-head">
+                                <p class="note-eyebrow">Official dispatch view</p>
+                                <h3 class="note-title" id="title-sea-911-live">Seattle Fire Real-Time 911</h3>
+                            </header>
+                            <div class="note-body">
+                                <p>Minimal live incident table for fire and EMS calls, with location, unit, and time context.</p>
+                            </div>
+                            <p class="note-links">
+                                <a href="https://web.seattle.gov/sfd/realtime911/getRecsForDatePub.asp?action=Today&incDate=&rad1=des" target="_blank" rel="noreferrer noopener">Open today's log</a>
+                                <a href="https://www.seattle.gov/fire" target="_blank" rel="noreferrer noopener">Seattle Fire</a>
+                            </p>
+                            <div class="note-actions js-only">
+                                <button type="button" class="note-button bookmark-toggle" data-action="bookmark" aria-pressed="false">
+                                    Save note
+                                </button>
+                                <button
+                                    type="button"
+                                    class="note-button expand-toggle"
+                                    data-action="expand"
+                                    aria-controls="details-sea-911-live"
+                                    aria-expanded="false"
+                                >
+                                    Show details
+                                </button>
+                            </div>
+                            <div class="note-details" id="details-sea-911-live">
+                                <p>Useful as a quick situational check when you want the city's public fire and EMS dispatch feed without map-heavy UI.</p>
+                                <ul>
+                                    <li>Best for citywide incident scanning.</li>
+                                    <li>Pair with AlertSeattle when disruptions may escalate.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article
+                        class="note note--standard"
+                        id="note-alert-seattle"
+                        data-guid="alert-seattle"
+                        data-category="emergency"
+                        data-tags="alerts notifications sms email city"
+                        aria-labelledby="title-alert-seattle"
+                    >
+                        <div class="note-surface">
+                            <header class="note-head">
+                                <p class="note-eyebrow">Official city broadcast</p>
+                                <h3 class="note-title" id="title-alert-seattle">AlertSeattle</h3>
+                            </header>
+                            <div class="note-body">
+                                <p>Seattle's official emergency alert system for text, email, and phone notices about major hazards and disruptions.</p>
+                            </div>
+                            <p class="note-links">
+                                <a href="https://alert.seattle.gov/" target="_blank" rel="noreferrer noopener">Sign up</a>
+                                <a href="https://alert.seattle.gov/faq/" target="_blank" rel="noreferrer noopener">FAQ</a>
+                                <a href="https://www.seattle.gov/emergency-management/prepare/alert-seattle" target="_blank" rel="noreferrer noopener">City explainer</a>
+                            </p>
+                            <div class="note-actions js-only">
+                                <button type="button" class="note-button bookmark-toggle" data-action="bookmark" aria-pressed="false">
+                                    Save note
+                                </button>
+                                <button
+                                    type="button"
+                                    class="note-button expand-toggle"
+                                    data-action="expand"
+                                    aria-controls="details-alert-seattle"
+                                    aria-expanded="false"
+                                >
+                                    Show details
+                                </button>
+                            </div>
+                            <div class="note-details" id="details-alert-seattle">
+                                <p>Use this as the first stop for official citywide notifications covering safety, health, transport, and utility events.</p>
+                                <ul>
+                                    <li>Good long-term personal setup task.</li>
+                                    <li>Complements, rather than replaces, live incident tools.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article
+                        class="note note--standard note--wide"
+                        id="note-spd-online-report"
+                        data-guid="spd-online-report"
+                        data-category="emergency"
+                        data-tags="police reporting non-emergency crime online"
+                        aria-labelledby="title-spd-online-report"
+                    >
+                        <div class="note-surface">
+                            <header class="note-head">
+                                <p class="note-eyebrow">Non-emergency reporting</p>
+                                <h3 class="note-title" id="title-spd-online-report">Seattle Police reporting shortcuts</h3>
+                            </header>
+                            <div class="note-body">
+                                <p>Official entry points for police guidance, eligible online reports, and recent calls or crime maps.</p>
+                            </div>
+                            <p class="note-links">
+                                <a href="https://www.seattle.gov/police" target="_blank" rel="noreferrer noopener">Seattle Police</a>
+                                <a href="https://spdonlinereporting.seattle.gov/" target="_blank" rel="noreferrer noopener">File an online report</a>
+                                <a href="https://www.seattle.gov/police/information-and-data/data/online-crime-maps" target="_blank" rel="noreferrer noopener">Crime maps</a>
+                            </p>
+                            <div class="note-actions js-only">
+                                <button type="button" class="note-button bookmark-toggle" data-action="bookmark" aria-pressed="false">
+                                    Save note
+                                </button>
+                                <button
+                                    type="button"
+                                    class="note-button expand-toggle"
+                                    data-action="expand"
+                                    aria-controls="details-spd-online-report"
+                                    aria-expanded="false"
+                                >
+                                    Show details
+                                </button>
+                            </div>
+                            <div class="note-details" id="details-spd-online-report">
+                                <p>This is the practical branch for incidents that do not require an emergency call but still need official documentation or follow-up.</p>
+                                <ul>
+                                    <li>Use the main SPD hub when you need the correct reporting pathway.</li>
+                                    <li>The crime-map shortcut is better for recent-area context than filing help.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article
+                        class="note note--large"
+                        id="note-seattle-oem"
+                        data-guid="seattle-oem"
+                        data-category="emergency"
+                        data-tags="preparedness hazards neighborhood emergency"
+                        aria-labelledby="title-seattle-oem"
+                    >
+                        <div class="note-surface">
+                            <header class="note-head">
+                                <p class="note-eyebrow">Preparedness hub</p>
+                                <h3 class="note-title" id="title-seattle-oem">Seattle Emergency Management</h3>
+                            </header>
+                            <div class="note-body">
+                                <p>Preparedness pathways for training, neighborhood planning, hazard overviews, and emergency hubs.</p>
+                            </div>
+                            <p class="note-links">
+                                <a href="https://www.seattle.gov/emergency-management" target="_blank" rel="noreferrer noopener">Emergency Management</a>
+                                <a href="https://www.seattle.gov/emergency-management/prepare/prepare-your-neighborhood" target="_blank" rel="noreferrer noopener">Prepare your neighborhood</a>
+                            </p>
+                            <div class="note-actions js-only">
+                                <button type="button" class="note-button bookmark-toggle" data-action="bookmark" aria-pressed="false">
+                                    Save note
+                                </button>
+                                <button
+                                    type="button"
+                                    class="note-button expand-toggle"
+                                    data-action="expand"
+                                    aria-controls="details-seattle-oem"
+                                    aria-expanded="false"
+                                >
+                                    Show details
+                                </button>
+                            </div>
+                            <div class="note-details" id="details-seattle-oem">
+                                <p>Less urgent than the live-alert notes, but the right place to build durable preparedness habits before you need them.</p>
+                                <ul>
+                                    <li>Neighborhood prep and communication hubs live here.</li>
+                                    <li>Good companion note for hazard-map exploration.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section
+                class="board-section"
+                data-category-key="mobility"
+                data-category-label="Mobility"
+                data-category-emoji="🚌"
+                data-category-description="Traffic, transit, ferries, and daily movement"
+                aria-labelledby="category-mobility"
+            >
+                <header class="section-header">
+                    <p class="section-kicker">🚌 Daily movement</p>
+                    <h2 id="category-mobility">Mobility</h2>
+                    <p class="section-summary">Transit planning, travel conditions, and the quickest operational views for getting around.</p>
+                </header>
+                <div class="notes-grid">
+                    <article
+                        class="note note--standard"
+                        id="note-sdot-travelers"
+                        data-guid="sdot-travelers"
+                        data-category="mobility"
+                        data-tags="traffic cameras travel map roads incidents"
+                        aria-labelledby="title-sdot-travelers"
+                    >
+                        <div class="note-surface">
+                            <header class="note-head">
+                                <p class="note-eyebrow">Street conditions</p>
+                                <h3 class="note-title" id="title-sdot-travelers">SDOT Travelers map</h3>
+                            </header>
+                            <div class="note-body">
+                                <p>Real-time traffic conditions for Seattle streets and nearby freeways, with linked camera views and incident context.</p>
+                            </div>
+                            <p class="note-links">
+                                <a href="https://web.seattle.gov/travelers/" target="_blank" rel="noreferrer noopener">Open travelers map</a>
+                                <a href="https://www.seattle.gov/trafficcams/i5_85th.htm" target="_blank" rel="noreferrer noopener">Traffic cameras</a>
+                            </p>
+                            <div class="note-actions js-only">
+                                <button type="button" class="note-button bookmark-toggle" data-action="bookmark" aria-pressed="false">
+                                    Save note
+                                </button>
+                                <button
+                                    type="button"
+                                    class="note-button expand-toggle"
+                                    data-action="expand"
+                                    aria-controls="details-sdot-travelers"
+                                    aria-expanded="false"
+                                >
+                                    Show details
+                                </button>
+                            </div>
+                            <div class="note-details" id="details-sdot-travelers">
+                                <p>Best when you need to decide whether traffic, closures, or camera-confirmed conditions change a trip.</p>
+                                <ul>
+                                    <li>Strong everyday local road view.</li>
+                                    <li>Use WSDOT for broader state routes and mountain passes.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article
+                        class="note note--large"
+                        id="note-metro-advisories"
+                        data-guid="metro-advisories"
+                        data-category="mobility"
+                        data-tags="transit bus advisories reroutes delays metro"
+                        aria-labelledby="title-metro-advisories"
+                    >
+                        <div class="note-surface">
+                            <header class="note-head">
+                                <p class="note-eyebrow">Transit changes</p>
+                                <h3 class="note-title" id="title-metro-advisories">King County Metro service advisories</h3>
+                            </header>
+                            <div class="note-body">
+                                <p>Official delay, reroute, closure, and service-change feed for Metro routes, including weather-linked disruptions.</p>
+                            </div>
+                            <p class="note-links">
+                                <a href="https://kingcounty.gov/en/dept/metro/rider-tools/service-advisories" target="_blank" rel="noreferrer noopener">Service advisories</a>
+                                <a href="https://tripplanner.kingcounty.gov/" target="_blank" rel="noreferrer noopener">Trip planner</a>
+                                <a href="https://kingcounty.gov/en/dept/metro/rider-tools/service-advisories/transit-alerts-signup" target="_blank" rel="noreferrer noopener">Alert signup</a>
+                            </p>
+                            <div class="note-actions js-only">
+                                <button type="button" class="note-button bookmark-toggle" data-action="bookmark" aria-pressed="false">
+                                    Save note
+                                </button>
+                                <button
+                                    type="button"
+                                    class="note-button expand-toggle"
+                                    data-action="expand"
+                                    aria-controls="details-metro-advisories"
+                                    aria-expanded="false"
+                                >
+                                    Show details
+                                </button>
+                            </div>
+                            <div class="note-details" id="details-metro-advisories">
+                                <p>This is the official place to confirm whether a planned route is rerouted, delayed, or suspended before you leave.</p>
+                                <ul>
+                                    <li>Use with the trip planner for route decisions.</li>
+                                    <li>Particularly useful during snow, flooding, or construction shifts.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article
+                        class="note note--compact"
+                        id="note-onebusaway"
+                        data-guid="onebusaway"
+                        data-category="mobility"
+                        data-tags="transit real-time arrivals stops buses rail"
+                        aria-labelledby="title-onebusaway"
+                    >
+                        <div class="note-surface">
+                            <header class="note-head">
+                                <p class="note-eyebrow">Arrival timing</p>
+                                <h3 class="note-title" id="title-onebusaway">OneBusAway</h3>
+                            </header>
+                            <div class="note-body">
+                                <p>Puget Sound real-time arrivals and route lookup for stop-code checks when you are already in motion.</p>
+                            </div>
+                            <p class="note-links">
+                                <a href="https://pugetsound.onebusaway.org/" target="_blank" rel="noreferrer noopener">Open OneBusAway</a>
+                                <a href="https://kingcounty.gov/en/dept/metro/rider-tools/mobile-and-web-apps" target="_blank" rel="noreferrer noopener">Metro app list</a>
+                            </p>
+                            <div class="note-actions js-only">
+                                <button type="button" class="note-button bookmark-toggle" data-action="bookmark" aria-pressed="false">
+                                    Save note
+                                </button>
+                                <button
+                                    type="button"
+                                    class="note-button expand-toggle"
+                                    data-action="expand"
+                                    aria-controls="details-onebusaway"
+                                    aria-expanded="false"
+                                >
+                                    Show details
+                                </button>
+                            </div>
+                            <div class="note-details" id="details-onebusaway">
+                                <p>Not the same as official advisories, but usually the quickest check for "is my bus close?" style decisions.</p>
+                                <ul>
+                                    <li>Good stop-code workflow on mobile.</li>
+                                    <li>Pair with official advisories when service is unstable.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article
+                        class="note note--wide"
+                        id="note-wa-ferries"
+                        data-guid="wa-ferries"
+                        data-category="mobility"
+                        data-tags="ferries alerts terminals vesselwatch airport travel"
+                        aria-labelledby="title-wa-ferries"
+                    >
+                        <div class="note-surface">
+                            <header class="note-head">
+                                <p class="note-eyebrow">Regional travel status</p>
+                                <h3 class="note-title" id="title-wa-ferries">Washington State Ferries status</h3>
+                            </header>
+                            <div class="note-body">
+                                <p>Route status, travel bulletins, live vessel tracking, and terminal operations for ferry-dependent trips.</p>
+                            </div>
+                            <p class="note-links">
+                                <a href="https://wsdot.wa.gov/travel/washington-state-ferries" target="_blank" rel="noreferrer noopener">Ferries hub</a>
+                                <a href="https://wsdot.com/ferries/schedule/bulletin.aspx" target="_blank" rel="noreferrer noopener">Travel bulletins</a>
+                                <a href="https://wsdot.com/ferries/vesselwatch/" target="_blank" rel="noreferrer noopener">VesselWatch</a>
+                            </p>
+                            <div class="note-actions js-only">
+                                <button type="button" class="note-button bookmark-toggle" data-action="bookmark" aria-pressed="false">
+                                    Save note
+                                </button>
+                                <button
+                                    type="button"
+                                    class="note-button expand-toggle"
+                                    data-action="expand"
+                                    aria-controls="details-wa-ferries"
+                                    aria-expanded="false"
+                                >
+                                    Show details
+                                </button>
+                            </div>
+                            <div class="note-details" id="details-wa-ferries">
+                                <p>Use this cluster when ferry travel is the trip bottleneck and you need route alerts, terminal status, or vessel positions fast.</p>
+                                <ul>
+                                    <li>Bulletins are the clearest single-page disruption view.</li>
+                                    <li>VesselWatch adds the live operational map.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section
+                class="board-section"
+                data-category-key="health"
+                data-category-label="Health and Crisis"
+                data-category-emoji="🩺"
+                data-category-description="Public health, crisis support, and urgent guidance"
+                aria-labelledby="category-health"
+            >
+                <header class="section-header">
+                    <p class="section-kicker">🩺 Health and crisis</p>
+                    <h2 id="category-health">Health and crisis</h2>
+                    <p class="section-summary">Public-health services and time-sensitive support paths that are still distinct from emergency dispatch.</p>
+                </header>
+                <div class="notes-grid">
+                    <article
+                        class="note note--standard"
+                        id="note-public-health-centers"
+                        data-guid="public-health-centers"
+                        data-category="health"
+                        data-tags="clinics public health vaccine directory"
+                        aria-labelledby="title-public-health-centers"
+                    >
+                        <div class="note-surface">
+                            <header class="note-head">
+                                <p class="note-eyebrow">Care access</p>
+                                <h3 class="note-title" id="title-public-health-centers">Public Health centers directory</h3>
+                            </header>
+                            <div class="note-body">
+                                <p>Directory of Public Health - Seattle &amp; King County clinics and service locations, plus vaccine access references.</p>
+                            </div>
+                            <p class="note-links">
+                                <a href="https://kingcounty.gov/en/dept/dph/health-safety/health-centers-programs-services/public-health-centers" target="_blank" rel="noreferrer noopener">Clinic directory</a>
+                                <a href="https://kingcounty.gov/en/dept/dph/health-safety/health-centers-programs-services/immunizations/where-to-get-vaccine" target="_blank" rel="noreferrer noopener">Vaccination locations</a>
+                            </p>
+                            <div class="note-actions js-only">
+                                <button type="button" class="note-button bookmark-toggle" data-action="bookmark" aria-pressed="false">
+                                    Save note
+                                </button>
+                                <button
+                                    type="button"
+                                    class="note-button expand-toggle"
+                                    data-action="expand"
+                                    aria-controls="details-public-health-centers"
+                                    aria-expanded="false"
+                                >
+                                    Show details
+                                </button>
+                            </div>
+                            <div class="note-details" id="details-public-health-centers">
+                                <p>A strong starting point when you need county health services rather than a hospital brand or urgent-care search engine.</p>
+                                <ul>
+                                    <li>Use the vaccine path for current access questions.</li>
+                                    <li>Use the clinic directory when you need location-level details.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article
+                        class="note note--wide"
+                        id="note-king-county-crisis"
+                        data-guid="king-county-crisis"
+                        data-category="health"
+                        data-tags="988 crisis behavioral mental health support"
+                        aria-labelledby="title-king-county-crisis"
+                    >
+                        <div class="note-surface">
+                            <header class="note-head">
+                                <p class="note-eyebrow">Behavioral crisis support</p>
+                                <h3 class="note-title" id="title-king-county-crisis">King County crisis services and 988</h3>
+                            </header>
+                            <div class="note-body">
+                                <p>County and statewide pathways for mental-health crisis support, including when to use 988 instead of emergency dispatch.</p>
+                            </div>
+                            <p class="note-links">
+                                <a href="https://kingcounty.gov/en/dept/dchs/human-social-services/behavioral-health-recovery/crisis-services" target="_blank" rel="noreferrer noopener">King County crisis services</a>
+                                <a href="https://wa988.org/" target="_blank" rel="noreferrer noopener">WA 988</a>
+                                <a href="https://988lifeline.org/" target="_blank" rel="noreferrer noopener">988 Lifeline</a>
+                            </p>
+                            <div class="note-actions js-only">
+                                <button type="button" class="note-button bookmark-toggle" data-action="bookmark" aria-pressed="false">
+                                    Save note
+                                </button>
+                                <button
+                                    type="button"
+                                    class="note-button expand-toggle"
+                                    data-action="expand"
+                                    aria-controls="details-king-county-crisis"
+                                    aria-expanded="false"
+                                >
+                                    Show details
+                                </button>
+                            </div>
+                            <div class="note-details" id="details-king-county-crisis">
+                                <p>Useful when you need a clearer escalation path between immediate danger, behavioral-health crisis support, and follow-on care.</p>
+                                <ul>
+                                    <li>988 is for crisis counseling and connection to support.</li>
+                                    <li>The county page explains regional pathways and next steps.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article
+                        class="note note--compact"
+                        id="note-poison-center"
+                        data-guid="poison-center"
+                        data-category="health"
+                        data-tags="poison toxic exposure hotline urgent"
+                        aria-labelledby="title-poison-center"
+                    >
+                        <div class="note-surface">
+                            <header class="note-head">
+                                <p class="note-eyebrow">Fast specialist advice</p>
+                                <h3 class="note-title" id="title-poison-center">Washington Poison Center</h3>
+                            </header>
+                            <div class="note-body">
+                                <p>Free expert poisoning guidance for medication, household, food, and environmental exposure questions.</p>
+                            </div>
+                            <p class="note-links">
+                                <a href="https://www.wapc.org/" target="_blank" rel="noreferrer noopener">Washington Poison Center</a>
+                                <a href="https://poisonhelp.hrsa.gov/poison-centers/find-poison-center" target="_blank" rel="noreferrer noopener">PoisonHelp</a>
+                            </p>
+                            <div class="note-actions js-only">
+                                <button type="button" class="note-button bookmark-toggle" data-action="bookmark" aria-pressed="false">
+                                    Save note
+                                </button>
+                                <button
+                                    type="button"
+                                    class="note-button expand-toggle"
+                                    data-action="expand"
+                                    aria-controls="details-poison-center"
+                                    aria-expanded="false"
+                                >
+                                    Show details
+                                </button>
+                            </div>
+                            <div class="note-details" id="details-poison-center">
+                                <p>Keep this one handy for urgent ingestion or exposure questions that need rapid specialist guidance.</p>
+                                <ul>
+                                    <li>Good complement to emergency contacts.</li>
+                                    <li>Especially useful when you need advice before deciding whether to escalate care.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section
+                class="board-section"
+                data-category-key="civic"
+                data-category-label="Civic Support"
+                data-category-emoji="🏛️"
+                data-category-description="City help, payments, and benefits pathways"
+                aria-labelledby="category-civic"
+            >
+                <header class="section-header">
+                    <p class="section-kicker">🏛️ City workflows</p>
+                    <h2 id="category-civic">Civic support</h2>
+                    <p class="section-summary">Shortcuts for city contact paths, public-benefit entry points, and common administrative tasks.</p>
+                </header>
+                <div class="notes-grid">
+                    <article
+                        class="note note--standard"
+                        id="note-customer-service-bureau"
+                        data-guid="customer-service-bureau"
+                        data-category="civic"
+                        data-tags="311 utilities city contacts help"
+                        aria-labelledby="title-customer-service-bureau"
+                    >
+                        <div class="note-surface">
+                            <header class="note-head">
+                                <p class="note-eyebrow">General city contact</p>
+                                <h3 class="note-title" id="title-customer-service-bureau">Seattle customer service bureau</h3>
+                            </header>
+                            <div class="note-body">
+                                <p>Central contact hub that pulls together 911, 311-style service paths, and key utility emergency numbers.</p>
+                            </div>
+                            <p class="note-links">
+                                <a href="https://www.seattle.gov/customer-service-bureau/contact-us" target="_blank" rel="noreferrer noopener">Contact hub</a>
+                                <a href="https://www.seattle.gov/elected-officials" target="_blank" rel="noreferrer noopener">City officials directory</a>
+                            </p>
+                            <div class="note-actions js-only">
+                                <button type="button" class="note-button bookmark-toggle" data-action="bookmark" aria-pressed="false">
+                                    Save note
+                                </button>
+                                <button
+                                    type="button"
+                                    class="note-button expand-toggle"
+                                    data-action="expand"
+                                    aria-controls="details-customer-service-bureau"
+                                    aria-expanded="false"
+                                >
+                                    Show details
+                                </button>
+                            </div>
+                            <div class="note-details" id="details-customer-service-bureau">
+                                <p>This is the practical note for "who do I contact?" questions that are urgent enough to matter but not necessarily emergencies.</p>
+                                <ul>
+                                    <li>Useful as a first-hop directory.</li>
+                                    <li>Pairs well with Seattle Police or utility-specific workflows.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article
+                        class="note note--compact"
+                        id="note-pay-or-apply"
+                        data-guid="pay-or-apply"
+                        data-category="civic"
+                        data-tags="payments applications tickets permits city"
+                        aria-labelledby="title-pay-or-apply"
+                    >
+                        <div class="note-surface">
+                            <header class="note-head">
+                                <p class="note-eyebrow">Common transactions</p>
+                                <h3 class="note-title" id="title-pay-or-apply">Seattle pay or apply hub</h3>
+                            </header>
+                            <div class="note-body">
+                                <p>Single entry page for common city payment and application workflows such as tickets and municipal requests.</p>
+                            </div>
+                            <p class="note-links">
+                                <a href="https://www.seattle.gov/pay-or-apply" target="_blank" rel="noreferrer noopener">Pay or apply</a>
+                                <a href="https://www.seattle.gov/courts/tickets-and-payments/pay-my-ticket" target="_blank" rel="noreferrer noopener">Pay my ticket</a>
+                            </p>
+                            <div class="note-actions js-only">
+                                <button type="button" class="note-button bookmark-toggle" data-action="bookmark" aria-pressed="false">
+                                    Save note
+                                </button>
+                                <button
+                                    type="button"
+                                    class="note-button expand-toggle"
+                                    data-action="expand"
+                                    aria-controls="details-pay-or-apply"
+                                    aria-expanded="false"
+                                >
+                                    Show details
+                                </button>
+                            </div>
+                            <div class="note-details" id="details-pay-or-apply">
+                                <p>Best when you know the city workflow exists but do not want to hunt through department navigation first.</p>
+                                <ul>
+                                    <li>Strong shortcut note for recurring admin tasks.</li>
+                                    <li>The court payment page is linked directly for ticket follow-through.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article
+                        class="note note--large"
+                        id="note-washington-connection"
+                        data-guid="washington-connection"
+                        data-category="civic"
+                        data-tags="benefits assistance housing food unemployment jobs"
+                        aria-labelledby="title-washington-connection"
+                    >
+                        <div class="note-surface">
+                            <header class="note-head">
+                                <p class="note-eyebrow">Benefits and support</p>
+                                <h3 class="note-title" id="title-washington-connection">Washington Connection</h3>
+                            </header>
+                            <div class="note-body">
+                                <p>Statewide gateway for benefits applications, prescreening, and social-service navigation when you need a formal entry point.</p>
+                            </div>
+                            <p class="note-links">
+                                <a href="https://www.washingtonconnection.org/" target="_blank" rel="noreferrer noopener">Washington Connection</a>
+                                <a href="https://www.washingtonconnection.org/prescreening/home.go?action=Introduction" target="_blank" rel="noreferrer noopener">See if I qualify</a>
+                                <a href="https://wa211.org/" target="_blank" rel="noreferrer noopener">Washington 211</a>
+                            </p>
+                            <div class="note-actions js-only">
+                                <button type="button" class="note-button bookmark-toggle" data-action="bookmark" aria-pressed="false">
+                                    Save note
+                                </button>
+                                <button
+                                    type="button"
+                                    class="note-button expand-toggle"
+                                    data-action="expand"
+                                    aria-controls="details-washington-connection"
+                                    aria-expanded="false"
+                                >
+                                    Show details
+                                </button>
+                            </div>
+                            <div class="note-details" id="details-washington-connection">
+                                <p>This is a more durable support note than a single city transaction link, because it helps with benefits and service discovery.</p>
+                                <ul>
+                                    <li>Use the prescreener for early qualification checks.</li>
+                                    <li>Use 211 when you need broader human guidance and service referral.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section
+                class="board-section"
+                data-category-key="environment"
+                data-category-label="Weather and Hazards"
+                data-category-emoji="🌦️"
+                data-category-description="Forecasts, smoke, and risk maps"
+                aria-labelledby="category-environment"
+            >
+                <header class="section-header">
+                    <p class="section-kicker">🌦️ Conditions and risk</p>
+                    <h2 id="category-environment">Weather and hazards</h2>
+                    <p class="section-summary">Forecasts, air quality, and hazard context for planning ahead rather than reacting late.</p>
+                </header>
+                <div class="notes-grid">
+                    <article
+                        class="note note--compact"
+                        id="note-seattle-forecast"
+                        data-guid="seattle-forecast"
+                        data-category="environment"
+                        data-tags="weather forecast nws seattle warnings"
+                        aria-labelledby="title-seattle-forecast"
+                    >
+                        <div class="note-surface">
+                            <header class="note-head">
+                                <p class="note-eyebrow">Forecast baseline</p>
+                                <h3 class="note-title" id="title-seattle-forecast">National Weather Service Seattle forecast</h3>
+                            </header>
+                            <div class="note-body">
+                                <p>Official forecast point page and regional office hub for warnings, watches, and day-to-day Seattle conditions.</p>
+                            </div>
+                            <p class="note-links">
+                                <a href="https://www.weather.gov/sew/" target="_blank" rel="noreferrer noopener">NWS Seattle office</a>
+                                <a href="https://forecast.weather.gov/MapClick.php?lat=47.6218&lon=-122.3503" target="_blank" rel="noreferrer noopener">Seattle point forecast</a>
+                            </p>
+                            <div class="note-actions js-only">
+                                <button type="button" class="note-button bookmark-toggle" data-action="bookmark" aria-pressed="false">
+                                    Save note
+                                </button>
+                                <button
+                                    type="button"
+                                    class="note-button expand-toggle"
+                                    data-action="expand"
+                                    aria-controls="details-seattle-forecast"
+                                    aria-expanded="false"
+                                >
+                                    Show details
+                                </button>
+                            </div>
+                            <div class="note-details" id="details-seattle-forecast">
+                                <p>Good primary weather note when you want the official warning source before checking secondary dashboards.</p>
+                                <ul>
+                                    <li>Forecast point page is faster for Seattle-specific conditions.</li>
+                                    <li>The office page is stronger for broader regional context.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article
+                        class="note note--standard"
+                        id="note-air-quality"
+                        data-guid="air-quality"
+                        data-category="environment"
+                        data-tags="air quality smoke wildfire ecology map"
+                        aria-labelledby="title-air-quality"
+                    >
+                        <div class="note-surface">
+                            <header class="note-head">
+                                <p class="note-eyebrow">Smoke season check</p>
+                                <h3 class="note-title" id="title-air-quality">Washington air quality map</h3>
+                            </header>
+                            <div class="note-body">
+                                <p>State air-quality map and wildfire-smoke guidance for checking conditions before outdoor plans or ventilation decisions.</p>
+                            </div>
+                            <p class="note-links">
+                                <a href="https://airqualitymap.ecology.wa.gov/" target="_blank" rel="noreferrer noopener">Air quality map</a>
+                                <a href="https://ecology.wa.gov/air-climate/air-quality/smoke-fire/wildfire-smoke" target="_blank" rel="noreferrer noopener">Smoke guidance</a>
+                            </p>
+                            <div class="note-actions js-only">
+                                <button type="button" class="note-button bookmark-toggle" data-action="bookmark" aria-pressed="false">
+                                    Save note
+                                </button>
+                                <button
+                                    type="button"
+                                    class="note-button expand-toggle"
+                                    data-action="expand"
+                                    aria-controls="details-air-quality"
+                                    aria-expanded="false"
+                                >
+                                    Show details
+                                </button>
+                            </div>
+                            <div class="note-details" id="details-air-quality">
+                                <p>Useful for quick "is it smoke, fog, or just gloomy?" questions and for deciding how cautious to be with outside plans.</p>
+                                <ul>
+                                    <li>Map gives the live regional picture.</li>
+                                    <li>Guidance page adds practical response context.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article
+                        class="note note--wide note--large"
+                        id="note-hazard-explorer"
+                        data-guid="hazard-explorer"
+                        data-category="environment"
+                        data-tags="hazards map earthquake flood preparedness planning"
+                        aria-labelledby="title-hazard-explorer"
+                    >
+                        <div class="note-surface">
+                            <header class="note-head">
+                                <p class="note-eyebrow">Planning map</p>
+                                <h3 class="note-title" id="title-hazard-explorer">Seattle hazard explorer</h3>
+                            </header>
+                            <div class="note-body">
+                                <p>Interactive local hazard map that layers planning context, facilities, and vulnerability information for preparedness work.</p>
+                            </div>
+                            <p class="note-links">
+                                <a href="https://experience.arcgis.com/experience/cfb119f55b7b4fdbbfd2b86341bfddc6" target="_blank" rel="noreferrer noopener">Hazard explorer</a>
+                                <a href="https://www.seattle.gov/emergency-management/prepare/all-hazards" target="_blank" rel="noreferrer noopener">All hazards overview</a>
+                                <a href="https://earthquake.usgs.gov/earthquakes/map/" target="_blank" rel="noreferrer noopener">USGS quake map</a>
+                            </p>
+                            <div class="note-actions js-only">
+                                <button type="button" class="note-button bookmark-toggle" data-action="bookmark" aria-pressed="false">
+                                    Save note
+                                </button>
+                                <button
+                                    type="button"
+                                    class="note-button expand-toggle"
+                                    data-action="expand"
+                                    aria-controls="details-hazard-explorer"
+                                    aria-expanded="false"
+                                >
+                                    Show details
+                                </button>
+                            </div>
+                            <div class="note-details" id="details-hazard-explorer">
+                                <p>This is the board's long-horizon planning note: stronger for understanding place-based risk than for immediate operational alerts.</p>
+                                <ul>
+                                    <li>Useful for neighborhood preparedness work.</li>
+                                    <li>Pairs naturally with Seattle Emergency Management and forecast notes.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script type="module" src="./app.js"></script>
+</body>
+</html>
