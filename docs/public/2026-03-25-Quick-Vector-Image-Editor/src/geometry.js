@@ -176,7 +176,7 @@ export function getSelectionOutline(object, viewport, measureText) {
 
 export function getHandleMarkup(handles) {
     return handles
-        .map((handle) => `<rect x="${handle.x - (SELECTION_HANDLE_SIZE_PX / 2)}" y="${handle.y - (SELECTION_HANDLE_SIZE_PX / 2)}" width="${SELECTION_HANDLE_SIZE_PX}" height="${SELECTION_HANDLE_SIZE_PX}" rx="3" fill="#ffffff" stroke="#006e52" stroke-width="1.5" />`)
+        .map((handle) => `<g><circle cx="${handle.x}" cy="${handle.y}" r="${(SELECTION_HANDLE_SIZE_PX / 2) + 1.25}" fill="#ffffff" stroke="#1a73e8" stroke-width="2.25" /><circle cx="${handle.x}" cy="${handle.y}" r="${Math.max(2.5, (SELECTION_HANDLE_SIZE_PX / 2) - 2.5)}" fill="#1a73e8" /></g>`)
         .join("");
 }
 

@@ -48,6 +48,12 @@ import {
 } from "./geometry.js";
 import { AppLogger } from "./logger.js";
 import { PersistenceService } from "./persistence.js";
+import {
+    getContextualHint,
+    getTextUiPatch,
+    renderDocumentInspectorMarkup,
+    renderObjectInspectorMarkup
+} from "./presentation.js";
 import { parseEditorSvg, renderSceneMarkup, serializeDocumentToSvg } from "./serialization.js";
 import {
     createViewportState,
@@ -125,6 +131,7 @@ export class VectorEditorApp {
             documentOriginLabel: document.getElementById("document-origin-label"),
             saveStateLabel: document.getElementById("save-state-label"),
             storageStateLabel: document.getElementById("storage-state-label"),
+            hintLabel: document.getElementById("hint-label"),
             openDocumentButton: document.getElementById("open-document-button"),
             openDocumentInput: document.getElementById("open-document-input"),
             pasteDocumentButton: document.getElementById("paste-document-button"),
@@ -442,14 +449,27 @@ export class VectorEditorApp {
         const selectedObject = this.getSelectedObject();
         const outline = getSelectionOutline(selectedObject, this.state.viewport, this.measureText);
         const handles = getSelectionHandles(selectedObject, this.state.viewport, this.measureText);
+        const isEditingSelectedText = Boolean(
+            selectedObject
+            && selectedObject.type === OBJECT_TYPE.TEXT
+            && this.state.textEdit?.objectId === selectedObject.id
+        );
         let markup = "";
         if (outline?.type === "rect") {
-            markup += `<rect x="${outline.x}" y="${outline.y}" width="${outline.width}" height="${outline.height}" fill="none" stroke="#006e52" stroke-width="1.5" stroke-dasharray="8 4" />`;
+            if (selectedObject?.type === OBJECT_TYPE.TEXT) {
+                if (!isEditingSelectedText) {
+                    markup += `<rect x="${outline.x}" y="${outline.y}" width="${outline.width}" height="${outline.height}" fill="rgba(26, 115, 232, 0.08)" stroke="#1a73e8" stroke-width="1.75" stroke-dasharray="6 4" rx="4" />`;
+                }
+            } else {
+                markup += `<rect x="${outline.x}" y="${outline.y}" width="${outline.width}" height="${outline.height}" fill="none" stroke="#1a73e8" stroke-width="1.75" stroke-dasharray="6 4" rx="4" />`;
+            }
         }
         if (outline?.type === "line") {
-            markup += `<line x1="${outline.x1}" y1="${outline.y1}" x2="${outline.x2}" y2="${outline.y2}" stroke="#006e52" stroke-width="2" stroke-dasharray="8 4" />`;
+            markup += `<line x1="${outline.x1}" y1="${outline.y1}" x2="${outline.x2}" y2="${outline.y2}" stroke="#1a73e8" stroke-width="2.5" stroke-dasharray="6 4" />`;
         }
-        markup += getHandleMarkup(handles);
+        if (!isEditingSelectedText) {
+            markup += getHandleMarkup(handles);
+        }
         this.elements.overlaySvg.setAttribute("viewBox", `0 0 ${Math.max(1, this.state.viewport.width)} ${Math.max(1, this.state.viewport.height)}`);
         this.elements.overlaySvg.innerHTML = markup;
     }
@@ -502,180 +522,20 @@ export class VectorEditorApp {
 
     renderDocumentInspector() {
         const summary = this.getDocumentSummary();
-        return `
-            <div class="inspector-group">
-                <h3>Canvas</h3>
-                <div class="field-grid">
-                    <div class="field">
-                        <label for="canvas-width-input">Width</label>
-                        <input id="canvas-width-input" data-field="canvas-width" type="number" min="1" step="1" value="${escapeXml(String(this.state.document.canvas.width))}">
-                    </div>
-                    <div class="field">
-                        <label for="canvas-height-input">Height</label>
-                        <input id="canvas-height-input" data-field="canvas-height" type="number" min="1" step="1" value="${escapeXml(String(this.state.document.canvas.height))}">
-                    </div>
-                </div>
-                <div class="field-grid field-grid-single">
-                    <div class="field">
-                        <label for="canvas-background-input">Background</label>
-                        <input id="canvas-background-input" data-field="canvas-background" type="text" value="${escapeXml(this.state.document.canvas.background)}">
-                    </div>
-                </div>
-                <div class="action-row">
-                    <button type="button" data-action="apply-canvas">Apply Canvas Size</button>
-                    <button type="button" data-action="fit-canvas">Fit Canvas</button>
-                </div>
-                <p class="help-text">Reducing canvas size warns before objects fall outside the new bounds. Objects are never rescaled automatically.</p>
-            </div>
-            <div class="inspector-group">
-                <h3>Document Meta</h3>
-                <div class="meta-list">
-                    <div>Objects: ${summary.objectCount}</div>
-                    <div>Canvas: ${summary.canvas.width} x ${summary.canvas.height}</div>
-                    <div>Origin: ${this.getDocumentOriginText()}</div>
-                    <div>Lineage: ${escapeXml(summary.lineageId)}</div>
-                    <div>Latest committed save sequence: ${summary.latestCommittedSaveSequence}</div>
-                </div>
-            </div>
-        `;
+        return renderDocumentInspectorMarkup({
+            documentState: this.state.document,
+            summary: {
+                ...summary,
+                documentOriginText: this.getDocumentOriginText()
+            }
+        });
     }
 
     renderObjectInspector(object) {
-        const sharedActions = `
-            <div class="inspector-group">
-                <h3>Layer</h3>
-                <div class="action-row">
-                    <button type="button" data-action="send-to-back">Send To Back</button>
-                    <button type="button" data-action="send-backward">Send Backward</button>
-                    <button type="button" data-action="bring-forward">Bring Forward</button>
-                    <button type="button" data-action="bring-to-front">Bring To Front</button>
-                </div>
-            </div>
-            <div class="inspector-group">
-                <h3>Actions</h3>
-                <div class="action-row">
-                    <button type="button" data-action="copy-selection">Copy Object</button>
-                    <button type="button" data-action="cut-selection">Cut Object</button>
-                    <button type="button" data-action="delete-selection" class="danger-button">Delete Object</button>
-                </div>
-            </div>
-        `;
-        if (object.type === OBJECT_TYPE.TEXT) {
-            return `
-                <div class="inspector-group">
-                    <h3>Text</h3>
-                    <div class="field-grid field-grid-single">
-                        <div class="field">
-                            <label for="text-content-input">Content</label>
-                            <input id="text-content-input" data-field="text" type="text" value="${escapeXml(object.text)}">
-                        </div>
-                    </div>
-                    <div class="field-grid">
-                        <div class="field">
-                            <label for="text-x-input">X</label>
-                            <input id="text-x-input" data-field="x" type="number" step="1" value="${round(object.x, 2)}">
-                        </div>
-                        <div class="field">
-                            <label for="text-y-input">Baseline Y</label>
-                            <input id="text-y-input" data-field="y" type="number" step="1" value="${round(object.y, 2)}">
-                        </div>
-                        <div class="field">
-                            <label for="text-font-size-input">Font Size</label>
-                            <input id="text-font-size-input" data-field="fontSize" type="number" min="1" step="1" value="${round(object.fontSize, 2)}">
-                        </div>
-                        <div class="field">
-                            <label for="text-font-weight-input">Font Weight</label>
-                            <input id="text-font-weight-input" data-field="fontWeight" type="number" min="100" max="900" step="100" value="${round(object.fontWeight, 0)}">
-                        </div>
-                        <div class="field">
-                            <label for="text-fill-input">Fill</label>
-                            <input id="text-fill-input" data-field="fill" type="text" value="${escapeXml(object.fill)}">
-                        </div>
-                    </div>
-                    <div class="action-row">
-                        <button type="button" data-action="edit-text">Edit On Canvas</button>
-                    </div>
-                </div>
-                ${sharedActions}
-            `;
-        }
-        if (object.type === OBJECT_TYPE.LINE) {
-            return `
-                <div class="inspector-group">
-                    <h3>Line</h3>
-                    <div class="field-grid">
-                        <div class="field">
-                            <label for="line-x1-input">X1</label>
-                            <input id="line-x1-input" data-field="x1" type="number" step="1" value="${round(object.x1, 2)}">
-                        </div>
-                        <div class="field">
-                            <label for="line-y1-input">Y1</label>
-                            <input id="line-y1-input" data-field="y1" type="number" step="1" value="${round(object.y1, 2)}">
-                        </div>
-                        <div class="field">
-                            <label for="line-x2-input">X2</label>
-                            <input id="line-x2-input" data-field="x2" type="number" step="1" value="${round(object.x2, 2)}">
-                        </div>
-                        <div class="field">
-                            <label for="line-y2-input">Y2</label>
-                            <input id="line-y2-input" data-field="y2" type="number" step="1" value="${round(object.y2, 2)}">
-                        </div>
-                        <div class="field">
-                            <label for="line-stroke-width-input">Stroke Width</label>
-                            <input id="line-stroke-width-input" data-field="strokeWidth" type="number" min="1" step="1" value="${round(object.strokeWidth, 2)}">
-                        </div>
-                        <div class="field">
-                            <label for="line-stroke-input">Stroke</label>
-                            <input id="line-stroke-input" data-field="stroke" type="text" value="${escapeXml(object.stroke)}">
-                        </div>
-                    </div>
-                </div>
-                ${sharedActions}
-            `;
-        }
-        const isImage = object.type === OBJECT_TYPE.IMAGE;
-        const objectTitle = isImage ? "Image" : object.type === OBJECT_TYPE.RECTANGLE ? "Rectangle" : "Ellipse";
-        return `
-            <div class="inspector-group">
-                <h3>${objectTitle}</h3>
-                <div class="field-grid">
-                    <div class="field">
-                        <label for="object-x-input">X</label>
-                        <input id="object-x-input" data-field="x" type="number" step="1" value="${round(object.x, 2)}">
-                    </div>
-                    <div class="field">
-                        <label for="object-y-input">Y</label>
-                        <input id="object-y-input" data-field="y" type="number" step="1" value="${round(object.y, 2)}">
-                    </div>
-                    <div class="field">
-                        <label for="object-width-input">Width</label>
-                        <input id="object-width-input" data-field="width" type="number" min="4" step="1" value="${round(object.width, 2)}">
-                    </div>
-                    <div class="field">
-                        <label for="object-height-input">Height</label>
-                        <input id="object-height-input" data-field="height" type="number" min="4" step="1" value="${round(object.height, 2)}">
-                    </div>
-                    ${isImage ? "" : `
-                        <div class="field">
-                            <label for="object-stroke-width-input">Stroke Width</label>
-                            <input id="object-stroke-width-input" data-field="strokeWidth" type="number" min="1" step="1" value="${round(object.strokeWidth, 2)}">
-                        </div>
-                        <div class="field">
-                            <label for="object-stroke-input">Stroke</label>
-                            <input id="object-stroke-input" data-field="stroke" type="text" value="${escapeXml(object.stroke)}">
-                        </div>
-                        <div class="field">
-                            <label for="object-fill-input">Fill</label>
-                            <input id="object-fill-input" data-field="fill" type="text" value="${escapeXml(object.fill)}">
-                        </div>
-                    `}
-                </div>
-                ${isImage ? `
-                    <p class="help-text">Natural size: ${round(object.naturalWidth, 0)} x ${round(object.naturalHeight, 0)}</p>
-                ` : ""}
-            </div>
-            ${sharedActions}
-        `;
+        return renderObjectInspectorMarkup({
+            object,
+            measureText: this.measureText
+        });
     }
 
     renderStatus() {
@@ -683,6 +543,11 @@ export class VectorEditorApp {
         this.elements.documentOriginLabel.textContent = this.getDocumentOriginText();
         this.elements.saveStateLabel.textContent = this.getSaveStateText();
         this.elements.storageStateLabel.textContent = this.getStorageStateText();
+        this.elements.hintLabel.textContent = getContextualHint({
+            tool: this.state.tool,
+            selectedObject: this.getSelectedObject(),
+            isTextEditing: Boolean(this.state.textEdit)
+        });
         this.elements.saveStateLabel.className = `status-chip ${this.getSaveStateClass()}`;
         this.elements.storageStateLabel.className = `status-chip ${this.getStorageStateClass()}`;
         this.elements.documentOriginLabel.className = `status-chip ${this.state.documentOrigin === DOCUMENT_ORIGIN.RECOVERED ? "status-warning" : ""}`.trim();
@@ -1375,7 +1240,7 @@ export class VectorEditorApp {
         }
         const field = input.dataset.field;
         let value = input.value;
-        if (["x", "y", "width", "height", "fontSize", "fontWeight", "lineHeight", "x1", "y1", "x2", "y2", "strokeWidth"].includes(field)) {
+        if (["x", "y", "left", "top", "width", "height", "fontSize", "fontWeight", "lineHeight", "x1", "y1", "x2", "y2", "strokeWidth"].includes(field)) {
             const numericValue = Number(value);
             if (!Number.isFinite(numericValue)) {
                 this.pushNotice({
@@ -1397,9 +1262,10 @@ export class VectorEditorApp {
         if (field === "text") {
             value = normalizeTextContent(value);
         }
-        const nextDocument = patchObject(this.state.document, this.state.selectionId, {
-            [field]: value
-        });
+        const patch = selectedObject.type === OBJECT_TYPE.TEXT && (field === "left" || field === "top")
+            ? getTextUiPatch(selectedObject, field, value, this.measureText)
+            : { [field]: value };
+        const nextDocument = patchObject(this.state.document, this.state.selectionId, patch);
         this.commitDocument(nextDocument, {
             reason: `inspector.${field}`,
             selectionId: this.state.selectionId
