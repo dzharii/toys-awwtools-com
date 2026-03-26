@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quick Vector Image Editor</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <div class="app-shell">
+        <header class="top-toolbar">
+            <div class="toolbar-group">
+                <button type="button" id="new-document-button">New Document</button>
+                <button type="button" id="open-document-button">Open Document</button>
+                <button type="button" id="paste-document-button">Paste Document</button>
+                <button type="button" id="insert-image-button">Insert Image</button>
+                <button type="button" id="paste-button">Paste</button>
+                <input id="open-document-input" type="file" accept=".svg,image/svg+xml" hidden>
+                <input id="insert-image-input" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden>
+            </div>
+            <div class="toolbar-group">
+                <button type="button" id="export-svg-button">Export SVG</button>
+                <button type="button" id="export-png-button">Export PNG</button>
+                <button type="button" id="export-jpeg-button">Export JPEG</button>
+                <button type="button" id="copy-png-button">Copy PNG</button>
+                <button type="button" id="copy-svg-button">Copy SVG</button>
+            </div>
+            <div class="toolbar-group toolbar-zoom">
+                <button type="button" id="zoom-out-button">Zoom Out</button>
+                <span id="zoom-label" class="status-chip">100%</span>
+                <button type="button" id="zoom-in-button">Zoom In</button>
+                <button type="button" id="reset-zoom-button">Reset Zoom</button>
+            </div>
+            <div class="toolbar-group toolbar-status">
+                <span id="document-origin-label" class="status-chip">New document</span>
+                <span id="save-state-label" class="status-chip">All changes saved</span>
+                <span id="storage-state-label" class="status-chip">Storage ready</span>
+            </div>
+        </header>
+
+        <div class="editor-layout">
+            <aside class="tool-rail" id="tool-rail" aria-label="Editing tools">
+                <button type="button" class="tool-button" data-tool="select">Select</button>
+                <button type="button" class="tool-button" data-tool="text">Text</button>
+                <button type="button" class="tool-button" data-tool="rectangle">Rectangle</button>
+                <button type="button" class="tool-button" data-tool="ellipse">Ellipse</button>
+                <button type="button" class="tool-button" data-tool="line">Line</button>
+            </aside>
+
+            <main class="workspace">
+                <div class="workspace-meta">
+                    <span>Space + drag pans. Alt/Option + click cycles covered objects.</span>
+                    <span>Use Paste or Ctrl/Cmd+V for clipboard-first work. Double click selected text to edit.</span>
+                </div>
+                <div id="viewport" class="viewport" tabindex="0" aria-label="Canvas viewport">
+                    <svg id="scene-svg" class="scene-svg" aria-hidden="true"></svg>
+                    <svg id="overlay-svg" class="overlay-svg" aria-hidden="true"></svg>
+                    <input id="text-edit-overlay" class="text-edit-overlay" type="text" spellcheck="false" hidden>
+                    <div id="empty-state" class="empty-state">
+                        <p>Insert a screenshot or start with a shape.</p>
+                        <p>The editor autosaves retained local drafts in IndexedDB.</p>
+                    </div>
+                </div>
+                <div id="notice-region" class="notice-region" aria-live="polite"></div>
+            </main>
+
+            <aside class="inspector">
+                <section class="inspector-section">
+                    <h2>Inspector</h2>
+                    <div id="inspector-content"></div>
+                </section>
+                <details class="inspector-section log-section" open>
+                    <summary>Activity Log</summary>
+                    <div class="log-controls">
+                        <button type="button" id="copy-logs-button">Copy Logs</button>
+                        <button type="button" id="clear-logs-button">Clear View</button>
+                    </div>
+                    <pre id="log-output" class="log-output"></pre>
+                </details>
+            </aside>
+        </div>
+    </div>
+
+    <dialog id="confirm-dialog" class="confirm-dialog">
+        <form method="dialog">
+            <h2 id="confirm-title">Confirm action</h2>
+            <p id="confirm-message"></p>
+            <div id="confirm-details" class="confirm-details"></div>
+            <menu class="confirm-actions">
+                <button type="submit" value="cancel">Cancel</button>
+                <button type="submit" value="confirm" class="danger-button">Continue</button>
+            </menu>
+        </form>
+    </dialog>
+
+    <script src="./libs/dexie-4.2.0.js"></script>
+    <script type="module" src="./src/main.js"></script>
+</body>
+</html>
