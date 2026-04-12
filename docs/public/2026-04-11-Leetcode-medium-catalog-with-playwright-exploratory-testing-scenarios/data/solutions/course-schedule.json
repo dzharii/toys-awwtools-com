@@ -1,0 +1,933 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "course-schedule",
+  "problemTitle": "Course Schedule",
+  "problemNumber": 207,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go",
+      "typescript",
+      "javascript",
+      "csharp",
+      "c"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go",
+      "TypeScript",
+      "JavaScript",
+      "C#",
+      "C"
+    ],
+    "solutionCount": 16,
+    "writeupCount": 5,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-python-course-schedule.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/course-schedule.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/course-schedule.py",
+          "relativePath": "Python/course-schedule.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(|V| + |E|)\n# Space: O(|E|)\n\nimport collections\n\n\n# Khan's algorithm (bfs solution)\nclass Solution(object):\n    def canFinish(self, numCourses, prerequisites):\n        \"\"\"\n        :type numCourses: int\n        :type prerequisites: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        adj = collections.defaultdict(list)\n        in_degree = collections.Counter()\n        for u, v in prerequisites:\n            in_degree[u] += 1\n            adj[v].append(u)\n        result = []\n        q = [u for u in xrange(numCourses) if u not in in_degree]\n        while q:\n            new_q = []\n            for u in q:\n                result.append(u)\n                for v in adj[u]:\n                    in_degree[v] -= 1\n                    if in_degree[v] == 0:\n                        new_q.append(v)\n            q = new_q\n        return len(result) == numCourses\n\n\n# Time:  O(|V| + |E|)\n# Space: O(|E|)\nimport collections\n\n\n# dfs solution\nclass Solution2(object):\n    def canFinish(self, numCourses, prerequisites):\n        \"\"\"\n        :type numCourses: int\n        :type prerequisites: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        adj = collections.defaultdict(list)\n        in_degree = collections.Counter()\n        for u, v in prerequisites:\n            in_degree[u] += 1\n            adj[v].append(u)\n        result = []\n        stk = [u for u in xrange(numCourses) if u not in in_degree]\n        while stk:\n            u = stk.pop()\n            result.append(u)\n            for v in adj[u]:\n                in_degree[v] -= 1\n                if in_degree[v] == 0:\n                    stk.append(v)\n        return len(result) == numCourses\n",
+          "originalCode": "# Time:  O(|V| + |E|)\n# Space: O(|E|)\n\nimport collections\n\n\n# Khan's algorithm (bfs solution)\nclass Solution(object):\n    def canFinish(self, numCourses, prerequisites):\n        \"\"\"\n        :type numCourses: int\n        :type prerequisites: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        adj = collections.defaultdict(list)\n        in_degree = collections.Counter()\n        for u, v in prerequisites:\n            in_degree[u] += 1\n            adj[v].append(u)\n        result = []\n        q = [u for u in xrange(numCourses) if u not in in_degree]\n        while q:\n            new_q = []\n            for u in q:\n                result.append(u)\n                for v in adj[u]:\n                    in_degree[v] -= 1\n                    if in_degree[v] == 0:\n                        new_q.append(v)\n            q = new_q\n        return len(result) == numCourses\n\n\n# Time:  O(|V| + |E|)\n# Space: O(|E|)\nimport collections\n\n\n# dfs solution\nclass Solution2(object):\n    def canFinish(self, numCourses, prerequisites):\n        \"\"\"\n        :type numCourses: int\n        :type prerequisites: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        adj = collections.defaultdict(list)\n        in_degree = collections.Counter()\n        for u, v in prerequisites:\n            in_degree[u] += 1\n            adj[v].append(u)\n        result = []\n        stk = [u for u in xrange(numCourses) if u not in in_degree]\n        while stk:\n            u = stk.pop()\n            result.append(u)\n            for v in adj[u]:\n                in_degree[v] -= 1\n                if in_degree[v] == 0:\n                    stk.append(v)\n        return len(result) == numCourses\n",
+          "reviewedCode": "# Time:  O(|V| + |E|)\n# Space: O(|E|)\n\nimport collections\n\n\n# Khan's algorithm (bfs solution)\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind.\nclass Solution(object):\n    def canFinish(self, numCourses, prerequisites):\n        \"\"\"\n        :type numCourses: int\n        :type prerequisites: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.\n        adj = collections.defaultdict(list)\n        in_degree = collections.Counter()\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for u, v in prerequisites:\n            in_degree[u] += 1\n            adj[v].append(u)\n        result = []\n        # [Reader note] Decision point\n        # Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible.\n        q = [u for u in xrange(numCourses) if u not in in_degree]\n        while q:\n            new_q = []\n            for u in q:\n                result.append(u)\n                for v in adj[u]:\n                    in_degree[v] -= 1\n                    if in_degree[v] == 0:\n                        new_q.append(v)\n            q = new_q\n        return len(result) == numCourses\n\n\n# Time:  O(|V| + |E|)\n# Space: O(|E|)\nimport collections\n\n\n# dfs solution\nclass Solution2(object):\n    def canFinish(self, numCourses, prerequisites):\n        \"\"\"\n        :type numCourses: int\n        :type prerequisites: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        adj = collections.defaultdict(list)\n        in_degree = collections.Counter()\n        for u, v in prerequisites:\n            in_degree[u] += 1\n            adj[v].append(u)\n        result = []\n        stk = [u for u in xrange(numCourses) if u not in in_degree]\n        while stk:\n            u = stk.pop()\n            result.append(u)\n            for v in adj[u]:\n                in_degree[v] -= 1\n                if in_degree[v] == 0:\n                    stk.append(v)\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return len(result) == numCourses",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(|V| + |E|)",
+            "Space: O(|E|)"
+          ],
+          "annotations": [
+            {
+              "line": 8,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind."
+            },
+            {
+              "line": 15,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering."
+            },
+            {
+              "line": 17,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 21,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+            },
+            {
+              "line": 61,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is the standard on-ramp to directed graph reasoning because the story is concrete and the graph concept is essential.",
+            "whatToNotice": "Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.",
+            "riskPoint": "The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0200-0299-0207.course-schedule-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0200-0299/0207.Course%20Schedule/Solution.py",
+          "localPath": "doocs_leetcode/solution/0200-0299/0207.Course Schedule/Solution.py",
+          "relativePath": "solution/0200-0299/0207.Course Schedule/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "class Solution:\n    def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:\n        g = [[] for _ in range(numCourses)]\n        indeg = [0] * numCourses\n        for a, b in prerequisites:\n            g[b].append(a)\n            indeg[a] += 1\n        q = [i for i, x in enumerate(indeg) if x == 0]\n        for i in q:\n            numCourses -= 1\n            for j in g[i]:\n                indeg[j] -= 1\n                if indeg[j] == 0:\n                    q.append(j)\n        return numCourses == 0\n",
+          "originalCode": "class Solution:\n    def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:\n        g = [[] for _ in range(numCourses)]\n        indeg = [0] * numCourses\n        for a, b in prerequisites:\n            g[b].append(a)\n            indeg[a] += 1\n        q = [i for i, x in enumerate(indeg) if x == 0]\n        for i in q:\n            numCourses -= 1\n            for j in g[i]:\n                indeg[j] -= 1\n                if indeg[j] == 0:\n                    q.append(j)\n        return numCourses == 0\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind.\nclass Solution:\n    def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.\n        g = [[] for _ in range(numCourses)]\n        indeg = [0] * numCourses\n        for a, b in prerequisites:\n            g[b].append(a)\n            indeg[a] += 1\n        # [Reader note] Decision point\n        # Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible.\n        q = [i for i, x in enumerate(indeg) if x == 0]\n        for i in q:\n            numCourses -= 1\n            for j in g[i]:\n                indeg[j] -= 1\n                if indeg[j] == 0:\n                    q.append(j)\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return numCourses == 0",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering."
+            },
+            {
+              "line": 8,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+            },
+            {
+              "line": 15,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is the standard on-ramp to directed graph reasoning because the story is concrete and the graph concept is essential.",
+            "whatToNotice": "Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.",
+            "riskPoint": "The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 6,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-cpp-0207-course-schedule.cpp",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/cpp/0207-course-schedule.cpp",
+          "localPath": "neetcode-gh_leetcode/cpp/0207-course-schedule.cpp",
+          "relativePath": "cpp/0207-course-schedule.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "article+code",
+          "code": "/*\n    Courses & prerequisites, return true if can finish all courses\n    Ex. numCourses = 2, prerequisites = [[1,0]] -> true\n\n    All courses can be completed if there's no cycle (visit already visited)\n\n    Time: O(V + E)\n    Space: O(V + E)\n*/\n\nclass Solution {\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {\n        // map each course to prereq list\n        unordered_map<int, vector<int>> m;\n        for (int i = 0; i < prerequisites.size(); i++) {\n            m[prerequisites[i][0]].push_back(prerequisites[i][1]);\n        }\n        // all courses along current DFS path\n        unordered_set<int> visited;\n        \n        for (int course = 0; course < numCourses; course++) {\n            if (!dfs(course, m, visited)) {\n                return false;\n            }\n        }\n        return true;\n    }\nprivate:\n    bool dfs(int course, unordered_map<int, vector<int>>& m, unordered_set<int>& visited) {\n        if (visited.find(course) != visited.end()) {\n            return false;\n        }\n        if (m[course].empty()) {\n            return true;\n        }\n        visited.insert(course);\n        for (int i = 0; i < m[course].size(); i++) {\n            int nextCourse = m[course][i];\n            if (!dfs(nextCourse, m, visited)) {\n                return false;\n            }\n        }\n        m[course].clear();\n        visited.erase(course);\n        return true;\n    }\n};\n",
+          "originalCode": "/*\n    Courses & prerequisites, return true if can finish all courses\n    Ex. numCourses = 2, prerequisites = [[1,0]] -> true\n\n    All courses can be completed if there's no cycle (visit already visited)\n\n    Time: O(V + E)\n    Space: O(V + E)\n*/\n\nclass Solution {\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {\n        // map each course to prereq list\n        unordered_map<int, vector<int>> m;\n        for (int i = 0; i < prerequisites.size(); i++) {\n            m[prerequisites[i][0]].push_back(prerequisites[i][1]);\n        }\n        // all courses along current DFS path\n        unordered_set<int> visited;\n        \n        for (int course = 0; course < numCourses; course++) {\n            if (!dfs(course, m, visited)) {\n                return false;\n            }\n        }\n        return true;\n    }\nprivate:\n    bool dfs(int course, unordered_map<int, vector<int>>& m, unordered_set<int>& visited) {\n        if (visited.find(course) != visited.end()) {\n            return false;\n        }\n        if (m[course].empty()) {\n            return true;\n        }\n        visited.insert(course);\n        for (int i = 0; i < m[course].size(); i++) {\n            int nextCourse = m[course][i];\n            if (!dfs(nextCourse, m, visited)) {\n                return false;\n            }\n        }\n        m[course].clear();\n        visited.erase(course);\n        return true;\n    }\n};\n",
+          "reviewedCode": "/*\n    Courses & prerequisites, return true if can finish all courses\n    Ex. numCourses = 2, prerequisites = [[1,0]] -> true\n\n    All courses can be completed if there's no cycle (visit already visited)\n\n    Time: O(V + E)\n    Space: O(V + E)\n*/\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind.\nclass Solution {\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {\n        // map each course to prereq list\n        unordered_map<int, vector<int>> m;\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.\n        for (int i = 0; i < prerequisites.size(); i++) {\n            m[prerequisites[i][0]].push_back(prerequisites[i][1]);\n        }\n        // all courses along current DFS path\n        unordered_set<int> visited;\n        \n        for (int course = 0; course < numCourses; course++) {\n            // [Reader note] Decision point\n            // Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible.\n            if (!dfs(course, m, visited)) {\n                return false;\n            }\n        }\n        return true;\n    }\nprivate:\n    bool dfs(int course, unordered_map<int, vector<int>>& m, unordered_set<int>& visited) {\n        if (visited.find(course) != visited.end()) {\n            return false;\n        }\n        if (m[course].empty()) {\n            return true;\n        }\n        visited.insert(course);\n        for (int i = 0; i < m[course].size(); i++) {\n            int nextCourse = m[course][i];\n            if (!dfs(nextCourse, m, visited)) {\n                return false;\n            }\n        }\n        m[course].clear();\n        visited.erase(course);\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return true;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time: O(V + E)",
+            "Space: O(V + E)"
+          ],
+          "annotations": [
+            {
+              "line": 11,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind."
+            },
+            {
+              "line": 16,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering."
+            },
+            {
+              "line": 23,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+            },
+            {
+              "line": 46,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is the standard on-ramp to directed graph reasoning because the story is concrete and the graph concept is essential.",
+            "whatToNotice": "Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.",
+            "riskPoint": "The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+          }
+        },
+        {
+          "id": "kamyu104_leetcode-solutions-c-course-schedule.cpp",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/C%2B%2B/course-schedule.cpp",
+          "localPath": "kamyu104_LeetCode-Solutions/C++/course-schedule.cpp",
+          "relativePath": "C++/course-schedule.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Time:  O(|V| + |E|)\n// Space: O(|E|)\n\n// Kahn\u2019s algorithm (bfs solution)\nclass Solution {\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {\n        unordered_map<int, vector<int>> adj;\n        unordered_map<int, int> in_degree;\n        for (const auto& p : prerequisites) {\n            ++in_degree[p[0]];\n            adj[p[1]].emplace_back(p[0]);\n        }\n        queue<int> q;\n        for (int i = 0; i < numCourses; ++i) {\n            if (!in_degree.count(i)) {\n                q.emplace(i);\n            }\n        }\n        vector<int> result;\n        while (!q.empty()) {\n            const auto node = q.front(); q.pop();\n            result.emplace_back(node);\n            for (const auto& i : adj[node]) {\n                if (!--in_degree[i]) {\n                    q.emplace(i);\n                }\n            }\n        }\n        return size(result) == numCourses;\n    }\n};\n\n// Time:  O(|V| + |E|)\n// Space: O(|E|)\n// dfs solution\nclass Solution2 {\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {\n        unordered_map<int, vector<int>> adj;\n        unordered_map<int, int> in_degree;\n        for (const auto& p : prerequisites) {\n            ++in_degree[p[0]];\n            adj[p[1]].emplace_back(p[0]);\n        }\n        vector<int> stk;\n        for (int i = 0; i < numCourses; ++i) {\n            if (!in_degree.count(i)) {\n                stk.emplace_back(i);\n            }\n        }\n        vector<int> result;\n        while (!stk.empty()) {\n            const auto node = stk.back(); stk.pop_back();\n            result.emplace_back(node);\n            for (const auto& i : adj[node]) {\n                if (!--in_degree[i]) {\n                    stk.emplace_back(i);\n                }\n            }\n        }\n        return size(result) == numCourses;\n    }\n};\n",
+          "originalCode": "// Time:  O(|V| + |E|)\n// Space: O(|E|)\n\n// Kahn\u2019s algorithm (bfs solution)\nclass Solution {\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {\n        unordered_map<int, vector<int>> adj;\n        unordered_map<int, int> in_degree;\n        for (const auto& p : prerequisites) {\n            ++in_degree[p[0]];\n            adj[p[1]].emplace_back(p[0]);\n        }\n        queue<int> q;\n        for (int i = 0; i < numCourses; ++i) {\n            if (!in_degree.count(i)) {\n                q.emplace(i);\n            }\n        }\n        vector<int> result;\n        while (!q.empty()) {\n            const auto node = q.front(); q.pop();\n            result.emplace_back(node);\n            for (const auto& i : adj[node]) {\n                if (!--in_degree[i]) {\n                    q.emplace(i);\n                }\n            }\n        }\n        return size(result) == numCourses;\n    }\n};\n\n// Time:  O(|V| + |E|)\n// Space: O(|E|)\n// dfs solution\nclass Solution2 {\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {\n        unordered_map<int, vector<int>> adj;\n        unordered_map<int, int> in_degree;\n        for (const auto& p : prerequisites) {\n            ++in_degree[p[0]];\n            adj[p[1]].emplace_back(p[0]);\n        }\n        vector<int> stk;\n        for (int i = 0; i < numCourses; ++i) {\n            if (!in_degree.count(i)) {\n                stk.emplace_back(i);\n            }\n        }\n        vector<int> result;\n        while (!stk.empty()) {\n            const auto node = stk.back(); stk.pop_back();\n            result.emplace_back(node);\n            for (const auto& i : adj[node]) {\n                if (!--in_degree[i]) {\n                    stk.emplace_back(i);\n                }\n            }\n        }\n        return size(result) == numCourses;\n    }\n};\n",
+          "reviewedCode": "// Time:  O(|V| + |E|)\n// Space: O(|E|)\n\n// Kahn\u2019s algorithm (bfs solution)\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind.\nclass Solution {\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {\n        unordered_map<int, vector<int>> adj;\n        unordered_map<int, int> in_degree;\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.\n        for (const auto& p : prerequisites) {\n            ++in_degree[p[0]];\n            adj[p[1]].emplace_back(p[0]);\n        }\n        queue<int> q;\n        for (int i = 0; i < numCourses; ++i) {\n            // [Reader note] Decision point\n            // Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible.\n            if (!in_degree.count(i)) {\n                q.emplace(i);\n            }\n        }\n        vector<int> result;\n        while (!q.empty()) {\n            const auto node = q.front(); q.pop();\n            result.emplace_back(node);\n            for (const auto& i : adj[node]) {\n                if (!--in_degree[i]) {\n                    q.emplace(i);\n                }\n            }\n        }\n        return size(result) == numCourses;\n    }\n};\n\n// Time:  O(|V| + |E|)\n// Space: O(|E|)\n// dfs solution\nclass Solution2 {\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {\n        unordered_map<int, vector<int>> adj;\n        unordered_map<int, int> in_degree;\n        for (const auto& p : prerequisites) {\n            ++in_degree[p[0]];\n            adj[p[1]].emplace_back(p[0]);\n        }\n        vector<int> stk;\n        for (int i = 0; i < numCourses; ++i) {\n            if (!in_degree.count(i)) {\n                stk.emplace_back(i);\n            }\n        }\n        vector<int> result;\n        while (!stk.empty()) {\n            const auto node = stk.back(); stk.pop_back();\n            result.emplace_back(node);\n            for (const auto& i : adj[node]) {\n                if (!--in_degree[i]) {\n                    stk.emplace_back(i);\n                }\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return size(result) == numCourses;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(|V| + |E|)",
+            "Space: O(|E|)"
+          ],
+          "annotations": [
+            {
+              "line": 5,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind."
+            },
+            {
+              "line": 10,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering."
+            },
+            {
+              "line": 16,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+            },
+            {
+              "line": 62,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is the standard on-ramp to directed graph reasoning because the story is concrete and the graph concept is essential.",
+            "whatToNotice": "Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.",
+            "riskPoint": "The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0200-0299-0207.course-schedule-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0200-0299/0207.Course%20Schedule/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/0200-0299/0207.Course Schedule/Solution.cpp",
+          "relativePath": "solution/0200-0299/0207.Course Schedule/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {\n        vector<vector<int>> g(numCourses);\n        vector<int> indeg(numCourses);\n        for (auto& p : prerequisites) {\n            int a = p[0], b = p[1];\n            g[b].push_back(a);\n            ++indeg[a];\n        }\n        queue<int> q;\n        for (int i = 0; i < numCourses; ++i) {\n            if (indeg[i] == 0) {\n                q.push(i);\n            }\n        }\n        while (!q.empty()) {\n            int i = q.front();\n            q.pop();\n            --numCourses;\n            for (int j : g[i]) {\n                if (--indeg[j] == 0) {\n                    q.push(j);\n                }\n            }\n        }\n        return numCourses == 0;\n    }\n};\n",
+          "originalCode": "class Solution {\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {\n        vector<vector<int>> g(numCourses);\n        vector<int> indeg(numCourses);\n        for (auto& p : prerequisites) {\n            int a = p[0], b = p[1];\n            g[b].push_back(a);\n            ++indeg[a];\n        }\n        queue<int> q;\n        for (int i = 0; i < numCourses; ++i) {\n            if (indeg[i] == 0) {\n                q.push(i);\n            }\n        }\n        while (!q.empty()) {\n            int i = q.front();\n            q.pop();\n            --numCourses;\n            for (int j : g[i]) {\n                if (--indeg[j] == 0) {\n                    q.push(j);\n                }\n            }\n        }\n        return numCourses == 0;\n    }\n};\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind.\nclass Solution {\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {\n        vector<vector<int>> g(numCourses);\n        vector<int> indeg(numCourses);\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (auto& p : prerequisites) {\n            // [Reader note] State setup\n            // This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.\n            int a = p[0], b = p[1];\n            g[b].push_back(a);\n            ++indeg[a];\n        }\n        queue<int> q;\n        for (int i = 0; i < numCourses; ++i) {\n            // [Reader note] Decision point\n            // Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible.\n            if (indeg[i] == 0) {\n                q.push(i);\n            }\n        }\n        while (!q.empty()) {\n            int i = q.front();\n            q.pop();\n            --numCourses;\n            for (int j : g[i]) {\n                if (--indeg[j] == 0) {\n                    q.push(j);\n                }\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return numCourses == 0;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind."
+            },
+            {
+              "line": 7,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering."
+            },
+            {
+              "line": 6,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 13,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+            },
+            {
+              "line": 27,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is the standard on-ramp to directed graph reasoning because the story is concrete and the graph concept is essential.",
+            "whatToNotice": "Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.",
+            "riskPoint": "The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+          }
+        },
+        {
+          "id": "wisdompeak_leetcode-bfs-207.course-schedule-207.course-schedule_bfs.cpp",
+          "repository": "wisdompeak_LeetCode",
+          "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+          "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/BFS/207.Course-Schedule/207.Course-Schedule_BFS.cpp",
+          "localPath": "wisdompeak_LeetCode/BFS/207.Course-Schedule/207.Course-Schedule_BFS.cpp",
+          "relativePath": "BFS/207.Course-Schedule/207.Course-Schedule_BFS.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+readme",
+          "code": "class Solution {\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) \n    {\n        vector<vector<int>>next(numCourses);\n        vector<int>InDegree(numCourses);\n        for (auto p: prerequisites)\n        {\n            next[p[0]].push_back(p[1]);\n            InDegree[p[1]]++;\n        }\n        queue<int>q;\n        int count = 0;\n        for (int i=0; i<numCourses; i++)\n        {\n            if (InDegree[i]==0) \n            {\n                q.push(i);\n                count++;\n            }\n        }\n                    \n        while (!q.empty())\n        {\n            int curCourse = q.front();\n            q.pop();\n            for (auto nextCourse: next[curCourse])\n            {\n                InDegree[nextCourse]--;\n                if (InDegree[nextCourse]==0)\n                {\n                    q.push(nextCourse);\n                    count++;\n                }                    \n            }\n        }        \n        \n        return count==numCourses;        \n    }\n};\n",
+          "originalCode": "class Solution {\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) \n    {\n        vector<vector<int>>next(numCourses);\n        vector<int>InDegree(numCourses);\n        for (auto p: prerequisites)\n        {\n            next[p[0]].push_back(p[1]);\n            InDegree[p[1]]++;\n        }\n        queue<int>q;\n        int count = 0;\n        for (int i=0; i<numCourses; i++)\n        {\n            if (InDegree[i]==0) \n            {\n                q.push(i);\n                count++;\n            }\n        }\n                    \n        while (!q.empty())\n        {\n            int curCourse = q.front();\n            q.pop();\n            for (auto nextCourse: next[curCourse])\n            {\n                InDegree[nextCourse]--;\n                if (InDegree[nextCourse]==0)\n                {\n                    q.push(nextCourse);\n                    count++;\n                }                    \n            }\n        }        \n        \n        return count==numCourses;        \n    }\n};\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind.\nclass Solution {\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) \n    {\n        vector<vector<int>>next(numCourses);\n        vector<int>InDegree(numCourses);\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (auto p: prerequisites)\n        {\n            next[p[0]].push_back(p[1]);\n            InDegree[p[1]]++;\n        }\n        queue<int>q;\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.\n        int count = 0;\n        for (int i=0; i<numCourses; i++)\n        {\n            // [Reader note] Decision point\n            // Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible.\n            if (InDegree[i]==0) \n            {\n                q.push(i);\n                count++;\n            }\n        }\n                    \n        while (!q.empty())\n        {\n            int curCourse = q.front();\n            q.pop();\n            for (auto nextCourse: next[curCourse])\n            {\n                InDegree[nextCourse]--;\n                if (InDegree[nextCourse]==0)\n                {\n                    q.push(nextCourse);\n                    count++;\n                }                    \n            }\n        }        \n        \n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return count==numCourses;        \n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind."
+            },
+            {
+              "line": 13,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering."
+            },
+            {
+              "line": 7,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 16,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+            },
+            {
+              "line": 38,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is the standard on-ramp to directed graph reasoning because the story is concrete and the graph concept is essential.",
+            "whatToNotice": "Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.",
+            "riskPoint": "The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+          }
+        },
+        {
+          "id": "wisdompeak_leetcode-bfs-207.course-schedule-207.course-schedule_dfs.cpp",
+          "repository": "wisdompeak_LeetCode",
+          "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+          "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/BFS/207.Course-Schedule/207.Course-Schedule_DFS.cpp",
+          "localPath": "wisdompeak_LeetCode/BFS/207.Course-Schedule/207.Course-Schedule_DFS.cpp",
+          "relativePath": "BFS/207.Course-Schedule/207.Course-Schedule_DFS.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+readme",
+          "code": "class Solution {\n    vector<int>visited;\n    vector<vector<int>>next;\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) \n    {\n        visited.resize(numCourses, 0);\n        next.resize(numCourses);        \n        for (auto p: prerequisites)        \n            next[p[0]].push_back(p[1]);\n        \n        for (int i=0; i<numCourses; i++)\n        {            \n            if (dfs(i)==false) return false;            \n        }\n        \n        return true;\n    }\n    \n    bool dfs(int cur)\n    {\n        if (visited[cur]==1) return true;\n\n        visited[cur] = 2;\n        for (int next: next[cur])\n        {\n            if (visited[next]==1) continue;\n            if (visited[next]==2) return false;\n            if (dfs(next)==false)  return false;\n        }\n        visited[cur] = 1;\n        return true;\n    }\n};\n",
+          "originalCode": "class Solution {\n    vector<int>visited;\n    vector<vector<int>>next;\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) \n    {\n        visited.resize(numCourses, 0);\n        next.resize(numCourses);        \n        for (auto p: prerequisites)        \n            next[p[0]].push_back(p[1]);\n        \n        for (int i=0; i<numCourses; i++)\n        {            \n            if (dfs(i)==false) return false;            \n        }\n        \n        return true;\n    }\n    \n    bool dfs(int cur)\n    {\n        if (visited[cur]==1) return true;\n\n        visited[cur] = 2;\n        for (int next: next[cur])\n        {\n            if (visited[next]==1) continue;\n            if (visited[next]==2) return false;\n            if (dfs(next)==false)  return false;\n        }\n        visited[cur] = 1;\n        return true;\n    }\n};\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind.\nclass Solution {\n    vector<int>visited;\n    vector<vector<int>>next;\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) \n    {\n        visited.resize(numCourses, 0);\n        next.resize(numCourses);        \n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (auto p: prerequisites)        \n            next[p[0]].push_back(p[1]);\n        \n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.\n        for (int i=0; i<numCourses; i++)\n        {            \n            // [Reader note] Decision point\n            // Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible.\n            if (dfs(i)==false) return false;            \n        }\n        \n        return true;\n    }\n    \n    bool dfs(int cur)\n    {\n        if (visited[cur]==1) return true;\n\n        visited[cur] = 2;\n        for (int next: next[cur])\n        {\n            if (visited[next]==1) continue;\n            if (visited[next]==2) return false;\n            if (dfs(next)==false)  return false;\n        }\n        visited[cur] = 1;\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return true;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind."
+            },
+            {
+              "line": 12,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering."
+            },
+            {
+              "line": 9,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 14,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+            },
+            {
+              "line": 32,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is the standard on-ramp to directed graph reasoning because the story is concrete and the graph concept is essential.",
+            "whatToNotice": "Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.",
+            "riskPoint": "The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+          }
+        },
+        {
+          "id": "haoel_leetcode-algorithms-cpp-courseschedule-courseschedule.cpp",
+          "repository": "haoel_leetcode",
+          "repositoryUrl": "https://github.com/haoel/leetcode",
+          "sourceUrl": "https://github.com/haoel/leetcode/blob/master/algorithms/cpp/courseSchedule/CourseSchedule.cpp",
+          "localPath": "haoel_leetcode/algorithms/cpp/courseSchedule/CourseSchedule.cpp",
+          "relativePath": "algorithms/cpp/courseSchedule/CourseSchedule.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Source : https://leetcode.com/problems/course-schedule/\n// Author : Hao Chen\n// Date   : 2015-06-09\n\n/********************************************************************************** \n * \n * There are a total of n courses you have to take, labeled from 0 to n - 1.\n * \n * Some courses may have prerequisites, for example to take course 0 you have to first take course 1, \n * which is expressed as a pair: [0,1]\n * \n * Given the total number of courses and a list of prerequisite pairs, is it possible for you to \n * finish all courses?\n * \n * For example:\n *      2, [[1,0]]\n * There are a total of 2 courses to take. To take course 1 you should have finished course 0. \n * So it is possible.\n * \n *      2, [[1,0],[0,1]]\n * There are a total of 2 courses to take. To take course 1 you should have finished course 0, \n * and to take course 0 you should also have finished course 1. So it is impossible.\n * \n * Note:\n * The input prerequisites is a graph represented by a list of edges, not adjacency matrices. \n * Read more about how a graph is represented.\n * \n * click to show more hints.\n * \n * Hints:\n * \n *  - This problem is equivalent to finding if a cycle exists in a directed graph. If a cycle exists, \n *    no topological ordering exists and therefore it will be impossible to take all courses.\n *\n *  - Topological Sort via DFS - A great video tutorial (21 minutes) on Coursera explaining the basic \n *    concepts of Topological Sort. (https://class.coursera.org/algo-003/lecture/52)\n *\n *  - Topological sort could also be done via BFS. (http://en.wikipedia.org/wiki/Topological_sorting#Algorithms)\n * \n *               \n **********************************************************************************/\n\n\nclass Solution {\npublic:\n\n    bool hasCycle(int n, vector<int>& explored, vector<int>& path, map<int, vector<int>>& graph) {\n        \n        for(int i=0; i<graph[n].size(); i++){\n            \n            //detect the cycle\n            if ( path[graph[n][i]] ) return true;\n            \n            //set the marker\n            path[graph[n][i]] = true;\n            \n            if (hasCycle(graph[n][i], explored, path, graph)) {\n                return true;\n            }\n            //backtrace reset\n            path[graph[n][i]] = false;\n        }\n        //no cycle found, mark this node can finished!\n        explored[n] = true;\n        return false;\n        \n    }\n\n    bool canFinish(int numCourses, vector<pair<int, int>>& prerequisites) {\n        \n        //using map to stroe the graph, it's easy to search the edge for each node\n        //the bool in pair means it is explored or not\n        map<int, vector<int>> graph;\n        for(int i=0; i<prerequisites.size(); i++){\n            graph[prerequisites[i].first].push_back( prerequisites[i].second );\n        }\n        \n        //explored[] is used to record the node already checked!\n        vector<int> explored(numCourses, false);\n        \n        //path[] is used to check the cycle during DFS\n        vector<int> path(numCourses, false);\n        \n        for(int i=0; i<numCourses; i++){\n            \n            if (explored[i]) continue;\n            if (hasCycle(i, explored, path, graph)) return false;\n            \n\n        }\n        return true;\n    }\n};\n",
+          "originalCode": "// Source : https://leetcode.com/problems/course-schedule/\n// Author : Hao Chen\n// Date   : 2015-06-09\n\n/********************************************************************************** \n * \n * There are a total of n courses you have to take, labeled from 0 to n - 1.\n * \n * Some courses may have prerequisites, for example to take course 0 you have to first take course 1, \n * which is expressed as a pair: [0,1]\n * \n * Given the total number of courses and a list of prerequisite pairs, is it possible for you to \n * finish all courses?\n * \n * For example:\n *      2, [[1,0]]\n * There are a total of 2 courses to take. To take course 1 you should have finished course 0. \n * So it is possible.\n * \n *      2, [[1,0],[0,1]]\n * There are a total of 2 courses to take. To take course 1 you should have finished course 0, \n * and to take course 0 you should also have finished course 1. So it is impossible.\n * \n * Note:\n * The input prerequisites is a graph represented by a list of edges, not adjacency matrices. \n * Read more about how a graph is represented.\n * \n * click to show more hints.\n * \n * Hints:\n * \n *  - This problem is equivalent to finding if a cycle exists in a directed graph. If a cycle exists, \n *    no topological ordering exists and therefore it will be impossible to take all courses.\n *\n *  - Topological Sort via DFS - A great video tutorial (21 minutes) on Coursera explaining the basic \n *    concepts of Topological Sort. (https://class.coursera.org/algo-003/lecture/52)\n *\n *  - Topological sort could also be done via BFS. (http://en.wikipedia.org/wiki/Topological_sorting#Algorithms)\n * \n *               \n **********************************************************************************/\n\n\nclass Solution {\npublic:\n\n    bool hasCycle(int n, vector<int>& explored, vector<int>& path, map<int, vector<int>>& graph) {\n        \n        for(int i=0; i<graph[n].size(); i++){\n            \n            //detect the cycle\n            if ( path[graph[n][i]] ) return true;\n            \n            //set the marker\n            path[graph[n][i]] = true;\n            \n            if (hasCycle(graph[n][i], explored, path, graph)) {\n                return true;\n            }\n            //backtrace reset\n            path[graph[n][i]] = false;\n        }\n        //no cycle found, mark this node can finished!\n        explored[n] = true;\n        return false;\n        \n    }\n\n    bool canFinish(int numCourses, vector<pair<int, int>>& prerequisites) {\n        \n        //using map to stroe the graph, it's easy to search the edge for each node\n        //the bool in pair means it is explored or not\n        map<int, vector<int>> graph;\n        for(int i=0; i<prerequisites.size(); i++){\n            graph[prerequisites[i].first].push_back( prerequisites[i].second );\n        }\n        \n        //explored[] is used to record the node already checked!\n        vector<int> explored(numCourses, false);\n        \n        //path[] is used to check the cycle during DFS\n        vector<int> path(numCourses, false);\n        \n        for(int i=0; i<numCourses; i++){\n            \n            if (explored[i]) continue;\n            if (hasCycle(i, explored, path, graph)) return false;\n            \n\n        }\n        return true;\n    }\n};\n",
+          "reviewedCode": "// Source : https://leetcode.com/problems/course-schedule/\n// Author : Hao Chen\n// Date   : 2015-06-09\n\n/********************************************************************************** \n * \n * There are a total of n courses you have to take, labeled from 0 to n - 1.\n * \n * Some courses may have prerequisites, for example to take course 0 you have to first take course 1, \n * which is expressed as a pair: [0,1]\n * \n * Given the total number of courses and a list of prerequisite pairs, is it possible for you to \n * finish all courses?\n * \n * For example:\n *      2, [[1,0]]\n * There are a total of 2 courses to take. To take course 1 you should have finished course 0. \n * So it is possible.\n * \n *      2, [[1,0],[0,1]]\n * There are a total of 2 courses to take. To take course 1 you should have finished course 0, \n * and to take course 0 you should also have finished course 1. So it is impossible.\n * \n * Note:\n * The input prerequisites is a graph represented by a list of edges, not adjacency matrices. \n * Read more about how a graph is represented.\n * \n * click to show more hints.\n * \n * Hints:\n * \n *  - This problem is equivalent to finding if a cycle exists in a directed graph. If a cycle exists, \n *    no topological ordering exists and therefore it will be impossible to take all courses.\n *\n *  - Topological Sort via DFS - A great video tutorial (21 minutes) on Coursera explaining the basic \n *    concepts of Topological Sort. (https://class.coursera.org/algo-003/lecture/52)\n *\n *  - Topological sort could also be done via BFS. (http://en.wikipedia.org/wiki/Topological_sorting#Algorithms)\n * \n *               \n **********************************************************************************/\n\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind.\nclass Solution {\npublic:\n\n    bool hasCycle(int n, vector<int>& explored, vector<int>& path, map<int, vector<int>>& graph) {\n        \n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.\n        for(int i=0; i<graph[n].size(); i++){\n            \n            //detect the cycle\n            // [Reader note] Decision point\n            // Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible.\n            if ( path[graph[n][i]] ) return true;\n            \n            //set the marker\n            path[graph[n][i]] = true;\n            \n            if (hasCycle(graph[n][i], explored, path, graph)) {\n                return true;\n            }\n            //backtrace reset\n            path[graph[n][i]] = false;\n        }\n        //no cycle found, mark this node can finished!\n        explored[n] = true;\n        return false;\n        \n    }\n\n    bool canFinish(int numCourses, vector<pair<int, int>>& prerequisites) {\n        \n        //using map to stroe the graph, it's easy to search the edge for each node\n        //the bool in pair means it is explored or not\n        map<int, vector<int>> graph;\n        for(int i=0; i<prerequisites.size(); i++){\n            graph[prerequisites[i].first].push_back( prerequisites[i].second );\n        }\n        \n        //explored[] is used to record the node already checked!\n        vector<int> explored(numCourses, false);\n        \n        //path[] is used to check the cycle during DFS\n        vector<int> path(numCourses, false);\n        \n        for(int i=0; i<numCourses; i++){\n            \n            if (explored[i]) continue;\n            if (hasCycle(i, explored, path, graph)) return false;\n            \n\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return true;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 44,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind."
+            },
+            {
+              "line": 49,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering."
+            },
+            {
+              "line": 52,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+            },
+            {
+              "line": 91,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is the standard on-ramp to directed graph reasoning because the story is concrete and the graph concept is essential.",
+            "whatToNotice": "Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.",
+            "riskPoint": "The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-java-0207-course-schedule.java",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/java/0207-course-schedule.java",
+          "localPath": "neetcode-gh_leetcode/java/0207-course-schedule.java",
+          "relativePath": "java/0207-course-schedule.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "article+code",
+          "code": "class Solution {\n\n    public boolean canFinish(int numCourses, int[][] prerequisites) {\n        List<List<Integer>> adj = new ArrayList<>();\n        for (int i = 0; i < numCourses; i++) {\n            adj.add(new ArrayList<>());\n        }\n\n        for (int i = 0; i < prerequisites.length; i++) {\n            adj.get(prerequisites[i][0]).add(prerequisites[i][1]);\n        }\n\n        int[] visited = new int[numCourses];\n        for (int i = 0; i < numCourses; i++) {\n            if (visited[i] == 0) {\n                if (isCyclic(adj, visited, i)) {\n                    return false;\n                }\n            }\n        }\n        return true;\n    }\n\n    private boolean isCyclic(List<List<Integer>> adj, int[] visited, int curr) {\n        if (visited[curr] == 2) {\n            return true;\n        }\n\n        visited[curr] = 2;\n        for (int i = 0; i < adj.get(curr).size(); i++) {\n            if (visited[adj.get(curr).get(i)] != 1) {\n                if (isCyclic(adj, visited, adj.get(curr).get(i))) {\n                    return true;\n                }\n            }\n        }\n        visited[curr] = 1;\n        return false;\n    }\n}\n",
+          "originalCode": "class Solution {\n\n    public boolean canFinish(int numCourses, int[][] prerequisites) {\n        List<List<Integer>> adj = new ArrayList<>();\n        for (int i = 0; i < numCourses; i++) {\n            adj.add(new ArrayList<>());\n        }\n\n        for (int i = 0; i < prerequisites.length; i++) {\n            adj.get(prerequisites[i][0]).add(prerequisites[i][1]);\n        }\n\n        int[] visited = new int[numCourses];\n        for (int i = 0; i < numCourses; i++) {\n            if (visited[i] == 0) {\n                if (isCyclic(adj, visited, i)) {\n                    return false;\n                }\n            }\n        }\n        return true;\n    }\n\n    private boolean isCyclic(List<List<Integer>> adj, int[] visited, int curr) {\n        if (visited[curr] == 2) {\n            return true;\n        }\n\n        visited[curr] = 2;\n        for (int i = 0; i < adj.get(curr).size(); i++) {\n            if (visited[adj.get(curr).get(i)] != 1) {\n                if (isCyclic(adj, visited, adj.get(curr).get(i))) {\n                    return true;\n                }\n            }\n        }\n        visited[curr] = 1;\n        return false;\n    }\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind.\nclass Solution {\n\n    public boolean canFinish(int numCourses, int[][] prerequisites) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.\n        List<List<Integer>> adj = new ArrayList<>();\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = 0; i < numCourses; i++) {\n            adj.add(new ArrayList<>());\n        }\n\n        for (int i = 0; i < prerequisites.length; i++) {\n            adj.get(prerequisites[i][0]).add(prerequisites[i][1]);\n        }\n\n        int[] visited = new int[numCourses];\n        for (int i = 0; i < numCourses; i++) {\n            // [Reader note] Decision point\n            // Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible.\n            if (visited[i] == 0) {\n                if (isCyclic(adj, visited, i)) {\n                    return false;\n                }\n            }\n        }\n        return true;\n    }\n\n    private boolean isCyclic(List<List<Integer>> adj, int[] visited, int curr) {\n        if (visited[curr] == 2) {\n            return true;\n        }\n\n        visited[curr] = 2;\n        for (int i = 0; i < adj.get(curr).size(); i++) {\n            if (visited[adj.get(curr).get(i)] != 1) {\n                if (isCyclic(adj, visited, adj.get(curr).get(i))) {\n                    return true;\n                }\n            }\n        }\n        visited[curr] = 1;\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return false;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering."
+            },
+            {
+              "line": 5,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 15,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+            },
+            {
+              "line": 38,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is the standard on-ramp to directed graph reasoning because the story is concrete and the graph concept is essential.",
+            "whatToNotice": "Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.",
+            "riskPoint": "The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0200-0299-0207.course-schedule-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0200-0299/0207.Course%20Schedule/Solution.java",
+          "localPath": "doocs_leetcode/solution/0200-0299/0207.Course Schedule/Solution.java",
+          "relativePath": "solution/0200-0299/0207.Course Schedule/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\n    public boolean canFinish(int numCourses, int[][] prerequisites) {\n        List<Integer>[] g = new List[numCourses];\n        Arrays.setAll(g, k -> new ArrayList<>());\n        int[] indeg = new int[numCourses];\n        for (var p : prerequisites) {\n            int a = p[0], b = p[1];\n            g[b].add(a);\n            ++indeg[a];\n        }\n        Deque<Integer> q = new ArrayDeque<>();\n        for (int i = 0; i < numCourses; ++i) {\n            if (indeg[i] == 0) {\n                q.offer(i);\n            }\n        }\n        while (!q.isEmpty()) {\n            int i = q.poll();\n            --numCourses;\n            for (int j : g[i]) {\n                if (--indeg[j] == 0) {\n                    q.offer(j);\n                }\n            }\n        }\n        return numCourses == 0;\n    }\n}\n",
+          "originalCode": "class Solution {\n    public boolean canFinish(int numCourses, int[][] prerequisites) {\n        List<Integer>[] g = new List[numCourses];\n        Arrays.setAll(g, k -> new ArrayList<>());\n        int[] indeg = new int[numCourses];\n        for (var p : prerequisites) {\n            int a = p[0], b = p[1];\n            g[b].add(a);\n            ++indeg[a];\n        }\n        Deque<Integer> q = new ArrayDeque<>();\n        for (int i = 0; i < numCourses; ++i) {\n            if (indeg[i] == 0) {\n                q.offer(i);\n            }\n        }\n        while (!q.isEmpty()) {\n            int i = q.poll();\n            --numCourses;\n            for (int j : g[i]) {\n                if (--indeg[j] == 0) {\n                    q.offer(j);\n                }\n            }\n        }\n        return numCourses == 0;\n    }\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind.\nclass Solution {\n    public boolean canFinish(int numCourses, int[][] prerequisites) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.\n        List<Integer>[] g = new List[numCourses];\n        Arrays.setAll(g, k -> new ArrayList<>());\n        int[] indeg = new int[numCourses];\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (var p : prerequisites) {\n            int a = p[0], b = p[1];\n            g[b].add(a);\n            ++indeg[a];\n        }\n        Deque<Integer> q = new ArrayDeque<>();\n        for (int i = 0; i < numCourses; ++i) {\n            // [Reader note] Decision point\n            // Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible.\n            if (indeg[i] == 0) {\n                q.offer(i);\n            }\n        }\n        while (!q.isEmpty()) {\n            int i = q.poll();\n            --numCourses;\n            for (int j : g[i]) {\n                if (--indeg[j] == 0) {\n                    q.offer(j);\n                }\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return numCourses == 0;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering."
+            },
+            {
+              "line": 6,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 13,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+            },
+            {
+              "line": 26,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is the standard on-ramp to directed graph reasoning because the story is concrete and the graph concept is essential.",
+            "whatToNotice": "Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.",
+            "riskPoint": "The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-go-0207-course-schedule.go",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/go/0207-course-schedule.go",
+          "localPath": "neetcode-gh_leetcode/go/0207-course-schedule.go",
+          "relativePath": "go/0207-course-schedule.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "article+code",
+          "code": "func canFinish(numCourses int, prerequisites [][]int) bool {\n\tgraph := make(map[int][]int)\n\n\tfor _, prer := range prerequisites {\n\t\tgraph[prer[1]] = append(graph[prer[1]], prer[0])\n\t}\n\n\tvisitSet := make(map[int]struct{})\n\n\tvar dfs func(course int) bool\n\n\tdfs = func(course int) bool {\n\t\tif _, ok := visitSet[course]; ok {\n\t\t\treturn false\n\t\t}\n\n\t\tif len(graph[course]) == 0 {\n\t\t\treturn true\n\t\t}\n\n\t\tvisitSet[course] = struct{}{}\n\n\t\tfor _, pre := range graph[course] {\n\t\t\tif !dfs(pre) {\n\t\t\t\treturn false\n\t\t\t}\n\t\t}\n\t\tdelete(visitSet, course)\n\n\t\tgraph[course] = []int{}\n\n\t\treturn true\n\t}\n\n\tfor i := 0; i < numCourses; i++ {\n\t\tif !dfs(i) {\n\t\t\treturn false\n\t\t}\n\t}\n\n\treturn true\n}\n",
+          "originalCode": "func canFinish(numCourses int, prerequisites [][]int) bool {\n\tgraph := make(map[int][]int)\n\n\tfor _, prer := range prerequisites {\n\t\tgraph[prer[1]] = append(graph[prer[1]], prer[0])\n\t}\n\n\tvisitSet := make(map[int]struct{})\n\n\tvar dfs func(course int) bool\n\n\tdfs = func(course int) bool {\n\t\tif _, ok := visitSet[course]; ok {\n\t\t\treturn false\n\t\t}\n\n\t\tif len(graph[course]) == 0 {\n\t\t\treturn true\n\t\t}\n\n\t\tvisitSet[course] = struct{}{}\n\n\t\tfor _, pre := range graph[course] {\n\t\t\tif !dfs(pre) {\n\t\t\t\treturn false\n\t\t\t}\n\t\t}\n\t\tdelete(visitSet, course)\n\n\t\tgraph[course] = []int{}\n\n\t\treturn true\n\t}\n\n\tfor i := 0; i < numCourses; i++ {\n\t\tif !dfs(i) {\n\t\t\treturn false\n\t\t}\n\t}\n\n\treturn true\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind.\nfunc canFinish(numCourses int, prerequisites [][]int) bool {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.\n\tgraph := make(map[int][]int)\n\n\t// [Reader note] Main pass\n\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\tfor _, prer := range prerequisites {\n\t\tgraph[prer[1]] = append(graph[prer[1]], prer[0])\n\t}\n\n\tvisitSet := make(map[int]struct{})\n\n\tvar dfs func(course int) bool\n\n\tdfs = func(course int) bool {\n\t\t// [Reader note] Decision point\n\t\t// Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible.\n\t\tif _, ok := visitSet[course]; ok {\n\t\t\treturn false\n\t\t}\n\n\t\tif len(graph[course]) == 0 {\n\t\t\treturn true\n\t\t}\n\n\t\tvisitSet[course] = struct{}{}\n\n\t\tfor _, pre := range graph[course] {\n\t\t\tif !dfs(pre) {\n\t\t\t\treturn false\n\t\t\t}\n\t\t}\n\t\tdelete(visitSet, course)\n\n\t\tgraph[course] = []int{}\n\n\t\treturn true\n\t}\n\n\tfor i := 0; i < numCourses; i++ {\n\t\tif !dfs(i) {\n\t\t\treturn false\n\t\t}\n\t}\n\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn true\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering."
+            },
+            {
+              "line": 4,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 13,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+            },
+            {
+              "line": 41,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is the standard on-ramp to directed graph reasoning because the story is concrete and the graph concept is essential.",
+            "whatToNotice": "Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.",
+            "riskPoint": "The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0200-0299-0207.course-schedule-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0200-0299/0207.Course%20Schedule/Solution.go",
+          "localPath": "doocs_leetcode/solution/0200-0299/0207.Course Schedule/Solution.go",
+          "relativePath": "solution/0200-0299/0207.Course Schedule/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "func canFinish(numCourses int, prerequisites [][]int) bool {\n\tg := make([][]int, numCourses)\n\tindeg := make([]int, numCourses)\n\tfor _, p := range prerequisites {\n\t\ta, b := p[0], p[1]\n\t\tg[b] = append(g[b], a)\n\t\tindeg[a]++\n\t}\n\tq := []int{}\n\tfor i, x := range indeg {\n\t\tif x == 0 {\n\t\t\tq = append(q, i)\n\t\t}\n\t}\n\tfor len(q) > 0 {\n\t\ti := q[0]\n\t\tq = q[1:]\n\t\tnumCourses--\n\t\tfor _, j := range g[i] {\n\t\t\tindeg[j]--\n\t\t\tif indeg[j] == 0 {\n\t\t\t\tq = append(q, j)\n\t\t\t}\n\t\t}\n\t}\n\treturn numCourses == 0\n}\n",
+          "originalCode": "func canFinish(numCourses int, prerequisites [][]int) bool {\n\tg := make([][]int, numCourses)\n\tindeg := make([]int, numCourses)\n\tfor _, p := range prerequisites {\n\t\ta, b := p[0], p[1]\n\t\tg[b] = append(g[b], a)\n\t\tindeg[a]++\n\t}\n\tq := []int{}\n\tfor i, x := range indeg {\n\t\tif x == 0 {\n\t\t\tq = append(q, i)\n\t\t}\n\t}\n\tfor len(q) > 0 {\n\t\ti := q[0]\n\t\tq = q[1:]\n\t\tnumCourses--\n\t\tfor _, j := range g[i] {\n\t\t\tindeg[j]--\n\t\t\tif indeg[j] == 0 {\n\t\t\t\tq = append(q, j)\n\t\t\t}\n\t\t}\n\t}\n\treturn numCourses == 0\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind.\nfunc canFinish(numCourses int, prerequisites [][]int) bool {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.\n\tg := make([][]int, numCourses)\n\tindeg := make([]int, numCourses)\n\t// [Reader note] Main pass\n\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\tfor _, p := range prerequisites {\n\t\ta, b := p[0], p[1]\n\t\tg[b] = append(g[b], a)\n\t\tindeg[a]++\n\t}\n\tq := []int{}\n\tfor i, x := range indeg {\n\t\t// [Reader note] Decision point\n\t\t// Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible.\n\t\tif x == 0 {\n\t\t\tq = append(q, i)\n\t\t}\n\t}\n\tfor len(q) > 0 {\n\t\ti := q[0]\n\t\tq = q[1:]\n\t\tnumCourses--\n\t\tfor _, j := range g[i] {\n\t\t\tindeg[j]--\n\t\t\tif indeg[j] == 0 {\n\t\t\t\tq = append(q, j)\n\t\t\t}\n\t\t}\n\t}\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn numCourses == 0\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering."
+            },
+            {
+              "line": 4,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 11,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+            },
+            {
+              "line": 26,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is the standard on-ramp to directed graph reasoning because the story is concrete and the graph concept is essential.",
+            "whatToNotice": "Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.",
+            "riskPoint": "The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+          }
+        }
+      ]
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0200-0299-0207.course-schedule-solution.ts",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0200-0299/0207.Course%20Schedule/Solution.ts",
+          "localPath": "doocs_leetcode/solution/0200-0299/0207.Course Schedule/Solution.ts",
+          "relativePath": "solution/0200-0299/0207.Course Schedule/Solution.ts",
+          "languageId": "typescript",
+          "languageLabel": "TypeScript",
+          "coverageType": "code+explanation",
+          "code": "function canFinish(numCourses: number, prerequisites: number[][]): boolean {\n    const g: number[][] = Array.from({ length: numCourses }, () => []);\n    const indeg: number[] = Array(numCourses).fill(0);\n    for (const [a, b] of prerequisites) {\n        g[b].push(a);\n        indeg[a]++;\n    }\n    const q: number[] = [];\n    for (let i = 0; i < numCourses; ++i) {\n        if (indeg[i] === 0) {\n            q.push(i);\n        }\n    }\n    for (const i of q) {\n        --numCourses;\n        for (const j of g[i]) {\n            if (--indeg[j] === 0) {\n                q.push(j);\n            }\n        }\n    }\n    return numCourses === 0;\n}\n",
+          "originalCode": "function canFinish(numCourses: number, prerequisites: number[][]): boolean {\n    const g: number[][] = Array.from({ length: numCourses }, () => []);\n    const indeg: number[] = Array(numCourses).fill(0);\n    for (const [a, b] of prerequisites) {\n        g[b].push(a);\n        indeg[a]++;\n    }\n    const q: number[] = [];\n    for (let i = 0; i < numCourses; ++i) {\n        if (indeg[i] === 0) {\n            q.push(i);\n        }\n    }\n    for (const i of q) {\n        --numCourses;\n        for (const j of g[i]) {\n            if (--indeg[j] === 0) {\n                q.push(j);\n            }\n        }\n    }\n    return numCourses === 0;\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind.\nfunction canFinish(numCourses: number, prerequisites: number[][]): boolean {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.\n    const g: number[][] = Array.from({ length: numCourses }, () => []);\n    const indeg: number[] = Array(numCourses).fill(0);\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (const [a, b] of prerequisites) {\n        g[b].push(a);\n        indeg[a]++;\n    }\n    const q: number[] = [];\n    for (let i = 0; i < numCourses; ++i) {\n        // [Reader note] Decision point\n        // Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible.\n        if (indeg[i] === 0) {\n            q.push(i);\n        }\n    }\n    for (const i of q) {\n        --numCourses;\n        for (const j of g[i]) {\n            if (--indeg[j] === 0) {\n                q.push(j);\n            }\n        }\n    }\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return numCourses === 0;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering."
+            },
+            {
+              "line": 4,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 10,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+            },
+            {
+              "line": 22,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is the standard on-ramp to directed graph reasoning because the story is concrete and the graph concept is essential.",
+            "whatToNotice": "Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.",
+            "riskPoint": "The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+          }
+        }
+      ]
+    },
+    {
+      "id": "javascript",
+      "label": "JavaScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-javascript-0207-course-schedule.js",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/javascript/0207-course-schedule.js",
+          "localPath": "neetcode-gh_leetcode/javascript/0207-course-schedule.js",
+          "relativePath": "javascript/0207-course-schedule.js",
+          "languageId": "javascript",
+          "languageLabel": "JavaScript",
+          "coverageType": "article+code",
+          "code": "/**\n * https://leetcode.com/problems/course-schedule/\n * Time O((V)^2 + E) | Space O(V + E)\n * @param {number} numCourses\n * @param {number[][]} prerequisites\n * @return {boolean}\n */\nvar canFinish = function (numCourses, prerequisites) {\n    const { graph, path } = buildGraph(numCourses, prerequisites);\n\n    return hasPath(numCourses, graph, path);\n};\n\nvar initGraph = (numCourses) => ({\n    graph: new Array(numCourses).fill().map(() => []),\n    path: new Array(numCourses).fill(false),\n});\n\nvar buildGraph = (numCourses, prerequisites) => {\n    const { graph, path } = initGraph(numCourses);\n\n    for (const [src, dst] of prerequisites) {\n        const neighbors = graph[dst] || [];\n\n        neighbors.push(src);\n\n        graph[dst] = neighbors;\n    }\n\n    return { graph, path };\n};\n\nvar hasPath = (numCourses, graph, path) => {\n    for (let course = 0; course < numCourses; course++) {\n        if (isCyclic(course, graph, path)) return false;\n    }\n\n    return true;\n};\n\nvar isCyclic = (currCourse, graph, path) => {\n    const hasSeen = path[currCourse];\n    if (hasSeen) return true;\n\n    const isMissingNext = !(currCourse in graph);\n    if (isMissingNext) return false;\n\n    return backTrack(currCourse, graph, path);\n};\n\nvar backTrack = (currCourse, graph, path) => {\n    path[currCourse] = true;\n    const _hasCycle = hasCycle(currCourse, graph, path);\n    path[currCourse] = false;\n\n    return _hasCycle;\n};\n\nvar hasCycle = (currCourse, graph, path) => {\n    for (const neighbor of graph[currCourse]) {\n        if (isCyclic(neighbor, graph, path)) return true;\n    }\n\n    return false;\n};\n\n/**\n * https://leetcode.com/problems/course-schedule/\n * Time O(V + E) | Space O(V + E)\n * @param {number} numCourses\n * @param {number[][]} prerequisites\n * @return {boolean}\n */\nvar canFinish = function (numCourses, prerequisites) {\n    const { graph, visited, path } = buildGraph(numCourses, prerequisites);\n\n    for (let currCourse = 0; currCourse < numCourses; currCourse++) {\n        if (isCyclic(currCourse, graph, visited, path)) return false;\n    }\n\n    return true;\n};\n\nvar initGraph = (numCourses) => ({\n    graph: new Array(numCourses).fill().map(() => []),\n    visited: new Array(numCourses).fill(false),\n    path: new Array(numCourses).fill(false),\n});\n\nvar buildGraph = (numCourses, prerequisites) => {\n    const { graph, visited, path } = initGraph(numCourses);\n\n    for (const [src, dst] of prerequisites) {\n        const neighbors = graph[dst] || [];\n\n        neighbors.push(src);\n\n        graph[dst] = neighbors;\n    }\n\n    return { graph, visited, path };\n};\n\nvar isCyclic = (currCourse, graph, visited, path) => {\n    const isVisited = visited[currCourse];\n    if (isVisited) return false;\n\n    const hasSeen = path[currCourse];\n    if (hasSeen) return true;\n\n    const isMissingNext = !(currCourse in graph);\n    if (isMissingNext) return false;\n\n    const _isCyclic = backTrack(currCourse, graph, visited, path);\n\n    visited[currCourse] = true;\n\n    return _isCyclic;\n};\n\nvar backTrack = (currCourse, graph, visited, path) => {\n    path[currCourse] = true;\n    const _hasCycle = hasCycle(currCourse, graph, visited, path);\n    path[currCourse] = false;\n\n    return _hasCycle;\n};\n\nvar hasCycle = (currCourse, graph, visited, path) => {\n    for (const neighbor of graph[currCourse]) {\n        if (isCyclic(neighbor, graph, visited, path)) return true;\n    }\n\n    return false;\n};\n\n/**\n * https://leetcode.com/problems/course-schedule/\n * Time O(V + E) | Space O(V + E)\n * @param {number} numCourses\n * @param {number[][]} prerequisites\n * @return {boolean}\n */\nvar canFinish = function (numCourses, prerequisites) {\n    const { graph, indegree } = buildGraph(numCourses, prerequisites);\n    const topologicalOrder = topologicalSort(graph, indegree);\n    const isDirectedAcyclicGraph = topologicalOrder.length === numCourses;\n\n    return isDirectedAcyclicGraph;\n};\n\nvar initGraph = (numCourses) => ({\n    graph: new Array(numCourses).fill().map(() => []),\n    indegree: new Array(numCourses).fill(0),\n});\n\nvar buildGraph = (numCourses, prerequisites) => {\n    const { graph, indegree } = initGraph(numCourses);\n\n    for (const [src, dst] of prerequisites) {\n        graph[src].push(dst);\n        indegree[dst]++;\n    }\n\n    return { graph, indegree };\n};\n\nvar topologicalSort = (graph, indegree, order = []) => {\n    const queue = searchGraph(graph, indegree);\n\n    bfs(graph, indegree, queue, order);\n\n    return order;\n};\n\nvar searchGraph = (graph, indegree, queue = new Queue([])) => {\n    for (const node in graph) {\n        const isSource = indegree[node] === 0;\n        if (isSource) queue.enqueue(node);\n    }\n\n    return queue;\n};\n\nvar bfs = (graph, indegree, queue, order) => {\n    while (!queue.isEmpty()) {\n        for (let i = queue.size() - 1; 0 <= i; i--) {\n            checkNeighbors(graph, indegree, queue, order);\n        }\n    }\n};\n\nvar checkNeighbors = (graph, indegree, queue, order) => {\n    const node = queue.dequeue();\n\n    order.push(node);\n\n    for (const neighbor of graph[node]) {\n        indegree[neighbor]--;\n\n        const isSource = indegree[neighbor] === 0;\n        if (isSource) queue.enqueue(neighbor);\n    }\n};\n",
+          "originalCode": "/**\n * https://leetcode.com/problems/course-schedule/\n * Time O((V)^2 + E) | Space O(V + E)\n * @param {number} numCourses\n * @param {number[][]} prerequisites\n * @return {boolean}\n */\nvar canFinish = function (numCourses, prerequisites) {\n    const { graph, path } = buildGraph(numCourses, prerequisites);\n\n    return hasPath(numCourses, graph, path);\n};\n\nvar initGraph = (numCourses) => ({\n    graph: new Array(numCourses).fill().map(() => []),\n    path: new Array(numCourses).fill(false),\n});\n\nvar buildGraph = (numCourses, prerequisites) => {\n    const { graph, path } = initGraph(numCourses);\n\n    for (const [src, dst] of prerequisites) {\n        const neighbors = graph[dst] || [];\n\n        neighbors.push(src);\n\n        graph[dst] = neighbors;\n    }\n\n    return { graph, path };\n};\n\nvar hasPath = (numCourses, graph, path) => {\n    for (let course = 0; course < numCourses; course++) {\n        if (isCyclic(course, graph, path)) return false;\n    }\n\n    return true;\n};\n\nvar isCyclic = (currCourse, graph, path) => {\n    const hasSeen = path[currCourse];\n    if (hasSeen) return true;\n\n    const isMissingNext = !(currCourse in graph);\n    if (isMissingNext) return false;\n\n    return backTrack(currCourse, graph, path);\n};\n\nvar backTrack = (currCourse, graph, path) => {\n    path[currCourse] = true;\n    const _hasCycle = hasCycle(currCourse, graph, path);\n    path[currCourse] = false;\n\n    return _hasCycle;\n};\n\nvar hasCycle = (currCourse, graph, path) => {\n    for (const neighbor of graph[currCourse]) {\n        if (isCyclic(neighbor, graph, path)) return true;\n    }\n\n    return false;\n};\n\n/**\n * https://leetcode.com/problems/course-schedule/\n * Time O(V + E) | Space O(V + E)\n * @param {number} numCourses\n * @param {number[][]} prerequisites\n * @return {boolean}\n */\nvar canFinish = function (numCourses, prerequisites) {\n    const { graph, visited, path } = buildGraph(numCourses, prerequisites);\n\n    for (let currCourse = 0; currCourse < numCourses; currCourse++) {\n        if (isCyclic(currCourse, graph, visited, path)) return false;\n    }\n\n    return true;\n};\n\nvar initGraph = (numCourses) => ({\n    graph: new Array(numCourses).fill().map(() => []),\n    visited: new Array(numCourses).fill(false),\n    path: new Array(numCourses).fill(false),\n});\n\nvar buildGraph = (numCourses, prerequisites) => {\n    const { graph, visited, path } = initGraph(numCourses);\n\n    for (const [src, dst] of prerequisites) {\n        const neighbors = graph[dst] || [];\n\n        neighbors.push(src);\n\n        graph[dst] = neighbors;\n    }\n\n    return { graph, visited, path };\n};\n\nvar isCyclic = (currCourse, graph, visited, path) => {\n    const isVisited = visited[currCourse];\n    if (isVisited) return false;\n\n    const hasSeen = path[currCourse];\n    if (hasSeen) return true;\n\n    const isMissingNext = !(currCourse in graph);\n    if (isMissingNext) return false;\n\n    const _isCyclic = backTrack(currCourse, graph, visited, path);\n\n    visited[currCourse] = true;\n\n    return _isCyclic;\n};\n\nvar backTrack = (currCourse, graph, visited, path) => {\n    path[currCourse] = true;\n    const _hasCycle = hasCycle(currCourse, graph, visited, path);\n    path[currCourse] = false;\n\n    return _hasCycle;\n};\n\nvar hasCycle = (currCourse, graph, visited, path) => {\n    for (const neighbor of graph[currCourse]) {\n        if (isCyclic(neighbor, graph, visited, path)) return true;\n    }\n\n    return false;\n};\n\n/**\n * https://leetcode.com/problems/course-schedule/\n * Time O(V + E) | Space O(V + E)\n * @param {number} numCourses\n * @param {number[][]} prerequisites\n * @return {boolean}\n */\nvar canFinish = function (numCourses, prerequisites) {\n    const { graph, indegree } = buildGraph(numCourses, prerequisites);\n    const topologicalOrder = topologicalSort(graph, indegree);\n    const isDirectedAcyclicGraph = topologicalOrder.length === numCourses;\n\n    return isDirectedAcyclicGraph;\n};\n\nvar initGraph = (numCourses) => ({\n    graph: new Array(numCourses).fill().map(() => []),\n    indegree: new Array(numCourses).fill(0),\n});\n\nvar buildGraph = (numCourses, prerequisites) => {\n    const { graph, indegree } = initGraph(numCourses);\n\n    for (const [src, dst] of prerequisites) {\n        graph[src].push(dst);\n        indegree[dst]++;\n    }\n\n    return { graph, indegree };\n};\n\nvar topologicalSort = (graph, indegree, order = []) => {\n    const queue = searchGraph(graph, indegree);\n\n    bfs(graph, indegree, queue, order);\n\n    return order;\n};\n\nvar searchGraph = (graph, indegree, queue = new Queue([])) => {\n    for (const node in graph) {\n        const isSource = indegree[node] === 0;\n        if (isSource) queue.enqueue(node);\n    }\n\n    return queue;\n};\n\nvar bfs = (graph, indegree, queue, order) => {\n    while (!queue.isEmpty()) {\n        for (let i = queue.size() - 1; 0 <= i; i--) {\n            checkNeighbors(graph, indegree, queue, order);\n        }\n    }\n};\n\nvar checkNeighbors = (graph, indegree, queue, order) => {\n    const node = queue.dequeue();\n\n    order.push(node);\n\n    for (const neighbor of graph[node]) {\n        indegree[neighbor]--;\n\n        const isSource = indegree[neighbor] === 0;\n        if (isSource) queue.enqueue(neighbor);\n    }\n};\n",
+          "reviewedCode": "/**\n * https://leetcode.com/problems/course-schedule/\n * Time O((V)^2 + E) | Space O(V + E)\n * @param {number} numCourses\n * @param {number[][]} prerequisites\n * @return {boolean}\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind.\nvar canFinish = function (numCourses, prerequisites) {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.\n    const { graph, path } = buildGraph(numCourses, prerequisites);\n\n    return hasPath(numCourses, graph, path);\n};\n\nvar initGraph = (numCourses) => ({\n    graph: new Array(numCourses).fill().map(() => []),\n    path: new Array(numCourses).fill(false),\n});\n\nvar buildGraph = (numCourses, prerequisites) => {\n    const { graph, path } = initGraph(numCourses);\n\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (const [src, dst] of prerequisites) {\n        const neighbors = graph[dst] || [];\n\n        neighbors.push(src);\n\n        graph[dst] = neighbors;\n    }\n\n    return { graph, path };\n};\n\nvar hasPath = (numCourses, graph, path) => {\n    for (let course = 0; course < numCourses; course++) {\n        // [Reader note] Decision point\n        // Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible.\n        if (isCyclic(course, graph, path)) return false;\n    }\n\n    return true;\n};\n\nvar isCyclic = (currCourse, graph, path) => {\n    const hasSeen = path[currCourse];\n    if (hasSeen) return true;\n\n    const isMissingNext = !(currCourse in graph);\n    if (isMissingNext) return false;\n\n    return backTrack(currCourse, graph, path);\n};\n\nvar backTrack = (currCourse, graph, path) => {\n    path[currCourse] = true;\n    const _hasCycle = hasCycle(currCourse, graph, path);\n    path[currCourse] = false;\n\n    return _hasCycle;\n};\n\nvar hasCycle = (currCourse, graph, path) => {\n    for (const neighbor of graph[currCourse]) {\n        if (isCyclic(neighbor, graph, path)) return true;\n    }\n\n    return false;\n};\n\n/**\n * https://leetcode.com/problems/course-schedule/\n * Time O(V + E) | Space O(V + E)\n * @param {number} numCourses\n * @param {number[][]} prerequisites\n * @return {boolean}\n */\nvar canFinish = function (numCourses, prerequisites) {\n    const { graph, visited, path } = buildGraph(numCourses, prerequisites);\n\n    for (let currCourse = 0; currCourse < numCourses; currCourse++) {\n        if (isCyclic(currCourse, graph, visited, path)) return false;\n    }\n\n    return true;\n};\n\nvar initGraph = (numCourses) => ({\n    graph: new Array(numCourses).fill().map(() => []),\n    visited: new Array(numCourses).fill(false),\n    path: new Array(numCourses).fill(false),\n});\n\nvar buildGraph = (numCourses, prerequisites) => {\n    const { graph, visited, path } = initGraph(numCourses);\n\n    for (const [src, dst] of prerequisites) {\n        const neighbors = graph[dst] || [];\n\n        neighbors.push(src);\n\n        graph[dst] = neighbors;\n    }\n\n    return { graph, visited, path };\n};\n\nvar isCyclic = (currCourse, graph, visited, path) => {\n    const isVisited = visited[currCourse];\n    if (isVisited) return false;\n\n    const hasSeen = path[currCourse];\n    if (hasSeen) return true;\n\n    const isMissingNext = !(currCourse in graph);\n    if (isMissingNext) return false;\n\n    const _isCyclic = backTrack(currCourse, graph, visited, path);\n\n    visited[currCourse] = true;\n\n    return _isCyclic;\n};\n\nvar backTrack = (currCourse, graph, visited, path) => {\n    path[currCourse] = true;\n    const _hasCycle = hasCycle(currCourse, graph, visited, path);\n    path[currCourse] = false;\n\n    return _hasCycle;\n};\n\nvar hasCycle = (currCourse, graph, visited, path) => {\n    for (const neighbor of graph[currCourse]) {\n        if (isCyclic(neighbor, graph, visited, path)) return true;\n    }\n\n    return false;\n};\n\n/**\n * https://leetcode.com/problems/course-schedule/\n * Time O(V + E) | Space O(V + E)\n * @param {number} numCourses\n * @param {number[][]} prerequisites\n * @return {boolean}\n */\nvar canFinish = function (numCourses, prerequisites) {\n    const { graph, indegree } = buildGraph(numCourses, prerequisites);\n    const topologicalOrder = topologicalSort(graph, indegree);\n    const isDirectedAcyclicGraph = topologicalOrder.length === numCourses;\n\n    return isDirectedAcyclicGraph;\n};\n\nvar initGraph = (numCourses) => ({\n    graph: new Array(numCourses).fill().map(() => []),\n    indegree: new Array(numCourses).fill(0),\n});\n\nvar buildGraph = (numCourses, prerequisites) => {\n    const { graph, indegree } = initGraph(numCourses);\n\n    for (const [src, dst] of prerequisites) {\n        graph[src].push(dst);\n        indegree[dst]++;\n    }\n\n    return { graph, indegree };\n};\n\nvar topologicalSort = (graph, indegree, order = []) => {\n    const queue = searchGraph(graph, indegree);\n\n    bfs(graph, indegree, queue, order);\n\n    return order;\n};\n\nvar searchGraph = (graph, indegree, queue = new Queue([])) => {\n    for (const node in graph) {\n        const isSource = indegree[node] === 0;\n        if (isSource) queue.enqueue(node);\n    }\n\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return queue;\n};\n\nvar bfs = (graph, indegree, queue, order) => {\n    while (!queue.isEmpty()) {\n        for (let i = queue.size() - 1; 0 <= i; i--) {\n            checkNeighbors(graph, indegree, queue, order);\n        }\n    }\n};\n\nvar checkNeighbors = (graph, indegree, queue, order) => {\n    const node = queue.dequeue();\n\n    order.push(node);\n\n    for (const neighbor of graph[node]) {\n        indegree[neighbor]--;\n\n        const isSource = indegree[neighbor] === 0;\n        if (isSource) queue.enqueue(neighbor);\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time O((V)^2 + E) | Space O(V + E)"
+          ],
+          "annotations": [
+            {
+              "line": 8,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind."
+            },
+            {
+              "line": 9,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering."
+            },
+            {
+              "line": 22,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 35,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+            },
+            {
+              "line": 182,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is the standard on-ramp to directed graph reasoning because the story is concrete and the graph concept is essential.",
+            "whatToNotice": "Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.",
+            "riskPoint": "The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+          }
+        }
+      ]
+    },
+    {
+      "id": "csharp",
+      "label": "C#",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-csharp-0207-course-schedule.cs",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/csharp/0207-course-schedule.cs",
+          "localPath": "neetcode-gh_leetcode/csharp/0207-course-schedule.cs",
+          "relativePath": "csharp/0207-course-schedule.cs",
+          "languageId": "csharp",
+          "languageLabel": "C#",
+          "coverageType": "article+code",
+          "code": "public class Solution {\n   public bool CanFinish(int numCourses, int[][] prerequisites)\n        {\n\n            IDictionary<int, List<int>> preMap = new Dictionary<int, List<int>>();\n            HashSet<int> visited = new HashSet<int>();\n            for (int i = 0; i < numCourses; i++)\n            {\n                preMap.Add(i, new List<int>());\n            }\n\n            foreach (int[] course in prerequisites)\n            {\n                int courseToTake = course[0];\n                int courseDependOn = course[1];\n                preMap[courseToTake].Add(courseDependOn);\n            }\n\n            foreach (int c in Enumerable.Range(0, numCourses))\n            {\n                if (!DfsGraph(preMap, visited, c))\n                {\n                    return false;\n                }\n            }\n            return true; \n        }\n        public bool DfsGraph(IDictionary<int, List<int>> preMap, HashSet<int> visited, int crs)\n        {\n            if (visited.Contains(crs))\n            {\n                return false;\n            }\n            if (preMap[crs] == new List<int>())\n            {\n                return true;\n            }\n            visited.Add(crs);\n            foreach (var pre in preMap[crs])\n            {\n                if (!DfsGraph(preMap, visited, pre))\n                {\n                    return false;\n                }\n            }\n            visited.Remove(crs);\n            preMap[crs] = new List<int>();\n            return true; \n        }\n}\n",
+          "originalCode": "public class Solution {\n   public bool CanFinish(int numCourses, int[][] prerequisites)\n        {\n\n            IDictionary<int, List<int>> preMap = new Dictionary<int, List<int>>();\n            HashSet<int> visited = new HashSet<int>();\n            for (int i = 0; i < numCourses; i++)\n            {\n                preMap.Add(i, new List<int>());\n            }\n\n            foreach (int[] course in prerequisites)\n            {\n                int courseToTake = course[0];\n                int courseDependOn = course[1];\n                preMap[courseToTake].Add(courseDependOn);\n            }\n\n            foreach (int c in Enumerable.Range(0, numCourses))\n            {\n                if (!DfsGraph(preMap, visited, c))\n                {\n                    return false;\n                }\n            }\n            return true; \n        }\n        public bool DfsGraph(IDictionary<int, List<int>> preMap, HashSet<int> visited, int crs)\n        {\n            if (visited.Contains(crs))\n            {\n                return false;\n            }\n            if (preMap[crs] == new List<int>())\n            {\n                return true;\n            }\n            visited.Add(crs);\n            foreach (var pre in preMap[crs])\n            {\n                if (!DfsGraph(preMap, visited, pre))\n                {\n                    return false;\n                }\n            }\n            visited.Remove(crs);\n            preMap[crs] = new List<int>();\n            return true; \n        }\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind.\npublic class Solution {\n   public bool CanFinish(int numCourses, int[][] prerequisites)\n        {\n\n            // [Reader note] State setup\n            // This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.\n            IDictionary<int, List<int>> preMap = new Dictionary<int, List<int>>();\n            HashSet<int> visited = new HashSet<int>();\n            // [Reader note] Main pass\n            // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for (int i = 0; i < numCourses; i++)\n            {\n                preMap.Add(i, new List<int>());\n            }\n\n            foreach (int[] course in prerequisites)\n            {\n                int courseToTake = course[0];\n                int courseDependOn = course[1];\n                preMap[courseToTake].Add(courseDependOn);\n            }\n\n            foreach (int c in Enumerable.Range(0, numCourses))\n            {\n                // [Reader note] Decision point\n                // Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible.\n                if (!DfsGraph(preMap, visited, c))\n                {\n                    return false;\n                }\n            }\n            return true; \n        }\n        public bool DfsGraph(IDictionary<int, List<int>> preMap, HashSet<int> visited, int crs)\n        {\n            if (visited.Contains(crs))\n            {\n                return false;\n            }\n            if (preMap[crs] == new List<int>())\n            {\n                return true;\n            }\n            visited.Add(crs);\n            foreach (var pre in preMap[crs])\n            {\n                if (!DfsGraph(preMap, visited, pre))\n                {\n                    return false;\n                }\n            }\n            visited.Remove(crs);\n            preMap[crs] = new List<int>();\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return true; \n        }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind."
+            },
+            {
+              "line": 5,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering."
+            },
+            {
+              "line": 7,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 21,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+            },
+            {
+              "line": 48,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is the standard on-ramp to directed graph reasoning because the story is concrete and the graph concept is essential.",
+            "whatToNotice": "Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.",
+            "riskPoint": "The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+          }
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "label": "C",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-c-0207-course-schedule.c",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/c/0207-course-schedule.c",
+          "localPath": "neetcode-gh_leetcode/c/0207-course-schedule.c",
+          "relativePath": "c/0207-course-schedule.c",
+          "languageId": "c",
+          "languageLabel": "C",
+          "coverageType": "article+code",
+          "code": "#include <stdbool.h>\n#include <stdlib.h>\n\n// The most prerequisites a course has in the test data.\n#define PREREQ_MAX (13)\n\nbool hasLoops(int idx, int cmap[][PREREQ_MAX], int cpr[], int* visited) {\n    // The current course requires a course that requires the current course (looped requirements).\n    if (visited[idx] > 0)\n        return true;\n\n    // Check the current course's prerequisites for loops.\n    if (visited[idx] == 0) {\n        visited[idx] = 1;\n        for (int i = 0; i < cpr[idx]; i++) {\n            if (hasLoops(cmap[idx][i], cmap, cpr, visited)) {\n                return true;\n            }\n        }\n        // Mark course as processed in a previous loop. Alternatively, we can also just clear the visited[] array.\n        visited[idx] = -1;\n    }\n\n    return false;\n}\n\nbool canFinish(int numCourses, int** prerequisites, int prerequisitesSize, int* prerequisitesColSize) {\n    int cmap[2001][PREREQ_MAX]; // Holds the prerequisites of each course.\n    int cpr[2001] = {0};        // Number of course prerequisites.\n    int visited[2001] = {0};\n\n    // Map out all prerequisites of all courses.\n    for (int i = 0; i < prerequisitesSize; i++) {\n        int course = prerequisites[i][0];\n        int prereq = prerequisites[i][1];\n\n        cmap[course][cpr[course]++] = prereq;\n    }\n\n    // Check for loops.\n    for (int i = 0; i < numCourses; i++) {\n        // If the courses loop, then we can't finish the courses.\n        if (hasLoops(i, cmap, cpr, visited)) {\n            return false;\n        }\n    }\n\n    return true;\n}\n",
+          "originalCode": "#include <stdbool.h>\n#include <stdlib.h>\n\n// The most prerequisites a course has in the test data.\n#define PREREQ_MAX (13)\n\nbool hasLoops(int idx, int cmap[][PREREQ_MAX], int cpr[], int* visited) {\n    // The current course requires a course that requires the current course (looped requirements).\n    if (visited[idx] > 0)\n        return true;\n\n    // Check the current course's prerequisites for loops.\n    if (visited[idx] == 0) {\n        visited[idx] = 1;\n        for (int i = 0; i < cpr[idx]; i++) {\n            if (hasLoops(cmap[idx][i], cmap, cpr, visited)) {\n                return true;\n            }\n        }\n        // Mark course as processed in a previous loop. Alternatively, we can also just clear the visited[] array.\n        visited[idx] = -1;\n    }\n\n    return false;\n}\n\nbool canFinish(int numCourses, int** prerequisites, int prerequisitesSize, int* prerequisitesColSize) {\n    int cmap[2001][PREREQ_MAX]; // Holds the prerequisites of each course.\n    int cpr[2001] = {0};        // Number of course prerequisites.\n    int visited[2001] = {0};\n\n    // Map out all prerequisites of all courses.\n    for (int i = 0; i < prerequisitesSize; i++) {\n        int course = prerequisites[i][0];\n        int prereq = prerequisites[i][1];\n\n        cmap[course][cpr[course]++] = prereq;\n    }\n\n    // Check for loops.\n    for (int i = 0; i < numCourses; i++) {\n        // If the courses loop, then we can't finish the courses.\n        if (hasLoops(i, cmap, cpr, visited)) {\n            return false;\n        }\n    }\n\n    return true;\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind.\n#include <stdbool.h>\n#include <stdlib.h>\n\n// The most prerequisites a course has in the test data.\n#define PREREQ_MAX (13)\n\nbool hasLoops(int idx, int cmap[][PREREQ_MAX], int cpr[], int* visited) {\n    // The current course requires a course that requires the current course (looped requirements).\n    if (visited[idx] > 0)\n        return true;\n\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    // Check the current course's prerequisites for loops.\n    // [Reader note] Decision point\n    // Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible.\n    if (visited[idx] == 0) {\n        visited[idx] = 1;\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.\n        for (int i = 0; i < cpr[idx]; i++) {\n            if (hasLoops(cmap[idx][i], cmap, cpr, visited)) {\n                return true;\n            }\n        }\n        // Mark course as processed in a previous loop. Alternatively, we can also just clear the visited[] array.\n        visited[idx] = -1;\n    }\n\n    return false;\n}\n\nbool canFinish(int numCourses, int** prerequisites, int prerequisitesSize, int* prerequisitesColSize) {\n    int cmap[2001][PREREQ_MAX]; // Holds the prerequisites of each course.\n    int cpr[2001] = {0};        // Number of course prerequisites.\n    int visited[2001] = {0};\n\n    // Map out all prerequisites of all courses.\n    for (int i = 0; i < prerequisitesSize; i++) {\n        int course = prerequisites[i][0];\n        int prereq = prerequisites[i][1];\n\n        cmap[course][cpr[course]++] = prereq;\n    }\n\n    // Check for loops.\n    for (int i = 0; i < numCourses; i++) {\n        // If the courses loop, then we can't finish the courses.\n        if (hasLoops(i, cmap, cpr, visited)) {\n            return false;\n        }\n    }\n\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return true;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind."
+            },
+            {
+              "line": 15,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering."
+            },
+            {
+              "line": 12,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 13,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+            },
+            {
+              "line": 48,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is the standard on-ramp to directed graph reasoning because the story is concrete and the graph concept is essential.",
+            "whatToNotice": "Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.",
+            "riskPoint": "The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible."
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "neetcode-gh_leetcode-articles-course-schedule.md",
+      "repository": "neetcode-gh_leetcode",
+      "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+      "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/articles/course-schedule.md",
+      "localPath": "neetcode-gh_leetcode/articles/course-schedule.md",
+      "relativePath": "articles/course-schedule.md",
+      "title": "course schedule",
+      "excerpt": "## Prerequisites Before attempting this problem, you should be comfortable with: - **Graph Representation** - Building adjacency lists from edge pairs to represent directed graphs - **Depth-First Search (DFS)** - Recursive graph traversal for exploring dependencies and detecting cycles - **Topological Sort (Kahn's Algorithm)** - BFS-based approach using indegree to determine if a valid ordering exists - **Cycle Dete..."
+    },
+    {
+      "id": "neetcode-gh_leetcode-hints-course-schedule.md",
+      "repository": "neetcode-gh_leetcode",
+      "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+      "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/hints/course-schedule.md",
+      "localPath": "neetcode-gh_leetcode/hints/course-schedule.md",
+      "relativePath": "hints/course-schedule.md",
+      "title": "course schedule",
+      "excerpt": "<br> <details class=\"hint-accordion\"> <summary>Recommended Time & Space Complexity</summary> <p> You should aim for a solution with <code>O(V + E)</code> time and <code>O(V + E)</code> space, where <code>V</code> is the number of courses (nodes) and <code>E</code> is the number of prerequisites (edges). </p> </details> <br> <details class=\"hint-accordion\"> <summary>Hint 1</summary> <p> Consider the problem as a grap..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0200-0299-0207.course-schedule-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0200-0299/0207.Course%20Schedule/README.md",
+      "localPath": "doocs_leetcode/solution/0200-0299/0207.Course Schedule/README.md",
+      "relativePath": "solution/0200-0299/0207.Course Schedule/README.md",
+      "title": "[207. \u8bfe\u7a0b\u8868](https://leetcode.cn/problems/course-schedule)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/0200-0299/0207.Course%20Schedule/README.md tags: - \u6df1\u5ea6\u4f18\u5148\u641c\u7d22 - \u5e7f\u5ea6\u4f18\u5148\u641c\u7d22 - \u56fe - \u62d3\u6251\u6392\u5e8f --- <!-- problem:start --> # [207. \u8bfe\u7a0b\u8868](https://leetcode.cn/problems/course-schedule) [English Version](/solution/0200-0299/0207.Course%20Schedule/README_EN.md) ## \u9898\u76ee\u63cf\u8ff0 <!-- description:start --> <p>\u4f60\u8fd9\u4e2a\u5b66\u671f\u5fc5\u987b\u9009\u4fee <code>numCourses</code> \u95e8\u8bfe\u7a0b\uff0c\u8bb0\u4e3a&nbsp..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0200-0299-0207.course-schedule-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0200-0299/0207.Course%20Schedule/README_EN.md",
+      "localPath": "doocs_leetcode/solution/0200-0299/0207.Course Schedule/README_EN.md",
+      "relativePath": "solution/0200-0299/0207.Course Schedule/README_EN.md",
+      "title": "[207. Course Schedule](https://leetcode.com/problems/course-schedule)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/0200-0299/0207.Course%20Schedule/README_EN.md tags: - Depth-First Search - Breadth-First Search - Graph - Topological Sort --- <!-- problem:start --> # [207. Course Schedule](https://leetcode.com/problems/course-schedule) [\u4e2d\u6587\u6587\u6863](/solution/0200-0299/0207.Course%20Schedule/README.md) ## Description <!-- description:sta..."
+    },
+    {
+      "id": "wisdompeak_leetcode-bfs-207.course-schedule-readme.md",
+      "repository": "wisdompeak_LeetCode",
+      "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+      "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/BFS/207.Course-Schedule/Readme.md",
+      "localPath": "wisdompeak_LeetCode/BFS/207.Course-Schedule/Readme.md",
+      "relativePath": "BFS/207.Course-Schedule/Readme.md",
+      "title": "207.Course-Schedule",
+      "excerpt": "### 207.Course-Schedule \u6211\u4eec\u5c06\u4f9d\u8d56\u5173\u7cfb\u8868\u8ff0\u6210\u4e00\u6761\u6709\u5411\u8fb9\u3002\u8bfe\u7a0ba\u9700\u8981\u5148\u4fee\u8bfe\u7a0bb\uff0c\u90a3\u4e48\u5c31\u6709\u4e00\u6761\u8fb9\u4ecea\u6307\u5411b\u3002\u672c\u9898\u7684\u672c\u8d28\u5c31\u662f\u5728\u4e00\u4e2a\u6709\u5411\u56fe\u4e2d\u5224\u65ad\u662f\u5426\u6709\u73af\u3002\u5982\u679c\u6709\u73af\uff0c\u610f\u5473\u7740\u5faa\u73af\u4f9d\u8d56\uff0c\u5c31\u9700\u8981\u8fd4\u56defalse\u3002 \u5728\u56fe\u8bba\u4e2d\uff0c\u5224\u65ad\u6709\u5411\u56fe\u662f\u5426\u6709\u73af\uff0c\u4e00\u822c\u6709DFS\u548cBFS\u4e24\u79cd\u505a\u6cd5\u3002 #### \u89e3\u6cd51\uff1a DFS DFS\u7684\u57fa\u672c\u601d\u60f3\u662f\u4ece\u4efb\u610f\u4e00\u4e2a\u672a\u8bbf\u95ee\u8fc7\u7684\u8282\u70b9\u5f00\u59cb\u505aDFS\u7684\u904d\u5386\u3002\u5982\u679c\u5728\u67d0\u6761\u652f\u8def\u7684\u904d\u5386\u8fc7\u7a0b\u4e2d\uff08\u6ca1\u6709\u904d\u5386\u5230\u51fa\u5ea6\u4e3a0\u7684\u7aef\u70b9\uff09\u9047\u5230\u4e86\u4efb\u4f55\u5728\u8fd9\u6761\u652f\u8def\u4e2d\u5df2\u7ecf\u8bbf\u95ee\u8fc7\u7684\u8282\u70b9\uff0c\u90a3\u4e48\u5c31\u80fd\u5224\u65ad\u6210\u73af\u3002 \u6ce8\u610f\uff0c\u201c\u9047\u5230\u4e86\u4efb\u4f55\u5728\u8fd9\u6761\u652f\u8def\u4e2d\u5df2\u7ecf\u8bbf\u95ee\u8fc7\u7684\u8282\u70b9\u201d\u548c\u201c\u9047\u5230\u4e86\u4efb\u4f55\u5df2\u7ecf\u8bbf\u95ee\u8fc7\u7684\u8282\u70b9\u201d\uff0c\u662f\u4e0d\u540c\u7684\u6982\u5ff5\u3002\u6bd4\u5982\uff1a ``` 1 -> 2 -> 3 -> 4 ^ 5 -> 6 -> 7 -> 8 ^____| ``` \u6211\u4eec\u4ece1\u5f00\u59cb\u4f9d\u6b21\u8bbf\u95ee1->2->3->4\uff0c\u7136\u540e\u904d\u5386\u7ed3\u675f\u3002\u7136\u540e\u4ece5\u5f00\u59cb\u4f9d\u6b21\u8bbf\u95ee5->6->7->3\u7684\u65f6\u5019\uff0c3\u5df2\u7ecf\u88ab\u8bbf\u95ee\u8fc7\u4e86\u3002\u4f46\u662f\u8fd9\u4e0d\u4f1a\u8bef\u5224\u6210\u73af\u3002\u56e0\u4e3a..."
+    }
+  ]
+}

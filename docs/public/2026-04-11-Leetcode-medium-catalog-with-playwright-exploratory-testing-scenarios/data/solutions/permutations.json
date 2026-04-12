@@ -1,0 +1,865 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "permutations",
+  "problemTitle": "Permutations",
+  "problemNumber": 46,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go",
+      "typescript",
+      "javascript",
+      "csharp",
+      "c"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go",
+      "TypeScript",
+      "JavaScript",
+      "C#",
+      "C"
+    ],
+    "solutionCount": 15,
+    "writeupCount": 5,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 3,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-python-permutations.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/permutations.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/permutations.py",
+          "relativePath": "Python/permutations.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(n * n!)\n# Space: O(n)\n\nclass Solution(object):\n    # @param num, a list of integer\n    # @return a list of lists of integers\n    def permute(self, num):\n        result = []\n        used = [False] * len(num)\n        self.permuteRecu(result, used, [], num)\n        return result\n\n    def permuteRecu(self, result, used, cur, num):\n        if len(cur) == len(num):\n            result.append(cur[:])\n            return\n        for i in xrange(len(num)):\n            if not used[i]:\n                used[i] = True\n                cur.append(num[i])\n                self.permuteRecu(result, used, cur, num)\n                cur.pop()\n                used[i] = False\n\n\n# Time:  O(n^2 * n!)\n# Space: O(n^2)\nclass Solution2(object):\n    def permute(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        res = []\n        self.dfs(nums, [], res)\n        return res\n\n    def dfs(self, nums, path, res):\n        if not nums:\n            res.append(path)\n\n        for i in xrange(len(nums)):\n            # e.g., [1, 2, 3]: 3! = 6 cases\n            # idx -> nums, path\n            # 0 -> [2, 3], [1] -> 0: [3], [1, 2] -> [], [1, 2, 3]\n            #                  -> 1: [2], [1, 3] -> [], [1, 3, 2]\n            #\n            # 1 -> [1, 3], [2] -> 0: [3], [2, 1] -> [], [2, 1, 3]\n            #                  -> 1: [1], [2, 3] -> [], [2, 3, 1]\n            #\n            # 2 -> [1, 2], [3] -> 0: [2], [3, 1] -> [], [3, 1, 2]\n            #                  -> 1: [1], [3, 2] -> [], [3, 2, 1]\n            self.dfs(nums[:i] + nums[i+1:], path + [nums[i]], res)\n",
+          "originalCode": "# Time:  O(n * n!)\n# Space: O(n)\n\nclass Solution(object):\n    # @param num, a list of integer\n    # @return a list of lists of integers\n    def permute(self, num):\n        result = []\n        used = [False] * len(num)\n        self.permuteRecu(result, used, [], num)\n        return result\n\n    def permuteRecu(self, result, used, cur, num):\n        if len(cur) == len(num):\n            result.append(cur[:])\n            return\n        for i in xrange(len(num)):\n            if not used[i]:\n                used[i] = True\n                cur.append(num[i])\n                self.permuteRecu(result, used, cur, num)\n                cur.pop()\n                used[i] = False\n\n\n# Time:  O(n^2 * n!)\n# Space: O(n^2)\nclass Solution2(object):\n    def permute(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        res = []\n        self.dfs(nums, [], res)\n        return res\n\n    def dfs(self, nums, path, res):\n        if not nums:\n            res.append(path)\n\n        for i in xrange(len(nums)):\n            # e.g., [1, 2, 3]: 3! = 6 cases\n            # idx -> nums, path\n            # 0 -> [2, 3], [1] -> 0: [3], [1, 2] -> [], [1, 2, 3]\n            #                  -> 1: [2], [1, 3] -> [], [1, 3, 2]\n            #\n            # 1 -> [1, 3], [2] -> 0: [3], [2, 1] -> [], [2, 1, 3]\n            #                  -> 1: [1], [2, 3] -> [], [2, 3, 1]\n            #\n            # 2 -> [1, 2], [3] -> 0: [2], [3, 1] -> [], [3, 1, 2]\n            #                  -> 1: [1], [3, 2] -> [], [3, 2, 1]\n            self.dfs(nums[:i] + nums[i+1:], path + [nums[i]], res)\n",
+          "reviewedCode": "# Time:  O(n * n!)\n# Space: O(n)\n\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement.\nclass Solution(object):\n    # @param num, a list of integer\n    # @return a list of lists of integers\n    def permute(self, num):\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.\n        result = []\n        used = [False] * len(num)\n        self.permuteRecu(result, used, [], num)\n        return result\n\n    def permuteRecu(self, result, used, cur, num):\n        if len(cur) == len(num):\n            result.append(cur[:])\n            return\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for i in xrange(len(num)):\n            # [Reader note] Decision point\n            # Pay attention here: The search explodes quickly, so clean bookkeeping matters more than clever optimization.\n            if not used[i]:\n                used[i] = True\n                cur.append(num[i])\n                self.permuteRecu(result, used, cur, num)\n                cur.pop()\n                used[i] = False\n\n\n# Time:  O(n^2 * n!)\n# Space: O(n^2)\nclass Solution2(object):\n    def permute(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        res = []\n        self.dfs(nums, [], res)\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return res\n\n    def dfs(self, nums, path, res):\n        if not nums:\n            res.append(path)\n\n        for i in xrange(len(nums)):\n            # e.g., [1, 2, 3]: 3! = 6 cases\n            # idx -> nums, path\n            # 0 -> [2, 3], [1] -> 0: [3], [1, 2] -> [], [1, 2, 3]\n            #                  -> 1: [2], [1, 3] -> [], [1, 3, 2]\n            #\n            # 1 -> [1, 3], [2] -> 0: [3], [2, 1] -> [], [2, 1, 3]\n            #                  -> 1: [1], [2, 3] -> [], [2, 3, 1]\n            #\n            # 2 -> [1, 2], [3] -> 0: [2], [3, 1] -> [], [3, 1, 2]\n            #                  -> 1: [1], [3, 2] -> [], [3, 2, 1]\n            self.dfs(nums[:i] + nums[i+1:], path + [nums[i]], res)",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n * n!)",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 4,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement."
+            },
+            {
+              "line": 8,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees."
+            },
+            {
+              "line": 17,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 18,
+              "label": "Decision point",
+              "note": "Pay attention here: The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+            },
+            {
+              "line": 36,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It turns the backtracking template into a slightly richer search where used-state and path length both matter.",
+            "whatToNotice": "Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.",
+            "riskPoint": "The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0046.permutations-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0046.Permutations/Solution.py",
+          "localPath": "doocs_leetcode/solution/0000-0099/0046.Permutations/Solution.py",
+          "relativePath": "solution/0000-0099/0046.Permutations/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "class Solution:\n    def permute(self, nums: List[int]) -> List[List[int]]:\n        def dfs(i: int):\n            if i >= n:\n                ans.append(t[:])\n                return\n            for j, x in enumerate(nums):\n                if not vis[j]:\n                    vis[j] = True\n                    t[i] = x\n                    dfs(i + 1)\n                    vis[j] = False\n\n        n = len(nums)\n        vis = [False] * n\n        t = [0] * n\n        ans = []\n        dfs(0)\n        return ans\n",
+          "originalCode": "class Solution:\n    def permute(self, nums: List[int]) -> List[List[int]]:\n        def dfs(i: int):\n            if i >= n:\n                ans.append(t[:])\n                return\n            for j, x in enumerate(nums):\n                if not vis[j]:\n                    vis[j] = True\n                    t[i] = x\n                    dfs(i + 1)\n                    vis[j] = False\n\n        n = len(nums)\n        vis = [False] * n\n        t = [0] * n\n        ans = []\n        dfs(0)\n        return ans\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement.\nclass Solution:\n    def permute(self, nums: List[int]) -> List[List[int]]:\n        def dfs(i: int):\n            if i >= n:\n                ans.append(t[:])\n                return\n            # [Reader note] Main pass\n            # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for j, x in enumerate(nums):\n                # [Reader note] Decision point\n                # Pay attention here: The search explodes quickly, so clean bookkeeping matters more than clever optimization.\n                if not vis[j]:\n                    vis[j] = True\n                    t[i] = x\n                    dfs(i + 1)\n                    vis[j] = False\n\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.\n        n = len(nums)\n        vis = [False] * n\n        t = [0] * n\n        ans = []\n        dfs(0)\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return ans",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement."
+            },
+            {
+              "line": 14,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees."
+            },
+            {
+              "line": 7,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 8,
+              "label": "Decision point",
+              "note": "Pay attention here: The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+            },
+            {
+              "line": 19,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It turns the backtracking template into a slightly richer search where used-state and path length both matter.",
+            "whatToNotice": "Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.",
+            "riskPoint": "The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+          }
+        },
+        {
+          "id": "wisdompeak_leetcode-math-046.permutations-046.permutations.py",
+          "repository": "wisdompeak_LeetCode",
+          "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+          "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/Math/046.Permutations/046.Permutations.py",
+          "localPath": "wisdompeak_LeetCode/Math/046.Permutations/046.Permutations.py",
+          "relativePath": "Math/046.Permutations/046.Permutations.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+readme",
+          "code": "class Solution:\n    def permute(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        def insert(P,k):\n            result = []\n            for p in P:\n                for i in range(len(p)+1):\n                    q = p[:i]+[k]+p[i:]\n                    result.append(q)\n            return result\n        \n        P = [[]]\n        for i in nums:\n            P = insert(P,i)\n        return P\n",
+          "originalCode": "class Solution:\n    def permute(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        def insert(P,k):\n            result = []\n            for p in P:\n                for i in range(len(p)+1):\n                    q = p[:i]+[k]+p[i:]\n                    result.append(q)\n            return result\n        \n        P = [[]]\n        for i in nums:\n            P = insert(P,i)\n        return P\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement.\nclass Solution:\n    def permute(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        def insert(P,k):\n            # [Reader note] State setup\n            # This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.\n            result = []\n            # [Reader note] Main pass\n            # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for p in P:\n                for i in range(len(p)+1):\n                    q = p[:i]+[k]+p[i:]\n                    result.append(q)\n            return result\n        \n        P = [[]]\n        for i in nums:\n            P = insert(P,i)\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return P",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement."
+            },
+            {
+              "line": 8,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees."
+            },
+            {
+              "line": 9,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 18,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It turns the backtracking template into a slightly richer search where used-state and path length both matter.",
+            "whatToNotice": "Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.",
+            "riskPoint": "The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 4,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-cpp-0046-permutations.cpp",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/cpp/0046-permutations.cpp",
+          "localPath": "neetcode-gh_leetcode/cpp/0046-permutations.cpp",
+          "relativePath": "cpp/0046-permutations.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "article+code",
+          "code": "/*\n    Given array of distinct integers, return all the possible permutations\n    Ex. nums = [1,2,3] -> [[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]\n\n    Permute by swapping i/start, DFS from this point, backtrack to undo swap\n\n    Time: O(n x n!)\n    Space: O(n!)\n*/\n\nclass Solution {\npublic:\n    vector<vector<int>> permute(vector<int>& nums) {\n        vector<vector<int>> result;\n        dfs(nums, 0, result);\n        return result;\n    }\nprivate:\n    void dfs(vector<int>& nums, int start, vector<vector<int>>& result) {\n        if (start == nums.size()) {\n            result.push_back(nums);\n            return;\n        }\n        for (int i = start; i < nums.size(); i++) {\n            swap(nums[i], nums[start]);\n            dfs(nums, start + 1, result);\n            swap(nums[i], nums[start]);\n        }\n    }\n};\n",
+          "originalCode": "/*\n    Given array of distinct integers, return all the possible permutations\n    Ex. nums = [1,2,3] -> [[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]\n\n    Permute by swapping i/start, DFS from this point, backtrack to undo swap\n\n    Time: O(n x n!)\n    Space: O(n!)\n*/\n\nclass Solution {\npublic:\n    vector<vector<int>> permute(vector<int>& nums) {\n        vector<vector<int>> result;\n        dfs(nums, 0, result);\n        return result;\n    }\nprivate:\n    void dfs(vector<int>& nums, int start, vector<vector<int>>& result) {\n        if (start == nums.size()) {\n            result.push_back(nums);\n            return;\n        }\n        for (int i = start; i < nums.size(); i++) {\n            swap(nums[i], nums[start]);\n            dfs(nums, start + 1, result);\n            swap(nums[i], nums[start]);\n        }\n    }\n};\n",
+          "reviewedCode": "/*\n    Given array of distinct integers, return all the possible permutations\n    Ex. nums = [1,2,3] -> [[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]\n\n    Permute by swapping i/start, DFS from this point, backtrack to undo swap\n\n    Time: O(n x n!)\n    Space: O(n!)\n*/\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement.\nclass Solution {\npublic:\n    vector<vector<int>> permute(vector<int>& nums) {\n        vector<vector<int>> result;\n        dfs(nums, 0, result);\n        return result;\n    }\nprivate:\n    void dfs(vector<int>& nums, int start, vector<vector<int>>& result) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.\n        if (start == nums.size()) {\n            result.push_back(nums);\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return;\n        }\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = start; i < nums.size(); i++) {\n            swap(nums[i], nums[start]);\n            dfs(nums, start + 1, result);\n            swap(nums[i], nums[start]);\n        }\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time: O(n x n!)",
+            "Space: O(n!)"
+          ],
+          "annotations": [
+            {
+              "line": 11,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement."
+            },
+            {
+              "line": 20,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees."
+            },
+            {
+              "line": 24,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 22,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It turns the backtracking template into a slightly richer search where used-state and path length both matter.",
+            "whatToNotice": "Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.",
+            "riskPoint": "The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0046.permutations-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0046.Permutations/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/0000-0099/0046.Permutations/Solution.cpp",
+          "relativePath": "solution/0000-0099/0046.Permutations/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\npublic:\n    vector<vector<int>> permute(vector<int>& nums) {\n        int n = nums.size();\n        vector<vector<int>> ans;\n        vector<int> t(n);\n        vector<bool> vis(n);\n        auto dfs = [&](this auto&& dfs, int i) -> void {\n            if (i == n) {\n                ans.emplace_back(t);\n                return;\n            }\n            for (int j = 0; j < n; ++j) {\n                if (!vis[j]) {\n                    vis[j] = true;\n                    t[i] = nums[j];\n                    dfs(i + 1);\n                    vis[j] = false;\n                }\n            }\n        };\n        dfs(0);\n        return ans;\n    }\n};\n",
+          "originalCode": "class Solution {\npublic:\n    vector<vector<int>> permute(vector<int>& nums) {\n        int n = nums.size();\n        vector<vector<int>> ans;\n        vector<int> t(n);\n        vector<bool> vis(n);\n        auto dfs = [&](this auto&& dfs, int i) -> void {\n            if (i == n) {\n                ans.emplace_back(t);\n                return;\n            }\n            for (int j = 0; j < n; ++j) {\n                if (!vis[j]) {\n                    vis[j] = true;\n                    t[i] = nums[j];\n                    dfs(i + 1);\n                    vis[j] = false;\n                }\n            }\n        };\n        dfs(0);\n        return ans;\n    }\n};\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement.\nclass Solution {\npublic:\n    vector<vector<int>> permute(vector<int>& nums) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.\n        int n = nums.size();\n        vector<vector<int>> ans;\n        vector<int> t(n);\n        vector<bool> vis(n);\n        auto dfs = [&](this auto&& dfs, int i) -> void {\n            if (i == n) {\n                ans.emplace_back(t);\n                return;\n            }\n            // [Reader note] Main pass\n            // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for (int j = 0; j < n; ++j) {\n                // [Reader note] Decision point\n                // Pay attention here: The search explodes quickly, so clean bookkeeping matters more than clever optimization.\n                if (!vis[j]) {\n                    vis[j] = true;\n                    t[i] = nums[j];\n                    dfs(i + 1);\n                    vis[j] = false;\n                }\n            }\n        };\n        dfs(0);\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return ans;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees."
+            },
+            {
+              "line": 13,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 14,
+              "label": "Decision point",
+              "note": "Pay attention here: The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+            },
+            {
+              "line": 23,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It turns the backtracking template into a slightly richer search where used-state and path length both matter.",
+            "whatToNotice": "Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.",
+            "riskPoint": "The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+          }
+        },
+        {
+          "id": "wisdompeak_leetcode-math-046.permutations-046.permutations.cpp",
+          "repository": "wisdompeak_LeetCode",
+          "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+          "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/Math/046.Permutations/046.Permutations.cpp",
+          "localPath": "wisdompeak_LeetCode/Math/046.Permutations/046.Permutations.cpp",
+          "relativePath": "Math/046.Permutations/046.Permutations.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+readme",
+          "code": "class Solution {\npublic:\n    vector<vector<int>> permute(vector<int>& nums) \n    {\n        queue<vector<int>>q;\n        q.push({nums[0]});\n        \n        for (int i=1; i<nums.size(); i++)\n        {\n            int N=q.size();\n            for (int j=0; j<N; j++)\n            {\n                auto p=q.front();\n                q.pop();\n                \n                int M=p.size();\n                for (int k=0; k<=M; k++)\n                {\n                    auto temp=p;\n                    temp.insert(temp.begin()+k,nums[i]);\n                    q.push(temp);\n                }\n            }\n        }\n         \n        \n        vector<vector<int>>results;\n        while (!q.empty())\n        {\n            results.push_back(q.front());\n            q.pop();\n        }\n        return results;\n    }\n};\n",
+          "originalCode": "class Solution {\npublic:\n    vector<vector<int>> permute(vector<int>& nums) \n    {\n        queue<vector<int>>q;\n        q.push({nums[0]});\n        \n        for (int i=1; i<nums.size(); i++)\n        {\n            int N=q.size();\n            for (int j=0; j<N; j++)\n            {\n                auto p=q.front();\n                q.pop();\n                \n                int M=p.size();\n                for (int k=0; k<=M; k++)\n                {\n                    auto temp=p;\n                    temp.insert(temp.begin()+k,nums[i]);\n                    q.push(temp);\n                }\n            }\n        }\n         \n        \n        vector<vector<int>>results;\n        while (!q.empty())\n        {\n            results.push_back(q.front());\n            q.pop();\n        }\n        return results;\n    }\n};\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement.\nclass Solution {\npublic:\n    vector<vector<int>> permute(vector<int>& nums) \n    {\n        queue<vector<int>>q;\n        q.push({nums[0]});\n        \n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.\n        for (int i=1; i<nums.size(); i++)\n        {\n            int N=q.size();\n            for (int j=0; j<N; j++)\n            {\n                auto p=q.front();\n                q.pop();\n                \n                int M=p.size();\n                for (int k=0; k<=M; k++)\n                {\n                    auto temp=p;\n                    temp.insert(temp.begin()+k,nums[i]);\n                    q.push(temp);\n                }\n            }\n        }\n         \n        \n        vector<vector<int>>results;\n        while (!q.empty())\n        {\n            results.push_back(q.front());\n            q.pop();\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return results;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement."
+            },
+            {
+              "line": 8,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees."
+            },
+            {
+              "line": 33,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It turns the backtracking template into a slightly richer search where used-state and path length both matter.",
+            "whatToNotice": "Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.",
+            "riskPoint": "The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+          }
+        },
+        {
+          "id": "haoel_leetcode-algorithms-cpp-permutations-permutations.cpp",
+          "repository": "haoel_leetcode",
+          "repositoryUrl": "https://github.com/haoel/leetcode",
+          "sourceUrl": "https://github.com/haoel/leetcode/blob/master/algorithms/cpp/permutations/permutations.cpp",
+          "localPath": "haoel_leetcode/algorithms/cpp/permutations/permutations.cpp",
+          "relativePath": "algorithms/cpp/permutations/permutations.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Source : https://oj.leetcode.com/problems/permutations/\n// Author : Hao Chen\n// Date   : 2014-06-21\n\n/********************************************************************************** \n* \n* Given a collection of numbers, return all possible permutations.\n* \n* For example,\n* [1,2,3] have the following permutations:\n* [1,2,3], [1,3,2], [2,1,3], [2,3,1], [3,1,2], and [3,2,1].\n* \n*               \n**********************************************************************************/\n\n#include <stdio.h>\n#include <stdlib.h>\n#include <iostream>\n#include <vector>\nusing namespace std;\n\n/*\n{ 1 2 3 }\n{ 2 1 3 }\n{ 3 2 1 }\n{ 1 3 2 }\n{ 2 3 1 }\n{ 3 1 2 }\n*/\n\n/*\n *    The algroithm - Take each element in array to the first place.\n *\n *    For example: \n *    \n *         0) initalization \n * \n *             pos = 0\n *             [1, 2, 3]   \n *\n *         1) take each element into the first place, \n *\n *             pos = 1\n *             [1, 2, 3]  ==>  [2, 1, 3] , [3, 1, 2] \n *\n *             then we have total 3 answers\n *             [1, 2, 3],  [2, 1, 3] , [3, 1, 2] \n *            \n *         2) take each element into the \"first place\" -- pos \n *\n *             pos = 2\n *             [1, 2, 3]  ==>  [1, 3, 2]\n *             [2, 1, 3]  ==>  [2, 3, 1]\n *             [3, 1, 2]  ==>  [3, 2, 1] \n *\n *             then we have total 6 answers\n *             [1, 2, 3],  [2, 1, 3] , [3, 1, 2], [1, 3, 2], [2, 3, 1], [3, 2, 1]\n *\n *          3) pos = 3 which greater than length of array, return.\n *\n */\nvector<vector<int> > permute(vector<int> &num) {\n    \n    vector<vector<int> > vv;\n    vv.push_back(num);\n\n    if (num.size() <2){\n        return vv;\n    }\n        \n    int pos=0;\n    while(pos<num.size()-1){\n        int size = vv.size();\n        for(int i=0; i<size; i++){\n            //take each number to the first place\n            for (int j=pos+1; j<vv[i].size(); j++) {\n                vector<int> v = vv[i];\n                int t = v[j]; \n                v[j] = v[pos];\n                v[pos] = t;\n                vv.push_back(v);\n            }\n        }\n        pos++;\n    }\n    return vv;\n}\n\nint main(int argc, char** argv)\n{\n    int n = 3;\n    if (argc>1){\n       n = atoi(argv[1]); \n    }\n\n    vector<int> v;\n    for (int i=0; i<n; i++) {\n        v.push_back(i+1);\n    }\n    vector<vector<int> > vv;\n    vv = permute(v);\n    \n    for(int i=0; i<vv.size(); i++) {\n        cout << \"{ \";\n        for(int j=0; j<vv[i].size(); j++){\n            cout << vv[i][j] << \" \";\n        }\n        cout << \"}\" <<endl;\n    }\n\n    return 0;\n}\n",
+          "originalCode": "// Source : https://oj.leetcode.com/problems/permutations/\n// Author : Hao Chen\n// Date   : 2014-06-21\n\n/********************************************************************************** \n* \n* Given a collection of numbers, return all possible permutations.\n* \n* For example,\n* [1,2,3] have the following permutations:\n* [1,2,3], [1,3,2], [2,1,3], [2,3,1], [3,1,2], and [3,2,1].\n* \n*               \n**********************************************************************************/\n\n#include <stdio.h>\n#include <stdlib.h>\n#include <iostream>\n#include <vector>\nusing namespace std;\n\n/*\n{ 1 2 3 }\n{ 2 1 3 }\n{ 3 2 1 }\n{ 1 3 2 }\n{ 2 3 1 }\n{ 3 1 2 }\n*/\n\n/*\n *    The algroithm - Take each element in array to the first place.\n *\n *    For example: \n *    \n *         0) initalization \n * \n *             pos = 0\n *             [1, 2, 3]   \n *\n *         1) take each element into the first place, \n *\n *             pos = 1\n *             [1, 2, 3]  ==>  [2, 1, 3] , [3, 1, 2] \n *\n *             then we have total 3 answers\n *             [1, 2, 3],  [2, 1, 3] , [3, 1, 2] \n *            \n *         2) take each element into the \"first place\" -- pos \n *\n *             pos = 2\n *             [1, 2, 3]  ==>  [1, 3, 2]\n *             [2, 1, 3]  ==>  [2, 3, 1]\n *             [3, 1, 2]  ==>  [3, 2, 1] \n *\n *             then we have total 6 answers\n *             [1, 2, 3],  [2, 1, 3] , [3, 1, 2], [1, 3, 2], [2, 3, 1], [3, 2, 1]\n *\n *          3) pos = 3 which greater than length of array, return.\n *\n */\nvector<vector<int> > permute(vector<int> &num) {\n    \n    vector<vector<int> > vv;\n    vv.push_back(num);\n\n    if (num.size() <2){\n        return vv;\n    }\n        \n    int pos=0;\n    while(pos<num.size()-1){\n        int size = vv.size();\n        for(int i=0; i<size; i++){\n            //take each number to the first place\n            for (int j=pos+1; j<vv[i].size(); j++) {\n                vector<int> v = vv[i];\n                int t = v[j]; \n                v[j] = v[pos];\n                v[pos] = t;\n                vv.push_back(v);\n            }\n        }\n        pos++;\n    }\n    return vv;\n}\n\nint main(int argc, char** argv)\n{\n    int n = 3;\n    if (argc>1){\n       n = atoi(argv[1]); \n    }\n\n    vector<int> v;\n    for (int i=0; i<n; i++) {\n        v.push_back(i+1);\n    }\n    vector<vector<int> > vv;\n    vv = permute(v);\n    \n    for(int i=0; i<vv.size(); i++) {\n        cout << \"{ \";\n        for(int j=0; j<vv[i].size(); j++){\n            cout << vv[i][j] << \" \";\n        }\n        cout << \"}\" <<endl;\n    }\n\n    return 0;\n}\n",
+          "reviewedCode": "// Source : https://oj.leetcode.com/problems/permutations/\n// Author : Hao Chen\n// Date   : 2014-06-21\n\n/********************************************************************************** \n* \n* Given a collection of numbers, return all possible permutations.\n* \n* For example,\n* [1,2,3] have the following permutations:\n* [1,2,3], [1,3,2], [2,1,3], [2,3,1], [3,1,2], and [3,2,1].\n* \n*               \n**********************************************************************************/\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement.\n#include <stdio.h>\n#include <stdlib.h>\n#include <iostream>\n#include <vector>\nusing namespace std;\n\n/*\n{ 1 2 3 }\n{ 2 1 3 }\n{ 3 2 1 }\n{ 1 3 2 }\n{ 2 3 1 }\n{ 3 1 2 }\n*/\n\n/*\n *    The algroithm - Take each element in array to the first place.\n *\n *    For example: \n *    \n *         0) initalization \n * \n // [Reader note] State setup\n // This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.\n *             pos = 0\n *             [1, 2, 3]   \n *\n *         1) take each element into the first place, \n *\n *             pos = 1\n *             [1, 2, 3]  ==>  [2, 1, 3] , [3, 1, 2] \n *\n *             then we have total 3 answers\n *             [1, 2, 3],  [2, 1, 3] , [3, 1, 2] \n *            \n *         2) take each element into the \"first place\" -- pos \n *\n *             pos = 2\n *             [1, 2, 3]  ==>  [1, 3, 2]\n *             [2, 1, 3]  ==>  [2, 3, 1]\n *             [3, 1, 2]  ==>  [3, 2, 1] \n *\n *             then we have total 6 answers\n *             [1, 2, 3],  [2, 1, 3] , [3, 1, 2], [1, 3, 2], [2, 3, 1], [3, 2, 1]\n *\n *          3) pos = 3 which greater than length of array, return.\n *\n */\nvector<vector<int> > permute(vector<int> &num) {\n    \n    vector<vector<int> > vv;\n    vv.push_back(num);\n\n    if (num.size() <2){\n        return vv;\n    }\n        \n    int pos=0;\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    while(pos<num.size()-1){\n        int size = vv.size();\n        for(int i=0; i<size; i++){\n            //take each number to the first place\n            for (int j=pos+1; j<vv[i].size(); j++) {\n                vector<int> v = vv[i];\n                int t = v[j]; \n                v[j] = v[pos];\n                v[pos] = t;\n                vv.push_back(v);\n            }\n        }\n        pos++;\n    }\n    return vv;\n}\n\nint main(int argc, char** argv)\n{\n    int n = 3;\n    // [Reader note] Decision point\n    // Pay attention here: The search explodes quickly, so clean bookkeeping matters more than clever optimization.\n    if (argc>1){\n       n = atoi(argv[1]); \n    }\n\n    vector<int> v;\n    for (int i=0; i<n; i++) {\n        v.push_back(i+1);\n    }\n    vector<vector<int> > vv;\n    vv = permute(v);\n    \n    for(int i=0; i<vv.size(); i++) {\n        cout << \"{ \";\n        for(int j=0; j<vv[i].size(); j++){\n            cout << vv[i][j] << \" \";\n        }\n        cout << \"}\" <<endl;\n    }\n\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return 0;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 16,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement."
+            },
+            {
+              "line": 38,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees."
+            },
+            {
+              "line": 72,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 92,
+              "label": "Decision point",
+              "note": "Pay attention here: The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+            },
+            {
+              "line": 111,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It turns the backtracking template into a slightly richer search where used-state and path length both matter.",
+            "whatToNotice": "Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.",
+            "riskPoint": "The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-java-0046-permutations.java",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/java/0046-permutations.java",
+          "localPath": "neetcode-gh_leetcode/java/0046-permutations.java",
+          "relativePath": "java/0046-permutations.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "article+code",
+          "code": "import java.util.ArrayList;\nimport java.util.Arrays;\n\nclass Solution {\n\n    public List<List<Integer>> permute(int[] nums) {\n        List<List<Integer>> ans = new ArrayList<>();\n        function(ans, nums, 0);\n        return ans;\n    }\n\n    public void function(List<List<Integer>> ans, int[] arr, int start) {\n        if (start == arr.length) {\n            List<Integer> list = new ArrayList();\n            for (int i = 0; i < arr.length; i++) list.add(arr[i]);\n            ans.add(list);\n            return;\n        }\n\n        for (int i = start; i < arr.length; i++) {\n            swap(arr, start, i);\n            function(ans, arr, start + 1);\n            swap(arr, start, i);\n        }\n    }\n\n    public void swap(int[] arr, int a, int b) {\n        int temp = arr[a];\n        arr[a] = arr[b];\n        arr[b] = temp;\n    }\n}\n",
+          "originalCode": "import java.util.ArrayList;\nimport java.util.Arrays;\n\nclass Solution {\n\n    public List<List<Integer>> permute(int[] nums) {\n        List<List<Integer>> ans = new ArrayList<>();\n        function(ans, nums, 0);\n        return ans;\n    }\n\n    public void function(List<List<Integer>> ans, int[] arr, int start) {\n        if (start == arr.length) {\n            List<Integer> list = new ArrayList();\n            for (int i = 0; i < arr.length; i++) list.add(arr[i]);\n            ans.add(list);\n            return;\n        }\n\n        for (int i = start; i < arr.length; i++) {\n            swap(arr, start, i);\n            function(ans, arr, start + 1);\n            swap(arr, start, i);\n        }\n    }\n\n    public void swap(int[] arr, int a, int b) {\n        int temp = arr[a];\n        arr[a] = arr[b];\n        arr[b] = temp;\n    }\n}\n",
+          "reviewedCode": "import java.util.ArrayList;\nimport java.util.Arrays;\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement.\nclass Solution {\n\n    public List<List<Integer>> permute(int[] nums) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.\n        List<List<Integer>> ans = new ArrayList<>();\n        function(ans, nums, 0);\n        return ans;\n    }\n\n    public void function(List<List<Integer>> ans, int[] arr, int start) {\n        if (start == arr.length) {\n            List<Integer> list = new ArrayList();\n            // [Reader note] Main pass\n            // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for (int i = 0; i < arr.length; i++) list.add(arr[i]);\n            ans.add(list);\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return;\n        }\n\n        for (int i = start; i < arr.length; i++) {\n            swap(arr, start, i);\n            function(ans, arr, start + 1);\n            swap(arr, start, i);\n        }\n    }\n\n    public void swap(int[] arr, int a, int b) {\n        int temp = arr[a];\n        arr[a] = arr[b];\n        arr[b] = temp;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 4,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement."
+            },
+            {
+              "line": 7,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees."
+            },
+            {
+              "line": 15,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 17,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It turns the backtracking template into a slightly richer search where used-state and path length both matter.",
+            "whatToNotice": "Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.",
+            "riskPoint": "The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0046.permutations-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0046.Permutations/Solution.java",
+          "localPath": "doocs_leetcode/solution/0000-0099/0046.Permutations/Solution.java",
+          "relativePath": "solution/0000-0099/0046.Permutations/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\n    private List<List<Integer>> ans = new ArrayList<>();\n    private List<Integer> t = new ArrayList<>();\n    private boolean[] vis;\n    private int[] nums;\n\n    public List<List<Integer>> permute(int[] nums) {\n        this.nums = nums;\n        vis = new boolean[nums.length];\n        dfs(0);\n        return ans;\n    }\n\n    private void dfs(int i) {\n        if (i == nums.length) {\n            ans.add(new ArrayList<>(t));\n            return;\n        }\n        for (int j = 0; j < nums.length; ++j) {\n            if (!vis[j]) {\n                vis[j] = true;\n                t.add(nums[j]);\n                dfs(i + 1);\n                t.remove(t.size() - 1);\n                vis[j] = false;\n            }\n        }\n    }\n}",
+          "originalCode": "class Solution {\n    private List<List<Integer>> ans = new ArrayList<>();\n    private List<Integer> t = new ArrayList<>();\n    private boolean[] vis;\n    private int[] nums;\n\n    public List<List<Integer>> permute(int[] nums) {\n        this.nums = nums;\n        vis = new boolean[nums.length];\n        dfs(0);\n        return ans;\n    }\n\n    private void dfs(int i) {\n        if (i == nums.length) {\n            ans.add(new ArrayList<>(t));\n            return;\n        }\n        for (int j = 0; j < nums.length; ++j) {\n            if (!vis[j]) {\n                vis[j] = true;\n                t.add(nums[j]);\n                dfs(i + 1);\n                t.remove(t.size() - 1);\n                vis[j] = false;\n            }\n        }\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement.\nclass Solution {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.\n    private List<List<Integer>> ans = new ArrayList<>();\n    private List<Integer> t = new ArrayList<>();\n    private boolean[] vis;\n    private int[] nums;\n\n    public List<List<Integer>> permute(int[] nums) {\n        this.nums = nums;\n        vis = new boolean[nums.length];\n        dfs(0);\n        return ans;\n    }\n\n    private void dfs(int i) {\n        if (i == nums.length) {\n            ans.add(new ArrayList<>(t));\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return;\n        }\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int j = 0; j < nums.length; ++j) {\n            // [Reader note] Decision point\n            // Pay attention here: The search explodes quickly, so clean bookkeeping matters more than clever optimization.\n            if (!vis[j]) {\n                vis[j] = true;\n                t.add(nums[j]);\n                dfs(i + 1);\n                t.remove(t.size() - 1);\n                vis[j] = false;\n            }\n        }\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees."
+            },
+            {
+              "line": 19,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 20,
+              "label": "Decision point",
+              "note": "Pay attention here: The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+            },
+            {
+              "line": 17,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It turns the backtracking template into a slightly richer search where used-state and path length both matter.",
+            "whatToNotice": "Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.",
+            "riskPoint": "The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-go-0046-permutations.go",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/go/0046-permutations.go",
+          "localPath": "neetcode-gh_leetcode/go/0046-permutations.go",
+          "relativePath": "go/0046-permutations.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "article+code",
+          "code": "package main\n\nfunc permute(nums []int) [][]int {\n\tn := len(nums)\n\tans := make([][]int, 0)\n\tcurr := make([]int, 0, n)\n\tvis := make(map[int]int)\n\tvar backtrack func(idx int)\n\tbacktrack = func(idx int) {\n\t\tif len(curr) == n {\n\t\t\tans = append(ans, append([]int{}, curr...))\n\t\t}\n\t\tfor i := 0; i < n; i++ {\n\t\t\tif vis[i] == 0 {\n\t\t\t\tvis[i]++\n\t\t\t\tcurr = append(curr, nums[i])\n\t\t\t\tbacktrack(i + 1)\n\t\t\t\tcurr = curr[:len(curr)-1]\n\t\t\t\tvis[i]--\n\t\t\t}\n\t\t}\n\t}\n\tbacktrack(0)\n\treturn ans\n}\n",
+          "originalCode": "package main\n\nfunc permute(nums []int) [][]int {\n\tn := len(nums)\n\tans := make([][]int, 0)\n\tcurr := make([]int, 0, n)\n\tvis := make(map[int]int)\n\tvar backtrack func(idx int)\n\tbacktrack = func(idx int) {\n\t\tif len(curr) == n {\n\t\t\tans = append(ans, append([]int{}, curr...))\n\t\t}\n\t\tfor i := 0; i < n; i++ {\n\t\t\tif vis[i] == 0 {\n\t\t\t\tvis[i]++\n\t\t\t\tcurr = append(curr, nums[i])\n\t\t\t\tbacktrack(i + 1)\n\t\t\t\tcurr = curr[:len(curr)-1]\n\t\t\t\tvis[i]--\n\t\t\t}\n\t\t}\n\t}\n\tbacktrack(0)\n\treturn ans\n}\n",
+          "reviewedCode": "package main\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement.\nfunc permute(nums []int) [][]int {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.\n\tn := len(nums)\n\tans := make([][]int, 0)\n\tcurr := make([]int, 0, n)\n\tvis := make(map[int]int)\n\tvar backtrack func(idx int)\n\tbacktrack = func(idx int) {\n\t\tif len(curr) == n {\n\t\t\tans = append(ans, append([]int{}, curr...))\n\t\t}\n\t\t// [Reader note] Main pass\n\t\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\t\tfor i := 0; i < n; i++ {\n\t\t\t// [Reader note] Decision point\n\t\t\t// Pay attention here: The search explodes quickly, so clean bookkeeping matters more than clever optimization.\n\t\t\tif vis[i] == 0 {\n\t\t\t\tvis[i]++\n\t\t\t\tcurr = append(curr, nums[i])\n\t\t\t\tbacktrack(i + 1)\n\t\t\t\tcurr = curr[:len(curr)-1]\n\t\t\t\tvis[i]--\n\t\t\t}\n\t\t}\n\t}\n\tbacktrack(0)\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn ans\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 3,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees."
+            },
+            {
+              "line": 13,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 14,
+              "label": "Decision point",
+              "note": "Pay attention here: The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+            },
+            {
+              "line": 24,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It turns the backtracking template into a slightly richer search where used-state and path length both matter.",
+            "whatToNotice": "Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.",
+            "riskPoint": "The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0046.permutations-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0046.Permutations/Solution.go",
+          "localPath": "doocs_leetcode/solution/0000-0099/0046.Permutations/Solution.go",
+          "relativePath": "solution/0000-0099/0046.Permutations/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "func permute(nums []int) (ans [][]int) {\n\tn := len(nums)\n\tt := make([]int, n)\n\tvis := make([]bool, n)\n\tvar dfs func(int)\n\tdfs = func(i int) {\n\t\tif i == n {\n\t\t\tans = append(ans, slices.Clone(t))\n\t\t\treturn\n\t\t}\n\t\tfor j, x := range nums {\n\t\t\tif !vis[j] {\n\t\t\t\tvis[j] = true\n\t\t\t\tt[i] = x\n\t\t\t\tdfs(i + 1)\n\t\t\t\tvis[j] = false\n\t\t\t}\n\t\t}\n\t}\n\tdfs(0)\n\treturn\n}\n",
+          "originalCode": "func permute(nums []int) (ans [][]int) {\n\tn := len(nums)\n\tt := make([]int, n)\n\tvis := make([]bool, n)\n\tvar dfs func(int)\n\tdfs = func(i int) {\n\t\tif i == n {\n\t\t\tans = append(ans, slices.Clone(t))\n\t\t\treturn\n\t\t}\n\t\tfor j, x := range nums {\n\t\t\tif !vis[j] {\n\t\t\t\tvis[j] = true\n\t\t\t\tt[i] = x\n\t\t\t\tdfs(i + 1)\n\t\t\t\tvis[j] = false\n\t\t\t}\n\t\t}\n\t}\n\tdfs(0)\n\treturn\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement.\nfunc permute(nums []int) (ans [][]int) {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.\n\tn := len(nums)\n\tt := make([]int, n)\n\tvis := make([]bool, n)\n\tvar dfs func(int)\n\tdfs = func(i int) {\n\t\tif i == n {\n\t\t\tans = append(ans, slices.Clone(t))\n\t\t\treturn\n\t\t}\n\t\t// [Reader note] Main pass\n\t\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\t\tfor j, x := range nums {\n\t\t\t// [Reader note] Decision point\n\t\t\t// Pay attention here: The search explodes quickly, so clean bookkeeping matters more than clever optimization.\n\t\t\tif !vis[j] {\n\t\t\t\tvis[j] = true\n\t\t\t\tt[i] = x\n\t\t\t\tdfs(i + 1)\n\t\t\t\tvis[j] = false\n\t\t\t}\n\t\t}\n\t}\n\tdfs(0)\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees."
+            },
+            {
+              "line": 11,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 12,
+              "label": "Decision point",
+              "note": "Pay attention here: The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+            },
+            {
+              "line": 21,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It turns the backtracking template into a slightly richer search where used-state and path length both matter.",
+            "whatToNotice": "Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.",
+            "riskPoint": "The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+          }
+        }
+      ]
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0046.permutations-solution.ts",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0046.Permutations/Solution.ts",
+          "localPath": "doocs_leetcode/solution/0000-0099/0046.Permutations/Solution.ts",
+          "relativePath": "solution/0000-0099/0046.Permutations/Solution.ts",
+          "languageId": "typescript",
+          "languageLabel": "TypeScript",
+          "coverageType": "code+explanation",
+          "code": "function permute(nums: number[]): number[][] {\n    const n = nums.length;\n    const ans: number[][] = [];\n    const vis: boolean[] = Array(n).fill(false);\n    const t: number[] = Array(n).fill(0);\n    const dfs = (i: number) => {\n        if (i >= n) {\n            ans.push(t.slice());\n            return;\n        }\n        for (let j = 0; j < n; ++j) {\n            if (!vis[j]) {\n                vis[j] = true;\n                t[i] = nums[j];\n                dfs(i + 1);\n                vis[j] = false;\n            }\n        }\n    };\n    dfs(0);\n    return ans;\n}\n",
+          "originalCode": "function permute(nums: number[]): number[][] {\n    const n = nums.length;\n    const ans: number[][] = [];\n    const vis: boolean[] = Array(n).fill(false);\n    const t: number[] = Array(n).fill(0);\n    const dfs = (i: number) => {\n        if (i >= n) {\n            ans.push(t.slice());\n            return;\n        }\n        for (let j = 0; j < n; ++j) {\n            if (!vis[j]) {\n                vis[j] = true;\n                t[i] = nums[j];\n                dfs(i + 1);\n                vis[j] = false;\n            }\n        }\n    };\n    dfs(0);\n    return ans;\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement.\nfunction permute(nums: number[]): number[][] {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.\n    const n = nums.length;\n    const ans: number[][] = [];\n    const vis: boolean[] = Array(n).fill(false);\n    const t: number[] = Array(n).fill(0);\n    const dfs = (i: number) => {\n        if (i >= n) {\n            ans.push(t.slice());\n            return;\n        }\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (let j = 0; j < n; ++j) {\n            // [Reader note] Decision point\n            // Pay attention here: The search explodes quickly, so clean bookkeeping matters more than clever optimization.\n            if (!vis[j]) {\n                vis[j] = true;\n                t[i] = nums[j];\n                dfs(i + 1);\n                vis[j] = false;\n            }\n        }\n    };\n    dfs(0);\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return ans;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees."
+            },
+            {
+              "line": 11,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 12,
+              "label": "Decision point",
+              "note": "Pay attention here: The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+            },
+            {
+              "line": 21,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It turns the backtracking template into a slightly richer search where used-state and path length both matter.",
+            "whatToNotice": "Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.",
+            "riskPoint": "The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+          }
+        }
+      ]
+    },
+    {
+      "id": "javascript",
+      "label": "JavaScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-javascript-0046-permutations.js",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/javascript/0046-permutations.js",
+          "localPath": "neetcode-gh_leetcode/javascript/0046-permutations.js",
+          "relativePath": "javascript/0046-permutations.js",
+          "languageId": "javascript",
+          "languageLabel": "JavaScript",
+          "coverageType": "article+code",
+          "code": "/**\n * https://leetcode.com/problems/permutations/solution/\n * Time O(N!) | Space(N!)\n * @param {number[]} nums\n * @return {number[][]}\n */\nvar permute = function (nums) {\n    return dfs(nums);\n};\n\nvar dfs = function (nums, permutation = [], permutations = []) {\n    const isBaseCase = nums.length === permutation.length;\n    if (isBaseCase) return permutations.push(permutation.slice());\n\n    for (let i = 0; i < nums.length; i++) {\n        if (permutation.includes(nums[i])) continue;\n\n        backTrack(nums, i, permutation, permutations);\n    }\n\n    return permutations;\n};\n\nconst backTrack = (nums, i, permutation, permutations) => {\n    permutation.push(nums[i]);\n    dfs(nums, permutation, permutations);\n    permutation.pop();\n};\n\n/**\n * https://leetcode.com/problems/permutations/solution/\n * Time O(N!) | Space(N!)\n * @param {number[]} nums\n * @return {number[][]}\n */\nvar permute = function (nums) {\n    return bfs(nums);\n};\n\nconst bfs = (nums, levels = [[]], permutations = []) => {\n    for (const num of nums) {\n        for (let i = levels.length - 1; 0 <= i; i--) {\n            const previousLevel = levels.shift();\n\n            for (let index = 0; index < previousLevel.length + 1; index++) {\n                const level = reArrangeSet(previousLevel, num, index);\n\n                const isBaseCase = level.length === nums.length;\n                if (isBaseCase) {\n                    permutations.push(level);\n                    continue;\n                }\n\n                levels.push(level);\n            }\n        }\n    }\n\n    return permutations;\n};\n\nconst reArrangeSet = (previousLevel, num, index) => {\n    const [before, after] = [\n        previousLevel.slice(0, index),\n        previousLevel.slice(index),\n    ];\n\n    return [...before, num, ...after];\n};\n",
+          "originalCode": "/**\n * https://leetcode.com/problems/permutations/solution/\n * Time O(N!) | Space(N!)\n * @param {number[]} nums\n * @return {number[][]}\n */\nvar permute = function (nums) {\n    return dfs(nums);\n};\n\nvar dfs = function (nums, permutation = [], permutations = []) {\n    const isBaseCase = nums.length === permutation.length;\n    if (isBaseCase) return permutations.push(permutation.slice());\n\n    for (let i = 0; i < nums.length; i++) {\n        if (permutation.includes(nums[i])) continue;\n\n        backTrack(nums, i, permutation, permutations);\n    }\n\n    return permutations;\n};\n\nconst backTrack = (nums, i, permutation, permutations) => {\n    permutation.push(nums[i]);\n    dfs(nums, permutation, permutations);\n    permutation.pop();\n};\n\n/**\n * https://leetcode.com/problems/permutations/solution/\n * Time O(N!) | Space(N!)\n * @param {number[]} nums\n * @return {number[][]}\n */\nvar permute = function (nums) {\n    return bfs(nums);\n};\n\nconst bfs = (nums, levels = [[]], permutations = []) => {\n    for (const num of nums) {\n        for (let i = levels.length - 1; 0 <= i; i--) {\n            const previousLevel = levels.shift();\n\n            for (let index = 0; index < previousLevel.length + 1; index++) {\n                const level = reArrangeSet(previousLevel, num, index);\n\n                const isBaseCase = level.length === nums.length;\n                if (isBaseCase) {\n                    permutations.push(level);\n                    continue;\n                }\n\n                levels.push(level);\n            }\n        }\n    }\n\n    return permutations;\n};\n\nconst reArrangeSet = (previousLevel, num, index) => {\n    const [before, after] = [\n        previousLevel.slice(0, index),\n        previousLevel.slice(index),\n    ];\n\n    return [...before, num, ...after];\n};\n",
+          "reviewedCode": "/**\n * https://leetcode.com/problems/permutations/solution/\n * Time O(N!) | Space(N!)\n * @param {number[]} nums\n * @return {number[][]}\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement.\nvar permute = function (nums) {\n    return dfs(nums);\n};\n\n// [Reader note] State setup\n// This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.\nvar dfs = function (nums, permutation = [], permutations = []) {\n    const isBaseCase = nums.length === permutation.length;\n    if (isBaseCase) return permutations.push(permutation.slice());\n\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (let i = 0; i < nums.length; i++) {\n        // [Reader note] Decision point\n        // Pay attention here: The search explodes quickly, so clean bookkeeping matters more than clever optimization.\n        if (permutation.includes(nums[i])) continue;\n\n        backTrack(nums, i, permutation, permutations);\n    }\n\n    return permutations;\n};\n\nconst backTrack = (nums, i, permutation, permutations) => {\n    permutation.push(nums[i]);\n    dfs(nums, permutation, permutations);\n    permutation.pop();\n};\n\n/**\n * https://leetcode.com/problems/permutations/solution/\n * Time O(N!) | Space(N!)\n * @param {number[]} nums\n * @return {number[][]}\n */\nvar permute = function (nums) {\n    return bfs(nums);\n};\n\nconst bfs = (nums, levels = [[]], permutations = []) => {\n    for (const num of nums) {\n        for (let i = levels.length - 1; 0 <= i; i--) {\n            const previousLevel = levels.shift();\n\n            for (let index = 0; index < previousLevel.length + 1; index++) {\n                const level = reArrangeSet(previousLevel, num, index);\n\n                const isBaseCase = level.length === nums.length;\n                if (isBaseCase) {\n                    permutations.push(level);\n                    continue;\n                }\n\n                levels.push(level);\n            }\n        }\n    }\n\n    return permutations;\n};\n\nconst reArrangeSet = (previousLevel, num, index) => {\n    const [before, after] = [\n        previousLevel.slice(0, index),\n        previousLevel.slice(index),\n    ];\n\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return [...before, num, ...after];\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time O(N!) | Space(N!)"
+          ],
+          "annotations": [
+            {
+              "line": 7,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement."
+            },
+            {
+              "line": 11,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees."
+            },
+            {
+              "line": 15,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 16,
+              "label": "Decision point",
+              "note": "Pay attention here: The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+            },
+            {
+              "line": 68,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It turns the backtracking template into a slightly richer search where used-state and path length both matter.",
+            "whatToNotice": "Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.",
+            "riskPoint": "The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+          }
+        }
+      ]
+    },
+    {
+      "id": "csharp",
+      "label": "C#",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-csharp-0046-permutations.cs",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/csharp/0046-permutations.cs",
+          "localPath": "neetcode-gh_leetcode/csharp/0046-permutations.cs",
+          "relativePath": "csharp/0046-permutations.cs",
+          "languageId": "csharp",
+          "languageLabel": "C#",
+          "coverageType": "article+code",
+          "code": "public class Solution\n{\n    public IList<IList<int>> Permute(int[] nums)\n    {\n        var result = new List<IList<int>>();\n        PermuteRecurse(result, nums, 0);\n        return result;\n    }\n\n    private void PermuteRecurse(List<IList<int>> res, int[] arr, int start)\n    {\n        if (start == arr.Length)\n        {\n            var list = arr.Select(t => (t)).ToList();\n            res.Add(list);\n            return;\n        }\n\n        for (var i = start; i < arr.Length; i++)\n        {\n            (arr[start], arr[i]) = (arr[i], arr[start]);\n            PermuteRecurse(res, arr, start + 1);\n            (arr[start], arr[i]) = (arr[i], arr[start]);\n        }\n    }\n}",
+          "originalCode": "public class Solution\n{\n    public IList<IList<int>> Permute(int[] nums)\n    {\n        var result = new List<IList<int>>();\n        PermuteRecurse(result, nums, 0);\n        return result;\n    }\n\n    private void PermuteRecurse(List<IList<int>> res, int[] arr, int start)\n    {\n        if (start == arr.Length)\n        {\n            var list = arr.Select(t => (t)).ToList();\n            res.Add(list);\n            return;\n        }\n\n        for (var i = start; i < arr.Length; i++)\n        {\n            (arr[start], arr[i]) = (arr[i], arr[start]);\n            PermuteRecurse(res, arr, start + 1);\n            (arr[start], arr[i]) = (arr[i], arr[start]);\n        }\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement.\npublic class Solution\n{\n    public IList<IList<int>> Permute(int[] nums)\n    {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.\n        var result = new List<IList<int>>();\n        PermuteRecurse(result, nums, 0);\n        return result;\n    }\n\n    private void PermuteRecurse(List<IList<int>> res, int[] arr, int start)\n    {\n        if (start == arr.Length)\n        {\n            var list = arr.Select(t => (t)).ToList();\n            res.Add(list);\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return;\n        }\n\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (var i = start; i < arr.Length; i++)\n        {\n            (arr[start], arr[i]) = (arr[i], arr[start]);\n            PermuteRecurse(res, arr, start + 1);\n            (arr[start], arr[i]) = (arr[i], arr[start]);\n        }\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement."
+            },
+            {
+              "line": 5,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees."
+            },
+            {
+              "line": 19,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 16,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It turns the backtracking template into a slightly richer search where used-state and path length both matter.",
+            "whatToNotice": "Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.",
+            "riskPoint": "The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+          }
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "label": "C",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-c-0046-permutations.c",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/c/0046-permutations.c",
+          "localPath": "neetcode-gh_leetcode/c/0046-permutations.c",
+          "relativePath": "c/0046-permutations.c",
+          "languageId": "c",
+          "languageLabel": "C",
+          "coverageType": "article+code",
+          "code": "void swap(int* a, int* b) {\n    int temp = *a;\n    *a = *b;\n    *b = temp;\n}\n\nvoid backtrack(int* nums, int numsSize, int** result, int* returnSize, int* current, int index) {\n    if (index == numsSize) {\n        result[*returnSize] = (int*)malloc(numsSize * sizeof(int));\n        for (int i = 0; i < numsSize; i++) {\n            result[*returnSize][i] = current[i];\n        }\n        (*returnSize)++;\n        return;\n    }\n\n    for (int i = index; i < numsSize; i++) {\n        swap(&nums[i], &nums[index]);\n        current[index] = nums[index];\n        backtrack(nums, numsSize, result, returnSize, current, index + 1);\n        swap(&nums[i], &nums[index]);\n    }\n}\n\nint** permute(int* nums, int numsSize, int* returnSize, int** returnColumnSizes) {\n    int totalPermutations = 1;\n    for (int i = 1; i <= numsSize; i++) {\n        totalPermutations *= i;\n    }\n\n    int** result = (int**)malloc(totalPermutations * sizeof(int*));\n    int* current = (int*)malloc(numsSize * sizeof(int));\n    *returnSize = 0;\n    *returnColumnSizes = (int*)malloc(totalPermutations * sizeof(int));\n\n    backtrack(nums, numsSize, result, returnSize, current, 0);\n\n    for (int i = 0; i < totalPermutations; i++) {\n        (*returnColumnSizes)[i] = numsSize;\n    }\n\n    free(current);\n    return result;\n}\n",
+          "originalCode": "void swap(int* a, int* b) {\n    int temp = *a;\n    *a = *b;\n    *b = temp;\n}\n\nvoid backtrack(int* nums, int numsSize, int** result, int* returnSize, int* current, int index) {\n    if (index == numsSize) {\n        result[*returnSize] = (int*)malloc(numsSize * sizeof(int));\n        for (int i = 0; i < numsSize; i++) {\n            result[*returnSize][i] = current[i];\n        }\n        (*returnSize)++;\n        return;\n    }\n\n    for (int i = index; i < numsSize; i++) {\n        swap(&nums[i], &nums[index]);\n        current[index] = nums[index];\n        backtrack(nums, numsSize, result, returnSize, current, index + 1);\n        swap(&nums[i], &nums[index]);\n    }\n}\n\nint** permute(int* nums, int numsSize, int* returnSize, int** returnColumnSizes) {\n    int totalPermutations = 1;\n    for (int i = 1; i <= numsSize; i++) {\n        totalPermutations *= i;\n    }\n\n    int** result = (int**)malloc(totalPermutations * sizeof(int*));\n    int* current = (int*)malloc(numsSize * sizeof(int));\n    *returnSize = 0;\n    *returnColumnSizes = (int*)malloc(totalPermutations * sizeof(int));\n\n    backtrack(nums, numsSize, result, returnSize, current, 0);\n\n    for (int i = 0; i < totalPermutations; i++) {\n        (*returnColumnSizes)[i] = numsSize;\n    }\n\n    free(current);\n    return result;\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement.\nvoid swap(int* a, int* b) {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.\n    int temp = *a;\n    *a = *b;\n    *b = temp;\n}\n\nvoid backtrack(int* nums, int numsSize, int** result, int* returnSize, int* current, int index) {\n    if (index == numsSize) {\n        result[*returnSize] = (int*)malloc(numsSize * sizeof(int));\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = 0; i < numsSize; i++) {\n            result[*returnSize][i] = current[i];\n        }\n        (*returnSize)++;\n        return;\n    }\n\n    for (int i = index; i < numsSize; i++) {\n        swap(&nums[i], &nums[index]);\n        current[index] = nums[index];\n        backtrack(nums, numsSize, result, returnSize, current, index + 1);\n        swap(&nums[i], &nums[index]);\n    }\n}\n\nint** permute(int* nums, int numsSize, int* returnSize, int** returnColumnSizes) {\n    int totalPermutations = 1;\n    for (int i = 1; i <= numsSize; i++) {\n        totalPermutations *= i;\n    }\n\n    int** result = (int**)malloc(totalPermutations * sizeof(int*));\n    int* current = (int*)malloc(numsSize * sizeof(int));\n    *returnSize = 0;\n    *returnColumnSizes = (int*)malloc(totalPermutations * sizeof(int));\n\n    backtrack(nums, numsSize, result, returnSize, current, 0);\n\n    for (int i = 0; i < totalPermutations; i++) {\n        (*returnColumnSizes)[i] = numsSize;\n    }\n\n    free(current);\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return result;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each step chooses the next unused item for the growing arrangement."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees."
+            },
+            {
+              "line": 10,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 43,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It turns the backtracking template into a slightly richer search where used-state and path length both matter.",
+            "whatToNotice": "Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.",
+            "riskPoint": "The search explodes quickly, so clean bookkeeping matters more than clever optimization."
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "neetcode-gh_leetcode-articles-permutations.md",
+      "repository": "neetcode-gh_leetcode",
+      "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+      "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/articles/permutations.md",
+      "localPath": "neetcode-gh_leetcode/articles/permutations.md",
+      "relativePath": "articles/permutations.md",
+      "title": "permutations",
+      "excerpt": "## Prerequisites Before attempting this problem, you should be comfortable with: - **Recursion** - Building permutations by reducing to smaller subproblems - **Backtracking** - Exploring choices, then undoing them to try alternatives - **Arrays and List Operations** - Inserting elements at various positions and swapping - **Bit Manipulation (Optional)** - Using bitmasks to efficiently track used elements --- ## 1. R..."
+    },
+    {
+      "id": "neetcode-gh_leetcode-hints-permutations.md",
+      "repository": "neetcode-gh_leetcode",
+      "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+      "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/hints/permutations.md",
+      "localPath": "neetcode-gh_leetcode/hints/permutations.md",
+      "relativePath": "hints/permutations.md",
+      "title": "permutations",
+      "excerpt": "<br> <details class=\"hint-accordion\"> <summary>Recommended Time & Space Complexity</summary> <p> You should aim for a solution with <code>O(n * n!)</code> time and <code>O(n)</code> space, where <code>n</code> is the size of the input array. </p> </details> <br> <details class=\"hint-accordion\"> <summary>Hint 1</summary> <p> A permutation is the same as the array but with the numbers arranged in a different order. Th..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0000-0099-0046.permutations-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0046.Permutations/README.md",
+      "localPath": "doocs_leetcode/solution/0000-0099/0046.Permutations/README.md",
+      "relativePath": "solution/0000-0099/0046.Permutations/README.md",
+      "title": "[46. \u5168\u6392\u5217](https://leetcode.cn/problems/permutations)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/0000-0099/0046.Permutations/README.md tags: - \u6570\u7ec4 - \u56de\u6eaf --- <!-- problem:start --> # [46. \u5168\u6392\u5217](https://leetcode.cn/problems/permutations) [English Version](/solution/0000-0099/0046.Permutations/README_EN.md) ## \u9898\u76ee\u63cf\u8ff0 <!-- description:start --> <p>\u7ed9\u5b9a\u4e00\u4e2a\u4e0d\u542b\u91cd\u590d\u6570\u5b57\u7684\u6570\u7ec4 <code>nums</code> \uff0c\u8fd4\u56de\u5176 <em>\u6240\u6709\u53ef\u80fd\u7684\u5168\u6392\u5217</em> \u3002\u4f60\u53ef\u4ee5 <strong>\u6309\u4efb\u610f\u987a\u5e8f</str..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0000-0099-0046.permutations-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0046.Permutations/README_EN.md",
+      "localPath": "doocs_leetcode/solution/0000-0099/0046.Permutations/README_EN.md",
+      "relativePath": "solution/0000-0099/0046.Permutations/README_EN.md",
+      "title": "[46. Permutations](https://leetcode.com/problems/permutations)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/0000-0099/0046.Permutations/README_EN.md tags: - Array - Backtracking --- <!-- problem:start --> # [46. Permutations](https://leetcode.com/problems/permutations) [\u4e2d\u6587\u6587\u6863](/solution/0000-0099/0046.Permutations/README.md) ## Description <!-- description:start --> <p>Given an array <code>nums</code> of distinct integers,..."
+    },
+    {
+      "id": "wisdompeak_leetcode-math-046.permutations-readme.md",
+      "repository": "wisdompeak_LeetCode",
+      "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+      "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/Math/046.Permutations/Readme.md",
+      "localPath": "wisdompeak_LeetCode/Math/046.Permutations/Readme.md",
+      "relativePath": "Math/046.Permutations/Readme.md",
+      "title": "046.Permutations",
+      "excerpt": "### 046.Permutations \u8003\u8651\u5c06\u7b2cn\u4e2a\u6570\u5b57\uff0c\u63d2\u5165\u5230\u5df2\u6709\u7684n-1\u4e2a\u6570\u5b57\u7ec4\u6210\u7684\u5168\u6392\u5217\u4e2d\u53bb\uff0c\u6ce8\u610f\u6709n\u4e2a\u4f4d\u7f6e\u7684\u63d2\u7a7a\u3002 [Leetcode Link](https://leetcode.com/problems/permutations)"
+    }
+  ]
+}

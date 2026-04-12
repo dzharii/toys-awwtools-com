@@ -1,0 +1,804 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "generate-parentheses",
+  "problemTitle": "Generate Parentheses",
+  "problemNumber": 22,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go",
+      "typescript",
+      "javascript",
+      "csharp",
+      "c"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go",
+      "TypeScript",
+      "JavaScript",
+      "C#",
+      "C"
+    ],
+    "solutionCount": 14,
+    "writeupCount": 4,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-python-generate-parentheses.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/generate-parentheses.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/generate-parentheses.py",
+          "relativePath": "Python/generate-parentheses.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(4^n / n^(3/2)) ~= Catalan numbers\n# Space: O(n)\n\n# iterative solution\nclass Solution(object):\n    def generateParenthesis(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: List[str]\n        \"\"\"\n        result, curr = [], []\n        stk = [(1, (n, n))]\n        while stk:\n            step, args = stk.pop()\n            if step == 1:\n                left, right = args\n                if left == 0 and right == 0:\n                    result.append(\"\".join(curr))\n                if left < right:\n                    stk.append((3, tuple()))\n                    stk.append((1, (left, right-1)))\n                    stk.append((2, (')')))\n                if left > 0:\n                    stk.append((3, tuple()))\n                    stk.append((1, (left-1, right)))\n                    stk.append((2, ('(')))\n            elif step == 2:\n                curr.append(args[0])\n            elif step == 3:\n                curr.pop()\n        return result\n\n\n# Time:  O(4^n / n^(3/2)) ~= Catalan numbers\n# Space: O(n)\n# recursive solution\nclass Solution2(object):\n    def generateParenthesis(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: List[str]\n        \"\"\"\n        def generateParenthesisRecu(left, right, curr, result):\n            if left == 0 and right == 0:\n                result.append(\"\".join(curr))\n            if left > 0:\n                curr.append('(')\n                generateParenthesisRecu(left-1, right, curr, result)\n                curr.pop()\n            if left < right:\n                curr.append(')')\n                generateParenthesisRecu(left, right-1, curr, result)\n                curr.pop()\n\n        result = []\n        generateParenthesisRecu(n, n, [], result)\n        return result\n",
+          "originalCode": "# Time:  O(4^n / n^(3/2)) ~= Catalan numbers\n# Space: O(n)\n\n# iterative solution\nclass Solution(object):\n    def generateParenthesis(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: List[str]\n        \"\"\"\n        result, curr = [], []\n        stk = [(1, (n, n))]\n        while stk:\n            step, args = stk.pop()\n            if step == 1:\n                left, right = args\n                if left == 0 and right == 0:\n                    result.append(\"\".join(curr))\n                if left < right:\n                    stk.append((3, tuple()))\n                    stk.append((1, (left, right-1)))\n                    stk.append((2, (')')))\n                if left > 0:\n                    stk.append((3, tuple()))\n                    stk.append((1, (left-1, right)))\n                    stk.append((2, ('(')))\n            elif step == 2:\n                curr.append(args[0])\n            elif step == 3:\n                curr.pop()\n        return result\n\n\n# Time:  O(4^n / n^(3/2)) ~= Catalan numbers\n# Space: O(n)\n# recursive solution\nclass Solution2(object):\n    def generateParenthesis(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: List[str]\n        \"\"\"\n        def generateParenthesisRecu(left, right, curr, result):\n            if left == 0 and right == 0:\n                result.append(\"\".join(curr))\n            if left > 0:\n                curr.append('(')\n                generateParenthesisRecu(left-1, right, curr, result)\n                curr.pop()\n            if left < right:\n                curr.append(')')\n                generateParenthesisRecu(left, right-1, curr, result)\n                curr.pop()\n\n        result = []\n        generateParenthesisRecu(n, n, [], result)\n        return result\n",
+          "reviewedCode": "# Time:  O(4^n / n^(3/2)) ~= Catalan numbers\n# Space: O(n)\n\n# iterative solution\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string.\nclass Solution(object):\n    def generateParenthesis(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: List[str]\n        \"\"\"\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.\n        result, curr = [], []\n        stk = [(1, (n, n))]\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while stk:\n            step, args = stk.pop()\n            # [Reader note] Decision point\n            # Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later.\n            if step == 1:\n                left, right = args\n                if left == 0 and right == 0:\n                    result.append(\"\".join(curr))\n                if left < right:\n                    stk.append((3, tuple()))\n                    stk.append((1, (left, right-1)))\n                    stk.append((2, (')')))\n                if left > 0:\n                    stk.append((3, tuple()))\n                    stk.append((1, (left-1, right)))\n                    stk.append((2, ('(')))\n            elif step == 2:\n                curr.append(args[0])\n            elif step == 3:\n                curr.pop()\n        return result\n\n\n# Time:  O(4^n / n^(3/2)) ~= Catalan numbers\n# Space: O(n)\n# recursive solution\nclass Solution2(object):\n    def generateParenthesis(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: List[str]\n        \"\"\"\n        def generateParenthesisRecu(left, right, curr, result):\n            if left == 0 and right == 0:\n                result.append(\"\".join(curr))\n            if left > 0:\n                curr.append('(')\n                generateParenthesisRecu(left-1, right, curr, result)\n                curr.pop()\n            if left < right:\n                curr.append(')')\n                generateParenthesisRecu(left, right-1, curr, result)\n                curr.pop()\n\n        result = []\n        generateParenthesisRecu(n, n, [], result)\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return result",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(4^n / n^(3/2)) ~= Catalan numbers",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 5,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string."
+            },
+            {
+              "line": 11,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search."
+            },
+            {
+              "line": 13,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 15,
+              "label": "Decision point",
+              "note": "Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+            },
+            {
+              "line": 57,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a classic constraint-building problem and a very good next step after simple combination generation.",
+            "whatToNotice": "State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.",
+            "riskPoint": "The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0022.generate-parentheses-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0022.Generate%20Parentheses/Solution.py",
+          "localPath": "doocs_leetcode/solution/0000-0099/0022.Generate Parentheses/Solution.py",
+          "relativePath": "solution/0000-0099/0022.Generate Parentheses/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "class Solution:\n    def generateParenthesis(self, n: int) -> List[str]:\n        def dfs(l, r, t):\n            if l > n or r > n or l < r:\n                return\n            if l == n and r == n:\n                ans.append(t)\n                return\n            dfs(l + 1, r, t + '(')\n            dfs(l, r + 1, t + ')')\n\n        ans = []\n        dfs(0, 0, '')\n        return ans\n",
+          "originalCode": "class Solution:\n    def generateParenthesis(self, n: int) -> List[str]:\n        def dfs(l, r, t):\n            if l > n or r > n or l < r:\n                return\n            if l == n and r == n:\n                ans.append(t)\n                return\n            dfs(l + 1, r, t + '(')\n            dfs(l, r + 1, t + ')')\n\n        ans = []\n        dfs(0, 0, '')\n        return ans\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string.\nclass Solution:\n    def generateParenthesis(self, n: int) -> List[str]:\n        def dfs(l, r, t):\n            # [Reader note] Decision point\n            # Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later.\n            if l > n or r > n or l < r:\n                return\n            # [Reader note] State setup\n            # This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.\n            if l == n and r == n:\n                ans.append(t)\n                return\n            dfs(l + 1, r, t + '(')\n            dfs(l, r + 1, t + ')')\n\n        ans = []\n        dfs(0, 0, '')\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return ans",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string."
+            },
+            {
+              "line": 6,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search."
+            },
+            {
+              "line": 4,
+              "label": "Decision point",
+              "note": "Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+            },
+            {
+              "line": 14,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a classic constraint-building problem and a very good next step after simple combination generation.",
+            "whatToNotice": "State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.",
+            "riskPoint": "The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 4,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-cpp-0022-generate-parentheses.cpp",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/cpp/0022-generate-parentheses.cpp",
+          "localPath": "neetcode-gh_leetcode/cpp/0022-generate-parentheses.cpp",
+          "relativePath": "cpp/0022-generate-parentheses.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "article+code",
+          "code": "/*\n    Given n pairs of parentheses, generate all combos of well-formed parentheses\n    Ex. n = 3 -> [\"((()))\",\"(()())\",\"(())()\",\"()(())\",\"()()()\"], n = 1 -> [\"()\"]\n\n    Backtracking, keep valid, favor trying opens, then try closes if still valid\n\n    Time: O(2^n)\n    Space: O(n)\n*/\n\nclass Solution {\npublic:\n    vector<string> generateParenthesis(int n) {\n        vector<string> result;\n        generate(n, 0, 0, \"\", result);\n        return result;\n    }\nprivate:\n    void generate(int n, int open, int close, string str, vector<string>& result) {\n        if (open == n && close == n) {\n            result.push_back(str);\n            return;\n        }\n        if (open < n) {\n            generate(n, open + 1, close, str + '(', result);\n        }\n        if (open > close) {\n            generate(n, open, close + 1, str + ')', result);\n        }\n    }\n};\n\n/*\n    Using a single stack without recursion\n\n    Time: O(2^n)\n    Space: O(n)\n*/\nclass Solution {\npublic:\n    vector<string> generateParenthesis(int n) {\n        stack<vector<string>> stk;\n        vector<string> result;\n        stk.push({\"(\", \"1\", \"0\"}); // {string, left_count, right_count}\n\n        while (!stk.empty()) {\n            for (int i = 0; i < stk.size(); i++) {\n                vector<string> item = stk.top();\n                stk.pop();\n                int left = stoi(item[1]), right = stoi(item[2]);\n                if (left == n && right == n) {\n                    result.push_back(item[0]);\n                    continue;\n                }\n                if (left < n) {\n                    stk.push({item[0] + \"(\", to_string(++left), to_string(right)});\n                    left--; // reverse left count\n                }\n                if (left > right) {\n                    stk.push({item[0] + \")\", to_string(left), to_string(++right)});\n                }\n            }\n        }\n        return result;\n    }\n};\n",
+          "originalCode": "/*\n    Given n pairs of parentheses, generate all combos of well-formed parentheses\n    Ex. n = 3 -> [\"((()))\",\"(()())\",\"(())()\",\"()(())\",\"()()()\"], n = 1 -> [\"()\"]\n\n    Backtracking, keep valid, favor trying opens, then try closes if still valid\n\n    Time: O(2^n)\n    Space: O(n)\n*/\n\nclass Solution {\npublic:\n    vector<string> generateParenthesis(int n) {\n        vector<string> result;\n        generate(n, 0, 0, \"\", result);\n        return result;\n    }\nprivate:\n    void generate(int n, int open, int close, string str, vector<string>& result) {\n        if (open == n && close == n) {\n            result.push_back(str);\n            return;\n        }\n        if (open < n) {\n            generate(n, open + 1, close, str + '(', result);\n        }\n        if (open > close) {\n            generate(n, open, close + 1, str + ')', result);\n        }\n    }\n};\n\n/*\n    Using a single stack without recursion\n\n    Time: O(2^n)\n    Space: O(n)\n*/\nclass Solution {\npublic:\n    vector<string> generateParenthesis(int n) {\n        stack<vector<string>> stk;\n        vector<string> result;\n        stk.push({\"(\", \"1\", \"0\"}); // {string, left_count, right_count}\n\n        while (!stk.empty()) {\n            for (int i = 0; i < stk.size(); i++) {\n                vector<string> item = stk.top();\n                stk.pop();\n                int left = stoi(item[1]), right = stoi(item[2]);\n                if (left == n && right == n) {\n                    result.push_back(item[0]);\n                    continue;\n                }\n                if (left < n) {\n                    stk.push({item[0] + \"(\", to_string(++left), to_string(right)});\n                    left--; // reverse left count\n                }\n                if (left > right) {\n                    stk.push({item[0] + \")\", to_string(left), to_string(++right)});\n                }\n            }\n        }\n        return result;\n    }\n};\n",
+          "reviewedCode": "/*\n    Given n pairs of parentheses, generate all combos of well-formed parentheses\n    Ex. n = 3 -> [\"((()))\",\"(()())\",\"(())()\",\"()(())\",\"()()()\"], n = 1 -> [\"()\"]\n\n    Backtracking, keep valid, favor trying opens, then try closes if still valid\n\n    Time: O(2^n)\n    Space: O(n)\n*/\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string.\nclass Solution {\npublic:\n    vector<string> generateParenthesis(int n) {\n        vector<string> result;\n        generate(n, 0, 0, \"\", result);\n        return result;\n    }\nprivate:\n    void generate(int n, int open, int close, string str, vector<string>& result) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.\n        if (open == n && close == n) {\n            result.push_back(str);\n            return;\n        }\n        if (open < n) {\n            generate(n, open + 1, close, str + '(', result);\n        }\n        if (open > close) {\n            generate(n, open, close + 1, str + ')', result);\n        }\n    }\n};\n\n/*\n    Using a single stack without recursion\n\n    Time: O(2^n)\n    Space: O(n)\n*/\nclass Solution {\npublic:\n    vector<string> generateParenthesis(int n) {\n        stack<vector<string>> stk;\n        vector<string> result;\n        stk.push({\"(\", \"1\", \"0\"}); // {string, left_count, right_count}\n\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while (!stk.empty()) {\n            for (int i = 0; i < stk.size(); i++) {\n                vector<string> item = stk.top();\n                stk.pop();\n                int left = stoi(item[1]), right = stoi(item[2]);\n                // [Reader note] Decision point\n                // Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later.\n                if (left == n && right == n) {\n                    result.push_back(item[0]);\n                    continue;\n                }\n                if (left < n) {\n                    stk.push({item[0] + \"(\", to_string(++left), to_string(right)});\n                    left--; // reverse left count\n                }\n                if (left > right) {\n                    stk.push({item[0] + \")\", to_string(left), to_string(++right)});\n                }\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return result;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time: O(2^n)",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 11,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string."
+            },
+            {
+              "line": 20,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search."
+            },
+            {
+              "line": 46,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 51,
+              "label": "Decision point",
+              "note": "Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+            },
+            {
+              "line": 64,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a classic constraint-building problem and a very good next step after simple combination generation.",
+            "whatToNotice": "State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.",
+            "riskPoint": "The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+          }
+        },
+        {
+          "id": "kamyu104_leetcode-solutions-c-generate-parentheses.cpp",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/C%2B%2B/generate-parentheses.cpp",
+          "localPath": "kamyu104_LeetCode-Solutions/C++/generate-parentheses.cpp",
+          "relativePath": "C++/generate-parentheses.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Time:  O(4^n / n^(3/2)) ~= Catalan numbers\n// Space: O(n)\n\n// iterative solution\nclass Solution {\npublic:\n    vector<string> generateParenthesis(int n) {\n        vector<string> result;\n        string curr;\n        vector<tuple<int, int, int, char>> stk = {{1, n, n, 0}};\n        while (!stk.empty()) {\n            const auto [step, left, right, c] = move(stk.back()); stk.pop_back();\n            if (step == 1) {\n                if (left == 0 && right == 0) {\n                    result.emplace_back(curr);\n                }\n                if (left < right) {\n                    stk.emplace_back(3, 0, 0, 0);\n                    stk.emplace_back(1, left, right - 1, 0);\n                    stk.emplace_back(2, 0, 0, ')');\n                }\n                if (left > 0) {\n                    stk.emplace_back(3, 0, 0, 0);\n                    stk.emplace_back(1, left - 1, right, 0);\n                    stk.emplace_back(2, 0, 0, '(');\n                }\n            } else if (step == 2) {\n                curr.push_back(c);\n            } else if (step == 3) {\n                curr.pop_back();\n            }\n        }\n        return result;\n    }\n};\n\n// Time:  O(4^n / n^(3/2)) ~= Catalan numbers\n// Space: O(n)\n// recursive solution\nclass Solution2 {\npublic:\n    vector<string> generateParenthesis(int n) {\n        vector<string> result;\n        string curr;\n        generateParenthesisRecu(n, n, &curr, &result);\n        return result;\n    }\n\nprivate:\n    void generateParenthesisRecu(int left, int right, string *curr, vector<string> *result) {\n        if (left == 0 && right == 0) {\n            result->emplace_back(*curr);\n        }\n        if (left > 0) {\n            curr->push_back('(');\n            generateParenthesisRecu(left - 1, right, curr, result);\n            curr->pop_back();\n        }\n        if (left < right) {\n            curr->push_back(')');\n            generateParenthesisRecu(left, right - 1, curr, result);\n            curr->pop_back();\n        }\n    }\n};\n",
+          "originalCode": "// Time:  O(4^n / n^(3/2)) ~= Catalan numbers\n// Space: O(n)\n\n// iterative solution\nclass Solution {\npublic:\n    vector<string> generateParenthesis(int n) {\n        vector<string> result;\n        string curr;\n        vector<tuple<int, int, int, char>> stk = {{1, n, n, 0}};\n        while (!stk.empty()) {\n            const auto [step, left, right, c] = move(stk.back()); stk.pop_back();\n            if (step == 1) {\n                if (left == 0 && right == 0) {\n                    result.emplace_back(curr);\n                }\n                if (left < right) {\n                    stk.emplace_back(3, 0, 0, 0);\n                    stk.emplace_back(1, left, right - 1, 0);\n                    stk.emplace_back(2, 0, 0, ')');\n                }\n                if (left > 0) {\n                    stk.emplace_back(3, 0, 0, 0);\n                    stk.emplace_back(1, left - 1, right, 0);\n                    stk.emplace_back(2, 0, 0, '(');\n                }\n            } else if (step == 2) {\n                curr.push_back(c);\n            } else if (step == 3) {\n                curr.pop_back();\n            }\n        }\n        return result;\n    }\n};\n\n// Time:  O(4^n / n^(3/2)) ~= Catalan numbers\n// Space: O(n)\n// recursive solution\nclass Solution2 {\npublic:\n    vector<string> generateParenthesis(int n) {\n        vector<string> result;\n        string curr;\n        generateParenthesisRecu(n, n, &curr, &result);\n        return result;\n    }\n\nprivate:\n    void generateParenthesisRecu(int left, int right, string *curr, vector<string> *result) {\n        if (left == 0 && right == 0) {\n            result->emplace_back(*curr);\n        }\n        if (left > 0) {\n            curr->push_back('(');\n            generateParenthesisRecu(left - 1, right, curr, result);\n            curr->pop_back();\n        }\n        if (left < right) {\n            curr->push_back(')');\n            generateParenthesisRecu(left, right - 1, curr, result);\n            curr->pop_back();\n        }\n    }\n};\n",
+          "reviewedCode": "// Time:  O(4^n / n^(3/2)) ~= Catalan numbers\n// Space: O(n)\n\n// iterative solution\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string.\nclass Solution {\npublic:\n    vector<string> generateParenthesis(int n) {\n        vector<string> result;\n        string curr;\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.\n        vector<tuple<int, int, int, char>> stk = {{1, n, n, 0}};\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while (!stk.empty()) {\n            const auto [step, left, right, c] = move(stk.back()); stk.pop_back();\n            // [Reader note] Decision point\n            // Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later.\n            if (step == 1) {\n                if (left == 0 && right == 0) {\n                    result.emplace_back(curr);\n                }\n                if (left < right) {\n                    stk.emplace_back(3, 0, 0, 0);\n                    stk.emplace_back(1, left, right - 1, 0);\n                    stk.emplace_back(2, 0, 0, ')');\n                }\n                if (left > 0) {\n                    stk.emplace_back(3, 0, 0, 0);\n                    stk.emplace_back(1, left - 1, right, 0);\n                    stk.emplace_back(2, 0, 0, '(');\n                }\n            } else if (step == 2) {\n                curr.push_back(c);\n            } else if (step == 3) {\n                curr.pop_back();\n            }\n        }\n        return result;\n    }\n};\n\n// Time:  O(4^n / n^(3/2)) ~= Catalan numbers\n// Space: O(n)\n// recursive solution\nclass Solution2 {\npublic:\n    vector<string> generateParenthesis(int n) {\n        vector<string> result;\n        string curr;\n        generateParenthesisRecu(n, n, &curr, &result);\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return result;\n    }\n\nprivate:\n    void generateParenthesisRecu(int left, int right, string *curr, vector<string> *result) {\n        if (left == 0 && right == 0) {\n            result->emplace_back(*curr);\n        }\n        if (left > 0) {\n            curr->push_back('(');\n            generateParenthesisRecu(left - 1, right, curr, result);\n            curr->pop_back();\n        }\n        if (left < right) {\n            curr->push_back(')');\n            generateParenthesisRecu(left, right - 1, curr, result);\n            curr->pop_back();\n        }\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(4^n / n^(3/2)) ~= Catalan numbers",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 5,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string."
+            },
+            {
+              "line": 10,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search."
+            },
+            {
+              "line": 11,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 13,
+              "label": "Decision point",
+              "note": "Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+            },
+            {
+              "line": 46,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a classic constraint-building problem and a very good next step after simple combination generation.",
+            "whatToNotice": "State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.",
+            "riskPoint": "The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0022.generate-parentheses-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0022.Generate%20Parentheses/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/0000-0099/0022.Generate Parentheses/Solution.cpp",
+          "relativePath": "solution/0000-0099/0022.Generate Parentheses/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\npublic:\n    vector<string> generateParenthesis(int n) {\n        vector<string> ans;\n        function<void(int, int, string)> dfs = [&](int l, int r, string t) {\n            if (l > n || r > n || l < r) return;\n            if (l == n && r == n) {\n                ans.push_back(t);\n                return;\n            }\n            dfs(l + 1, r, t + \"(\");\n            dfs(l, r + 1, t + \")\");\n        };\n        dfs(0, 0, \"\");\n        return ans;\n    }\n};",
+          "originalCode": "class Solution {\npublic:\n    vector<string> generateParenthesis(int n) {\n        vector<string> ans;\n        function<void(int, int, string)> dfs = [&](int l, int r, string t) {\n            if (l > n || r > n || l < r) return;\n            if (l == n && r == n) {\n                ans.push_back(t);\n                return;\n            }\n            dfs(l + 1, r, t + \"(\");\n            dfs(l, r + 1, t + \")\");\n        };\n        dfs(0, 0, \"\");\n        return ans;\n    }\n};",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string.\nclass Solution {\npublic:\n    vector<string> generateParenthesis(int n) {\n        vector<string> ans;\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.\n        function<void(int, int, string)> dfs = [&](int l, int r, string t) {\n            // [Reader note] Decision point\n            // Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later.\n            if (l > n || r > n || l < r) return;\n            if (l == n && r == n) {\n                ans.push_back(t);\n                return;\n            }\n            dfs(l + 1, r, t + \"(\");\n            dfs(l, r + 1, t + \")\");\n        };\n        dfs(0, 0, \"\");\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return ans;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string."
+            },
+            {
+              "line": 5,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search."
+            },
+            {
+              "line": 6,
+              "label": "Decision point",
+              "note": "Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+            },
+            {
+              "line": 15,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a classic constraint-building problem and a very good next step after simple combination generation.",
+            "whatToNotice": "State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.",
+            "riskPoint": "The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+          }
+        },
+        {
+          "id": "haoel_leetcode-algorithms-cpp-generateparentheses-generateparentheses.cpp",
+          "repository": "haoel_leetcode",
+          "repositoryUrl": "https://github.com/haoel/leetcode",
+          "sourceUrl": "https://github.com/haoel/leetcode/blob/master/algorithms/cpp/generateParentheses/generateParentheses.cpp",
+          "localPath": "haoel_leetcode/algorithms/cpp/generateParentheses/generateParentheses.cpp",
+          "relativePath": "algorithms/cpp/generateParentheses/generateParentheses.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Source : https://oj.leetcode.com/problems/generate-parentheses/\n// Author : Hao Chen\n// Date   : 2014-06-29\n\n/********************************************************************************** \n* \n* Given n pairs of parentheses, write a function to generate all combinations of well-formed parentheses.\n* \n* For example, given n = 3, a solution set is:\n* \n* \"((()))\", \"(()())\", \"(())()\", \"()(())\", \"()()()\"\n* \n*               \n**********************************************************************************/\n\n#include <stdlib.h>\n#include <iostream>\n#include <vector>\nusing namespace std;\n\n\nvoid generator(vector<string>& result, int left, int right, string s);\nvector<string> generateParenthesis(int n) {\n    \n    vector<string> result;\n    string s;\n    generator(result, n, n, s);\n    return result;\n}\n\nvoid generator(vector<string>& result, int left, int right, string s){\n    if (left==0 && right==0){\n        result.push_back(s);\n        return;\n    }\n    if (left>0){\n        generator(result, left-1, right, s+'(');\n    }\n    if (right>0 && right>left){\n        generator(result, left, right-1, s+')');\n    }\n}\n    \nvoid printResult(vector<string>& result)\n{\n    for(int i=0; i<result.size(); i++){\n        cout << result[i] <<endl;\n    }\n}\n\nint main(int argc, char** argv) \n{\n    int n=3;\n    if (argc>1){\n        n = atoi(argv[1]);\n    }\n    vector<string> r = generateParenthesis(n);\n    printResult(r);\n    return 0;\n}\n",
+          "originalCode": "// Source : https://oj.leetcode.com/problems/generate-parentheses/\n// Author : Hao Chen\n// Date   : 2014-06-29\n\n/********************************************************************************** \n* \n* Given n pairs of parentheses, write a function to generate all combinations of well-formed parentheses.\n* \n* For example, given n = 3, a solution set is:\n* \n* \"((()))\", \"(()())\", \"(())()\", \"()(())\", \"()()()\"\n* \n*               \n**********************************************************************************/\n\n#include <stdlib.h>\n#include <iostream>\n#include <vector>\nusing namespace std;\n\n\nvoid generator(vector<string>& result, int left, int right, string s);\nvector<string> generateParenthesis(int n) {\n    \n    vector<string> result;\n    string s;\n    generator(result, n, n, s);\n    return result;\n}\n\nvoid generator(vector<string>& result, int left, int right, string s){\n    if (left==0 && right==0){\n        result.push_back(s);\n        return;\n    }\n    if (left>0){\n        generator(result, left-1, right, s+'(');\n    }\n    if (right>0 && right>left){\n        generator(result, left, right-1, s+')');\n    }\n}\n    \nvoid printResult(vector<string>& result)\n{\n    for(int i=0; i<result.size(); i++){\n        cout << result[i] <<endl;\n    }\n}\n\nint main(int argc, char** argv) \n{\n    int n=3;\n    if (argc>1){\n        n = atoi(argv[1]);\n    }\n    vector<string> r = generateParenthesis(n);\n    printResult(r);\n    return 0;\n}\n",
+          "reviewedCode": "// Source : https://oj.leetcode.com/problems/generate-parentheses/\n// Author : Hao Chen\n// Date   : 2014-06-29\n\n/********************************************************************************** \n* \n* Given n pairs of parentheses, write a function to generate all combinations of well-formed parentheses.\n* \n* For example, given n = 3, a solution set is:\n* \n* \"((()))\", \"(()())\", \"(())()\", \"()(())\", \"()()()\"\n* \n*               \n**********************************************************************************/\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string.\n#include <stdlib.h>\n#include <iostream>\n#include <vector>\nusing namespace std;\n\n\nvoid generator(vector<string>& result, int left, int right, string s);\nvector<string> generateParenthesis(int n) {\n    \n    vector<string> result;\n    string s;\n    generator(result, n, n, s);\n    return result;\n}\n\nvoid generator(vector<string>& result, int left, int right, string s){\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.\n    if (left==0 && right==0){\n        result.push_back(s);\n        return;\n    }\n    if (left>0){\n        generator(result, left-1, right, s+'(');\n    }\n    if (right>0 && right>left){\n        generator(result, left, right-1, s+')');\n    }\n}\n    \nvoid printResult(vector<string>& result)\n{\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for(int i=0; i<result.size(); i++){\n        cout << result[i] <<endl;\n    }\n}\n\nint main(int argc, char** argv) \n{\n    int n=3;\n    // [Reader note] Decision point\n    // Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later.\n    if (argc>1){\n        n = atoi(argv[1]);\n    }\n    vector<string> r = generateParenthesis(n);\n    printResult(r);\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return 0;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 16,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string."
+            },
+            {
+              "line": 32,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search."
+            },
+            {
+              "line": 46,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 54,
+              "label": "Decision point",
+              "note": "Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+            },
+            {
+              "line": 59,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a classic constraint-building problem and a very good next step after simple combination generation.",
+            "whatToNotice": "State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.",
+            "riskPoint": "The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-java-0022-generate-parentheses.java",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/java/0022-generate-parentheses.java",
+          "localPath": "neetcode-gh_leetcode/java/0022-generate-parentheses.java",
+          "relativePath": "java/0022-generate-parentheses.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "article+code",
+          "code": "package arrays;\n\nimport java.util.ArrayList;\nimport java.util.Iterator;\nimport java.util.List;\nimport java.util.Stack;\n\npublic class Solution {\n\n    public static void main(String[] args) {\n        Solution sol = new Solution();\n        sol.generateParenthesis(3);\n    }\n\n    Stack<Character> stack = new Stack<>();\n    List<String> res = new ArrayList<>();\n\n    public List<String> generateParenthesis(int n) {\n        backtrack(0, 0, n);\n        return res;\n    }\n\n    private void backtrack(int openN, int closedN, int n) {\n        if (openN == closedN && closedN == n) {\n            StringBuilder sb = new StringBuilder();\n            for (Character c: stack) {\n                sb.append(c);\n            }\n            res.add(sb.toString());\n        }\n        if (openN < n) {\n            stack.push('(');\n            backtrack(openN + 1, closedN, n);\n            stack.pop();\n        }\n        if (closedN < openN) {\n            stack.push(')');\n            backtrack(openN, closedN + 1, n);\n            stack.pop();\n        }\n    }\n}\n",
+          "originalCode": "package arrays;\n\nimport java.util.ArrayList;\nimport java.util.Iterator;\nimport java.util.List;\nimport java.util.Stack;\n\npublic class Solution {\n\n    public static void main(String[] args) {\n        Solution sol = new Solution();\n        sol.generateParenthesis(3);\n    }\n\n    Stack<Character> stack = new Stack<>();\n    List<String> res = new ArrayList<>();\n\n    public List<String> generateParenthesis(int n) {\n        backtrack(0, 0, n);\n        return res;\n    }\n\n    private void backtrack(int openN, int closedN, int n) {\n        if (openN == closedN && closedN == n) {\n            StringBuilder sb = new StringBuilder();\n            for (Character c: stack) {\n                sb.append(c);\n            }\n            res.add(sb.toString());\n        }\n        if (openN < n) {\n            stack.push('(');\n            backtrack(openN + 1, closedN, n);\n            stack.pop();\n        }\n        if (closedN < openN) {\n            stack.push(')');\n            backtrack(openN, closedN + 1, n);\n            stack.pop();\n        }\n    }\n}\n",
+          "reviewedCode": "package arrays;\n\nimport java.util.ArrayList;\nimport java.util.Iterator;\nimport java.util.List;\nimport java.util.Stack;\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string.\npublic class Solution {\n\n    public static void main(String[] args) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.\n        Solution sol = new Solution();\n        sol.generateParenthesis(3);\n    }\n\n    Stack<Character> stack = new Stack<>();\n    List<String> res = new ArrayList<>();\n\n    public List<String> generateParenthesis(int n) {\n        backtrack(0, 0, n);\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return res;\n    }\n\n    private void backtrack(int openN, int closedN, int n) {\n        if (openN == closedN && closedN == n) {\n            StringBuilder sb = new StringBuilder();\n            // [Reader note] Main pass\n            // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for (Character c: stack) {\n                sb.append(c);\n            }\n            res.add(sb.toString());\n        }\n        // [Reader note] Decision point\n        // Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later.\n        if (openN < n) {\n            stack.push('(');\n            backtrack(openN + 1, closedN, n);\n            stack.pop();\n        }\n        if (closedN < openN) {\n            stack.push(')');\n            backtrack(openN, closedN + 1, n);\n            stack.pop();\n        }\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 8,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string."
+            },
+            {
+              "line": 11,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search."
+            },
+            {
+              "line": 26,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 31,
+              "label": "Decision point",
+              "note": "Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+            },
+            {
+              "line": 20,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a classic constraint-building problem and a very good next step after simple combination generation.",
+            "whatToNotice": "State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.",
+            "riskPoint": "The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0022.generate-parentheses-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0022.Generate%20Parentheses/Solution.java",
+          "localPath": "doocs_leetcode/solution/0000-0099/0022.Generate Parentheses/Solution.java",
+          "relativePath": "solution/0000-0099/0022.Generate Parentheses/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\n    private List<String> ans = new ArrayList<>();\n    private int n;\n\n    public List<String> generateParenthesis(int n) {\n        this.n = n;\n        dfs(0, 0, \"\");\n        return ans;\n    }\n\n    private void dfs(int l, int r, String t) {\n        if (l > n || r > n || l < r) {\n            return;\n        }\n        if (l == n && r == n) {\n            ans.add(t);\n            return;\n        }\n        dfs(l + 1, r, t + \"(\");\n        dfs(l, r + 1, t + \")\");\n    }\n}",
+          "originalCode": "class Solution {\n    private List<String> ans = new ArrayList<>();\n    private int n;\n\n    public List<String> generateParenthesis(int n) {\n        this.n = n;\n        dfs(0, 0, \"\");\n        return ans;\n    }\n\n    private void dfs(int l, int r, String t) {\n        if (l > n || r > n || l < r) {\n            return;\n        }\n        if (l == n && r == n) {\n            ans.add(t);\n            return;\n        }\n        dfs(l + 1, r, t + \"(\");\n        dfs(l, r + 1, t + \")\");\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string.\nclass Solution {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.\n    private List<String> ans = new ArrayList<>();\n    private int n;\n\n    public List<String> generateParenthesis(int n) {\n        this.n = n;\n        dfs(0, 0, \"\");\n        return ans;\n    }\n\n    private void dfs(int l, int r, String t) {\n        // [Reader note] Decision point\n        // Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later.\n        if (l > n || r > n || l < r) {\n            return;\n        }\n        if (l == n && r == n) {\n            ans.add(t);\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return;\n        }\n        dfs(l + 1, r, t + \"(\");\n        dfs(l, r + 1, t + \")\");\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search."
+            },
+            {
+              "line": 12,
+              "label": "Decision point",
+              "note": "Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+            },
+            {
+              "line": 17,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a classic constraint-building problem and a very good next step after simple combination generation.",
+            "whatToNotice": "State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.",
+            "riskPoint": "The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-go-0022-generate-parentheses.go",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/go/0022-generate-parentheses.go",
+          "localPath": "neetcode-gh_leetcode/go/0022-generate-parentheses.go",
+          "relativePath": "go/0022-generate-parentheses.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "article+code",
+          "code": "package main\n\nimport \"strings\"\n\nfunc generateParenthesis(n int) []string {\n\tvar stack []string\n\tvar res []string\n\n\tvar backtrack func(int, int)\n\tbacktrack = func(openN int, closedN int) {\n\t\tif openN == n && closedN == n && openN == closedN {\n\t\t\tres = append(res, strings.Join(stack, \"\"))\n\t\t\treturn\n\t\t}\n\t\tif openN < n {\n\t\t\tstack = append(stack, \"(\")\n\t\t\tbacktrack(openN+1, closedN)\n\t\t\tpop(&stack)\n\t\t}\n\t\tif closedN < openN {\n\t\t\tstack = append(stack, \")\")\n\t\t\tbacktrack(openN, closedN+1)\n\t\t\tpop(&stack)\n\t\t}\n\t}\n\tbacktrack(0, 0)\n\treturn res\n\n}\n\nfunc pop(list *[]string) {\n\t//since pop() function in go doesn't exist\n\tlength := len(*list)\n\t*list = (*list)[:length-1]\n}\n",
+          "originalCode": "package main\n\nimport \"strings\"\n\nfunc generateParenthesis(n int) []string {\n\tvar stack []string\n\tvar res []string\n\n\tvar backtrack func(int, int)\n\tbacktrack = func(openN int, closedN int) {\n\t\tif openN == n && closedN == n && openN == closedN {\n\t\t\tres = append(res, strings.Join(stack, \"\"))\n\t\t\treturn\n\t\t}\n\t\tif openN < n {\n\t\t\tstack = append(stack, \"(\")\n\t\t\tbacktrack(openN+1, closedN)\n\t\t\tpop(&stack)\n\t\t}\n\t\tif closedN < openN {\n\t\t\tstack = append(stack, \")\")\n\t\t\tbacktrack(openN, closedN+1)\n\t\t\tpop(&stack)\n\t\t}\n\t}\n\tbacktrack(0, 0)\n\treturn res\n\n}\n\nfunc pop(list *[]string) {\n\t//since pop() function in go doesn't exist\n\tlength := len(*list)\n\t*list = (*list)[:length-1]\n}\n",
+          "reviewedCode": "package main\n\nimport \"strings\"\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string.\nfunc generateParenthesis(n int) []string {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.\n\tvar stack []string\n\tvar res []string\n\n\tvar backtrack func(int, int)\n\tbacktrack = func(openN int, closedN int) {\n\t\t// [Reader note] Decision point\n\t\t// Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later.\n\t\tif openN == n && closedN == n && openN == closedN {\n\t\t\tres = append(res, strings.Join(stack, \"\"))\n\t\t\treturn\n\t\t}\n\t\tif openN < n {\n\t\t\tstack = append(stack, \"(\")\n\t\t\tbacktrack(openN+1, closedN)\n\t\t\tpop(&stack)\n\t\t}\n\t\tif closedN < openN {\n\t\t\tstack = append(stack, \")\")\n\t\t\tbacktrack(openN, closedN+1)\n\t\t\tpop(&stack)\n\t\t}\n\t}\n\tbacktrack(0, 0)\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn res\n\n}\n\nfunc pop(list *[]string) {\n\t//since pop() function in go doesn't exist\n\tlength := len(*list)\n\t*list = (*list)[:length-1]\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 5,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string."
+            },
+            {
+              "line": 6,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search."
+            },
+            {
+              "line": 11,
+              "label": "Decision point",
+              "note": "Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+            },
+            {
+              "line": 27,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a classic constraint-building problem and a very good next step after simple combination generation.",
+            "whatToNotice": "State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.",
+            "riskPoint": "The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0022.generate-parentheses-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0022.Generate%20Parentheses/Solution.go",
+          "localPath": "doocs_leetcode/solution/0000-0099/0022.Generate Parentheses/Solution.go",
+          "relativePath": "solution/0000-0099/0022.Generate Parentheses/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "func generateParenthesis(n int) (ans []string) {\n\tvar dfs func(int, int, string)\n\tdfs = func(l, r int, t string) {\n\t\tif l > n || r > n || l < r {\n\t\t\treturn\n\t\t}\n\t\tif l == n && r == n {\n\t\t\tans = append(ans, t)\n\t\t\treturn\n\t\t}\n\t\tdfs(l+1, r, t+\"(\")\n\t\tdfs(l, r+1, t+\")\")\n\t}\n\tdfs(0, 0, \"\")\n\treturn ans\n}",
+          "originalCode": "func generateParenthesis(n int) (ans []string) {\n\tvar dfs func(int, int, string)\n\tdfs = func(l, r int, t string) {\n\t\tif l > n || r > n || l < r {\n\t\t\treturn\n\t\t}\n\t\tif l == n && r == n {\n\t\t\tans = append(ans, t)\n\t\t\treturn\n\t\t}\n\t\tdfs(l+1, r, t+\"(\")\n\t\tdfs(l, r+1, t+\")\")\n\t}\n\tdfs(0, 0, \"\")\n\treturn ans\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string.\nfunc generateParenthesis(n int) (ans []string) {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.\n\tvar dfs func(int, int, string)\n\tdfs = func(l, r int, t string) {\n\t\t// [Reader note] Decision point\n\t\t// Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later.\n\t\tif l > n || r > n || l < r {\n\t\t\treturn\n\t\t}\n\t\tif l == n && r == n {\n\t\t\tans = append(ans, t)\n\t\t\treturn\n\t\t}\n\t\tdfs(l+1, r, t+\"(\")\n\t\tdfs(l, r+1, t+\")\")\n\t}\n\tdfs(0, 0, \"\")\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn ans\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search."
+            },
+            {
+              "line": 4,
+              "label": "Decision point",
+              "note": "Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+            },
+            {
+              "line": 15,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a classic constraint-building problem and a very good next step after simple combination generation.",
+            "whatToNotice": "State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.",
+            "riskPoint": "The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+          }
+        }
+      ]
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0022.generate-parentheses-solution.ts",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0022.Generate%20Parentheses/Solution.ts",
+          "localPath": "doocs_leetcode/solution/0000-0099/0022.Generate Parentheses/Solution.ts",
+          "relativePath": "solution/0000-0099/0022.Generate Parentheses/Solution.ts",
+          "languageId": "typescript",
+          "languageLabel": "TypeScript",
+          "coverageType": "code+explanation",
+          "code": "function generateParenthesis(n: number): string[] {\n    function dfs(l, r, t) {\n        if (l > n || r > n || l < r) {\n            return;\n        }\n        if (l == n && r == n) {\n            ans.push(t);\n            return;\n        }\n        dfs(l + 1, r, t + '(');\n        dfs(l, r + 1, t + ')');\n    }\n    let ans = [];\n    dfs(0, 0, '');\n    return ans;\n}\n",
+          "originalCode": "function generateParenthesis(n: number): string[] {\n    function dfs(l, r, t) {\n        if (l > n || r > n || l < r) {\n            return;\n        }\n        if (l == n && r == n) {\n            ans.push(t);\n            return;\n        }\n        dfs(l + 1, r, t + '(');\n        dfs(l, r + 1, t + ')');\n    }\n    let ans = [];\n    dfs(0, 0, '');\n    return ans;\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string.\nfunction generateParenthesis(n: number): string[] {\n    function dfs(l, r, t) {\n        // [Reader note] Decision point\n        // Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later.\n        if (l > n || r > n || l < r) {\n            return;\n        }\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.\n        if (l == n && r == n) {\n            ans.push(t);\n            return;\n        }\n        dfs(l + 1, r, t + '(');\n        dfs(l, r + 1, t + ')');\n    }\n    let ans = [];\n    dfs(0, 0, '');\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return ans;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string."
+            },
+            {
+              "line": 6,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search."
+            },
+            {
+              "line": 3,
+              "label": "Decision point",
+              "note": "Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+            },
+            {
+              "line": 15,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a classic constraint-building problem and a very good next step after simple combination generation.",
+            "whatToNotice": "State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.",
+            "riskPoint": "The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+          }
+        }
+      ]
+    },
+    {
+      "id": "javascript",
+      "label": "JavaScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-javascript-0022-generate-parentheses.js",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/javascript/0022-generate-parentheses.js",
+          "localPath": "neetcode-gh_leetcode/javascript/0022-generate-parentheses.js",
+          "relativePath": "javascript/0022-generate-parentheses.js",
+          "languageId": "javascript",
+          "languageLabel": "JavaScript",
+          "coverageType": "article+code",
+          "code": "/**\n * DFS\n * Time O(((4^N) / (N * SQRT(N)))) | Space O(((4^N) / (N * SQRT(N))))\n * Time O(2^N) | Space O(2^N)\n * https://leetcode.com/problems/generate-parentheses\n * @param {number} n\n * @return {string[]}\n */\nvar generateParenthesis = (n) => dfs(n);\n\nconst dfs = (n, combos = [], open = 0, close = 0, path = []) => {\n    const isBaseCase = path.length === n * 2;\n    if (isBaseCase) {\n        combos.push(path.join('')); /* Space O(N + N) */\n\n        return combos;\n    }\n\n    const isOpen = open < n;\n    if (isOpen)\n        backTrackOpen(\n            n,\n            combos,\n            open,\n            close,\n            path,\n        ); /* Time O(2^N) | Space O(2^N) */\n\n    const isClose = close < open;\n    if (isClose)\n        backTrackClose(\n            n,\n            combos,\n            open,\n            close,\n            path,\n        ); /* Time O(2^N) | Space O(2^N) */\n\n    return combos;\n};\n\nconst backTrackOpen = (n, combos, open, close, path) => {\n    path.push('('); /* Space O(N) */\n    dfs(n, combos, open + 1, close, path); /* Time O(2^N) | Space O(2^N) */\n    path.pop();\n};\n\nconst backTrackClose = (n, combos, open, close, path) => {\n    path.push(')'); /* Space O(N) */\n    dfs(n, combos, open, close + 1, path); /* Time O(2^N) | Space O(2^N) */\n    path.pop();\n};\n\n/**\n * BFS\n * Time O(((4^N) / (N * SQRT(N)))) | Space O(((4^N) / (N * SQRT(N))))\n * Time O(2^N) | Space O(2^N)\n * https://leetcode.com/problems/generate-parentheses\n * @param {number} n\n * @return {string[]}\n */\nvar generateParenthesis = (n) => bfs(n);\n\nconst bfs = (n, combos = []) => {\n    const queue = new Queue([['', 0, 0]]);\n\n    while (!queue.isEmpty()) {\n        /* Time O(2^N) */\n        const [str, open, close] = queue.dequeue();\n\n        const isBaseCase = open === n && close === n;\n        if (isBaseCase) {\n            combos.push(str); /* Space O(N) */\n\n            continue;\n        }\n\n        const isOpen = open < n;\n        if (isOpen)\n            queue.enqueue([`${str}(`, open + 1, close]); /* Space O(2^N) */\n\n        const isClose = close < open;\n        if (isClose)\n            queue.enqueue([`${str})`, open, close + 1]); /* Space O(2^N) */\n    }\n\n    return combos;\n};\n\n/**\n * DFS\n * Time O(((4^N) / (N * SQRT(N)))) | Space O(((4^N) / (N * SQRT(N))))\n * Time O(2^N) | Space O(2^N)\n * https://leetcode.com/problems/generate-parentheses\n * @param {number} n\n * @return {string[]}\n */\nvar generateParenthesis = (n, combos = []) => {\n    const isBaseCase = n === 0;\n    if (isBaseCase) {\n        combos.push('');\n\n        return combos;\n    }\n\n    for (let c = 0; c < n; c++) {\n        for (const left of generateParenthesis(c)) {\n            for (const right of generateParenthesis(n - 1 - c)) {\n                combos.push(`(${left})${right}`);\n            }\n        }\n    }\n\n    return combos;\n};\n",
+          "originalCode": "/**\n * DFS\n * Time O(((4^N) / (N * SQRT(N)))) | Space O(((4^N) / (N * SQRT(N))))\n * Time O(2^N) | Space O(2^N)\n * https://leetcode.com/problems/generate-parentheses\n * @param {number} n\n * @return {string[]}\n */\nvar generateParenthesis = (n) => dfs(n);\n\nconst dfs = (n, combos = [], open = 0, close = 0, path = []) => {\n    const isBaseCase = path.length === n * 2;\n    if (isBaseCase) {\n        combos.push(path.join('')); /* Space O(N + N) */\n\n        return combos;\n    }\n\n    const isOpen = open < n;\n    if (isOpen)\n        backTrackOpen(\n            n,\n            combos,\n            open,\n            close,\n            path,\n        ); /* Time O(2^N) | Space O(2^N) */\n\n    const isClose = close < open;\n    if (isClose)\n        backTrackClose(\n            n,\n            combos,\n            open,\n            close,\n            path,\n        ); /* Time O(2^N) | Space O(2^N) */\n\n    return combos;\n};\n\nconst backTrackOpen = (n, combos, open, close, path) => {\n    path.push('('); /* Space O(N) */\n    dfs(n, combos, open + 1, close, path); /* Time O(2^N) | Space O(2^N) */\n    path.pop();\n};\n\nconst backTrackClose = (n, combos, open, close, path) => {\n    path.push(')'); /* Space O(N) */\n    dfs(n, combos, open, close + 1, path); /* Time O(2^N) | Space O(2^N) */\n    path.pop();\n};\n\n/**\n * BFS\n * Time O(((4^N) / (N * SQRT(N)))) | Space O(((4^N) / (N * SQRT(N))))\n * Time O(2^N) | Space O(2^N)\n * https://leetcode.com/problems/generate-parentheses\n * @param {number} n\n * @return {string[]}\n */\nvar generateParenthesis = (n) => bfs(n);\n\nconst bfs = (n, combos = []) => {\n    const queue = new Queue([['', 0, 0]]);\n\n    while (!queue.isEmpty()) {\n        /* Time O(2^N) */\n        const [str, open, close] = queue.dequeue();\n\n        const isBaseCase = open === n && close === n;\n        if (isBaseCase) {\n            combos.push(str); /* Space O(N) */\n\n            continue;\n        }\n\n        const isOpen = open < n;\n        if (isOpen)\n            queue.enqueue([`${str}(`, open + 1, close]); /* Space O(2^N) */\n\n        const isClose = close < open;\n        if (isClose)\n            queue.enqueue([`${str})`, open, close + 1]); /* Space O(2^N) */\n    }\n\n    return combos;\n};\n\n/**\n * DFS\n * Time O(((4^N) / (N * SQRT(N)))) | Space O(((4^N) / (N * SQRT(N))))\n * Time O(2^N) | Space O(2^N)\n * https://leetcode.com/problems/generate-parentheses\n * @param {number} n\n * @return {string[]}\n */\nvar generateParenthesis = (n, combos = []) => {\n    const isBaseCase = n === 0;\n    if (isBaseCase) {\n        combos.push('');\n\n        return combos;\n    }\n\n    for (let c = 0; c < n; c++) {\n        for (const left of generateParenthesis(c)) {\n            for (const right of generateParenthesis(n - 1 - c)) {\n                combos.push(`(${left})${right}`);\n            }\n        }\n    }\n\n    return combos;\n};\n",
+          "reviewedCode": "/**\n * DFS\n * Time O(((4^N) / (N * SQRT(N)))) | Space O(((4^N) / (N * SQRT(N))))\n * Time O(2^N) | Space O(2^N)\n * https://leetcode.com/problems/generate-parentheses\n * @param {number} n\n * @return {string[]}\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string.\nvar generateParenthesis = (n) => dfs(n);\n\n// [Reader note] State setup\n// This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.\nconst dfs = (n, combos = [], open = 0, close = 0, path = []) => {\n    const isBaseCase = path.length === n * 2;\n    if (isBaseCase) {\n        combos.push(path.join('')); /* Space O(N + N) */\n\n        return combos;\n    }\n\n    const isOpen = open < n;\n    if (isOpen)\n        backTrackOpen(\n            n,\n            combos,\n            open,\n            close,\n            path,\n        ); /* Time O(2^N) | Space O(2^N) */\n\n    const isClose = close < open;\n    if (isClose)\n        backTrackClose(\n            n,\n            combos,\n            open,\n            close,\n            path,\n        ); /* Time O(2^N) | Space O(2^N) */\n\n    return combos;\n};\n\nconst backTrackOpen = (n, combos, open, close, path) => {\n    path.push('('); /* Space O(N) */\n    dfs(n, combos, open + 1, close, path); /* Time O(2^N) | Space O(2^N) */\n    path.pop();\n};\n\nconst backTrackClose = (n, combos, open, close, path) => {\n    path.push(')'); /* Space O(N) */\n    dfs(n, combos, open, close + 1, path); /* Time O(2^N) | Space O(2^N) */\n    path.pop();\n};\n\n/**\n * BFS\n * Time O(((4^N) / (N * SQRT(N)))) | Space O(((4^N) / (N * SQRT(N))))\n * Time O(2^N) | Space O(2^N)\n * https://leetcode.com/problems/generate-parentheses\n * @param {number} n\n * @return {string[]}\n */\nvar generateParenthesis = (n) => bfs(n);\n\nconst bfs = (n, combos = []) => {\n    const queue = new Queue([['', 0, 0]]);\n\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    while (!queue.isEmpty()) {\n        /* Time O(2^N) */\n        const [str, open, close] = queue.dequeue();\n\n        const isBaseCase = open === n && close === n;\n        // [Reader note] Decision point\n        // Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later.\n        if (isBaseCase) {\n            combos.push(str); /* Space O(N) */\n\n            continue;\n        }\n\n        const isOpen = open < n;\n        if (isOpen)\n            queue.enqueue([`${str}(`, open + 1, close]); /* Space O(2^N) */\n\n        const isClose = close < open;\n        if (isClose)\n            queue.enqueue([`${str})`, open, close + 1]); /* Space O(2^N) */\n    }\n\n    return combos;\n};\n\n/**\n * DFS\n * Time O(((4^N) / (N * SQRT(N)))) | Space O(((4^N) / (N * SQRT(N))))\n * Time O(2^N) | Space O(2^N)\n * https://leetcode.com/problems/generate-parentheses\n * @param {number} n\n * @return {string[]}\n */\nvar generateParenthesis = (n, combos = []) => {\n    const isBaseCase = n === 0;\n    if (isBaseCase) {\n        combos.push('');\n\n        return combos;\n    }\n\n    for (let c = 0; c < n; c++) {\n        for (const left of generateParenthesis(c)) {\n            for (const right of generateParenthesis(n - 1 - c)) {\n                combos.push(`(${left})${right}`);\n            }\n        }\n    }\n\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return combos;\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time O(((4^N) / (N * SQRT(N)))) | Space O(((4^N) / (N * SQRT(N))))",
+            "Time O(2^N) | Space O(2^N)"
+          ],
+          "annotations": [
+            {
+              "line": 9,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string."
+            },
+            {
+              "line": 11,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search."
+            },
+            {
+              "line": 67,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 72,
+              "label": "Decision point",
+              "note": "Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+            },
+            {
+              "line": 114,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a classic constraint-building problem and a very good next step after simple combination generation.",
+            "whatToNotice": "State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.",
+            "riskPoint": "The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+          }
+        }
+      ]
+    },
+    {
+      "id": "csharp",
+      "label": "C#",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-csharp-0022-generate-parentheses.cs",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/csharp/0022-generate-parentheses.cs",
+          "localPath": "neetcode-gh_leetcode/csharp/0022-generate-parentheses.cs",
+          "relativePath": "csharp/0022-generate-parentheses.cs",
+          "languageId": "csharp",
+          "languageLabel": "C#",
+          "coverageType": "article+code",
+          "code": "public class Solution {\n    public IList<string> GenerateParenthesis(int n) {\n        var result = new List<string>();\n        var seq = new StringBuilder();\n        \n        void backtrack(int open, int close) {\n            if(seq.Length == n * 2) {\n                result.Add(seq.ToString());\n                return;\n            } \n            \n            if(open < n) {\n                seq.Append(\"(\");\n                backtrack(open + 1, close);\n                seq.Remove(seq.Length - 1, 1);\n            }\n            if(close < open) {\n                seq.Append(\")\");\n                backtrack(open, close + 1);\n                seq.Remove(seq.Length - 1, 1);\n            }\n            \n        }\n\n        backtrack(0, 0);\n\n        return result;\n    }\n}",
+          "originalCode": "public class Solution {\n    public IList<string> GenerateParenthesis(int n) {\n        var result = new List<string>();\n        var seq = new StringBuilder();\n        \n        void backtrack(int open, int close) {\n            if(seq.Length == n * 2) {\n                result.Add(seq.ToString());\n                return;\n            } \n            \n            if(open < n) {\n                seq.Append(\"(\");\n                backtrack(open + 1, close);\n                seq.Remove(seq.Length - 1, 1);\n            }\n            if(close < open) {\n                seq.Append(\")\");\n                backtrack(open, close + 1);\n                seq.Remove(seq.Length - 1, 1);\n            }\n            \n        }\n\n        backtrack(0, 0);\n\n        return result;\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string.\npublic class Solution {\n    public IList<string> GenerateParenthesis(int n) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.\n        var result = new List<string>();\n        var seq = new StringBuilder();\n        \n        void backtrack(int open, int close) {\n            // [Reader note] Decision point\n            // Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later.\n            if(seq.Length == n * 2) {\n                result.Add(seq.ToString());\n                return;\n            } \n            \n            if(open < n) {\n                seq.Append(\"(\");\n                backtrack(open + 1, close);\n                seq.Remove(seq.Length - 1, 1);\n            }\n            if(close < open) {\n                seq.Append(\")\");\n                backtrack(open, close + 1);\n                seq.Remove(seq.Length - 1, 1);\n            }\n            \n        }\n\n        backtrack(0, 0);\n\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return result;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search."
+            },
+            {
+              "line": 7,
+              "label": "Decision point",
+              "note": "Pay attention here: The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+            },
+            {
+              "line": 27,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a classic constraint-building problem and a very good next step after simple combination generation.",
+            "whatToNotice": "State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.",
+            "riskPoint": "The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+          }
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "label": "C",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-c-0022-generate-parentheses.c",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/c/0022-generate-parentheses.c",
+          "localPath": "neetcode-gh_leetcode/c/0022-generate-parentheses.c",
+          "relativePath": "c/0022-generate-parentheses.c",
+          "languageId": "c",
+          "languageLabel": "C",
+          "coverageType": "article+code",
+          "code": "/*\n * Problem: Generate Parentheses (Medium)\n * Link: https://leetcode.com/problems/generate-parentheses/\n *\n * The solution uses a backtracking approach to find all well-formed parantheses\n * pairs.\n */\n\n#include <math.h>\n#include <stddef.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\n/*---------------------------------------------------*/\n// Things get easier to manage with this structure\n// It will essentially act a minimal version of `std::string`.\n// The length of the string is always fixed as we know what the length is going\n// to be.\nstruct _Str\n{\n  char* buf;\n  int len;\n  int idx;\n} DefStr = { .idx = 0 };\n\n// Doesn't add anything to the code other than convenience of writing `Str ...`\n// over `struct _Str ...`\ntypedef struct _Str Str;\n\n// Pushes a character to the back of the Str\nvoid\npush_back(Str* self, char chr)\n{\n  if (self->idx > self->len) {\n    // Length check\n    return;\n  }\n  self->buf[self->idx++] = chr;\n}\n\n// Pops last character from the Str. Add Nullchar at the end just to signify the\n// end of string.\nvoid\npop_back(Str* self)\n{\n  if (self->idx == 0) {\n    return;\n  }\n  self->buf[self->idx--] = '\\0';\n}\n\n/*---------------------------------------------------*/\n\n/*\n * This problem can be reduced to a subsets problem, where we explore every\n * possible parantheses combination and keep the valid ones.\n *\n * To do so, we will --\n * 1. Generate a combination\n * 2. Check if it is balanced\n * 3. Backtrack\n * 4. Repeat\n */\nvoid\nbacktrack(char** results,\n          int n,\n          int open,\n          int closed,\n          Str* curr,\n          int* returnSize)\n{\n  if (closed > open) {\n    // This is the case when we prune the exploration of not well-formed\n    // parentheses\n    return;\n  }\n  if (open + closed == 2 * n) {\n    // ^ checking lengths\n    // Create a copy of the qualifying buffer and save it in Results\n    // wf = well-formed\n    results[*returnSize] = (char*)calloc(2 * n + 1, sizeof(char));\n    memcpy(results[*returnSize], curr->buf, 2 * n);\n    *returnSize = *returnSize + 1;\n    return;\n  }\n\n  if (open < n) {\n    // If we do not have enough opening brackets, add one till we have `n`\n    push_back(curr, '(');\n    backtrack(results, n, open + 1, closed, curr, returnSize);\n\n    // Pop this so that we can explore the other combinations\n    pop_back(curr);\n  }\n\n  if (closed < n) {\n    // If we do not have enough closing brackets, add one till we have `n`\n    push_back(curr, ')');\n    backtrack(results, n, open, closed + 1, curr, returnSize);\n\n    // Pop this so that we can explore the other combinations\n    pop_back(curr);\n  }\n}\n\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar**\ngenerateParenthesis(int n, int* returnSize)\n{\n  /*\n   * Allocate enough memory for maximum possible combinations\n   * The maximum would ideally be every possible combination (included invalid\n   * ones). This is 2^(len of combination) == 2^(2 * n)\n   *\n   * Ofc, we will need less memory than this, but its fine.\n   *\n   * In the worst case according to our constraints, n = 9.\n   * In this case, we will allocate 2^9 * 8 = 4096 bytes, which is 4KB. So we\n   * can be sure that this program won't hog **too** much memory.\n   */\n\n  char** results = (char**)malloc(pow(2, 2 * n) * sizeof(char*));\n\n  // Length is excluding null character, calloc includes null character\n  // Calloc because it zeroes out our memory, so we automatically get a null\n  // character.\n  Str current = { .len = 2 * n, .buf = (char*)calloc(2 * n + 1, sizeof(char)) };\n\n  // We backtrack.\n  *returnSize = 0;\n  backtrack(results, n, 0, 0, &current, returnSize);\n\n  // Free the Str buffer as we won't need it now.\n  free(current.buf);\n\n  // Return results\n  return results;\n}\n",
+          "originalCode": "/*\n * Problem: Generate Parentheses (Medium)\n * Link: https://leetcode.com/problems/generate-parentheses/\n *\n * The solution uses a backtracking approach to find all well-formed parantheses\n * pairs.\n */\n\n#include <math.h>\n#include <stddef.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\n/*---------------------------------------------------*/\n// Things get easier to manage with this structure\n// It will essentially act a minimal version of `std::string`.\n// The length of the string is always fixed as we know what the length is going\n// to be.\nstruct _Str\n{\n  char* buf;\n  int len;\n  int idx;\n} DefStr = { .idx = 0 };\n\n// Doesn't add anything to the code other than convenience of writing `Str ...`\n// over `struct _Str ...`\ntypedef struct _Str Str;\n\n// Pushes a character to the back of the Str\nvoid\npush_back(Str* self, char chr)\n{\n  if (self->idx > self->len) {\n    // Length check\n    return;\n  }\n  self->buf[self->idx++] = chr;\n}\n\n// Pops last character from the Str. Add Nullchar at the end just to signify the\n// end of string.\nvoid\npop_back(Str* self)\n{\n  if (self->idx == 0) {\n    return;\n  }\n  self->buf[self->idx--] = '\\0';\n}\n\n/*---------------------------------------------------*/\n\n/*\n * This problem can be reduced to a subsets problem, where we explore every\n * possible parantheses combination and keep the valid ones.\n *\n * To do so, we will --\n * 1. Generate a combination\n * 2. Check if it is balanced\n * 3. Backtrack\n * 4. Repeat\n */\nvoid\nbacktrack(char** results,\n          int n,\n          int open,\n          int closed,\n          Str* curr,\n          int* returnSize)\n{\n  if (closed > open) {\n    // This is the case when we prune the exploration of not well-formed\n    // parentheses\n    return;\n  }\n  if (open + closed == 2 * n) {\n    // ^ checking lengths\n    // Create a copy of the qualifying buffer and save it in Results\n    // wf = well-formed\n    results[*returnSize] = (char*)calloc(2 * n + 1, sizeof(char));\n    memcpy(results[*returnSize], curr->buf, 2 * n);\n    *returnSize = *returnSize + 1;\n    return;\n  }\n\n  if (open < n) {\n    // If we do not have enough opening brackets, add one till we have `n`\n    push_back(curr, '(');\n    backtrack(results, n, open + 1, closed, curr, returnSize);\n\n    // Pop this so that we can explore the other combinations\n    pop_back(curr);\n  }\n\n  if (closed < n) {\n    // If we do not have enough closing brackets, add one till we have `n`\n    push_back(curr, ')');\n    backtrack(results, n, open, closed + 1, curr, returnSize);\n\n    // Pop this so that we can explore the other combinations\n    pop_back(curr);\n  }\n}\n\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar**\ngenerateParenthesis(int n, int* returnSize)\n{\n  /*\n   * Allocate enough memory for maximum possible combinations\n   * The maximum would ideally be every possible combination (included invalid\n   * ones). This is 2^(len of combination) == 2^(2 * n)\n   *\n   * Ofc, we will need less memory than this, but its fine.\n   *\n   * In the worst case according to our constraints, n = 9.\n   * In this case, we will allocate 2^9 * 8 = 4096 bytes, which is 4KB. So we\n   * can be sure that this program won't hog **too** much memory.\n   */\n\n  char** results = (char**)malloc(pow(2, 2 * n) * sizeof(char*));\n\n  // Length is excluding null character, calloc includes null character\n  // Calloc because it zeroes out our memory, so we automatically get a null\n  // character.\n  Str current = { .len = 2 * n, .buf = (char*)calloc(2 * n + 1, sizeof(char)) };\n\n  // We backtrack.\n  *returnSize = 0;\n  backtrack(results, n, 0, 0, &current, returnSize);\n\n  // Free the Str buffer as we won't need it now.\n  free(current.buf);\n\n  // Return results\n  return results;\n}\n",
+          "reviewedCode": "/*\n * Problem: Generate Parentheses (Medium)\n * Link: https://leetcode.com/problems/generate-parentheses/\n *\n * The solution uses a backtracking approach to find all well-formed parantheses\n * pairs.\n */\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string.\n#include <math.h>\n#include <stddef.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\n/*---------------------------------------------------*/\n// Things get easier to manage with this structure\n// It will essentially act a minimal version of `std::string`.\n// The length of the string is always fixed as we know what the length is going\n// to be.\nstruct _Str\n{\n  char* buf;\n  int len;\n  int idx;\n// [Reader note] State setup\n// This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.\n} DefStr = { .idx = 0 };\n\n// Doesn't add anything to the code other than convenience of writing `Str ...`\n// over `struct _Str ...`\ntypedef struct _Str Str;\n\n// Pushes a character to the back of the Str\nvoid\npush_back(Str* self, char chr)\n{\n  if (self->idx > self->len) {\n    // Length check\n    return;\n  }\n  self->buf[self->idx++] = chr;\n}\n\n// Pops last character from the Str. Add Nullchar at the end just to signify the\n// end of string.\nvoid\npop_back(Str* self)\n{\n  if (self->idx == 0) {\n    return;\n  }\n  self->buf[self->idx--] = '\\0';\n}\n\n/*---------------------------------------------------*/\n\n/*\n * This problem can be reduced to a subsets problem, where we explore every\n * possible parantheses combination and keep the valid ones.\n *\n * To do so, we will --\n * 1. Generate a combination\n * 2. Check if it is balanced\n * 3. Backtrack\n * 4. Repeat\n */\nvoid\nbacktrack(char** results,\n          int n,\n          int open,\n          int closed,\n          Str* curr,\n          int* returnSize)\n{\n  if (closed > open) {\n    // This is the case when we prune the exploration of not well-formed\n    // parentheses\n    return;\n  }\n  if (open + closed == 2 * n) {\n    // ^ checking lengths\n    // Create a copy of the qualifying buffer and save it in Results\n    // wf = well-formed\n    results[*returnSize] = (char*)calloc(2 * n + 1, sizeof(char));\n    memcpy(results[*returnSize], curr->buf, 2 * n);\n    *returnSize = *returnSize + 1;\n    return;\n  }\n\n  if (open < n) {\n    // If we do not have enough opening brackets, add one till we have `n`\n    push_back(curr, '(');\n    backtrack(results, n, open + 1, closed, curr, returnSize);\n\n    // Pop this so that we can explore the other combinations\n    pop_back(curr);\n  }\n\n  if (closed < n) {\n    // If we do not have enough closing brackets, add one till we have `n`\n    push_back(curr, ')');\n    backtrack(results, n, open, closed + 1, curr, returnSize);\n\n    // Pop this so that we can explore the other combinations\n    pop_back(curr);\n  }\n}\n\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar**\ngenerateParenthesis(int n, int* returnSize)\n{\n  /*\n   // [Reader note] Main pass\n   // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n   * Allocate enough memory for maximum possible combinations\n   * The maximum would ideally be every possible combination (included invalid\n   * ones). This is 2^(len of combination) == 2^(2 * n)\n   *\n   * Ofc, we will need less memory than this, but its fine.\n   *\n   * In the worst case according to our constraints, n = 9.\n   * In this case, we will allocate 2^9 * 8 = 4096 bytes, which is 4KB. So we\n   * can be sure that this program won't hog **too** much memory.\n   */\n\n  char** results = (char**)malloc(pow(2, 2 * n) * sizeof(char*));\n\n  // Length is excluding null character, calloc includes null character\n  // Calloc because it zeroes out our memory, so we automatically get a null\n  // character.\n  Str current = { .len = 2 * n, .buf = (char*)calloc(2 * n + 1, sizeof(char)) };\n\n  // We backtrack.\n  *returnSize = 0;\n  backtrack(results, n, 0, 0, &current, returnSize);\n\n  // Free the Str buffer as we won't need it now.\n  free(current.buf);\n\n  // Return results\n  // [Reader note] Return\n  // The final return exposes the result after the traversal and state updates have settled.\n  return results;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 9,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Only continue branches that still have a plausible path to a valid final string."
+            },
+            {
+              "line": 25,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search."
+            },
+            {
+              "line": 114,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 140,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a classic constraint-building problem and a very good next step after simple combination generation.",
+            "whatToNotice": "State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.",
+            "riskPoint": "The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later."
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "neetcode-gh_leetcode-articles-generate-parentheses.md",
+      "repository": "neetcode-gh_leetcode",
+      "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+      "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/articles/generate-parentheses.md",
+      "localPath": "neetcode-gh_leetcode/articles/generate-parentheses.md",
+      "relativePath": "articles/generate-parentheses.md",
+      "title": "generate parentheses",
+      "excerpt": "## Prerequisites Before attempting this problem, you should be comfortable with: - **Recursion** - Building solutions through recursive function calls - **Backtracking** - Exploring solution paths and undoing choices when they lead to invalid states - **Dynamic Programming** - Building larger solutions from smaller subproblems - **String Manipulation** - Building and validating strings character by character --- ##..."
+    },
+    {
+      "id": "neetcode-gh_leetcode-hints-generate-parentheses.md",
+      "repository": "neetcode-gh_leetcode",
+      "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+      "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/hints/generate-parentheses.md",
+      "localPath": "neetcode-gh_leetcode/hints/generate-parentheses.md",
+      "relativePath": "hints/generate-parentheses.md",
+      "title": "generate parentheses",
+      "excerpt": "<br> <details class=\"hint-accordion\"> <summary>Recommended Time & Space Complexity</summary> <p> You should aim for a solution as good or better than <code>O(4^n / sqrt(n))</code> time and <code>O(n)</code> space, where <code>n</code> is the number of parenthesis pairs in the string. </p> </details> <br> <details class=\"hint-accordion\"> <summary>Hint 1</summary> <p> A brute force solution would be to generate all po..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0000-0099-0022.generate-parentheses-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0022.Generate%20Parentheses/README.md",
+      "localPath": "doocs_leetcode/solution/0000-0099/0022.Generate Parentheses/README.md",
+      "relativePath": "solution/0000-0099/0022.Generate Parentheses/README.md",
+      "title": "[22. \u62ec\u53f7\u751f\u6210](https://leetcode.cn/problems/generate-parentheses)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/0000-0099/0022.Generate%20Parentheses/README.md tags: - \u5b57\u7b26\u4e32 - \u52a8\u6001\u89c4\u5212 - \u56de\u6eaf --- <!-- problem:start --> # [22. \u62ec\u53f7\u751f\u6210](https://leetcode.cn/problems/generate-parentheses) [English Version](/solution/0000-0099/0022.Generate%20Parentheses/README_EN.md) ## \u9898\u76ee\u63cf\u8ff0 <!-- description:start --> <p>\u6570\u5b57 <code>n</code>&nbsp;\u4ee3\u8868\u751f\u6210\u62ec\u53f7\u7684\u5bf9\u6570\uff0c\u8bf7\u4f60\u8bbe\u8ba1\u4e00\u4e2a\u51fd\u6570..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0000-0099-0022.generate-parentheses-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0022.Generate%20Parentheses/README_EN.md",
+      "localPath": "doocs_leetcode/solution/0000-0099/0022.Generate Parentheses/README_EN.md",
+      "relativePath": "solution/0000-0099/0022.Generate Parentheses/README_EN.md",
+      "title": "[22. Generate Parentheses](https://leetcode.com/problems/generate-parentheses)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/0000-0099/0022.Generate%20Parentheses/README_EN.md tags: - String - Dynamic Programming - Backtracking --- <!-- problem:start --> # [22. Generate Parentheses](https://leetcode.com/problems/generate-parentheses) [\u4e2d\u6587\u6587\u6863](/solution/0000-0099/0022.Generate%20Parentheses/README.md) ## Description <!-- description:start -->..."
+    }
+  ]
+}

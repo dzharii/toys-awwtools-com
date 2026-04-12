@@ -1,0 +1,892 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "rotting-oranges",
+  "problemTitle": "Rotting Oranges",
+  "problemNumber": 994,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go",
+      "typescript",
+      "javascript",
+      "csharp",
+      "c",
+      "kotlin"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go",
+      "TypeScript",
+      "JavaScript",
+      "C#",
+      "C",
+      "Kotlin"
+    ],
+    "solutionCount": 15,
+    "writeupCount": 2,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 3,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-python-0994-rotting-oranges.py",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/python/0994-rotting-oranges.py",
+          "localPath": "neetcode-gh_leetcode/python/0994-rotting-oranges.py",
+          "relativePath": "python/0994-rotting-oranges.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code",
+          "code": "class Solution:\n    def orangesRotting(self, grid: List[List[int]]) -> int:\n        q = collections.deque()\n        fresh = 0\n        time = 0\n\n        for r in range(len(grid)):\n            for c in range(len(grid[0])):\n                if grid[r][c] == 1:\n                    fresh += 1\n                if grid[r][c] == 2:\n                    q.append((r, c))\n\n        directions = [[0, 1], [0, -1], [1, 0], [-1, 0]]\n        while fresh > 0 and q:\n            length = len(q)\n            for i in range(length):\n                r, c = q.popleft()\n\n                for dr, dc in directions:\n                    row, col = r + dr, c + dc\n                    # if in bounds and nonrotten, make rotten\n                    # and add to q\n                    if (\n                        row in range(len(grid))\n                        and col in range(len(grid[0]))\n                        and grid[row][col] == 1\n                    ):\n                        grid[row][col] = 2\n                        q.append((row, col))\n                        fresh -= 1\n            time += 1\n        return time if fresh == 0 else -1\n",
+          "originalCode": "class Solution:\n    def orangesRotting(self, grid: List[List[int]]) -> int:\n        q = collections.deque()\n        fresh = 0\n        time = 0\n\n        for r in range(len(grid)):\n            for c in range(len(grid[0])):\n                if grid[r][c] == 1:\n                    fresh += 1\n                if grid[r][c] == 2:\n                    q.append((r, c))\n\n        directions = [[0, 1], [0, -1], [1, 0], [-1, 0]]\n        while fresh > 0 and q:\n            length = len(q)\n            for i in range(length):\n                r, c = q.popleft()\n\n                for dr, dc in directions:\n                    row, col = r + dr, c + dc\n                    # if in bounds and nonrotten, make rotten\n                    # and add to q\n                    if (\n                        row in range(len(grid))\n                        and col in range(len(grid[0]))\n                        and grid[row][col] == 1\n                    ):\n                        grid[row][col] = 2\n                        q.append((row, col))\n                        fresh -= 1\n            time += 1\n        return time if fresh == 0 else -1\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together.\nclass Solution:\n    def orangesRotting(self, grid: List[List[int]]) -> int:\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.\n        q = collections.deque()\n        fresh = 0\n        time = 0\n\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for r in range(len(grid)):\n            for c in range(len(grid[0])):\n                # [Reader note] Decision point\n                # Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'\n                if grid[r][c] == 1:\n                    fresh += 1\n                if grid[r][c] == 2:\n                    q.append((r, c))\n\n        directions = [[0, 1], [0, -1], [1, 0], [-1, 0]]\n        while fresh > 0 and q:\n            length = len(q)\n            for i in range(length):\n                r, c = q.popleft()\n\n                for dr, dc in directions:\n                    row, col = r + dr, c + dc\n                    # if in bounds and nonrotten, make rotten\n                    # and add to q\n                    if (\n                        row in range(len(grid))\n                        and col in range(len(grid[0]))\n                        and grid[row][col] == 1\n                    ):\n                        grid[row][col] = 2\n                        q.append((row, col))\n                        fresh -= 1\n            time += 1\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return time if fresh == 0 else -1",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "time = 0"
+          ],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation."
+            },
+            {
+              "line": 7,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 9,
+              "label": "Decision point",
+              "note": "Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+            },
+            {
+              "line": 33,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the clearest multi-source BFS problems, and the time interpretation makes the level structure intuitive.",
+            "whatToNotice": "Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.",
+            "riskPoint": "It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+          }
+        },
+        {
+          "id": "kamyu104_leetcode-solutions-python-rotting-oranges.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/rotting-oranges.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/rotting-oranges.py",
+          "relativePath": "Python/rotting-oranges.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(m * n)\n# Space: O(m * n)\n\nimport collections\n\n\nclass Solution(object):\n    def orangesRotting(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]\n\n        count = 0\n        q = collections.deque()\n        for r, row in enumerate(grid):\n            for c, val in enumerate(row):\n                if val == 2:\n                    q.append((r, c, 0))\n                elif val == 1:\n                    count += 1\n\n        result = 0\n        while q:\n            r, c, result = q.popleft()\n            for d in directions:\n                nr, nc = r+d[0], c+d[1]\n                if not (0 <= nr < len(grid) and \\\n                        0 <= nc < len(grid[r])):\n                    continue\n                if grid[nr][nc] == 1:\n                    count -= 1\n                    grid[nr][nc] = 2\n                    q.append((nr, nc, result+1))\n        return result if count == 0 else -1\n",
+          "originalCode": "# Time:  O(m * n)\n# Space: O(m * n)\n\nimport collections\n\n\nclass Solution(object):\n    def orangesRotting(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]\n\n        count = 0\n        q = collections.deque()\n        for r, row in enumerate(grid):\n            for c, val in enumerate(row):\n                if val == 2:\n                    q.append((r, c, 0))\n                elif val == 1:\n                    count += 1\n\n        result = 0\n        while q:\n            r, c, result = q.popleft()\n            for d in directions:\n                nr, nc = r+d[0], c+d[1]\n                if not (0 <= nr < len(grid) and \\\n                        0 <= nc < len(grid[r])):\n                    continue\n                if grid[nr][nc] == 1:\n                    count -= 1\n                    grid[nr][nc] = 2\n                    q.append((nr, nc, result+1))\n        return result if count == 0 else -1\n",
+          "reviewedCode": "# Time:  O(m * n)\n# Space: O(m * n)\n\nimport collections\n\n\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together.\nclass Solution(object):\n    def orangesRotting(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.\n        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]\n\n        count = 0\n        q = collections.deque()\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for r, row in enumerate(grid):\n            for c, val in enumerate(row):\n                # [Reader note] Decision point\n                # Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'\n                if val == 2:\n                    q.append((r, c, 0))\n                elif val == 1:\n                    count += 1\n\n        result = 0\n        while q:\n            r, c, result = q.popleft()\n            for d in directions:\n                nr, nc = r+d[0], c+d[1]\n                if not (0 <= nr < len(grid) and \\\n                        0 <= nc < len(grid[r])):\n                    continue\n                if grid[nr][nc] == 1:\n                    count -= 1\n                    grid[nr][nc] = 2\n                    q.append((nr, nc, result+1))\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return result if count == 0 else -1",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(m * n)",
+            "Space: O(m * n)"
+          ],
+          "annotations": [
+            {
+              "line": 7,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together."
+            },
+            {
+              "line": 13,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation."
+            },
+            {
+              "line": 17,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 19,
+              "label": "Decision point",
+              "note": "Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+            },
+            {
+              "line": 36,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the clearest multi-source BFS problems, and the time interpretation makes the level structure intuitive.",
+            "whatToNotice": "Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.",
+            "riskPoint": "It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0900-0999-0994.rotting-oranges-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0900-0999/0994.Rotting%20Oranges/Solution.py",
+          "localPath": "doocs_leetcode/solution/0900-0999/0994.Rotting Oranges/Solution.py",
+          "relativePath": "solution/0900-0999/0994.Rotting Oranges/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "class Solution:\n    def orangesRotting(self, grid: List[List[int]]) -> int:\n        m, n = len(grid), len(grid[0])\n        cnt = 0\n        q = deque()\n        for i, row in enumerate(grid):\n            for j, x in enumerate(row):\n                if x == 2:\n                    q.append((i, j))\n                elif x == 1:\n                    cnt += 1\n        ans = 0\n        dirs = (-1, 0, 1, 0, -1)\n        while q and cnt:\n            ans += 1\n            for _ in range(len(q)):\n                i, j = q.popleft()\n                for a, b in pairwise(dirs):\n                    x, y = i + a, j + b\n                    if 0 <= x < m and 0 <= y < n and grid[x][y] == 1:\n                        grid[x][y] = 2\n                        q.append((x, y))\n                        cnt -= 1\n                        if cnt == 0:\n                            return ans\n        return -1 if cnt else 0\n",
+          "originalCode": "class Solution:\n    def orangesRotting(self, grid: List[List[int]]) -> int:\n        m, n = len(grid), len(grid[0])\n        cnt = 0\n        q = deque()\n        for i, row in enumerate(grid):\n            for j, x in enumerate(row):\n                if x == 2:\n                    q.append((i, j))\n                elif x == 1:\n                    cnt += 1\n        ans = 0\n        dirs = (-1, 0, 1, 0, -1)\n        while q and cnt:\n            ans += 1\n            for _ in range(len(q)):\n                i, j = q.popleft()\n                for a, b in pairwise(dirs):\n                    x, y = i + a, j + b\n                    if 0 <= x < m and 0 <= y < n and grid[x][y] == 1:\n                        grid[x][y] = 2\n                        q.append((x, y))\n                        cnt -= 1\n                        if cnt == 0:\n                            return ans\n        return -1 if cnt else 0\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together.\nclass Solution:\n    def orangesRotting(self, grid: List[List[int]]) -> int:\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.\n        m, n = len(grid), len(grid[0])\n        cnt = 0\n        q = deque()\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for i, row in enumerate(grid):\n            for j, x in enumerate(row):\n                # [Reader note] Decision point\n                # Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'\n                if x == 2:\n                    q.append((i, j))\n                elif x == 1:\n                    cnt += 1\n        ans = 0\n        dirs = (-1, 0, 1, 0, -1)\n        while q and cnt:\n            ans += 1\n            for _ in range(len(q)):\n                i, j = q.popleft()\n                for a, b in pairwise(dirs):\n                    x, y = i + a, j + b\n                    if 0 <= x < m and 0 <= y < n and grid[x][y] == 1:\n                        grid[x][y] = 2\n                        q.append((x, y))\n                        cnt -= 1\n                        if cnt == 0:\n                            return ans\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return -1 if cnt else 0",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation."
+            },
+            {
+              "line": 6,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 8,
+              "label": "Decision point",
+              "note": "Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+            },
+            {
+              "line": 26,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the clearest multi-source BFS problems, and the time interpretation makes the level structure intuitive.",
+            "whatToNotice": "Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.",
+            "riskPoint": "It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 3,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-cpp-0994-rotting-oranges.cpp",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/cpp/0994-rotting-oranges.cpp",
+          "localPath": "neetcode-gh_leetcode/cpp/0994-rotting-oranges.cpp",
+          "relativePath": "cpp/0994-rotting-oranges.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code",
+          "code": "/*\n    Given grid: 0 empty cell, 1 fresh orange, 2 rotten orange\n    Return min # of minutes until no cell has a fresh orange\n\n    BFS: rotten will contaminate neighbors first, then propagate out\n\n    Time: O(m x n)\n    Space: O(m x n)\n*/\n\nclass Solution {\npublic:\n    int orangesRotting(vector<vector<int>>& grid) {\n        int m = grid.size();\n        int n = grid[0].size();\n        \n        // build initial set of rotten oranges\n        queue<pair<int, int>> q;\n        int fresh = 0;\n        for (int i = 0; i < m; i++) {\n            for (int j = 0; j < n; j++) {\n                if (grid[i][j] == 2) {\n                    q.push({i, j});\n                } else if (grid[i][j] == 1) {\n                    fresh++;\n                }\n            }\n        }\n        // mark the start of a minute\n        q.push({-1, -1});\n        \n        int result = -1;\n        \n        // start rotting process via BFS\n        while (!q.empty()) {\n            int row = q.front().first;\n            int col = q.front().second;\n            q.pop();\n            \n            if (row == -1) {\n                // finish 1 minute of processing, mark next minute\n                result++;\n                if (!q.empty()) {\n                    q.push({-1, -1});\n                }\n            } else {\n                // rotten orange, contaminate its neighbors\n                for (int i = 0; i < dirs.size(); i++) {\n                    int x = row + dirs[i][0];\n                    int y = col + dirs[i][1];\n                    \n                    if (x < 0 || x >= m || y < 0 || y >= n) {\n                        continue;\n                    }\n                    \n                    if (grid[x][y] == 1) {\n                        // contaminate\n                        grid[x][y] = 2;\n                        fresh--;\n                        // this orange will now contaminate others\n                        q.push({x, y});\n                    }\n                }\n            }\n        }\n        \n        if (fresh == 0) {\n            return result;\n        }\n        return -1;\n    }\nprivate:\n    vector<vector<int>> dirs = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};\n};\n",
+          "originalCode": "/*\n    Given grid: 0 empty cell, 1 fresh orange, 2 rotten orange\n    Return min # of minutes until no cell has a fresh orange\n\n    BFS: rotten will contaminate neighbors first, then propagate out\n\n    Time: O(m x n)\n    Space: O(m x n)\n*/\n\nclass Solution {\npublic:\n    int orangesRotting(vector<vector<int>>& grid) {\n        int m = grid.size();\n        int n = grid[0].size();\n        \n        // build initial set of rotten oranges\n        queue<pair<int, int>> q;\n        int fresh = 0;\n        for (int i = 0; i < m; i++) {\n            for (int j = 0; j < n; j++) {\n                if (grid[i][j] == 2) {\n                    q.push({i, j});\n                } else if (grid[i][j] == 1) {\n                    fresh++;\n                }\n            }\n        }\n        // mark the start of a minute\n        q.push({-1, -1});\n        \n        int result = -1;\n        \n        // start rotting process via BFS\n        while (!q.empty()) {\n            int row = q.front().first;\n            int col = q.front().second;\n            q.pop();\n            \n            if (row == -1) {\n                // finish 1 minute of processing, mark next minute\n                result++;\n                if (!q.empty()) {\n                    q.push({-1, -1});\n                }\n            } else {\n                // rotten orange, contaminate its neighbors\n                for (int i = 0; i < dirs.size(); i++) {\n                    int x = row + dirs[i][0];\n                    int y = col + dirs[i][1];\n                    \n                    if (x < 0 || x >= m || y < 0 || y >= n) {\n                        continue;\n                    }\n                    \n                    if (grid[x][y] == 1) {\n                        // contaminate\n                        grid[x][y] = 2;\n                        fresh--;\n                        // this orange will now contaminate others\n                        q.push({x, y});\n                    }\n                }\n            }\n        }\n        \n        if (fresh == 0) {\n            return result;\n        }\n        return -1;\n    }\nprivate:\n    vector<vector<int>> dirs = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};\n};\n",
+          "reviewedCode": "/*\n    Given grid: 0 empty cell, 1 fresh orange, 2 rotten orange\n    Return min # of minutes until no cell has a fresh orange\n\n    BFS: rotten will contaminate neighbors first, then propagate out\n\n    Time: O(m x n)\n    Space: O(m x n)\n*/\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together.\nclass Solution {\npublic:\n    int orangesRotting(vector<vector<int>>& grid) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.\n        int m = grid.size();\n        int n = grid[0].size();\n        \n        // build initial set of rotten oranges\n        queue<pair<int, int>> q;\n        int fresh = 0;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = 0; i < m; i++) {\n            for (int j = 0; j < n; j++) {\n                // [Reader note] Decision point\n                // Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'\n                if (grid[i][j] == 2) {\n                    q.push({i, j});\n                } else if (grid[i][j] == 1) {\n                    fresh++;\n                }\n            }\n        }\n        // mark the start of a minute\n        q.push({-1, -1});\n        \n        int result = -1;\n        \n        // start rotting process via BFS\n        while (!q.empty()) {\n            int row = q.front().first;\n            int col = q.front().second;\n            q.pop();\n            \n            if (row == -1) {\n                // finish 1 minute of processing, mark next minute\n                result++;\n                if (!q.empty()) {\n                    q.push({-1, -1});\n                }\n            } else {\n                // rotten orange, contaminate its neighbors\n                for (int i = 0; i < dirs.size(); i++) {\n                    int x = row + dirs[i][0];\n                    int y = col + dirs[i][1];\n                    \n                    if (x < 0 || x >= m || y < 0 || y >= n) {\n                        continue;\n                    }\n                    \n                    if (grid[x][y] == 1) {\n                        // contaminate\n                        grid[x][y] = 2;\n                        fresh--;\n                        // this orange will now contaminate others\n                        q.push({x, y});\n                    }\n                }\n            }\n        }\n        \n        if (fresh == 0) {\n            return result;\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return -1;\n    }\nprivate:\n    vector<vector<int>> dirs = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time: O(m x n)",
+            "Space: O(m x n)"
+          ],
+          "annotations": [
+            {
+              "line": 11,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together."
+            },
+            {
+              "line": 14,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation."
+            },
+            {
+              "line": 20,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 22,
+              "label": "Decision point",
+              "note": "Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+            },
+            {
+              "line": 70,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the clearest multi-source BFS problems, and the time interpretation makes the level structure intuitive.",
+            "whatToNotice": "Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.",
+            "riskPoint": "It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+          }
+        },
+        {
+          "id": "kamyu104_leetcode-solutions-c-rotting-oranges.cpp",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/C%2B%2B/rotting-oranges.cpp",
+          "localPath": "kamyu104_LeetCode-Solutions/C++/rotting-oranges.cpp",
+          "relativePath": "C++/rotting-oranges.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Time:  O(m * n)\n// Space: O(m * n)\n\nclass Solution {\npublic:\n    int orangesRotting(vector<vector<int>>& grid) {\n        static const vector<pair<int, int>> directions{{0, 1}, {1, 0},\n                                                       {0, -1}, {-1, 0}};\n\n        int count = 0;\n        queue<tuple<int, int, int>> q;\n        for (int r = 0; r < grid.size(); ++r) {\n            for (int c = 0; c < grid[r].size(); ++c) {\n                if (grid[r][c] == 2) {\n                    q.emplace(r, c, 0);\n                } else if (grid[r][c]  == 1) {\n                    ++count;\n                }\n            }\n        }\n\n        int result = 0;\n        while (!q.empty()) {\n            int r, c;\n            tie(r, c, result) = q.front(); q.pop();\n            for (const auto& d : directions) {\n                int nr = r + d.first, nc = c + d.second;\n                if  (!(0 <= nr && nr < grid.size() &&\n                       0 <= nc && nc < grid[r].size())) {\n                    continue;\n                }\n                if (grid[nr][nc] == 1) {\n                    --count;\n                    grid[nr][nc] = 2;\n                    q.emplace(nr, nc, result + 1);\n                }\n            }\n        }\n        return (count == 0) ? result : -1;\n    }\n};\n",
+          "originalCode": "// Time:  O(m * n)\n// Space: O(m * n)\n\nclass Solution {\npublic:\n    int orangesRotting(vector<vector<int>>& grid) {\n        static const vector<pair<int, int>> directions{{0, 1}, {1, 0},\n                                                       {0, -1}, {-1, 0}};\n\n        int count = 0;\n        queue<tuple<int, int, int>> q;\n        for (int r = 0; r < grid.size(); ++r) {\n            for (int c = 0; c < grid[r].size(); ++c) {\n                if (grid[r][c] == 2) {\n                    q.emplace(r, c, 0);\n                } else if (grid[r][c]  == 1) {\n                    ++count;\n                }\n            }\n        }\n\n        int result = 0;\n        while (!q.empty()) {\n            int r, c;\n            tie(r, c, result) = q.front(); q.pop();\n            for (const auto& d : directions) {\n                int nr = r + d.first, nc = c + d.second;\n                if  (!(0 <= nr && nr < grid.size() &&\n                       0 <= nc && nc < grid[r].size())) {\n                    continue;\n                }\n                if (grid[nr][nc] == 1) {\n                    --count;\n                    grid[nr][nc] = 2;\n                    q.emplace(nr, nc, result + 1);\n                }\n            }\n        }\n        return (count == 0) ? result : -1;\n    }\n};\n",
+          "reviewedCode": "// Time:  O(m * n)\n// Space: O(m * n)\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together.\nclass Solution {\npublic:\n    int orangesRotting(vector<vector<int>>& grid) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.\n        static const vector<pair<int, int>> directions{{0, 1}, {1, 0},\n                                                       {0, -1}, {-1, 0}};\n\n        int count = 0;\n        queue<tuple<int, int, int>> q;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int r = 0; r < grid.size(); ++r) {\n            for (int c = 0; c < grid[r].size(); ++c) {\n                // [Reader note] Decision point\n                // Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'\n                if (grid[r][c] == 2) {\n                    q.emplace(r, c, 0);\n                } else if (grid[r][c]  == 1) {\n                    ++count;\n                }\n            }\n        }\n\n        int result = 0;\n        while (!q.empty()) {\n            int r, c;\n            tie(r, c, result) = q.front(); q.pop();\n            for (const auto& d : directions) {\n                int nr = r + d.first, nc = c + d.second;\n                if  (!(0 <= nr && nr < grid.size() &&\n                       0 <= nc && nc < grid[r].size())) {\n                    continue;\n                }\n                if (grid[nr][nc] == 1) {\n                    --count;\n                    grid[nr][nc] = 2;\n                    q.emplace(nr, nc, result + 1);\n                }\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return (count == 0) ? result : -1;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(m * n)",
+            "Space: O(m * n)"
+          ],
+          "annotations": [
+            {
+              "line": 4,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together."
+            },
+            {
+              "line": 7,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation."
+            },
+            {
+              "line": 12,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 14,
+              "label": "Decision point",
+              "note": "Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+            },
+            {
+              "line": 39,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the clearest multi-source BFS problems, and the time interpretation makes the level structure intuitive.",
+            "whatToNotice": "Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.",
+            "riskPoint": "It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0900-0999-0994.rotting-oranges-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0900-0999/0994.Rotting%20Oranges/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/0900-0999/0994.Rotting Oranges/Solution.cpp",
+          "relativePath": "solution/0900-0999/0994.Rotting Oranges/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\npublic:\n    int orangesRotting(vector<vector<int>>& grid) {\n        int m = grid.size(), n = grid[0].size();\n        queue<pair<int, int>> q;\n        int cnt = 0;\n        for (int i = 0; i < m; ++i) {\n            for (int j = 0; j < n; ++j) {\n                if (grid[i][j] == 1) {\n                    ++cnt;\n                } else if (grid[i][j] == 2) {\n                    q.emplace(i, j);\n                }\n            }\n        }\n        const int dirs[5] = {-1, 0, 1, 0, -1};\n        for (int ans = 1; q.size() && cnt; ++ans) {\n            for (int k = q.size(); k; --k) {\n                auto [i, j] = q.front();\n                q.pop();\n                for (int d = 0; d < 4; ++d) {\n                    int x = i + dirs[d], y = j + dirs[d + 1];\n                    if (x >= 0 && x < m && y >= 0 && y < n && grid[x][y] == 1) {\n                        grid[x][y] = 2;\n                        q.emplace(x, y);\n                        if (--cnt == 0) {\n                            return ans;\n                        }\n                    }\n                }\n            }\n        }\n        return cnt > 0 ? -1 : 0;\n    }\n};\n",
+          "originalCode": "class Solution {\npublic:\n    int orangesRotting(vector<vector<int>>& grid) {\n        int m = grid.size(), n = grid[0].size();\n        queue<pair<int, int>> q;\n        int cnt = 0;\n        for (int i = 0; i < m; ++i) {\n            for (int j = 0; j < n; ++j) {\n                if (grid[i][j] == 1) {\n                    ++cnt;\n                } else if (grid[i][j] == 2) {\n                    q.emplace(i, j);\n                }\n            }\n        }\n        const int dirs[5] = {-1, 0, 1, 0, -1};\n        for (int ans = 1; q.size() && cnt; ++ans) {\n            for (int k = q.size(); k; --k) {\n                auto [i, j] = q.front();\n                q.pop();\n                for (int d = 0; d < 4; ++d) {\n                    int x = i + dirs[d], y = j + dirs[d + 1];\n                    if (x >= 0 && x < m && y >= 0 && y < n && grid[x][y] == 1) {\n                        grid[x][y] = 2;\n                        q.emplace(x, y);\n                        if (--cnt == 0) {\n                            return ans;\n                        }\n                    }\n                }\n            }\n        }\n        return cnt > 0 ? -1 : 0;\n    }\n};\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together.\nclass Solution {\npublic:\n    int orangesRotting(vector<vector<int>>& grid) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.\n        int m = grid.size(), n = grid[0].size();\n        queue<pair<int, int>> q;\n        int cnt = 0;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = 0; i < m; ++i) {\n            for (int j = 0; j < n; ++j) {\n                // [Reader note] Decision point\n                // Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'\n                if (grid[i][j] == 1) {\n                    ++cnt;\n                } else if (grid[i][j] == 2) {\n                    q.emplace(i, j);\n                }\n            }\n        }\n        const int dirs[5] = {-1, 0, 1, 0, -1};\n        for (int ans = 1; q.size() && cnt; ++ans) {\n            for (int k = q.size(); k; --k) {\n                auto [i, j] = q.front();\n                q.pop();\n                for (int d = 0; d < 4; ++d) {\n                    int x = i + dirs[d], y = j + dirs[d + 1];\n                    if (x >= 0 && x < m && y >= 0 && y < n && grid[x][y] == 1) {\n                        grid[x][y] = 2;\n                        q.emplace(x, y);\n                        if (--cnt == 0) {\n                            return ans;\n                        }\n                    }\n                }\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return cnt > 0 ? -1 : 0;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation."
+            },
+            {
+              "line": 7,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 9,
+              "label": "Decision point",
+              "note": "Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+            },
+            {
+              "line": 33,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the clearest multi-source BFS problems, and the time interpretation makes the level structure intuitive.",
+            "whatToNotice": "Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.",
+            "riskPoint": "It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-java-0994-rotting-oranges.java",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/java/0994-rotting-oranges.java",
+          "localPath": "neetcode-gh_leetcode/java/0994-rotting-oranges.java",
+          "relativePath": "java/0994-rotting-oranges.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code",
+          "code": "class Solution {\n\n    public int orangesRotting(int[][] grid) {\n        int m = grid.length, n = grid[0].length;\n        Queue<int[]> queue = new LinkedList<>();\n        int fresh = 0;\n\n        for (int i = 0; i < m; i += 1) {\n            for (int j = 0; j < n; j += 1) {\n                if (grid[i][j] == 2) queue.offer(new int[] { i, j }); else if (\n                    grid[i][j] == 1\n                ) fresh += 1;\n            }\n        }\n\n        int count = 0;\n        int[][] dirs = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } };\n        while (!queue.isEmpty() && fresh != 0) {\n            count += 1;\n            int sz = queue.size();\n            for (int i = 0; i < sz; i += 1) {\n                int[] rotten = queue.poll();\n                int r = rotten[0], c = rotten[1];\n                for (int[] dir : dirs) {\n                    int x = r + dir[0], y = c + dir[1];\n                    if (0 <= x && x < m && 0 <= y && y < n && grid[x][y] == 1) {\n                        grid[x][y] = 2;\n                        queue.offer(new int[] { x, y });\n                        fresh -= 1;\n                    }\n                }\n            }\n        }\n        return fresh == 0 ? count : -1;\n    }\n}\n",
+          "originalCode": "class Solution {\n\n    public int orangesRotting(int[][] grid) {\n        int m = grid.length, n = grid[0].length;\n        Queue<int[]> queue = new LinkedList<>();\n        int fresh = 0;\n\n        for (int i = 0; i < m; i += 1) {\n            for (int j = 0; j < n; j += 1) {\n                if (grid[i][j] == 2) queue.offer(new int[] { i, j }); else if (\n                    grid[i][j] == 1\n                ) fresh += 1;\n            }\n        }\n\n        int count = 0;\n        int[][] dirs = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } };\n        while (!queue.isEmpty() && fresh != 0) {\n            count += 1;\n            int sz = queue.size();\n            for (int i = 0; i < sz; i += 1) {\n                int[] rotten = queue.poll();\n                int r = rotten[0], c = rotten[1];\n                for (int[] dir : dirs) {\n                    int x = r + dir[0], y = c + dir[1];\n                    if (0 <= x && x < m && 0 <= y && y < n && grid[x][y] == 1) {\n                        grid[x][y] = 2;\n                        queue.offer(new int[] { x, y });\n                        fresh -= 1;\n                    }\n                }\n            }\n        }\n        return fresh == 0 ? count : -1;\n    }\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together.\nclass Solution {\n\n    public int orangesRotting(int[][] grid) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.\n        int m = grid.length, n = grid[0].length;\n        Queue<int[]> queue = new LinkedList<>();\n        int fresh = 0;\n\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = 0; i < m; i += 1) {\n            for (int j = 0; j < n; j += 1) {\n                // [Reader note] Decision point\n                // Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'\n                if (grid[i][j] == 2) queue.offer(new int[] { i, j }); else if (\n                    grid[i][j] == 1\n                ) fresh += 1;\n            }\n        }\n\n        int count = 0;\n        int[][] dirs = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } };\n        while (!queue.isEmpty() && fresh != 0) {\n            count += 1;\n            int sz = queue.size();\n            for (int i = 0; i < sz; i += 1) {\n                int[] rotten = queue.poll();\n                int r = rotten[0], c = rotten[1];\n                for (int[] dir : dirs) {\n                    int x = r + dir[0], y = c + dir[1];\n                    if (0 <= x && x < m && 0 <= y && y < n && grid[x][y] == 1) {\n                        grid[x][y] = 2;\n                        queue.offer(new int[] { x, y });\n                        fresh -= 1;\n                    }\n                }\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return fresh == 0 ? count : -1;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation."
+            },
+            {
+              "line": 8,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 10,
+              "label": "Decision point",
+              "note": "Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+            },
+            {
+              "line": 34,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the clearest multi-source BFS problems, and the time interpretation makes the level structure intuitive.",
+            "whatToNotice": "Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.",
+            "riskPoint": "It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0900-0999-0994.rotting-oranges-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0900-0999/0994.Rotting%20Oranges/Solution.java",
+          "localPath": "doocs_leetcode/solution/0900-0999/0994.Rotting Oranges/Solution.java",
+          "relativePath": "solution/0900-0999/0994.Rotting Oranges/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\n    public int orangesRotting(int[][] grid) {\n        int m = grid.length, n = grid[0].length;\n        Deque<int[]> q = new ArrayDeque<>();\n        int cnt = 0;\n        for (int i = 0; i < m; ++i) {\n            for (int j = 0; j < n; ++j) {\n                if (grid[i][j] == 1) {\n                    ++cnt;\n                } else if (grid[i][j] == 2) {\n                    q.offer(new int[] {i, j});\n                }\n            }\n        }\n        final int[] dirs = {-1, 0, 1, 0, -1};\n        for (int ans = 1; !q.isEmpty() && cnt > 0; ++ans) {\n            for (int k = q.size(); k > 0; --k) {\n                var p = q.poll();\n                for (int d = 0; d < 4; ++d) {\n                    int x = p[0] + dirs[d], y = p[1] + dirs[d + 1];\n                    if (x >= 0 && x < m && y >= 0 && y < n && grid[x][y] == 1) {\n                        grid[x][y] = 2;\n                        q.offer(new int[] {x, y});\n                        if (--cnt == 0) {\n                            return ans;\n                        }\n                    }\n                }\n            }\n        }\n        return cnt > 0 ? -1 : 0;\n    }\n}\n",
+          "originalCode": "class Solution {\n    public int orangesRotting(int[][] grid) {\n        int m = grid.length, n = grid[0].length;\n        Deque<int[]> q = new ArrayDeque<>();\n        int cnt = 0;\n        for (int i = 0; i < m; ++i) {\n            for (int j = 0; j < n; ++j) {\n                if (grid[i][j] == 1) {\n                    ++cnt;\n                } else if (grid[i][j] == 2) {\n                    q.offer(new int[] {i, j});\n                }\n            }\n        }\n        final int[] dirs = {-1, 0, 1, 0, -1};\n        for (int ans = 1; !q.isEmpty() && cnt > 0; ++ans) {\n            for (int k = q.size(); k > 0; --k) {\n                var p = q.poll();\n                for (int d = 0; d < 4; ++d) {\n                    int x = p[0] + dirs[d], y = p[1] + dirs[d + 1];\n                    if (x >= 0 && x < m && y >= 0 && y < n && grid[x][y] == 1) {\n                        grid[x][y] = 2;\n                        q.offer(new int[] {x, y});\n                        if (--cnt == 0) {\n                            return ans;\n                        }\n                    }\n                }\n            }\n        }\n        return cnt > 0 ? -1 : 0;\n    }\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together.\nclass Solution {\n    public int orangesRotting(int[][] grid) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.\n        int m = grid.length, n = grid[0].length;\n        Deque<int[]> q = new ArrayDeque<>();\n        int cnt = 0;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = 0; i < m; ++i) {\n            for (int j = 0; j < n; ++j) {\n                // [Reader note] Decision point\n                // Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'\n                if (grid[i][j] == 1) {\n                    ++cnt;\n                } else if (grid[i][j] == 2) {\n                    q.offer(new int[] {i, j});\n                }\n            }\n        }\n        final int[] dirs = {-1, 0, 1, 0, -1};\n        for (int ans = 1; !q.isEmpty() && cnt > 0; ++ans) {\n            for (int k = q.size(); k > 0; --k) {\n                var p = q.poll();\n                for (int d = 0; d < 4; ++d) {\n                    int x = p[0] + dirs[d], y = p[1] + dirs[d + 1];\n                    if (x >= 0 && x < m && y >= 0 && y < n && grid[x][y] == 1) {\n                        grid[x][y] = 2;\n                        q.offer(new int[] {x, y});\n                        if (--cnt == 0) {\n                            return ans;\n                        }\n                    }\n                }\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return cnt > 0 ? -1 : 0;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation."
+            },
+            {
+              "line": 6,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 8,
+              "label": "Decision point",
+              "note": "Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+            },
+            {
+              "line": 31,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the clearest multi-source BFS problems, and the time interpretation makes the level structure intuitive.",
+            "whatToNotice": "Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.",
+            "riskPoint": "It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-go-0994-rotting-oranges.go",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/go/0994-rotting-oranges.go",
+          "localPath": "neetcode-gh_leetcode/go/0994-rotting-oranges.go",
+          "relativePath": "go/0994-rotting-oranges.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code",
+          "code": "const ROW = 0\nconst COL = 1\nfunc orangesRotting(grid [][]int) int {\n    q := make([][]int, 0)\n    fresh := 0\n    time := 0\n    \n    for r := 0; r < len(grid); r++ {\n        for c := 0; c < len(grid[0]); c++ {\n            if grid[r][c] == 1 {\n                fresh += 1\n            }\n            if grid[r][c] == 2 {\n                q = append(q, []int{r, c})\n            }\n        }\n    }\n    \n    directions := [4][2]int{{0, 1}, {0, -1}, {1, 0}, {-1, 0}}\n    for fresh > 0 && len(q) != 0 {\n        length := len(q)\n        for i := 0; i < length; i++ {\n            cell := q[0]\n            q = q[1:]\n            \n            for _, d := range directions {\n                row, col := cell[ROW] + d[ROW], cell[COL] + d[COL]\n\n                // if in bounds and notrotten, make rotten\n                // and add to q\n                if(\n                    row >= 0 && row < len(grid) &&\n                    col >= 0 && col < len(grid[0]) &&\n                    grid[row][col] == 1) {\n                    grid[row][col] = 2\n                    q = append(q, []int{row, col})\n                    fresh -= 1\n                }\n            }         \n        }\n        time += 1\n    }\n    \n    if fresh == 0 {\n        return time;\n    }\n    return -1\n}\n",
+          "originalCode": "const ROW = 0\nconst COL = 1\nfunc orangesRotting(grid [][]int) int {\n    q := make([][]int, 0)\n    fresh := 0\n    time := 0\n    \n    for r := 0; r < len(grid); r++ {\n        for c := 0; c < len(grid[0]); c++ {\n            if grid[r][c] == 1 {\n                fresh += 1\n            }\n            if grid[r][c] == 2 {\n                q = append(q, []int{r, c})\n            }\n        }\n    }\n    \n    directions := [4][2]int{{0, 1}, {0, -1}, {1, 0}, {-1, 0}}\n    for fresh > 0 && len(q) != 0 {\n        length := len(q)\n        for i := 0; i < length; i++ {\n            cell := q[0]\n            q = q[1:]\n            \n            for _, d := range directions {\n                row, col := cell[ROW] + d[ROW], cell[COL] + d[COL]\n\n                // if in bounds and notrotten, make rotten\n                // and add to q\n                if(\n                    row >= 0 && row < len(grid) &&\n                    col >= 0 && col < len(grid[0]) &&\n                    grid[row][col] == 1) {\n                    grid[row][col] = 2\n                    q = append(q, []int{row, col})\n                    fresh -= 1\n                }\n            }         \n        }\n        time += 1\n    }\n    \n    if fresh == 0 {\n        return time;\n    }\n    return -1\n}\n",
+          "reviewedCode": "const ROW = 0\nconst COL = 1\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together.\nfunc orangesRotting(grid [][]int) int {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.\n    q := make([][]int, 0)\n    fresh := 0\n    time := 0\n    \n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for r := 0; r < len(grid); r++ {\n        for c := 0; c < len(grid[0]); c++ {\n            // [Reader note] Decision point\n            // Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'\n            if grid[r][c] == 1 {\n                fresh += 1\n            }\n            if grid[r][c] == 2 {\n                q = append(q, []int{r, c})\n            }\n        }\n    }\n    \n    directions := [4][2]int{{0, 1}, {0, -1}, {1, 0}, {-1, 0}}\n    for fresh > 0 && len(q) != 0 {\n        length := len(q)\n        for i := 0; i < length; i++ {\n            cell := q[0]\n            q = q[1:]\n            \n            for _, d := range directions {\n                row, col := cell[ROW] + d[ROW], cell[COL] + d[COL]\n\n                // if in bounds and notrotten, make rotten\n                // and add to q\n                if(\n                    row >= 0 && row < len(grid) &&\n                    col >= 0 && col < len(grid[0]) &&\n                    grid[row][col] == 1) {\n                    grid[row][col] = 2\n                    q = append(q, []int{row, col})\n                    fresh -= 1\n                }\n            }         \n        }\n        time += 1\n    }\n    \n    if fresh == 0 {\n        return time;\n    }\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return -1\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "time := 0"
+          ],
+          "annotations": [
+            {
+              "line": 3,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation."
+            },
+            {
+              "line": 8,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 10,
+              "label": "Decision point",
+              "note": "Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+            },
+            {
+              "line": 47,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the clearest multi-source BFS problems, and the time interpretation makes the level structure intuitive.",
+            "whatToNotice": "Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.",
+            "riskPoint": "It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0900-0999-0994.rotting-oranges-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0900-0999/0994.Rotting%20Oranges/Solution.go",
+          "localPath": "doocs_leetcode/solution/0900-0999/0994.Rotting Oranges/Solution.go",
+          "relativePath": "solution/0900-0999/0994.Rotting Oranges/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "func orangesRotting(grid [][]int) int {\n\tm, n := len(grid), len(grid[0])\n\tq := [][2]int{}\n\tcnt := 0\n\tfor i, row := range grid {\n\t\tfor j, x := range row {\n\t\t\tif x == 1 {\n\t\t\t\tcnt++\n\t\t\t} else if x == 2 {\n\t\t\t\tq = append(q, [2]int{i, j})\n\t\t\t}\n\t\t}\n\t}\n\tdirs := [5]int{-1, 0, 1, 0, -1}\n\tfor ans := 1; len(q) > 0 && cnt > 0; ans++ {\n\t\tfor k := len(q); k > 0; k-- {\n\t\t\tp := q[0]\n\t\t\tq = q[1:]\n\t\t\tfor d := 0; d < 4; d++ {\n\t\t\t\tx, y := p[0]+dirs[d], p[1]+dirs[d+1]\n\t\t\t\tif x >= 0 && x < m && y >= 0 && y < n && grid[x][y] == 1 {\n\t\t\t\t\tgrid[x][y] = 2\n\t\t\t\t\tq = append(q, [2]int{x, y})\n\t\t\t\t\tif cnt--; cnt == 0 {\n\t\t\t\t\t\treturn ans\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\tif cnt > 0 {\n\t\treturn -1\n\t}\n\treturn 0\n}\n",
+          "originalCode": "func orangesRotting(grid [][]int) int {\n\tm, n := len(grid), len(grid[0])\n\tq := [][2]int{}\n\tcnt := 0\n\tfor i, row := range grid {\n\t\tfor j, x := range row {\n\t\t\tif x == 1 {\n\t\t\t\tcnt++\n\t\t\t} else if x == 2 {\n\t\t\t\tq = append(q, [2]int{i, j})\n\t\t\t}\n\t\t}\n\t}\n\tdirs := [5]int{-1, 0, 1, 0, -1}\n\tfor ans := 1; len(q) > 0 && cnt > 0; ans++ {\n\t\tfor k := len(q); k > 0; k-- {\n\t\t\tp := q[0]\n\t\t\tq = q[1:]\n\t\t\tfor d := 0; d < 4; d++ {\n\t\t\t\tx, y := p[0]+dirs[d], p[1]+dirs[d+1]\n\t\t\t\tif x >= 0 && x < m && y >= 0 && y < n && grid[x][y] == 1 {\n\t\t\t\t\tgrid[x][y] = 2\n\t\t\t\t\tq = append(q, [2]int{x, y})\n\t\t\t\t\tif cnt--; cnt == 0 {\n\t\t\t\t\t\treturn ans\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\tif cnt > 0 {\n\t\treturn -1\n\t}\n\treturn 0\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together.\nfunc orangesRotting(grid [][]int) int {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.\n\tm, n := len(grid), len(grid[0])\n\tq := [][2]int{}\n\tcnt := 0\n\t// [Reader note] Main pass\n\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\tfor i, row := range grid {\n\t\tfor j, x := range row {\n\t\t\t// [Reader note] Decision point\n\t\t\t// Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'\n\t\t\tif x == 1 {\n\t\t\t\tcnt++\n\t\t\t} else if x == 2 {\n\t\t\t\tq = append(q, [2]int{i, j})\n\t\t\t}\n\t\t}\n\t}\n\tdirs := [5]int{-1, 0, 1, 0, -1}\n\tfor ans := 1; len(q) > 0 && cnt > 0; ans++ {\n\t\tfor k := len(q); k > 0; k-- {\n\t\t\tp := q[0]\n\t\t\tq = q[1:]\n\t\t\tfor d := 0; d < 4; d++ {\n\t\t\t\tx, y := p[0]+dirs[d], p[1]+dirs[d+1]\n\t\t\t\tif x >= 0 && x < m && y >= 0 && y < n && grid[x][y] == 1 {\n\t\t\t\t\tgrid[x][y] = 2\n\t\t\t\t\tq = append(q, [2]int{x, y})\n\t\t\t\t\tif cnt--; cnt == 0 {\n\t\t\t\t\t\treturn ans\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\tif cnt > 0 {\n\t\treturn -1\n\t}\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn 0\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation."
+            },
+            {
+              "line": 5,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 7,
+              "label": "Decision point",
+              "note": "Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+            },
+            {
+              "line": 34,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the clearest multi-source BFS problems, and the time interpretation makes the level structure intuitive.",
+            "whatToNotice": "Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.",
+            "riskPoint": "It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+          }
+        }
+      ]
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0900-0999-0994.rotting-oranges-solution.ts",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0900-0999/0994.Rotting%20Oranges/Solution.ts",
+          "localPath": "doocs_leetcode/solution/0900-0999/0994.Rotting Oranges/Solution.ts",
+          "relativePath": "solution/0900-0999/0994.Rotting Oranges/Solution.ts",
+          "languageId": "typescript",
+          "languageLabel": "TypeScript",
+          "coverageType": "code+explanation",
+          "code": "function orangesRotting(grid: number[][]): number {\n    const m: number = grid.length;\n    const n: number = grid[0].length;\n    const q: number[][] = [];\n    let cnt: number = 0;\n    for (let i: number = 0; i < m; ++i) {\n        for (let j: number = 0; j < n; ++j) {\n            if (grid[i][j] === 1) {\n                cnt++;\n            } else if (grid[i][j] === 2) {\n                q.push([i, j]);\n            }\n        }\n    }\n    const dirs: number[] = [-1, 0, 1, 0, -1];\n    for (let ans = 1; q.length && cnt; ++ans) {\n        const t: number[][] = [];\n        for (const [i, j] of q) {\n            for (let d = 0; d < 4; ++d) {\n                const [x, y] = [i + dirs[d], j + dirs[d + 1]];\n                if (x >= 0 && x < m && y >= 0 && y < n && grid[x][y] === 1) {\n                    grid[x][y] = 2;\n                    t.push([x, y]);\n                    if (--cnt === 0) {\n                        return ans;\n                    }\n                }\n            }\n        }\n        q.splice(0, q.length, ...t);\n    }\n    return cnt > 0 ? -1 : 0;\n}\n",
+          "originalCode": "function orangesRotting(grid: number[][]): number {\n    const m: number = grid.length;\n    const n: number = grid[0].length;\n    const q: number[][] = [];\n    let cnt: number = 0;\n    for (let i: number = 0; i < m; ++i) {\n        for (let j: number = 0; j < n; ++j) {\n            if (grid[i][j] === 1) {\n                cnt++;\n            } else if (grid[i][j] === 2) {\n                q.push([i, j]);\n            }\n        }\n    }\n    const dirs: number[] = [-1, 0, 1, 0, -1];\n    for (let ans = 1; q.length && cnt; ++ans) {\n        const t: number[][] = [];\n        for (const [i, j] of q) {\n            for (let d = 0; d < 4; ++d) {\n                const [x, y] = [i + dirs[d], j + dirs[d + 1]];\n                if (x >= 0 && x < m && y >= 0 && y < n && grid[x][y] === 1) {\n                    grid[x][y] = 2;\n                    t.push([x, y]);\n                    if (--cnt === 0) {\n                        return ans;\n                    }\n                }\n            }\n        }\n        q.splice(0, q.length, ...t);\n    }\n    return cnt > 0 ? -1 : 0;\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together.\nfunction orangesRotting(grid: number[][]): number {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.\n    const m: number = grid.length;\n    const n: number = grid[0].length;\n    const q: number[][] = [];\n    let cnt: number = 0;\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (let i: number = 0; i < m; ++i) {\n        for (let j: number = 0; j < n; ++j) {\n            // [Reader note] Decision point\n            // Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'\n            if (grid[i][j] === 1) {\n                cnt++;\n            } else if (grid[i][j] === 2) {\n                q.push([i, j]);\n            }\n        }\n    }\n    const dirs: number[] = [-1, 0, 1, 0, -1];\n    for (let ans = 1; q.length && cnt; ++ans) {\n        const t: number[][] = [];\n        for (const [i, j] of q) {\n            for (let d = 0; d < 4; ++d) {\n                const [x, y] = [i + dirs[d], j + dirs[d + 1]];\n                if (x >= 0 && x < m && y >= 0 && y < n && grid[x][y] === 1) {\n                    grid[x][y] = 2;\n                    t.push([x, y]);\n                    if (--cnt === 0) {\n                        return ans;\n                    }\n                }\n            }\n        }\n        q.splice(0, q.length, ...t);\n    }\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return cnt > 0 ? -1 : 0;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation."
+            },
+            {
+              "line": 6,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 8,
+              "label": "Decision point",
+              "note": "Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+            },
+            {
+              "line": 32,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the clearest multi-source BFS problems, and the time interpretation makes the level structure intuitive.",
+            "whatToNotice": "Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.",
+            "riskPoint": "It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+          }
+        }
+      ]
+    },
+    {
+      "id": "javascript",
+      "label": "JavaScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-javascript-0994-rotting-oranges.js",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/javascript/0994-rotting-oranges.js",
+          "localPath": "neetcode-gh_leetcode/javascript/0994-rotting-oranges.js",
+          "relativePath": "javascript/0994-rotting-oranges.js",
+          "languageId": "javascript",
+          "languageLabel": "JavaScript",
+          "coverageType": "code",
+          "code": "/**\n * https://leetcode.com/problems/rotting-oranges/\n * Time O(ROWS * COLS) | Space O(ROWS * COLS)\n * @param {number[][]} grid\n * @return {number}\n */\nvar orangesRotting = function (grid) {\n    const { queue, orangeCount } = searchGrid(grid); /* Time O(ROWS * COLS) */\n    const { rottenCount, minutes } = bfs(grid, queue);\n\n    const isEqual = orangeCount === rottenCount;\n    return isEqual ? minutes : -1;\n};\n\nconst searchGrid = (grid, orangeCount = 0, queue = new Queue([])) => {\n    const [rows, cols] = [grid.length, grid[0].length];\n\n    for (let row = 0; row < rows; row++) {\n        /* Time O(ROWS) */\n        for (let col = 0; col < cols; col++) {\n            /* Time O(COLS) */\n            const isEmpty = grid[row][col] === 0;\n            if (!isEmpty) orangeCount++;\n\n            const isRotten = grid[row][col] === 2;\n            if (isRotten) queue.enqueue([row, col]); /* Space O(ROWS * COLS) */\n        }\n    }\n\n    return { queue, orangeCount };\n};\n\nconst bfs = (grid, queue, rottenCount = 0, minutes = 0) => {\n    while (!queue.isEmpty()) {\n        rottenCount += queue.size();\n\n        for (let i = queue.size() - 1; 0 <= i; i--) {\n            /* Time O(WIDTH) */\n            expireFresh(grid, queue);\n        }\n\n        if (queue.size()) minutes++;\n    }\n\n    return { rottenCount, minutes };\n};\n\nvar expireFresh = (grid, queue) => {\n    const [rows, cols] = [grid.length, grid[0].length];\n    const [row, col] = queue.dequeue();\n\n    for (const [_row, _col] of getNeighbors(row, rows, col, cols)) {\n        const isFresh = grid[_row][_col] === 1;\n        if (!isFresh) continue;\n\n        grid[_row][_col] = 2;\n        queue.enqueue([_row, _col]); /* Space O(ROWS * COLS) */\n    }\n};\n\nvar getNeighbors = (row, rows, col, cols) =>\n    [\n        [0, 1],\n        [0, -1],\n        [1, 0],\n        [-1, 0],\n    ]\n        .map(([_row, _col]) => [row + _row, col + _col])\n        .filter(\n            ([_row, _col]) =>\n                0 <= _row && _row < rows && 0 <= _col && _col < cols,\n        );\n\n/**\n * https://leetcode.com/problems/rotting-oranges/\n * Time O((ROWS * COLS)^2) | Space O(1)\n * @param {number[][]} grid\n * @return {number}\n */\nvar orangesRotting = function (grid, minutes = 2) {\n    while (expireFresh(grid, minutes)) minutes++; /* Time O((ROWS * COLS)^2) */\n\n    return !hasFresh(grid) /* Time O(ROWS * COLS) */ ? minutes - 2 : -1;\n};\n\nvar expireFresh = (grid, minutes, toBeContinued = false) => {\n    const [rows, cols] = [grid.length, grid[0].length];\n\n    for (let row = 0; row < rows; row++) {\n        /* Time O(ROWS) */\n        for (let col = 0; col < cols; col++) {\n            /* Time O(COLS) */\n            const isEqual = grid[row][col] === minutes;\n            if (!isEqual) continue;\n\n            for (const [_row, _col] of getNeighbors(row, rows, col, cols)) {\n                const isFresh = grid[_row][_col] === 1;\n                if (!isFresh) continue;\n\n                grid[_row][_col] = minutes + 1;\n                toBeContinued = true;\n            }\n        }\n    }\n\n    return toBeContinued;\n};\n\nvar getNeighbors = (row, rows, col, cols) =>\n    [\n        [0, 1],\n        [0, -1],\n        [1, 0],\n        [-1, 0],\n    ]\n        .map(([_row, _col]) => [row + _row, col + _col])\n        .filter(\n            ([_row, _col]) =>\n                0 <= _row && _row < rows && 0 <= _col && _col < cols,\n        );\n\nconst hasFresh = (grid) => {\n    for (const row of grid) {\n        /* Time O(ROWS) */\n        for (const cell of row) {\n            /* Time O(COLS) */\n            const isFresh = cell === 1;\n            if (isFresh) return true;\n        }\n    }\n\n    return false;\n};\n",
+          "originalCode": "/**\n * https://leetcode.com/problems/rotting-oranges/\n * Time O(ROWS * COLS) | Space O(ROWS * COLS)\n * @param {number[][]} grid\n * @return {number}\n */\nvar orangesRotting = function (grid) {\n    const { queue, orangeCount } = searchGrid(grid); /* Time O(ROWS * COLS) */\n    const { rottenCount, minutes } = bfs(grid, queue);\n\n    const isEqual = orangeCount === rottenCount;\n    return isEqual ? minutes : -1;\n};\n\nconst searchGrid = (grid, orangeCount = 0, queue = new Queue([])) => {\n    const [rows, cols] = [grid.length, grid[0].length];\n\n    for (let row = 0; row < rows; row++) {\n        /* Time O(ROWS) */\n        for (let col = 0; col < cols; col++) {\n            /* Time O(COLS) */\n            const isEmpty = grid[row][col] === 0;\n            if (!isEmpty) orangeCount++;\n\n            const isRotten = grid[row][col] === 2;\n            if (isRotten) queue.enqueue([row, col]); /* Space O(ROWS * COLS) */\n        }\n    }\n\n    return { queue, orangeCount };\n};\n\nconst bfs = (grid, queue, rottenCount = 0, minutes = 0) => {\n    while (!queue.isEmpty()) {\n        rottenCount += queue.size();\n\n        for (let i = queue.size() - 1; 0 <= i; i--) {\n            /* Time O(WIDTH) */\n            expireFresh(grid, queue);\n        }\n\n        if (queue.size()) minutes++;\n    }\n\n    return { rottenCount, minutes };\n};\n\nvar expireFresh = (grid, queue) => {\n    const [rows, cols] = [grid.length, grid[0].length];\n    const [row, col] = queue.dequeue();\n\n    for (const [_row, _col] of getNeighbors(row, rows, col, cols)) {\n        const isFresh = grid[_row][_col] === 1;\n        if (!isFresh) continue;\n\n        grid[_row][_col] = 2;\n        queue.enqueue([_row, _col]); /* Space O(ROWS * COLS) */\n    }\n};\n\nvar getNeighbors = (row, rows, col, cols) =>\n    [\n        [0, 1],\n        [0, -1],\n        [1, 0],\n        [-1, 0],\n    ]\n        .map(([_row, _col]) => [row + _row, col + _col])\n        .filter(\n            ([_row, _col]) =>\n                0 <= _row && _row < rows && 0 <= _col && _col < cols,\n        );\n\n/**\n * https://leetcode.com/problems/rotting-oranges/\n * Time O((ROWS * COLS)^2) | Space O(1)\n * @param {number[][]} grid\n * @return {number}\n */\nvar orangesRotting = function (grid, minutes = 2) {\n    while (expireFresh(grid, minutes)) minutes++; /* Time O((ROWS * COLS)^2) */\n\n    return !hasFresh(grid) /* Time O(ROWS * COLS) */ ? minutes - 2 : -1;\n};\n\nvar expireFresh = (grid, minutes, toBeContinued = false) => {\n    const [rows, cols] = [grid.length, grid[0].length];\n\n    for (let row = 0; row < rows; row++) {\n        /* Time O(ROWS) */\n        for (let col = 0; col < cols; col++) {\n            /* Time O(COLS) */\n            const isEqual = grid[row][col] === minutes;\n            if (!isEqual) continue;\n\n            for (const [_row, _col] of getNeighbors(row, rows, col, cols)) {\n                const isFresh = grid[_row][_col] === 1;\n                if (!isFresh) continue;\n\n                grid[_row][_col] = minutes + 1;\n                toBeContinued = true;\n            }\n        }\n    }\n\n    return toBeContinued;\n};\n\nvar getNeighbors = (row, rows, col, cols) =>\n    [\n        [0, 1],\n        [0, -1],\n        [1, 0],\n        [-1, 0],\n    ]\n        .map(([_row, _col]) => [row + _row, col + _col])\n        .filter(\n            ([_row, _col]) =>\n                0 <= _row && _row < rows && 0 <= _col && _col < cols,\n        );\n\nconst hasFresh = (grid) => {\n    for (const row of grid) {\n        /* Time O(ROWS) */\n        for (const cell of row) {\n            /* Time O(COLS) */\n            const isFresh = cell === 1;\n            if (isFresh) return true;\n        }\n    }\n\n    return false;\n};\n",
+          "reviewedCode": "/**\n * https://leetcode.com/problems/rotting-oranges/\n * Time O(ROWS * COLS) | Space O(ROWS * COLS)\n * @param {number[][]} grid\n * @return {number}\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together.\nvar orangesRotting = function (grid) {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.\n    const { queue, orangeCount } = searchGrid(grid); /* Time O(ROWS * COLS) */\n    const { rottenCount, minutes } = bfs(grid, queue);\n\n    const isEqual = orangeCount === rottenCount;\n    return isEqual ? minutes : -1;\n};\n\nconst searchGrid = (grid, orangeCount = 0, queue = new Queue([])) => {\n    const [rows, cols] = [grid.length, grid[0].length];\n\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (let row = 0; row < rows; row++) {\n        /* Time O(ROWS) */\n        for (let col = 0; col < cols; col++) {\n            /* Time O(COLS) */\n            const isEmpty = grid[row][col] === 0;\n            // [Reader note] Decision point\n            // Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'\n            if (!isEmpty) orangeCount++;\n\n            const isRotten = grid[row][col] === 2;\n            if (isRotten) queue.enqueue([row, col]); /* Space O(ROWS * COLS) */\n        }\n    }\n\n    return { queue, orangeCount };\n};\n\nconst bfs = (grid, queue, rottenCount = 0, minutes = 0) => {\n    while (!queue.isEmpty()) {\n        rottenCount += queue.size();\n\n        for (let i = queue.size() - 1; 0 <= i; i--) {\n            /* Time O(WIDTH) */\n            expireFresh(grid, queue);\n        }\n\n        if (queue.size()) minutes++;\n    }\n\n    return { rottenCount, minutes };\n};\n\nvar expireFresh = (grid, queue) => {\n    const [rows, cols] = [grid.length, grid[0].length];\n    const [row, col] = queue.dequeue();\n\n    for (const [_row, _col] of getNeighbors(row, rows, col, cols)) {\n        const isFresh = grid[_row][_col] === 1;\n        if (!isFresh) continue;\n\n        grid[_row][_col] = 2;\n        queue.enqueue([_row, _col]); /* Space O(ROWS * COLS) */\n    }\n};\n\nvar getNeighbors = (row, rows, col, cols) =>\n    [\n        [0, 1],\n        [0, -1],\n        [1, 0],\n        [-1, 0],\n    ]\n        .map(([_row, _col]) => [row + _row, col + _col])\n        .filter(\n            ([_row, _col]) =>\n                0 <= _row && _row < rows && 0 <= _col && _col < cols,\n        );\n\n/**\n * https://leetcode.com/problems/rotting-oranges/\n * Time O((ROWS * COLS)^2) | Space O(1)\n * @param {number[][]} grid\n * @return {number}\n */\nvar orangesRotting = function (grid, minutes = 2) {\n    while (expireFresh(grid, minutes)) minutes++; /* Time O((ROWS * COLS)^2) */\n\n    return !hasFresh(grid) /* Time O(ROWS * COLS) */ ? minutes - 2 : -1;\n};\n\nvar expireFresh = (grid, minutes, toBeContinued = false) => {\n    const [rows, cols] = [grid.length, grid[0].length];\n\n    for (let row = 0; row < rows; row++) {\n        /* Time O(ROWS) */\n        for (let col = 0; col < cols; col++) {\n            /* Time O(COLS) */\n            const isEqual = grid[row][col] === minutes;\n            if (!isEqual) continue;\n\n            for (const [_row, _col] of getNeighbors(row, rows, col, cols)) {\n                const isFresh = grid[_row][_col] === 1;\n                if (!isFresh) continue;\n\n                grid[_row][_col] = minutes + 1;\n                toBeContinued = true;\n            }\n        }\n    }\n\n    return toBeContinued;\n};\n\nvar getNeighbors = (row, rows, col, cols) =>\n    [\n        [0, 1],\n        [0, -1],\n        [1, 0],\n        [-1, 0],\n    ]\n        .map(([_row, _col]) => [row + _row, col + _col])\n        .filter(\n            ([_row, _col]) =>\n                0 <= _row && _row < rows && 0 <= _col && _col < cols,\n        );\n\nconst hasFresh = (grid) => {\n    for (const row of grid) {\n        /* Time O(ROWS) */\n        for (const cell of row) {\n            /* Time O(COLS) */\n            const isFresh = cell === 1;\n            if (isFresh) return true;\n        }\n    }\n\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return false;\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time O(ROWS * COLS) | Space O(ROWS * COLS)",
+            "const { queue, orangeCount } = searchGrid(grid); /* Time O(ROWS * COLS) */"
+          ],
+          "annotations": [
+            {
+              "line": 7,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together."
+            },
+            {
+              "line": 8,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation."
+            },
+            {
+              "line": 18,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 23,
+              "label": "Decision point",
+              "note": "Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+            },
+            {
+              "line": 132,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the clearest multi-source BFS problems, and the time interpretation makes the level structure intuitive.",
+            "whatToNotice": "Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.",
+            "riskPoint": "It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+          }
+        }
+      ]
+    },
+    {
+      "id": "csharp",
+      "label": "C#",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-csharp-0994-rotting-oranges.cs",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/csharp/0994-rotting-oranges.cs",
+          "localPath": "neetcode-gh_leetcode/csharp/0994-rotting-oranges.cs",
+          "relativePath": "csharp/0994-rotting-oranges.cs",
+          "languageId": "csharp",
+          "languageLabel": "C#",
+          "coverageType": "code",
+          "code": "public class Solution {\n  public int OrangesRotting(int[][] grid)\n        {\n            if (grid == null || grid[0].Length == 0)\n                return 0;\n\n            int r = grid.Length, c = grid[0].Length, fresh = 0, time = 0;\n\n            Queue<(int, int)> q = new Queue<(int, int)>();\n\n            for (int i = 0; i < r; i++)\n            {\n                for (int j = 0; j < c; j++)\n                {\n                    if (grid[i][j] == 1)\n                        fresh++;\n                    else if (grid[i][j] == 2)\n                    {\n                        q.Enqueue((i, j));\n                    };\n                }\n            }\n\n            if (fresh == 0)\n                return 0;\n\n            int[,] dir = new int[,] { { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 } };\n            while (q.Any())\n            {\n                time++;\n                int size = q.Count;\n                for (int i = 0; i < size; i++)\n                {\n                    var curr = q.Dequeue();\n                    for (int j = 0; j < 4; j++)\n                    {\n                        int row = curr.Item1 + dir[j, 0];\n                        int col = curr.Item2 + dir[j, 1];\n\n                        if (row >= 0 && row < r && col >= 0 && col < c && grid[row][col] == 1)\n                        {\n                            grid[row][col] = 2;\n                            q.Enqueue((row, col));\n                            fresh--;\n                        }\n                    }\n                }\n            }\n\n            return fresh == 0 ? time - 1 : -1;\n        }}\n",
+          "originalCode": "public class Solution {\n  public int OrangesRotting(int[][] grid)\n        {\n            if (grid == null || grid[0].Length == 0)\n                return 0;\n\n            int r = grid.Length, c = grid[0].Length, fresh = 0, time = 0;\n\n            Queue<(int, int)> q = new Queue<(int, int)>();\n\n            for (int i = 0; i < r; i++)\n            {\n                for (int j = 0; j < c; j++)\n                {\n                    if (grid[i][j] == 1)\n                        fresh++;\n                    else if (grid[i][j] == 2)\n                    {\n                        q.Enqueue((i, j));\n                    };\n                }\n            }\n\n            if (fresh == 0)\n                return 0;\n\n            int[,] dir = new int[,] { { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 } };\n            while (q.Any())\n            {\n                time++;\n                int size = q.Count;\n                for (int i = 0; i < size; i++)\n                {\n                    var curr = q.Dequeue();\n                    for (int j = 0; j < 4; j++)\n                    {\n                        int row = curr.Item1 + dir[j, 0];\n                        int col = curr.Item2 + dir[j, 1];\n\n                        if (row >= 0 && row < r && col >= 0 && col < c && grid[row][col] == 1)\n                        {\n                            grid[row][col] = 2;\n                            q.Enqueue((row, col));\n                            fresh--;\n                        }\n                    }\n                }\n            }\n\n            return fresh == 0 ? time - 1 : -1;\n        }}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together.\npublic class Solution {\n  public int OrangesRotting(int[][] grid)\n        {\n            // [Reader note] State setup\n            // This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.\n            if (grid == null || grid[0].Length == 0)\n                return 0;\n\n            int r = grid.Length, c = grid[0].Length, fresh = 0, time = 0;\n\n            Queue<(int, int)> q = new Queue<(int, int)>();\n\n            // [Reader note] Main pass\n            // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for (int i = 0; i < r; i++)\n            {\n                for (int j = 0; j < c; j++)\n                {\n                    // [Reader note] Decision point\n                    // Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'\n                    if (grid[i][j] == 1)\n                        fresh++;\n                    else if (grid[i][j] == 2)\n                    {\n                        q.Enqueue((i, j));\n                    };\n                }\n            }\n\n            if (fresh == 0)\n                return 0;\n\n            int[,] dir = new int[,] { { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 } };\n            while (q.Any())\n            {\n                time++;\n                int size = q.Count;\n                for (int i = 0; i < size; i++)\n                {\n                    var curr = q.Dequeue();\n                    for (int j = 0; j < 4; j++)\n                    {\n                        int row = curr.Item1 + dir[j, 0];\n                        int col = curr.Item2 + dir[j, 1];\n\n                        if (row >= 0 && row < r && col >= 0 && col < c && grid[row][col] == 1)\n                        {\n                            grid[row][col] = 2;\n                            q.Enqueue((row, col));\n                            fresh--;\n                        }\n                    }\n                }\n            }\n\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return fresh == 0 ? time - 1 : -1;\n        }}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "int r = grid.Length, c = grid[0].Length, fresh = 0, time = 0;"
+          ],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation."
+            },
+            {
+              "line": 11,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 15,
+              "label": "Decision point",
+              "note": "Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+            },
+            {
+              "line": 50,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the clearest multi-source BFS problems, and the time interpretation makes the level structure intuitive.",
+            "whatToNotice": "Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.",
+            "riskPoint": "It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "label": "C",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-c-0994-rotting-oranges.c",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/c/0994-rotting-oranges.c",
+          "localPath": "neetcode-gh_leetcode/c/0994-rotting-oranges.c",
+          "relativePath": "c/0994-rotting-oranges.c",
+          "languageId": "c",
+          "languageLabel": "C",
+          "coverageType": "code",
+          "code": "\nint directions[4][2] = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};\n\nbool rotting_process(int** grid, int rows, int cols, int timestamp) {\n    bool continue_process = false;\n    for (int row = 0; row < rows; row++) {\n        for (int col = 0; col < cols; col++) {\n            if (grid[row][col] == timestamp) {\n                for (int i = 0; i < 4; i++) {\n                    int r = row + directions[i][0];\n                    int c = col + directions[i][1];\n                    if (rows > r && r >= 0 && cols > c && c >= 0) {\n                        if (grid[r][c] == 1) {\n                            grid[r][c] = timestamp + 1;\n                            continue_process = true;\n                        }\n                    }\n                }\n            }\n        }\n    }\n    return continue_process;\n}\n\nint orangesRotting(int** grid, int gridSize, int* gridColSize){\n    \n    int rows = gridSize;\n    int cols = gridColSize[0];\n    \n    int timestamp = 2;\n    while (rotting_process(grid, rows, cols, timestamp)) {\n        timestamp += 1;\n    } \n    \n    for (int row = 0; row < rows; row++) {\n        for (int col = 0; col < cols; col++) {\n            if (grid[row][col] == 1) {\n                return -1;\n            }\n        }\n    }\n    return timestamp - 2;\n}",
+          "originalCode": "\nint directions[4][2] = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};\n\nbool rotting_process(int** grid, int rows, int cols, int timestamp) {\n    bool continue_process = false;\n    for (int row = 0; row < rows; row++) {\n        for (int col = 0; col < cols; col++) {\n            if (grid[row][col] == timestamp) {\n                for (int i = 0; i < 4; i++) {\n                    int r = row + directions[i][0];\n                    int c = col + directions[i][1];\n                    if (rows > r && r >= 0 && cols > c && c >= 0) {\n                        if (grid[r][c] == 1) {\n                            grid[r][c] = timestamp + 1;\n                            continue_process = true;\n                        }\n                    }\n                }\n            }\n        }\n    }\n    return continue_process;\n}\n\nint orangesRotting(int** grid, int gridSize, int* gridColSize){\n    \n    int rows = gridSize;\n    int cols = gridColSize[0];\n    \n    int timestamp = 2;\n    while (rotting_process(grid, rows, cols, timestamp)) {\n        timestamp += 1;\n    } \n    \n    for (int row = 0; row < rows; row++) {\n        for (int col = 0; col < cols; col++) {\n            if (grid[row][col] == 1) {\n                return -1;\n            }\n        }\n    }\n    return timestamp - 2;\n}",
+          "reviewedCode": "\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together.\nint directions[4][2] = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};\n\nbool rotting_process(int** grid, int rows, int cols, int timestamp) {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.\n    bool continue_process = false;\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (int row = 0; row < rows; row++) {\n        for (int col = 0; col < cols; col++) {\n            // [Reader note] Decision point\n            // Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'\n            if (grid[row][col] == timestamp) {\n                for (int i = 0; i < 4; i++) {\n                    int r = row + directions[i][0];\n                    int c = col + directions[i][1];\n                    if (rows > r && r >= 0 && cols > c && c >= 0) {\n                        if (grid[r][c] == 1) {\n                            grid[r][c] = timestamp + 1;\n                            continue_process = true;\n                        }\n                    }\n                }\n            }\n        }\n    }\n    return continue_process;\n}\n\nint orangesRotting(int** grid, int gridSize, int* gridColSize){\n    \n    int rows = gridSize;\n    int cols = gridColSize[0];\n    \n    int timestamp = 2;\n    while (rotting_process(grid, rows, cols, timestamp)) {\n        timestamp += 1;\n    } \n    \n    for (int row = 0; row < rows; row++) {\n        for (int col = 0; col < cols; col++) {\n            if (grid[row][col] == 1) {\n                return -1;\n            }\n        }\n    }\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return timestamp - 2;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "bool rotting_process(int** grid, int rows, int cols, int timestamp) {",
+            "if (grid[row][col] == timestamp) {"
+          ],
+          "annotations": [
+            {
+              "line": 2,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together."
+            },
+            {
+              "line": 5,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation."
+            },
+            {
+              "line": 6,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 8,
+              "label": "Decision point",
+              "note": "Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+            },
+            {
+              "line": 42,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the clearest multi-source BFS problems, and the time interpretation makes the level structure intuitive.",
+            "whatToNotice": "Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.",
+            "riskPoint": "It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+          }
+        }
+      ]
+    },
+    {
+      "id": "kotlin",
+      "label": "Kotlin",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-kotlin-0994-rotting-oranges.kt",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/kotlin/0994-rotting-oranges.kt",
+          "localPath": "neetcode-gh_leetcode/kotlin/0994-rotting-oranges.kt",
+          "relativePath": "kotlin/0994-rotting-oranges.kt",
+          "languageId": "kotlin",
+          "languageLabel": "Kotlin",
+          "coverageType": "code",
+          "code": "class Solution {\n    fun orangesRotting(grid: Array<IntArray>): Int {\n        val m = grid.size\n        val n = grid[0].size\n        var fresh = 0\n        var minute = -1\n        var queue = LinkedList<IntArray>()\n        val dirs = arrayOf(intArrayOf(-1,0),intArrayOf(1,0),intArrayOf(0,1),intArrayOf(0,-1))\n\n        for (i in 0..m-1) {\n            for (j in 0..n-1) {\n                val curr = grid[i][j]\n\n                if (curr == 2)\n                    queue.add(intArrayOf(i, j))\n                else if (curr == 1)\n                    fresh++\n            }\n        }\n\n        var temp = LinkedList<IntArray>()\n\n        while (queue.size != 0) {\n            val curr = queue.poll()\n\n            for (dir in dirs) {\n                val x = curr[0] + dir[0]\n                val y = curr[1] + dir[1]\n\n                if (x < 0 || x >= m || y < 0 || y >= n)\n                    continue\n\n                if (grid[x][y] == 1) {\n                    temp.add(intArrayOf(x, y))\n                    fresh--\n                    grid[x][y] = 2\n                }\n            }\n\n            if (queue.size == 0) {\n                minute++\n                queue = temp\n                temp = LinkedList<IntArray>()\n            }\n        }\n\n        if (fresh != 0)\n            return -1\n\n        return if (minute == -1) 0 else minute\n    }\n}",
+          "originalCode": "class Solution {\n    fun orangesRotting(grid: Array<IntArray>): Int {\n        val m = grid.size\n        val n = grid[0].size\n        var fresh = 0\n        var minute = -1\n        var queue = LinkedList<IntArray>()\n        val dirs = arrayOf(intArrayOf(-1,0),intArrayOf(1,0),intArrayOf(0,1),intArrayOf(0,-1))\n\n        for (i in 0..m-1) {\n            for (j in 0..n-1) {\n                val curr = grid[i][j]\n\n                if (curr == 2)\n                    queue.add(intArrayOf(i, j))\n                else if (curr == 1)\n                    fresh++\n            }\n        }\n\n        var temp = LinkedList<IntArray>()\n\n        while (queue.size != 0) {\n            val curr = queue.poll()\n\n            for (dir in dirs) {\n                val x = curr[0] + dir[0]\n                val y = curr[1] + dir[1]\n\n                if (x < 0 || x >= m || y < 0 || y >= n)\n                    continue\n\n                if (grid[x][y] == 1) {\n                    temp.add(intArrayOf(x, y))\n                    fresh--\n                    grid[x][y] = 2\n                }\n            }\n\n            if (queue.size == 0) {\n                minute++\n                queue = temp\n                temp = LinkedList<IntArray>()\n            }\n        }\n\n        if (fresh != 0)\n            return -1\n\n        return if (minute == -1) 0 else minute\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together.\nclass Solution {\n    fun orangesRotting(grid: Array<IntArray>): Int {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.\n        val m = grid.size\n        val n = grid[0].size\n        var fresh = 0\n        var minute = -1\n        var queue = LinkedList<IntArray>()\n        val dirs = arrayOf(intArrayOf(-1,0),intArrayOf(1,0),intArrayOf(0,1),intArrayOf(0,-1))\n\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (i in 0..m-1) {\n            for (j in 0..n-1) {\n                val curr = grid[i][j]\n\n                // [Reader note] Decision point\n                // Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'\n                if (curr == 2)\n                    queue.add(intArrayOf(i, j))\n                else if (curr == 1)\n                    fresh++\n            }\n        }\n\n        var temp = LinkedList<IntArray>()\n\n        while (queue.size != 0) {\n            val curr = queue.poll()\n\n            for (dir in dirs) {\n                val x = curr[0] + dir[0]\n                val y = curr[1] + dir[1]\n\n                if (x < 0 || x >= m || y < 0 || y >= n)\n                    continue\n\n                if (grid[x][y] == 1) {\n                    temp.add(intArrayOf(x, y))\n                    fresh--\n                    grid[x][y] = 2\n                }\n            }\n\n            if (queue.size == 0) {\n                minute++\n                queue = temp\n                temp = LinkedList<IntArray>()\n            }\n        }\n\n        if (fresh != 0)\n            return -1\n\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return if (minute == -1) 0 else minute\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each BFS layer is one time step, and all active sources move together."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation."
+            },
+            {
+              "line": 10,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 14,
+              "label": "Decision point",
+              "note": "Pay attention here: It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+            },
+            {
+              "line": 50,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the clearest multi-source BFS problems, and the time interpretation makes the level structure intuitive.",
+            "whatToNotice": "Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.",
+            "riskPoint": "It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'"
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "doocs_leetcode-solution-0900-0999-0994.rotting-oranges-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0900-0999/0994.Rotting%20Oranges/README.md",
+      "localPath": "doocs_leetcode/solution/0900-0999/0994.Rotting Oranges/README.md",
+      "relativePath": "solution/0900-0999/0994.Rotting Oranges/README.md",
+      "title": "[994. \u8150\u70c2\u7684\u6a58\u5b50](https://leetcode.cn/problems/rotting-oranges)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/0900-0999/0994.Rotting%20Oranges/README.md tags: - \u5e7f\u5ea6\u4f18\u5148\u641c\u7d22 - \u6570\u7ec4 - \u77e9\u9635 --- <!-- problem:start --> # [994. \u8150\u70c2\u7684\u6a58\u5b50](https://leetcode.cn/problems/rotting-oranges) [English Version](/solution/0900-0999/0994.Rotting%20Oranges/README_EN.md) ## \u9898\u76ee\u63cf\u8ff0 <!-- description:start --> <p>\u5728\u7ed9\u5b9a\u7684&nbsp;<code>m x n</code>&nbsp;\u7f51\u683c<meta charset=\"UT..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0900-0999-0994.rotting-oranges-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0900-0999/0994.Rotting%20Oranges/README_EN.md",
+      "localPath": "doocs_leetcode/solution/0900-0999/0994.Rotting Oranges/README_EN.md",
+      "relativePath": "solution/0900-0999/0994.Rotting Oranges/README_EN.md",
+      "title": "[994. Rotting Oranges](https://leetcode.com/problems/rotting-oranges)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/0900-0999/0994.Rotting%20Oranges/README_EN.md tags: - Breadth-First Search - Array - Matrix --- <!-- problem:start --> # [994. Rotting Oranges](https://leetcode.com/problems/rotting-oranges) [\u4e2d\u6587\u6587\u6863](/solution/0900-0999/0994.Rotting%20Oranges/README.md) ## Description <!-- description:start --> <p>You are given an <cod..."
+    }
+  ]
+}

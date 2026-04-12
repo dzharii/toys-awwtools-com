@@ -1,0 +1,436 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "nearest-exit-from-entrance-in-maze",
+  "problemTitle": "Nearest Exit from Entrance in Maze",
+  "problemNumber": 1926,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go",
+      "typescript"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go",
+      "TypeScript"
+    ],
+    "solutionCount": 7,
+    "writeupCount": 2,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-python-nearest-exit-from-entrance-in-maze.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/nearest-exit-from-entrance-in-maze.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/nearest-exit-from-entrance-in-maze.py",
+          "relativePath": "Python/nearest-exit-from-entrance-in-maze.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(m * n)\n# Space: O(m + n)\n\n# bi-bfs solution\nclass Solution(object):\n    def nearestExit(self, maze, entrance):\n        \"\"\"\n        :type maze: List[List[str]]\n        :type entrance: List[int]\n        :rtype: int\n        \"\"\"\n        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]\n        visited = ' '\n        entrance = tuple(entrance)\n        left = set([entrance])\n        right = set([(r, 0) for r in xrange(len(maze)-1) if maze[r][0] == '.' and (r, 0) != entrance] +\n                    [(len(maze)-1, c) for c in xrange(len(maze[0])-1) if maze[len(maze)-1][c] == '.' and (len(maze)-1, c) != entrance] +\n                    [(r, len(maze[0])-1) for r in reversed(xrange(1, len(maze))) if maze[r][len(maze[0])-1] == '.' and (r, len(maze[0])-1) != entrance] +\n                    [(0, c) for c in reversed(xrange(1, len(maze[0]))) if maze[0][c] == '.' and (0, c) != entrance])\n        steps = 0\n        while left:\n            for (r, c) in left:\n                maze[r][c] = visited\n            new_left = set()\n            for (r, c) in left:\n                if (r, c) in right: \n                    return steps\n                for dr, dc in directions:\n                    nr, nc = r+dr, c+dc\n                    if not (0 <= nr < len(maze) and\n                            0 <= nc < len(maze[0]) and\n                            maze[nr][nc] == '.'):\n                        continue\n                    new_left.add((nr, nc))\n            left = new_left\n            steps += 1\n            if len(left) > len(right): \n                left, right = right, left\n        return -1\n\n\n# Time:  O(m * n)\n# Space: O(m + n)\n# bfs solution\nclass Solution2(object):\n    def nearestExit(self, maze, entrance):\n        \"\"\"\n        :type maze: List[List[str]]\n        :type entrance: List[int]\n        :rtype: int\n        \"\"\"\n        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]\n        visited = ' '\n        entrance = tuple(entrance)\n        maze[entrance[0]][entrance[1]] = visited\n        q = [(entrance, 0)]\n        while q:\n            new_q = []\n            for (r, c), step in q:\n                if (r, c) != entrance and \\\n                   (r in (0, len(maze)-1) or c in (0, len(maze[0])-1)):\n                    return step\n                for dr, dc in directions:\n                    nr, nc = r+dr, c+dc\n                    if not (0 <= nr < len(maze) and\n                            0 <= nc < len(maze[0]) and\n                            maze[nr][nc] == '.'):\n                        continue\n                    maze[nr][nc] = visited\n                    q.append(((nr, nc), step+1))\n            q = new_q\n        return -1\n",
+          "originalCode": "# Time:  O(m * n)\n# Space: O(m + n)\n\n# bi-bfs solution\nclass Solution(object):\n    def nearestExit(self, maze, entrance):\n        \"\"\"\n        :type maze: List[List[str]]\n        :type entrance: List[int]\n        :rtype: int\n        \"\"\"\n        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]\n        visited = ' '\n        entrance = tuple(entrance)\n        left = set([entrance])\n        right = set([(r, 0) for r in xrange(len(maze)-1) if maze[r][0] == '.' and (r, 0) != entrance] +\n                    [(len(maze)-1, c) for c in xrange(len(maze[0])-1) if maze[len(maze)-1][c] == '.' and (len(maze)-1, c) != entrance] +\n                    [(r, len(maze[0])-1) for r in reversed(xrange(1, len(maze))) if maze[r][len(maze[0])-1] == '.' and (r, len(maze[0])-1) != entrance] +\n                    [(0, c) for c in reversed(xrange(1, len(maze[0]))) if maze[0][c] == '.' and (0, c) != entrance])\n        steps = 0\n        while left:\n            for (r, c) in left:\n                maze[r][c] = visited\n            new_left = set()\n            for (r, c) in left:\n                if (r, c) in right: \n                    return steps\n                for dr, dc in directions:\n                    nr, nc = r+dr, c+dc\n                    if not (0 <= nr < len(maze) and\n                            0 <= nc < len(maze[0]) and\n                            maze[nr][nc] == '.'):\n                        continue\n                    new_left.add((nr, nc))\n            left = new_left\n            steps += 1\n            if len(left) > len(right): \n                left, right = right, left\n        return -1\n\n\n# Time:  O(m * n)\n# Space: O(m + n)\n# bfs solution\nclass Solution2(object):\n    def nearestExit(self, maze, entrance):\n        \"\"\"\n        :type maze: List[List[str]]\n        :type entrance: List[int]\n        :rtype: int\n        \"\"\"\n        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]\n        visited = ' '\n        entrance = tuple(entrance)\n        maze[entrance[0]][entrance[1]] = visited\n        q = [(entrance, 0)]\n        while q:\n            new_q = []\n            for (r, c), step in q:\n                if (r, c) != entrance and \\\n                   (r in (0, len(maze)-1) or c in (0, len(maze[0])-1)):\n                    return step\n                for dr, dc in directions:\n                    nr, nc = r+dr, c+dc\n                    if not (0 <= nr < len(maze) and\n                            0 <= nc < len(maze[0]) and\n                            maze[nr][nc] == '.'):\n                        continue\n                    maze[nr][nc] = visited\n                    q.append(((nr, nc), step+1))\n            q = new_q\n        return -1\n",
+          "reviewedCode": "# Time:  O(m * n)\n# Space: O(m + n)\n\n# bi-bfs solution\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Expand outward evenly until the first qualifying exit appears.\nclass Solution(object):\n    def nearestExit(self, maze, entrance):\n        \"\"\"\n        :type maze: List[List[str]]\n        :type entrance: List[int]\n        :rtype: int\n        \"\"\"\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish.\n        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]\n        visited = ' '\n        entrance = tuple(entrance)\n        left = set([entrance])\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        right = set([(r, 0) for r in xrange(len(maze)-1) if maze[r][0] == '.' and (r, 0) != entrance] +\n                    [(len(maze)-1, c) for c in xrange(len(maze[0])-1) if maze[len(maze)-1][c] == '.' and (len(maze)-1, c) != entrance] +\n                    [(r, len(maze[0])-1) for r in reversed(xrange(1, len(maze))) if maze[r][len(maze[0])-1] == '.' and (r, len(maze[0])-1) != entrance] +\n                    [(0, c) for c in reversed(xrange(1, len(maze[0]))) if maze[0][c] == '.' and (0, c) != entrance])\n        steps = 0\n        while left:\n            for (r, c) in left:\n                maze[r][c] = visited\n            new_left = set()\n            for (r, c) in left:\n                if (r, c) in right: \n                    return steps\n                for dr, dc in directions:\n                    nr, nc = r+dr, c+dc\n                    if not (0 <= nr < len(maze) and\n                            0 <= nc < len(maze[0]) and\n                            maze[nr][nc] == '.'):\n                        continue\n                    new_left.add((nr, nc))\n            left = new_left\n            steps += 1\n            if len(left) > len(right): \n                left, right = right, left\n        return -1\n\n\n# Time:  O(m * n)\n# Space: O(m + n)\n# bfs solution\nclass Solution2(object):\n    def nearestExit(self, maze, entrance):\n        \"\"\"\n        :type maze: List[List[str]]\n        :type entrance: List[int]\n        :rtype: int\n        \"\"\"\n        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]\n        visited = ' '\n        entrance = tuple(entrance)\n        maze[entrance[0]][entrance[1]] = visited\n        q = [(entrance, 0)]\n        while q:\n            new_q = []\n            for (r, c), step in q:\n                if (r, c) != entrance and \\\n                   (r in (0, len(maze)-1) or c in (0, len(maze[0])-1)):\n                    return step\n                for dr, dc in directions:\n                    nr, nc = r+dr, c+dc\n                    if not (0 <= nr < len(maze) and\n                            0 <= nc < len(maze[0]) and\n                            maze[nr][nc] == '.'):\n                        continue\n                    maze[nr][nc] = visited\n                    q.append(((nr, nc), step+1))\n            q = new_q\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return -1",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(m * n)",
+            "Space: O(m + n)"
+          ],
+          "annotations": [
+            {
+              "line": 5,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Expand outward evenly until the first qualifying exit appears."
+            },
+            {
+              "line": 12,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish."
+            },
+            {
+              "line": 16,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 72,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a newer, very readable BFS problem that keeps the state light and the decision value high.",
+            "whatToNotice": "Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish.",
+            "riskPoint": "The story is simple, but you need to encode the exit rule precisely so you do not count the entrance incorrectly."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-1900-1999-1926.nearest-exit-from-entrance-in-maze-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1900-1999/1926.Nearest%20Exit%20from%20Entrance%20in%20Maze/Solution.py",
+          "localPath": "doocs_leetcode/solution/1900-1999/1926.Nearest Exit from Entrance in Maze/Solution.py",
+          "relativePath": "solution/1900-1999/1926.Nearest Exit from Entrance in Maze/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "class Solution:\n    def nearestExit(self, maze: List[List[str]], entrance: List[int]) -> int:\n        m, n = len(maze), len(maze[0])\n        i, j = entrance\n        q = deque([(i, j)])\n        maze[i][j] = \"+\"\n        ans = 0\n        while q:\n            ans += 1\n            for _ in range(len(q)):\n                i, j = q.popleft()\n                for a, b in [[0, -1], [0, 1], [-1, 0], [1, 0]]:\n                    x, y = i + a, j + b\n                    if 0 <= x < m and 0 <= y < n and maze[x][y] == \".\":\n                        if x == 0 or x == m - 1 or y == 0 or y == n - 1:\n                            return ans\n                        q.append((x, y))\n                        maze[x][y] = \"+\"\n        return -1\n",
+          "originalCode": "class Solution:\n    def nearestExit(self, maze: List[List[str]], entrance: List[int]) -> int:\n        m, n = len(maze), len(maze[0])\n        i, j = entrance\n        q = deque([(i, j)])\n        maze[i][j] = \"+\"\n        ans = 0\n        while q:\n            ans += 1\n            for _ in range(len(q)):\n                i, j = q.popleft()\n                for a, b in [[0, -1], [0, 1], [-1, 0], [1, 0]]:\n                    x, y = i + a, j + b\n                    if 0 <= x < m and 0 <= y < n and maze[x][y] == \".\":\n                        if x == 0 or x == m - 1 or y == 0 or y == n - 1:\n                            return ans\n                        q.append((x, y))\n                        maze[x][y] = \"+\"\n        return -1\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Expand outward evenly until the first qualifying exit appears.\nclass Solution:\n    def nearestExit(self, maze: List[List[str]], entrance: List[int]) -> int:\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish.\n        m, n = len(maze), len(maze[0])\n        i, j = entrance\n        q = deque([(i, j)])\n        maze[i][j] = \"+\"\n        ans = 0\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while q:\n            ans += 1\n            for _ in range(len(q)):\n                i, j = q.popleft()\n                for a, b in [[0, -1], [0, 1], [-1, 0], [1, 0]]:\n                    x, y = i + a, j + b\n                    # [Reader note] Decision point\n                    # Pay attention here: The story is simple, but you need to encode the exit rule precisely so you do not count the entrance incorrectly.\n                    if 0 <= x < m and 0 <= y < n and maze[x][y] == \".\":\n                        if x == 0 or x == m - 1 or y == 0 or y == n - 1:\n                            return ans\n                        q.append((x, y))\n                        maze[x][y] = \"+\"\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return -1",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Expand outward evenly until the first qualifying exit appears."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish."
+            },
+            {
+              "line": 8,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 14,
+              "label": "Decision point",
+              "note": "Pay attention here: The story is simple, but you need to encode the exit rule precisely so you do not count the entrance incorrectly."
+            },
+            {
+              "line": 19,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a newer, very readable BFS problem that keeps the state light and the decision value high.",
+            "whatToNotice": "Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish.",
+            "riskPoint": "The story is simple, but you need to encode the exit rule precisely so you do not count the entrance incorrectly."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-c-nearest-exit-from-entrance-in-maze.cpp",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/C%2B%2B/nearest-exit-from-entrance-in-maze.cpp",
+          "localPath": "kamyu104_LeetCode-Solutions/C++/nearest-exit-from-entrance-in-maze.cpp",
+          "relativePath": "C++/nearest-exit-from-entrance-in-maze.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Time:  O(m * n)\n// Space: O(m + n)\n\n// bi-bfs solution\nclass Solution {\nprivate:\n    template <typename T>\n    struct PairHash {\n        size_t operator()(const pair<T, T>& p) const {\n            size_t seed = 0;\n            seed ^= std::hash<T>{}(p.first)  + 0x9e3779b9 + (seed<<6) + (seed>>2);\n            seed ^= std::hash<T>{}(p.second) + 0x9e3779b9 + (seed<<6) + (seed>>2);\n            return seed;\n        }\n    };\n\npublic:\n    int nearestExit(vector<vector<char>>& maze, vector<int>& entrance) {\n        static const vector<pair<int, int>> directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};\n        static const char visited = '-';\n        maze[entrance[0]][entrance[1]] = visited;\n        unordered_set<pair<int, int>, PairHash<int>> left = {{entrance[0], entrance[1]}}, right;\n        for (int r = 0; r < size(maze) - 1; ++r) {\n            if (maze[r][0] == '.' && vector<int>({r, 0}) != entrance) {\n                right.emplace(r, 0);\n            }\n        }\n        for (int c = 0; c < size(maze[0]) - 1; ++c) {\n            if (maze[size(maze) - 1][c] == '.' && vector<int>({int(size(maze)) - 1, c}) != entrance) {\n                right.emplace(size(maze) - 1, c);\n            }\n        }\n        for (int r = size(maze) - 1; r >= 1; --r) {\n            if (maze[r][size(maze[0]) - 1] == '.' && vector<int>({r, int(size(maze[0])) - 1}) != entrance) {\n                right.emplace(r, size(maze[0]) - 1);\n            }\n        }\n        for (int c = size(maze[0]) - 1; c >= 1; --c) {\n            if (maze[0][c] == '.' && vector<int>({0, c}) != entrance) {\n                right.emplace(0, c);\n            }\n        }\n        int steps = 0;\n        while (!empty(left)) {\n            for (const auto& [r, c] : left) {\n                maze[r][c] = visited;\n            }\n            unordered_set<pair<int, int>, PairHash<int>> new_left;\n            for (const auto& pos : left) {\n                if (right.count(pos)) {\n                    return steps;\n                }\n                for (const auto& [dr, dc] : directions) {\n                    pair<int, int> nei = {pos.first + dr, pos.second + dc};\n                    if (!(0 <= nei.first && nei.first < size(maze) &&\n                          0 <= nei.second && nei.second < size(maze[0]) &&\n                          maze[nei.first][nei.second] == '.')) {\n                        continue;\n                    }\n                    new_left.emplace(nei);\n                }\n            }\n            left = move(new_left);\n            ++steps;\n            if (size(left) > size(right)) {\n                swap(left, right);\n            }\n        }\n        return -1;\n    }\n};\n\n// Time:  O(m * n)\n// Space: O(m + n)\n// bfs solution\nclass Solution2 {\npublic:\n    int nearestExit(vector<vector<char>>& maze, vector<int>& entrance) {\n        static const vector<pair<int, int>> directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};\n        static const char visited = '-';\n        maze[entrance[0]][entrance[1]] = visited;\n        vector<pair<vector<int>, int>> q = {{entrance, 0}};\n        while (!empty(q)) {\n            vector<pair<vector<int>, int>> new_q;\n            for (const auto& [curr, step] : q) {\n                if (curr != entrance &&\n                    (curr[0] == 0 || curr[0] == size(maze) - 1 ||\n                     curr[1] == 0 || curr[1] == size(maze[0]) - 1)) {\n                    return step;\n                }\n                for (const auto& [dr, dc] : directions) {\n                    const auto nr = curr[0] + dr, nc = curr[1] + dc;\n                    if (!(0 <= nr && nr < size(maze) &&\n                          0 <= nc && nc < size(maze[0]) &&\n                          maze[nr][nc] == '.')) {\n                        continue;\n                    }\n                    maze[nr][nc] = visited;\n                    new_q.emplace_back(vector<int>({nr, nc}), step + 1);\n                }\n            }\n            q = move(new_q);\n        }\n        return -1;\n    }\n};\n",
+          "originalCode": "// Time:  O(m * n)\n// Space: O(m + n)\n\n// bi-bfs solution\nclass Solution {\nprivate:\n    template <typename T>\n    struct PairHash {\n        size_t operator()(const pair<T, T>& p) const {\n            size_t seed = 0;\n            seed ^= std::hash<T>{}(p.first)  + 0x9e3779b9 + (seed<<6) + (seed>>2);\n            seed ^= std::hash<T>{}(p.second) + 0x9e3779b9 + (seed<<6) + (seed>>2);\n            return seed;\n        }\n    };\n\npublic:\n    int nearestExit(vector<vector<char>>& maze, vector<int>& entrance) {\n        static const vector<pair<int, int>> directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};\n        static const char visited = '-';\n        maze[entrance[0]][entrance[1]] = visited;\n        unordered_set<pair<int, int>, PairHash<int>> left = {{entrance[0], entrance[1]}}, right;\n        for (int r = 0; r < size(maze) - 1; ++r) {\n            if (maze[r][0] == '.' && vector<int>({r, 0}) != entrance) {\n                right.emplace(r, 0);\n            }\n        }\n        for (int c = 0; c < size(maze[0]) - 1; ++c) {\n            if (maze[size(maze) - 1][c] == '.' && vector<int>({int(size(maze)) - 1, c}) != entrance) {\n                right.emplace(size(maze) - 1, c);\n            }\n        }\n        for (int r = size(maze) - 1; r >= 1; --r) {\n            if (maze[r][size(maze[0]) - 1] == '.' && vector<int>({r, int(size(maze[0])) - 1}) != entrance) {\n                right.emplace(r, size(maze[0]) - 1);\n            }\n        }\n        for (int c = size(maze[0]) - 1; c >= 1; --c) {\n            if (maze[0][c] == '.' && vector<int>({0, c}) != entrance) {\n                right.emplace(0, c);\n            }\n        }\n        int steps = 0;\n        while (!empty(left)) {\n            for (const auto& [r, c] : left) {\n                maze[r][c] = visited;\n            }\n            unordered_set<pair<int, int>, PairHash<int>> new_left;\n            for (const auto& pos : left) {\n                if (right.count(pos)) {\n                    return steps;\n                }\n                for (const auto& [dr, dc] : directions) {\n                    pair<int, int> nei = {pos.first + dr, pos.second + dc};\n                    if (!(0 <= nei.first && nei.first < size(maze) &&\n                          0 <= nei.second && nei.second < size(maze[0]) &&\n                          maze[nei.first][nei.second] == '.')) {\n                        continue;\n                    }\n                    new_left.emplace(nei);\n                }\n            }\n            left = move(new_left);\n            ++steps;\n            if (size(left) > size(right)) {\n                swap(left, right);\n            }\n        }\n        return -1;\n    }\n};\n\n// Time:  O(m * n)\n// Space: O(m + n)\n// bfs solution\nclass Solution2 {\npublic:\n    int nearestExit(vector<vector<char>>& maze, vector<int>& entrance) {\n        static const vector<pair<int, int>> directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};\n        static const char visited = '-';\n        maze[entrance[0]][entrance[1]] = visited;\n        vector<pair<vector<int>, int>> q = {{entrance, 0}};\n        while (!empty(q)) {\n            vector<pair<vector<int>, int>> new_q;\n            for (const auto& [curr, step] : q) {\n                if (curr != entrance &&\n                    (curr[0] == 0 || curr[0] == size(maze) - 1 ||\n                     curr[1] == 0 || curr[1] == size(maze[0]) - 1)) {\n                    return step;\n                }\n                for (const auto& [dr, dc] : directions) {\n                    const auto nr = curr[0] + dr, nc = curr[1] + dc;\n                    if (!(0 <= nr && nr < size(maze) &&\n                          0 <= nc && nc < size(maze[0]) &&\n                          maze[nr][nc] == '.')) {\n                        continue;\n                    }\n                    maze[nr][nc] = visited;\n                    new_q.emplace_back(vector<int>({nr, nc}), step + 1);\n                }\n            }\n            q = move(new_q);\n        }\n        return -1;\n    }\n};\n",
+          "reviewedCode": "// Time:  O(m * n)\n// Space: O(m + n)\n\n// bi-bfs solution\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Expand outward evenly until the first qualifying exit appears.\nclass Solution {\nprivate:\n    template <typename T>\n    struct PairHash {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish.\n        size_t operator()(const pair<T, T>& p) const {\n            size_t seed = 0;\n            seed ^= std::hash<T>{}(p.first)  + 0x9e3779b9 + (seed<<6) + (seed>>2);\n            seed ^= std::hash<T>{}(p.second) + 0x9e3779b9 + (seed<<6) + (seed>>2);\n            return seed;\n        }\n    };\n\npublic:\n    int nearestExit(vector<vector<char>>& maze, vector<int>& entrance) {\n        static const vector<pair<int, int>> directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};\n        static const char visited = '-';\n        maze[entrance[0]][entrance[1]] = visited;\n        unordered_set<pair<int, int>, PairHash<int>> left = {{entrance[0], entrance[1]}}, right;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int r = 0; r < size(maze) - 1; ++r) {\n            // [Reader note] Decision point\n            // Pay attention here: The story is simple, but you need to encode the exit rule precisely so you do not count the entrance incorrectly.\n            if (maze[r][0] == '.' && vector<int>({r, 0}) != entrance) {\n                right.emplace(r, 0);\n            }\n        }\n        for (int c = 0; c < size(maze[0]) - 1; ++c) {\n            if (maze[size(maze) - 1][c] == '.' && vector<int>({int(size(maze)) - 1, c}) != entrance) {\n                right.emplace(size(maze) - 1, c);\n            }\n        }\n        for (int r = size(maze) - 1; r >= 1; --r) {\n            if (maze[r][size(maze[0]) - 1] == '.' && vector<int>({r, int(size(maze[0])) - 1}) != entrance) {\n                right.emplace(r, size(maze[0]) - 1);\n            }\n        }\n        for (int c = size(maze[0]) - 1; c >= 1; --c) {\n            if (maze[0][c] == '.' && vector<int>({0, c}) != entrance) {\n                right.emplace(0, c);\n            }\n        }\n        int steps = 0;\n        while (!empty(left)) {\n            for (const auto& [r, c] : left) {\n                maze[r][c] = visited;\n            }\n            unordered_set<pair<int, int>, PairHash<int>> new_left;\n            for (const auto& pos : left) {\n                if (right.count(pos)) {\n                    return steps;\n                }\n                for (const auto& [dr, dc] : directions) {\n                    pair<int, int> nei = {pos.first + dr, pos.second + dc};\n                    if (!(0 <= nei.first && nei.first < size(maze) &&\n                          0 <= nei.second && nei.second < size(maze[0]) &&\n                          maze[nei.first][nei.second] == '.')) {\n                        continue;\n                    }\n                    new_left.emplace(nei);\n                }\n            }\n            left = move(new_left);\n            ++steps;\n            if (size(left) > size(right)) {\n                swap(left, right);\n            }\n        }\n        return -1;\n    }\n};\n\n// Time:  O(m * n)\n// Space: O(m + n)\n// bfs solution\nclass Solution2 {\npublic:\n    int nearestExit(vector<vector<char>>& maze, vector<int>& entrance) {\n        static const vector<pair<int, int>> directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};\n        static const char visited = '-';\n        maze[entrance[0]][entrance[1]] = visited;\n        vector<pair<vector<int>, int>> q = {{entrance, 0}};\n        while (!empty(q)) {\n            vector<pair<vector<int>, int>> new_q;\n            for (const auto& [curr, step] : q) {\n                if (curr != entrance &&\n                    (curr[0] == 0 || curr[0] == size(maze) - 1 ||\n                     curr[1] == 0 || curr[1] == size(maze[0]) - 1)) {\n                    return step;\n                }\n                for (const auto& [dr, dc] : directions) {\n                    const auto nr = curr[0] + dr, nc = curr[1] + dc;\n                    if (!(0 <= nr && nr < size(maze) &&\n                          0 <= nc && nc < size(maze[0]) &&\n                          maze[nr][nc] == '.')) {\n                        continue;\n                    }\n                    maze[nr][nc] = visited;\n                    new_q.emplace_back(vector<int>({nr, nc}), step + 1);\n                }\n            }\n            q = move(new_q);\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return -1;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(m * n)",
+            "Space: O(m + n)"
+          ],
+          "annotations": [
+            {
+              "line": 5,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Expand outward evenly until the first qualifying exit appears."
+            },
+            {
+              "line": 9,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish."
+            },
+            {
+              "line": 23,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 24,
+              "label": "Decision point",
+              "note": "Pay attention here: The story is simple, but you need to encode the exit rule precisely so you do not count the entrance incorrectly."
+            },
+            {
+              "line": 104,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a newer, very readable BFS problem that keeps the state light and the decision value high.",
+            "whatToNotice": "Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish.",
+            "riskPoint": "The story is simple, but you need to encode the exit rule precisely so you do not count the entrance incorrectly."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-1900-1999-1926.nearest-exit-from-entrance-in-maze-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1900-1999/1926.Nearest%20Exit%20from%20Entrance%20in%20Maze/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/1900-1999/1926.Nearest Exit from Entrance in Maze/Solution.cpp",
+          "relativePath": "solution/1900-1999/1926.Nearest Exit from Entrance in Maze/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\npublic:\n    int nearestExit(vector<vector<char>>& maze, vector<int>& entrance) {\n        int m = maze.size(), n = maze[0].size();\n        int dirs[5] = {-1, 0, 1, 0, -1};\n        queue<pair<int, int>> q;\n        q.emplace(entrance[0], entrance[1]);\n        maze[entrance[0]][entrance[1]] = '+';\n        for (int ans = 1; !q.empty(); ++ans) {\n            for (int k = q.size(); k; --k) {\n                auto [i, j] = q.front();\n                q.pop();\n                for (int d = 0; d < 4; ++d) {\n                    int x = i + dirs[d], y = j + dirs[d + 1];\n                    if (x >= 0 && x < m && y >= 0 && y < n && maze[x][y] == '.') {\n                        if (x == 0 || x == m - 1 || y == 0 || y == n - 1) {\n                            return ans;\n                        }\n                        maze[x][y] = '+';\n                        q.emplace(x, y);\n                    }\n                }\n            }\n        }\n        return -1;\n    }\n};\n",
+          "originalCode": "class Solution {\npublic:\n    int nearestExit(vector<vector<char>>& maze, vector<int>& entrance) {\n        int m = maze.size(), n = maze[0].size();\n        int dirs[5] = {-1, 0, 1, 0, -1};\n        queue<pair<int, int>> q;\n        q.emplace(entrance[0], entrance[1]);\n        maze[entrance[0]][entrance[1]] = '+';\n        for (int ans = 1; !q.empty(); ++ans) {\n            for (int k = q.size(); k; --k) {\n                auto [i, j] = q.front();\n                q.pop();\n                for (int d = 0; d < 4; ++d) {\n                    int x = i + dirs[d], y = j + dirs[d + 1];\n                    if (x >= 0 && x < m && y >= 0 && y < n && maze[x][y] == '.') {\n                        if (x == 0 || x == m - 1 || y == 0 || y == n - 1) {\n                            return ans;\n                        }\n                        maze[x][y] = '+';\n                        q.emplace(x, y);\n                    }\n                }\n            }\n        }\n        return -1;\n    }\n};\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Expand outward evenly until the first qualifying exit appears.\nclass Solution {\npublic:\n    int nearestExit(vector<vector<char>>& maze, vector<int>& entrance) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish.\n        int m = maze.size(), n = maze[0].size();\n        int dirs[5] = {-1, 0, 1, 0, -1};\n        queue<pair<int, int>> q;\n        q.emplace(entrance[0], entrance[1]);\n        maze[entrance[0]][entrance[1]] = '+';\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int ans = 1; !q.empty(); ++ans) {\n            for (int k = q.size(); k; --k) {\n                auto [i, j] = q.front();\n                q.pop();\n                for (int d = 0; d < 4; ++d) {\n                    int x = i + dirs[d], y = j + dirs[d + 1];\n                    // [Reader note] Decision point\n                    // Pay attention here: The story is simple, but you need to encode the exit rule precisely so you do not count the entrance incorrectly.\n                    if (x >= 0 && x < m && y >= 0 && y < n && maze[x][y] == '.') {\n                        if (x == 0 || x == m - 1 || y == 0 || y == n - 1) {\n                            return ans;\n                        }\n                        maze[x][y] = '+';\n                        q.emplace(x, y);\n                    }\n                }\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return -1;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Expand outward evenly until the first qualifying exit appears."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish."
+            },
+            {
+              "line": 9,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 15,
+              "label": "Decision point",
+              "note": "Pay attention here: The story is simple, but you need to encode the exit rule precisely so you do not count the entrance incorrectly."
+            },
+            {
+              "line": 25,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a newer, very readable BFS problem that keeps the state light and the decision value high.",
+            "whatToNotice": "Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish.",
+            "riskPoint": "The story is simple, but you need to encode the exit rule precisely so you do not count the entrance incorrectly."
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-1900-1999-1926.nearest-exit-from-entrance-in-maze-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1900-1999/1926.Nearest%20Exit%20from%20Entrance%20in%20Maze/Solution.java",
+          "localPath": "doocs_leetcode/solution/1900-1999/1926.Nearest Exit from Entrance in Maze/Solution.java",
+          "relativePath": "solution/1900-1999/1926.Nearest Exit from Entrance in Maze/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\n    public int nearestExit(char[][] maze, int[] entrance) {\n        int m = maze.length, n = maze[0].length;\n        final int[] dirs = {-1, 0, 1, 0, -1};\n        Deque<int[]> q = new ArrayDeque<>();\n        q.offer(entrance);\n        maze[entrance[0]][entrance[1]] = '+';\n        for (int ans = 1; !q.isEmpty(); ++ans) {\n            for (int k = q.size(); k > 0; --k) {\n                var p = q.poll();\n                for (int d = 0; d < 4; ++d) {\n                    int x = p[0] + dirs[d], y = p[1] + dirs[d + 1];\n                    if (x >= 0 && x < m && y >= 0 && y < n && maze[x][y] == '.') {\n                        if (x == 0 || x == m - 1 || y == 0 || y == n - 1) {\n                            return ans;\n                        }\n                        maze[x][y] = '+';\n                        q.offer(new int[] {x, y});\n                    }\n                }\n            }\n        }\n        return -1;\n    }\n}\n",
+          "originalCode": "class Solution {\n    public int nearestExit(char[][] maze, int[] entrance) {\n        int m = maze.length, n = maze[0].length;\n        final int[] dirs = {-1, 0, 1, 0, -1};\n        Deque<int[]> q = new ArrayDeque<>();\n        q.offer(entrance);\n        maze[entrance[0]][entrance[1]] = '+';\n        for (int ans = 1; !q.isEmpty(); ++ans) {\n            for (int k = q.size(); k > 0; --k) {\n                var p = q.poll();\n                for (int d = 0; d < 4; ++d) {\n                    int x = p[0] + dirs[d], y = p[1] + dirs[d + 1];\n                    if (x >= 0 && x < m && y >= 0 && y < n && maze[x][y] == '.') {\n                        if (x == 0 || x == m - 1 || y == 0 || y == n - 1) {\n                            return ans;\n                        }\n                        maze[x][y] = '+';\n                        q.offer(new int[] {x, y});\n                    }\n                }\n            }\n        }\n        return -1;\n    }\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Expand outward evenly until the first qualifying exit appears.\nclass Solution {\n    public int nearestExit(char[][] maze, int[] entrance) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish.\n        int m = maze.length, n = maze[0].length;\n        final int[] dirs = {-1, 0, 1, 0, -1};\n        Deque<int[]> q = new ArrayDeque<>();\n        q.offer(entrance);\n        maze[entrance[0]][entrance[1]] = '+';\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int ans = 1; !q.isEmpty(); ++ans) {\n            for (int k = q.size(); k > 0; --k) {\n                var p = q.poll();\n                for (int d = 0; d < 4; ++d) {\n                    int x = p[0] + dirs[d], y = p[1] + dirs[d + 1];\n                    // [Reader note] Decision point\n                    // Pay attention here: The story is simple, but you need to encode the exit rule precisely so you do not count the entrance incorrectly.\n                    if (x >= 0 && x < m && y >= 0 && y < n && maze[x][y] == '.') {\n                        if (x == 0 || x == m - 1 || y == 0 || y == n - 1) {\n                            return ans;\n                        }\n                        maze[x][y] = '+';\n                        q.offer(new int[] {x, y});\n                    }\n                }\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return -1;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Expand outward evenly until the first qualifying exit appears."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish."
+            },
+            {
+              "line": 8,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 13,
+              "label": "Decision point",
+              "note": "Pay attention here: The story is simple, but you need to encode the exit rule precisely so you do not count the entrance incorrectly."
+            },
+            {
+              "line": 23,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a newer, very readable BFS problem that keeps the state light and the decision value high.",
+            "whatToNotice": "Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish.",
+            "riskPoint": "The story is simple, but you need to encode the exit rule precisely so you do not count the entrance incorrectly."
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-1900-1999-1926.nearest-exit-from-entrance-in-maze-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1900-1999/1926.Nearest%20Exit%20from%20Entrance%20in%20Maze/Solution.go",
+          "localPath": "doocs_leetcode/solution/1900-1999/1926.Nearest Exit from Entrance in Maze/Solution.go",
+          "relativePath": "solution/1900-1999/1926.Nearest Exit from Entrance in Maze/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "func nearestExit(maze [][]byte, entrance []int) int {\n\tm, n := len(maze), len(maze[0])\n\tq := [][2]int{{entrance[0], entrance[1]}}\n\tmaze[entrance[0]][entrance[1]] = '+'\n\tdirs := []int{-1, 0, 1, 0, -1}\n\tfor ans := 1; len(q) > 0; ans++ {\n\t\tfor k := len(q); k > 0; k-- {\n\t\t\tp := q[0]\n\t\t\tq = q[1:]\n\t\t\tfor l := 0; l < 4; l++ {\n\t\t\t\tx, y := p[0]+dirs[l], p[1]+dirs[l+1]\n\t\t\t\tif x >= 0 && x < m && y >= 0 && y < n && maze[x][y] == '.' {\n\t\t\t\t\tif x == 0 || x == m-1 || y == 0 || y == n-1 {\n\t\t\t\t\t\treturn ans\n\t\t\t\t\t}\n\t\t\t\t\tq = append(q, [2]int{x, y})\n\t\t\t\t\tmaze[x][y] = '+'\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\treturn -1\n}\n",
+          "originalCode": "func nearestExit(maze [][]byte, entrance []int) int {\n\tm, n := len(maze), len(maze[0])\n\tq := [][2]int{{entrance[0], entrance[1]}}\n\tmaze[entrance[0]][entrance[1]] = '+'\n\tdirs := []int{-1, 0, 1, 0, -1}\n\tfor ans := 1; len(q) > 0; ans++ {\n\t\tfor k := len(q); k > 0; k-- {\n\t\t\tp := q[0]\n\t\t\tq = q[1:]\n\t\t\tfor l := 0; l < 4; l++ {\n\t\t\t\tx, y := p[0]+dirs[l], p[1]+dirs[l+1]\n\t\t\t\tif x >= 0 && x < m && y >= 0 && y < n && maze[x][y] == '.' {\n\t\t\t\t\tif x == 0 || x == m-1 || y == 0 || y == n-1 {\n\t\t\t\t\t\treturn ans\n\t\t\t\t\t}\n\t\t\t\t\tq = append(q, [2]int{x, y})\n\t\t\t\t\tmaze[x][y] = '+'\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\treturn -1\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Expand outward evenly until the first qualifying exit appears.\nfunc nearestExit(maze [][]byte, entrance []int) int {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish.\n\tm, n := len(maze), len(maze[0])\n\tq := [][2]int{{entrance[0], entrance[1]}}\n\tmaze[entrance[0]][entrance[1]] = '+'\n\tdirs := []int{-1, 0, 1, 0, -1}\n\t// [Reader note] Main pass\n\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\tfor ans := 1; len(q) > 0; ans++ {\n\t\tfor k := len(q); k > 0; k-- {\n\t\t\tp := q[0]\n\t\t\tq = q[1:]\n\t\t\tfor l := 0; l < 4; l++ {\n\t\t\t\tx, y := p[0]+dirs[l], p[1]+dirs[l+1]\n\t\t\t\t// [Reader note] Decision point\n\t\t\t\t// Pay attention here: The story is simple, but you need to encode the exit rule precisely so you do not count the entrance incorrectly.\n\t\t\t\tif x >= 0 && x < m && y >= 0 && y < n && maze[x][y] == '.' {\n\t\t\t\t\tif x == 0 || x == m-1 || y == 0 || y == n-1 {\n\t\t\t\t\t\treturn ans\n\t\t\t\t\t}\n\t\t\t\t\tq = append(q, [2]int{x, y})\n\t\t\t\t\tmaze[x][y] = '+'\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn -1\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Expand outward evenly until the first qualifying exit appears."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish."
+            },
+            {
+              "line": 6,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 12,
+              "label": "Decision point",
+              "note": "Pay attention here: The story is simple, but you need to encode the exit rule precisely so you do not count the entrance incorrectly."
+            },
+            {
+              "line": 22,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a newer, very readable BFS problem that keeps the state light and the decision value high.",
+            "whatToNotice": "Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish.",
+            "riskPoint": "The story is simple, but you need to encode the exit rule precisely so you do not count the entrance incorrectly."
+          }
+        }
+      ]
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-1900-1999-1926.nearest-exit-from-entrance-in-maze-solution.ts",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1900-1999/1926.Nearest%20Exit%20from%20Entrance%20in%20Maze/Solution.ts",
+          "localPath": "doocs_leetcode/solution/1900-1999/1926.Nearest Exit from Entrance in Maze/Solution.ts",
+          "relativePath": "solution/1900-1999/1926.Nearest Exit from Entrance in Maze/Solution.ts",
+          "languageId": "typescript",
+          "languageLabel": "TypeScript",
+          "coverageType": "code+explanation",
+          "code": "function nearestExit(maze: string[][], entrance: number[]): number {\n    const dir = [0, 1, 0, -1, 0];\n    const q = [[...entrance, 0]];\n    maze[entrance[0]][entrance[1]] = '+';\n    for (const [i, j, ans] of q) {\n        for (let d = 0; d < 4; d++) {\n            const [x, y] = [i + dir[d], j + dir[d + 1]];\n            const v = maze[x]?.[y];\n            if (!v && ans) {\n                return ans;\n            }\n            if (v === '.') {\n                q.push([x, y, ans + 1]);\n                maze[x][y] = '+';\n            }\n        }\n    }\n    return -1;\n}\n",
+          "originalCode": "function nearestExit(maze: string[][], entrance: number[]): number {\n    const dir = [0, 1, 0, -1, 0];\n    const q = [[...entrance, 0]];\n    maze[entrance[0]][entrance[1]] = '+';\n    for (const [i, j, ans] of q) {\n        for (let d = 0; d < 4; d++) {\n            const [x, y] = [i + dir[d], j + dir[d + 1]];\n            const v = maze[x]?.[y];\n            if (!v && ans) {\n                return ans;\n            }\n            if (v === '.') {\n                q.push([x, y, ans + 1]);\n                maze[x][y] = '+';\n            }\n        }\n    }\n    return -1;\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Expand outward evenly until the first qualifying exit appears.\nfunction nearestExit(maze: string[][], entrance: number[]): number {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish.\n    const dir = [0, 1, 0, -1, 0];\n    const q = [[...entrance, 0]];\n    maze[entrance[0]][entrance[1]] = '+';\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (const [i, j, ans] of q) {\n        for (let d = 0; d < 4; d++) {\n            const [x, y] = [i + dir[d], j + dir[d + 1]];\n            const v = maze[x]?.[y];\n            // [Reader note] Decision point\n            // Pay attention here: The story is simple, but you need to encode the exit rule precisely so you do not count the entrance incorrectly.\n            if (!v && ans) {\n                return ans;\n            }\n            if (v === '.') {\n                q.push([x, y, ans + 1]);\n                maze[x][y] = '+';\n            }\n        }\n    }\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return -1;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Expand outward evenly until the first qualifying exit appears."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish."
+            },
+            {
+              "line": 5,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 9,
+              "label": "Decision point",
+              "note": "Pay attention here: The story is simple, but you need to encode the exit rule precisely so you do not count the entrance incorrectly."
+            },
+            {
+              "line": 18,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a newer, very readable BFS problem that keeps the state light and the decision value high.",
+            "whatToNotice": "Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish.",
+            "riskPoint": "The story is simple, but you need to encode the exit rule precisely so you do not count the entrance incorrectly."
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "doocs_leetcode-solution-1900-1999-1926.nearest-exit-from-entrance-in-maze-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1900-1999/1926.Nearest%20Exit%20from%20Entrance%20in%20Maze/README.md",
+      "localPath": "doocs_leetcode/solution/1900-1999/1926.Nearest Exit from Entrance in Maze/README.md",
+      "relativePath": "solution/1900-1999/1926.Nearest Exit from Entrance in Maze/README.md",
+      "title": "[1926. \u8ff7\u5bab\u4e2d\u79bb\u5165\u53e3\u6700\u8fd1\u7684\u51fa\u53e3](https://leetcode.cn/problems/nearest-exit-from-entrance-in-maze)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/1900-1999/1926.Nearest%20Exit%20from%20Entrance%20in%20Maze/README.md rating: 1638 source: \u7b2c 56 \u573a\u53cc\u5468\u8d5b Q2 tags: - \u5e7f\u5ea6\u4f18\u5148\u641c\u7d22 - \u6570\u7ec4 - \u77e9\u9635 --- <!-- problem:start --> # [1926. \u8ff7\u5bab\u4e2d\u79bb\u5165\u53e3\u6700\u8fd1\u7684\u51fa\u53e3](https://leetcode.cn/problems/nearest-exit-from-entrance-in-maze) [English Version](/solution/1900-1999/1926.Nearest%20Exit%20from%20Entrance%20i..."
+    },
+    {
+      "id": "doocs_leetcode-solution-1900-1999-1926.nearest-exit-from-entrance-in-maze-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1900-1999/1926.Nearest%20Exit%20from%20Entrance%20in%20Maze/README_EN.md",
+      "localPath": "doocs_leetcode/solution/1900-1999/1926.Nearest Exit from Entrance in Maze/README_EN.md",
+      "relativePath": "solution/1900-1999/1926.Nearest Exit from Entrance in Maze/README_EN.md",
+      "title": "[1926. Nearest Exit from Entrance in Maze](https://leetcode.com/problems/nearest-exit-from-entrance-in-maze)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/1900-1999/1926.Nearest%20Exit%20from%20Entrance%20in%20Maze/README_EN.md rating: 1638 source: Biweekly Contest 56 Q2 tags: - Breadth-First Search - Array - Matrix --- <!-- problem:start --> # [1926. Nearest Exit from Entrance in Maze](https://leetcode.com/problems/nearest-exit-from-entrance-in-maze) [\u4e2d\u6587\u6587\u6863](/solution/..."
+    }
+  ]
+}

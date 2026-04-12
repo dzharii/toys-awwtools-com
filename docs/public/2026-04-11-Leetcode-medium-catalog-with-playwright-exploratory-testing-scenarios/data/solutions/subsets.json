@@ -1,0 +1,858 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "subsets",
+  "problemTitle": "Subsets",
+  "problemNumber": 78,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go",
+      "typescript",
+      "javascript",
+      "csharp",
+      "c"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go",
+      "TypeScript",
+      "JavaScript",
+      "C#",
+      "C"
+    ],
+    "solutionCount": 16,
+    "writeupCount": 4,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 3,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-python-subsets.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/subsets.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/subsets.py",
+          "relativePath": "Python/subsets.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(n * 2^n)\n# Space: O(1)\n\nclass Solution(object):\n    def subsets(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        nums.sort()\n        result = [[]]\n        for i in xrange(len(nums)):\n            size = len(result)\n            for j in xrange(size):\n                result.append(list(result[j]))\n                result[-1].append(nums[i])\n        return result\n\n\n# Time:  O(n * 2^n)\n# Space: O(1)\nclass Solution2(object):\n    def subsets(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        result = []\n        i, count = 0, 1 << len(nums)\n        nums.sort()\n\n        while i < count:\n            cur = []\n            for j in xrange(len(nums)):\n                if i & 1 << j:\n                    cur.append(nums[j])\n            result.append(cur)\n            i += 1\n\n        return result\n\n\n# Time:  O(n * 2^n)\n# Space: O(1)\nclass Solution3(object):\n    def subsets(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        return self.subsetsRecu([], sorted(nums))\n\n    def subsetsRecu(self, cur, nums):\n        if not nums:\n            return [cur]\n\n        return self.subsetsRecu(cur, nums[1:]) + self.subsetsRecu(cur + [nums[0]], nums[1:])\n\n\n",
+          "originalCode": "# Time:  O(n * 2^n)\n# Space: O(1)\n\nclass Solution(object):\n    def subsets(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        nums.sort()\n        result = [[]]\n        for i in xrange(len(nums)):\n            size = len(result)\n            for j in xrange(size):\n                result.append(list(result[j]))\n                result[-1].append(nums[i])\n        return result\n\n\n# Time:  O(n * 2^n)\n# Space: O(1)\nclass Solution2(object):\n    def subsets(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        result = []\n        i, count = 0, 1 << len(nums)\n        nums.sort()\n\n        while i < count:\n            cur = []\n            for j in xrange(len(nums)):\n                if i & 1 << j:\n                    cur.append(nums[j])\n            result.append(cur)\n            i += 1\n\n        return result\n\n\n# Time:  O(n * 2^n)\n# Space: O(1)\nclass Solution3(object):\n    def subsets(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        return self.subsetsRecu([], sorted(nums))\n\n    def subsetsRecu(self, cur, nums):\n        if not nums:\n            return [cur]\n\n        return self.subsetsRecu(cur, nums[1:]) + self.subsetsRecu(cur + [nums[0]], nums[1:])\n\n\n",
+          "reviewedCode": "# Time:  O(n * 2^n)\n# Space: O(1)\n\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not.\nclass Solution(object):\n    def subsets(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        nums.sort()\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.\n        result = [[]]\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for i in xrange(len(nums)):\n            size = len(result)\n            for j in xrange(size):\n                result.append(list(result[j]))\n                result[-1].append(nums[i])\n        return result\n\n\n# Time:  O(n * 2^n)\n# Space: O(1)\nclass Solution2(object):\n    def subsets(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        result = []\n        i, count = 0, 1 << len(nums)\n        nums.sort()\n\n        while i < count:\n            cur = []\n            for j in xrange(len(nums)):\n                # [Reader note] Decision point\n                # Pay attention here: The main trap is mutating one shared path object without remembering when a snapshot is needed.\n                if i & 1 << j:\n                    cur.append(nums[j])\n            result.append(cur)\n            i += 1\n\n        return result\n\n\n# Time:  O(n * 2^n)\n# Space: O(1)\nclass Solution3(object):\n    def subsets(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[List[int]]\n        \"\"\"\n        return self.subsetsRecu([], sorted(nums))\n\n    def subsetsRecu(self, cur, nums):\n        if not nums:\n            return [cur]\n\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return self.subsetsRecu(cur, nums[1:]) + self.subsetsRecu(cur + [nums[0]], nums[1:])\n\n",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n * 2^n)",
+            "Space: O(1)"
+          ],
+          "annotations": [
+            {
+              "line": 4,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not."
+            },
+            {
+              "line": 11,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process."
+            },
+            {
+              "line": 12,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 35,
+              "label": "Decision point",
+              "note": "Pay attention here: The main trap is mutating one shared path object without remembering when a snapshot is needed."
+            },
+            {
+              "line": 57,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the most reusable recursion templates because the include-or-skip structure appears everywhere.",
+            "whatToNotice": "Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.",
+            "riskPoint": "The main trap is mutating one shared path object without remembering when a snapshot is needed."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0078.subsets-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0078.Subsets/Solution.py",
+          "localPath": "doocs_leetcode/solution/0000-0099/0078.Subsets/Solution.py",
+          "relativePath": "solution/0000-0099/0078.Subsets/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "class Solution:\n    def subsets(self, nums: List[int]) -> List[List[int]]:\n        def dfs(i: int):\n            if i == len(nums):\n                ans.append(t[:])\n                return\n            dfs(i + 1)\n            t.append(nums[i])\n            dfs(i + 1)\n            t.pop()\n\n        ans = []\n        t = []\n        dfs(0)\n        return ans\n",
+          "originalCode": "class Solution:\n    def subsets(self, nums: List[int]) -> List[List[int]]:\n        def dfs(i: int):\n            if i == len(nums):\n                ans.append(t[:])\n                return\n            dfs(i + 1)\n            t.append(nums[i])\n            dfs(i + 1)\n            t.pop()\n\n        ans = []\n        t = []\n        dfs(0)\n        return ans\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not.\nclass Solution:\n    def subsets(self, nums: List[int]) -> List[List[int]]:\n        def dfs(i: int):\n            # [Reader note] State setup\n            # This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.\n            if i == len(nums):\n                ans.append(t[:])\n                return\n            dfs(i + 1)\n            t.append(nums[i])\n            dfs(i + 1)\n            t.pop()\n\n        ans = []\n        t = []\n        dfs(0)\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return ans",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process."
+            },
+            {
+              "line": 15,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the most reusable recursion templates because the include-or-skip structure appears everywhere.",
+            "whatToNotice": "Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.",
+            "riskPoint": "The main trap is mutating one shared path object without remembering when a snapshot is needed."
+          }
+        },
+        {
+          "id": "haoel_leetcode-algorithms-python-subsets-subsets.py",
+          "repository": "haoel_leetcode",
+          "repositoryUrl": "https://github.com/haoel/leetcode",
+          "sourceUrl": "https://github.com/haoel/leetcode/blob/master/algorithms/python/Subsets/subsets.py",
+          "localPath": "haoel_leetcode/algorithms/python/Subsets/subsets.py",
+          "relativePath": "algorithms/python/Subsets/subsets.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "def subsets(self, nums):\n    res = []\n    def backtracking(temp, start):\n        res.append(temp[:])\n        for i in range(start, len(nums)):\n            temp.append(nums[i])\n            backtracking(temp, i + 1)\n            temp.pop()\n    \n    backtracking([], 0)\n    return res\n    ",
+          "originalCode": "def subsets(self, nums):\n    res = []\n    def backtracking(temp, start):\n        res.append(temp[:])\n        for i in range(start, len(nums)):\n            temp.append(nums[i])\n            backtracking(temp, i + 1)\n            temp.pop()\n    \n    backtracking([], 0)\n    return res\n    ",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not.\ndef subsets(self, nums):\n    # [Reader note] State setup\n    # This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.\n    res = []\n    def backtracking(temp, start):\n        res.append(temp[:])\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for i in range(start, len(nums)):\n            temp.append(nums[i])\n            backtracking(temp, i + 1)\n            temp.pop()\n    \n    backtracking([], 0)\n    # [Reader note] Return\n    # The final return exposes the result after the traversal and state updates have settled.\n    return res\n    ",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process."
+            },
+            {
+              "line": 5,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 11,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the most reusable recursion templates because the include-or-skip structure appears everywhere.",
+            "whatToNotice": "Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.",
+            "riskPoint": "The main trap is mutating one shared path object without remembering when a snapshot is needed."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 4,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-cpp-0078-subsets.cpp",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/cpp/0078-subsets.cpp",
+          "localPath": "neetcode-gh_leetcode/cpp/0078-subsets.cpp",
+          "relativePath": "cpp/0078-subsets.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "article+code",
+          "code": "/*\n    Given an integer array of unique elements, return all possible subsets (the power set)\n    Ex. nums = [1,2,3] -> [[],[1],[2],[1,2],[3],[1,3],[2,3],[1,2,3]]\n\n    Backtracking, generate all combinations, push/pop + index checking to explore new combos\n\n    Time: O(n x 2^n)\n    Space: O(n)\n*/\n\nclass Solution {\npublic:\n    vector<vector<int>> subsets(vector<int>& nums) {\n        vector<int> curr;\n        vector<vector<int>> result;\n        dfs(nums, 0, curr, result);\n        return result;\n    }\nprivate:\n    void dfs(vector<int>& nums, int start, vector<int>& curr, vector<vector<int>>& result) {\n        result.push_back(curr);\n        for (int i = start; i < nums.size(); i++) {\n            curr.push_back(nums[i]);\n            dfs(nums, i + 1, curr, result);\n            curr.pop_back();\n        }\n    }\n};\n",
+          "originalCode": "/*\n    Given an integer array of unique elements, return all possible subsets (the power set)\n    Ex. nums = [1,2,3] -> [[],[1],[2],[1,2],[3],[1,3],[2,3],[1,2,3]]\n\n    Backtracking, generate all combinations, push/pop + index checking to explore new combos\n\n    Time: O(n x 2^n)\n    Space: O(n)\n*/\n\nclass Solution {\npublic:\n    vector<vector<int>> subsets(vector<int>& nums) {\n        vector<int> curr;\n        vector<vector<int>> result;\n        dfs(nums, 0, curr, result);\n        return result;\n    }\nprivate:\n    void dfs(vector<int>& nums, int start, vector<int>& curr, vector<vector<int>>& result) {\n        result.push_back(curr);\n        for (int i = start; i < nums.size(); i++) {\n            curr.push_back(nums[i]);\n            dfs(nums, i + 1, curr, result);\n            curr.pop_back();\n        }\n    }\n};\n",
+          "reviewedCode": "/*\n    Given an integer array of unique elements, return all possible subsets (the power set)\n    Ex. nums = [1,2,3] -> [[],[1],[2],[1,2],[3],[1,3],[2,3],[1,2,3]]\n\n    Backtracking, generate all combinations, push/pop + index checking to explore new combos\n\n    Time: O(n x 2^n)\n    Space: O(n)\n*/\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not.\nclass Solution {\npublic:\n    vector<vector<int>> subsets(vector<int>& nums) {\n        vector<int> curr;\n        vector<vector<int>> result;\n        dfs(nums, 0, curr, result);\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return result;\n    }\nprivate:\n    void dfs(vector<int>& nums, int start, vector<int>& curr, vector<vector<int>>& result) {\n        result.push_back(curr);\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.\n        for (int i = start; i < nums.size(); i++) {\n            curr.push_back(nums[i]);\n            dfs(nums, i + 1, curr, result);\n            curr.pop_back();\n        }\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time: O(n x 2^n)",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 11,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not."
+            },
+            {
+              "line": 22,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process."
+            },
+            {
+              "line": 17,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the most reusable recursion templates because the include-or-skip structure appears everywhere.",
+            "whatToNotice": "Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.",
+            "riskPoint": "The main trap is mutating one shared path object without remembering when a snapshot is needed."
+          }
+        },
+        {
+          "id": "kamyu104_leetcode-solutions-c-subsets.cpp",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/C%2B%2B/subsets.cpp",
+          "localPath": "kamyu104_LeetCode-Solutions/C++/subsets.cpp",
+          "relativePath": "C++/subsets.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Time: O(n * 2^n)\n// Space: O(1)\n\nclass Solution {\npublic:\n    vector<vector<int> > subsets(vector<int> &nums) {\n        vector<vector<int>> result(1);\n        sort(nums.begin(), nums.end());\n        for (size_t i = 0; i < nums.size(); ++i) {\n            const size_t size = result.size();\n            for (size_t j = 0; j < size; ++j) {\n                result.emplace_back(result[j]);\n                result.back().emplace_back(nums[i]);\n            }\n        }\n        return result;\n    }\n};\n\n// Time: O(n * 2^n)\n// Space: O(1)\nclass Solution2 {\npublic:\n    vector<vector<int> > subsets(vector<int> &nums) {\n        vector<vector<int>> result(1);\n        sort(nums.begin(), nums.end());\n        for (size_t i = 0; i < nums.size(); ++i) {\n            const size_t size = result.size();\n            for (size_t j = 0; j < size; ++j) {\n                result.emplace_back(result[j]);\n                result.back().emplace_back(nums[i]);\n            }\n        }\n        return result;\n    }\n};\n",
+          "originalCode": "// Time: O(n * 2^n)\n// Space: O(1)\n\nclass Solution {\npublic:\n    vector<vector<int> > subsets(vector<int> &nums) {\n        vector<vector<int>> result(1);\n        sort(nums.begin(), nums.end());\n        for (size_t i = 0; i < nums.size(); ++i) {\n            const size_t size = result.size();\n            for (size_t j = 0; j < size; ++j) {\n                result.emplace_back(result[j]);\n                result.back().emplace_back(nums[i]);\n            }\n        }\n        return result;\n    }\n};\n\n// Time: O(n * 2^n)\n// Space: O(1)\nclass Solution2 {\npublic:\n    vector<vector<int> > subsets(vector<int> &nums) {\n        vector<vector<int>> result(1);\n        sort(nums.begin(), nums.end());\n        for (size_t i = 0; i < nums.size(); ++i) {\n            const size_t size = result.size();\n            for (size_t j = 0; j < size; ++j) {\n                result.emplace_back(result[j]);\n                result.back().emplace_back(nums[i]);\n            }\n        }\n        return result;\n    }\n};\n",
+          "reviewedCode": "// Time: O(n * 2^n)\n// Space: O(1)\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not.\nclass Solution {\npublic:\n    vector<vector<int> > subsets(vector<int> &nums) {\n        vector<vector<int>> result(1);\n        sort(nums.begin(), nums.end());\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.\n        for (size_t i = 0; i < nums.size(); ++i) {\n            const size_t size = result.size();\n            for (size_t j = 0; j < size; ++j) {\n                result.emplace_back(result[j]);\n                result.back().emplace_back(nums[i]);\n            }\n        }\n        return result;\n    }\n};\n\n// Time: O(n * 2^n)\n// Space: O(1)\nclass Solution2 {\npublic:\n    vector<vector<int> > subsets(vector<int> &nums) {\n        vector<vector<int>> result(1);\n        sort(nums.begin(), nums.end());\n        for (size_t i = 0; i < nums.size(); ++i) {\n            const size_t size = result.size();\n            for (size_t j = 0; j < size; ++j) {\n                result.emplace_back(result[j]);\n                result.back().emplace_back(nums[i]);\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return result;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time: O(n * 2^n)",
+            "Space: O(1)"
+          ],
+          "annotations": [
+            {
+              "line": 4,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not."
+            },
+            {
+              "line": 9,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process."
+            },
+            {
+              "line": 34,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the most reusable recursion templates because the include-or-skip structure appears everywhere.",
+            "whatToNotice": "Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.",
+            "riskPoint": "The main trap is mutating one shared path object without remembering when a snapshot is needed."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0078.subsets-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0078.Subsets/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/0000-0099/0078.Subsets/Solution.cpp",
+          "relativePath": "solution/0000-0099/0078.Subsets/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\npublic:\n    vector<vector<int>> subsets(vector<int>& nums) {\n        vector<vector<int>> ans;\n        vector<int> t;\n        function<void(int)> dfs = [&](int i) -> void {\n            if (i == nums.size()) {\n                ans.push_back(t);\n                return;\n            }\n            dfs(i + 1);\n            t.push_back(nums[i]);\n            dfs(i + 1);\n            t.pop_back();\n        };\n        dfs(0);\n        return ans;\n    }\n};",
+          "originalCode": "class Solution {\npublic:\n    vector<vector<int>> subsets(vector<int>& nums) {\n        vector<vector<int>> ans;\n        vector<int> t;\n        function<void(int)> dfs = [&](int i) -> void {\n            if (i == nums.size()) {\n                ans.push_back(t);\n                return;\n            }\n            dfs(i + 1);\n            t.push_back(nums[i]);\n            dfs(i + 1);\n            t.pop_back();\n        };\n        dfs(0);\n        return ans;\n    }\n};",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not.\nclass Solution {\npublic:\n    vector<vector<int>> subsets(vector<int>& nums) {\n        vector<vector<int>> ans;\n        vector<int> t;\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.\n        function<void(int)> dfs = [&](int i) -> void {\n            // [Reader note] Decision point\n            // Pay attention here: The main trap is mutating one shared path object without remembering when a snapshot is needed.\n            if (i == nums.size()) {\n                ans.push_back(t);\n                return;\n            }\n            dfs(i + 1);\n            t.push_back(nums[i]);\n            dfs(i + 1);\n            t.pop_back();\n        };\n        dfs(0);\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return ans;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not."
+            },
+            {
+              "line": 6,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process."
+            },
+            {
+              "line": 7,
+              "label": "Decision point",
+              "note": "Pay attention here: The main trap is mutating one shared path object without remembering when a snapshot is needed."
+            },
+            {
+              "line": 17,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the most reusable recursion templates because the include-or-skip structure appears everywhere.",
+            "whatToNotice": "Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.",
+            "riskPoint": "The main trap is mutating one shared path object without remembering when a snapshot is needed."
+          }
+        },
+        {
+          "id": "haoel_leetcode-algorithms-cpp-subsets-subsets.cpp",
+          "repository": "haoel_leetcode",
+          "repositoryUrl": "https://github.com/haoel/leetcode",
+          "sourceUrl": "https://github.com/haoel/leetcode/blob/master/algorithms/cpp/subsets/subsets.cpp",
+          "localPath": "haoel_leetcode/algorithms/cpp/subsets/subsets.cpp",
+          "relativePath": "algorithms/cpp/subsets/subsets.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Source : https://oj.leetcode.com/problems/subsets/\n// Author : Hao Chen\n// Date   : 2014-07-03\n\n/********************************************************************************** \n* \n* Given a set of distinct integers, S, return all possible subsets.\n* \n* Note:\n* \n* Elements in a subset must be in non-descending order.\n* The solution set must not contain duplicate subsets.\n* \n* For example,\n* If S = [1,2,3], a solution is:\n* \n* [\n*   [3],\n*   [1],\n*   [2],\n*   [1,2,3],\n*   [1,3],\n*   [2,3],\n*   [1,2],\n*   []\n* ]\n* \n*               \n**********************************************************************************/\n\n#include <stdio.h>\n#include <stdlib.h>\n#include <time.h>\n#include <iostream>\n#include <vector>\n#include <algorithm>\nusing namespace std;\n\nvoid getCombination(vector<int>& v, int n, int k, vector<int>& solution, vector< vector<int> >& result );\nvector<vector<int> > combine(vector<int>& v, int k); \nvector<vector<int> > combine1(vector<int>& v, int k); \nvector<vector<int> > combine2(vector<int>& v, int k);\n\nvector<vector<int> > subsets(vector<int> &S) {\n    vector<vector<int> > result;\n    for(int i=0; i<=S.size(); i++){\n        vector<vector<int> > r = combine(S, i); \n        result.insert(result.end(), r.begin(), r.end()); \n    } \n    return result;\n}\n\n\nvector<vector<int> > combine(vector<int>& v, int k) {\n    if (random()%2){\n        cout << \"recusive method!\" << endl;\n        return combine1(v, k);\n    }\n    cout << \"non-recusive method!\" << endl;\n    return combine2(v, k);\n}\n\nvector<vector<int> > combine1(vector<int> &v, int k) {\n    vector<vector<int> > result;\n    vector<int> solution;\n    getCombination(v, v.size(), k, solution, result);\n    return result;\n}\n\nvoid getCombination(vector<int> &v, int n, int k, vector<int>& solution, vector< vector<int> >& result ){\n    if (k==0){\n        //sort to meet LeetCode requirement\n        vector<int> v = solution;\n        sort(v.begin(), v.end());\n        result.push_back(v);\n        return;\n    }\n    for(int i=n; i>0; i--){\n        solution.push_back(v[i-1]);\n        getCombination(v, i-1, k-1, solution, result);\n        solution.pop_back();\n    }\n}\n\nvector<vector<int> > combine2(vector<int> &v, int k) {\n    \n    vector<vector<int> > result;\n    vector<int> d;\n    int n = v.size();\n    for (int i=0; i<n; i++){\n        d.push_back( (i<k) ? 1 : 0 );\n    }\n\n    //1) from the left, find the [1,0] pattern, change it to [0,1]\n    //2) move all of the 1 before the pattern to the most left side\n    //3) check all of 1 move to the right\n    while(1){\n        vector<int> tmp;\n        for(int x=0; x<n; x++){\n            if (d[x]) tmp.push_back(v[x]);\n        }\n        sort(tmp.begin(), tmp.end());\n        result.push_back(tmp);\n        //step 1), find [1,0] pattern\n        int i;\n        bool found = false;\n        int ones =0;\n        for(i=0; i<n-1; i++){\n            \n            if (d[i]==1 && d[i+1]==0){\n                d[i]=0; d[i+1]=1;\n                found = true;\n                //step 2) move all of right 1 to the most left side\n                for (int j=0; j<i; j++){\n                    d[j]=( ones > 0 ) ? 1 : 0;\n                    ones--;\n                }\n                break; \n            } \n            if (d[i]==1) ones++;\n        }\n        if (!found){\n            break;\n        }\n        \n    }\n    return result;\n    \n}\n\n\n\n\nvoid printResult(vector<vector<int> >& result)\n{\n    for(int i=0; i<result.size(); i++){\n        cout << \"{\";\n        for(int j=0; j<result[i].size(); j++){\n            cout << \" \" << result[i][j];\n        }\n        cout << \" }\" <<endl;\n    }\n}\n\nvoid printArray(vector<int>& v){\n    cout << \"{\";\n    for(int i=0; i<v.size(); i++) {\n        cout << \" \" << v[i];\n    }\n    cout << \" }\" << endl;\n}\n\nint main(int argc, char** argv)\n{\n    srand(time(NULL));\n\n    int n = 3;\n    if (argc>1){\n        n = atoi(argv[1]);\n    }\n    vector<int> v;\n    for(int i=n; i>0; i--){\n        v.push_back(i);\n    }\n    printArray(v);\n    vector<vector<int> > r = subsets(v);\n    printResult(r);\n}\n",
+          "originalCode": "// Source : https://oj.leetcode.com/problems/subsets/\n// Author : Hao Chen\n// Date   : 2014-07-03\n\n/********************************************************************************** \n* \n* Given a set of distinct integers, S, return all possible subsets.\n* \n* Note:\n* \n* Elements in a subset must be in non-descending order.\n* The solution set must not contain duplicate subsets.\n* \n* For example,\n* If S = [1,2,3], a solution is:\n* \n* [\n*   [3],\n*   [1],\n*   [2],\n*   [1,2,3],\n*   [1,3],\n*   [2,3],\n*   [1,2],\n*   []\n* ]\n* \n*               \n**********************************************************************************/\n\n#include <stdio.h>\n#include <stdlib.h>\n#include <time.h>\n#include <iostream>\n#include <vector>\n#include <algorithm>\nusing namespace std;\n\nvoid getCombination(vector<int>& v, int n, int k, vector<int>& solution, vector< vector<int> >& result );\nvector<vector<int> > combine(vector<int>& v, int k); \nvector<vector<int> > combine1(vector<int>& v, int k); \nvector<vector<int> > combine2(vector<int>& v, int k);\n\nvector<vector<int> > subsets(vector<int> &S) {\n    vector<vector<int> > result;\n    for(int i=0; i<=S.size(); i++){\n        vector<vector<int> > r = combine(S, i); \n        result.insert(result.end(), r.begin(), r.end()); \n    } \n    return result;\n}\n\n\nvector<vector<int> > combine(vector<int>& v, int k) {\n    if (random()%2){\n        cout << \"recusive method!\" << endl;\n        return combine1(v, k);\n    }\n    cout << \"non-recusive method!\" << endl;\n    return combine2(v, k);\n}\n\nvector<vector<int> > combine1(vector<int> &v, int k) {\n    vector<vector<int> > result;\n    vector<int> solution;\n    getCombination(v, v.size(), k, solution, result);\n    return result;\n}\n\nvoid getCombination(vector<int> &v, int n, int k, vector<int>& solution, vector< vector<int> >& result ){\n    if (k==0){\n        //sort to meet LeetCode requirement\n        vector<int> v = solution;\n        sort(v.begin(), v.end());\n        result.push_back(v);\n        return;\n    }\n    for(int i=n; i>0; i--){\n        solution.push_back(v[i-1]);\n        getCombination(v, i-1, k-1, solution, result);\n        solution.pop_back();\n    }\n}\n\nvector<vector<int> > combine2(vector<int> &v, int k) {\n    \n    vector<vector<int> > result;\n    vector<int> d;\n    int n = v.size();\n    for (int i=0; i<n; i++){\n        d.push_back( (i<k) ? 1 : 0 );\n    }\n\n    //1) from the left, find the [1,0] pattern, change it to [0,1]\n    //2) move all of the 1 before the pattern to the most left side\n    //3) check all of 1 move to the right\n    while(1){\n        vector<int> tmp;\n        for(int x=0; x<n; x++){\n            if (d[x]) tmp.push_back(v[x]);\n        }\n        sort(tmp.begin(), tmp.end());\n        result.push_back(tmp);\n        //step 1), find [1,0] pattern\n        int i;\n        bool found = false;\n        int ones =0;\n        for(i=0; i<n-1; i++){\n            \n            if (d[i]==1 && d[i+1]==0){\n                d[i]=0; d[i+1]=1;\n                found = true;\n                //step 2) move all of right 1 to the most left side\n                for (int j=0; j<i; j++){\n                    d[j]=( ones > 0 ) ? 1 : 0;\n                    ones--;\n                }\n                break; \n            } \n            if (d[i]==1) ones++;\n        }\n        if (!found){\n            break;\n        }\n        \n    }\n    return result;\n    \n}\n\n\n\n\nvoid printResult(vector<vector<int> >& result)\n{\n    for(int i=0; i<result.size(); i++){\n        cout << \"{\";\n        for(int j=0; j<result[i].size(); j++){\n            cout << \" \" << result[i][j];\n        }\n        cout << \" }\" <<endl;\n    }\n}\n\nvoid printArray(vector<int>& v){\n    cout << \"{\";\n    for(int i=0; i<v.size(); i++) {\n        cout << \" \" << v[i];\n    }\n    cout << \" }\" << endl;\n}\n\nint main(int argc, char** argv)\n{\n    srand(time(NULL));\n\n    int n = 3;\n    if (argc>1){\n        n = atoi(argv[1]);\n    }\n    vector<int> v;\n    for(int i=n; i>0; i--){\n        v.push_back(i);\n    }\n    printArray(v);\n    vector<vector<int> > r = subsets(v);\n    printResult(r);\n}\n",
+          "reviewedCode": "// Source : https://oj.leetcode.com/problems/subsets/\n// Author : Hao Chen\n// Date   : 2014-07-03\n\n/********************************************************************************** \n* \n* Given a set of distinct integers, S, return all possible subsets.\n* \n* Note:\n* \n* Elements in a subset must be in non-descending order.\n* The solution set must not contain duplicate subsets.\n* \n* For example,\n* If S = [1,2,3], a solution is:\n* \n* [\n*   [3],\n*   [1],\n*   [2],\n*   [1,2,3],\n*   [1,3],\n*   [2,3],\n*   [1,2],\n*   []\n* ]\n* \n*               \n**********************************************************************************/\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not.\n#include <stdio.h>\n#include <stdlib.h>\n#include <time.h>\n#include <iostream>\n#include <vector>\n#include <algorithm>\nusing namespace std;\n\nvoid getCombination(vector<int>& v, int n, int k, vector<int>& solution, vector< vector<int> >& result );\nvector<vector<int> > combine(vector<int>& v, int k); \nvector<vector<int> > combine1(vector<int>& v, int k); \nvector<vector<int> > combine2(vector<int>& v, int k);\n\nvector<vector<int> > subsets(vector<int> &S) {\n    vector<vector<int> > result;\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.\n    for(int i=0; i<=S.size(); i++){\n        vector<vector<int> > r = combine(S, i); \n        result.insert(result.end(), r.begin(), r.end()); \n    } \n    return result;\n}\n\n\nvector<vector<int> > combine(vector<int>& v, int k) {\n    // [Reader note] Decision point\n    // Pay attention here: The main trap is mutating one shared path object without remembering when a snapshot is needed.\n    if (random()%2){\n        cout << \"recusive method!\" << endl;\n        return combine1(v, k);\n    }\n    cout << \"non-recusive method!\" << endl;\n    return combine2(v, k);\n}\n\nvector<vector<int> > combine1(vector<int> &v, int k) {\n    vector<vector<int> > result;\n    vector<int> solution;\n    getCombination(v, v.size(), k, solution, result);\n    return result;\n}\n\nvoid getCombination(vector<int> &v, int n, int k, vector<int>& solution, vector< vector<int> >& result ){\n    if (k==0){\n        //sort to meet LeetCode requirement\n        vector<int> v = solution;\n        sort(v.begin(), v.end());\n        result.push_back(v);\n        return;\n    }\n    for(int i=n; i>0; i--){\n        solution.push_back(v[i-1]);\n        getCombination(v, i-1, k-1, solution, result);\n        solution.pop_back();\n    }\n}\n\nvector<vector<int> > combine2(vector<int> &v, int k) {\n    \n    vector<vector<int> > result;\n    vector<int> d;\n    int n = v.size();\n    for (int i=0; i<n; i++){\n        d.push_back( (i<k) ? 1 : 0 );\n    }\n\n    //1) from the left, find the [1,0] pattern, change it to [0,1]\n    //2) move all of the 1 before the pattern to the most left side\n    //3) check all of 1 move to the right\n    while(1){\n        vector<int> tmp;\n        for(int x=0; x<n; x++){\n            if (d[x]) tmp.push_back(v[x]);\n        }\n        sort(tmp.begin(), tmp.end());\n        result.push_back(tmp);\n        //step 1), find [1,0] pattern\n        int i;\n        bool found = false;\n        int ones =0;\n        for(i=0; i<n-1; i++){\n            \n            if (d[i]==1 && d[i+1]==0){\n                d[i]=0; d[i+1]=1;\n                found = true;\n                //step 2) move all of right 1 to the most left side\n                for (int j=0; j<i; j++){\n                    d[j]=( ones > 0 ) ? 1 : 0;\n                    ones--;\n                }\n                break; \n            } \n            if (d[i]==1) ones++;\n        }\n        if (!found){\n            break;\n        }\n        \n    }\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return result;\n    \n}\n\n\n\n\nvoid printResult(vector<vector<int> >& result)\n{\n    for(int i=0; i<result.size(); i++){\n        cout << \"{\";\n        for(int j=0; j<result[i].size(); j++){\n            cout << \" \" << result[i][j];\n        }\n        cout << \" }\" <<endl;\n    }\n}\n\nvoid printArray(vector<int>& v){\n    cout << \"{\";\n    for(int i=0; i<v.size(); i++) {\n        cout << \" \" << v[i];\n    }\n    cout << \" }\" << endl;\n}\n\nint main(int argc, char** argv)\n{\n    srand(time(NULL));\n\n    int n = 3;\n    if (argc>1){\n        n = atoi(argv[1]);\n    }\n    vector<int> v;\n    for(int i=n; i>0; i--){\n        v.push_back(i);\n    }\n    printArray(v);\n    vector<vector<int> > r = subsets(v);\n    printResult(r);\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 31,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not."
+            },
+            {
+              "line": 46,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process."
+            },
+            {
+              "line": 55,
+              "label": "Decision point",
+              "note": "Pay attention here: The main trap is mutating one shared path object without remembering when a snapshot is needed."
+            },
+            {
+              "line": 127,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the most reusable recursion templates because the include-or-skip structure appears everywhere.",
+            "whatToNotice": "Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.",
+            "riskPoint": "The main trap is mutating one shared path object without remembering when a snapshot is needed."
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 3,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-java-0078-subsets.java",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/java/0078-subsets.java",
+          "localPath": "neetcode-gh_leetcode/java/0078-subsets.java",
+          "relativePath": "java/0078-subsets.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "article+code",
+          "code": "// The idea is to have two conditions: \n// One in which we will take the element into consideration, \n// Second in which we won't take the element into consideration.\nclass Solution {\n\n    public List<List<Integer>> subsets(int[] nums) {\n        List<List<Integer>> ans = new ArrayList<>();\n        List<Integer> list = new ArrayList<>();\n        helper(ans, 0, nums, list);\n        return ans;\n    }\n\n    public void helper(\n        List<List<Integer>> ans,\n        int start,\n        int[] nums,\n        List<Integer> list\n    ) {\n        if (start >= nums.length) {\n            ans.add(new ArrayList<>(list));\n        } else {\n            // add the element and start the  recursive call\n            list.add(nums[start]);\n            helper(ans, start + 1, nums, list);\n            // remove the element and do the backtracking call.\n            list.remove(list.size() - 1);\n            helper(ans, start + 1, nums, list);\n        }\n    }\n}\n",
+          "originalCode": "// The idea is to have two conditions: \n// One in which we will take the element into consideration, \n// Second in which we won't take the element into consideration.\nclass Solution {\n\n    public List<List<Integer>> subsets(int[] nums) {\n        List<List<Integer>> ans = new ArrayList<>();\n        List<Integer> list = new ArrayList<>();\n        helper(ans, 0, nums, list);\n        return ans;\n    }\n\n    public void helper(\n        List<List<Integer>> ans,\n        int start,\n        int[] nums,\n        List<Integer> list\n    ) {\n        if (start >= nums.length) {\n            ans.add(new ArrayList<>(list));\n        } else {\n            // add the element and start the  recursive call\n            list.add(nums[start]);\n            helper(ans, start + 1, nums, list);\n            // remove the element and do the backtracking call.\n            list.remove(list.size() - 1);\n            helper(ans, start + 1, nums, list);\n        }\n    }\n}\n",
+          "reviewedCode": "// The idea is to have two conditions: \n// One in which we will take the element into consideration, \n// Second in which we won't take the element into consideration.\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not.\nclass Solution {\n\n    public List<List<Integer>> subsets(int[] nums) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.\n        List<List<Integer>> ans = new ArrayList<>();\n        List<Integer> list = new ArrayList<>();\n        helper(ans, 0, nums, list);\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return ans;\n    }\n\n    public void helper(\n        List<List<Integer>> ans,\n        int start,\n        int[] nums,\n        List<Integer> list\n    ) {\n        // [Reader note] Decision point\n        // Pay attention here: The main trap is mutating one shared path object without remembering when a snapshot is needed.\n        if (start >= nums.length) {\n            ans.add(new ArrayList<>(list));\n        } else {\n            // add the element and start the  recursive call\n            list.add(nums[start]);\n            helper(ans, start + 1, nums, list);\n            // remove the element and do the backtracking call.\n            list.remove(list.size() - 1);\n            helper(ans, start + 1, nums, list);\n        }\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 4,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not."
+            },
+            {
+              "line": 7,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process."
+            },
+            {
+              "line": 19,
+              "label": "Decision point",
+              "note": "Pay attention here: The main trap is mutating one shared path object without remembering when a snapshot is needed."
+            },
+            {
+              "line": 10,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the most reusable recursion templates because the include-or-skip structure appears everywhere.",
+            "whatToNotice": "Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.",
+            "riskPoint": "The main trap is mutating one shared path object without remembering when a snapshot is needed."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0078.subsets-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0078.Subsets/Solution.java",
+          "localPath": "doocs_leetcode/solution/0000-0099/0078.Subsets/Solution.java",
+          "relativePath": "solution/0000-0099/0078.Subsets/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\n    private List<List<Integer>> ans = new ArrayList<>();\n    private List<Integer> t = new ArrayList<>();\n    private int[] nums;\n\n    public List<List<Integer>> subsets(int[] nums) {\n        this.nums = nums;\n        dfs(0);\n        return ans;\n    }\n\n    private void dfs(int i) {\n        if (i == nums.length) {\n            ans.add(new ArrayList<>(t));\n            return;\n        }\n        dfs(i + 1);\n        t.add(nums[i]);\n        dfs(i + 1);\n        t.remove(t.size() - 1);\n    }\n}",
+          "originalCode": "class Solution {\n    private List<List<Integer>> ans = new ArrayList<>();\n    private List<Integer> t = new ArrayList<>();\n    private int[] nums;\n\n    public List<List<Integer>> subsets(int[] nums) {\n        this.nums = nums;\n        dfs(0);\n        return ans;\n    }\n\n    private void dfs(int i) {\n        if (i == nums.length) {\n            ans.add(new ArrayList<>(t));\n            return;\n        }\n        dfs(i + 1);\n        t.add(nums[i]);\n        dfs(i + 1);\n        t.remove(t.size() - 1);\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not.\nclass Solution {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.\n    private List<List<Integer>> ans = new ArrayList<>();\n    private List<Integer> t = new ArrayList<>();\n    private int[] nums;\n\n    public List<List<Integer>> subsets(int[] nums) {\n        this.nums = nums;\n        dfs(0);\n        return ans;\n    }\n\n    private void dfs(int i) {\n        // [Reader note] Decision point\n        // Pay attention here: The main trap is mutating one shared path object without remembering when a snapshot is needed.\n        if (i == nums.length) {\n            ans.add(new ArrayList<>(t));\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return;\n        }\n        dfs(i + 1);\n        t.add(nums[i]);\n        dfs(i + 1);\n        t.remove(t.size() - 1);\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process."
+            },
+            {
+              "line": 13,
+              "label": "Decision point",
+              "note": "Pay attention here: The main trap is mutating one shared path object without remembering when a snapshot is needed."
+            },
+            {
+              "line": 15,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the most reusable recursion templates because the include-or-skip structure appears everywhere.",
+            "whatToNotice": "Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.",
+            "riskPoint": "The main trap is mutating one shared path object without remembering when a snapshot is needed."
+          }
+        },
+        {
+          "id": "haoel_leetcode-algorithms-java-src-subsets-subsets.java",
+          "repository": "haoel_leetcode",
+          "repositoryUrl": "https://github.com/haoel/leetcode",
+          "sourceUrl": "https://github.com/haoel/leetcode/blob/master/algorithms/java/src/subsets/subsets.java",
+          "localPath": "haoel_leetcode/algorithms/java/src/subsets/subsets.java",
+          "relativePath": "algorithms/java/src/subsets/subsets.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "indexed-code",
+          "code": "// Source : https://oj.leetcode.com/problems/subsets/\n// Inspired by : http://www.jiuzhang.com/solutions/subsets/\n// Author : Lei Cao\n// Date   : 2015-10-02\n\n/**********************************************************************************\n *\n * Given a set of distinct integers, S, return all possible subsets.\n *\n * Note:\n *\n * Elements in a subset must be in non-descending order.\n * The solution set must not contain duplicate subsets.\n *\n * For example,\n * If S = [1,2,3], a solution is:\n *\n * [\n *   [3],\n *   [1],\n *   [2],\n *   [1,2,3],\n *   [1,3],\n *   [2,3],\n *   [1,2],\n *   []\n * ]\n *\n *\n **********************************************************************************/\n\npackage subsets;\n\nimport java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.Collections;\nimport java.util.List;\n\npublic class subsets {\n    /**\n     * Leetcode version\n     * @param nums\n     * @return\n     */\n    public List<List<Integer>> subsets(int [] nums) {\n        List<List<Integer>> result = new ArrayList<List<Integer>>();\n        if (nums == null || nums.length == 0) {\n            return result;\n        }\n        ArrayList<Integer> list = new ArrayList<Integer>();\n        Arrays.sort(nums);\n        addSubset(result, list, nums, 0);\n        return result;\n    }\n\n    private void addSubset(List<List<Integer>> result, ArrayList<Integer> list, int[] nums, int pos) {\n        result.add(new ArrayList<Integer>(list));\n        for (int i = pos; i < nums.length; i++) {\n            list.add(nums[i]);\n            addSubset(result, list, nums, i + 1);\n            list.remove(list.size()-1);\n        }\n    }\n\n    /**\n     * Lintcode version\n     * @param S: A set of numbers.\n     * @return: A list of lists. All valid subsets.\n     */\n    public ArrayList<ArrayList<Integer>> subsets(ArrayList<Integer> s) {\n        // write your code here\n        ArrayList<ArrayList<Integer>> result = new ArrayList<ArrayList<Integer>>();\n        if (s == null || s.size() == 0) {\n            return result;\n        }\n        ArrayList<Integer> list = new ArrayList<Integer>();\n        Collections.sort(s);\n        addSubset(s, result, list, 0);\n        return result;\n    }\n\n    private void addSubset(\n            ArrayList<Integer> s,\n            ArrayList<ArrayList<Integer>> result,\n            ArrayList<Integer> list,\n            int pos) {\n        result.add(new ArrayList<Integer>(list));\n        for (int i = pos; i < s.size(); i++) {\n            list.add(s.get(i));\n            addSubset(s, result, list, i + 1);\n            list.remove(list.size() - 1);\n        }\n    }\n}\n",
+          "originalCode": "// Source : https://oj.leetcode.com/problems/subsets/\n// Inspired by : http://www.jiuzhang.com/solutions/subsets/\n// Author : Lei Cao\n// Date   : 2015-10-02\n\n/**********************************************************************************\n *\n * Given a set of distinct integers, S, return all possible subsets.\n *\n * Note:\n *\n * Elements in a subset must be in non-descending order.\n * The solution set must not contain duplicate subsets.\n *\n * For example,\n * If S = [1,2,3], a solution is:\n *\n * [\n *   [3],\n *   [1],\n *   [2],\n *   [1,2,3],\n *   [1,3],\n *   [2,3],\n *   [1,2],\n *   []\n * ]\n *\n *\n **********************************************************************************/\n\npackage subsets;\n\nimport java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.Collections;\nimport java.util.List;\n\npublic class subsets {\n    /**\n     * Leetcode version\n     * @param nums\n     * @return\n     */\n    public List<List<Integer>> subsets(int [] nums) {\n        List<List<Integer>> result = new ArrayList<List<Integer>>();\n        if (nums == null || nums.length == 0) {\n            return result;\n        }\n        ArrayList<Integer> list = new ArrayList<Integer>();\n        Arrays.sort(nums);\n        addSubset(result, list, nums, 0);\n        return result;\n    }\n\n    private void addSubset(List<List<Integer>> result, ArrayList<Integer> list, int[] nums, int pos) {\n        result.add(new ArrayList<Integer>(list));\n        for (int i = pos; i < nums.length; i++) {\n            list.add(nums[i]);\n            addSubset(result, list, nums, i + 1);\n            list.remove(list.size()-1);\n        }\n    }\n\n    /**\n     * Lintcode version\n     * @param S: A set of numbers.\n     * @return: A list of lists. All valid subsets.\n     */\n    public ArrayList<ArrayList<Integer>> subsets(ArrayList<Integer> s) {\n        // write your code here\n        ArrayList<ArrayList<Integer>> result = new ArrayList<ArrayList<Integer>>();\n        if (s == null || s.size() == 0) {\n            return result;\n        }\n        ArrayList<Integer> list = new ArrayList<Integer>();\n        Collections.sort(s);\n        addSubset(s, result, list, 0);\n        return result;\n    }\n\n    private void addSubset(\n            ArrayList<Integer> s,\n            ArrayList<ArrayList<Integer>> result,\n            ArrayList<Integer> list,\n            int pos) {\n        result.add(new ArrayList<Integer>(list));\n        for (int i = pos; i < s.size(); i++) {\n            list.add(s.get(i));\n            addSubset(s, result, list, i + 1);\n            list.remove(list.size() - 1);\n        }\n    }\n}\n",
+          "reviewedCode": "// Source : https://oj.leetcode.com/problems/subsets/\n// Inspired by : http://www.jiuzhang.com/solutions/subsets/\n// Author : Lei Cao\n// Date   : 2015-10-02\n\n/**********************************************************************************\n *\n * Given a set of distinct integers, S, return all possible subsets.\n *\n * Note:\n *\n * Elements in a subset must be in non-descending order.\n * The solution set must not contain duplicate subsets.\n *\n * For example,\n * If S = [1,2,3], a solution is:\n *\n * [\n *   [3],\n *   [1],\n *   [2],\n *   [1,2,3],\n *   [1,3],\n *   [2,3],\n *   [1,2],\n *   []\n * ]\n *\n *\n **********************************************************************************/\n\npackage subsets;\n\nimport java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.Collections;\nimport java.util.List;\n\npublic class subsets {\n    /**\n     * Leetcode version\n     * @param nums\n     * @return\n     */\n    // [Reader note] Entry point\n    // Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not.\n    public List<List<Integer>> subsets(int [] nums) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.\n        List<List<Integer>> result = new ArrayList<List<Integer>>();\n        if (nums == null || nums.length == 0) {\n            return result;\n        }\n        ArrayList<Integer> list = new ArrayList<Integer>();\n        Arrays.sort(nums);\n        addSubset(result, list, nums, 0);\n        return result;\n    }\n\n    private void addSubset(List<List<Integer>> result, ArrayList<Integer> list, int[] nums, int pos) {\n        result.add(new ArrayList<Integer>(list));\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = pos; i < nums.length; i++) {\n            list.add(nums[i]);\n            addSubset(result, list, nums, i + 1);\n            list.remove(list.size()-1);\n        }\n    }\n\n    /**\n     * Lintcode version\n     * @param S: A set of numbers.\n     * @return: A list of lists. All valid subsets.\n     */\n    public ArrayList<ArrayList<Integer>> subsets(ArrayList<Integer> s) {\n        // write your code here\n        ArrayList<ArrayList<Integer>> result = new ArrayList<ArrayList<Integer>>();\n        // [Reader note] Decision point\n        // Pay attention here: The main trap is mutating one shared path object without remembering when a snapshot is needed.\n        if (s == null || s.size() == 0) {\n            return result;\n        }\n        ArrayList<Integer> list = new ArrayList<Integer>();\n        Collections.sort(s);\n        addSubset(s, result, list, 0);\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return result;\n    }\n\n    private void addSubset(\n            ArrayList<Integer> s,\n            ArrayList<ArrayList<Integer>> result,\n            ArrayList<Integer> list,\n            int pos) {\n        result.add(new ArrayList<Integer>(list));\n        for (int i = pos; i < s.size(); i++) {\n            list.add(s.get(i));\n            addSubset(s, result, list, i + 1);\n            list.remove(list.size() - 1);\n        }\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 45,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not."
+            },
+            {
+              "line": 46,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process."
+            },
+            {
+              "line": 58,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 73,
+              "label": "Decision point",
+              "note": "Pay attention here: The main trap is mutating one shared path object without remembering when a snapshot is needed."
+            },
+            {
+              "line": 79,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the most reusable recursion templates because the include-or-skip structure appears everywhere.",
+            "whatToNotice": "Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.",
+            "riskPoint": "The main trap is mutating one shared path object without remembering when a snapshot is needed."
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-go-0078-subsets.go",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/go/0078-subsets.go",
+          "localPath": "neetcode-gh_leetcode/go/0078-subsets.go",
+          "relativePath": "go/0078-subsets.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "article+code",
+          "code": "package main\n\nfunc subsets(nums []int) [][]int {\n\tans := make([][]int, 0)\n\tcurr := make([]int, 0)\n\tvar backtrack func(idx int)\n\tbacktrack = func(idx int) {\n\t\tans = append(ans, append([]int{}, curr...))\n\t\tif idx == len(nums) {\n\t\t\treturn\n\t\t}\n\t\tfor i := idx; i < len(nums); i++ {\n\t\t\tcurr = append(curr, nums[i])\n\t\t\tbacktrack(i + 1)\n\t\t\tcurr = curr[:len(curr)-1]\n\t\t}\n\t}\n\tbacktrack(0)\n\treturn ans\n}\n",
+          "originalCode": "package main\n\nfunc subsets(nums []int) [][]int {\n\tans := make([][]int, 0)\n\tcurr := make([]int, 0)\n\tvar backtrack func(idx int)\n\tbacktrack = func(idx int) {\n\t\tans = append(ans, append([]int{}, curr...))\n\t\tif idx == len(nums) {\n\t\t\treturn\n\t\t}\n\t\tfor i := idx; i < len(nums); i++ {\n\t\t\tcurr = append(curr, nums[i])\n\t\t\tbacktrack(i + 1)\n\t\t\tcurr = curr[:len(curr)-1]\n\t\t}\n\t}\n\tbacktrack(0)\n\treturn ans\n}\n",
+          "reviewedCode": "package main\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not.\nfunc subsets(nums []int) [][]int {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.\n\tans := make([][]int, 0)\n\tcurr := make([]int, 0)\n\tvar backtrack func(idx int)\n\tbacktrack = func(idx int) {\n\t\tans = append(ans, append([]int{}, curr...))\n\t\tif idx == len(nums) {\n\t\t\treturn\n\t\t}\n\t\t// [Reader note] Main pass\n\t\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\t\tfor i := idx; i < len(nums); i++ {\n\t\t\tcurr = append(curr, nums[i])\n\t\t\tbacktrack(i + 1)\n\t\t\tcurr = curr[:len(curr)-1]\n\t\t}\n\t}\n\tbacktrack(0)\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn ans\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 3,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process."
+            },
+            {
+              "line": 12,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 19,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the most reusable recursion templates because the include-or-skip structure appears everywhere.",
+            "whatToNotice": "Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.",
+            "riskPoint": "The main trap is mutating one shared path object without remembering when a snapshot is needed."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0078.subsets-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0078.Subsets/Solution.go",
+          "localPath": "doocs_leetcode/solution/0000-0099/0078.Subsets/Solution.go",
+          "relativePath": "solution/0000-0099/0078.Subsets/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "func subsets(nums []int) (ans [][]int) {\n\tt := []int{}\n\tvar dfs func(int)\n\tdfs = func(i int) {\n\t\tif i == len(nums) {\n\t\t\tans = append(ans, append([]int(nil), t...))\n\t\t\treturn\n\t\t}\n\t\tdfs(i + 1)\n\t\tt = append(t, nums[i])\n\t\tdfs(i + 1)\n\t\tt = t[:len(t)-1]\n\t}\n\tdfs(0)\n\treturn\n}",
+          "originalCode": "func subsets(nums []int) (ans [][]int) {\n\tt := []int{}\n\tvar dfs func(int)\n\tdfs = func(i int) {\n\t\tif i == len(nums) {\n\t\t\tans = append(ans, append([]int(nil), t...))\n\t\t\treturn\n\t\t}\n\t\tdfs(i + 1)\n\t\tt = append(t, nums[i])\n\t\tdfs(i + 1)\n\t\tt = t[:len(t)-1]\n\t}\n\tdfs(0)\n\treturn\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not.\nfunc subsets(nums []int) (ans [][]int) {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.\n\tt := []int{}\n\tvar dfs func(int)\n\tdfs = func(i int) {\n\t\t// [Reader note] Decision point\n\t\t// Pay attention here: The main trap is mutating one shared path object without remembering when a snapshot is needed.\n\t\tif i == len(nums) {\n\t\t\tans = append(ans, append([]int(nil), t...))\n\t\t\treturn\n\t\t}\n\t\tdfs(i + 1)\n\t\tt = append(t, nums[i])\n\t\tdfs(i + 1)\n\t\tt = t[:len(t)-1]\n\t}\n\tdfs(0)\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process."
+            },
+            {
+              "line": 5,
+              "label": "Decision point",
+              "note": "Pay attention here: The main trap is mutating one shared path object without remembering when a snapshot is needed."
+            },
+            {
+              "line": 15,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the most reusable recursion templates because the include-or-skip structure appears everywhere.",
+            "whatToNotice": "Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.",
+            "riskPoint": "The main trap is mutating one shared path object without remembering when a snapshot is needed."
+          }
+        }
+      ]
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0078.subsets-solution.ts",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0078.Subsets/Solution.ts",
+          "localPath": "doocs_leetcode/solution/0000-0099/0078.Subsets/Solution.ts",
+          "relativePath": "solution/0000-0099/0078.Subsets/Solution.ts",
+          "languageId": "typescript",
+          "languageLabel": "TypeScript",
+          "coverageType": "code+explanation",
+          "code": "function subsets(nums: number[]): number[][] {\n    const ans: number[][] = [];\n    const t: number[] = [];\n    const dfs = (i: number) => {\n        if (i === nums.length) {\n            ans.push(t.slice());\n            return;\n        }\n        dfs(i + 1);\n        t.push(nums[i]);\n        dfs(i + 1);\n        t.pop();\n    };\n    dfs(0);\n    return ans;\n}\n",
+          "originalCode": "function subsets(nums: number[]): number[][] {\n    const ans: number[][] = [];\n    const t: number[] = [];\n    const dfs = (i: number) => {\n        if (i === nums.length) {\n            ans.push(t.slice());\n            return;\n        }\n        dfs(i + 1);\n        t.push(nums[i]);\n        dfs(i + 1);\n        t.pop();\n    };\n    dfs(0);\n    return ans;\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not.\nfunction subsets(nums: number[]): number[][] {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.\n    const ans: number[][] = [];\n    const t: number[] = [];\n    const dfs = (i: number) => {\n        // [Reader note] Decision point\n        // Pay attention here: The main trap is mutating one shared path object without remembering when a snapshot is needed.\n        if (i === nums.length) {\n            ans.push(t.slice());\n            return;\n        }\n        dfs(i + 1);\n        t.push(nums[i]);\n        dfs(i + 1);\n        t.pop();\n    };\n    dfs(0);\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return ans;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process."
+            },
+            {
+              "line": 5,
+              "label": "Decision point",
+              "note": "Pay attention here: The main trap is mutating one shared path object without remembering when a snapshot is needed."
+            },
+            {
+              "line": 15,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the most reusable recursion templates because the include-or-skip structure appears everywhere.",
+            "whatToNotice": "Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.",
+            "riskPoint": "The main trap is mutating one shared path object without remembering when a snapshot is needed."
+          }
+        }
+      ]
+    },
+    {
+      "id": "javascript",
+      "label": "JavaScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-javascript-0078-subsets.js",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/javascript/0078-subsets.js",
+          "localPath": "neetcode-gh_leetcode/javascript/0078-subsets.js",
+          "relativePath": "javascript/0078-subsets.js",
+          "languageId": "javascript",
+          "languageLabel": "JavaScript",
+          "coverageType": "article+code",
+          "code": "/**\n * https://leetcode.com/problems/subsets/\n * Time O(N * 2^N) | Space(N)\n * @param {number[]} nums\n * @return {number[][]}\n */\nvar subsets = (nums) => {\n    nums.sort((a, b) => a - b);\n\n    return dfs(nums);\n};\n\nvar dfs = (nums, level = 0, set = [], subset = []) => {\n    subset.push(set.slice());\n\n    for (let i = level; i < nums.length; i++) {\n        backTrack(nums, i, set, subset);\n    }\n\n    return subset;\n};\n\nconst backTrack = (nums, i, set, subset) => {\n    set.push(nums[i]);\n    dfs(nums, i + 1, set, subset);\n    set.pop();\n};\n\n/**\n * https://leetcode.com/problems/subsets/\n * Time O(N * 2^N) | Space(N * 2^N)\n * @param {number[]} nums\n * @return {number[][]}\n */\nvar subsets = (nums) => {\n    nums.sort((a, b) => a - b);\n\n    return bfs(nums);\n};\n\nconst bfs = (nums, subsets = [[]]) => {\n    for (const num of nums) {\n        const levels = subsets.length;\n\n        for (let level = 0; level < levels; level++) {\n            const nextLevel = [...subsets[level], num];\n\n            subsets.push(nextLevel);\n        }\n    }\n\n    return subsets;\n};\n",
+          "originalCode": "/**\n * https://leetcode.com/problems/subsets/\n * Time O(N * 2^N) | Space(N)\n * @param {number[]} nums\n * @return {number[][]}\n */\nvar subsets = (nums) => {\n    nums.sort((a, b) => a - b);\n\n    return dfs(nums);\n};\n\nvar dfs = (nums, level = 0, set = [], subset = []) => {\n    subset.push(set.slice());\n\n    for (let i = level; i < nums.length; i++) {\n        backTrack(nums, i, set, subset);\n    }\n\n    return subset;\n};\n\nconst backTrack = (nums, i, set, subset) => {\n    set.push(nums[i]);\n    dfs(nums, i + 1, set, subset);\n    set.pop();\n};\n\n/**\n * https://leetcode.com/problems/subsets/\n * Time O(N * 2^N) | Space(N * 2^N)\n * @param {number[]} nums\n * @return {number[][]}\n */\nvar subsets = (nums) => {\n    nums.sort((a, b) => a - b);\n\n    return bfs(nums);\n};\n\nconst bfs = (nums, subsets = [[]]) => {\n    for (const num of nums) {\n        const levels = subsets.length;\n\n        for (let level = 0; level < levels; level++) {\n            const nextLevel = [...subsets[level], num];\n\n            subsets.push(nextLevel);\n        }\n    }\n\n    return subsets;\n};\n",
+          "reviewedCode": "/**\n * https://leetcode.com/problems/subsets/\n * Time O(N * 2^N) | Space(N)\n * @param {number[]} nums\n * @return {number[][]}\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not.\nvar subsets = (nums) => {\n    nums.sort((a, b) => a - b);\n\n    return dfs(nums);\n};\n\n// [Reader note] State setup\n// This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.\nvar dfs = (nums, level = 0, set = [], subset = []) => {\n    subset.push(set.slice());\n\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (let i = level; i < nums.length; i++) {\n        backTrack(nums, i, set, subset);\n    }\n\n    return subset;\n};\n\nconst backTrack = (nums, i, set, subset) => {\n    set.push(nums[i]);\n    dfs(nums, i + 1, set, subset);\n    set.pop();\n};\n\n/**\n * https://leetcode.com/problems/subsets/\n * Time O(N * 2^N) | Space(N * 2^N)\n * @param {number[]} nums\n * @return {number[][]}\n */\nvar subsets = (nums) => {\n    nums.sort((a, b) => a - b);\n\n    return bfs(nums);\n};\n\nconst bfs = (nums, subsets = [[]]) => {\n    for (const num of nums) {\n        const levels = subsets.length;\n\n        for (let level = 0; level < levels; level++) {\n            const nextLevel = [...subsets[level], num];\n\n            subsets.push(nextLevel);\n        }\n    }\n\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return subsets;\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time O(N * 2^N) | Space(N)"
+          ],
+          "annotations": [
+            {
+              "line": 7,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not."
+            },
+            {
+              "line": 13,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process."
+            },
+            {
+              "line": 16,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 52,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the most reusable recursion templates because the include-or-skip structure appears everywhere.",
+            "whatToNotice": "Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.",
+            "riskPoint": "The main trap is mutating one shared path object without remembering when a snapshot is needed."
+          }
+        }
+      ]
+    },
+    {
+      "id": "csharp",
+      "label": "C#",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-csharp-0078-subsets.cs",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/csharp/0078-subsets.cs",
+          "localPath": "neetcode-gh_leetcode/csharp/0078-subsets.cs",
+          "relativePath": "csharp/0078-subsets.cs",
+          "languageId": "csharp",
+          "languageLabel": "C#",
+          "coverageType": "article+code",
+          "code": "public class Solution {\n    private List<int> subset = new List<int>();\n    private List<IList<int>> result = new List<IList<int>>();\n    private void backtrack(int i, int[] nums) {\n        if(i >= nums.Length) {\n            result.Add(new List<int>(subset));\n            return;\n        }\n        subset.Add(nums[i]);\n        backtrack(i + 1, nums);\n        subset.Remove(nums[i]);\n        backtrack(i + 1, nums);\n            \n    }\n    public IList<IList<int>> Subsets(int[] nums) {\n        backtrack(0, nums);\n        return result;  \n    }\n}",
+          "originalCode": "public class Solution {\n    private List<int> subset = new List<int>();\n    private List<IList<int>> result = new List<IList<int>>();\n    private void backtrack(int i, int[] nums) {\n        if(i >= nums.Length) {\n            result.Add(new List<int>(subset));\n            return;\n        }\n        subset.Add(nums[i]);\n        backtrack(i + 1, nums);\n        subset.Remove(nums[i]);\n        backtrack(i + 1, nums);\n            \n    }\n    public IList<IList<int>> Subsets(int[] nums) {\n        backtrack(0, nums);\n        return result;  \n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not.\npublic class Solution {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.\n    private List<int> subset = new List<int>();\n    private List<IList<int>> result = new List<IList<int>>();\n    private void backtrack(int i, int[] nums) {\n        // [Reader note] Decision point\n        // Pay attention here: The main trap is mutating one shared path object without remembering when a snapshot is needed.\n        if(i >= nums.Length) {\n            result.Add(new List<int>(subset));\n            return;\n        }\n        subset.Add(nums[i]);\n        backtrack(i + 1, nums);\n        subset.Remove(nums[i]);\n        backtrack(i + 1, nums);\n            \n    }\n    public IList<IList<int>> Subsets(int[] nums) {\n        backtrack(0, nums);\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return result;  \n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process."
+            },
+            {
+              "line": 5,
+              "label": "Decision point",
+              "note": "Pay attention here: The main trap is mutating one shared path object without remembering when a snapshot is needed."
+            },
+            {
+              "line": 17,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the most reusable recursion templates because the include-or-skip structure appears everywhere.",
+            "whatToNotice": "Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.",
+            "riskPoint": "The main trap is mutating one shared path object without remembering when a snapshot is needed."
+          }
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "label": "C",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-c-0078-subsets.c",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/c/0078-subsets.c",
+          "localPath": "neetcode-gh_leetcode/c/0078-subsets.c",
+          "relativePath": "c/0078-subsets.c",
+          "languageId": "c",
+          "languageLabel": "C",
+          "coverageType": "article+code",
+          "code": "\n\n/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\n\nint nCr(int* factorials, int n, int r) {\n    return (int)(factorials[n] / (factorials[r] * (factorials[n - r])));\n}\n\nint** subsets(int* nums, int numsSize, int* returnSize, int** returnColumnSizes){\n    \n    int* factorials = (int*)malloc((numsSize + 1) * sizeof(int));\n    factorials[0] = 1;\n    factorials[1] = 1;\n    \n    for (int i = 2; i < (numsSize + 1); i++) {\n        factorials[i] = factorials[i - 1] * i;\n    }\n    \n    int combinations = 0;\n    for (int i = 0; i < (numsSize + 1); i++) {\n        combinations += nCr(factorials, numsSize, i);\n    }\n    *returnSize = combinations;\n    \n    int** result = (int**)malloc(combinations * sizeof(int*));\n    returnColumnSizes[0] = (int*)malloc(combinations * sizeof(int));\n    returnColumnSizes[0][0] = 0;\n    \n    int current_size = 1;\n    int lead = 1;\n    for (int i = 0; i < numsSize; i++) {\n        for (int j = 0; j < current_size; j++) {\n            int* new_subset = (int*)malloc((returnColumnSizes[0][j] + 1) * sizeof(int));\n            for (int k = 0; k < returnColumnSizes[0][j]; k++) {\n                new_subset[k] = result[j][k];\n            }\n            new_subset[returnColumnSizes[0][j]] = nums[i];\n            result[lead] = new_subset;\n            returnColumnSizes[0][lead] = (returnColumnSizes[0][j] + 1);  \n            lead += 1;\n        }   \n        current_size = lead;\n    }\n    free(factorials);\n    return result;\n}",
+          "originalCode": "\n\n/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\n\nint nCr(int* factorials, int n, int r) {\n    return (int)(factorials[n] / (factorials[r] * (factorials[n - r])));\n}\n\nint** subsets(int* nums, int numsSize, int* returnSize, int** returnColumnSizes){\n    \n    int* factorials = (int*)malloc((numsSize + 1) * sizeof(int));\n    factorials[0] = 1;\n    factorials[1] = 1;\n    \n    for (int i = 2; i < (numsSize + 1); i++) {\n        factorials[i] = factorials[i - 1] * i;\n    }\n    \n    int combinations = 0;\n    for (int i = 0; i < (numsSize + 1); i++) {\n        combinations += nCr(factorials, numsSize, i);\n    }\n    *returnSize = combinations;\n    \n    int** result = (int**)malloc(combinations * sizeof(int*));\n    returnColumnSizes[0] = (int*)malloc(combinations * sizeof(int));\n    returnColumnSizes[0][0] = 0;\n    \n    int current_size = 1;\n    int lead = 1;\n    for (int i = 0; i < numsSize; i++) {\n        for (int j = 0; j < current_size; j++) {\n            int* new_subset = (int*)malloc((returnColumnSizes[0][j] + 1) * sizeof(int));\n            for (int k = 0; k < returnColumnSizes[0][j]; k++) {\n                new_subset[k] = result[j][k];\n            }\n            new_subset[returnColumnSizes[0][j]] = nums[i];\n            result[lead] = new_subset;\n            returnColumnSizes[0][lead] = (returnColumnSizes[0][j] + 1);  \n            lead += 1;\n        }   \n        current_size = lead;\n    }\n    free(factorials);\n    return result;\n}",
+          "reviewedCode": "\n\n/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not.\nint nCr(int* factorials, int n, int r) {\n    return (int)(factorials[n] / (factorials[r] * (factorials[n - r])));\n}\n\nint** subsets(int* nums, int numsSize, int* returnSize, int** returnColumnSizes){\n    \n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.\n    int* factorials = (int*)malloc((numsSize + 1) * sizeof(int));\n    factorials[0] = 1;\n    factorials[1] = 1;\n    \n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (int i = 2; i < (numsSize + 1); i++) {\n        factorials[i] = factorials[i - 1] * i;\n    }\n    \n    int combinations = 0;\n    for (int i = 0; i < (numsSize + 1); i++) {\n        combinations += nCr(factorials, numsSize, i);\n    }\n    *returnSize = combinations;\n    \n    int** result = (int**)malloc(combinations * sizeof(int*));\n    returnColumnSizes[0] = (int*)malloc(combinations * sizeof(int));\n    returnColumnSizes[0][0] = 0;\n    \n    int current_size = 1;\n    int lead = 1;\n    for (int i = 0; i < numsSize; i++) {\n        for (int j = 0; j < current_size; j++) {\n            int* new_subset = (int*)malloc((returnColumnSizes[0][j] + 1) * sizeof(int));\n            for (int k = 0; k < returnColumnSizes[0][j]; k++) {\n                new_subset[k] = result[j][k];\n            }\n            new_subset[returnColumnSizes[0][j]] = nums[i];\n            result[lead] = new_subset;\n            returnColumnSizes[0][lead] = (returnColumnSizes[0][j] + 1);  \n            lead += 1;\n        }   \n        current_size = lead;\n    }\n    free(factorials);\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return result;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 9,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: At each position, branch on whether this item belongs to the current subset or not."
+            },
+            {
+              "line": 15,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process."
+            },
+            {
+              "line": 19,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 49,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the most reusable recursion templates because the include-or-skip structure appears everywhere.",
+            "whatToNotice": "Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.",
+            "riskPoint": "The main trap is mutating one shared path object without remembering when a snapshot is needed."
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "neetcode-gh_leetcode-articles-subsets.md",
+      "repository": "neetcode-gh_leetcode",
+      "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+      "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/articles/subsets.md",
+      "localPath": "neetcode-gh_leetcode/articles/subsets.md",
+      "relativePath": "articles/subsets.md",
+      "title": "subsets",
+      "excerpt": "## Prerequisites Before attempting this problem, you should be comfortable with: - **Recursion** - Used to explore the decision tree where each element is either included or excluded - **Backtracking** - Needed to undo choices (remove elements) after exploring one branch of the decision tree - **Bit Manipulation** - Alternative approach uses bitmasks to represent subset membership --- ## 1. Backtracking ### Intuitio..."
+    },
+    {
+      "id": "neetcode-gh_leetcode-hints-subsets.md",
+      "repository": "neetcode-gh_leetcode",
+      "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+      "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/hints/subsets.md",
+      "localPath": "neetcode-gh_leetcode/hints/subsets.md",
+      "relativePath": "hints/subsets.md",
+      "title": "subsets",
+      "excerpt": "<br> <details class=\"hint-accordion\"> <summary>Recommended Time & Space Complexity</summary> <p> You should aim for a solution with <code>O(n * (2^n))</code> time and <code>O(n)</code> space, where <code>n</code> is the size of the input array. </p> </details> <br> <details class=\"hint-accordion\"> <summary>Hint 1</summary> <p> It is straightforward that if the array is empty we return an empty array. When we have an..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0000-0099-0078.subsets-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0078.Subsets/README.md",
+      "localPath": "doocs_leetcode/solution/0000-0099/0078.Subsets/README.md",
+      "relativePath": "solution/0000-0099/0078.Subsets/README.md",
+      "title": "[78. \u5b50\u96c6](https://leetcode.cn/problems/subsets)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/0000-0099/0078.Subsets/README.md tags: - \u4f4d\u8fd0\u7b97 - \u6570\u7ec4 - \u56de\u6eaf --- <!-- problem:start --> # [78. \u5b50\u96c6](https://leetcode.cn/problems/subsets) [English Version](/solution/0000-0099/0078.Subsets/README_EN.md) ## \u9898\u76ee\u63cf\u8ff0 <!-- description:start --> <p>\u7ed9\u4f60\u4e00\u4e2a\u6574\u6570\u6570\u7ec4&nbsp;<code>nums</code> \uff0c\u6570\u7ec4\u4e2d\u7684\u5143\u7d20 <strong>\u4e92\u4e0d\u76f8\u540c</strong> \u3002\u8fd4\u56de\u8be5\u6570\u7ec4\u6240\u6709\u53ef\u80fd\u7684<span data-keyw..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0000-0099-0078.subsets-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0078.Subsets/README_EN.md",
+      "localPath": "doocs_leetcode/solution/0000-0099/0078.Subsets/README_EN.md",
+      "relativePath": "solution/0000-0099/0078.Subsets/README_EN.md",
+      "title": "[78. Subsets](https://leetcode.com/problems/subsets)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/0000-0099/0078.Subsets/README_EN.md tags: - Bit Manipulation - Array - Backtracking --- <!-- problem:start --> # [78. Subsets](https://leetcode.com/problems/subsets) [\u4e2d\u6587\u6587\u6863](/solution/0000-0099/0078.Subsets/README.md) ## Description <!-- description:start --> <p>Given an integer array <code>nums</code> of <strong>uniq..."
+    }
+  ]
+}

@@ -1,0 +1,669 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "open-the-lock",
+  "problemTitle": "Open the Lock",
+  "problemNumber": 752,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go",
+      "typescript",
+      "csharp",
+      "kotlin"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go",
+      "TypeScript",
+      "C#",
+      "Kotlin"
+    ],
+    "solutionCount": 11,
+    "writeupCount": 3,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 3,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-python-0752-open-the-lock.py",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/python/0752-open-the-lock.py",
+          "localPath": "neetcode-gh_leetcode/python/0752-open-the-lock.py",
+          "relativePath": "python/0752-open-the-lock.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "article+code",
+          "code": "class Solution:\n    def openLock(self, deadends: List[str], target: str) -> int:\n        if \"0000\" in deadends:\n            return -1\n\n        def children(wheel):\n            res = []\n            for i in range(4):\n                digit = str((int(wheel[i]) + 1) % 10)\n                res.append(wheel[:i] + digit + wheel[i + 1 :])\n                digit = str((int(wheel[i]) + 10 - 1) % 10)\n                res.append(wheel[:i] + digit + wheel[i + 1 :])\n            return res\n\n        q = deque()\n        visit = set(deadends)\n        q.append([\"0000\", 0])  # [wheel, turns]\n        while q:\n            wheel, turns = q.popleft()\n            if wheel == target:\n                return turns\n            for child in children(wheel):\n                if child not in visit:\n                    visit.add(child)\n                    q.append([child, turns + 1])\n        return -1\n",
+          "originalCode": "class Solution:\n    def openLock(self, deadends: List[str], target: str) -> int:\n        if \"0000\" in deadends:\n            return -1\n\n        def children(wheel):\n            res = []\n            for i in range(4):\n                digit = str((int(wheel[i]) + 1) % 10)\n                res.append(wheel[:i] + digit + wheel[i + 1 :])\n                digit = str((int(wheel[i]) + 10 - 1) % 10)\n                res.append(wheel[:i] + digit + wheel[i + 1 :])\n            return res\n\n        q = deque()\n        visit = set(deadends)\n        q.append([\"0000\", 0])  # [wheel, turns]\n        while q:\n            wheel, turns = q.popleft()\n            if wheel == target:\n                return turns\n            for child in children(wheel):\n                if child not in visit:\n                    visit.add(child)\n                    q.append([child, turns + 1])\n        return -1\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space.\nclass Solution:\n    def openLock(self, deadends: List[str], target: str) -> int:\n        if \"0000\" in deadends:\n            return -1\n\n        def children(wheel):\n            # [Reader note] State setup\n            # This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states.\n            res = []\n            # [Reader note] Main pass\n            # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for i in range(4):\n                digit = str((int(wheel[i]) + 1) % 10)\n                res.append(wheel[:i] + digit + wheel[i + 1 :])\n                digit = str((int(wheel[i]) + 10 - 1) % 10)\n                res.append(wheel[:i] + digit + wheel[i + 1 :])\n            return res\n\n        q = deque()\n        visit = set(deadends)\n        q.append([\"0000\", 0])  # [wheel, turns]\n        while q:\n            wheel, turns = q.popleft()\n            # [Reader note] Decision point\n            # Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort.\n            if wheel == target:\n                return turns\n            for child in children(wheel):\n                if child not in visit:\n                    visit.add(child)\n                    q.append([child, turns + 1])\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return -1",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space."
+            },
+            {
+              "line": 7,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states."
+            },
+            {
+              "line": 8,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 20,
+              "label": "Decision point",
+              "note": "Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+            },
+            {
+              "line": 26,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a very good implicit-graph problem because the state generation is simple and the shortest-path need is obvious.",
+            "whatToNotice": "Generating neighbors on the fly, visited-state handling, and treating strings as graph states.",
+            "riskPoint": "Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+          }
+        },
+        {
+          "id": "kamyu104_leetcode-solutions-python-open-the-lock.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/open-the-lock.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/open-the-lock.py",
+          "relativePath": "Python/open-the-lock.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(k * n^k + d), n is the number of alphabets,\n#                        k is the length of target,\n#                        d is the size of deadends\n# Space: O(k * n^k + d)\n\nclass Solution(object):\n    def openLock(self, deadends, target):\n        \"\"\"\n        :type deadends: List[str]\n        :type target: str\n        :rtype: int\n        \"\"\"\n        dead = set(deadends)\n        q = [\"0000\"]\n        lookup = {\"0000\"}\n        depth = 0\n        while q:\n            next_q = []\n            for node in q:\n                if node == target: return depth\n                if node in dead: continue\n                for i in xrange(4):\n                    n = int(node[i])\n                    for d in (-1, 1):\n                        nn = (n+d) % 10\n                        neighbor = node[:i] + str(nn) + node[i+1:]\n                        if neighbor not in lookup:\n                            lookup.add(neighbor)\n                            next_q.append(neighbor)\n            q = next_q\n            depth += 1\n        return -1\n\n",
+          "originalCode": "# Time:  O(k * n^k + d), n is the number of alphabets,\n#                        k is the length of target,\n#                        d is the size of deadends\n# Space: O(k * n^k + d)\n\nclass Solution(object):\n    def openLock(self, deadends, target):\n        \"\"\"\n        :type deadends: List[str]\n        :type target: str\n        :rtype: int\n        \"\"\"\n        dead = set(deadends)\n        q = [\"0000\"]\n        lookup = {\"0000\"}\n        depth = 0\n        while q:\n            next_q = []\n            for node in q:\n                if node == target: return depth\n                if node in dead: continue\n                for i in xrange(4):\n                    n = int(node[i])\n                    for d in (-1, 1):\n                        nn = (n+d) % 10\n                        neighbor = node[:i] + str(nn) + node[i+1:]\n                        if neighbor not in lookup:\n                            lookup.add(neighbor)\n                            next_q.append(neighbor)\n            q = next_q\n            depth += 1\n        return -1\n\n",
+          "reviewedCode": "# Time:  O(k * n^k + d), n is the number of alphabets,\n#                        k is the length of target,\n#                        d is the size of deadends\n# Space: O(k * n^k + d)\n\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space.\nclass Solution(object):\n    def openLock(self, deadends, target):\n        \"\"\"\n        :type deadends: List[str]\n        :type target: str\n        :rtype: int\n        \"\"\"\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states.\n        dead = set(deadends)\n        q = [\"0000\"]\n        lookup = {\"0000\"}\n        depth = 0\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while q:\n            next_q = []\n            for node in q:\n                # [Reader note] Decision point\n                # Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort.\n                if node == target: return depth\n                if node in dead: continue\n                for i in xrange(4):\n                    n = int(node[i])\n                    for d in (-1, 1):\n                        nn = (n+d) % 10\n                        neighbor = node[:i] + str(nn) + node[i+1:]\n                        if neighbor not in lookup:\n                            lookup.add(neighbor)\n                            next_q.append(neighbor)\n            q = next_q\n            depth += 1\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return -1\n",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(k * n^k + d), n is the number of alphabets,",
+            "Space: O(k * n^k + d)"
+          ],
+          "annotations": [
+            {
+              "line": 6,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space."
+            },
+            {
+              "line": 13,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states."
+            },
+            {
+              "line": 17,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 20,
+              "label": "Decision point",
+              "note": "Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+            },
+            {
+              "line": 32,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a very good implicit-graph problem because the state generation is simple and the shortest-path need is obvious.",
+            "whatToNotice": "Generating neighbors on the fly, visited-state handling, and treating strings as graph states.",
+            "riskPoint": "Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0700-0799-0752.open-the-lock-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0700-0799/0752.Open%20the%20Lock/Solution.py",
+          "localPath": "doocs_leetcode/solution/0700-0799/0752.Open the Lock/Solution.py",
+          "relativePath": "solution/0700-0799/0752.Open the Lock/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "class Solution:\n    def openLock(self, deadends: List[str], target: str) -> int:\n        def next(s):\n            res = []\n            s = list(s)\n            for i in range(4):\n                c = s[i]\n                s[i] = '9' if c == '0' else str(int(c) - 1)\n                res.append(''.join(s))\n                s[i] = '0' if c == '9' else str(int(c) + 1)\n                res.append(''.join(s))\n                s[i] = c\n            return res\n\n        if target == '0000':\n            return 0\n        s = set(deadends)\n        if '0000' in s:\n            return -1\n        q = deque(['0000'])\n        s.add('0000')\n        ans = 0\n        while q:\n            ans += 1\n            for _ in range(len(q)):\n                p = q.popleft()\n                for t in next(p):\n                    if t == target:\n                        return ans\n                    if t not in s:\n                        q.append(t)\n                        s.add(t)\n        return -1\n",
+          "originalCode": "class Solution:\n    def openLock(self, deadends: List[str], target: str) -> int:\n        def next(s):\n            res = []\n            s = list(s)\n            for i in range(4):\n                c = s[i]\n                s[i] = '9' if c == '0' else str(int(c) - 1)\n                res.append(''.join(s))\n                s[i] = '0' if c == '9' else str(int(c) + 1)\n                res.append(''.join(s))\n                s[i] = c\n            return res\n\n        if target == '0000':\n            return 0\n        s = set(deadends)\n        if '0000' in s:\n            return -1\n        q = deque(['0000'])\n        s.add('0000')\n        ans = 0\n        while q:\n            ans += 1\n            for _ in range(len(q)):\n                p = q.popleft()\n                for t in next(p):\n                    if t == target:\n                        return ans\n                    if t not in s:\n                        q.append(t)\n                        s.add(t)\n        return -1\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space.\nclass Solution:\n    def openLock(self, deadends: List[str], target: str) -> int:\n        def next(s):\n            # [Reader note] State setup\n            # This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states.\n            res = []\n            s = list(s)\n            # [Reader note] Main pass\n            # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for i in range(4):\n                c = s[i]\n                # [Reader note] Decision point\n                # Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort.\n                s[i] = '9' if c == '0' else str(int(c) - 1)\n                res.append(''.join(s))\n                s[i] = '0' if c == '9' else str(int(c) + 1)\n                res.append(''.join(s))\n                s[i] = c\n            return res\n\n        if target == '0000':\n            return 0\n        s = set(deadends)\n        if '0000' in s:\n            return -1\n        q = deque(['0000'])\n        s.add('0000')\n        ans = 0\n        while q:\n            ans += 1\n            for _ in range(len(q)):\n                p = q.popleft()\n                for t in next(p):\n                    if t == target:\n                        return ans\n                    if t not in s:\n                        q.append(t)\n                        s.add(t)\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return -1",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states."
+            },
+            {
+              "line": 6,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 8,
+              "label": "Decision point",
+              "note": "Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+            },
+            {
+              "line": 33,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a very good implicit-graph problem because the state generation is simple and the shortest-path need is obvious.",
+            "whatToNotice": "Generating neighbors on the fly, visited-state handling, and treating strings as graph states.",
+            "riskPoint": "Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-c-open-the-lock.cpp",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/C%2B%2B/open-the-lock.cpp",
+          "localPath": "kamyu104_LeetCode-Solutions/C++/open-the-lock.cpp",
+          "relativePath": "C++/open-the-lock.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Time:  O(k * n^k + d), n is the number of alphabets,\n//                        k is the length of target,\n//                        d is the size of deadends\n// Space: O(k * n^k + d)\n\nclass Solution {\npublic:\n    int openLock(vector<string>& deadends, string target) {\n        unordered_set<string> dead(deadends.begin(), deadends.end());\n        vector<string> q{\"0000\"};\n        unordered_set<string> lookup{\"0000\"};\n        int depth = 0;\n        while (!q.empty()) {\n            vector<string> next_q;\n            for (const auto& node : q) {\n                if (node == target) {\n                    return depth;\n                }\n                if (dead.count(node)) {\n                    continue;\n                }\n                for (int i = 0; i < 4; ++i) {\n                    auto n = node[i] - '0';\n                    for (const auto& d : {-1, 1}) {\n                        auto nn = (n + d + 10) % 10;\n                        auto neighbor = node;\n                        neighbor[i] = '0' + nn;\n                        if (!lookup.count(neighbor)) {\n                            lookup.emplace(neighbor);\n                            next_q.emplace_back(neighbor);\n                        }\n                    }\n                }\n            }\n            swap(q, next_q);\n            ++depth;\n        }\n        return -1;\n    }\n};\n",
+          "originalCode": "// Time:  O(k * n^k + d), n is the number of alphabets,\n//                        k is the length of target,\n//                        d is the size of deadends\n// Space: O(k * n^k + d)\n\nclass Solution {\npublic:\n    int openLock(vector<string>& deadends, string target) {\n        unordered_set<string> dead(deadends.begin(), deadends.end());\n        vector<string> q{\"0000\"};\n        unordered_set<string> lookup{\"0000\"};\n        int depth = 0;\n        while (!q.empty()) {\n            vector<string> next_q;\n            for (const auto& node : q) {\n                if (node == target) {\n                    return depth;\n                }\n                if (dead.count(node)) {\n                    continue;\n                }\n                for (int i = 0; i < 4; ++i) {\n                    auto n = node[i] - '0';\n                    for (const auto& d : {-1, 1}) {\n                        auto nn = (n + d + 10) % 10;\n                        auto neighbor = node;\n                        neighbor[i] = '0' + nn;\n                        if (!lookup.count(neighbor)) {\n                            lookup.emplace(neighbor);\n                            next_q.emplace_back(neighbor);\n                        }\n                    }\n                }\n            }\n            swap(q, next_q);\n            ++depth;\n        }\n        return -1;\n    }\n};\n",
+          "reviewedCode": "// Time:  O(k * n^k + d), n is the number of alphabets,\n//                        k is the length of target,\n//                        d is the size of deadends\n// Space: O(k * n^k + d)\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space.\nclass Solution {\npublic:\n    int openLock(vector<string>& deadends, string target) {\n        unordered_set<string> dead(deadends.begin(), deadends.end());\n        vector<string> q{\"0000\"};\n        unordered_set<string> lookup{\"0000\"};\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states.\n        int depth = 0;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while (!q.empty()) {\n            vector<string> next_q;\n            for (const auto& node : q) {\n                // [Reader note] Decision point\n                // Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort.\n                if (node == target) {\n                    return depth;\n                }\n                if (dead.count(node)) {\n                    continue;\n                }\n                for (int i = 0; i < 4; ++i) {\n                    auto n = node[i] - '0';\n                    for (const auto& d : {-1, 1}) {\n                        auto nn = (n + d + 10) % 10;\n                        auto neighbor = node;\n                        neighbor[i] = '0' + nn;\n                        if (!lookup.count(neighbor)) {\n                            lookup.emplace(neighbor);\n                            next_q.emplace_back(neighbor);\n                        }\n                    }\n                }\n            }\n            swap(q, next_q);\n            ++depth;\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return -1;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(k * n^k + d), n is the number of alphabets,",
+            "Space: O(k * n^k + d)"
+          ],
+          "annotations": [
+            {
+              "line": 6,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space."
+            },
+            {
+              "line": 12,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states."
+            },
+            {
+              "line": 13,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 16,
+              "label": "Decision point",
+              "note": "Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+            },
+            {
+              "line": 38,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a very good implicit-graph problem because the state generation is simple and the shortest-path need is obvious.",
+            "whatToNotice": "Generating neighbors on the fly, visited-state handling, and treating strings as graph states.",
+            "riskPoint": "Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0700-0799-0752.open-the-lock-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0700-0799/0752.Open%20the%20Lock/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/0700-0799/0752.Open the Lock/Solution.cpp",
+          "relativePath": "solution/0700-0799/0752.Open the Lock/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\npublic:\n    int openLock(vector<string>& deadends, string target) {\n        unordered_set<string> s(deadends.begin(), deadends.end());\n        if (s.count(\"0000\")) return -1;\n        if (target == \"0000\") return 0;\n        queue<string> q{{\"0000\"}};\n        s.insert(\"0000\");\n        int ans = 0;\n        while (!q.empty()) {\n            ++ans;\n            for (int n = q.size(); n > 0; --n) {\n                string p = q.front();\n                q.pop();\n                for (string t : next(p)) {\n                    if (target == t) return ans;\n                    if (!s.count(t)) {\n                        q.push(t);\n                        s.insert(t);\n                    }\n                }\n            }\n        }\n        return -1;\n    }\n\n    vector<string> next(string& t) {\n        vector<string> res;\n        for (int i = 0; i < 4; ++i) {\n            char c = t[i];\n            t[i] = c == '0' ? '9' : (char) (c - 1);\n            res.push_back(t);\n            t[i] = c == '9' ? '0' : (char) (c + 1);\n            res.push_back(t);\n            t[i] = c;\n        }\n        return res;\n    }\n};",
+          "originalCode": "class Solution {\npublic:\n    int openLock(vector<string>& deadends, string target) {\n        unordered_set<string> s(deadends.begin(), deadends.end());\n        if (s.count(\"0000\")) return -1;\n        if (target == \"0000\") return 0;\n        queue<string> q{{\"0000\"}};\n        s.insert(\"0000\");\n        int ans = 0;\n        while (!q.empty()) {\n            ++ans;\n            for (int n = q.size(); n > 0; --n) {\n                string p = q.front();\n                q.pop();\n                for (string t : next(p)) {\n                    if (target == t) return ans;\n                    if (!s.count(t)) {\n                        q.push(t);\n                        s.insert(t);\n                    }\n                }\n            }\n        }\n        return -1;\n    }\n\n    vector<string> next(string& t) {\n        vector<string> res;\n        for (int i = 0; i < 4; ++i) {\n            char c = t[i];\n            t[i] = c == '0' ? '9' : (char) (c - 1);\n            res.push_back(t);\n            t[i] = c == '9' ? '0' : (char) (c + 1);\n            res.push_back(t);\n            t[i] = c;\n        }\n        return res;\n    }\n};",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space.\nclass Solution {\npublic:\n    int openLock(vector<string>& deadends, string target) {\n        unordered_set<string> s(deadends.begin(), deadends.end());\n        if (s.count(\"0000\")) return -1;\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states.\n        if (target == \"0000\") return 0;\n        queue<string> q{{\"0000\"}};\n        s.insert(\"0000\");\n        int ans = 0;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while (!q.empty()) {\n            ++ans;\n            for (int n = q.size(); n > 0; --n) {\n                string p = q.front();\n                q.pop();\n                for (string t : next(p)) {\n                    // [Reader note] Decision point\n                    // Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort.\n                    if (target == t) return ans;\n                    if (!s.count(t)) {\n                        q.push(t);\n                        s.insert(t);\n                    }\n                }\n            }\n        }\n        return -1;\n    }\n\n    vector<string> next(string& t) {\n        vector<string> res;\n        for (int i = 0; i < 4; ++i) {\n            char c = t[i];\n            t[i] = c == '0' ? '9' : (char) (c - 1);\n            res.push_back(t);\n            t[i] = c == '9' ? '0' : (char) (c + 1);\n            res.push_back(t);\n            t[i] = c;\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return res;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space."
+            },
+            {
+              "line": 6,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states."
+            },
+            {
+              "line": 10,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 16,
+              "label": "Decision point",
+              "note": "Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+            },
+            {
+              "line": 37,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a very good implicit-graph problem because the state generation is simple and the shortest-path need is obvious.",
+            "whatToNotice": "Generating neighbors on the fly, visited-state handling, and treating strings as graph states.",
+            "riskPoint": "Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-java-0752-open-the-lock.java",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/java/0752-open-the-lock.java",
+          "localPath": "neetcode-gh_leetcode/java/0752-open-the-lock.java",
+          "relativePath": "java/0752-open-the-lock.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "article+code",
+          "code": "class Solution {\n    public int openLock(String[] deadends, String target) {\n        Set<String> visited = new HashSet<>();\n        for (String deadend : deadends) {\n            if (deadend.equals(\"0000\")) {\n                return -1;\n            }\n            visited.add(deadend);\n        }\n\n        Queue<String> queue = new LinkedList<>();\n        queue.offer(\"0000\");\n        visited.add(\"0000\");\n\n        int turns = 0;\n        while (!queue.isEmpty()) {\n            int size = queue.size();\n            for (int i = 0; i < size; i++) {\n                String lock = queue.poll();\n                if (lock.equals(target)) {\n                    return turns;\n                }\n                List<String> children = generateChildren(lock);\n                for (String child : children) {\n                    if (!visited.contains(child)) {\n                        visited.add(child);\n                        queue.offer(child);\n                    }\n                }\n            }\n            turns++;\n        }\n        return -1;\n    }\n\n    private List<String> generateChildren(String lock) {\n        List<String> children = new ArrayList<>();\n        for (int i = 0; i < 4; i++) {\n            char[] digits = lock.toCharArray();\n            digits[i] = (char)(((digits[i] - '0' + 1) % 10) + '0');\n            children.add(new String(digits));\n            digits[i] = (char)(((digits[i] - '0' - 2 + 10) % 10) + '0');\n            children.add(new String(digits));\n        }\n        return children;\n    }\n}\n",
+          "originalCode": "class Solution {\n    public int openLock(String[] deadends, String target) {\n        Set<String> visited = new HashSet<>();\n        for (String deadend : deadends) {\n            if (deadend.equals(\"0000\")) {\n                return -1;\n            }\n            visited.add(deadend);\n        }\n\n        Queue<String> queue = new LinkedList<>();\n        queue.offer(\"0000\");\n        visited.add(\"0000\");\n\n        int turns = 0;\n        while (!queue.isEmpty()) {\n            int size = queue.size();\n            for (int i = 0; i < size; i++) {\n                String lock = queue.poll();\n                if (lock.equals(target)) {\n                    return turns;\n                }\n                List<String> children = generateChildren(lock);\n                for (String child : children) {\n                    if (!visited.contains(child)) {\n                        visited.add(child);\n                        queue.offer(child);\n                    }\n                }\n            }\n            turns++;\n        }\n        return -1;\n    }\n\n    private List<String> generateChildren(String lock) {\n        List<String> children = new ArrayList<>();\n        for (int i = 0; i < 4; i++) {\n            char[] digits = lock.toCharArray();\n            digits[i] = (char)(((digits[i] - '0' + 1) % 10) + '0');\n            children.add(new String(digits));\n            digits[i] = (char)(((digits[i] - '0' - 2 + 10) % 10) + '0');\n            children.add(new String(digits));\n        }\n        return children;\n    }\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space.\nclass Solution {\n    public int openLock(String[] deadends, String target) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states.\n        Set<String> visited = new HashSet<>();\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (String deadend : deadends) {\n            // [Reader note] Decision point\n            // Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort.\n            if (deadend.equals(\"0000\")) {\n                return -1;\n            }\n            visited.add(deadend);\n        }\n\n        Queue<String> queue = new LinkedList<>();\n        queue.offer(\"0000\");\n        visited.add(\"0000\");\n\n        int turns = 0;\n        while (!queue.isEmpty()) {\n            int size = queue.size();\n            for (int i = 0; i < size; i++) {\n                String lock = queue.poll();\n                if (lock.equals(target)) {\n                    return turns;\n                }\n                List<String> children = generateChildren(lock);\n                for (String child : children) {\n                    if (!visited.contains(child)) {\n                        visited.add(child);\n                        queue.offer(child);\n                    }\n                }\n            }\n            turns++;\n        }\n        return -1;\n    }\n\n    private List<String> generateChildren(String lock) {\n        List<String> children = new ArrayList<>();\n        for (int i = 0; i < 4; i++) {\n            char[] digits = lock.toCharArray();\n            digits[i] = (char)(((digits[i] - '0' + 1) % 10) + '0');\n            children.add(new String(digits));\n            digits[i] = (char)(((digits[i] - '0' - 2 + 10) % 10) + '0');\n            children.add(new String(digits));\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return children;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states."
+            },
+            {
+              "line": 4,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 5,
+              "label": "Decision point",
+              "note": "Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+            },
+            {
+              "line": 45,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a very good implicit-graph problem because the state generation is simple and the shortest-path need is obvious.",
+            "whatToNotice": "Generating neighbors on the fly, visited-state handling, and treating strings as graph states.",
+            "riskPoint": "Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0700-0799-0752.open-the-lock-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0700-0799/0752.Open%20the%20Lock/Solution.java",
+          "localPath": "doocs_leetcode/solution/0700-0799/0752.Open the Lock/Solution.java",
+          "relativePath": "solution/0700-0799/0752.Open the Lock/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\n    public int openLock(String[] deadends, String target) {\n        if (\"0000\".equals(target)) {\n            return 0;\n        }\n        Set<String> s = new HashSet<>(Arrays.asList(deadends));\n        if (s.contains(\"0000\")) {\n            return -1;\n        }\n        Deque<String> q = new ArrayDeque<>();\n        q.offer(\"0000\");\n        s.add(\"0000\");\n        int ans = 0;\n        while (!q.isEmpty()) {\n            ++ans;\n            for (int n = q.size(); n > 0; --n) {\n                String p = q.poll();\n                for (String t : next(p)) {\n                    if (target.equals(t)) {\n                        return ans;\n                    }\n                    if (!s.contains(t)) {\n                        q.offer(t);\n                        s.add(t);\n                    }\n                }\n            }\n        }\n        return -1;\n    }\n\n    private List<String> next(String t) {\n        List res = new ArrayList<>();\n        char[] chars = t.toCharArray();\n        for (int i = 0; i < 4; ++i) {\n            char c = chars[i];\n            chars[i] = c == '0' ? '9' : (char) (c - 1);\n            res.add(String.valueOf(chars));\n            chars[i] = c == '9' ? '0' : (char) (c + 1);\n            res.add(String.valueOf(chars));\n            chars[i] = c;\n        }\n        return res;\n    }\n}",
+          "originalCode": "class Solution {\n    public int openLock(String[] deadends, String target) {\n        if (\"0000\".equals(target)) {\n            return 0;\n        }\n        Set<String> s = new HashSet<>(Arrays.asList(deadends));\n        if (s.contains(\"0000\")) {\n            return -1;\n        }\n        Deque<String> q = new ArrayDeque<>();\n        q.offer(\"0000\");\n        s.add(\"0000\");\n        int ans = 0;\n        while (!q.isEmpty()) {\n            ++ans;\n            for (int n = q.size(); n > 0; --n) {\n                String p = q.poll();\n                for (String t : next(p)) {\n                    if (target.equals(t)) {\n                        return ans;\n                    }\n                    if (!s.contains(t)) {\n                        q.offer(t);\n                        s.add(t);\n                    }\n                }\n            }\n        }\n        return -1;\n    }\n\n    private List<String> next(String t) {\n        List res = new ArrayList<>();\n        char[] chars = t.toCharArray();\n        for (int i = 0; i < 4; ++i) {\n            char c = chars[i];\n            chars[i] = c == '0' ? '9' : (char) (c - 1);\n            res.add(String.valueOf(chars));\n            chars[i] = c == '9' ? '0' : (char) (c + 1);\n            res.add(String.valueOf(chars));\n            chars[i] = c;\n        }\n        return res;\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space.\nclass Solution {\n    public int openLock(String[] deadends, String target) {\n        if (\"0000\".equals(target)) {\n            return 0;\n        }\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states.\n        Set<String> s = new HashSet<>(Arrays.asList(deadends));\n        if (s.contains(\"0000\")) {\n            return -1;\n        }\n        Deque<String> q = new ArrayDeque<>();\n        q.offer(\"0000\");\n        s.add(\"0000\");\n        int ans = 0;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while (!q.isEmpty()) {\n            ++ans;\n            for (int n = q.size(); n > 0; --n) {\n                String p = q.poll();\n                for (String t : next(p)) {\n                    // [Reader note] Decision point\n                    // Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort.\n                    if (target.equals(t)) {\n                        return ans;\n                    }\n                    if (!s.contains(t)) {\n                        q.offer(t);\n                        s.add(t);\n                    }\n                }\n            }\n        }\n        return -1;\n    }\n\n    private List<String> next(String t) {\n        List res = new ArrayList<>();\n        char[] chars = t.toCharArray();\n        for (int i = 0; i < 4; ++i) {\n            char c = chars[i];\n            chars[i] = c == '0' ? '9' : (char) (c - 1);\n            res.add(String.valueOf(chars));\n            chars[i] = c == '9' ? '0' : (char) (c + 1);\n            res.add(String.valueOf(chars));\n            chars[i] = c;\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return res;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space."
+            },
+            {
+              "line": 6,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states."
+            },
+            {
+              "line": 14,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 19,
+              "label": "Decision point",
+              "note": "Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+            },
+            {
+              "line": 43,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a very good implicit-graph problem because the state generation is simple and the shortest-path need is obvious.",
+            "whatToNotice": "Generating neighbors on the fly, visited-state handling, and treating strings as graph states.",
+            "riskPoint": "Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0700-0799-0752.open-the-lock-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0700-0799/0752.Open%20the%20Lock/Solution.go",
+          "localPath": "doocs_leetcode/solution/0700-0799/0752.Open the Lock/Solution.go",
+          "relativePath": "solution/0700-0799/0752.Open the Lock/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "func openLock(deadends []string, target string) int {\n\tif target == \"0000\" {\n\t\treturn 0\n\t}\n\ts := make(map[string]bool)\n\tfor _, d := range deadends {\n\t\ts[d] = true\n\t}\n\tif s[\"0000\"] {\n\t\treturn -1\n\t}\n\tq := []string{\"0000\"}\n\ts[\"0000\"] = true\n\tans := 0\n\tnext := func(t string) []string {\n\t\ts := []byte(t)\n\t\tvar res []string\n\t\tfor i, b := range s {\n\t\t\ts[i] = b - 1\n\t\t\tif s[i] < '0' {\n\t\t\t\ts[i] = '9'\n\t\t\t}\n\t\t\tres = append(res, string(s))\n\t\t\ts[i] = b + 1\n\t\t\tif s[i] > '9' {\n\t\t\t\ts[i] = '0'\n\t\t\t}\n\t\t\tres = append(res, string(s))\n\t\t\ts[i] = b\n\t\t}\n\t\treturn res\n\t}\n\tfor len(q) > 0 {\n\t\tans++\n\t\tfor n := len(q); n > 0; n-- {\n\t\t\tp := q[0]\n\t\t\tq = q[1:]\n\t\t\tfor _, t := range next(p) {\n\t\t\t\tif target == t {\n\t\t\t\t\treturn ans\n\t\t\t\t}\n\t\t\t\tif !s[t] {\n\t\t\t\t\tq = append(q, t)\n\t\t\t\t\ts[t] = true\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\treturn -1\n}",
+          "originalCode": "func openLock(deadends []string, target string) int {\n\tif target == \"0000\" {\n\t\treturn 0\n\t}\n\ts := make(map[string]bool)\n\tfor _, d := range deadends {\n\t\ts[d] = true\n\t}\n\tif s[\"0000\"] {\n\t\treturn -1\n\t}\n\tq := []string{\"0000\"}\n\ts[\"0000\"] = true\n\tans := 0\n\tnext := func(t string) []string {\n\t\ts := []byte(t)\n\t\tvar res []string\n\t\tfor i, b := range s {\n\t\t\ts[i] = b - 1\n\t\t\tif s[i] < '0' {\n\t\t\t\ts[i] = '9'\n\t\t\t}\n\t\t\tres = append(res, string(s))\n\t\t\ts[i] = b + 1\n\t\t\tif s[i] > '9' {\n\t\t\t\ts[i] = '0'\n\t\t\t}\n\t\t\tres = append(res, string(s))\n\t\t\ts[i] = b\n\t\t}\n\t\treturn res\n\t}\n\tfor len(q) > 0 {\n\t\tans++\n\t\tfor n := len(q); n > 0; n-- {\n\t\t\tp := q[0]\n\t\t\tq = q[1:]\n\t\t\tfor _, t := range next(p) {\n\t\t\t\tif target == t {\n\t\t\t\t\treturn ans\n\t\t\t\t}\n\t\t\t\tif !s[t] {\n\t\t\t\t\tq = append(q, t)\n\t\t\t\t\ts[t] = true\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\treturn -1\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space.\nfunc openLock(deadends []string, target string) int {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states.\n\tif target == \"0000\" {\n\t\treturn 0\n\t}\n\ts := make(map[string]bool)\n\t// [Reader note] Main pass\n\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\tfor _, d := range deadends {\n\t\ts[d] = true\n\t}\n\t// [Reader note] Decision point\n\t// Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort.\n\tif s[\"0000\"] {\n\t\treturn -1\n\t}\n\tq := []string{\"0000\"}\n\ts[\"0000\"] = true\n\tans := 0\n\tnext := func(t string) []string {\n\t\ts := []byte(t)\n\t\tvar res []string\n\t\tfor i, b := range s {\n\t\t\ts[i] = b - 1\n\t\t\tif s[i] < '0' {\n\t\t\t\ts[i] = '9'\n\t\t\t}\n\t\t\tres = append(res, string(s))\n\t\t\ts[i] = b + 1\n\t\t\tif s[i] > '9' {\n\t\t\t\ts[i] = '0'\n\t\t\t}\n\t\t\tres = append(res, string(s))\n\t\t\ts[i] = b\n\t\t}\n\t\treturn res\n\t}\n\tfor len(q) > 0 {\n\t\tans++\n\t\tfor n := len(q); n > 0; n-- {\n\t\t\tp := q[0]\n\t\t\tq = q[1:]\n\t\t\tfor _, t := range next(p) {\n\t\t\t\tif target == t {\n\t\t\t\t\treturn ans\n\t\t\t\t}\n\t\t\t\tif !s[t] {\n\t\t\t\t\tq = append(q, t)\n\t\t\t\t\ts[t] = true\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn -1\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states."
+            },
+            {
+              "line": 6,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 9,
+              "label": "Decision point",
+              "note": "Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+            },
+            {
+              "line": 49,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a very good implicit-graph problem because the state generation is simple and the shortest-path need is obvious.",
+            "whatToNotice": "Generating neighbors on the fly, visited-state handling, and treating strings as graph states.",
+            "riskPoint": "Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+          }
+        }
+      ]
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0700-0799-0752.open-the-lock-solution.ts",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0700-0799/0752.Open%20the%20Lock/Solution.ts",
+          "localPath": "doocs_leetcode/solution/0700-0799/0752.Open the Lock/Solution.ts",
+          "relativePath": "solution/0700-0799/0752.Open the Lock/Solution.ts",
+          "languageId": "typescript",
+          "languageLabel": "TypeScript",
+          "coverageType": "code+explanation",
+          "code": "function openLock(deadends: string[], target: string): number {\n    const vis = Array<boolean>(10_000);\n    const q = [[0, 0, 0, 0, 0]];\n    const t = +target;\n    deadends.forEach(s => (vis[+s] = true));\n\n    for (const [a, b, c, d, ans] of q) {\n        const key = a * 1000 + b * 100 + c * 10 + d;\n        if (vis[key]) {\n            continue;\n        }\n\n        vis[key] = true;\n        if (key === t) {\n            return ans;\n        }\n\n        for (let i = 0; i < 4; i++) {\n            const next = [a, b, c, d, ans + 1];\n            const prev = [a, b, c, d, ans + 1];\n            next[i] = (next[i] + 11) % 10;\n            prev[i] = (prev[i] + 9) % 10;\n            q.push(prev, next);\n        }\n    }\n\n    return -1;\n}\n",
+          "originalCode": "function openLock(deadends: string[], target: string): number {\n    const vis = Array<boolean>(10_000);\n    const q = [[0, 0, 0, 0, 0]];\n    const t = +target;\n    deadends.forEach(s => (vis[+s] = true));\n\n    for (const [a, b, c, d, ans] of q) {\n        const key = a * 1000 + b * 100 + c * 10 + d;\n        if (vis[key]) {\n            continue;\n        }\n\n        vis[key] = true;\n        if (key === t) {\n            return ans;\n        }\n\n        for (let i = 0; i < 4; i++) {\n            const next = [a, b, c, d, ans + 1];\n            const prev = [a, b, c, d, ans + 1];\n            next[i] = (next[i] + 11) % 10;\n            prev[i] = (prev[i] + 9) % 10;\n            q.push(prev, next);\n        }\n    }\n\n    return -1;\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space.\nfunction openLock(deadends: string[], target: string): number {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states.\n    const vis = Array<boolean>(10_000);\n    const q = [[0, 0, 0, 0, 0]];\n    const t = +target;\n    deadends.forEach(s => (vis[+s] = true));\n\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (const [a, b, c, d, ans] of q) {\n        const key = a * 1000 + b * 100 + c * 10 + d;\n        // [Reader note] Decision point\n        // Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort.\n        if (vis[key]) {\n            continue;\n        }\n\n        vis[key] = true;\n        if (key === t) {\n            return ans;\n        }\n\n        for (let i = 0; i < 4; i++) {\n            const next = [a, b, c, d, ans + 1];\n            const prev = [a, b, c, d, ans + 1];\n            next[i] = (next[i] + 11) % 10;\n            prev[i] = (prev[i] + 9) % 10;\n            q.push(prev, next);\n        }\n    }\n\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return -1;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states."
+            },
+            {
+              "line": 7,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 9,
+              "label": "Decision point",
+              "note": "Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+            },
+            {
+              "line": 27,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a very good implicit-graph problem because the state generation is simple and the shortest-path need is obvious.",
+            "whatToNotice": "Generating neighbors on the fly, visited-state handling, and treating strings as graph states.",
+            "riskPoint": "Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+          }
+        }
+      ]
+    },
+    {
+      "id": "csharp",
+      "label": "C#",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-csharp-0752-open-the-lock.cs",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/csharp/0752-open-the-lock.cs",
+          "localPath": "neetcode-gh_leetcode/csharp/0752-open-the-lock.cs",
+          "relativePath": "csharp/0752-open-the-lock.cs",
+          "languageId": "csharp",
+          "languageLabel": "C#",
+          "coverageType": "article+code",
+          "code": "public class Solution {\n    public int OpenLock(string[] deadends, string target)\n        {\n            const string start = \"0000\";\n\n            var deadEnds = deadends.ToHashSet();\n            var visited = new HashSet<string>();\n            if (deadEnds.Contains(start) || deadends.Contains(target)) return -1;\n\n            Queue<string> q = new Queue<string>(new[] { start });\n            visited.Add(start);\n            int res = 0;\n            while (q.Count > 0)\n            { \n                int queueCnt=q.Count;\n                for (int i = 0; i < queueCnt; i++)\n                {\n                    var curr = q.Dequeue();\n                    if (curr == target) return res;\n                    foreach (var nei in GetNeighbors(curr))\n                    {\n                        if (!visited.Contains(nei) && !deadends.Contains(nei))\n                        {\n                            q.Enqueue(nei);\n                            visited.Add(nei);\n                        }\n                    }\n                }\n                res++;\n            }\n            return -1;\n        }\n\n        private List<string> GetNeighbors(string s)\n        {\n            var result = new List<string>();\n            for (int i = 0; i < s.Length; i++)\n            {\n                var charAr1 = s.ToCharArray();\n                charAr1[i] = charAr1[i] == '9' ? '0' : (char)((int)charAr1[i] + 1);\n                result.Add(new string(charAr1));\n                var charAr2 = s.ToCharArray();\n                charAr2[i] = charAr2[i] == '0' ? '9' : (char)((int)charAr2[i] - 1);\n                result.Add(new string(charAr2));\n            }\n            return result;\n        }\n}\n",
+          "originalCode": "public class Solution {\n    public int OpenLock(string[] deadends, string target)\n        {\n            const string start = \"0000\";\n\n            var deadEnds = deadends.ToHashSet();\n            var visited = new HashSet<string>();\n            if (deadEnds.Contains(start) || deadends.Contains(target)) return -1;\n\n            Queue<string> q = new Queue<string>(new[] { start });\n            visited.Add(start);\n            int res = 0;\n            while (q.Count > 0)\n            { \n                int queueCnt=q.Count;\n                for (int i = 0; i < queueCnt; i++)\n                {\n                    var curr = q.Dequeue();\n                    if (curr == target) return res;\n                    foreach (var nei in GetNeighbors(curr))\n                    {\n                        if (!visited.Contains(nei) && !deadends.Contains(nei))\n                        {\n                            q.Enqueue(nei);\n                            visited.Add(nei);\n                        }\n                    }\n                }\n                res++;\n            }\n            return -1;\n        }\n\n        private List<string> GetNeighbors(string s)\n        {\n            var result = new List<string>();\n            for (int i = 0; i < s.Length; i++)\n            {\n                var charAr1 = s.ToCharArray();\n                charAr1[i] = charAr1[i] == '9' ? '0' : (char)((int)charAr1[i] + 1);\n                result.Add(new string(charAr1));\n                var charAr2 = s.ToCharArray();\n                charAr2[i] = charAr2[i] == '0' ? '9' : (char)((int)charAr2[i] - 1);\n                result.Add(new string(charAr2));\n            }\n            return result;\n        }\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space.\npublic class Solution {\n    public int OpenLock(string[] deadends, string target)\n        {\n            // [Reader note] State setup\n            // This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states.\n            const string start = \"0000\";\n\n            var deadEnds = deadends.ToHashSet();\n            var visited = new HashSet<string>();\n            if (deadEnds.Contains(start) || deadends.Contains(target)) return -1;\n\n            Queue<string> q = new Queue<string>(new[] { start });\n            visited.Add(start);\n            int res = 0;\n            // [Reader note] Main pass\n            // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            while (q.Count > 0)\n            { \n                int queueCnt=q.Count;\n                for (int i = 0; i < queueCnt; i++)\n                {\n                    var curr = q.Dequeue();\n                    // [Reader note] Decision point\n                    // Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort.\n                    if (curr == target) return res;\n                    foreach (var nei in GetNeighbors(curr))\n                    {\n                        if (!visited.Contains(nei) && !deadends.Contains(nei))\n                        {\n                            q.Enqueue(nei);\n                            visited.Add(nei);\n                        }\n                    }\n                }\n                res++;\n            }\n            return -1;\n        }\n\n        private List<string> GetNeighbors(string s)\n        {\n            var result = new List<string>();\n            for (int i = 0; i < s.Length; i++)\n            {\n                var charAr1 = s.ToCharArray();\n                charAr1[i] = charAr1[i] == '9' ? '0' : (char)((int)charAr1[i] + 1);\n                result.Add(new string(charAr1));\n                var charAr2 = s.ToCharArray();\n                charAr2[i] = charAr2[i] == '0' ? '9' : (char)((int)charAr2[i] - 1);\n                result.Add(new string(charAr2));\n            }\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return result;\n        }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states."
+            },
+            {
+              "line": 13,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 19,
+              "label": "Decision point",
+              "note": "Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+            },
+            {
+              "line": 46,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a very good implicit-graph problem because the state generation is simple and the shortest-path need is obvious.",
+            "whatToNotice": "Generating neighbors on the fly, visited-state handling, and treating strings as graph states.",
+            "riskPoint": "Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+          }
+        }
+      ]
+    },
+    {
+      "id": "kotlin",
+      "label": "Kotlin",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-kotlin-0752-open-the-lock.kt",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/kotlin/0752-open-the-lock.kt",
+          "localPath": "neetcode-gh_leetcode/kotlin/0752-open-the-lock.kt",
+          "relativePath": "kotlin/0752-open-the-lock.kt",
+          "languageId": "kotlin",
+          "languageLabel": "Kotlin",
+          "coverageType": "article+code",
+          "code": "class Solution {\n\n    fun openLock(deadends: Array<String>, target: String): Int {\n        val deadEndSet = hashSetOf<String>()\n        deadends.forEach { deadEndSet.add(it) }\n        if (target in deadEndSet || \"0000\" in deadEndSet) return -1\n        // [ (String,Level) ]\n        val queue: Queue<Pair<String, Int>> = LinkedList<Pair<String, Int>>().apply {\n            add(Pair(\"0000\", 0))\n        }\n        val visitedCombinations = hashSetOf<String>()\n\n        while (queue.isNotEmpty()) {\n            val (currentCombination, levelOfCurrentCombination) = queue.remove()\n            if (currentCombination == target) return levelOfCurrentCombination\n            // increments\n            for (i in currentCombination.indices) {\n                val digitAtIndex = Character.digit(currentCombination[i], 10)\n                val incrementedValue = Character.forDigit((digitAtIndex + 1) % 10, 10)\n                val newCombination = currentCombination.replaceCharAt(i, incrementedValue)\n                if (newCombination in visitedCombinations || newCombination in deadEndSet) continue\n                visitedCombinations.add(newCombination)\n                queue.add(Pair(newCombination, levelOfCurrentCombination + 1))\n            }\n            // decrements\n            for (i in currentCombination.indices) {\n                val valueAtIndex = Character.digit(currentCombination[i], 10)\n                val decrementedValue = Character.forDigit(\n                    (valueAtIndex - 1).takeIf { valueAtIndex - 1 in 0..9 } ?: 9, 10)\n                val newCombination = currentCombination.replaceCharAt(i, decrementedValue)\n                if (newCombination in visitedCombinations || newCombination in deadEndSet) continue\n                visitedCombinations.add(newCombination)\n                queue.add(Pair(newCombination, levelOfCurrentCombination + 1))\n            }\n        }\n        return -1\n    }\n\n    private fun String.replaceCharAt(\n        index: Int,\n        newChar: Char\n    ): String = when (index) {\n        0 -> newChar + substring(1..this.lastIndex)\n        lastIndex -> substring(0 until this.lastIndex) + newChar\n        else -> substring(0 until index) + newChar + substring(index + 1..this.lastIndex)\n    }\n}",
+          "originalCode": "class Solution {\n\n    fun openLock(deadends: Array<String>, target: String): Int {\n        val deadEndSet = hashSetOf<String>()\n        deadends.forEach { deadEndSet.add(it) }\n        if (target in deadEndSet || \"0000\" in deadEndSet) return -1\n        // [ (String,Level) ]\n        val queue: Queue<Pair<String, Int>> = LinkedList<Pair<String, Int>>().apply {\n            add(Pair(\"0000\", 0))\n        }\n        val visitedCombinations = hashSetOf<String>()\n\n        while (queue.isNotEmpty()) {\n            val (currentCombination, levelOfCurrentCombination) = queue.remove()\n            if (currentCombination == target) return levelOfCurrentCombination\n            // increments\n            for (i in currentCombination.indices) {\n                val digitAtIndex = Character.digit(currentCombination[i], 10)\n                val incrementedValue = Character.forDigit((digitAtIndex + 1) % 10, 10)\n                val newCombination = currentCombination.replaceCharAt(i, incrementedValue)\n                if (newCombination in visitedCombinations || newCombination in deadEndSet) continue\n                visitedCombinations.add(newCombination)\n                queue.add(Pair(newCombination, levelOfCurrentCombination + 1))\n            }\n            // decrements\n            for (i in currentCombination.indices) {\n                val valueAtIndex = Character.digit(currentCombination[i], 10)\n                val decrementedValue = Character.forDigit(\n                    (valueAtIndex - 1).takeIf { valueAtIndex - 1 in 0..9 } ?: 9, 10)\n                val newCombination = currentCombination.replaceCharAt(i, decrementedValue)\n                if (newCombination in visitedCombinations || newCombination in deadEndSet) continue\n                visitedCombinations.add(newCombination)\n                queue.add(Pair(newCombination, levelOfCurrentCombination + 1))\n            }\n        }\n        return -1\n    }\n\n    private fun String.replaceCharAt(\n        index: Int,\n        newChar: Char\n    ): String = when (index) {\n        0 -> newChar + substring(1..this.lastIndex)\n        lastIndex -> substring(0 until this.lastIndex) + newChar\n        else -> substring(0 until index) + newChar + substring(index + 1..this.lastIndex)\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space.\nclass Solution {\n\n    fun openLock(deadends: Array<String>, target: String): Int {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states.\n        val deadEndSet = hashSetOf<String>()\n        deadends.forEach { deadEndSet.add(it) }\n        if (target in deadEndSet || \"0000\" in deadEndSet) return -1\n        // [ (String,Level) ]\n        val queue: Queue<Pair<String, Int>> = LinkedList<Pair<String, Int>>().apply {\n            add(Pair(\"0000\", 0))\n        }\n        val visitedCombinations = hashSetOf<String>()\n\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while (queue.isNotEmpty()) {\n            val (currentCombination, levelOfCurrentCombination) = queue.remove()\n            // [Reader note] Decision point\n            // Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort.\n            if (currentCombination == target) return levelOfCurrentCombination\n            // increments\n            for (i in currentCombination.indices) {\n                val digitAtIndex = Character.digit(currentCombination[i], 10)\n                val incrementedValue = Character.forDigit((digitAtIndex + 1) % 10, 10)\n                val newCombination = currentCombination.replaceCharAt(i, incrementedValue)\n                if (newCombination in visitedCombinations || newCombination in deadEndSet) continue\n                visitedCombinations.add(newCombination)\n                queue.add(Pair(newCombination, levelOfCurrentCombination + 1))\n            }\n            // decrements\n            for (i in currentCombination.indices) {\n                val valueAtIndex = Character.digit(currentCombination[i], 10)\n                val decrementedValue = Character.forDigit(\n                    (valueAtIndex - 1).takeIf { valueAtIndex - 1 in 0..9 } ?: 9, 10)\n                val newCombination = currentCombination.replaceCharAt(i, decrementedValue)\n                if (newCombination in visitedCombinations || newCombination in deadEndSet) continue\n                visitedCombinations.add(newCombination)\n                queue.add(Pair(newCombination, levelOfCurrentCombination + 1))\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return -1\n    }\n\n    private fun String.replaceCharAt(\n        index: Int,\n        newChar: Char\n    ): String = when (index) {\n        0 -> newChar + substring(1..this.lastIndex)\n        lastIndex -> substring(0 until this.lastIndex) + newChar\n        else -> substring(0 until index) + newChar + substring(index + 1..this.lastIndex)\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: The graph is not given to you; you manufacture neighbors as you explore the state space."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Generating neighbors on the fly, visited-state handling, and treating strings as graph states."
+            },
+            {
+              "line": 13,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 15,
+              "label": "Decision point",
+              "note": "Pay attention here: Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+            },
+            {
+              "line": 36,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a very good implicit-graph problem because the state generation is simple and the shortest-path need is obvious.",
+            "whatToNotice": "Generating neighbors on the fly, visited-state handling, and treating strings as graph states.",
+            "riskPoint": "Dead-end handling matters; forgetting blocked states early can waste a lot of search effort."
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "neetcode-gh_leetcode-articles-open-the-lock.md",
+      "repository": "neetcode-gh_leetcode",
+      "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+      "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/articles/open-the-lock.md",
+      "localPath": "neetcode-gh_leetcode/articles/open-the-lock.md",
+      "relativePath": "articles/open-the-lock.md",
+      "title": "open the lock",
+      "excerpt": "## Prerequisites Before attempting this problem, you should be comfortable with: - **Breadth-First Search (BFS)** - Level-by-level graph traversal to find shortest paths in unweighted graphs - **Graph Modeling** - Recognizing when a problem can be modeled as a graph where states are nodes and transitions are edges - **HashSet for Visited States** - Efficiently tracking visited states to avoid revisiting and infinite..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0700-0799-0752.open-the-lock-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0700-0799/0752.Open%20the%20Lock/README.md",
+      "localPath": "doocs_leetcode/solution/0700-0799/0752.Open the Lock/README.md",
+      "relativePath": "solution/0700-0799/0752.Open the Lock/README.md",
+      "title": "[752. \u6253\u5f00\u8f6c\u76d8\u9501](https://leetcode.cn/problems/open-the-lock)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/0700-0799/0752.Open%20the%20Lock/README.md tags: - \u5e7f\u5ea6\u4f18\u5148\u641c\u7d22 - \u6570\u7ec4 - \u54c8\u5e0c\u8868 - \u5b57\u7b26\u4e32 --- <!-- problem:start --> # [752. \u6253\u5f00\u8f6c\u76d8\u9501](https://leetcode.cn/problems/open-the-lock) [English Version](/solution/0700-0799/0752.Open%20the%20Lock/README_EN.md) ## \u9898\u76ee\u63cf\u8ff0 <!-- description:start --> <p>\u4f60\u6709\u4e00\u4e2a\u5e26\u6709\u56db\u4e2a\u5706\u5f62\u62e8\u8f6e\u7684\u8f6c\u76d8\u9501\u3002\u6bcf\u4e2a\u62e8\u8f6e\u90fd\u670910\u4e2a\u6570\u5b57\uff1a <code>'0', '1', '2..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0700-0799-0752.open-the-lock-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0700-0799/0752.Open%20the%20Lock/README_EN.md",
+      "localPath": "doocs_leetcode/solution/0700-0799/0752.Open the Lock/README_EN.md",
+      "relativePath": "solution/0700-0799/0752.Open the Lock/README_EN.md",
+      "title": "[752. Open the Lock](https://leetcode.com/problems/open-the-lock)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/0700-0799/0752.Open%20the%20Lock/README_EN.md tags: - Breadth-First Search - Array - Hash Table - String --- <!-- problem:start --> # [752. Open the Lock](https://leetcode.com/problems/open-the-lock) [\u4e2d\u6587\u6587\u6863](/solution/0700-0799/0752.Open%20the%20Lock/README.md) ## Description <!-- description:start --> <p>You have a l..."
+    }
+  ]
+}

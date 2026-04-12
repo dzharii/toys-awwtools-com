@@ -1,0 +1,377 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "count-the-number-of-complete-components",
+  "problemTitle": "Count the Number of Complete Components",
+  "problemNumber": 2685,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go"
+    ],
+    "solutionCount": 6,
+    "writeupCount": 2,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-python-count-the-number-of-complete-components.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/count-the-number-of-complete-components.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/count-the-number-of-complete-components.py",
+          "relativePath": "Python/count-the-number-of-complete-components.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(n)\n# Space: O(n)\n\n# bfs\nclass Solution(object):\n    def countCompleteComponents(self, n, edges):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :rtype: int\n        \"\"\"\n        def bfs(u):\n            if lookup[u]:\n                return False\n            v_cnt = e_cnt = 0\n            lookup[u] = True\n            q = [u]\n            while q:\n                new_q = []\n                v_cnt += len(q)\n                for u in q:\n                    e_cnt += len(adj[u])\n                    for v in adj[u]:\n                        if lookup[v]:\n                            continue\n                        lookup[v] = True\n                        new_q.append(v)\n                q = new_q\n            return v_cnt*(v_cnt-1) == e_cnt\n\n        adj = [[] for _ in xrange(n)]\n        for u, v in edges:\n            adj[u].append(v)\n            adj[v].append(u)\n        lookup = [False]*n\n        return sum(bfs(u) for u in xrange(n) if not lookup[u])\n",
+          "originalCode": "# Time:  O(n)\n# Space: O(n)\n\n# bfs\nclass Solution(object):\n    def countCompleteComponents(self, n, edges):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :rtype: int\n        \"\"\"\n        def bfs(u):\n            if lookup[u]:\n                return False\n            v_cnt = e_cnt = 0\n            lookup[u] = True\n            q = [u]\n            while q:\n                new_q = []\n                v_cnt += len(q)\n                for u in q:\n                    e_cnt += len(adj[u])\n                    for v in adj[u]:\n                        if lookup[v]:\n                            continue\n                        lookup[v] = True\n                        new_q.append(v)\n                q = new_q\n            return v_cnt*(v_cnt-1) == e_cnt\n\n        adj = [[] for _ in xrange(n)]\n        for u, v in edges:\n            adj[u].append(v)\n            adj[v].append(u)\n        lookup = [False]*n\n        return sum(bfs(u) for u in xrange(n) if not lookup[u])\n",
+          "reviewedCode": "# Time:  O(n)\n# Space: O(n)\n\n# bfs\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Traversal tells you which nodes belong together; then you ask whether that set contains every internal edge it should.\nclass Solution(object):\n    def countCompleteComponents(self, n, edges):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :rtype: int\n        \"\"\"\n        def bfs(u):\n            if lookup[u]:\n                return False\n            # [Reader note] State setup\n            # This setup stage creates the state needed for the invariant or partial result: Component extraction, structural validation, and translating a graph property into a precise per-component check.\n            v_cnt = e_cnt = 0\n            lookup[u] = True\n            q = [u]\n            # [Reader note] Main pass\n            # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            while q:\n                new_q = []\n                v_cnt += len(q)\n                for u in q:\n                    e_cnt += len(adj[u])\n                    for v in adj[u]:\n                        # [Reader note] Decision point\n                        # Pay attention here: The trick is not fancy traversal; it is making the completeness test exact instead of relying on vague visual intuition.\n                        if lookup[v]:\n                            continue\n                        lookup[v] = True\n                        new_q.append(v)\n                q = new_q\n            return v_cnt*(v_cnt-1) == e_cnt\n\n        adj = [[] for _ in xrange(n)]\n        for u, v in edges:\n            adj[u].append(v)\n            adj[v].append(u)\n        lookup = [False]*n\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return sum(bfs(u) for u in xrange(n) if not lookup[u])",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n)",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 5,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traversal tells you which nodes belong together; then you ask whether that set contains every internal edge it should."
+            },
+            {
+              "line": 15,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Component extraction, structural validation, and translating a graph property into a precise per-component check."
+            },
+            {
+              "line": 18,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 24,
+              "label": "Decision point",
+              "note": "Pay attention here: The trick is not fancy traversal; it is making the completeness test exact instead of relying on vague visual intuition."
+            },
+            {
+              "line": 36,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a good next step after plain connected-components problems because the traversal is only the first half of the job.",
+            "whatToNotice": "Component extraction, structural validation, and translating a graph property into a precise per-component check.",
+            "riskPoint": "The trick is not fancy traversal; it is making the completeness test exact instead of relying on vague visual intuition."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-2600-2699-2685.count-the-number-of-complete-components-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/2600-2699/2685.Count%20the%20Number%20of%20Complete%20Components/Solution.py",
+          "localPath": "doocs_leetcode/solution/2600-2699/2685.Count the Number of Complete Components/Solution.py",
+          "relativePath": "solution/2600-2699/2685.Count the Number of Complete Components/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "class Solution:\n    def countCompleteComponents(self, n: int, edges: List[List[int]]) -> int:\n        def dfs(i: int) -> (int, int):\n            vis[i] = True\n            x, y = 1, len(g[i])\n            for j in g[i]:\n                if not vis[j]:\n                    a, b = dfs(j)\n                    x += a\n                    y += b\n            return x, y\n\n        g = defaultdict(list)\n        for a, b in edges:\n            g[a].append(b)\n            g[b].append(a)\n        vis = [False] * n\n        ans = 0\n        for i in range(n):\n            if not vis[i]:\n                a, b = dfs(i)\n                ans += a * (a - 1) == b\n        return ans\n",
+          "originalCode": "class Solution:\n    def countCompleteComponents(self, n: int, edges: List[List[int]]) -> int:\n        def dfs(i: int) -> (int, int):\n            vis[i] = True\n            x, y = 1, len(g[i])\n            for j in g[i]:\n                if not vis[j]:\n                    a, b = dfs(j)\n                    x += a\n                    y += b\n            return x, y\n\n        g = defaultdict(list)\n        for a, b in edges:\n            g[a].append(b)\n            g[b].append(a)\n        vis = [False] * n\n        ans = 0\n        for i in range(n):\n            if not vis[i]:\n                a, b = dfs(i)\n                ans += a * (a - 1) == b\n        return ans\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Traversal tells you which nodes belong together; then you ask whether that set contains every internal edge it should.\nclass Solution:\n    def countCompleteComponents(self, n: int, edges: List[List[int]]) -> int:\n        def dfs(i: int) -> (int, int):\n            vis[i] = True\n            # [Reader note] State setup\n            # This setup stage creates the state needed for the invariant or partial result: Component extraction, structural validation, and translating a graph property into a precise per-component check.\n            x, y = 1, len(g[i])\n            # [Reader note] Main pass\n            # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for j in g[i]:\n                # [Reader note] Decision point\n                # Pay attention here: The trick is not fancy traversal; it is making the completeness test exact instead of relying on vague visual intuition.\n                if not vis[j]:\n                    a, b = dfs(j)\n                    x += a\n                    y += b\n            return x, y\n\n        g = defaultdict(list)\n        for a, b in edges:\n            g[a].append(b)\n            g[b].append(a)\n        vis = [False] * n\n        ans = 0\n        for i in range(n):\n            if not vis[i]:\n                a, b = dfs(i)\n                ans += a * (a - 1) == b\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return ans",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traversal tells you which nodes belong together; then you ask whether that set contains every internal edge it should."
+            },
+            {
+              "line": 5,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Component extraction, structural validation, and translating a graph property into a precise per-component check."
+            },
+            {
+              "line": 6,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 7,
+              "label": "Decision point",
+              "note": "Pay attention here: The trick is not fancy traversal; it is making the completeness test exact instead of relying on vague visual intuition."
+            },
+            {
+              "line": 23,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a good next step after plain connected-components problems because the traversal is only the first half of the job.",
+            "whatToNotice": "Component extraction, structural validation, and translating a graph property into a precise per-component check.",
+            "riskPoint": "The trick is not fancy traversal; it is making the completeness test exact instead of relying on vague visual intuition."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-c-count-the-number-of-complete-components.cpp",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/C%2B%2B/count-the-number-of-complete-components.cpp",
+          "localPath": "kamyu104_LeetCode-Solutions/C++/count-the-number-of-complete-components.cpp",
+          "relativePath": "C++/count-the-number-of-complete-components.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Time:  O(n)\n// Space: O(n)\n\n// bfs\nclass Solution {\npublic:\n    int countCompleteComponents(int n, vector<vector<int>>& edges) {\n        vector<bool> lookup(n);\n        vector<vector<int>> adj(n);\n        for (const auto& e : edges) {\n            adj[e[0]].emplace_back(e[1]);\n            adj[e[1]].emplace_back(e[0]);\n        }\n        const auto& bfs = [&](int u) {\n            if (lookup[u]) {\n                return false;\n            }\n            int v_cnt = 0, e_cnt = 0;\n            lookup[u] = true;\n            vector<int> q = {u};\n            while (!empty(q)) {\n                vector<int> new_q;\n                v_cnt += size(q);\n                for (const auto& u : q) {\n                    e_cnt += size(adj[u]);\n                    for (const auto& v : adj[u]) {\n                        if (lookup[v]) {\n                            continue;\n                        }\n                        lookup[v] = true;\n                        new_q.emplace_back(v);\n                    }\n                }\n                q = move(new_q);\n            }\n            return v_cnt * (v_cnt - 1) == e_cnt;\n        };\n\n        int result = 0;\n        for (int u = 0; u < n; ++u) {\n            result += bfs(u);\n        }\n        return result;\n    }\n};\n",
+          "originalCode": "// Time:  O(n)\n// Space: O(n)\n\n// bfs\nclass Solution {\npublic:\n    int countCompleteComponents(int n, vector<vector<int>>& edges) {\n        vector<bool> lookup(n);\n        vector<vector<int>> adj(n);\n        for (const auto& e : edges) {\n            adj[e[0]].emplace_back(e[1]);\n            adj[e[1]].emplace_back(e[0]);\n        }\n        const auto& bfs = [&](int u) {\n            if (lookup[u]) {\n                return false;\n            }\n            int v_cnt = 0, e_cnt = 0;\n            lookup[u] = true;\n            vector<int> q = {u};\n            while (!empty(q)) {\n                vector<int> new_q;\n                v_cnt += size(q);\n                for (const auto& u : q) {\n                    e_cnt += size(adj[u]);\n                    for (const auto& v : adj[u]) {\n                        if (lookup[v]) {\n                            continue;\n                        }\n                        lookup[v] = true;\n                        new_q.emplace_back(v);\n                    }\n                }\n                q = move(new_q);\n            }\n            return v_cnt * (v_cnt - 1) == e_cnt;\n        };\n\n        int result = 0;\n        for (int u = 0; u < n; ++u) {\n            result += bfs(u);\n        }\n        return result;\n    }\n};\n",
+          "reviewedCode": "// Time:  O(n)\n// Space: O(n)\n\n// bfs\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Traversal tells you which nodes belong together; then you ask whether that set contains every internal edge it should.\nclass Solution {\npublic:\n    int countCompleteComponents(int n, vector<vector<int>>& edges) {\n        vector<bool> lookup(n);\n        vector<vector<int>> adj(n);\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Component extraction, structural validation, and translating a graph property into a precise per-component check.\n        for (const auto& e : edges) {\n            adj[e[0]].emplace_back(e[1]);\n            adj[e[1]].emplace_back(e[0]);\n        }\n        const auto& bfs = [&](int u) {\n            // [Reader note] Decision point\n            // Pay attention here: The trick is not fancy traversal; it is making the completeness test exact instead of relying on vague visual intuition.\n            if (lookup[u]) {\n                return false;\n            }\n            int v_cnt = 0, e_cnt = 0;\n            lookup[u] = true;\n            vector<int> q = {u};\n            while (!empty(q)) {\n                vector<int> new_q;\n                v_cnt += size(q);\n                for (const auto& u : q) {\n                    e_cnt += size(adj[u]);\n                    for (const auto& v : adj[u]) {\n                        if (lookup[v]) {\n                            continue;\n                        }\n                        lookup[v] = true;\n                        new_q.emplace_back(v);\n                    }\n                }\n                q = move(new_q);\n            }\n            return v_cnt * (v_cnt - 1) == e_cnt;\n        };\n\n        int result = 0;\n        for (int u = 0; u < n; ++u) {\n            result += bfs(u);\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return result;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n)",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 5,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traversal tells you which nodes belong together; then you ask whether that set contains every internal edge it should."
+            },
+            {
+              "line": 10,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Component extraction, structural validation, and translating a graph property into a precise per-component check."
+            },
+            {
+              "line": 15,
+              "label": "Decision point",
+              "note": "Pay attention here: The trick is not fancy traversal; it is making the completeness test exact instead of relying on vague visual intuition."
+            },
+            {
+              "line": 43,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a good next step after plain connected-components problems because the traversal is only the first half of the job.",
+            "whatToNotice": "Component extraction, structural validation, and translating a graph property into a precise per-component check.",
+            "riskPoint": "The trick is not fancy traversal; it is making the completeness test exact instead of relying on vague visual intuition."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-2600-2699-2685.count-the-number-of-complete-components-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/2600-2699/2685.Count%20the%20Number%20of%20Complete%20Components/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/2600-2699/2685.Count the Number of Complete Components/Solution.cpp",
+          "relativePath": "solution/2600-2699/2685.Count the Number of Complete Components/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\npublic:\n    int countCompleteComponents(int n, vector<vector<int>>& edges) {\n        vector<vector<int>> g(n);\n        bool vis[n];\n        memset(vis, false, sizeof(vis));\n        for (auto& e : edges) {\n            int a = e[0], b = e[1];\n            g[a].push_back(b);\n            g[b].push_back(a);\n        }\n        function<pair<int, int>(int)> dfs = [&](int i) -> pair<int, int> {\n            vis[i] = true;\n            int x = 1, y = g[i].size();\n            for (int j : g[i]) {\n                if (!vis[j]) {\n                    auto [a, b] = dfs(j);\n                    x += a;\n                    y += b;\n                }\n            }\n            return make_pair(x, y);\n        };\n        int ans = 0;\n        for (int i = 0; i < n; ++i) {\n            if (!vis[i]) {\n                auto [a, b] = dfs(i);\n                if (a * (a - 1) == b) {\n                    ++ans;\n                }\n            }\n        }\n        return ans;\n    }\n};",
+          "originalCode": "class Solution {\npublic:\n    int countCompleteComponents(int n, vector<vector<int>>& edges) {\n        vector<vector<int>> g(n);\n        bool vis[n];\n        memset(vis, false, sizeof(vis));\n        for (auto& e : edges) {\n            int a = e[0], b = e[1];\n            g[a].push_back(b);\n            g[b].push_back(a);\n        }\n        function<pair<int, int>(int)> dfs = [&](int i) -> pair<int, int> {\n            vis[i] = true;\n            int x = 1, y = g[i].size();\n            for (int j : g[i]) {\n                if (!vis[j]) {\n                    auto [a, b] = dfs(j);\n                    x += a;\n                    y += b;\n                }\n            }\n            return make_pair(x, y);\n        };\n        int ans = 0;\n        for (int i = 0; i < n; ++i) {\n            if (!vis[i]) {\n                auto [a, b] = dfs(i);\n                if (a * (a - 1) == b) {\n                    ++ans;\n                }\n            }\n        }\n        return ans;\n    }\n};",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Traversal tells you which nodes belong together; then you ask whether that set contains every internal edge it should.\nclass Solution {\npublic:\n    int countCompleteComponents(int n, vector<vector<int>>& edges) {\n        vector<vector<int>> g(n);\n        bool vis[n];\n        memset(vis, false, sizeof(vis));\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (auto& e : edges) {\n            // [Reader note] State setup\n            // This setup stage creates the state needed for the invariant or partial result: Component extraction, structural validation, and translating a graph property into a precise per-component check.\n            int a = e[0], b = e[1];\n            g[a].push_back(b);\n            g[b].push_back(a);\n        }\n        function<pair<int, int>(int)> dfs = [&](int i) -> pair<int, int> {\n            vis[i] = true;\n            int x = 1, y = g[i].size();\n            for (int j : g[i]) {\n                // [Reader note] Decision point\n                // Pay attention here: The trick is not fancy traversal; it is making the completeness test exact instead of relying on vague visual intuition.\n                if (!vis[j]) {\n                    auto [a, b] = dfs(j);\n                    x += a;\n                    y += b;\n                }\n            }\n            return make_pair(x, y);\n        };\n        int ans = 0;\n        for (int i = 0; i < n; ++i) {\n            if (!vis[i]) {\n                auto [a, b] = dfs(i);\n                if (a * (a - 1) == b) {\n                    ++ans;\n                }\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return ans;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traversal tells you which nodes belong together; then you ask whether that set contains every internal edge it should."
+            },
+            {
+              "line": 8,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Component extraction, structural validation, and translating a graph property into a precise per-component check."
+            },
+            {
+              "line": 7,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 16,
+              "label": "Decision point",
+              "note": "Pay attention here: The trick is not fancy traversal; it is making the completeness test exact instead of relying on vague visual intuition."
+            },
+            {
+              "line": 33,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a good next step after plain connected-components problems because the traversal is only the first half of the job.",
+            "whatToNotice": "Component extraction, structural validation, and translating a graph property into a precise per-component check.",
+            "riskPoint": "The trick is not fancy traversal; it is making the completeness test exact instead of relying on vague visual intuition."
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-2600-2699-2685.count-the-number-of-complete-components-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/2600-2699/2685.Count%20the%20Number%20of%20Complete%20Components/Solution.java",
+          "localPath": "doocs_leetcode/solution/2600-2699/2685.Count the Number of Complete Components/Solution.java",
+          "relativePath": "solution/2600-2699/2685.Count the Number of Complete Components/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\n    private List<Integer>[] g;\n    private boolean[] vis;\n\n    public int countCompleteComponents(int n, int[][] edges) {\n        g = new List[n];\n        vis = new boolean[n];\n        Arrays.setAll(g, k -> new ArrayList<>());\n        for (int[] e : edges) {\n            int a = e[0], b = e[1];\n            g[a].add(b);\n            g[b].add(a);\n        }\n        int ans = 0;\n        for (int i = 0; i < n; ++i) {\n            if (!vis[i]) {\n                int[] t = dfs(i);\n                if (t[0] * (t[0] - 1) == t[1]) {\n                    ++ans;\n                }\n            }\n        }\n        return ans;\n    }\n\n    private int[] dfs(int i) {\n        vis[i] = true;\n        int x = 1, y = g[i].size();\n        for (int j : g[i]) {\n            if (!vis[j]) {\n                int[] t = dfs(j);\n                x += t[0];\n                y += t[1];\n            }\n        }\n        return new int[] {x, y};\n    }\n}",
+          "originalCode": "class Solution {\n    private List<Integer>[] g;\n    private boolean[] vis;\n\n    public int countCompleteComponents(int n, int[][] edges) {\n        g = new List[n];\n        vis = new boolean[n];\n        Arrays.setAll(g, k -> new ArrayList<>());\n        for (int[] e : edges) {\n            int a = e[0], b = e[1];\n            g[a].add(b);\n            g[b].add(a);\n        }\n        int ans = 0;\n        for (int i = 0; i < n; ++i) {\n            if (!vis[i]) {\n                int[] t = dfs(i);\n                if (t[0] * (t[0] - 1) == t[1]) {\n                    ++ans;\n                }\n            }\n        }\n        return ans;\n    }\n\n    private int[] dfs(int i) {\n        vis[i] = true;\n        int x = 1, y = g[i].size();\n        for (int j : g[i]) {\n            if (!vis[j]) {\n                int[] t = dfs(j);\n                x += t[0];\n                y += t[1];\n            }\n        }\n        return new int[] {x, y};\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Traversal tells you which nodes belong together; then you ask whether that set contains every internal edge it should.\nclass Solution {\n    private List<Integer>[] g;\n    private boolean[] vis;\n\n    public int countCompleteComponents(int n, int[][] edges) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Component extraction, structural validation, and translating a graph property into a precise per-component check.\n        g = new List[n];\n        vis = new boolean[n];\n        Arrays.setAll(g, k -> new ArrayList<>());\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int[] e : edges) {\n            int a = e[0], b = e[1];\n            g[a].add(b);\n            g[b].add(a);\n        }\n        int ans = 0;\n        for (int i = 0; i < n; ++i) {\n            // [Reader note] Decision point\n            // Pay attention here: The trick is not fancy traversal; it is making the completeness test exact instead of relying on vague visual intuition.\n            if (!vis[i]) {\n                int[] t = dfs(i);\n                if (t[0] * (t[0] - 1) == t[1]) {\n                    ++ans;\n                }\n            }\n        }\n        return ans;\n    }\n\n    private int[] dfs(int i) {\n        vis[i] = true;\n        int x = 1, y = g[i].size();\n        for (int j : g[i]) {\n            if (!vis[j]) {\n                int[] t = dfs(j);\n                x += t[0];\n                y += t[1];\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return new int[] {x, y};\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traversal tells you which nodes belong together; then you ask whether that set contains every internal edge it should."
+            },
+            {
+              "line": 6,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Component extraction, structural validation, and translating a graph property into a precise per-component check."
+            },
+            {
+              "line": 9,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 16,
+              "label": "Decision point",
+              "note": "Pay attention here: The trick is not fancy traversal; it is making the completeness test exact instead of relying on vague visual intuition."
+            },
+            {
+              "line": 36,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a good next step after plain connected-components problems because the traversal is only the first half of the job.",
+            "whatToNotice": "Component extraction, structural validation, and translating a graph property into a precise per-component check.",
+            "riskPoint": "The trick is not fancy traversal; it is making the completeness test exact instead of relying on vague visual intuition."
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-2600-2699-2685.count-the-number-of-complete-components-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/2600-2699/2685.Count%20the%20Number%20of%20Complete%20Components/Solution.go",
+          "localPath": "doocs_leetcode/solution/2600-2699/2685.Count the Number of Complete Components/Solution.go",
+          "relativePath": "solution/2600-2699/2685.Count the Number of Complete Components/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "func countCompleteComponents(n int, edges [][]int) (ans int) {\n\tg := make([][]int, n)\n\tvis := make([]bool, n)\n\tfor _, e := range edges {\n\t\ta, b := e[0], e[1]\n\t\tg[a] = append(g[a], b)\n\t\tg[b] = append(g[b], a)\n\t}\n\tvar dfs func(int) (int, int)\n\tdfs = func(i int) (int, int) {\n\t\tvis[i] = true\n\t\tx, y := 1, len(g[i])\n\t\tfor _, j := range g[i] {\n\t\t\tif !vis[j] {\n\t\t\t\ta, b := dfs(j)\n\t\t\t\tx += a\n\t\t\t\ty += b\n\t\t\t}\n\t\t}\n\t\treturn x, y\n\t}\n\tfor i := range vis {\n\t\tif !vis[i] {\n\t\t\ta, b := dfs(i)\n\t\t\tif a*(a-1) == b {\n\t\t\t\tans++\n\t\t\t}\n\t\t}\n\t}\n\treturn\n}",
+          "originalCode": "func countCompleteComponents(n int, edges [][]int) (ans int) {\n\tg := make([][]int, n)\n\tvis := make([]bool, n)\n\tfor _, e := range edges {\n\t\ta, b := e[0], e[1]\n\t\tg[a] = append(g[a], b)\n\t\tg[b] = append(g[b], a)\n\t}\n\tvar dfs func(int) (int, int)\n\tdfs = func(i int) (int, int) {\n\t\tvis[i] = true\n\t\tx, y := 1, len(g[i])\n\t\tfor _, j := range g[i] {\n\t\t\tif !vis[j] {\n\t\t\t\ta, b := dfs(j)\n\t\t\t\tx += a\n\t\t\t\ty += b\n\t\t\t}\n\t\t}\n\t\treturn x, y\n\t}\n\tfor i := range vis {\n\t\tif !vis[i] {\n\t\t\ta, b := dfs(i)\n\t\t\tif a*(a-1) == b {\n\t\t\t\tans++\n\t\t\t}\n\t\t}\n\t}\n\treturn\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Traversal tells you which nodes belong together; then you ask whether that set contains every internal edge it should.\nfunc countCompleteComponents(n int, edges [][]int) (ans int) {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Component extraction, structural validation, and translating a graph property into a precise per-component check.\n\tg := make([][]int, n)\n\tvis := make([]bool, n)\n\t// [Reader note] Main pass\n\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\tfor _, e := range edges {\n\t\ta, b := e[0], e[1]\n\t\tg[a] = append(g[a], b)\n\t\tg[b] = append(g[b], a)\n\t}\n\tvar dfs func(int) (int, int)\n\tdfs = func(i int) (int, int) {\n\t\tvis[i] = true\n\t\tx, y := 1, len(g[i])\n\t\tfor _, j := range g[i] {\n\t\t\t// [Reader note] Decision point\n\t\t\t// Pay attention here: The trick is not fancy traversal; it is making the completeness test exact instead of relying on vague visual intuition.\n\t\t\tif !vis[j] {\n\t\t\t\ta, b := dfs(j)\n\t\t\t\tx += a\n\t\t\t\ty += b\n\t\t\t}\n\t\t}\n\t\treturn x, y\n\t}\n\tfor i := range vis {\n\t\tif !vis[i] {\n\t\t\ta, b := dfs(i)\n\t\t\tif a*(a-1) == b {\n\t\t\t\tans++\n\t\t\t}\n\t\t}\n\t}\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traversal tells you which nodes belong together; then you ask whether that set contains every internal edge it should."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Component extraction, structural validation, and translating a graph property into a precise per-component check."
+            },
+            {
+              "line": 4,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 14,
+              "label": "Decision point",
+              "note": "Pay attention here: The trick is not fancy traversal; it is making the completeness test exact instead of relying on vague visual intuition."
+            },
+            {
+              "line": 30,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a good next step after plain connected-components problems because the traversal is only the first half of the job.",
+            "whatToNotice": "Component extraction, structural validation, and translating a graph property into a precise per-component check.",
+            "riskPoint": "The trick is not fancy traversal; it is making the completeness test exact instead of relying on vague visual intuition."
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "doocs_leetcode-solution-2600-2699-2685.count-the-number-of-complete-components-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/2600-2699/2685.Count%20the%20Number%20of%20Complete%20Components/README.md",
+      "localPath": "doocs_leetcode/solution/2600-2699/2685.Count the Number of Complete Components/README.md",
+      "relativePath": "solution/2600-2699/2685.Count the Number of Complete Components/README.md",
+      "title": "[2685. \u7edf\u8ba1\u5b8c\u5168\u8fde\u901a\u5206\u91cf\u7684\u6570\u91cf](https://leetcode.cn/problems/count-the-number-of-complete-components)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/2600-2699/2685.Count%20the%20Number%20of%20Complete%20Components/README.md rating: 1769 source: \u7b2c 345 \u573a\u5468\u8d5b Q4 tags: - \u6df1\u5ea6\u4f18\u5148\u641c\u7d22 - \u5e7f\u5ea6\u4f18\u5148\u641c\u7d22 - \u5e76\u67e5\u96c6 - \u56fe --- <!-- problem:start --> # [2685. \u7edf\u8ba1\u5b8c\u5168\u8fde\u901a\u5206\u91cf\u7684\u6570\u91cf](https://leetcode.cn/problems/count-the-number-of-complete-components) [English Version](/solution/2600-2699/2685.Count%20the%20Num..."
+    },
+    {
+      "id": "doocs_leetcode-solution-2600-2699-2685.count-the-number-of-complete-components-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/2600-2699/2685.Count%20the%20Number%20of%20Complete%20Components/README_EN.md",
+      "localPath": "doocs_leetcode/solution/2600-2699/2685.Count the Number of Complete Components/README_EN.md",
+      "relativePath": "solution/2600-2699/2685.Count the Number of Complete Components/README_EN.md",
+      "title": "[2685. Count the Number of Complete Components](https://leetcode.com/problems/count-the-number-of-complete-components)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/2600-2699/2685.Count%20the%20Number%20of%20Complete%20Components/README_EN.md rating: 1769 source: Weekly Contest 345 Q4 tags: - Depth-First Search - Breadth-First Search - Union Find - Graph --- <!-- problem:start --> # [2685. Count the Number of Complete Components](https://leetcode.com/problems/count-the-number-of..."
+    }
+  ]
+}

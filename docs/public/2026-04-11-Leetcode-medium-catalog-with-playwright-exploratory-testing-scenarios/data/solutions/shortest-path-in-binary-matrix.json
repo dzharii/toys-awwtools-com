@@ -1,0 +1,610 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "shortest-path-in-binary-matrix",
+  "problemTitle": "Shortest Path in Binary Matrix",
+  "problemNumber": 1091,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go",
+      "typescript",
+      "kotlin"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go",
+      "TypeScript",
+      "Kotlin"
+    ],
+    "solutionCount": 10,
+    "writeupCount": 3,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 3,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-python-1091-shortest-path-in-binary-matrix.py",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/python/1091-shortest-path-in-binary-matrix.py",
+          "localPath": "neetcode-gh_leetcode/python/1091-shortest-path-in-binary-matrix.py",
+          "relativePath": "python/1091-shortest-path-in-binary-matrix.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "article+code",
+          "code": "class Solution:\n    def shortestPathBinaryMatrix(self, grid: List[List[int]]) -> int:\n        N = len(grid)\n        q = deque([(0, 0, 1)]) # r, c, length\n        visit = set((0, 0))\n        direct = [[0, 1], [1, 0], [0, -1], [-1, 0],\n                  [1, 1], [-1, -1], [1, -1], [-1, 1]]\n        while q:\n            r, c, length = q.popleft()\n            if (min(r, c) < 0 or max(r, c) >= N or\n                grid[r][c]):\n                continue\n            if r == N - 1 and c == N - 1:\n                return length\n            for dr, dc in direct:\n                if (r + dr, c + dc) not in visit:\n                    q.append((r + dr, c + dc, length + 1))\n                    visit.add((r + dr, c + dc))\n        return -1\n",
+          "originalCode": "class Solution:\n    def shortestPathBinaryMatrix(self, grid: List[List[int]]) -> int:\n        N = len(grid)\n        q = deque([(0, 0, 1)]) # r, c, length\n        visit = set((0, 0))\n        direct = [[0, 1], [1, 0], [0, -1], [-1, 0],\n                  [1, 1], [-1, -1], [1, -1], [-1, 1]]\n        while q:\n            r, c, length = q.popleft()\n            if (min(r, c) < 0 or max(r, c) >= N or\n                grid[r][c]):\n                continue\n            if r == N - 1 and c == N - 1:\n                return length\n            for dr, dc in direct:\n                if (r + dr, c + dc) not in visit:\n                    q.append((r + dr, c + dc, length + 1))\n                    visit.add((r + dr, c + dc))\n        return -1\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: In an unweighted grid, the first time you reach a cell at a layer is already its best distance.\nclass Solution:\n    def shortestPathBinaryMatrix(self, grid: List[List[int]]) -> int:\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Reachability checks, shortest-path layering, and careful neighbor generation on a grid.\n        N = len(grid)\n        q = deque([(0, 0, 1)]) # r, c, length\n        visit = set((0, 0))\n        direct = [[0, 1], [1, 0], [0, -1], [-1, 0],\n                  [1, 1], [-1, -1], [1, -1], [-1, 1]]\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while q:\n            r, c, length = q.popleft()\n            # [Reader note] Decision point\n            # Pay attention here: Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself.\n            if (min(r, c) < 0 or max(r, c) >= N or\n                grid[r][c]):\n                continue\n            if r == N - 1 and c == N - 1:\n                return length\n            for dr, dc in direct:\n                if (r + dr, c + dc) not in visit:\n                    q.append((r + dr, c + dc, length + 1))\n                    visit.add((r + dr, c + dc))\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return -1",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: In an unweighted grid, the first time you reach a cell at a layer is already its best distance."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reachability checks, shortest-path layering, and careful neighbor generation on a grid."
+            },
+            {
+              "line": 8,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 10,
+              "label": "Decision point",
+              "note": "Pay attention here: Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself."
+            },
+            {
+              "line": 19,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a clean shortest-path Medium in an unweighted setting, which makes BFS feel justified instead of magical.",
+            "whatToNotice": "Reachability checks, shortest-path layering, and careful neighbor generation on a grid.",
+            "riskPoint": "Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself."
+          }
+        },
+        {
+          "id": "kamyu104_leetcode-solutions-python-shortest-path-in-binary-matrix.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/shortest-path-in-binary-matrix.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/shortest-path-in-binary-matrix.py",
+          "relativePath": "Python/shortest-path-in-binary-matrix.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(n^2)\n# Space: O(n)\n\nimport collections\n\n\nclass Solution(object):\n    def shortestPathBinaryMatrix(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        directions = [(-1, -1), (-1, 0), (-1, 1), \\\n                      ( 0, -1), ( 0, 1), \\\n                      ( 1, -1), ( 1, 0), ( 1, 1)]\n        result = 0\n        q = collections.deque([(0, 0)])\n        while q:\n            result += 1\n            next_depth = collections.deque()\n            while q:\n                i, j = q.popleft()\n                if 0 <= i < len(grid) and \\\n                   0 <= j < len(grid[0]) and \\\n                    not grid[i][j]:\n                    grid[i][j] = 1\n                    if i == len(grid)-1 and j == len(grid)-1:\n                        return result\n                    for d in directions:\n                        next_depth.append((i+d[0], j+d[1]))\n            q = next_depth\n        return -1\n",
+          "originalCode": "# Time:  O(n^2)\n# Space: O(n)\n\nimport collections\n\n\nclass Solution(object):\n    def shortestPathBinaryMatrix(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        directions = [(-1, -1), (-1, 0), (-1, 1), \\\n                      ( 0, -1), ( 0, 1), \\\n                      ( 1, -1), ( 1, 0), ( 1, 1)]\n        result = 0\n        q = collections.deque([(0, 0)])\n        while q:\n            result += 1\n            next_depth = collections.deque()\n            while q:\n                i, j = q.popleft()\n                if 0 <= i < len(grid) and \\\n                   0 <= j < len(grid[0]) and \\\n                    not grid[i][j]:\n                    grid[i][j] = 1\n                    if i == len(grid)-1 and j == len(grid)-1:\n                        return result\n                    for d in directions:\n                        next_depth.append((i+d[0], j+d[1]))\n            q = next_depth\n        return -1\n",
+          "reviewedCode": "# Time:  O(n^2)\n# Space: O(n)\n\nimport collections\n\n\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: In an unweighted grid, the first time you reach a cell at a layer is already its best distance.\nclass Solution(object):\n    def shortestPathBinaryMatrix(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Reachability checks, shortest-path layering, and careful neighbor generation on a grid.\n        directions = [(-1, -1), (-1, 0), (-1, 1), \\\n                      ( 0, -1), ( 0, 1), \\\n                      ( 1, -1), ( 1, 0), ( 1, 1)]\n        result = 0\n        q = collections.deque([(0, 0)])\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while q:\n            result += 1\n            next_depth = collections.deque()\n            while q:\n                i, j = q.popleft()\n                # [Reader note] Decision point\n                # Pay attention here: Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself.\n                if 0 <= i < len(grid) and \\\n                   0 <= j < len(grid[0]) and \\\n                    not grid[i][j]:\n                    grid[i][j] = 1\n                    if i == len(grid)-1 and j == len(grid)-1:\n                        return result\n                    for d in directions:\n                        next_depth.append((i+d[0], j+d[1]))\n            q = next_depth\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return -1",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n^2)",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 7,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: In an unweighted grid, the first time you reach a cell at a layer is already its best distance."
+            },
+            {
+              "line": 13,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reachability checks, shortest-path layering, and careful neighbor generation on a grid."
+            },
+            {
+              "line": 18,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 23,
+              "label": "Decision point",
+              "note": "Pay attention here: Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself."
+            },
+            {
+              "line": 32,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a clean shortest-path Medium in an unweighted setting, which makes BFS feel justified instead of magical.",
+            "whatToNotice": "Reachability checks, shortest-path layering, and careful neighbor generation on a grid.",
+            "riskPoint": "Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-1000-1099-1091.shortest-path-in-binary-matrix-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1000-1099/1091.Shortest%20Path%20in%20Binary%20Matrix/Solution.py",
+          "localPath": "doocs_leetcode/solution/1000-1099/1091.Shortest Path in Binary Matrix/Solution.py",
+          "relativePath": "solution/1000-1099/1091.Shortest Path in Binary Matrix/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "class Solution:\n    def shortestPathBinaryMatrix(self, grid: List[List[int]]) -> int:\n        if grid[0][0]:\n            return -1\n        n = len(grid)\n        grid[0][0] = 1\n        q = deque([(0, 0)])\n        ans = 1\n        while q:\n            for _ in range(len(q)):\n                i, j = q.popleft()\n                if i == j == n - 1:\n                    return ans\n                for x in range(i - 1, i + 2):\n                    for y in range(j - 1, j + 2):\n                        if 0 <= x < n and 0 <= y < n and grid[x][y] == 0:\n                            grid[x][y] = 1\n                            q.append((x, y))\n            ans += 1\n        return -1\n",
+          "originalCode": "class Solution:\n    def shortestPathBinaryMatrix(self, grid: List[List[int]]) -> int:\n        if grid[0][0]:\n            return -1\n        n = len(grid)\n        grid[0][0] = 1\n        q = deque([(0, 0)])\n        ans = 1\n        while q:\n            for _ in range(len(q)):\n                i, j = q.popleft()\n                if i == j == n - 1:\n                    return ans\n                for x in range(i - 1, i + 2):\n                    for y in range(j - 1, j + 2):\n                        if 0 <= x < n and 0 <= y < n and grid[x][y] == 0:\n                            grid[x][y] = 1\n                            q.append((x, y))\n            ans += 1\n        return -1\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: In an unweighted grid, the first time you reach a cell at a layer is already its best distance.\nclass Solution:\n    def shortestPathBinaryMatrix(self, grid: List[List[int]]) -> int:\n        if grid[0][0]:\n            return -1\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Reachability checks, shortest-path layering, and careful neighbor generation on a grid.\n        n = len(grid)\n        grid[0][0] = 1\n        q = deque([(0, 0)])\n        ans = 1\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while q:\n            for _ in range(len(q)):\n                i, j = q.popleft()\n                # [Reader note] Decision point\n                # Pay attention here: Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself.\n                if i == j == n - 1:\n                    return ans\n                for x in range(i - 1, i + 2):\n                    for y in range(j - 1, j + 2):\n                        if 0 <= x < n and 0 <= y < n and grid[x][y] == 0:\n                            grid[x][y] = 1\n                            q.append((x, y))\n            ans += 1\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return -1",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: In an unweighted grid, the first time you reach a cell at a layer is already its best distance."
+            },
+            {
+              "line": 5,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reachability checks, shortest-path layering, and careful neighbor generation on a grid."
+            },
+            {
+              "line": 9,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 12,
+              "label": "Decision point",
+              "note": "Pay attention here: Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself."
+            },
+            {
+              "line": 20,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a clean shortest-path Medium in an unweighted setting, which makes BFS feel justified instead of magical.",
+            "whatToNotice": "Reachability checks, shortest-path layering, and careful neighbor generation on a grid.",
+            "riskPoint": "Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-c-shortest-path-in-binary-matrix.cpp",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/C%2B%2B/shortest-path-in-binary-matrix.cpp",
+          "localPath": "kamyu104_LeetCode-Solutions/C++/shortest-path-in-binary-matrix.cpp",
+          "relativePath": "C++/shortest-path-in-binary-matrix.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Time:  O(n^2)\n// Space: O(n)\n\nclass Solution {\npublic:\n    int shortestPathBinaryMatrix(vector<vector<int>>& grid) {\n        static const vector<pair<int, int>> directions = {{-1, -1}, {-1, 0}, {-1, 1},\n                                                          { 0, -1}, { 0, 1},\n                                                          { 1, -1}, { 1, 0}, { 1, 1}};\n        int result = 0;\n        queue<pair<int, int>> q({{0, 0}});\n        while (!q.empty()) {\n            ++result;\n            queue<pair<int, int>> next_depth;\n            while (!q.empty()) {\n                int i, j;\n                tie(i, j) = q.front(); q.pop();\n                if (0 <= i && i < grid.size() &&\n                    0 <= j && j < grid[0].size() &&\n                    !grid[i][j]) {\n                    grid[i][j] = 1;\n                    if (i == grid.size() - 1 && j == grid.size() - 1) {\n                        return result;\n                    }\n                    for (const auto& dir : directions) {\n                        next_depth.emplace(i + dir.first, j + dir.second);\n                    }\n                }\n            }\n            q = move(next_depth);\n        }\n        return -1;\n    }\n};\n",
+          "originalCode": "// Time:  O(n^2)\n// Space: O(n)\n\nclass Solution {\npublic:\n    int shortestPathBinaryMatrix(vector<vector<int>>& grid) {\n        static const vector<pair<int, int>> directions = {{-1, -1}, {-1, 0}, {-1, 1},\n                                                          { 0, -1}, { 0, 1},\n                                                          { 1, -1}, { 1, 0}, { 1, 1}};\n        int result = 0;\n        queue<pair<int, int>> q({{0, 0}});\n        while (!q.empty()) {\n            ++result;\n            queue<pair<int, int>> next_depth;\n            while (!q.empty()) {\n                int i, j;\n                tie(i, j) = q.front(); q.pop();\n                if (0 <= i && i < grid.size() &&\n                    0 <= j && j < grid[0].size() &&\n                    !grid[i][j]) {\n                    grid[i][j] = 1;\n                    if (i == grid.size() - 1 && j == grid.size() - 1) {\n                        return result;\n                    }\n                    for (const auto& dir : directions) {\n                        next_depth.emplace(i + dir.first, j + dir.second);\n                    }\n                }\n            }\n            q = move(next_depth);\n        }\n        return -1;\n    }\n};\n",
+          "reviewedCode": "// Time:  O(n^2)\n// Space: O(n)\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: In an unweighted grid, the first time you reach a cell at a layer is already its best distance.\nclass Solution {\npublic:\n    int shortestPathBinaryMatrix(vector<vector<int>>& grid) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Reachability checks, shortest-path layering, and careful neighbor generation on a grid.\n        static const vector<pair<int, int>> directions = {{-1, -1}, {-1, 0}, {-1, 1},\n                                                          { 0, -1}, { 0, 1},\n                                                          { 1, -1}, { 1, 0}, { 1, 1}};\n        int result = 0;\n        queue<pair<int, int>> q({{0, 0}});\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while (!q.empty()) {\n            ++result;\n            queue<pair<int, int>> next_depth;\n            while (!q.empty()) {\n                int i, j;\n                tie(i, j) = q.front(); q.pop();\n                // [Reader note] Decision point\n                // Pay attention here: Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself.\n                if (0 <= i && i < grid.size() &&\n                    0 <= j && j < grid[0].size() &&\n                    !grid[i][j]) {\n                    grid[i][j] = 1;\n                    if (i == grid.size() - 1 && j == grid.size() - 1) {\n                        return result;\n                    }\n                    for (const auto& dir : directions) {\n                        next_depth.emplace(i + dir.first, j + dir.second);\n                    }\n                }\n            }\n            q = move(next_depth);\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return -1;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n^2)",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 4,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: In an unweighted grid, the first time you reach a cell at a layer is already its best distance."
+            },
+            {
+              "line": 7,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reachability checks, shortest-path layering, and careful neighbor generation on a grid."
+            },
+            {
+              "line": 12,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 18,
+              "label": "Decision point",
+              "note": "Pay attention here: Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself."
+            },
+            {
+              "line": 32,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a clean shortest-path Medium in an unweighted setting, which makes BFS feel justified instead of magical.",
+            "whatToNotice": "Reachability checks, shortest-path layering, and careful neighbor generation on a grid.",
+            "riskPoint": "Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-1000-1099-1091.shortest-path-in-binary-matrix-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1000-1099/1091.Shortest%20Path%20in%20Binary%20Matrix/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/1000-1099/1091.Shortest Path in Binary Matrix/Solution.cpp",
+          "relativePath": "solution/1000-1099/1091.Shortest Path in Binary Matrix/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\npublic:\n    int shortestPathBinaryMatrix(vector<vector<int>>& grid) {\n        if (grid[0][0]) {\n            return -1;\n        }\n        int n = grid.size();\n        grid[0][0] = 1;\n        queue<pair<int, int>> q;\n        q.emplace(0, 0);\n        for (int ans = 1; !q.empty(); ++ans) {\n            for (int k = q.size(); k; --k) {\n                auto [i, j] = q.front();\n                q.pop();\n                if (i == n - 1 && j == n - 1) {\n                    return ans;\n                }\n                for (int x = i - 1; x <= i + 1; ++x) {\n                    for (int y = j - 1; y <= j + 1; ++y) {\n                        if (x >= 0 && x < n && y >= 0 && y < n && !grid[x][y]) {\n                            grid[x][y] = 1;\n                            q.emplace(x, y);\n                        }\n                    }\n                }\n            }\n        }\n        return -1;\n    }\n};",
+          "originalCode": "class Solution {\npublic:\n    int shortestPathBinaryMatrix(vector<vector<int>>& grid) {\n        if (grid[0][0]) {\n            return -1;\n        }\n        int n = grid.size();\n        grid[0][0] = 1;\n        queue<pair<int, int>> q;\n        q.emplace(0, 0);\n        for (int ans = 1; !q.empty(); ++ans) {\n            for (int k = q.size(); k; --k) {\n                auto [i, j] = q.front();\n                q.pop();\n                if (i == n - 1 && j == n - 1) {\n                    return ans;\n                }\n                for (int x = i - 1; x <= i + 1; ++x) {\n                    for (int y = j - 1; y <= j + 1; ++y) {\n                        if (x >= 0 && x < n && y >= 0 && y < n && !grid[x][y]) {\n                            grid[x][y] = 1;\n                            q.emplace(x, y);\n                        }\n                    }\n                }\n            }\n        }\n        return -1;\n    }\n};",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: In an unweighted grid, the first time you reach a cell at a layer is already its best distance.\nclass Solution {\npublic:\n    int shortestPathBinaryMatrix(vector<vector<int>>& grid) {\n        if (grid[0][0]) {\n            return -1;\n        }\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Reachability checks, shortest-path layering, and careful neighbor generation on a grid.\n        int n = grid.size();\n        grid[0][0] = 1;\n        queue<pair<int, int>> q;\n        q.emplace(0, 0);\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int ans = 1; !q.empty(); ++ans) {\n            for (int k = q.size(); k; --k) {\n                auto [i, j] = q.front();\n                q.pop();\n                // [Reader note] Decision point\n                // Pay attention here: Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself.\n                if (i == n - 1 && j == n - 1) {\n                    return ans;\n                }\n                for (int x = i - 1; x <= i + 1; ++x) {\n                    for (int y = j - 1; y <= j + 1; ++y) {\n                        if (x >= 0 && x < n && y >= 0 && y < n && !grid[x][y]) {\n                            grid[x][y] = 1;\n                            q.emplace(x, y);\n                        }\n                    }\n                }\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return -1;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: In an unweighted grid, the first time you reach a cell at a layer is already its best distance."
+            },
+            {
+              "line": 7,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reachability checks, shortest-path layering, and careful neighbor generation on a grid."
+            },
+            {
+              "line": 11,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 15,
+              "label": "Decision point",
+              "note": "Pay attention here: Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself."
+            },
+            {
+              "line": 28,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a clean shortest-path Medium in an unweighted setting, which makes BFS feel justified instead of magical.",
+            "whatToNotice": "Reachability checks, shortest-path layering, and careful neighbor generation on a grid.",
+            "riskPoint": "Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself."
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-java-1091-shortest-path-in-binary-matrix.java",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/java/1091-shortest-path-in-binary-matrix.java",
+          "localPath": "neetcode-gh_leetcode/java/1091-shortest-path-in-binary-matrix.java",
+          "relativePath": "java/1091-shortest-path-in-binary-matrix.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "article+code",
+          "code": "class Solution {\n  public int shortestPathBinaryMatrix(int[][] grid) {\n    int n = grid.length;\n    Queue<Integer[]> q = new LinkedList<>();\n    q.add(new Integer[]{0, 0, 1}); // row, col, length\n    \n    boolean[][] visited = new boolean[n][n];\n    visited[0][0] = true;\n    \n    int[][] direct = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}, {1, 1}, {-1, -1}, {1, -1}, {-1, 1}};\n\n    while (!q.isEmpty()) {\n      Integer[] curr = q.poll();\n      int r = curr[0];\n      int c = curr[1];\n      int length = curr[2];\n      \n      // out of bounds or no way further\n      if (Math.min(r, c) < 0 || Math.max(r, c) == n || grid[r][c] == 1) continue;\n      \n      if (r == n - 1 && c == n - 1) return length;\n      \n      for (int[] d : direct) {\n        int newRow = r + d[0];\n        int newCol = c + d[1];\n        if (Math.min(newRow, newCol) >= 0 && Math.max(newRow, newCol) < n && !visited[newRow][newCol]) {\n          q.add(new Integer[]{newRow, newCol, 1 + length});\n          visited[newRow][newCol] = true;\n        }\n      }\n    }\n    return -1;\n  }\n  \n}\n",
+          "originalCode": "class Solution {\n  public int shortestPathBinaryMatrix(int[][] grid) {\n    int n = grid.length;\n    Queue<Integer[]> q = new LinkedList<>();\n    q.add(new Integer[]{0, 0, 1}); // row, col, length\n    \n    boolean[][] visited = new boolean[n][n];\n    visited[0][0] = true;\n    \n    int[][] direct = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}, {1, 1}, {-1, -1}, {1, -1}, {-1, 1}};\n\n    while (!q.isEmpty()) {\n      Integer[] curr = q.poll();\n      int r = curr[0];\n      int c = curr[1];\n      int length = curr[2];\n      \n      // out of bounds or no way further\n      if (Math.min(r, c) < 0 || Math.max(r, c) == n || grid[r][c] == 1) continue;\n      \n      if (r == n - 1 && c == n - 1) return length;\n      \n      for (int[] d : direct) {\n        int newRow = r + d[0];\n        int newCol = c + d[1];\n        if (Math.min(newRow, newCol) >= 0 && Math.max(newRow, newCol) < n && !visited[newRow][newCol]) {\n          q.add(new Integer[]{newRow, newCol, 1 + length});\n          visited[newRow][newCol] = true;\n        }\n      }\n    }\n    return -1;\n  }\n  \n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: In an unweighted grid, the first time you reach a cell at a layer is already its best distance.\nclass Solution {\n  public int shortestPathBinaryMatrix(int[][] grid) {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Reachability checks, shortest-path layering, and careful neighbor generation on a grid.\n    int n = grid.length;\n    Queue<Integer[]> q = new LinkedList<>();\n    q.add(new Integer[]{0, 0, 1}); // row, col, length\n    \n    boolean[][] visited = new boolean[n][n];\n    visited[0][0] = true;\n    \n    int[][] direct = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}, {1, 1}, {-1, -1}, {1, -1}, {-1, 1}};\n\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    while (!q.isEmpty()) {\n      Integer[] curr = q.poll();\n      int r = curr[0];\n      int c = curr[1];\n      int length = curr[2];\n      \n      // out of bounds or no way further\n      // [Reader note] Decision point\n      // Pay attention here: Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself.\n      if (Math.min(r, c) < 0 || Math.max(r, c) == n || grid[r][c] == 1) continue;\n      \n      if (r == n - 1 && c == n - 1) return length;\n      \n      for (int[] d : direct) {\n        int newRow = r + d[0];\n        int newCol = c + d[1];\n        if (Math.min(newRow, newCol) >= 0 && Math.max(newRow, newCol) < n && !visited[newRow][newCol]) {\n          q.add(new Integer[]{newRow, newCol, 1 + length});\n          visited[newRow][newCol] = true;\n        }\n      }\n    }\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return -1;\n  }\n  \n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: In an unweighted grid, the first time you reach a cell at a layer is already its best distance."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reachability checks, shortest-path layering, and careful neighbor generation on a grid."
+            },
+            {
+              "line": 12,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 19,
+              "label": "Decision point",
+              "note": "Pay attention here: Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself."
+            },
+            {
+              "line": 32,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a clean shortest-path Medium in an unweighted setting, which makes BFS feel justified instead of magical.",
+            "whatToNotice": "Reachability checks, shortest-path layering, and careful neighbor generation on a grid.",
+            "riskPoint": "Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-1000-1099-1091.shortest-path-in-binary-matrix-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1000-1099/1091.Shortest%20Path%20in%20Binary%20Matrix/Solution.java",
+          "localPath": "doocs_leetcode/solution/1000-1099/1091.Shortest Path in Binary Matrix/Solution.java",
+          "relativePath": "solution/1000-1099/1091.Shortest Path in Binary Matrix/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\n    public int shortestPathBinaryMatrix(int[][] grid) {\n        if (grid[0][0] == 1) {\n            return -1;\n        }\n        int n = grid.length;\n        grid[0][0] = 1;\n        Deque<int[]> q = new ArrayDeque<>();\n        q.offer(new int[] {0, 0});\n        for (int ans = 1; !q.isEmpty(); ++ans) {\n            for (int k = q.size(); k > 0; --k) {\n                var p = q.poll();\n                int i = p[0], j = p[1];\n                if (i == n - 1 && j == n - 1) {\n                    return ans;\n                }\n                for (int x = i - 1; x <= i + 1; ++x) {\n                    for (int y = j - 1; y <= j + 1; ++y) {\n                        if (x >= 0 && x < n && y >= 0 && y < n && grid[x][y] == 0) {\n                            grid[x][y] = 1;\n                            q.offer(new int[] {x, y});\n                        }\n                    }\n                }\n            }\n        }\n        return -1;\n    }\n}",
+          "originalCode": "class Solution {\n    public int shortestPathBinaryMatrix(int[][] grid) {\n        if (grid[0][0] == 1) {\n            return -1;\n        }\n        int n = grid.length;\n        grid[0][0] = 1;\n        Deque<int[]> q = new ArrayDeque<>();\n        q.offer(new int[] {0, 0});\n        for (int ans = 1; !q.isEmpty(); ++ans) {\n            for (int k = q.size(); k > 0; --k) {\n                var p = q.poll();\n                int i = p[0], j = p[1];\n                if (i == n - 1 && j == n - 1) {\n                    return ans;\n                }\n                for (int x = i - 1; x <= i + 1; ++x) {\n                    for (int y = j - 1; y <= j + 1; ++y) {\n                        if (x >= 0 && x < n && y >= 0 && y < n && grid[x][y] == 0) {\n                            grid[x][y] = 1;\n                            q.offer(new int[] {x, y});\n                        }\n                    }\n                }\n            }\n        }\n        return -1;\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: In an unweighted grid, the first time you reach a cell at a layer is already its best distance.\nclass Solution {\n    public int shortestPathBinaryMatrix(int[][] grid) {\n        if (grid[0][0] == 1) {\n            return -1;\n        }\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Reachability checks, shortest-path layering, and careful neighbor generation on a grid.\n        int n = grid.length;\n        grid[0][0] = 1;\n        Deque<int[]> q = new ArrayDeque<>();\n        q.offer(new int[] {0, 0});\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int ans = 1; !q.isEmpty(); ++ans) {\n            for (int k = q.size(); k > 0; --k) {\n                var p = q.poll();\n                int i = p[0], j = p[1];\n                // [Reader note] Decision point\n                // Pay attention here: Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself.\n                if (i == n - 1 && j == n - 1) {\n                    return ans;\n                }\n                for (int x = i - 1; x <= i + 1; ++x) {\n                    for (int y = j - 1; y <= j + 1; ++y) {\n                        if (x >= 0 && x < n && y >= 0 && y < n && grid[x][y] == 0) {\n                            grid[x][y] = 1;\n                            q.offer(new int[] {x, y});\n                        }\n                    }\n                }\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return -1;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: In an unweighted grid, the first time you reach a cell at a layer is already its best distance."
+            },
+            {
+              "line": 6,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reachability checks, shortest-path layering, and careful neighbor generation on a grid."
+            },
+            {
+              "line": 10,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 14,
+              "label": "Decision point",
+              "note": "Pay attention here: Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself."
+            },
+            {
+              "line": 27,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a clean shortest-path Medium in an unweighted setting, which makes BFS feel justified instead of magical.",
+            "whatToNotice": "Reachability checks, shortest-path layering, and careful neighbor generation on a grid.",
+            "riskPoint": "Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself."
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-1000-1099-1091.shortest-path-in-binary-matrix-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1000-1099/1091.Shortest%20Path%20in%20Binary%20Matrix/Solution.go",
+          "localPath": "doocs_leetcode/solution/1000-1099/1091.Shortest Path in Binary Matrix/Solution.go",
+          "relativePath": "solution/1000-1099/1091.Shortest Path in Binary Matrix/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "func shortestPathBinaryMatrix(grid [][]int) int {\n\tif grid[0][0] == 1 {\n\t\treturn -1\n\t}\n\tn := len(grid)\n\tgrid[0][0] = 1\n\tq := [][2]int{{0, 0}}\n\tfor ans := 1; len(q) > 0; ans++ {\n\t\tfor k := len(q); k > 0; k-- {\n\t\t\tp := q[0]\n\t\t\ti, j := p[0], p[1]\n\t\t\tq = q[1:]\n\t\t\tif i == n-1 && j == n-1 {\n\t\t\t\treturn ans\n\t\t\t}\n\t\t\tfor x := i - 1; x <= i+1; x++ {\n\t\t\t\tfor y := j - 1; y <= j+1; y++ {\n\t\t\t\t\tif x >= 0 && x < n && y >= 0 && y < n && grid[x][y] == 0 {\n\t\t\t\t\t\tgrid[x][y] = 1\n\t\t\t\t\t\tq = append(q, [2]int{x, y})\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\treturn -1\n}",
+          "originalCode": "func shortestPathBinaryMatrix(grid [][]int) int {\n\tif grid[0][0] == 1 {\n\t\treturn -1\n\t}\n\tn := len(grid)\n\tgrid[0][0] = 1\n\tq := [][2]int{{0, 0}}\n\tfor ans := 1; len(q) > 0; ans++ {\n\t\tfor k := len(q); k > 0; k-- {\n\t\t\tp := q[0]\n\t\t\ti, j := p[0], p[1]\n\t\t\tq = q[1:]\n\t\t\tif i == n-1 && j == n-1 {\n\t\t\t\treturn ans\n\t\t\t}\n\t\t\tfor x := i - 1; x <= i+1; x++ {\n\t\t\t\tfor y := j - 1; y <= j+1; y++ {\n\t\t\t\t\tif x >= 0 && x < n && y >= 0 && y < n && grid[x][y] == 0 {\n\t\t\t\t\t\tgrid[x][y] = 1\n\t\t\t\t\t\tq = append(q, [2]int{x, y})\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\treturn -1\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: In an unweighted grid, the first time you reach a cell at a layer is already its best distance.\nfunc shortestPathBinaryMatrix(grid [][]int) int {\n\tif grid[0][0] == 1 {\n\t\treturn -1\n\t}\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Reachability checks, shortest-path layering, and careful neighbor generation on a grid.\n\tn := len(grid)\n\tgrid[0][0] = 1\n\tq := [][2]int{{0, 0}}\n\t// [Reader note] Main pass\n\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\tfor ans := 1; len(q) > 0; ans++ {\n\t\tfor k := len(q); k > 0; k-- {\n\t\t\tp := q[0]\n\t\t\ti, j := p[0], p[1]\n\t\t\tq = q[1:]\n\t\t\t// [Reader note] Decision point\n\t\t\t// Pay attention here: Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself.\n\t\t\tif i == n-1 && j == n-1 {\n\t\t\t\treturn ans\n\t\t\t}\n\t\t\tfor x := i - 1; x <= i+1; x++ {\n\t\t\t\tfor y := j - 1; y <= j+1; y++ {\n\t\t\t\t\tif x >= 0 && x < n && y >= 0 && y < n && grid[x][y] == 0 {\n\t\t\t\t\t\tgrid[x][y] = 1\n\t\t\t\t\t\tq = append(q, [2]int{x, y})\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn -1\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: In an unweighted grid, the first time you reach a cell at a layer is already its best distance."
+            },
+            {
+              "line": 5,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reachability checks, shortest-path layering, and careful neighbor generation on a grid."
+            },
+            {
+              "line": 8,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 13,
+              "label": "Decision point",
+              "note": "Pay attention here: Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself."
+            },
+            {
+              "line": 26,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a clean shortest-path Medium in an unweighted setting, which makes BFS feel justified instead of magical.",
+            "whatToNotice": "Reachability checks, shortest-path layering, and careful neighbor generation on a grid.",
+            "riskPoint": "Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself."
+          }
+        }
+      ]
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-1000-1099-1091.shortest-path-in-binary-matrix-solution.ts",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1000-1099/1091.Shortest%20Path%20in%20Binary%20Matrix/Solution.ts",
+          "localPath": "doocs_leetcode/solution/1000-1099/1091.Shortest Path in Binary Matrix/Solution.ts",
+          "relativePath": "solution/1000-1099/1091.Shortest Path in Binary Matrix/Solution.ts",
+          "languageId": "typescript",
+          "languageLabel": "TypeScript",
+          "coverageType": "code+explanation",
+          "code": "function shortestPathBinaryMatrix(grid: number[][]): number {\n    if (grid[0][0]) {\n        return -1;\n    }\n    const max = grid.length - 1;\n    grid[0][0] = 1;\n    let q: number[][] = [[0, 0]];\n    for (let ans = 1; q.length > 0; ++ans) {\n        const nq: number[][] = [];\n        for (const [i, j] of q) {\n            if (i === max && j === max) {\n                return ans;\n            }\n            for (let x = i - 1; x <= i + 1; ++x) {\n                for (let y = j - 1; y <= j + 1; ++y) {\n                    if (grid[x]?.[y] === 0) {\n                        grid[x][y] = 1;\n                        nq.push([x, y]);\n                    }\n                }\n            }\n        }\n        q = nq;\n    }\n    return -1;\n}\n",
+          "originalCode": "function shortestPathBinaryMatrix(grid: number[][]): number {\n    if (grid[0][0]) {\n        return -1;\n    }\n    const max = grid.length - 1;\n    grid[0][0] = 1;\n    let q: number[][] = [[0, 0]];\n    for (let ans = 1; q.length > 0; ++ans) {\n        const nq: number[][] = [];\n        for (const [i, j] of q) {\n            if (i === max && j === max) {\n                return ans;\n            }\n            for (let x = i - 1; x <= i + 1; ++x) {\n                for (let y = j - 1; y <= j + 1; ++y) {\n                    if (grid[x]?.[y] === 0) {\n                        grid[x][y] = 1;\n                        nq.push([x, y]);\n                    }\n                }\n            }\n        }\n        q = nq;\n    }\n    return -1;\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: In an unweighted grid, the first time you reach a cell at a layer is already its best distance.\nfunction shortestPathBinaryMatrix(grid: number[][]): number {\n    if (grid[0][0]) {\n        return -1;\n    }\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Reachability checks, shortest-path layering, and careful neighbor generation on a grid.\n    const max = grid.length - 1;\n    grid[0][0] = 1;\n    let q: number[][] = [[0, 0]];\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (let ans = 1; q.length > 0; ++ans) {\n        const nq: number[][] = [];\n        for (const [i, j] of q) {\n            // [Reader note] Decision point\n            // Pay attention here: Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself.\n            if (i === max && j === max) {\n                return ans;\n            }\n            for (let x = i - 1; x <= i + 1; ++x) {\n                for (let y = j - 1; y <= j + 1; ++y) {\n                    if (grid[x]?.[y] === 0) {\n                        grid[x][y] = 1;\n                        nq.push([x, y]);\n                    }\n                }\n            }\n        }\n        q = nq;\n    }\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return -1;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: In an unweighted grid, the first time you reach a cell at a layer is already its best distance."
+            },
+            {
+              "line": 5,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reachability checks, shortest-path layering, and careful neighbor generation on a grid."
+            },
+            {
+              "line": 8,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 11,
+              "label": "Decision point",
+              "note": "Pay attention here: Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself."
+            },
+            {
+              "line": 25,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a clean shortest-path Medium in an unweighted setting, which makes BFS feel justified instead of magical.",
+            "whatToNotice": "Reachability checks, shortest-path layering, and careful neighbor generation on a grid.",
+            "riskPoint": "Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself."
+          }
+        }
+      ]
+    },
+    {
+      "id": "kotlin",
+      "label": "Kotlin",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-kotlin-1091-shortest-path-in-binary-matrix.kt",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/kotlin/1091-shortest-path-in-binary-matrix.kt",
+          "localPath": "neetcode-gh_leetcode/kotlin/1091-shortest-path-in-binary-matrix.kt",
+          "relativePath": "kotlin/1091-shortest-path-in-binary-matrix.kt",
+          "languageId": "kotlin",
+          "languageLabel": "Kotlin",
+          "coverageType": "article+code",
+          "code": "class Solution {\n    fun shortestPathBinaryMatrix(grid: Array<IntArray>): Int {\n\n        if(grid[0][0] == 1 || grid[grid.lastIndex][grid.lastIndex] == 1) return -1\n\n        fun isValid(i: Int, j: Int) = i in (0..grid.lastIndex) && j in (0..grid.lastIndex) && grid[i][j] == 0\n\n        val q = ArrayDeque<Pair<Int, Int>>()\n        var distance = 0\n\n        q.add(0 to 0)\n        grid[0][0] = 1\n\n        while (q.isNotEmpty()) {\n            distance++\n            val size = q.size\n            repeat (size) {\n                val (i, j) = q.poll()\n                if(i == grid.lastIndex && j == grid.lastIndex) return distance\n                for(cell in cells) {\n                    val nextI = i + cell[0]\n                    val nextJ = j + cell[1]\n                    if(isValid(nextI, nextJ)) {\n                        q.add(nextI to nextJ)\n                        grid[nextI][nextJ] = 1\n                    }\n                }\n            }    \n        }\n\n        return -1\n    }\n\n    companion object {\n        val cells = arrayOf(\n            intArrayOf(0,1),\n            intArrayOf(1,1),\n            intArrayOf(0,-1),\n            intArrayOf(1,-1),\n            intArrayOf(1,0),\n            intArrayOf(-1,-1),\n            intArrayOf(-1,0),\n            intArrayOf(-1, 1)\n        )    \n    }\n}\n",
+          "originalCode": "class Solution {\n    fun shortestPathBinaryMatrix(grid: Array<IntArray>): Int {\n\n        if(grid[0][0] == 1 || grid[grid.lastIndex][grid.lastIndex] == 1) return -1\n\n        fun isValid(i: Int, j: Int) = i in (0..grid.lastIndex) && j in (0..grid.lastIndex) && grid[i][j] == 0\n\n        val q = ArrayDeque<Pair<Int, Int>>()\n        var distance = 0\n\n        q.add(0 to 0)\n        grid[0][0] = 1\n\n        while (q.isNotEmpty()) {\n            distance++\n            val size = q.size\n            repeat (size) {\n                val (i, j) = q.poll()\n                if(i == grid.lastIndex && j == grid.lastIndex) return distance\n                for(cell in cells) {\n                    val nextI = i + cell[0]\n                    val nextJ = j + cell[1]\n                    if(isValid(nextI, nextJ)) {\n                        q.add(nextI to nextJ)\n                        grid[nextI][nextJ] = 1\n                    }\n                }\n            }    \n        }\n\n        return -1\n    }\n\n    companion object {\n        val cells = arrayOf(\n            intArrayOf(0,1),\n            intArrayOf(1,1),\n            intArrayOf(0,-1),\n            intArrayOf(1,-1),\n            intArrayOf(1,0),\n            intArrayOf(-1,-1),\n            intArrayOf(-1,0),\n            intArrayOf(-1, 1)\n        )    \n    }\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: In an unweighted grid, the first time you reach a cell at a layer is already its best distance.\nclass Solution {\n    fun shortestPathBinaryMatrix(grid: Array<IntArray>): Int {\n\n        if(grid[0][0] == 1 || grid[grid.lastIndex][grid.lastIndex] == 1) return -1\n\n        fun isValid(i: Int, j: Int) = i in (0..grid.lastIndex) && j in (0..grid.lastIndex) && grid[i][j] == 0\n\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Reachability checks, shortest-path layering, and careful neighbor generation on a grid.\n        val q = ArrayDeque<Pair<Int, Int>>()\n        var distance = 0\n\n        q.add(0 to 0)\n        grid[0][0] = 1\n\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while (q.isNotEmpty()) {\n            distance++\n            val size = q.size\n            repeat (size) {\n                val (i, j) = q.poll()\n                // [Reader note] Decision point\n                // Pay attention here: Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself.\n                if(i == grid.lastIndex && j == grid.lastIndex) return distance\n                for(cell in cells) {\n                    val nextI = i + cell[0]\n                    val nextJ = j + cell[1]\n                    if(isValid(nextI, nextJ)) {\n                        q.add(nextI to nextJ)\n                        grid[nextI][nextJ] = 1\n                    }\n                }\n            }    \n        }\n\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return -1\n    }\n\n    companion object {\n        val cells = arrayOf(\n            intArrayOf(0,1),\n            intArrayOf(1,1),\n            intArrayOf(0,-1),\n            intArrayOf(1,-1),\n            intArrayOf(1,0),\n            intArrayOf(-1,-1),\n            intArrayOf(-1,0),\n            intArrayOf(-1, 1)\n        )    \n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: In an unweighted grid, the first time you reach a cell at a layer is already its best distance."
+            },
+            {
+              "line": 8,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reachability checks, shortest-path layering, and careful neighbor generation on a grid."
+            },
+            {
+              "line": 14,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 19,
+              "label": "Decision point",
+              "note": "Pay attention here: Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself."
+            },
+            {
+              "line": 31,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a clean shortest-path Medium in an unweighted setting, which makes BFS feel justified instead of magical.",
+            "whatToNotice": "Reachability checks, shortest-path layering, and careful neighbor generation on a grid.",
+            "riskPoint": "Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself."
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "neetcode-gh_leetcode-articles-shortest-path-in-binary-matrix.md",
+      "repository": "neetcode-gh_leetcode",
+      "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+      "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/articles/shortest-path-in-binary-matrix.md",
+      "localPath": "neetcode-gh_leetcode/articles/shortest-path-in-binary-matrix.md",
+      "relativePath": "articles/shortest-path-in-binary-matrix.md",
+      "title": "shortest path in binary matrix",
+      "excerpt": "## Prerequisites Before attempting this problem, you should be comfortable with: - **Breadth First Search (BFS)** - BFS guarantees the shortest path in unweighted graphs since it explores nodes level by level - **8-Directional Grid Traversal** - Unlike typical grid problems, this one allows diagonal movement requiring all 8 neighbor checks - **Queue-based Level Order Processing** - Understanding how to process BFS b..."
+    },
+    {
+      "id": "doocs_leetcode-solution-1000-1099-1091.shortest-path-in-binary-matrix-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1000-1099/1091.Shortest%20Path%20in%20Binary%20Matrix/README.md",
+      "localPath": "doocs_leetcode/solution/1000-1099/1091.Shortest Path in Binary Matrix/README.md",
+      "relativePath": "solution/1000-1099/1091.Shortest Path in Binary Matrix/README.md",
+      "title": "[1091. \u4e8c\u8fdb\u5236\u77e9\u9635\u4e2d\u7684\u6700\u77ed\u8def\u5f84](https://leetcode.cn/problems/shortest-path-in-binary-matrix)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/1000-1099/1091.Shortest%20Path%20in%20Binary%20Matrix/README.md rating: 1658 source: \u7b2c 141 \u573a\u5468\u8d5b Q3 tags: - \u5e7f\u5ea6\u4f18\u5148\u641c\u7d22 - \u6570\u7ec4 - \u77e9\u9635 --- <!-- problem:start --> # [1091. \u4e8c\u8fdb\u5236\u77e9\u9635\u4e2d\u7684\u6700\u77ed\u8def\u5f84](https://leetcode.cn/problems/shortest-path-in-binary-matrix) [English Version](/solution/1000-1099/1091.Shortest%20Path%20in%20Binary%20Matrix/README_..."
+    },
+    {
+      "id": "doocs_leetcode-solution-1000-1099-1091.shortest-path-in-binary-matrix-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1000-1099/1091.Shortest%20Path%20in%20Binary%20Matrix/README_EN.md",
+      "localPath": "doocs_leetcode/solution/1000-1099/1091.Shortest Path in Binary Matrix/README_EN.md",
+      "relativePath": "solution/1000-1099/1091.Shortest Path in Binary Matrix/README_EN.md",
+      "title": "[1091. Shortest Path in Binary Matrix](https://leetcode.com/problems/shortest-path-in-binary-matrix)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/1000-1099/1091.Shortest%20Path%20in%20Binary%20Matrix/README_EN.md rating: 1658 source: Weekly Contest 141 Q3 tags: - Breadth-First Search - Array - Matrix --- <!-- problem:start --> # [1091. Shortest Path in Binary Matrix](https://leetcode.com/problems/shortest-path-in-binary-matrix) [\u4e2d\u6587\u6587\u6863](/solution/1000-1099/1091...."
+    }
+  ]
+}

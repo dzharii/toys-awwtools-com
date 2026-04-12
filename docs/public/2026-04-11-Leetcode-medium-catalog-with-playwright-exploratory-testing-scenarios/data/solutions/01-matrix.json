@@ -1,0 +1,484 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "01-matrix",
+  "problemTitle": "01 Matrix",
+  "problemNumber": 542,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go",
+      "typescript"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go",
+      "TypeScript"
+    ],
+    "solutionCount": 8,
+    "writeupCount": 2,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-python-01-matrix.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/01-matrix.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/01-matrix.py",
+          "relativePath": "Python/01-matrix.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(m * n)\n# Space: O(1)\n\n# dp solution\nclass Solution(object):\n    def updateMatrix(self, matrix):\n        \"\"\"\n        :type matrix: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        for i in xrange(len(matrix)):\n            for j in xrange(len(matrix[i])):\n                if not matrix[i][j]:\n                    continue\n                matrix[i][j] = float(\"inf\")\n                if i > 0:\n                    matrix[i][j] = min(matrix[i][j], matrix[i-1][j]+1)\n                if j > 0:\n                    matrix[i][j] = min(matrix[i][j], matrix[i][j-1]+1)\n        for i in reversed(xrange(len(matrix))):\n            for j in reversed(xrange(len(matrix[i]))):\n                if not matrix[i][j]:\n                    continue\n                if i < len(matrix)-1:\n                    matrix[i][j] = min(matrix[i][j], matrix[i+1][j]+1)\n                if j < len(matrix[i])-1:\n                    matrix[i][j] = min(matrix[i][j], matrix[i][j+1]+1)\n        return matrix\n\n\n# Time:  O(m * n)\n# Space: O(m * n)\n# dp solution\nclass Solution2(object):\n    def updateMatrix(self, matrix):\n        \"\"\"\n        :type matrix: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        dp = [[float(\"inf\")]*len(matrix[0]) for _ in xrange(len(matrix))]\n        for i in xrange(len(matrix)):\n            for j in xrange(len(matrix[i])):\n                if matrix[i][j] == 0:\n                    dp[i][j] = 0\n                else:\n                    if i > 0:\n                        dp[i][j] = min(dp[i][j], dp[i-1][j]+1)\n                    if j > 0:\n                        dp[i][j] = min(dp[i][j], dp[i][j-1]+1)\n        for i in reversed(xrange(len(matrix))):\n            for j in reversed(xrange(len(matrix[i]))):\n                if matrix[i][j] == 0:\n                    dp[i][j] = 0\n                else:\n                    if i < len(matrix)-1:\n                        dp[i][j] = min(dp[i][j], dp[i+1][j]+1)\n                    if j < len(matrix[i])-1:\n                        dp[i][j] = min(dp[i][j], dp[i][j+1]+1)\n        return dp\n\n\n# Time:  O(m * n)\n# Space: O(m * n)\nimport collections\n\n\nclass Solution3(object):\n    def updateMatrix(self, matrix):\n        \"\"\"\n        :type matrix: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        queue = collections.deque()\n        for i in xrange(len(matrix)):\n            for j in xrange(len(matrix[0])):\n                if matrix[i][j] == 0:\n                    queue.append((i, j))\n                else:\n                    matrix[i][j] = float(\"inf\")\n\n        dirs = [(-1, 0), (1, 0), (0, -1), (0, 1)]\n        while queue:\n            cell = queue.popleft()\n            for dir in dirs:\n                i, j = cell[0]+dir[0], cell[1]+dir[1]\n                if not (0 <= i < len(matrix) and\n                        0 <= j < len(matrix[0]) and\n                        matrix[i][j] > matrix[cell[0]][cell[1]]+1):\n                    continue\n                queue.append((i, j))\n                matrix[i][j] = matrix[cell[0]][cell[1]]+1\n\n        return matrix\n",
+          "originalCode": "# Time:  O(m * n)\n# Space: O(1)\n\n# dp solution\nclass Solution(object):\n    def updateMatrix(self, matrix):\n        \"\"\"\n        :type matrix: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        for i in xrange(len(matrix)):\n            for j in xrange(len(matrix[i])):\n                if not matrix[i][j]:\n                    continue\n                matrix[i][j] = float(\"inf\")\n                if i > 0:\n                    matrix[i][j] = min(matrix[i][j], matrix[i-1][j]+1)\n                if j > 0:\n                    matrix[i][j] = min(matrix[i][j], matrix[i][j-1]+1)\n        for i in reversed(xrange(len(matrix))):\n            for j in reversed(xrange(len(matrix[i]))):\n                if not matrix[i][j]:\n                    continue\n                if i < len(matrix)-1:\n                    matrix[i][j] = min(matrix[i][j], matrix[i+1][j]+1)\n                if j < len(matrix[i])-1:\n                    matrix[i][j] = min(matrix[i][j], matrix[i][j+1]+1)\n        return matrix\n\n\n# Time:  O(m * n)\n# Space: O(m * n)\n# dp solution\nclass Solution2(object):\n    def updateMatrix(self, matrix):\n        \"\"\"\n        :type matrix: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        dp = [[float(\"inf\")]*len(matrix[0]) for _ in xrange(len(matrix))]\n        for i in xrange(len(matrix)):\n            for j in xrange(len(matrix[i])):\n                if matrix[i][j] == 0:\n                    dp[i][j] = 0\n                else:\n                    if i > 0:\n                        dp[i][j] = min(dp[i][j], dp[i-1][j]+1)\n                    if j > 0:\n                        dp[i][j] = min(dp[i][j], dp[i][j-1]+1)\n        for i in reversed(xrange(len(matrix))):\n            for j in reversed(xrange(len(matrix[i]))):\n                if matrix[i][j] == 0:\n                    dp[i][j] = 0\n                else:\n                    if i < len(matrix)-1:\n                        dp[i][j] = min(dp[i][j], dp[i+1][j]+1)\n                    if j < len(matrix[i])-1:\n                        dp[i][j] = min(dp[i][j], dp[i][j+1]+1)\n        return dp\n\n\n# Time:  O(m * n)\n# Space: O(m * n)\nimport collections\n\n\nclass Solution3(object):\n    def updateMatrix(self, matrix):\n        \"\"\"\n        :type matrix: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        queue = collections.deque()\n        for i in xrange(len(matrix)):\n            for j in xrange(len(matrix[0])):\n                if matrix[i][j] == 0:\n                    queue.append((i, j))\n                else:\n                    matrix[i][j] = float(\"inf\")\n\n        dirs = [(-1, 0), (1, 0), (0, -1), (0, 1)]\n        while queue:\n            cell = queue.popleft()\n            for dir in dirs:\n                i, j = cell[0]+dir[0], cell[1]+dir[1]\n                if not (0 <= i < len(matrix) and\n                        0 <= j < len(matrix[0]) and\n                        matrix[i][j] > matrix[cell[0]][cell[1]]+1):\n                    continue\n                queue.append((i, j))\n                matrix[i][j] = matrix[cell[0]][cell[1]]+1\n\n        return matrix\n",
+          "reviewedCode": "# Time:  O(m * n)\n# Space: O(1)\n\n# dp solution\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Start from every known destination at once and let distance spread outward.\nclass Solution(object):\n    def updateMatrix(self, matrix):\n        \"\"\"\n        :type matrix: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for i in xrange(len(matrix)):\n            for j in xrange(len(matrix[i])):\n                # [Reader note] Decision point\n                # Pay attention here: If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be.\n                if not matrix[i][j]:\n                    continue\n                matrix[i][j] = float(\"inf\")\n                if i > 0:\n                    matrix[i][j] = min(matrix[i][j], matrix[i-1][j]+1)\n                if j > 0:\n                    matrix[i][j] = min(matrix[i][j], matrix[i][j-1]+1)\n        for i in reversed(xrange(len(matrix))):\n            for j in reversed(xrange(len(matrix[i]))):\n                if not matrix[i][j]:\n                    continue\n                if i < len(matrix)-1:\n                    matrix[i][j] = min(matrix[i][j], matrix[i+1][j]+1)\n                if j < len(matrix[i])-1:\n                    matrix[i][j] = min(matrix[i][j], matrix[i][j+1]+1)\n        return matrix\n\n\n# Time:  O(m * n)\n# Space: O(m * n)\n# dp solution\nclass Solution2(object):\n    def updateMatrix(self, matrix):\n        \"\"\"\n        :type matrix: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Multi-source BFS, distance propagation, and setting up a global search instead of many local ones.\n        dp = [[float(\"inf\")]*len(matrix[0]) for _ in xrange(len(matrix))]\n        for i in xrange(len(matrix)):\n            for j in xrange(len(matrix[i])):\n                if matrix[i][j] == 0:\n                    dp[i][j] = 0\n                else:\n                    if i > 0:\n                        dp[i][j] = min(dp[i][j], dp[i-1][j]+1)\n                    if j > 0:\n                        dp[i][j] = min(dp[i][j], dp[i][j-1]+1)\n        for i in reversed(xrange(len(matrix))):\n            for j in reversed(xrange(len(matrix[i]))):\n                if matrix[i][j] == 0:\n                    dp[i][j] = 0\n                else:\n                    if i < len(matrix)-1:\n                        dp[i][j] = min(dp[i][j], dp[i+1][j]+1)\n                    if j < len(matrix[i])-1:\n                        dp[i][j] = min(dp[i][j], dp[i][j+1]+1)\n        return dp\n\n\n# Time:  O(m * n)\n# Space: O(m * n)\nimport collections\n\n\nclass Solution3(object):\n    def updateMatrix(self, matrix):\n        \"\"\"\n        :type matrix: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        queue = collections.deque()\n        for i in xrange(len(matrix)):\n            for j in xrange(len(matrix[0])):\n                if matrix[i][j] == 0:\n                    queue.append((i, j))\n                else:\n                    matrix[i][j] = float(\"inf\")\n\n        dirs = [(-1, 0), (1, 0), (0, -1), (0, 1)]\n        while queue:\n            cell = queue.popleft()\n            for dir in dirs:\n                i, j = cell[0]+dir[0], cell[1]+dir[1]\n                if not (0 <= i < len(matrix) and\n                        0 <= j < len(matrix[0]) and\n                        matrix[i][j] > matrix[cell[0]][cell[1]]+1):\n                    continue\n                queue.append((i, j))\n                matrix[i][j] = matrix[cell[0]][cell[1]]+1\n\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return matrix",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(m * n)",
+            "Space: O(1)"
+          ],
+          "annotations": [
+            {
+              "line": 5,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Start from every known destination at once and let distance spread outward."
+            },
+            {
+              "line": 40,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Multi-source BFS, distance propagation, and setting up a global search instead of many local ones."
+            },
+            {
+              "line": 11,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 13,
+              "label": "Decision point",
+              "note": "Pay attention here: If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be."
+            },
+            {
+              "line": 93,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a strong distance-to-nearest problem and a great moment for understanding why reverse thinking can simplify search.",
+            "whatToNotice": "Multi-source BFS, distance propagation, and setting up a global search instead of many local ones.",
+            "riskPoint": "If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0500-0599-0542.01-matrix-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0500-0599/0542.01%20Matrix/Solution.py",
+          "localPath": "doocs_leetcode/solution/0500-0599/0542.01 Matrix/Solution.py",
+          "relativePath": "solution/0500-0599/0542.01 Matrix/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "class Solution:\n    def updateMatrix(self, mat: List[List[int]]) -> List[List[int]]:\n        m, n = len(mat), len(mat[0])\n        ans = [[-1] * n for _ in range(m)]\n        q = deque()\n        for i, row in enumerate(mat):\n            for j, x in enumerate(row):\n                if x == 0:\n                    ans[i][j] = 0\n                    q.append((i, j))\n        dirs = (-1, 0, 1, 0, -1)\n        while q:\n            i, j = q.popleft()\n            for a, b in pairwise(dirs):\n                x, y = i + a, j + b\n                if 0 <= x < m and 0 <= y < n and ans[x][y] == -1:\n                    ans[x][y] = ans[i][j] + 1\n                    q.append((x, y))\n        return ans\n",
+          "originalCode": "class Solution:\n    def updateMatrix(self, mat: List[List[int]]) -> List[List[int]]:\n        m, n = len(mat), len(mat[0])\n        ans = [[-1] * n for _ in range(m)]\n        q = deque()\n        for i, row in enumerate(mat):\n            for j, x in enumerate(row):\n                if x == 0:\n                    ans[i][j] = 0\n                    q.append((i, j))\n        dirs = (-1, 0, 1, 0, -1)\n        while q:\n            i, j = q.popleft()\n            for a, b in pairwise(dirs):\n                x, y = i + a, j + b\n                if 0 <= x < m and 0 <= y < n and ans[x][y] == -1:\n                    ans[x][y] = ans[i][j] + 1\n                    q.append((x, y))\n        return ans\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Start from every known destination at once and let distance spread outward.\nclass Solution:\n    def updateMatrix(self, mat: List[List[int]]) -> List[List[int]]:\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Multi-source BFS, distance propagation, and setting up a global search instead of many local ones.\n        m, n = len(mat), len(mat[0])\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        ans = [[-1] * n for _ in range(m)]\n        q = deque()\n        for i, row in enumerate(mat):\n            for j, x in enumerate(row):\n                # [Reader note] Decision point\n                # Pay attention here: If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be.\n                if x == 0:\n                    ans[i][j] = 0\n                    q.append((i, j))\n        dirs = (-1, 0, 1, 0, -1)\n        while q:\n            i, j = q.popleft()\n            for a, b in pairwise(dirs):\n                x, y = i + a, j + b\n                if 0 <= x < m and 0 <= y < n and ans[x][y] == -1:\n                    ans[x][y] = ans[i][j] + 1\n                    q.append((x, y))\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return ans",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Start from every known destination at once and let distance spread outward."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Multi-source BFS, distance propagation, and setting up a global search instead of many local ones."
+            },
+            {
+              "line": 4,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 8,
+              "label": "Decision point",
+              "note": "Pay attention here: If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be."
+            },
+            {
+              "line": 19,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a strong distance-to-nearest problem and a great moment for understanding why reverse thinking can simplify search.",
+            "whatToNotice": "Multi-source BFS, distance propagation, and setting up a global search instead of many local ones.",
+            "riskPoint": "If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 3,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-c-01-matrix.cpp",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/C%2B%2B/01-matrix.cpp",
+          "localPath": "kamyu104_LeetCode-Solutions/C++/01-matrix.cpp",
+          "relativePath": "C++/01-matrix.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Time:  O(m * n)\n// Space: O(1)\n\n// dp solution\nclass Solution {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& matrix) {\n        for (int i = 0; i < matrix.size(); ++i) {\n            for (int j = 0; j < matrix[i].size(); ++j) {\n                if (!matrix[i][j]) {\n                    continue;\n                }\n                matrix[i][j] = numeric_limits<int>::max();\n                if (i > 0 && matrix[i - 1][j] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i - 1][j] + 1);\n                }\n                if (j > 0 && matrix[i][j - 1] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i][j - 1] + 1);\n                }\n            }\n        }\n\n        for (int i = matrix.size() - 1; i >= 0; --i) {\n            for (int j = matrix[i].size() - 1; j >= 0; --j) {\n                if (!matrix[i][j]) {\n                    continue;\n                }\n                if (i < matrix.size() - 1 && matrix[i + 1][j] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i + 1][j] + 1);\n                }\n                if (j < matrix[i].size() - 1 && matrix[i][j + 1] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i][j + 1] + 1);\n                }\n            }\n        }\n\n        return matrix;\n    }\n};\n\n// Time:  O(m * n)\n// Space: O(m * n)\n// dp solution\nclass Solution2 {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& matrix) {\n        vector<vector<int> > dp(matrix.size(),\n                                vector<int>(matrix[0].size(),\n                                            numeric_limits<int>::max()));\n\n        for (int i = 0; i < matrix.size(); ++i) {\n            for (int j = 0; j < matrix[i].size(); ++j) {\n                if (matrix[i][j] == 0) {\n                    dp[i][j] = 0;\n                } else {\n                    if (i > 0 && dp[i - 1][j] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i - 1][j] + 1);\n                    }\n                    if (j > 0 && dp[i][j - 1] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i][j - 1] + 1);\n                    }\n                }\n            }\n        }\n\n        for (int i = matrix.size() - 1; i >= 0; --i) {\n            for (int j = matrix[i].size() - 1; j >= 0; --j) {\n                if (matrix[i][j] == 0) {\n                    dp[i][j] = 0;\n                } else {\n                    if (i < matrix.size() - 1 && dp[i + 1][j] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i + 1][j] + 1);\n                    }\n                    if (j < matrix[i].size() - 1 && dp[i][j + 1] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i][j + 1] + 1);\n                    }\n                }\n            }\n        }\n\n        return dp;\n    }\n};\n\n// Time:  O(m * n)\n// Space: O(m * n)\nclass Solution3 {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& matrix) {\n        queue<pair<int, int>> queue;\n        for (int i = 0; i < matrix.size(); ++i) {\n            for (int j = 0; j < matrix[0].size(); ++j) {\n                if (matrix[i][j] == 0) {\n                    queue.emplace(i, j);\n                }\n                else {\n                    matrix[i][j] = numeric_limits<int>::max();\n                }\n            }\n        }\n\n        const vector<pair<int, int>> dirs = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};\n        while (!queue.empty()) {\n            auto cell = queue.front();\n            queue.pop();\n            for (const auto& dir : dirs) {\n                auto i = cell.first + dir.first;\n                auto j = cell.second + dir.second;\n                if (!(0 <= i && i < matrix.size() && 0 <= j && j < matrix[0].size() && \n                      matrix[i][j] > matrix[cell.first][cell.second] + 1)) {\n                        continue;\n                }\n                queue.emplace(i, j);\n                matrix[i][j] = matrix[cell.first][cell.second] + 1;\n            }\n        }\n        \n        return matrix;\n    }\n};\n",
+          "originalCode": "// Time:  O(m * n)\n// Space: O(1)\n\n// dp solution\nclass Solution {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& matrix) {\n        for (int i = 0; i < matrix.size(); ++i) {\n            for (int j = 0; j < matrix[i].size(); ++j) {\n                if (!matrix[i][j]) {\n                    continue;\n                }\n                matrix[i][j] = numeric_limits<int>::max();\n                if (i > 0 && matrix[i - 1][j] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i - 1][j] + 1);\n                }\n                if (j > 0 && matrix[i][j - 1] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i][j - 1] + 1);\n                }\n            }\n        }\n\n        for (int i = matrix.size() - 1; i >= 0; --i) {\n            for (int j = matrix[i].size() - 1; j >= 0; --j) {\n                if (!matrix[i][j]) {\n                    continue;\n                }\n                if (i < matrix.size() - 1 && matrix[i + 1][j] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i + 1][j] + 1);\n                }\n                if (j < matrix[i].size() - 1 && matrix[i][j + 1] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i][j + 1] + 1);\n                }\n            }\n        }\n\n        return matrix;\n    }\n};\n\n// Time:  O(m * n)\n// Space: O(m * n)\n// dp solution\nclass Solution2 {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& matrix) {\n        vector<vector<int> > dp(matrix.size(),\n                                vector<int>(matrix[0].size(),\n                                            numeric_limits<int>::max()));\n\n        for (int i = 0; i < matrix.size(); ++i) {\n            for (int j = 0; j < matrix[i].size(); ++j) {\n                if (matrix[i][j] == 0) {\n                    dp[i][j] = 0;\n                } else {\n                    if (i > 0 && dp[i - 1][j] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i - 1][j] + 1);\n                    }\n                    if (j > 0 && dp[i][j - 1] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i][j - 1] + 1);\n                    }\n                }\n            }\n        }\n\n        for (int i = matrix.size() - 1; i >= 0; --i) {\n            for (int j = matrix[i].size() - 1; j >= 0; --j) {\n                if (matrix[i][j] == 0) {\n                    dp[i][j] = 0;\n                } else {\n                    if (i < matrix.size() - 1 && dp[i + 1][j] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i + 1][j] + 1);\n                    }\n                    if (j < matrix[i].size() - 1 && dp[i][j + 1] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i][j + 1] + 1);\n                    }\n                }\n            }\n        }\n\n        return dp;\n    }\n};\n\n// Time:  O(m * n)\n// Space: O(m * n)\nclass Solution3 {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& matrix) {\n        queue<pair<int, int>> queue;\n        for (int i = 0; i < matrix.size(); ++i) {\n            for (int j = 0; j < matrix[0].size(); ++j) {\n                if (matrix[i][j] == 0) {\n                    queue.emplace(i, j);\n                }\n                else {\n                    matrix[i][j] = numeric_limits<int>::max();\n                }\n            }\n        }\n\n        const vector<pair<int, int>> dirs = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};\n        while (!queue.empty()) {\n            auto cell = queue.front();\n            queue.pop();\n            for (const auto& dir : dirs) {\n                auto i = cell.first + dir.first;\n                auto j = cell.second + dir.second;\n                if (!(0 <= i && i < matrix.size() && 0 <= j && j < matrix[0].size() && \n                      matrix[i][j] > matrix[cell.first][cell.second] + 1)) {\n                        continue;\n                }\n                queue.emplace(i, j);\n                matrix[i][j] = matrix[cell.first][cell.second] + 1;\n            }\n        }\n        \n        return matrix;\n    }\n};\n",
+          "reviewedCode": "// Time:  O(m * n)\n// Space: O(1)\n\n// dp solution\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Start from every known destination at once and let distance spread outward.\nclass Solution {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& matrix) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Multi-source BFS, distance propagation, and setting up a global search instead of many local ones.\n        for (int i = 0; i < matrix.size(); ++i) {\n            for (int j = 0; j < matrix[i].size(); ++j) {\n                // [Reader note] Decision point\n                // Pay attention here: If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be.\n                if (!matrix[i][j]) {\n                    continue;\n                }\n                matrix[i][j] = numeric_limits<int>::max();\n                if (i > 0 && matrix[i - 1][j] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i - 1][j] + 1);\n                }\n                if (j > 0 && matrix[i][j - 1] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i][j - 1] + 1);\n                }\n            }\n        }\n\n        for (int i = matrix.size() - 1; i >= 0; --i) {\n            for (int j = matrix[i].size() - 1; j >= 0; --j) {\n                if (!matrix[i][j]) {\n                    continue;\n                }\n                if (i < matrix.size() - 1 && matrix[i + 1][j] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i + 1][j] + 1);\n                }\n                if (j < matrix[i].size() - 1 && matrix[i][j + 1] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i][j + 1] + 1);\n                }\n            }\n        }\n\n        return matrix;\n    }\n};\n\n// Time:  O(m * n)\n// Space: O(m * n)\n// dp solution\nclass Solution2 {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& matrix) {\n        vector<vector<int> > dp(matrix.size(),\n                                vector<int>(matrix[0].size(),\n                                            numeric_limits<int>::max()));\n\n        for (int i = 0; i < matrix.size(); ++i) {\n            for (int j = 0; j < matrix[i].size(); ++j) {\n                if (matrix[i][j] == 0) {\n                    dp[i][j] = 0;\n                } else {\n                    if (i > 0 && dp[i - 1][j] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i - 1][j] + 1);\n                    }\n                    if (j > 0 && dp[i][j - 1] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i][j - 1] + 1);\n                    }\n                }\n            }\n        }\n\n        for (int i = matrix.size() - 1; i >= 0; --i) {\n            for (int j = matrix[i].size() - 1; j >= 0; --j) {\n                if (matrix[i][j] == 0) {\n                    dp[i][j] = 0;\n                } else {\n                    if (i < matrix.size() - 1 && dp[i + 1][j] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i + 1][j] + 1);\n                    }\n                    if (j < matrix[i].size() - 1 && dp[i][j + 1] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i][j + 1] + 1);\n                    }\n                }\n            }\n        }\n\n        return dp;\n    }\n};\n\n// Time:  O(m * n)\n// Space: O(m * n)\nclass Solution3 {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& matrix) {\n        queue<pair<int, int>> queue;\n        for (int i = 0; i < matrix.size(); ++i) {\n            for (int j = 0; j < matrix[0].size(); ++j) {\n                if (matrix[i][j] == 0) {\n                    queue.emplace(i, j);\n                }\n                else {\n                    matrix[i][j] = numeric_limits<int>::max();\n                }\n            }\n        }\n\n        const vector<pair<int, int>> dirs = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};\n        while (!queue.empty()) {\n            auto cell = queue.front();\n            queue.pop();\n            for (const auto& dir : dirs) {\n                auto i = cell.first + dir.first;\n                auto j = cell.second + dir.second;\n                if (!(0 <= i && i < matrix.size() && 0 <= j && j < matrix[0].size() && \n                      matrix[i][j] > matrix[cell.first][cell.second] + 1)) {\n                        continue;\n                }\n                queue.emplace(i, j);\n                matrix[i][j] = matrix[cell.first][cell.second] + 1;\n            }\n        }\n        \n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return matrix;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(m * n)",
+            "Space: O(1)"
+          ],
+          "annotations": [
+            {
+              "line": 5,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Start from every known destination at once and let distance spread outward."
+            },
+            {
+              "line": 8,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Multi-source BFS, distance propagation, and setting up a global search instead of many local ones."
+            },
+            {
+              "line": 10,
+              "label": "Decision point",
+              "note": "Pay attention here: If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be."
+            },
+            {
+              "line": 118,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a strong distance-to-nearest problem and a great moment for understanding why reverse thinking can simplify search.",
+            "whatToNotice": "Multi-source BFS, distance propagation, and setting up a global search instead of many local ones.",
+            "riskPoint": "If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0500-0599-0542.01-matrix-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0500-0599/0542.01%20Matrix/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/0500-0599/0542.01 Matrix/Solution.cpp",
+          "relativePath": "solution/0500-0599/0542.01 Matrix/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& mat) {\n        int m = mat.size(), n = mat[0].size();\n        vector<vector<int>> ans(m, vector<int>(n, -1));\n        queue<pair<int, int>> q;\n        for (int i = 0; i < m; ++i) {\n            for (int j = 0; j < n; ++j) {\n                if (mat[i][j] == 0) {\n                    ans[i][j] = 0;\n                    q.emplace(i, j);\n                }\n            }\n        }\n        vector<int> dirs = {-1, 0, 1, 0, -1};\n        while (!q.empty()) {\n            auto p = q.front();\n            q.pop();\n            for (int i = 0; i < 4; ++i) {\n                int x = p.first + dirs[i];\n                int y = p.second + dirs[i + 1];\n                if (x >= 0 && x < m && y >= 0 && y < n && ans[x][y] == -1) {\n                    ans[x][y] = ans[p.first][p.second] + 1;\n                    q.emplace(x, y);\n                }\n            }\n        }\n        return ans;\n    }\n};",
+          "originalCode": "class Solution {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& mat) {\n        int m = mat.size(), n = mat[0].size();\n        vector<vector<int>> ans(m, vector<int>(n, -1));\n        queue<pair<int, int>> q;\n        for (int i = 0; i < m; ++i) {\n            for (int j = 0; j < n; ++j) {\n                if (mat[i][j] == 0) {\n                    ans[i][j] = 0;\n                    q.emplace(i, j);\n                }\n            }\n        }\n        vector<int> dirs = {-1, 0, 1, 0, -1};\n        while (!q.empty()) {\n            auto p = q.front();\n            q.pop();\n            for (int i = 0; i < 4; ++i) {\n                int x = p.first + dirs[i];\n                int y = p.second + dirs[i + 1];\n                if (x >= 0 && x < m && y >= 0 && y < n && ans[x][y] == -1) {\n                    ans[x][y] = ans[p.first][p.second] + 1;\n                    q.emplace(x, y);\n                }\n            }\n        }\n        return ans;\n    }\n};",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Start from every known destination at once and let distance spread outward.\nclass Solution {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& mat) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Multi-source BFS, distance propagation, and setting up a global search instead of many local ones.\n        int m = mat.size(), n = mat[0].size();\n        vector<vector<int>> ans(m, vector<int>(n, -1));\n        queue<pair<int, int>> q;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = 0; i < m; ++i) {\n            for (int j = 0; j < n; ++j) {\n                // [Reader note] Decision point\n                // Pay attention here: If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be.\n                if (mat[i][j] == 0) {\n                    ans[i][j] = 0;\n                    q.emplace(i, j);\n                }\n            }\n        }\n        vector<int> dirs = {-1, 0, 1, 0, -1};\n        while (!q.empty()) {\n            auto p = q.front();\n            q.pop();\n            for (int i = 0; i < 4; ++i) {\n                int x = p.first + dirs[i];\n                int y = p.second + dirs[i + 1];\n                if (x >= 0 && x < m && y >= 0 && y < n && ans[x][y] == -1) {\n                    ans[x][y] = ans[p.first][p.second] + 1;\n                    q.emplace(x, y);\n                }\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return ans;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Start from every known destination at once and let distance spread outward."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Multi-source BFS, distance propagation, and setting up a global search instead of many local ones."
+            },
+            {
+              "line": 7,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 9,
+              "label": "Decision point",
+              "note": "Pay attention here: If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be."
+            },
+            {
+              "line": 28,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a strong distance-to-nearest problem and a great moment for understanding why reverse thinking can simplify search.",
+            "whatToNotice": "Multi-source BFS, distance propagation, and setting up a global search instead of many local ones.",
+            "riskPoint": "If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be."
+          }
+        },
+        {
+          "id": "test-123-01-matrix.cpp",
+          "repository": "test-123",
+          "repositoryUrl": null,
+          "sourceUrl": null,
+          "localPath": "test-123/01-matrix.cpp",
+          "relativePath": "01-matrix.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code",
+          "code": "// Time:  O(m * n)\n// Space: O(1)\n\n// dp solution\nclass Solution {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& matrix) {\n        for (int i = 0; i < matrix.size(); ++i) {\n            for (int j = 0; j < matrix[i].size(); ++j) {\n                if (!matrix[i][j]) {\n                    continue;\n                }\n                matrix[i][j] = numeric_limits<int>::max();\n                if (i > 0 && matrix[i - 1][j] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i - 1][j] + 1);\n                }\n                if (j > 0 && matrix[i][j - 1] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i][j - 1] + 1);\n                }\n            }\n        }\n\n        for (int i = matrix.size() - 1; i >= 0; --i) {\n            for (int j = matrix[i].size() - 1; j >= 0; --j) {\n                if (!matrix[i][j]) {\n                    continue;\n                }\n                if (i < matrix.size() - 1 && matrix[i + 1][j] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i + 1][j] + 1);\n                }\n                if (j < matrix[i].size() - 1 && matrix[i][j + 1] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i][j + 1] + 1);\n                }\n            }\n        }\n\n        return matrix;\n    }\n};\n\n// Time:  O(m * n)\n// Space: O(m * n)\n// dp solution\nclass Solution2 {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& matrix) {\n        vector<vector<int> > dp(matrix.size(),\n                                vector<int>(matrix[0].size(),\n                                            numeric_limits<int>::max()));\n\n        for (int i = 0; i < matrix.size(); ++i) {\n            for (int j = 0; j < matrix[i].size(); ++j) {\n                if (matrix[i][j] == 0) {\n                    dp[i][j] = 0;\n                } else {\n                    if (i > 0 && dp[i - 1][j] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i - 1][j] + 1);\n                    }\n                    if (j > 0 && dp[i][j - 1] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i][j - 1] + 1);\n                    }\n                }\n            }\n        }\n\n        for (int i = matrix.size() - 1; i >= 0; --i) {\n            for (int j = matrix[i].size() - 1; j >= 0; --j) {\n                if (matrix[i][j] == 0) {\n                    dp[i][j] = 0;\n                } else {\n                    if (i < matrix.size() - 1 && dp[i + 1][j] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i + 1][j] + 1);\n                    }\n                    if (j < matrix[i].size() - 1 && dp[i][j + 1] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i][j + 1] + 1);\n                    }\n                }\n            }\n        }\n\n        return dp;\n    }\n};\n\n// Time:  O(m * n)\n// Space: O(m * n)\nclass Solution3 {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& matrix) {\n        queue<pair<int, int>> queue;\n        for (int i = 0; i < matrix.size(); ++i) {\n            for (int j = 0; j < matrix[0].size(); ++j) {\n                if (matrix[i][j] == 0) {\n                    queue.emplace(i, j);\n                }\n                else {\n                    matrix[i][j] = numeric_limits<int>::max();\n                }\n            }\n        }\n\n        const vector<pair<int, int>> dirs = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};\n        while (!queue.empty()) {\n            auto cell = queue.front();\n            queue.pop();\n            for (const auto& dir : dirs) {\n                auto i = cell.first + dir.first;\n                auto j = cell.second + dir.second;\n                if (!(0 <= i && i < matrix.size() && 0 <= j && j < matrix[0].size() && \n                      matrix[i][j] > matrix[cell.first][cell.second] + 1)) {\n                        continue;\n                }\n                queue.emplace(i, j);\n                matrix[i][j] = matrix[cell.first][cell.second] + 1;\n            }\n        }\n        \n        return matrix;\n    }\n};\n",
+          "originalCode": "// Time:  O(m * n)\n// Space: O(1)\n\n// dp solution\nclass Solution {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& matrix) {\n        for (int i = 0; i < matrix.size(); ++i) {\n            for (int j = 0; j < matrix[i].size(); ++j) {\n                if (!matrix[i][j]) {\n                    continue;\n                }\n                matrix[i][j] = numeric_limits<int>::max();\n                if (i > 0 && matrix[i - 1][j] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i - 1][j] + 1);\n                }\n                if (j > 0 && matrix[i][j - 1] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i][j - 1] + 1);\n                }\n            }\n        }\n\n        for (int i = matrix.size() - 1; i >= 0; --i) {\n            for (int j = matrix[i].size() - 1; j >= 0; --j) {\n                if (!matrix[i][j]) {\n                    continue;\n                }\n                if (i < matrix.size() - 1 && matrix[i + 1][j] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i + 1][j] + 1);\n                }\n                if (j < matrix[i].size() - 1 && matrix[i][j + 1] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i][j + 1] + 1);\n                }\n            }\n        }\n\n        return matrix;\n    }\n};\n\n// Time:  O(m * n)\n// Space: O(m * n)\n// dp solution\nclass Solution2 {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& matrix) {\n        vector<vector<int> > dp(matrix.size(),\n                                vector<int>(matrix[0].size(),\n                                            numeric_limits<int>::max()));\n\n        for (int i = 0; i < matrix.size(); ++i) {\n            for (int j = 0; j < matrix[i].size(); ++j) {\n                if (matrix[i][j] == 0) {\n                    dp[i][j] = 0;\n                } else {\n                    if (i > 0 && dp[i - 1][j] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i - 1][j] + 1);\n                    }\n                    if (j > 0 && dp[i][j - 1] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i][j - 1] + 1);\n                    }\n                }\n            }\n        }\n\n        for (int i = matrix.size() - 1; i >= 0; --i) {\n            for (int j = matrix[i].size() - 1; j >= 0; --j) {\n                if (matrix[i][j] == 0) {\n                    dp[i][j] = 0;\n                } else {\n                    if (i < matrix.size() - 1 && dp[i + 1][j] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i + 1][j] + 1);\n                    }\n                    if (j < matrix[i].size() - 1 && dp[i][j + 1] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i][j + 1] + 1);\n                    }\n                }\n            }\n        }\n\n        return dp;\n    }\n};\n\n// Time:  O(m * n)\n// Space: O(m * n)\nclass Solution3 {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& matrix) {\n        queue<pair<int, int>> queue;\n        for (int i = 0; i < matrix.size(); ++i) {\n            for (int j = 0; j < matrix[0].size(); ++j) {\n                if (matrix[i][j] == 0) {\n                    queue.emplace(i, j);\n                }\n                else {\n                    matrix[i][j] = numeric_limits<int>::max();\n                }\n            }\n        }\n\n        const vector<pair<int, int>> dirs = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};\n        while (!queue.empty()) {\n            auto cell = queue.front();\n            queue.pop();\n            for (const auto& dir : dirs) {\n                auto i = cell.first + dir.first;\n                auto j = cell.second + dir.second;\n                if (!(0 <= i && i < matrix.size() && 0 <= j && j < matrix[0].size() && \n                      matrix[i][j] > matrix[cell.first][cell.second] + 1)) {\n                        continue;\n                }\n                queue.emplace(i, j);\n                matrix[i][j] = matrix[cell.first][cell.second] + 1;\n            }\n        }\n        \n        return matrix;\n    }\n};\n",
+          "reviewedCode": "// Time:  O(m * n)\n// Space: O(1)\n\n// dp solution\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Start from every known destination at once and let distance spread outward.\nclass Solution {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& matrix) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Multi-source BFS, distance propagation, and setting up a global search instead of many local ones.\n        for (int i = 0; i < matrix.size(); ++i) {\n            for (int j = 0; j < matrix[i].size(); ++j) {\n                // [Reader note] Decision point\n                // Pay attention here: If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be.\n                if (!matrix[i][j]) {\n                    continue;\n                }\n                matrix[i][j] = numeric_limits<int>::max();\n                if (i > 0 && matrix[i - 1][j] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i - 1][j] + 1);\n                }\n                if (j > 0 && matrix[i][j - 1] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i][j - 1] + 1);\n                }\n            }\n        }\n\n        for (int i = matrix.size() - 1; i >= 0; --i) {\n            for (int j = matrix[i].size() - 1; j >= 0; --j) {\n                if (!matrix[i][j]) {\n                    continue;\n                }\n                if (i < matrix.size() - 1 && matrix[i + 1][j] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i + 1][j] + 1);\n                }\n                if (j < matrix[i].size() - 1 && matrix[i][j + 1] != numeric_limits<int>::max()) {\n                    matrix[i][j] = min(matrix[i][j], matrix[i][j + 1] + 1);\n                }\n            }\n        }\n\n        return matrix;\n    }\n};\n\n// Time:  O(m * n)\n// Space: O(m * n)\n// dp solution\nclass Solution2 {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& matrix) {\n        vector<vector<int> > dp(matrix.size(),\n                                vector<int>(matrix[0].size(),\n                                            numeric_limits<int>::max()));\n\n        for (int i = 0; i < matrix.size(); ++i) {\n            for (int j = 0; j < matrix[i].size(); ++j) {\n                if (matrix[i][j] == 0) {\n                    dp[i][j] = 0;\n                } else {\n                    if (i > 0 && dp[i - 1][j] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i - 1][j] + 1);\n                    }\n                    if (j > 0 && dp[i][j - 1] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i][j - 1] + 1);\n                    }\n                }\n            }\n        }\n\n        for (int i = matrix.size() - 1; i >= 0; --i) {\n            for (int j = matrix[i].size() - 1; j >= 0; --j) {\n                if (matrix[i][j] == 0) {\n                    dp[i][j] = 0;\n                } else {\n                    if (i < matrix.size() - 1 && dp[i + 1][j] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i + 1][j] + 1);\n                    }\n                    if (j < matrix[i].size() - 1 && dp[i][j + 1] != numeric_limits<int>::max()) {\n                        dp[i][j] = min(dp[i][j], dp[i][j + 1] + 1);\n                    }\n                }\n            }\n        }\n\n        return dp;\n    }\n};\n\n// Time:  O(m * n)\n// Space: O(m * n)\nclass Solution3 {\npublic:\n    vector<vector<int>> updateMatrix(vector<vector<int>>& matrix) {\n        queue<pair<int, int>> queue;\n        for (int i = 0; i < matrix.size(); ++i) {\n            for (int j = 0; j < matrix[0].size(); ++j) {\n                if (matrix[i][j] == 0) {\n                    queue.emplace(i, j);\n                }\n                else {\n                    matrix[i][j] = numeric_limits<int>::max();\n                }\n            }\n        }\n\n        const vector<pair<int, int>> dirs = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};\n        while (!queue.empty()) {\n            auto cell = queue.front();\n            queue.pop();\n            for (const auto& dir : dirs) {\n                auto i = cell.first + dir.first;\n                auto j = cell.second + dir.second;\n                if (!(0 <= i && i < matrix.size() && 0 <= j && j < matrix[0].size() && \n                      matrix[i][j] > matrix[cell.first][cell.second] + 1)) {\n                        continue;\n                }\n                queue.emplace(i, j);\n                matrix[i][j] = matrix[cell.first][cell.second] + 1;\n            }\n        }\n        \n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return matrix;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(m * n)",
+            "Space: O(1)"
+          ],
+          "annotations": [
+            {
+              "line": 5,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Start from every known destination at once and let distance spread outward."
+            },
+            {
+              "line": 8,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Multi-source BFS, distance propagation, and setting up a global search instead of many local ones."
+            },
+            {
+              "line": 10,
+              "label": "Decision point",
+              "note": "Pay attention here: If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be."
+            },
+            {
+              "line": 118,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a strong distance-to-nearest problem and a great moment for understanding why reverse thinking can simplify search.",
+            "whatToNotice": "Multi-source BFS, distance propagation, and setting up a global search instead of many local ones.",
+            "riskPoint": "If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be."
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0500-0599-0542.01-matrix-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0500-0599/0542.01%20Matrix/Solution.java",
+          "localPath": "doocs_leetcode/solution/0500-0599/0542.01 Matrix/Solution.java",
+          "relativePath": "solution/0500-0599/0542.01 Matrix/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\n    public int[][] updateMatrix(int[][] mat) {\n        int m = mat.length, n = mat[0].length;\n        int[][] ans = new int[m][n];\n        for (int[] row : ans) {\n            Arrays.fill(row, -1);\n        }\n        Deque<int[]> q = new ArrayDeque<>();\n        for (int i = 0; i < m; ++i) {\n            for (int j = 0; j < n; ++j) {\n                if (mat[i][j] == 0) {\n                    q.offer(new int[] {i, j});\n                    ans[i][j] = 0;\n                }\n            }\n        }\n        int[] dirs = {-1, 0, 1, 0, -1};\n        while (!q.isEmpty()) {\n            int[] p = q.poll();\n            int i = p[0], j = p[1];\n            for (int k = 0; k < 4; ++k) {\n                int x = i + dirs[k], y = j + dirs[k + 1];\n                if (x >= 0 && x < m && y >= 0 && y < n && ans[x][y] == -1) {\n                    ans[x][y] = ans[i][j] + 1;\n                    q.offer(new int[] {x, y});\n                }\n            }\n        }\n        return ans;\n    }\n}",
+          "originalCode": "class Solution {\n    public int[][] updateMatrix(int[][] mat) {\n        int m = mat.length, n = mat[0].length;\n        int[][] ans = new int[m][n];\n        for (int[] row : ans) {\n            Arrays.fill(row, -1);\n        }\n        Deque<int[]> q = new ArrayDeque<>();\n        for (int i = 0; i < m; ++i) {\n            for (int j = 0; j < n; ++j) {\n                if (mat[i][j] == 0) {\n                    q.offer(new int[] {i, j});\n                    ans[i][j] = 0;\n                }\n            }\n        }\n        int[] dirs = {-1, 0, 1, 0, -1};\n        while (!q.isEmpty()) {\n            int[] p = q.poll();\n            int i = p[0], j = p[1];\n            for (int k = 0; k < 4; ++k) {\n                int x = i + dirs[k], y = j + dirs[k + 1];\n                if (x >= 0 && x < m && y >= 0 && y < n && ans[x][y] == -1) {\n                    ans[x][y] = ans[i][j] + 1;\n                    q.offer(new int[] {x, y});\n                }\n            }\n        }\n        return ans;\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Start from every known destination at once and let distance spread outward.\nclass Solution {\n    public int[][] updateMatrix(int[][] mat) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Multi-source BFS, distance propagation, and setting up a global search instead of many local ones.\n        int m = mat.length, n = mat[0].length;\n        int[][] ans = new int[m][n];\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int[] row : ans) {\n            Arrays.fill(row, -1);\n        }\n        Deque<int[]> q = new ArrayDeque<>();\n        for (int i = 0; i < m; ++i) {\n            for (int j = 0; j < n; ++j) {\n                // [Reader note] Decision point\n                // Pay attention here: If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be.\n                if (mat[i][j] == 0) {\n                    q.offer(new int[] {i, j});\n                    ans[i][j] = 0;\n                }\n            }\n        }\n        int[] dirs = {-1, 0, 1, 0, -1};\n        while (!q.isEmpty()) {\n            int[] p = q.poll();\n            int i = p[0], j = p[1];\n            for (int k = 0; k < 4; ++k) {\n                int x = i + dirs[k], y = j + dirs[k + 1];\n                if (x >= 0 && x < m && y >= 0 && y < n && ans[x][y] == -1) {\n                    ans[x][y] = ans[i][j] + 1;\n                    q.offer(new int[] {x, y});\n                }\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return ans;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Start from every known destination at once and let distance spread outward."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Multi-source BFS, distance propagation, and setting up a global search instead of many local ones."
+            },
+            {
+              "line": 5,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 11,
+              "label": "Decision point",
+              "note": "Pay attention here: If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be."
+            },
+            {
+              "line": 29,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a strong distance-to-nearest problem and a great moment for understanding why reverse thinking can simplify search.",
+            "whatToNotice": "Multi-source BFS, distance propagation, and setting up a global search instead of many local ones.",
+            "riskPoint": "If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be."
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0500-0599-0542.01-matrix-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0500-0599/0542.01%20Matrix/Solution.go",
+          "localPath": "doocs_leetcode/solution/0500-0599/0542.01 Matrix/Solution.go",
+          "relativePath": "solution/0500-0599/0542.01 Matrix/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "func updateMatrix(mat [][]int) [][]int {\n\tm, n := len(mat), len(mat[0])\n\tans := make([][]int, m)\n\tfor i := range ans {\n\t\tans[i] = make([]int, n)\n\t\tfor j := range ans[i] {\n\t\t\tans[i][j] = -1\n\t\t}\n\t}\n\ttype pair struct{ x, y int }\n\tvar q []pair\n\tfor i, row := range mat {\n\t\tfor j, v := range row {\n\t\t\tif v == 0 {\n\t\t\t\tans[i][j] = 0\n\t\t\t\tq = append(q, pair{i, j})\n\t\t\t}\n\t\t}\n\t}\n\tdirs := []int{-1, 0, 1, 0, -1}\n\tfor len(q) > 0 {\n\t\tp := q[0]\n\t\tq = q[1:]\n\t\tfor i := 0; i < 4; i++ {\n\t\t\tx, y := p.x+dirs[i], p.y+dirs[i+1]\n\t\t\tif x >= 0 && x < m && y >= 0 && y < n && ans[x][y] == -1 {\n\t\t\t\tans[x][y] = ans[p.x][p.y] + 1\n\t\t\t\tq = append(q, pair{x, y})\n\t\t\t}\n\t\t}\n\t}\n\treturn ans\n}",
+          "originalCode": "func updateMatrix(mat [][]int) [][]int {\n\tm, n := len(mat), len(mat[0])\n\tans := make([][]int, m)\n\tfor i := range ans {\n\t\tans[i] = make([]int, n)\n\t\tfor j := range ans[i] {\n\t\t\tans[i][j] = -1\n\t\t}\n\t}\n\ttype pair struct{ x, y int }\n\tvar q []pair\n\tfor i, row := range mat {\n\t\tfor j, v := range row {\n\t\t\tif v == 0 {\n\t\t\t\tans[i][j] = 0\n\t\t\t\tq = append(q, pair{i, j})\n\t\t\t}\n\t\t}\n\t}\n\tdirs := []int{-1, 0, 1, 0, -1}\n\tfor len(q) > 0 {\n\t\tp := q[0]\n\t\tq = q[1:]\n\t\tfor i := 0; i < 4; i++ {\n\t\t\tx, y := p.x+dirs[i], p.y+dirs[i+1]\n\t\t\tif x >= 0 && x < m && y >= 0 && y < n && ans[x][y] == -1 {\n\t\t\t\tans[x][y] = ans[p.x][p.y] + 1\n\t\t\t\tq = append(q, pair{x, y})\n\t\t\t}\n\t\t}\n\t}\n\treturn ans\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Start from every known destination at once and let distance spread outward.\nfunc updateMatrix(mat [][]int) [][]int {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Multi-source BFS, distance propagation, and setting up a global search instead of many local ones.\n\tm, n := len(mat), len(mat[0])\n\tans := make([][]int, m)\n\t// [Reader note] Main pass\n\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\tfor i := range ans {\n\t\tans[i] = make([]int, n)\n\t\tfor j := range ans[i] {\n\t\t\tans[i][j] = -1\n\t\t}\n\t}\n\ttype pair struct{ x, y int }\n\tvar q []pair\n\tfor i, row := range mat {\n\t\tfor j, v := range row {\n\t\t\t// [Reader note] Decision point\n\t\t\t// Pay attention here: If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be.\n\t\t\tif v == 0 {\n\t\t\t\tans[i][j] = 0\n\t\t\t\tq = append(q, pair{i, j})\n\t\t\t}\n\t\t}\n\t}\n\tdirs := []int{-1, 0, 1, 0, -1}\n\tfor len(q) > 0 {\n\t\tp := q[0]\n\t\tq = q[1:]\n\t\tfor i := 0; i < 4; i++ {\n\t\t\tx, y := p.x+dirs[i], p.y+dirs[i+1]\n\t\t\tif x >= 0 && x < m && y >= 0 && y < n && ans[x][y] == -1 {\n\t\t\t\tans[x][y] = ans[p.x][p.y] + 1\n\t\t\t\tq = append(q, pair{x, y})\n\t\t\t}\n\t\t}\n\t}\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn ans\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Start from every known destination at once and let distance spread outward."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Multi-source BFS, distance propagation, and setting up a global search instead of many local ones."
+            },
+            {
+              "line": 4,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 14,
+              "label": "Decision point",
+              "note": "Pay attention here: If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be."
+            },
+            {
+              "line": 32,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a strong distance-to-nearest problem and a great moment for understanding why reverse thinking can simplify search.",
+            "whatToNotice": "Multi-source BFS, distance propagation, and setting up a global search instead of many local ones.",
+            "riskPoint": "If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be."
+          }
+        }
+      ]
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0500-0599-0542.01-matrix-solution.ts",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0500-0599/0542.01%20Matrix/Solution.ts",
+          "localPath": "doocs_leetcode/solution/0500-0599/0542.01 Matrix/Solution.ts",
+          "relativePath": "solution/0500-0599/0542.01 Matrix/Solution.ts",
+          "languageId": "typescript",
+          "languageLabel": "TypeScript",
+          "coverageType": "code+explanation",
+          "code": "function updateMatrix(mat: number[][]): number[][] {\n    const [m, n] = [mat.length, mat[0].length];\n    const ans: number[][] = Array.from({ length: m }, () => Array.from({ length: n }, () => -1));\n    const q: [number, number][] = [];\n    for (let i = 0; i < m; ++i) {\n        for (let j = 0; j < n; ++j) {\n            if (mat[i][j] === 0) {\n                q.push([i, j]);\n                ans[i][j] = 0;\n            }\n        }\n    }\n    const dirs: number[] = [-1, 0, 1, 0, -1];\n    for (const [i, j] of q) {\n        for (let k = 0; k < 4; ++k) {\n            const [x, y] = [i + dirs[k], j + dirs[k + 1]];\n            if (x >= 0 && x < m && y >= 0 && y < n && ans[x][y] === -1) {\n                ans[x][y] = ans[i][j] + 1;\n                q.push([x, y]);\n            }\n        }\n    }\n    return ans;\n}\n",
+          "originalCode": "function updateMatrix(mat: number[][]): number[][] {\n    const [m, n] = [mat.length, mat[0].length];\n    const ans: number[][] = Array.from({ length: m }, () => Array.from({ length: n }, () => -1));\n    const q: [number, number][] = [];\n    for (let i = 0; i < m; ++i) {\n        for (let j = 0; j < n; ++j) {\n            if (mat[i][j] === 0) {\n                q.push([i, j]);\n                ans[i][j] = 0;\n            }\n        }\n    }\n    const dirs: number[] = [-1, 0, 1, 0, -1];\n    for (const [i, j] of q) {\n        for (let k = 0; k < 4; ++k) {\n            const [x, y] = [i + dirs[k], j + dirs[k + 1]];\n            if (x >= 0 && x < m && y >= 0 && y < n && ans[x][y] === -1) {\n                ans[x][y] = ans[i][j] + 1;\n                q.push([x, y]);\n            }\n        }\n    }\n    return ans;\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Start from every known destination at once and let distance spread outward.\nfunction updateMatrix(mat: number[][]): number[][] {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Multi-source BFS, distance propagation, and setting up a global search instead of many local ones.\n    const [m, n] = [mat.length, mat[0].length];\n    const ans: number[][] = Array.from({ length: m }, () => Array.from({ length: n }, () => -1));\n    const q: [number, number][] = [];\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (let i = 0; i < m; ++i) {\n        for (let j = 0; j < n; ++j) {\n            // [Reader note] Decision point\n            // Pay attention here: If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be.\n            if (mat[i][j] === 0) {\n                q.push([i, j]);\n                ans[i][j] = 0;\n            }\n        }\n    }\n    const dirs: number[] = [-1, 0, 1, 0, -1];\n    for (const [i, j] of q) {\n        for (let k = 0; k < 4; ++k) {\n            const [x, y] = [i + dirs[k], j + dirs[k + 1]];\n            if (x >= 0 && x < m && y >= 0 && y < n && ans[x][y] === -1) {\n                ans[x][y] = ans[i][j] + 1;\n                q.push([x, y]);\n            }\n        }\n    }\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return ans;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Start from every known destination at once and let distance spread outward."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Multi-source BFS, distance propagation, and setting up a global search instead of many local ones."
+            },
+            {
+              "line": 5,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 7,
+              "label": "Decision point",
+              "note": "Pay attention here: If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be."
+            },
+            {
+              "line": 23,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a strong distance-to-nearest problem and a great moment for understanding why reverse thinking can simplify search.",
+            "whatToNotice": "Multi-source BFS, distance propagation, and setting up a global search instead of many local ones.",
+            "riskPoint": "If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be."
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "doocs_leetcode-solution-0500-0599-0542.01-matrix-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0500-0599/0542.01%20Matrix/README.md",
+      "localPath": "doocs_leetcode/solution/0500-0599/0542.01 Matrix/README.md",
+      "relativePath": "solution/0500-0599/0542.01 Matrix/README.md",
+      "title": "[542. 01 \u77e9\u9635](https://leetcode.cn/problems/01-matrix)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/0500-0599/0542.01%20Matrix/README.md tags: - \u5e7f\u5ea6\u4f18\u5148\u641c\u7d22 - \u6570\u7ec4 - \u52a8\u6001\u89c4\u5212 - \u77e9\u9635 --- <!-- problem:start --> # [542. 01 \u77e9\u9635](https://leetcode.cn/problems/01-matrix) [English Version](/solution/0500-0599/0542.01%20Matrix/README_EN.md) ## \u9898\u76ee\u63cf\u8ff0 <!-- description:start --> <p>\u7ed9\u5b9a\u4e00\u4e2a\u7531 <code>0</code> \u548c <code>1</code> \u7ec4\u6210\u7684\u77e9\u9635 <code>mat</code> \uff0c\u8bf7\u8f93..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0500-0599-0542.01-matrix-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0500-0599/0542.01%20Matrix/README_EN.md",
+      "localPath": "doocs_leetcode/solution/0500-0599/0542.01 Matrix/README_EN.md",
+      "relativePath": "solution/0500-0599/0542.01 Matrix/README_EN.md",
+      "title": "[542. 01 Matrix](https://leetcode.com/problems/01-matrix)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/0500-0599/0542.01%20Matrix/README_EN.md tags: - Breadth-First Search - Array - Dynamic Programming - Matrix --- <!-- problem:start --> # [542. 01 Matrix](https://leetcode.com/problems/01-matrix) [\u4e2d\u6587\u6587\u6863](/solution/0500-0599/0542.01%20Matrix/README.md) ## Description <!-- description:start --> <p>Given an <code>m x n</c..."
+    }
+  ]
+}

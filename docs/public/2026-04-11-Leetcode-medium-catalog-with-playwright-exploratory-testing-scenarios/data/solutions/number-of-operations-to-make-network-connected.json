@@ -1,0 +1,491 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "number-of-operations-to-make-network-connected",
+  "problemTitle": "Number of Operations to Make Network Connected",
+  "problemNumber": 1319,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go",
+      "typescript"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go",
+      "TypeScript"
+    ],
+    "solutionCount": 8,
+    "writeupCount": 3,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-python-number-of-operations-to-make-network-connected.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/number-of-operations-to-make-network-connected.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/number-of-operations-to-make-network-connected.py",
+          "relativePath": "Python/number-of-operations-to-make-network-connected.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(|E| + |V|)\n# Space: O(|V|)\n\nclass UnionFind(object):\n    def __init__(self, n):\n        self.set = range(n)\n        self.count = n\n\n    def find_set(self, x):\n        if self.set[x] != x:\n            self.set[x] = self.find_set(self.set[x])  # path compression.\n        return self.set[x]\n\n    def union_set(self, x, y):\n        x_root, y_root = map(self.find_set, (x, y))\n        if x_root == y_root:\n            return False\n        self.set[max(x_root, y_root)] = min(x_root, y_root)\n        self.count -= 1\n        return True\n\n\nclass Solution(object):\n    def makeConnected(self, n, connections):\n        \"\"\"\n        :type n: int\n        :type connections: List[List[int]]\n        :rtype: int\n        \"\"\"\n        if len(connections) < n-1:\n            return -1\n        union_find = UnionFind(n)\n        for i, j in connections:\n            union_find.union_set(i, j)\n        return union_find.count - 1\n\n\n# Time:  O(|E| + |V|)\n# Space: O(|V|)\nimport collections\n\n\nclass Solution2(object):\n    def makeConnected(self, n, connections):\n        \"\"\"\n        :type n: int\n        :type connections: List[List[int]]\n        :rtype: int\n        \"\"\"\n        def dfs(i, lookup):\n            if i in lookup:\n                return 0\n            lookup.add(i)\n            if i in G:\n                for j in G[i]:\n                    dfs(j, lookup)\n            return 1\n\n        if len(connections) < n-1:\n            return -1\n        G = collections.defaultdict(list)\n        for i, j in connections:\n            G[i].append(j)\n            G[j].append(i)\n        lookup = set()\n        return sum(dfs(i, lookup) for i in xrange(n)) - 1\n",
+          "originalCode": "# Time:  O(|E| + |V|)\n# Space: O(|V|)\n\nclass UnionFind(object):\n    def __init__(self, n):\n        self.set = range(n)\n        self.count = n\n\n    def find_set(self, x):\n        if self.set[x] != x:\n            self.set[x] = self.find_set(self.set[x])  # path compression.\n        return self.set[x]\n\n    def union_set(self, x, y):\n        x_root, y_root = map(self.find_set, (x, y))\n        if x_root == y_root:\n            return False\n        self.set[max(x_root, y_root)] = min(x_root, y_root)\n        self.count -= 1\n        return True\n\n\nclass Solution(object):\n    def makeConnected(self, n, connections):\n        \"\"\"\n        :type n: int\n        :type connections: List[List[int]]\n        :rtype: int\n        \"\"\"\n        if len(connections) < n-1:\n            return -1\n        union_find = UnionFind(n)\n        for i, j in connections:\n            union_find.union_set(i, j)\n        return union_find.count - 1\n\n\n# Time:  O(|E| + |V|)\n# Space: O(|V|)\nimport collections\n\n\nclass Solution2(object):\n    def makeConnected(self, n, connections):\n        \"\"\"\n        :type n: int\n        :type connections: List[List[int]]\n        :rtype: int\n        \"\"\"\n        def dfs(i, lookup):\n            if i in lookup:\n                return 0\n            lookup.add(i)\n            if i in G:\n                for j in G[i]:\n                    dfs(j, lookup)\n            return 1\n\n        if len(connections) < n-1:\n            return -1\n        G = collections.defaultdict(list)\n        for i, j in connections:\n            G[i].append(j)\n            G[j].append(i)\n        lookup = set()\n        return sum(dfs(i, lookup) for i in xrange(n)) - 1\n",
+          "reviewedCode": "# Time:  O(|E| + |V|)\n# Space: O(|V|)\n\nclass UnionFind(object):\n    # [Reader note] Entry point\n    # Start from the core routine and keep this mental model in view: Count disconnected groups first; the needed work follows from that structure and the available spare edges.\n    def __init__(self, n):\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Component counting, feasibility checks from raw counts, and interpreting connectivity in system language.\n        self.set = range(n)\n        self.count = n\n\n    def find_set(self, x):\n        if self.set[x] != x:\n            self.set[x] = self.find_set(self.set[x])  # path compression.\n        return self.set[x]\n\n    def union_set(self, x, y):\n        x_root, y_root = map(self.find_set, (x, y))\n        if x_root == y_root:\n            return False\n        self.set[max(x_root, y_root)] = min(x_root, y_root)\n        self.count -= 1\n        return True\n\n\nclass Solution(object):\n    def makeConnected(self, n, connections):\n        \"\"\"\n        :type n: int\n        :type connections: List[List[int]]\n        :rtype: int\n        \"\"\"\n        if len(connections) < n-1:\n            return -1\n        union_find = UnionFind(n)\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for i, j in connections:\n            union_find.union_set(i, j)\n        return union_find.count - 1\n\n\n# Time:  O(|E| + |V|)\n# Space: O(|V|)\nimport collections\n\n\nclass Solution2(object):\n    def makeConnected(self, n, connections):\n        \"\"\"\n        :type n: int\n        :type connections: List[List[int]]\n        :rtype: int\n        \"\"\"\n        def dfs(i, lookup):\n            # [Reader note] Decision point\n            # Pay attention here: There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain.\n            if i in lookup:\n                return 0\n            lookup.add(i)\n            if i in G:\n                for j in G[i]:\n                    dfs(j, lookup)\n            return 1\n\n        if len(connections) < n-1:\n            return -1\n        G = collections.defaultdict(list)\n        for i, j in connections:\n            G[i].append(j)\n            G[j].append(i)\n        lookup = set()\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return sum(dfs(i, lookup) for i in xrange(n)) - 1",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(|E| + |V|)",
+            "Space: O(|V|)"
+          ],
+          "annotations": [
+            {
+              "line": 5,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Count disconnected groups first; the needed work follows from that structure and the available spare edges."
+            },
+            {
+              "line": 6,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Component counting, feasibility checks from raw counts, and interpreting connectivity in system language."
+            },
+            {
+              "line": 33,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 51,
+              "label": "Decision point",
+              "note": "Pay attention here: There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain."
+            },
+            {
+              "line": 66,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a clean network-flavored component problem that often feels more intuitive than older province-style phrasing.",
+            "whatToNotice": "Component counting, feasibility checks from raw counts, and interpreting connectivity in system language.",
+            "riskPoint": "There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-1300-1399-1319.number-of-operations-to-make-network-connected-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1300-1399/1319.Number%20of%20Operations%20to%20Make%20Network%20Connected/Solution.py",
+          "localPath": "doocs_leetcode/solution/1300-1399/1319.Number of Operations to Make Network Connected/Solution.py",
+          "relativePath": "solution/1300-1399/1319.Number of Operations to Make Network Connected/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "class Solution:\n    def makeConnected(self, n: int, connections: List[List[int]]) -> int:\n        def find(x: int) -> int:\n            if p[x] != x:\n                p[x] = find(p[x])\n            return p[x]\n\n        cnt = 0\n        p = list(range(n))\n        for a, b in connections:\n            pa, pb = find(a), find(b)\n            if pa == pb:\n                cnt += 1\n            else:\n                p[pa] = pb\n                n -= 1\n        return -1 if n - 1 > cnt else n - 1\n",
+          "originalCode": "class Solution:\n    def makeConnected(self, n: int, connections: List[List[int]]) -> int:\n        def find(x: int) -> int:\n            if p[x] != x:\n                p[x] = find(p[x])\n            return p[x]\n\n        cnt = 0\n        p = list(range(n))\n        for a, b in connections:\n            pa, pb = find(a), find(b)\n            if pa == pb:\n                cnt += 1\n            else:\n                p[pa] = pb\n                n -= 1\n        return -1 if n - 1 > cnt else n - 1\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Count disconnected groups first; the needed work follows from that structure and the available spare edges.\nclass Solution:\n    def makeConnected(self, n: int, connections: List[List[int]]) -> int:\n        def find(x: int) -> int:\n            if p[x] != x:\n                p[x] = find(p[x])\n            return p[x]\n\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Component counting, feasibility checks from raw counts, and interpreting connectivity in system language.\n        cnt = 0\n        p = list(range(n))\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for a, b in connections:\n            pa, pb = find(a), find(b)\n            # [Reader note] Decision point\n            # Pay attention here: There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain.\n            if pa == pb:\n                cnt += 1\n            else:\n                p[pa] = pb\n                n -= 1\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return -1 if n - 1 > cnt else n - 1",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Count disconnected groups first; the needed work follows from that structure and the available spare edges."
+            },
+            {
+              "line": 8,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Component counting, feasibility checks from raw counts, and interpreting connectivity in system language."
+            },
+            {
+              "line": 10,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 12,
+              "label": "Decision point",
+              "note": "Pay attention here: There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain."
+            },
+            {
+              "line": 17,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a clean network-flavored component problem that often feels more intuitive than older province-style phrasing.",
+            "whatToNotice": "Component counting, feasibility checks from raw counts, and interpreting connectivity in system language.",
+            "riskPoint": "There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 3,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-c-number-of-operations-to-make-network-connected.cpp",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/C%2B%2B/number-of-operations-to-make-network-connected.cpp",
+          "localPath": "kamyu104_LeetCode-Solutions/C++/number-of-operations-to-make-network-connected.cpp",
+          "relativePath": "C++/number-of-operations-to-make-network-connected.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Time:  O(|E| + |V|)\n// Space: O(|V|)\n\nclass Solution {\npublic:\n    int makeConnected(int n, vector<vector<int>>& connections) {\n        if (connections.size() < n - 1) {\n            return -1;\n        }\n        UnionFind union_find(n);\n        for (const auto& c : connections) {\n            union_find.union_set(c[0], c[1]);\n        }\n        return union_find.size() - 1;\n    }\n\nprivate:\n    class UnionFind {\n    public:\n        UnionFind(const int n) : set_(n), size_(n) {\n            iota(set_.begin(), set_.end(), 0);\n        }\n\n        int find_set(const int x) {\n           if (set_[x] != x) {\n               set_[x] = find_set(set_[x]);  // Path compression.\n           }\n           return set_[x];\n        }\n\n        bool union_set(const int x, const int y) {\n            int x_root = find_set(x), y_root = find_set(y);\n            if (x_root == y_root) {\n                return false;\n            }\n            set_[min(x_root, y_root)] = max(x_root, y_root);\n            --size_;\n            return true;\n        }\n\n        int size() const {\n            return size_;\n        }\n\n    private:\n        vector<int> set_;\n        int size_;\n    };\n};\n\n// Time:  O(|E| + |V|)\n// Space: O(|V|)\nclass Solution2 {\npublic:\n    int makeConnected(int n, vector<vector<int>>& connections) {\n        if (connections.size() < n - 1) {\n            return -1;\n        }\n        unordered_map<int, vector<int>> G;\n        for (const auto& c : connections) {\n            G[c[0]].emplace_back(c[1]);\n            G[c[1]].emplace_back(c[0]);\n        }\n        int result = 0;\n        unordered_set<int> lookup;\n        for (int i = 0; i < n; ++i) {\n            result += dfs(G, i, &lookup);\n        }\n        return result - 1;\n    }\n\nprivate:\n    int dfs(const unordered_map<int, vector<int>>& G,\n            int i, unordered_set<int> *lookup) {\n        if (lookup->count(i)) {\n            return 0;\n        }\n        lookup->emplace(i);\n        if (G.count(i)) {\n            for (const auto& j : G.at(i)) {\n                dfs(G, j, lookup);\n            }\n        }\n        return 1;\n    }\n};\n",
+          "originalCode": "// Time:  O(|E| + |V|)\n// Space: O(|V|)\n\nclass Solution {\npublic:\n    int makeConnected(int n, vector<vector<int>>& connections) {\n        if (connections.size() < n - 1) {\n            return -1;\n        }\n        UnionFind union_find(n);\n        for (const auto& c : connections) {\n            union_find.union_set(c[0], c[1]);\n        }\n        return union_find.size() - 1;\n    }\n\nprivate:\n    class UnionFind {\n    public:\n        UnionFind(const int n) : set_(n), size_(n) {\n            iota(set_.begin(), set_.end(), 0);\n        }\n\n        int find_set(const int x) {\n           if (set_[x] != x) {\n               set_[x] = find_set(set_[x]);  // Path compression.\n           }\n           return set_[x];\n        }\n\n        bool union_set(const int x, const int y) {\n            int x_root = find_set(x), y_root = find_set(y);\n            if (x_root == y_root) {\n                return false;\n            }\n            set_[min(x_root, y_root)] = max(x_root, y_root);\n            --size_;\n            return true;\n        }\n\n        int size() const {\n            return size_;\n        }\n\n    private:\n        vector<int> set_;\n        int size_;\n    };\n};\n\n// Time:  O(|E| + |V|)\n// Space: O(|V|)\nclass Solution2 {\npublic:\n    int makeConnected(int n, vector<vector<int>>& connections) {\n        if (connections.size() < n - 1) {\n            return -1;\n        }\n        unordered_map<int, vector<int>> G;\n        for (const auto& c : connections) {\n            G[c[0]].emplace_back(c[1]);\n            G[c[1]].emplace_back(c[0]);\n        }\n        int result = 0;\n        unordered_set<int> lookup;\n        for (int i = 0; i < n; ++i) {\n            result += dfs(G, i, &lookup);\n        }\n        return result - 1;\n    }\n\nprivate:\n    int dfs(const unordered_map<int, vector<int>>& G,\n            int i, unordered_set<int> *lookup) {\n        if (lookup->count(i)) {\n            return 0;\n        }\n        lookup->emplace(i);\n        if (G.count(i)) {\n            for (const auto& j : G.at(i)) {\n                dfs(G, j, lookup);\n            }\n        }\n        return 1;\n    }\n};\n",
+          "reviewedCode": "// Time:  O(|E| + |V|)\n// Space: O(|V|)\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Count disconnected groups first; the needed work follows from that structure and the available spare edges.\nclass Solution {\npublic:\n    int makeConnected(int n, vector<vector<int>>& connections) {\n        if (connections.size() < n - 1) {\n            return -1;\n        }\n        UnionFind union_find(n);\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Component counting, feasibility checks from raw counts, and interpreting connectivity in system language.\n        for (const auto& c : connections) {\n            union_find.union_set(c[0], c[1]);\n        }\n        return union_find.size() - 1;\n    }\n\nprivate:\n    class UnionFind {\n    public:\n        UnionFind(const int n) : set_(n), size_(n) {\n            iota(set_.begin(), set_.end(), 0);\n        }\n\n        int find_set(const int x) {\n           // [Reader note] Decision point\n           // Pay attention here: There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain.\n           if (set_[x] != x) {\n               set_[x] = find_set(set_[x]);  // Path compression.\n           }\n           return set_[x];\n        }\n\n        bool union_set(const int x, const int y) {\n            int x_root = find_set(x), y_root = find_set(y);\n            if (x_root == y_root) {\n                return false;\n            }\n            set_[min(x_root, y_root)] = max(x_root, y_root);\n            --size_;\n            return true;\n        }\n\n        int size() const {\n            return size_;\n        }\n\n    private:\n        vector<int> set_;\n        int size_;\n    };\n};\n\n// Time:  O(|E| + |V|)\n// Space: O(|V|)\nclass Solution2 {\npublic:\n    int makeConnected(int n, vector<vector<int>>& connections) {\n        if (connections.size() < n - 1) {\n            return -1;\n        }\n        unordered_map<int, vector<int>> G;\n        for (const auto& c : connections) {\n            G[c[0]].emplace_back(c[1]);\n            G[c[1]].emplace_back(c[0]);\n        }\n        int result = 0;\n        unordered_set<int> lookup;\n        for (int i = 0; i < n; ++i) {\n            result += dfs(G, i, &lookup);\n        }\n        return result - 1;\n    }\n\nprivate:\n    int dfs(const unordered_map<int, vector<int>>& G,\n            int i, unordered_set<int> *lookup) {\n        if (lookup->count(i)) {\n            return 0;\n        }\n        lookup->emplace(i);\n        if (G.count(i)) {\n            for (const auto& j : G.at(i)) {\n                dfs(G, j, lookup);\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return 1;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(|E| + |V|)",
+            "Space: O(|V|)"
+          ],
+          "annotations": [
+            {
+              "line": 4,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Count disconnected groups first; the needed work follows from that structure and the available spare edges."
+            },
+            {
+              "line": 11,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Component counting, feasibility checks from raw counts, and interpreting connectivity in system language."
+            },
+            {
+              "line": 25,
+              "label": "Decision point",
+              "note": "Pay attention here: There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain."
+            },
+            {
+              "line": 84,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a clean network-flavored component problem that often feels more intuitive than older province-style phrasing.",
+            "whatToNotice": "Component counting, feasibility checks from raw counts, and interpreting connectivity in system language.",
+            "riskPoint": "There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-1300-1399-1319.number-of-operations-to-make-network-connected-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1300-1399/1319.Number%20of%20Operations%20to%20Make%20Network%20Connected/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/1300-1399/1319.Number of Operations to Make Network Connected/Solution.cpp",
+          "relativePath": "solution/1300-1399/1319.Number of Operations to Make Network Connected/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\npublic:\n    int makeConnected(int n, vector<vector<int>>& connections) {\n        vector<int> p(n);\n        iota(p.begin(), p.end(), 0);\n        int cnt = 0;\n        function<int(int)> find = [&](int x) -> int {\n            if (p[x] != x) {\n                p[x] = find(p[x]);\n            }\n            return p[x];\n        };\n        for (const auto& c : connections) {\n            int pa = find(c[0]), pb = find(c[1]);\n            if (pa == pb) {\n                ++cnt;\n            } else {\n                p[pa] = pb;\n                --n;\n            }\n        }\n        return cnt >= n - 1 ? n - 1 : -1;\n    }\n};\n",
+          "originalCode": "class Solution {\npublic:\n    int makeConnected(int n, vector<vector<int>>& connections) {\n        vector<int> p(n);\n        iota(p.begin(), p.end(), 0);\n        int cnt = 0;\n        function<int(int)> find = [&](int x) -> int {\n            if (p[x] != x) {\n                p[x] = find(p[x]);\n            }\n            return p[x];\n        };\n        for (const auto& c : connections) {\n            int pa = find(c[0]), pb = find(c[1]);\n            if (pa == pb) {\n                ++cnt;\n            } else {\n                p[pa] = pb;\n                --n;\n            }\n        }\n        return cnt >= n - 1 ? n - 1 : -1;\n    }\n};\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Count disconnected groups first; the needed work follows from that structure and the available spare edges.\nclass Solution {\npublic:\n    int makeConnected(int n, vector<vector<int>>& connections) {\n        vector<int> p(n);\n        iota(p.begin(), p.end(), 0);\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Component counting, feasibility checks from raw counts, and interpreting connectivity in system language.\n        int cnt = 0;\n        function<int(int)> find = [&](int x) -> int {\n            if (p[x] != x) {\n                p[x] = find(p[x]);\n            }\n            return p[x];\n        };\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (const auto& c : connections) {\n            int pa = find(c[0]), pb = find(c[1]);\n            // [Reader note] Decision point\n            // Pay attention here: There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain.\n            if (pa == pb) {\n                ++cnt;\n            } else {\n                p[pa] = pb;\n                --n;\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return cnt >= n - 1 ? n - 1 : -1;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Count disconnected groups first; the needed work follows from that structure and the available spare edges."
+            },
+            {
+              "line": 6,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Component counting, feasibility checks from raw counts, and interpreting connectivity in system language."
+            },
+            {
+              "line": 13,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 15,
+              "label": "Decision point",
+              "note": "Pay attention here: There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain."
+            },
+            {
+              "line": 22,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a clean network-flavored component problem that often feels more intuitive than older province-style phrasing.",
+            "whatToNotice": "Component counting, feasibility checks from raw counts, and interpreting connectivity in system language.",
+            "riskPoint": "There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain."
+          }
+        },
+        {
+          "id": "wisdompeak_leetcode-union_find-1319.number-of-operations-to-make-network-connected-1319.number-of-operations-to-make-network-connected.cpp",
+          "repository": "wisdompeak_LeetCode",
+          "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+          "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/Union_Find/1319.Number-of-Operations-to-Make-Network-Connected/1319.Number-of-Operations-to-Make-Network-Connected.cpp",
+          "localPath": "wisdompeak_LeetCode/Union_Find/1319.Number-of-Operations-to-Make-Network-Connected/1319.Number-of-Operations-to-Make-Network-Connected.cpp",
+          "relativePath": "Union_Find/1319.Number-of-Operations-to-Make-Network-Connected/1319.Number-of-Operations-to-Make-Network-Connected.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+readme",
+          "code": "class Solution {\n    vector<int>Father;\npublic:\n    int makeConnected(int n, vector<vector<int>>& connections) \n    {\n        Father.resize(n);\n        vector<int>edges(n,0);\n        unordered_map<int,int>cables;\n        unordered_map<int,int>elements;\n\n        for (int i=0; i<n; i++)\n            Father[i] = i;\n\n        for (auto& edge: connections)\n        {\n            if (FindFather(edge[0])!=FindFather(edge[1]))\n                Union(edge[0],edge[1]);\n            edges[edge[0]]+=1;\n            edges[edge[1]]+=1;\n        }\n\n        for (int i=0; i<n; i++)\n        {\n            Father[i] = FindFather(i);\n            cables[Father[i]] += edges[i];\n            elements[Father[i]] += 1;\n        }\n\n        int redundant = 0;\n        int islands = cables.size();\n        for (auto x: cables)\n        {\n            int root = x.first;\n            redundant += cables[root]/2+1-elements[root];\n        }\n\n        if (redundant>=islands-1)\n            return islands-1;\n        else \n            return -1;        \n    }\n\n    int FindFather(int x)\n    {\n        if (Father[x]!=x)\n            Father[x] = FindFather(Father[x]);\n        return Father[x];\n    }\n    \n    void Union(int x, int y)\n    {\n        x = Father[x];\n        y = Father[y];\n        if (x<y)\n            Father[y] = x;\n        else\n            Father[x] = y;\n    }\n};\n",
+          "originalCode": "class Solution {\n    vector<int>Father;\npublic:\n    int makeConnected(int n, vector<vector<int>>& connections) \n    {\n        Father.resize(n);\n        vector<int>edges(n,0);\n        unordered_map<int,int>cables;\n        unordered_map<int,int>elements;\n\n        for (int i=0; i<n; i++)\n            Father[i] = i;\n\n        for (auto& edge: connections)\n        {\n            if (FindFather(edge[0])!=FindFather(edge[1]))\n                Union(edge[0],edge[1]);\n            edges[edge[0]]+=1;\n            edges[edge[1]]+=1;\n        }\n\n        for (int i=0; i<n; i++)\n        {\n            Father[i] = FindFather(i);\n            cables[Father[i]] += edges[i];\n            elements[Father[i]] += 1;\n        }\n\n        int redundant = 0;\n        int islands = cables.size();\n        for (auto x: cables)\n        {\n            int root = x.first;\n            redundant += cables[root]/2+1-elements[root];\n        }\n\n        if (redundant>=islands-1)\n            return islands-1;\n        else \n            return -1;        \n    }\n\n    int FindFather(int x)\n    {\n        if (Father[x]!=x)\n            Father[x] = FindFather(Father[x]);\n        return Father[x];\n    }\n    \n    void Union(int x, int y)\n    {\n        x = Father[x];\n        y = Father[y];\n        if (x<y)\n            Father[y] = x;\n        else\n            Father[x] = y;\n    }\n};\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Count disconnected groups first; the needed work follows from that structure and the available spare edges.\nclass Solution {\n    vector<int>Father;\npublic:\n    int makeConnected(int n, vector<vector<int>>& connections) \n    {\n        Father.resize(n);\n        vector<int>edges(n,0);\n        unordered_map<int,int>cables;\n        unordered_map<int,int>elements;\n\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Component counting, feasibility checks from raw counts, and interpreting connectivity in system language.\n        for (int i=0; i<n; i++)\n            Father[i] = i;\n\n        for (auto& edge: connections)\n        {\n            // [Reader note] Decision point\n            // Pay attention here: There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain.\n            if (FindFather(edge[0])!=FindFather(edge[1]))\n                Union(edge[0],edge[1]);\n            edges[edge[0]]+=1;\n            edges[edge[1]]+=1;\n        }\n\n        for (int i=0; i<n; i++)\n        {\n            Father[i] = FindFather(i);\n            cables[Father[i]] += edges[i];\n            elements[Father[i]] += 1;\n        }\n\n        int redundant = 0;\n        int islands = cables.size();\n        for (auto x: cables)\n        {\n            int root = x.first;\n            redundant += cables[root]/2+1-elements[root];\n        }\n\n        if (redundant>=islands-1)\n            return islands-1;\n        else \n            return -1;        \n    }\n\n    int FindFather(int x)\n    {\n        if (Father[x]!=x)\n            Father[x] = FindFather(Father[x]);\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return Father[x];\n    }\n    \n    void Union(int x, int y)\n    {\n        x = Father[x];\n        y = Father[y];\n        if (x<y)\n            Father[y] = x;\n        else\n            Father[x] = y;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Count disconnected groups first; the needed work follows from that structure and the available spare edges."
+            },
+            {
+              "line": 11,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Component counting, feasibility checks from raw counts, and interpreting connectivity in system language."
+            },
+            {
+              "line": 16,
+              "label": "Decision point",
+              "note": "Pay attention here: There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain."
+            },
+            {
+              "line": 47,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a clean network-flavored component problem that often feels more intuitive than older province-style phrasing.",
+            "whatToNotice": "Component counting, feasibility checks from raw counts, and interpreting connectivity in system language.",
+            "riskPoint": "There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain."
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-1300-1399-1319.number-of-operations-to-make-network-connected-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1300-1399/1319.Number%20of%20Operations%20to%20Make%20Network%20Connected/Solution.java",
+          "localPath": "doocs_leetcode/solution/1300-1399/1319.Number of Operations to Make Network Connected/Solution.java",
+          "relativePath": "solution/1300-1399/1319.Number of Operations to Make Network Connected/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\n    private int[] p;\n\n    public int makeConnected(int n, int[][] connections) {\n        p = new int[n];\n        for (int i = 0; i < n; ++i) {\n            p[i] = i;\n        }\n        int cnt = 0;\n        for (int[] e : connections) {\n            int pa = find(e[0]), pb = find(e[1]);\n            if (pa == pb) {\n                ++cnt;\n            } else {\n                p[pa] = pb;\n                --n;\n            }\n        }\n        return n - 1 > cnt ? -1 : n - 1;\n    }\n\n    private int find(int x) {\n        if (p[x] != x) {\n            p[x] = find(p[x]);\n        }\n        return p[x];\n    }\n}\n",
+          "originalCode": "class Solution {\n    private int[] p;\n\n    public int makeConnected(int n, int[][] connections) {\n        p = new int[n];\n        for (int i = 0; i < n; ++i) {\n            p[i] = i;\n        }\n        int cnt = 0;\n        for (int[] e : connections) {\n            int pa = find(e[0]), pb = find(e[1]);\n            if (pa == pb) {\n                ++cnt;\n            } else {\n                p[pa] = pb;\n                --n;\n            }\n        }\n        return n - 1 > cnt ? -1 : n - 1;\n    }\n\n    private int find(int x) {\n        if (p[x] != x) {\n            p[x] = find(p[x]);\n        }\n        return p[x];\n    }\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Count disconnected groups first; the needed work follows from that structure and the available spare edges.\nclass Solution {\n    private int[] p;\n\n    public int makeConnected(int n, int[][] connections) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Component counting, feasibility checks from raw counts, and interpreting connectivity in system language.\n        p = new int[n];\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = 0; i < n; ++i) {\n            p[i] = i;\n        }\n        int cnt = 0;\n        for (int[] e : connections) {\n            int pa = find(e[0]), pb = find(e[1]);\n            // [Reader note] Decision point\n            // Pay attention here: There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain.\n            if (pa == pb) {\n                ++cnt;\n            } else {\n                p[pa] = pb;\n                --n;\n            }\n        }\n        return n - 1 > cnt ? -1 : n - 1;\n    }\n\n    private int find(int x) {\n        if (p[x] != x) {\n            p[x] = find(p[x]);\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return p[x];\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Count disconnected groups first; the needed work follows from that structure and the available spare edges."
+            },
+            {
+              "line": 5,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Component counting, feasibility checks from raw counts, and interpreting connectivity in system language."
+            },
+            {
+              "line": 6,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 12,
+              "label": "Decision point",
+              "note": "Pay attention here: There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain."
+            },
+            {
+              "line": 26,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a clean network-flavored component problem that often feels more intuitive than older province-style phrasing.",
+            "whatToNotice": "Component counting, feasibility checks from raw counts, and interpreting connectivity in system language.",
+            "riskPoint": "There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain."
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-1300-1399-1319.number-of-operations-to-make-network-connected-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1300-1399/1319.Number%20of%20Operations%20to%20Make%20Network%20Connected/Solution.go",
+          "localPath": "doocs_leetcode/solution/1300-1399/1319.Number of Operations to Make Network Connected/Solution.go",
+          "relativePath": "solution/1300-1399/1319.Number of Operations to Make Network Connected/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "func makeConnected(n int, connections [][]int) int {\n\tp := make([]int, n)\n\tfor i := range p {\n\t\tp[i] = i\n\t}\n\tcnt := 0\n\tvar find func(x int) int\n\tfind = func(x int) int {\n\t\tif p[x] != x {\n\t\t\tp[x] = find(p[x])\n\t\t}\n\t\treturn p[x]\n\t}\n\tfor _, e := range connections {\n\t\tpa, pb := find(e[0]), find(e[1])\n\t\tif pa == pb {\n\t\t\tcnt++\n\t\t} else {\n\t\t\tp[pa] = pb\n\t\t\tn--\n\t\t}\n\t}\n\tif n-1 > cnt {\n\t\treturn -1\n\t}\n\treturn n - 1\n}\n",
+          "originalCode": "func makeConnected(n int, connections [][]int) int {\n\tp := make([]int, n)\n\tfor i := range p {\n\t\tp[i] = i\n\t}\n\tcnt := 0\n\tvar find func(x int) int\n\tfind = func(x int) int {\n\t\tif p[x] != x {\n\t\t\tp[x] = find(p[x])\n\t\t}\n\t\treturn p[x]\n\t}\n\tfor _, e := range connections {\n\t\tpa, pb := find(e[0]), find(e[1])\n\t\tif pa == pb {\n\t\t\tcnt++\n\t\t} else {\n\t\t\tp[pa] = pb\n\t\t\tn--\n\t\t}\n\t}\n\tif n-1 > cnt {\n\t\treturn -1\n\t}\n\treturn n - 1\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Count disconnected groups first; the needed work follows from that structure and the available spare edges.\nfunc makeConnected(n int, connections [][]int) int {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Component counting, feasibility checks from raw counts, and interpreting connectivity in system language.\n\tp := make([]int, n)\n\t// [Reader note] Main pass\n\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\tfor i := range p {\n\t\tp[i] = i\n\t}\n\tcnt := 0\n\tvar find func(x int) int\n\tfind = func(x int) int {\n\t\t// [Reader note] Decision point\n\t\t// Pay attention here: There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain.\n\t\tif p[x] != x {\n\t\t\tp[x] = find(p[x])\n\t\t}\n\t\treturn p[x]\n\t}\n\tfor _, e := range connections {\n\t\tpa, pb := find(e[0]), find(e[1])\n\t\tif pa == pb {\n\t\t\tcnt++\n\t\t} else {\n\t\t\tp[pa] = pb\n\t\t\tn--\n\t\t}\n\t}\n\tif n-1 > cnt {\n\t\treturn -1\n\t}\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn n - 1\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Count disconnected groups first; the needed work follows from that structure and the available spare edges."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Component counting, feasibility checks from raw counts, and interpreting connectivity in system language."
+            },
+            {
+              "line": 3,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 9,
+              "label": "Decision point",
+              "note": "Pay attention here: There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain."
+            },
+            {
+              "line": 26,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a clean network-flavored component problem that often feels more intuitive than older province-style phrasing.",
+            "whatToNotice": "Component counting, feasibility checks from raw counts, and interpreting connectivity in system language.",
+            "riskPoint": "There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain."
+          }
+        }
+      ]
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-1300-1399-1319.number-of-operations-to-make-network-connected-solution.ts",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1300-1399/1319.Number%20of%20Operations%20to%20Make%20Network%20Connected/Solution.ts",
+          "localPath": "doocs_leetcode/solution/1300-1399/1319.Number of Operations to Make Network Connected/Solution.ts",
+          "relativePath": "solution/1300-1399/1319.Number of Operations to Make Network Connected/Solution.ts",
+          "languageId": "typescript",
+          "languageLabel": "TypeScript",
+          "coverageType": "code+explanation",
+          "code": "function makeConnected(n: number, connections: number[][]): number {\n    const p: number[] = Array.from({ length: n }, (_, i) => i);\n    const find = (x: number): number => {\n        if (p[x] !== x) {\n            p[x] = find(p[x]);\n        }\n        return p[x];\n    };\n    let cnt = 0;\n    for (const [a, b] of connections) {\n        const [pa, pb] = [find(a), find(b)];\n        if (pa === pb) {\n            ++cnt;\n        } else {\n            p[pa] = pb;\n            --n;\n        }\n    }\n    return cnt >= n - 1 ? n - 1 : -1;\n}\n",
+          "originalCode": "function makeConnected(n: number, connections: number[][]): number {\n    const p: number[] = Array.from({ length: n }, (_, i) => i);\n    const find = (x: number): number => {\n        if (p[x] !== x) {\n            p[x] = find(p[x]);\n        }\n        return p[x];\n    };\n    let cnt = 0;\n    for (const [a, b] of connections) {\n        const [pa, pb] = [find(a), find(b)];\n        if (pa === pb) {\n            ++cnt;\n        } else {\n            p[pa] = pb;\n            --n;\n        }\n    }\n    return cnt >= n - 1 ? n - 1 : -1;\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Count disconnected groups first; the needed work follows from that structure and the available spare edges.\nfunction makeConnected(n: number, connections: number[][]): number {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Component counting, feasibility checks from raw counts, and interpreting connectivity in system language.\n    const p: number[] = Array.from({ length: n }, (_, i) => i);\n    const find = (x: number): number => {\n        if (p[x] !== x) {\n            p[x] = find(p[x]);\n        }\n        return p[x];\n    };\n    let cnt = 0;\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (const [a, b] of connections) {\n        const [pa, pb] = [find(a), find(b)];\n        // [Reader note] Decision point\n        // Pay attention here: There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain.\n        if (pa === pb) {\n            ++cnt;\n        } else {\n            p[pa] = pb;\n            --n;\n        }\n    }\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return cnt >= n - 1 ? n - 1 : -1;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Count disconnected groups first; the needed work follows from that structure and the available spare edges."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Component counting, feasibility checks from raw counts, and interpreting connectivity in system language."
+            },
+            {
+              "line": 10,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 12,
+              "label": "Decision point",
+              "note": "Pay attention here: There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain."
+            },
+            {
+              "line": 19,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a clean network-flavored component problem that often feels more intuitive than older province-style phrasing.",
+            "whatToNotice": "Component counting, feasibility checks from raw counts, and interpreting connectivity in system language.",
+            "riskPoint": "There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain."
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "doocs_leetcode-solution-1300-1399-1319.number-of-operations-to-make-network-connected-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1300-1399/1319.Number%20of%20Operations%20to%20Make%20Network%20Connected/README.md",
+      "localPath": "doocs_leetcode/solution/1300-1399/1319.Number of Operations to Make Network Connected/README.md",
+      "relativePath": "solution/1300-1399/1319.Number of Operations to Make Network Connected/README.md",
+      "title": "[1319. \u8fde\u901a\u7f51\u7edc\u7684\u64cd\u4f5c\u6b21\u6570](https://leetcode.cn/problems/number-of-operations-to-make-network-connected)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/1300-1399/1319.Number%20of%20Operations%20to%20Make%20Network%20Connected/README.md rating: 1633 source: \u7b2c 171 \u573a\u5468\u8d5b Q3 tags: - \u6df1\u5ea6\u4f18\u5148\u641c\u7d22 - \u5e7f\u5ea6\u4f18\u5148\u641c\u7d22 - \u5e76\u67e5\u96c6 - \u56fe --- <!-- problem:start --> # [1319. \u8fde\u901a\u7f51\u7edc\u7684\u64cd\u4f5c\u6b21\u6570](https://leetcode.cn/problems/number-of-operations-to-make-network-connected) [English Version](/solution/1300-1399/1319.Num..."
+    },
+    {
+      "id": "doocs_leetcode-solution-1300-1399-1319.number-of-operations-to-make-network-connected-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1300-1399/1319.Number%20of%20Operations%20to%20Make%20Network%20Connected/README_EN.md",
+      "localPath": "doocs_leetcode/solution/1300-1399/1319.Number of Operations to Make Network Connected/README_EN.md",
+      "relativePath": "solution/1300-1399/1319.Number of Operations to Make Network Connected/README_EN.md",
+      "title": "[1319. Number of Operations to Make Network Connected](https://leetcode.com/problems/number-of-operations-to-make-network-connected)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/1300-1399/1319.Number%20of%20Operations%20to%20Make%20Network%20Connected/README_EN.md rating: 1633 source: Weekly Contest 171 Q3 tags: - Depth-First Search - Breadth-First Search - Union Find - Graph --- <!-- problem:start --> # [1319. Number of Operations to Make Network Connected](https://leetcode.com/problems/num..."
+    },
+    {
+      "id": "wisdompeak_leetcode-union_find-1319.number-of-operations-to-make-network-connected-readme.md",
+      "repository": "wisdompeak_LeetCode",
+      "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+      "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/Union_Find/1319.Number-of-Operations-to-Make-Network-Connected/Readme.md",
+      "localPath": "wisdompeak_LeetCode/Union_Find/1319.Number-of-Operations-to-Make-Network-Connected/Readme.md",
+      "relativePath": "Union_Find/1319.Number-of-Operations-to-Make-Network-Connected/Readme.md",
+      "title": "1319.Number-of-Operations-to-Make-Network-Connected",
+      "excerpt": "### 1319.Number-of-Operations-to-Make-Network-Connected \u9996\u5148\u60f3\u5230\u7684\u662f\uff0c\u5c5e\u4e8e\u540c\u4e00\u7ec4\u4e92\u8054\u7684\u591a\u4e2a\u8ba1\u7b97\u673a\u53ef\u80fd\u4f1a\u6709\u4e00\u4e9b\u5197\u4f59\u7684\u8fde\u63a5\u7ebf\u3002\u90a3\u4e48\u5197\u4f59\u591a\u5c11\u5462\uff1f\u5f88\u7b80\u5355\uff0c\u6709N\u4e2a\u8ba1\u7b97\u673a\u5df2\u7ecf\u4e92\u8054\u7684\u8bdd\uff0c\u90a3\u4e48\u53ea\u9700\u8981N-1\u6761\u7ebf\u5c31\u53ef\u4ee5\u4fdd\u8bc1\u5b83\u4eec\u4e92\u8054\uff0c\u591a\u4f59\u7684\u7ebf\u5176\u5b9e\u90fd\u662f\u53ef\u4ee5\u62d4\u6389\u7684\uff0c\u6211\u4eec\u53ef\u4ee5\u6539\u7528\u5b83\u6765\u8fde\u63a5\u4e0d\u540c\u5c40\u57df\u7f51\u3002 \u63a5\u4e0b\u6765\uff0c\u6211\u4eec\u77e5\u9053\uff0c\u5982\u679c\u5c06M\u4e2a\u4e0d\u76f8\u8fde\u7684\u5c40\u57df\u7f51\u90fd\u4e92\u901a\uff0c\u90a3\u4e48\u9700\u8981M-1\u6761\u7ebf\u3002 \u6240\u4ee5\u603b\u4f53\u7684\u7b97\u6cd5\u662f\uff1a\u7528Union Find\u7684\u65b9\u6cd5\u6765\u6570\u4e00\u4e0b\u6709M\u4e2a\u5c40\u57df\u7f51\uff1b\u518d\u8ba1\u7b97\u6bcf\u4e2a\u5c40\u57df\u7f51\u91cc\u6709\u591a\u5c11\u5197\u4f59\u7684\u4f20\u8f93\u7ebf\u5e76\u76f8\u52a0\u3002\u5982\u679c\u6240\u6709\u5197\u4f59\u7684\u4f20\u8f93\u7ebf\u6570\u76eeK>=M-1\u7684\u8bdd\uff0c\u90a3\u4e48\u5c31\u53ef\u4ee5\u628a\u6240\u6709\u7684\u8ba1\u7b97\u673a\u90fd\u8fde\u63a5\u8d77\u6765\u3002 [Leetcode Link](https://leetcode.com/problems/number-of-operations-to-make-network-connected)"
+    }
+  ]
+}

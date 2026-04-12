@@ -1,0 +1,848 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "product-of-array-except-self",
+  "problemTitle": "Product of Array Except Self",
+  "problemNumber": 238,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go",
+      "typescript",
+      "javascript",
+      "csharp",
+      "c",
+      "kotlin"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go",
+      "TypeScript",
+      "JavaScript",
+      "C#",
+      "C",
+      "Kotlin"
+    ],
+    "solutionCount": 16,
+    "writeupCount": 2,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 3,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-python-0238-product-of-array-except-self.py",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/python/0238-product-of-array-except-self.py",
+          "localPath": "neetcode-gh_leetcode/python/0238-product-of-array-except-self.py",
+          "relativePath": "python/0238-product-of-array-except-self.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code",
+          "code": "class Solution:\n    def productExceptSelf(self, nums: List[int]) -> List[int]:\n        res = [1] * (len(nums))\n\n        for i in range(1, len(nums)):\n            res[i] = res[i-1] * nums[i-1]\n        postfix = 1\n        for i in range(len(nums) - 1, -1, -1):\n            res[i] *= postfix\n            postfix *= nums[i]\n        return res\n",
+          "originalCode": "class Solution:\n    def productExceptSelf(self, nums: List[int]) -> List[int]:\n        res = [1] * (len(nums))\n\n        for i in range(1, len(nums)):\n            res[i] = res[i-1] * nums[i-1]\n        postfix = 1\n        for i in range(len(nums) - 1, -1, -1):\n            res[i] *= postfix\n            postfix *= nums[i]\n        return res\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently.\nclass Solution:\n    def productExceptSelf(self, nums: List[int]) -> List[int]:\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.\n        res = [1] * (len(nums))\n\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for i in range(1, len(nums)):\n            res[i] = res[i-1] * nums[i-1]\n        postfix = 1\n        for i in range(len(nums) - 1, -1, -1):\n            res[i] *= postfix\n            postfix *= nums[i]\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return res",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse."
+            },
+            {
+              "line": 5,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 11,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It teaches the value of deliberate passes and reusable partial work without requiring heavy theory.",
+            "whatToNotice": "Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.",
+            "riskPoint": "The logic is short, but careless ordering will overwrite information you still need."
+          }
+        },
+        {
+          "id": "kamyu104_leetcode-solutions-python-product-of-array-except-self.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/product-of-array-except-self.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/product-of-array-except-self.py",
+          "relativePath": "Python/product-of-array-except-self.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(n)\n# Space: O(1)\n\nclass Solution(object):\n    # @param {integer[]} nums\n    # @return {integer[]}\n    def productExceptSelf(self, nums):\n        if not nums:\n            return []\n\n        left_product = [1 for _ in xrange(len(nums))]\n        for i in xrange(1, len(nums)):\n            left_product[i] = left_product[i - 1] * nums[i - 1]\n\n        right_product = 1\n        for i in xrange(len(nums) - 2, -1, -1):\n            right_product *= nums[i + 1]\n            left_product[i] = left_product[i] * right_product\n\n        return left_product\n\n",
+          "originalCode": "# Time:  O(n)\n# Space: O(1)\n\nclass Solution(object):\n    # @param {integer[]} nums\n    # @return {integer[]}\n    def productExceptSelf(self, nums):\n        if not nums:\n            return []\n\n        left_product = [1 for _ in xrange(len(nums))]\n        for i in xrange(1, len(nums)):\n            left_product[i] = left_product[i - 1] * nums[i - 1]\n\n        right_product = 1\n        for i in xrange(len(nums) - 2, -1, -1):\n            right_product *= nums[i + 1]\n            left_product[i] = left_product[i] * right_product\n\n        return left_product\n\n",
+          "reviewedCode": "# Time:  O(n)\n# Space: O(1)\n\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently.\nclass Solution(object):\n    # @param {integer[]} nums\n    # @return {integer[]}\n    def productExceptSelf(self, nums):\n        if not nums:\n            return []\n\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.\n        left_product = [1 for _ in xrange(len(nums))]\n        for i in xrange(1, len(nums)):\n            left_product[i] = left_product[i - 1] * nums[i - 1]\n\n        right_product = 1\n        for i in xrange(len(nums) - 2, -1, -1):\n            right_product *= nums[i + 1]\n            left_product[i] = left_product[i] * right_product\n\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return left_product\n",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n)",
+            "Space: O(1)"
+          ],
+          "annotations": [
+            {
+              "line": 4,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently."
+            },
+            {
+              "line": 11,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse."
+            },
+            {
+              "line": 20,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It teaches the value of deliberate passes and reusable partial work without requiring heavy theory.",
+            "whatToNotice": "Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.",
+            "riskPoint": "The logic is short, but careless ordering will overwrite information you still need."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0200-0299-0238.product-of-array-except-self-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0200-0299/0238.Product%20of%20Array%20Except%20Self/Solution.py",
+          "localPath": "doocs_leetcode/solution/0200-0299/0238.Product of Array Except Self/Solution.py",
+          "relativePath": "solution/0200-0299/0238.Product of Array Except Self/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "class Solution:\n    def productExceptSelf(self, nums: List[int]) -> List[int]:\n        n = len(nums)\n        ans = [0] * n\n        left = right = 1\n        for i, x in enumerate(nums):\n            ans[i] = left\n            left *= x\n        for i in range(n - 1, -1, -1):\n            ans[i] *= right\n            right *= nums[i]\n        return ans\n",
+          "originalCode": "class Solution:\n    def productExceptSelf(self, nums: List[int]) -> List[int]:\n        n = len(nums)\n        ans = [0] * n\n        left = right = 1\n        for i, x in enumerate(nums):\n            ans[i] = left\n            left *= x\n        for i in range(n - 1, -1, -1):\n            ans[i] *= right\n            right *= nums[i]\n        return ans\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently.\nclass Solution:\n    def productExceptSelf(self, nums: List[int]) -> List[int]:\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.\n        n = len(nums)\n        ans = [0] * n\n        left = right = 1\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for i, x in enumerate(nums):\n            ans[i] = left\n            left *= x\n        for i in range(n - 1, -1, -1):\n            ans[i] *= right\n            right *= nums[i]\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return ans",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse."
+            },
+            {
+              "line": 6,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 12,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It teaches the value of deliberate passes and reusable partial work without requiring heavy theory.",
+            "whatToNotice": "Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.",
+            "riskPoint": "The logic is short, but careless ordering will overwrite information you still need."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 4,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-cpp-0238-product-of-array-except-self.cpp",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/cpp/0238-product-of-array-except-self.cpp",
+          "localPath": "neetcode-gh_leetcode/cpp/0238-product-of-array-except-self.cpp",
+          "relativePath": "cpp/0238-product-of-array-except-self.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code",
+          "code": "/*\n    Given an integer array nums, return an array such that:\n    answer[i] is equal to the product of all elements of nums except nums[i]\n    Ex. nums = [1,2,3,4] -> [24,12,8,6], nums = [-1,1,0,-3,3] -> [0,0,9,0,0]\n\n    Calculate prefix products forward, then postfix backwards in a 2nd pass\n\n    Time: O(n)\n    Space: O(1)\n*/\n\nclass Solution {\npublic:\n    vector<int> productExceptSelf(vector<int>& nums) {\n        int n = nums.size();\n        vector<int> result(n, 1);\n        \n        int prefix = 1;\n        for (int i = 0; i < n; i++) {\n            result[i] = prefix;\n            prefix = prefix * nums[i];\n        }\n        \n        int postfix = 1;\n        for (int i = n - 1; i >= 0; i--) {\n            result[i] = result[i] * postfix;\n            postfix = postfix * nums[i];\n        }\n        \n        return result;\n    }\n};\n",
+          "originalCode": "/*\n    Given an integer array nums, return an array such that:\n    answer[i] is equal to the product of all elements of nums except nums[i]\n    Ex. nums = [1,2,3,4] -> [24,12,8,6], nums = [-1,1,0,-3,3] -> [0,0,9,0,0]\n\n    Calculate prefix products forward, then postfix backwards in a 2nd pass\n\n    Time: O(n)\n    Space: O(1)\n*/\n\nclass Solution {\npublic:\n    vector<int> productExceptSelf(vector<int>& nums) {\n        int n = nums.size();\n        vector<int> result(n, 1);\n        \n        int prefix = 1;\n        for (int i = 0; i < n; i++) {\n            result[i] = prefix;\n            prefix = prefix * nums[i];\n        }\n        \n        int postfix = 1;\n        for (int i = n - 1; i >= 0; i--) {\n            result[i] = result[i] * postfix;\n            postfix = postfix * nums[i];\n        }\n        \n        return result;\n    }\n};\n",
+          "reviewedCode": "/*\n    Given an integer array nums, return an array such that:\n    answer[i] is equal to the product of all elements of nums except nums[i]\n    Ex. nums = [1,2,3,4] -> [24,12,8,6], nums = [-1,1,0,-3,3] -> [0,0,9,0,0]\n\n    Calculate prefix products forward, then postfix backwards in a 2nd pass\n\n    Time: O(n)\n    Space: O(1)\n*/\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently.\nclass Solution {\npublic:\n    vector<int> productExceptSelf(vector<int>& nums) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.\n        int n = nums.size();\n        vector<int> result(n, 1);\n        \n        int prefix = 1;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = 0; i < n; i++) {\n            result[i] = prefix;\n            prefix = prefix * nums[i];\n        }\n        \n        int postfix = 1;\n        for (int i = n - 1; i >= 0; i--) {\n            result[i] = result[i] * postfix;\n            postfix = postfix * nums[i];\n        }\n        \n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return result;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time: O(n)",
+            "Space: O(1)"
+          ],
+          "annotations": [
+            {
+              "line": 12,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently."
+            },
+            {
+              "line": 15,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse."
+            },
+            {
+              "line": 19,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 30,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It teaches the value of deliberate passes and reusable partial work without requiring heavy theory.",
+            "whatToNotice": "Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.",
+            "riskPoint": "The logic is short, but careless ordering will overwrite information you still need."
+          }
+        },
+        {
+          "id": "kamyu104_leetcode-solutions-c-product-of-array-except-self.cpp",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/C%2B%2B/product-of-array-except-self.cpp",
+          "localPath": "kamyu104_LeetCode-Solutions/C++/product-of-array-except-self.cpp",
+          "relativePath": "C++/product-of-array-except-self.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Time:  O(n)\n// Space: O(1)\n\nclass Solution {\npublic:\n    vector<int> productExceptSelf(vector<int>& nums) {\n        if (nums.empty()) {\n            return {};\n        }\n\n        vector<int> left_product(nums.size());\n\n        left_product[0] = 1;\n        for (int i = 1; i < nums.size(); ++i) {\n            left_product[i] = left_product[i - 1] * nums[i - 1];\n        }\n\n        int right_product = 1;\n        for (int i = static_cast<int>(nums.size()) - 2; i >= 0; --i) {\n            right_product *= nums[i + 1];\n            left_product[i] = left_product[i] * right_product;\n        }\n\n        return left_product;\n    }\n};\n",
+          "originalCode": "// Time:  O(n)\n// Space: O(1)\n\nclass Solution {\npublic:\n    vector<int> productExceptSelf(vector<int>& nums) {\n        if (nums.empty()) {\n            return {};\n        }\n\n        vector<int> left_product(nums.size());\n\n        left_product[0] = 1;\n        for (int i = 1; i < nums.size(); ++i) {\n            left_product[i] = left_product[i - 1] * nums[i - 1];\n        }\n\n        int right_product = 1;\n        for (int i = static_cast<int>(nums.size()) - 2; i >= 0; --i) {\n            right_product *= nums[i + 1];\n            left_product[i] = left_product[i] * right_product;\n        }\n\n        return left_product;\n    }\n};\n",
+          "reviewedCode": "// Time:  O(n)\n// Space: O(1)\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently.\nclass Solution {\npublic:\n    vector<int> productExceptSelf(vector<int>& nums) {\n        if (nums.empty()) {\n            return {};\n        }\n\n        vector<int> left_product(nums.size());\n\n        left_product[0] = 1;\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.\n        for (int i = 1; i < nums.size(); ++i) {\n            left_product[i] = left_product[i - 1] * nums[i - 1];\n        }\n\n        int right_product = 1;\n        for (int i = static_cast<int>(nums.size()) - 2; i >= 0; --i) {\n            right_product *= nums[i + 1];\n            left_product[i] = left_product[i] * right_product;\n        }\n\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return left_product;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n)",
+            "Space: O(1)"
+          ],
+          "annotations": [
+            {
+              "line": 4,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently."
+            },
+            {
+              "line": 14,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse."
+            },
+            {
+              "line": 24,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It teaches the value of deliberate passes and reusable partial work without requiring heavy theory.",
+            "whatToNotice": "Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.",
+            "riskPoint": "The logic is short, but careless ordering will overwrite information you still need."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0200-0299-0238.product-of-array-except-self-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0200-0299/0238.Product%20of%20Array%20Except%20Self/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/0200-0299/0238.Product of Array Except Self/Solution.cpp",
+          "relativePath": "solution/0200-0299/0238.Product of Array Except Self/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\npublic:\n    vector<int> productExceptSelf(vector<int>& nums) {\n        int n = nums.size();\n        vector<int> ans(n);\n        for (int i = 0, left = 1; i < n; ++i) {\n            ans[i] = left;\n            left *= nums[i];\n        }\n        for (int i = n - 1, right = 1; ~i; --i) {\n            ans[i] *= right;\n            right *= nums[i];\n        }\n        return ans;\n    }\n};",
+          "originalCode": "class Solution {\npublic:\n    vector<int> productExceptSelf(vector<int>& nums) {\n        int n = nums.size();\n        vector<int> ans(n);\n        for (int i = 0, left = 1; i < n; ++i) {\n            ans[i] = left;\n            left *= nums[i];\n        }\n        for (int i = n - 1, right = 1; ~i; --i) {\n            ans[i] *= right;\n            right *= nums[i];\n        }\n        return ans;\n    }\n};",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently.\nclass Solution {\npublic:\n    vector<int> productExceptSelf(vector<int>& nums) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.\n        int n = nums.size();\n        vector<int> ans(n);\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = 0, left = 1; i < n; ++i) {\n            ans[i] = left;\n            left *= nums[i];\n        }\n        for (int i = n - 1, right = 1; ~i; --i) {\n            ans[i] *= right;\n            right *= nums[i];\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return ans;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse."
+            },
+            {
+              "line": 6,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 14,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It teaches the value of deliberate passes and reusable partial work without requiring heavy theory.",
+            "whatToNotice": "Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.",
+            "riskPoint": "The logic is short, but careless ordering will overwrite information you still need."
+          }
+        },
+        {
+          "id": "haoel_leetcode-algorithms-cpp-productofarrayexceptself-productofarrayexceptself.cpp",
+          "repository": "haoel_leetcode",
+          "repositoryUrl": "https://github.com/haoel/leetcode",
+          "sourceUrl": "https://github.com/haoel/leetcode/blob/master/algorithms/cpp/productOfArrayExceptSelf/ProductOfArrayExceptSelf.cpp",
+          "localPath": "haoel_leetcode/algorithms/cpp/productOfArrayExceptSelf/ProductOfArrayExceptSelf.cpp",
+          "relativePath": "algorithms/cpp/productOfArrayExceptSelf/ProductOfArrayExceptSelf.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Source : https://leetcode.com/problems/product-of-array-except-self/\n// Author : Hao Chen\n// Date   : 2015-07-17\n\n/********************************************************************************** \n * \n * Given an array of n integers where n > 1, nums, return an array output such that \n * output[i] is equal to the product of all the elements of nums except nums[i].\n * \n * Solve it without division and in O(n).\n * \n * For example, given [1,2,3,4], return [24,12,8,6].\n * \n * Follow up:\n * Could you solve it with constant space complexity? (Note: The output array does not \n * count as extra space for the purpose of space complexity analysis.)\n *               \n **********************************************************************************/\n\nclass Solution {\npublic:\n    vector<int> productExceptSelf(vector<int>& nums) {\n        \n        int len = nums.size();\n        vector<int> result(len, 1);\n        \n        //from the left to right \n        for (int i=1; i<len; i++) {\n            result[i] = result[i-1]*nums[i-1];\n        }\n        //from the right to left\n        int factorial = 1;\n        for (int i=len-2; i>=0; i--){\n            factorial *= nums[i+1];\n            result[i] *= factorial;\n        }\n        return result;\n    }\n};\n\n\n\n",
+          "originalCode": "// Source : https://leetcode.com/problems/product-of-array-except-self/\n// Author : Hao Chen\n// Date   : 2015-07-17\n\n/********************************************************************************** \n * \n * Given an array of n integers where n > 1, nums, return an array output such that \n * output[i] is equal to the product of all the elements of nums except nums[i].\n * \n * Solve it without division and in O(n).\n * \n * For example, given [1,2,3,4], return [24,12,8,6].\n * \n * Follow up:\n * Could you solve it with constant space complexity? (Note: The output array does not \n * count as extra space for the purpose of space complexity analysis.)\n *               \n **********************************************************************************/\n\nclass Solution {\npublic:\n    vector<int> productExceptSelf(vector<int>& nums) {\n        \n        int len = nums.size();\n        vector<int> result(len, 1);\n        \n        //from the left to right \n        for (int i=1; i<len; i++) {\n            result[i] = result[i-1]*nums[i-1];\n        }\n        //from the right to left\n        int factorial = 1;\n        for (int i=len-2; i>=0; i--){\n            factorial *= nums[i+1];\n            result[i] *= factorial;\n        }\n        return result;\n    }\n};\n\n\n\n",
+          "reviewedCode": "// Source : https://leetcode.com/problems/product-of-array-except-self/\n// Author : Hao Chen\n// Date   : 2015-07-17\n\n/********************************************************************************** \n * \n * Given an array of n integers where n > 1, nums, return an array output such that \n * output[i] is equal to the product of all the elements of nums except nums[i].\n * \n * Solve it without division and in O(n).\n * \n * For example, given [1,2,3,4], return [24,12,8,6].\n * \n * Follow up:\n * Could you solve it with constant space complexity? (Note: The output array does not \n * count as extra space for the purpose of space complexity analysis.)\n *               \n **********************************************************************************/\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently.\nclass Solution {\npublic:\n    vector<int> productExceptSelf(vector<int>& nums) {\n        \n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.\n        int len = nums.size();\n        vector<int> result(len, 1);\n        \n        //from the left to right \n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i=1; i<len; i++) {\n            result[i] = result[i-1]*nums[i-1];\n        }\n        //from the right to left\n        int factorial = 1;\n        for (int i=len-2; i>=0; i--){\n            factorial *= nums[i+1];\n            result[i] *= factorial;\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return result;\n    }\n};\n\n\n",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 20,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently."
+            },
+            {
+              "line": 24,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse."
+            },
+            {
+              "line": 28,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 37,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It teaches the value of deliberate passes and reusable partial work without requiring heavy theory.",
+            "whatToNotice": "Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.",
+            "riskPoint": "The logic is short, but careless ordering will overwrite information you still need."
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-java-0238-product-of-array-except-self.java",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/java/0238-product-of-array-except-self.java",
+          "localPath": "neetcode-gh_leetcode/java/0238-product-of-array-except-self.java",
+          "relativePath": "java/0238-product-of-array-except-self.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code",
+          "code": "//Just store the left and right product (Try doing this with extra space first)\n//This one is constant space because we are returning the array we created\n//In first pass calculate the left product except self and in second calculate the right\n\nclass Solution {\n\n    public int[] productExceptSelf(int[] nums) {\n        int[] arr = new int[nums.length];\n        int right = 1, left = 1;\n        for (int i = 0; i < nums.length; i++) {\n            arr[i] = left;\n            left *= nums[i];\n        }\n        for (int i = nums.length - 1; i >= 0; i--) {\n            arr[i] *= right;\n            right *= nums[i];\n        }\n        return arr;\n    }\n\n    public int[] productExceptSelfNumsAsPrefix(int[] nums) {\n        int[] output = new int[nums.length];\n        output[0] = 1;\n\n        for (int i = 0; i < nums.length - 1; i++) output[i + 1] =\n            output[i] * nums[i];\n\n        for (int i = nums.length - 2; i >= 0; i--) {\n            output[i] = nums[i + 1] * output[i];\n            nums[i] = nums[i] * nums[i + 1];\n        }\n        return output;\n    }\n}\n",
+          "originalCode": "//Just store the left and right product (Try doing this with extra space first)\n//This one is constant space because we are returning the array we created\n//In first pass calculate the left product except self and in second calculate the right\n\nclass Solution {\n\n    public int[] productExceptSelf(int[] nums) {\n        int[] arr = new int[nums.length];\n        int right = 1, left = 1;\n        for (int i = 0; i < nums.length; i++) {\n            arr[i] = left;\n            left *= nums[i];\n        }\n        for (int i = nums.length - 1; i >= 0; i--) {\n            arr[i] *= right;\n            right *= nums[i];\n        }\n        return arr;\n    }\n\n    public int[] productExceptSelfNumsAsPrefix(int[] nums) {\n        int[] output = new int[nums.length];\n        output[0] = 1;\n\n        for (int i = 0; i < nums.length - 1; i++) output[i + 1] =\n            output[i] * nums[i];\n\n        for (int i = nums.length - 2; i >= 0; i--) {\n            output[i] = nums[i + 1] * output[i];\n            nums[i] = nums[i] * nums[i + 1];\n        }\n        return output;\n    }\n}\n",
+          "reviewedCode": "//Just store the left and right product (Try doing this with extra space first)\n//This one is constant space because we are returning the array we created\n//In first pass calculate the left product except self and in second calculate the right\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently.\nclass Solution {\n\n    public int[] productExceptSelf(int[] nums) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.\n        int[] arr = new int[nums.length];\n        int right = 1, left = 1;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = 0; i < nums.length; i++) {\n            arr[i] = left;\n            left *= nums[i];\n        }\n        for (int i = nums.length - 1; i >= 0; i--) {\n            arr[i] *= right;\n            right *= nums[i];\n        }\n        return arr;\n    }\n\n    public int[] productExceptSelfNumsAsPrefix(int[] nums) {\n        int[] output = new int[nums.length];\n        output[0] = 1;\n\n        for (int i = 0; i < nums.length - 1; i++) output[i + 1] =\n            output[i] * nums[i];\n\n        for (int i = nums.length - 2; i >= 0; i--) {\n            output[i] = nums[i + 1] * output[i];\n            nums[i] = nums[i] * nums[i + 1];\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return output;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Just store the left and right product (Try doing this with extra space first)",
+            "This one is constant space because we are returning the array we created"
+          ],
+          "annotations": [
+            {
+              "line": 5,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently."
+            },
+            {
+              "line": 8,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse."
+            },
+            {
+              "line": 10,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 32,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It teaches the value of deliberate passes and reusable partial work without requiring heavy theory.",
+            "whatToNotice": "Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.",
+            "riskPoint": "The logic is short, but careless ordering will overwrite information you still need."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0200-0299-0238.product-of-array-except-self-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0200-0299/0238.Product%20of%20Array%20Except%20Self/Solution.java",
+          "localPath": "doocs_leetcode/solution/0200-0299/0238.Product of Array Except Self/Solution.java",
+          "relativePath": "solution/0200-0299/0238.Product of Array Except Self/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\n    public int[] productExceptSelf(int[] nums) {\n        int n = nums.length;\n        int[] ans = new int[n];\n        for (int i = 0, left = 1; i < n; ++i) {\n            ans[i] = left;\n            left *= nums[i];\n        }\n        for (int i = n - 1, right = 1; i >= 0; --i) {\n            ans[i] *= right;\n            right *= nums[i];\n        }\n        return ans;\n    }\n}",
+          "originalCode": "class Solution {\n    public int[] productExceptSelf(int[] nums) {\n        int n = nums.length;\n        int[] ans = new int[n];\n        for (int i = 0, left = 1; i < n; ++i) {\n            ans[i] = left;\n            left *= nums[i];\n        }\n        for (int i = n - 1, right = 1; i >= 0; --i) {\n            ans[i] *= right;\n            right *= nums[i];\n        }\n        return ans;\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently.\nclass Solution {\n    public int[] productExceptSelf(int[] nums) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.\n        int n = nums.length;\n        int[] ans = new int[n];\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = 0, left = 1; i < n; ++i) {\n            ans[i] = left;\n            left *= nums[i];\n        }\n        for (int i = n - 1, right = 1; i >= 0; --i) {\n            ans[i] *= right;\n            right *= nums[i];\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return ans;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse."
+            },
+            {
+              "line": 5,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 13,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It teaches the value of deliberate passes and reusable partial work without requiring heavy theory.",
+            "whatToNotice": "Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.",
+            "riskPoint": "The logic is short, but careless ordering will overwrite information you still need."
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-go-0238-product-of-array-except-self.go",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/go/0238-product-of-array-except-self.go",
+          "localPath": "neetcode-gh_leetcode/go/0238-product-of-array-except-self.go",
+          "relativePath": "go/0238-product-of-array-except-self.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code",
+          "code": "func productExceptSelf(nums []int) []int {\n\tres := make([]int, len(nums))\n\n\tprefix := 1\n\tfor i, num := range nums {\n\t\tres[i] = prefix\n\t\tprefix *= num\n\t}\n\n\tpostfix := 1\n\tfor i := len(nums) - 1; i >= 0; i-- {\n\t\tres[i] *= postfix\n\t\tpostfix *= nums[i]\n\t}\n\treturn res\n}\n",
+          "originalCode": "func productExceptSelf(nums []int) []int {\n\tres := make([]int, len(nums))\n\n\tprefix := 1\n\tfor i, num := range nums {\n\t\tres[i] = prefix\n\t\tprefix *= num\n\t}\n\n\tpostfix := 1\n\tfor i := len(nums) - 1; i >= 0; i-- {\n\t\tres[i] *= postfix\n\t\tpostfix *= nums[i]\n\t}\n\treturn res\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently.\nfunc productExceptSelf(nums []int) []int {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.\n\tres := make([]int, len(nums))\n\n\tprefix := 1\n\t// [Reader note] Main pass\n\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\tfor i, num := range nums {\n\t\tres[i] = prefix\n\t\tprefix *= num\n\t}\n\n\tpostfix := 1\n\tfor i := len(nums) - 1; i >= 0; i-- {\n\t\tres[i] *= postfix\n\t\tpostfix *= nums[i]\n\t}\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn res\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse."
+            },
+            {
+              "line": 5,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 15,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It teaches the value of deliberate passes and reusable partial work without requiring heavy theory.",
+            "whatToNotice": "Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.",
+            "riskPoint": "The logic is short, but careless ordering will overwrite information you still need."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0200-0299-0238.product-of-array-except-self-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0200-0299/0238.Product%20of%20Array%20Except%20Self/Solution.go",
+          "localPath": "doocs_leetcode/solution/0200-0299/0238.Product of Array Except Self/Solution.go",
+          "relativePath": "solution/0200-0299/0238.Product of Array Except Self/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "func productExceptSelf(nums []int) []int {\n\tn := len(nums)\n\tans := make([]int, n)\n\tleft, right := 1, 1\n\tfor i, x := range nums {\n\t\tans[i] = left\n\t\tleft *= x\n\t}\n\tfor i := n - 1; i >= 0; i-- {\n\t\tans[i] *= right\n\t\tright *= nums[i]\n\t}\n\treturn ans\n}",
+          "originalCode": "func productExceptSelf(nums []int) []int {\n\tn := len(nums)\n\tans := make([]int, n)\n\tleft, right := 1, 1\n\tfor i, x := range nums {\n\t\tans[i] = left\n\t\tleft *= x\n\t}\n\tfor i := n - 1; i >= 0; i-- {\n\t\tans[i] *= right\n\t\tright *= nums[i]\n\t}\n\treturn ans\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently.\nfunc productExceptSelf(nums []int) []int {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.\n\tn := len(nums)\n\tans := make([]int, n)\n\tleft, right := 1, 1\n\t// [Reader note] Main pass\n\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\tfor i, x := range nums {\n\t\tans[i] = left\n\t\tleft *= x\n\t}\n\tfor i := n - 1; i >= 0; i-- {\n\t\tans[i] *= right\n\t\tright *= nums[i]\n\t}\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn ans\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse."
+            },
+            {
+              "line": 5,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 13,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It teaches the value of deliberate passes and reusable partial work without requiring heavy theory.",
+            "whatToNotice": "Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.",
+            "riskPoint": "The logic is short, but careless ordering will overwrite information you still need."
+          }
+        }
+      ]
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0200-0299-0238.product-of-array-except-self-solution.ts",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0200-0299/0238.Product%20of%20Array%20Except%20Self/Solution.ts",
+          "localPath": "doocs_leetcode/solution/0200-0299/0238.Product of Array Except Self/Solution.ts",
+          "relativePath": "solution/0200-0299/0238.Product of Array Except Self/Solution.ts",
+          "languageId": "typescript",
+          "languageLabel": "TypeScript",
+          "coverageType": "code+explanation",
+          "code": "function productExceptSelf(nums: number[]): number[] {\n    const n = nums.length;\n    const ans: number[] = new Array(n);\n    for (let i = 0, left = 1; i < n; ++i) {\n        ans[i] = left;\n        left *= nums[i];\n    }\n    for (let i = n - 1, right = 1; i >= 0; --i) {\n        ans[i] *= right;\n        right *= nums[i];\n    }\n    return ans;\n}\n",
+          "originalCode": "function productExceptSelf(nums: number[]): number[] {\n    const n = nums.length;\n    const ans: number[] = new Array(n);\n    for (let i = 0, left = 1; i < n; ++i) {\n        ans[i] = left;\n        left *= nums[i];\n    }\n    for (let i = n - 1, right = 1; i >= 0; --i) {\n        ans[i] *= right;\n        right *= nums[i];\n    }\n    return ans;\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently.\nfunction productExceptSelf(nums: number[]): number[] {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.\n    const n = nums.length;\n    const ans: number[] = new Array(n);\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (let i = 0, left = 1; i < n; ++i) {\n        ans[i] = left;\n        left *= nums[i];\n    }\n    for (let i = n - 1, right = 1; i >= 0; --i) {\n        ans[i] *= right;\n        right *= nums[i];\n    }\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return ans;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse."
+            },
+            {
+              "line": 4,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 12,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It teaches the value of deliberate passes and reusable partial work without requiring heavy theory.",
+            "whatToNotice": "Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.",
+            "riskPoint": "The logic is short, but careless ordering will overwrite information you still need."
+          }
+        }
+      ]
+    },
+    {
+      "id": "javascript",
+      "label": "JavaScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-javascript-0238-product-of-array-except-self.js",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/javascript/0238-product-of-array-except-self.js",
+          "localPath": "neetcode-gh_leetcode/javascript/0238-product-of-array-except-self.js",
+          "relativePath": "javascript/0238-product-of-array-except-self.js",
+          "languageId": "javascript",
+          "languageLabel": "JavaScript",
+          "coverageType": "code",
+          "code": "/**\n * Array\n * Time O(N) | Space O(N)\n * https://leetcode.com/problems/product-of-array-except-self/\n * @param {number[]} nums\n * @return {number[]}\n */\nfunction productExceptSelf(nums) {\n    const result = [];\n    let prefix = 1;\n    let postfix = 1;\n\n    for (let i = 0; i < nums.length; i++) {\n        result[i] = prefix;\n        prefix *= nums[i];\n    }\n    for (let i = nums.length - 2; i >= 0; i--) {\n        postfix *= nums[i + 1];\n        result[i] *= postfix;\n    }\n\n    return result;\n}\n",
+          "originalCode": "/**\n * Array\n * Time O(N) | Space O(N)\n * https://leetcode.com/problems/product-of-array-except-self/\n * @param {number[]} nums\n * @return {number[]}\n */\nfunction productExceptSelf(nums) {\n    const result = [];\n    let prefix = 1;\n    let postfix = 1;\n\n    for (let i = 0; i < nums.length; i++) {\n        result[i] = prefix;\n        prefix *= nums[i];\n    }\n    for (let i = nums.length - 2; i >= 0; i--) {\n        postfix *= nums[i + 1];\n        result[i] *= postfix;\n    }\n\n    return result;\n}\n",
+          "reviewedCode": "/**\n * Array\n * Time O(N) | Space O(N)\n * https://leetcode.com/problems/product-of-array-except-self/\n * @param {number[]} nums\n * @return {number[]}\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently.\nfunction productExceptSelf(nums) {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.\n    const result = [];\n    let prefix = 1;\n    let postfix = 1;\n\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (let i = 0; i < nums.length; i++) {\n        result[i] = prefix;\n        prefix *= nums[i];\n    }\n    for (let i = nums.length - 2; i >= 0; i--) {\n        postfix *= nums[i + 1];\n        result[i] *= postfix;\n    }\n\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return result;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time O(N) | Space O(N)"
+          ],
+          "annotations": [
+            {
+              "line": 8,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently."
+            },
+            {
+              "line": 9,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse."
+            },
+            {
+              "line": 13,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 22,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It teaches the value of deliberate passes and reusable partial work without requiring heavy theory.",
+            "whatToNotice": "Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.",
+            "riskPoint": "The logic is short, but careless ordering will overwrite information you still need."
+          }
+        }
+      ]
+    },
+    {
+      "id": "csharp",
+      "label": "C#",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-csharp-0238-product-of-array-except-self.cs",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/csharp/0238-product-of-array-except-self.cs",
+          "localPath": "neetcode-gh_leetcode/csharp/0238-product-of-array-except-self.cs",
+          "relativePath": "csharp/0238-product-of-array-except-self.cs",
+          "languageId": "csharp",
+          "languageLabel": "C#",
+          "coverageType": "code",
+          "code": "public class Solution {\n    public int[] ProductExceptSelf(int[] nums) {\n        int prefix = 1, postfix = 1;\n        int[] res = new int[nums.Length];        \n        \n        for(int i = 0; i < nums.Length; i++){\n            res[i] = prefix;\n            prefix *= nums[i];             \n        }\n        \n        for(int i = nums.Length-1; i>=0; i--){\n            res[i] *= postfix;\n            postfix *= nums[i];          \n        }\n        return res;\n    }\n}\n",
+          "originalCode": "public class Solution {\n    public int[] ProductExceptSelf(int[] nums) {\n        int prefix = 1, postfix = 1;\n        int[] res = new int[nums.Length];        \n        \n        for(int i = 0; i < nums.Length; i++){\n            res[i] = prefix;\n            prefix *= nums[i];             \n        }\n        \n        for(int i = nums.Length-1; i>=0; i--){\n            res[i] *= postfix;\n            postfix *= nums[i];          \n        }\n        return res;\n    }\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently.\npublic class Solution {\n    public int[] ProductExceptSelf(int[] nums) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.\n        int prefix = 1, postfix = 1;\n        int[] res = new int[nums.Length];        \n        \n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for(int i = 0; i < nums.Length; i++){\n            res[i] = prefix;\n            prefix *= nums[i];             \n        }\n        \n        for(int i = nums.Length-1; i>=0; i--){\n            res[i] *= postfix;\n            postfix *= nums[i];          \n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return res;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse."
+            },
+            {
+              "line": 6,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 15,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It teaches the value of deliberate passes and reusable partial work without requiring heavy theory.",
+            "whatToNotice": "Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.",
+            "riskPoint": "The logic is short, but careless ordering will overwrite information you still need."
+          }
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "label": "C",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-c-0238-product-of-array-except-self.c",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/c/0238-product-of-array-except-self.c",
+          "localPath": "neetcode-gh_leetcode/c/0238-product-of-array-except-self.c",
+          "relativePath": "c/0238-product-of-array-except-self.c",
+          "languageId": "c",
+          "languageLabel": "C",
+          "coverageType": "code",
+          "code": "/*\n    Time: O(n)\n    Space: O(n)\n\n * Note: The returned array must be malloced, assume caller calls free().\n*/\n\nint* productExceptSelf(int* nums, int numsSize, int* returnSize) {\n    *returnSize = numsSize;\n    \n    int *result = (int *)malloc(sizeof(int)*numsSize);\n    memset(result, 1, numsSize*sizeof(result[0])); // Fill up result array with 1s\n    \n    int pre = 1;\n    for(int i=0; i<numsSize; i++) {\n        result[i] = pre;\n        pre *= nums[i];\n    }\n    \n    int post = 1;\n    for(int i=numsSize-1; i>=0; i--) {\n        result[i] *= post;\n        post *= nums[i];\n    }\n    \n    return result;\n}",
+          "originalCode": "/*\n    Time: O(n)\n    Space: O(n)\n\n * Note: The returned array must be malloced, assume caller calls free().\n*/\n\nint* productExceptSelf(int* nums, int numsSize, int* returnSize) {\n    *returnSize = numsSize;\n    \n    int *result = (int *)malloc(sizeof(int)*numsSize);\n    memset(result, 1, numsSize*sizeof(result[0])); // Fill up result array with 1s\n    \n    int pre = 1;\n    for(int i=0; i<numsSize; i++) {\n        result[i] = pre;\n        pre *= nums[i];\n    }\n    \n    int post = 1;\n    for(int i=numsSize-1; i>=0; i--) {\n        result[i] *= post;\n        post *= nums[i];\n    }\n    \n    return result;\n}",
+          "reviewedCode": "/*\n    // [Reader note] Entry point\n    // Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently.\n    Time: O(n)\n    Space: O(n)\n\n * Note: The returned array must be malloced, assume caller calls free().\n*/\n\nint* productExceptSelf(int* nums, int numsSize, int* returnSize) {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.\n    *returnSize = numsSize;\n    \n    int *result = (int *)malloc(sizeof(int)*numsSize);\n    memset(result, 1, numsSize*sizeof(result[0])); // Fill up result array with 1s\n    \n    int pre = 1;\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for(int i=0; i<numsSize; i++) {\n        result[i] = pre;\n        pre *= nums[i];\n    }\n    \n    int post = 1;\n    for(int i=numsSize-1; i>=0; i--) {\n        result[i] *= post;\n        post *= nums[i];\n    }\n    \n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return result;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time: O(n)",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 2,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently."
+            },
+            {
+              "line": 9,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse."
+            },
+            {
+              "line": 15,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 26,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It teaches the value of deliberate passes and reusable partial work without requiring heavy theory.",
+            "whatToNotice": "Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.",
+            "riskPoint": "The logic is short, but careless ordering will overwrite information you still need."
+          }
+        }
+      ]
+    },
+    {
+      "id": "kotlin",
+      "label": "Kotlin",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-kotlin-0238-product-of-array-except-self.kt",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/kotlin/0238-product-of-array-except-self.kt",
+          "localPath": "neetcode-gh_leetcode/kotlin/0238-product-of-array-except-self.kt",
+          "relativePath": "kotlin/0238-product-of-array-except-self.kt",
+          "languageId": "kotlin",
+          "languageLabel": "Kotlin",
+          "coverageType": "code",
+          "code": "package kotlin\n\n\nfun main() {\n    val nums = intArrayOf(1, 2, 3, 4)\n    //o.p : 24, 12,8,6\n}\n\nfun productExceptSelf(nums: IntArray): IntArray {\n    val res = IntArray(nums.size)\n\n    var prefix = 1\n\n    for (i in 0 until nums.size) {\n        res[i] = prefix\n        prefix *= nums[i]\n    }\n\n    var postfix = 1\n    for (i in nums.size - 1 downTo 0) {\n        res[i] *= postfix\n        postfix *= nums[i]\n    }\n\n    return res\n}",
+          "originalCode": "package kotlin\n\n\nfun main() {\n    val nums = intArrayOf(1, 2, 3, 4)\n    //o.p : 24, 12,8,6\n}\n\nfun productExceptSelf(nums: IntArray): IntArray {\n    val res = IntArray(nums.size)\n\n    var prefix = 1\n\n    for (i in 0 until nums.size) {\n        res[i] = prefix\n        prefix *= nums[i]\n    }\n\n    var postfix = 1\n    for (i in nums.size - 1 downTo 0) {\n        res[i] *= postfix\n        postfix *= nums[i]\n    }\n\n    return res\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently.\npackage kotlin\n\n\nfun main() {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.\n    val nums = intArrayOf(1, 2, 3, 4)\n    //o.p : 24, 12,8,6\n}\n\nfun productExceptSelf(nums: IntArray): IntArray {\n    val res = IntArray(nums.size)\n\n    var prefix = 1\n\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (i in 0 until nums.size) {\n        res[i] = prefix\n        prefix *= nums[i]\n    }\n\n    var postfix = 1\n    for (i in nums.size - 1 downTo 0) {\n        res[i] *= postfix\n        postfix *= nums[i]\n    }\n\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return res\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Use partial work from each side instead of recomputing every view independently."
+            },
+            {
+              "line": 5,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse."
+            },
+            {
+              "line": 14,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 25,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It teaches the value of deliberate passes and reusable partial work without requiring heavy theory.",
+            "whatToNotice": "Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.",
+            "riskPoint": "The logic is short, but careless ordering will overwrite information you still need."
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "doocs_leetcode-solution-0200-0299-0238.product-of-array-except-self-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0200-0299/0238.Product%20of%20Array%20Except%20Self/README.md",
+      "localPath": "doocs_leetcode/solution/0200-0299/0238.Product of Array Except Self/README.md",
+      "relativePath": "solution/0200-0299/0238.Product of Array Except Self/README.md",
+      "title": "[238. \u9664\u4e86\u81ea\u8eab\u4ee5\u5916\u6570\u7ec4\u7684\u4e58\u79ef](https://leetcode.cn/problems/product-of-array-except-self)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/0200-0299/0238.Product%20of%20Array%20Except%20Self/README.md tags: - \u6570\u7ec4 - \u524d\u7f00\u548c --- <!-- problem:start --> # [238. \u9664\u4e86\u81ea\u8eab\u4ee5\u5916\u6570\u7ec4\u7684\u4e58\u79ef](https://leetcode.cn/problems/product-of-array-except-self) [English Version](/solution/0200-0299/0238.Product%20of%20Array%20Except%20Self/README_EN.md) ## \u9898\u76ee\u63cf\u8ff0 <!-- description:start --> <p>\u7ed9\u4f60\u4e00\u4e2a..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0200-0299-0238.product-of-array-except-self-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0200-0299/0238.Product%20of%20Array%20Except%20Self/README_EN.md",
+      "localPath": "doocs_leetcode/solution/0200-0299/0238.Product of Array Except Self/README_EN.md",
+      "relativePath": "solution/0200-0299/0238.Product of Array Except Self/README_EN.md",
+      "title": "[238. Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/0200-0299/0238.Product%20of%20Array%20Except%20Self/README_EN.md tags: - Array - Prefix Sum --- <!-- problem:start --> # [238. Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self) [\u4e2d\u6587\u6587\u6863](/solution/0200-0299/0238.Product%20of%20Array%20Except%20Self/README.md) ## Description <!-- d..."
+    }
+  ]
+}

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Medium LeetCode Explorer</title>
+    <meta
+      name="description"
+      content="A repository-aware, decision-grade Medium LeetCode explorer for the Easy-to-Medium transition."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-app-ready="false" data-selected-problem="" data-visible-count="0">
+    <a class="skip-link" href="#workspace">Skip to workspace</a>
+
+    <div class="app-shell" data-testid="app-shell">
+      <aside class="sidebar" aria-label="Navigation and route entry" data-testid="orientation-rail">
+        <div class="sidebar-head">
+          <p class="sidebar-kicker">Medium Problem Field Guide</p>
+          <h1>Choose faster. Practice better.</h1>
+          <p class="sidebar-copy">
+            A field guide plus operator workspace for choosing the next useful
+            Medium without digging through noise.
+          </p>
+        </div>
+
+        <section class="sidebar-section" aria-labelledby="sidebar-start-title">
+          <div class="section-head">
+            <p class="section-kicker">Routes</p>
+            <h2 id="sidebar-start-title">Start from a real practice goal</h2>
+          </div>
+          <div id="sidebar-quick-views" class="nav-stack"></div>
+        </section>
+
+        <section class="sidebar-section" aria-labelledby="sidebar-guides-title">
+          <div class="section-head">
+            <p class="section-kicker">Guides</p>
+            <h2 id="sidebar-guides-title">Topic pages</h2>
+          </div>
+          <div id="sidebar-guides" class="nav-stack"></div>
+        </section>
+
+        <details class="sidebar-section sidebar-details">
+          <summary>Advanced filters</summary>
+          <div class="filter-group">
+            <h3>Phase</h3>
+            <div id="phase-filters" class="token-wrap"></div>
+          </div>
+          <div class="filter-group">
+            <h3>Concept</h3>
+            <div id="concept-filters" class="token-wrap"></div>
+          </div>
+          <div class="filter-group">
+            <h3>Clarity</h3>
+            <div id="clarity-filters" class="token-wrap"></div>
+          </div>
+          <div class="filter-group">
+            <h3>Effort</h3>
+            <div id="effort-filters" class="token-wrap"></div>
+          </div>
+          <div class="filter-group">
+            <h3>Signals</h3>
+            <div id="toggle-filters" class="token-wrap"></div>
+          </div>
+        </details>
+
+        <section class="sidebar-section sidebar-metrics" aria-label="Progress snapshot">
+          <div class="section-head compact">
+            <div>
+              <p class="section-kicker">Snapshot</p>
+              <h2>Current field guide state</h2>
+            </div>
+          </div>
+          <div class="metric-grid">
+            <div class="metric-box">
+              <span>Curated</span>
+              <strong id="metric-total">49</strong>
+            </div>
+            <div class="metric-box">
+              <span>Solved</span>
+              <strong id="metric-solved">0</strong>
+            </div>
+            <div class="metric-box">
+              <span>Pinned</span>
+              <strong id="metric-pinned">0</strong>
+            </div>
+            <div class="metric-box">
+              <span>Repos</span>
+              <strong id="metric-repos">6</strong>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <main class="main-shell" data-testid="main-shell">
+        <header class="topbar" data-testid="topbar">
+          <div class="topbar-copy">
+            <p class="section-kicker">Decision Workspace</p>
+            <h2>Recommendation-first catalog with stable detail context</h2>
+          </div>
+          <div class="topbar-actions">
+            <label class="search-field" for="search-input">
+              <span class="visually-hidden">Search problems</span>
+              <input
+                id="search-input"
+                data-testid="search-input"
+                type="search"
+                placeholder="Search by title, pattern, or note"
+                autocomplete="off"
+              />
+            </label>
+            <select id="sort-select" class="control-select" aria-label="Sort problems" data-testid="sort-select">
+              <option value="recommended">Recommended order</option>
+              <option value="clarity">Clarity first</option>
+              <option value="effort">Lower effort first</option>
+              <option value="title">Title</option>
+            </select>
+            <button id="pick-next-button" class="button button-primary" type="button" data-testid="pick-next-button">
+              Pick next
+            </button>
+            <button id="reset-filters-button" class="button" type="button" data-testid="reset-filters-button">
+              Reset
+            </button>
+          </div>
+        </header>
+
+        <section class="overview-row" aria-labelledby="overview-title" data-testid="overview-row">
+          <div class="overview-main">
+            <div class="section-head compact">
+              <div>
+                <p class="section-kicker">Orientation</p>
+                <h2 id="overview-title">Current route through the field guide</h2>
+              </div>
+              <div class="toggle-line">
+                <label class="checkbox-inline" for="compact-toggle">
+                  <input id="compact-toggle" type="checkbox" />
+                  <span>Compact catalog</span>
+                </label>
+                <button id="clear-state-button" class="button button-quiet" type="button">
+                  Clear saved state
+                </button>
+              </div>
+            </div>
+            <div id="hero-recommendations" class="recommendation-grid" data-testid="hero-recommendations"></div>
+          </div>
+
+          <aside class="overview-side">
+            <div class="summary-card">
+              <p class="section-kicker">Visible slice</p>
+              <h3 id="list-count">49 visible</h3>
+              <p id="list-status" class="summary-copy">0 solved in view</p>
+              <div id="active-filter-bar" class="active-filter-bar" data-testid="active-filter-bar"></div>
+            </div>
+            <div id="guide-strip-links" class="guide-grid" data-testid="guide-strip-links"></div>
+          </aside>
+        </section>
+
+        <section class="roadmap-panel" data-testid="roadmap-panel">
+          <div class="roadmap-head">
+            <div>
+              <p class="section-kicker">Progression map</p>
+              <h2>Visible route through the learning landscape</h2>
+              <p class="roadmap-copy">
+                Use the map to locate the current slice, filter by stage, or jump
+                directly into a problem without losing the workspace context.
+              </p>
+            </div>
+            <div id="roadmap-context" class="roadmap-context" data-testid="roadmap-context"></div>
+          </div>
+          <div class="roadmap-shell">
+            <svg
+              id="roadmap-svg"
+              class="roadmap-svg"
+              data-testid="roadmap-svg"
+              viewBox="0 0 1240 420"
+              role="img"
+              aria-labelledby="roadmap-title roadmap-desc"
+            >
+              <title id="roadmap-title">Medium progression map</title>
+              <desc id="roadmap-desc">
+                Interactive roadmap showing phase progression and grouped problem nodes.
+              </desc>
+            </svg>
+            <div id="roadmap-tooltip" class="roadmap-tooltip" hidden></div>
+          </div>
+        </section>
+
+        <section id="workspace" class="workspace" aria-label="Explorer workspace" data-testid="workspace">
+          <section class="catalog-pane" data-testid="catalog-pane">
+            <div class="pane-head">
+              <div>
+                <p class="section-kicker">Catalog</p>
+                <h2>Curated route through the current slice</h2>
+              </div>
+              <p class="pane-copy">
+                Scroll here without losing the selected problem on the right.
+              </p>
+            </div>
+
+            <div id="featured-picks" class="featured-strip" data-testid="featured-picks"></div>
+
+            <div id="catalog-scroll" class="catalog-scroll" data-testid="catalog-scroll">
+              <div id="phase-groups" class="phase-groups" data-testid="phase-groups"></div>
+            </div>
+          </section>
+
+          <aside class="detail-pane" data-testid="detail-pane">
+            <div class="pane-head">
+              <div>
+                <p class="section-kicker">Inspection panel</p>
+                <h2>Why this problem, where it sits, and what supports it</h2>
+              </div>
+              <div class="pane-tools">
+                <button id="toggle-detail-width" class="button button-quiet" type="button" data-testid="toggle-detail-width">
+                  Widen reading
+                </button>
+              </div>
+            </div>
+            <div id="detail-scroll" class="detail-scroll" data-testid="detail-scroll">
+              <div id="detail-content" class="detail-content" data-testid="detail-content">
+                <p class="empty-state">
+                  Select a problem to inspect the recommendation, local support,
+                  and teaching links.
+                </p>
+              </div>
+            </div>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <div id="solution-dialog" class="solution-dialog" data-open="false" hidden data-testid="solution-dialog">
+      <div class="solution-backdrop" data-close-solutions="true"></div>
+      <section class="solution-panel" aria-labelledby="solution-dialog-title">
+        <header class="solution-panel-head">
+          <div>
+            <p class="section-kicker">Solution Workspace</p>
+            <h2 id="solution-dialog-title" data-testid="solution-dialog-title">Attributed implementations</h2>
+            <p id="solution-dialog-subtitle" class="summary-copy">Choose a language and compare repo implementations.</p>
+          </div>
+          <button id="solution-dialog-close" class="button" type="button" data-testid="solution-dialog-close">
+            Close
+          </button>
+        </header>
+
+        <div id="solution-dialog-status" class="solution-status" data-testid="solution-dialog-status"></div>
+        <div id="solution-language-tabs" class="solution-language-tabs" data-testid="solution-language-tabs"></div>
+        <div id="solution-source-tabs" class="solution-source-tabs" data-testid="solution-source-tabs"></div>
+
+        <div class="solution-layout">
+          <aside class="solution-sidebar">
+            <article id="solution-attribution" class="detail-block" data-testid="solution-attribution"></article>
+            <article id="solution-review" class="detail-block" data-testid="solution-review"></article>
+            <article id="solution-writeups" class="detail-block" data-testid="solution-writeups"></article>
+          </aside>
+
+          <section class="solution-code-shell">
+            <div class="solution-code-toolbar">
+              <button id="solution-copy-code" class="button button-quiet" type="button" data-testid="solution-copy-code">
+                Copy code
+              </button>
+            </div>
+            <div id="solution-code" class="solution-code" data-testid="solution-code"></div>
+          </section>
+        </div>
+      </section>
+    </div>
+
+    <script src="data/problems.js"></script>
+    <script src="data/topic-guides.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,816 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "combination-sum",
+  "problemTitle": "Combination Sum",
+  "problemNumber": 39,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go",
+      "typescript",
+      "javascript",
+      "csharp",
+      "c",
+      "kotlin"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go",
+      "TypeScript",
+      "JavaScript",
+      "C#",
+      "C",
+      "Kotlin"
+    ],
+    "solutionCount": 15,
+    "writeupCount": 2,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 3,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-python-0039-combination-sum.py",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/python/0039-combination-sum.py",
+          "localPath": "neetcode-gh_leetcode/python/0039-combination-sum.py",
+          "relativePath": "python/0039-combination-sum.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code",
+          "code": "class Solution:\n    def combinationSum(self, candidates: List[int], target: int) -> List[List[int]]:\n        res = []\n\n        def dfs(i, cur, total):\n            if total == target:\n                res.append(cur.copy())\n                return\n            if i >= len(candidates) or total > target:\n                return\n\n            cur.append(candidates[i])\n            dfs(i, cur, total + candidates[i])\n            cur.pop()\n            dfs(i + 1, cur, total)\n\n        dfs(0, [], 0)\n        return res\n",
+          "originalCode": "class Solution:\n    def combinationSum(self, candidates: List[int], target: int) -> List[List[int]]:\n        res = []\n\n        def dfs(i, cur, total):\n            if total == target:\n                res.append(cur.copy())\n                return\n            if i >= len(candidates) or total > target:\n                return\n\n            cur.append(candidates[i])\n            dfs(i, cur, total + candidates[i])\n            cur.pop()\n            dfs(i + 1, cur, total)\n\n        dfs(0, [], 0)\n        return res\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it.\nclass Solution:\n    def combinationSum(self, candidates: List[int], target: int) -> List[List[int]]:\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.\n        res = []\n\n        def dfs(i, cur, total):\n            # [Reader note] Decision point\n            # Pay attention here: The important design choice is how you keep the search from reordering the same combination into noisy duplicates.\n            if total == target:\n                res.append(cur.copy())\n                return\n            if i >= len(candidates) or total > target:\n                return\n\n            cur.append(candidates[i])\n            dfs(i, cur, total + candidates[i])\n            cur.pop()\n            dfs(i + 1, cur, total)\n\n        dfs(0, [], 0)\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return res",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work."
+            },
+            {
+              "line": 6,
+              "label": "Decision point",
+              "note": "Pay attention here: The important design choice is how you keep the search from reordering the same combination into noisy duplicates."
+            },
+            {
+              "line": 18,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong transition backtracking problem because target pressure and reuse rules make the recursion more realistic.",
+            "whatToNotice": "State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.",
+            "riskPoint": "The important design choice is how you keep the search from reordering the same combination into noisy duplicates."
+          }
+        },
+        {
+          "id": "kamyu104_leetcode-solutions-python-combination-sum.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/combination-sum.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/combination-sum.py",
+          "relativePath": "Python/combination-sum.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(k * n^k)\n# Space: O(k)\n\nclass Solution(object):\n    # @param candidates, a list of integers\n    # @param target, integer\n    # @return a list of lists of integers\n    def combinationSum(self, candidates, target):\n        result = []\n        self.combinationSumRecu(sorted(candidates), result, 0, [], target)\n        return result\n\n    def combinationSumRecu(self, candidates, result, start, intermediate, target):\n        if target == 0:\n            result.append(list(intermediate))\n        while start < len(candidates) and candidates[start] <= target:\n            intermediate.append(candidates[start])\n            self.combinationSumRecu(candidates, result, start, intermediate, target - candidates[start])\n            intermediate.pop()\n            start += 1\n\n",
+          "originalCode": "# Time:  O(k * n^k)\n# Space: O(k)\n\nclass Solution(object):\n    # @param candidates, a list of integers\n    # @param target, integer\n    # @return a list of lists of integers\n    def combinationSum(self, candidates, target):\n        result = []\n        self.combinationSumRecu(sorted(candidates), result, 0, [], target)\n        return result\n\n    def combinationSumRecu(self, candidates, result, start, intermediate, target):\n        if target == 0:\n            result.append(list(intermediate))\n        while start < len(candidates) and candidates[start] <= target:\n            intermediate.append(candidates[start])\n            self.combinationSumRecu(candidates, result, start, intermediate, target - candidates[start])\n            intermediate.pop()\n            start += 1\n\n",
+          "reviewedCode": "# Time:  O(k * n^k)\n# Space: O(k)\n\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it.\nclass Solution(object):\n    # @param candidates, a list of integers\n    # @param target, integer\n    # @return a list of lists of integers\n    def combinationSum(self, candidates, target):\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.\n        result = []\n        self.combinationSumRecu(sorted(candidates), result, 0, [], target)\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return result\n\n    def combinationSumRecu(self, candidates, result, start, intermediate, target):\n        if target == 0:\n            result.append(list(intermediate))\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while start < len(candidates) and candidates[start] <= target:\n            intermediate.append(candidates[start])\n            self.combinationSumRecu(candidates, result, start, intermediate, target - candidates[start])\n            intermediate.pop()\n            start += 1\n",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(k * n^k)",
+            "Space: O(k)"
+          ],
+          "annotations": [
+            {
+              "line": 4,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it."
+            },
+            {
+              "line": 9,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work."
+            },
+            {
+              "line": 16,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 11,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong transition backtracking problem because target pressure and reuse rules make the recursion more realistic.",
+            "whatToNotice": "State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.",
+            "riskPoint": "The important design choice is how you keep the search from reordering the same combination into noisy duplicates."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0039.combination-sum-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0039.Combination%20Sum/Solution.py",
+          "localPath": "doocs_leetcode/solution/0000-0099/0039.Combination Sum/Solution.py",
+          "relativePath": "solution/0000-0099/0039.Combination Sum/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "class Solution:\n    def combinationSum(self, candidates: List[int], target: int) -> List[List[int]]:\n        def dfs(i: int, s: int):\n            if s == 0:\n                ans.append(t[:])\n                return\n            if s < candidates[i]:\n                return\n            for j in range(i, len(candidates)):\n                t.append(candidates[j])\n                dfs(j, s - candidates[j])\n                t.pop()\n\n        candidates.sort()\n        t = []\n        ans = []\n        dfs(0, target)\n        return ans\n",
+          "originalCode": "class Solution:\n    def combinationSum(self, candidates: List[int], target: int) -> List[List[int]]:\n        def dfs(i: int, s: int):\n            if s == 0:\n                ans.append(t[:])\n                return\n            if s < candidates[i]:\n                return\n            for j in range(i, len(candidates)):\n                t.append(candidates[j])\n                dfs(j, s - candidates[j])\n                t.pop()\n\n        candidates.sort()\n        t = []\n        ans = []\n        dfs(0, target)\n        return ans\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it.\nclass Solution:\n    def combinationSum(self, candidates: List[int], target: int) -> List[List[int]]:\n        def dfs(i: int, s: int):\n            # [Reader note] State setup\n            # This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.\n            if s == 0:\n                ans.append(t[:])\n                return\n            if s < candidates[i]:\n                return\n            # [Reader note] Main pass\n            # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for j in range(i, len(candidates)):\n                t.append(candidates[j])\n                dfs(j, s - candidates[j])\n                t.pop()\n\n        candidates.sort()\n        t = []\n        ans = []\n        dfs(0, target)\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return ans",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work."
+            },
+            {
+              "line": 9,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 18,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong transition backtracking problem because target pressure and reuse rules make the recursion more realistic.",
+            "whatToNotice": "State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.",
+            "riskPoint": "The important design choice is how you keep the search from reordering the same combination into noisy duplicates."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 3,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-cpp-0039-combination-sum.cpp",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/cpp/0039-combination-sum.cpp",
+          "localPath": "neetcode-gh_leetcode/cpp/0039-combination-sum.cpp",
+          "relativePath": "cpp/0039-combination-sum.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code",
+          "code": "/*\n    Given distinct int array & a target, return list of all unique combos that sum to target\n    Ex. candidates = [2,3,6,7] target = 7 -> [[2,2,3],[7]]\n\n    Backtracking, generate all combo sums, push/pop + index checking to explore new combos\n\n    Time: O(2^target)\n    Space: O(target)\n*/\n\nclass Solution {\npublic:\n    vector<vector<int>> combinationSum(vector<int>& candidates, int target) {\n        std::vector<int> curr;\n        std::vector<std::vector<int>> res;\n        helper(candidates, target, 0, curr, res);\n        return res;\n    }\nprivate:\n    void helper(std::vector<int>& cands, int target, int i, std::vector<int>& curr,  std::vector<std::vector<int>>& res) {\n        if (i >= cands.size() || target < 0)\n            return;\n\n        if (target == 0) {\n            res.push_back(curr);\n            return;\n        }\n\n        curr.push_back(cands[i]);\n        \n        helper(cands, target - cands[i], i, curr, res);\n\n        curr.pop_back();\n\n        helper(cands, target, i + 1, curr, res);\n    }\n};\n",
+          "originalCode": "/*\n    Given distinct int array & a target, return list of all unique combos that sum to target\n    Ex. candidates = [2,3,6,7] target = 7 -> [[2,2,3],[7]]\n\n    Backtracking, generate all combo sums, push/pop + index checking to explore new combos\n\n    Time: O(2^target)\n    Space: O(target)\n*/\n\nclass Solution {\npublic:\n    vector<vector<int>> combinationSum(vector<int>& candidates, int target) {\n        std::vector<int> curr;\n        std::vector<std::vector<int>> res;\n        helper(candidates, target, 0, curr, res);\n        return res;\n    }\nprivate:\n    void helper(std::vector<int>& cands, int target, int i, std::vector<int>& curr,  std::vector<std::vector<int>>& res) {\n        if (i >= cands.size() || target < 0)\n            return;\n\n        if (target == 0) {\n            res.push_back(curr);\n            return;\n        }\n\n        curr.push_back(cands[i]);\n        \n        helper(cands, target - cands[i], i, curr, res);\n\n        curr.pop_back();\n\n        helper(cands, target, i + 1, curr, res);\n    }\n};\n",
+          "reviewedCode": "/*\n    Given distinct int array & a target, return list of all unique combos that sum to target\n    Ex. candidates = [2,3,6,7] target = 7 -> [[2,2,3],[7]]\n\n    Backtracking, generate all combo sums, push/pop + index checking to explore new combos\n\n    Time: O(2^target)\n    Space: O(target)\n*/\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it.\nclass Solution {\npublic:\n    vector<vector<int>> combinationSum(vector<int>& candidates, int target) {\n        std::vector<int> curr;\n        std::vector<std::vector<int>> res;\n        helper(candidates, target, 0, curr, res);\n        return res;\n    }\nprivate:\n    void helper(std::vector<int>& cands, int target, int i, std::vector<int>& curr,  std::vector<std::vector<int>>& res) {\n        // [Reader note] Decision point\n        // Pay attention here: The important design choice is how you keep the search from reordering the same combination into noisy duplicates.\n        if (i >= cands.size() || target < 0)\n            return;\n\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.\n        if (target == 0) {\n            res.push_back(curr);\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return;\n        }\n\n        curr.push_back(cands[i]);\n        \n        helper(cands, target - cands[i], i, curr, res);\n\n        curr.pop_back();\n\n        helper(cands, target, i + 1, curr, res);\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time: O(2^target)",
+            "Space: O(target)"
+          ],
+          "annotations": [
+            {
+              "line": 11,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it."
+            },
+            {
+              "line": 24,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work."
+            },
+            {
+              "line": 21,
+              "label": "Decision point",
+              "note": "Pay attention here: The important design choice is how you keep the search from reordering the same combination into noisy duplicates."
+            },
+            {
+              "line": 26,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong transition backtracking problem because target pressure and reuse rules make the recursion more realistic.",
+            "whatToNotice": "State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.",
+            "riskPoint": "The important design choice is how you keep the search from reordering the same combination into noisy duplicates."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0039.combination-sum-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0039.Combination%20Sum/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/0000-0099/0039.Combination Sum/Solution.cpp",
+          "relativePath": "solution/0000-0099/0039.Combination Sum/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\npublic:\n    vector<vector<int>> combinationSum(vector<int>& candidates, int target) {\n        sort(candidates.begin(), candidates.end());\n        vector<vector<int>> ans;\n        vector<int> t;\n        function<void(int, int)> dfs = [&](int i, int s) {\n            if (s == 0) {\n                ans.emplace_back(t);\n                return;\n            }\n            if (s < candidates[i]) {\n                return;\n            }\n            for (int j = i; j < candidates.size(); ++j) {\n                t.push_back(candidates[j]);\n                dfs(j, s - candidates[j]);\n                t.pop_back();\n            }\n        };\n        dfs(0, target);\n        return ans;\n    }\n};",
+          "originalCode": "class Solution {\npublic:\n    vector<vector<int>> combinationSum(vector<int>& candidates, int target) {\n        sort(candidates.begin(), candidates.end());\n        vector<vector<int>> ans;\n        vector<int> t;\n        function<void(int, int)> dfs = [&](int i, int s) {\n            if (s == 0) {\n                ans.emplace_back(t);\n                return;\n            }\n            if (s < candidates[i]) {\n                return;\n            }\n            for (int j = i; j < candidates.size(); ++j) {\n                t.push_back(candidates[j]);\n                dfs(j, s - candidates[j]);\n                t.pop_back();\n            }\n        };\n        dfs(0, target);\n        return ans;\n    }\n};",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it.\nclass Solution {\npublic:\n    vector<vector<int>> combinationSum(vector<int>& candidates, int target) {\n        sort(candidates.begin(), candidates.end());\n        vector<vector<int>> ans;\n        vector<int> t;\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.\n        function<void(int, int)> dfs = [&](int i, int s) {\n            if (s == 0) {\n                ans.emplace_back(t);\n                return;\n            }\n            if (s < candidates[i]) {\n                return;\n            }\n            // [Reader note] Main pass\n            // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for (int j = i; j < candidates.size(); ++j) {\n                t.push_back(candidates[j]);\n                dfs(j, s - candidates[j]);\n                t.pop_back();\n            }\n        };\n        dfs(0, target);\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return ans;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it."
+            },
+            {
+              "line": 7,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work."
+            },
+            {
+              "line": 15,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 22,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong transition backtracking problem because target pressure and reuse rules make the recursion more realistic.",
+            "whatToNotice": "State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.",
+            "riskPoint": "The important design choice is how you keep the search from reordering the same combination into noisy duplicates."
+          }
+        },
+        {
+          "id": "haoel_leetcode-algorithms-cpp-combinationsum-combinationsum.cpp",
+          "repository": "haoel_leetcode",
+          "repositoryUrl": "https://github.com/haoel/leetcode",
+          "sourceUrl": "https://github.com/haoel/leetcode/blob/master/algorithms/cpp/combinationSum/combinationSum.cpp",
+          "localPath": "haoel_leetcode/algorithms/cpp/combinationSum/combinationSum.cpp",
+          "relativePath": "algorithms/cpp/combinationSum/combinationSum.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Source : https://oj.leetcode.com/problems/combination-sum/\n// Author : Hao Chen\n// Date   : 2014-07-19\n\n/********************************************************************************** \n* \n* Given a set of candidate numbers (C) and a target number (T), find all unique combinations \n* in C where the candidate numbers sums to T. \n* \n* The same repeated number may be chosen from C unlimited number of times.\n* \n* Note:\n* \n* All numbers (including target) will be positive integers.\n* Elements in a combination (a1, a2, \u2026 , ak) must be in non-descending order. (ie, a1 \u2264 a2 \u2264 \u2026 \u2264 ak).\n* The solution set must not contain duplicate combinations.\n* \n* For example, given candidate set 2,3,6,7 and target 7, \n* A solution set is: \n* [7] \n* [2, 2, 3] \n* \n*               \n**********************************************************************************/\n\n#include <iostream>\n#include <vector>\n#include <algorithm>\nusing namespace std;\n\n\nvoid combinationSumHelper(vector<int> &candidates, int start, int target, vector<int> &solution, vector< vector<int> > &result) {\n    if (target<0){\n        return;\n    }\n    if (target==0){\n        result.push_back(solution);\n        return;\n    }\n    for(int i=start; i<candidates.size(); i++){\n        //skip duplicates\n        if (i>start && candidates[i] == candidates[i-1]) {\n            continue;\n        }\n        solution.push_back(candidates[i]);\n        combinationSumHelper(candidates, i, target - candidates[i], solution, result);\n        solution.pop_back();\n    }\n}\n\nvector<vector<int> > combinationSum(vector<int> &candidates, int target) {\n    vector< vector<int> > result;\n    if (candidates.size()<=0){\n        return result;\n    }\n    sort(candidates.begin(), candidates.end());\n    \n    vector<int> solution;\n    combinationSumHelper(candidates, 0, target, solution, result);\n\n    return result;\n}\n\nvoid printMatrix(vector< vector<int> > &vv)\n{\n    for(int i=0; i<vv.size(); i++) {\n        cout << \"[\";\n        for(int j=0; j<vv[i].size(); j++) {\n            cout << \" \" << vv[i][j];\n        }\n        cout << \"]\" << endl;;\n    }\n}\n\nvoid printArray(vector<int> &v)\n{\n    cout << \"{\";\n    for(int i=0; i<v.size(); i++) {\n        cout << \" \" << v[i];\n    }\n    cout << \"}\" << endl;\n}\n\n\nint main(int argc, char** argv)\n{\n    int a[] = {4,2,3,3,5,7};\n    vector<int> v(a, a+sizeof(a)/sizeof(int));\n    int target = 7;\n    cout << \"array  = \";\n    printArray(v);\n    cout << \"target = \" << target << endl;\n    \n    vector< vector<int> > vv = combinationSum(v, target);\n    printMatrix(vv);\n\n    return 0;\n}\n",
+          "originalCode": "// Source : https://oj.leetcode.com/problems/combination-sum/\n// Author : Hao Chen\n// Date   : 2014-07-19\n\n/********************************************************************************** \n* \n* Given a set of candidate numbers (C) and a target number (T), find all unique combinations \n* in C where the candidate numbers sums to T. \n* \n* The same repeated number may be chosen from C unlimited number of times.\n* \n* Note:\n* \n* All numbers (including target) will be positive integers.\n* Elements in a combination (a1, a2, \u2026 , ak) must be in non-descending order. (ie, a1 \u2264 a2 \u2264 \u2026 \u2264 ak).\n* The solution set must not contain duplicate combinations.\n* \n* For example, given candidate set 2,3,6,7 and target 7, \n* A solution set is: \n* [7] \n* [2, 2, 3] \n* \n*               \n**********************************************************************************/\n\n#include <iostream>\n#include <vector>\n#include <algorithm>\nusing namespace std;\n\n\nvoid combinationSumHelper(vector<int> &candidates, int start, int target, vector<int> &solution, vector< vector<int> > &result) {\n    if (target<0){\n        return;\n    }\n    if (target==0){\n        result.push_back(solution);\n        return;\n    }\n    for(int i=start; i<candidates.size(); i++){\n        //skip duplicates\n        if (i>start && candidates[i] == candidates[i-1]) {\n            continue;\n        }\n        solution.push_back(candidates[i]);\n        combinationSumHelper(candidates, i, target - candidates[i], solution, result);\n        solution.pop_back();\n    }\n}\n\nvector<vector<int> > combinationSum(vector<int> &candidates, int target) {\n    vector< vector<int> > result;\n    if (candidates.size()<=0){\n        return result;\n    }\n    sort(candidates.begin(), candidates.end());\n    \n    vector<int> solution;\n    combinationSumHelper(candidates, 0, target, solution, result);\n\n    return result;\n}\n\nvoid printMatrix(vector< vector<int> > &vv)\n{\n    for(int i=0; i<vv.size(); i++) {\n        cout << \"[\";\n        for(int j=0; j<vv[i].size(); j++) {\n            cout << \" \" << vv[i][j];\n        }\n        cout << \"]\" << endl;;\n    }\n}\n\nvoid printArray(vector<int> &v)\n{\n    cout << \"{\";\n    for(int i=0; i<v.size(); i++) {\n        cout << \" \" << v[i];\n    }\n    cout << \"}\" << endl;\n}\n\n\nint main(int argc, char** argv)\n{\n    int a[] = {4,2,3,3,5,7};\n    vector<int> v(a, a+sizeof(a)/sizeof(int));\n    int target = 7;\n    cout << \"array  = \";\n    printArray(v);\n    cout << \"target = \" << target << endl;\n    \n    vector< vector<int> > vv = combinationSum(v, target);\n    printMatrix(vv);\n\n    return 0;\n}\n",
+          "reviewedCode": "// Source : https://oj.leetcode.com/problems/combination-sum/\n// Author : Hao Chen\n// Date   : 2014-07-19\n\n/********************************************************************************** \n* \n* Given a set of candidate numbers (C) and a target number (T), find all unique combinations \n* in C where the candidate numbers sums to T. \n* \n* The same repeated number may be chosen from C unlimited number of times.\n* \n* Note:\n* \n* All numbers (including target) will be positive integers.\n* Elements in a combination (a1, a2, \u2026 , ak) must be in non-descending order. (ie, a1 \u2264 a2 \u2264 \u2026 \u2264 ak).\n* The solution set must not contain duplicate combinations.\n* \n* For example, given candidate set 2,3,6,7 and target 7, \n* A solution set is: \n* [7] \n* [2, 2, 3] \n* \n*               \n**********************************************************************************/\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it.\n#include <iostream>\n#include <vector>\n#include <algorithm>\nusing namespace std;\n\n\nvoid combinationSumHelper(vector<int> &candidates, int start, int target, vector<int> &solution, vector< vector<int> > &result) {\n    if (target<0){\n        return;\n    }\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.\n    if (target==0){\n        result.push_back(solution);\n        return;\n    }\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for(int i=start; i<candidates.size(); i++){\n        //skip duplicates\n        // [Reader note] Decision point\n        // Pay attention here: The important design choice is how you keep the search from reordering the same combination into noisy duplicates.\n        if (i>start && candidates[i] == candidates[i-1]) {\n            continue;\n        }\n        solution.push_back(candidates[i]);\n        combinationSumHelper(candidates, i, target - candidates[i], solution, result);\n        solution.pop_back();\n    }\n}\n\nvector<vector<int> > combinationSum(vector<int> &candidates, int target) {\n    vector< vector<int> > result;\n    if (candidates.size()<=0){\n        return result;\n    }\n    sort(candidates.begin(), candidates.end());\n    \n    vector<int> solution;\n    combinationSumHelper(candidates, 0, target, solution, result);\n\n    return result;\n}\n\nvoid printMatrix(vector< vector<int> > &vv)\n{\n    for(int i=0; i<vv.size(); i++) {\n        cout << \"[\";\n        for(int j=0; j<vv[i].size(); j++) {\n            cout << \" \" << vv[i][j];\n        }\n        cout << \"]\" << endl;;\n    }\n}\n\nvoid printArray(vector<int> &v)\n{\n    cout << \"{\";\n    for(int i=0; i<v.size(); i++) {\n        cout << \" \" << v[i];\n    }\n    cout << \"}\" << endl;\n}\n\n\nint main(int argc, char** argv)\n{\n    int a[] = {4,2,3,3,5,7};\n    vector<int> v(a, a+sizeof(a)/sizeof(int));\n    int target = 7;\n    cout << \"array  = \";\n    printArray(v);\n    cout << \"target = \" << target << endl;\n    \n    vector< vector<int> > vv = combinationSum(v, target);\n    printMatrix(vv);\n\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return 0;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "The same repeated number may be chosen from C unlimited number of times."
+          ],
+          "annotations": [
+            {
+              "line": 26,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it."
+            },
+            {
+              "line": 36,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work."
+            },
+            {
+              "line": 40,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 42,
+              "label": "Decision point",
+              "note": "Pay attention here: The important design choice is how you keep the search from reordering the same combination into noisy duplicates."
+            },
+            {
+              "line": 97,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong transition backtracking problem because target pressure and reuse rules make the recursion more realistic.",
+            "whatToNotice": "State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.",
+            "riskPoint": "The important design choice is how you keep the search from reordering the same combination into noisy duplicates."
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-java-0039-combination-sum.java",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/java/0039-combination-sum.java",
+          "localPath": "neetcode-gh_leetcode/java/0039-combination-sum.java",
+          "relativePath": "java/0039-combination-sum.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code",
+          "code": "class Solution {\n\n    public List<List<Integer>> combinationSum(int[] candidates, int target) {\n        List<List<Integer>> ans = new ArrayList<List<Integer>>();\n        List<Integer> cur = new ArrayList();\n        backtrack(candidates, target, ans, cur, 0);\n        return ans;\n    }\n\n    public void backtrack(\n        int[] candidates,\n        int target,\n        List<List<Integer>> ans,\n        List<Integer> cur,\n        int index\n    ) {\n        if (target == 0) {\n            ans.add(new ArrayList(cur));\n        } else if (target < 0 || index >= candidates.length) {\n            return;\n        } else {\n            cur.add(candidates[index]);\n            backtrack(candidates, target - candidates[index], ans, cur, index);\n\n            cur.remove(cur.get(cur.size() - 1));\n            backtrack(candidates, target, ans, cur, index + 1);\n        }\n    }\n}\n",
+          "originalCode": "class Solution {\n\n    public List<List<Integer>> combinationSum(int[] candidates, int target) {\n        List<List<Integer>> ans = new ArrayList<List<Integer>>();\n        List<Integer> cur = new ArrayList();\n        backtrack(candidates, target, ans, cur, 0);\n        return ans;\n    }\n\n    public void backtrack(\n        int[] candidates,\n        int target,\n        List<List<Integer>> ans,\n        List<Integer> cur,\n        int index\n    ) {\n        if (target == 0) {\n            ans.add(new ArrayList(cur));\n        } else if (target < 0 || index >= candidates.length) {\n            return;\n        } else {\n            cur.add(candidates[index]);\n            backtrack(candidates, target - candidates[index], ans, cur, index);\n\n            cur.remove(cur.get(cur.size() - 1));\n            backtrack(candidates, target, ans, cur, index + 1);\n        }\n    }\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it.\nclass Solution {\n\n    public List<List<Integer>> combinationSum(int[] candidates, int target) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.\n        List<List<Integer>> ans = new ArrayList<List<Integer>>();\n        List<Integer> cur = new ArrayList();\n        backtrack(candidates, target, ans, cur, 0);\n        return ans;\n    }\n\n    public void backtrack(\n        int[] candidates,\n        int target,\n        List<List<Integer>> ans,\n        List<Integer> cur,\n        int index\n    ) {\n        // [Reader note] Decision point\n        // Pay attention here: The important design choice is how you keep the search from reordering the same combination into noisy duplicates.\n        if (target == 0) {\n            ans.add(new ArrayList(cur));\n        } else if (target < 0 || index >= candidates.length) {\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return;\n        } else {\n            cur.add(candidates[index]);\n            backtrack(candidates, target - candidates[index], ans, cur, index);\n\n            cur.remove(cur.get(cur.size() - 1));\n            backtrack(candidates, target, ans, cur, index + 1);\n        }\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work."
+            },
+            {
+              "line": 17,
+              "label": "Decision point",
+              "note": "Pay attention here: The important design choice is how you keep the search from reordering the same combination into noisy duplicates."
+            },
+            {
+              "line": 20,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong transition backtracking problem because target pressure and reuse rules make the recursion more realistic.",
+            "whatToNotice": "State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.",
+            "riskPoint": "The important design choice is how you keep the search from reordering the same combination into noisy duplicates."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0039.combination-sum-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0039.Combination%20Sum/Solution.java",
+          "localPath": "doocs_leetcode/solution/0000-0099/0039.Combination Sum/Solution.java",
+          "relativePath": "solution/0000-0099/0039.Combination Sum/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\n    private List<List<Integer>> ans = new ArrayList<>();\n    private List<Integer> t = new ArrayList<>();\n    private int[] candidates;\n\n    public List<List<Integer>> combinationSum(int[] candidates, int target) {\n        Arrays.sort(candidates);\n        this.candidates = candidates;\n        dfs(0, target);\n        return ans;\n    }\n\n    private void dfs(int i, int s) {\n        if (s == 0) {\n            ans.add(new ArrayList(t));\n            return;\n        }\n        if (s < candidates[i]) {\n            return;\n        }\n        for (int j = i; j < candidates.length; ++j) {\n            t.add(candidates[j]);\n            dfs(j, s - candidates[j]);\n            t.remove(t.size() - 1);\n        }\n    }\n}",
+          "originalCode": "class Solution {\n    private List<List<Integer>> ans = new ArrayList<>();\n    private List<Integer> t = new ArrayList<>();\n    private int[] candidates;\n\n    public List<List<Integer>> combinationSum(int[] candidates, int target) {\n        Arrays.sort(candidates);\n        this.candidates = candidates;\n        dfs(0, target);\n        return ans;\n    }\n\n    private void dfs(int i, int s) {\n        if (s == 0) {\n            ans.add(new ArrayList(t));\n            return;\n        }\n        if (s < candidates[i]) {\n            return;\n        }\n        for (int j = i; j < candidates.length; ++j) {\n            t.add(candidates[j]);\n            dfs(j, s - candidates[j]);\n            t.remove(t.size() - 1);\n        }\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it.\nclass Solution {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.\n    private List<List<Integer>> ans = new ArrayList<>();\n    private List<Integer> t = new ArrayList<>();\n    private int[] candidates;\n\n    public List<List<Integer>> combinationSum(int[] candidates, int target) {\n        Arrays.sort(candidates);\n        this.candidates = candidates;\n        dfs(0, target);\n        return ans;\n    }\n\n    private void dfs(int i, int s) {\n        if (s == 0) {\n            ans.add(new ArrayList(t));\n            return;\n        }\n        if (s < candidates[i]) {\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return;\n        }\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int j = i; j < candidates.length; ++j) {\n            t.add(candidates[j]);\n            dfs(j, s - candidates[j]);\n            t.remove(t.size() - 1);\n        }\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work."
+            },
+            {
+              "line": 21,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 19,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong transition backtracking problem because target pressure and reuse rules make the recursion more realistic.",
+            "whatToNotice": "State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.",
+            "riskPoint": "The important design choice is how you keep the search from reordering the same combination into noisy duplicates."
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-go-0039-combination-sum.go",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/go/0039-combination-sum.go",
+          "localPath": "neetcode-gh_leetcode/go/0039-combination-sum.go",
+          "relativePath": "go/0039-combination-sum.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code",
+          "code": "package main\n\nfunc combinationSum(candidates []int, target int) [][]int {\n\tans := make([][]int, 0)\n\tcurr := make([]int, 0)\n\tvar backtrack func(idx int, currSum int, curr []int)\n\tbacktrack = func(idx int, currSum int, curr []int) {\n\t\tif currSum == target {\n\t\t\tans = append(ans, append([]int{}, curr...))\n\t\t\treturn\n\t\t}\n\t\tif currSum > target {\n\t\t\treturn\n\t\t}\n\t\tfor i := idx; i < len(candidates); i++ {\n\t\t\tcurr = append(curr, candidates[i])\n\t\t\tbacktrack(i, currSum+candidates[i], curr)\n\t\t\tcurr = curr[:len(curr)-1]\n\t\t}\n\n\t}\n\tbacktrack(0, 0, curr)\n\treturn ans\n}\n",
+          "originalCode": "package main\n\nfunc combinationSum(candidates []int, target int) [][]int {\n\tans := make([][]int, 0)\n\tcurr := make([]int, 0)\n\tvar backtrack func(idx int, currSum int, curr []int)\n\tbacktrack = func(idx int, currSum int, curr []int) {\n\t\tif currSum == target {\n\t\t\tans = append(ans, append([]int{}, curr...))\n\t\t\treturn\n\t\t}\n\t\tif currSum > target {\n\t\t\treturn\n\t\t}\n\t\tfor i := idx; i < len(candidates); i++ {\n\t\t\tcurr = append(curr, candidates[i])\n\t\t\tbacktrack(i, currSum+candidates[i], curr)\n\t\t\tcurr = curr[:len(curr)-1]\n\t\t}\n\n\t}\n\tbacktrack(0, 0, curr)\n\treturn ans\n}\n",
+          "reviewedCode": "package main\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it.\nfunc combinationSum(candidates []int, target int) [][]int {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.\n\tans := make([][]int, 0)\n\tcurr := make([]int, 0)\n\tvar backtrack func(idx int, currSum int, curr []int)\n\tbacktrack = func(idx int, currSum int, curr []int) {\n\t\tif currSum == target {\n\t\t\tans = append(ans, append([]int{}, curr...))\n\t\t\treturn\n\t\t}\n\t\tif currSum > target {\n\t\t\treturn\n\t\t}\n\t\t// [Reader note] Main pass\n\t\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\t\tfor i := idx; i < len(candidates); i++ {\n\t\t\tcurr = append(curr, candidates[i])\n\t\t\tbacktrack(i, currSum+candidates[i], curr)\n\t\t\tcurr = curr[:len(curr)-1]\n\t\t}\n\n\t}\n\tbacktrack(0, 0, curr)\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn ans\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 3,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work."
+            },
+            {
+              "line": 15,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 23,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong transition backtracking problem because target pressure and reuse rules make the recursion more realistic.",
+            "whatToNotice": "State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.",
+            "riskPoint": "The important design choice is how you keep the search from reordering the same combination into noisy duplicates."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0039.combination-sum-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0039.Combination%20Sum/Solution.go",
+          "localPath": "doocs_leetcode/solution/0000-0099/0039.Combination Sum/Solution.go",
+          "relativePath": "solution/0000-0099/0039.Combination Sum/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "func combinationSum(candidates []int, target int) (ans [][]int) {\n\tsort.Ints(candidates)\n\tt := []int{}\n\tvar dfs func(i, s int)\n\tdfs = func(i, s int) {\n\t\tif s == 0 {\n\t\t\tans = append(ans, slices.Clone(t))\n\t\t\treturn\n\t\t}\n\t\tif s < candidates[i] {\n\t\t\treturn\n\t\t}\n\t\tfor j := i; j < len(candidates); j++ {\n\t\t\tt = append(t, candidates[j])\n\t\t\tdfs(j, s-candidates[j])\n\t\t\tt = t[:len(t)-1]\n\t\t}\n\t}\n\tdfs(0, target)\n\treturn\n}",
+          "originalCode": "func combinationSum(candidates []int, target int) (ans [][]int) {\n\tsort.Ints(candidates)\n\tt := []int{}\n\tvar dfs func(i, s int)\n\tdfs = func(i, s int) {\n\t\tif s == 0 {\n\t\t\tans = append(ans, slices.Clone(t))\n\t\t\treturn\n\t\t}\n\t\tif s < candidates[i] {\n\t\t\treturn\n\t\t}\n\t\tfor j := i; j < len(candidates); j++ {\n\t\t\tt = append(t, candidates[j])\n\t\t\tdfs(j, s-candidates[j])\n\t\t\tt = t[:len(t)-1]\n\t\t}\n\t}\n\tdfs(0, target)\n\treturn\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it.\nfunc combinationSum(candidates []int, target int) (ans [][]int) {\n\tsort.Ints(candidates)\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.\n\tt := []int{}\n\tvar dfs func(i, s int)\n\tdfs = func(i, s int) {\n\t\tif s == 0 {\n\t\t\tans = append(ans, slices.Clone(t))\n\t\t\treturn\n\t\t}\n\t\tif s < candidates[i] {\n\t\t\treturn\n\t\t}\n\t\t// [Reader note] Main pass\n\t\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\t\tfor j := i; j < len(candidates); j++ {\n\t\t\tt = append(t, candidates[j])\n\t\t\tdfs(j, s-candidates[j])\n\t\t\tt = t[:len(t)-1]\n\t\t}\n\t}\n\tdfs(0, target)\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work."
+            },
+            {
+              "line": 13,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 20,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong transition backtracking problem because target pressure and reuse rules make the recursion more realistic.",
+            "whatToNotice": "State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.",
+            "riskPoint": "The important design choice is how you keep the search from reordering the same combination into noisy duplicates."
+          }
+        }
+      ]
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0039.combination-sum-solution.ts",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0039.Combination%20Sum/Solution.ts",
+          "localPath": "doocs_leetcode/solution/0000-0099/0039.Combination Sum/Solution.ts",
+          "relativePath": "solution/0000-0099/0039.Combination Sum/Solution.ts",
+          "languageId": "typescript",
+          "languageLabel": "TypeScript",
+          "coverageType": "code+explanation",
+          "code": "function combinationSum(candidates: number[], target: number): number[][] {\n    candidates.sort((a, b) => a - b);\n    const ans: number[][] = [];\n    const t: number[] = [];\n    const dfs = (i: number, s: number) => {\n        if (s === 0) {\n            ans.push(t.slice());\n            return;\n        }\n        if (s < candidates[i]) {\n            return;\n        }\n        for (let j = i; j < candidates.length; ++j) {\n            t.push(candidates[j]);\n            dfs(j, s - candidates[j]);\n            t.pop();\n        }\n    };\n    dfs(0, target);\n    return ans;\n}\n",
+          "originalCode": "function combinationSum(candidates: number[], target: number): number[][] {\n    candidates.sort((a, b) => a - b);\n    const ans: number[][] = [];\n    const t: number[] = [];\n    const dfs = (i: number, s: number) => {\n        if (s === 0) {\n            ans.push(t.slice());\n            return;\n        }\n        if (s < candidates[i]) {\n            return;\n        }\n        for (let j = i; j < candidates.length; ++j) {\n            t.push(candidates[j]);\n            dfs(j, s - candidates[j]);\n            t.pop();\n        }\n    };\n    dfs(0, target);\n    return ans;\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it.\nfunction combinationSum(candidates: number[], target: number): number[][] {\n    candidates.sort((a, b) => a - b);\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.\n    const ans: number[][] = [];\n    const t: number[] = [];\n    const dfs = (i: number, s: number) => {\n        if (s === 0) {\n            ans.push(t.slice());\n            return;\n        }\n        if (s < candidates[i]) {\n            return;\n        }\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (let j = i; j < candidates.length; ++j) {\n            t.push(candidates[j]);\n            dfs(j, s - candidates[j]);\n            t.pop();\n        }\n    };\n    dfs(0, target);\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return ans;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work."
+            },
+            {
+              "line": 13,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 20,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong transition backtracking problem because target pressure and reuse rules make the recursion more realistic.",
+            "whatToNotice": "State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.",
+            "riskPoint": "The important design choice is how you keep the search from reordering the same combination into noisy duplicates."
+          }
+        }
+      ]
+    },
+    {
+      "id": "javascript",
+      "label": "JavaScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-javascript-0039-combination-sum.js",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/javascript/0039-combination-sum.js",
+          "localPath": "neetcode-gh_leetcode/javascript/0039-combination-sum.js",
+          "relativePath": "javascript/0039-combination-sum.js",
+          "languageId": "javascript",
+          "languageLabel": "JavaScript",
+          "coverageType": "code",
+          "code": "/**\n * https://leetcode.com/problems/combination-sum/\n * Time O(N * ((Target/MIN) + 1)) | Space O(N * (Target/Min))\n * @param {number[]} candidates\n * @param {number} target\n * @return {number[][]}\n */\nvar combinationSum = function (\n    candidates,\n    target,\n    index = 0,\n    combination = [],\n    combinations = [],\n) {\n    const isBaseCase = target < 0;\n    if (isBaseCase) return combinations;\n\n    const isTarget = target === 0;\n    if (isTarget) return combinations.push(combination.slice());\n\n    for (let i = index; i < candidates.length; i++) {\n        backTrack(candidates, target, i, combination, combinations);\n    }\n\n    return combinations;\n};\n\nconst backTrack = (candidates, target, i, combination, combinations) => {\n    combination.push(candidates[i]);\n    combinationSum(\n        candidates,\n        target - candidates[i],\n        i,\n        combination,\n        combinations,\n    );\n    combination.pop();\n};\n",
+          "originalCode": "/**\n * https://leetcode.com/problems/combination-sum/\n * Time O(N * ((Target/MIN) + 1)) | Space O(N * (Target/Min))\n * @param {number[]} candidates\n * @param {number} target\n * @return {number[][]}\n */\nvar combinationSum = function (\n    candidates,\n    target,\n    index = 0,\n    combination = [],\n    combinations = [],\n) {\n    const isBaseCase = target < 0;\n    if (isBaseCase) return combinations;\n\n    const isTarget = target === 0;\n    if (isTarget) return combinations.push(combination.slice());\n\n    for (let i = index; i < candidates.length; i++) {\n        backTrack(candidates, target, i, combination, combinations);\n    }\n\n    return combinations;\n};\n\nconst backTrack = (candidates, target, i, combination, combinations) => {\n    combination.push(candidates[i]);\n    combinationSum(\n        candidates,\n        target - candidates[i],\n        i,\n        combination,\n        combinations,\n    );\n    combination.pop();\n};\n",
+          "reviewedCode": "/**\n * https://leetcode.com/problems/combination-sum/\n * Time O(N * ((Target/MIN) + 1)) | Space O(N * (Target/Min))\n * @param {number[]} candidates\n * @param {number} target\n * @return {number[][]}\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it.\nvar combinationSum = function (\n    candidates,\n    target,\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.\n    index = 0,\n    combination = [],\n    combinations = [],\n) {\n    const isBaseCase = target < 0;\n    if (isBaseCase) return combinations;\n\n    const isTarget = target === 0;\n    if (isTarget) return combinations.push(combination.slice());\n\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (let i = index; i < candidates.length; i++) {\n        backTrack(candidates, target, i, combination, combinations);\n    }\n\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return combinations;\n};\n\nconst backTrack = (candidates, target, i, combination, combinations) => {\n    combination.push(candidates[i]);\n    combinationSum(\n        candidates,\n        target - candidates[i],\n        i,\n        combination,\n        combinations,\n    );\n    combination.pop();\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time O(N * ((Target/MIN) + 1)) | Space O(N * (Target/Min))"
+          ],
+          "annotations": [
+            {
+              "line": 8,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it."
+            },
+            {
+              "line": 11,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work."
+            },
+            {
+              "line": 21,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 25,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong transition backtracking problem because target pressure and reuse rules make the recursion more realistic.",
+            "whatToNotice": "State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.",
+            "riskPoint": "The important design choice is how you keep the search from reordering the same combination into noisy duplicates."
+          }
+        }
+      ]
+    },
+    {
+      "id": "csharp",
+      "label": "C#",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-csharp-0039-combination-sum.cs",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/csharp/0039-combination-sum.cs",
+          "localPath": "neetcode-gh_leetcode/csharp/0039-combination-sum.cs",
+          "relativePath": "csharp/0039-combination-sum.cs",
+          "languageId": "csharp",
+          "languageLabel": "C#",
+          "coverageType": "code",
+          "code": "public class Solution {\n    IList<IList<int>> result = new List<IList<int>>();\n    public void backtrack(int index, List<int> path, int total, int[] candidates, int target) {\n        if(total == target) {\n            result.Add(path.ToList());\n            return;\n        }\n        \n        if(total > target || index >= candidates.Length) return;\n        \n        path.Add(candidates[index]);\n        backtrack(index, \n                  path, \n                  total + candidates[index], \n                  candidates, \n                  target);\n        \n        path.Remove(path.Last());\n        \n        backtrack(index + 1, \n                  path, \n                  total, \n                  candidates, \n                  target);\n        \n    }\n    public IList<IList<int>> CombinationSum(int[] candidates, int target) {\n        backtrack(0, new List<int>(), 0, candidates, target);\n        return result;\n    }\n}",
+          "originalCode": "public class Solution {\n    IList<IList<int>> result = new List<IList<int>>();\n    public void backtrack(int index, List<int> path, int total, int[] candidates, int target) {\n        if(total == target) {\n            result.Add(path.ToList());\n            return;\n        }\n        \n        if(total > target || index >= candidates.Length) return;\n        \n        path.Add(candidates[index]);\n        backtrack(index, \n                  path, \n                  total + candidates[index], \n                  candidates, \n                  target);\n        \n        path.Remove(path.Last());\n        \n        backtrack(index + 1, \n                  path, \n                  total, \n                  candidates, \n                  target);\n        \n    }\n    public IList<IList<int>> CombinationSum(int[] candidates, int target) {\n        backtrack(0, new List<int>(), 0, candidates, target);\n        return result;\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it.\npublic class Solution {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.\n    IList<IList<int>> result = new List<IList<int>>();\n    public void backtrack(int index, List<int> path, int total, int[] candidates, int target) {\n        // [Reader note] Decision point\n        // Pay attention here: The important design choice is how you keep the search from reordering the same combination into noisy duplicates.\n        if(total == target) {\n            result.Add(path.ToList());\n            return;\n        }\n        \n        if(total > target || index >= candidates.Length) return;\n        \n        path.Add(candidates[index]);\n        backtrack(index, \n                  path, \n                  total + candidates[index], \n                  candidates, \n                  target);\n        \n        path.Remove(path.Last());\n        \n        backtrack(index + 1, \n                  path, \n                  total, \n                  candidates, \n                  target);\n        \n    }\n    public IList<IList<int>> CombinationSum(int[] candidates, int target) {\n        backtrack(0, new List<int>(), 0, candidates, target);\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return result;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work."
+            },
+            {
+              "line": 4,
+              "label": "Decision point",
+              "note": "Pay attention here: The important design choice is how you keep the search from reordering the same combination into noisy duplicates."
+            },
+            {
+              "line": 29,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong transition backtracking problem because target pressure and reuse rules make the recursion more realistic.",
+            "whatToNotice": "State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.",
+            "riskPoint": "The important design choice is how you keep the search from reordering the same combination into noisy duplicates."
+          }
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "label": "C",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-c-0039-combination-sum.c",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/c/0039-combination-sum.c",
+          "localPath": "neetcode-gh_leetcode/c/0039-combination-sum.c",
+          "relativePath": "c/0039-combination-sum.c",
+          "languageId": "c",
+          "languageLabel": "C",
+          "coverageType": "code",
+          "code": "\n/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\n\n\n// An array with array_size to store each unique combination during backtracking.\nstruct Combination_Array {\n    int* array;\n    int array_size;\n};\n\n// A function to create a empty Combination_Array.\nstruct Combination_Array* New(int array_size) {\n    struct Combination_Array* comb_array = (struct Combination_Array*)malloc(sizeof(struct Combination_Array));\n    comb_array -> array = (int*)malloc(array_size * sizeof(int));\n    comb_array -> array_size = array_size;\n    return comb_array;\n}\n\n// A generic stack node with void* pointer.\nstruct Stack {\n    void* value;\n    struct Stack* next;\n};\n\n// A function to create the stack node.\nstruct Stack* Node(void* value, struct Stack* next) {\n    struct Stack* node = (struct Stack*)malloc(sizeof(struct Stack));\n    node -> value = value;\n    node -> next = next;\n    return node;\n}\n\n// append to the stack.\nvoid append(struct Stack* root, void* value) {\n    struct Stack* node = Node(value, root -> next);\n    root -> next = node;\n}\n\n// pop from the stack.\nvoid* pop(struct Stack* root) {\n    void* value = root -> next -> value;\n    struct Stack* delete_node = root -> next;\n    root -> next = root -> next -> next;\n    free(delete_node);\n    return value;\n}\n\n// Recursive backtracking method.\nint backtrack(struct Stack* results, struct Stack* candidates_stack, int stack_size, int running_sum, int* candidates, int index) {\n    \n    if (running_sum == 0) {\n        // create a combination array. \n        struct Combination_Array* combination = New(stack_size);\n        // copy the candidates from the candidates_stack to the combination array.\n        struct Stack* node = candidates_stack;\n        for (int i = 0; i < stack_size; i++) {\n            combination -> array[i] = *(int*)node -> next -> value;\n            node = node -> next;\n        }\n        // append the combination to the results stack.\n        append(results, combination);\n        return 1;\n    }\n    \n    int returnSize = 0;\n    if (running_sum > 0) {\n        for (int i = index; i >= 0; i--) {\n            append(candidates_stack, &candidates[i]);\n            returnSize += backtrack(results, candidates_stack, stack_size + 1, running_sum - candidates[i], candidates, i);\n            // backtrack by poping the candidate from the candidate_stack.\n            pop(candidates_stack);\n        }\n    }\n\n    return returnSize;\n}\n\n\nint** combinationSum(int* candidates, int candidatesSize, int target, int* returnSize, int** returnColumnSizes){\n\n    // A candidates_stack to track all possible combinations of candidates during backtracking.\n    struct Stack* candidates_stack = Node(NULL, NULL);\n    // A results stack to store each combination solution on the stack during backtracking. \n    struct Stack* results = Node(NULL, NULL);\n\n    // The backtracking method returns the total number of possible combinations (the final result size).\n    *returnSize = backtrack(results, candidates_stack, 0, target, candidates, candidatesSize - 1);\n    \n    // prepare the result array.\n    int** result_array = (int**)malloc(*returnSize * sizeof(int*));\n    *returnColumnSizes = (int*)malloc(*returnSize * sizeof(int));\n\n    for (int i = 0; i < *returnSize; i++) {\n        // pop() each solution from the results stack to the results array.\n        struct Combination_Array* combination = (struct Combination_Array*)pop(results);\n        result_array[i] = combination -> array;\n        returnColumnSizes[0][i] = combination -> array_size;\n        free(combination);\n    }\n    // finally free the results stack and the candidates stack.\n    free(results);\n    free(candidates_stack);\n    return result_array;\n\n}",
+          "originalCode": "\n/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\n\n\n// An array with array_size to store each unique combination during backtracking.\nstruct Combination_Array {\n    int* array;\n    int array_size;\n};\n\n// A function to create a empty Combination_Array.\nstruct Combination_Array* New(int array_size) {\n    struct Combination_Array* comb_array = (struct Combination_Array*)malloc(sizeof(struct Combination_Array));\n    comb_array -> array = (int*)malloc(array_size * sizeof(int));\n    comb_array -> array_size = array_size;\n    return comb_array;\n}\n\n// A generic stack node with void* pointer.\nstruct Stack {\n    void* value;\n    struct Stack* next;\n};\n\n// A function to create the stack node.\nstruct Stack* Node(void* value, struct Stack* next) {\n    struct Stack* node = (struct Stack*)malloc(sizeof(struct Stack));\n    node -> value = value;\n    node -> next = next;\n    return node;\n}\n\n// append to the stack.\nvoid append(struct Stack* root, void* value) {\n    struct Stack* node = Node(value, root -> next);\n    root -> next = node;\n}\n\n// pop from the stack.\nvoid* pop(struct Stack* root) {\n    void* value = root -> next -> value;\n    struct Stack* delete_node = root -> next;\n    root -> next = root -> next -> next;\n    free(delete_node);\n    return value;\n}\n\n// Recursive backtracking method.\nint backtrack(struct Stack* results, struct Stack* candidates_stack, int stack_size, int running_sum, int* candidates, int index) {\n    \n    if (running_sum == 0) {\n        // create a combination array. \n        struct Combination_Array* combination = New(stack_size);\n        // copy the candidates from the candidates_stack to the combination array.\n        struct Stack* node = candidates_stack;\n        for (int i = 0; i < stack_size; i++) {\n            combination -> array[i] = *(int*)node -> next -> value;\n            node = node -> next;\n        }\n        // append the combination to the results stack.\n        append(results, combination);\n        return 1;\n    }\n    \n    int returnSize = 0;\n    if (running_sum > 0) {\n        for (int i = index; i >= 0; i--) {\n            append(candidates_stack, &candidates[i]);\n            returnSize += backtrack(results, candidates_stack, stack_size + 1, running_sum - candidates[i], candidates, i);\n            // backtrack by poping the candidate from the candidate_stack.\n            pop(candidates_stack);\n        }\n    }\n\n    return returnSize;\n}\n\n\nint** combinationSum(int* candidates, int candidatesSize, int target, int* returnSize, int** returnColumnSizes){\n\n    // A candidates_stack to track all possible combinations of candidates during backtracking.\n    struct Stack* candidates_stack = Node(NULL, NULL);\n    // A results stack to store each combination solution on the stack during backtracking. \n    struct Stack* results = Node(NULL, NULL);\n\n    // The backtracking method returns the total number of possible combinations (the final result size).\n    *returnSize = backtrack(results, candidates_stack, 0, target, candidates, candidatesSize - 1);\n    \n    // prepare the result array.\n    int** result_array = (int**)malloc(*returnSize * sizeof(int*));\n    *returnColumnSizes = (int*)malloc(*returnSize * sizeof(int));\n\n    for (int i = 0; i < *returnSize; i++) {\n        // pop() each solution from the results stack to the results array.\n        struct Combination_Array* combination = (struct Combination_Array*)pop(results);\n        result_array[i] = combination -> array;\n        returnColumnSizes[0][i] = combination -> array_size;\n        free(combination);\n    }\n    // finally free the results stack and the candidates stack.\n    free(results);\n    free(candidates_stack);\n    return result_array;\n\n}",
+          "reviewedCode": "\n/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\n\n\n// An array with array_size to store each unique combination during backtracking.\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it.\nstruct Combination_Array {\n    int* array;\n    int array_size;\n};\n\n// A function to create a empty Combination_Array.\nstruct Combination_Array* New(int array_size) {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.\n    struct Combination_Array* comb_array = (struct Combination_Array*)malloc(sizeof(struct Combination_Array));\n    comb_array -> array = (int*)malloc(array_size * sizeof(int));\n    comb_array -> array_size = array_size;\n    return comb_array;\n}\n\n// A generic stack node with void* pointer.\nstruct Stack {\n    void* value;\n    struct Stack* next;\n};\n\n// A function to create the stack node.\nstruct Stack* Node(void* value, struct Stack* next) {\n    struct Stack* node = (struct Stack*)malloc(sizeof(struct Stack));\n    node -> value = value;\n    node -> next = next;\n    return node;\n}\n\n// append to the stack.\nvoid append(struct Stack* root, void* value) {\n    struct Stack* node = Node(value, root -> next);\n    root -> next = node;\n}\n\n// pop from the stack.\nvoid* pop(struct Stack* root) {\n    void* value = root -> next -> value;\n    struct Stack* delete_node = root -> next;\n    root -> next = root -> next -> next;\n    free(delete_node);\n    return value;\n}\n\n// Recursive backtracking method.\nint backtrack(struct Stack* results, struct Stack* candidates_stack, int stack_size, int running_sum, int* candidates, int index) {\n    \n    if (running_sum == 0) {\n        // create a combination array. \n        struct Combination_Array* combination = New(stack_size);\n        // copy the candidates from the candidates_stack to the combination array.\n        struct Stack* node = candidates_stack;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = 0; i < stack_size; i++) {\n            combination -> array[i] = *(int*)node -> next -> value;\n            node = node -> next;\n        }\n        // append the combination to the results stack.\n        append(results, combination);\n        return 1;\n    }\n    \n    int returnSize = 0;\n    // [Reader note] Decision point\n    // Pay attention here: The important design choice is how you keep the search from reordering the same combination into noisy duplicates.\n    if (running_sum > 0) {\n        for (int i = index; i >= 0; i--) {\n            append(candidates_stack, &candidates[i]);\n            returnSize += backtrack(results, candidates_stack, stack_size + 1, running_sum - candidates[i], candidates, i);\n            // backtrack by poping the candidate from the candidate_stack.\n            pop(candidates_stack);\n        }\n    }\n\n    return returnSize;\n}\n\n\nint** combinationSum(int* candidates, int candidatesSize, int target, int* returnSize, int** returnColumnSizes){\n\n    // A candidates_stack to track all possible combinations of candidates during backtracking.\n    struct Stack* candidates_stack = Node(NULL, NULL);\n    // A results stack to store each combination solution on the stack during backtracking. \n    struct Stack* results = Node(NULL, NULL);\n\n    // The backtracking method returns the total number of possible combinations (the final result size).\n    *returnSize = backtrack(results, candidates_stack, 0, target, candidates, candidatesSize - 1);\n    \n    // prepare the result array.\n    int** result_array = (int**)malloc(*returnSize * sizeof(int*));\n    *returnColumnSizes = (int*)malloc(*returnSize * sizeof(int));\n\n    for (int i = 0; i < *returnSize; i++) {\n        // pop() each solution from the results stack to the results array.\n        struct Combination_Array* combination = (struct Combination_Array*)pop(results);\n        result_array[i] = combination -> array;\n        returnColumnSizes[0][i] = combination -> array_size;\n        free(combination);\n    }\n    // finally free the results stack and the candidates stack.\n    free(results);\n    free(candidates_stack);\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return result_array;\n\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 10,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it."
+            },
+            {
+              "line": 17,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work."
+            },
+            {
+              "line": 60,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 70,
+              "label": "Decision point",
+              "note": "Pay attention here: The important design choice is how you keep the search from reordering the same combination into noisy duplicates."
+            },
+            {
+              "line": 107,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong transition backtracking problem because target pressure and reuse rules make the recursion more realistic.",
+            "whatToNotice": "State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.",
+            "riskPoint": "The important design choice is how you keep the search from reordering the same combination into noisy duplicates."
+          }
+        }
+      ]
+    },
+    {
+      "id": "kotlin",
+      "label": "Kotlin",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-kotlin-0039-combination-sum.kt",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/kotlin/0039-combination-sum.kt",
+          "localPath": "neetcode-gh_leetcode/kotlin/0039-combination-sum.kt",
+          "relativePath": "kotlin/0039-combination-sum.kt",
+          "languageId": "kotlin",
+          "languageLabel": "Kotlin",
+          "coverageType": "code",
+          "code": "class Solution {\n    fun combinationSum(candidates: IntArray, target: Int): List<List<Int>> {\n        val res = mutableListOf<List<Int>>()\n        dfs(candidates, target, 0, mutableListOf<Int>(), res)\n        return res\n    }\n\n    fun dfs(nums: IntArray, target: Int, idx: Int, list: MutableList<Int>, res: MutableList<List<Int>>) {\n\n        if (target == 0) {\n            res.add(ArrayList(list))\n            return\n        }\n\n        if (idx >= nums.size || target < 0)\n            return\n\n        for (i in idx..nums.size-1) {\n            list.add(nums[i])\n            dfs(nums, target - nums[i], i, list, res)\n            list.removeAt(list.size-1)\n        }\n    }\n}",
+          "originalCode": "class Solution {\n    fun combinationSum(candidates: IntArray, target: Int): List<List<Int>> {\n        val res = mutableListOf<List<Int>>()\n        dfs(candidates, target, 0, mutableListOf<Int>(), res)\n        return res\n    }\n\n    fun dfs(nums: IntArray, target: Int, idx: Int, list: MutableList<Int>, res: MutableList<List<Int>>) {\n\n        if (target == 0) {\n            res.add(ArrayList(list))\n            return\n        }\n\n        if (idx >= nums.size || target < 0)\n            return\n\n        for (i in idx..nums.size-1) {\n            list.add(nums[i])\n            dfs(nums, target - nums[i], i, list, res)\n            list.removeAt(list.size-1)\n        }\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it.\nclass Solution {\n    fun combinationSum(candidates: IntArray, target: Int): List<List<Int>> {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.\n        val res = mutableListOf<List<Int>>()\n        dfs(candidates, target, 0, mutableListOf<Int>(), res)\n        return res\n    }\n\n    fun dfs(nums: IntArray, target: Int, idx: Int, list: MutableList<Int>, res: MutableList<List<Int>>) {\n\n        if (target == 0) {\n            res.add(ArrayList(list))\n            return\n        }\n\n        if (idx >= nums.size || target < 0)\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return\n\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (i in idx..nums.size-1) {\n            list.add(nums[i])\n            dfs(nums, target - nums[i], i, list, res)\n            list.removeAt(list.size-1)\n        }\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Carry the remaining target downward and stop branches that have already overspent it."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work."
+            },
+            {
+              "line": 18,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 16,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong transition backtracking problem because target pressure and reuse rules make the recursion more realistic.",
+            "whatToNotice": "State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.",
+            "riskPoint": "The important design choice is how you keep the search from reordering the same combination into noisy duplicates."
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "doocs_leetcode-solution-0000-0099-0039.combination-sum-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0039.Combination%20Sum/README.md",
+      "localPath": "doocs_leetcode/solution/0000-0099/0039.Combination Sum/README.md",
+      "relativePath": "solution/0000-0099/0039.Combination Sum/README.md",
+      "title": "[39. \u7ec4\u5408\u603b\u548c](https://leetcode.cn/problems/combination-sum)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/0000-0099/0039.Combination%20Sum/README.md tags: - \u6570\u7ec4 - \u56de\u6eaf --- <!-- problem:start --> # [39. \u7ec4\u5408\u603b\u548c](https://leetcode.cn/problems/combination-sum) [English Version](/solution/0000-0099/0039.Combination%20Sum/README_EN.md) ## \u9898\u76ee\u63cf\u8ff0 <!-- description:start --> <p>\u7ed9\u4f60\u4e00\u4e2a <strong>\u65e0\u91cd\u590d\u5143\u7d20</strong> \u7684\u6574\u6570\u6570\u7ec4&nbsp;<code>candidates</code> \u548c..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0000-0099-0039.combination-sum-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0039.Combination%20Sum/README_EN.md",
+      "localPath": "doocs_leetcode/solution/0000-0099/0039.Combination Sum/README_EN.md",
+      "relativePath": "solution/0000-0099/0039.Combination Sum/README_EN.md",
+      "title": "[39. Combination Sum](https://leetcode.com/problems/combination-sum)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/0000-0099/0039.Combination%20Sum/README_EN.md tags: - Array - Backtracking --- <!-- problem:start --> # [39. Combination Sum](https://leetcode.com/problems/combination-sum) [\u4e2d\u6587\u6587\u6863](/solution/0000-0099/0039.Combination%20Sum/README.md) ## Description <!-- description:start --> <p>Given an array of <strong>distinct</str..."
+    }
+  ]
+}

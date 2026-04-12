@@ -1,0 +1,1054 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "reorder-list",
+  "problemTitle": "Reorder List",
+  "problemNumber": 143,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go",
+      "typescript",
+      "javascript",
+      "csharp",
+      "c",
+      "kotlin"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go",
+      "TypeScript",
+      "JavaScript",
+      "C#",
+      "C",
+      "Kotlin"
+    ],
+    "solutionCount": 20,
+    "writeupCount": 3,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 5,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-python-0143-reorder-list.py",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/python/0143-reorder-list.py",
+          "localPath": "neetcode-gh_leetcode/python/0143-reorder-list.py",
+          "relativePath": "python/0143-reorder-list.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code",
+          "code": "class Solution:\n    def reorderList(self, head: ListNode) -> None:\n        # find middle\n        slow, fast = head, head.next\n        while fast and fast.next:\n            slow = slow.next\n            fast = fast.next.next\n\n        # reverse second half\n        second = slow.next\n        prev = slow.next = None\n        while second:\n            tmp = second.next\n            second.next = prev\n            prev = second\n            second = tmp\n\n        # merge two halfs\n        first, second = head, prev\n        while second:\n            tmp1, tmp2 = first.next, second.next\n            first.next = second\n            second.next = tmp1\n            first, second = tmp1, tmp2\n",
+          "originalCode": "class Solution:\n    def reorderList(self, head: ListNode) -> None:\n        # find middle\n        slow, fast = head, head.next\n        while fast and fast.next:\n            slow = slow.next\n            fast = fast.next.next\n\n        # reverse second half\n        second = slow.next\n        prev = slow.next = None\n        while second:\n            tmp = second.next\n            second.next = prev\n            prev = second\n            second = tmp\n\n        # merge two halfs\n        first, second = head, prev\n        while second:\n            tmp1, tmp2 = first.next, second.next\n            first.next = second\n            second.next = tmp1\n            first, second = tmp1, tmp2\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order.\nclass Solution:\n    # [Reader note] State setup\n    # This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.\n    def reorderList(self, head: ListNode) -> None:\n        # find middle\n        slow, fast = head, head.next\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while fast and fast.next:\n            slow = slow.next\n            fast = fast.next.next\n\n        # reverse second half\n        second = slow.next\n        prev = slow.next = None\n        while second:\n            tmp = second.next\n            second.next = prev\n            prev = second\n            second = tmp\n\n        # merge two halfs\n        first, second = head, prev\n        while second:\n            tmp1, tmp2 = first.next, second.next\n            first.next = second\n            second.next = tmp1\n            first, second = tmp1, tmp2",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly."
+            },
+            {
+              "line": 5,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a great later linked-list pick because it composes several manageable routines into one coherent transformation.",
+            "whatToNotice": "Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.",
+            "riskPoint": "The final merge is easy to rush; careful termination matters more than the raw idea."
+          }
+        },
+        {
+          "id": "kamyu104_leetcode-solutions-python-reorder-list.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/reorder-list.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/reorder-list.py",
+          "relativePath": "Python/reorder-list.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(n)\n# Space: O(1)\n\nclass ListNode(object):\n    def __init__(self, x):\n        self.val = x\n        self.next = None\n\n    def __repr__(self):\n        if self:\n            return \"{} -> {}\".format(self.val, repr(self.next))\n\nclass Solution(object):\n    # @param head, a ListNode\n    # @return nothing\n    def reorderList(self, head):\n        if head == None or head.next == None:\n            return head\n\n        fast, slow, prev = head, head, None\n        while fast != None and fast.next != None:\n            fast, slow, prev = fast.next.next, slow.next, slow\n        current, prev.next, prev = slow, None, None\n\n        while current != None:\n            current.next, prev, current = prev, current, current.next\n\n        l1, l2 = head, prev\n        dummy = ListNode(0)\n        current = dummy\n\n        while l1 != None and l2 != None:\n            current.next, current, l1 = l1, l1, l1.next\n            current.next, current, l2 = l2, l2, l2.next\n\n        return dummy.next\n\n",
+          "originalCode": "# Time:  O(n)\n# Space: O(1)\n\nclass ListNode(object):\n    def __init__(self, x):\n        self.val = x\n        self.next = None\n\n    def __repr__(self):\n        if self:\n            return \"{} -> {}\".format(self.val, repr(self.next))\n\nclass Solution(object):\n    # @param head, a ListNode\n    # @return nothing\n    def reorderList(self, head):\n        if head == None or head.next == None:\n            return head\n\n        fast, slow, prev = head, head, None\n        while fast != None and fast.next != None:\n            fast, slow, prev = fast.next.next, slow.next, slow\n        current, prev.next, prev = slow, None, None\n\n        while current != None:\n            current.next, prev, current = prev, current, current.next\n\n        l1, l2 = head, prev\n        dummy = ListNode(0)\n        current = dummy\n\n        while l1 != None and l2 != None:\n            current.next, current, l1 = l1, l1, l1.next\n            current.next, current, l2 = l2, l2, l2.next\n\n        return dummy.next\n\n",
+          "reviewedCode": "# Time:  O(n)\n# Space: O(1)\n\nclass ListNode(object):\n    # [Reader note] Entry point\n    # Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order.\n    def __init__(self, x):\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.\n        self.val = x\n        self.next = None\n\n    def __repr__(self):\n        if self:\n            return \"{} -> {}\".format(self.val, repr(self.next))\n\nclass Solution(object):\n    # @param head, a ListNode\n    # @return nothing\n    def reorderList(self, head):\n        if head == None or head.next == None:\n            return head\n\n        fast, slow, prev = head, head, None\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while fast != None and fast.next != None:\n            fast, slow, prev = fast.next.next, slow.next, slow\n        current, prev.next, prev = slow, None, None\n\n        while current != None:\n            current.next, prev, current = prev, current, current.next\n\n        l1, l2 = head, prev\n        dummy = ListNode(0)\n        current = dummy\n\n        while l1 != None and l2 != None:\n            current.next, current, l1 = l1, l1, l1.next\n            current.next, current, l2 = l2, l2, l2.next\n\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return dummy.next\n",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n)",
+            "Space: O(1)"
+          ],
+          "annotations": [
+            {
+              "line": 5,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order."
+            },
+            {
+              "line": 6,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly."
+            },
+            {
+              "line": 21,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 36,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a great later linked-list pick because it composes several manageable routines into one coherent transformation.",
+            "whatToNotice": "Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.",
+            "riskPoint": "The final merge is easy to rush; careful termination matters more than the raw idea."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0100-0199-0143.reorder-list-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0100-0199/0143.Reorder%20List/Solution.py",
+          "localPath": "doocs_leetcode/solution/0100-0199/0143.Reorder List/Solution.py",
+          "relativePath": "solution/0100-0199/0143.Reorder List/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def reorderList(self, head: Optional[ListNode]) -> None:\n        fast = slow = head\n        while fast.next and fast.next.next:\n            slow = slow.next\n            fast = fast.next.next\n\n        cur = slow.next\n        slow.next = None\n\n        pre = None\n        while cur:\n            t = cur.next\n            cur.next = pre\n            pre, cur = cur, t\n        cur = head\n\n        while pre:\n            t = pre.next\n            pre.next = cur.next\n            cur.next = pre\n            cur, pre = pre.next, t\n",
+          "originalCode": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def reorderList(self, head: Optional[ListNode]) -> None:\n        fast = slow = head\n        while fast.next and fast.next.next:\n            slow = slow.next\n            fast = fast.next.next\n\n        cur = slow.next\n        slow.next = None\n\n        pre = None\n        while cur:\n            t = cur.next\n            cur.next = pre\n            pre, cur = cur, t\n        cur = head\n\n        while pre:\n            t = pre.next\n            pre.next = cur.next\n            cur.next = pre\n            cur, pre = pre.next, t\n",
+          "reviewedCode": "# Definition for singly-linked list.\n# class ListNode:\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order.\n#     def __init__(self, val=0, next=None):\n# [Reader note] State setup\n# This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def reorderList(self, head: Optional[ListNode]) -> None:\n        fast = slow = head\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while fast.next and fast.next.next:\n            slow = slow.next\n            fast = fast.next.next\n\n        cur = slow.next\n        slow.next = None\n\n        pre = None\n        while cur:\n            t = cur.next\n            cur.next = pre\n            pre, cur = cur, t\n        cur = head\n\n        while pre:\n            t = pre.next\n            pre.next = cur.next\n            cur.next = pre\n            cur, pre = pre.next, t",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 3,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly."
+            },
+            {
+              "line": 9,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a great later linked-list pick because it composes several manageable routines into one coherent transformation.",
+            "whatToNotice": "Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.",
+            "riskPoint": "The final merge is easy to rush; careful termination matters more than the raw idea."
+          }
+        },
+        {
+          "id": "wisdompeak_leetcode-linked_list-143.reorder-list-143.reorder-list.py",
+          "repository": "wisdompeak_LeetCode",
+          "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+          "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/Linked_List/143.Reorder-List/143.Reorder-List.py",
+          "localPath": "wisdompeak_LeetCode/Linked_List/143.Reorder-List/143.Reorder-List.py",
+          "relativePath": "Linked_List/143.Reorder-List/143.Reorder-List.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+readme",
+          "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, x):\n#         self.val = x\n#         self.next = None\n\nclass Solution:\n    def reorderList(self, head):\n        \"\"\"\n        :type head: ListNode\n        :rtype: void Do not return anything, modify head in-place instead.\n        \"\"\"        \n        if not head: return None\n        \n        fast,slow = head,head\n        while fast.next and fast.next.next:\n            fast = fast.next.next\n            slow = slow.next\n        head2 = slow.next\n        slow.next = None\n                  \n        prv,h = None,head2\n        while h:\n            nxt = h.next\n            h.next = prv\n            prv = h\n            h = nxt\n        head2 = prv       \n            \n        h = ListNode(0)\n        h1,h2 = head,head2\n        while h1 and h2:\n            h1_temp, h2_temp = h1.next, h2.next\n            h.next = h1     \n            h = h.next\n            h.next = h2\n            h = h.next\n            h1,h2 = h1_temp, h2_temp\n        if h1:\n            h.next = h1\n",
+          "originalCode": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, x):\n#         self.val = x\n#         self.next = None\n\nclass Solution:\n    def reorderList(self, head):\n        \"\"\"\n        :type head: ListNode\n        :rtype: void Do not return anything, modify head in-place instead.\n        \"\"\"        \n        if not head: return None\n        \n        fast,slow = head,head\n        while fast.next and fast.next.next:\n            fast = fast.next.next\n            slow = slow.next\n        head2 = slow.next\n        slow.next = None\n                  \n        prv,h = None,head2\n        while h:\n            nxt = h.next\n            h.next = prv\n            prv = h\n            h = nxt\n        head2 = prv       \n            \n        h = ListNode(0)\n        h1,h2 = head,head2\n        while h1 and h2:\n            h1_temp, h2_temp = h1.next, h2.next\n            h.next = h1     \n            h = h.next\n            h.next = h2\n            h = h.next\n            h1,h2 = h1_temp, h2_temp\n        if h1:\n            h.next = h1\n",
+          "reviewedCode": "# Definition for singly-linked list.\n# class ListNode:\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order.\n#     def __init__(self, x):\n# [Reader note] State setup\n# This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.\n#         self.val = x\n#         self.next = None\n\nclass Solution:\n    def reorderList(self, head):\n        \"\"\"\n        :type head: ListNode\n        :rtype: void Do not return anything, modify head in-place instead.\n        \"\"\"        \n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        if not head: return None\n        \n        fast,slow = head,head\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while fast.next and fast.next.next:\n            fast = fast.next.next\n            slow = slow.next\n        head2 = slow.next\n        slow.next = None\n                  \n        prv,h = None,head2\n        while h:\n            nxt = h.next\n            h.next = prv\n            prv = h\n            h = nxt\n        head2 = prv       \n            \n        h = ListNode(0)\n        h1,h2 = head,head2\n        while h1 and h2:\n            h1_temp, h2_temp = h1.next, h2.next\n            h.next = h1     \n            h = h.next\n            h.next = h2\n            h = h.next\n            h1,h2 = h1_temp, h2_temp\n        # [Reader note] Decision point\n        # Pay attention here: The final merge is easy to rush; careful termination matters more than the raw idea.\n        if h1:\n            h.next = h1",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 3,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly."
+            },
+            {
+              "line": 16,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 39,
+              "label": "Decision point",
+              "note": "Pay attention here: The final merge is easy to rush; careful termination matters more than the raw idea."
+            },
+            {
+              "line": 13,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a great later linked-list pick because it composes several manageable routines into one coherent transformation.",
+            "whatToNotice": "Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.",
+            "riskPoint": "The final merge is easy to rush; careful termination matters more than the raw idea."
+          }
+        },
+        {
+          "id": "haoel_leetcode-algorithms-python-reorderlist-reorderlist.py",
+          "repository": "haoel_leetcode",
+          "repositoryUrl": "https://github.com/haoel/leetcode",
+          "sourceUrl": "https://github.com/haoel/leetcode/blob/master/algorithms/python/ReorderList/reorderList.py",
+          "localPath": "haoel_leetcode/algorithms/python/ReorderList/reorderList.py",
+          "relativePath": "algorithms/python/ReorderList/reorderList.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "def reorderList(self, head):\n    if not head or not head.next: return\n    \n    # Step 1: find the middle node\n    middle = None\n    slow, fast = head, head\n    while fast and fast.next:\n        middle = slow\n        slow = slow.next\n        fast = fast.next.next\n    middle.next = None\n    \n    # Step 2: reverse the second half\n    prev = None\n    while slow:\n        nextNode = slow.next\n        slow.next = prev\n        prev, slow = slow, nextNode\n        \n    # Step 3: merge two lists\n    while head and prev:\n        first, second = head.next, prev.next\n        head.next = prev\n        if first: prev.next = first\n        head, prev = first, second",
+          "originalCode": "def reorderList(self, head):\n    if not head or not head.next: return\n    \n    # Step 1: find the middle node\n    middle = None\n    slow, fast = head, head\n    while fast and fast.next:\n        middle = slow\n        slow = slow.next\n        fast = fast.next.next\n    middle.next = None\n    \n    # Step 2: reverse the second half\n    prev = None\n    while slow:\n        nextNode = slow.next\n        slow.next = prev\n        prev, slow = slow, nextNode\n        \n    # Step 3: merge two lists\n    while head and prev:\n        first, second = head.next, prev.next\n        head.next = prev\n        if first: prev.next = first\n        head, prev = first, second",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order.\ndef reorderList(self, head):\n    # [Reader note] Return\n    # The final return exposes the result after the traversal and state updates have settled.\n    if not head or not head.next: return\n    \n    # Step 1: find the middle node\n    # [Reader note] State setup\n    # This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.\n    middle = None\n    slow, fast = head, head\n    # [Reader note] Main pass\n    # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    while fast and fast.next:\n        middle = slow\n        slow = slow.next\n        fast = fast.next.next\n    middle.next = None\n    \n    # Step 2: reverse the second half\n    prev = None\n    while slow:\n        nextNode = slow.next\n        slow.next = prev\n        prev, slow = slow, nextNode\n        \n    # Step 3: merge two lists\n    while head and prev:\n        first, second = head.next, prev.next\n        head.next = prev\n        # [Reader note] Decision point\n        # Pay attention here: The final merge is easy to rush; careful termination matters more than the raw idea.\n        if first: prev.next = first\n        head, prev = first, second",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order."
+            },
+            {
+              "line": 5,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly."
+            },
+            {
+              "line": 7,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 24,
+              "label": "Decision point",
+              "note": "Pay attention here: The final merge is easy to rush; careful termination matters more than the raw idea."
+            },
+            {
+              "line": 2,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a great later linked-list pick because it composes several manageable routines into one coherent transformation.",
+            "whatToNotice": "Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.",
+            "riskPoint": "The final merge is easy to rush; careful termination matters more than the raw idea."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 6,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-cpp-0143-reorder-list.cpp",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/cpp/0143-reorder-list.cpp",
+          "localPath": "neetcode-gh_leetcode/cpp/0143-reorder-list.cpp",
+          "relativePath": "cpp/0143-reorder-list.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code",
+          "code": "/*\n    Given head of linked-list, reorder list alternating outside in\n    Ex. head = [1,2,3,4] -> [1,4,2,3], head = [1,2,3,4,5] -> [1,5,2,4,3]\n\n    Find middle node, split in half, reverse 2nd half of list, merge\n\n    Time: O(n)\n    Space: O(1)\n*/\n\n/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    void reorderList(ListNode* head) {\n        if (head->next == NULL) {\n            return;\n        }\n        \n        ListNode* prev = NULL;\n        ListNode* slow = head;\n        ListNode* fast = head;\n        \n        while (fast != NULL && fast->next != NULL) {\n            prev = slow;\n            slow = slow->next;\n            fast = fast->next->next;\n        }\n        \n        prev->next = NULL;\n        \n        ListNode* l1 = head;\n        ListNode* l2 = reverse(slow);\n        \n        merge(l1, l2);\n    }\nprivate:\n    ListNode* reverse(ListNode* head) {\n        ListNode* prev = NULL;\n        ListNode* curr = head;\n        ListNode* next = curr->next;\n        \n        while (curr != NULL) {\n            next = curr->next;\n            curr->next = prev;\n            prev = curr;\n            curr = next;\n        }\n        \n        return prev;\n    }\n    void merge(ListNode* l1, ListNode* l2) {\n        while (l1 != NULL) {\n            ListNode* p1 = l1->next;\n            ListNode* p2 = l2->next;\n            \n            l1->next = l2;\n            if (p1 == NULL) {\n                break;\n            }\n            l2->next = p1;\n            \n            l1 = p1;\n            l2 = p2;\n        }\n    }\n};\n",
+          "originalCode": "/*\n    Given head of linked-list, reorder list alternating outside in\n    Ex. head = [1,2,3,4] -> [1,4,2,3], head = [1,2,3,4,5] -> [1,5,2,4,3]\n\n    Find middle node, split in half, reverse 2nd half of list, merge\n\n    Time: O(n)\n    Space: O(1)\n*/\n\n/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    void reorderList(ListNode* head) {\n        if (head->next == NULL) {\n            return;\n        }\n        \n        ListNode* prev = NULL;\n        ListNode* slow = head;\n        ListNode* fast = head;\n        \n        while (fast != NULL && fast->next != NULL) {\n            prev = slow;\n            slow = slow->next;\n            fast = fast->next->next;\n        }\n        \n        prev->next = NULL;\n        \n        ListNode* l1 = head;\n        ListNode* l2 = reverse(slow);\n        \n        merge(l1, l2);\n    }\nprivate:\n    ListNode* reverse(ListNode* head) {\n        ListNode* prev = NULL;\n        ListNode* curr = head;\n        ListNode* next = curr->next;\n        \n        while (curr != NULL) {\n            next = curr->next;\n            curr->next = prev;\n            prev = curr;\n            curr = next;\n        }\n        \n        return prev;\n    }\n    void merge(ListNode* l1, ListNode* l2) {\n        while (l1 != NULL) {\n            ListNode* p1 = l1->next;\n            ListNode* p2 = l2->next;\n            \n            l1->next = l2;\n            if (p1 == NULL) {\n                break;\n            }\n            l2->next = p1;\n            \n            l1 = p1;\n            l2 = p2;\n        }\n    }\n};\n",
+          "reviewedCode": "/*\n    Given head of linked-list, reorder list alternating outside in\n    Ex. head = [1,2,3,4] -> [1,4,2,3], head = [1,2,3,4,5] -> [1,5,2,4,3]\n\n    Find middle node, split in half, reverse 2nd half of list, merge\n\n    Time: O(n)\n    Space: O(1)\n*/\n\n/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order.\nclass Solution {\npublic:\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.\n    void reorderList(ListNode* head) {\n        if (head->next == NULL) {\n            return;\n        }\n        \n        ListNode* prev = NULL;\n        ListNode* slow = head;\n        ListNode* fast = head;\n        \n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while (fast != NULL && fast->next != NULL) {\n            prev = slow;\n            slow = slow->next;\n            fast = fast->next->next;\n        }\n        \n        prev->next = NULL;\n        \n        ListNode* l1 = head;\n        ListNode* l2 = reverse(slow);\n        \n        merge(l1, l2);\n    }\nprivate:\n    ListNode* reverse(ListNode* head) {\n        ListNode* prev = NULL;\n        ListNode* curr = head;\n        ListNode* next = curr->next;\n        \n        while (curr != NULL) {\n            next = curr->next;\n            curr->next = prev;\n            prev = curr;\n            curr = next;\n        }\n        \n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return prev;\n    }\n    void merge(ListNode* l1, ListNode* l2) {\n        while (l1 != NULL) {\n            ListNode* p1 = l1->next;\n            ListNode* p2 = l2->next;\n            \n            l1->next = l2;\n            // [Reader note] Decision point\n            // Pay attention here: The final merge is easy to rush; careful termination matters more than the raw idea.\n            if (p1 == NULL) {\n                break;\n            }\n            l2->next = p1;\n            \n            l1 = p1;\n            l2 = p2;\n        }\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time: O(n)",
+            "Space: O(1)"
+          ],
+          "annotations": [
+            {
+              "line": 21,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order."
+            },
+            {
+              "line": 23,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly."
+            },
+            {
+              "line": 32,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 66,
+              "label": "Decision point",
+              "note": "Pay attention here: The final merge is easy to rush; careful termination matters more than the raw idea."
+            },
+            {
+              "line": 58,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a great later linked-list pick because it composes several manageable routines into one coherent transformation.",
+            "whatToNotice": "Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.",
+            "riskPoint": "The final merge is easy to rush; careful termination matters more than the raw idea."
+          }
+        },
+        {
+          "id": "kamyu104_leetcode-solutions-c-reorder-list.cpp",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/C%2B%2B/reorder-list.cpp",
+          "localPath": "kamyu104_LeetCode-Solutions/C++/reorder-list.cpp",
+          "relativePath": "C++/reorder-list.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Time:  O(n)\n// Space: O(1)\n\n/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode(int x) : val(x), next(NULL) {}\n * };\n */\nclass Solution {\n    public:\n        void reorderList(ListNode *head) {\n        if (!head) {\n            return;\n        }\n\n        auto slow = head, fast = head;\n\n        while (fast->next && fast->next->next) {\n            slow = slow->next;\n            fast = fast->next->next;\n        }\n\n        // Split into two lists.\n        auto tmp = slow->next;\n        slow->next = nullptr;\n        slow = tmp;\n\n        merge(head, reverse(slow));\n    }\n\nprivate:\n    ListNode *reverse(ListNode *head) {\n        ListNode dummy{0};\n\n        while (head) {\n            auto tmp = head->next;\n            head->next = dummy.next;\n            dummy.next = head;\n            head = tmp;\n        }\n\n        return dummy.next;\n    }\n\n    ListNode *merge(ListNode *list1, ListNode *list2) {\n        ListNode dummy{0};\n        auto ptr = &dummy;\n\n        while (list1 && list2) {\n            auto tmp = list1->next;\n\n            ptr->next = list1;\n            ptr = ptr->next;\n            ptr->next = list2;\n            ptr = ptr->next;\n\n            list1 = tmp;\n            list2 = list2->next;\n        }\n\n        if (list1) {\n            ptr->next = list1;\n        }\n\n        return dummy.next;\n    }\n};\n",
+          "originalCode": "// Time:  O(n)\n// Space: O(1)\n\n/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode(int x) : val(x), next(NULL) {}\n * };\n */\nclass Solution {\n    public:\n        void reorderList(ListNode *head) {\n        if (!head) {\n            return;\n        }\n\n        auto slow = head, fast = head;\n\n        while (fast->next && fast->next->next) {\n            slow = slow->next;\n            fast = fast->next->next;\n        }\n\n        // Split into two lists.\n        auto tmp = slow->next;\n        slow->next = nullptr;\n        slow = tmp;\n\n        merge(head, reverse(slow));\n    }\n\nprivate:\n    ListNode *reverse(ListNode *head) {\n        ListNode dummy{0};\n\n        while (head) {\n            auto tmp = head->next;\n            head->next = dummy.next;\n            dummy.next = head;\n            head = tmp;\n        }\n\n        return dummy.next;\n    }\n\n    ListNode *merge(ListNode *list1, ListNode *list2) {\n        ListNode dummy{0};\n        auto ptr = &dummy;\n\n        while (list1 && list2) {\n            auto tmp = list1->next;\n\n            ptr->next = list1;\n            ptr = ptr->next;\n            ptr->next = list2;\n            ptr = ptr->next;\n\n            list1 = tmp;\n            list2 = list2->next;\n        }\n\n        if (list1) {\n            ptr->next = list1;\n        }\n\n        return dummy.next;\n    }\n};\n",
+          "reviewedCode": "// Time:  O(n)\n// Space: O(1)\n\n/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode(int x) : val(x), next(NULL) {}\n * };\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order.\nclass Solution {\n    public:\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.\n        void reorderList(ListNode *head) {\n        if (!head) {\n            return;\n        }\n\n        auto slow = head, fast = head;\n\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while (fast->next && fast->next->next) {\n            slow = slow->next;\n            fast = fast->next->next;\n        }\n\n        // Split into two lists.\n        auto tmp = slow->next;\n        slow->next = nullptr;\n        slow = tmp;\n\n        merge(head, reverse(slow));\n    }\n\nprivate:\n    ListNode *reverse(ListNode *head) {\n        ListNode dummy{0};\n\n        while (head) {\n            auto tmp = head->next;\n            head->next = dummy.next;\n            dummy.next = head;\n            head = tmp;\n        }\n\n        return dummy.next;\n    }\n\n    ListNode *merge(ListNode *list1, ListNode *list2) {\n        ListNode dummy{0};\n        auto ptr = &dummy;\n\n        while (list1 && list2) {\n            auto tmp = list1->next;\n\n            ptr->next = list1;\n            ptr = ptr->next;\n            ptr->next = list2;\n            ptr = ptr->next;\n\n            list1 = tmp;\n            list2 = list2->next;\n        }\n\n        // [Reader note] Decision point\n        // Pay attention here: The final merge is easy to rush; careful termination matters more than the raw idea.\n        if (list1) {\n            ptr->next = list1;\n        }\n\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return dummy.next;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n)",
+            "Space: O(1)"
+          ],
+          "annotations": [
+            {
+              "line": 12,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order."
+            },
+            {
+              "line": 14,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly."
+            },
+            {
+              "line": 21,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 64,
+              "label": "Decision point",
+              "note": "Pay attention here: The final merge is easy to rush; careful termination matters more than the raw idea."
+            },
+            {
+              "line": 68,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a great later linked-list pick because it composes several manageable routines into one coherent transformation.",
+            "whatToNotice": "Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.",
+            "riskPoint": "The final merge is easy to rush; careful termination matters more than the raw idea."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0100-0199-0143.reorder-list-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0100-0199/0143.Reorder%20List/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/0100-0199/0143.Reorder List/Solution.cpp",
+          "relativePath": "solution/0100-0199/0143.Reorder List/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    void reorderList(ListNode* head) {\n        ListNode* fast = head;\n        ListNode* slow = head;\n        while (fast->next && fast->next->next) {\n            slow = slow->next;\n            fast = fast->next->next;\n        }\n\n        ListNode* cur = slow->next;\n        slow->next = nullptr;\n\n        ListNode* pre = nullptr;\n        while (cur) {\n            ListNode* t = cur->next;\n            cur->next = pre;\n            pre = cur;\n            cur = t;\n        }\n        cur = head;\n\n        while (pre) {\n            ListNode* t = pre->next;\n            pre->next = cur->next;\n            cur->next = pre;\n            cur = pre->next;\n            pre = t;\n        }\n    }\n};",
+          "originalCode": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    void reorderList(ListNode* head) {\n        ListNode* fast = head;\n        ListNode* slow = head;\n        while (fast->next && fast->next->next) {\n            slow = slow->next;\n            fast = fast->next->next;\n        }\n\n        ListNode* cur = slow->next;\n        slow->next = nullptr;\n\n        ListNode* pre = nullptr;\n        while (cur) {\n            ListNode* t = cur->next;\n            cur->next = pre;\n            pre = cur;\n            cur = t;\n        }\n        cur = head;\n\n        while (pre) {\n            ListNode* t = pre->next;\n            pre->next = cur->next;\n            cur->next = pre;\n            cur = pre->next;\n            pre = t;\n        }\n    }\n};",
+          "reviewedCode": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order.\nclass Solution {\npublic:\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.\n    void reorderList(ListNode* head) {\n        ListNode* fast = head;\n        ListNode* slow = head;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while (fast->next && fast->next->next) {\n            slow = slow->next;\n            fast = fast->next->next;\n        }\n\n        ListNode* cur = slow->next;\n        slow->next = nullptr;\n\n        ListNode* pre = nullptr;\n        while (cur) {\n            ListNode* t = cur->next;\n            cur->next = pre;\n            pre = cur;\n            cur = t;\n        }\n        cur = head;\n\n        while (pre) {\n            ListNode* t = pre->next;\n            pre->next = cur->next;\n            cur->next = pre;\n            cur = pre->next;\n            pre = t;\n        }\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 11,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order."
+            },
+            {
+              "line": 13,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly."
+            },
+            {
+              "line": 16,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a great later linked-list pick because it composes several manageable routines into one coherent transformation.",
+            "whatToNotice": "Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.",
+            "riskPoint": "The final merge is easy to rush; careful termination matters more than the raw idea."
+          }
+        },
+        {
+          "id": "wisdompeak_leetcode-linked_list-143.reorder-list-143.reorder-list.cpp",
+          "repository": "wisdompeak_LeetCode",
+          "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+          "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/Linked_List/143.Reorder-List/143.Reorder-List.cpp",
+          "localPath": "wisdompeak_LeetCode/Linked_List/143.Reorder-List/143.Reorder-List.cpp",
+          "relativePath": "Linked_List/143.Reorder-List/143.Reorder-List.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+readme",
+          "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    void reorderList(ListNode* head) \n    {\n        ListNode* dummy = new ListNode(0);\n        dummy->next = head;\n\n        ListNode* p = dummy;\n        int count = 0;\n        while (p->next)\n        {\n            count++;\n            p = p->next;\n        }\n\n        ListNode* q = dummy;\n        for (int i=0; i<(count+1)/2; i++)\n            q = q->next;\n        ListNode* head2 = q->next;\n        q->next = NULL;\n\n        head2 = reverseLinkedList(head2);\n\n        p = head, q = head2;\n        ListNode* h = dummy;\n        while (p || q)\n        {\n            if (p)\n            {\n                h->next = p;\n                p = p->next;\n                h = h->next;\n            }\n            if (q)\n            {\n                h->next = q;\n                q = q->next;\n                h = h->next;\n            }\n        }\n    }\n\n    ListNode* reverseLinkedList(ListNode* head)\n    {\n        ListNode* cur = head;\n        ListNode* last = NULL;\n        ListNode* next = NULL;\n        while (cur!=NULL)\n        {\n            next = cur->next;\n            cur->next = last;\n            last = cur;\n            cur = next;\n        }\n        return last;\n    }\n};\n",
+          "originalCode": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    void reorderList(ListNode* head) \n    {\n        ListNode* dummy = new ListNode(0);\n        dummy->next = head;\n\n        ListNode* p = dummy;\n        int count = 0;\n        while (p->next)\n        {\n            count++;\n            p = p->next;\n        }\n\n        ListNode* q = dummy;\n        for (int i=0; i<(count+1)/2; i++)\n            q = q->next;\n        ListNode* head2 = q->next;\n        q->next = NULL;\n\n        head2 = reverseLinkedList(head2);\n\n        p = head, q = head2;\n        ListNode* h = dummy;\n        while (p || q)\n        {\n            if (p)\n            {\n                h->next = p;\n                p = p->next;\n                h = h->next;\n            }\n            if (q)\n            {\n                h->next = q;\n                q = q->next;\n                h = h->next;\n            }\n        }\n    }\n\n    ListNode* reverseLinkedList(ListNode* head)\n    {\n        ListNode* cur = head;\n        ListNode* last = NULL;\n        ListNode* next = NULL;\n        while (cur!=NULL)\n        {\n            next = cur->next;\n            cur->next = last;\n            last = cur;\n            cur = next;\n        }\n        return last;\n    }\n};\n",
+          "reviewedCode": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order.\nclass Solution {\npublic:\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.\n    void reorderList(ListNode* head) \n    {\n        ListNode* dummy = new ListNode(0);\n        dummy->next = head;\n\n        ListNode* p = dummy;\n        int count = 0;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while (p->next)\n        {\n            count++;\n            p = p->next;\n        }\n\n        ListNode* q = dummy;\n        for (int i=0; i<(count+1)/2; i++)\n            q = q->next;\n        ListNode* head2 = q->next;\n        q->next = NULL;\n\n        head2 = reverseLinkedList(head2);\n\n        p = head, q = head2;\n        ListNode* h = dummy;\n        while (p || q)\n        {\n            // [Reader note] Decision point\n            // Pay attention here: The final merge is easy to rush; careful termination matters more than the raw idea.\n            if (p)\n            {\n                h->next = p;\n                p = p->next;\n                h = h->next;\n            }\n            if (q)\n            {\n                h->next = q;\n                q = q->next;\n                h = h->next;\n            }\n        }\n    }\n\n    ListNode* reverseLinkedList(ListNode* head)\n    {\n        ListNode* cur = head;\n        ListNode* last = NULL;\n        ListNode* next = NULL;\n        while (cur!=NULL)\n        {\n            next = cur->next;\n            cur->next = last;\n            last = cur;\n            cur = next;\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return last;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 11,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order."
+            },
+            {
+              "line": 13,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly."
+            },
+            {
+              "line": 20,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 38,
+              "label": "Decision point",
+              "note": "Pay attention here: The final merge is easy to rush; careful termination matters more than the raw idea."
+            },
+            {
+              "line": 65,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a great later linked-list pick because it composes several manageable routines into one coherent transformation.",
+            "whatToNotice": "Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.",
+            "riskPoint": "The final merge is easy to rush; careful termination matters more than the raw idea."
+          }
+        },
+        {
+          "id": "wisdompeak_leetcode-linked_list-143.reorder-list-143.reorder-list_v2.cpp",
+          "repository": "wisdompeak_LeetCode",
+          "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+          "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/Linked_List/143.Reorder-List/143.Reorder-List_v2.cpp",
+          "localPath": "wisdompeak_LeetCode/Linked_List/143.Reorder-List/143.Reorder-List_v2.cpp",
+          "relativePath": "Linked_List/143.Reorder-List/143.Reorder-List_v2.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+readme",
+          "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    void reorderList(ListNode* head) {\n        ListNode *slow = head, *fast = head;\n        for(; fast && fast->next; slow = slow->next, fast = fast->next->next);\n        ListNode *head1 = head;\n        ListNode *head2 = slow->next;\n        slow->next = nullptr;\n\n        // reverse list2\n        ListNode *nextNode = nullptr;\n        for(ListNode *cur = head2; cur != nullptr;) {\n            ListNode *curNext = cur->next;\n            cur->next = nextNode;\n            nextNode = cur;\n            cur = curNext;\n        }\n        head2 = nextNode;\n\n        // traverse list1 to insert\n        for(ListNode *ptr1 = head1, *ptr2 = head2; ptr1 && ptr2;) {\n            ListNode *ptr1Next = ptr1->next, *ptr2Next = ptr2->next;\n            ptr1->next = ptr2;\n            ptr2->next = ptr1Next;\n            ptr1 = ptr1Next;\n            ptr2 = ptr2Next;\n        }\n    }\n};\n",
+          "originalCode": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    void reorderList(ListNode* head) {\n        ListNode *slow = head, *fast = head;\n        for(; fast && fast->next; slow = slow->next, fast = fast->next->next);\n        ListNode *head1 = head;\n        ListNode *head2 = slow->next;\n        slow->next = nullptr;\n\n        // reverse list2\n        ListNode *nextNode = nullptr;\n        for(ListNode *cur = head2; cur != nullptr;) {\n            ListNode *curNext = cur->next;\n            cur->next = nextNode;\n            nextNode = cur;\n            cur = curNext;\n        }\n        head2 = nextNode;\n\n        // traverse list1 to insert\n        for(ListNode *ptr1 = head1, *ptr2 = head2; ptr1 && ptr2;) {\n            ListNode *ptr1Next = ptr1->next, *ptr2Next = ptr2->next;\n            ptr1->next = ptr2;\n            ptr2->next = ptr1Next;\n            ptr1 = ptr1Next;\n            ptr2 = ptr2Next;\n        }\n    }\n};\n",
+          "reviewedCode": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order.\nclass Solution {\npublic:\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.\n    void reorderList(ListNode* head) {\n        ListNode *slow = head, *fast = head;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for(; fast && fast->next; slow = slow->next, fast = fast->next->next);\n        ListNode *head1 = head;\n        ListNode *head2 = slow->next;\n        slow->next = nullptr;\n\n        // reverse list2\n        ListNode *nextNode = nullptr;\n        for(ListNode *cur = head2; cur != nullptr;) {\n            ListNode *curNext = cur->next;\n            cur->next = nextNode;\n            nextNode = cur;\n            cur = curNext;\n        }\n        head2 = nextNode;\n\n        // traverse list1 to insert\n        for(ListNode *ptr1 = head1, *ptr2 = head2; ptr1 && ptr2;) {\n            ListNode *ptr1Next = ptr1->next, *ptr2Next = ptr2->next;\n            ptr1->next = ptr2;\n            ptr2->next = ptr1Next;\n            ptr1 = ptr1Next;\n            ptr2 = ptr2Next;\n        }\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 11,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order."
+            },
+            {
+              "line": 13,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly."
+            },
+            {
+              "line": 15,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a great later linked-list pick because it composes several manageable routines into one coherent transformation.",
+            "whatToNotice": "Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.",
+            "riskPoint": "The final merge is easy to rush; careful termination matters more than the raw idea."
+          }
+        },
+        {
+          "id": "haoel_leetcode-algorithms-cpp-reorderlist-reorderlist.cpp",
+          "repository": "haoel_leetcode",
+          "repositoryUrl": "https://github.com/haoel/leetcode",
+          "sourceUrl": "https://github.com/haoel/leetcode/blob/master/algorithms/cpp/reorderList/reorderList.cpp",
+          "localPath": "haoel_leetcode/algorithms/cpp/reorderList/reorderList.cpp",
+          "relativePath": "algorithms/cpp/reorderList/reorderList.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Source : https://oj.leetcode.com/problems/reorder-list/\n// Author : Hao Chen\n// Date   : 2014-06-17\n\n/********************************************************************************** \n* \n* Given a singly linked list L: L0\u2192L1\u2192\u2026\u2192Ln-1\u2192Ln,\n* reorder it to: L0\u2192Ln\u2192L1\u2192Ln-1\u2192L2\u2192Ln-2\u2192\u2026\n* \n* You must do this in-place without altering the nodes' values.\n* \n* For example,\n* Given {1,2,3,4}, reorder it to {1,4,2,3}.\n* \n*               \n**********************************************************************************/\n\n#include <stdio.h>\n#include <stdlib.h>\n/**\n * Definition for singly-linked list.\n */\nclass ListNode {\npublic:\n    int val;\n    ListNode *next;\n    ListNode():val(0), next(NULL) {}\n    ListNode(int x) : val(x), next(NULL) {}\n};\n\nclass Solution {\npublic:\n    void reorderList(ListNode *head) {\n        ListNode *pMid = findMidPos(head);\n        pMid = reverseList(pMid);\n        head = Merge(head, pMid);\n    }\n    \nprivate:\n    ListNode* findMidPos(ListNode *head){\n\n        ListNode *p1, *p2, *p=NULL;\n        p1 = p2 = head;\n        \n        while(p1!=NULL && p2!=NULL && p2->next!=NULL){\n            p = p1;\n            p1 = p1->next;\n            p2 = p2->next->next;\n        }\n\n        if(p!=NULL){\n            p->next = NULL;\n        }\n        \n        return p1;\n    }\n    \n    ListNode* reverseList(ListNode *head){\n        ListNode* h = NULL;\n        ListNode *p;\n        while (head!=NULL){\n            p = head;\n            head = head->next;\n            p->next = h;\n            h = p;\n        }\n        return h;\n    }\n    \n    ListNode* Merge(ListNode *h1, ListNode* h2) {\n        ListNode *p1=h1, *p2=h2, *p1nxt, *p2nxt;\n        while(p1!=NULL && p2!=NULL){\n            p1nxt = p1->next;\n            p2nxt = p2->next;\n            \n            p1->next = p2;\n            p2->next = p1nxt;\n            \n            if (p1nxt==NULL){\n                p2->next = p2nxt;\n                break;\n            }\n            p1=p1nxt;\n            p2=p2nxt;\n        }\n    }\n};\n\nvoid printList(ListNode *h){\n    while(h!=NULL){\n        printf(\"%d->\", h->val);\n        h = h->next;\n    }\n    printf(\"nil\\n\");\n}\n\nint main(int argc, char** argv)\n{\n    int size = atoi(argv[1]);\n    ListNode* n = new ListNode[size] ;\n\n    for(int i=0; i<size; i++){\n        n[i].val = i;\n        if( i+1 < size) {\n            n[i].next = &n[i+1];\n        }\n    }\n\n\n    Solution s;\n    s.reorderList(&n[0]);\n    printList(&n[0]);\n    \n    \n    \n    return 0;\n}\n",
+          "originalCode": "// Source : https://oj.leetcode.com/problems/reorder-list/\n// Author : Hao Chen\n// Date   : 2014-06-17\n\n/********************************************************************************** \n* \n* Given a singly linked list L: L0\u2192L1\u2192\u2026\u2192Ln-1\u2192Ln,\n* reorder it to: L0\u2192Ln\u2192L1\u2192Ln-1\u2192L2\u2192Ln-2\u2192\u2026\n* \n* You must do this in-place without altering the nodes' values.\n* \n* For example,\n* Given {1,2,3,4}, reorder it to {1,4,2,3}.\n* \n*               \n**********************************************************************************/\n\n#include <stdio.h>\n#include <stdlib.h>\n/**\n * Definition for singly-linked list.\n */\nclass ListNode {\npublic:\n    int val;\n    ListNode *next;\n    ListNode():val(0), next(NULL) {}\n    ListNode(int x) : val(x), next(NULL) {}\n};\n\nclass Solution {\npublic:\n    void reorderList(ListNode *head) {\n        ListNode *pMid = findMidPos(head);\n        pMid = reverseList(pMid);\n        head = Merge(head, pMid);\n    }\n    \nprivate:\n    ListNode* findMidPos(ListNode *head){\n\n        ListNode *p1, *p2, *p=NULL;\n        p1 = p2 = head;\n        \n        while(p1!=NULL && p2!=NULL && p2->next!=NULL){\n            p = p1;\n            p1 = p1->next;\n            p2 = p2->next->next;\n        }\n\n        if(p!=NULL){\n            p->next = NULL;\n        }\n        \n        return p1;\n    }\n    \n    ListNode* reverseList(ListNode *head){\n        ListNode* h = NULL;\n        ListNode *p;\n        while (head!=NULL){\n            p = head;\n            head = head->next;\n            p->next = h;\n            h = p;\n        }\n        return h;\n    }\n    \n    ListNode* Merge(ListNode *h1, ListNode* h2) {\n        ListNode *p1=h1, *p2=h2, *p1nxt, *p2nxt;\n        while(p1!=NULL && p2!=NULL){\n            p1nxt = p1->next;\n            p2nxt = p2->next;\n            \n            p1->next = p2;\n            p2->next = p1nxt;\n            \n            if (p1nxt==NULL){\n                p2->next = p2nxt;\n                break;\n            }\n            p1=p1nxt;\n            p2=p2nxt;\n        }\n    }\n};\n\nvoid printList(ListNode *h){\n    while(h!=NULL){\n        printf(\"%d->\", h->val);\n        h = h->next;\n    }\n    printf(\"nil\\n\");\n}\n\nint main(int argc, char** argv)\n{\n    int size = atoi(argv[1]);\n    ListNode* n = new ListNode[size] ;\n\n    for(int i=0; i<size; i++){\n        n[i].val = i;\n        if( i+1 < size) {\n            n[i].next = &n[i+1];\n        }\n    }\n\n\n    Solution s;\n    s.reorderList(&n[0]);\n    printList(&n[0]);\n    \n    \n    \n    return 0;\n}\n",
+          "reviewedCode": "// Source : https://oj.leetcode.com/problems/reorder-list/\n// Author : Hao Chen\n// Date   : 2014-06-17\n\n/********************************************************************************** \n* \n* Given a singly linked list L: L0\u2192L1\u2192\u2026\u2192Ln-1\u2192Ln,\n* reorder it to: L0\u2192Ln\u2192L1\u2192Ln-1\u2192L2\u2192Ln-2\u2192\u2026\n* \n* You must do this in-place without altering the nodes' values.\n* \n* For example,\n* Given {1,2,3,4}, reorder it to {1,4,2,3}.\n* \n*               \n**********************************************************************************/\n\n#include <stdio.h>\n#include <stdlib.h>\n/**\n * Definition for singly-linked list.\n */\nclass ListNode {\npublic:\n    int val;\n    ListNode *next;\n    ListNode():val(0), next(NULL) {}\n    ListNode(int x) : val(x), next(NULL) {}\n};\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order.\nclass Solution {\npublic:\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.\n    void reorderList(ListNode *head) {\n        ListNode *pMid = findMidPos(head);\n        pMid = reverseList(pMid);\n        head = Merge(head, pMid);\n    }\n    \nprivate:\n    ListNode* findMidPos(ListNode *head){\n\n        ListNode *p1, *p2, *p=NULL;\n        p1 = p2 = head;\n        \n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while(p1!=NULL && p2!=NULL && p2->next!=NULL){\n            p = p1;\n            p1 = p1->next;\n            p2 = p2->next->next;\n        }\n\n        // [Reader note] Decision point\n        // Pay attention here: The final merge is easy to rush; careful termination matters more than the raw idea.\n        if(p!=NULL){\n            p->next = NULL;\n        }\n        \n        return p1;\n    }\n    \n    ListNode* reverseList(ListNode *head){\n        ListNode* h = NULL;\n        ListNode *p;\n        while (head!=NULL){\n            p = head;\n            head = head->next;\n            p->next = h;\n            h = p;\n        }\n        return h;\n    }\n    \n    ListNode* Merge(ListNode *h1, ListNode* h2) {\n        ListNode *p1=h1, *p2=h2, *p1nxt, *p2nxt;\n        while(p1!=NULL && p2!=NULL){\n            p1nxt = p1->next;\n            p2nxt = p2->next;\n            \n            p1->next = p2;\n            p2->next = p1nxt;\n            \n            if (p1nxt==NULL){\n                p2->next = p2nxt;\n                break;\n            }\n            p1=p1nxt;\n            p2=p2nxt;\n        }\n    }\n};\n\nvoid printList(ListNode *h){\n    while(h!=NULL){\n        printf(\"%d->\", h->val);\n        h = h->next;\n    }\n    printf(\"nil\\n\");\n}\n\nint main(int argc, char** argv)\n{\n    int size = atoi(argv[1]);\n    ListNode* n = new ListNode[size] ;\n\n    for(int i=0; i<size; i++){\n        n[i].val = i;\n        if( i+1 < size) {\n            n[i].next = &n[i+1];\n        }\n    }\n\n\n    Solution s;\n    s.reorderList(&n[0]);\n    printList(&n[0]);\n    \n    \n    \n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return 0;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 31,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order."
+            },
+            {
+              "line": 33,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly."
+            },
+            {
+              "line": 45,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 51,
+              "label": "Decision point",
+              "note": "Pay attention here: The final merge is easy to rush; careful termination matters more than the raw idea."
+            },
+            {
+              "line": 116,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a great later linked-list pick because it composes several manageable routines into one coherent transformation.",
+            "whatToNotice": "Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.",
+            "riskPoint": "The final merge is easy to rush; careful termination matters more than the raw idea."
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-java-0143-reorder-list.java",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/java/0143-reorder-list.java",
+          "localPath": "neetcode-gh_leetcode/java/0143-reorder-list.java",
+          "relativePath": "java/0143-reorder-list.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code",
+          "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n\n    public void reorderList(ListNode head) {\n        \n        //Find middle of list using a slow and fast pointer approach\n        ListNode slow = head;\n        ListNode fast = head.next;\n        while (fast != null && fast.next != null) {\n            slow = slow.next;\n            fast = fast.next.next;\n        }\n\n        //Reverse the second half of the list using a tmp variable\n        ListNode second = slow.next;\n        ListNode prev = slow.next = null;\n        while (second != null) {\n            ListNode tmp = second.next;\n            second.next = prev;\n            prev = second;\n            second = tmp;\n        }\n\n        //Re-assign the pointers to match the pattern\n        ListNode first = head;\n        second = prev;\n        while (second != null) {\n            ListNode tmp1 = first.next;\n            ListNode tmp2 = second.next;\n            first.next = second;\n            second.next = tmp1;\n            first = tmp1;\n            second = tmp2;\n        }\n    }\n}\n",
+          "originalCode": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n\n    public void reorderList(ListNode head) {\n        \n        //Find middle of list using a slow and fast pointer approach\n        ListNode slow = head;\n        ListNode fast = head.next;\n        while (fast != null && fast.next != null) {\n            slow = slow.next;\n            fast = fast.next.next;\n        }\n\n        //Reverse the second half of the list using a tmp variable\n        ListNode second = slow.next;\n        ListNode prev = slow.next = null;\n        while (second != null) {\n            ListNode tmp = second.next;\n            second.next = prev;\n            prev = second;\n            second = tmp;\n        }\n\n        //Re-assign the pointers to match the pattern\n        ListNode first = head;\n        second = prev;\n        while (second != null) {\n            ListNode tmp1 = first.next;\n            ListNode tmp2 = second.next;\n            first.next = second;\n            second.next = tmp1;\n            first = tmp1;\n            second = tmp2;\n        }\n    }\n}\n",
+          "reviewedCode": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order.\nclass Solution {\n\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.\n    public void reorderList(ListNode head) {\n        \n        //Find middle of list using a slow and fast pointer approach\n        ListNode slow = head;\n        ListNode fast = head.next;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while (fast != null && fast.next != null) {\n            slow = slow.next;\n            fast = fast.next.next;\n        }\n\n        //Reverse the second half of the list using a tmp variable\n        ListNode second = slow.next;\n        ListNode prev = slow.next = null;\n        while (second != null) {\n            ListNode tmp = second.next;\n            second.next = prev;\n            prev = second;\n            second = tmp;\n        }\n\n        // [Reader note] Decision point\n        // Pay attention here: The final merge is easy to rush; careful termination matters more than the raw idea.\n        //Re-assign the pointers to match the pattern\n        ListNode first = head;\n        second = prev;\n        while (second != null) {\n            ListNode tmp1 = first.next;\n            ListNode tmp2 = second.next;\n            first.next = second;\n            second.next = tmp1;\n            first = tmp1;\n            second = tmp2;\n        }\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 11,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order."
+            },
+            {
+              "line": 13,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly."
+            },
+            {
+              "line": 18,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 33,
+              "label": "Decision point",
+              "note": "Pay attention here: The final merge is easy to rush; careful termination matters more than the raw idea."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a great later linked-list pick because it composes several manageable routines into one coherent transformation.",
+            "whatToNotice": "Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.",
+            "riskPoint": "The final merge is easy to rush; careful termination matters more than the raw idea."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0100-0199-0143.reorder-list-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0100-0199/0143.Reorder%20List/Solution.java",
+          "localPath": "doocs_leetcode/solution/0100-0199/0143.Reorder List/Solution.java",
+          "relativePath": "solution/0100-0199/0143.Reorder List/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public void reorderList(ListNode head) {\n        ListNode fast = head, slow = head;\n        while (fast.next != null && fast.next.next != null) {\n            slow = slow.next;\n            fast = fast.next.next;\n        }\n\n        ListNode cur = slow.next;\n        slow.next = null;\n\n        ListNode pre = null;\n        while (cur != null) {\n            ListNode t = cur.next;\n            cur.next = pre;\n            pre = cur;\n            cur = t;\n        }\n        cur = head;\n\n        while (pre != null) {\n            ListNode t = pre.next;\n            pre.next = cur.next;\n            cur.next = pre;\n            cur = pre.next;\n            pre = t;\n        }\n    }\n}",
+          "originalCode": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public void reorderList(ListNode head) {\n        ListNode fast = head, slow = head;\n        while (fast.next != null && fast.next.next != null) {\n            slow = slow.next;\n            fast = fast.next.next;\n        }\n\n        ListNode cur = slow.next;\n        slow.next = null;\n\n        ListNode pre = null;\n        while (cur != null) {\n            ListNode t = cur.next;\n            cur.next = pre;\n            pre = cur;\n            cur = t;\n        }\n        cur = head;\n\n        while (pre != null) {\n            ListNode t = pre.next;\n            pre.next = cur.next;\n            cur.next = pre;\n            cur = pre.next;\n            pre = t;\n        }\n    }\n}",
+          "reviewedCode": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order.\nclass Solution {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.\n    public void reorderList(ListNode head) {\n        ListNode fast = head, slow = head;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while (fast.next != null && fast.next.next != null) {\n            slow = slow.next;\n            fast = fast.next.next;\n        }\n\n        ListNode cur = slow.next;\n        slow.next = null;\n\n        ListNode pre = null;\n        while (cur != null) {\n            ListNode t = cur.next;\n            cur.next = pre;\n            pre = cur;\n            cur = t;\n        }\n        cur = head;\n\n        while (pre != null) {\n            ListNode t = pre.next;\n            pre.next = cur.next;\n            cur.next = pre;\n            cur = pre.next;\n            pre = t;\n        }\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 11,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order."
+            },
+            {
+              "line": 12,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly."
+            },
+            {
+              "line": 14,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a great later linked-list pick because it composes several manageable routines into one coherent transformation.",
+            "whatToNotice": "Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.",
+            "riskPoint": "The final merge is easy to rush; careful termination matters more than the raw idea."
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-go-0143-reorder-list.go",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/go/0143-reorder-list.go",
+          "localPath": "neetcode-gh_leetcode/go/0143-reorder-list.go",
+          "relativePath": "go/0143-reorder-list.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code",
+          "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\n func reorderList(head *ListNode)  {\n    slow := head\n    fast := head.Next\n    \n    for fast != nil && fast.Next != nil {\n        fast = fast.Next.Next\n        slow = slow.Next\n    }\n    \n    reversed := reverse(slow.Next)\n    slow.Next = nil\n    \n    curr := head\n    \n    for curr != nil && reversed != nil {\n        next := curr.Next\n        revNext := reversed.Next\n        curr.Next = reversed\n        reversed.Next = next\n        curr = next\n        reversed = revNext\n    }\n}\n\nfunc reverse(node *ListNode) *ListNode {\n    var prev, curr *ListNode = nil, node\n    \n    for curr != nil {\n        next := curr.Next\n        curr.Next = prev\n        prev = curr\n        curr = next\n    }\n    \n    return prev\n}",
+          "originalCode": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\n func reorderList(head *ListNode)  {\n    slow := head\n    fast := head.Next\n    \n    for fast != nil && fast.Next != nil {\n        fast = fast.Next.Next\n        slow = slow.Next\n    }\n    \n    reversed := reverse(slow.Next)\n    slow.Next = nil\n    \n    curr := head\n    \n    for curr != nil && reversed != nil {\n        next := curr.Next\n        revNext := reversed.Next\n        curr.Next = reversed\n        reversed.Next = next\n        curr = next\n        reversed = revNext\n    }\n}\n\nfunc reverse(node *ListNode) *ListNode {\n    var prev, curr *ListNode = nil, node\n    \n    for curr != nil {\n        next := curr.Next\n        curr.Next = prev\n        prev = curr\n        curr = next\n    }\n    \n    return prev\n}",
+          "reviewedCode": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\n // [Reader note] Entry point\n // Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order.\n func reorderList(head *ListNode)  {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.\n    slow := head\n    fast := head.Next\n    \n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for fast != nil && fast.Next != nil {\n        fast = fast.Next.Next\n        slow = slow.Next\n    }\n    \n    reversed := reverse(slow.Next)\n    slow.Next = nil\n    \n    curr := head\n    \n    for curr != nil && reversed != nil {\n        next := curr.Next\n        revNext := reversed.Next\n        curr.Next = reversed\n        reversed.Next = next\n        curr = next\n        reversed = revNext\n    }\n}\n\nfunc reverse(node *ListNode) *ListNode {\n    var prev, curr *ListNode = nil, node\n    \n    for curr != nil {\n        next := curr.Next\n        curr.Next = prev\n        prev = curr\n        curr = next\n    }\n    \n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return prev\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 8,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order."
+            },
+            {
+              "line": 9,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly."
+            },
+            {
+              "line": 12,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 42,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a great later linked-list pick because it composes several manageable routines into one coherent transformation.",
+            "whatToNotice": "Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.",
+            "riskPoint": "The final merge is easy to rush; careful termination matters more than the raw idea."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0100-0199-0143.reorder-list-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0100-0199/0143.Reorder%20List/Solution.go",
+          "localPath": "doocs_leetcode/solution/0100-0199/0143.Reorder List/Solution.go",
+          "relativePath": "solution/0100-0199/0143.Reorder List/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc reorderList(head *ListNode) {\n\tfast, slow := head, head\n\tfor fast.Next != nil && fast.Next.Next != nil {\n\t\tslow, fast = slow.Next, fast.Next.Next\n\t}\n\n\tcur := slow.Next\n\tslow.Next = nil\n\n\tvar pre *ListNode\n\tfor cur != nil {\n\t\tt := cur.Next\n\t\tcur.Next = pre\n\t\tpre, cur = cur, t\n\t}\n\tcur = head\n\n\tfor pre != nil {\n\t\tt := pre.Next\n\t\tpre.Next = cur.Next\n\t\tcur.Next = pre\n\t\tcur, pre = pre.Next, t\n\t}\n}",
+          "originalCode": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc reorderList(head *ListNode) {\n\tfast, slow := head, head\n\tfor fast.Next != nil && fast.Next.Next != nil {\n\t\tslow, fast = slow.Next, fast.Next.Next\n\t}\n\n\tcur := slow.Next\n\tslow.Next = nil\n\n\tvar pre *ListNode\n\tfor cur != nil {\n\t\tt := cur.Next\n\t\tcur.Next = pre\n\t\tpre, cur = cur, t\n\t}\n\tcur = head\n\n\tfor pre != nil {\n\t\tt := pre.Next\n\t\tpre.Next = cur.Next\n\t\tcur.Next = pre\n\t\tcur, pre = pre.Next, t\n\t}\n}",
+          "reviewedCode": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order.\nfunc reorderList(head *ListNode) {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.\n\tfast, slow := head, head\n\t// [Reader note] Main pass\n\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\tfor fast.Next != nil && fast.Next.Next != nil {\n\t\tslow, fast = slow.Next, fast.Next.Next\n\t}\n\n\tcur := slow.Next\n\tslow.Next = nil\n\n\tvar pre *ListNode\n\tfor cur != nil {\n\t\tt := cur.Next\n\t\tcur.Next = pre\n\t\tpre, cur = cur, t\n\t}\n\tcur = head\n\n\tfor pre != nil {\n\t\tt := pre.Next\n\t\tpre.Next = cur.Next\n\t\tcur.Next = pre\n\t\tcur, pre = pre.Next, t\n\t}\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 8,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order."
+            },
+            {
+              "line": 9,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly."
+            },
+            {
+              "line": 10,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a great later linked-list pick because it composes several manageable routines into one coherent transformation.",
+            "whatToNotice": "Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.",
+            "riskPoint": "The final merge is easy to rush; careful termination matters more than the raw idea."
+          }
+        }
+      ]
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0100-0199-0143.reorder-list-solution.ts",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0100-0199/0143.Reorder%20List/Solution.ts",
+          "localPath": "doocs_leetcode/solution/0100-0199/0143.Reorder List/Solution.ts",
+          "relativePath": "solution/0100-0199/0143.Reorder List/Solution.ts",
+          "languageId": "typescript",
+          "languageLabel": "TypeScript",
+          "coverageType": "code+explanation",
+          "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\n/**\n Do not return anything, modify head in-place instead.\n */\nfunction reorderList(head: ListNode | null): void {\n    let slow = head;\n    let fast = head;\n    while (fast && fast.next) {\n        slow = slow.next;\n        fast = fast.next.next;\n    }\n\n    let next = slow.next;\n    slow.next = null;\n    while (next) {\n        [next.next, slow, next] = [slow, next, next.next];\n    }\n\n    let left = head;\n    let right = slow;\n    while (right.next) {\n        const next = left.next;\n        left.next = right;\n        right = right.next;\n        left.next.next = next;\n        left = left.next.next;\n    }\n}\n",
+          "originalCode": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\n/**\n Do not return anything, modify head in-place instead.\n */\nfunction reorderList(head: ListNode | null): void {\n    let slow = head;\n    let fast = head;\n    while (fast && fast.next) {\n        slow = slow.next;\n        fast = fast.next.next;\n    }\n\n    let next = slow.next;\n    slow.next = null;\n    while (next) {\n        [next.next, slow, next] = [slow, next, next.next];\n    }\n\n    let left = head;\n    let right = slow;\n    while (right.next) {\n        const next = left.next;\n        left.next = right;\n        right = right.next;\n        left.next.next = next;\n        left = left.next.next;\n    }\n}\n",
+          "reviewedCode": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\n/**\n // [Reader note] Return\n // The final return exposes the result after the traversal and state updates have settled.\n Do not return anything, modify head in-place instead.\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order.\nfunction reorderList(head: ListNode | null): void {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.\n    let slow = head;\n    let fast = head;\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    while (fast && fast.next) {\n        slow = slow.next;\n        fast = fast.next.next;\n    }\n\n    let next = slow.next;\n    slow.next = null;\n    while (next) {\n        [next.next, slow, next] = [slow, next, next.next];\n    }\n\n    let left = head;\n    let right = slow;\n    while (right.next) {\n        const next = left.next;\n        left.next = right;\n        right = right.next;\n        left.next.next = next;\n        left = left.next.next;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 16,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order."
+            },
+            {
+              "line": 17,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly."
+            },
+            {
+              "line": 19,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 14,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a great later linked-list pick because it composes several manageable routines into one coherent transformation.",
+            "whatToNotice": "Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.",
+            "riskPoint": "The final merge is easy to rush; careful termination matters more than the raw idea."
+          }
+        }
+      ]
+    },
+    {
+      "id": "javascript",
+      "label": "JavaScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-javascript-0143-reorder-list.js",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/javascript/0143-reorder-list.js",
+          "localPath": "neetcode-gh_leetcode/javascript/0143-reorder-list.js",
+          "relativePath": "javascript/0143-reorder-list.js",
+          "languageId": "javascript",
+          "languageLabel": "JavaScript",
+          "coverageType": "code",
+          "code": "/**\n * https://leetcode.com/problems/reorder-list/\n * Time O(N) | Space O(1)\n * @param {ListNode} head\n * @return {void} Do not return anything, modify head in-place instead.\n */\nvar reorderList = function (head) {\n    const mid = getMid(head); /* Time O(N) */\n    const reversedFromMid = reverse(mid); /* Time O(N) */\n\n    reorder(head, reversedFromMid); /* Time O(N) */\n};\n\nconst getMid = (head) => {\n    let [slow, fast] = [head, head];\n\n    while (fast && fast.next) {\n        /* Time O(N) */\n        slow = slow.next;\n        fast = fast.next.next;\n    }\n\n    return slow;\n};\n\nconst reverse = (head) => {\n    let [prev, curr, next] = [null, head, null];\n\n    while (curr) {\n        /* Time O(N) */\n        next = curr.next;\n        curr.next = prev;\n\n        prev = curr;\n        curr = next;\n    }\n\n    return prev;\n};\n\nconst reorder = (l1, l2) => {\n    let [first, next, second] = [l1, null, l2];\n\n    while (second.next) {\n        /* Time O(N) */\n        next = first.next;\n        first.next = second;\n        first = next;\n\n        next = second.next;\n        second.next = first;\n        second = next;\n    }\n};\n",
+          "originalCode": "/**\n * https://leetcode.com/problems/reorder-list/\n * Time O(N) | Space O(1)\n * @param {ListNode} head\n * @return {void} Do not return anything, modify head in-place instead.\n */\nvar reorderList = function (head) {\n    const mid = getMid(head); /* Time O(N) */\n    const reversedFromMid = reverse(mid); /* Time O(N) */\n\n    reorder(head, reversedFromMid); /* Time O(N) */\n};\n\nconst getMid = (head) => {\n    let [slow, fast] = [head, head];\n\n    while (fast && fast.next) {\n        /* Time O(N) */\n        slow = slow.next;\n        fast = fast.next.next;\n    }\n\n    return slow;\n};\n\nconst reverse = (head) => {\n    let [prev, curr, next] = [null, head, null];\n\n    while (curr) {\n        /* Time O(N) */\n        next = curr.next;\n        curr.next = prev;\n\n        prev = curr;\n        curr = next;\n    }\n\n    return prev;\n};\n\nconst reorder = (l1, l2) => {\n    let [first, next, second] = [l1, null, l2];\n\n    while (second.next) {\n        /* Time O(N) */\n        next = first.next;\n        first.next = second;\n        first = next;\n\n        next = second.next;\n        second.next = first;\n        second = next;\n    }\n};\n",
+          "reviewedCode": "/**\n * https://leetcode.com/problems/reorder-list/\n * Time O(N) | Space O(1)\n * @param {ListNode} head\n * @return {void} Do not return anything, modify head in-place instead.\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order.\nvar reorderList = function (head) {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.\n    const mid = getMid(head); /* Time O(N) */\n    const reversedFromMid = reverse(mid); /* Time O(N) */\n\n    reorder(head, reversedFromMid); /* Time O(N) */\n};\n\nconst getMid = (head) => {\n    let [slow, fast] = [head, head];\n\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    while (fast && fast.next) {\n        /* Time O(N) */\n        slow = slow.next;\n        fast = fast.next.next;\n    }\n\n    return slow;\n};\n\nconst reverse = (head) => {\n    let [prev, curr, next] = [null, head, null];\n\n    while (curr) {\n        /* Time O(N) */\n        next = curr.next;\n        curr.next = prev;\n\n        prev = curr;\n        curr = next;\n    }\n\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return prev;\n};\n\nconst reorder = (l1, l2) => {\n    let [first, next, second] = [l1, null, l2];\n\n    while (second.next) {\n        /* Time O(N) */\n        next = first.next;\n        first.next = second;\n        first = next;\n\n        next = second.next;\n        second.next = first;\n        second = next;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time O(N) | Space O(1)",
+            "const mid = getMid(head); /* Time O(N) */",
+            "const reversedFromMid = reverse(mid); /* Time O(N) */"
+          ],
+          "annotations": [
+            {
+              "line": 7,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order."
+            },
+            {
+              "line": 8,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly."
+            },
+            {
+              "line": 17,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 38,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a great later linked-list pick because it composes several manageable routines into one coherent transformation.",
+            "whatToNotice": "Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.",
+            "riskPoint": "The final merge is easy to rush; careful termination matters more than the raw idea."
+          }
+        }
+      ]
+    },
+    {
+      "id": "csharp",
+      "label": "C#",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-csharp-0143-reorder-list.cs",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/csharp/0143-reorder-list.cs",
+          "localPath": "neetcode-gh_leetcode/csharp/0143-reorder-list.cs",
+          "relativePath": "csharp/0143-reorder-list.cs",
+          "languageId": "csharp",
+          "languageLabel": "C#",
+          "coverageType": "code",
+          "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    private ListNode revList(ListNode head) {\n        ListNode prev = null;\n        \n        var cur = head;\n        \n        while(cur != null) {\n            var temp = cur.next;\n            cur.next = prev;\n            prev = cur;\n            cur = temp;\n        }\n        return prev;\n        \n    }\n    public void ReorderList(ListNode head) {\n        if(head == null || head.next == null) return;\n        \n        // find middle\n        var slow = head;\n        var fast = head.next;\n        var nodeCount = 1;\n        while(true) {\n            if(fast == null || fast.next == null) break;\n            slow = slow.next;\n            nodeCount++;\n            fast = fast.next.next; \n        }\n        \n        var middle = slow.next;\n        slow.next = null;\n        \n        \n        var secondHead = revList(middle);\n        \n        // merge two lists\n        var first = head;\n        var second = secondHead;\n        while(second != null) {\n            var temp1 = first.next;\n            var temp2 = second.next;\n            first.next = second;\n            second.next = temp1;\n            first = temp1;\n            second = temp2;\n            \n        }\n        \n        return;\n    }\n}",
+          "originalCode": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    private ListNode revList(ListNode head) {\n        ListNode prev = null;\n        \n        var cur = head;\n        \n        while(cur != null) {\n            var temp = cur.next;\n            cur.next = prev;\n            prev = cur;\n            cur = temp;\n        }\n        return prev;\n        \n    }\n    public void ReorderList(ListNode head) {\n        if(head == null || head.next == null) return;\n        \n        // find middle\n        var slow = head;\n        var fast = head.next;\n        var nodeCount = 1;\n        while(true) {\n            if(fast == null || fast.next == null) break;\n            slow = slow.next;\n            nodeCount++;\n            fast = fast.next.next; \n        }\n        \n        var middle = slow.next;\n        slow.next = null;\n        \n        \n        var secondHead = revList(middle);\n        \n        // merge two lists\n        var first = head;\n        var second = secondHead;\n        while(second != null) {\n            var temp1 = first.next;\n            var temp2 = second.next;\n            first.next = second;\n            second.next = temp1;\n            first = temp1;\n            second = temp2;\n            \n        }\n        \n        return;\n    }\n}",
+          "reviewedCode": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n // [Reader note] Entry point\n // Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order.\n *     public ListNode(int val=0, ListNode next=null) {\n // [Reader note] State setup\n // This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    private ListNode revList(ListNode head) {\n        ListNode prev = null;\n        \n        var cur = head;\n        \n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while(cur != null) {\n            var temp = cur.next;\n            cur.next = prev;\n            prev = cur;\n            cur = temp;\n        }\n        return prev;\n        \n    }\n    public void ReorderList(ListNode head) {\n        // [Reader note] Decision point\n        // Pay attention here: The final merge is easy to rush; careful termination matters more than the raw idea.\n        if(head == null || head.next == null) return;\n        \n        // find middle\n        var slow = head;\n        var fast = head.next;\n        var nodeCount = 1;\n        while(true) {\n            if(fast == null || fast.next == null) break;\n            slow = slow.next;\n            nodeCount++;\n            fast = fast.next.next; \n        }\n        \n        var middle = slow.next;\n        slow.next = null;\n        \n        \n        var secondHead = revList(middle);\n        \n        // merge two lists\n        var first = head;\n        var second = secondHead;\n        while(second != null) {\n            var temp1 = first.next;\n            var temp2 = second.next;\n            first.next = second;\n            second.next = temp1;\n            first = temp1;\n            second = temp2;\n            \n        }\n        \n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 6,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order."
+            },
+            {
+              "line": 7,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly."
+            },
+            {
+              "line": 18,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 28,
+              "label": "Decision point",
+              "note": "Pay attention here: The final merge is easy to rush; careful termination matters more than the raw idea."
+            },
+            {
+              "line": 60,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a great later linked-list pick because it composes several manageable routines into one coherent transformation.",
+            "whatToNotice": "Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.",
+            "riskPoint": "The final merge is easy to rush; careful termination matters more than the raw idea."
+          }
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "label": "C",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-c-0143-reorder-list.c",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/c/0143-reorder-list.c",
+          "localPath": "neetcode-gh_leetcode/c/0143-reorder-list.c",
+          "relativePath": "c/0143-reorder-list.c",
+          "languageId": "c",
+          "languageLabel": "C",
+          "coverageType": "code",
+          "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\n\nstruct ListNode* reverse(struct ListNode* head) {\n    struct ListNode* prev = NULL;\n    struct ListNode* curr = head;\n    struct ListNode* next = curr->next;\n    \n    while (curr != NULL) {\n        next = curr->next;\n        curr->next = prev;\n        prev = curr;\n        curr = next;\n    }\n    \n    return prev;\n}\n\nvoid merge(struct ListNode* l1, struct ListNode* l2) {\n    while (l1 != NULL) {\n        struct ListNode* p1 = l1->next;\n        struct ListNode* p2 = l2->next;\n        \n        l1->next = l2;\n        if (p1 == NULL) {\n            break;\n        }\n        l2->next = p1;\n        \n        l1 = p1;\n        l2 = p2;\n    }\n}\n\nvoid reorderList(struct ListNode* head){\n    if (head->next == NULL) {\n        return;\n    }\n    \n    struct ListNode* prev = NULL;\n    struct ListNode* slow = head;\n    struct ListNode* fast = head;\n    \n    while (fast != NULL && fast->next != NULL) {\n        prev = slow;\n        slow = slow->next;\n        fast = fast->next->next;\n    }\n    \n    prev->next = NULL;\n    \n    struct ListNode* l1 = head;\n    struct ListNode* l2 = reverse(slow);\n    \n    merge(l1, l2);\n}",
+          "originalCode": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\n\nstruct ListNode* reverse(struct ListNode* head) {\n    struct ListNode* prev = NULL;\n    struct ListNode* curr = head;\n    struct ListNode* next = curr->next;\n    \n    while (curr != NULL) {\n        next = curr->next;\n        curr->next = prev;\n        prev = curr;\n        curr = next;\n    }\n    \n    return prev;\n}\n\nvoid merge(struct ListNode* l1, struct ListNode* l2) {\n    while (l1 != NULL) {\n        struct ListNode* p1 = l1->next;\n        struct ListNode* p2 = l2->next;\n        \n        l1->next = l2;\n        if (p1 == NULL) {\n            break;\n        }\n        l2->next = p1;\n        \n        l1 = p1;\n        l2 = p2;\n    }\n}\n\nvoid reorderList(struct ListNode* head){\n    if (head->next == NULL) {\n        return;\n    }\n    \n    struct ListNode* prev = NULL;\n    struct ListNode* slow = head;\n    struct ListNode* fast = head;\n    \n    while (fast != NULL && fast->next != NULL) {\n        prev = slow;\n        slow = slow->next;\n        fast = fast->next->next;\n    }\n    \n    prev->next = NULL;\n    \n    struct ListNode* l1 = head;\n    struct ListNode* l2 = reverse(slow);\n    \n    merge(l1, l2);\n}",
+          "reviewedCode": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order.\nstruct ListNode* reverse(struct ListNode* head) {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.\n    struct ListNode* prev = NULL;\n    struct ListNode* curr = head;\n    struct ListNode* next = curr->next;\n    \n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    while (curr != NULL) {\n        next = curr->next;\n        curr->next = prev;\n        prev = curr;\n        curr = next;\n    }\n    \n    return prev;\n}\n\nvoid merge(struct ListNode* l1, struct ListNode* l2) {\n    while (l1 != NULL) {\n        struct ListNode* p1 = l1->next;\n        struct ListNode* p2 = l2->next;\n        \n        l1->next = l2;\n        // [Reader note] Decision point\n        // Pay attention here: The final merge is easy to rush; careful termination matters more than the raw idea.\n        if (p1 == NULL) {\n            break;\n        }\n        l2->next = p1;\n        \n        l1 = p1;\n        l2 = p2;\n    }\n}\n\nvoid reorderList(struct ListNode* head){\n    if (head->next == NULL) {\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return;\n    }\n    \n    struct ListNode* prev = NULL;\n    struct ListNode* slow = head;\n    struct ListNode* fast = head;\n    \n    while (fast != NULL && fast->next != NULL) {\n        prev = slow;\n        slow = slow->next;\n        fast = fast->next->next;\n    }\n    \n    prev->next = NULL;\n    \n    struct ListNode* l1 = head;\n    struct ListNode* l2 = reverse(slow);\n    \n    merge(l1, l2);\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 9,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order."
+            },
+            {
+              "line": 10,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly."
+            },
+            {
+              "line": 14,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 30,
+              "label": "Decision point",
+              "note": "Pay attention here: The final merge is easy to rush; careful termination matters more than the raw idea."
+            },
+            {
+              "line": 42,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a great later linked-list pick because it composes several manageable routines into one coherent transformation.",
+            "whatToNotice": "Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.",
+            "riskPoint": "The final merge is easy to rush; careful termination matters more than the raw idea."
+          }
+        }
+      ]
+    },
+    {
+      "id": "kotlin",
+      "label": "Kotlin",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-kotlin-0143-reorder-list.kt",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/kotlin/0143-reorder-list.kt",
+          "localPath": "neetcode-gh_leetcode/kotlin/0143-reorder-list.kt",
+          "relativePath": "kotlin/0143-reorder-list.kt",
+          "languageId": "kotlin",
+          "languageLabel": "Kotlin",
+          "coverageType": "code",
+          "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution {\n    fun reorderList(head: ListNode?): Unit {\n        if (head == null || head.next == null)\n            return\n\n        var slow = head\n        var fast = head.next\n\n        while (fast != null && fast.next != null && slow != null) {\n            fast = fast.next.next\n            slow = slow.next\n        }\n\n        var reversed = reverse(slow!!.next)\n        slow.next = null\n        var curr = head\n\n        while (curr != null && reversed != null) {\n            val next = curr.next\n            val revNext = reversed.next\n            curr.next = reversed\n            reversed.next = next\n            curr = next\n            reversed = revNext\n        }\n    }\n\n    fun reverse(node: ListNode?): ListNode? {\n        var prev: ListNode? = null\n        var curr = node\n\n        while (curr != null) {\n            var next = curr.next\n            curr.next = prev\n            prev = curr\n            curr = next\n        }\n\n        return prev\n    }\n}",
+          "originalCode": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution {\n    fun reorderList(head: ListNode?): Unit {\n        if (head == null || head.next == null)\n            return\n\n        var slow = head\n        var fast = head.next\n\n        while (fast != null && fast.next != null && slow != null) {\n            fast = fast.next.next\n            slow = slow.next\n        }\n\n        var reversed = reverse(slow!!.next)\n        slow.next = null\n        var curr = head\n\n        while (curr != null && reversed != null) {\n            val next = curr.next\n            val revNext = reversed.next\n            curr.next = reversed\n            reversed.next = next\n            curr = next\n            reversed = revNext\n        }\n    }\n\n    fun reverse(node: ListNode?): ListNode? {\n        var prev: ListNode? = null\n        var curr = node\n\n        while (curr != null) {\n            var next = curr.next\n            curr.next = prev\n            prev = curr\n            curr = next\n        }\n\n        return prev\n    }\n}",
+          "reviewedCode": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order.\nclass Solution {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.\n    fun reorderList(head: ListNode?): Unit {\n        if (head == null || head.next == null)\n            return\n\n        var slow = head\n        var fast = head.next\n\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while (fast != null && fast.next != null && slow != null) {\n            fast = fast.next.next\n            slow = slow.next\n        }\n\n        var reversed = reverse(slow!!.next)\n        slow.next = null\n        var curr = head\n\n        while (curr != null && reversed != null) {\n            val next = curr.next\n            val revNext = reversed.next\n            curr.next = reversed\n            reversed.next = next\n            curr = next\n            reversed = revNext\n        }\n    }\n\n    fun reverse(node: ListNode?): ListNode? {\n        var prev: ListNode? = null\n        var curr = node\n\n        while (curr != null) {\n            var next = curr.next\n            curr.next = prev\n            prev = curr\n            curr = next\n        }\n\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return prev\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 10,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Break the task into clean list subroutines, then recombine them in a controlled order."
+            },
+            {
+              "line": 11,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Finding the middle, reversing a suffix, and interleaving two list fragments cleanly."
+            },
+            {
+              "line": 18,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 48,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a great later linked-list pick because it composes several manageable routines into one coherent transformation.",
+            "whatToNotice": "Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.",
+            "riskPoint": "The final merge is easy to rush; careful termination matters more than the raw idea."
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "doocs_leetcode-solution-0100-0199-0143.reorder-list-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0100-0199/0143.Reorder%20List/README.md",
+      "localPath": "doocs_leetcode/solution/0100-0199/0143.Reorder List/README.md",
+      "relativePath": "solution/0100-0199/0143.Reorder List/README.md",
+      "title": "[143. \u91cd\u6392\u94fe\u8868](https://leetcode.cn/problems/reorder-list)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/0100-0199/0143.Reorder%20List/README.md tags: - \u6808 - \u9012\u5f52 - \u94fe\u8868 - \u53cc\u6307\u9488 --- <!-- problem:start --> # [143. \u91cd\u6392\u94fe\u8868](https://leetcode.cn/problems/reorder-list) [English Version](/solution/0100-0199/0143.Reorder%20List/README_EN.md) ## \u9898\u76ee\u63cf\u8ff0 <!-- description:start --> <p>\u7ed9\u5b9a\u4e00\u4e2a\u5355\u94fe\u8868 <code>L</code><em> </em>\u7684\u5934\u8282\u70b9 <code>head</code> \uff0c\u5355\u94fe\u8868 <c..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0100-0199-0143.reorder-list-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0100-0199/0143.Reorder%20List/README_EN.md",
+      "localPath": "doocs_leetcode/solution/0100-0199/0143.Reorder List/README_EN.md",
+      "relativePath": "solution/0100-0199/0143.Reorder List/README_EN.md",
+      "title": "[143. Reorder List](https://leetcode.com/problems/reorder-list)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/0100-0199/0143.Reorder%20List/README_EN.md tags: - Stack - Recursion - Linked List - Two Pointers --- <!-- problem:start --> # [143. Reorder List](https://leetcode.com/problems/reorder-list) [\u4e2d\u6587\u6587\u6863](/solution/0100-0199/0143.Reorder%20List/README.md) ## Description <!-- description:start --> <p>You are given the head o..."
+    },
+    {
+      "id": "wisdompeak_leetcode-linked_list-143.reorder-list-readme.md",
+      "repository": "wisdompeak_LeetCode",
+      "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+      "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/Linked_List/143.Reorder-List/Readme.md",
+      "localPath": "wisdompeak_LeetCode/Linked_List/143.Reorder-List/Readme.md",
+      "relativePath": "Linked_List/143.Reorder-List/Readme.md",
+      "title": "143.Reorder-List.cpp",
+      "excerpt": "### 143.Reorder-List.cpp \u6b64\u9898\u4e0d\u96be\uff0c\u4f46\u662f\u6bd4\u8f83\u7e41\u7410\uff0c\u9700\u8981\u8010\u5fc3\u7406\u6e05\u601d\u8def\uff0c\u7ec6\u81f4\u5730\u64cd\u4f5c\u6307\u9488\u3002 \u672c\u9898\u7684\u7b97\u6cd5\u662f\uff0c\u5148\u6c42\u5f97\u6574\u4f53\u7684\u957f\u5ea6count\u3002\u4e8e\u662f\u6211\u4eec\u5c06\u6574\u4e2a\u94fe\u8868\u5206\u5272\u4e3a\u4e24\u90e8\u5206\uff1a\u524d\u8005\u6709(count+1)/2\u4e2a\u8282\u70b9\uff1b\u540e\u8005\u518d\u8fdb\u884c\u53cd\u8f6c\u94fe\u8868\u7684\u64cd\u4f5c\u3002 \u5f97\u5230\u8fd9\u4e24\u6bb5\u94fe\u8868\u4e4b\u540e\uff0c\u4ea4\u66ff\u6458\u53d6\u8282\u70b9\u62fc\u63a5\u5230\u65b0\u94fe\u8868\u4e0a\u3002 [Leetcode Link](https://leetcode.com/problems/reorder-list)"
+    }
+  ]
+}

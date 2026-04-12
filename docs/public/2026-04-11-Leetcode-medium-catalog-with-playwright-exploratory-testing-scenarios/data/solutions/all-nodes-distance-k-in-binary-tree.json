@@ -1,0 +1,584 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "all-nodes-distance-k-in-binary-tree",
+  "problemTitle": "All Nodes Distance K in Binary Tree",
+  "problemNumber": 863,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go",
+      "typescript"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go",
+      "TypeScript"
+    ],
+    "solutionCount": 10,
+    "writeupCount": 3,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-python-all-nodes-distance-k-in-binary-tree.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/all-nodes-distance-k-in-binary-tree.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/all-nodes-distance-k-in-binary-tree.py",
+          "relativePath": "Python/all-nodes-distance-k-in-binary-tree.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(n)\n# Space: O(n)\n\nimport collections\n\n\nclass Solution(object):\n    def distanceK(self, root, target, K):\n        \"\"\"\n        :type root: TreeNode\n        :type target: TreeNode\n        :type K: int\n        :rtype: List[int]\n        \"\"\"\n        def dfs(parent, child, neighbors):\n            if not child:\n                return\n            if parent:\n                neighbors[parent.val].append(child.val)\n                neighbors[child.val].append(parent.val)\n            dfs(child, child.left, neighbors)\n            dfs(child, child.right, neighbors)\n\n        neighbors = collections.defaultdict(list)\n        dfs(None, root, neighbors)\n        bfs = [target.val]\n        lookup = set(bfs)\n        for _ in xrange(K):\n            bfs = [nei for node in bfs\n                   for nei in neighbors[node]\n                   if nei not in lookup]\n            lookup |= set(bfs)\n        return bfs\n\n",
+          "originalCode": "# Time:  O(n)\n# Space: O(n)\n\nimport collections\n\n\nclass Solution(object):\n    def distanceK(self, root, target, K):\n        \"\"\"\n        :type root: TreeNode\n        :type target: TreeNode\n        :type K: int\n        :rtype: List[int]\n        \"\"\"\n        def dfs(parent, child, neighbors):\n            if not child:\n                return\n            if parent:\n                neighbors[parent.val].append(child.val)\n                neighbors[child.val].append(parent.val)\n            dfs(child, child.left, neighbors)\n            dfs(child, child.right, neighbors)\n\n        neighbors = collections.defaultdict(list)\n        dfs(None, root, neighbors)\n        bfs = [target.val]\n        lookup = set(bfs)\n        for _ in xrange(K):\n            bfs = [nei for node in bfs\n                   for nei in neighbors[node]\n                   if nei not in lookup]\n            lookup |= set(bfs)\n        return bfs\n\n",
+          "reviewedCode": "# Time:  O(n)\n# Space: O(n)\n\nimport collections\n\n\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: If the natural structure blocks the movement you need, change the representation before you search.\nclass Solution(object):\n    def distanceK(self, root, target, K):\n        \"\"\"\n        :type root: TreeNode\n        :type target: TreeNode\n        :type K: int\n        :rtype: List[int]\n        \"\"\"\n        def dfs(parent, child, neighbors):\n            if not child:\n                return\n            if parent:\n                neighbors[parent.val].append(child.val)\n                neighbors[child.val].append(parent.val)\n            dfs(child, child.left, neighbors)\n            dfs(child, child.right, neighbors)\n\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion.\n        neighbors = collections.defaultdict(list)\n        dfs(None, root, neighbors)\n        bfs = [target.val]\n        lookup = set(bfs)\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for _ in xrange(K):\n            bfs = [nei for node in bfs\n                   for nei in neighbors[node]\n                   # [Reader note] Decision point\n                   # Pay attention here: The challenge is not raw traversal; it is choosing a representation that makes distance feel natural.\n                   if nei not in lookup]\n            lookup |= set(bfs)\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return bfs\n",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n)",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 7,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: If the natural structure blocks the movement you need, change the representation before you search."
+            },
+            {
+              "line": 24,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion."
+            },
+            {
+              "line": 28,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 31,
+              "label": "Decision point",
+              "note": "Pay attention here: The challenge is not raw traversal; it is choosing a representation that makes distance feel natural."
+            },
+            {
+              "line": 33,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is an excellent bridge from trees to graphs because it forces you to think about missing upward movement.",
+            "whatToNotice": "Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion.",
+            "riskPoint": "The challenge is not raw traversal; it is choosing a representation that makes distance feel natural."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0800-0899-0863.all-nodes-distance-k-in-binary-tree-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0800-0899/0863.All%20Nodes%20Distance%20K%20in%20Binary%20Tree/Solution.py",
+          "localPath": "doocs_leetcode/solution/0800-0899/0863.All Nodes Distance K in Binary Tree/Solution.py",
+          "relativePath": "solution/0800-0899/0863.All Nodes Distance K in Binary Tree/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, x):\n#         self.val = x\n#         self.left = None\n#         self.right = None\n\n\nclass Solution:\n    def distanceK(self, root: TreeNode, target: TreeNode, k: int) -> List[int]:\n        def dfs(root, fa):\n            if root is None:\n                return\n            g[root] = fa\n            dfs(root.left, root)\n            dfs(root.right, root)\n\n        def dfs2(root, fa, k):\n            if root is None:\n                return\n            if k == 0:\n                ans.append(root.val)\n                return\n            for nxt in (root.left, root.right, g[root]):\n                if nxt != fa:\n                    dfs2(nxt, root, k - 1)\n\n        g = {}\n        dfs(root, None)\n        ans = []\n        dfs2(target, None, k)\n        return ans\n",
+          "originalCode": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, x):\n#         self.val = x\n#         self.left = None\n#         self.right = None\n\n\nclass Solution:\n    def distanceK(self, root: TreeNode, target: TreeNode, k: int) -> List[int]:\n        def dfs(root, fa):\n            if root is None:\n                return\n            g[root] = fa\n            dfs(root.left, root)\n            dfs(root.right, root)\n\n        def dfs2(root, fa, k):\n            if root is None:\n                return\n            if k == 0:\n                ans.append(root.val)\n                return\n            for nxt in (root.left, root.right, g[root]):\n                if nxt != fa:\n                    dfs2(nxt, root, k - 1)\n\n        g = {}\n        dfs(root, None)\n        ans = []\n        dfs2(target, None, k)\n        return ans\n",
+          "reviewedCode": "# Definition for a binary tree node.\n# class TreeNode:\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: If the natural structure blocks the movement you need, change the representation before you search.\n#     def __init__(self, x):\n# [Reader note] State setup\n# This setup stage creates the state needed for the invariant or partial result: Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion.\n#         self.val = x\n#         self.left = None\n#         self.right = None\n\n\nclass Solution:\n    def distanceK(self, root: TreeNode, target: TreeNode, k: int) -> List[int]:\n        def dfs(root, fa):\n            if root is None:\n                return\n            g[root] = fa\n            dfs(root.left, root)\n            dfs(root.right, root)\n\n        def dfs2(root, fa, k):\n            if root is None:\n                return\n            if k == 0:\n                ans.append(root.val)\n                return\n            # [Reader note] Main pass\n            # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for nxt in (root.left, root.right, g[root]):\n                # [Reader note] Decision point\n                # Pay attention here: The challenge is not raw traversal; it is choosing a representation that makes distance feel natural.\n                if nxt != fa:\n                    dfs2(nxt, root, k - 1)\n\n        g = {}\n        dfs(root, None)\n        ans = []\n        dfs2(target, None, k)\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return ans",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 3,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: If the natural structure blocks the movement you need, change the representation before you search."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion."
+            },
+            {
+              "line": 24,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 25,
+              "label": "Decision point",
+              "note": "Pay attention here: The challenge is not raw traversal; it is choosing a representation that makes distance feel natural."
+            },
+            {
+              "line": 32,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is an excellent bridge from trees to graphs because it forces you to think about missing upward movement.",
+            "whatToNotice": "Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion.",
+            "riskPoint": "The challenge is not raw traversal; it is choosing a representation that makes distance feel natural."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 5,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-c-all-nodes-distance-k-in-binary-tree.cpp",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/C%2B%2B/all-nodes-distance-k-in-binary-tree.cpp",
+          "localPath": "kamyu104_LeetCode-Solutions/C++/all-nodes-distance-k-in-binary-tree.cpp",
+          "relativePath": "C++/all-nodes-distance-k-in-binary-tree.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Time:  O(n)\n// Space: O(n)\n\n/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}\n * };\n */\nclass Solution {\npublic:\n    vector<int> distanceK(TreeNode* root, TreeNode* target, int K) {\n        unordered_map<int, vector<int>> neighbors;\n        dfs(nullptr, root, &neighbors);\n\n        vector<int> bfs{target->val};\n        unordered_set<int> lookup{target->val};\n        for (int i = 0; i < K; ++i) {\n            vector<int> curr;\n            for (const auto& node : bfs) {\n                for (const auto& nei : neighbors[node]) {\n                    if (!lookup.count(nei)) {\n                        curr.emplace_back(nei);\n                        lookup.emplace(nei);\n                    }\n                }\n            }\n            swap(bfs, curr);\n        }\n        return bfs;\n    }\n\nprivate:\n    void dfs(TreeNode *parent, TreeNode *child,\n             unordered_map<int, vector<int>> *neighbors) {\n        if (!child) {\n            return;\n        }\n        if (parent) {\n            (*neighbors)[parent->val].emplace_back(child->val);\n            (*neighbors)[child->val].emplace_back(parent->val);\n        }\n        dfs(child, child->left, neighbors);\n        dfs(child, child->right, neighbors);\n    }\n};\n",
+          "originalCode": "// Time:  O(n)\n// Space: O(n)\n\n/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}\n * };\n */\nclass Solution {\npublic:\n    vector<int> distanceK(TreeNode* root, TreeNode* target, int K) {\n        unordered_map<int, vector<int>> neighbors;\n        dfs(nullptr, root, &neighbors);\n\n        vector<int> bfs{target->val};\n        unordered_set<int> lookup{target->val};\n        for (int i = 0; i < K; ++i) {\n            vector<int> curr;\n            for (const auto& node : bfs) {\n                for (const auto& nei : neighbors[node]) {\n                    if (!lookup.count(nei)) {\n                        curr.emplace_back(nei);\n                        lookup.emplace(nei);\n                    }\n                }\n            }\n            swap(bfs, curr);\n        }\n        return bfs;\n    }\n\nprivate:\n    void dfs(TreeNode *parent, TreeNode *child,\n             unordered_map<int, vector<int>> *neighbors) {\n        if (!child) {\n            return;\n        }\n        if (parent) {\n            (*neighbors)[parent->val].emplace_back(child->val);\n            (*neighbors)[child->val].emplace_back(parent->val);\n        }\n        dfs(child, child->left, neighbors);\n        dfs(child, child->right, neighbors);\n    }\n};\n",
+          "reviewedCode": "// Time:  O(n)\n// Space: O(n)\n\n/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}\n * };\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: If the natural structure blocks the movement you need, change the representation before you search.\nclass Solution {\npublic:\n    vector<int> distanceK(TreeNode* root, TreeNode* target, int K) {\n        unordered_map<int, vector<int>> neighbors;\n        dfs(nullptr, root, &neighbors);\n\n        vector<int> bfs{target->val};\n        unordered_set<int> lookup{target->val};\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion.\n        for (int i = 0; i < K; ++i) {\n            vector<int> curr;\n            for (const auto& node : bfs) {\n                for (const auto& nei : neighbors[node]) {\n                    // [Reader note] Decision point\n                    // Pay attention here: The challenge is not raw traversal; it is choosing a representation that makes distance feel natural.\n                    if (!lookup.count(nei)) {\n                        curr.emplace_back(nei);\n                        lookup.emplace(nei);\n                    }\n                }\n            }\n            swap(bfs, curr);\n        }\n        return bfs;\n    }\n\nprivate:\n    void dfs(TreeNode *parent, TreeNode *child,\n             unordered_map<int, vector<int>> *neighbors) {\n        if (!child) {\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return;\n        }\n        if (parent) {\n            (*neighbors)[parent->val].emplace_back(child->val);\n            (*neighbors)[child->val].emplace_back(parent->val);\n        }\n        dfs(child, child->left, neighbors);\n        dfs(child, child->right, neighbors);\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n)",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 13,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: If the natural structure blocks the movement you need, change the representation before you search."
+            },
+            {
+              "line": 21,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion."
+            },
+            {
+              "line": 25,
+              "label": "Decision point",
+              "note": "Pay attention here: The challenge is not raw traversal; it is choosing a representation that makes distance feel natural."
+            },
+            {
+              "line": 40,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is an excellent bridge from trees to graphs because it forces you to think about missing upward movement.",
+            "whatToNotice": "Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion.",
+            "riskPoint": "The challenge is not raw traversal; it is choosing a representation that makes distance feel natural."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0800-0899-0863.all-nodes-distance-k-in-binary-tree-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0800-0899/0863.All%20Nodes%20Distance%20K%20in%20Binary%20Tree/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/0800-0899/0863.All Nodes Distance K in Binary Tree/Solution.cpp",
+          "relativePath": "solution/0800-0899/0863.All Nodes Distance K in Binary Tree/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}\n * };\n */\nclass Solution {\npublic:\n    vector<int> distanceK(TreeNode* root, TreeNode* target, int k) {\n        unordered_map<TreeNode*, TreeNode*> g;\n        vector<int> ans;\n\n        auto dfs = [&](this auto&& dfs, TreeNode* node, TreeNode* fa) {\n            if (!node) return;\n            g[node] = fa;\n            dfs(node->left, node);\n            dfs(node->right, node);\n        };\n\n        auto dfs2 = [&](this auto&& dfs2, TreeNode* node, TreeNode* fa, int k) {\n            if (!node) return;\n            if (k == 0) {\n                ans.push_back(node->val);\n                return;\n            }\n            for (auto&& nxt : {node->left, node->right, g[node]}) {\n                if (nxt != fa) {\n                    dfs2(nxt, node, k - 1);\n                }\n            }\n        };\n\n        dfs(root, nullptr);\n        dfs2(target, nullptr, k);\n        return ans;\n    }\n};\n",
+          "originalCode": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}\n * };\n */\nclass Solution {\npublic:\n    vector<int> distanceK(TreeNode* root, TreeNode* target, int k) {\n        unordered_map<TreeNode*, TreeNode*> g;\n        vector<int> ans;\n\n        auto dfs = [&](this auto&& dfs, TreeNode* node, TreeNode* fa) {\n            if (!node) return;\n            g[node] = fa;\n            dfs(node->left, node);\n            dfs(node->right, node);\n        };\n\n        auto dfs2 = [&](this auto&& dfs2, TreeNode* node, TreeNode* fa, int k) {\n            if (!node) return;\n            if (k == 0) {\n                ans.push_back(node->val);\n                return;\n            }\n            for (auto&& nxt : {node->left, node->right, g[node]}) {\n                if (nxt != fa) {\n                    dfs2(nxt, node, k - 1);\n                }\n            }\n        };\n\n        dfs(root, nullptr);\n        dfs2(target, nullptr, k);\n        return ans;\n    }\n};\n",
+          "reviewedCode": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}\n * };\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: If the natural structure blocks the movement you need, change the representation before you search.\nclass Solution {\npublic:\n    vector<int> distanceK(TreeNode* root, TreeNode* target, int k) {\n        unordered_map<TreeNode*, TreeNode*> g;\n        vector<int> ans;\n\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion.\n        auto dfs = [&](this auto&& dfs, TreeNode* node, TreeNode* fa) {\n            if (!node) return;\n            g[node] = fa;\n            dfs(node->left, node);\n            dfs(node->right, node);\n        };\n\n        auto dfs2 = [&](this auto&& dfs2, TreeNode* node, TreeNode* fa, int k) {\n            if (!node) return;\n            if (k == 0) {\n                ans.push_back(node->val);\n                return;\n            }\n            // [Reader note] Main pass\n            // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for (auto&& nxt : {node->left, node->right, g[node]}) {\n                // [Reader note] Decision point\n                // Pay attention here: The challenge is not raw traversal; it is choosing a representation that makes distance feel natural.\n                if (nxt != fa) {\n                    dfs2(nxt, node, k - 1);\n                }\n            }\n        };\n\n        dfs(root, nullptr);\n        dfs2(target, nullptr, k);\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return ans;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 10,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: If the natural structure blocks the movement you need, change the representation before you search."
+            },
+            {
+              "line": 16,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion."
+            },
+            {
+              "line": 29,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 30,
+              "label": "Decision point",
+              "note": "Pay attention here: The challenge is not raw traversal; it is choosing a representation that makes distance feel natural."
+            },
+            {
+              "line": 38,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is an excellent bridge from trees to graphs because it forces you to think about missing upward movement.",
+            "whatToNotice": "Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion.",
+            "riskPoint": "The challenge is not raw traversal; it is choosing a representation that makes distance feel natural."
+          }
+        },
+        {
+          "id": "wisdompeak_leetcode-tree-863.all-nodes-distance-k-in-binary-tree-863.all-nodes-distance-k-in-binary-tree_v1.cpp",
+          "repository": "wisdompeak_LeetCode",
+          "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+          "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/Tree/863.All-Nodes-Distance-K-in-Binary-Tree/863.All-Nodes-Distance-K-in-Binary-Tree_v1.cpp",
+          "localPath": "wisdompeak_LeetCode/Tree/863.All-Nodes-Distance-K-in-Binary-Tree/863.All-Nodes-Distance-K-in-Binary-Tree_v1.cpp",
+          "relativePath": "Tree/863.All-Nodes-Distance-K-in-Binary-Tree/863.All-Nodes-Distance-K-in-Binary-Tree_v1.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+readme",
+          "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}\n * };\n */\nclass Solution {\n    vector<int>rets;\npublic:\n    vector<int> distanceK(TreeNode* root, TreeNode* target, int K) \n    {\n        DFS(root, target, K);\n        return rets;\n    }\n    \n    int DFS(TreeNode* node, TreeNode* target, int k)\n    {\n        if (node==NULL) return -1;\n        \n        if (node==target)\n        {\n            fetch(node, k);\n            return 0;\n        }\n            \n        \n        int depth1 = DFS(node->left, target, k);        \n        if (depth1 != -1)\n        {\n            if (depth1 == k-1)\n                rets.push_back(node->val);\n            else                \n                fetch( node->right, k - depth1 -2 );\n                \n            return depth1+1;\n        }\n        \n        int depth2 = DFS(node->right, target, k);\n        if (depth2 != -1)\n        {\n            if (depth2 == k-1)\n                rets.push_back(node->val);\n            else    \n                fetch( node->left, k - depth2 -2 );\n            return depth2+1;\n        }\n        \n        return -1;\n    }\n    \n    void fetch(TreeNode* node, int k)\n    {\n        if (node==NULL) return;\n        if (k<0) return;\n        if (k==0)\n        {\n            rets.push_back(node->val);\n            return;\n        }\n        fetch(node->left, k-1);\n        fetch(node->right, k-1);        \n    }\n};\n\n\n",
+          "originalCode": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}\n * };\n */\nclass Solution {\n    vector<int>rets;\npublic:\n    vector<int> distanceK(TreeNode* root, TreeNode* target, int K) \n    {\n        DFS(root, target, K);\n        return rets;\n    }\n    \n    int DFS(TreeNode* node, TreeNode* target, int k)\n    {\n        if (node==NULL) return -1;\n        \n        if (node==target)\n        {\n            fetch(node, k);\n            return 0;\n        }\n            \n        \n        int depth1 = DFS(node->left, target, k);        \n        if (depth1 != -1)\n        {\n            if (depth1 == k-1)\n                rets.push_back(node->val);\n            else                \n                fetch( node->right, k - depth1 -2 );\n                \n            return depth1+1;\n        }\n        \n        int depth2 = DFS(node->right, target, k);\n        if (depth2 != -1)\n        {\n            if (depth2 == k-1)\n                rets.push_back(node->val);\n            else    \n                fetch( node->left, k - depth2 -2 );\n            return depth2+1;\n        }\n        \n        return -1;\n    }\n    \n    void fetch(TreeNode* node, int k)\n    {\n        if (node==NULL) return;\n        if (k<0) return;\n        if (k==0)\n        {\n            rets.push_back(node->val);\n            return;\n        }\n        fetch(node->left, k-1);\n        fetch(node->right, k-1);        \n    }\n};\n\n\n",
+          "reviewedCode": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}\n * };\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: If the natural structure blocks the movement you need, change the representation before you search.\nclass Solution {\n    vector<int>rets;\npublic:\n    vector<int> distanceK(TreeNode* root, TreeNode* target, int K) \n    {\n        DFS(root, target, K);\n        return rets;\n    }\n    \n    int DFS(TreeNode* node, TreeNode* target, int k)\n    {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion.\n        if (node==NULL) return -1;\n        \n        if (node==target)\n        {\n            fetch(node, k);\n            return 0;\n        }\n            \n        \n        int depth1 = DFS(node->left, target, k);        \n        if (depth1 != -1)\n        {\n            if (depth1 == k-1)\n                rets.push_back(node->val);\n            else                \n                fetch( node->right, k - depth1 -2 );\n                \n            return depth1+1;\n        }\n        \n        int depth2 = DFS(node->right, target, k);\n        if (depth2 != -1)\n        {\n            if (depth2 == k-1)\n                rets.push_back(node->val);\n            else    \n                fetch( node->left, k - depth2 -2 );\n            return depth2+1;\n        }\n        \n        return -1;\n    }\n    \n    void fetch(TreeNode* node, int k)\n    {\n        if (node==NULL) return;\n        if (k<0) return;\n        if (k==0)\n        {\n            rets.push_back(node->val);\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return;\n        }\n        fetch(node->left, k-1);\n        fetch(node->right, k-1);        \n    }\n};\n\n",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 10,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: If the natural structure blocks the movement you need, change the representation before you search."
+            },
+            {
+              "line": 21,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion."
+            },
+            {
+              "line": 61,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is an excellent bridge from trees to graphs because it forces you to think about missing upward movement.",
+            "whatToNotice": "Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion.",
+            "riskPoint": "The challenge is not raw traversal; it is choosing a representation that makes distance feel natural."
+          }
+        },
+        {
+          "id": "wisdompeak_leetcode-tree-863.all-nodes-distance-k-in-binary-tree-863.all-nodes-distance-k-in-binary-tree_v2.cpp",
+          "repository": "wisdompeak_LeetCode",
+          "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+          "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/Tree/863.All-Nodes-Distance-K-in-Binary-Tree/863.All-Nodes-Distance-K-in-Binary-Tree_v2.cpp",
+          "localPath": "wisdompeak_LeetCode/Tree/863.All-Nodes-Distance-K-in-Binary-Tree/863.All-Nodes-Distance-K-in-Binary-Tree_v2.cpp",
+          "relativePath": "Tree/863.All-Nodes-Distance-K-in-Binary-Tree/863.All-Nodes-Distance-K-in-Binary-Tree_v2.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+readme",
+          "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}\n * };\n */\nclass Solution {\n    unordered_map<int,vector<int>>adj;\npublic:\n    vector<int> distanceK(TreeNode* root, TreeNode* target, int K) \n    {\n        if (K==0) return {target->val};        \n        \n        DFS(root);\n        \n        queue<pair<int,int>>q;\n        unordered_set<int>visited;\n      \n        q.push({target->val,0});\n        visited.insert(target->val);\n        \n        vector<int>results;\n        while (!q.empty())\n        {\n            auto [cur, step] = q.front();\n            q.pop();\n            if (step>K) break;\n            \n            for (int next: adj[cur])\n            {\n                if (visited.find(next)!=visited.end())\n                    continue;                    \n                q.push({next,step+1});\n                visited.insert(next);\n                \n                if (step+1==K) results.push_back(next);\n            }\n        }\n        return results;\n    }\n    \n    void DFS(TreeNode* node)\n    {\n        if (node==NULL) return;\n        if (node->left!=NULL)\n        {\n            adj[node->val].push_back(node->left->val);\n            adj[node->left->val].push_back(node->val);\n            DFS(node->left);\n        }\n        if (node->right!=NULL)\n        {\n            adj[node->val].push_back(node->right->val);\n            adj[node->right->val].push_back(node->val);\n            DFS(node->right);\n        }            \n    }\n};\n",
+          "originalCode": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}\n * };\n */\nclass Solution {\n    unordered_map<int,vector<int>>adj;\npublic:\n    vector<int> distanceK(TreeNode* root, TreeNode* target, int K) \n    {\n        if (K==0) return {target->val};        \n        \n        DFS(root);\n        \n        queue<pair<int,int>>q;\n        unordered_set<int>visited;\n      \n        q.push({target->val,0});\n        visited.insert(target->val);\n        \n        vector<int>results;\n        while (!q.empty())\n        {\n            auto [cur, step] = q.front();\n            q.pop();\n            if (step>K) break;\n            \n            for (int next: adj[cur])\n            {\n                if (visited.find(next)!=visited.end())\n                    continue;                    \n                q.push({next,step+1});\n                visited.insert(next);\n                \n                if (step+1==K) results.push_back(next);\n            }\n        }\n        return results;\n    }\n    \n    void DFS(TreeNode* node)\n    {\n        if (node==NULL) return;\n        if (node->left!=NULL)\n        {\n            adj[node->val].push_back(node->left->val);\n            adj[node->left->val].push_back(node->val);\n            DFS(node->left);\n        }\n        if (node->right!=NULL)\n        {\n            adj[node->val].push_back(node->right->val);\n            adj[node->right->val].push_back(node->val);\n            DFS(node->right);\n        }            \n    }\n};\n",
+          "reviewedCode": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}\n * };\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: If the natural structure blocks the movement you need, change the representation before you search.\nclass Solution {\n    unordered_map<int,vector<int>>adj;\npublic:\n    vector<int> distanceK(TreeNode* root, TreeNode* target, int K) \n    {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion.\n        if (K==0) return {target->val};        \n        \n        DFS(root);\n        \n        queue<pair<int,int>>q;\n        unordered_set<int>visited;\n      \n        q.push({target->val,0});\n        visited.insert(target->val);\n        \n        vector<int>results;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        while (!q.empty())\n        {\n            auto [cur, step] = q.front();\n            q.pop();\n            // [Reader note] Decision point\n            // Pay attention here: The challenge is not raw traversal; it is choosing a representation that makes distance feel natural.\n            if (step>K) break;\n            \n            for (int next: adj[cur])\n            {\n                if (visited.find(next)!=visited.end())\n                    continue;                    \n                q.push({next,step+1});\n                visited.insert(next);\n                \n                if (step+1==K) results.push_back(next);\n            }\n        }\n        return results;\n    }\n    \n    void DFS(TreeNode* node)\n    {\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        if (node==NULL) return;\n        if (node->left!=NULL)\n        {\n            adj[node->val].push_back(node->left->val);\n            adj[node->left->val].push_back(node->val);\n            DFS(node->left);\n        }\n        if (node->right!=NULL)\n        {\n            adj[node->val].push_back(node->right->val);\n            adj[node->right->val].push_back(node->val);\n            DFS(node->right);\n        }            \n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 10,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: If the natural structure blocks the movement you need, change the representation before you search."
+            },
+            {
+              "line": 15,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion."
+            },
+            {
+              "line": 26,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 30,
+              "label": "Decision point",
+              "note": "Pay attention here: The challenge is not raw traversal; it is choosing a representation that makes distance feel natural."
+            },
+            {
+              "line": 47,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is an excellent bridge from trees to graphs because it forces you to think about missing upward movement.",
+            "whatToNotice": "Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion.",
+            "riskPoint": "The challenge is not raw traversal; it is choosing a representation that makes distance feel natural."
+          }
+        },
+        {
+          "id": "test-123-all-nodes-distance-k-in-binary-tree.cpp",
+          "repository": "test-123",
+          "repositoryUrl": null,
+          "sourceUrl": null,
+          "localPath": "test-123/all-nodes-distance-k-in-binary-tree.cpp",
+          "relativePath": "all-nodes-distance-k-in-binary-tree.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code",
+          "code": "// Time:  O(n)\n// Space: O(n)\n\n/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}\n * };\n */\nclass Solution {\npublic:\n    vector<int> distanceK(TreeNode* root, TreeNode* target, int K) {\n        unordered_map<int, vector<int>> neighbors;\n        dfs(nullptr, root, &neighbors);\n\n        vector<int> bfs{target->val};\n        unordered_set<int> lookup{target->val};\n        for (int i = 0; i < K; ++i) {\n            vector<int> curr;\n            for (const auto& node : bfs) {\n                for (const auto& nei : neighbors[node]) {\n                    if (!lookup.count(nei)) {\n                        curr.emplace_back(nei);\n                        lookup.emplace(nei);\n                    }\n                }\n            }\n            swap(bfs, curr);\n        }\n        return bfs;\n    }\n\nprivate:\n    void dfs(TreeNode *parent, TreeNode *child,\n             unordered_map<int, vector<int>> *neighbors) {\n        if (!child) {\n            return;\n        }\n        if (parent) {\n            (*neighbors)[parent->val].emplace_back(child->val);\n            (*neighbors)[child->val].emplace_back(parent->val);\n        }\n        dfs(child, child->left, neighbors);\n        dfs(child, child->right, neighbors);\n    }\n};\n",
+          "originalCode": "// Time:  O(n)\n// Space: O(n)\n\n/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}\n * };\n */\nclass Solution {\npublic:\n    vector<int> distanceK(TreeNode* root, TreeNode* target, int K) {\n        unordered_map<int, vector<int>> neighbors;\n        dfs(nullptr, root, &neighbors);\n\n        vector<int> bfs{target->val};\n        unordered_set<int> lookup{target->val};\n        for (int i = 0; i < K; ++i) {\n            vector<int> curr;\n            for (const auto& node : bfs) {\n                for (const auto& nei : neighbors[node]) {\n                    if (!lookup.count(nei)) {\n                        curr.emplace_back(nei);\n                        lookup.emplace(nei);\n                    }\n                }\n            }\n            swap(bfs, curr);\n        }\n        return bfs;\n    }\n\nprivate:\n    void dfs(TreeNode *parent, TreeNode *child,\n             unordered_map<int, vector<int>> *neighbors) {\n        if (!child) {\n            return;\n        }\n        if (parent) {\n            (*neighbors)[parent->val].emplace_back(child->val);\n            (*neighbors)[child->val].emplace_back(parent->val);\n        }\n        dfs(child, child->left, neighbors);\n        dfs(child, child->right, neighbors);\n    }\n};\n",
+          "reviewedCode": "// Time:  O(n)\n// Space: O(n)\n\n/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}\n * };\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: If the natural structure blocks the movement you need, change the representation before you search.\nclass Solution {\npublic:\n    vector<int> distanceK(TreeNode* root, TreeNode* target, int K) {\n        unordered_map<int, vector<int>> neighbors;\n        dfs(nullptr, root, &neighbors);\n\n        vector<int> bfs{target->val};\n        unordered_set<int> lookup{target->val};\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion.\n        for (int i = 0; i < K; ++i) {\n            vector<int> curr;\n            for (const auto& node : bfs) {\n                for (const auto& nei : neighbors[node]) {\n                    // [Reader note] Decision point\n                    // Pay attention here: The challenge is not raw traversal; it is choosing a representation that makes distance feel natural.\n                    if (!lookup.count(nei)) {\n                        curr.emplace_back(nei);\n                        lookup.emplace(nei);\n                    }\n                }\n            }\n            swap(bfs, curr);\n        }\n        return bfs;\n    }\n\nprivate:\n    void dfs(TreeNode *parent, TreeNode *child,\n             unordered_map<int, vector<int>> *neighbors) {\n        if (!child) {\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return;\n        }\n        if (parent) {\n            (*neighbors)[parent->val].emplace_back(child->val);\n            (*neighbors)[child->val].emplace_back(parent->val);\n        }\n        dfs(child, child->left, neighbors);\n        dfs(child, child->right, neighbors);\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n)",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 13,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: If the natural structure blocks the movement you need, change the representation before you search."
+            },
+            {
+              "line": 21,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion."
+            },
+            {
+              "line": 25,
+              "label": "Decision point",
+              "note": "Pay attention here: The challenge is not raw traversal; it is choosing a representation that makes distance feel natural."
+            },
+            {
+              "line": 40,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is an excellent bridge from trees to graphs because it forces you to think about missing upward movement.",
+            "whatToNotice": "Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion.",
+            "riskPoint": "The challenge is not raw traversal; it is choosing a representation that makes distance feel natural."
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0800-0899-0863.all-nodes-distance-k-in-binary-tree-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0800-0899/0863.All%20Nodes%20Distance%20K%20in%20Binary%20Tree/Solution.java",
+          "localPath": "doocs_leetcode/solution/0800-0899/0863.All Nodes Distance K in Binary Tree/Solution.java",
+          "relativePath": "solution/0800-0899/0863.All Nodes Distance K in Binary Tree/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode(int x) { val = x; }\n * }\n */\nclass Solution {\n    private Map<TreeNode, TreeNode> g = new HashMap<>();\n    private List<Integer> ans = new ArrayList<>();\n\n    public List<Integer> distanceK(TreeNode root, TreeNode target, int k) {\n        dfs(root, null);\n        dfs2(target, null, k);\n        return ans;\n    }\n\n    private void dfs(TreeNode root, TreeNode fa) {\n        if (root == null) {\n            return;\n        }\n        g.put(root, fa);\n        dfs(root.left, root);\n        dfs(root.right, root);\n    }\n\n    private void dfs2(TreeNode root, TreeNode fa, int k) {\n        if (root == null) {\n            return;\n        }\n        if (k == 0) {\n            ans.add(root.val);\n            return;\n        }\n        for (TreeNode nxt : new TreeNode[] {root.left, root.right, g.get(root)}) {\n            if (nxt != fa) {\n                dfs2(nxt, root, k - 1);\n            }\n        }\n    }\n}\n",
+          "originalCode": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode(int x) { val = x; }\n * }\n */\nclass Solution {\n    private Map<TreeNode, TreeNode> g = new HashMap<>();\n    private List<Integer> ans = new ArrayList<>();\n\n    public List<Integer> distanceK(TreeNode root, TreeNode target, int k) {\n        dfs(root, null);\n        dfs2(target, null, k);\n        return ans;\n    }\n\n    private void dfs(TreeNode root, TreeNode fa) {\n        if (root == null) {\n            return;\n        }\n        g.put(root, fa);\n        dfs(root.left, root);\n        dfs(root.right, root);\n    }\n\n    private void dfs2(TreeNode root, TreeNode fa, int k) {\n        if (root == null) {\n            return;\n        }\n        if (k == 0) {\n            ans.add(root.val);\n            return;\n        }\n        for (TreeNode nxt : new TreeNode[] {root.left, root.right, g.get(root)}) {\n            if (nxt != fa) {\n                dfs2(nxt, root, k - 1);\n            }\n        }\n    }\n}\n",
+          "reviewedCode": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode(int x) { val = x; }\n * }\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: If the natural structure blocks the movement you need, change the representation before you search.\nclass Solution {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion.\n    private Map<TreeNode, TreeNode> g = new HashMap<>();\n    private List<Integer> ans = new ArrayList<>();\n\n    public List<Integer> distanceK(TreeNode root, TreeNode target, int k) {\n        dfs(root, null);\n        dfs2(target, null, k);\n        return ans;\n    }\n\n    private void dfs(TreeNode root, TreeNode fa) {\n        if (root == null) {\n            return;\n        }\n        g.put(root, fa);\n        dfs(root.left, root);\n        dfs(root.right, root);\n    }\n\n    private void dfs2(TreeNode root, TreeNode fa, int k) {\n        if (root == null) {\n            return;\n        }\n        if (k == 0) {\n            ans.add(root.val);\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return;\n        }\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (TreeNode nxt : new TreeNode[] {root.left, root.right, g.get(root)}) {\n            // [Reader note] Decision point\n            // Pay attention here: The challenge is not raw traversal; it is choosing a representation that makes distance feel natural.\n            if (nxt != fa) {\n                dfs2(nxt, root, k - 1);\n            }\n        }\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 10,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: If the natural structure blocks the movement you need, change the representation before you search."
+            },
+            {
+              "line": 11,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion."
+            },
+            {
+              "line": 37,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 38,
+              "label": "Decision point",
+              "note": "Pay attention here: The challenge is not raw traversal; it is choosing a representation that makes distance feel natural."
+            },
+            {
+              "line": 35,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is an excellent bridge from trees to graphs because it forces you to think about missing upward movement.",
+            "whatToNotice": "Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion.",
+            "riskPoint": "The challenge is not raw traversal; it is choosing a representation that makes distance feel natural."
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0800-0899-0863.all-nodes-distance-k-in-binary-tree-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0800-0899/0863.All%20Nodes%20Distance%20K%20in%20Binary%20Tree/Solution.go",
+          "localPath": "doocs_leetcode/solution/0800-0899/0863.All Nodes Distance K in Binary Tree/Solution.go",
+          "relativePath": "solution/0800-0899/0863.All Nodes Distance K in Binary Tree/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "func distanceK(root *TreeNode, target *TreeNode, k int) []int {\n\tg := make(map[*TreeNode]*TreeNode)\n\tans := []int{}\n\n\tvar dfs func(node, fa *TreeNode)\n\tdfs = func(node, fa *TreeNode) {\n\t\tif node == nil {\n\t\t\treturn\n\t\t}\n\t\tg[node] = fa\n\t\tdfs(node.Left, node)\n\t\tdfs(node.Right, node)\n\t}\n\n\tvar dfs2 func(node, fa *TreeNode, k int)\n\tdfs2 = func(node, fa *TreeNode, k int) {\n\t\tif node == nil {\n\t\t\treturn\n\t\t}\n\t\tif k == 0 {\n\t\t\tans = append(ans, node.Val)\n\t\t\treturn\n\t\t}\n\t\tfor _, nxt := range []*TreeNode{node.Left, node.Right, g[node]} {\n\t\t\tif nxt != fa {\n\t\t\t\tdfs2(nxt, node, k-1)\n\t\t\t}\n\t\t}\n\t}\n\n\tdfs(root, nil)\n\tdfs2(target, nil, k)\n\n\treturn ans\n}\n",
+          "originalCode": "func distanceK(root *TreeNode, target *TreeNode, k int) []int {\n\tg := make(map[*TreeNode]*TreeNode)\n\tans := []int{}\n\n\tvar dfs func(node, fa *TreeNode)\n\tdfs = func(node, fa *TreeNode) {\n\t\tif node == nil {\n\t\t\treturn\n\t\t}\n\t\tg[node] = fa\n\t\tdfs(node.Left, node)\n\t\tdfs(node.Right, node)\n\t}\n\n\tvar dfs2 func(node, fa *TreeNode, k int)\n\tdfs2 = func(node, fa *TreeNode, k int) {\n\t\tif node == nil {\n\t\t\treturn\n\t\t}\n\t\tif k == 0 {\n\t\t\tans = append(ans, node.Val)\n\t\t\treturn\n\t\t}\n\t\tfor _, nxt := range []*TreeNode{node.Left, node.Right, g[node]} {\n\t\t\tif nxt != fa {\n\t\t\t\tdfs2(nxt, node, k-1)\n\t\t\t}\n\t\t}\n\t}\n\n\tdfs(root, nil)\n\tdfs2(target, nil, k)\n\n\treturn ans\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: If the natural structure blocks the movement you need, change the representation before you search.\nfunc distanceK(root *TreeNode, target *TreeNode, k int) []int {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion.\n\tg := make(map[*TreeNode]*TreeNode)\n\tans := []int{}\n\n\tvar dfs func(node, fa *TreeNode)\n\tdfs = func(node, fa *TreeNode) {\n\t\tif node == nil {\n\t\t\treturn\n\t\t}\n\t\tg[node] = fa\n\t\tdfs(node.Left, node)\n\t\tdfs(node.Right, node)\n\t}\n\n\tvar dfs2 func(node, fa *TreeNode, k int)\n\tdfs2 = func(node, fa *TreeNode, k int) {\n\t\tif node == nil {\n\t\t\treturn\n\t\t}\n\t\tif k == 0 {\n\t\t\tans = append(ans, node.Val)\n\t\t\treturn\n\t\t}\n\t\t// [Reader note] Main pass\n\t\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\t\tfor _, nxt := range []*TreeNode{node.Left, node.Right, g[node]} {\n\t\t\t// [Reader note] Decision point\n\t\t\t// Pay attention here: The challenge is not raw traversal; it is choosing a representation that makes distance feel natural.\n\t\t\tif nxt != fa {\n\t\t\t\tdfs2(nxt, node, k-1)\n\t\t\t}\n\t\t}\n\t}\n\n\tdfs(root, nil)\n\tdfs2(target, nil, k)\n\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn ans\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: If the natural structure blocks the movement you need, change the representation before you search."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion."
+            },
+            {
+              "line": 24,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 25,
+              "label": "Decision point",
+              "note": "Pay attention here: The challenge is not raw traversal; it is choosing a representation that makes distance feel natural."
+            },
+            {
+              "line": 34,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is an excellent bridge from trees to graphs because it forces you to think about missing upward movement.",
+            "whatToNotice": "Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion.",
+            "riskPoint": "The challenge is not raw traversal; it is choosing a representation that makes distance feel natural."
+          }
+        }
+      ]
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0800-0899-0863.all-nodes-distance-k-in-binary-tree-solution.ts",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0800-0899/0863.All%20Nodes%20Distance%20K%20in%20Binary%20Tree/Solution.ts",
+          "localPath": "doocs_leetcode/solution/0800-0899/0863.All Nodes Distance K in Binary Tree/Solution.ts",
+          "relativePath": "solution/0800-0899/0863.All Nodes Distance K in Binary Tree/Solution.ts",
+          "languageId": "typescript",
+          "languageLabel": "TypeScript",
+          "coverageType": "code+explanation",
+          "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction distanceK(root: TreeNode | null, target: TreeNode | null, k: number): number[] {\n    const g = new Map<TreeNode, TreeNode | null>();\n    const ans: number[] = [];\n\n    const dfs = (node: TreeNode | null, fa: TreeNode | null) => {\n        if (!node) {\n            return;\n        }\n        g.set(node, fa);\n        dfs(node.left, node);\n        dfs(node.right, node);\n    };\n\n    const dfs2 = (node: TreeNode | null, fa: TreeNode | null, k: number) => {\n        if (!node) {\n            return;\n        }\n        if (k === 0) {\n            ans.push(node.val);\n            return;\n        }\n        for (const nxt of [node.left, node.right, g.get(node) || null]) {\n            if (nxt !== fa) {\n                dfs2(nxt, node, k - 1);\n            }\n        }\n    };\n\n    dfs(root, null);\n    dfs2(target, null, k);\n    return ans;\n}\n",
+          "originalCode": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction distanceK(root: TreeNode | null, target: TreeNode | null, k: number): number[] {\n    const g = new Map<TreeNode, TreeNode | null>();\n    const ans: number[] = [];\n\n    const dfs = (node: TreeNode | null, fa: TreeNode | null) => {\n        if (!node) {\n            return;\n        }\n        g.set(node, fa);\n        dfs(node.left, node);\n        dfs(node.right, node);\n    };\n\n    const dfs2 = (node: TreeNode | null, fa: TreeNode | null, k: number) => {\n        if (!node) {\n            return;\n        }\n        if (k === 0) {\n            ans.push(node.val);\n            return;\n        }\n        for (const nxt of [node.left, node.right, g.get(node) || null]) {\n            if (nxt !== fa) {\n                dfs2(nxt, node, k - 1);\n            }\n        }\n    };\n\n    dfs(root, null);\n    dfs2(target, null, k);\n    return ans;\n}\n",
+          "reviewedCode": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: If the natural structure blocks the movement you need, change the representation before you search.\nfunction distanceK(root: TreeNode | null, target: TreeNode | null, k: number): number[] {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion.\n    const g = new Map<TreeNode, TreeNode | null>();\n    const ans: number[] = [];\n\n    const dfs = (node: TreeNode | null, fa: TreeNode | null) => {\n        if (!node) {\n            return;\n        }\n        g.set(node, fa);\n        dfs(node.left, node);\n        dfs(node.right, node);\n    };\n\n    const dfs2 = (node: TreeNode | null, fa: TreeNode | null, k: number) => {\n        if (!node) {\n            return;\n        }\n        if (k === 0) {\n            ans.push(node.val);\n            return;\n        }\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (const nxt of [node.left, node.right, g.get(node) || null]) {\n            // [Reader note] Decision point\n            // Pay attention here: The challenge is not raw traversal; it is choosing a representation that makes distance feel natural.\n            if (nxt !== fa) {\n                dfs2(nxt, node, k - 1);\n            }\n        }\n    };\n\n    dfs(root, null);\n    dfs2(target, null, k);\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return ans;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 15,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: If the natural structure blocks the movement you need, change the representation before you search."
+            },
+            {
+              "line": 16,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion."
+            },
+            {
+              "line": 36,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 37,
+              "label": "Decision point",
+              "note": "Pay attention here: The challenge is not raw traversal; it is choosing a representation that makes distance feel natural."
+            },
+            {
+              "line": 45,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is an excellent bridge from trees to graphs because it forces you to think about missing upward movement.",
+            "whatToNotice": "Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion.",
+            "riskPoint": "The challenge is not raw traversal; it is choosing a representation that makes distance feel natural."
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "doocs_leetcode-solution-0800-0899-0863.all-nodes-distance-k-in-binary-tree-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0800-0899/0863.All%20Nodes%20Distance%20K%20in%20Binary%20Tree/README.md",
+      "localPath": "doocs_leetcode/solution/0800-0899/0863.All Nodes Distance K in Binary Tree/README.md",
+      "relativePath": "solution/0800-0899/0863.All Nodes Distance K in Binary Tree/README.md",
+      "title": "[863. \u4e8c\u53c9\u6811\u4e2d\u6240\u6709\u8ddd\u79bb\u4e3a K \u7684\u7ed3\u70b9](https://leetcode.cn/problems/all-nodes-distance-k-in-binary-tree)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/0800-0899/0863.All%20Nodes%20Distance%20K%20in%20Binary%20Tree/README.md tags: - \u6811 - \u6df1\u5ea6\u4f18\u5148\u641c\u7d22 - \u5e7f\u5ea6\u4f18\u5148\u641c\u7d22 - \u54c8\u5e0c\u8868 - \u4e8c\u53c9\u6811 --- <!-- problem:start --> # [863. \u4e8c\u53c9\u6811\u4e2d\u6240\u6709\u8ddd\u79bb\u4e3a K \u7684\u7ed3\u70b9](https://leetcode.cn/problems/all-nodes-distance-k-in-binary-tree) [English Version](/solution/0800-0899/0863.All%20Nodes%20Distance%20K%20in%20Binary%20Tree/..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0800-0899-0863.all-nodes-distance-k-in-binary-tree-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0800-0899/0863.All%20Nodes%20Distance%20K%20in%20Binary%20Tree/README_EN.md",
+      "localPath": "doocs_leetcode/solution/0800-0899/0863.All Nodes Distance K in Binary Tree/README_EN.md",
+      "relativePath": "solution/0800-0899/0863.All Nodes Distance K in Binary Tree/README_EN.md",
+      "title": "[863. All Nodes Distance K in Binary Tree](https://leetcode.com/problems/all-nodes-distance-k-in-binary-tree)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/0800-0899/0863.All%20Nodes%20Distance%20K%20in%20Binary%20Tree/README_EN.md tags: - Tree - Depth-First Search - Breadth-First Search - Hash Table - Binary Tree --- <!-- problem:start --> # [863. All Nodes Distance K in Binary Tree](https://leetcode.com/problems/all-nodes-distance-k-in-binary-tree) [\u4e2d\u6587\u6587\u6863](/solution/08..."
+    },
+    {
+      "id": "wisdompeak_leetcode-tree-863.all-nodes-distance-k-in-binary-tree-readme.md",
+      "repository": "wisdompeak_LeetCode",
+      "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+      "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/Tree/863.All-Nodes-Distance-K-in-Binary-Tree/Readme.md",
+      "localPath": "wisdompeak_LeetCode/Tree/863.All-Nodes-Distance-K-in-Binary-Tree/Readme.md",
+      "relativePath": "Tree/863.All-Nodes-Distance-K-in-Binary-Tree/Readme.md",
+      "title": "863.All-Nodes-Distance-K-in-Binary-Tree",
+      "excerpt": "### 863.All-Nodes-Distance-K-in-Binary-Tree #### \u89e3\u6cd51\uff1a \u672c\u9898\u7684\u5173\u952e\u70b9\u662f\uff0c\u4efb\u4f55\u4e24\u4e2a\u8282\u70b9AB\u4e4b\u95f4\u7684\u8def\u5f84\uff0c\u90fd\u53ef\u4ee5\u60f3\u8c61\u6210\u6709\u4e00\u4e2a\u201c\u62d0\u70b9\u201dO\uff0c\u5176\u4e2dOA\u662f\u6cbf\u5de6\u5b50\u6811\u5411\u4e0b\u7684\u8def\u5f84\uff0cOB\u662f\u6cbf\u53f3\u5b50\u6811\u5411\u4e0b\u7684\u8def\u5f84\u3002\u6211\u4eec\u53ef\u4ee5\u9012\u5f52\u5904\u7406\u6bcf\u4e00\u4e2a\u8282\u70b9node\uff0c\u8bbe\u60f3\u5b83\u662f\u8fd9\u4e2a\u62d0\u70b9\uff0cA\u662ftarget\u5e76\u4f4d\u4e8e\u5176\u4e2d\u4e00\u4e2a\u5206\u652f\uff0c\u90a3\u4e48\u5982\u4f55\u5728\u53e6\u4e00\u4e2a\u5206\u652f\u4e2d\u627e\u5230B\uff1f\u663e\u7136\uff0c\u5047\u8bbe\u6211\u4eec\u80fd\u5f97\u5230target\u5230node->left\u4e4b\u95f4\u7684\u8ddd\u79bb\u662ft\uff0c\u90a3\u4e48\u6211\u4eec\u53ea\u9700\u8981\u4ecenode->right\u51fa\u53d1\u5f80\u4e0b\u8d70k-2-t\u6b65\uff0c\u6240\u62b5\u8fbe\u7684\u8282\u70b9\u5c31\u90fd\u662f\u7b26\u5408\u8981\u6c42\u7684B\u70b9\u3002\u540c\u7406\uff0c\u5982\u679ctarget\u4f4d\u4e8enode->right\u5206\u652f\uff0c\u7c7b\u4f3c\u7684\u5904\u7406\u3002 \u9700\u8981\u5355\u72ec\u5904\u7406\u7684\u60c5\u51b5\u5c31\u662f```node==target```\uff0c\u6b64\u65f6\u6211\u4eec\u627e\u7684\u5c31\u662f\u4ecenode\u5f00\u59cb\u5f80\u4e0b\u8d70k\u6b65\u5230\u8fbe\u7684\u8282\u70b9\u3002 \u6ce8\u610f\uff0c```DFS(node)```\u51fd\u6570\u7684\u4e00\u4e2a\u526f\u4ea7\u54c1\u5c31\u662f\u53ef\u4ee5\u8fd4\u56detarget\u5230\u8fbenode\u7684\u8ddd\u79bb\uff08\u5047\u8bbetarget\u5728node\u7684\u4e0b\u65b9\uff09\uff0c..."
+    }
+  ]
+}

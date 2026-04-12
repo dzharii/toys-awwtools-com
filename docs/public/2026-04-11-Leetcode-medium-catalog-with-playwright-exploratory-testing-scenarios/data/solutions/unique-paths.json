@@ -1,0 +1,879 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "unique-paths",
+  "problemTitle": "Unique Paths",
+  "problemNumber": 62,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go",
+      "typescript",
+      "javascript",
+      "csharp",
+      "c",
+      "kotlin"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go",
+      "TypeScript",
+      "JavaScript",
+      "C#",
+      "C",
+      "Kotlin"
+    ],
+    "solutionCount": 16,
+    "writeupCount": 2,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 3,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-python-0062-unique-paths.py",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/python/0062-unique-paths.py",
+          "localPath": "neetcode-gh_leetcode/python/0062-unique-paths.py",
+          "relativePath": "python/0062-unique-paths.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code",
+          "code": "class Solution:\n    def uniquePaths(self, m: int, n: int) -> int:\n        row = [1] * n\n\n        for i in range(m - 1):\n            newRow = [1] * n\n            for j in range(n - 2, -1, -1):\n                newRow[j] = newRow[j + 1] + row[j]\n            row = newRow\n        return row[0]\n\n        # O(n * m) O(n)\n",
+          "originalCode": "class Solution:\n    def uniquePaths(self, m: int, n: int) -> int:\n        row = [1] * n\n\n        for i in range(m - 1):\n            newRow = [1] * n\n            for j in range(n - 2, -1, -1):\n                newRow[j] = newRow[j + 1] + row[j]\n            row = newRow\n        return row[0]\n\n        # O(n * m) O(n)\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it.\nclass Solution:\n    def uniquePaths(self, m: int, n: int) -> int:\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid.\n        row = [1] * n\n\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for i in range(m - 1):\n            newRow = [1] * n\n            for j in range(n - 2, -1, -1):\n                newRow[j] = newRow[j + 1] + row[j]\n            row = newRow\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return row[0]\n\n        # O(n * m) O(n)",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid."
+            },
+            {
+              "line": 5,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 10,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the easiest true DP Mediums because the state and recurrence are both visually intuitive.",
+            "whatToNotice": "State definition, recurrence building, and seeing repeated substructure inside a grid.",
+            "riskPoint": "The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+          }
+        },
+        {
+          "id": "kamyu104_leetcode-solutions-python-unique-paths.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/unique-paths.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/unique-paths.py",
+          "relativePath": "Python/unique-paths.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(m + n)\n# Space: O(1)\n\nclass Solution(object):\n    def uniquePaths(self, m, n):\n        \"\"\"\n        :type m: int\n        :type n: int\n        :rtype: int\n        \"\"\"\n        def nCr(n, r):  # Time: O(n), Space: O(1)\n            if n-r < r:\n                r = n-r\n            c = 1\n            for k in xrange(1, r+1):\n                c *= n-k+1\n                c //= k\n            return c\n\n        return nCr((m-1)+(n-1), n-1)\n\n\n# Time:  O(m * n)\n# Space: O(min(m, n))\nclass Solution2(object):\n    def uniquePaths(self, m, n):\n        \"\"\"\n        :type m: int\n        :type n: int\n        :rtype: int\n        \"\"\"\n        if m < n:\n            m, n  = n, m\n\n        dp = [1]*n\n        for i in xrange(1, m):\n            for j in xrange(1, n):\n                dp[j] += dp[j-1]\n        return dp[n-1]\n",
+          "originalCode": "# Time:  O(m + n)\n# Space: O(1)\n\nclass Solution(object):\n    def uniquePaths(self, m, n):\n        \"\"\"\n        :type m: int\n        :type n: int\n        :rtype: int\n        \"\"\"\n        def nCr(n, r):  # Time: O(n), Space: O(1)\n            if n-r < r:\n                r = n-r\n            c = 1\n            for k in xrange(1, r+1):\n                c *= n-k+1\n                c //= k\n            return c\n\n        return nCr((m-1)+(n-1), n-1)\n\n\n# Time:  O(m * n)\n# Space: O(min(m, n))\nclass Solution2(object):\n    def uniquePaths(self, m, n):\n        \"\"\"\n        :type m: int\n        :type n: int\n        :rtype: int\n        \"\"\"\n        if m < n:\n            m, n  = n, m\n\n        dp = [1]*n\n        for i in xrange(1, m):\n            for j in xrange(1, n):\n                dp[j] += dp[j-1]\n        return dp[n-1]\n",
+          "reviewedCode": "# Time:  O(m + n)\n# Space: O(1)\n\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it.\nclass Solution(object):\n    def uniquePaths(self, m, n):\n        \"\"\"\n        :type m: int\n        :type n: int\n        :rtype: int\n        \"\"\"\n        def nCr(n, r):  # Time: O(n), Space: O(1)\n            if n-r < r:\n                # [Reader note] State setup\n                # This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid.\n                r = n-r\n            c = 1\n            # [Reader note] Main pass\n            # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for k in xrange(1, r+1):\n                c *= n-k+1\n                c //= k\n            return c\n\n        return nCr((m-1)+(n-1), n-1)\n\n\n# Time:  O(m * n)\n# Space: O(min(m, n))\nclass Solution2(object):\n    def uniquePaths(self, m, n):\n        \"\"\"\n        :type m: int\n        :type n: int\n        :rtype: int\n        \"\"\"\n        # [Reader note] Decision point\n        # Pay attention here: The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything.\n        if m < n:\n            m, n  = n, m\n\n        dp = [1]*n\n        for i in xrange(1, m):\n            for j in xrange(1, n):\n                dp[j] += dp[j-1]\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return dp[n-1]",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(m + n)",
+            "Space: O(1)",
+            "def nCr(n, r):  # Time: O(n), Space: O(1)"
+          ],
+          "annotations": [
+            {
+              "line": 4,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it."
+            },
+            {
+              "line": 13,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid."
+            },
+            {
+              "line": 15,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 32,
+              "label": "Decision point",
+              "note": "Pay attention here: The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+            },
+            {
+              "line": 39,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the easiest true DP Mediums because the state and recurrence are both visually intuitive.",
+            "whatToNotice": "State definition, recurrence building, and seeing repeated substructure inside a grid.",
+            "riskPoint": "The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0062.unique-paths-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0062.Unique%20Paths/Solution.py",
+          "localPath": "doocs_leetcode/solution/0000-0099/0062.Unique Paths/Solution.py",
+          "relativePath": "solution/0000-0099/0062.Unique Paths/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "class Solution:\n    def uniquePaths(self, m: int, n: int) -> int:\n        f = [[0] * n for _ in range(m)]\n        f[0][0] = 1\n        for i in range(m):\n            for j in range(n):\n                if i:\n                    f[i][j] += f[i - 1][j]\n                if j:\n                    f[i][j] += f[i][j - 1]\n        return f[-1][-1]\n",
+          "originalCode": "class Solution:\n    def uniquePaths(self, m: int, n: int) -> int:\n        f = [[0] * n for _ in range(m)]\n        f[0][0] = 1\n        for i in range(m):\n            for j in range(n):\n                if i:\n                    f[i][j] += f[i - 1][j]\n                if j:\n                    f[i][j] += f[i][j - 1]\n        return f[-1][-1]\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it.\nclass Solution:\n    def uniquePaths(self, m: int, n: int) -> int:\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid.\n        f = [[0] * n for _ in range(m)]\n        f[0][0] = 1\n        for i in range(m):\n            for j in range(n):\n                # [Reader note] Decision point\n                # Pay attention here: The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything.\n                if i:\n                    f[i][j] += f[i - 1][j]\n                if j:\n                    f[i][j] += f[i][j - 1]\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return f[-1][-1]",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid."
+            },
+            {
+              "line": 7,
+              "label": "Decision point",
+              "note": "Pay attention here: The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+            },
+            {
+              "line": 11,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the easiest true DP Mediums because the state and recurrence are both visually intuitive.",
+            "whatToNotice": "State definition, recurrence building, and seeing repeated substructure inside a grid.",
+            "riskPoint": "The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 3,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-cpp-0062-unique-paths.cpp",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/cpp/0062-unique-paths.cpp",
+          "localPath": "neetcode-gh_leetcode/cpp/0062-unique-paths.cpp",
+          "relativePath": "cpp/0062-unique-paths.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code",
+          "code": "/*\n    Given grid, return # of unique paths from top-left to bottom-right\n    Ex. m = 3, n = 2 -> 3 unique paths (R->D->D, D->D->R, D->R->D)\n\n    DP: edges have 1 unique path, inner cells consider where it comes from\n    Recurrence relation: grid[i][j] = grid[i-1][j] + grid[i][j-1]\n\n    Time: O(m x n)\n    Space: O(m x n)\n*/\n\nclass Solution {\npublic:\n    int uniquePaths(int m, int n) {\n        vector<vector<int>> grid(m, vector<int>(n, 0));\n        \n        for (int i = 0; i < m; i++) {\n            grid[i][0] = 1;\n        }\n        for (int j = 0; j < n; j++) {\n            grid[0][j] = 1;\n        }\n        for (int i = 1; i < m; i++) {\n            for (int j = 1; j < n; j++) {\n                grid[i][j] = grid[i - 1][j] + grid[i][j - 1];\n            }\n        }\n        \n        return grid[m - 1][n - 1];\n    }\n};\n",
+          "originalCode": "/*\n    Given grid, return # of unique paths from top-left to bottom-right\n    Ex. m = 3, n = 2 -> 3 unique paths (R->D->D, D->D->R, D->R->D)\n\n    DP: edges have 1 unique path, inner cells consider where it comes from\n    Recurrence relation: grid[i][j] = grid[i-1][j] + grid[i][j-1]\n\n    Time: O(m x n)\n    Space: O(m x n)\n*/\n\nclass Solution {\npublic:\n    int uniquePaths(int m, int n) {\n        vector<vector<int>> grid(m, vector<int>(n, 0));\n        \n        for (int i = 0; i < m; i++) {\n            grid[i][0] = 1;\n        }\n        for (int j = 0; j < n; j++) {\n            grid[0][j] = 1;\n        }\n        for (int i = 1; i < m; i++) {\n            for (int j = 1; j < n; j++) {\n                grid[i][j] = grid[i - 1][j] + grid[i][j - 1];\n            }\n        }\n        \n        return grid[m - 1][n - 1];\n    }\n};\n",
+          "reviewedCode": "/*\n    Given grid, return # of unique paths from top-left to bottom-right\n    Ex. m = 3, n = 2 -> 3 unique paths (R->D->D, D->D->R, D->R->D)\n\n    DP: edges have 1 unique path, inner cells consider where it comes from\n    Recurrence relation: grid[i][j] = grid[i-1][j] + grid[i][j-1]\n\n    Time: O(m x n)\n    Space: O(m x n)\n*/\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it.\nclass Solution {\npublic:\n    int uniquePaths(int m, int n) {\n        vector<vector<int>> grid(m, vector<int>(n, 0));\n        \n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid.\n        for (int i = 0; i < m; i++) {\n            grid[i][0] = 1;\n        }\n        for (int j = 0; j < n; j++) {\n            grid[0][j] = 1;\n        }\n        for (int i = 1; i < m; i++) {\n            for (int j = 1; j < n; j++) {\n                grid[i][j] = grid[i - 1][j] + grid[i][j - 1];\n            }\n        }\n        \n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return grid[m - 1][n - 1];\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time: O(m x n)",
+            "Space: O(m x n)"
+          ],
+          "annotations": [
+            {
+              "line": 12,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it."
+            },
+            {
+              "line": 17,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid."
+            },
+            {
+              "line": 29,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the easiest true DP Mediums because the state and recurrence are both visually intuitive.",
+            "whatToNotice": "State definition, recurrence building, and seeing repeated substructure inside a grid.",
+            "riskPoint": "The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0062.unique-paths-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0062.Unique%20Paths/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/0000-0099/0062.Unique Paths/Solution.cpp",
+          "relativePath": "solution/0000-0099/0062.Unique Paths/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\npublic:\n    int uniquePaths(int m, int n) {\n        vector<vector<int>> f(m, vector<int>(n));\n        f[0][0] = 1;\n        for (int i = 0; i < m; ++i) {\n            for (int j = 0; j < n; ++j) {\n                if (i) {\n                    f[i][j] += f[i - 1][j];\n                }\n                if (j) {\n                    f[i][j] += f[i][j - 1];\n                }\n            }\n        }\n        return f[m - 1][n - 1];\n    }\n};",
+          "originalCode": "class Solution {\npublic:\n    int uniquePaths(int m, int n) {\n        vector<vector<int>> f(m, vector<int>(n));\n        f[0][0] = 1;\n        for (int i = 0; i < m; ++i) {\n            for (int j = 0; j < n; ++j) {\n                if (i) {\n                    f[i][j] += f[i - 1][j];\n                }\n                if (j) {\n                    f[i][j] += f[i][j - 1];\n                }\n            }\n        }\n        return f[m - 1][n - 1];\n    }\n};",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it.\nclass Solution {\npublic:\n    int uniquePaths(int m, int n) {\n        vector<vector<int>> f(m, vector<int>(n));\n        f[0][0] = 1;\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid.\n        for (int i = 0; i < m; ++i) {\n            for (int j = 0; j < n; ++j) {\n                // [Reader note] Decision point\n                // Pay attention here: The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything.\n                if (i) {\n                    f[i][j] += f[i - 1][j];\n                }\n                if (j) {\n                    f[i][j] += f[i][j - 1];\n                }\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return f[m - 1][n - 1];\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it."
+            },
+            {
+              "line": 6,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid."
+            },
+            {
+              "line": 8,
+              "label": "Decision point",
+              "note": "Pay attention here: The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+            },
+            {
+              "line": 16,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the easiest true DP Mediums because the state and recurrence are both visually intuitive.",
+            "whatToNotice": "State definition, recurrence building, and seeing repeated substructure inside a grid.",
+            "riskPoint": "The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+          }
+        },
+        {
+          "id": "haoel_leetcode-algorithms-cpp-uniquepaths-uniquepaths.cpp",
+          "repository": "haoel_leetcode",
+          "repositoryUrl": "https://github.com/haoel/leetcode",
+          "sourceUrl": "https://github.com/haoel/leetcode/blob/master/algorithms/cpp/uniquePaths/uniquePaths.cpp",
+          "localPath": "haoel_leetcode/algorithms/cpp/uniquePaths/uniquePaths.cpp",
+          "relativePath": "algorithms/cpp/uniquePaths/uniquePaths.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Source : https://oj.leetcode.com/problems/unique-paths/\n// Author : Hao Chen\n// Date   : 2014-06-25\n\n/********************************************************************************** \n * \n * A robot is located at the top-left corner of a m x n grid (marked 'Start' in the diagram below).\n * \n * The robot can only move either down or right at any point in time. The robot is trying to reach \n * the bottom-right corner of the grid (marked 'Finish' in the diagram below).\n *    \n *    \n *    start                                                 \u2009\n *    +---------+----+----+----+----+----+                   \n *    |----|    |    |    |    |    |    |                   \n *    |----|    |    |    |    |    |    |                   \n *    +----------------------------------+                   \n *    |    |    |    |    |    |    |    |                   \n *    |    |    |    |    |    |    |    |                   \n *    +----------------------------------+                   \n *    |    |    |    |    |    |    |----|                   \n *    |    |    |    |    |    |    |----|                   \n *    +----+----+----+----+----+---------+                   \n *                                   finish                  \n *    \n * \n * How many possible unique paths are there?\n * \n * Above is a 3 x 7 grid. How many possible unique paths are there?\n * \n * Note: m and n will be at most 100.\n *               \n **********************************************************************************/\n\n#ifdef CSTYLE\n\n#include <stdio.h>\n#include <stdlib.h>\n\nvoid printMatrix(int*a, int m, int n)\n{\n    for (int i=0; i<m; i++){\n        for (int j=0; j<n; j++){\n            printf(\"%4d \", a[i*n+j]);\n        }\n        printf(\"\\n\");\n    }\n    printf(\"\\n\");\n}\n\n/*\n * Dynamic Programming\n *\n * We have a dp[i][j] represents  how many paths from [0][0] to hear. So, we have the following DP formuler:\n *\n *    dp[i][j] =  1  if i==0 || j==0        //the first row/column only have 1 uniqe path.\n *             =  dp[i-1][j] + dp[i][j-1]   //the path can be from my top cell and left cell.\n */\n\n// using C style array\nint uniquePaths(int m, int n) {\n    int* matrix = new int[m*n];\n    printMatrix(matrix, m, n);\n    for (int i=0; i<m; i++){\n        for (int j=0; j<n; j++){\n            if(i==0 || j==0){\n                matrix[i*n+j]=1;\n            }else{\n                matrix[i*n+j] = matrix[(i-1)*n+j] + matrix[i*n+j-1];\n            }\n        }\n    } \n    printMatrix(matrix, m, n);\n    int u = matrix[m*n-1];\n    delete[] matrix;\n    return u;\n}\n\n#else\n\n#include <vector>\nusing namespace std;\n\n// using C++ STL vector , the code is much easy to read\nint uniquePaths(int m, int n) {\n    vector< vector <int> >  dp (n, vector<int>(m, 1));\n    for (int row=1; row<n; row++) {\n        for (int col=1; col<m; col++) {\n            dp[row][col] = dp[row-1][col] + dp[row][col-1];\n        }\n    }\n    return dp[n-1][m-1];\n}\n\n#endif\n\nint main(int argc, char** argv)\n{\n    int m=3, n=7;\n    if( argc>2){\n        m = atoi(argv[1]);\n        n = atoi(argv[2]);\n    }\n\n    printf(\"uniquePaths=%d\\n\", uniquePaths(m,n));\n    return  0;\n}\n",
+          "originalCode": "// Source : https://oj.leetcode.com/problems/unique-paths/\n// Author : Hao Chen\n// Date   : 2014-06-25\n\n/********************************************************************************** \n * \n * A robot is located at the top-left corner of a m x n grid (marked 'Start' in the diagram below).\n * \n * The robot can only move either down or right at any point in time. The robot is trying to reach \n * the bottom-right corner of the grid (marked 'Finish' in the diagram below).\n *    \n *    \n *    start                                                 \u2009\n *    +---------+----+----+----+----+----+                   \n *    |----|    |    |    |    |    |    |                   \n *    |----|    |    |    |    |    |    |                   \n *    +----------------------------------+                   \n *    |    |    |    |    |    |    |    |                   \n *    |    |    |    |    |    |    |    |                   \n *    +----------------------------------+                   \n *    |    |    |    |    |    |    |----|                   \n *    |    |    |    |    |    |    |----|                   \n *    +----+----+----+----+----+---------+                   \n *                                   finish                  \n *    \n * \n * How many possible unique paths are there?\n * \n * Above is a 3 x 7 grid. How many possible unique paths are there?\n * \n * Note: m and n will be at most 100.\n *               \n **********************************************************************************/\n\n#ifdef CSTYLE\n\n#include <stdio.h>\n#include <stdlib.h>\n\nvoid printMatrix(int*a, int m, int n)\n{\n    for (int i=0; i<m; i++){\n        for (int j=0; j<n; j++){\n            printf(\"%4d \", a[i*n+j]);\n        }\n        printf(\"\\n\");\n    }\n    printf(\"\\n\");\n}\n\n/*\n * Dynamic Programming\n *\n * We have a dp[i][j] represents  how many paths from [0][0] to hear. So, we have the following DP formuler:\n *\n *    dp[i][j] =  1  if i==0 || j==0        //the first row/column only have 1 uniqe path.\n *             =  dp[i-1][j] + dp[i][j-1]   //the path can be from my top cell and left cell.\n */\n\n// using C style array\nint uniquePaths(int m, int n) {\n    int* matrix = new int[m*n];\n    printMatrix(matrix, m, n);\n    for (int i=0; i<m; i++){\n        for (int j=0; j<n; j++){\n            if(i==0 || j==0){\n                matrix[i*n+j]=1;\n            }else{\n                matrix[i*n+j] = matrix[(i-1)*n+j] + matrix[i*n+j-1];\n            }\n        }\n    } \n    printMatrix(matrix, m, n);\n    int u = matrix[m*n-1];\n    delete[] matrix;\n    return u;\n}\n\n#else\n\n#include <vector>\nusing namespace std;\n\n// using C++ STL vector , the code is much easy to read\nint uniquePaths(int m, int n) {\n    vector< vector <int> >  dp (n, vector<int>(m, 1));\n    for (int row=1; row<n; row++) {\n        for (int col=1; col<m; col++) {\n            dp[row][col] = dp[row-1][col] + dp[row][col-1];\n        }\n    }\n    return dp[n-1][m-1];\n}\n\n#endif\n\nint main(int argc, char** argv)\n{\n    int m=3, n=7;\n    if( argc>2){\n        m = atoi(argv[1]);\n        n = atoi(argv[2]);\n    }\n\n    printf(\"uniquePaths=%d\\n\", uniquePaths(m,n));\n    return  0;\n}\n",
+          "reviewedCode": "// Source : https://oj.leetcode.com/problems/unique-paths/\n// Author : Hao Chen\n// Date   : 2014-06-25\n\n/********************************************************************************** \n * \n * A robot is located at the top-left corner of a m x n grid (marked 'Start' in the diagram below).\n * \n * The robot can only move either down or right at any point in time. The robot is trying to reach \n * the bottom-right corner of the grid (marked 'Finish' in the diagram below).\n *    \n *    \n *    start                                                 \u2009\n *    +---------+----+----+----+----+----+                   \n *    |----|    |    |    |    |    |    |                   \n *    |----|    |    |    |    |    |    |                   \n *    +----------------------------------+                   \n *    |    |    |    |    |    |    |    |                   \n *    |    |    |    |    |    |    |    |                   \n *    +----------------------------------+                   \n *    |    |    |    |    |    |    |----|                   \n *    |    |    |    |    |    |    |----|                   \n *    +----+----+----+----+----+---------+                   \n *                                   finish                  \n *    \n * \n * How many possible unique paths are there?\n * \n * Above is a 3 x 7 grid. How many possible unique paths are there?\n * \n * Note: m and n will be at most 100.\n *               \n **********************************************************************************/\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it.\n#ifdef CSTYLE\n\n#include <stdio.h>\n#include <stdlib.h>\n\nvoid printMatrix(int*a, int m, int n)\n{\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid.\n    for (int i=0; i<m; i++){\n        for (int j=0; j<n; j++){\n            printf(\"%4d \", a[i*n+j]);\n        }\n        printf(\"\\n\");\n    }\n    printf(\"\\n\");\n}\n\n/*\n * Dynamic Programming\n *\n * We have a dp[i][j] represents  how many paths from [0][0] to hear. So, we have the following DP formuler:\n *\n // [Reader note] Decision point\n // Pay attention here: The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything.\n *    dp[i][j] =  1  if i==0 || j==0        //the first row/column only have 1 uniqe path.\n *             =  dp[i-1][j] + dp[i][j-1]   //the path can be from my top cell and left cell.\n */\n\n// using C style array\nint uniquePaths(int m, int n) {\n    int* matrix = new int[m*n];\n    printMatrix(matrix, m, n);\n    for (int i=0; i<m; i++){\n        for (int j=0; j<n; j++){\n            if(i==0 || j==0){\n                matrix[i*n+j]=1;\n            }else{\n                matrix[i*n+j] = matrix[(i-1)*n+j] + matrix[i*n+j-1];\n            }\n        }\n    } \n    printMatrix(matrix, m, n);\n    int u = matrix[m*n-1];\n    delete[] matrix;\n    return u;\n}\n\n#else\n\n#include <vector>\nusing namespace std;\n\n// using C++ STL vector , the code is much easy to read\nint uniquePaths(int m, int n) {\n    vector< vector <int> >  dp (n, vector<int>(m, 1));\n    for (int row=1; row<n; row++) {\n        for (int col=1; col<m; col++) {\n            dp[row][col] = dp[row-1][col] + dp[row][col-1];\n        }\n    }\n    return dp[n-1][m-1];\n}\n\n#endif\n\nint main(int argc, char** argv)\n{\n    int m=3, n=7;\n    if( argc>2){\n        m = atoi(argv[1]);\n        n = atoi(argv[2]);\n    }\n\n    printf(\"uniquePaths=%d\\n\", uniquePaths(m,n));\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return  0;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "The robot can only move either down or right at any point in time. The robot is trying to reach"
+          ],
+          "annotations": [
+            {
+              "line": 35,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it."
+            },
+            {
+              "line": 42,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid."
+            },
+            {
+              "line": 56,
+              "label": "Decision point",
+              "note": "Pay attention here: The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+            },
+            {
+              "line": 106,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the easiest true DP Mediums because the state and recurrence are both visually intuitive.",
+            "whatToNotice": "State definition, recurrence building, and seeing repeated substructure inside a grid.",
+            "riskPoint": "The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 3,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-java-0062-unique-paths.java",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/java/0062-unique-paths.java",
+          "localPath": "neetcode-gh_leetcode/java/0062-unique-paths.java",
+          "relativePath": "java/0062-unique-paths.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code",
+          "code": "class Solution {\n\n    // Dynamic programming: TC = O(m*n), SC = O(m*n)\n    public int uniquePaths(int m, int n) {\n        int[][] dp = new int[m][n];\n\n        // Fill out last row\n        for (int j = 0; j < n; j++) {\n            dp[m - 1][j] = 1;\n        }\n\n        // Fill out last column\n        for (int i = 0; i < m; i++) {\n            dp[i][n - 1] = 1;\n        }\n\n        for (int i = m - 2; i >= 0; i--) {\n            for (int j = n - 2; j >= 0; j--) {\n                dp[i][j] = dp[i][j + 1] + dp[i + 1][j];\n            }\n        }\n        return dp[0][0];\n    }\n\n    // Dynamic programming: TC = O(m*n), SC = O(min(m,n))\n    public int uniquePaths2(int m, int n) {\n        if (m <= 0 || n <= 0) return 0;\n\n        int[] dp = new int[n];\n        for (int i = 0; i < n; i++)\n            dp[i] = 1;\n\n        for (int i = 1; i < m; i++)\n            for (int j = 1; j < n; j++)\n                dp[j] += dp[j - 1];\n\n        return dp[n - 1];\n    }\n\n    // Combinatorics: TC = O(min(m,n)), SC = O(1)\n    // result = C(m + n, n) = (m + n)! / (m! * n!)\n    public int uniquePaths3(int m, int n) {\n        if (m <= 0 || n <= 0) return 0;\n\n        if (m < n) return uniquePaths3(n, m);\n\n        m--;\n        n--;\n        long res = 1;\n        for (int i = 1; i <= n; i++) {\n            res *= (m + i);\n            res /= i;\n        }\n        return (int)res;\n    }\n}\n",
+          "originalCode": "class Solution {\n\n    // Dynamic programming: TC = O(m*n), SC = O(m*n)\n    public int uniquePaths(int m, int n) {\n        int[][] dp = new int[m][n];\n\n        // Fill out last row\n        for (int j = 0; j < n; j++) {\n            dp[m - 1][j] = 1;\n        }\n\n        // Fill out last column\n        for (int i = 0; i < m; i++) {\n            dp[i][n - 1] = 1;\n        }\n\n        for (int i = m - 2; i >= 0; i--) {\n            for (int j = n - 2; j >= 0; j--) {\n                dp[i][j] = dp[i][j + 1] + dp[i + 1][j];\n            }\n        }\n        return dp[0][0];\n    }\n\n    // Dynamic programming: TC = O(m*n), SC = O(min(m,n))\n    public int uniquePaths2(int m, int n) {\n        if (m <= 0 || n <= 0) return 0;\n\n        int[] dp = new int[n];\n        for (int i = 0; i < n; i++)\n            dp[i] = 1;\n\n        for (int i = 1; i < m; i++)\n            for (int j = 1; j < n; j++)\n                dp[j] += dp[j - 1];\n\n        return dp[n - 1];\n    }\n\n    // Combinatorics: TC = O(min(m,n)), SC = O(1)\n    // result = C(m + n, n) = (m + n)! / (m! * n!)\n    public int uniquePaths3(int m, int n) {\n        if (m <= 0 || n <= 0) return 0;\n\n        if (m < n) return uniquePaths3(n, m);\n\n        m--;\n        n--;\n        long res = 1;\n        for (int i = 1; i <= n; i++) {\n            res *= (m + i);\n            res /= i;\n        }\n        return (int)res;\n    }\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it.\nclass Solution {\n\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid.\n    // Dynamic programming: TC = O(m*n), SC = O(m*n)\n    public int uniquePaths(int m, int n) {\n        int[][] dp = new int[m][n];\n\n        // Fill out last row\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int j = 0; j < n; j++) {\n            dp[m - 1][j] = 1;\n        }\n\n        // Fill out last column\n        for (int i = 0; i < m; i++) {\n            dp[i][n - 1] = 1;\n        }\n\n        for (int i = m - 2; i >= 0; i--) {\n            for (int j = n - 2; j >= 0; j--) {\n                dp[i][j] = dp[i][j + 1] + dp[i + 1][j];\n            }\n        }\n        return dp[0][0];\n    }\n\n    // Dynamic programming: TC = O(m*n), SC = O(min(m,n))\n    public int uniquePaths2(int m, int n) {\n        // [Reader note] Decision point\n        // Pay attention here: The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything.\n        if (m <= 0 || n <= 0) return 0;\n\n        int[] dp = new int[n];\n        for (int i = 0; i < n; i++)\n            dp[i] = 1;\n\n        for (int i = 1; i < m; i++)\n            for (int j = 1; j < n; j++)\n                dp[j] += dp[j - 1];\n\n        return dp[n - 1];\n    }\n\n    // Combinatorics: TC = O(min(m,n)), SC = O(1)\n    // result = C(m + n, n) = (m + n)! / (m! * n!)\n    public int uniquePaths3(int m, int n) {\n        if (m <= 0 || n <= 0) return 0;\n\n        if (m < n) return uniquePaths3(n, m);\n\n        m--;\n        n--;\n        long res = 1;\n        for (int i = 1; i <= n; i++) {\n            res *= (m + i);\n            res /= i;\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return (int)res;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid."
+            },
+            {
+              "line": 8,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 27,
+              "label": "Decision point",
+              "note": "Pay attention here: The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+            },
+            {
+              "line": 54,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the easiest true DP Mediums because the state and recurrence are both visually intuitive.",
+            "whatToNotice": "State definition, recurrence building, and seeing repeated substructure inside a grid.",
+            "riskPoint": "The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0062.unique-paths-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0062.Unique%20Paths/Solution.java",
+          "localPath": "doocs_leetcode/solution/0000-0099/0062.Unique Paths/Solution.java",
+          "relativePath": "solution/0000-0099/0062.Unique Paths/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\n    public int uniquePaths(int m, int n) {\n        var f = new int[m][n];\n        f[0][0] = 1;\n        for (int i = 0; i < m; ++i) {\n            for (int j = 0; j < n; ++j) {\n                if (i > 0) {\n                    f[i][j] += f[i - 1][j];\n                }\n                if (j > 0) {\n                    f[i][j] += f[i][j - 1];\n                }\n            }\n        }\n        return f[m - 1][n - 1];\n    }\n}",
+          "originalCode": "class Solution {\n    public int uniquePaths(int m, int n) {\n        var f = new int[m][n];\n        f[0][0] = 1;\n        for (int i = 0; i < m; ++i) {\n            for (int j = 0; j < n; ++j) {\n                if (i > 0) {\n                    f[i][j] += f[i - 1][j];\n                }\n                if (j > 0) {\n                    f[i][j] += f[i][j - 1];\n                }\n            }\n        }\n        return f[m - 1][n - 1];\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it.\nclass Solution {\n    public int uniquePaths(int m, int n) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid.\n        var f = new int[m][n];\n        f[0][0] = 1;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = 0; i < m; ++i) {\n            for (int j = 0; j < n; ++j) {\n                // [Reader note] Decision point\n                // Pay attention here: The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything.\n                if (i > 0) {\n                    f[i][j] += f[i - 1][j];\n                }\n                if (j > 0) {\n                    f[i][j] += f[i][j - 1];\n                }\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return f[m - 1][n - 1];\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid."
+            },
+            {
+              "line": 5,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 7,
+              "label": "Decision point",
+              "note": "Pay attention here: The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+            },
+            {
+              "line": 15,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the easiest true DP Mediums because the state and recurrence are both visually intuitive.",
+            "whatToNotice": "State definition, recurrence building, and seeing repeated substructure inside a grid.",
+            "riskPoint": "The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+          }
+        },
+        {
+          "id": "haoel_leetcode-algorithms-java-src-dynamicprogramming-uniquepaths-uniquepaths.java",
+          "repository": "haoel_leetcode",
+          "repositoryUrl": "https://github.com/haoel/leetcode",
+          "sourceUrl": "https://github.com/haoel/leetcode/blob/master/algorithms/java/src/dynamicProgramming/uniquePaths/uniquePaths.java",
+          "localPath": "haoel_leetcode/algorithms/java/src/dynamicProgramming/uniquePaths/uniquePaths.java",
+          "relativePath": "algorithms/java/src/dynamicProgramming/uniquePaths/uniquePaths.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "indexed-code",
+          "code": "// Source : https://oj.leetcode.com/problems/unique-paths/\n// Inspired by : http://www.jiuzhang.com/solutions/unique-paths/\n// Author : Lei Cao\n// Date   : 2015-10-11\n\n/**********************************************************************************\n *\n * A robot is located at the top-left corner of a m x n grid (marked 'Start' in the diagram below).\n *\n * The robot can only move either down or right at any point in time. The robot is trying to reach\n * the bottom-right corner of the grid (marked 'Finish' in the diagram below).\n *\n *\n *    start                                                 \u2009\n *    +---------+----+----+----+----+----+\n *    |----|    |    |    |    |    |    |\n *    |----|    |    |    |    |    |    |\n *    +----------------------------------+\n *    |    |    |    |    |    |    |    |\n *    |    |    |    |    |    |    |    |\n *    +----------------------------------+\n *    |    |    |    |    |    |    |----|\n *    |    |    |    |    |    |    |----|\n *    +----+----+----+----+----+---------+\n *                                   finish\n *\n *\n * How many possible unique paths are there?\n *\n * Above is a 3 x 7 grid. How many possible unique paths are there?\n *\n * Note: m and n will be at most 100.\n *\n **********************************************************************************/\n\npackage dynamicProgramming.uniquePaths;\n\npublic class uniquePaths {\n    /**\n     * @param n, m: positive integer (1 <= n ,m <= 100)\n     * @return an integer\n     */\n    public int uniquePaths(int m, int n) {\n        // write your code here\n        int[][] matrix = new int[m][n];\n        for (int i = 0; i < m; i++) {\n            matrix[i][0] = 1;\n        }\n        for (int i = 0; i < n; i++) {\n            matrix[0][i] = 1;\n        }\n\n        for (int i = 1; i < m; i++)  {\n            for (int j = 1; j < n; j++) {\n                matrix[i][j] = matrix[i-1][j] + matrix[i][j-1];\n            }\n        }\n        return matrix[m-1][n-1];\n    }\n}\n",
+          "originalCode": "// Source : https://oj.leetcode.com/problems/unique-paths/\n// Inspired by : http://www.jiuzhang.com/solutions/unique-paths/\n// Author : Lei Cao\n// Date   : 2015-10-11\n\n/**********************************************************************************\n *\n * A robot is located at the top-left corner of a m x n grid (marked 'Start' in the diagram below).\n *\n * The robot can only move either down or right at any point in time. The robot is trying to reach\n * the bottom-right corner of the grid (marked 'Finish' in the diagram below).\n *\n *\n *    start                                                 \u2009\n *    +---------+----+----+----+----+----+\n *    |----|    |    |    |    |    |    |\n *    |----|    |    |    |    |    |    |\n *    +----------------------------------+\n *    |    |    |    |    |    |    |    |\n *    |    |    |    |    |    |    |    |\n *    +----------------------------------+\n *    |    |    |    |    |    |    |----|\n *    |    |    |    |    |    |    |----|\n *    +----+----+----+----+----+---------+\n *                                   finish\n *\n *\n * How many possible unique paths are there?\n *\n * Above is a 3 x 7 grid. How many possible unique paths are there?\n *\n * Note: m and n will be at most 100.\n *\n **********************************************************************************/\n\npackage dynamicProgramming.uniquePaths;\n\npublic class uniquePaths {\n    /**\n     * @param n, m: positive integer (1 <= n ,m <= 100)\n     * @return an integer\n     */\n    public int uniquePaths(int m, int n) {\n        // write your code here\n        int[][] matrix = new int[m][n];\n        for (int i = 0; i < m; i++) {\n            matrix[i][0] = 1;\n        }\n        for (int i = 0; i < n; i++) {\n            matrix[0][i] = 1;\n        }\n\n        for (int i = 1; i < m; i++)  {\n            for (int j = 1; j < n; j++) {\n                matrix[i][j] = matrix[i-1][j] + matrix[i][j-1];\n            }\n        }\n        return matrix[m-1][n-1];\n    }\n}\n",
+          "reviewedCode": "// Source : https://oj.leetcode.com/problems/unique-paths/\n// Inspired by : http://www.jiuzhang.com/solutions/unique-paths/\n// Author : Lei Cao\n// Date   : 2015-10-11\n\n/**********************************************************************************\n *\n * A robot is located at the top-left corner of a m x n grid (marked 'Start' in the diagram below).\n *\n * The robot can only move either down or right at any point in time. The robot is trying to reach\n * the bottom-right corner of the grid (marked 'Finish' in the diagram below).\n *\n *\n *    start                                                 \u2009\n *    +---------+----+----+----+----+----+\n *    |----|    |    |    |    |    |    |\n *    |----|    |    |    |    |    |    |\n *    +----------------------------------+\n *    |    |    |    |    |    |    |    |\n *    |    |    |    |    |    |    |    |\n *    +----------------------------------+\n *    |    |    |    |    |    |    |----|\n *    |    |    |    |    |    |    |----|\n *    +----+----+----+----+----+---------+\n *                                   finish\n *\n *\n * How many possible unique paths are there?\n *\n * Above is a 3 x 7 grid. How many possible unique paths are there?\n *\n * Note: m and n will be at most 100.\n *\n **********************************************************************************/\n\npackage dynamicProgramming.uniquePaths;\n\npublic class uniquePaths {\n    /**\n     * @param n, m: positive integer (1 <= n ,m <= 100)\n     * @return an integer\n     */\n    // [Reader note] Entry point\n    // Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it.\n    public int uniquePaths(int m, int n) {\n        // write your code here\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid.\n        int[][] matrix = new int[m][n];\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = 0; i < m; i++) {\n            matrix[i][0] = 1;\n        }\n        for (int i = 0; i < n; i++) {\n            matrix[0][i] = 1;\n        }\n\n        for (int i = 1; i < m; i++)  {\n            for (int j = 1; j < n; j++) {\n                matrix[i][j] = matrix[i-1][j] + matrix[i][j-1];\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return matrix[m-1][n-1];\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "The robot can only move either down or right at any point in time. The robot is trying to reach"
+          ],
+          "annotations": [
+            {
+              "line": 43,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it."
+            },
+            {
+              "line": 45,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid."
+            },
+            {
+              "line": 46,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 58,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the easiest true DP Mediums because the state and recurrence are both visually intuitive.",
+            "whatToNotice": "State definition, recurrence building, and seeing repeated substructure inside a grid.",
+            "riskPoint": "The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-go-0062-unique-paths.go",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/go/0062-unique-paths.go",
+          "localPath": "neetcode-gh_leetcode/go/0062-unique-paths.go",
+          "relativePath": "go/0062-unique-paths.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code",
+          "code": "func uniquePaths(m int, n int) int {\n\tdp := make([]int, n)\n\tdp[0] = 1\n\n\tfor i := 0; i < m; i++ {\n\t\tfor j := 1; j < n; j++ {\n\t\t\tdp[j] += dp[j-1]\n\t\t}\n\t}\n\n\treturn dp[n-1]\n}",
+          "originalCode": "func uniquePaths(m int, n int) int {\n\tdp := make([]int, n)\n\tdp[0] = 1\n\n\tfor i := 0; i < m; i++ {\n\t\tfor j := 1; j < n; j++ {\n\t\t\tdp[j] += dp[j-1]\n\t\t}\n\t}\n\n\treturn dp[n-1]\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it.\nfunc uniquePaths(m int, n int) int {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid.\n\tdp := make([]int, n)\n\tdp[0] = 1\n\n\t// [Reader note] Main pass\n\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\tfor i := 0; i < m; i++ {\n\t\tfor j := 1; j < n; j++ {\n\t\t\tdp[j] += dp[j-1]\n\t\t}\n\t}\n\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn dp[n-1]\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid."
+            },
+            {
+              "line": 5,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 11,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the easiest true DP Mediums because the state and recurrence are both visually intuitive.",
+            "whatToNotice": "State definition, recurrence building, and seeing repeated substructure inside a grid.",
+            "riskPoint": "The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0062.unique-paths-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0062.Unique%20Paths/Solution.go",
+          "localPath": "doocs_leetcode/solution/0000-0099/0062.Unique Paths/Solution.go",
+          "relativePath": "solution/0000-0099/0062.Unique Paths/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "func uniquePaths(m int, n int) int {\n\tf := make([][]int, m)\n\tfor i := range f {\n\t\tf[i] = make([]int, n)\n\t}\n\tf[0][0] = 1\n\tfor i := 0; i < m; i++ {\n\t\tfor j := 0; j < n; j++ {\n\t\t\tif i > 0 {\n\t\t\t\tf[i][j] += f[i-1][j]\n\t\t\t}\n\t\t\tif j > 0 {\n\t\t\t\tf[i][j] += f[i][j-1]\n\t\t\t}\n\t\t}\n\t}\n\treturn f[m-1][n-1]\n}",
+          "originalCode": "func uniquePaths(m int, n int) int {\n\tf := make([][]int, m)\n\tfor i := range f {\n\t\tf[i] = make([]int, n)\n\t}\n\tf[0][0] = 1\n\tfor i := 0; i < m; i++ {\n\t\tfor j := 0; j < n; j++ {\n\t\t\tif i > 0 {\n\t\t\t\tf[i][j] += f[i-1][j]\n\t\t\t}\n\t\t\tif j > 0 {\n\t\t\t\tf[i][j] += f[i][j-1]\n\t\t\t}\n\t\t}\n\t}\n\treturn f[m-1][n-1]\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it.\nfunc uniquePaths(m int, n int) int {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid.\n\tf := make([][]int, m)\n\t// [Reader note] Main pass\n\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\tfor i := range f {\n\t\tf[i] = make([]int, n)\n\t}\n\tf[0][0] = 1\n\tfor i := 0; i < m; i++ {\n\t\tfor j := 0; j < n; j++ {\n\t\t\t// [Reader note] Decision point\n\t\t\t// Pay attention here: The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything.\n\t\t\tif i > 0 {\n\t\t\t\tf[i][j] += f[i-1][j]\n\t\t\t}\n\t\t\tif j > 0 {\n\t\t\t\tf[i][j] += f[i][j-1]\n\t\t\t}\n\t\t}\n\t}\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn f[m-1][n-1]\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid."
+            },
+            {
+              "line": 3,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 9,
+              "label": "Decision point",
+              "note": "Pay attention here: The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+            },
+            {
+              "line": 17,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the easiest true DP Mediums because the state and recurrence are both visually intuitive.",
+            "whatToNotice": "State definition, recurrence building, and seeing repeated substructure inside a grid.",
+            "riskPoint": "The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+          }
+        }
+      ]
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0000-0099-0062.unique-paths-solution.ts",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0062.Unique%20Paths/Solution.ts",
+          "localPath": "doocs_leetcode/solution/0000-0099/0062.Unique Paths/Solution.ts",
+          "relativePath": "solution/0000-0099/0062.Unique Paths/Solution.ts",
+          "languageId": "typescript",
+          "languageLabel": "TypeScript",
+          "coverageType": "code+explanation",
+          "code": "function uniquePaths(m: number, n: number): number {\n    const f: number[][] = Array(m)\n        .fill(0)\n        .map(() => Array(n).fill(0));\n    f[0][0] = 1;\n    for (let i = 0; i < m; ++i) {\n        for (let j = 0; j < n; ++j) {\n            if (i > 0) {\n                f[i][j] += f[i - 1][j];\n            }\n            if (j > 0) {\n                f[i][j] += f[i][j - 1];\n            }\n        }\n    }\n    return f[m - 1][n - 1];\n}\n",
+          "originalCode": "function uniquePaths(m: number, n: number): number {\n    const f: number[][] = Array(m)\n        .fill(0)\n        .map(() => Array(n).fill(0));\n    f[0][0] = 1;\n    for (let i = 0; i < m; ++i) {\n        for (let j = 0; j < n; ++j) {\n            if (i > 0) {\n                f[i][j] += f[i - 1][j];\n            }\n            if (j > 0) {\n                f[i][j] += f[i][j - 1];\n            }\n        }\n    }\n    return f[m - 1][n - 1];\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it.\nfunction uniquePaths(m: number, n: number): number {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid.\n    const f: number[][] = Array(m)\n        .fill(0)\n        .map(() => Array(n).fill(0));\n    f[0][0] = 1;\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (let i = 0; i < m; ++i) {\n        for (let j = 0; j < n; ++j) {\n            // [Reader note] Decision point\n            // Pay attention here: The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything.\n            if (i > 0) {\n                f[i][j] += f[i - 1][j];\n            }\n            if (j > 0) {\n                f[i][j] += f[i][j - 1];\n            }\n        }\n    }\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return f[m - 1][n - 1];\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid."
+            },
+            {
+              "line": 6,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 8,
+              "label": "Decision point",
+              "note": "Pay attention here: The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+            },
+            {
+              "line": 16,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the easiest true DP Mediums because the state and recurrence are both visually intuitive.",
+            "whatToNotice": "State definition, recurrence building, and seeing repeated substructure inside a grid.",
+            "riskPoint": "The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+          }
+        }
+      ]
+    },
+    {
+      "id": "javascript",
+      "label": "JavaScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-javascript-0062-unique-paths.js",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/javascript/0062-unique-paths.js",
+          "localPath": "neetcode-gh_leetcode/javascript/0062-unique-paths.js",
+          "relativePath": "javascript/0062-unique-paths.js",
+          "languageId": "javascript",
+          "languageLabel": "JavaScript",
+          "coverageType": "code",
+          "code": "/**\n * Brute Force - DFS\n * Time O(2^N) | Space O(HEIGHT)\n * https://leetcode.com/problems/unique-paths/\n * @param {number} m\n * @param {number} n\n * @return {number}\n */\nvar uniquePaths = (row, col) => {\n    const isBaseCase = row == 1 || col == 1;\n    if (isBaseCase) return 1;\n\n    return dfs(row, col); /* Time O(2^N) | Space O(HEIGHT) */\n};\n\nvar dfs = (row, col) => {\n    const left = uniquePaths(row - 1, col); /* Time O(2^N) | Space O(HEIGHT) */\n    const right = uniquePaths(row, col - 1); /* Time O(2^N) | Space O(HEIGHT) */\n\n    return left + right;\n};\n\n/**\n * DP - Top Down\n * Matrix - Memoization\n * Time O(ROWS * COLS) | Space O(ROWS * COLS)\n * https://leetcode.com/problems/unique-paths/\n * @param {number} m\n * @param {number} n\n * @return {number}\n */\nvar uniquePaths = (row, col, memo = getMemo(row, col)) => {\n    const isBaseCase = row === 1 || col === 1;\n    if (isBaseCase) return 1;\n\n    const hasSeen = memo[row][col] !== 0;\n    if (hasSeen) return memo[row][col];\n\n    return dfs(\n        row,\n        col,\n        memo,\n    ); /* Time O(ROWS * COLS) | Space O((ROWS * COLS) + HEIGHT) */\n};\n\nvar getMemo = (row, col) =>\n    new Array(row + 1)\n        .fill() /* Time O(ROWS)| Space O(ROWS) */\n        .map(() =>\n            new Array(col + 1).fill(0),\n        ); /* Time O(COLS)| Space O(COLS) */\n\nvar dfs = (row, col, memo) => {\n    const left = uniquePaths(\n        row - 1,\n        col,\n        memo,\n    ); /* Time O(ROWS * COLS) | Space O(HEIGHT) */\n    const right = uniquePaths(\n        row,\n        col - 1,\n        memo,\n    ); /* Time O(ROWS * COLS) | Space O(HEIGHT) */\n\n    memo[row][col] =\n        left + right; /*                     | Space O(ROWS * COLS) */\n    return memo[row][col];\n};\n\n/**\n * DP - Bottom Up\n * Matrix - Tabulation\n * Time O(ROWS * COLS) | Space O(ROWS * COLS)\n * https://leetcode.com/problems/unique-paths/\n * @param {number} row\n * @param {number} col\n * @return {number}\n */\nvar uniquePaths = (row, col) => {\n    const tabu = initTabu(\n        row,\n        col,\n    ); /* Time O(ROWS * COLS) | Space O(ROWS * COLS) */\n\n    search(row, col, tabu); /* Time O(ROWS * COLS) | Space O(ROWS * COLS) */\n\n    return tabu[row - 1][col - 1];\n};\n\nvar search = (row, col, tabu) => {\n    for (let _row = 1; _row < row; _row++) {\n        /* Time O(ROWS)*/\n        for (let _col = 1; _col < col; _col++) {\n            /* Time O(COLS)*/\n            const left = tabu[_row - 1][_col];\n            const right = tabu[_row][_col - 1];\n\n            tabu[_row][_col] = left + right; /* Space O(ROWS * COLS) */\n        }\n    }\n};\n\nvar initTabu = (row, col) => {\n    const tabu = new Array(row)\n        .fill() /* Time O(ROWS)     | Space O(ROWS) */\n        .map(() => new Array(col).fill(0)); /* Time O(COLS) | Space O(COLS) */\n\n    for (let _row = 0; _row < row; _row++) {\n        /* Time O(ROWS) */\n        tabu[_row][0] = 1; /*              | Space O(ROWS * COLS) */\n    }\n\n    for (let _col = 0; _col < col; _col++) {\n        /* Time O(COLS) */\n        tabu[0][_col] = 1; /*              | Space O(ROWS * COLS) */\n    }\n\n    return tabu;\n};\n\n/**\n * DP - Bottom Up\n * Array - Tabulation\n * Time O(ROWS * COLS) | Space O(COLS)\n * https://leetcode.com/problems/unique-paths/\n * @param {number} m\n * @param {number} n\n * @return {number}\n */\nvar uniquePaths = (row, col) => {\n    const tabu = initTabu(col); /* Time O(COLS)        | Space O(COLS) */\n\n    search(row, col, tabu); /* Time O(ROWS * COLS) | Space O(COLS) */\n\n    return tabu[col - 1];\n};\n\nvar initTabu = (col) =>\n    new Array(col).fill(1); /* Time O(COLS) | Space O(COLS) */\n\nvar search = (row, col, tabu) => {\n    for (let _row = 1; _row < row; _row++) {\n        /* Time O(ROWS) */\n        for (let _col = 1; _col < col; _col++) {\n            /* Time O(COLS) */\n            const prev = tabu[_col - 1];\n\n            tabu[_col] += prev; /* Space O(COLS) */\n        }\n    }\n};\n",
+          "originalCode": "/**\n * Brute Force - DFS\n * Time O(2^N) | Space O(HEIGHT)\n * https://leetcode.com/problems/unique-paths/\n * @param {number} m\n * @param {number} n\n * @return {number}\n */\nvar uniquePaths = (row, col) => {\n    const isBaseCase = row == 1 || col == 1;\n    if (isBaseCase) return 1;\n\n    return dfs(row, col); /* Time O(2^N) | Space O(HEIGHT) */\n};\n\nvar dfs = (row, col) => {\n    const left = uniquePaths(row - 1, col); /* Time O(2^N) | Space O(HEIGHT) */\n    const right = uniquePaths(row, col - 1); /* Time O(2^N) | Space O(HEIGHT) */\n\n    return left + right;\n};\n\n/**\n * DP - Top Down\n * Matrix - Memoization\n * Time O(ROWS * COLS) | Space O(ROWS * COLS)\n * https://leetcode.com/problems/unique-paths/\n * @param {number} m\n * @param {number} n\n * @return {number}\n */\nvar uniquePaths = (row, col, memo = getMemo(row, col)) => {\n    const isBaseCase = row === 1 || col === 1;\n    if (isBaseCase) return 1;\n\n    const hasSeen = memo[row][col] !== 0;\n    if (hasSeen) return memo[row][col];\n\n    return dfs(\n        row,\n        col,\n        memo,\n    ); /* Time O(ROWS * COLS) | Space O((ROWS * COLS) + HEIGHT) */\n};\n\nvar getMemo = (row, col) =>\n    new Array(row + 1)\n        .fill() /* Time O(ROWS)| Space O(ROWS) */\n        .map(() =>\n            new Array(col + 1).fill(0),\n        ); /* Time O(COLS)| Space O(COLS) */\n\nvar dfs = (row, col, memo) => {\n    const left = uniquePaths(\n        row - 1,\n        col,\n        memo,\n    ); /* Time O(ROWS * COLS) | Space O(HEIGHT) */\n    const right = uniquePaths(\n        row,\n        col - 1,\n        memo,\n    ); /* Time O(ROWS * COLS) | Space O(HEIGHT) */\n\n    memo[row][col] =\n        left + right; /*                     | Space O(ROWS * COLS) */\n    return memo[row][col];\n};\n\n/**\n * DP - Bottom Up\n * Matrix - Tabulation\n * Time O(ROWS * COLS) | Space O(ROWS * COLS)\n * https://leetcode.com/problems/unique-paths/\n * @param {number} row\n * @param {number} col\n * @return {number}\n */\nvar uniquePaths = (row, col) => {\n    const tabu = initTabu(\n        row,\n        col,\n    ); /* Time O(ROWS * COLS) | Space O(ROWS * COLS) */\n\n    search(row, col, tabu); /* Time O(ROWS * COLS) | Space O(ROWS * COLS) */\n\n    return tabu[row - 1][col - 1];\n};\n\nvar search = (row, col, tabu) => {\n    for (let _row = 1; _row < row; _row++) {\n        /* Time O(ROWS)*/\n        for (let _col = 1; _col < col; _col++) {\n            /* Time O(COLS)*/\n            const left = tabu[_row - 1][_col];\n            const right = tabu[_row][_col - 1];\n\n            tabu[_row][_col] = left + right; /* Space O(ROWS * COLS) */\n        }\n    }\n};\n\nvar initTabu = (row, col) => {\n    const tabu = new Array(row)\n        .fill() /* Time O(ROWS)     | Space O(ROWS) */\n        .map(() => new Array(col).fill(0)); /* Time O(COLS) | Space O(COLS) */\n\n    for (let _row = 0; _row < row; _row++) {\n        /* Time O(ROWS) */\n        tabu[_row][0] = 1; /*              | Space O(ROWS * COLS) */\n    }\n\n    for (let _col = 0; _col < col; _col++) {\n        /* Time O(COLS) */\n        tabu[0][_col] = 1; /*              | Space O(ROWS * COLS) */\n    }\n\n    return tabu;\n};\n\n/**\n * DP - Bottom Up\n * Array - Tabulation\n * Time O(ROWS * COLS) | Space O(COLS)\n * https://leetcode.com/problems/unique-paths/\n * @param {number} m\n * @param {number} n\n * @return {number}\n */\nvar uniquePaths = (row, col) => {\n    const tabu = initTabu(col); /* Time O(COLS)        | Space O(COLS) */\n\n    search(row, col, tabu); /* Time O(ROWS * COLS) | Space O(COLS) */\n\n    return tabu[col - 1];\n};\n\nvar initTabu = (col) =>\n    new Array(col).fill(1); /* Time O(COLS) | Space O(COLS) */\n\nvar search = (row, col, tabu) => {\n    for (let _row = 1; _row < row; _row++) {\n        /* Time O(ROWS) */\n        for (let _col = 1; _col < col; _col++) {\n            /* Time O(COLS) */\n            const prev = tabu[_col - 1];\n\n            tabu[_col] += prev; /* Space O(COLS) */\n        }\n    }\n};\n",
+          "reviewedCode": "/**\n * Brute Force - DFS\n * Time O(2^N) | Space O(HEIGHT)\n * https://leetcode.com/problems/unique-paths/\n * @param {number} m\n * @param {number} n\n * @return {number}\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it.\nvar uniquePaths = (row, col) => {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid.\n    const isBaseCase = row == 1 || col == 1;\n    if (isBaseCase) return 1;\n\n    return dfs(row, col); /* Time O(2^N) | Space O(HEIGHT) */\n};\n\nvar dfs = (row, col) => {\n    const left = uniquePaths(row - 1, col); /* Time O(2^N) | Space O(HEIGHT) */\n    const right = uniquePaths(row, col - 1); /* Time O(2^N) | Space O(HEIGHT) */\n\n    return left + right;\n};\n\n/**\n * DP - Top Down\n * Matrix - Memoization\n * Time O(ROWS * COLS) | Space O(ROWS * COLS)\n * https://leetcode.com/problems/unique-paths/\n * @param {number} m\n * @param {number} n\n * @return {number}\n */\nvar uniquePaths = (row, col, memo = getMemo(row, col)) => {\n    const isBaseCase = row === 1 || col === 1;\n    if (isBaseCase) return 1;\n\n    const hasSeen = memo[row][col] !== 0;\n    if (hasSeen) return memo[row][col];\n\n    return dfs(\n        row,\n        col,\n        memo,\n    ); /* Time O(ROWS * COLS) | Space O((ROWS * COLS) + HEIGHT) */\n};\n\nvar getMemo = (row, col) =>\n    new Array(row + 1)\n        .fill() /* Time O(ROWS)| Space O(ROWS) */\n        .map(() =>\n            new Array(col + 1).fill(0),\n        ); /* Time O(COLS)| Space O(COLS) */\n\nvar dfs = (row, col, memo) => {\n    const left = uniquePaths(\n        row - 1,\n        col,\n        memo,\n    ); /* Time O(ROWS * COLS) | Space O(HEIGHT) */\n    const right = uniquePaths(\n        row,\n        col - 1,\n        memo,\n    ); /* Time O(ROWS * COLS) | Space O(HEIGHT) */\n\n    memo[row][col] =\n        left + right; /*                     | Space O(ROWS * COLS) */\n    return memo[row][col];\n};\n\n/**\n * DP - Bottom Up\n * Matrix - Tabulation\n * Time O(ROWS * COLS) | Space O(ROWS * COLS)\n * https://leetcode.com/problems/unique-paths/\n * @param {number} row\n * @param {number} col\n * @return {number}\n */\nvar uniquePaths = (row, col) => {\n    const tabu = initTabu(\n        row,\n        col,\n    ); /* Time O(ROWS * COLS) | Space O(ROWS * COLS) */\n\n    search(row, col, tabu); /* Time O(ROWS * COLS) | Space O(ROWS * COLS) */\n\n    return tabu[row - 1][col - 1];\n};\n\nvar search = (row, col, tabu) => {\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (let _row = 1; _row < row; _row++) {\n        /* Time O(ROWS)*/\n        for (let _col = 1; _col < col; _col++) {\n            /* Time O(COLS)*/\n            const left = tabu[_row - 1][_col];\n            const right = tabu[_row][_col - 1];\n\n            tabu[_row][_col] = left + right; /* Space O(ROWS * COLS) */\n        }\n    }\n};\n\nvar initTabu = (row, col) => {\n    const tabu = new Array(row)\n        .fill() /* Time O(ROWS)     | Space O(ROWS) */\n        .map(() => new Array(col).fill(0)); /* Time O(COLS) | Space O(COLS) */\n\n    for (let _row = 0; _row < row; _row++) {\n        /* Time O(ROWS) */\n        tabu[_row][0] = 1; /*              | Space O(ROWS * COLS) */\n    }\n\n    for (let _col = 0; _col < col; _col++) {\n        /* Time O(COLS) */\n        tabu[0][_col] = 1; /*              | Space O(ROWS * COLS) */\n    }\n\n    return tabu;\n};\n\n/**\n * DP - Bottom Up\n * Array - Tabulation\n * Time O(ROWS * COLS) | Space O(COLS)\n * https://leetcode.com/problems/unique-paths/\n * @param {number} m\n * @param {number} n\n * @return {number}\n */\nvar uniquePaths = (row, col) => {\n    const tabu = initTabu(col); /* Time O(COLS)        | Space O(COLS) */\n\n    search(row, col, tabu); /* Time O(ROWS * COLS) | Space O(COLS) */\n\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return tabu[col - 1];\n};\n\nvar initTabu = (col) =>\n    new Array(col).fill(1); /* Time O(COLS) | Space O(COLS) */\n\nvar search = (row, col, tabu) => {\n    for (let _row = 1; _row < row; _row++) {\n        /* Time O(ROWS) */\n        for (let _col = 1; _col < col; _col++) {\n            /* Time O(COLS) */\n            const prev = tabu[_col - 1];\n\n            tabu[_col] += prev; /* Space O(COLS) */\n        }\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time O(2^N) | Space O(HEIGHT)"
+          ],
+          "annotations": [
+            {
+              "line": 9,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it."
+            },
+            {
+              "line": 10,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid."
+            },
+            {
+              "line": 91,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 135,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the easiest true DP Mediums because the state and recurrence are both visually intuitive.",
+            "whatToNotice": "State definition, recurrence building, and seeing repeated substructure inside a grid.",
+            "riskPoint": "The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+          }
+        }
+      ]
+    },
+    {
+      "id": "csharp",
+      "label": "C#",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-csharp-0062-unique-paths.cs",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/csharp/0062-unique-paths.cs",
+          "localPath": "neetcode-gh_leetcode/csharp/0062-unique-paths.cs",
+          "relativePath": "csharp/0062-unique-paths.cs",
+          "languageId": "csharp",
+          "languageLabel": "C#",
+          "coverageType": "code",
+          "code": "public class Solution {\n    public int UniquePaths(int m, int n) {\n         var row = new int[n];\n            Array.Fill(row, 1);\n            foreach (var i in Enumerable.Range(0, m - 1))\n            {\n                var newRow = new int[n];\n                Array.Fill(newRow, 1);\n              for (int j = n - 2; j >=0; j--)\n                { \n                    newRow[j] = newRow[j + 1] + row[j];\n                }\n                row = newRow;\n            }\n            return row[0];\n    }\n}\n",
+          "originalCode": "public class Solution {\n    public int UniquePaths(int m, int n) {\n         var row = new int[n];\n            Array.Fill(row, 1);\n            foreach (var i in Enumerable.Range(0, m - 1))\n            {\n                var newRow = new int[n];\n                Array.Fill(newRow, 1);\n              for (int j = n - 2; j >=0; j--)\n                { \n                    newRow[j] = newRow[j + 1] + row[j];\n                }\n                row = newRow;\n            }\n            return row[0];\n    }\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it.\npublic class Solution {\n    public int UniquePaths(int m, int n) {\n         // [Reader note] State setup\n         // This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid.\n         var row = new int[n];\n            Array.Fill(row, 1);\n            foreach (var i in Enumerable.Range(0, m - 1))\n            {\n                var newRow = new int[n];\n                Array.Fill(newRow, 1);\n              // [Reader note] Main pass\n              // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n              for (int j = n - 2; j >=0; j--)\n                { \n                    newRow[j] = newRow[j + 1] + row[j];\n                }\n                row = newRow;\n            }\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return row[0];\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid."
+            },
+            {
+              "line": 9,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 15,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the easiest true DP Mediums because the state and recurrence are both visually intuitive.",
+            "whatToNotice": "State definition, recurrence building, and seeing repeated substructure inside a grid.",
+            "riskPoint": "The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+          }
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "label": "C",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-c-0062-unique-paths.c",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/c/0062-unique-paths.c",
+          "localPath": "neetcode-gh_leetcode/c/0062-unique-paths.c",
+          "relativePath": "c/0062-unique-paths.c",
+          "languageId": "c",
+          "languageLabel": "C",
+          "coverageType": "code",
+          "code": "int dp[105][105] = {};\n    \nint ways(int posX, int posY, int m, int n)\n{\n    if(posX == m-1 && posY == n-1) return 1;\n\n    if(posX >= m || posY >= n) return 0;\n\n    if(dp[posX][posY] != -1) return dp[posX][posY];\n\n    int right = ways(posX + 1, posY, m, n); // moves to right corner.\n\n    int bottom = ways(posX, posY + 1, m, n);// moves to bottom corner.\n\n    dp[posX][posY] = right + bottom;\n\n    return dp[posX][posY];\n}\n\nint uniquePaths(int m, int n) {\n    \n    // Initializing the dp array with -1 value.\n    for(int i = 0; i < 105; i++){\n        for(int j = 0; j < 105; j++) dp[i][j] = -1;\n    }\n\n    int ans = ways(0, 0, m, n);\n\n    return ans;\n}",
+          "originalCode": "int dp[105][105] = {};\n    \nint ways(int posX, int posY, int m, int n)\n{\n    if(posX == m-1 && posY == n-1) return 1;\n\n    if(posX >= m || posY >= n) return 0;\n\n    if(dp[posX][posY] != -1) return dp[posX][posY];\n\n    int right = ways(posX + 1, posY, m, n); // moves to right corner.\n\n    int bottom = ways(posX, posY + 1, m, n);// moves to bottom corner.\n\n    dp[posX][posY] = right + bottom;\n\n    return dp[posX][posY];\n}\n\nint uniquePaths(int m, int n) {\n    \n    // Initializing the dp array with -1 value.\n    for(int i = 0; i < 105; i++){\n        for(int j = 0; j < 105; j++) dp[i][j] = -1;\n    }\n\n    int ans = ways(0, 0, m, n);\n\n    return ans;\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it.\nint dp[105][105] = {};\n    \nint ways(int posX, int posY, int m, int n)\n{\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid.\n    if(posX == m-1 && posY == n-1) return 1;\n\n    if(posX >= m || posY >= n) return 0;\n\n    if(dp[posX][posY] != -1) return dp[posX][posY];\n\n    int right = ways(posX + 1, posY, m, n); // moves to right corner.\n\n    int bottom = ways(posX, posY + 1, m, n);// moves to bottom corner.\n\n    dp[posX][posY] = right + bottom;\n\n    return dp[posX][posY];\n}\n\nint uniquePaths(int m, int n) {\n    \n    // Initializing the dp array with -1 value.\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for(int i = 0; i < 105; i++){\n        for(int j = 0; j < 105; j++) dp[i][j] = -1;\n    }\n\n    int ans = ways(0, 0, m, n);\n\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return ans;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it."
+            },
+            {
+              "line": 5,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid."
+            },
+            {
+              "line": 23,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 29,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the easiest true DP Mediums because the state and recurrence are both visually intuitive.",
+            "whatToNotice": "State definition, recurrence building, and seeing repeated substructure inside a grid.",
+            "riskPoint": "The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+          }
+        }
+      ]
+    },
+    {
+      "id": "kotlin",
+      "label": "Kotlin",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-kotlin-0062-unique-paths.kt",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/kotlin/0062-unique-paths.kt",
+          "localPath": "neetcode-gh_leetcode/kotlin/0062-unique-paths.kt",
+          "relativePath": "kotlin/0062-unique-paths.kt",
+          "languageId": "kotlin",
+          "languageLabel": "Kotlin",
+          "coverageType": "code",
+          "code": "class Solution {\n    fun uniquePaths(m: Int, n: Int): Int {\n      val dp = Array(m + 1) { IntArray(n + 1) { 0 } }\n        val indexM = m - 1\n        val indexN = n - 1\n        for (i in indexM downTo 0) {\n            for (j in indexN downTo 0) {\n                if (i == indexM && j == indexN) {\n                    dp[i][j] = 1\n                } else {\n                    dp[i][j] = dp[i + 1][j] + dp[i][j + 1]\n                }\n            }\n        }\n        return dp[0][0]\n    }\n}",
+          "originalCode": "class Solution {\n    fun uniquePaths(m: Int, n: Int): Int {\n      val dp = Array(m + 1) { IntArray(n + 1) { 0 } }\n        val indexM = m - 1\n        val indexN = n - 1\n        for (i in indexM downTo 0) {\n            for (j in indexN downTo 0) {\n                if (i == indexM && j == indexN) {\n                    dp[i][j] = 1\n                } else {\n                    dp[i][j] = dp[i + 1][j] + dp[i][j + 1]\n                }\n            }\n        }\n        return dp[0][0]\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it.\nclass Solution {\n    fun uniquePaths(m: Int, n: Int): Int {\n      // [Reader note] State setup\n      // This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid.\n      val dp = Array(m + 1) { IntArray(n + 1) { 0 } }\n        val indexM = m - 1\n        val indexN = n - 1\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (i in indexM downTo 0) {\n            for (j in indexN downTo 0) {\n                // [Reader note] Decision point\n                // Pay attention here: The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything.\n                if (i == indexM && j == indexN) {\n                    dp[i][j] = 1\n                } else {\n                    dp[i][j] = dp[i + 1][j] + dp[i][j + 1]\n                }\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return dp[0][0]\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Each state inherits its count from the smaller states that can feed into it."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: State definition, recurrence building, and seeing repeated substructure inside a grid."
+            },
+            {
+              "line": 6,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 8,
+              "label": "Decision point",
+              "note": "Pay attention here: The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+            },
+            {
+              "line": 15,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the easiest true DP Mediums because the state and recurrence are both visually intuitive.",
+            "whatToNotice": "State definition, recurrence building, and seeing repeated substructure inside a grid.",
+            "riskPoint": "The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything."
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "doocs_leetcode-solution-0000-0099-0062.unique-paths-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0062.Unique%20Paths/README.md",
+      "localPath": "doocs_leetcode/solution/0000-0099/0062.Unique Paths/README.md",
+      "relativePath": "solution/0000-0099/0062.Unique Paths/README.md",
+      "title": "[62. \u4e0d\u540c\u8def\u5f84](https://leetcode.cn/problems/unique-paths)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/0000-0099/0062.Unique%20Paths/README.md tags: - \u6570\u5b66 - \u52a8\u6001\u89c4\u5212 - \u7ec4\u5408\u6570\u5b66 --- <!-- problem:start --> # [62. \u4e0d\u540c\u8def\u5f84](https://leetcode.cn/problems/unique-paths) [English Version](/solution/0000-0099/0062.Unique%20Paths/README_EN.md) ## \u9898\u76ee\u63cf\u8ff0 <!-- description:start --> <p>\u4e00\u4e2a\u673a\u5668\u4eba\u4f4d\u4e8e\u4e00\u4e2a <code>m x n</code><em>&nbsp;</em>\u7f51\u683c\u7684\u5de6\u4e0a\u89d2 \uff08\u8d77\u59cb\u70b9\u5728\u4e0b\u56fe\u4e2d\u6807\u8bb0\u4e3a \u201cS..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0000-0099-0062.unique-paths-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0000-0099/0062.Unique%20Paths/README_EN.md",
+      "localPath": "doocs_leetcode/solution/0000-0099/0062.Unique Paths/README_EN.md",
+      "relativePath": "solution/0000-0099/0062.Unique Paths/README_EN.md",
+      "title": "[62. Unique Paths](https://leetcode.com/problems/unique-paths)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/0000-0099/0062.Unique%20Paths/README_EN.md tags: - Math - Dynamic Programming - Combinatorics --- <!-- problem:start --> # [62. Unique Paths](https://leetcode.com/problems/unique-paths) [\u4e2d\u6587\u6587\u6863](/solution/0000-0099/0062.Unique%20Paths/README.md) ## Description <!-- description:start --> <p>There is a robot on an <code>..."
+    }
+  ]
+}

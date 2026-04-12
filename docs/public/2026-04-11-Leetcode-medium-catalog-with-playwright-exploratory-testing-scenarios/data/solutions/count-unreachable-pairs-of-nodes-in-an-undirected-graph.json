@@ -1,0 +1,431 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "count-unreachable-pairs-of-nodes-in-an-undirected-graph",
+  "problemTitle": "Count Unreachable Pairs of Nodes in an Undirected Graph",
+  "problemNumber": 2316,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go",
+      "typescript"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go",
+      "TypeScript"
+    ],
+    "solutionCount": 7,
+    "writeupCount": 2,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-python-count-unreachable-pairs-of-nodes-in-an-undirected-graph.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/count-unreachable-pairs-of-nodes-in-an-undirected-graph.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/count-unreachable-pairs-of-nodes-in-an-undirected-graph.py",
+          "relativePath": "Python/count-unreachable-pairs-of-nodes-in-an-undirected-graph.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(n)\n# Space: O(n)\n\n# flood fill, bfs, math\nclass Solution(object):\n    def countPairs(self, n, edges):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :rtype: int\n        \"\"\"\n        def bfs(adj, u, lookup):\n            q = [u]\n            lookup[u] = 1\n            result = 1\n            while q:\n                new_q = []\n                for u in q:\n                    for v in adj[u]:\n                        if lookup[v]:\n                            continue\n                        lookup[v] = 1\n                        result += 1\n                        new_q.append(v)\n                q = new_q\n            return result\n        \n        adj = [[] for _ in xrange(n)]\n        for u, v in edges:\n            adj[u].append(v)\n            adj[v].append(u)\n        lookup = [0]*n\n        result = 0\n        for u in xrange(n):\n            if lookup[u]:\n                continue\n            cnt = bfs(adj, u, lookup)\n            result += cnt*(n-cnt)\n            n -= cnt\n        return result\n",
+          "originalCode": "# Time:  O(n)\n# Space: O(n)\n\n# flood fill, bfs, math\nclass Solution(object):\n    def countPairs(self, n, edges):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :rtype: int\n        \"\"\"\n        def bfs(adj, u, lookup):\n            q = [u]\n            lookup[u] = 1\n            result = 1\n            while q:\n                new_q = []\n                for u in q:\n                    for v in adj[u]:\n                        if lookup[v]:\n                            continue\n                        lookup[v] = 1\n                        result += 1\n                        new_q.append(v)\n                q = new_q\n            return result\n        \n        adj = [[] for _ in xrange(n)]\n        for u, v in edges:\n            adj[u].append(v)\n            adj[v].append(u)\n        lookup = [0]*n\n        result = 0\n        for u in xrange(n):\n            if lookup[u]:\n                continue\n            cnt = bfs(adj, u, lookup)\n            result += cnt*(n-cnt)\n            n -= cnt\n        return result\n",
+          "reviewedCode": "# Time:  O(n)\n# Space: O(n)\n\n# flood fill, bfs, math\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Traverse to learn the component sizes first; only then ask how many pairs cannot cross those boundaries.\nclass Solution(object):\n    def countPairs(self, n, edges):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :rtype: int\n        \"\"\"\n        def bfs(adj, u, lookup):\n            # [Reader note] State setup\n            # This setup stage creates the state needed for the invariant or partial result: Component discovery, size aggregation, and counting across partitions without double-counting.\n            q = [u]\n            lookup[u] = 1\n            result = 1\n            # [Reader note] Main pass\n            # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            while q:\n                new_q = []\n                for u in q:\n                    for v in adj[u]:\n                        # [Reader note] Decision point\n                        # Pay attention here: The graph traversal is straightforward; the real learning is in turning component sizes into pair counts cleanly.\n                        if lookup[v]:\n                            continue\n                        lookup[v] = 1\n                        result += 1\n                        new_q.append(v)\n                q = new_q\n            return result\n        \n        adj = [[] for _ in xrange(n)]\n        for u, v in edges:\n            adj[u].append(v)\n            adj[v].append(u)\n        lookup = [0]*n\n        result = 0\n        for u in xrange(n):\n            if lookup[u]:\n                continue\n            cnt = bfs(adj, u, lookup)\n            result += cnt*(n-cnt)\n            n -= cnt\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return result",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n)",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 5,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traverse to learn the component sizes first; only then ask how many pairs cannot cross those boundaries."
+            },
+            {
+              "line": 13,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Component discovery, size aggregation, and counting across partitions without double-counting."
+            },
+            {
+              "line": 16,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 20,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph traversal is straightforward; the real learning is in turning component sizes into pair counts cleanly."
+            },
+            {
+              "line": 40,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is extremely high-signal graph practice because the traversal part is simple and the counting insight transfers widely.",
+            "whatToNotice": "Component discovery, size aggregation, and counting across partitions without double-counting.",
+            "riskPoint": "The graph traversal is straightforward; the real learning is in turning component sizes into pair counts cleanly."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-2300-2399-2316.count-unreachable-pairs-of-nodes-in-an-undirected-graph-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/2300-2399/2316.Count%20Unreachable%20Pairs%20of%20Nodes%20in%20an%20Undirected%20Graph/Solution.py",
+          "localPath": "doocs_leetcode/solution/2300-2399/2316.Count Unreachable Pairs of Nodes in an Undirected Graph/Solution.py",
+          "relativePath": "solution/2300-2399/2316.Count Unreachable Pairs of Nodes in an Undirected Graph/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "class Solution:\n    def countPairs(self, n: int, edges: List[List[int]]) -> int:\n        def dfs(i: int) -> int:\n            if vis[i]:\n                return 0\n            vis[i] = True\n            return 1 + sum(dfs(j) for j in g[i])\n\n        g = [[] for _ in range(n)]\n        for a, b in edges:\n            g[a].append(b)\n            g[b].append(a)\n        vis = [False] * n\n        ans = s = 0\n        for i in range(n):\n            t = dfs(i)\n            ans += s * t\n            s += t\n        return ans\n",
+          "originalCode": "class Solution:\n    def countPairs(self, n: int, edges: List[List[int]]) -> int:\n        def dfs(i: int) -> int:\n            if vis[i]:\n                return 0\n            vis[i] = True\n            return 1 + sum(dfs(j) for j in g[i])\n\n        g = [[] for _ in range(n)]\n        for a, b in edges:\n            g[a].append(b)\n            g[b].append(a)\n        vis = [False] * n\n        ans = s = 0\n        for i in range(n):\n            t = dfs(i)\n            ans += s * t\n            s += t\n        return ans\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Traverse to learn the component sizes first; only then ask how many pairs cannot cross those boundaries.\nclass Solution:\n    def countPairs(self, n: int, edges: List[List[int]]) -> int:\n        def dfs(i: int) -> int:\n            if vis[i]:\n                return 0\n            vis[i] = True\n            # [Reader note] Main pass\n            # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            return 1 + sum(dfs(j) for j in g[i])\n\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Component discovery, size aggregation, and counting across partitions without double-counting.\n        g = [[] for _ in range(n)]\n        for a, b in edges:\n            g[a].append(b)\n            g[b].append(a)\n        vis = [False] * n\n        ans = s = 0\n        for i in range(n):\n            t = dfs(i)\n            ans += s * t\n            s += t\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return ans",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traverse to learn the component sizes first; only then ask how many pairs cannot cross those boundaries."
+            },
+            {
+              "line": 9,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Component discovery, size aggregation, and counting across partitions without double-counting."
+            },
+            {
+              "line": 7,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 19,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is extremely high-signal graph practice because the traversal part is simple and the counting insight transfers widely.",
+            "whatToNotice": "Component discovery, size aggregation, and counting across partitions without double-counting.",
+            "riskPoint": "The graph traversal is straightforward; the real learning is in turning component sizes into pair counts cleanly."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-c-count-unreachable-pairs-of-nodes-in-an-undirected-graph.cpp",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/C%2B%2B/count-unreachable-pairs-of-nodes-in-an-undirected-graph.cpp",
+          "localPath": "kamyu104_LeetCode-Solutions/C++/count-unreachable-pairs-of-nodes-in-an-undirected-graph.cpp",
+          "relativePath": "C++/count-unreachable-pairs-of-nodes-in-an-undirected-graph.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Time:  O(n)\n// Space: O(n)\n\n// flood fill, bfs, math\nclass Solution {\npublic:\n    long long countPairs(int n, vector<vector<int>>& edges) {\n        vector<vector<int>> adj(n);\n        for (const auto& e : edges) {\n            adj[e[0]].emplace_back(e[1]);\n            adj[e[1]].emplace_back(e[0]);\n        }\n        vector<bool> lookup(n);\n        const auto& bfs = [&](int u) {\n            vector<int> q = {u};\n            lookup[u] = true;\n            int64_t result = 1;\n            while (!empty(q)) {\n                vector<int> new_q;\n                for (const auto& u : q) {\n                    for (const auto& v : adj[u]) {\n                        if (lookup[v]) {\n                            continue;\n                        }\n                        lookup[v] = true;\n                        ++result;\n                        new_q.emplace_back(v);\n                    }\n                }\n                q = move(new_q);\n            }\n            return result;\n        };\n    \n        int64_t result = 0;\n        for (int u = 0; u < size(adj); ++u) {\n            if (lookup[u]) {\n                continue;\n            }\n            const int64_t cnt = bfs(u);\n            result += cnt * (n - cnt);\n            n -= cnt;\n        }\n        return result;\n    }\n};\n",
+          "originalCode": "// Time:  O(n)\n// Space: O(n)\n\n// flood fill, bfs, math\nclass Solution {\npublic:\n    long long countPairs(int n, vector<vector<int>>& edges) {\n        vector<vector<int>> adj(n);\n        for (const auto& e : edges) {\n            adj[e[0]].emplace_back(e[1]);\n            adj[e[1]].emplace_back(e[0]);\n        }\n        vector<bool> lookup(n);\n        const auto& bfs = [&](int u) {\n            vector<int> q = {u};\n            lookup[u] = true;\n            int64_t result = 1;\n            while (!empty(q)) {\n                vector<int> new_q;\n                for (const auto& u : q) {\n                    for (const auto& v : adj[u]) {\n                        if (lookup[v]) {\n                            continue;\n                        }\n                        lookup[v] = true;\n                        ++result;\n                        new_q.emplace_back(v);\n                    }\n                }\n                q = move(new_q);\n            }\n            return result;\n        };\n    \n        int64_t result = 0;\n        for (int u = 0; u < size(adj); ++u) {\n            if (lookup[u]) {\n                continue;\n            }\n            const int64_t cnt = bfs(u);\n            result += cnt * (n - cnt);\n            n -= cnt;\n        }\n        return result;\n    }\n};\n",
+          "reviewedCode": "// Time:  O(n)\n// Space: O(n)\n\n// flood fill, bfs, math\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Traverse to learn the component sizes first; only then ask how many pairs cannot cross those boundaries.\nclass Solution {\npublic:\n    long long countPairs(int n, vector<vector<int>>& edges) {\n        vector<vector<int>> adj(n);\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Component discovery, size aggregation, and counting across partitions without double-counting.\n        for (const auto& e : edges) {\n            adj[e[0]].emplace_back(e[1]);\n            adj[e[1]].emplace_back(e[0]);\n        }\n        vector<bool> lookup(n);\n        const auto& bfs = [&](int u) {\n            vector<int> q = {u};\n            lookup[u] = true;\n            int64_t result = 1;\n            while (!empty(q)) {\n                vector<int> new_q;\n                for (const auto& u : q) {\n                    for (const auto& v : adj[u]) {\n                        // [Reader note] Decision point\n                        // Pay attention here: The graph traversal is straightforward; the real learning is in turning component sizes into pair counts cleanly.\n                        if (lookup[v]) {\n                            continue;\n                        }\n                        lookup[v] = true;\n                        ++result;\n                        new_q.emplace_back(v);\n                    }\n                }\n                q = move(new_q);\n            }\n            return result;\n        };\n    \n        int64_t result = 0;\n        for (int u = 0; u < size(adj); ++u) {\n            if (lookup[u]) {\n                continue;\n            }\n            const int64_t cnt = bfs(u);\n            result += cnt * (n - cnt);\n            n -= cnt;\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return result;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n)",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 5,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traverse to learn the component sizes first; only then ask how many pairs cannot cross those boundaries."
+            },
+            {
+              "line": 9,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Component discovery, size aggregation, and counting across partitions without double-counting."
+            },
+            {
+              "line": 22,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph traversal is straightforward; the real learning is in turning component sizes into pair counts cleanly."
+            },
+            {
+              "line": 44,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is extremely high-signal graph practice because the traversal part is simple and the counting insight transfers widely.",
+            "whatToNotice": "Component discovery, size aggregation, and counting across partitions without double-counting.",
+            "riskPoint": "The graph traversal is straightforward; the real learning is in turning component sizes into pair counts cleanly."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-2300-2399-2316.count-unreachable-pairs-of-nodes-in-an-undirected-graph-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/2300-2399/2316.Count%20Unreachable%20Pairs%20of%20Nodes%20in%20an%20Undirected%20Graph/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/2300-2399/2316.Count Unreachable Pairs of Nodes in an Undirected Graph/Solution.cpp",
+          "relativePath": "solution/2300-2399/2316.Count Unreachable Pairs of Nodes in an Undirected Graph/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\npublic:\n    long long countPairs(int n, vector<vector<int>>& edges) {\n        vector<int> g[n];\n        for (auto& e : edges) {\n            int a = e[0], b = e[1];\n            g[a].push_back(b);\n            g[b].push_back(a);\n        }\n        bool vis[n];\n        memset(vis, 0, sizeof(vis));\n        function<int(int)> dfs = [&](int i) {\n            if (vis[i]) {\n                return 0;\n            }\n            vis[i] = true;\n            int cnt = 1;\n            for (int j : g[i]) {\n                cnt += dfs(j);\n            }\n            return cnt;\n        };\n        long long ans = 0, s = 0;\n        for (int i = 0; i < n; ++i) {\n            int t = dfs(i);\n            ans += s * t;\n            s += t;\n        }\n        return ans;\n    }\n};",
+          "originalCode": "class Solution {\npublic:\n    long long countPairs(int n, vector<vector<int>>& edges) {\n        vector<int> g[n];\n        for (auto& e : edges) {\n            int a = e[0], b = e[1];\n            g[a].push_back(b);\n            g[b].push_back(a);\n        }\n        bool vis[n];\n        memset(vis, 0, sizeof(vis));\n        function<int(int)> dfs = [&](int i) {\n            if (vis[i]) {\n                return 0;\n            }\n            vis[i] = true;\n            int cnt = 1;\n            for (int j : g[i]) {\n                cnt += dfs(j);\n            }\n            return cnt;\n        };\n        long long ans = 0, s = 0;\n        for (int i = 0; i < n; ++i) {\n            int t = dfs(i);\n            ans += s * t;\n            s += t;\n        }\n        return ans;\n    }\n};",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Traverse to learn the component sizes first; only then ask how many pairs cannot cross those boundaries.\nclass Solution {\npublic:\n    long long countPairs(int n, vector<vector<int>>& edges) {\n        vector<int> g[n];\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (auto& e : edges) {\n            // [Reader note] State setup\n            // This setup stage creates the state needed for the invariant or partial result: Component discovery, size aggregation, and counting across partitions without double-counting.\n            int a = e[0], b = e[1];\n            g[a].push_back(b);\n            g[b].push_back(a);\n        }\n        bool vis[n];\n        memset(vis, 0, sizeof(vis));\n        function<int(int)> dfs = [&](int i) {\n            // [Reader note] Decision point\n            // Pay attention here: The graph traversal is straightforward; the real learning is in turning component sizes into pair counts cleanly.\n            if (vis[i]) {\n                return 0;\n            }\n            vis[i] = true;\n            int cnt = 1;\n            for (int j : g[i]) {\n                cnt += dfs(j);\n            }\n            return cnt;\n        };\n        long long ans = 0, s = 0;\n        for (int i = 0; i < n; ++i) {\n            int t = dfs(i);\n            ans += s * t;\n            s += t;\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return ans;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traverse to learn the component sizes first; only then ask how many pairs cannot cross those boundaries."
+            },
+            {
+              "line": 6,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Component discovery, size aggregation, and counting across partitions without double-counting."
+            },
+            {
+              "line": 5,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 13,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph traversal is straightforward; the real learning is in turning component sizes into pair counts cleanly."
+            },
+            {
+              "line": 29,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is extremely high-signal graph practice because the traversal part is simple and the counting insight transfers widely.",
+            "whatToNotice": "Component discovery, size aggregation, and counting across partitions without double-counting.",
+            "riskPoint": "The graph traversal is straightforward; the real learning is in turning component sizes into pair counts cleanly."
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-2300-2399-2316.count-unreachable-pairs-of-nodes-in-an-undirected-graph-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/2300-2399/2316.Count%20Unreachable%20Pairs%20of%20Nodes%20in%20an%20Undirected%20Graph/Solution.java",
+          "localPath": "doocs_leetcode/solution/2300-2399/2316.Count Unreachable Pairs of Nodes in an Undirected Graph/Solution.java",
+          "relativePath": "solution/2300-2399/2316.Count Unreachable Pairs of Nodes in an Undirected Graph/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\n    private List<Integer>[] g;\n    private boolean[] vis;\n\n    public long countPairs(int n, int[][] edges) {\n        g = new List[n];\n        vis = new boolean[n];\n        Arrays.setAll(g, i -> new ArrayList<>());\n        for (var e : edges) {\n            int a = e[0], b = e[1];\n            g[a].add(b);\n            g[b].add(a);\n        }\n        long ans = 0, s = 0;\n        for (int i = 0; i < n; ++i) {\n            int t = dfs(i);\n            ans += s * t;\n            s += t;\n        }\n        return ans;\n    }\n\n    private int dfs(int i) {\n        if (vis[i]) {\n            return 0;\n        }\n        vis[i] = true;\n        int cnt = 1;\n        for (int j : g[i]) {\n            cnt += dfs(j);\n        }\n        return cnt;\n    }\n}",
+          "originalCode": "class Solution {\n    private List<Integer>[] g;\n    private boolean[] vis;\n\n    public long countPairs(int n, int[][] edges) {\n        g = new List[n];\n        vis = new boolean[n];\n        Arrays.setAll(g, i -> new ArrayList<>());\n        for (var e : edges) {\n            int a = e[0], b = e[1];\n            g[a].add(b);\n            g[b].add(a);\n        }\n        long ans = 0, s = 0;\n        for (int i = 0; i < n; ++i) {\n            int t = dfs(i);\n            ans += s * t;\n            s += t;\n        }\n        return ans;\n    }\n\n    private int dfs(int i) {\n        if (vis[i]) {\n            return 0;\n        }\n        vis[i] = true;\n        int cnt = 1;\n        for (int j : g[i]) {\n            cnt += dfs(j);\n        }\n        return cnt;\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Traverse to learn the component sizes first; only then ask how many pairs cannot cross those boundaries.\nclass Solution {\n    private List<Integer>[] g;\n    private boolean[] vis;\n\n    public long countPairs(int n, int[][] edges) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Component discovery, size aggregation, and counting across partitions without double-counting.\n        g = new List[n];\n        vis = new boolean[n];\n        Arrays.setAll(g, i -> new ArrayList<>());\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (var e : edges) {\n            int a = e[0], b = e[1];\n            g[a].add(b);\n            g[b].add(a);\n        }\n        long ans = 0, s = 0;\n        for (int i = 0; i < n; ++i) {\n            int t = dfs(i);\n            ans += s * t;\n            s += t;\n        }\n        return ans;\n    }\n\n    private int dfs(int i) {\n        // [Reader note] Decision point\n        // Pay attention here: The graph traversal is straightforward; the real learning is in turning component sizes into pair counts cleanly.\n        if (vis[i]) {\n            return 0;\n        }\n        vis[i] = true;\n        int cnt = 1;\n        for (int j : g[i]) {\n            cnt += dfs(j);\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return cnt;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traverse to learn the component sizes first; only then ask how many pairs cannot cross those boundaries."
+            },
+            {
+              "line": 6,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Component discovery, size aggregation, and counting across partitions without double-counting."
+            },
+            {
+              "line": 9,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 24,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph traversal is straightforward; the real learning is in turning component sizes into pair counts cleanly."
+            },
+            {
+              "line": 32,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is extremely high-signal graph practice because the traversal part is simple and the counting insight transfers widely.",
+            "whatToNotice": "Component discovery, size aggregation, and counting across partitions without double-counting.",
+            "riskPoint": "The graph traversal is straightforward; the real learning is in turning component sizes into pair counts cleanly."
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-2300-2399-2316.count-unreachable-pairs-of-nodes-in-an-undirected-graph-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/2300-2399/2316.Count%20Unreachable%20Pairs%20of%20Nodes%20in%20an%20Undirected%20Graph/Solution.go",
+          "localPath": "doocs_leetcode/solution/2300-2399/2316.Count Unreachable Pairs of Nodes in an Undirected Graph/Solution.go",
+          "relativePath": "solution/2300-2399/2316.Count Unreachable Pairs of Nodes in an Undirected Graph/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "func countPairs(n int, edges [][]int) (ans int64) {\n\tg := make([][]int, n)\n\tfor _, e := range edges {\n\t\ta, b := e[0], e[1]\n\t\tg[a] = append(g[a], b)\n\t\tg[b] = append(g[b], a)\n\t}\n\tvis := make([]bool, n)\n\tvar dfs func(int) int\n\tdfs = func(i int) int {\n\t\tif vis[i] {\n\t\t\treturn 0\n\t\t}\n\t\tvis[i] = true\n\t\tcnt := 1\n\t\tfor _, j := range g[i] {\n\t\t\tcnt += dfs(j)\n\t\t}\n\t\treturn cnt\n\t}\n\tvar s int64\n\tfor i := 0; i < n; i++ {\n\t\tt := int64(dfs(i))\n\t\tans += s * t\n\t\ts += t\n\t}\n\treturn\n}",
+          "originalCode": "func countPairs(n int, edges [][]int) (ans int64) {\n\tg := make([][]int, n)\n\tfor _, e := range edges {\n\t\ta, b := e[0], e[1]\n\t\tg[a] = append(g[a], b)\n\t\tg[b] = append(g[b], a)\n\t}\n\tvis := make([]bool, n)\n\tvar dfs func(int) int\n\tdfs = func(i int) int {\n\t\tif vis[i] {\n\t\t\treturn 0\n\t\t}\n\t\tvis[i] = true\n\t\tcnt := 1\n\t\tfor _, j := range g[i] {\n\t\t\tcnt += dfs(j)\n\t\t}\n\t\treturn cnt\n\t}\n\tvar s int64\n\tfor i := 0; i < n; i++ {\n\t\tt := int64(dfs(i))\n\t\tans += s * t\n\t\ts += t\n\t}\n\treturn\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Traverse to learn the component sizes first; only then ask how many pairs cannot cross those boundaries.\nfunc countPairs(n int, edges [][]int) (ans int64) {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Component discovery, size aggregation, and counting across partitions without double-counting.\n\tg := make([][]int, n)\n\t// [Reader note] Main pass\n\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\tfor _, e := range edges {\n\t\ta, b := e[0], e[1]\n\t\tg[a] = append(g[a], b)\n\t\tg[b] = append(g[b], a)\n\t}\n\tvis := make([]bool, n)\n\tvar dfs func(int) int\n\tdfs = func(i int) int {\n\t\t// [Reader note] Decision point\n\t\t// Pay attention here: The graph traversal is straightforward; the real learning is in turning component sizes into pair counts cleanly.\n\t\tif vis[i] {\n\t\t\treturn 0\n\t\t}\n\t\tvis[i] = true\n\t\tcnt := 1\n\t\tfor _, j := range g[i] {\n\t\t\tcnt += dfs(j)\n\t\t}\n\t\treturn cnt\n\t}\n\tvar s int64\n\tfor i := 0; i < n; i++ {\n\t\tt := int64(dfs(i))\n\t\tans += s * t\n\t\ts += t\n\t}\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traverse to learn the component sizes first; only then ask how many pairs cannot cross those boundaries."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Component discovery, size aggregation, and counting across partitions without double-counting."
+            },
+            {
+              "line": 3,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 11,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph traversal is straightforward; the real learning is in turning component sizes into pair counts cleanly."
+            },
+            {
+              "line": 27,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is extremely high-signal graph practice because the traversal part is simple and the counting insight transfers widely.",
+            "whatToNotice": "Component discovery, size aggregation, and counting across partitions without double-counting.",
+            "riskPoint": "The graph traversal is straightforward; the real learning is in turning component sizes into pair counts cleanly."
+          }
+        }
+      ]
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-2300-2399-2316.count-unreachable-pairs-of-nodes-in-an-undirected-graph-solution.ts",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/2300-2399/2316.Count%20Unreachable%20Pairs%20of%20Nodes%20in%20an%20Undirected%20Graph/Solution.ts",
+          "localPath": "doocs_leetcode/solution/2300-2399/2316.Count Unreachable Pairs of Nodes in an Undirected Graph/Solution.ts",
+          "relativePath": "solution/2300-2399/2316.Count Unreachable Pairs of Nodes in an Undirected Graph/Solution.ts",
+          "languageId": "typescript",
+          "languageLabel": "TypeScript",
+          "coverageType": "code+explanation",
+          "code": "function countPairs(n: number, edges: number[][]): number {\n    const g: number[][] = Array.from({ length: n }, () => []);\n    for (const [a, b] of edges) {\n        g[a].push(b);\n        g[b].push(a);\n    }\n    const vis: boolean[] = Array(n).fill(false);\n    const dfs = (i: number): number => {\n        if (vis[i]) {\n            return 0;\n        }\n        vis[i] = true;\n        let cnt = 1;\n        for (const j of g[i]) {\n            cnt += dfs(j);\n        }\n        return cnt;\n    };\n    let [ans, s] = [0, 0];\n    for (let i = 0; i < n; ++i) {\n        const t = dfs(i);\n        ans += s * t;\n        s += t;\n    }\n    return ans;\n}\n",
+          "originalCode": "function countPairs(n: number, edges: number[][]): number {\n    const g: number[][] = Array.from({ length: n }, () => []);\n    for (const [a, b] of edges) {\n        g[a].push(b);\n        g[b].push(a);\n    }\n    const vis: boolean[] = Array(n).fill(false);\n    const dfs = (i: number): number => {\n        if (vis[i]) {\n            return 0;\n        }\n        vis[i] = true;\n        let cnt = 1;\n        for (const j of g[i]) {\n            cnt += dfs(j);\n        }\n        return cnt;\n    };\n    let [ans, s] = [0, 0];\n    for (let i = 0; i < n; ++i) {\n        const t = dfs(i);\n        ans += s * t;\n        s += t;\n    }\n    return ans;\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Traverse to learn the component sizes first; only then ask how many pairs cannot cross those boundaries.\nfunction countPairs(n: number, edges: number[][]): number {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Component discovery, size aggregation, and counting across partitions without double-counting.\n    const g: number[][] = Array.from({ length: n }, () => []);\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (const [a, b] of edges) {\n        g[a].push(b);\n        g[b].push(a);\n    }\n    const vis: boolean[] = Array(n).fill(false);\n    const dfs = (i: number): number => {\n        // [Reader note] Decision point\n        // Pay attention here: The graph traversal is straightforward; the real learning is in turning component sizes into pair counts cleanly.\n        if (vis[i]) {\n            return 0;\n        }\n        vis[i] = true;\n        let cnt = 1;\n        for (const j of g[i]) {\n            cnt += dfs(j);\n        }\n        return cnt;\n    };\n    let [ans, s] = [0, 0];\n    for (let i = 0; i < n; ++i) {\n        const t = dfs(i);\n        ans += s * t;\n        s += t;\n    }\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return ans;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traverse to learn the component sizes first; only then ask how many pairs cannot cross those boundaries."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Component discovery, size aggregation, and counting across partitions without double-counting."
+            },
+            {
+              "line": 3,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 9,
+              "label": "Decision point",
+              "note": "Pay attention here: The graph traversal is straightforward; the real learning is in turning component sizes into pair counts cleanly."
+            },
+            {
+              "line": 25,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is extremely high-signal graph practice because the traversal part is simple and the counting insight transfers widely.",
+            "whatToNotice": "Component discovery, size aggregation, and counting across partitions without double-counting.",
+            "riskPoint": "The graph traversal is straightforward; the real learning is in turning component sizes into pair counts cleanly."
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "doocs_leetcode-solution-2300-2399-2316.count-unreachable-pairs-of-nodes-in-an-undirected-graph-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/2300-2399/2316.Count%20Unreachable%20Pairs%20of%20Nodes%20in%20an%20Undirected%20Graph/README.md",
+      "localPath": "doocs_leetcode/solution/2300-2399/2316.Count Unreachable Pairs of Nodes in an Undirected Graph/README.md",
+      "relativePath": "solution/2300-2399/2316.Count Unreachable Pairs of Nodes in an Undirected Graph/README.md",
+      "title": "[2316. \u7edf\u8ba1\u65e0\u5411\u56fe\u4e2d\u65e0\u6cd5\u4e92\u76f8\u5230\u8fbe\u70b9\u5bf9\u6570](https://leetcode.cn/problems/count-unreachable-pairs-of-nodes-in-an-undirected-graph)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/2300-2399/2316.Count%20Unreachable%20Pairs%20of%20Nodes%20in%20an%20Undirected%20Graph/README.md rating: 1604 source: \u7b2c 81 \u573a\u53cc\u5468\u8d5b Q2 tags: - \u6df1\u5ea6\u4f18\u5148\u641c\u7d22 - \u5e7f\u5ea6\u4f18\u5148\u641c\u7d22 - \u5e76\u67e5\u96c6 - \u56fe --- <!-- problem:start --> # [2316. \u7edf\u8ba1\u65e0\u5411\u56fe\u4e2d\u65e0\u6cd5\u4e92\u76f8\u5230\u8fbe\u70b9\u5bf9\u6570](https://leetcode.cn/problems/count-unreachable-pairs-of-nodes-in-an-undirected-graph) [English Version](..."
+    },
+    {
+      "id": "doocs_leetcode-solution-2300-2399-2316.count-unreachable-pairs-of-nodes-in-an-undirected-graph-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/2300-2399/2316.Count%20Unreachable%20Pairs%20of%20Nodes%20in%20an%20Undirected%20Graph/README_EN.md",
+      "localPath": "doocs_leetcode/solution/2300-2399/2316.Count Unreachable Pairs of Nodes in an Undirected Graph/README_EN.md",
+      "relativePath": "solution/2300-2399/2316.Count Unreachable Pairs of Nodes in an Undirected Graph/README_EN.md",
+      "title": "[2316. Count Unreachable Pairs of Nodes in an Undirected Graph](https://leetcode.com/problems/count-unreachable-pairs-of-nodes-in-an-undirected-graph)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/2300-2399/2316.Count%20Unreachable%20Pairs%20of%20Nodes%20in%20an%20Undirected%20Graph/README_EN.md rating: 1604 source: Biweekly Contest 81 Q2 tags: - Depth-First Search - Breadth-First Search - Union Find - Graph --- <!-- problem:start --> # [2316. Count Unreachable Pairs of Nodes in an Undirected Graph](https://le..."
+    }
+  ]
+}

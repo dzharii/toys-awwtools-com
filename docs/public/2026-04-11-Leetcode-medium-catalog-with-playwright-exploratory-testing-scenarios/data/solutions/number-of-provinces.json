@@ -1,0 +1,546 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "number-of-provinces",
+  "problemTitle": "Number of Provinces",
+  "problemNumber": 547,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go",
+      "typescript"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go",
+      "TypeScript"
+    ],
+    "solutionCount": 9,
+    "writeupCount": 3,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-python-friend-circles.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/friend-circles.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/friend-circles.py",
+          "relativePath": "Python/friend-circles.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(n^2)\n# Space: O(n)\n\nclass Solution(object):\n    def findCircleNum(self, M):\n        \"\"\"\n        :type M: List[List[int]]\n        :rtype: int\n        \"\"\"\n\n        class UnionFind(object):\n            def __init__(self, n):\n                self.set = range(n)\n                self.count = n\n\n            def find_set(self, x):\n               if self.set[x] != x:\n                   self.set[x] = self.find_set(self.set[x])  # path compression.\n               return self.set[x]\n\n            def union_set(self, x, y):\n                x_root, y_root = map(self.find_set, (x, y))\n                if x_root != y_root:\n                    self.set[min(x_root, y_root)] = max(x_root, y_root)\n                    self.count -= 1\n\n        circles = UnionFind(len(M))\n        for i in xrange(len(M)):\n            for j in xrange(len(M)):\n                if M[i][j] and i != j:\n                    circles.union_set(i, j)\n        return circles.count\n\n\n",
+          "originalCode": "# Time:  O(n^2)\n# Space: O(n)\n\nclass Solution(object):\n    def findCircleNum(self, M):\n        \"\"\"\n        :type M: List[List[int]]\n        :rtype: int\n        \"\"\"\n\n        class UnionFind(object):\n            def __init__(self, n):\n                self.set = range(n)\n                self.count = n\n\n            def find_set(self, x):\n               if self.set[x] != x:\n                   self.set[x] = self.find_set(self.set[x])  # path compression.\n               return self.set[x]\n\n            def union_set(self, x, y):\n                x_root, y_root = map(self.find_set, (x, y))\n                if x_root != y_root:\n                    self.set[min(x_root, y_root)] = max(x_root, y_root)\n                    self.count -= 1\n\n        circles = UnionFind(len(M))\n        for i in xrange(len(M)):\n            for j in xrange(len(M)):\n                if M[i][j] and i != j:\n                    circles.union_set(i, j)\n        return circles.count\n\n\n",
+          "reviewedCode": "# Time:  O(n^2)\n# Space: O(n)\n\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: A province is just a component; once one city is claimed, finish that whole group before counting again.\nclass Solution(object):\n    def findCircleNum(self, M):\n        \"\"\"\n        :type M: List[List[int]]\n        :rtype: int\n        \"\"\"\n\n        class UnionFind(object):\n            def __init__(self, n):\n                # [Reader note] State setup\n                # This setup stage creates the state needed for the invariant or partial result: Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation.\n                self.set = range(n)\n                self.count = n\n\n            def find_set(self, x):\n               if self.set[x] != x:\n                   self.set[x] = self.find_set(self.set[x])  # path compression.\n               return self.set[x]\n\n            def union_set(self, x, y):\n                x_root, y_root = map(self.find_set, (x, y))\n                if x_root != y_root:\n                    self.set[min(x_root, y_root)] = max(x_root, y_root)\n                    self.count -= 1\n\n        circles = UnionFind(len(M))\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for i in xrange(len(M)):\n            for j in xrange(len(M)):\n                # [Reader note] Decision point\n                # Pay attention here: The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful.\n                if M[i][j] and i != j:\n                    circles.union_set(i, j)\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return circles.count\n\n",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n^2)",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 4,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A province is just a component; once one city is claimed, finish that whole group before counting again."
+            },
+            {
+              "line": 13,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation."
+            },
+            {
+              "line": 28,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 30,
+              "label": "Decision point",
+              "note": "Pay attention here: The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful."
+            },
+            {
+              "line": 32,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is an approachable graph component problem and a good transition from grid components to abstract connectivity.",
+            "whatToNotice": "Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation.",
+            "riskPoint": "The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0500-0599-0547.number-of-provinces-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0500-0599/0547.Number%20of%20Provinces/Solution.py",
+          "localPath": "doocs_leetcode/solution/0500-0599/0547.Number of Provinces/Solution.py",
+          "relativePath": "solution/0500-0599/0547.Number of Provinces/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "class Solution:\n    def findCircleNum(self, isConnected: List[List[int]]) -> int:\n        def dfs(i: int):\n            vis[i] = True\n            for j, x in enumerate(isConnected[i]):\n                if not vis[j] and x:\n                    dfs(j)\n\n        n = len(isConnected)\n        vis = [False] * n\n        ans = 0\n        for i in range(n):\n            if not vis[i]:\n                dfs(i)\n                ans += 1\n        return ans\n",
+          "originalCode": "class Solution:\n    def findCircleNum(self, isConnected: List[List[int]]) -> int:\n        def dfs(i: int):\n            vis[i] = True\n            for j, x in enumerate(isConnected[i]):\n                if not vis[j] and x:\n                    dfs(j)\n\n        n = len(isConnected)\n        vis = [False] * n\n        ans = 0\n        for i in range(n):\n            if not vis[i]:\n                dfs(i)\n                ans += 1\n        return ans\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: A province is just a component; once one city is claimed, finish that whole group before counting again.\nclass Solution:\n    def findCircleNum(self, isConnected: List[List[int]]) -> int:\n        def dfs(i: int):\n            vis[i] = True\n            # [Reader note] Main pass\n            # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for j, x in enumerate(isConnected[i]):\n                # [Reader note] Decision point\n                # Pay attention here: The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful.\n                if not vis[j] and x:\n                    dfs(j)\n\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation.\n        n = len(isConnected)\n        vis = [False] * n\n        ans = 0\n        for i in range(n):\n            if not vis[i]:\n                dfs(i)\n                ans += 1\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return ans",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A province is just a component; once one city is claimed, finish that whole group before counting again."
+            },
+            {
+              "line": 9,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation."
+            },
+            {
+              "line": 5,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 6,
+              "label": "Decision point",
+              "note": "Pay attention here: The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful."
+            },
+            {
+              "line": 16,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is an approachable graph component problem and a good transition from grid components to abstract connectivity.",
+            "whatToNotice": "Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation.",
+            "riskPoint": "The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 4,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-c-friend-circles.cpp",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/C%2B%2B/friend-circles.cpp",
+          "localPath": "kamyu104_LeetCode-Solutions/C++/friend-circles.cpp",
+          "relativePath": "C++/friend-circles.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Time:  O(n^2)\n// Space: O(n)\n\nclass Solution {\npublic:\n    int findCircleNum(vector<vector<int>>& M) {\n        UnionFind circles(M.size());\n        for (int i = 0; i < M.size(); ++i) {\n            for (int j = 0; j < M[i].size(); ++j) {\n                if (M[i][j] && i != j) {\n                    circles.union_set(i, j);\n                }\n            }\n        }\n        return circles.size();\n    }\n\nprivate:\n    class UnionFind {\n        public:\n            UnionFind(const int n) : set_(n), count_(n) {\n                iota(set_.begin(), set_.end(), 0);\n            }\n\n            int find_set(const int x) {\n               if (set_[x] != x) {\n                   set_[x] = find_set(set_[x]);  // Path compression.\n               }\n               return set_[x];\n            }\n\n            void union_set(const int x, const int y) {\n                int x_root = find_set(x), y_root = find_set(y);\n                if (x_root != y_root) {\n                    set_[min(x_root, y_root)] = max(x_root, y_root);\n                    --count_;\n                }\n            }\n\n            int size() const {\n                return count_;\n            }\n\n        private:\n            vector<int> set_;\n            int count_;\n    };\n};\n",
+          "originalCode": "// Time:  O(n^2)\n// Space: O(n)\n\nclass Solution {\npublic:\n    int findCircleNum(vector<vector<int>>& M) {\n        UnionFind circles(M.size());\n        for (int i = 0; i < M.size(); ++i) {\n            for (int j = 0; j < M[i].size(); ++j) {\n                if (M[i][j] && i != j) {\n                    circles.union_set(i, j);\n                }\n            }\n        }\n        return circles.size();\n    }\n\nprivate:\n    class UnionFind {\n        public:\n            UnionFind(const int n) : set_(n), count_(n) {\n                iota(set_.begin(), set_.end(), 0);\n            }\n\n            int find_set(const int x) {\n               if (set_[x] != x) {\n                   set_[x] = find_set(set_[x]);  // Path compression.\n               }\n               return set_[x];\n            }\n\n            void union_set(const int x, const int y) {\n                int x_root = find_set(x), y_root = find_set(y);\n                if (x_root != y_root) {\n                    set_[min(x_root, y_root)] = max(x_root, y_root);\n                    --count_;\n                }\n            }\n\n            int size() const {\n                return count_;\n            }\n\n        private:\n            vector<int> set_;\n            int count_;\n    };\n};\n",
+          "reviewedCode": "// Time:  O(n^2)\n// Space: O(n)\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: A province is just a component; once one city is claimed, finish that whole group before counting again.\nclass Solution {\npublic:\n    int findCircleNum(vector<vector<int>>& M) {\n        UnionFind circles(M.size());\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation.\n        for (int i = 0; i < M.size(); ++i) {\n            for (int j = 0; j < M[i].size(); ++j) {\n                // [Reader note] Decision point\n                // Pay attention here: The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful.\n                if (M[i][j] && i != j) {\n                    circles.union_set(i, j);\n                }\n            }\n        }\n        return circles.size();\n    }\n\nprivate:\n    class UnionFind {\n        public:\n            UnionFind(const int n) : set_(n), count_(n) {\n                iota(set_.begin(), set_.end(), 0);\n            }\n\n            int find_set(const int x) {\n               if (set_[x] != x) {\n                   set_[x] = find_set(set_[x]);  // Path compression.\n               }\n               return set_[x];\n            }\n\n            void union_set(const int x, const int y) {\n                int x_root = find_set(x), y_root = find_set(y);\n                if (x_root != y_root) {\n                    set_[min(x_root, y_root)] = max(x_root, y_root);\n                    --count_;\n                }\n            }\n\n            int size() const {\n                // [Reader note] Return\n                // The final return exposes the result after the traversal and state updates have settled.\n                return count_;\n            }\n\n        private:\n            vector<int> set_;\n            int count_;\n    };\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n^2)",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 4,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A province is just a component; once one city is claimed, finish that whole group before counting again."
+            },
+            {
+              "line": 8,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation."
+            },
+            {
+              "line": 10,
+              "label": "Decision point",
+              "note": "Pay attention here: The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful."
+            },
+            {
+              "line": 41,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is an approachable graph component problem and a good transition from grid components to abstract connectivity.",
+            "whatToNotice": "Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation.",
+            "riskPoint": "The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0500-0599-0547.number-of-provinces-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0500-0599/0547.Number%20of%20Provinces/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/0500-0599/0547.Number of Provinces/Solution.cpp",
+          "relativePath": "solution/0500-0599/0547.Number of Provinces/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\npublic:\n    int findCircleNum(vector<vector<int>>& isConnected) {\n        int n = isConnected.size();\n        int ans = 0;\n        bool vis[n];\n        memset(vis, false, sizeof(vis));\n        auto dfs = [&](this auto&& dfs, int i) -> void {\n            vis[i] = true;\n            for (int j = 0; j < n; ++j) {\n                if (!vis[j] && isConnected[i][j]) {\n                    dfs(j);\n                }\n            }\n        };\n        for (int i = 0; i < n; ++i) {\n            if (!vis[i]) {\n                dfs(i);\n                ++ans;\n            }\n        }\n        return ans;\n    }\n};\n",
+          "originalCode": "class Solution {\npublic:\n    int findCircleNum(vector<vector<int>>& isConnected) {\n        int n = isConnected.size();\n        int ans = 0;\n        bool vis[n];\n        memset(vis, false, sizeof(vis));\n        auto dfs = [&](this auto&& dfs, int i) -> void {\n            vis[i] = true;\n            for (int j = 0; j < n; ++j) {\n                if (!vis[j] && isConnected[i][j]) {\n                    dfs(j);\n                }\n            }\n        };\n        for (int i = 0; i < n; ++i) {\n            if (!vis[i]) {\n                dfs(i);\n                ++ans;\n            }\n        }\n        return ans;\n    }\n};\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: A province is just a component; once one city is claimed, finish that whole group before counting again.\nclass Solution {\npublic:\n    int findCircleNum(vector<vector<int>>& isConnected) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation.\n        int n = isConnected.size();\n        int ans = 0;\n        bool vis[n];\n        memset(vis, false, sizeof(vis));\n        auto dfs = [&](this auto&& dfs, int i) -> void {\n            vis[i] = true;\n            // [Reader note] Main pass\n            // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for (int j = 0; j < n; ++j) {\n                // [Reader note] Decision point\n                // Pay attention here: The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful.\n                if (!vis[j] && isConnected[i][j]) {\n                    dfs(j);\n                }\n            }\n        };\n        for (int i = 0; i < n; ++i) {\n            if (!vis[i]) {\n                dfs(i);\n                ++ans;\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return ans;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A province is just a component; once one city is claimed, finish that whole group before counting again."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation."
+            },
+            {
+              "line": 10,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 11,
+              "label": "Decision point",
+              "note": "Pay attention here: The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful."
+            },
+            {
+              "line": 22,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is an approachable graph component problem and a good transition from grid components to abstract connectivity.",
+            "whatToNotice": "Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation.",
+            "riskPoint": "The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful."
+          }
+        },
+        {
+          "id": "wisdompeak_leetcode-union_find-547.friend-circles-547.friend-circles.cpp",
+          "repository": "wisdompeak_LeetCode",
+          "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+          "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/Union_Find/547.Friend-Circles/547.Friend-Circles.cpp",
+          "localPath": "wisdompeak_LeetCode/Union_Find/547.Friend-Circles/547.Friend-Circles.cpp",
+          "relativePath": "Union_Find/547.Friend-Circles/547.Friend-Circles.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+readme",
+          "code": "\nclass Solution {\n    vector<int>Father;\npublic:\n    int findCircleNum(vector<vector<int>>& M) \n    {\n        int N=M.size();\n        \n        for (int i=0; i<N; i++)\n            Father.push_back(i);\n        \n        for (int i=0; i<N; i++)\n         for (int j=0; j<N; j++)\n         {\n             if (M[i][j]==0) continue;\n             \n             if (FindSet(i)!=FindSet(j))\n                 Union(i,j);             \n         }\n        \n        unordered_set<int>Set;\n        for (int i=0; i<N; i++)\n        {\n            Father[i] = FindSet(i);\n            Set.insert(Father[i]);\n        }\n            \n        return Set.size();\n    }\n    \n    int FindSet(int x)\n    {\n        if (x!=Father[x])\n        {\n            Father[x]=FindSet(Father[x]);\n        }\n        return Father[x];\n    }\n    \n    void Union (int x, int y)\n    {\n        x=Father[x];\n        y=Father[y];\n        if (x<=y)\n            Father[y]=x;\n        else\n            Father[x]=y;\n    }\n};\n",
+          "originalCode": "\nclass Solution {\n    vector<int>Father;\npublic:\n    int findCircleNum(vector<vector<int>>& M) \n    {\n        int N=M.size();\n        \n        for (int i=0; i<N; i++)\n            Father.push_back(i);\n        \n        for (int i=0; i<N; i++)\n         for (int j=0; j<N; j++)\n         {\n             if (M[i][j]==0) continue;\n             \n             if (FindSet(i)!=FindSet(j))\n                 Union(i,j);             \n         }\n        \n        unordered_set<int>Set;\n        for (int i=0; i<N; i++)\n        {\n            Father[i] = FindSet(i);\n            Set.insert(Father[i]);\n        }\n            \n        return Set.size();\n    }\n    \n    int FindSet(int x)\n    {\n        if (x!=Father[x])\n        {\n            Father[x]=FindSet(Father[x]);\n        }\n        return Father[x];\n    }\n    \n    void Union (int x, int y)\n    {\n        x=Father[x];\n        y=Father[y];\n        if (x<=y)\n            Father[y]=x;\n        else\n            Father[x]=y;\n    }\n};\n",
+          "reviewedCode": "\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: A province is just a component; once one city is claimed, finish that whole group before counting again.\nclass Solution {\n    vector<int>Father;\npublic:\n    int findCircleNum(vector<vector<int>>& M) \n    {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation.\n        int N=M.size();\n        \n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i=0; i<N; i++)\n            Father.push_back(i);\n        \n        for (int i=0; i<N; i++)\n         for (int j=0; j<N; j++)\n         {\n             // [Reader note] Decision point\n             // Pay attention here: The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful.\n             if (M[i][j]==0) continue;\n             \n             if (FindSet(i)!=FindSet(j))\n                 Union(i,j);             \n         }\n        \n        unordered_set<int>Set;\n        for (int i=0; i<N; i++)\n        {\n            Father[i] = FindSet(i);\n            Set.insert(Father[i]);\n        }\n            \n        return Set.size();\n    }\n    \n    int FindSet(int x)\n    {\n        if (x!=Father[x])\n        {\n            Father[x]=FindSet(Father[x]);\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return Father[x];\n    }\n    \n    void Union (int x, int y)\n    {\n        x=Father[x];\n        y=Father[y];\n        if (x<=y)\n            Father[y]=x;\n        else\n            Father[x]=y;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 2,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A province is just a component; once one city is claimed, finish that whole group before counting again."
+            },
+            {
+              "line": 7,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation."
+            },
+            {
+              "line": 9,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 15,
+              "label": "Decision point",
+              "note": "Pay attention here: The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful."
+            },
+            {
+              "line": 37,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is an approachable graph component problem and a good transition from grid components to abstract connectivity.",
+            "whatToNotice": "Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation.",
+            "riskPoint": "The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful."
+          }
+        },
+        {
+          "id": "haoel_leetcode-algorithms-cpp-friendcircles-friendcircles.cpp",
+          "repository": "haoel_leetcode",
+          "repositoryUrl": "https://github.com/haoel/leetcode",
+          "sourceUrl": "https://github.com/haoel/leetcode/blob/master/algorithms/cpp/friendCircles/FriendCircles.cpp",
+          "localPath": "haoel_leetcode/algorithms/cpp/friendCircles/FriendCircles.cpp",
+          "relativePath": "algorithms/cpp/friendCircles/FriendCircles.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Source : https://leetcode.com/problems/friend-circles/\n// Author : Hao Chen\n// Date   : 2019-03-26\n\n/***************************************************************************************************** \n *\n * \n * There are N students in a class. Some of them are friends, while some are not. Their friendship is \n * transitive in nature. For example, if A is a direct friend of B, and B is a direct friend of C, \n * then A is an indirect friend of C. And we defined a friend circle is a group of students who are \n * direct or indirect friends.\n * \n * Given a N*N matrix M representing the friend relationship between students in the class. If M[i][j] \n * = 1, then the ith and jth students are direct friends with each other, otherwise not. And you have \n * to output the total number of friend circles among all the students.\n * \n * Example 1:\n * \n * Input: \n * [[1,1,0],\n *  [1,1,0],\n *  [0,0,1]]\n * Output: 2\n * Explanation:The 0th and 1st students are direct friends, so they are in a friend circle. The 2nd \n * student himself is in a friend circle. So return 2.\n * \n * Example 2:\n * \n * Input: \n * [[1,1,0],\n *  [1,1,1],\n *  [0,1,1]]\n * Output: 1\n * Explanation:The 0th and 1st students are direct friends, the 1st and 2nd students are direct \n * friends, so the 0th and 2nd students are indirect friends. All of them are in the same friend \n * circle, so return 1.\n * \n * Note:\n * \n * N is in range [1,200].\n * M[i][i] = 1 for all students.\n * If M[i][j] = 1, then M[j][i] = 1.\n * \n ******************************************************************************************************/\n\nclass Solution {\npublic:\n\n    // -----------------------------------------------------------------------------\n    //DFS solution is quite easy to understand, just like the \"Number of Island\"\n    int findCircleNum_DFS(vector<vector<int>>& M) {\n        int n = 0;\n        for (int i=0; i<M.size(); i++) {\n            for (int j=0; j<M[0].size(); j++) {\n                if ( M[i][j] == 1 ) {\n                    n++;\n                    M[i][j] = 2;\n                    mark(M, j);\n                }\n            }\n        }\n        return n;\n    }\n\n    void mark(vector<vector<int>>& M, int i ) {\n        for ( int j=0;  j<M[i].size(); j++ ){\n            if ( M[i][j] == 1 ) {\n                M[i][j] = 2;\n                mark(M, j);\n            }\n        }\n    }\n\n    // -----------------------------------------------------------------------------\n    //Union Find Solution\n    int findCircleNum_UF(vector<vector<int>>& M) {\n\n        vector<int> relations(M.size());\n        for (int i=0; i<relations.size(); i++){\n            relations[i] = i;\n        }\n\n        int n = M.size(); //by default, there are N friend cicles\n        for (int i=0; i<M.size(); i++) {\n            for (int j=0; j<M[0].size(); j++) {\n                if ( M[i][j] == 1 && i != j ) {\n                    if ( join(relations, i, j) ) n--;\n                }\n            }\n        }\n        return n;\n    }\n\n    //find the tail node.\n    //   if a -> b -> c -> d, then find(a),find(b) or find(c) would return d;\n    int find(vector<int>& relations, int i ) {\n        while( relations[i] != i ) {\n            i = relations[i];\n        }\n        return i;\n    }\n    // join the x cicle with y cicle,\n    // if x and y are already in same friend cicle, then return false, else return true;\n    bool join(vector<int> &relations, int x, int y) {\n        int tx = find(relations, x);\n        int ty = find(relations, y);\n        if ( tx != ty ) relations[tx] = ty;\n        return tx != ty;\n    }\n\n    // -----------------------------------------------------------------------------\n    \n    int findCircleNum(vector<vector<int>>& M) {\n        return findCircleNum_UF(M);\n        return findCircleNum_DFS(M);\n    }\n};\n",
+          "originalCode": "// Source : https://leetcode.com/problems/friend-circles/\n// Author : Hao Chen\n// Date   : 2019-03-26\n\n/***************************************************************************************************** \n *\n * \n * There are N students in a class. Some of them are friends, while some are not. Their friendship is \n * transitive in nature. For example, if A is a direct friend of B, and B is a direct friend of C, \n * then A is an indirect friend of C. And we defined a friend circle is a group of students who are \n * direct or indirect friends.\n * \n * Given a N*N matrix M representing the friend relationship between students in the class. If M[i][j] \n * = 1, then the ith and jth students are direct friends with each other, otherwise not. And you have \n * to output the total number of friend circles among all the students.\n * \n * Example 1:\n * \n * Input: \n * [[1,1,0],\n *  [1,1,0],\n *  [0,0,1]]\n * Output: 2\n * Explanation:The 0th and 1st students are direct friends, so they are in a friend circle. The 2nd \n * student himself is in a friend circle. So return 2.\n * \n * Example 2:\n * \n * Input: \n * [[1,1,0],\n *  [1,1,1],\n *  [0,1,1]]\n * Output: 1\n * Explanation:The 0th and 1st students are direct friends, the 1st and 2nd students are direct \n * friends, so the 0th and 2nd students are indirect friends. All of them are in the same friend \n * circle, so return 1.\n * \n * Note:\n * \n * N is in range [1,200].\n * M[i][i] = 1 for all students.\n * If M[i][j] = 1, then M[j][i] = 1.\n * \n ******************************************************************************************************/\n\nclass Solution {\npublic:\n\n    // -----------------------------------------------------------------------------\n    //DFS solution is quite easy to understand, just like the \"Number of Island\"\n    int findCircleNum_DFS(vector<vector<int>>& M) {\n        int n = 0;\n        for (int i=0; i<M.size(); i++) {\n            for (int j=0; j<M[0].size(); j++) {\n                if ( M[i][j] == 1 ) {\n                    n++;\n                    M[i][j] = 2;\n                    mark(M, j);\n                }\n            }\n        }\n        return n;\n    }\n\n    void mark(vector<vector<int>>& M, int i ) {\n        for ( int j=0;  j<M[i].size(); j++ ){\n            if ( M[i][j] == 1 ) {\n                M[i][j] = 2;\n                mark(M, j);\n            }\n        }\n    }\n\n    // -----------------------------------------------------------------------------\n    //Union Find Solution\n    int findCircleNum_UF(vector<vector<int>>& M) {\n\n        vector<int> relations(M.size());\n        for (int i=0; i<relations.size(); i++){\n            relations[i] = i;\n        }\n\n        int n = M.size(); //by default, there are N friend cicles\n        for (int i=0; i<M.size(); i++) {\n            for (int j=0; j<M[0].size(); j++) {\n                if ( M[i][j] == 1 && i != j ) {\n                    if ( join(relations, i, j) ) n--;\n                }\n            }\n        }\n        return n;\n    }\n\n    //find the tail node.\n    //   if a -> b -> c -> d, then find(a),find(b) or find(c) would return d;\n    int find(vector<int>& relations, int i ) {\n        while( relations[i] != i ) {\n            i = relations[i];\n        }\n        return i;\n    }\n    // join the x cicle with y cicle,\n    // if x and y are already in same friend cicle, then return false, else return true;\n    bool join(vector<int> &relations, int x, int y) {\n        int tx = find(relations, x);\n        int ty = find(relations, y);\n        if ( tx != ty ) relations[tx] = ty;\n        return tx != ty;\n    }\n\n    // -----------------------------------------------------------------------------\n    \n    int findCircleNum(vector<vector<int>>& M) {\n        return findCircleNum_UF(M);\n        return findCircleNum_DFS(M);\n    }\n};\n",
+          "reviewedCode": "// Source : https://leetcode.com/problems/friend-circles/\n// Author : Hao Chen\n// Date   : 2019-03-26\n\n/***************************************************************************************************** \n *\n * \n * There are N students in a class. Some of them are friends, while some are not. Their friendship is \n * transitive in nature. For example, if A is a direct friend of B, and B is a direct friend of C, \n * then A is an indirect friend of C. And we defined a friend circle is a group of students who are \n * direct or indirect friends.\n * \n * Given a N*N matrix M representing the friend relationship between students in the class. If M[i][j] \n * = 1, then the ith and jth students are direct friends with each other, otherwise not. And you have \n * to output the total number of friend circles among all the students.\n * \n * Example 1:\n * \n * Input: \n * [[1,1,0],\n *  [1,1,0],\n *  [0,0,1]]\n * Output: 2\n * Explanation:The 0th and 1st students are direct friends, so they are in a friend circle. The 2nd \n * student himself is in a friend circle. So return 2.\n * \n * Example 2:\n * \n * Input: \n * [[1,1,0],\n *  [1,1,1],\n *  [0,1,1]]\n * Output: 1\n * Explanation:The 0th and 1st students are direct friends, the 1st and 2nd students are direct \n * friends, so the 0th and 2nd students are indirect friends. All of them are in the same friend \n * circle, so return 1.\n * \n * Note:\n * \n * N is in range [1,200].\n * M[i][i] = 1 for all students.\n * If M[i][j] = 1, then M[j][i] = 1.\n * \n ******************************************************************************************************/\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: A province is just a component; once one city is claimed, finish that whole group before counting again.\nclass Solution {\npublic:\n\n    // -----------------------------------------------------------------------------\n    //DFS solution is quite easy to understand, just like the \"Number of Island\"\n    int findCircleNum_DFS(vector<vector<int>>& M) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation.\n        int n = 0;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i=0; i<M.size(); i++) {\n            for (int j=0; j<M[0].size(); j++) {\n                // [Reader note] Decision point\n                // Pay attention here: The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful.\n                if ( M[i][j] == 1 ) {\n                    n++;\n                    M[i][j] = 2;\n                    mark(M, j);\n                }\n            }\n        }\n        return n;\n    }\n\n    void mark(vector<vector<int>>& M, int i ) {\n        for ( int j=0;  j<M[i].size(); j++ ){\n            if ( M[i][j] == 1 ) {\n                M[i][j] = 2;\n                mark(M, j);\n            }\n        }\n    }\n\n    // -----------------------------------------------------------------------------\n    //Union Find Solution\n    int findCircleNum_UF(vector<vector<int>>& M) {\n\n        vector<int> relations(M.size());\n        for (int i=0; i<relations.size(); i++){\n            relations[i] = i;\n        }\n\n        int n = M.size(); //by default, there are N friend cicles\n        for (int i=0; i<M.size(); i++) {\n            for (int j=0; j<M[0].size(); j++) {\n                if ( M[i][j] == 1 && i != j ) {\n                    if ( join(relations, i, j) ) n--;\n                }\n            }\n        }\n        return n;\n    }\n\n    //find the tail node.\n    //   if a -> b -> c -> d, then find(a),find(b) or find(c) would return d;\n    int find(vector<int>& relations, int i ) {\n        while( relations[i] != i ) {\n            i = relations[i];\n        }\n        return i;\n    }\n    // join the x cicle with y cicle,\n    // if x and y are already in same friend cicle, then return false, else return true;\n    bool join(vector<int> &relations, int x, int y) {\n        int tx = find(relations, x);\n        int ty = find(relations, y);\n        if ( tx != ty ) relations[tx] = ty;\n        return tx != ty;\n    }\n\n    // -----------------------------------------------------------------------------\n    \n    int findCircleNum(vector<vector<int>>& M) {\n        return findCircleNum_UF(M);\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return findCircleNum_DFS(M);\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 46,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A province is just a component; once one city is claimed, finish that whole group before counting again."
+            },
+            {
+              "line": 52,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation."
+            },
+            {
+              "line": 53,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 55,
+              "label": "Decision point",
+              "note": "Pay attention here: The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful."
+            },
+            {
+              "line": 115,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is an approachable graph component problem and a good transition from grid components to abstract connectivity.",
+            "whatToNotice": "Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation.",
+            "riskPoint": "The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful."
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0500-0599-0547.number-of-provinces-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0500-0599/0547.Number%20of%20Provinces/Solution.java",
+          "localPath": "doocs_leetcode/solution/0500-0599/0547.Number of Provinces/Solution.java",
+          "relativePath": "solution/0500-0599/0547.Number of Provinces/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\n    private int[][] g;\n    private boolean[] vis;\n\n    public int findCircleNum(int[][] isConnected) {\n        g = isConnected;\n        int n = g.length;\n        vis = new boolean[n];\n        int ans = 0;\n        for (int i = 0; i < n; ++i) {\n            if (!vis[i]) {\n                dfs(i);\n                ++ans;\n            }\n        }\n        return ans;\n    }\n\n    private void dfs(int i) {\n        vis[i] = true;\n        for (int j = 0; j < g.length; ++j) {\n            if (!vis[j] && g[i][j] == 1) {\n                dfs(j);\n            }\n        }\n    }\n}",
+          "originalCode": "class Solution {\n    private int[][] g;\n    private boolean[] vis;\n\n    public int findCircleNum(int[][] isConnected) {\n        g = isConnected;\n        int n = g.length;\n        vis = new boolean[n];\n        int ans = 0;\n        for (int i = 0; i < n; ++i) {\n            if (!vis[i]) {\n                dfs(i);\n                ++ans;\n            }\n        }\n        return ans;\n    }\n\n    private void dfs(int i) {\n        vis[i] = true;\n        for (int j = 0; j < g.length; ++j) {\n            if (!vis[j] && g[i][j] == 1) {\n                dfs(j);\n            }\n        }\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: A province is just a component; once one city is claimed, finish that whole group before counting again.\nclass Solution {\n    private int[][] g;\n    private boolean[] vis;\n\n    public int findCircleNum(int[][] isConnected) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation.\n        g = isConnected;\n        int n = g.length;\n        vis = new boolean[n];\n        int ans = 0;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = 0; i < n; ++i) {\n            // [Reader note] Decision point\n            // Pay attention here: The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful.\n            if (!vis[i]) {\n                dfs(i);\n                ++ans;\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return ans;\n    }\n\n    private void dfs(int i) {\n        vis[i] = true;\n        for (int j = 0; j < g.length; ++j) {\n            if (!vis[j] && g[i][j] == 1) {\n                dfs(j);\n            }\n        }\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A province is just a component; once one city is claimed, finish that whole group before counting again."
+            },
+            {
+              "line": 6,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation."
+            },
+            {
+              "line": 10,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 11,
+              "label": "Decision point",
+              "note": "Pay attention here: The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful."
+            },
+            {
+              "line": 16,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is an approachable graph component problem and a good transition from grid components to abstract connectivity.",
+            "whatToNotice": "Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation.",
+            "riskPoint": "The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful."
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0500-0599-0547.number-of-provinces-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0500-0599/0547.Number%20of%20Provinces/Solution.go",
+          "localPath": "doocs_leetcode/solution/0500-0599/0547.Number of Provinces/Solution.go",
+          "relativePath": "solution/0500-0599/0547.Number of Provinces/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "func findCircleNum(isConnected [][]int) (ans int) {\n\tn := len(isConnected)\n\tvis := make([]bool, n)\n\tvar dfs func(int)\n\tdfs = func(i int) {\n\t\tvis[i] = true\n\t\tfor j, x := range isConnected[i] {\n\t\t\tif !vis[j] && x == 1 {\n\t\t\t\tdfs(j)\n\t\t\t}\n\t\t}\n\t}\n\tfor i, v := range vis {\n\t\tif !v {\n\t\t\tans++\n\t\t\tdfs(i)\n\t\t}\n\t}\n\treturn\n}",
+          "originalCode": "func findCircleNum(isConnected [][]int) (ans int) {\n\tn := len(isConnected)\n\tvis := make([]bool, n)\n\tvar dfs func(int)\n\tdfs = func(i int) {\n\t\tvis[i] = true\n\t\tfor j, x := range isConnected[i] {\n\t\t\tif !vis[j] && x == 1 {\n\t\t\t\tdfs(j)\n\t\t\t}\n\t\t}\n\t}\n\tfor i, v := range vis {\n\t\tif !v {\n\t\t\tans++\n\t\t\tdfs(i)\n\t\t}\n\t}\n\treturn\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: A province is just a component; once one city is claimed, finish that whole group before counting again.\nfunc findCircleNum(isConnected [][]int) (ans int) {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation.\n\tn := len(isConnected)\n\tvis := make([]bool, n)\n\tvar dfs func(int)\n\tdfs = func(i int) {\n\t\tvis[i] = true\n\t\t// [Reader note] Main pass\n\t\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\t\tfor j, x := range isConnected[i] {\n\t\t\t// [Reader note] Decision point\n\t\t\t// Pay attention here: The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful.\n\t\t\tif !vis[j] && x == 1 {\n\t\t\t\tdfs(j)\n\t\t\t}\n\t\t}\n\t}\n\tfor i, v := range vis {\n\t\tif !v {\n\t\t\tans++\n\t\t\tdfs(i)\n\t\t}\n\t}\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A province is just a component; once one city is claimed, finish that whole group before counting again."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation."
+            },
+            {
+              "line": 7,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 8,
+              "label": "Decision point",
+              "note": "Pay attention here: The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful."
+            },
+            {
+              "line": 19,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is an approachable graph component problem and a good transition from grid components to abstract connectivity.",
+            "whatToNotice": "Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation.",
+            "riskPoint": "The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful."
+          }
+        }
+      ]
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0500-0599-0547.number-of-provinces-solution.ts",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0500-0599/0547.Number%20of%20Provinces/Solution.ts",
+          "localPath": "doocs_leetcode/solution/0500-0599/0547.Number of Provinces/Solution.ts",
+          "relativePath": "solution/0500-0599/0547.Number of Provinces/Solution.ts",
+          "languageId": "typescript",
+          "languageLabel": "TypeScript",
+          "coverageType": "code+explanation",
+          "code": "function findCircleNum(isConnected: number[][]): number {\n    const n = isConnected.length;\n    const vis: boolean[] = Array(n).fill(false);\n    const dfs = (i: number) => {\n        vis[i] = true;\n        for (let j = 0; j < n; ++j) {\n            if (!vis[j] && isConnected[i][j]) {\n                dfs(j);\n            }\n        }\n    };\n    let ans = 0;\n    for (let i = 0; i < n; ++i) {\n        if (!vis[i]) {\n            dfs(i);\n            ++ans;\n        }\n    }\n    return ans;\n}\n",
+          "originalCode": "function findCircleNum(isConnected: number[][]): number {\n    const n = isConnected.length;\n    const vis: boolean[] = Array(n).fill(false);\n    const dfs = (i: number) => {\n        vis[i] = true;\n        for (let j = 0; j < n; ++j) {\n            if (!vis[j] && isConnected[i][j]) {\n                dfs(j);\n            }\n        }\n    };\n    let ans = 0;\n    for (let i = 0; i < n; ++i) {\n        if (!vis[i]) {\n            dfs(i);\n            ++ans;\n        }\n    }\n    return ans;\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: A province is just a component; once one city is claimed, finish that whole group before counting again.\nfunction findCircleNum(isConnected: number[][]): number {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation.\n    const n = isConnected.length;\n    const vis: boolean[] = Array(n).fill(false);\n    const dfs = (i: number) => {\n        vis[i] = true;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (let j = 0; j < n; ++j) {\n            // [Reader note] Decision point\n            // Pay attention here: The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful.\n            if (!vis[j] && isConnected[i][j]) {\n                dfs(j);\n            }\n        }\n    };\n    let ans = 0;\n    for (let i = 0; i < n; ++i) {\n        if (!vis[i]) {\n            dfs(i);\n            ++ans;\n        }\n    }\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return ans;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: A province is just a component; once one city is claimed, finish that whole group before counting again."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation."
+            },
+            {
+              "line": 6,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 7,
+              "label": "Decision point",
+              "note": "Pay attention here: The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful."
+            },
+            {
+              "line": 19,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is an approachable graph component problem and a good transition from grid components to abstract connectivity.",
+            "whatToNotice": "Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation.",
+            "riskPoint": "The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful."
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "doocs_leetcode-solution-0500-0599-0547.number-of-provinces-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0500-0599/0547.Number%20of%20Provinces/README.md",
+      "localPath": "doocs_leetcode/solution/0500-0599/0547.Number of Provinces/README.md",
+      "relativePath": "solution/0500-0599/0547.Number of Provinces/README.md",
+      "title": "[547. \u7701\u4efd\u6570\u91cf](https://leetcode.cn/problems/number-of-provinces)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/0500-0599/0547.Number%20of%20Provinces/README.md tags: - \u6df1\u5ea6\u4f18\u5148\u641c\u7d22 - \u5e7f\u5ea6\u4f18\u5148\u641c\u7d22 - \u5e76\u67e5\u96c6 - \u56fe --- <!-- problem:start --> # [547. \u7701\u4efd\u6570\u91cf](https://leetcode.cn/problems/number-of-provinces) [English Version](/solution/0500-0599/0547.Number%20of%20Provinces/README_EN.md) ## \u9898\u76ee\u63cf\u8ff0 <!-- description:start --> <div class=\"original__bRMd\"> <di..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0500-0599-0547.number-of-provinces-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0500-0599/0547.Number%20of%20Provinces/README_EN.md",
+      "localPath": "doocs_leetcode/solution/0500-0599/0547.Number of Provinces/README_EN.md",
+      "relativePath": "solution/0500-0599/0547.Number of Provinces/README_EN.md",
+      "title": "[547. Number of Provinces](https://leetcode.com/problems/number-of-provinces)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/0500-0599/0547.Number%20of%20Provinces/README_EN.md tags: - Depth-First Search - Breadth-First Search - Union Find - Graph --- <!-- problem:start --> # [547. Number of Provinces](https://leetcode.com/problems/number-of-provinces) [\u4e2d\u6587\u6587\u6863](/solution/0500-0599/0547.Number%20of%20Provinces/README.md) ## Description <!-- d..."
+    },
+    {
+      "id": "wisdompeak_leetcode-union_find-547.friend-circles-readme.md",
+      "repository": "wisdompeak_LeetCode",
+      "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+      "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/Union_Find/547.Friend-Circles/Readme.md",
+      "localPath": "wisdompeak_LeetCode/Union_Find/547.Friend-Circles/Readme.md",
+      "relativePath": "Union_Find/547.Friend-Circles/Readme.md",
+      "title": "547.Friend-Circles",
+      "excerpt": "### 547.Friend-Circles \u6ce8\u610f\uff0c\u6700\u540e\u9700\u8981\u91cd\u65b0\u904d\u5386\u4e00\u904d\u6240\u6709\u8282\u70b9\uff0c\u901a\u8fc7FindSet\u6765\u66f4\u65b0\u6240\u6709\u7684\u7236\u8282\u70b9\u3002 ```cpp unordered_set<int>Set; for (int i=0; i<N; i++) { Father[i] = FindSet(i); Set.insert(Father[i]); } return Set.size(); ``` [Leetcode Link](https://leetcode.com/problems/friend-circles)"
+    }
+  ]
+}

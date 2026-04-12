@@ -1,0 +1,501 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "amount-of-time-for-binary-tree-to-be-infected",
+  "problemTitle": "Amount of Time for Binary Tree to Be Infected",
+  "problemNumber": 2385,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go",
+      "typescript"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go",
+      "TypeScript"
+    ],
+    "solutionCount": 8,
+    "writeupCount": 2,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-python-amount-of-time-for-binary-tree-to-be-infected.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/amount-of-time-for-binary-tree-to-be-infected.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/amount-of-time-for-binary-tree-to-be-infected.py",
+          "relativePath": "Python/amount-of-time-for-binary-tree-to-be-infected.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(n)\n# Space: O(h)\n\n# Definition for a binary tree node.\nclass TreeNode(object):\n    def __init__(self, val=0, left=None, right=None):\n        pass\n\n\n# iterative dfs, tree dp\nclass Solution(object):\n    def amountOfTime(self, root, start):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type start: int\n        :rtype: int\n        \"\"\"\n        def iter_dfs(root, start):\n            result = -1\n            stk = [(1, (root, [-1]*2))]\n            while stk:\n                step, args = stk.pop()\n                if step == 1:\n                    curr, ret = args\n                    if curr is None:\n                        continue\n                    left, right = [-1]*2, [-1]*2\n                    stk.append((2, (curr, left, right, ret)))\n                    stk.append((1, (curr.right, right)))\n                    stk.append((1, (curr.left, left)))\n                elif step == 2:\n                    curr, left, right, ret = args\n                    d = -1\n                    if curr.val == start:\n                        d = 0\n                        result = max(left[0], right[0])+1\n                    elif left[1] >= 0:\n                        d = left[1]+1\n                        result = max(result, right[0]+1+d)\n                    elif right[1] >= 0:\n                        d = right[1]+1\n                        result = max(result, left[0]+1+d)\n                    ret[:] = [max(left[0], right[0])+1, d]  # [height, dist_to_start]\n            return result\n\n        return iter_dfs(root, start)\n\n\n# Time:  O(n)\n# Space: O(h)\n# dfs, tree dp\nclass Solution2(object):\n    def amountOfTime(self, root, start):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type start: int\n        :rtype: int\n        \"\"\"\n        def dfs(curr, start, result):\n            if curr is None:\n                return [-1, -1]\n            left = dfs(curr.left, start, result)\n            right = dfs(curr.right, start, result)\n            d = -1\n            if curr.val == start:\n                d = 0\n                result[0] = max(left[0], right[0])+1\n            elif left[1] >= 0:\n                d = left[1]+1\n                result[0] = max(result[0], right[0]+1+d)\n            elif right[1] >= 0:\n                d = right[1]+1\n                result[0] = max(result[0], left[0]+1+d)\n            return [max(left[0], right[0])+1, d]  # [height, dist_to_start]\n\n        result = [-1]\n        dfs(root, start, result)\n        return result[0]\n\n\n# Time:  O(n)\n# Space: O(n)\n# bfs\nclass Solution3(object):\n    def amountOfTime(self, root, start):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type start: int\n        :rtype: int\n        \"\"\"\n        def bfs(root):\n            adj = collections.defaultdict(list)\n            q = [root]\n            while q:\n                new_q = []\n                for u in q:\n                    for v in (u.left, u.right):\n                        if v is None:\n                            continue\n                        adj[u.val].append(v.val)\n                        adj[v.val].append(u.val)\n                        new_q.append(v)\n                q = new_q\n            return adj\n\n        def bfs2(adj, start):\n            result = -1\n            q = [start]\n            lookup = {start}\n            while q:\n                new_q = []\n                for u in q:\n                    for v in adj[u]:\n                        if v in lookup:\n                            continue\n                        lookup.add(v)\n                        new_q.append(v)\n                q = new_q\n                result += 1\n            return result\n\n        adj = bfs(root)\n        return bfs2(adj, start)\n",
+          "originalCode": "# Time:  O(n)\n# Space: O(h)\n\n# Definition for a binary tree node.\nclass TreeNode(object):\n    def __init__(self, val=0, left=None, right=None):\n        pass\n\n\n# iterative dfs, tree dp\nclass Solution(object):\n    def amountOfTime(self, root, start):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type start: int\n        :rtype: int\n        \"\"\"\n        def iter_dfs(root, start):\n            result = -1\n            stk = [(1, (root, [-1]*2))]\n            while stk:\n                step, args = stk.pop()\n                if step == 1:\n                    curr, ret = args\n                    if curr is None:\n                        continue\n                    left, right = [-1]*2, [-1]*2\n                    stk.append((2, (curr, left, right, ret)))\n                    stk.append((1, (curr.right, right)))\n                    stk.append((1, (curr.left, left)))\n                elif step == 2:\n                    curr, left, right, ret = args\n                    d = -1\n                    if curr.val == start:\n                        d = 0\n                        result = max(left[0], right[0])+1\n                    elif left[1] >= 0:\n                        d = left[1]+1\n                        result = max(result, right[0]+1+d)\n                    elif right[1] >= 0:\n                        d = right[1]+1\n                        result = max(result, left[0]+1+d)\n                    ret[:] = [max(left[0], right[0])+1, d]  # [height, dist_to_start]\n            return result\n\n        return iter_dfs(root, start)\n\n\n# Time:  O(n)\n# Space: O(h)\n# dfs, tree dp\nclass Solution2(object):\n    def amountOfTime(self, root, start):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type start: int\n        :rtype: int\n        \"\"\"\n        def dfs(curr, start, result):\n            if curr is None:\n                return [-1, -1]\n            left = dfs(curr.left, start, result)\n            right = dfs(curr.right, start, result)\n            d = -1\n            if curr.val == start:\n                d = 0\n                result[0] = max(left[0], right[0])+1\n            elif left[1] >= 0:\n                d = left[1]+1\n                result[0] = max(result[0], right[0]+1+d)\n            elif right[1] >= 0:\n                d = right[1]+1\n                result[0] = max(result[0], left[0]+1+d)\n            return [max(left[0], right[0])+1, d]  # [height, dist_to_start]\n\n        result = [-1]\n        dfs(root, start, result)\n        return result[0]\n\n\n# Time:  O(n)\n# Space: O(n)\n# bfs\nclass Solution3(object):\n    def amountOfTime(self, root, start):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type start: int\n        :rtype: int\n        \"\"\"\n        def bfs(root):\n            adj = collections.defaultdict(list)\n            q = [root]\n            while q:\n                new_q = []\n                for u in q:\n                    for v in (u.left, u.right):\n                        if v is None:\n                            continue\n                        adj[u.val].append(v.val)\n                        adj[v.val].append(u.val)\n                        new_q.append(v)\n                q = new_q\n            return adj\n\n        def bfs2(adj, start):\n            result = -1\n            q = [start]\n            lookup = {start}\n            while q:\n                new_q = []\n                for u in q:\n                    for v in adj[u]:\n                        if v in lookup:\n                            continue\n                        lookup.add(v)\n                        new_q.append(v)\n                q = new_q\n                result += 1\n            return result\n\n        adj = bfs(root)\n        return bfs2(adj, start)\n",
+          "reviewedCode": "# Time:  O(n)\n# Space: O(h)\n\n# Definition for a binary tree node.\nclass TreeNode(object):\n    # [Reader note] Entry point\n    # Start from the core routine and keep this mental model in view: Once infection can move both up and down, this is a distance layering problem more than a classic recursive one.\n    def __init__(self, val=0, left=None, right=None):\n        pass\n\n\n# iterative dfs, tree dp\nclass Solution(object):\n    def amountOfTime(self, root, start):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type start: int\n        :rtype: int\n        \"\"\"\n        def iter_dfs(root, start):\n            # [Reader note] State setup\n            # This setup stage creates the state needed for the invariant or partial result: Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels.\n            result = -1\n            stk = [(1, (root, [-1]*2))]\n            # [Reader note] Main pass\n            # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            while stk:\n                step, args = stk.pop()\n                # [Reader note] Decision point\n                # Pay attention here: The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions.\n                if step == 1:\n                    curr, ret = args\n                    if curr is None:\n                        continue\n                    left, right = [-1]*2, [-1]*2\n                    stk.append((2, (curr, left, right, ret)))\n                    stk.append((1, (curr.right, right)))\n                    stk.append((1, (curr.left, left)))\n                elif step == 2:\n                    curr, left, right, ret = args\n                    d = -1\n                    if curr.val == start:\n                        d = 0\n                        result = max(left[0], right[0])+1\n                    elif left[1] >= 0:\n                        d = left[1]+1\n                        result = max(result, right[0]+1+d)\n                    elif right[1] >= 0:\n                        d = right[1]+1\n                        result = max(result, left[0]+1+d)\n                    ret[:] = [max(left[0], right[0])+1, d]  # [height, dist_to_start]\n            return result\n\n        return iter_dfs(root, start)\n\n\n# Time:  O(n)\n# Space: O(h)\n# dfs, tree dp\nclass Solution2(object):\n    def amountOfTime(self, root, start):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type start: int\n        :rtype: int\n        \"\"\"\n        def dfs(curr, start, result):\n            if curr is None:\n                return [-1, -1]\n            left = dfs(curr.left, start, result)\n            right = dfs(curr.right, start, result)\n            d = -1\n            if curr.val == start:\n                d = 0\n                result[0] = max(left[0], right[0])+1\n            elif left[1] >= 0:\n                d = left[1]+1\n                result[0] = max(result[0], right[0]+1+d)\n            elif right[1] >= 0:\n                d = right[1]+1\n                result[0] = max(result[0], left[0]+1+d)\n            return [max(left[0], right[0])+1, d]  # [height, dist_to_start]\n\n        result = [-1]\n        dfs(root, start, result)\n        return result[0]\n\n\n# Time:  O(n)\n# Space: O(n)\n# bfs\nclass Solution3(object):\n    def amountOfTime(self, root, start):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :type start: int\n        :rtype: int\n        \"\"\"\n        def bfs(root):\n            adj = collections.defaultdict(list)\n            q = [root]\n            while q:\n                new_q = []\n                for u in q:\n                    for v in (u.left, u.right):\n                        if v is None:\n                            continue\n                        adj[u.val].append(v.val)\n                        adj[v.val].append(u.val)\n                        new_q.append(v)\n                q = new_q\n            return adj\n\n        def bfs2(adj, start):\n            result = -1\n            q = [start]\n            lookup = {start}\n            while q:\n                new_q = []\n                for u in q:\n                    for v in adj[u]:\n                        if v in lookup:\n                            continue\n                        lookup.add(v)\n                        new_q.append(v)\n                q = new_q\n                result += 1\n            return result\n\n        adj = bfs(root)\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return bfs2(adj, start)",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n)",
+            "Space: O(h)",
+            "def amountOfTime(self, root, start):"
+          ],
+          "annotations": [
+            {
+              "line": 6,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Once infection can move both up and down, this is a distance layering problem more than a classic recursive one."
+            },
+            {
+              "line": 19,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels."
+            },
+            {
+              "line": 21,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 23,
+              "label": "Decision point",
+              "note": "Pay attention here: The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions."
+            },
+            {
+              "line": 123,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the best tree-to-graph bridge problems because the story naturally suggests layered spread over edges.",
+            "whatToNotice": "Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels.",
+            "riskPoint": "The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-2300-2399-2385.amount-of-time-for-binary-tree-to-be-infected-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/2300-2399/2385.Amount%20of%20Time%20for%20Binary%20Tree%20to%20Be%20Infected/Solution.py",
+          "localPath": "doocs_leetcode/solution/2300-2399/2385.Amount of Time for Binary Tree to Be Infected/Solution.py",
+          "relativePath": "solution/2300-2399/2385.Amount of Time for Binary Tree to Be Infected/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def amountOfTime(self, root: Optional[TreeNode], start: int) -> int:\n        def dfs(node: Optional[TreeNode], fa: Optional[TreeNode]):\n            if node is None:\n                return\n            if fa:\n                g[node.val].append(fa.val)\n                g[fa.val].append(node.val)\n            dfs(node.left, node)\n            dfs(node.right, node)\n\n        def dfs2(node: int, fa: int) -> int:\n            ans = 0\n            for nxt in g[node]:\n                if nxt != fa:\n                    ans = max(ans, 1 + dfs2(nxt, node))\n            return ans\n\n        g = defaultdict(list)\n        dfs(root, None)\n        return dfs2(start, -1)\n",
+          "originalCode": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def amountOfTime(self, root: Optional[TreeNode], start: int) -> int:\n        def dfs(node: Optional[TreeNode], fa: Optional[TreeNode]):\n            if node is None:\n                return\n            if fa:\n                g[node.val].append(fa.val)\n                g[fa.val].append(node.val)\n            dfs(node.left, node)\n            dfs(node.right, node)\n\n        def dfs2(node: int, fa: int) -> int:\n            ans = 0\n            for nxt in g[node]:\n                if nxt != fa:\n                    ans = max(ans, 1 + dfs2(nxt, node))\n            return ans\n\n        g = defaultdict(list)\n        dfs(root, None)\n        return dfs2(start, -1)\n",
+          "reviewedCode": "# Definition for a binary tree node.\n# class TreeNode:\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Once infection can move both up and down, this is a distance layering problem more than a classic recursive one.\n#     def __init__(self, val=0, left=None, right=None):\n# [Reader note] State setup\n# This setup stage creates the state needed for the invariant or partial result: Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels.\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def amountOfTime(self, root: Optional[TreeNode], start: int) -> int:\n        def dfs(node: Optional[TreeNode], fa: Optional[TreeNode]):\n            if node is None:\n                return\n            if fa:\n                g[node.val].append(fa.val)\n                g[fa.val].append(node.val)\n            dfs(node.left, node)\n            dfs(node.right, node)\n\n        def dfs2(node: int, fa: int) -> int:\n            ans = 0\n            # [Reader note] Main pass\n            # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for nxt in g[node]:\n                # [Reader note] Decision point\n                # Pay attention here: The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions.\n                if nxt != fa:\n                    ans = max(ans, 1 + dfs2(nxt, node))\n            return ans\n\n        g = defaultdict(list)\n        dfs(root, None)\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return dfs2(start, -1)",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "def amountOfTime(self, root: Optional[TreeNode], start: int) -> int:"
+          ],
+          "annotations": [
+            {
+              "line": 3,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Once infection can move both up and down, this is a distance layering problem more than a classic recursive one."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels."
+            },
+            {
+              "line": 20,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 21,
+              "label": "Decision point",
+              "note": "Pay attention here: The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions."
+            },
+            {
+              "line": 27,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the best tree-to-graph bridge problems because the story naturally suggests layered spread over edges.",
+            "whatToNotice": "Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels.",
+            "riskPoint": "The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 3,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-c-amount-of-time-for-binary-tree-to-be-infected.cpp",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/C%2B%2B/amount-of-time-for-binary-tree-to-be-infected.cpp",
+          "localPath": "kamyu104_LeetCode-Solutions/C++/amount-of-time-for-binary-tree-to-be-infected.cpp",
+          "relativePath": "C++/amount-of-time-for-binary-tree-to-be-infected.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Time:  O(n)\n// Space: O(h)\n\n// iterative dfs, tree dp\nclass Solution {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        const auto& iter_dfs = [&]() {\n            int result = -1;\n            using RET = pair<int, int>;\n            RET ret = {-1, -1};\n            vector<tuple<int, TreeNode *, shared_ptr<RET>, shared_ptr<RET>, RET *>> stk;\n            stk.emplace_back(1, root, nullptr, nullptr, &ret);\n            while (!empty(stk)) {\n                auto [step, curr, left, right, ret] = stk.back(); stk.pop_back();\n                if (step == 1) {\n                    if (!curr) {\n                        continue;\n                    }\n                    auto left = make_shared<RET>(-1, -1), right = make_shared<RET>(-1, -1);\n                    stk.emplace_back(2, curr, left, right, ret);\n                    stk.emplace_back(1, curr->right, nullptr, nullptr, right.get());\n                    stk.emplace_back(1, curr->left, nullptr, nullptr, left.get());\n                } else if (step == 2) {\n                    int d = -1;\n                    if (curr->val == start) {\n                        d = 0;\n                        result = max(left->first, right->first) + 1;\n                    } else if (left->second >= 0) {\n                        d = left->second + 1;\n                        result = max(result, right->first + 1 + d);\n                    } else if (right->second >= 0) {\n                        d = right->second + 1;\n                        result = max(result, left->first + 1 + d);\n                    }\n                    *ret = make_pair(max(left->first, right->first) + 1, d);  // [height, dist_to_start]\n                }\n            }\n            return result;\n        };\n\n        return iter_dfs();\n    }\n};\n\n\n// Time:  O(n)\n// Space: O(h)\n// dfs, tree dp\nclass Solution2 {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        int result = -1;\n\n        const function<pair<int, int>(TreeNode *)> dfs = [&](TreeNode *curr) {\n            if (!curr) {\n                return make_pair(-1, -1);\n            }\n            const auto& left = dfs(curr->left);\n            const auto& right = dfs(curr->right);\n            int d = -1;\n            if (curr->val == start) {\n                d = 0;\n                result = max(left.first, right.first) + 1;\n            } else if (left.second >= 0) {\n                d = left.second + 1;\n                result = max(result, right.first + 1 + d);\n            } else if (right.second >= 0) {\n                d = right.second + 1;\n                result = max(result, left.first + 1 + d);\n            }\n            return make_pair(max(left.first, right.first) + 1, d);  // [height, dist_to_start]\n        };\n\n        dfs(root);\n        return result;\n    }\n};\n\n// Time:  O(n)\n// Space: O(n)\n// bfs\nclass Solution3 {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        const auto& bfs = [](const auto& root) {\n            unordered_map<int, vector<int>> adj;\n            vector<TreeNode *> q = {root};\n            while (!empty(q)) {\n                vector<TreeNode *> new_q;\n                for (const auto& u : q) {\n                    for (const auto& v : {u->left, u->right}) {\n                        if (!v) {\n                            continue;\n                        }\n                        adj[u->val].emplace_back(v->val);\n                        adj[v->val].emplace_back(u->val);\n                        new_q.emplace_back(v);\n                    }\n                }\n                q = move(new_q);\n            }\n            return adj;\n        };\n        \n        const auto& bfs2 = [](const auto& adj, const auto& start) {\n            int result = -1;\n            vector<int> q = {start};\n            unordered_set<int> lookup = {start};\n            while (!empty(q)) {\n                vector<int> new_q;\n                for (const auto& u : q) {\n                    if (!adj.count(u)) {\n                        continue;\n                    }\n                    for (const auto& v : adj.at(u)) {\n                        if (lookup.count(v)) {\n                            continue;\n                        }\n                        lookup.emplace(v);\n                        new_q.emplace_back(v);\n                    }\n                }\n                q = move(new_q);\n                ++result;\n            }\n            return result;\n        };\n\n        const auto& adj = bfs(root);\n        return bfs2(adj, start);\n    }\n};\n",
+          "originalCode": "// Time:  O(n)\n// Space: O(h)\n\n// iterative dfs, tree dp\nclass Solution {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        const auto& iter_dfs = [&]() {\n            int result = -1;\n            using RET = pair<int, int>;\n            RET ret = {-1, -1};\n            vector<tuple<int, TreeNode *, shared_ptr<RET>, shared_ptr<RET>, RET *>> stk;\n            stk.emplace_back(1, root, nullptr, nullptr, &ret);\n            while (!empty(stk)) {\n                auto [step, curr, left, right, ret] = stk.back(); stk.pop_back();\n                if (step == 1) {\n                    if (!curr) {\n                        continue;\n                    }\n                    auto left = make_shared<RET>(-1, -1), right = make_shared<RET>(-1, -1);\n                    stk.emplace_back(2, curr, left, right, ret);\n                    stk.emplace_back(1, curr->right, nullptr, nullptr, right.get());\n                    stk.emplace_back(1, curr->left, nullptr, nullptr, left.get());\n                } else if (step == 2) {\n                    int d = -1;\n                    if (curr->val == start) {\n                        d = 0;\n                        result = max(left->first, right->first) + 1;\n                    } else if (left->second >= 0) {\n                        d = left->second + 1;\n                        result = max(result, right->first + 1 + d);\n                    } else if (right->second >= 0) {\n                        d = right->second + 1;\n                        result = max(result, left->first + 1 + d);\n                    }\n                    *ret = make_pair(max(left->first, right->first) + 1, d);  // [height, dist_to_start]\n                }\n            }\n            return result;\n        };\n\n        return iter_dfs();\n    }\n};\n\n\n// Time:  O(n)\n// Space: O(h)\n// dfs, tree dp\nclass Solution2 {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        int result = -1;\n\n        const function<pair<int, int>(TreeNode *)> dfs = [&](TreeNode *curr) {\n            if (!curr) {\n                return make_pair(-1, -1);\n            }\n            const auto& left = dfs(curr->left);\n            const auto& right = dfs(curr->right);\n            int d = -1;\n            if (curr->val == start) {\n                d = 0;\n                result = max(left.first, right.first) + 1;\n            } else if (left.second >= 0) {\n                d = left.second + 1;\n                result = max(result, right.first + 1 + d);\n            } else if (right.second >= 0) {\n                d = right.second + 1;\n                result = max(result, left.first + 1 + d);\n            }\n            return make_pair(max(left.first, right.first) + 1, d);  // [height, dist_to_start]\n        };\n\n        dfs(root);\n        return result;\n    }\n};\n\n// Time:  O(n)\n// Space: O(n)\n// bfs\nclass Solution3 {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        const auto& bfs = [](const auto& root) {\n            unordered_map<int, vector<int>> adj;\n            vector<TreeNode *> q = {root};\n            while (!empty(q)) {\n                vector<TreeNode *> new_q;\n                for (const auto& u : q) {\n                    for (const auto& v : {u->left, u->right}) {\n                        if (!v) {\n                            continue;\n                        }\n                        adj[u->val].emplace_back(v->val);\n                        adj[v->val].emplace_back(u->val);\n                        new_q.emplace_back(v);\n                    }\n                }\n                q = move(new_q);\n            }\n            return adj;\n        };\n        \n        const auto& bfs2 = [](const auto& adj, const auto& start) {\n            int result = -1;\n            vector<int> q = {start};\n            unordered_set<int> lookup = {start};\n            while (!empty(q)) {\n                vector<int> new_q;\n                for (const auto& u : q) {\n                    if (!adj.count(u)) {\n                        continue;\n                    }\n                    for (const auto& v : adj.at(u)) {\n                        if (lookup.count(v)) {\n                            continue;\n                        }\n                        lookup.emplace(v);\n                        new_q.emplace_back(v);\n                    }\n                }\n                q = move(new_q);\n                ++result;\n            }\n            return result;\n        };\n\n        const auto& adj = bfs(root);\n        return bfs2(adj, start);\n    }\n};\n",
+          "reviewedCode": "// Time:  O(n)\n// Space: O(h)\n\n// iterative dfs, tree dp\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Once infection can move both up and down, this is a distance layering problem more than a classic recursive one.\nclass Solution {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels.\n        const auto& iter_dfs = [&]() {\n            int result = -1;\n            using RET = pair<int, int>;\n            RET ret = {-1, -1};\n            vector<tuple<int, TreeNode *, shared_ptr<RET>, shared_ptr<RET>, RET *>> stk;\n            stk.emplace_back(1, root, nullptr, nullptr, &ret);\n            // [Reader note] Main pass\n            // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            while (!empty(stk)) {\n                auto [step, curr, left, right, ret] = stk.back(); stk.pop_back();\n                // [Reader note] Decision point\n                // Pay attention here: The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions.\n                if (step == 1) {\n                    if (!curr) {\n                        continue;\n                    }\n                    auto left = make_shared<RET>(-1, -1), right = make_shared<RET>(-1, -1);\n                    stk.emplace_back(2, curr, left, right, ret);\n                    stk.emplace_back(1, curr->right, nullptr, nullptr, right.get());\n                    stk.emplace_back(1, curr->left, nullptr, nullptr, left.get());\n                } else if (step == 2) {\n                    int d = -1;\n                    if (curr->val == start) {\n                        d = 0;\n                        result = max(left->first, right->first) + 1;\n                    } else if (left->second >= 0) {\n                        d = left->second + 1;\n                        result = max(result, right->first + 1 + d);\n                    } else if (right->second >= 0) {\n                        d = right->second + 1;\n                        result = max(result, left->first + 1 + d);\n                    }\n                    *ret = make_pair(max(left->first, right->first) + 1, d);  // [height, dist_to_start]\n                }\n            }\n            return result;\n        };\n\n        return iter_dfs();\n    }\n};\n\n\n// Time:  O(n)\n// Space: O(h)\n// dfs, tree dp\nclass Solution2 {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        int result = -1;\n\n        const function<pair<int, int>(TreeNode *)> dfs = [&](TreeNode *curr) {\n            if (!curr) {\n                return make_pair(-1, -1);\n            }\n            const auto& left = dfs(curr->left);\n            const auto& right = dfs(curr->right);\n            int d = -1;\n            if (curr->val == start) {\n                d = 0;\n                result = max(left.first, right.first) + 1;\n            } else if (left.second >= 0) {\n                d = left.second + 1;\n                result = max(result, right.first + 1 + d);\n            } else if (right.second >= 0) {\n                d = right.second + 1;\n                result = max(result, left.first + 1 + d);\n            }\n            return make_pair(max(left.first, right.first) + 1, d);  // [height, dist_to_start]\n        };\n\n        dfs(root);\n        return result;\n    }\n};\n\n// Time:  O(n)\n// Space: O(n)\n// bfs\nclass Solution3 {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        const auto& bfs = [](const auto& root) {\n            unordered_map<int, vector<int>> adj;\n            vector<TreeNode *> q = {root};\n            while (!empty(q)) {\n                vector<TreeNode *> new_q;\n                for (const auto& u : q) {\n                    for (const auto& v : {u->left, u->right}) {\n                        if (!v) {\n                            continue;\n                        }\n                        adj[u->val].emplace_back(v->val);\n                        adj[v->val].emplace_back(u->val);\n                        new_q.emplace_back(v);\n                    }\n                }\n                q = move(new_q);\n            }\n            return adj;\n        };\n        \n        const auto& bfs2 = [](const auto& adj, const auto& start) {\n            int result = -1;\n            vector<int> q = {start};\n            unordered_set<int> lookup = {start};\n            while (!empty(q)) {\n                vector<int> new_q;\n                for (const auto& u : q) {\n                    if (!adj.count(u)) {\n                        continue;\n                    }\n                    for (const auto& v : adj.at(u)) {\n                        if (lookup.count(v)) {\n                            continue;\n                        }\n                        lookup.emplace(v);\n                        new_q.emplace_back(v);\n                    }\n                }\n                q = move(new_q);\n                ++result;\n            }\n            return result;\n        };\n\n        const auto& adj = bfs(root);\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return bfs2(adj, start);\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n)",
+            "Space: O(h)",
+            "int amountOfTime(TreeNode* root, int start) {"
+          ],
+          "annotations": [
+            {
+              "line": 5,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Once infection can move both up and down, this is a distance layering problem more than a classic recursive one."
+            },
+            {
+              "line": 8,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels."
+            },
+            {
+              "line": 14,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 16,
+              "label": "Decision point",
+              "note": "Pay attention here: The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions."
+            },
+            {
+              "line": 131,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the best tree-to-graph bridge problems because the story naturally suggests layered spread over edges.",
+            "whatToNotice": "Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels.",
+            "riskPoint": "The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-2300-2399-2385.amount-of-time-for-binary-tree-to-be-infected-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/2300-2399/2385.Amount%20of%20Time%20for%20Binary%20Tree%20to%20Be%20Infected/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/2300-2399/2385.Amount of Time for Binary Tree to Be Infected/Solution.cpp",
+          "relativePath": "solution/2300-2399/2385.Amount of Time for Binary Tree to Be Infected/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        unordered_map<int, vector<int>> g;\n        function<void(TreeNode*, TreeNode*)> dfs = [&](TreeNode* node, TreeNode* fa) {\n            if (!node) {\n                return;\n            }\n            if (fa) {\n                g[node->val].push_back(fa->val);\n                g[fa->val].push_back(node->val);\n            }\n            dfs(node->left, node);\n            dfs(node->right, node);\n        };\n        function<int(int, int)> dfs2 = [&](int node, int fa) -> int {\n            int ans = 0;\n            for (int nxt : g[node]) {\n                if (nxt != fa) {\n                    ans = max(ans, 1 + dfs2(nxt, node));\n                }\n            }\n            return ans;\n        };\n        dfs(root, nullptr);\n        return dfs2(start, -1);\n    }\n};",
+          "originalCode": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        unordered_map<int, vector<int>> g;\n        function<void(TreeNode*, TreeNode*)> dfs = [&](TreeNode* node, TreeNode* fa) {\n            if (!node) {\n                return;\n            }\n            if (fa) {\n                g[node->val].push_back(fa->val);\n                g[fa->val].push_back(node->val);\n            }\n            dfs(node->left, node);\n            dfs(node->right, node);\n        };\n        function<int(int, int)> dfs2 = [&](int node, int fa) -> int {\n            int ans = 0;\n            for (int nxt : g[node]) {\n                if (nxt != fa) {\n                    ans = max(ans, 1 + dfs2(nxt, node));\n                }\n            }\n            return ans;\n        };\n        dfs(root, nullptr);\n        return dfs2(start, -1);\n    }\n};",
+          "reviewedCode": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Once infection can move both up and down, this is a distance layering problem more than a classic recursive one.\nclass Solution {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        unordered_map<int, vector<int>> g;\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels.\n        function<void(TreeNode*, TreeNode*)> dfs = [&](TreeNode* node, TreeNode* fa) {\n            if (!node) {\n                return;\n            }\n            if (fa) {\n                g[node->val].push_back(fa->val);\n                g[fa->val].push_back(node->val);\n            }\n            dfs(node->left, node);\n            dfs(node->right, node);\n        };\n        function<int(int, int)> dfs2 = [&](int node, int fa) -> int {\n            int ans = 0;\n            // [Reader note] Main pass\n            // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for (int nxt : g[node]) {\n                // [Reader note] Decision point\n                // Pay attention here: The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions.\n                if (nxt != fa) {\n                    ans = max(ans, 1 + dfs2(nxt, node));\n                }\n            }\n            return ans;\n        };\n        dfs(root, nullptr);\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return dfs2(start, -1);\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 12,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Once infection can move both up and down, this is a distance layering problem more than a classic recursive one."
+            },
+            {
+              "line": 16,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels."
+            },
+            {
+              "line": 29,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 30,
+              "label": "Decision point",
+              "note": "Pay attention here: The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions."
+            },
+            {
+              "line": 37,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the best tree-to-graph bridge problems because the story naturally suggests layered spread over edges.",
+            "whatToNotice": "Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels.",
+            "riskPoint": "The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions."
+          }
+        },
+        {
+          "id": "test-123-amount-of-time-for-binary-tree-to-be-infected.cpp",
+          "repository": "test-123",
+          "repositoryUrl": null,
+          "sourceUrl": null,
+          "localPath": "test-123/amount-of-time-for-binary-tree-to-be-infected.cpp",
+          "relativePath": "amount-of-time-for-binary-tree-to-be-infected.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code",
+          "code": "// Time:  O(n)\n// Space: O(h)\n\n// iterative dfs, tree dp\nclass Solution {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        const auto& iter_dfs = [&]() {\n            int result = -1;\n            using RET = pair<int, int>;\n            RET ret = {-1, -1};\n            vector<tuple<int, TreeNode *, shared_ptr<RET>, shared_ptr<RET>, RET *>> stk;\n            stk.emplace_back(1, root, nullptr, nullptr, &ret);\n            while (!empty(stk)) {\n                auto [step, curr, left, right, ret] = stk.back(); stk.pop_back();\n                if (step == 1) {\n                    if (!curr) {\n                        continue;\n                    }\n                    auto left = make_shared<RET>(-1, -1), right = make_shared<RET>(-1, -1);\n                    stk.emplace_back(2, curr, left, right, ret);\n                    stk.emplace_back(1, curr->right, nullptr, nullptr, right.get());\n                    stk.emplace_back(1, curr->left, nullptr, nullptr, left.get());\n                } else if (step == 2) {\n                    int d = -1;\n                    if (curr->val == start) {\n                        d = 0;\n                        result = max(left->first, right->first) + 1;\n                    } else if (left->second >= 0) {\n                        d = left->second + 1;\n                        result = max(result, right->first + 1 + d);\n                    } else if (right->second >= 0) {\n                        d = right->second + 1;\n                        result = max(result, left->first + 1 + d);\n                    }\n                    *ret = make_pair(max(left->first, right->first) + 1, d);  // [height, dist_to_start]\n                }\n            }\n            return result;\n        };\n\n        return iter_dfs();\n    }\n};\n\n\n// Time:  O(n)\n// Space: O(h)\n// dfs, tree dp\nclass Solution2 {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        int result = -1;\n\n        const function<pair<int, int>(TreeNode *)> dfs = [&](TreeNode *curr) {\n            if (!curr) {\n                return make_pair(-1, -1);\n            }\n            const auto& left = dfs(curr->left);\n            const auto& right = dfs(curr->right);\n            int d = -1;\n            if (curr->val == start) {\n                d = 0;\n                result = max(left.first, right.first) + 1;\n            } else if (left.second >= 0) {\n                d = left.second + 1;\n                result = max(result, right.first + 1 + d);\n            } else if (right.second >= 0) {\n                d = right.second + 1;\n                result = max(result, left.first + 1 + d);\n            }\n            return make_pair(max(left.first, right.first) + 1, d);  // [height, dist_to_start]\n        };\n\n        dfs(root);\n        return result;\n    }\n};\n\n// Time:  O(n)\n// Space: O(n)\n// bfs\nclass Solution3 {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        const auto& bfs = [](const auto& root) {\n            unordered_map<int, vector<int>> adj;\n            vector<TreeNode *> q = {root};\n            while (!empty(q)) {\n                vector<TreeNode *> new_q;\n                for (const auto& u : q) {\n                    for (const auto& v : {u->left, u->right}) {\n                        if (!v) {\n                            continue;\n                        }\n                        adj[u->val].emplace_back(v->val);\n                        adj[v->val].emplace_back(u->val);\n                        new_q.emplace_back(v);\n                    }\n                }\n                q = move(new_q);\n            }\n            return adj;\n        };\n        \n        const auto& bfs2 = [](const auto& adj, const auto& start) {\n            int result = -1;\n            vector<int> q = {start};\n            unordered_set<int> lookup = {start};\n            while (!empty(q)) {\n                vector<int> new_q;\n                for (const auto& u : q) {\n                    if (!adj.count(u)) {\n                        continue;\n                    }\n                    for (const auto& v : adj.at(u)) {\n                        if (lookup.count(v)) {\n                            continue;\n                        }\n                        lookup.emplace(v);\n                        new_q.emplace_back(v);\n                    }\n                }\n                q = move(new_q);\n                ++result;\n            }\n            return result;\n        };\n\n        const auto& adj = bfs(root);\n        return bfs2(adj, start);\n    }\n};\n",
+          "originalCode": "// Time:  O(n)\n// Space: O(h)\n\n// iterative dfs, tree dp\nclass Solution {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        const auto& iter_dfs = [&]() {\n            int result = -1;\n            using RET = pair<int, int>;\n            RET ret = {-1, -1};\n            vector<tuple<int, TreeNode *, shared_ptr<RET>, shared_ptr<RET>, RET *>> stk;\n            stk.emplace_back(1, root, nullptr, nullptr, &ret);\n            while (!empty(stk)) {\n                auto [step, curr, left, right, ret] = stk.back(); stk.pop_back();\n                if (step == 1) {\n                    if (!curr) {\n                        continue;\n                    }\n                    auto left = make_shared<RET>(-1, -1), right = make_shared<RET>(-1, -1);\n                    stk.emplace_back(2, curr, left, right, ret);\n                    stk.emplace_back(1, curr->right, nullptr, nullptr, right.get());\n                    stk.emplace_back(1, curr->left, nullptr, nullptr, left.get());\n                } else if (step == 2) {\n                    int d = -1;\n                    if (curr->val == start) {\n                        d = 0;\n                        result = max(left->first, right->first) + 1;\n                    } else if (left->second >= 0) {\n                        d = left->second + 1;\n                        result = max(result, right->first + 1 + d);\n                    } else if (right->second >= 0) {\n                        d = right->second + 1;\n                        result = max(result, left->first + 1 + d);\n                    }\n                    *ret = make_pair(max(left->first, right->first) + 1, d);  // [height, dist_to_start]\n                }\n            }\n            return result;\n        };\n\n        return iter_dfs();\n    }\n};\n\n\n// Time:  O(n)\n// Space: O(h)\n// dfs, tree dp\nclass Solution2 {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        int result = -1;\n\n        const function<pair<int, int>(TreeNode *)> dfs = [&](TreeNode *curr) {\n            if (!curr) {\n                return make_pair(-1, -1);\n            }\n            const auto& left = dfs(curr->left);\n            const auto& right = dfs(curr->right);\n            int d = -1;\n            if (curr->val == start) {\n                d = 0;\n                result = max(left.first, right.first) + 1;\n            } else if (left.second >= 0) {\n                d = left.second + 1;\n                result = max(result, right.first + 1 + d);\n            } else if (right.second >= 0) {\n                d = right.second + 1;\n                result = max(result, left.first + 1 + d);\n            }\n            return make_pair(max(left.first, right.first) + 1, d);  // [height, dist_to_start]\n        };\n\n        dfs(root);\n        return result;\n    }\n};\n\n// Time:  O(n)\n// Space: O(n)\n// bfs\nclass Solution3 {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        const auto& bfs = [](const auto& root) {\n            unordered_map<int, vector<int>> adj;\n            vector<TreeNode *> q = {root};\n            while (!empty(q)) {\n                vector<TreeNode *> new_q;\n                for (const auto& u : q) {\n                    for (const auto& v : {u->left, u->right}) {\n                        if (!v) {\n                            continue;\n                        }\n                        adj[u->val].emplace_back(v->val);\n                        adj[v->val].emplace_back(u->val);\n                        new_q.emplace_back(v);\n                    }\n                }\n                q = move(new_q);\n            }\n            return adj;\n        };\n        \n        const auto& bfs2 = [](const auto& adj, const auto& start) {\n            int result = -1;\n            vector<int> q = {start};\n            unordered_set<int> lookup = {start};\n            while (!empty(q)) {\n                vector<int> new_q;\n                for (const auto& u : q) {\n                    if (!adj.count(u)) {\n                        continue;\n                    }\n                    for (const auto& v : adj.at(u)) {\n                        if (lookup.count(v)) {\n                            continue;\n                        }\n                        lookup.emplace(v);\n                        new_q.emplace_back(v);\n                    }\n                }\n                q = move(new_q);\n                ++result;\n            }\n            return result;\n        };\n\n        const auto& adj = bfs(root);\n        return bfs2(adj, start);\n    }\n};\n",
+          "reviewedCode": "// Time:  O(n)\n// Space: O(h)\n\n// iterative dfs, tree dp\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Once infection can move both up and down, this is a distance layering problem more than a classic recursive one.\nclass Solution {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels.\n        const auto& iter_dfs = [&]() {\n            int result = -1;\n            using RET = pair<int, int>;\n            RET ret = {-1, -1};\n            vector<tuple<int, TreeNode *, shared_ptr<RET>, shared_ptr<RET>, RET *>> stk;\n            stk.emplace_back(1, root, nullptr, nullptr, &ret);\n            // [Reader note] Main pass\n            // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            while (!empty(stk)) {\n                auto [step, curr, left, right, ret] = stk.back(); stk.pop_back();\n                // [Reader note] Decision point\n                // Pay attention here: The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions.\n                if (step == 1) {\n                    if (!curr) {\n                        continue;\n                    }\n                    auto left = make_shared<RET>(-1, -1), right = make_shared<RET>(-1, -1);\n                    stk.emplace_back(2, curr, left, right, ret);\n                    stk.emplace_back(1, curr->right, nullptr, nullptr, right.get());\n                    stk.emplace_back(1, curr->left, nullptr, nullptr, left.get());\n                } else if (step == 2) {\n                    int d = -1;\n                    if (curr->val == start) {\n                        d = 0;\n                        result = max(left->first, right->first) + 1;\n                    } else if (left->second >= 0) {\n                        d = left->second + 1;\n                        result = max(result, right->first + 1 + d);\n                    } else if (right->second >= 0) {\n                        d = right->second + 1;\n                        result = max(result, left->first + 1 + d);\n                    }\n                    *ret = make_pair(max(left->first, right->first) + 1, d);  // [height, dist_to_start]\n                }\n            }\n            return result;\n        };\n\n        return iter_dfs();\n    }\n};\n\n\n// Time:  O(n)\n// Space: O(h)\n// dfs, tree dp\nclass Solution2 {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        int result = -1;\n\n        const function<pair<int, int>(TreeNode *)> dfs = [&](TreeNode *curr) {\n            if (!curr) {\n                return make_pair(-1, -1);\n            }\n            const auto& left = dfs(curr->left);\n            const auto& right = dfs(curr->right);\n            int d = -1;\n            if (curr->val == start) {\n                d = 0;\n                result = max(left.first, right.first) + 1;\n            } else if (left.second >= 0) {\n                d = left.second + 1;\n                result = max(result, right.first + 1 + d);\n            } else if (right.second >= 0) {\n                d = right.second + 1;\n                result = max(result, left.first + 1 + d);\n            }\n            return make_pair(max(left.first, right.first) + 1, d);  // [height, dist_to_start]\n        };\n\n        dfs(root);\n        return result;\n    }\n};\n\n// Time:  O(n)\n// Space: O(n)\n// bfs\nclass Solution3 {\npublic:\n    int amountOfTime(TreeNode* root, int start) {\n        const auto& bfs = [](const auto& root) {\n            unordered_map<int, vector<int>> adj;\n            vector<TreeNode *> q = {root};\n            while (!empty(q)) {\n                vector<TreeNode *> new_q;\n                for (const auto& u : q) {\n                    for (const auto& v : {u->left, u->right}) {\n                        if (!v) {\n                            continue;\n                        }\n                        adj[u->val].emplace_back(v->val);\n                        adj[v->val].emplace_back(u->val);\n                        new_q.emplace_back(v);\n                    }\n                }\n                q = move(new_q);\n            }\n            return adj;\n        };\n        \n        const auto& bfs2 = [](const auto& adj, const auto& start) {\n            int result = -1;\n            vector<int> q = {start};\n            unordered_set<int> lookup = {start};\n            while (!empty(q)) {\n                vector<int> new_q;\n                for (const auto& u : q) {\n                    if (!adj.count(u)) {\n                        continue;\n                    }\n                    for (const auto& v : adj.at(u)) {\n                        if (lookup.count(v)) {\n                            continue;\n                        }\n                        lookup.emplace(v);\n                        new_q.emplace_back(v);\n                    }\n                }\n                q = move(new_q);\n                ++result;\n            }\n            return result;\n        };\n\n        const auto& adj = bfs(root);\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return bfs2(adj, start);\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n)",
+            "Space: O(h)",
+            "int amountOfTime(TreeNode* root, int start) {"
+          ],
+          "annotations": [
+            {
+              "line": 5,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Once infection can move both up and down, this is a distance layering problem more than a classic recursive one."
+            },
+            {
+              "line": 8,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels."
+            },
+            {
+              "line": 14,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 16,
+              "label": "Decision point",
+              "note": "Pay attention here: The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions."
+            },
+            {
+              "line": 131,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the best tree-to-graph bridge problems because the story naturally suggests layered spread over edges.",
+            "whatToNotice": "Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels.",
+            "riskPoint": "The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions."
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-2300-2399-2385.amount-of-time-for-binary-tree-to-be-infected-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/2300-2399/2385.Amount%20of%20Time%20for%20Binary%20Tree%20to%20Be%20Infected/Solution.java",
+          "localPath": "doocs_leetcode/solution/2300-2399/2385.Amount of Time for Binary Tree to Be Infected/Solution.java",
+          "relativePath": "solution/2300-2399/2385.Amount of Time for Binary Tree to Be Infected/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    private Map<Integer, List<Integer>> g = new HashMap<>();\n\n    public int amountOfTime(TreeNode root, int start) {\n        dfs(root, null);\n        return dfs2(start, -1);\n    }\n\n    private void dfs(TreeNode node, TreeNode fa) {\n        if (node == null) {\n            return;\n        }\n        if (fa != null) {\n            g.computeIfAbsent(node.val, k -> new ArrayList<>()).add(fa.val);\n            g.computeIfAbsent(fa.val, k -> new ArrayList<>()).add(node.val);\n        }\n        dfs(node.left, node);\n        dfs(node.right, node);\n    }\n\n    private int dfs2(int node, int fa) {\n        int ans = 0;\n        for (int nxt : g.getOrDefault(node, List.of())) {\n            if (nxt != fa) {\n                ans = Math.max(ans, 1 + dfs2(nxt, node));\n            }\n        }\n        return ans;\n    }\n}",
+          "originalCode": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    private Map<Integer, List<Integer>> g = new HashMap<>();\n\n    public int amountOfTime(TreeNode root, int start) {\n        dfs(root, null);\n        return dfs2(start, -1);\n    }\n\n    private void dfs(TreeNode node, TreeNode fa) {\n        if (node == null) {\n            return;\n        }\n        if (fa != null) {\n            g.computeIfAbsent(node.val, k -> new ArrayList<>()).add(fa.val);\n            g.computeIfAbsent(fa.val, k -> new ArrayList<>()).add(node.val);\n        }\n        dfs(node.left, node);\n        dfs(node.right, node);\n    }\n\n    private int dfs2(int node, int fa) {\n        int ans = 0;\n        for (int nxt : g.getOrDefault(node, List.of())) {\n            if (nxt != fa) {\n                ans = Math.max(ans, 1 + dfs2(nxt, node));\n            }\n        }\n        return ans;\n    }\n}",
+          "reviewedCode": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Once infection can move both up and down, this is a distance layering problem more than a classic recursive one.\nclass Solution {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels.\n    private Map<Integer, List<Integer>> g = new HashMap<>();\n\n    public int amountOfTime(TreeNode root, int start) {\n        dfs(root, null);\n        return dfs2(start, -1);\n    }\n\n    private void dfs(TreeNode node, TreeNode fa) {\n        if (node == null) {\n            return;\n        }\n        if (fa != null) {\n            g.computeIfAbsent(node.val, k -> new ArrayList<>()).add(fa.val);\n            g.computeIfAbsent(fa.val, k -> new ArrayList<>()).add(node.val);\n        }\n        dfs(node.left, node);\n        dfs(node.right, node);\n    }\n\n    private int dfs2(int node, int fa) {\n        int ans = 0;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int nxt : g.getOrDefault(node, List.of())) {\n            // [Reader note] Decision point\n            // Pay attention here: The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions.\n            if (nxt != fa) {\n                ans = Math.max(ans, 1 + dfs2(nxt, node));\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return ans;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 16,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Once infection can move both up and down, this is a distance layering problem more than a classic recursive one."
+            },
+            {
+              "line": 17,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels."
+            },
+            {
+              "line": 38,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 39,
+              "label": "Decision point",
+              "note": "Pay attention here: The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions."
+            },
+            {
+              "line": 43,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the best tree-to-graph bridge problems because the story naturally suggests layered spread over edges.",
+            "whatToNotice": "Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels.",
+            "riskPoint": "The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions."
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-2300-2399-2385.amount-of-time-for-binary-tree-to-be-infected-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/2300-2399/2385.Amount%20of%20Time%20for%20Binary%20Tree%20to%20Be%20Infected/Solution.go",
+          "localPath": "doocs_leetcode/solution/2300-2399/2385.Amount of Time for Binary Tree to Be Infected/Solution.go",
+          "relativePath": "solution/2300-2399/2385.Amount of Time for Binary Tree to Be Infected/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc amountOfTime(root *TreeNode, start int) int {\n\tg := map[int][]int{}\n\tvar dfs func(*TreeNode, *TreeNode)\n\tdfs = func(node, fa *TreeNode) {\n\t\tif node == nil {\n\t\t\treturn\n\t\t}\n\t\tif fa != nil {\n\t\t\tg[node.Val] = append(g[node.Val], fa.Val)\n\t\t\tg[fa.Val] = append(g[fa.Val], node.Val)\n\t\t}\n\t\tdfs(node.Left, node)\n\t\tdfs(node.Right, node)\n\t}\n\tvar dfs2 func(int, int) int\n\tdfs2 = func(node, fa int) (ans int) {\n\t\tfor _, nxt := range g[node] {\n\t\t\tif nxt != fa {\n\t\t\t\tans = max(ans, 1+dfs2(nxt, node))\n\t\t\t}\n\t\t}\n\t\treturn\n\t}\n\tdfs(root, nil)\n\treturn dfs2(start, -1)\n}",
+          "originalCode": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc amountOfTime(root *TreeNode, start int) int {\n\tg := map[int][]int{}\n\tvar dfs func(*TreeNode, *TreeNode)\n\tdfs = func(node, fa *TreeNode) {\n\t\tif node == nil {\n\t\t\treturn\n\t\t}\n\t\tif fa != nil {\n\t\t\tg[node.Val] = append(g[node.Val], fa.Val)\n\t\t\tg[fa.Val] = append(g[fa.Val], node.Val)\n\t\t}\n\t\tdfs(node.Left, node)\n\t\tdfs(node.Right, node)\n\t}\n\tvar dfs2 func(int, int) int\n\tdfs2 = func(node, fa int) (ans int) {\n\t\tfor _, nxt := range g[node] {\n\t\t\tif nxt != fa {\n\t\t\t\tans = max(ans, 1+dfs2(nxt, node))\n\t\t\t}\n\t\t}\n\t\treturn\n\t}\n\tdfs(root, nil)\n\treturn dfs2(start, -1)\n}",
+          "reviewedCode": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Once infection can move both up and down, this is a distance layering problem more than a classic recursive one.\nfunc amountOfTime(root *TreeNode, start int) int {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels.\n\tg := map[int][]int{}\n\tvar dfs func(*TreeNode, *TreeNode)\n\tdfs = func(node, fa *TreeNode) {\n\t\tif node == nil {\n\t\t\treturn\n\t\t}\n\t\tif fa != nil {\n\t\t\tg[node.Val] = append(g[node.Val], fa.Val)\n\t\t\tg[fa.Val] = append(g[fa.Val], node.Val)\n\t\t}\n\t\tdfs(node.Left, node)\n\t\tdfs(node.Right, node)\n\t}\n\tvar dfs2 func(int, int) int\n\tdfs2 = func(node, fa int) (ans int) {\n\t\t// [Reader note] Main pass\n\t\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\t\tfor _, nxt := range g[node] {\n\t\t\t// [Reader note] Decision point\n\t\t\t// Pay attention here: The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions.\n\t\t\tif nxt != fa {\n\t\t\t\tans = max(ans, 1+dfs2(nxt, node))\n\t\t\t}\n\t\t}\n\t\treturn\n\t}\n\tdfs(root, nil)\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn dfs2(start, -1)\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "func amountOfTime(root *TreeNode, start int) int {"
+          ],
+          "annotations": [
+            {
+              "line": 9,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Once infection can move both up and down, this is a distance layering problem more than a classic recursive one."
+            },
+            {
+              "line": 10,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels."
+            },
+            {
+              "line": 25,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 26,
+              "label": "Decision point",
+              "note": "Pay attention here: The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions."
+            },
+            {
+              "line": 33,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the best tree-to-graph bridge problems because the story naturally suggests layered spread over edges.",
+            "whatToNotice": "Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels.",
+            "riskPoint": "The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions."
+          }
+        }
+      ]
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-2300-2399-2385.amount-of-time-for-binary-tree-to-be-infected-solution.ts",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/2300-2399/2385.Amount%20of%20Time%20for%20Binary%20Tree%20to%20Be%20Infected/Solution.ts",
+          "localPath": "doocs_leetcode/solution/2300-2399/2385.Amount of Time for Binary Tree to Be Infected/Solution.ts",
+          "relativePath": "solution/2300-2399/2385.Amount of Time for Binary Tree to Be Infected/Solution.ts",
+          "languageId": "typescript",
+          "languageLabel": "TypeScript",
+          "coverageType": "code+explanation",
+          "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction amountOfTime(root: TreeNode | null, start: number): number {\n    const g: Map<number, number[]> = new Map();\n    const dfs = (node: TreeNode | null, fa: TreeNode | null) => {\n        if (!node) {\n            return;\n        }\n        if (fa) {\n            if (!g.has(node.val)) {\n                g.set(node.val, []);\n            }\n            g.get(node.val)!.push(fa.val);\n            if (!g.has(fa.val)) {\n                g.set(fa.val, []);\n            }\n            g.get(fa.val)!.push(node.val);\n        }\n        dfs(node.left, node);\n        dfs(node.right, node);\n    };\n    const dfs2 = (node: number, fa: number): number => {\n        let ans = 0;\n        for (const nxt of g.get(node) || []) {\n            if (nxt !== fa) {\n                ans = Math.max(ans, 1 + dfs2(nxt, node));\n            }\n        }\n        return ans;\n    };\n    dfs(root, null);\n    return dfs2(start, -1);\n}\n",
+          "originalCode": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction amountOfTime(root: TreeNode | null, start: number): number {\n    const g: Map<number, number[]> = new Map();\n    const dfs = (node: TreeNode | null, fa: TreeNode | null) => {\n        if (!node) {\n            return;\n        }\n        if (fa) {\n            if (!g.has(node.val)) {\n                g.set(node.val, []);\n            }\n            g.get(node.val)!.push(fa.val);\n            if (!g.has(fa.val)) {\n                g.set(fa.val, []);\n            }\n            g.get(fa.val)!.push(node.val);\n        }\n        dfs(node.left, node);\n        dfs(node.right, node);\n    };\n    const dfs2 = (node: number, fa: number): number => {\n        let ans = 0;\n        for (const nxt of g.get(node) || []) {\n            if (nxt !== fa) {\n                ans = Math.max(ans, 1 + dfs2(nxt, node));\n            }\n        }\n        return ans;\n    };\n    dfs(root, null);\n    return dfs2(start, -1);\n}\n",
+          "reviewedCode": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Once infection can move both up and down, this is a distance layering problem more than a classic recursive one.\nfunction amountOfTime(root: TreeNode | null, start: number): number {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels.\n    const g: Map<number, number[]> = new Map();\n    const dfs = (node: TreeNode | null, fa: TreeNode | null) => {\n        if (!node) {\n            return;\n        }\n        if (fa) {\n            if (!g.has(node.val)) {\n                g.set(node.val, []);\n            }\n            g.get(node.val)!.push(fa.val);\n            if (!g.has(fa.val)) {\n                g.set(fa.val, []);\n            }\n            g.get(fa.val)!.push(node.val);\n        }\n        dfs(node.left, node);\n        dfs(node.right, node);\n    };\n    const dfs2 = (node: number, fa: number): number => {\n        let ans = 0;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (const nxt of g.get(node) || []) {\n            // [Reader note] Decision point\n            // Pay attention here: The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions.\n            if (nxt !== fa) {\n                ans = Math.max(ans, 1 + dfs2(nxt, node));\n            }\n        }\n        return ans;\n    };\n    dfs(root, null);\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return dfs2(start, -1);\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 15,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Once infection can move both up and down, this is a distance layering problem more than a classic recursive one."
+            },
+            {
+              "line": 16,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels."
+            },
+            {
+              "line": 36,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 37,
+              "label": "Decision point",
+              "note": "Pay attention here: The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions."
+            },
+            {
+              "line": 44,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is one of the best tree-to-graph bridge problems because the story naturally suggests layered spread over edges.",
+            "whatToNotice": "Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels.",
+            "riskPoint": "The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions."
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "doocs_leetcode-solution-2300-2399-2385.amount-of-time-for-binary-tree-to-be-infected-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/2300-2399/2385.Amount%20of%20Time%20for%20Binary%20Tree%20to%20Be%20Infected/README.md",
+      "localPath": "doocs_leetcode/solution/2300-2399/2385.Amount of Time for Binary Tree to Be Infected/README.md",
+      "relativePath": "solution/2300-2399/2385.Amount of Time for Binary Tree to Be Infected/README.md",
+      "title": "[2385. \u611f\u67d3\u4e8c\u53c9\u6811\u9700\u8981\u7684\u603b\u65f6\u95f4](https://leetcode.cn/problems/amount-of-time-for-binary-tree-to-be-infected)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/2300-2399/2385.Amount%20of%20Time%20for%20Binary%20Tree%20to%20Be%20Infected/README.md rating: 1711 source: \u7b2c 307 \u573a\u5468\u8d5b Q3 tags: - \u6811 - \u6df1\u5ea6\u4f18\u5148\u641c\u7d22 - \u5e7f\u5ea6\u4f18\u5148\u641c\u7d22 - \u54c8\u5e0c\u8868 - \u4e8c\u53c9\u6811 --- <!-- problem:start --> # [2385. \u611f\u67d3\u4e8c\u53c9\u6811\u9700\u8981\u7684\u603b\u65f6\u95f4](https://leetcode.cn/problems/amount-of-time-for-binary-tree-to-be-infected) [English Version](/solution/2300-239..."
+    },
+    {
+      "id": "doocs_leetcode-solution-2300-2399-2385.amount-of-time-for-binary-tree-to-be-infected-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/2300-2399/2385.Amount%20of%20Time%20for%20Binary%20Tree%20to%20Be%20Infected/README_EN.md",
+      "localPath": "doocs_leetcode/solution/2300-2399/2385.Amount of Time for Binary Tree to Be Infected/README_EN.md",
+      "relativePath": "solution/2300-2399/2385.Amount of Time for Binary Tree to Be Infected/README_EN.md",
+      "title": "[2385. Amount of Time for Binary Tree to Be Infected](https://leetcode.com/problems/amount-of-time-for-binary-tree-to-be-infected)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/2300-2399/2385.Amount%20of%20Time%20for%20Binary%20Tree%20to%20Be%20Infected/README_EN.md rating: 1711 source: Weekly Contest 307 Q3 tags: - Tree - Depth-First Search - Breadth-First Search - Hash Table - Binary Tree --- <!-- problem:start --> # [2385. Amount of Time for Binary Tree to Be Infected](https://leetcode.c..."
+    }
+  ]
+}

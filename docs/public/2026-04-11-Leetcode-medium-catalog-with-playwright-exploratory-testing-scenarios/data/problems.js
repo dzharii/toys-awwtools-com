@@ -1,0 +1,10618 @@
+window.PROBLEM_DATA = {
+  "generatedAt": "2026-04-11",
+  "researchSources": {
+    "leetcode_patterns": "https://seanprashad.com/leetcode-patterns/",
+    "neetcode": "https://neetcode.io/",
+    "svg_accessibility": "https://www.w3.org/TR/SVG/access",
+    "uswds_search": "https://designsystem.digital.gov/components/search/"
+  },
+  "phases": [
+    {
+      "id": "foundations",
+      "name": "Phase 1: First Solid Mediums",
+      "shortName": "First Solid Mediums",
+      "description": "Shorter statements, one main invariant, and quick pattern payoff."
+    },
+    {
+      "id": "linked-lists",
+      "name": "Phase 2: Pointer Control",
+      "shortName": "Pointer Control",
+      "description": "Linked-list problems that reward careful pointer movement without excessive domain noise."
+    },
+    {
+      "id": "trees",
+      "name": "Phase 3: Trees And Recursive Signals",
+      "shortName": "Trees And Recursive Signals",
+      "description": "Tree traversal, recursion flow, and clean structural invariants."
+    },
+    {
+      "id": "graphs",
+      "name": "Phase 4: Grids And Reachability",
+      "shortName": "Grids And Reachability",
+      "description": "Graph and grid traversal with clear stories and strong BFS/DFS reuse."
+    },
+    {
+      "id": "state-space",
+      "name": "Phase 5: State Space Search",
+      "shortName": "State Space Search",
+      "description": "Backtracking, DAG exploration, and choice-making under constraints."
+    },
+    {
+      "id": "dp",
+      "name": "Phase 6: Intro Dynamic Programming",
+      "shortName": "Intro Dynamic Programming",
+      "description": "Decision chains and manageable state transitions that start to feel like real DP."
+    }
+  ],
+  "lanes": [
+    {
+      "id": "window-pointer",
+      "label": "Windows And Pointers",
+      "color": "#9c4f2c"
+    },
+    {
+      "id": "linked-list",
+      "label": "Linked Lists",
+      "color": "#005f73"
+    },
+    {
+      "id": "tree",
+      "label": "Trees",
+      "color": "#3d405b"
+    },
+    {
+      "id": "graph-grid",
+      "label": "Graphs And Grids",
+      "color": "#1d7874"
+    },
+    {
+      "id": "state-search",
+      "label": "State Search",
+      "color": "#7b2d26"
+    },
+    {
+      "id": "dp",
+      "label": "Dynamic Programming",
+      "color": "#5f0f40"
+    }
+  ],
+  "topicGuides": [
+    {
+      "id": "two-pointers",
+      "title": "Two Pointers",
+      "path": "topics/two-pointers.html"
+    },
+    {
+      "id": "sliding-window",
+      "title": "Sliding Window",
+      "path": "topics/sliding-window.html"
+    },
+    {
+      "id": "prefix-sums",
+      "title": "Prefix Sums And Difference Arrays",
+      "path": "topics/prefix-sums.html"
+    },
+    {
+      "id": "linked-lists",
+      "title": "Linked Lists",
+      "path": "topics/linked-lists.html"
+    },
+    {
+      "id": "tree-traversal",
+      "title": "Tree Traversal",
+      "path": "topics/tree-traversal.html"
+    },
+    {
+      "id": "bfs",
+      "title": "Breadth-First Search",
+      "path": "topics/bfs.html"
+    },
+    {
+      "id": "dfs",
+      "title": "Depth-First Search",
+      "path": "topics/dfs.html"
+    },
+    {
+      "id": "graph-traversal",
+      "title": "Graph Traversal",
+      "path": "topics/graph-traversal.html"
+    },
+    {
+      "id": "backtracking",
+      "title": "Backtracking",
+      "path": "topics/backtracking.html"
+    },
+    {
+      "id": "dynamic-programming",
+      "title": "Dynamic Programming",
+      "path": "topics/dynamic-programming.html"
+    }
+  ],
+  "problems": [
+    {
+      "id": "longest-substring-without-repeating-characters",
+      "number": 3,
+      "title": "Longest Substring Without Repeating Characters",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/longest-substring-without-repeating-characters/",
+      "concepts": [
+        "sliding-window",
+        "hashing",
+        "string"
+      ],
+      "phase": {
+        "id": "foundations",
+        "name": "Phase 1: First Solid Mediums",
+        "shortName": "First Solid Mediums",
+        "description": "Shorter statements, one main invariant, and quick pattern payoff."
+      },
+      "lane": {
+        "id": "window-pointer",
+        "label": "Windows And Pointers",
+        "color": "#9c4f2c"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "This is one of the cleanest introductions to a moving constraint, and the same rhythm shows up across many string mediums.",
+      "whatYouPractice": "Maintaining window state, knowing when to shrink, and separating the invariant from the bookkeeping.",
+      "overview": "Keep a live substring valid while repeated characters force you to adjust its left edge.",
+      "interestNote": "A classic first Medium because the statement is short but the technique scales far beyond this problem.",
+      "caveat": "The idea is clean, but it is easy to get the left boundary updates slightly wrong.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 1,
+      "prerequisites": [],
+      "statementStyle": "Short string prompt with one dominant condition.",
+      "expectedMentalModel": "Protect one running invariant instead of restarting work from scratch.",
+      "topicGuides": [
+        {
+          "id": "sliding-window",
+          "title": "Sliding Window",
+          "path": "topics/sliding-window.html"
+        }
+      ],
+      "memberships": [
+        "Blind 75",
+        "NeetCode 150",
+        "Seed report",
+        "Sliding Window"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/longest-substring-without-repeating-characters/",
+        "https://neetcode.io/problems/longest-substring-without-repeating-characters",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Hash Table",
+          "slug": "hash-table"
+        },
+        {
+          "name": "String",
+          "slug": "string"
+        },
+        {
+          "name": "Sliding Window",
+          "slug": "sliding-window"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0000-0099/0003.Longest Substring Without Repeating Characters/README.md",
+            "solution/0000-0099/0003.Longest Substring Without Repeating Characters/README_EN.md",
+            "solution/0000-0099/0003.Longest Substring Without Repeating Characters/Solution.cpp",
+            "solution/0000-0099/0003.Longest Substring Without Repeating Characters/Solution.go",
+            "solution/0000-0099/0003.Longest Substring Without Repeating Characters/Solution.java",
+            "solution/0000-0099/0003.Longest Substring Without Repeating Characters/Solution.py",
+            "solution/0000-0099/0003.Longest Substring Without Repeating Characters/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/longestSubstringWithoutRepeatingCharacters/longestSubstringWithoutRepeatingCharacters.cpp",
+            "shell/TransposeFile.sh"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/longest-substring-without-repeating-characters.cpp",
+            "Python/longest-substring-without-repeating-characters.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "c/0003-longest-substring-without-repeating-characters.c",
+            "cpp/0003-longest-substring-without-repeating-characters.cpp",
+            "csharp/0003-longest-substring-without-repeating-characters.cs",
+            "go/0003-longest-substring-without-repeating-characters.go",
+            "java/0003-longest-substring-without-repeating-characters.java",
+            "javascript/0003-longest-substring-without-repeating-characters.js",
+            "kotlin/0003-longest-substring-without-repeating-characters.kt",
+            "python/0003-longest-substring-without-repeating-characters.py"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "test-123",
+          "coverageType": "code",
+          "paths": [
+            "3sum-closest.cpp",
+            "3sum-smaller.cpp",
+            "3sum-with-multiplicity.cpp",
+            "3sum.cpp"
+          ],
+          "notes": "Broad path scan matched the problem by number or normalized slug.",
+          "matchMode": "broad"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Two_Pointers/003.Longest Substring Without Repeating Characters/003.Longest-Substring-Without-Repeating-Characters.cpp",
+            "Two_Pointers/003.Longest Substring Without Repeating Characters/3. Longest Substring Without Repeating Characters.cpp",
+            "Two_Pointers/003.Longest Substring Without Repeating Characters/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C",
+          "Kotlin"
+        ],
+        "solutionCount": 18,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "longest-repeating-character-replacement",
+      "number": 424,
+      "title": "Longest Repeating Character Replacement",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/longest-repeating-character-replacement/",
+      "concepts": [
+        "sliding-window",
+        "counting",
+        "string"
+      ],
+      "phase": {
+        "id": "foundations",
+        "name": "Phase 1: First Solid Mediums",
+        "shortName": "First Solid Mediums",
+        "description": "Shorter statements, one main invariant, and quick pattern payoff."
+      },
+      "lane": {
+        "id": "window-pointer",
+        "label": "Windows And Pointers",
+        "color": "#9c4f2c"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "first-medium",
+      "whySolve": "It deepens the sliding-window habit without turning into a long statement or a niche trick.",
+      "whatYouPractice": "Reasoning about window validity, frequency counts, and when an approximate summary is enough to move forward.",
+      "overview": "Grow and trim a substring while asking how much editing pressure the current window can absorb.",
+      "interestNote": "Strong follow-up to #3 because it teaches a more durable way to think about window constraints.",
+      "caveat": "Many first attempts over-correct the frequency logic and make the window harder than it needs to be.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 2,
+      "prerequisites": [],
+      "statementStyle": "Compact string prompt with a single tolerance rule.",
+      "expectedMentalModel": "A valid window can survive some pressure; you do not need to rebuild the whole story each step.",
+      "topicGuides": [
+        {
+          "id": "sliding-window",
+          "title": "Sliding Window",
+          "path": "topics/sliding-window.html"
+        }
+      ],
+      "memberships": [
+        "Blind 75",
+        "NeetCode 150",
+        "Seed report",
+        "Sliding Window"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/longest-repeating-character-replacement/",
+        "https://neetcode.io/problems/longest-repeating-character-replacement",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Hash Table",
+          "slug": "hash-table"
+        },
+        {
+          "name": "String",
+          "slug": "string"
+        },
+        {
+          "name": "Sliding Window",
+          "slug": "sliding-window"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0400-0499/0424.Longest Repeating Character Replacement/README.md",
+            "solution/0400-0499/0424.Longest Repeating Character Replacement/README_EN.md",
+            "solution/0400-0499/0424.Longest Repeating Character Replacement/Solution.cpp",
+            "solution/0400-0499/0424.Longest Repeating Character Replacement/Solution.go",
+            "solution/0400-0499/0424.Longest Repeating Character Replacement/Solution.java",
+            "solution/0400-0499/0424.Longest Repeating Character Replacement/Solution.py",
+            "solution/0400-0499/0424.Longest Repeating Character Replacement/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/longest-repeating-character-replacement.cpp",
+            "Python/longest-repeating-character-replacement.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "c/0424-longest-repeating-character-replacement.c",
+            "cpp/0424-longest-repeating-character-replacement.cpp",
+            "csharp/0424-longest-repeating-character-replacement.cs",
+            "go/0424-longest-repeating-character-replacement.go",
+            "java/0424-longest-repeating-character-replacement.java",
+            "javascript/0424-longest-repeating-character-replacement.js",
+            "kotlin/0424-longest-repeating-character-replacement.kt",
+            "python/0424-longest-repeating-character-replacement.py"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Two_Pointers/424.Longest-Repeating-Character-Replacement/424.Longest-Repeating-Character-Replacement_v1.cpp",
+            "Two_Pointers/424.Longest-Repeating-Character-Replacement/424.Longest-Repeating-Character-Replacement_v2.cpp",
+            "Two_Pointers/424.Longest-Repeating-Character-Replacement/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C",
+          "Kotlin"
+        ],
+        "solutionCount": 17,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "product-of-array-except-self",
+      "number": 238,
+      "title": "Product of Array Except Self",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/product-of-array-except-self/",
+      "concepts": [
+        "array",
+        "prefix-suffix",
+        "bookkeeping"
+      ],
+      "phase": {
+        "id": "foundations",
+        "name": "Phase 1: First Solid Mediums",
+        "shortName": "First Solid Mediums",
+        "description": "Shorter statements, one main invariant, and quick pattern payoff."
+      },
+      "lane": {
+        "id": "window-pointer",
+        "label": "Windows And Pointers",
+        "color": "#9c4f2c"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It teaches the value of deliberate passes and reusable partial work without requiring heavy theory.",
+      "whatYouPractice": "Left-to-right and right-to-left accumulation, output construction, and disciplined state reuse.",
+      "overview": "Produce an output for each position while avoiding the tempting but forbidden direct route.",
+      "interestNote": "This problem often feels like a small leap in maturity because the clean solution is about structure, not clever syntax.",
+      "caveat": "The logic is short, but careless ordering will overwrite information you still need.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 3,
+      "prerequisites": [],
+      "statementStyle": "Straightforward array prompt with a useful restriction.",
+      "expectedMentalModel": "Use partial work from each side instead of recomputing every view independently.",
+      "topicGuides": [
+        {
+          "id": "two-pointers",
+          "title": "Two Pointers",
+          "path": "topics/two-pointers.html"
+        }
+      ],
+      "memberships": [
+        "Arrays & Hashing",
+        "Blind 75",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/product-of-array-except-self/",
+        "https://neetcode.io/problems/product-of-array-except-self",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Prefix Sum",
+          "slug": "prefix-sum"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0200-0299/0238.Product of Array Except Self/README.md",
+            "solution/0200-0299/0238.Product of Array Except Self/README_EN.md",
+            "solution/0200-0299/0238.Product of Array Except Self/Solution.cpp",
+            "solution/0200-0299/0238.Product of Array Except Self/Solution.go",
+            "solution/0200-0299/0238.Product of Array Except Self/Solution.java",
+            "solution/0200-0299/0238.Product of Array Except Self/Solution.py",
+            "solution/0200-0299/0238.Product of Array Except Self/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/productOfArrayExceptSelf/ProductOfArrayExceptSelf.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/product-of-array-except-self.cpp",
+            "Python/product-of-array-except-self.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "c/0238-product-of-array-except-self.c",
+            "cpp/0238-product-of-array-except-self.cpp",
+            "csharp/0238-product-of-array-except-self.cs",
+            "go/0238-product-of-array-except-self.go",
+            "java/0238-product-of-array-except-self.java",
+            "javascript/0238-product-of-array-except-self.js",
+            "kotlin/0238-product-of-array-except-self.kt",
+            "python/0238-product-of-array-except-self.py"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C",
+          "Kotlin"
+        ],
+        "solutionCount": 16,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "container-with-most-water",
+      "number": 11,
+      "title": "Container With Most Water",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/container-with-most-water/",
+      "concepts": [
+        "two-pointers",
+        "array",
+        "proof-ish reasoning"
+      ],
+      "phase": {
+        "id": "foundations",
+        "name": "Phase 1: First Solid Mediums",
+        "shortName": "First Solid Mediums",
+        "description": "Shorter statements, one main invariant, and quick pattern payoff."
+      },
+      "lane": {
+        "id": "window-pointer",
+        "label": "Windows And Pointers",
+        "color": "#9c4f2c"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It is one of the best first two-pointer Mediums because the win comes from reasoning, not from implementation bulk.",
+      "whatYouPractice": "Shrinking search space, defending pointer movement, and reading a geometric statement as an invariant problem.",
+      "overview": "Compare pairs from the outside in while the limiting side controls the value of the current choice.",
+      "interestNote": "High payoff for interviews because the pattern teaches how to justify a pointer move rather than guess one.",
+      "caveat": "The code is tiny; the real work is trusting why one pointer move can safely discard many candidates.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 4,
+      "prerequisites": [],
+      "statementStyle": "Visual array prompt with almost no setup friction.",
+      "expectedMentalModel": "Eliminate regions only when you can explain why they cannot beat the current best path forward.",
+      "topicGuides": [
+        {
+          "id": "two-pointers",
+          "title": "Two Pointers",
+          "path": "topics/two-pointers.html"
+        }
+      ],
+      "memberships": [
+        "Blind 75",
+        "NeetCode 150",
+        "Seed report",
+        "Two Pointers"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/container-with-most-water/",
+        "https://neetcode.io/problems/container-with-most-water",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Two Pointers",
+          "slug": "two-pointers"
+        },
+        {
+          "name": "Greedy",
+          "slug": "greedy"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0000-0099/0011.Container With Most Water/README.md",
+            "solution/0000-0099/0011.Container With Most Water/README_EN.md",
+            "solution/0000-0099/0011.Container With Most Water/Solution.cpp",
+            "solution/0000-0099/0011.Container With Most Water/Solution.go",
+            "solution/0000-0099/0011.Container With Most Water/Solution.java",
+            "solution/0000-0099/0011.Container With Most Water/Solution.py",
+            "solution/0000-0099/0011.Container With Most Water/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/containerWithMostWater/containerWithMostWater.cpp",
+            "algorithms/java/src/containerwithmostwater.java"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/container-with-most-water.cpp",
+            "Python/container-with-most-water.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "c/0011-container-with-most-water.c",
+            "cpp/0011-container-with-most-water.cpp",
+            "csharp/0011-container-with-most-water.cs",
+            "dart/0011-container-with-most-water.dart",
+            "go/0011-container-with-most-water.go",
+            "java/0011-container-with-most-water.java",
+            "javascript/0011-container-with-most-water.js",
+            "kotlin/0011-container-with-most-water.kt"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Two_Pointers/011.Container-With-Most-Water/11-Container-With-Most-Water.cpp",
+            "Two_Pointers/011.Container-With-Most-Water/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c",
+          "kotlin",
+          "dart"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C",
+          "Kotlin",
+          "Dart"
+        ],
+        "solutionCount": 18,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "3sum",
+      "number": 15,
+      "title": "3Sum",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/3sum/",
+      "concepts": [
+        "sorting",
+        "two-pointers",
+        "duplicate-handling"
+      ],
+      "phase": {
+        "id": "foundations",
+        "name": "Phase 1: First Solid Mediums",
+        "shortName": "First Solid Mediums",
+        "description": "Shorter statements, one main invariant, and quick pattern payoff."
+      },
+      "lane": {
+        "id": "window-pointer",
+        "label": "Windows And Pointers",
+        "color": "#9c4f2c"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "This is a real transition problem: still readable, but now duplicate handling and search structure both matter.",
+      "whatYouPractice": "Reducing a harder search to a familiar subproblem, working on sorted data, and controlling repeated answers.",
+      "overview": "Find unique triples by reshaping the search into a more manageable sorted scan.",
+      "interestNote": "It is famous for a reason: the core idea returns in many sum and combination problems.",
+      "caveat": "The conceptual move is good; the tedious part is keeping duplicate handling clean and consistent.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 5,
+      "prerequisites": [],
+      "statementStyle": "Short numeric prompt with a stronger uniqueness requirement.",
+      "expectedMentalModel": "Reframe the broad search into one anchor plus a smaller coordinated scan.",
+      "topicGuides": [
+        {
+          "id": "two-pointers",
+          "title": "Two Pointers",
+          "path": "topics/two-pointers.html"
+        }
+      ],
+      "memberships": [
+        "Blind 75",
+        "NeetCode 150",
+        "Seed report",
+        "Two Pointers"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/3sum/",
+        "https://neetcode.io/problems/3sum",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Two Pointers",
+          "slug": "two-pointers"
+        },
+        {
+          "name": "Sorting",
+          "slug": "sorting"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0000-0099/0015.3Sum/README.md",
+            "solution/0000-0099/0015.3Sum/README_EN.md",
+            "solution/0000-0099/0015.3Sum/Solution.cpp",
+            "solution/0000-0099/0015.3Sum/Solution.go",
+            "solution/0000-0099/0015.3Sum/Solution.java",
+            "solution/0000-0099/0015.3Sum/Solution.py",
+            "solution/0000-0099/0015.3Sum/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/3Sum/3Sum.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/3sum.cpp",
+            "Python/3sum.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "c/0015-3sum.c",
+            "cpp/0015-3sum.cpp",
+            "csharp/0015-3sum.cs",
+            "go/0015-3sum.go",
+            "java/0015-3sum.java",
+            "javascript/0015-3sum.js",
+            "kotlin/0015-3sum.kt",
+            "python/0015-3sum.py"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "test-123",
+          "coverageType": "code",
+          "paths": [
+            "3sum.cpp"
+          ],
+          "notes": "Flat mirror of solution source files, useful as a quick local reference after solving.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Two_Pointers/015.3Sum/15-3Sum.cpp",
+            "Two_Pointers/015.3Sum/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C",
+          "Kotlin"
+        ],
+        "solutionCount": 18,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "group-anagrams",
+      "number": 49,
+      "title": "Group Anagrams",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/group-anagrams/",
+      "concepts": [
+        "hashing",
+        "string",
+        "bucketing"
+      ],
+      "phase": {
+        "id": "foundations",
+        "name": "Phase 1: First Solid Mediums",
+        "shortName": "First Solid Mediums",
+        "description": "Shorter statements, one main invariant, and quick pattern payoff."
+      },
+      "lane": {
+        "id": "window-pointer",
+        "label": "Windows And Pointers",
+        "color": "#9c4f2c"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "The statement is easy to digest, but it teaches a durable pattern: choose a stable representation, then bucket on it.",
+      "whatYouPractice": "Canonical representations, hash-based grouping, and thinking about data normalization before implementation.",
+      "overview": "Cluster strings that share the same underlying letter makeup even when their order differs.",
+      "interestNote": "A calm, useful Medium that rewards clean modeling more than algorithmic theatrics.",
+      "caveat": "The main decision is how to represent the signature cleanly and consistently.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 6,
+      "prerequisites": [],
+      "statementStyle": "Short grouping prompt with low statement friction.",
+      "expectedMentalModel": "If equivalent inputs can share one signature, grouping becomes much simpler.",
+      "topicGuides": [
+        {
+          "id": "sliding-window",
+          "title": "Sliding Window",
+          "path": "topics/sliding-window.html"
+        }
+      ],
+      "memberships": [
+        "Arrays & Hashing",
+        "Blind 75",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/group-anagrams/",
+        "https://neetcode.io/problems/group-anagrams",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Hash Table",
+          "slug": "hash-table"
+        },
+        {
+          "name": "String",
+          "slug": "string"
+        },
+        {
+          "name": "Sorting",
+          "slug": "sorting"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0000-0099/0049.Group Anagrams/README.md",
+            "solution/0000-0099/0049.Group Anagrams/README_EN.md",
+            "solution/0000-0099/0049.Group Anagrams/Solution.cpp",
+            "solution/0000-0099/0049.Group Anagrams/Solution.go",
+            "solution/0000-0099/0049.Group Anagrams/Solution.java",
+            "solution/0000-0099/0049.Group Anagrams/Solution.py",
+            "solution/0000-0099/0049.Group Anagrams/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/anagrams/GroupAnagrams.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/group-anagrams.cpp",
+            "Python/group-anagrams.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "c/0049-group-anagrams.c",
+            "cpp/0049-group-anagrams.cpp",
+            "csharp/0049-group-anagrams.cs",
+            "dart/0049-group-anagrams.dart",
+            "go/0049-group-anagrams.go",
+            "java/0049-group-anagrams.java",
+            "javascript/0049-group-anagrams.js",
+            "kotlin/0049-group-anagrams.kt"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Hash/049.Group-Anagrams/49.Group Anagrams.cpp",
+            "Hash/049.Group-Anagrams/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c",
+          "kotlin",
+          "dart"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C",
+          "Kotlin",
+          "Dart"
+        ],
+        "solutionCount": 17,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "merge-intervals",
+      "number": 56,
+      "title": "Merge Intervals",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/merge-intervals/",
+      "concepts": [
+        "sorting",
+        "intervals",
+        "sweep"
+      ],
+      "phase": {
+        "id": "foundations",
+        "name": "Phase 1: First Solid Mediums",
+        "shortName": "First Solid Mediums",
+        "description": "Shorter statements, one main invariant, and quick pattern payoff."
+      },
+      "lane": {
+        "id": "window-pointer",
+        "label": "Windows And Pointers",
+        "color": "#9c4f2c"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It builds the recurring interview instinct that many interval problems become manageable once the data is ordered.",
+      "whatYouPractice": "Sorting for structure, maintaining a running merged region, and deciding when to extend versus flush work.",
+      "overview": "Condense overlapping ranges into a smaller summary without losing any covered span.",
+      "interestNote": "One of the best examples of a reusable 'sort first, then scan' pattern.",
+      "caveat": "The implementation is not hard, but edge cases around touching and nested intervals deserve attention.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 7,
+      "prerequisites": [],
+      "statementStyle": "Clean interval prompt with obvious output semantics.",
+      "expectedMentalModel": "Order the world first, then maintain one current region until the next item truly breaks it.",
+      "topicGuides": [
+        {
+          "id": "two-pointers",
+          "title": "Two Pointers",
+          "path": "topics/two-pointers.html"
+        }
+      ],
+      "memberships": [
+        "Blind 75",
+        "Intervals",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/merge-intervals/",
+        "https://neetcode.io/problems/merge-intervals",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Sorting",
+          "slug": "sorting"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0000-0099/0056.Merge Intervals/README.md",
+            "solution/0000-0099/0056.Merge Intervals/README_EN.md",
+            "solution/0000-0099/0056.Merge Intervals/Solution.cpp",
+            "solution/0000-0099/0056.Merge Intervals/Solution.go",
+            "solution/0000-0099/0056.Merge Intervals/Solution.java",
+            "solution/0000-0099/0056.Merge Intervals/Solution.py",
+            "solution/0000-0099/0056.Merge Intervals/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/mergeIntervals/mergeIntervals.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/merge-intervals.cpp",
+            "Python/merge-intervals.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/merge-intervals.md",
+            "c/0056-merge-intervals.c",
+            "cpp/0056-merge-intervals.cpp",
+            "csharp/0056-merge-intervals.cs",
+            "go/0056-merge-intervals.go",
+            "hints/merge-intervals.md",
+            "java/0056-merge-intervals.java",
+            "javascript/0056-merge-intervals.js"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Others/056.Merge-Intervals/056.Merge-Intervals.cpp",
+            "Others/056.Merge-Intervals/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C"
+        ],
+        "solutionCount": 15,
+        "writeupCount": 5,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "sort-colors",
+      "number": 75,
+      "title": "Sort Colors",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/sort-colors/",
+      "concepts": [
+        "two-pointers",
+        "partitioning",
+        "array"
+      ],
+      "phase": {
+        "id": "foundations",
+        "name": "Phase 1: First Solid Mediums",
+        "shortName": "First Solid Mediums",
+        "description": "Shorter statements, one main invariant, and quick pattern payoff."
+      },
+      "lane": {
+        "id": "window-pointer",
+        "label": "Windows And Pointers",
+        "color": "#9c4f2c"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is compact, memorable, and excellent for learning how pointer invariants can define multiple active zones at once.",
+      "whatYouPractice": "Multi-pointer partitioning, in-place swaps, and staying honest about the meaning of each segment.",
+      "overview": "Rearrange a tiny alphabet of values in-place while preserving what each region already means.",
+      "interestNote": "A short problem with outsized value because it trains disciplined invariant thinking.",
+      "caveat": "The danger is not time complexity; it is losing track of what each pointer boundary currently guarantees.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 8,
+      "prerequisites": [],
+      "statementStyle": "Very short array prompt with strong invariant pressure.",
+      "expectedMentalModel": "Treat the array as labeled zones and keep those promises true after every swap.",
+      "topicGuides": [
+        {
+          "id": "two-pointers",
+          "title": "Two Pointers",
+          "path": "topics/two-pointers.html"
+        }
+      ],
+      "memberships": [
+        "Arrays & Hashing",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/sort-colors/",
+        "https://neetcode.io/problems/sort-colors",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Two Pointers",
+          "slug": "two-pointers"
+        },
+        {
+          "name": "Sorting",
+          "slug": "sorting"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0000-0099/0075.Sort Colors/README.md",
+            "solution/0000-0099/0075.Sort Colors/README_EN.md",
+            "solution/0000-0099/0075.Sort Colors/Solution.cpp",
+            "solution/0000-0099/0075.Sort Colors/Solution.go",
+            "solution/0000-0099/0075.Sort Colors/Solution.java",
+            "solution/0000-0099/0075.Sort Colors/Solution.py",
+            "solution/0000-0099/0075.Sort Colors/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/sortColors/sortColors.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/sort-colors.cpp",
+            "Python/sort-colors.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/sort-colors.md",
+            "c/0075-sort-colors.c",
+            "cpp/0075-sort-colors.cpp",
+            "csharp/0075-sort-colors.cs",
+            "go/0075-sort-colors.go",
+            "java/0075-sort-colors.java",
+            "javascript/0075-sort-colors.js",
+            "kotlin/0075-sort-colors.kt"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Two_Pointers/075.Sort-Colors/75. Sort Colors.cpp",
+            "Two_Pointers/075.Sort-Colors/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C",
+          "Kotlin"
+        ],
+        "solutionCount": 16,
+        "writeupCount": 4,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "add-two-numbers",
+      "number": 2,
+      "title": "Add Two Numbers",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/add-two-numbers/",
+      "concepts": [
+        "linked-list",
+        "digit-carry",
+        "pointer-walk"
+      ],
+      "phase": {
+        "id": "linked-lists",
+        "name": "Phase 2: Pointer Control",
+        "shortName": "Pointer Control",
+        "description": "Linked-list problems that reward careful pointer movement without excessive domain noise."
+      },
+      "lane": {
+        "id": "linked-list",
+        "label": "Linked Lists",
+        "color": "#005f73"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It is one of the friendliest linked-list Mediums because the story is intuitive but still forces pointer discipline.",
+      "whatYouPractice": "Parallel traversal, node construction, carry management, and using a stable build pointer.",
+      "overview": "Walk two linked structures together while building a third result one digit at a time.",
+      "interestNote": "A foundational linked-list problem that gives you confidence without relying on obscure pointer tricks.",
+      "caveat": "The cases are simple, but forgetting the tail carry or an uneven list length leads to subtle misses.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 9,
+      "prerequisites": [],
+      "statementStyle": "Concrete, arithmetic-flavored linked-list prompt.",
+      "expectedMentalModel": "Advance through both lists in lockstep and build the answer incrementally instead of patching it later.",
+      "topicGuides": [
+        {
+          "id": "linked-lists",
+          "title": "Linked Lists",
+          "path": "topics/linked-lists.html"
+        }
+      ],
+      "memberships": [
+        "Linked List",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/add-two-numbers/",
+        "https://neetcode.io/problems/add-two-numbers",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Linked List",
+          "slug": "linked-list"
+        },
+        {
+          "name": "Math",
+          "slug": "math"
+        },
+        {
+          "name": "Recursion",
+          "slug": "recursion"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0000-0099/0002.Add Two Numbers/README.md",
+            "solution/0000-0099/0002.Add Two Numbers/README_EN.md",
+            "solution/0000-0099/0002.Add Two Numbers/Solution.cpp",
+            "solution/0000-0099/0002.Add Two Numbers/Solution.go",
+            "solution/0000-0099/0002.Add Two Numbers/Solution.java",
+            "solution/0000-0099/0002.Add Two Numbers/Solution.py",
+            "solution/0000-0099/0002.Add Two Numbers/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/addTwoNumbers/addTwoNumbers.cpp",
+            "algorithms/java/src/searchRangeInBinarySearchTree/searchRangeInBinarySearchTree.java",
+            "shell/ValidPhoneNumbers.sh"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/add-two-numbers.cpp",
+            "Python/add-two-numbers.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/add-two-numbers.md",
+            "c/0002-add-two-numbers.c",
+            "cpp/0002-add-two-numbers.cpp",
+            "csharp/0002-add-two-numbers.cs",
+            "go/0002-add-two-numbers.go",
+            "hints/add-two-numbers.md",
+            "java/0002-add-two-numbers.java",
+            "javascript/0002-add-two-numbers.js"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "test-123",
+          "coverageType": "code",
+          "paths": [
+            "add-two-numbers.cpp"
+          ],
+          "notes": "Flat mirror of solution source files, useful as a quick local reference after solving.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code",
+          "paths": [
+            "BFS/1066.Campus-Bikes-II/1066.Campus-Bikes-II_v2.cpp",
+            "BFS/1559.Detect-Cycles-in-2D-Grid/1559.Detect-Cycles-in-2D-Grid.cpp",
+            "BFS/1559.Detect-Cycles-in-2D-Grid/Readme.md",
+            "BFS/1879.Minimum-XOR-Sum-of-Two-Arrays/1879.Minimum-XOR-Sum-of-Two-Arrays_v2.cpp",
+            "BFS/2258.Escape-the-Spreading-Fire/2258.Escape-the-Spreading-Fire_v2.cpp",
+            "BFS/2662.Minimum-Cost-of-a-Path-With-Special-Roads/2662.Minimum-Cost-of-a-Path-With-Special-Roads_v2.cpp",
+            "BFS/743.Network-Delay-Time/743.Network-Delay-Time_Dijkstra_N2.cpp",
+            "BFS/815.Bus-Routes/815.Bus-Routes_v2.cpp"
+          ],
+          "notes": "Broad path scan matched the problem by number or normalized slug.",
+          "matchMode": "broad"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C"
+        ],
+        "solutionCount": 16,
+        "writeupCount": 4,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "remove-nth-node-from-end-of-list",
+      "number": 19,
+      "title": "Remove Nth Node From End of List",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/remove-nth-node-from-end-of-list/",
+      "concepts": [
+        "linked-list",
+        "two-pointers",
+        "offset"
+      ],
+      "phase": {
+        "id": "linked-lists",
+        "name": "Phase 2: Pointer Control",
+        "shortName": "Pointer Control",
+        "description": "Linked-list problems that reward careful pointer movement without excessive domain noise."
+      },
+      "lane": {
+        "id": "linked-list",
+        "label": "Linked Lists",
+        "color": "#005f73"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It is a perfect pointer-offset problem and a strong lesson in how one pass can replace two when you control the gap.",
+      "whatYouPractice": "Sentinel use, offset pointers, and deletion around boundary cases such as removing the head.",
+      "overview": "Delete one node near the end without first rewriting the list as an array.",
+      "interestNote": "This problem earns its place because the pattern generalizes cleanly to many one-pass list routines.",
+      "caveat": "The core idea is stable, but head removal is where many otherwise correct drafts break.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 10,
+      "prerequisites": [],
+      "statementStyle": "Short linked-list prompt with one practical operation.",
+      "expectedMentalModel": "Maintain a fixed distance so later structure becomes available exactly when you need it.",
+      "topicGuides": [
+        {
+          "id": "linked-lists",
+          "title": "Linked Lists",
+          "path": "topics/linked-lists.html"
+        },
+        {
+          "id": "two-pointers",
+          "title": "Two Pointers",
+          "path": "topics/two-pointers.html"
+        }
+      ],
+      "memberships": [
+        "Blind 75",
+        "Linked List",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/remove-nth-node-from-end-of-list/",
+        "https://neetcode.io/problems/remove-nth-node-from-end-of-list",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Linked List",
+          "slug": "linked-list"
+        },
+        {
+          "name": "Two Pointers",
+          "slug": "two-pointers"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0000-0099/0019.Remove Nth Node From End of List/README.md",
+            "solution/0000-0099/0019.Remove Nth Node From End of List/README_EN.md",
+            "solution/0000-0099/0019.Remove Nth Node From End of List/Solution.cpp",
+            "solution/0000-0099/0019.Remove Nth Node From End of List/Solution.go",
+            "solution/0000-0099/0019.Remove Nth Node From End of List/Solution.java",
+            "solution/0000-0099/0019.Remove Nth Node From End of List/Solution.py",
+            "solution/0000-0099/0019.Remove Nth Node From End of List/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/removeNthNodeFromEndOfList/removeNthNodeFromEndOfList.cpp",
+            "algorithms/python/RemoveNthNodeFromEndOfList/removeNthFromEnd.py"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/remove-nth-node-from-end-of-list.cpp",
+            "Python/remove-nth-node-from-end-of-list.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "c/0019-remove-nth-node-from-end-of-list.c",
+            "cpp/0019-remove-nth-node-from-end-of-list.cpp",
+            "csharp/0019-remove-nth-node-from-end-of-list.cs",
+            "go/0019-remove-nth-node-from-end-of-list.go",
+            "java/0019-remove-nth-node-from-end-of-list.java",
+            "javascript/0019-remove-nth-node-from-end-of-list.js",
+            "kotlin/0019-remove-nth-node-from-end-of-list.kt",
+            "python/0019-remove-nth-node-from-end-of-list.py"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C",
+          "Kotlin"
+        ],
+        "solutionCount": 17,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "swap-nodes-in-pairs",
+      "number": 24,
+      "title": "Swap Nodes in Pairs",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/swap-nodes-in-pairs/",
+      "concepts": [
+        "linked-list",
+        "pointer-rewiring"
+      ],
+      "phase": {
+        "id": "linked-lists",
+        "name": "Phase 2: Pointer Control",
+        "shortName": "Pointer Control",
+        "description": "Linked-list problems that reward careful pointer movement without excessive domain noise."
+      },
+      "lane": {
+        "id": "linked-list",
+        "label": "Linked Lists",
+        "color": "#005f73"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is small enough to focus purely on link manipulation, which makes it good pointer practice without heavy setup.",
+      "whatYouPractice": "Temporary references, local rewiring order, and preserving access to the unprocessed remainder of the list.",
+      "overview": "Rewire a linked list locally so adjacent nodes trade places without changing the stored values.",
+      "interestNote": "Useful because it teaches calm, stepwise rewiring rather than dramatic pointer gymnastics.",
+      "caveat": "If you change links in the wrong order, you can lose the rest of the list almost immediately.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 11,
+      "prerequisites": [],
+      "statementStyle": "Tiny linked-list transformation with no story overhead.",
+      "expectedMentalModel": "Treat each pair as a local surgery while preserving the handle to everything not yet processed.",
+      "topicGuides": [
+        {
+          "id": "linked-lists",
+          "title": "Linked Lists",
+          "path": "topics/linked-lists.html"
+        }
+      ],
+      "memberships": [
+        "Linked List",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/swap-nodes-in-pairs/",
+        "https://neetcode.io/problems/swap-nodes-in-pairs",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Linked List",
+          "slug": "linked-list"
+        },
+        {
+          "name": "Recursion",
+          "slug": "recursion"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0000-0099/0024.Swap Nodes in Pairs/README.md",
+            "solution/0000-0099/0024.Swap Nodes in Pairs/README_EN.md",
+            "solution/0000-0099/0024.Swap Nodes in Pairs/Solution.cpp",
+            "solution/0000-0099/0024.Swap Nodes in Pairs/Solution.go",
+            "solution/0000-0099/0024.Swap Nodes in Pairs/Solution.java",
+            "solution/0000-0099/0024.Swap Nodes in Pairs/Solution.py",
+            "solution/0000-0099/0024.Swap Nodes in Pairs/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/swapNodesInPairs/swapNodesInPairs.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/swap-nodes-in-pairs.cpp",
+            "Python/swap-nodes-in-pairs.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/swap-nodes-in-pairs.md",
+            "c/0024-swap-nodes-in-pairs.c",
+            "cpp/0024-swap-nodes-in-pairs.cpp",
+            "go/0024-swap-nodes-in-pairs.go",
+            "java/0024-swap-nodes-in-pairs.java",
+            "kotlin/0024-swap-nodes-in-pairs.kt",
+            "python/0024-swap-nodes-in-pairs.py"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "test-123",
+          "coverageType": "code",
+          "paths": [
+            "24-game.cpp"
+          ],
+          "notes": "Broad path scan matched the problem by number or normalized slug.",
+          "matchMode": "broad"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code",
+          "paths": [
+            "LCCUP/2020Fall/LCP24.\u6570\u5b57\u6e38\u620f/code.cpp",
+            "LCCUP/2020Fall/LCP24.\u6570\u5b57\u6e38\u620f/Readme.md",
+            "Recursion/679.24-Game/679.24-Game_v1.cpp",
+            "Recursion/679.24-Game/679.24-Game_v2.cpp",
+            "Recursion/679.24-Game/679.24-Game_v3.cpp",
+            "Recursion/679.24-Game/Readme.md"
+          ],
+          "notes": "Broad path scan matched the problem by number or normalized slug.",
+          "matchMode": "broad"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "c",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "C",
+          "Kotlin"
+        ],
+        "solutionCount": 14,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "linked-list-cycle-ii",
+      "number": 142,
+      "title": "Linked List Cycle II",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/linked-list-cycle-ii/",
+      "concepts": [
+        "linked-list",
+        "fast-slow-pointers",
+        "cycle"
+      ],
+      "phase": {
+        "id": "linked-lists",
+        "name": "Phase 2: Pointer Control",
+        "shortName": "Pointer Control",
+        "description": "Linked-list problems that reward careful pointer movement without excessive domain noise."
+      },
+      "lane": {
+        "id": "linked-list",
+        "label": "Linked Lists",
+        "color": "#005f73"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "moderate",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is one of the first list problems where a non-obvious pointer pattern becomes worth learning as a reusable mental model.",
+      "whatYouPractice": "Reasoning about pointer speed, meeting behavior, and separating detection from location.",
+      "overview": "Determine where a linked-list loop begins after detecting that a loop exists at all.",
+      "interestNote": "High interview value because the pattern is memorable and shows up far outside linked lists.",
+      "caveat": "The proof intuition matters; without it, the second phase can feel magical instead of reliable.",
+      "classic": true,
+      "newerGem": false,
+      "starter": false,
+      "recommendedOrder": 12,
+      "prerequisites": [],
+      "statementStyle": "Short prompt, but the insight is more conceptual than mechanical.",
+      "expectedMentalModel": "Different pointer speeds create structure you can exploit later, not just a detection signal.",
+      "topicGuides": [
+        {
+          "id": "linked-lists",
+          "title": "Linked Lists",
+          "path": "topics/linked-lists.html"
+        },
+        {
+          "id": "two-pointers",
+          "title": "Two Pointers",
+          "path": "topics/two-pointers.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/linked-list-cycle-ii/",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Hash Table",
+          "slug": "hash-table"
+        },
+        {
+          "name": "Linked List",
+          "slug": "linked-list"
+        },
+        {
+          "name": "Two Pointers",
+          "slug": "two-pointers"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0100-0199/0142.Linked List Cycle II/README.md",
+            "solution/0100-0199/0142.Linked List Cycle II/README_EN.md",
+            "solution/0100-0199/0142.Linked List Cycle II/Solution.cpp",
+            "solution/0100-0199/0142.Linked List Cycle II/Solution.go",
+            "solution/0100-0199/0142.Linked List Cycle II/Solution.java",
+            "solution/0100-0199/0142.Linked List Cycle II/Solution.py",
+            "solution/0100-0199/0142.Linked List Cycle II/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/linkedListCycle/linkedListCycle.II.cpp",
+            "algorithms/python/LinkedListCycleII/detectCycle.py"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/linked-list-cycle-ii.cpp",
+            "Python/linked-list-cycle-ii.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "articles/linked-list-cycle-ii.md",
+            "c/0142-linked-list-cycle-ii.c",
+            "java/0142-linked-list-cycle-ii.java",
+            "swift/0142-linked-list-cycle-ii.swift"
+          ],
+          "notes": "Broad path scan matched the problem by number or normalized slug.",
+          "matchMode": "broad"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Linked_List/142.Linked-List-Cycle-II/142.Linked-List-Cycle-II.cpp",
+            "Linked_List/142.Linked-List-Cycle-II/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 10,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "odd-even-linked-list",
+      "number": 328,
+      "title": "Odd Even Linked List",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/odd-even-linked-list/",
+      "concepts": [
+        "linked-list",
+        "stable-reordering",
+        "pointer-partition"
+      ],
+      "phase": {
+        "id": "linked-lists",
+        "name": "Phase 2: Pointer Control",
+        "shortName": "Pointer Control",
+        "description": "Linked-list problems that reward careful pointer movement without excessive domain noise."
+      },
+      "lane": {
+        "id": "linked-list",
+        "label": "Linked Lists",
+        "color": "#005f73"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is a practical reordering problem that feels richer than it first appears but stays readable.",
+      "whatYouPractice": "Maintaining parallel tails, respecting stability, and updating multiple linked segments safely.",
+      "overview": "Split a list into two traversal streams and stitch them back together while keeping their internal order.",
+      "interestNote": "Good transition material because it feels like a real list transformation rather than a toy pointer drill.",
+      "caveat": "The bookkeeping is mild, but dropping the head of one partition or finishing the tail incorrectly is common.",
+      "classic": false,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 13,
+      "prerequisites": [],
+      "statementStyle": "Straightforward linked-list reordering task.",
+      "expectedMentalModel": "Build clean sublists first, then reconnect them once the structure is stable.",
+      "topicGuides": [
+        {
+          "id": "linked-lists",
+          "title": "Linked Lists",
+          "path": "topics/linked-lists.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/odd-even-linked-list/",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Linked List",
+          "slug": "linked-list"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0300-0399/0328.Odd Even Linked List/README.md",
+            "solution/0300-0399/0328.Odd Even Linked List/README_EN.md",
+            "solution/0300-0399/0328.Odd Even Linked List/Solution.cpp",
+            "solution/0300-0399/0328.Odd Even Linked List/Solution.go",
+            "solution/0300-0399/0328.Odd Even Linked List/Solution.java",
+            "solution/0300-0399/0328.Odd Even Linked List/Solution.py",
+            "solution/0300-0399/0328.Odd Even Linked List/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/oddEvenLinkedList/OddEvenLinkedList.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/odd-even-linked-list.cpp",
+            "Python/odd-even-linked-list.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 8,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "reorder-list",
+      "number": 143,
+      "title": "Reorder List",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/reorder-list/",
+      "concepts": [
+        "linked-list",
+        "two-pointers",
+        "reverse",
+        "merge"
+      ],
+      "phase": {
+        "id": "linked-lists",
+        "name": "Phase 2: Pointer Control",
+        "shortName": "Pointer Control",
+        "description": "Linked-list problems that reward careful pointer movement without excessive domain noise."
+      },
+      "lane": {
+        "id": "linked-list",
+        "label": "Linked Lists",
+        "color": "#005f73"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "stretch",
+      "readiness": "stretch",
+      "whySolve": "This is a great later linked-list pick because it composes several manageable routines into one coherent transformation.",
+      "whatYouPractice": "Finding the middle, reversing a suffix, and interleaving two list fragments cleanly.",
+      "overview": "Reshape a list into an alternating front-back pattern without converting it into a random-access structure.",
+      "interestNote": "Strong bridge problem because it shows how small pointer routines can be composed into a larger plan.",
+      "caveat": "The final merge is easy to rush; careful termination matters more than the raw idea.",
+      "classic": true,
+      "newerGem": false,
+      "starter": false,
+      "recommendedOrder": 14,
+      "prerequisites": [],
+      "statementStyle": "Readable transformation prompt with several natural substeps.",
+      "expectedMentalModel": "Break the task into clean list subroutines, then recombine them in a controlled order.",
+      "topicGuides": [
+        {
+          "id": "linked-lists",
+          "title": "Linked Lists",
+          "path": "topics/linked-lists.html"
+        },
+        {
+          "id": "two-pointers",
+          "title": "Two Pointers",
+          "path": "topics/two-pointers.html"
+        }
+      ],
+      "memberships": [
+        "Blind 75",
+        "Linked List",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/reorder-list/",
+        "https://neetcode.io/problems/reorder-list",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Linked List",
+          "slug": "linked-list"
+        },
+        {
+          "name": "Two Pointers",
+          "slug": "two-pointers"
+        },
+        {
+          "name": "Stack",
+          "slug": "stack"
+        },
+        {
+          "name": "Recursion",
+          "slug": "recursion"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0100-0199/0143.Reorder List/README.md",
+            "solution/0100-0199/0143.Reorder List/README_EN.md",
+            "solution/0100-0199/0143.Reorder List/Solution.cpp",
+            "solution/0100-0199/0143.Reorder List/Solution.go",
+            "solution/0100-0199/0143.Reorder List/Solution.java",
+            "solution/0100-0199/0143.Reorder List/Solution.py",
+            "solution/0100-0199/0143.Reorder List/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/reorderList/reorderList.cpp",
+            "algorithms/python/ReorderList/reorderList.py"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/reorder-list.cpp",
+            "Python/reorder-list.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "c/0143-reorder-list.c",
+            "cpp/0143-reorder-list.cpp",
+            "csharp/0143-reorder-list.cs",
+            "go/0143-reorder-list.go",
+            "java/0143-reorder-list.java",
+            "javascript/0143-reorder-list.js",
+            "kotlin/0143-reorder-list.kt",
+            "python/0143-reorder-list.py"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Linked_List/143.Reorder-List/143.Reorder-List.cpp",
+            "Linked_List/143.Reorder-List/143.Reorder-List.py",
+            "Linked_List/143.Reorder-List/143.Reorder-List_v2.cpp",
+            "Linked_List/143.Reorder-List/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C",
+          "Kotlin"
+        ],
+        "solutionCount": 20,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "binary-tree-level-order-traversal",
+      "number": 102,
+      "title": "Binary Tree Level Order Traversal",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/binary-tree-level-order-traversal/",
+      "concepts": [
+        "tree",
+        "bfs",
+        "queue"
+      ],
+      "phase": {
+        "id": "trees",
+        "name": "Phase 3: Trees And Recursive Signals",
+        "shortName": "Trees And Recursive Signals",
+        "description": "Tree traversal, recursion flow, and clean structural invariants."
+      },
+      "lane": {
+        "id": "tree",
+        "label": "Trees",
+        "color": "#3d405b"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "This is the friendliest tree BFS Medium and the template returns constantly in traversal variants.",
+      "whatYouPractice": "Queue-driven processing, level boundaries, and translating a tree shape into ordered output groups.",
+      "overview": "Visit a tree level by level and preserve the grouping the traversal naturally reveals.",
+      "interestNote": "An ideal starting point for tree traversal because the statement and the mechanism line up neatly.",
+      "caveat": "The important part is organizing level boundaries cleanly instead of mixing all nodes into one flat pass.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 15,
+      "prerequisites": [],
+      "statementStyle": "Short visual tree prompt with a very natural output shape.",
+      "expectedMentalModel": "Use the queue to mirror how the tree unfolds outward from the root.",
+      "topicGuides": [
+        {
+          "id": "tree-traversal",
+          "title": "Tree Traversal",
+          "path": "topics/tree-traversal.html"
+        },
+        {
+          "id": "bfs",
+          "title": "Breadth-First Search",
+          "path": "topics/bfs.html"
+        }
+      ],
+      "memberships": [
+        "Blind 75",
+        "NeetCode 150",
+        "Seed report",
+        "Trees"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/binary-tree-level-order-traversal/",
+        "https://neetcode.io/problems/binary-tree-level-order-traversal",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Tree",
+          "slug": "tree"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Binary Tree",
+          "slug": "binary-tree"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0100-0199/0102.Binary Tree Level Order Traversal/README.md",
+            "solution/0100-0199/0102.Binary Tree Level Order Traversal/README_EN.md",
+            "solution/0100-0199/0102.Binary Tree Level Order Traversal/Solution.cpp",
+            "solution/0100-0199/0102.Binary Tree Level Order Traversal/Solution.go",
+            "solution/0100-0199/0102.Binary Tree Level Order Traversal/Solution.java",
+            "solution/0100-0199/0102.Binary Tree Level Order Traversal/Solution.py",
+            "solution/0100-0199/0102.Binary Tree Level Order Traversal/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/binaryTreeLevelOrderTraversal/binaryTreeLevelOrderTraversal.cpp",
+            "algorithms/java/src/binaryTreeLevelOrderTraversal/binaryTreeLevelOrderTraversal.java"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/binary-tree-level-order-traversal.cpp",
+            "Python/binary-tree-level-order-traversal.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "c/0102-binary-tree-level-order-traversal.c",
+            "cpp/0102-binary-tree-level-order-traversal.cpp",
+            "csharp/0102-binary-tree-level-order-traversal.cs",
+            "go/0102-binary-tree-level-order-traversal.go",
+            "java/0102-binary-tree-level-order-traversal.java",
+            "javascript/0102-binary-tree-level-order-traversal.js",
+            "kotlin/0102-binary-tree-level-order-traversal.kt",
+            "python/0102-binary-tree-level-order-traversal.py"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C",
+          "Kotlin"
+        ],
+        "solutionCount": 17,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "binary-tree-right-side-view",
+      "number": 199,
+      "title": "Binary Tree Right Side View",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/binary-tree-right-side-view/",
+      "concepts": [
+        "tree",
+        "bfs",
+        "dfs",
+        "visibility"
+      ],
+      "phase": {
+        "id": "trees",
+        "name": "Phase 3: Trees And Recursive Signals",
+        "shortName": "Trees And Recursive Signals",
+        "description": "Tree traversal, recursion flow, and clean structural invariants."
+      },
+      "lane": {
+        "id": "tree",
+        "label": "Trees",
+        "color": "#3d405b"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "light",
+      "readiness": "next-up",
+      "whySolve": "It is a small but worthwhile twist on level traversal and encourages you to think about order within each level.",
+      "whatYouPractice": "Level grouping, traversal order choices, and extracting one representative view from broader traversal state.",
+      "overview": "Report which nodes remain visible when the tree is observed from one side.",
+      "interestNote": "Useful because it turns a familiar traversal into a more selective, view-based question.",
+      "caveat": "The problem is not hard, but mixing the visibility rule with traversal order can create avoidable confusion.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 16,
+      "prerequisites": [],
+      "statementStyle": "Small tree-visibility prompt with low friction.",
+      "expectedMentalModel": "The traversal gives more information than you need; the challenge is choosing the right signal from each layer.",
+      "topicGuides": [
+        {
+          "id": "tree-traversal",
+          "title": "Tree Traversal",
+          "path": "topics/tree-traversal.html"
+        },
+        {
+          "id": "bfs",
+          "title": "Breadth-First Search",
+          "path": "topics/bfs.html"
+        },
+        {
+          "id": "dfs",
+          "title": "Depth-First Search",
+          "path": "topics/dfs.html"
+        }
+      ],
+      "memberships": [
+        "NeetCode 150",
+        "Seed report",
+        "Trees"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/binary-tree-right-side-view/",
+        "https://neetcode.io/problems/binary-tree-right-side-view",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Tree",
+          "slug": "tree"
+        },
+        {
+          "name": "Depth-First Search",
+          "slug": "depth-first-search"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Binary Tree",
+          "slug": "binary-tree"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0100-0199/0199.Binary Tree Right Side View/README.md",
+            "solution/0100-0199/0199.Binary Tree Right Side View/README_EN.md",
+            "solution/0100-0199/0199.Binary Tree Right Side View/Solution.cpp",
+            "solution/0100-0199/0199.Binary Tree Right Side View/Solution.go",
+            "solution/0100-0199/0199.Binary Tree Right Side View/Solution.java",
+            "solution/0100-0199/0199.Binary Tree Right Side View/Solution.py",
+            "solution/0100-0199/0199.Binary Tree Right Side View/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/binaryTreeRightSideView/binaryTreeRightSideView.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "Python/binary-tree-right-side-view.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/binary-tree-right-side-view.md",
+            "c/0199-binary-tree-right-side-view.c",
+            "cpp/0199-binary-tree-right-side-view.cpp",
+            "csharp/0199-binary-tree-right-side-view.cs",
+            "go/0199-binary-tree-right-side-view.go",
+            "hints/binary-tree-right-side-view.md",
+            "java/0199-binary-tree-right-side-view.java",
+            "javascript/0199-binary-tree-right-side-view.js"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C"
+        ],
+        "solutionCount": 13,
+        "writeupCount": 4,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "validate-binary-search-tree",
+      "number": 98,
+      "title": "Validate Binary Search Tree",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/validate-binary-search-tree/",
+      "concepts": [
+        "tree",
+        "dfs",
+        "bst",
+        "invariants"
+      ],
+      "phase": {
+        "id": "trees",
+        "name": "Phase 3: Trees And Recursive Signals",
+        "shortName": "Trees And Recursive Signals",
+        "description": "Tree traversal, recursion flow, and clean structural invariants."
+      },
+      "lane": {
+        "id": "tree",
+        "label": "Trees",
+        "color": "#3d405b"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is one of the best recursion-invariant problems because the local parent-child view is not enough.",
+      "whatYouPractice": "Passing structural constraints through recursion, reading tree properties globally, and handling boundary values safely.",
+      "overview": "Check whether every node in a tree respects the global ordering promises of a BST.",
+      "interestNote": "High signal because it teaches the difference between local checks and full structural guarantees.",
+      "caveat": "The trap is exactly the point: a locally valid-looking tree can still fail globally.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 17,
+      "prerequisites": [],
+      "statementStyle": "Clean tree property check with a famous hidden pitfall.",
+      "expectedMentalModel": "Carry the allowable range through the recursion instead of relying on immediate neighbors alone.",
+      "topicGuides": [
+        {
+          "id": "tree-traversal",
+          "title": "Tree Traversal",
+          "path": "topics/tree-traversal.html"
+        },
+        {
+          "id": "dfs",
+          "title": "Depth-First Search",
+          "path": "topics/dfs.html"
+        }
+      ],
+      "memberships": [
+        "Blind 75",
+        "NeetCode 150",
+        "Seed report",
+        "Trees"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/validate-binary-search-tree/",
+        "https://neetcode.io/problems/validate-binary-search-tree",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Tree",
+          "slug": "tree"
+        },
+        {
+          "name": "Depth-First Search",
+          "slug": "depth-first-search"
+        },
+        {
+          "name": "Binary Search Tree",
+          "slug": "binary-search-tree"
+        },
+        {
+          "name": "Binary Tree",
+          "slug": "binary-tree"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0000-0099/0098.Validate Binary Search Tree/README.md",
+            "solution/0000-0099/0098.Validate Binary Search Tree/README_EN.md",
+            "solution/0000-0099/0098.Validate Binary Search Tree/Solution.cpp",
+            "solution/0000-0099/0098.Validate Binary Search Tree/Solution.go",
+            "solution/0000-0099/0098.Validate Binary Search Tree/Solution.java",
+            "solution/0000-0099/0098.Validate Binary Search Tree/Solution.py",
+            "solution/0000-0099/0098.Validate Binary Search Tree/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/validateBinarySearchTree/validateBinarySearchTree.cpp",
+            "algorithms/java/src/validateBinarySearchTree/validateBinarySearchTree.java",
+            "algorithms/python/ValidateBinarySearchTree/isValidBST.py"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/validate-binary-search-tree.cpp",
+            "Python/validate-binary-search-tree.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "c/0098-validate-binary-search-tree.c",
+            "cpp/0098-validate-binary-search-tree.cpp",
+            "csharp/0098-validate-binary-search-tree.cs",
+            "go/0098-validate-binary-search-tree.go",
+            "java/0098-validate-binary-search-tree.java",
+            "javascript/0098-validate-binary-search-tree.js",
+            "kotlin/0098-validate-binary-search-tree.kt",
+            "python/0098-validate-binary-search-tree.py"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Tree/098.Validate-Binary-Search-Tree/098.Validate Binary Search Tree.cpp",
+            "Tree/098.Validate-Binary-Search-Tree/098.Validate-Binary-Search-Tree_s2.cpp",
+            "Tree/098.Validate-Binary-Search-Tree/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C",
+          "Kotlin"
+        ],
+        "solutionCount": 20,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "kth-smallest-element-in-a-bst",
+      "number": 230,
+      "title": "Kth Smallest Element in a BST",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/kth-smallest-element-in-a-bst/",
+      "concepts": [
+        "tree",
+        "bst",
+        "inorder"
+      ],
+      "phase": {
+        "id": "trees",
+        "name": "Phase 3: Trees And Recursive Signals",
+        "shortName": "Trees And Recursive Signals",
+        "description": "Tree traversal, recursion flow, and clean structural invariants."
+      },
+      "lane": {
+        "id": "tree",
+        "label": "Trees",
+        "color": "#3d405b"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It rewards recognizing what BST order gives you for free and turns traversal into a targeted search.",
+      "whatYouPractice": "Inorder thinking, counting during traversal, and linking a data-structure property to output order.",
+      "overview": "Use the ordering structure of a BST to locate one position in its sorted view.",
+      "interestNote": "A confidence-building tree Medium because the main value is understanding the structure, not wrestling with edge cases.",
+      "caveat": "You can solve it several ways; the worthwhile part is choosing the one that actually uses the BST property cleanly.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 18,
+      "prerequisites": [],
+      "statementStyle": "Short structural tree prompt with a direct interpretation.",
+      "expectedMentalModel": "Convert the BST promise into traversal order rather than treating the tree like an arbitrary graph.",
+      "topicGuides": [
+        {
+          "id": "tree-traversal",
+          "title": "Tree Traversal",
+          "path": "topics/tree-traversal.html"
+        },
+        {
+          "id": "dfs",
+          "title": "Depth-First Search",
+          "path": "topics/dfs.html"
+        }
+      ],
+      "memberships": [
+        "Blind 75",
+        "NeetCode 150",
+        "Seed report",
+        "Trees"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/kth-smallest-element-in-a-bst/",
+        "https://neetcode.io/problems/kth-smallest-element-in-a-bst",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Tree",
+          "slug": "tree"
+        },
+        {
+          "name": "Depth-First Search",
+          "slug": "depth-first-search"
+        },
+        {
+          "name": "Binary Search Tree",
+          "slug": "binary-search-tree"
+        },
+        {
+          "name": "Binary Tree",
+          "slug": "binary-tree"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0200-0299/0230.Kth Smallest Element in a BST/README.md",
+            "solution/0200-0299/0230.Kth Smallest Element in a BST/README_EN.md",
+            "solution/0200-0299/0230.Kth Smallest Element in a BST/Solution.cpp",
+            "solution/0200-0299/0230.Kth Smallest Element in a BST/Solution.go",
+            "solution/0200-0299/0230.Kth Smallest Element in a BST/Solution.java",
+            "solution/0200-0299/0230.Kth Smallest Element in a BST/Solution.py",
+            "solution/0200-0299/0230.Kth Smallest Element in a BST/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/kthSmallestElementInaBST/KthSmallestElementInABst.cpp",
+            "algorithms/python/KthSmallestElementInABST/kthSmallest.py"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/kth-smallest-element-in-a-bst.cpp",
+            "Python/kth-smallest-element-in-a-bst.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "c/0230-kth-smallest-element-in-a-bst.c",
+            "cpp/0230-kth-smallest-element-in-a-bst.cpp",
+            "csharp/0230-kth-smallest-element-in-a-bst.cs",
+            "go/0230-kth-smallest-element-in-a-bst.go",
+            "java/0230-kth-smallest-element-in-a-bst.java",
+            "javascript/0230-kth-smallest-element-in-a-bst.js",
+            "kotlin/0230-kth-smallest-element-in-a-bst.kt",
+            "python/0230-kth-smallest-element-in-a-bst.py"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C",
+          "Kotlin"
+        ],
+        "solutionCount": 17,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "lowest-common-ancestor-of-a-binary-tree",
+      "number": 236,
+      "title": "Lowest Common Ancestor of a Binary Tree",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-tree/",
+      "concepts": [
+        "tree",
+        "dfs",
+        "postorder",
+        "signals"
+      ],
+      "phase": {
+        "id": "trees",
+        "name": "Phase 3: Trees And Recursive Signals",
+        "shortName": "Trees And Recursive Signals",
+        "description": "Tree traversal, recursion flow, and clean structural invariants."
+      },
+      "lane": {
+        "id": "tree",
+        "label": "Trees",
+        "color": "#3d405b"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is a classic recursion problem where the meaningful work is how information bubbles back up from children.",
+      "whatYouPractice": "Postorder reasoning, return-value design, and distinguishing between 'found here' and 'found below.'",
+      "overview": "Find the deepest node that still sits above both targets inside a binary tree.",
+      "interestNote": "A durable interview staple because the recursive signal flow is reusable in many tree questions.",
+      "caveat": "The statement is friendly, but weak return-value design can make the recursion messy fast.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 19,
+      "prerequisites": [],
+      "statementStyle": "Readable tree prompt with a relationship-based goal.",
+      "expectedMentalModel": "Children send signals upward; the parent decides whether those signals combine into the answer.",
+      "topicGuides": [
+        {
+          "id": "tree-traversal",
+          "title": "Tree Traversal",
+          "path": "topics/tree-traversal.html"
+        },
+        {
+          "id": "dfs",
+          "title": "Depth-First Search",
+          "path": "topics/dfs.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-tree/",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Tree",
+          "slug": "tree"
+        },
+        {
+          "name": "Depth-First Search",
+          "slug": "depth-first-search"
+        },
+        {
+          "name": "Binary Tree",
+          "slug": "binary-tree"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0200-0299/0236.Lowest Common Ancestor of a Binary Tree/README.md",
+            "solution/0200-0299/0236.Lowest Common Ancestor of a Binary Tree/README_EN.md",
+            "solution/0200-0299/0236.Lowest Common Ancestor of a Binary Tree/Solution.cpp",
+            "solution/0200-0299/0236.Lowest Common Ancestor of a Binary Tree/Solution.go",
+            "solution/0200-0299/0236.Lowest Common Ancestor of a Binary Tree/Solution.java",
+            "solution/0200-0299/0236.Lowest Common Ancestor of a Binary Tree/Solution.py",
+            "solution/0200-0299/0236.Lowest Common Ancestor of a Binary Tree/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/lowestCommonAncestorOfABinaryTree/LowestCommonAncestorOfABinaryTree.cpp",
+            "algorithms/java/src/lowestCommonAncestorOfABinaryTree/lowestCommonAncestorOfABinaryTree.java",
+            "algorithms/python/LowestCommonAncestorOfABinaryTree/lowestCommonAncestor.py"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/lowest-common-ancestor-of-a-binary-tree.cpp",
+            "Python/lowest-common-ancestor-of-a-binary-tree.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "articles/lowest-common-ancestor-of-a-binary-tree-iii.md",
+            "articles/lowest-common-ancestor-of-a-binary-tree.md",
+            "cpp/0236-power-of-three.cpp",
+            "go/0236-lowest-common-ancestor-of-binary-tree.go",
+            "java/0236-lowest-common-ancestor-of-a-binary-tree.java",
+            "python/0236-lowest-common-ancestor-of-a-binary-tree.py"
+          ],
+          "notes": "Broad path scan matched the problem by number or normalized slug.",
+          "matchMode": "broad"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Tree/236.Lowest-Common-Ancestor-of-a-Binary-Tree/235.Lowest Common Ancestor of a Binary Search Tree.cpp",
+            "Tree/236.Lowest-Common-Ancestor-of-a-Binary-Tree/236.Lowest-Common-Ancestor-of-a-Binary-Tree_v1.cpp",
+            "Tree/236.Lowest-Common-Ancestor-of-a-Binary-Tree/236.Lowest-Common-Ancestor-of-a-Binary-Tree_v2.cpp",
+            "Tree/236.Lowest-Common-Ancestor-of-a-Binary-Tree/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 13,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "construct-binary-tree-from-preorder-and-inorder-traversal",
+      "number": 105,
+      "title": "Construct Binary Tree from Preorder and Inorder Traversal",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/",
+      "concepts": [
+        "tree",
+        "recursion",
+        "indexing",
+        "decomposition"
+      ],
+      "phase": {
+        "id": "trees",
+        "name": "Phase 3: Trees And Recursive Signals",
+        "shortName": "Trees And Recursive Signals",
+        "description": "Tree traversal, recursion flow, and clean structural invariants."
+      },
+      "lane": {
+        "id": "tree",
+        "label": "Trees",
+        "color": "#3d405b"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "stretch",
+      "readiness": "stretch",
+      "whySolve": "It is a very good transition problem for learning how recursive subproblems are defined by ranges instead of copied arrays.",
+      "whatYouPractice": "Recursive decomposition, boundary indexing, and mapping traversal semantics to subtree slices.",
+      "overview": "Rebuild a tree from two traversal views that each reveal different structural information.",
+      "interestNote": "Worth doing because it makes traversal orders feel operational instead of purely descriptive.",
+      "caveat": "The statement is clear, but sloppy range bookkeeping quickly turns the recursion into noise.",
+      "classic": true,
+      "newerGem": false,
+      "starter": false,
+      "recommendedOrder": 20,
+      "prerequisites": [],
+      "statementStyle": "Tree reconstruction prompt with predictable subproblem structure.",
+      "expectedMentalModel": "Each traversal tells you something different; combine them to carve the tree into smaller valid regions.",
+      "topicGuides": [
+        {
+          "id": "tree-traversal",
+          "title": "Tree Traversal",
+          "path": "topics/tree-traversal.html"
+        },
+        {
+          "id": "dfs",
+          "title": "Depth-First Search",
+          "path": "topics/dfs.html"
+        }
+      ],
+      "memberships": [
+        "Blind 75",
+        "NeetCode 150",
+        "Seed report",
+        "Trees"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/",
+        "https://neetcode.io/problems/construct-binary-tree-from-preorder-and-inorder-traversal",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Hash Table",
+          "slug": "hash-table"
+        },
+        {
+          "name": "Divide and Conquer",
+          "slug": "divide-and-conquer"
+        },
+        {
+          "name": "Tree",
+          "slug": "tree"
+        },
+        {
+          "name": "Binary Tree",
+          "slug": "binary-tree"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0100-0199/0105.Construct Binary Tree from Preorder and Inorder Traversal/README.md",
+            "solution/0100-0199/0105.Construct Binary Tree from Preorder and Inorder Traversal/README_EN.md",
+            "solution/0100-0199/0105.Construct Binary Tree from Preorder and Inorder Traversal/Solution.cpp",
+            "solution/0100-0199/0105.Construct Binary Tree from Preorder and Inorder Traversal/Solution.go",
+            "solution/0100-0199/0105.Construct Binary Tree from Preorder and Inorder Traversal/Solution.java",
+            "solution/0100-0199/0105.Construct Binary Tree from Preorder and Inorder Traversal/Solution.py",
+            "solution/0100-0199/0105.Construct Binary Tree from Preorder and Inorder Traversal/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/constructBinaryTreeFromPreorderAndInorderTraversal/constructBinaryTreeFromPreorderAndInorderTraversal.cpp",
+            "algorithms/python/ConstructBinaryTreeFromPreorderAndInorderTraversal/buildTree.py"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/construct-binary-tree-from-preorder-and-inorder-traversal.cpp",
+            "Python/construct-binary-tree-from-preorder-and-inorder-traversal.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "c/0105-construct-binary-tree-from-preorder-and-inorder-traversal.c",
+            "cpp/0105-construct-binary-tree-from-preorder-and-inorder-traversal.cpp",
+            "csharp/0105-construct-binary-tree-from-preorder-and-inorder-traversal.cs",
+            "go/0105-construct-binary-tree-from-preorder-and-inorder-traversal.go",
+            "java/0105-construct-binary-tree-from-preorder-and-inorder-traversal.java",
+            "javascript/0105-construct-binary-tree-from-preorder-and-inorder-traversal.js",
+            "kotlin/0105-construct-binary-tree-from-preorder-and-inorder-traversal.kt",
+            "python/0105-construct-binary-tree-from-preorder-and-inorder-traversal.py"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Tree/105.Construct-Binary-Tree-from-Preorder-and-Inorder-Traversal/105.Construct Binary Tree from Preorder and Inorder Traversal.cpp",
+            "Tree/105.Construct-Binary-Tree-from-Preorder-and-Inorder-Traversal/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C",
+          "Kotlin"
+        ],
+        "solutionCount": 18,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "all-nodes-distance-k-in-binary-tree",
+      "number": 863,
+      "title": "All Nodes Distance K in Binary Tree",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/all-nodes-distance-k-in-binary-tree/",
+      "concepts": [
+        "tree",
+        "graph-thinking",
+        "bfs",
+        "dfs"
+      ],
+      "phase": {
+        "id": "trees",
+        "name": "Phase 3: Trees And Recursive Signals",
+        "shortName": "Trees And Recursive Signals",
+        "description": "Tree traversal, recursion flow, and clean structural invariants."
+      },
+      "lane": {
+        "id": "tree",
+        "label": "Trees",
+        "color": "#3d405b"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "moderate",
+      "effort": "stretch",
+      "readiness": "stretch",
+      "whySolve": "It is an excellent bridge from trees to graphs because it forces you to think about missing upward movement.",
+      "whatYouPractice": "Reframing tree navigation, neighborhood reasoning, and using traversal after a structural conversion.",
+      "overview": "Find all nodes a fixed number of steps away from a target in a structure that normally only points downward.",
+      "interestNote": "Strong follow-up once plain tree traversals feel familiar, because it broadens how you model the structure itself.",
+      "caveat": "The challenge is not raw traversal; it is choosing a representation that makes distance feel natural.",
+      "classic": false,
+      "newerGem": false,
+      "starter": false,
+      "recommendedOrder": 21,
+      "prerequisites": [],
+      "statementStyle": "Concrete tree-distance prompt with one modeling twist.",
+      "expectedMentalModel": "If the natural structure blocks the movement you need, change the representation before you search.",
+      "topicGuides": [
+        {
+          "id": "tree-traversal",
+          "title": "Tree Traversal",
+          "path": "topics/tree-traversal.html"
+        },
+        {
+          "id": "bfs",
+          "title": "Breadth-First Search",
+          "path": "topics/bfs.html"
+        },
+        {
+          "id": "dfs",
+          "title": "Depth-First Search",
+          "path": "topics/dfs.html"
+        },
+        {
+          "id": "graph-traversal",
+          "title": "Graph Traversal",
+          "path": "topics/graph-traversal.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/all-nodes-distance-k-in-binary-tree/",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Hash Table",
+          "slug": "hash-table"
+        },
+        {
+          "name": "Tree",
+          "slug": "tree"
+        },
+        {
+          "name": "Depth-First Search",
+          "slug": "depth-first-search"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Binary Tree",
+          "slug": "binary-tree"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0800-0899/0863.All Nodes Distance K in Binary Tree/README.md",
+            "solution/0800-0899/0863.All Nodes Distance K in Binary Tree/README_EN.md",
+            "solution/0800-0899/0863.All Nodes Distance K in Binary Tree/Solution.cpp",
+            "solution/0800-0899/0863.All Nodes Distance K in Binary Tree/Solution.go",
+            "solution/0800-0899/0863.All Nodes Distance K in Binary Tree/Solution.java",
+            "solution/0800-0899/0863.All Nodes Distance K in Binary Tree/Solution.py",
+            "solution/0800-0899/0863.All Nodes Distance K in Binary Tree/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/all-nodes-distance-k-in-binary-tree.cpp",
+            "Python/all-nodes-distance-k-in-binary-tree.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "java/0863-all-nodes-distance-k-in-binary-tree.java"
+          ],
+          "notes": "Broad path scan matched the problem by number or normalized slug.",
+          "matchMode": "broad"
+        },
+        {
+          "repository": "test-123",
+          "coverageType": "code",
+          "paths": [
+            "all-nodes-distance-k-in-binary-tree.cpp"
+          ],
+          "notes": "Flat mirror of solution source files, useful as a quick local reference after solving.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Tree/863.All-Nodes-Distance-K-in-Binary-Tree/863.All-Nodes-Distance-K-in-Binary-Tree_v1.cpp",
+            "Tree/863.All-Nodes-Distance-K-in-Binary-Tree/863.All-Nodes-Distance-K-in-Binary-Tree_v2.cpp",
+            "Tree/863.All-Nodes-Distance-K-in-Binary-Tree/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 10,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "number-of-islands",
+      "number": 200,
+      "title": "Number of Islands",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/number-of-islands/",
+      "concepts": [
+        "grid",
+        "dfs",
+        "bfs",
+        "connected-components"
+      ],
+      "phase": {
+        "id": "graphs",
+        "name": "Phase 4: Grids And Reachability",
+        "shortName": "Grids And Reachability",
+        "description": "Graph and grid traversal with clear stories and strong BFS/DFS reuse."
+      },
+      "lane": {
+        "id": "graph-grid",
+        "label": "Graphs And Grids",
+        "color": "#1d7874"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "This is the gateway grid traversal problem and the underlying component idea reappears everywhere.",
+      "whatYouPractice": "Component discovery, visited marking, and turning a visual grid story into systematic traversal.",
+      "overview": "Count how many separate land regions exist in a grid where adjacency defines connection.",
+      "interestNote": "One of the highest-ROI Mediums in interview prep because so many variants are direct cousins of this one.",
+      "caveat": "The traversal is standard; the real habit to build is marking visits cleanly and not recounting the same region.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 22,
+      "prerequisites": [],
+      "statementStyle": "Highly visual grid prompt with obvious connectivity rules.",
+      "expectedMentalModel": "When a cell belongs to a region, finish that whole region before moving on to the next count.",
+      "topicGuides": [
+        {
+          "id": "bfs",
+          "title": "Breadth-First Search",
+          "path": "topics/bfs.html"
+        },
+        {
+          "id": "dfs",
+          "title": "Depth-First Search",
+          "path": "topics/dfs.html"
+        },
+        {
+          "id": "graph-traversal",
+          "title": "Graph Traversal",
+          "path": "topics/graph-traversal.html"
+        }
+      ],
+      "memberships": [
+        "Blind 75",
+        "Graphs",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/number-of-islands/",
+        "https://neetcode.io/problems/number-of-islands",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Depth-First Search",
+          "slug": "depth-first-search"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Union-Find",
+          "slug": "union-find"
+        },
+        {
+          "name": "Matrix",
+          "slug": "matrix"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0200-0299/0200.Number of Islands/README.md",
+            "solution/0200-0299/0200.Number of Islands/README_EN.md",
+            "solution/0200-0299/0200.Number of Islands/Solution.cpp",
+            "solution/0200-0299/0200.Number of Islands/Solution.go",
+            "solution/0200-0299/0200.Number of Islands/Solution.java",
+            "solution/0200-0299/0200.Number of Islands/Solution.py",
+            "solution/0200-0299/0200.Number of Islands/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/numberOfIslands/NumberOfIslands.cpp",
+            "algorithms/python/NumberOfIslands/numIslands.py"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/number-of-islands.cpp",
+            "Python/number-of-islands.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "c/0200-number-of-islands.c",
+            "cpp/0200-number-of-islands.cpp",
+            "csharp/0200-number-of-islands.cs",
+            "go/0200-number-of-islands.go",
+            "java/0200-number-of-islands.java",
+            "javascript/0200-number-of-islands.js",
+            "kotlin/0200-number-of-islands.kt",
+            "python/0200-number-of-islands.py"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "DFS/200.Number-of-Islands/200.Number of Islands_BFS.cpp",
+            "DFS/200.Number-of-Islands/200.Number of Islands_DFS.cpp",
+            "DFS/200.Number-of-Islands/200.Number-of-Islands_UnionFind.cpp",
+            "DFS/200.Number-of-Islands/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C",
+          "Kotlin"
+        ],
+        "solutionCount": 20,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "rotting-oranges",
+      "number": 994,
+      "title": "Rotting Oranges",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/rotting-oranges/",
+      "concepts": [
+        "grid",
+        "bfs",
+        "multi-source",
+        "levels"
+      ],
+      "phase": {
+        "id": "graphs",
+        "name": "Phase 4: Grids And Reachability",
+        "shortName": "Grids And Reachability",
+        "description": "Graph and grid traversal with clear stories and strong BFS/DFS reuse."
+      },
+      "lane": {
+        "id": "graph-grid",
+        "label": "Graphs And Grids",
+        "color": "#1d7874"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It is one of the clearest multi-source BFS problems, and the time interpretation makes the level structure intuitive.",
+      "whatYouPractice": "Level-based expansion, simultaneous sources, and reading time from traversal layers instead of manual simulation.",
+      "overview": "Track how a spreading effect moves through a grid over time from all currently active sources.",
+      "interestNote": "Excellent BFS teaching problem because the queue evolution mirrors the story almost perfectly.",
+      "caveat": "It is easy to accidentally mix up 'how many cells changed' with 'how much time passed.'",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 23,
+      "prerequisites": [],
+      "statementStyle": "Visual grid process with a natural notion of rounds.",
+      "expectedMentalModel": "Each BFS layer is one time step, and all active sources move together.",
+      "topicGuides": [
+        {
+          "id": "bfs",
+          "title": "Breadth-First Search",
+          "path": "topics/bfs.html"
+        },
+        {
+          "id": "graph-traversal",
+          "title": "Graph Traversal",
+          "path": "topics/graph-traversal.html"
+        }
+      ],
+      "memberships": [
+        "Graphs",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/rotting-oranges/",
+        "https://neetcode.io/problems/rotting-oranges",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Matrix",
+          "slug": "matrix"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0900-0999/0994.Rotting Oranges/README.md",
+            "solution/0900-0999/0994.Rotting Oranges/README_EN.md",
+            "solution/0900-0999/0994.Rotting Oranges/Solution.cpp",
+            "solution/0900-0999/0994.Rotting Oranges/Solution.go",
+            "solution/0900-0999/0994.Rotting Oranges/Solution.java",
+            "solution/0900-0999/0994.Rotting Oranges/Solution.py",
+            "solution/0900-0999/0994.Rotting Oranges/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/rotting-oranges.cpp",
+            "Python/rotting-oranges.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "c/0994-rotting-oranges.c",
+            "cpp/0994-rotting-oranges.cpp",
+            "csharp/0994-rotting-oranges.cs",
+            "go/0994-rotting-oranges.go",
+            "java/0994-rotting-oranges.java",
+            "javascript/0994-rotting-oranges.js",
+            "kotlin/0994-rotting-oranges.kt",
+            "python/0994-rotting-oranges.py"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C",
+          "Kotlin"
+        ],
+        "solutionCount": 15,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "01-matrix",
+      "number": 542,
+      "title": "01 Matrix",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/01-matrix/",
+      "concepts": [
+        "grid",
+        "bfs",
+        "multi-source",
+        "distance"
+      ],
+      "phase": {
+        "id": "graphs",
+        "name": "Phase 4: Grids And Reachability",
+        "shortName": "Grids And Reachability",
+        "description": "Graph and grid traversal with clear stories and strong BFS/DFS reuse."
+      },
+      "lane": {
+        "id": "graph-grid",
+        "label": "Graphs And Grids",
+        "color": "#1d7874"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "This is a strong distance-to-nearest problem and a great moment for understanding why reverse thinking can simplify search.",
+      "whatYouPractice": "Multi-source BFS, distance propagation, and setting up a global search instead of many local ones.",
+      "overview": "Compute how far every cell is from the nearest target value instead of solving each cell independently.",
+      "interestNote": "Very good pattern builder because it looks broad at first and then collapses into one reusable traversal idea.",
+      "caveat": "If you try to solve each cell from scratch, the problem becomes much noisier than it needs to be.",
+      "classic": false,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 24,
+      "prerequisites": [],
+      "statementStyle": "Clean grid distance prompt.",
+      "expectedMentalModel": "Start from every known destination at once and let distance spread outward.",
+      "topicGuides": [
+        {
+          "id": "bfs",
+          "title": "Breadth-First Search",
+          "path": "topics/bfs.html"
+        },
+        {
+          "id": "graph-traversal",
+          "title": "Graph Traversal",
+          "path": "topics/graph-traversal.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/01-matrix/",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Dynamic Programming",
+          "slug": "dynamic-programming"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Matrix",
+          "slug": "matrix"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0500-0599/0542.01 Matrix/README.md",
+            "solution/0500-0599/0542.01 Matrix/README_EN.md",
+            "solution/0500-0599/0542.01 Matrix/Solution.cpp",
+            "solution/0500-0599/0542.01 Matrix/Solution.go",
+            "solution/0500-0599/0542.01 Matrix/Solution.java",
+            "solution/0500-0599/0542.01 Matrix/Solution.py",
+            "solution/0500-0599/0542.01 Matrix/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/01-matrix.cpp",
+            "Python/01-matrix.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "test-123",
+          "coverageType": "code",
+          "paths": [
+            "01-matrix.cpp"
+          ],
+          "notes": "Flat mirror of solution source files, useful as a quick local reference after solving.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 8,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "shortest-path-in-binary-matrix",
+      "number": 1091,
+      "title": "Shortest Path in Binary Matrix",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/shortest-path-in-binary-matrix/",
+      "concepts": [
+        "grid",
+        "bfs",
+        "shortest-path",
+        "reachability"
+      ],
+      "phase": {
+        "id": "graphs",
+        "name": "Phase 4: Grids And Reachability",
+        "shortName": "Grids And Reachability",
+        "description": "Graph and grid traversal with clear stories and strong BFS/DFS reuse."
+      },
+      "lane": {
+        "id": "graph-grid",
+        "label": "Graphs And Grids",
+        "color": "#1d7874"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is a clean shortest-path Medium in an unweighted setting, which makes BFS feel justified instead of magical.",
+      "whatYouPractice": "Reachability checks, shortest-path layering, and careful neighbor generation on a grid.",
+      "overview": "Move through a blocked grid while finding the fewest steps from one corner to the other.",
+      "interestNote": "Strong starter shortest-path problem because the statement is concrete and the winning search model is stable.",
+      "caveat": "Most mistakes come from boundary handling and start-or-end blocked cases rather than from the search idea itself.",
+      "classic": false,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 25,
+      "prerequisites": [],
+      "statementStyle": "Visual shortest-path grid prompt.",
+      "expectedMentalModel": "In an unweighted grid, the first time you reach a cell at a layer is already its best distance.",
+      "topicGuides": [
+        {
+          "id": "bfs",
+          "title": "Breadth-First Search",
+          "path": "topics/bfs.html"
+        },
+        {
+          "id": "graph-traversal",
+          "title": "Graph Traversal",
+          "path": "topics/graph-traversal.html"
+        }
+      ],
+      "memberships": [
+        "Graphs",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/shortest-path-in-binary-matrix/",
+        "https://neetcode.io/problems/shortest-path-in-binary-matrix",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Matrix",
+          "slug": "matrix"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/1000-1099/1091.Shortest Path in Binary Matrix/README.md",
+            "solution/1000-1099/1091.Shortest Path in Binary Matrix/README_EN.md",
+            "solution/1000-1099/1091.Shortest Path in Binary Matrix/Solution.cpp",
+            "solution/1000-1099/1091.Shortest Path in Binary Matrix/Solution.go",
+            "solution/1000-1099/1091.Shortest Path in Binary Matrix/Solution.java",
+            "solution/1000-1099/1091.Shortest Path in Binary Matrix/Solution.py",
+            "solution/1000-1099/1091.Shortest Path in Binary Matrix/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/shortest-path-in-binary-matrix.cpp",
+            "Python/shortest-path-in-binary-matrix.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/shortest-path-in-binary-matrix.md",
+            "java/1091-shortest-path-in-binary-matrix.java",
+            "kotlin/1091-shortest-path-in-binary-matrix.kt",
+            "python/1091-shortest-path-in-binary-matrix.py"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "Kotlin"
+        ],
+        "solutionCount": 10,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "nearest-exit-from-entrance-in-maze",
+      "number": 1926,
+      "title": "Nearest Exit from Entrance in Maze",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/nearest-exit-from-entrance-in-maze/",
+      "concepts": [
+        "grid",
+        "bfs",
+        "maze",
+        "shortest-path"
+      ],
+      "phase": {
+        "id": "graphs",
+        "name": "Phase 4: Grids And Reachability",
+        "shortName": "Grids And Reachability",
+        "description": "Graph and grid traversal with clear stories and strong BFS/DFS reuse."
+      },
+      "lane": {
+        "id": "graph-grid",
+        "label": "Graphs And Grids",
+        "color": "#1d7874"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It is a newer, very readable BFS problem that keeps the state light and the decision value high.",
+      "whatYouPractice": "Shortest-path search, entrance-versus-exit rules, and staying disciplined about what counts as a finish.",
+      "overview": "Start from one position inside a maze and find the nearest valid way out.",
+      "interestNote": "A modern gem for transition practice because the problem feels approachable but still trains the full BFS habit.",
+      "caveat": "The story is simple, but you need to encode the exit rule precisely so you do not count the entrance incorrectly.",
+      "classic": false,
+      "newerGem": true,
+      "starter": true,
+      "recommendedOrder": 26,
+      "prerequisites": [],
+      "statementStyle": "Clean maze prompt with immediate visual intuition.",
+      "expectedMentalModel": "Expand outward evenly until the first qualifying exit appears.",
+      "topicGuides": [
+        {
+          "id": "bfs",
+          "title": "Breadth-First Search",
+          "path": "topics/bfs.html"
+        },
+        {
+          "id": "graph-traversal",
+          "title": "Graph Traversal",
+          "path": "topics/graph-traversal.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/nearest-exit-from-entrance-in-maze/",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Matrix",
+          "slug": "matrix"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/1900-1999/1926.Nearest Exit from Entrance in Maze/README.md",
+            "solution/1900-1999/1926.Nearest Exit from Entrance in Maze/README_EN.md",
+            "solution/1900-1999/1926.Nearest Exit from Entrance in Maze/Solution.cpp",
+            "solution/1900-1999/1926.Nearest Exit from Entrance in Maze/Solution.go",
+            "solution/1900-1999/1926.Nearest Exit from Entrance in Maze/Solution.java",
+            "solution/1900-1999/1926.Nearest Exit from Entrance in Maze/Solution.py",
+            "solution/1900-1999/1926.Nearest Exit from Entrance in Maze/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/nearest-exit-from-entrance-in-maze.cpp",
+            "Python/nearest-exit-from-entrance-in-maze.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 7,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "keys-and-rooms",
+      "number": 841,
+      "title": "Keys and Rooms",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/keys-and-rooms/",
+      "concepts": [
+        "graph",
+        "dfs",
+        "bfs",
+        "reachability"
+      ],
+      "phase": {
+        "id": "graphs",
+        "name": "Phase 4: Grids And Reachability",
+        "shortName": "Grids And Reachability",
+        "description": "Graph and grid traversal with clear stories and strong BFS/DFS reuse."
+      },
+      "lane": {
+        "id": "graph-grid",
+        "label": "Graphs And Grids",
+        "color": "#1d7874"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "This is a low-friction graph traversal problem with almost no graph-theory jargon, which is exactly what makes it useful here.",
+      "whatYouPractice": "Visited tracking, graph reachability, and seeing traversal as unlocking more future work.",
+      "overview": "Follow reachable room-to-key relationships and determine whether the entire structure becomes visitable.",
+      "interestNote": "Excellent confidence builder for anyone who finds abstract graph wording more intimidating than the underlying idea.",
+      "caveat": "The concept is gentle; the only real mistake is forgetting that keys can reveal more keys recursively.",
+      "classic": false,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 27,
+      "prerequisites": [],
+      "statementStyle": "Friendly graph story with almost no formalism.",
+      "expectedMentalModel": "Every newly reached node may add more nodes to the frontier, so keep exploring until the frontier is empty.",
+      "topicGuides": [
+        {
+          "id": "dfs",
+          "title": "Depth-First Search",
+          "path": "topics/dfs.html"
+        },
+        {
+          "id": "bfs",
+          "title": "Breadth-First Search",
+          "path": "topics/bfs.html"
+        },
+        {
+          "id": "graph-traversal",
+          "title": "Graph Traversal",
+          "path": "topics/graph-traversal.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/keys-and-rooms/",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Depth-First Search",
+          "slug": "depth-first-search"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Graph Theory",
+          "slug": "graph"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0800-0899/0841.Keys and Rooms/README.md",
+            "solution/0800-0899/0841.Keys and Rooms/README_EN.md",
+            "solution/0800-0899/0841.Keys and Rooms/Solution.cpp",
+            "solution/0800-0899/0841.Keys and Rooms/Solution.go",
+            "solution/0800-0899/0841.Keys and Rooms/Solution.java",
+            "solution/0800-0899/0841.Keys and Rooms/Solution.py",
+            "solution/0800-0899/0841.Keys and Rooms/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/keys-and-rooms.cpp",
+            "Python/keys-and-rooms.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 7,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "number-of-provinces",
+      "number": 547,
+      "title": "Number of Provinces",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/number-of-provinces/",
+      "concepts": [
+        "graph",
+        "dfs",
+        "bfs",
+        "components"
+      ],
+      "phase": {
+        "id": "graphs",
+        "name": "Phase 4: Grids And Reachability",
+        "shortName": "Grids And Reachability",
+        "description": "Graph and grid traversal with clear stories and strong BFS/DFS reuse."
+      },
+      "lane": {
+        "id": "graph-grid",
+        "label": "Graphs And Grids",
+        "color": "#1d7874"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It is an approachable graph component problem and a good transition from grid components to abstract connectivity.",
+      "whatYouPractice": "Reading an adjacency matrix, component counting, and mapping the same connected-region idea to a new representation.",
+      "overview": "Count how many disconnected groups exist inside a city-connection matrix.",
+      "interestNote": "Useful because it reveals that many graph problems are really the same connectivity question in different clothing.",
+      "caveat": "The challenge is small, but the matrix representation can tempt you into scanning redundantly if you are not careful.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 28,
+      "prerequisites": [],
+      "statementStyle": "Short connectivity prompt in matrix form.",
+      "expectedMentalModel": "A province is just a component; once one city is claimed, finish that whole group before counting again.",
+      "topicGuides": [
+        {
+          "id": "dfs",
+          "title": "Depth-First Search",
+          "path": "topics/dfs.html"
+        },
+        {
+          "id": "bfs",
+          "title": "Breadth-First Search",
+          "path": "topics/bfs.html"
+        },
+        {
+          "id": "graph-traversal",
+          "title": "Graph Traversal",
+          "path": "topics/graph-traversal.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/number-of-provinces/",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Depth-First Search",
+          "slug": "depth-first-search"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Union-Find",
+          "slug": "union-find"
+        },
+        {
+          "name": "Graph Theory",
+          "slug": "graph"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0500-0599/0547.Number of Provinces/README.md",
+            "solution/0500-0599/0547.Number of Provinces/README_EN.md",
+            "solution/0500-0599/0547.Number of Provinces/Solution.cpp",
+            "solution/0500-0599/0547.Number of Provinces/Solution.go",
+            "solution/0500-0599/0547.Number of Provinces/Solution.java",
+            "solution/0500-0599/0547.Number of Provinces/Solution.py",
+            "solution/0500-0599/0547.Number of Provinces/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/friendCircles/FriendCircles.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/friend-circles.cpp",
+            "Python/friend-circles.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "articles/number-of-provinces.md"
+          ],
+          "notes": "Broad path scan matched the problem by number or normalized slug.",
+          "matchMode": "broad"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Union_Find/547.Friend-Circles/547.Friend-Circles.cpp",
+            "Union_Find/547.Friend-Circles/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 9,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "clone-graph",
+      "number": 133,
+      "title": "Clone Graph",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/clone-graph/",
+      "concepts": [
+        "graph",
+        "dfs",
+        "bfs",
+        "hashing",
+        "copying-structure"
+      ],
+      "phase": {
+        "id": "graphs",
+        "name": "Phase 4: Grids And Reachability",
+        "shortName": "Grids And Reachability",
+        "description": "Graph and grid traversal with clear stories and strong BFS/DFS reuse."
+      },
+      "lane": {
+        "id": "graph-grid",
+        "label": "Graphs And Grids",
+        "color": "#1d7874"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is one of the cleanest graph-copying problems and teaches why a visited map is about identity, not just repetition.",
+      "whatYouPractice": "Visited maps, structure copying, and traversing cyclic data without duplicating nodes or getting trapped in loops.",
+      "overview": "Recreate an entire graph while preserving its connectivity instead of only its labels.",
+      "interestNote": "Good medium-value problem because the story is direct but the bookkeeping is representative of real graph work.",
+      "caveat": "The main risk is cloning neighbors before you have a stable mapping for the node identities you have already seen.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 29,
+      "prerequisites": [],
+      "statementStyle": "Simple graph-copy prompt with clear success criteria.",
+      "expectedMentalModel": "Separate 'have I already built this node' from 'have I already explored its neighbors.'",
+      "topicGuides": [
+        {
+          "id": "dfs",
+          "title": "Depth-First Search",
+          "path": "topics/dfs.html"
+        },
+        {
+          "id": "bfs",
+          "title": "Breadth-First Search",
+          "path": "topics/bfs.html"
+        },
+        {
+          "id": "graph-traversal",
+          "title": "Graph Traversal",
+          "path": "topics/graph-traversal.html"
+        }
+      ],
+      "memberships": [
+        "Blind 75",
+        "Graphs",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/clone-graph/",
+        "https://neetcode.io/problems/clone-graph",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Hash Table",
+          "slug": "hash-table"
+        },
+        {
+          "name": "Depth-First Search",
+          "slug": "depth-first-search"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Graph Theory",
+          "slug": "graph"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0100-0199/0133.Clone Graph/README.md",
+            "solution/0100-0199/0133.Clone Graph/README_EN.md",
+            "solution/0100-0199/0133.Clone Graph/Solution.cpp",
+            "solution/0100-0199/0133.Clone Graph/Solution.go",
+            "solution/0100-0199/0133.Clone Graph/Solution.java",
+            "solution/0100-0199/0133.Clone Graph/Solution.py",
+            "solution/0100-0199/0133.Clone Graph/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/cloneGraph/cloneGraph.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "Python/clone-graph.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/clone-graph.md",
+            "c/0133-clone-graph.c",
+            "cpp/0133-clone-graph.cpp",
+            "csharp/0133-clone-graph.cs",
+            "go/0133-clone-graph.go",
+            "hints/clone-graph.md",
+            "java/0133-clone-graph.java",
+            "javascript/0133-clone-graph.js"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Recursion/133.Clone-Graph/133.Clone Graph_BFS.cpp",
+            "Recursion/133.Clone-Graph/133.Clone Graph_DFS.cpp",
+            "Recursion/133.Clone-Graph/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C"
+        ],
+        "solutionCount": 15,
+        "writeupCount": 5,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "course-schedule",
+      "number": 207,
+      "title": "Course Schedule",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/course-schedule/",
+      "concepts": [
+        "graph",
+        "topological-sort",
+        "cycle-detection",
+        "dependencies"
+      ],
+      "phase": {
+        "id": "graphs",
+        "name": "Phase 4: Grids And Reachability",
+        "shortName": "Grids And Reachability",
+        "description": "Graph and grid traversal with clear stories and strong BFS/DFS reuse."
+      },
+      "lane": {
+        "id": "graph-grid",
+        "label": "Graphs And Grids",
+        "color": "#1d7874"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is the standard on-ramp to directed graph reasoning because the story is concrete and the graph concept is essential.",
+      "whatYouPractice": "Dependency modeling, cycle awareness, and distinguishing between reachability and valid ordering.",
+      "overview": "Decide whether a dependency graph can be completed without circular requirements blocking progress.",
+      "interestNote": "A staple for a reason: many real interview graphs are just dependency constraints with different names.",
+      "caveat": "The graph itself is readable; the key is choosing a representation that makes 'blocked forever' visible.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 30,
+      "prerequisites": [],
+      "statementStyle": "Practical dependency prompt with direct real-world framing.",
+      "expectedMentalModel": "A schedule works only if dependency pressure can be peeled away layer by layer without leaving a loop behind.",
+      "topicGuides": [
+        {
+          "id": "graph-traversal",
+          "title": "Graph Traversal",
+          "path": "topics/graph-traversal.html"
+        },
+        {
+          "id": "dfs",
+          "title": "Depth-First Search",
+          "path": "topics/dfs.html"
+        },
+        {
+          "id": "bfs",
+          "title": "Breadth-First Search",
+          "path": "topics/bfs.html"
+        }
+      ],
+      "memberships": [
+        "Blind 75",
+        "Graphs",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/course-schedule/",
+        "https://neetcode.io/problems/course-schedule",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Depth-First Search",
+          "slug": "depth-first-search"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Graph Theory",
+          "slug": "graph"
+        },
+        {
+          "name": "Topological Sort",
+          "slug": "topological-sort"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0200-0299/0207.Course Schedule/README.md",
+            "solution/0200-0299/0207.Course Schedule/README_EN.md",
+            "solution/0200-0299/0207.Course Schedule/Solution.cpp",
+            "solution/0200-0299/0207.Course Schedule/Solution.go",
+            "solution/0200-0299/0207.Course Schedule/Solution.java",
+            "solution/0200-0299/0207.Course Schedule/Solution.py",
+            "solution/0200-0299/0207.Course Schedule/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/courseSchedule/CourseSchedule.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/course-schedule.cpp",
+            "Python/course-schedule.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/course-schedule.md",
+            "c/0207-course-schedule.c",
+            "cpp/0207-course-schedule.cpp",
+            "csharp/0207-course-schedule.cs",
+            "go/0207-course-schedule.go",
+            "hints/course-schedule.md",
+            "java/0207-course-schedule.java",
+            "javascript/0207-course-schedule.js"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "BFS/207.Course-Schedule/207.Course-Schedule_BFS.cpp",
+            "BFS/207.Course-Schedule/207.Course-Schedule_DFS.cpp",
+            "BFS/207.Course-Schedule/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C"
+        ],
+        "solutionCount": 16,
+        "writeupCount": 5,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "course-schedule-ii",
+      "number": 210,
+      "title": "Course Schedule II",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/course-schedule-ii/",
+      "concepts": [
+        "graph",
+        "topological-sort",
+        "dependencies",
+        "ordering"
+      ],
+      "phase": {
+        "id": "graphs",
+        "name": "Phase 4: Grids And Reachability",
+        "shortName": "Grids And Reachability",
+        "description": "Graph and grid traversal with clear stories and strong BFS/DFS reuse."
+      },
+      "lane": {
+        "id": "graph-grid",
+        "label": "Graphs And Grids",
+        "color": "#1d7874"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It extends Course Schedule in the healthiest possible way: same core idea, richer output requirement.",
+      "whatYouPractice": "Turning feasibility reasoning into constructive output and managing order as part of traversal state.",
+      "overview": "Produce one valid course order when the dependency graph allows it.",
+      "interestNote": "Great follow-up because it reinforces the same dependency model instead of making you learn a new story.",
+      "caveat": "The trick is not the graph; it is preserving a consistent order once you know the schedule is possible.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 31,
+      "prerequisites": [],
+      "statementStyle": "Natural extension prompt with a constructive output.",
+      "expectedMentalModel": "Once dependency pressure is manageable, keep the sequence you peeled away rather than discarding it.",
+      "topicGuides": [
+        {
+          "id": "graph-traversal",
+          "title": "Graph Traversal",
+          "path": "topics/graph-traversal.html"
+        },
+        {
+          "id": "dfs",
+          "title": "Depth-First Search",
+          "path": "topics/dfs.html"
+        },
+        {
+          "id": "bfs",
+          "title": "Breadth-First Search",
+          "path": "topics/bfs.html"
+        }
+      ],
+      "memberships": [
+        "Graphs",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/course-schedule-ii/",
+        "https://neetcode.io/problems/course-schedule-ii",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Depth-First Search",
+          "slug": "depth-first-search"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Graph Theory",
+          "slug": "graph"
+        },
+        {
+          "name": "Topological Sort",
+          "slug": "topological-sort"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0200-0299/0210.Course Schedule II/README.md",
+            "solution/0200-0299/0210.Course Schedule II/README_EN.md",
+            "solution/0200-0299/0210.Course Schedule II/Solution.cpp",
+            "solution/0200-0299/0210.Course Schedule II/Solution.go",
+            "solution/0200-0299/0210.Course Schedule II/Solution.java",
+            "solution/0200-0299/0210.Course Schedule II/Solution.py",
+            "solution/0200-0299/0210.Course Schedule II/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/courseSchedule/CourseSchedule.II.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/course-schedule-ii.cpp",
+            "Python/course-schedule-ii.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/course-schedule-ii.md",
+            "cpp/0210-course-schedule-ii.cpp",
+            "csharp/0210-course-schedule-ii.cs",
+            "go/0210-course-schedule-ii.go",
+            "hints/course-schedule-ii.md",
+            "java/0210-course-schedule-ii.java",
+            "javascript/0210-course-schedule-ii.js",
+            "kotlin/0210-course-schedule-ii.kt"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "BFS/210.Course-Schedule-II/210.Course-Schedule-II.cpp",
+            "BFS/210.Course-Schedule-II/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "Kotlin"
+        ],
+        "solutionCount": 15,
+        "writeupCount": 5,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "open-the-lock",
+      "number": 752,
+      "title": "Open the Lock",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/open-the-lock/",
+      "concepts": [
+        "graph",
+        "bfs",
+        "implicit-graph",
+        "state-space"
+      ],
+      "phase": {
+        "id": "graphs",
+        "name": "Phase 4: Grids And Reachability",
+        "shortName": "Grids And Reachability",
+        "description": "Graph and grid traversal with clear stories and strong BFS/DFS reuse."
+      },
+      "lane": {
+        "id": "graph-grid",
+        "label": "Graphs And Grids",
+        "color": "#1d7874"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is a very good implicit-graph problem because the state generation is simple and the shortest-path need is obvious.",
+      "whatYouPractice": "Generating neighbors on the fly, visited-state handling, and treating strings as graph states.",
+      "overview": "Search through dial configurations where each move creates a small set of neighboring states.",
+      "interestNote": "High-value newer-style BFS problem because it feels like a state machine rather than a traditional node-edge diagram.",
+      "caveat": "Dead-end handling matters; forgetting blocked states early can waste a lot of search effort.",
+      "classic": false,
+      "newerGem": true,
+      "starter": true,
+      "recommendedOrder": 32,
+      "prerequisites": [],
+      "statementStyle": "Short puzzle-flavored state graph prompt.",
+      "expectedMentalModel": "The graph is not given to you; you manufacture neighbors as you explore the state space.",
+      "topicGuides": [
+        {
+          "id": "bfs",
+          "title": "Breadth-First Search",
+          "path": "topics/bfs.html"
+        },
+        {
+          "id": "graph-traversal",
+          "title": "Graph Traversal",
+          "path": "topics/graph-traversal.html"
+        },
+        {
+          "id": "backtracking",
+          "title": "Backtracking",
+          "path": "topics/backtracking.html"
+        }
+      ],
+      "memberships": [
+        "Graphs",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/open-the-lock/",
+        "https://neetcode.io/problems/open-the-lock",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Hash Table",
+          "slug": "hash-table"
+        },
+        {
+          "name": "String",
+          "slug": "string"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0700-0799/0752.Open the Lock/README.md",
+            "solution/0700-0799/0752.Open the Lock/README_EN.md",
+            "solution/0700-0799/0752.Open the Lock/Solution.cpp",
+            "solution/0700-0799/0752.Open the Lock/Solution.go",
+            "solution/0700-0799/0752.Open the Lock/Solution.java",
+            "solution/0700-0799/0752.Open the Lock/Solution.py",
+            "solution/0700-0799/0752.Open the Lock/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/open-the-lock.cpp",
+            "Python/open-the-lock.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/open-the-lock.md",
+            "csharp/0752-open-the-lock.cs",
+            "java/0752-open-the-lock.java",
+            "kotlin/0752-open-the-lock.kt",
+            "python/0752-open-the-lock.py"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "csharp",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "C#",
+          "Kotlin"
+        ],
+        "solutionCount": 11,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "reorder-routes-to-make-all-paths-lead-to-the-city-zero",
+      "number": 1466,
+      "title": "Reorder Routes to Make All Paths Lead to the City Zero",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/reorder-routes-to-make-all-paths-lead-to-the-city-zero/",
+      "concepts": [
+        "graph",
+        "dfs",
+        "bfs",
+        "edge-direction",
+        "bookkeeping"
+      ],
+      "phase": {
+        "id": "graphs",
+        "name": "Phase 4: Grids And Reachability",
+        "shortName": "Grids And Reachability",
+        "description": "Graph and grid traversal with clear stories and strong BFS/DFS reuse."
+      },
+      "lane": {
+        "id": "graph-grid",
+        "label": "Graphs And Grids",
+        "color": "#1d7874"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is a strong modern graph Medium because the twist is concrete, readable, and still teaches careful traversal bookkeeping.",
+      "whatYouPractice": "Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.",
+      "overview": "Traverse a road network and count how many directed roads would need to change for everything to flow toward one hub.",
+      "interestNote": "A newer gem with good educational return because it adds a twist without drowning you in graph theory language.",
+      "caveat": "The main challenge is preserving original direction information while still traversing the whole graph flexibly.",
+      "classic": false,
+      "newerGem": true,
+      "starter": true,
+      "recommendedOrder": 33,
+      "prerequisites": [],
+      "statementStyle": "Concrete city-network prompt with one directional twist.",
+      "expectedMentalModel": "Traverse the network freely, but keep enough edge metadata to judge each road relative to the root.",
+      "topicGuides": [
+        {
+          "id": "graph-traversal",
+          "title": "Graph Traversal",
+          "path": "topics/graph-traversal.html"
+        },
+        {
+          "id": "dfs",
+          "title": "Depth-First Search",
+          "path": "topics/dfs.html"
+        },
+        {
+          "id": "bfs",
+          "title": "Breadth-First Search",
+          "path": "topics/bfs.html"
+        }
+      ],
+      "memberships": [
+        "Graphs",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/reorder-routes-to-make-all-paths-lead-to-the-city-zero/",
+        "https://neetcode.io/problems/reorder-routes-to-make-all-paths-lead-to-the-city-zero",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Depth-First Search",
+          "slug": "depth-first-search"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Graph Theory",
+          "slug": "graph"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/1400-1499/1466.Reorder Routes to Make All Paths Lead to the City Zero/README.md",
+            "solution/1400-1499/1466.Reorder Routes to Make All Paths Lead to the City Zero/README_EN.md",
+            "solution/1400-1499/1466.Reorder Routes to Make All Paths Lead to the City Zero/Solution.cpp",
+            "solution/1400-1499/1466.Reorder Routes to Make All Paths Lead to the City Zero/Solution.go",
+            "solution/1400-1499/1466.Reorder Routes to Make All Paths Lead to the City Zero/Solution.java",
+            "solution/1400-1499/1466.Reorder Routes to Make All Paths Lead to the City Zero/Solution.py",
+            "solution/1400-1499/1466.Reorder Routes to Make All Paths Lead to the City Zero/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/reorder-routes-to-make-all-paths-lead-to-the-city-zero.cpp",
+            "Python/reorder-routes-to-make-all-paths-lead-to-the-city-zero.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/reorder-routes-to-make-all-paths-lead-to-the-city-zero.md",
+            "cpp/1466-reorder-routes-to-make-all-paths-lead-to-the-city-zero.cpp",
+            "csharp/1466-reorder-routes-to-make-all-paths-lead-to-the-city-zero.cs",
+            "java/1466-reorder-routes-to-make-all-paths-lead-to-the-city-zero.java",
+            "kotlin/1466-reorder-routes-to-make-all-paths-lead-to-the-city-zero.kt"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "csharp",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "C#",
+          "Kotlin"
+        ],
+        "solutionCount": 11,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "number-of-operations-to-make-network-connected",
+      "number": 1319,
+      "title": "Number of Operations to Make Network Connected",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/number-of-operations-to-make-network-connected/",
+      "concepts": [
+        "graph",
+        "components",
+        "dfs",
+        "bfs",
+        "network"
+      ],
+      "phase": {
+        "id": "graphs",
+        "name": "Phase 4: Grids And Reachability",
+        "shortName": "Grids And Reachability",
+        "description": "Graph and grid traversal with clear stories and strong BFS/DFS reuse."
+      },
+      "lane": {
+        "id": "graph-grid",
+        "label": "Graphs And Grids",
+        "color": "#1d7874"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It is a clean network-flavored component problem that often feels more intuitive than older province-style phrasing.",
+      "whatYouPractice": "Component counting, feasibility checks from raw counts, and interpreting connectivity in system language.",
+      "overview": "Decide whether spare connections can be reused to make a whole network connected and how much work that would take.",
+      "interestNote": "Good practical graph pick because the story feels close to real infrastructure reasoning.",
+      "caveat": "There are two separate questions hiding inside: whether the goal is possible at all and how many groups remain.",
+      "classic": false,
+      "newerGem": true,
+      "starter": true,
+      "recommendedOrder": 34,
+      "prerequisites": [],
+      "statementStyle": "Direct network-connectivity prompt with low jargon.",
+      "expectedMentalModel": "Count disconnected groups first; the needed work follows from that structure and the available spare edges.",
+      "topicGuides": [
+        {
+          "id": "graph-traversal",
+          "title": "Graph Traversal",
+          "path": "topics/graph-traversal.html"
+        },
+        {
+          "id": "dfs",
+          "title": "Depth-First Search",
+          "path": "topics/dfs.html"
+        },
+        {
+          "id": "bfs",
+          "title": "Breadth-First Search",
+          "path": "topics/bfs.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/number-of-operations-to-make-network-connected/",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Depth-First Search",
+          "slug": "depth-first-search"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Union-Find",
+          "slug": "union-find"
+        },
+        {
+          "name": "Graph Theory",
+          "slug": "graph"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/1300-1399/1319.Number of Operations to Make Network Connected/README.md",
+            "solution/1300-1399/1319.Number of Operations to Make Network Connected/README_EN.md",
+            "solution/1300-1399/1319.Number of Operations to Make Network Connected/Solution.cpp",
+            "solution/1300-1399/1319.Number of Operations to Make Network Connected/Solution.go",
+            "solution/1300-1399/1319.Number of Operations to Make Network Connected/Solution.java",
+            "solution/1300-1399/1319.Number of Operations to Make Network Connected/Solution.py",
+            "solution/1300-1399/1319.Number of Operations to Make Network Connected/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/number-of-operations-to-make-network-connected.cpp",
+            "Python/number-of-operations-to-make-network-connected.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Union_Find/1319.Number-of-Operations-to-Make-Network-Connected/1319.Number-of-Operations-to-Make-Network-Connected.cpp",
+            "Union_Find/1319.Number-of-Operations-to-Make-Network-Connected/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 8,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "all-paths-from-source-to-target",
+      "number": 797,
+      "title": "All Paths From Source to Target",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/all-paths-from-source-to-target/",
+      "concepts": [
+        "graph",
+        "dfs",
+        "dag",
+        "path-enumeration"
+      ],
+      "phase": {
+        "id": "state-space",
+        "name": "Phase 5: State Space Search",
+        "shortName": "State Space Search",
+        "description": "Backtracking, DAG exploration, and choice-making under constraints."
+      },
+      "lane": {
+        "id": "state-search",
+        "label": "State Search",
+        "color": "#7b2d26"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is an approachable bridge from plain traversal to path-building recursion because the graph is acyclic and the goal is concrete.",
+      "whatYouPractice": "Building paths incrementally, backtracking over graph choices, and recognizing when acyclicity simplifies the search.",
+      "overview": "Enumerate every valid route through a DAG from the start node to the finish node.",
+      "interestNote": "A good gentle state-space problem because it expands DFS thinking without immediately turning into pruning-heavy backtracking.",
+      "caveat": "The output itself grows, so the focus should stay on path construction discipline rather than on over-optimizing the traversal.",
+      "classic": false,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 35,
+      "prerequisites": [],
+      "statementStyle": "Simple DAG prompt with explicit start and target.",
+      "expectedMentalModel": "Carry one current path, explore one choice, then cleanly step back before taking the next.",
+      "topicGuides": [
+        {
+          "id": "dfs",
+          "title": "Depth-First Search",
+          "path": "topics/dfs.html"
+        },
+        {
+          "id": "graph-traversal",
+          "title": "Graph Traversal",
+          "path": "topics/graph-traversal.html"
+        },
+        {
+          "id": "backtracking",
+          "title": "Backtracking",
+          "path": "topics/backtracking.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/all-paths-from-source-to-target/",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Backtracking",
+          "slug": "backtracking"
+        },
+        {
+          "name": "Depth-First Search",
+          "slug": "depth-first-search"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Graph Theory",
+          "slug": "graph"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0700-0799/0797.All Paths From Source to Target/README.md",
+            "solution/0700-0799/0797.All Paths From Source to Target/README_EN.md",
+            "solution/0700-0799/0797.All Paths From Source to Target/Solution.cpp",
+            "solution/0700-0799/0797.All Paths From Source to Target/Solution.go",
+            "solution/0700-0799/0797.All Paths From Source to Target/Solution.java",
+            "solution/0700-0799/0797.All Paths From Source to Target/Solution.py",
+            "solution/0700-0799/0797.All Paths From Source to Target/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/all-paths-from-source-to-target.cpp",
+            "Python/all-paths-from-source-to-target.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "java/0797-all-paths-from-source-to-target.java"
+          ],
+          "notes": "Broad path scan matched the problem by number or normalized slug.",
+          "matchMode": "broad"
+        },
+        {
+          "repository": "test-123",
+          "coverageType": "code",
+          "paths": [
+            "all-paths-from-source-to-target.cpp"
+          ],
+          "notes": "Flat mirror of solution source files, useful as a quick local reference after solving.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 8,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "letter-combinations-of-a-phone-number",
+      "number": 17,
+      "title": "Letter Combinations of a Phone Number",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/letter-combinations-of-a-phone-number/",
+      "concepts": [
+        "backtracking",
+        "string-building",
+        "choice-tree"
+      ],
+      "phase": {
+        "id": "state-space",
+        "name": "Phase 5: State Space Search",
+        "shortName": "State Space Search",
+        "description": "Backtracking, DAG exploration, and choice-making under constraints."
+      },
+      "lane": {
+        "id": "state-search",
+        "label": "State Search",
+        "color": "#7b2d26"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "This is arguably the cleanest first backtracking Medium because the search tree is easy to picture.",
+      "whatYouPractice": "Choice expansion, path building, and the basic rhythm of take, recurse, and undo or append-forward.",
+      "overview": "Generate all strings formed by one choice from each digit's letter set.",
+      "interestNote": "Excellent confidence builder for recursion because the branching structure is visible from the statement itself.",
+      "caveat": "The solution is not hard, but it becomes messy if you do not keep the current partial answer isolated and reusable.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 36,
+      "prerequisites": [],
+      "statementStyle": "Very short combinational prompt.",
+      "expectedMentalModel": "Each digit opens a small choice fan-out; walk the tree depth by depth until a full word is formed.",
+      "topicGuides": [
+        {
+          "id": "backtracking",
+          "title": "Backtracking",
+          "path": "topics/backtracking.html"
+        }
+      ],
+      "memberships": [
+        "Backtracking",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/letter-combinations-of-a-phone-number/",
+        "https://neetcode.io/problems/letter-combinations-of-a-phone-number",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Hash Table",
+          "slug": "hash-table"
+        },
+        {
+          "name": "String",
+          "slug": "string"
+        },
+        {
+          "name": "Backtracking",
+          "slug": "backtracking"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0000-0099/0017.Letter Combinations of a Phone Number/README.md",
+            "solution/0000-0099/0017.Letter Combinations of a Phone Number/README_EN.md",
+            "solution/0000-0099/0017.Letter Combinations of a Phone Number/Solution.cpp",
+            "solution/0000-0099/0017.Letter Combinations of a Phone Number/Solution.go",
+            "solution/0000-0099/0017.Letter Combinations of a Phone Number/Solution.java",
+            "solution/0000-0099/0017.Letter Combinations of a Phone Number/Solution.py",
+            "solution/0000-0099/0017.Letter Combinations of a Phone Number/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/letterCombinationsOfAPhoneNumber/letterCombinationsOfAPhoneNumber.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/letter-combinations-of-a-phone-number.cpp",
+            "Python/letter-combinations-of-a-phone-number.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "cpp/0017-letter-combinations-of-a-phone-number.cpp",
+            "csharp/0017-letter-combinations-of-a-phone-number.cs",
+            "go/0017-letter-combinations-of-a-phone-number.go",
+            "java/0017-letter-combinations-of-a-phone-number.java",
+            "javascript/0017-letter-combinations-of-a-phone-number.js",
+            "kotlin/0017-letter-combinations-of-a-phone-number.kt",
+            "python/0017-letter-combinations-of-a-phone-number.py",
+            "ruby/0017-letter-combinations-of-a-phone-number.rb"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "kotlin",
+          "ruby"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "Kotlin",
+          "Ruby"
+        ],
+        "solutionCount": 16,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "generate-parentheses",
+      "number": 22,
+      "title": "Generate Parentheses",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/generate-parentheses/",
+      "concepts": [
+        "backtracking",
+        "constraints",
+        "string-building"
+      ],
+      "phase": {
+        "id": "state-space",
+        "name": "Phase 5: State Space Search",
+        "shortName": "State Space Search",
+        "description": "Backtracking, DAG exploration, and choice-making under constraints."
+      },
+      "lane": {
+        "id": "state-search",
+        "label": "State Search",
+        "color": "#7b2d26"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "moderate",
+      "readiness": "first-medium",
+      "whySolve": "It is a classic constraint-building problem and a very good next step after simple combination generation.",
+      "whatYouPractice": "State validation during generation, pruning bad prefixes early, and seeing recursion as controlled search.",
+      "overview": "Build every valid parentheses string of a fixed size while respecting balance constraints at all times.",
+      "interestNote": "A backtracking staple because the constraint is intuitive but the search behavior teaches a lot.",
+      "caveat": "The search tree is manageable only if invalid partial strings stop early instead of being completed and filtered later.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 37,
+      "prerequisites": [],
+      "statementStyle": "Compact generation prompt with one clear validity rule.",
+      "expectedMentalModel": "Only continue branches that still have a plausible path to a valid final string.",
+      "topicGuides": [
+        {
+          "id": "backtracking",
+          "title": "Backtracking",
+          "path": "topics/backtracking.html"
+        }
+      ],
+      "memberships": [
+        "NeetCode 150",
+        "Seed report",
+        "Stack"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/generate-parentheses/",
+        "https://neetcode.io/problems/generate-parentheses",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "String",
+          "slug": "string"
+        },
+        {
+          "name": "Dynamic Programming",
+          "slug": "dynamic-programming"
+        },
+        {
+          "name": "Backtracking",
+          "slug": "backtracking"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0000-0099/0022.Generate Parentheses/README.md",
+            "solution/0000-0099/0022.Generate Parentheses/README_EN.md",
+            "solution/0000-0099/0022.Generate Parentheses/Solution.cpp",
+            "solution/0000-0099/0022.Generate Parentheses/Solution.go",
+            "solution/0000-0099/0022.Generate Parentheses/Solution.java",
+            "solution/0000-0099/0022.Generate Parentheses/Solution.py",
+            "solution/0000-0099/0022.Generate Parentheses/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/generateParentheses/generateParentheses.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/generate-parentheses.cpp",
+            "Python/generate-parentheses.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/generate-parentheses.md",
+            "c/0022-generate-parentheses.c",
+            "cpp/0022-generate-parentheses.cpp",
+            "csharp/0022-generate-parentheses.cs",
+            "go/0022-generate-parentheses.go",
+            "hints/generate-parentheses.md",
+            "java/0022-generate-parentheses.java",
+            "javascript/0022-generate-parentheses.js"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C"
+        ],
+        "solutionCount": 14,
+        "writeupCount": 4,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "subsets",
+      "number": 78,
+      "title": "Subsets",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/subsets/",
+      "concepts": [
+        "backtracking",
+        "sets",
+        "decision-tree"
+      ],
+      "phase": {
+        "id": "state-space",
+        "name": "Phase 5: State Space Search",
+        "shortName": "State Space Search",
+        "description": "Backtracking, DAG exploration, and choice-making under constraints."
+      },
+      "lane": {
+        "id": "state-search",
+        "label": "State Search",
+        "color": "#7b2d26"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It is one of the most reusable recursion templates because the include-or-skip structure appears everywhere.",
+      "whatYouPractice": "Decision branching, recording partial work, and recognizing when a recursion tree mirrors a binary choice process.",
+      "overview": "List every subset of a small array by deciding, step by step, which elements belong in the current choice.",
+      "interestNote": "Low-friction but high-payoff pattern problem for building a mental template you will reuse often.",
+      "caveat": "The main trap is mutating one shared path object without remembering when a snapshot is needed.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 38,
+      "prerequisites": [],
+      "statementStyle": "Minimal subset-generation prompt.",
+      "expectedMentalModel": "At each position, branch on whether this item belongs to the current subset or not.",
+      "topicGuides": [
+        {
+          "id": "backtracking",
+          "title": "Backtracking",
+          "path": "topics/backtracking.html"
+        }
+      ],
+      "memberships": [
+        "Backtracking",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/subsets/",
+        "https://neetcode.io/problems/subsets",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Backtracking",
+          "slug": "backtracking"
+        },
+        {
+          "name": "Bit Manipulation",
+          "slug": "bit-manipulation"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0000-0099/0078.Subsets/README.md",
+            "solution/0000-0099/0078.Subsets/README_EN.md",
+            "solution/0000-0099/0078.Subsets/Solution.cpp",
+            "solution/0000-0099/0078.Subsets/Solution.go",
+            "solution/0000-0099/0078.Subsets/Solution.java",
+            "solution/0000-0099/0078.Subsets/Solution.py",
+            "solution/0000-0099/0078.Subsets/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/subsets/subsets.cpp",
+            "algorithms/java/src/subsets/subsets.java",
+            "algorithms/python/Subsets/subsets.py"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/subsets.cpp",
+            "Python/subsets.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/subsets.md",
+            "c/0078-subsets.c",
+            "cpp/0078-subsets.cpp",
+            "csharp/0078-subsets.cs",
+            "go/0078-subsets.go",
+            "hints/subsets.md",
+            "java/0078-subsets.java",
+            "javascript/0078-subsets.js"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code",
+          "paths": [
+            "DFS/090.Subsets-II/090.Subsets-II.cpp",
+            "DFS/090.Subsets-II/Readme.md",
+            "DFS/2597.The-Number-of-Beautiful-Subsets/2597.The-Number-of-Beautiful-Subsets.cpp",
+            "DFS/2597.The-Number-of-Beautiful-Subsets/2597.The-Number-of-Beautiful-Subsets_v2.cpp",
+            "DFS/2597.The-Number-of-Beautiful-Subsets/Readme.md",
+            "DFS/698.Partition-to-K-Equal-Sum-Subsets/698.Partition-to-K-Equal-Sum-Subsets_v1.cpp",
+            "DFS/698.Partition-to-K-Equal-Sum-Subsets/698.Partition-to-K-Equal-Sum-Subsets_v2.cpp",
+            "DFS/698.Partition-to-K-Equal-Sum-Subsets/Readme.md"
+          ],
+          "notes": "Broad path scan matched the problem by number or normalized slug.",
+          "matchMode": "broad"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C"
+        ],
+        "solutionCount": 16,
+        "writeupCount": 4,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "permutations",
+      "number": 46,
+      "title": "Permutations",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/permutations/",
+      "concepts": [
+        "backtracking",
+        "ordering",
+        "choice-tree"
+      ],
+      "phase": {
+        "id": "state-space",
+        "name": "Phase 5: State Space Search",
+        "shortName": "State Space Search",
+        "description": "Backtracking, DAG exploration, and choice-making under constraints."
+      },
+      "lane": {
+        "id": "state-search",
+        "label": "State Search",
+        "color": "#7b2d26"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "very-clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It turns the backtracking template into a slightly richer search where used-state and path length both matter.",
+      "whatYouPractice": "Choice tracking, used-element bookkeeping, and exploring order-sensitive search trees.",
+      "overview": "Generate every ordering of a set of values rather than just every selection of them.",
+      "interestNote": "Worth doing because it makes the backtracking skeleton feel operational rather than abstract.",
+      "caveat": "The search explodes quickly, so clean bookkeeping matters more than clever optimization.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 39,
+      "prerequisites": [],
+      "statementStyle": "Short generation prompt where order changes the result.",
+      "expectedMentalModel": "Each step chooses the next unused item for the growing arrangement.",
+      "topicGuides": [
+        {
+          "id": "backtracking",
+          "title": "Backtracking",
+          "path": "topics/backtracking.html"
+        }
+      ],
+      "memberships": [
+        "Backtracking",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/permutations/",
+        "https://neetcode.io/problems/permutations",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Backtracking",
+          "slug": "backtracking"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0000-0099/0046.Permutations/README.md",
+            "solution/0000-0099/0046.Permutations/README_EN.md",
+            "solution/0000-0099/0046.Permutations/Solution.cpp",
+            "solution/0000-0099/0046.Permutations/Solution.go",
+            "solution/0000-0099/0046.Permutations/Solution.java",
+            "solution/0000-0099/0046.Permutations/Solution.py",
+            "solution/0000-0099/0046.Permutations/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/permutations/permutations.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "Python/permutations.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/permutations.md",
+            "c/0046-permutations.c",
+            "cpp/0046-permutations.cpp",
+            "csharp/0046-permutations.cs",
+            "go/0046-permutations.go",
+            "hints/permutations.md",
+            "java/0046-permutations.java",
+            "javascript/0046-permutations.js"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Math/046.Permutations/046.Permutations.cpp",
+            "Math/046.Permutations/046.Permutations.py",
+            "Math/046.Permutations/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C"
+        ],
+        "solutionCount": 15,
+        "writeupCount": 5,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "combination-sum",
+      "number": 39,
+      "title": "Combination Sum",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/combination-sum/",
+      "concepts": [
+        "backtracking",
+        "target-tracking",
+        "combinations"
+      ],
+      "phase": {
+        "id": "state-space",
+        "name": "Phase 5: State Space Search",
+        "shortName": "State Space Search",
+        "description": "Backtracking, DAG exploration, and choice-making under constraints."
+      },
+      "lane": {
+        "id": "state-search",
+        "label": "State Search",
+        "color": "#7b2d26"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is a strong transition backtracking problem because target pressure and reuse rules make the recursion more realistic.",
+      "whatYouPractice": "State reduction, branch control, and choosing a search order that avoids unnecessary duplicate work.",
+      "overview": "Search for value combinations that exactly hit a target while candidates may be reused.",
+      "interestNote": "High-value pattern problem because many later combination questions are variations on this structure.",
+      "caveat": "The important design choice is how you keep the search from reordering the same combination into noisy duplicates.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 40,
+      "prerequisites": [],
+      "statementStyle": "Readable number-combination prompt with a concrete goal.",
+      "expectedMentalModel": "Carry the remaining target downward and stop branches that have already overspent it.",
+      "topicGuides": [
+        {
+          "id": "backtracking",
+          "title": "Backtracking",
+          "path": "topics/backtracking.html"
+        }
+      ],
+      "memberships": [
+        "Backtracking",
+        "Blind 75",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/combination-sum/",
+        "https://neetcode.io/problems/combination-sum",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Backtracking",
+          "slug": "backtracking"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0000-0099/0039.Combination Sum/README.md",
+            "solution/0000-0099/0039.Combination Sum/README_EN.md",
+            "solution/0000-0099/0039.Combination Sum/Solution.cpp",
+            "solution/0000-0099/0039.Combination Sum/Solution.go",
+            "solution/0000-0099/0039.Combination Sum/Solution.java",
+            "solution/0000-0099/0039.Combination Sum/Solution.py",
+            "solution/0000-0099/0039.Combination Sum/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/combinationSum/combinationSum.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "Python/combination-sum.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "c/0039-combination-sum.c",
+            "cpp/0039-combination-sum.cpp",
+            "csharp/0039-combination-sum.cs",
+            "go/0039-combination-sum.go",
+            "java/0039-combination-sum.java",
+            "javascript/0039-combination-sum.js",
+            "kotlin/0039-combination-sum.kt",
+            "python/0039-combination-sum.py"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code",
+          "paths": [
+            "DFS/040.Combination-Sum-II/040.Combination-Sum-II.cpp",
+            "DFS/040.Combination-Sum-II/Readme.md",
+            "Dynamic_Programming/377.Combination-Sum-IV/377.Combination-Sum-IV.cpp",
+            "Dynamic_Programming/377.Combination-Sum-IV/377.Combination-Sum-IV.py",
+            "Dynamic_Programming/377.Combination-Sum-IV/Readme.md"
+          ],
+          "notes": "Broad path scan matched the problem by number or normalized slug.",
+          "matchMode": "broad"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C",
+          "Kotlin"
+        ],
+        "solutionCount": 15,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "palindrome-partitioning",
+      "number": 131,
+      "title": "Palindrome Partitioning",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/palindrome-partitioning/",
+      "concepts": [
+        "backtracking",
+        "string",
+        "partitioning"
+      ],
+      "phase": {
+        "id": "state-space",
+        "name": "Phase 5: State Space Search",
+        "shortName": "State Space Search",
+        "description": "Backtracking, DAG exploration, and choice-making under constraints."
+      },
+      "lane": {
+        "id": "state-search",
+        "label": "State Search",
+        "color": "#7b2d26"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "stretch",
+      "readiness": "stretch",
+      "whySolve": "It is a richer backtracking problem that still stays readable and adds a meaningful validation layer to the search.",
+      "whatYouPractice": "Partition-based recursion, candidate validation, and balancing path growth against local checks.",
+      "overview": "Cut a string into segments so that every chosen piece satisfies the same structural property.",
+      "interestNote": "A nice later backtracking Medium because it adds depth without depending on a weird story.",
+      "caveat": "The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests.",
+      "classic": true,
+      "newerGem": false,
+      "starter": false,
+      "recommendedOrder": 41,
+      "prerequisites": [],
+      "statementStyle": "Clean string partition prompt with a strong segment rule.",
+      "expectedMentalModel": "Choose the next cut, validate that segment, and recurse on the untouched suffix.",
+      "topicGuides": [
+        {
+          "id": "backtracking",
+          "title": "Backtracking",
+          "path": "topics/backtracking.html"
+        }
+      ],
+      "memberships": [
+        "Backtracking",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/palindrome-partitioning/",
+        "https://neetcode.io/problems/palindrome-partitioning",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "String",
+          "slug": "string"
+        },
+        {
+          "name": "Dynamic Programming",
+          "slug": "dynamic-programming"
+        },
+        {
+          "name": "Backtracking",
+          "slug": "backtracking"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0100-0199/0131.Palindrome Partitioning/README.md",
+            "solution/0100-0199/0131.Palindrome Partitioning/README_EN.md",
+            "solution/0100-0199/0131.Palindrome Partitioning/Solution.cpp",
+            "solution/0100-0199/0131.Palindrome Partitioning/Solution.go",
+            "solution/0100-0199/0131.Palindrome Partitioning/Solution.java",
+            "solution/0100-0199/0131.Palindrome Partitioning/Solution.py",
+            "solution/0100-0199/0131.Palindrome Partitioning/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/palindromePartitioning/palindromePartitioning.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "Python/palindrome-partitioning.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/palindrome-partitioning.md",
+            "cpp/0131-palindrome-partitioning.cpp",
+            "csharp/0131-palindrome-partitioning.cs",
+            "go/0131-palindrome-partitioning.go",
+            "hints/palindrome-partitioning.md",
+            "java/0131-palindrome-partitioning.java",
+            "javascript/0131-palindrome-partitioning.js",
+            "kotlin/0131-palindrome-partitioning.kt"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Dynamic_Programming/131.Palindrome-Partitioning/131.Palindrome-Partitioning.cpp",
+            "Dynamic_Programming/131.Palindrome-Partitioning/131.Palindrome-Partitioning.py",
+            "Dynamic_Programming/131.Palindrome-Partitioning/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "Kotlin"
+        ],
+        "solutionCount": 15,
+        "writeupCount": 5,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "unique-paths",
+      "number": 62,
+      "title": "Unique Paths",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/unique-paths/",
+      "concepts": [
+        "dynamic-programming",
+        "grid",
+        "counting"
+      ],
+      "phase": {
+        "id": "dp",
+        "name": "Phase 6: Intro Dynamic Programming",
+        "shortName": "Intro Dynamic Programming",
+        "description": "Decision chains and manageable state transitions that start to feel like real DP."
+      },
+      "lane": {
+        "id": "dp",
+        "label": "Dynamic Programming",
+        "color": "#5f0f40"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It is one of the easiest true DP Mediums because the state and recurrence are both visually intuitive.",
+      "whatYouPractice": "State definition, recurrence building, and seeing repeated substructure inside a grid.",
+      "overview": "Count how many ways exist to reach one grid corner from another when movement is restricted.",
+      "interestNote": "Excellent DP opener because the problem feels friendly while still teaching the core tabulation instinct.",
+      "caveat": "The recurrence is simple; the real lesson is deciding what each cell should mean before you fill anything.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 42,
+      "prerequisites": [],
+      "statementStyle": "Very clear grid-counting prompt.",
+      "expectedMentalModel": "Each state inherits its count from the smaller states that can feed into it.",
+      "topicGuides": [
+        {
+          "id": "dynamic-programming",
+          "title": "Dynamic Programming",
+          "path": "topics/dynamic-programming.html"
+        }
+      ],
+      "memberships": [
+        "2-D Dynamic Programming",
+        "Blind 75",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/unique-paths/",
+        "https://neetcode.io/problems/unique-paths",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Math",
+          "slug": "math"
+        },
+        {
+          "name": "Dynamic Programming",
+          "slug": "dynamic-programming"
+        },
+        {
+          "name": "Combinatorics",
+          "slug": "combinatorics"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0000-0099/0062.Unique Paths/README.md",
+            "solution/0000-0099/0062.Unique Paths/README_EN.md",
+            "solution/0000-0099/0062.Unique Paths/Solution.cpp",
+            "solution/0000-0099/0062.Unique Paths/Solution.go",
+            "solution/0000-0099/0062.Unique Paths/Solution.java",
+            "solution/0000-0099/0062.Unique Paths/Solution.py",
+            "solution/0000-0099/0062.Unique Paths/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/uniquePaths/uniquePaths.cpp",
+            "algorithms/java/src/dynamicProgramming/uniquePaths/uniquePaths.java"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "Python/unique-paths.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "c/0062-unique-paths.c",
+            "cpp/0062-unique-paths.cpp",
+            "csharp/0062-unique-paths.cs",
+            "go/0062-unique-paths.go",
+            "java/0062-unique-paths.java",
+            "javascript/0062-unique-paths.js",
+            "kotlin/0062-unique-paths.kt",
+            "python/0062-unique-paths.py"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C",
+          "Kotlin"
+        ],
+        "solutionCount": 16,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "coin-change",
+      "number": 322,
+      "title": "Coin Change",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/coin-change/",
+      "concepts": [
+        "dynamic-programming",
+        "minimization",
+        "amount-state"
+      ],
+      "phase": {
+        "id": "dp",
+        "name": "Phase 6: Intro Dynamic Programming",
+        "shortName": "Intro Dynamic Programming",
+        "description": "Decision chains and manageable state transitions that start to feel like real DP."
+      },
+      "lane": {
+        "id": "dp",
+        "label": "Dynamic Programming",
+        "color": "#5f0f40"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is a foundational DP Medium because it forces you to think about impossible states, not just successful ones.",
+      "whatYouPractice": "1D DP state design, minimization updates, and distinguishing between reachable and unreachable subproblems.",
+      "overview": "Reach a target amount using the fewest pieces from a reusable set of coin values.",
+      "interestNote": "One of the most reusable beginner DP problems because many later tasks are the same shape with different stories.",
+      "caveat": "The recurrence is not the hard part; handling impossible states and initialization cleanly is.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 43,
+      "prerequisites": [],
+      "statementStyle": "Short optimization prompt with a familiar story.",
+      "expectedMentalModel": "Build answers for smaller amounts first, then reuse them when considering the current amount.",
+      "topicGuides": [
+        {
+          "id": "dynamic-programming",
+          "title": "Dynamic Programming",
+          "path": "topics/dynamic-programming.html"
+        }
+      ],
+      "memberships": [
+        "1-D Dynamic Programming",
+        "Blind 75",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/coin-change/",
+        "https://neetcode.io/problems/coin-change",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Dynamic Programming",
+          "slug": "dynamic-programming"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0300-0399/0322.Coin Change/README.md",
+            "solution/0300-0399/0322.Coin Change/README_EN.md",
+            "solution/0300-0399/0322.Coin Change/Solution.cpp",
+            "solution/0300-0399/0322.Coin Change/Solution.go",
+            "solution/0300-0399/0322.Coin Change/Solution.java",
+            "solution/0300-0399/0322.Coin Change/Solution.py",
+            "solution/0300-0399/0322.Coin Change/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/coinChange/coinChange.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/coin-change.cpp",
+            "Python/coin-change.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/coin-change.md",
+            "c/0322-coin-change.c",
+            "cpp/0322-coin-change.cpp",
+            "csharp/0322-coin-change.cs",
+            "go/0322-coin-change.go",
+            "hints/coin-change.md",
+            "java/0322-coin-change.java",
+            "javascript/0322-coin-change.js"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Dynamic_Programming/322.Coin-Change/322.Coin Change.cpp",
+            "Dynamic_Programming/322.Coin-Change/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C"
+        ],
+        "solutionCount": 15,
+        "writeupCount": 5,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "longest-increasing-subsequence",
+      "number": 300,
+      "title": "Longest Increasing Subsequence",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/longest-increasing-subsequence/",
+      "concepts": [
+        "dynamic-programming",
+        "sequence",
+        "optimization"
+      ],
+      "phase": {
+        "id": "dp",
+        "name": "Phase 6: Intro Dynamic Programming",
+        "shortName": "Intro Dynamic Programming",
+        "description": "Decision chains and manageable state transitions that start to feel like real DP."
+      },
+      "lane": {
+        "id": "dp",
+        "label": "Dynamic Programming",
+        "color": "#5f0f40"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "stretch",
+      "readiness": "stretch",
+      "whySolve": "This is a major milestone DP problem because it teaches how to define a sequence state around 'best ending here.'",
+      "whatYouPractice": "Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.",
+      "overview": "Find the longest subsequence that keeps rising without requiring the chosen values to stay adjacent.",
+      "interestNote": "A classic pattern builder that later opens the door to many more sequence DPs.",
+      "caveat": "The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 44,
+      "prerequisites": [],
+      "statementStyle": "Compact sequence prompt with one important distinction.",
+      "expectedMentalModel": "Ask what the best increasing chain looks like if it must end at this position.",
+      "topicGuides": [
+        {
+          "id": "dynamic-programming",
+          "title": "Dynamic Programming",
+          "path": "topics/dynamic-programming.html"
+        }
+      ],
+      "memberships": [
+        "1-D Dynamic Programming",
+        "Blind 75",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/longest-increasing-subsequence/",
+        "https://neetcode.io/problems/longest-increasing-subsequence",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Binary Search",
+          "slug": "binary-search"
+        },
+        {
+          "name": "Dynamic Programming",
+          "slug": "dynamic-programming"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0300-0399/0300.Longest Increasing Subsequence/README.md",
+            "solution/0300-0399/0300.Longest Increasing Subsequence/README_EN.md",
+            "solution/0300-0399/0300.Longest Increasing Subsequence/Solution.cpp",
+            "solution/0300-0399/0300.Longest Increasing Subsequence/Solution.go",
+            "solution/0300-0399/0300.Longest Increasing Subsequence/Solution.java",
+            "solution/0300-0399/0300.Longest Increasing Subsequence/Solution.py",
+            "solution/0300-0399/0300.Longest Increasing Subsequence/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/longestIncreasingSubsequence/longestIncreasingSubsequence.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/longest-increasing-subsequence.cpp",
+            "Python/longest-increasing-subsequence.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/longest-increasing-subsequence.md",
+            "c/0300-longest-increasing-subsequence.c",
+            "cpp/0300-longest-increasing-subsequence.cpp",
+            "csharp/0300-longest-increasing-subsequence.cs",
+            "go/0300-longest-increasing-subsequence.go",
+            "hints/longest-increasing-subsequence.md",
+            "java/0300-longest-increasing-subsequence.java",
+            "javascript/0300-longest-increasing-subsequence.js"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Greedy/300.Longest-Increasing-Subsequence/300.Longest-Increasing-Subsequence_v1.cpp",
+            "Greedy/300.Longest-Increasing-Subsequence/300.Longest-Increasing-Subsequence_v2.cpp",
+            "Greedy/300.Longest-Increasing-Subsequence/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C"
+        ],
+        "solutionCount": 16,
+        "writeupCount": 5,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "partition-equal-subset-sum",
+      "number": 416,
+      "title": "Partition Equal Subset Sum",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/partition-equal-subset-sum/",
+      "concepts": [
+        "dynamic-programming",
+        "subset",
+        "knapsack"
+      ],
+      "phase": {
+        "id": "dp",
+        "name": "Phase 6: Intro Dynamic Programming",
+        "shortName": "Intro Dynamic Programming",
+        "description": "Decision chains and manageable state transitions that start to feel like real DP."
+      },
+      "lane": {
+        "id": "dp",
+        "label": "Dynamic Programming",
+        "color": "#5f0f40"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is a very good first subset-sum style Medium and a realistic introduction to yes-or-no DP states.",
+      "whatYouPractice": "Target reduction, subset feasibility thinking, and translating a partition story into one smaller question.",
+      "overview": "Decide whether a collection can be split into two groups with the same total weight.",
+      "interestNote": "A useful bridge problem because it makes knapsack-style reasoning feel concrete instead of theoretical.",
+      "caveat": "The key move is reframing the original goal into the right target; otherwise the search feels larger than it is.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 45,
+      "prerequisites": [],
+      "statementStyle": "Simple numeric partition prompt.",
+      "expectedMentalModel": "If you can hit the right half-sum cleanly, the original partition question is already answered.",
+      "topicGuides": [
+        {
+          "id": "dynamic-programming",
+          "title": "Dynamic Programming",
+          "path": "topics/dynamic-programming.html"
+        }
+      ],
+      "memberships": [
+        "1-D Dynamic Programming",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/partition-equal-subset-sum/",
+        "https://neetcode.io/problems/partition-equal-subset-sum",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Dynamic Programming",
+          "slug": "dynamic-programming"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0400-0499/0416.Partition Equal Subset Sum/README.md",
+            "solution/0400-0499/0416.Partition Equal Subset Sum/README_EN.md",
+            "solution/0400-0499/0416.Partition Equal Subset Sum/Solution.cpp",
+            "solution/0400-0499/0416.Partition Equal Subset Sum/Solution.go",
+            "solution/0400-0499/0416.Partition Equal Subset Sum/Solution.java",
+            "solution/0400-0499/0416.Partition Equal Subset Sum/Solution.py",
+            "solution/0400-0499/0416.Partition Equal Subset Sum/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/partitionEqualSubsetSum/PartitionEqualSubsetSum.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/partition-equal-subset-sum.cpp",
+            "Python/partition-equal-subset-sum.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/partition-equal-subset-sum.md",
+            "c/0416-partition-equal-subset-sum.c",
+            "cpp/0416-partition-equal-subset-sum.cpp",
+            "csharp/0416-partition-equal-subset-sum.cs",
+            "go/0416-partition-equal-subset-sum.go",
+            "hints/partition-equal-subset-sum.md",
+            "java/0416-partition-equal-subset-sum.java",
+            "javascript/0416-partition-equal-subset-sum.js"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Dynamic_Programming/416.Partition-Equal-Subset-Sum/416.Partition-Equal-Subset-Sum.cpp",
+            "Dynamic_Programming/416.Partition-Equal-Subset-Sum/416.Partition-Equal-Subset-Sum_dfs_v1.cpp",
+            "Dynamic_Programming/416.Partition-Equal-Subset-Sum/416.Partition-Equal-Subset-Sum_dfs_v2.cpp",
+            "Dynamic_Programming/416.Partition-Equal-Subset-Sum/416.Partition-Equal-Subset-Sum_dp_v2.cpp",
+            "Dynamic_Programming/416.Partition-Equal-Subset-Sum/416.Partition-Equal-Subset-Sum_dp_v3.cpp",
+            "Dynamic_Programming/416.Partition-Equal-Subset-Sum/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C"
+        ],
+        "solutionCount": 19,
+        "writeupCount": 5,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "word-break",
+      "number": 139,
+      "title": "Word Break",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/word-break/",
+      "concepts": [
+        "dynamic-programming",
+        "string",
+        "prefix-decomposition"
+      ],
+      "phase": {
+        "id": "dp",
+        "name": "Phase 6: Intro Dynamic Programming",
+        "shortName": "Intro Dynamic Programming",
+        "description": "Decision chains and manageable state transitions that start to feel like real DP."
+      },
+      "lane": {
+        "id": "dp",
+        "label": "Dynamic Programming",
+        "color": "#5f0f40"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is an excellent transition from recursive guessing to memoized or tabulated decomposition.",
+      "whatYouPractice": "Prefix-state thinking, reuse of earlier segmentation results, and seeing strings as buildable from smaller valid prefixes.",
+      "overview": "Decide whether a string can be broken into valid dictionary pieces without gaps or leftovers.",
+      "interestNote": "High payoff because many string DPs are really about valid ways to decompose a prefix or suffix.",
+      "caveat": "The brute-force search grows quickly, so the learning value is in recognizing overlapping decomposition states.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 46,
+      "prerequisites": [],
+      "statementStyle": "Readable dictionary segmentation prompt.",
+      "expectedMentalModel": "Treat each prefix boundary as a state: can the string up to here be assembled validly or not?",
+      "topicGuides": [
+        {
+          "id": "dynamic-programming",
+          "title": "Dynamic Programming",
+          "path": "topics/dynamic-programming.html"
+        }
+      ],
+      "memberships": [
+        "1-D Dynamic Programming",
+        "Blind 75",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/word-break/",
+        "https://neetcode.io/problems/word-break",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Hash Table",
+          "slug": "hash-table"
+        },
+        {
+          "name": "String",
+          "slug": "string"
+        },
+        {
+          "name": "Dynamic Programming",
+          "slug": "dynamic-programming"
+        },
+        {
+          "name": "Trie",
+          "slug": "trie"
+        },
+        {
+          "name": "Memoization",
+          "slug": "memoization"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0100-0199/0139.Word Break/README.md",
+            "solution/0100-0199/0139.Word Break/README_EN.md",
+            "solution/0100-0199/0139.Word Break/Solution.cpp",
+            "solution/0100-0199/0139.Word Break/Solution.go",
+            "solution/0100-0199/0139.Word Break/Solution.java",
+            "solution/0100-0199/0139.Word Break/Solution.py",
+            "solution/0100-0199/0139.Word Break/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/wordBreak/wordBreak.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/word-break.cpp",
+            "Python/word-break.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/word-break.md",
+            "cpp/0139-word-break.cpp",
+            "csharp/0139-word-break.cs",
+            "go/0139-word-break.go",
+            "hints/word-break.md",
+            "java/0139-word-break.java",
+            "javascript/0139-word-break.js",
+            "kotlin/0139-word-break.kt"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Trie/139.Word-Break/139.Word-Break_DP.cpp",
+            "Trie/139.Word-Break/139.Word-Break_DP.py",
+            "Trie/139.Word-Break/139.Word-Break_Trie.cpp",
+            "Trie/139.Word-Break/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "Kotlin"
+        ],
+        "solutionCount": 17,
+        "writeupCount": 5,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "target-sum",
+      "number": 494,
+      "title": "Target Sum",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/target-sum/",
+      "concepts": [
+        "dynamic-programming",
+        "subset",
+        "counting",
+        "sign-choice"
+      ],
+      "phase": {
+        "id": "dp",
+        "name": "Phase 6: Intro Dynamic Programming",
+        "shortName": "Intro Dynamic Programming",
+        "description": "Decision chains and manageable state transitions that start to feel like real DP."
+      },
+      "lane": {
+        "id": "dp",
+        "label": "Dynamic Programming",
+        "color": "#5f0f40"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "moderate",
+      "effort": "stretch",
+      "readiness": "stretch",
+      "whySolve": "It is rewarding because the surface story looks different, but underneath it becomes a familiar state-counting problem.",
+      "whatYouPractice": "State transformation, counting variants of a target, and recognizing when a strange prompt hides a standard DP shape.",
+      "overview": "Assign a plus or minus choice to each number so the final expression lands on the requested target.",
+      "interestNote": "Good later DP pick because it trains the habit of reformulating the question before filling states.",
+      "caveat": "The problem becomes much easier only after the right reframing, so the front-end interpretation matters a lot.",
+      "classic": true,
+      "newerGem": false,
+      "starter": false,
+      "recommendedOrder": 47,
+      "prerequisites": [],
+      "statementStyle": "Short arithmetic prompt with a hidden structural reduction.",
+      "expectedMentalModel": "Before filling states, ask what equivalent target-counting question the sign choices are really describing.",
+      "topicGuides": [
+        {
+          "id": "dynamic-programming",
+          "title": "Dynamic Programming",
+          "path": "topics/dynamic-programming.html"
+        }
+      ],
+      "memberships": [
+        "2-D Dynamic Programming",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/target-sum/",
+        "https://neetcode.io/problems/target-sum",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Dynamic Programming",
+          "slug": "dynamic-programming"
+        },
+        {
+          "name": "Backtracking",
+          "slug": "backtracking"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0400-0499/0494.Target Sum/README.md",
+            "solution/0400-0499/0494.Target Sum/README_EN.md",
+            "solution/0400-0499/0494.Target Sum/Solution.cpp",
+            "solution/0400-0499/0494.Target Sum/Solution.go",
+            "solution/0400-0499/0494.Target Sum/Solution.java",
+            "solution/0400-0499/0494.Target Sum/Solution.py",
+            "solution/0400-0499/0494.Target Sum/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/targetSum/targetSum.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/target-sum.cpp",
+            "Python/target-sum.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/target-sum.md",
+            "c/0494-target-sum.c",
+            "cpp/0494-target-sum.cpp",
+            "csharp/0494-target-sum.cs",
+            "go/0494-target-sum.go",
+            "hints/target-sum.md",
+            "java/0494-target-sum.java",
+            "javascript/0494-target-sum.js"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Dynamic_Programming/494.Target-Sum/494.Target-Sum-DFS.py",
+            "Dynamic_Programming/494.Target-Sum/494.Target-Sum-DP.py",
+            "Dynamic_Programming/494.Target-Sum/494.Target-Sum_DP_v2.cpp",
+            "Dynamic_Programming/494.Target-Sum/494.Target-Sum_DP_v3.cpp",
+            "Dynamic_Programming/494.Target-Sum/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C"
+        ],
+        "solutionCount": 18,
+        "writeupCount": 5,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "decode-ways",
+      "number": 91,
+      "title": "Decode Ways",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/decode-ways/",
+      "concepts": [
+        "dynamic-programming",
+        "string",
+        "counting",
+        "local-validity"
+      ],
+      "phase": {
+        "id": "dp",
+        "name": "Phase 6: Intro Dynamic Programming",
+        "shortName": "Intro Dynamic Programming",
+        "description": "Decision chains and manageable state transitions that start to feel like real DP."
+      },
+      "lane": {
+        "id": "dp",
+        "label": "Dynamic Programming",
+        "color": "#5f0f40"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is a manageable string DP where local validity checks and position-based state both matter.",
+      "whatYouPractice": "Position DP, branching on one-step versus two-step moves, and handling invalid local patterns cleanly.",
+      "overview": "Count how many valid decodings a digit string can produce under a small mapping rule.",
+      "interestNote": "A very good string-DP transition problem because the recurrence is compact but not totally obvious.",
+      "caveat": "The challenge is less about coding and more about being precise about which local chunks are legal.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 48,
+      "prerequisites": [],
+      "statementStyle": "Short decoding prompt with small local rules.",
+      "expectedMentalModel": "At each position, ask how many legal ways the remainder can be interpreted if you consume one or two digits.",
+      "topicGuides": [
+        {
+          "id": "dynamic-programming",
+          "title": "Dynamic Programming",
+          "path": "topics/dynamic-programming.html"
+        }
+      ],
+      "memberships": [
+        "1-D Dynamic Programming",
+        "Blind 75",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/decode-ways/",
+        "https://neetcode.io/problems/decode-ways",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "String",
+          "slug": "string"
+        },
+        {
+          "name": "Dynamic Programming",
+          "slug": "dynamic-programming"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0000-0099/0091.Decode Ways/README.md",
+            "solution/0000-0099/0091.Decode Ways/README_EN.md",
+            "solution/0000-0099/0091.Decode Ways/Solution.cpp",
+            "solution/0000-0099/0091.Decode Ways/Solution.go",
+            "solution/0000-0099/0091.Decode Ways/Solution.java",
+            "solution/0000-0099/0091.Decode Ways/Solution.py",
+            "solution/0000-0099/0091.Decode Ways/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/decodeWays/decodeWays.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "Python/decode-ways.cpp",
+            "Python/decode-ways.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/decode-ways.md",
+            "c/0091-decode-ways.c",
+            "cpp/0091-decode-ways.cpp",
+            "csharp/0091-decode-ways.cs",
+            "go/0091-decode-ways.go",
+            "hints/decode-ways.md",
+            "java/0091-decode-ways.java",
+            "javascript/0091-decode-ways.js"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Dynamic_Programming/091.Decode-Ways/091.Decode_Ways.cpp",
+            "Dynamic_Programming/091.Decode-Ways/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C"
+        ],
+        "solutionCount": 14,
+        "writeupCount": 5,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "jump-game-ii",
+      "number": 45,
+      "title": "Jump Game II",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/jump-game-ii/",
+      "concepts": [
+        "dynamic-programming",
+        "greedy",
+        "reachability",
+        "array"
+      ],
+      "phase": {
+        "id": "dp",
+        "name": "Phase 6: Intro Dynamic Programming",
+        "shortName": "Intro Dynamic Programming",
+        "description": "Decision chains and manageable state transitions that start to feel like real DP."
+      },
+      "lane": {
+        "id": "dp",
+        "label": "Dynamic Programming",
+        "color": "#5f0f40"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "stretch",
+      "readiness": "stretch",
+      "whySolve": "It is a useful end-of-ramp problem because it sits at the border between DP thinking and stronger greedy perspective.",
+      "whatYouPractice": "Range-based state thinking, measuring progress in layers or intervals, and comparing constructive approaches.",
+      "overview": "Reach the end of an array in the fewest jumps when each position offers a limited forward range.",
+      "interestNote": "Strong capstone for this collection because it tests whether you can reason about future reach instead of only local moves.",
+      "caveat": "It is easy to focus on individual jumps when the cleaner viewpoint is to reason about the current reachable band.",
+      "classic": true,
+      "newerGem": false,
+      "starter": true,
+      "recommendedOrder": 49,
+      "prerequisites": [],
+      "statementStyle": "Compact array prompt with obvious stakes.",
+      "expectedMentalModel": "Think in terms of how far the current wave of reachable positions can take you before another jump becomes unavoidable.",
+      "topicGuides": [
+        {
+          "id": "dynamic-programming",
+          "title": "Dynamic Programming",
+          "path": "topics/dynamic-programming.html"
+        }
+      ],
+      "memberships": [
+        "Greedy",
+        "NeetCode 150",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/jump-game-ii/",
+        "https://neetcode.io/problems/jump-game-ii",
+        "https://seanprashad.com/leetcode-patterns/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Dynamic Programming",
+          "slug": "dynamic-programming"
+        },
+        {
+          "name": "Greedy",
+          "slug": "greedy"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/0000-0099/0045.Jump Game II/README.md",
+            "solution/0000-0099/0045.Jump Game II/README_EN.md",
+            "solution/0000-0099/0045.Jump Game II/Solution.cpp",
+            "solution/0000-0099/0045.Jump Game II/Solution.go",
+            "solution/0000-0099/0045.Jump Game II/Solution.java",
+            "solution/0000-0099/0045.Jump Game II/Solution.py",
+            "solution/0000-0099/0045.Jump Game II/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "haoel_leetcode",
+          "coverageType": "indexed-code",
+          "paths": [
+            "algorithms/cpp/jumpGame/jumpGame.II.cpp"
+          ],
+          "notes": "README table with direct language links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "Python/jump-game-ii.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/jump-game-ii.md",
+            "c/0045-jump-game-ii.c",
+            "cpp/0045-jump-game-ii.cpp",
+            "csharp/0045-jump-game-ii.cs",
+            "go/0045-jump-game-ii.go",
+            "hints/jump-game-ii.md",
+            "java/0045-jump-game-ii.java",
+            "javascript/0045-jump-game-ii.js"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Greedy/045.Jump-Game-II/045.Jump-Game-II.cpp",
+            "Greedy/045.Jump-Game-II/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "javascript",
+          "csharp",
+          "c"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "JavaScript",
+          "C#",
+          "C"
+        ],
+        "solutionCount": 14,
+        "writeupCount": 5,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "merge-nodes-in-between-zeros",
+      "number": 2181,
+      "title": "Merge Nodes in Between Zeros",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/merge-nodes-in-between-zeros/",
+      "concepts": [
+        "linked-list",
+        "segmentation",
+        "single-pass"
+      ],
+      "phase": {
+        "id": "linked-lists",
+        "name": "Phase 2: Pointer Control",
+        "shortName": "Pointer Control",
+        "description": "Linked-list problems that reward careful pointer movement without excessive domain noise."
+      },
+      "lane": {
+        "id": "linked-list",
+        "label": "Linked Lists",
+        "color": "#005f73"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It is one of the cleanest modern linked-list Mediums because the structure tells you exactly where the meaningful work starts and ends.",
+      "whatYouPractice": "Single-pass list traversal, segment accumulation, and building output without losing pointer safety.",
+      "overview": "Traverse a linked list whose zero nodes mark segment boundaries and collapse each segment into one output node.",
+      "interestNote": "A very good confidence-builder if classic pointer questions still feel brittle.",
+      "caveat": "The statement is friendly, but it is still easy to attach result nodes in the wrong place or forget to reset the running segment total.",
+      "classic": false,
+      "newerGem": true,
+      "starter": true,
+      "recommendedOrder": 50,
+      "prerequisites": [],
+      "statementStyle": "Short linked-list prompt with explicit structural markers.",
+      "expectedMentalModel": "The zeros are boundaries, not data; walk segment by segment and only materialize the collapsed result.",
+      "topicGuides": [
+        {
+          "id": "linked-lists",
+          "title": "Linked Lists",
+          "path": "topics/linked-lists.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/merge-nodes-in-between-zeros/",
+        "https://www.techinterviewhandbook.org/algorithms/linked-list/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Linked List",
+          "slug": "linked-list"
+        },
+        {
+          "name": "Simulation",
+          "slug": "simulation"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/2100-2199/2181.Merge Nodes in Between Zeros/README.md",
+            "solution/2100-2199/2181.Merge Nodes in Between Zeros/README_EN.md",
+            "solution/2100-2199/2181.Merge Nodes in Between Zeros/Solution.cpp",
+            "solution/2100-2199/2181.Merge Nodes in Between Zeros/Solution.go",
+            "solution/2100-2199/2181.Merge Nodes in Between Zeros/Solution.java",
+            "solution/2100-2199/2181.Merge Nodes in Between Zeros/Solution.py",
+            "solution/2100-2199/2181.Merge Nodes in Between Zeros/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/merge-nodes-in-between-zeros.cpp",
+            "Python/merge-nodes-in-between-zeros.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 7,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "remove-nodes-from-linked-list",
+      "number": 2487,
+      "title": "Remove Nodes From Linked List",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/remove-nodes-from-linked-list/",
+      "concepts": [
+        "linked-list",
+        "monotonic-thinking",
+        "rewiring"
+      ],
+      "phase": {
+        "id": "linked-lists",
+        "name": "Phase 2: Pointer Control",
+        "shortName": "Pointer Control",
+        "description": "Linked-list problems that reward careful pointer movement without excessive domain noise."
+      },
+      "lane": {
+        "id": "linked-list",
+        "label": "Linked Lists",
+        "color": "#005f73"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It teaches a valuable linked-list lesson: some local keep-or-delete decisions depend on future structure, not only the current node.",
+      "whatYouPractice": "Reasoning about future comparisons, list cleanup, and choosing a representation that makes destructive edits manageable.",
+      "overview": "Delete nodes that are dominated by a later larger value while keeping the surviving list intact.",
+      "interestNote": "This feels newer and fresher than the standard pointer-drill Mediums while still teaching a reusable idea.",
+      "caveat": "The trap is trying to make irrevocable deletion decisions before you have a stable view of the nodes to the right.",
+      "classic": false,
+      "newerGem": true,
+      "starter": false,
+      "recommendedOrder": 51,
+      "prerequisites": [],
+      "statementStyle": "Short list prompt with a future-looking deletion rule.",
+      "expectedMentalModel": "The interesting comparison is against what survives later, not merely against the immediate next node.",
+      "topicGuides": [
+        {
+          "id": "linked-lists",
+          "title": "Linked Lists",
+          "path": "topics/linked-lists.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/remove-nodes-from-linked-list/",
+        "https://www.techinterviewhandbook.org/algorithms/linked-list/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Linked List",
+          "slug": "linked-list"
+        },
+        {
+          "name": "Stack",
+          "slug": "stack"
+        },
+        {
+          "name": "Recursion",
+          "slug": "recursion"
+        },
+        {
+          "name": "Monotonic Stack",
+          "slug": "monotonic-stack"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/2400-2499/2487.Remove Nodes From Linked List/README.md",
+            "solution/2400-2499/2487.Remove Nodes From Linked List/README_EN.md",
+            "solution/2400-2499/2487.Remove Nodes From Linked List/Solution.cpp",
+            "solution/2400-2499/2487.Remove Nodes From Linked List/Solution.go",
+            "solution/2400-2499/2487.Remove Nodes From Linked List/Solution.java",
+            "solution/2400-2499/2487.Remove Nodes From Linked List/Solution.py",
+            "solution/2400-2499/2487.Remove Nodes From Linked List/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/remove-nodes-from-linked-list.cpp",
+            "Python/remove-nodes-from-linked-list.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "articles/remove-nodes-from-linked-list.md"
+          ],
+          "notes": "Broad path scan matched the problem by number or normalized slug.",
+          "matchMode": "broad"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 7,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "insert-greatest-common-divisors-in-linked-list",
+      "number": 2807,
+      "title": "Insert Greatest Common Divisors in Linked List",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/insert-greatest-common-divisors-in-linked-list/",
+      "concepts": [
+        "linked-list",
+        "in-place-insertion",
+        "pair-processing"
+      ],
+      "phase": {
+        "id": "linked-lists",
+        "name": "Phase 2: Pointer Control",
+        "shortName": "Pointer Control",
+        "description": "Linked-list problems that reward careful pointer movement without excessive domain noise."
+      },
+      "lane": {
+        "id": "linked-list",
+        "label": "Linked Lists",
+        "color": "#005f73"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It is compact, concrete, and useful for learning the exact pointer order needed for safe in-place insertion.",
+      "whatYouPractice": "Preserving access before insertion, pairwise processing, and advancing correctly after mutating the list.",
+      "overview": "Walk adjacent pairs in a list and insert one derived node between them without breaking traversal.",
+      "interestNote": "A strong short-form refresher when you want pure pointer mechanics without extra algorithmic noise.",
+      "caveat": "Because the inserted node becomes part of the structure immediately, careless pointer advancement can create skipped work or loops.",
+      "classic": false,
+      "newerGem": true,
+      "starter": true,
+      "recommendedOrder": 52,
+      "prerequisites": [],
+      "statementStyle": "Very direct linked-list transformation prompt.",
+      "expectedMentalModel": "Handle one original pair at a time and be explicit about where traversal resumes after insertion.",
+      "topicGuides": [
+        {
+          "id": "linked-lists",
+          "title": "Linked Lists",
+          "path": "topics/linked-lists.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/insert-greatest-common-divisors-in-linked-list/",
+        "https://www.techinterviewhandbook.org/algorithms/linked-list/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Linked List",
+          "slug": "linked-list"
+        },
+        {
+          "name": "Math",
+          "slug": "math"
+        },
+        {
+          "name": "Number Theory",
+          "slug": "number-theory"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/2800-2899/2807.Insert Greatest Common Divisors in Linked List/README.md",
+            "solution/2800-2899/2807.Insert Greatest Common Divisors in Linked List/README_EN.md",
+            "solution/2800-2899/2807.Insert Greatest Common Divisors in Linked List/Solution.cpp",
+            "solution/2800-2899/2807.Insert Greatest Common Divisors in Linked List/Solution.go",
+            "solution/2800-2899/2807.Insert Greatest Common Divisors in Linked List/Solution.java",
+            "solution/2800-2899/2807.Insert Greatest Common Divisors in Linked List/Solution.py",
+            "solution/2800-2899/2807.Insert Greatest Common Divisors in Linked List/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/insert-greatest-common-divisors-in-linked-list.cpp",
+            "Python/insert-greatest-common-divisors-in-linked-list.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "articles/insert-greatest-common-divisors-in-linked-list.md"
+          ],
+          "notes": "Broad path scan matched the problem by number or normalized slug.",
+          "matchMode": "broad"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 7,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "double-a-number-represented-as-a-linked-list",
+      "number": 2816,
+      "title": "Double a Number Represented as a Linked List",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/double-a-number-represented-as-a-linked-list/",
+      "concepts": [
+        "linked-list",
+        "carry",
+        "digit-processing"
+      ],
+      "phase": {
+        "id": "linked-lists",
+        "name": "Phase 2: Pointer Control",
+        "shortName": "Pointer Control",
+        "description": "Linked-list problems that reward careful pointer movement without excessive domain noise."
+      },
+      "lane": {
+        "id": "linked-list",
+        "label": "Linked Lists",
+        "color": "#005f73"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is a good follow-up to Add Two Numbers because the list mechanics are familiar but the carry flow is less obvious.",
+      "whatYouPractice": "Digit carry propagation, head-edge handling, and choosing an update order that does not fight the representation.",
+      "overview": "Double a number stored across list nodes while managing carries and the possibility of a new leading digit.",
+      "interestNote": "Useful because it teaches how arithmetic constraints interact with pointer constraints.",
+      "caveat": "The main risk is underestimating how a carry can escape all the way past the current head.",
+      "classic": false,
+      "newerGem": true,
+      "starter": false,
+      "recommendedOrder": 53,
+      "prerequisites": [],
+      "statementStyle": "Readable arithmetic-flavored list prompt.",
+      "expectedMentalModel": "Treat the list like a digit stream with carry pressure that may need structural help at the front.",
+      "topicGuides": [
+        {
+          "id": "linked-lists",
+          "title": "Linked Lists",
+          "path": "topics/linked-lists.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/double-a-number-represented-as-a-linked-list/",
+        "https://www.techinterviewhandbook.org/algorithms/linked-list/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Linked List",
+          "slug": "linked-list"
+        },
+        {
+          "name": "Math",
+          "slug": "math"
+        },
+        {
+          "name": "Stack",
+          "slug": "stack"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/2800-2899/2816.Double a Number Represented as a Linked List/README.md",
+            "solution/2800-2899/2816.Double a Number Represented as a Linked List/README_EN.md",
+            "solution/2800-2899/2816.Double a Number Represented as a Linked List/Solution.cpp",
+            "solution/2800-2899/2816.Double a Number Represented as a Linked List/Solution.go",
+            "solution/2800-2899/2816.Double a Number Represented as a Linked List/Solution.java",
+            "solution/2800-2899/2816.Double a Number Represented as a Linked List/Solution.py",
+            "solution/2800-2899/2816.Double a Number Represented as a Linked List/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/double-a-number-represented-as-a-linked-list.cpp",
+            "Python/double-a-number-represented-as-a-linked-list.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 7,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "delete-nodes-from-linked-list-present-in-array",
+      "number": 3217,
+      "title": "Delete Nodes From Linked List Present in Array",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/delete-nodes-from-linked-list-present-in-array/",
+      "concepts": [
+        "linked-list",
+        "hashing",
+        "deletion"
+      ],
+      "phase": {
+        "id": "linked-lists",
+        "name": "Phase 2: Pointer Control",
+        "shortName": "Pointer Control",
+        "description": "Linked-list problems that reward careful pointer movement without excessive domain noise."
+      },
+      "lane": {
+        "id": "linked-list",
+        "label": "Linked Lists",
+        "color": "#005f73"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It combines a standard membership structure with reliable list deletion, which is exactly the kind of two-technique blend that shows up in interviews.",
+      "whatYouPractice": "Sentinel-based deletion, membership preprocessing, and keeping the traversal logic simpler than the problem story suggests.",
+      "overview": "Remove every node whose value appears in an external array while preserving the rest of the list.",
+      "interestNote": "High practical value because it feels like real data cleanup rather than a toy list puzzle.",
+      "caveat": "The data-structure choice is straightforward; the subtle part is deleting cleanly at the head and through runs of removable nodes.",
+      "classic": false,
+      "newerGem": true,
+      "starter": true,
+      "recommendedOrder": 54,
+      "prerequisites": [],
+      "statementStyle": "Concrete list-filtering prompt with no hidden story tax.",
+      "expectedMentalModel": "Solve membership first, then make the list walk a calm delete-or-keep routine.",
+      "topicGuides": [
+        {
+          "id": "linked-lists",
+          "title": "Linked Lists",
+          "path": "topics/linked-lists.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/delete-nodes-from-linked-list-present-in-array/",
+        "https://www.techinterviewhandbook.org/algorithms/linked-list/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Hash Table",
+          "slug": "hash-table"
+        },
+        {
+          "name": "Linked List",
+          "slug": "linked-list"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/3200-3299/3217.Delete Nodes From Linked List Present in Array/README.md",
+            "solution/3200-3299/3217.Delete Nodes From Linked List Present in Array/README_EN.md",
+            "solution/3200-3299/3217.Delete Nodes From Linked List Present in Array/Solution.cpp",
+            "solution/3200-3299/3217.Delete Nodes From Linked List Present in Array/Solution.go",
+            "solution/3200-3299/3217.Delete Nodes From Linked List Present in Array/Solution.java",
+            "solution/3200-3299/3217.Delete Nodes From Linked List Present in Array/Solution.py",
+            "solution/3200-3299/3217.Delete Nodes From Linked List Present in Array/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/delete-nodes-from-linked-list-present-in-array.cpp",
+            "Python/delete-nodes-from-linked-list-present-in-array.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 7,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "create-binary-tree-from-descriptions",
+      "number": 2196,
+      "title": "Create Binary Tree From Descriptions",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/create-binary-tree-from-descriptions/",
+      "concepts": [
+        "tree",
+        "construction",
+        "parent-child-relationships"
+      ],
+      "phase": {
+        "id": "trees",
+        "name": "Phase 3: Trees And Recursive Signals",
+        "shortName": "Trees And Recursive Signals",
+        "description": "Tree traversal, recursion flow, and clean structural invariants."
+      },
+      "lane": {
+        "id": "tree",
+        "label": "Trees",
+        "color": "#3d405b"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It is excellent tree-construction practice because the input is relational rather than already shaped like a tree.",
+      "whatYouPractice": "Node creation, parent-child wiring, and root detection from incomplete relational data.",
+      "overview": "Build a binary tree from parent-child descriptions and identify the real root once the pieces exist.",
+      "interestNote": "This is one of the cleanest tree-building Mediums from the newer LeetCode range.",
+      "caveat": "The node wiring is not difficult, but it is easy to lose track of which values have already been established as children.",
+      "classic": false,
+      "newerGem": true,
+      "starter": true,
+      "recommendedOrder": 55,
+      "prerequisites": [],
+      "statementStyle": "Short relational prompt that turns into explicit structure-building.",
+      "expectedMentalModel": "Construct nodes and edges first, then ask which node was never claimed as anyone else's child.",
+      "topicGuides": [
+        {
+          "id": "tree-traversal",
+          "title": "Tree Traversal",
+          "path": "topics/tree-traversal.html"
+        },
+        {
+          "id": "dfs",
+          "title": "Depth-First Search",
+          "path": "topics/dfs.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/create-binary-tree-from-descriptions/",
+        "https://usaco.guide/silver/intro-tree",
+        "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/resources/lecture-10-depth-first-search/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Hash Table",
+          "slug": "hash-table"
+        },
+        {
+          "name": "Tree",
+          "slug": "tree"
+        },
+        {
+          "name": "Binary Tree",
+          "slug": "binary-tree"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/2100-2199/2196.Create Binary Tree From Descriptions/README.md",
+            "solution/2100-2199/2196.Create Binary Tree From Descriptions/README_EN.md",
+            "solution/2100-2199/2196.Create Binary Tree From Descriptions/Solution.cpp",
+            "solution/2100-2199/2196.Create Binary Tree From Descriptions/Solution.go",
+            "solution/2100-2199/2196.Create Binary Tree From Descriptions/Solution.java",
+            "solution/2100-2199/2196.Create Binary Tree From Descriptions/Solution.py",
+            "solution/2100-2199/2196.Create Binary Tree From Descriptions/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/create-binary-tree-from-descriptions.cpp",
+            "Python/create-binary-tree-from-descriptions.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 7,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "count-nodes-equal-to-average-of-subtree",
+      "number": 2265,
+      "title": "Count Nodes Equal to Average of Subtree",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/count-nodes-equal-to-average-of-subtree/",
+      "concepts": [
+        "tree",
+        "postorder",
+        "subtree-aggregation"
+      ],
+      "phase": {
+        "id": "trees",
+        "name": "Phase 3: Trees And Recursive Signals",
+        "shortName": "Trees And Recursive Signals",
+        "description": "Tree traversal, recursion flow, and clean structural invariants."
+      },
+      "lane": {
+        "id": "tree",
+        "label": "Trees",
+        "color": "#3d405b"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is a great postorder aggregation problem because the return values are simple and the payoff is immediate.",
+      "whatYouPractice": "Returning multiple subtree facts at once, composing child results, and using bottom-up recursion cleanly.",
+      "overview": "For each node, compare its value against a summary computed from its entire subtree.",
+      "interestNote": "A very strong 'why postorder exists' teaching problem.",
+      "caveat": "The work is conceptually clean, but the recursion gets messy fast if the return data is not designed deliberately.",
+      "classic": false,
+      "newerGem": true,
+      "starter": true,
+      "recommendedOrder": 56,
+      "prerequisites": [],
+      "statementStyle": "Short tree prompt with one subtree-based check.",
+      "expectedMentalModel": "Children report the numbers the parent needs; the parent should not recompute a subtree from scratch.",
+      "topicGuides": [
+        {
+          "id": "tree-traversal",
+          "title": "Tree Traversal",
+          "path": "topics/tree-traversal.html"
+        },
+        {
+          "id": "dfs",
+          "title": "Depth-First Search",
+          "path": "topics/dfs.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/count-nodes-equal-to-average-of-subtree/",
+        "https://usaco.guide/silver/intro-tree",
+        "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/resources/lecture-10-depth-first-search/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Tree",
+          "slug": "tree"
+        },
+        {
+          "name": "Depth-First Search",
+          "slug": "depth-first-search"
+        },
+        {
+          "name": "Binary Tree",
+          "slug": "binary-tree"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/2200-2299/2265.Count Nodes Equal to Average of Subtree/README.md",
+            "solution/2200-2299/2265.Count Nodes Equal to Average of Subtree/README_EN.md",
+            "solution/2200-2299/2265.Count Nodes Equal to Average of Subtree/Solution.cpp",
+            "solution/2200-2299/2265.Count Nodes Equal to Average of Subtree/Solution.go",
+            "solution/2200-2299/2265.Count Nodes Equal to Average of Subtree/Solution.java",
+            "solution/2200-2299/2265.Count Nodes Equal to Average of Subtree/Solution.py",
+            "solution/2200-2299/2265.Count Nodes Equal to Average of Subtree/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/count-nodes-equal-to-average-of-subtree.cpp",
+            "Python/count-nodes-equal-to-average-of-subtree.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 7,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "amount-of-time-for-binary-tree-to-be-infected",
+      "number": 2385,
+      "title": "Amount of Time for Binary Tree to Be Infected",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/amount-of-time-for-binary-tree-to-be-infected/",
+      "concepts": [
+        "tree",
+        "bfs",
+        "distance"
+      ],
+      "phase": {
+        "id": "trees",
+        "name": "Phase 3: Trees And Recursive Signals",
+        "shortName": "Trees And Recursive Signals",
+        "description": "Tree traversal, recursion flow, and clean structural invariants."
+      },
+      "lane": {
+        "id": "tree",
+        "label": "Trees",
+        "color": "#3d405b"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is one of the best tree-to-graph bridge problems because the story naturally suggests layered spread over edges.",
+      "whatYouPractice": "Turning a tree into a traversal graph, multi-directional movement, and reading elapsed time from BFS levels.",
+      "overview": "Treat infection spread through a tree as a distance problem and ask how long the farthest node takes to reach.",
+      "interestNote": "Excellent for learning when a tree problem stops being about parent-child recursion and starts being about distance.",
+      "caveat": "The statement is clear, but many first attempts stay trapped in one-way child traversal even though the process spreads in all directions.",
+      "classic": false,
+      "newerGem": true,
+      "starter": false,
+      "recommendedOrder": 57,
+      "prerequisites": [],
+      "statementStyle": "Readable tree story with explicit spread-over-time semantics.",
+      "expectedMentalModel": "Once infection can move both up and down, this is a distance layering problem more than a classic recursive one.",
+      "topicGuides": [
+        {
+          "id": "tree-traversal",
+          "title": "Tree Traversal",
+          "path": "topics/tree-traversal.html"
+        },
+        {
+          "id": "bfs",
+          "title": "Breadth-First Search",
+          "path": "topics/bfs.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/amount-of-time-for-binary-tree-to-be-infected/",
+        "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/resources/lecture-9-breadth-first-search/",
+        "https://usaco.guide/silver/intro-tree"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Hash Table",
+          "slug": "hash-table"
+        },
+        {
+          "name": "Tree",
+          "slug": "tree"
+        },
+        {
+          "name": "Depth-First Search",
+          "slug": "depth-first-search"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Binary Tree",
+          "slug": "binary-tree"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/2300-2399/2385.Amount of Time for Binary Tree to Be Infected/README.md",
+            "solution/2300-2399/2385.Amount of Time for Binary Tree to Be Infected/README_EN.md",
+            "solution/2300-2399/2385.Amount of Time for Binary Tree to Be Infected/Solution.cpp",
+            "solution/2300-2399/2385.Amount of Time for Binary Tree to Be Infected/Solution.go",
+            "solution/2300-2399/2385.Amount of Time for Binary Tree to Be Infected/Solution.java",
+            "solution/2300-2399/2385.Amount of Time for Binary Tree to Be Infected/Solution.py",
+            "solution/2300-2399/2385.Amount of Time for Binary Tree to Be Infected/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/amount-of-time-for-binary-tree-to-be-infected.cpp",
+            "Python/amount-of-time-for-binary-tree-to-be-infected.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "java/2385-amount-of-time-for-binary-tree-to-be-infected.java"
+          ],
+          "notes": "Broad path scan matched the problem by number or normalized slug.",
+          "matchMode": "broad"
+        },
+        {
+          "repository": "test-123",
+          "coverageType": "code",
+          "paths": [
+            "amount-of-time-for-binary-tree-to-be-infected.cpp"
+          ],
+          "notes": "Flat mirror of solution source files, useful as a quick local reference after solving.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 8,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "reverse-odd-levels-of-binary-tree",
+      "number": 2415,
+      "title": "Reverse Odd Levels of Binary Tree",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/reverse-odd-levels-of-binary-tree/",
+      "concepts": [
+        "tree",
+        "bfs",
+        "level-order"
+      ],
+      "phase": {
+        "id": "trees",
+        "name": "Phase 3: Trees And Recursive Signals",
+        "shortName": "Trees And Recursive Signals",
+        "description": "Tree traversal, recursion flow, and clean structural invariants."
+      },
+      "lane": {
+        "id": "tree",
+        "label": "Trees",
+        "color": "#3d405b"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It is a clean level-order practice problem because the transformation is simple enough that the traversal logic stays central.",
+      "whatYouPractice": "Level grouping, per-level buffering, and modifying tree values without losing track of level structure.",
+      "overview": "Process a tree level by level and apply a transformation only to the layers that match one parity rule.",
+      "interestNote": "High teaching value because it makes level-order feel operational rather than just observational.",
+      "caveat": "The trap is not algorithmic difficulty; it is mixing up which nodes belong to one logical level before you reverse anything.",
+      "classic": false,
+      "newerGem": true,
+      "starter": true,
+      "recommendedOrder": 58,
+      "prerequisites": [],
+      "statementStyle": "Very direct tree-transformation prompt.",
+      "expectedMentalModel": "Do the traversal first, understand the level as a batch, then apply the parity rule to that batch only.",
+      "topicGuides": [
+        {
+          "id": "tree-traversal",
+          "title": "Tree Traversal",
+          "path": "topics/tree-traversal.html"
+        },
+        {
+          "id": "bfs",
+          "title": "Breadth-First Search",
+          "path": "topics/bfs.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/reverse-odd-levels-of-binary-tree/",
+        "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/resources/lecture-9-breadth-first-search/",
+        "https://usaco.guide/silver/intro-tree"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Tree",
+          "slug": "tree"
+        },
+        {
+          "name": "Depth-First Search",
+          "slug": "depth-first-search"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Binary Tree",
+          "slug": "binary-tree"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/2400-2499/2415.Reverse Odd Levels of Binary Tree/README.md",
+            "solution/2400-2499/2415.Reverse Odd Levels of Binary Tree/README_EN.md",
+            "solution/2400-2499/2415.Reverse Odd Levels of Binary Tree/Solution.cpp",
+            "solution/2400-2499/2415.Reverse Odd Levels of Binary Tree/Solution.go",
+            "solution/2400-2499/2415.Reverse Odd Levels of Binary Tree/Solution.java",
+            "solution/2400-2499/2415.Reverse Odd Levels of Binary Tree/Solution.py",
+            "solution/2400-2499/2415.Reverse Odd Levels of Binary Tree/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/reverse-odd-levels-of-binary-tree.cpp",
+            "Python/reverse-odd-levels-of-binary-tree.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 7,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "minimum-number-of-operations-to-sort-a-binary-tree-by-level",
+      "number": 2471,
+      "title": "Minimum Number of Operations to Sort a Binary Tree by Level",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/minimum-number-of-operations-to-sort-a-binary-tree-by-level/",
+      "concepts": [
+        "tree",
+        "bfs",
+        "level-order",
+        "array-reasoning"
+      ],
+      "phase": {
+        "id": "trees",
+        "name": "Phase 3: Trees And Recursive Signals",
+        "shortName": "Trees And Recursive Signals",
+        "description": "Tree traversal, recursion flow, and clean structural invariants."
+      },
+      "lane": {
+        "id": "tree",
+        "label": "Trees",
+        "color": "#3d405b"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "stretch",
+      "readiness": "stretch",
+      "whySolve": "It is a good next tree Medium because it combines comfortable traversal with a separate, more deliberate level subtask.",
+      "whatYouPractice": "Separating traversal from per-level processing, converting tree state into arrays, and solving the right subproblem per level.",
+      "overview": "Collect each level of a tree, then reason about how much work it takes to reorder that level cleanly.",
+      "interestNote": "This problem rewards good decomposition more than raw coding speed.",
+      "caveat": "It is tempting to treat the whole tree as one sorting job, but the structure only asks you to solve smaller level-sized jobs independently.",
+      "classic": false,
+      "newerGem": true,
+      "starter": false,
+      "recommendedOrder": 59,
+      "prerequisites": [],
+      "statementStyle": "Clear tree prompt that becomes a sequence of per-level array questions.",
+      "expectedMentalModel": "Traverse first, isolate one level at a time, then solve the smaller reordering problem that level creates.",
+      "topicGuides": [
+        {
+          "id": "tree-traversal",
+          "title": "Tree Traversal",
+          "path": "topics/tree-traversal.html"
+        },
+        {
+          "id": "bfs",
+          "title": "Breadth-First Search",
+          "path": "topics/bfs.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/minimum-number-of-operations-to-sort-a-binary-tree-by-level/",
+        "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/resources/lecture-9-breadth-first-search/",
+        "https://usaco.guide/silver/intro-tree"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Tree",
+          "slug": "tree"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Binary Tree",
+          "slug": "binary-tree"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/2400-2499/2471.Minimum Number of Operations to Sort a Binary Tree by Level/README.md",
+            "solution/2400-2499/2471.Minimum Number of Operations to Sort a Binary Tree by Level/README_EN.md",
+            "solution/2400-2499/2471.Minimum Number of Operations to Sort a Binary Tree by Level/Solution.cpp",
+            "solution/2400-2499/2471.Minimum Number of Operations to Sort a Binary Tree by Level/Solution.go",
+            "solution/2400-2499/2471.Minimum Number of Operations to Sort a Binary Tree by Level/Solution.java",
+            "solution/2400-2499/2471.Minimum Number of Operations to Sort a Binary Tree by Level/Solution.py",
+            "solution/2400-2499/2471.Minimum Number of Operations to Sort a Binary Tree by Level/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/minimum-number-of-operations-to-sort-a-binary-tree-by-level.cpp",
+            "Python/minimum-number-of-operations-to-sort-a-binary-tree-by-level.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Greedy/2471.Minimum-Number-of-Operations-to-Sort-a-Binary-Tree-by-Level/2471.Minimum-Number-of-Operations-to-Sort-a-Binary-Tree-by-Level.cpp",
+            "Greedy/2471.Minimum-Number-of-Operations-to-Sort-a-Binary-Tree-by-Level/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 8,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "count-unreachable-pairs-of-nodes-in-an-undirected-graph",
+      "number": 2316,
+      "title": "Count Unreachable Pairs of Nodes in an Undirected Graph",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/count-unreachable-pairs-of-nodes-in-an-undirected-graph/",
+      "concepts": [
+        "graph",
+        "components",
+        "dfs",
+        "counting"
+      ],
+      "phase": {
+        "id": "graphs",
+        "name": "Phase 4: Grids And Reachability",
+        "shortName": "Grids And Reachability",
+        "description": "Graph and grid traversal with clear stories and strong BFS/DFS reuse."
+      },
+      "lane": {
+        "id": "graph-grid",
+        "label": "Graphs And Grids",
+        "color": "#1d7874"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is extremely high-signal graph practice because the traversal part is simple and the counting insight transfers widely.",
+      "whatYouPractice": "Component discovery, size aggregation, and counting across partitions without double-counting.",
+      "overview": "Find connected components in an undirected graph and translate their sizes into the number of impossible cross-component pairs.",
+      "interestNote": "One of the best newer graph Mediums if you want a problem that teaches more than it annoys.",
+      "caveat": "The graph traversal is straightforward; the real learning is in turning component sizes into pair counts cleanly.",
+      "classic": false,
+      "newerGem": true,
+      "starter": true,
+      "recommendedOrder": 60,
+      "prerequisites": [],
+      "statementStyle": "Short graph-counting prompt with one important structural insight.",
+      "expectedMentalModel": "Traverse to learn the component sizes first; only then ask how many pairs cannot cross those boundaries.",
+      "topicGuides": [
+        {
+          "id": "graph-traversal",
+          "title": "Graph Traversal",
+          "path": "topics/graph-traversal.html"
+        },
+        {
+          "id": "dfs",
+          "title": "Depth-First Search",
+          "path": "topics/dfs.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/count-unreachable-pairs-of-nodes-in-an-undirected-graph/",
+        "https://usaco.guide/silver/graph-traversal",
+        "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/resources/lecture-10-depth-first-search/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Depth-First Search",
+          "slug": "depth-first-search"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Union-Find",
+          "slug": "union-find"
+        },
+        {
+          "name": "Graph Theory",
+          "slug": "graph"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/2300-2399/2316.Count Unreachable Pairs of Nodes in an Undirected Graph/README.md",
+            "solution/2300-2399/2316.Count Unreachable Pairs of Nodes in an Undirected Graph/README_EN.md",
+            "solution/2300-2399/2316.Count Unreachable Pairs of Nodes in an Undirected Graph/Solution.cpp",
+            "solution/2300-2399/2316.Count Unreachable Pairs of Nodes in an Undirected Graph/Solution.go",
+            "solution/2300-2399/2316.Count Unreachable Pairs of Nodes in an Undirected Graph/Solution.java",
+            "solution/2300-2399/2316.Count Unreachable Pairs of Nodes in an Undirected Graph/Solution.py",
+            "solution/2300-2399/2316.Count Unreachable Pairs of Nodes in an Undirected Graph/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/count-unreachable-pairs-of-nodes-in-an-undirected-graph.cpp",
+            "Python/count-unreachable-pairs-of-nodes-in-an-undirected-graph.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 7,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "reachable-nodes-with-restrictions",
+      "number": 2368,
+      "title": "Reachable Nodes With Restrictions",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/reachable-nodes-with-restrictions/",
+      "concepts": [
+        "graph",
+        "dfs",
+        "bfs",
+        "restricted-traversal"
+      ],
+      "phase": {
+        "id": "graphs",
+        "name": "Phase 4: Grids And Reachability",
+        "shortName": "Grids And Reachability",
+        "description": "Graph and grid traversal with clear stories and strong BFS/DFS reuse."
+      },
+      "lane": {
+        "id": "graph-grid",
+        "label": "Graphs And Grids",
+        "color": "#1d7874"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It is a very clean graph-traversal variant because the only twist is a restriction set, not a whole new algorithm.",
+      "whatYouPractice": "Visited-state discipline, incorporating constraints into traversal, and keeping the graph model simple.",
+      "overview": "Traverse an undirected graph while respecting a set of forbidden nodes that should behave like hard walls.",
+      "interestNote": "A good graph confidence-builder because the story stays readable and the constraint is easy to explain.",
+      "caveat": "The main failure mode is letting the restriction check live in too many places instead of making it part of the traversal contract.",
+      "classic": false,
+      "newerGem": true,
+      "starter": true,
+      "recommendedOrder": 61,
+      "prerequisites": [],
+      "statementStyle": "Very direct reachability prompt with one explicit constraint set.",
+      "expectedMentalModel": "Treat restricted nodes exactly like blocked cells in a grid: the traversal should never enter them in the first place.",
+      "topicGuides": [
+        {
+          "id": "graph-traversal",
+          "title": "Graph Traversal",
+          "path": "topics/graph-traversal.html"
+        },
+        {
+          "id": "dfs",
+          "title": "Depth-First Search",
+          "path": "topics/dfs.html"
+        },
+        {
+          "id": "bfs",
+          "title": "Breadth-First Search",
+          "path": "topics/bfs.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/reachable-nodes-with-restrictions/",
+        "https://usaco.guide/silver/graph-traversal",
+        "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/resources/lecture-9-breadth-first-search/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Hash Table",
+          "slug": "hash-table"
+        },
+        {
+          "name": "Tree",
+          "slug": "tree"
+        },
+        {
+          "name": "Depth-First Search",
+          "slug": "depth-first-search"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Union-Find",
+          "slug": "union-find"
+        },
+        {
+          "name": "Graph Theory",
+          "slug": "graph"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/2300-2399/2368.Reachable Nodes With Restrictions/README.md",
+            "solution/2300-2399/2368.Reachable Nodes With Restrictions/README_EN.md",
+            "solution/2300-2399/2368.Reachable Nodes With Restrictions/Solution.cpp",
+            "solution/2300-2399/2368.Reachable Nodes With Restrictions/Solution.go",
+            "solution/2300-2399/2368.Reachable Nodes With Restrictions/Solution.java",
+            "solution/2300-2399/2368.Reachable Nodes With Restrictions/Solution.py",
+            "solution/2300-2399/2368.Reachable Nodes With Restrictions/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/reachable-nodes-with-restrictions.cpp",
+            "Python/reachable-nodes-with-restrictions.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 7,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "maximum-number-of-fish-in-a-grid",
+      "number": 2658,
+      "title": "Maximum Number of Fish in a Grid",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/maximum-number-of-fish-in-a-grid/",
+      "concepts": [
+        "grid",
+        "components",
+        "dfs",
+        "bfs"
+      ],
+      "phase": {
+        "id": "graphs",
+        "name": "Phase 4: Grids And Reachability",
+        "shortName": "Grids And Reachability",
+        "description": "Graph and grid traversal with clear stories and strong BFS/DFS reuse."
+      },
+      "lane": {
+        "id": "graph-grid",
+        "label": "Graphs And Grids",
+        "color": "#1d7874"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It is a friendly grid-components problem with a tangible payoff metric, which makes flood-fill reasoning feel useful immediately.",
+      "whatYouPractice": "Grid traversal, component aggregation, and reading a matrix as an implicit graph.",
+      "overview": "Explore connected water regions in a grid and compute the total reward available inside each component.",
+      "interestNote": "Excellent starter material for graph learners who are more comfortable with grids than adjacency lists.",
+      "caveat": "The traversal itself is standard; the important habit is to aggregate during one visit instead of revisiting cells repeatedly.",
+      "classic": false,
+      "newerGem": true,
+      "starter": true,
+      "recommendedOrder": 62,
+      "prerequisites": [],
+      "statementStyle": "Readable grid prompt with almost no wording friction.",
+      "expectedMentalModel": "Each connected patch is one component; harvest its total once, then compare components.",
+      "topicGuides": [
+        {
+          "id": "graph-traversal",
+          "title": "Graph Traversal",
+          "path": "topics/graph-traversal.html"
+        },
+        {
+          "id": "dfs",
+          "title": "Depth-First Search",
+          "path": "topics/dfs.html"
+        },
+        {
+          "id": "bfs",
+          "title": "Breadth-First Search",
+          "path": "topics/bfs.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/maximum-number-of-fish-in-a-grid/",
+        "https://usaco.guide/silver/flood-fill",
+        "https://usaco.guide/silver/graph-traversal"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Depth-First Search",
+          "slug": "depth-first-search"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Union-Find",
+          "slug": "union-find"
+        },
+        {
+          "name": "Matrix",
+          "slug": "matrix"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/2600-2699/2658.Maximum Number of Fish in a Grid/README.md",
+            "solution/2600-2699/2658.Maximum Number of Fish in a Grid/README_EN.md",
+            "solution/2600-2699/2658.Maximum Number of Fish in a Grid/Solution.cpp",
+            "solution/2600-2699/2658.Maximum Number of Fish in a Grid/Solution.go",
+            "solution/2600-2699/2658.Maximum Number of Fish in a Grid/Solution.java",
+            "solution/2600-2699/2658.Maximum Number of Fish in a Grid/Solution.py",
+            "solution/2600-2699/2658.Maximum Number of Fish in a Grid/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/maximum-number-of-fish-in-a-grid.cpp",
+            "Python/maximum-number-of-fish-in-a-grid.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 7,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "count-the-number-of-complete-components",
+      "number": 2685,
+      "title": "Count the Number of Complete Components",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/count-the-number-of-complete-components/",
+      "concepts": [
+        "graph",
+        "components",
+        "validation",
+        "counting"
+      ],
+      "phase": {
+        "id": "graphs",
+        "name": "Phase 4: Grids And Reachability",
+        "shortName": "Grids And Reachability",
+        "description": "Graph and grid traversal with clear stories and strong BFS/DFS reuse."
+      },
+      "lane": {
+        "id": "graph-grid",
+        "label": "Graphs And Grids",
+        "color": "#1d7874"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is a good next step after plain connected-components problems because the traversal is only the first half of the job.",
+      "whatYouPractice": "Component extraction, structural validation, and translating a graph property into a precise per-component check.",
+      "overview": "Break a graph into connected components, then check whether each component is fully connected inside itself.",
+      "interestNote": "Strong educational value because it teaches the difference between finding a component and reasoning about its internal shape.",
+      "caveat": "The trick is not fancy traversal; it is making the completeness test exact instead of relying on vague visual intuition.",
+      "classic": false,
+      "newerGem": true,
+      "starter": false,
+      "recommendedOrder": 63,
+      "prerequisites": [],
+      "statementStyle": "Short graph prompt with a clean structural property.",
+      "expectedMentalModel": "Traversal tells you which nodes belong together; then you ask whether that set contains every internal edge it should.",
+      "topicGuides": [
+        {
+          "id": "graph-traversal",
+          "title": "Graph Traversal",
+          "path": "topics/graph-traversal.html"
+        },
+        {
+          "id": "dfs",
+          "title": "Depth-First Search",
+          "path": "topics/dfs.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/count-the-number-of-complete-components/",
+        "https://usaco.guide/silver/graph-traversal",
+        "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/resources/lecture-10-depth-first-search/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Depth-First Search",
+          "slug": "depth-first-search"
+        },
+        {
+          "name": "Breadth-First Search",
+          "slug": "breadth-first-search"
+        },
+        {
+          "name": "Union-Find",
+          "slug": "union-find"
+        },
+        {
+          "name": "Graph Theory",
+          "slug": "graph"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/2600-2699/2685.Count the Number of Complete Components/README.md",
+            "solution/2600-2699/2685.Count the Number of Complete Components/README_EN.md",
+            "solution/2600-2699/2685.Count the Number of Complete Components/Solution.cpp",
+            "solution/2600-2699/2685.Count the Number of Complete Components/Solution.go",
+            "solution/2600-2699/2685.Count the Number of Complete Components/Solution.java",
+            "solution/2600-2699/2685.Count the Number of Complete Components/Solution.py"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/count-the-number-of-complete-components.cpp",
+            "Python/count-the-number-of-complete-components.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go"
+        ],
+        "solutionCount": 6,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "shifting-letters-ii",
+      "number": 2381,
+      "title": "Shifting Letters II",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/shifting-letters-ii/",
+      "concepts": [
+        "prefix-sums",
+        "difference-array",
+        "string",
+        "range-updates"
+      ],
+      "phase": {
+        "id": "foundations",
+        "name": "Phase 1: First Solid Mediums",
+        "shortName": "First Solid Mediums",
+        "description": "Shorter statements, one main invariant, and quick pattern payoff."
+      },
+      "lane": {
+        "id": "window-pointer",
+        "label": "Windows And Pointers",
+        "color": "#9c4f2c"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is one of the best approachable difference-array problems because the story is concrete and the pattern generalizes well.",
+      "whatYouPractice": "Offline range updates, boundary marking, and turning deferred changes into a final running total.",
+      "overview": "Apply many range-based character shifts efficiently by recording the changes at boundaries before you sweep through the string once.",
+      "interestNote": "High transfer value because the same idea reappears whenever many updates touch overlapping intervals.",
+      "caveat": "The logic is elegant, but only if you commit to recording change events instead of simulating every range directly.",
+      "classic": false,
+      "newerGem": true,
+      "starter": true,
+      "recommendedOrder": 64,
+      "prerequisites": [],
+      "statementStyle": "Readable string-update prompt with repeated operations.",
+      "expectedMentalModel": "Store how the shift amount changes at the boundaries, then reconstruct the real effect in one final pass.",
+      "topicGuides": [
+        {
+          "id": "prefix-sums",
+          "title": "Prefix Sums And Difference Arrays",
+          "path": "topics/prefix-sums.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/shifting-letters-ii/",
+        "https://usaco.guide/silver/prefix-sums",
+        "https://codeforces.com/blog/entry/78762"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "String",
+          "slug": "string"
+        },
+        {
+          "name": "Prefix Sum",
+          "slug": "prefix-sum"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/2300-2399/2381.Shifting Letters II/README.md",
+            "solution/2300-2399/2381.Shifting Letters II/README_EN.md",
+            "solution/2300-2399/2381.Shifting Letters II/Solution.cpp",
+            "solution/2300-2399/2381.Shifting Letters II/Solution.go",
+            "solution/2300-2399/2381.Shifting Letters II/Solution.java",
+            "solution/2300-2399/2381.Shifting Letters II/Solution.py",
+            "solution/2300-2399/2381.Shifting Letters II/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/shifting-letters-ii.cpp",
+            "Python/shifting-letters-ii.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "articles/shifting-letters-ii.md"
+          ],
+          "notes": "Broad path scan matched the problem by number or normalized slug.",
+          "matchMode": "broad"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Others/2381.Shifting-Letters-II/2381.Shifting-Letters-II.cpp",
+            "Others/2381.Shifting-Letters-II/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 8,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "longest-nice-subarray",
+      "number": 2401,
+      "title": "Longest Nice Subarray",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/longest-nice-subarray/",
+      "concepts": [
+        "sliding-window",
+        "bitwise",
+        "array"
+      ],
+      "phase": {
+        "id": "foundations",
+        "name": "Phase 1: First Solid Mediums",
+        "shortName": "First Solid Mediums",
+        "description": "Shorter statements, one main invariant, and quick pattern payoff."
+      },
+      "lane": {
+        "id": "window-pointer",
+        "label": "Windows And Pointers",
+        "color": "#9c4f2c"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is a strong sliding-window upgrade because the invariant is not about counts or sums, but the window rhythm still survives.",
+      "whatYouPractice": "Window repair logic, compact state summaries, and applying sliding-window discipline to a less familiar constraint.",
+      "overview": "Maintain a subarray whose members do not conflict under a bitwise condition, and shrink only when the invariant breaks.",
+      "interestNote": "Great for proving to yourself that sliding windows are about invariants, not about one specific string template.",
+      "caveat": "The difficulty is conceptual rather than syntactic: if the invariant is fuzzy, the left-edge movement becomes guesswork.",
+      "classic": false,
+      "newerGem": true,
+      "starter": false,
+      "recommendedOrder": 65,
+      "prerequisites": [],
+      "statementStyle": "Short array prompt with a less obvious validity rule.",
+      "expectedMentalModel": "The window is legal only while one compact state summary stays conflict-free; expand, repair, record.",
+      "topicGuides": [
+        {
+          "id": "sliding-window",
+          "title": "Sliding Window",
+          "path": "topics/sliding-window.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/longest-nice-subarray/",
+        "https://usaco.guide/gold/sliding-window",
+        "https://usaco.guide/silver/two-pointers"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Bit Manipulation",
+          "slug": "bit-manipulation"
+        },
+        {
+          "name": "Sliding Window",
+          "slug": "sliding-window"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/2400-2499/2401.Longest Nice Subarray/README.md",
+            "solution/2400-2499/2401.Longest Nice Subarray/README_EN.md",
+            "solution/2400-2499/2401.Longest Nice Subarray/Solution.cpp",
+            "solution/2400-2499/2401.Longest Nice Subarray/Solution.go",
+            "solution/2400-2499/2401.Longest Nice Subarray/Solution.java",
+            "solution/2400-2499/2401.Longest Nice Subarray/Solution.py",
+            "solution/2400-2499/2401.Longest Nice Subarray/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/longest-nice-subarray.cpp",
+            "Python/longest-nice-subarray.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Two_Pointers/2401.Longest-Nice-Subarray/2401.Longest-Nice-Subarray.cpp",
+            "Two_Pointers/2401.Longest-Nice-Subarray/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 8,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "maximum-sum-of-distinct-subarrays-with-length-k",
+      "number": 2461,
+      "title": "Maximum Sum of Distinct Subarrays With Length K",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/maximum-sum-of-distinct-subarrays-with-length-k/",
+      "concepts": [
+        "sliding-window",
+        "fixed-window",
+        "distinctness",
+        "counting"
+      ],
+      "phase": {
+        "id": "foundations",
+        "name": "Phase 1: First Solid Mediums",
+        "shortName": "First Solid Mediums",
+        "description": "Shorter statements, one main invariant, and quick pattern payoff."
+      },
+      "lane": {
+        "id": "window-pointer",
+        "label": "Windows And Pointers",
+        "color": "#9c4f2c"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It is one of the cleanest fixed-window Mediums because the value function and the legality check are both easy to explain.",
+      "whatYouPractice": "Fixed-size window updates, distinctness bookkeeping, and separating 'window value' from 'window validity.'",
+      "overview": "Slide a fixed-size window, keep track of duplicates cheaply, and only score windows that remain fully distinct.",
+      "interestNote": "A high-signal practice problem for anyone whose windows still feel hand-wavy.",
+      "caveat": "The pattern is stable, but mixing sum maintenance and duplicate maintenance in the wrong order causes avoidable bugs.",
+      "classic": false,
+      "newerGem": true,
+      "starter": true,
+      "recommendedOrder": 66,
+      "prerequisites": [],
+      "statementStyle": "Compact array prompt with one natural fixed-size invariant.",
+      "expectedMentalModel": "The window size never changes; the only question is whether the current K-length slice is legal and worth scoring.",
+      "topicGuides": [
+        {
+          "id": "sliding-window",
+          "title": "Sliding Window",
+          "path": "topics/sliding-window.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/maximum-sum-of-distinct-subarrays-with-length-k/",
+        "https://usaco.guide/gold/sliding-window",
+        "https://usaco.guide/silver/two-pointers"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Hash Table",
+          "slug": "hash-table"
+        },
+        {
+          "name": "Sliding Window",
+          "slug": "sliding-window"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/2400-2499/2461.Maximum Sum of Distinct Subarrays With Length K/README.md",
+            "solution/2400-2499/2461.Maximum Sum of Distinct Subarrays With Length K/README_EN.md",
+            "solution/2400-2499/2461.Maximum Sum of Distinct Subarrays With Length K/Solution.cpp",
+            "solution/2400-2499/2461.Maximum Sum of Distinct Subarrays With Length K/Solution.go",
+            "solution/2400-2499/2461.Maximum Sum of Distinct Subarrays With Length K/Solution.java",
+            "solution/2400-2499/2461.Maximum Sum of Distinct Subarrays With Length K/Solution.py",
+            "solution/2400-2499/2461.Maximum Sum of Distinct Subarrays With Length K/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/maximum-sum-of-distinct-subarrays-with-length-k.cpp",
+            "Python/maximum-sum-of-distinct-subarrays-with-length-k.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Two_Pointers/2461.Maximum-Sum-of-Distinct-Subarrays-With-Length-K/2461.Maximum-Sum-of-Distinct-Subarrays-With-Length-K.cpp",
+            "Two_Pointers/2461.Maximum-Sum-of-Distinct-Subarrays-With-Length-K/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 8,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "minimum-penalty-for-a-shop",
+      "number": 2483,
+      "title": "Minimum Penalty for a Shop",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/minimum-penalty-for-a-shop/",
+      "concepts": [
+        "prefix-sums",
+        "best-split",
+        "string",
+        "counting"
+      ],
+      "phase": {
+        "id": "foundations",
+        "name": "Phase 1: First Solid Mediums",
+        "shortName": "First Solid Mediums",
+        "description": "Shorter statements, one main invariant, and quick pattern payoff."
+      },
+      "lane": {
+        "id": "window-pointer",
+        "label": "Windows And Pointers",
+        "color": "#9c4f2c"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It is a terrific prefix-style problem because the statement is tiny but the split-point reasoning transfers everywhere.",
+      "whatYouPractice": "Best split evaluation, prefix-versus-suffix counting, and converting a narrative prompt into positional cost accounting.",
+      "overview": "Choose the best closing point by comparing how much penalty lies to the left versus to the right of each split.",
+      "interestNote": "One of the highest-value short Mediums in the newer range.",
+      "caveat": "The risk is thinking in terms of simulating store behavior when the cleaner view is just to score each possible boundary.",
+      "classic": false,
+      "newerGem": true,
+      "starter": true,
+      "recommendedOrder": 67,
+      "prerequisites": [],
+      "statementStyle": "Tiny decision prompt with almost no wording overhead.",
+      "expectedMentalModel": "Every possible closing time is a split point; precompute what each side of that split costs.",
+      "topicGuides": [
+        {
+          "id": "prefix-sums",
+          "title": "Prefix Sums And Difference Arrays",
+          "path": "topics/prefix-sums.html"
+        }
+      ],
+      "memberships": [
+        "Arrays & Hashing",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/minimum-penalty-for-a-shop/",
+        "https://neetcode.io/problems/minimum-penalty-for-a-shop",
+        "https://usaco.guide/silver/prefix-sums"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "String",
+          "slug": "string"
+        },
+        {
+          "name": "Prefix Sum",
+          "slug": "prefix-sum"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/2400-2499/2483.Minimum Penalty for a Shop/README.md",
+            "solution/2400-2499/2483.Minimum Penalty for a Shop/README_EN.md",
+            "solution/2400-2499/2483.Minimum Penalty for a Shop/Solution.cpp",
+            "solution/2400-2499/2483.Minimum Penalty for a Shop/Solution.go",
+            "solution/2400-2499/2483.Minimum Penalty for a Shop/Solution.java",
+            "solution/2400-2499/2483.Minimum Penalty for a Shop/Solution.py",
+            "solution/2400-2499/2483.Minimum Penalty for a Shop/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/minimum-penalty-for-a-shop.cpp",
+            "Python/minimum-penalty-for-a-shop.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/minimum-penalty-for-a-shop.md",
+            "cpp/2483-minimum-penalty-for-a-shop.cpp",
+            "java/2483-minimum-penalty-for-a-shop.java",
+            "kotlin/2483-minimum-penalty-for-a-shop.kt"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript",
+          "Kotlin"
+        ],
+        "solutionCount": 10,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "length-of-longest-subarray-with-at-most-k-frequency",
+      "number": 2958,
+      "title": "Length of Longest Subarray With at Most K Frequency",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/length-of-longest-subarray-with-at-most-k-frequency/",
+      "concepts": [
+        "sliding-window",
+        "frequency",
+        "array"
+      ],
+      "phase": {
+        "id": "foundations",
+        "name": "Phase 1: First Solid Mediums",
+        "shortName": "First Solid Mediums",
+        "description": "Shorter statements, one main invariant, and quick pattern payoff."
+      },
+      "lane": {
+        "id": "window-pointer",
+        "label": "Windows And Pointers",
+        "color": "#9c4f2c"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is a strong general-purpose sliding-window problem because the invariant is realistic and broadly reusable.",
+      "whatYouPractice": "Frequency bookkeeping, targeted window repair, and trusting the monotonic left-to-right rhythm.",
+      "overview": "Keep a window valid while no value exceeds the allowed frequency cap, and shrink only when one value violates that rule.",
+      "interestNote": "A very practical next-step window Medium for interview preparation.",
+      "caveat": "The mistake pattern is predictable: people track too much instead of only the counts that can break validity.",
+      "classic": false,
+      "newerGem": true,
+      "starter": false,
+      "recommendedOrder": 68,
+      "prerequisites": [],
+      "statementStyle": "Short array prompt with one local frequency rule.",
+      "expectedMentalModel": "Only shrink when the current window violates the cap, and only as much as needed to restore legality.",
+      "topicGuides": [
+        {
+          "id": "sliding-window",
+          "title": "Sliding Window",
+          "path": "topics/sliding-window.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/length-of-longest-subarray-with-at-most-k-frequency/",
+        "https://usaco.guide/gold/sliding-window",
+        "https://usaco.guide/silver/two-pointers"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Hash Table",
+          "slug": "hash-table"
+        },
+        {
+          "name": "Sliding Window",
+          "slug": "sliding-window"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/2900-2999/2958.Length of Longest Subarray With at Most K Frequency/README.md",
+            "solution/2900-2999/2958.Length of Longest Subarray With at Most K Frequency/README_EN.md",
+            "solution/2900-2999/2958.Length of Longest Subarray With at Most K Frequency/Solution.cpp",
+            "solution/2900-2999/2958.Length of Longest Subarray With at Most K Frequency/Solution.go",
+            "solution/2900-2999/2958.Length of Longest Subarray With at Most K Frequency/Solution.java",
+            "solution/2900-2999/2958.Length of Longest Subarray With at Most K Frequency/Solution.py",
+            "solution/2900-2999/2958.Length of Longest Subarray With at Most K Frequency/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/length-of-longest-subarray-with-at-most-k-frequency.cpp",
+            "Python/length-of-longest-subarray-with-at-most-k-frequency.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "articles/length-of-longest-subarray-with-at-most-k-frequency.md"
+          ],
+          "notes": "Broad path scan matched the problem by number or normalized slug.",
+          "matchMode": "broad"
+        },
+        {
+          "repository": "wisdompeak_LeetCode",
+          "coverageType": "code+readme",
+          "paths": [
+            "Two_Pointers/2958.Length-of-Longest-Subarray-With-at-Most-K-Frequency/2958.Length-of-Longest-Subarray-With-at-Most-K-Frequency.cpp",
+            "Two_Pointers/2958.Length-of-Longest-Subarray-With-at-Most-K-Frequency/Readme.md"
+          ],
+          "notes": "Topic-organized repository with per-problem Readme notes and focused C++ implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 8,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "count-subarrays-where-max-element-appears-at-least-k-times",
+      "number": 2962,
+      "title": "Count Subarrays Where Max Element Appears at Least K Times",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/count-subarrays-where-max-element-appears-at-least-k-times/",
+      "concepts": [
+        "sliding-window",
+        "counting",
+        "positions",
+        "array"
+      ],
+      "phase": {
+        "id": "foundations",
+        "name": "Phase 1: First Solid Mediums",
+        "shortName": "First Solid Mediums",
+        "description": "Shorter statements, one main invariant, and quick pattern payoff."
+      },
+      "lane": {
+        "id": "window-pointer",
+        "label": "Windows And Pointers",
+        "color": "#9c4f2c"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "moderate",
+      "readiness": "next-up",
+      "whySolve": "It is a worthwhile counting Medium because it nudges you away from brute-force window enumeration toward more structural counting.",
+      "whatYouPractice": "Counting without explicit enumeration, turning a condition into positional reasoning, and using monotonic movement to compress work.",
+      "overview": "Count valid subarrays by reasoning about where the important maximum-value occurrences sit instead of enumerating every range.",
+      "interestNote": "Good for strengthening the 'count, do not list' habit that many later array problems rely on.",
+      "caveat": "The challenge is not the statement; it is resisting the urge to inspect every candidate subarray directly.",
+      "classic": false,
+      "newerGem": true,
+      "starter": false,
+      "recommendedOrder": 69,
+      "prerequisites": [],
+      "statementStyle": "Readable array-counting prompt with one highlighted element.",
+      "expectedMentalModel": "Once the key occurrence positions are understood, whole groups of subarrays can be counted at once.",
+      "topicGuides": [
+        {
+          "id": "sliding-window",
+          "title": "Sliding Window",
+          "path": "topics/sliding-window.html"
+        },
+        {
+          "id": "prefix-sums",
+          "title": "Prefix Sums And Difference Arrays",
+          "path": "topics/prefix-sums.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/count-subarrays-where-max-element-appears-at-least-k-times/",
+        "https://usaco.guide/gold/sliding-window",
+        "https://usaco.guide/silver/prefix-sums"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Sliding Window",
+          "slug": "sliding-window"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/2900-2999/2962.Count Subarrays Where Max Element Appears at Least K Times/README.md",
+            "solution/2900-2999/2962.Count Subarrays Where Max Element Appears at Least K Times/README_EN.md",
+            "solution/2900-2999/2962.Count Subarrays Where Max Element Appears at Least K Times/Solution.cpp",
+            "solution/2900-2999/2962.Count Subarrays Where Max Element Appears at Least K Times/Solution.go",
+            "solution/2900-2999/2962.Count Subarrays Where Max Element Appears at Least K Times/Solution.java",
+            "solution/2900-2999/2962.Count Subarrays Where Max Element Appears at Least K Times/Solution.py",
+            "solution/2900-2999/2962.Count Subarrays Where Max Element Appears at Least K Times/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/count-subarrays-where-max-element-appears-at-least-k-times.cpp",
+            "Python/count-subarrays-where-max-element-appears-at-least-k-times.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "code",
+          "paths": [
+            "articles/count-subarrays-where-max-element-appears-at-least-k-times.md"
+          ],
+          "notes": "Broad path scan matched the problem by number or normalized slug.",
+          "matchMode": "broad"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 7,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "maximum-points-in-an-archery-competition",
+      "number": 2212,
+      "title": "Maximum Points in an Archery Competition",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/maximum-points-in-an-archery-competition/",
+      "concepts": [
+        "backtracking",
+        "choice-search",
+        "constraint-allocation"
+      ],
+      "phase": {
+        "id": "state-space",
+        "name": "Phase 5: State Space Search",
+        "shortName": "State Space Search",
+        "description": "Backtracking, DAG exploration, and choice-making under constraints."
+      },
+      "lane": {
+        "id": "state-search",
+        "label": "State Search",
+        "color": "#7b2d26"
+      },
+      "transitionFriendliness": "strong",
+      "clarity": "clear",
+      "effort": "stretch",
+      "readiness": "stretch",
+      "whySolve": "It is one of the more approachable backtracking Mediums because the choices are concrete and the search space has a visible story.",
+      "whatYouPractice": "State branching, budget tracking, and deciding when a search problem is small enough to explore directly.",
+      "overview": "Distribute a limited resource across scoring targets and search for the best legal allocation.",
+      "interestNote": "A useful 'backtracking can still feel friendly' problem.",
+      "caveat": "The branching is manageable, but the search only stays readable if the state representation is disciplined from the start.",
+      "classic": false,
+      "newerGem": true,
+      "starter": false,
+      "recommendedOrder": 70,
+      "prerequisites": [],
+      "statementStyle": "Concrete resource-allocation prompt with a bounded search space.",
+      "expectedMentalModel": "Each target is a choice point: spend enough to win it or skip it, and keep the remaining budget honest.",
+      "topicGuides": [
+        {
+          "id": "backtracking",
+          "title": "Backtracking",
+          "path": "topics/backtracking.html"
+        }
+      ],
+      "memberships": [
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/maximum-points-in-an-archery-competition/",
+        "https://web.stanford.edu/class/archive/cs/cs106b/cs106b.1244/lectures/11-backtracking1/"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Array",
+          "slug": "array"
+        },
+        {
+          "name": "Backtracking",
+          "slug": "backtracking"
+        },
+        {
+          "name": "Bit Manipulation",
+          "slug": "bit-manipulation"
+        },
+        {
+          "name": "Enumeration",
+          "slug": "enumeration"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/2200-2299/2212.Maximum Points in an Archery Competition/README.md",
+            "solution/2200-2299/2212.Maximum Points in an Archery Competition/README_EN.md",
+            "solution/2200-2299/2212.Maximum Points in an Archery Competition/Solution.cpp",
+            "solution/2200-2299/2212.Maximum Points in an Archery Competition/Solution.go",
+            "solution/2200-2299/2212.Maximum Points in an Archery Competition/Solution.java",
+            "solution/2200-2299/2212.Maximum Points in an Archery Competition/Solution.py",
+            "solution/2200-2299/2212.Maximum Points in an Archery Competition/Solution.ts"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/maximum-points-in-an-archery-competition.cpp",
+            "Python/maximum-points-in-an-archery-competition.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "typescript"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "TypeScript"
+        ],
+        "solutionCount": 7,
+        "writeupCount": 2,
+        "primaryLanguageId": "python"
+      }
+    },
+    {
+      "id": "count-ways-to-build-good-strings",
+      "number": 2466,
+      "title": "Count Ways To Build Good Strings",
+      "difficulty": "Medium",
+      "leetcodeUrl": "https://leetcode.com/problems/count-ways-to-build-good-strings/",
+      "concepts": [
+        "dynamic-programming",
+        "counting",
+        "length-state"
+      ],
+      "phase": {
+        "id": "dp",
+        "name": "Phase 6: Intro Dynamic Programming",
+        "shortName": "Intro Dynamic Programming",
+        "description": "Decision chains and manageable state transitions that start to feel like real DP."
+      },
+      "lane": {
+        "id": "dp",
+        "label": "Dynamic Programming",
+        "color": "#5f0f40"
+      },
+      "transitionFriendliness": "prime",
+      "clarity": "very-clear",
+      "effort": "light",
+      "readiness": "first-medium",
+      "whySolve": "It is an approachable DP counting problem because the state is simple and the recurrence follows directly from the allowed moves.",
+      "whatYouPractice": "1D counting DP, state transitions on length, and distinguishing 'how many ways' from 'is it possible.'",
+      "overview": "Count how many valid strings can be built when each move increases length by one of two allowed step sizes.",
+      "interestNote": "A very good newer DP ramp problem if classic coin-style prompts feel too abstract.",
+      "caveat": "The recurrence is friendly, but only once each length is treated as a state with incoming contributions from smaller lengths.",
+      "classic": false,
+      "newerGem": true,
+      "starter": true,
+      "recommendedOrder": 71,
+      "prerequisites": [],
+      "statementStyle": "Short constructive-counting prompt with explicit move sizes.",
+      "expectedMentalModel": "Length is the state; every valid previous length contributes forward if one of the allowed jumps can reach the current one.",
+      "topicGuides": [
+        {
+          "id": "dynamic-programming",
+          "title": "Dynamic Programming",
+          "path": "topics/dynamic-programming.html"
+        }
+      ],
+      "memberships": [
+        "1-D Dynamic Programming",
+        "Seed report"
+      ],
+      "sourceUrls": [
+        "https://leetcode.com/problems/count-ways-to-build-good-strings/",
+        "https://neetcode.io/problems/count-ways-to-build-good-strings",
+        "https://usaco.guide/gold/intro-dp"
+      ],
+      "validatedTopicTags": [
+        {
+          "name": "Dynamic Programming",
+          "slug": "dynamic-programming"
+        }
+      ],
+      "repoCoverage": [
+        {
+          "repository": "doocs_leetcode",
+          "coverageType": "code+explanation",
+          "paths": [
+            "solution/2400-2499/2466.Count Ways To Build Good Strings/README.md",
+            "solution/2400-2499/2466.Count Ways To Build Good Strings/README_EN.md",
+            "solution/2400-2499/2466.Count Ways To Build Good Strings/Solution.cpp",
+            "solution/2400-2499/2466.Count Ways To Build Good Strings/Solution.go",
+            "solution/2400-2499/2466.Count Ways To Build Good Strings/Solution.java",
+            "solution/2400-2499/2466.Count Ways To Build Good Strings/Solution.py"
+          ],
+          "notes": "Indexed solution directory with explanation pages and multilingual reference solutions.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "kamyu104_LeetCode-Solutions",
+          "coverageType": "indexed-code",
+          "paths": [
+            "C++/count-ways-to-build-good-strings.cpp",
+            "Python/count-ways-to-build-good-strings.py"
+          ],
+          "notes": "Large multi-language index with category tags and direct solution links.",
+          "matchMode": "high-precision"
+        },
+        {
+          "repository": "neetcode-gh_leetcode",
+          "coverageType": "article+code",
+          "paths": [
+            "articles/count-ways-to-build-good-strings.md",
+            "c/2466-count-ways-to-build-good-strings.c",
+            "kotlin/2466-count-ways-to-build-good-strings.kt"
+          ],
+          "notes": "Structured problem metadata with local articles, hints, and multilingual implementations.",
+          "matchMode": "high-precision"
+        }
+      ],
+      "solutionSummary": {
+        "hasSolutions": true,
+        "languageIds": [
+          "python",
+          "cpp",
+          "java",
+          "go",
+          "c",
+          "kotlin"
+        ],
+        "languageLabels": [
+          "Python",
+          "C++",
+          "Java",
+          "Go",
+          "C",
+          "Kotlin"
+        ],
+        "solutionCount": 8,
+        "writeupCount": 3,
+        "primaryLanguageId": "python"
+      }
+    }
+  ],
+  "summary": {
+    "problemCount": 71,
+    "repoCoverageCounts": {
+      "doocs_leetcode": 71,
+      "haoel_leetcode": 38,
+      "kamyu104_LeetCode-Solutions": 71,
+      "neetcode-gh_leetcode": 52,
+      "test-123": 8,
+      "wisdompeak_LeetCode": 37
+    },
+    "exclusions": [
+      {
+        "number": 198,
+        "title": "House Robber",
+        "reason": "Removed from the final site because it is Easy, and the published collection is Medium-only."
+      },
+      {
+        "number": 103,
+        "title": "Binary Tree Zigzag Level Order Traversal",
+        "reason": "Left out to reduce overlap after keeping level-order, right-side view, and stronger traversal follow-ups."
+      },
+      {
+        "number": 934,
+        "title": "Shortest Bridge",
+        "reason": "Strong problem, but trimmed from the main path because the graph section was already dense and this sits a bit later in the learning curve."
+      }
+    ]
+  }
+};

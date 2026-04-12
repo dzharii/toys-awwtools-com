@@ -1,0 +1,950 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "longest-increasing-subsequence",
+  "problemTitle": "Longest Increasing Subsequence",
+  "problemNumber": 300,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go",
+      "typescript",
+      "javascript",
+      "csharp",
+      "c"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go",
+      "TypeScript",
+      "JavaScript",
+      "C#",
+      "C"
+    ],
+    "solutionCount": 16,
+    "writeupCount": 5,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-python-longest-increasing-subsequence.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/longest-increasing-subsequence.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/longest-increasing-subsequence.py",
+          "relativePath": "Python/longest-increasing-subsequence.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(nlogn)\n# Space: O(n)\n\nimport bisect\n\n\nclass Solution(object):\n    def lengthOfLIS(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        LIS = []\n        def insert(target):\n            left = bisect.bisect_left(LIS, target)\n            # If not found, append the target.\n            if left == len(LIS):\n                LIS.append(target)\n            else:\n                LIS[left] = target\n    \n        for num in nums:\n            insert(num)\n        return len(LIS)\n\n\n# Time:  O(nlogn)\n# Space: O(n)\nclass Solution2(object):\n    def lengthOfLIS(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        LIS = []\n        def insert(target):\n            left, right = 0, len(LIS) - 1\n            # Find the first index \"left\" which satisfies LIS[left] >= target\n            while left <= right:\n                mid = left + (right - left) // 2\n                if LIS[mid] >= target:\n                    right = mid - 1\n                else:\n                    left = mid + 1\n            # If not found, append the target.\n            if left == len(LIS):\n                LIS.append(target)\n            else:\n                LIS[left] = target\n\n        for num in nums:\n            insert(num)\n\n        return len(LIS)\n\n\n# Time:  O(nlogn)\n# Space: O(n)\n# bit, fenwick tree\nclass Solution3(object):\n    def lengthOfLIS(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        class BIT(object):  # 0-indexed.\n            def __init__(self, n, default=0, fn=lambda x, y: x+y):\n                self.__bit = [default]*(n+1)  # Extra one for dummy node.\n                self.__default = default\n                self.__fn = fn\n\n            def update(self, i, val):\n                i += 1  # Extra one for dummy node.\n                while i < len(self.__bit):\n                    self.__bit[i] = self.__fn(self.__bit[i], val)\n                    i += (i & -i)\n\n            def query(self, i):\n                i += 1  # Extra one for dummy node.\n                ret = self.__default\n                while i > 0:\n                    ret = self.__fn(ret, self.__bit[i])\n                    i -= (i & -i)\n                return ret\n    \n        lookup = {x:i for i, x in enumerate(sorted(set(nums)))}\n        bit = BIT(len(lookup), fn=max)\n        for x in nums:\n            bit.update(lookup[x], bit.query(lookup[x]-1)+1)\n        return bit.query(len(lookup)-1)\n\n\n# Range Maximum Query\nclass SegmentTree(object):  # 0-based index\n    def __init__(self, N,\n                 build_fn=lambda x, y: [y]*(2*x),\n                 query_fn=lambda x, y: y if x is None else max(x, y),  # (lambda x, y: y if x is None else min(x, y))\n                 update_fn=lambda x, y: y,\n                 default_val=0):\n        self.N = N\n        self.H = (N-1).bit_length()\n        self.query_fn = query_fn\n        self.update_fn = update_fn\n        self.default_val = default_val\n        self.tree = build_fn(N, default_val)\n        self.lazy = [None]*N\n\n    def __apply(self, x, val):\n        self.tree[x] = self.update_fn(self.tree[x], val)\n        if x < self.N:\n            self.lazy[x] = self.update_fn(self.lazy[x], val)\n\n    def update(self, L, R, h):  # Time: O(logN), Space: O(N)\n        def pull(x):\n            while x > 1:\n                x //= 2\n                self.tree[x] = self.query_fn(self.tree[x*2], self.tree[x*2+1])\n                if self.lazy[x] is not None:\n                    self.tree[x] = self.update_fn(self.tree[x], self.lazy[x])\n\n        L += self.N\n        R += self.N\n        L0, R0 = L, R\n        while L <= R:\n            if L & 1:  # is right child\n                self.__apply(L, h) \n                L += 1\n            if R & 1 == 0:  # is left child\n                self.__apply(R, h)\n                R -= 1\n            L //= 2\n            R //= 2\n        pull(L0)\n        pull(R0)\n\n    def query(self, L, R):  # Time: O(logN), Space: O(N)\n        def push(x):\n            n = 2**self.H\n            while n != 1:\n                y = x // n\n                if self.lazy[y] is not None:\n                    self.__apply(y*2, self.lazy[y])\n                    self.__apply(y*2 + 1, self.lazy[y])\n                    self.lazy[y] = None\n                n //= 2\n\n        result = None\n        if L > R:\n            return result\n\n        L += self.N\n        R += self.N\n        push(L)\n        push(R)\n        while L <= R:\n            if L & 1:  # is right child\n                result = self.query_fn(result, self.tree[L])\n                L += 1\n            if R & 1 == 0:  # is left child\n                result = self.query_fn(result, self.tree[R])\n                R -= 1\n            L //= 2\n            R //= 2\n        return result\n    \n    def __str__(self):\n        showList = []\n        for i in xrange(self.N):\n            showList.append(self.query(i, i))\n        return \",\".join(map(str, showList))\n\n\n# Time:  O(nlogn)\n# Space: O(n)\n# optimized from Solution5\nclass Solution4(object):\n    def lengthOfLIS(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        val_to_idx = {num:i for i, num in enumerate(sorted(set(nums)))}\n        st = SegmentTree(len(val_to_idx))\n        for x in nums:\n            st.update(val_to_idx[x], val_to_idx[x], st.query(0, val_to_idx[x]-1)+1 if val_to_idx[x] >= 1 else 1)\n        return st.query(0, len(val_to_idx)-1) if len(val_to_idx) >= 1 else 0\n\n\n# Time:  O(n^2)\n# Space: O(n)\n# Traditional DP solution.\nclass Solution5(object):\n    def lengthOfLIS(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        dp = []  # dp[i]: the length of LIS ends with nums[i]\n        for i in xrange(len(nums)):\n            dp.append(1)\n            for j in xrange(i):\n                if nums[j] < nums[i]:\n                    dp[i] = max(dp[i], dp[j] + 1)\n        return max(dp) if dp else 0\n\n",
+          "originalCode": "# Time:  O(nlogn)\n# Space: O(n)\n\nimport bisect\n\n\nclass Solution(object):\n    def lengthOfLIS(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        LIS = []\n        def insert(target):\n            left = bisect.bisect_left(LIS, target)\n            # If not found, append the target.\n            if left == len(LIS):\n                LIS.append(target)\n            else:\n                LIS[left] = target\n    \n        for num in nums:\n            insert(num)\n        return len(LIS)\n\n\n# Time:  O(nlogn)\n# Space: O(n)\nclass Solution2(object):\n    def lengthOfLIS(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        LIS = []\n        def insert(target):\n            left, right = 0, len(LIS) - 1\n            # Find the first index \"left\" which satisfies LIS[left] >= target\n            while left <= right:\n                mid = left + (right - left) // 2\n                if LIS[mid] >= target:\n                    right = mid - 1\n                else:\n                    left = mid + 1\n            # If not found, append the target.\n            if left == len(LIS):\n                LIS.append(target)\n            else:\n                LIS[left] = target\n\n        for num in nums:\n            insert(num)\n\n        return len(LIS)\n\n\n# Time:  O(nlogn)\n# Space: O(n)\n# bit, fenwick tree\nclass Solution3(object):\n    def lengthOfLIS(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        class BIT(object):  # 0-indexed.\n            def __init__(self, n, default=0, fn=lambda x, y: x+y):\n                self.__bit = [default]*(n+1)  # Extra one for dummy node.\n                self.__default = default\n                self.__fn = fn\n\n            def update(self, i, val):\n                i += 1  # Extra one for dummy node.\n                while i < len(self.__bit):\n                    self.__bit[i] = self.__fn(self.__bit[i], val)\n                    i += (i & -i)\n\n            def query(self, i):\n                i += 1  # Extra one for dummy node.\n                ret = self.__default\n                while i > 0:\n                    ret = self.__fn(ret, self.__bit[i])\n                    i -= (i & -i)\n                return ret\n    \n        lookup = {x:i for i, x in enumerate(sorted(set(nums)))}\n        bit = BIT(len(lookup), fn=max)\n        for x in nums:\n            bit.update(lookup[x], bit.query(lookup[x]-1)+1)\n        return bit.query(len(lookup)-1)\n\n\n# Range Maximum Query\nclass SegmentTree(object):  # 0-based index\n    def __init__(self, N,\n                 build_fn=lambda x, y: [y]*(2*x),\n                 query_fn=lambda x, y: y if x is None else max(x, y),  # (lambda x, y: y if x is None else min(x, y))\n                 update_fn=lambda x, y: y,\n                 default_val=0):\n        self.N = N\n        self.H = (N-1).bit_length()\n        self.query_fn = query_fn\n        self.update_fn = update_fn\n        self.default_val = default_val\n        self.tree = build_fn(N, default_val)\n        self.lazy = [None]*N\n\n    def __apply(self, x, val):\n        self.tree[x] = self.update_fn(self.tree[x], val)\n        if x < self.N:\n            self.lazy[x] = self.update_fn(self.lazy[x], val)\n\n    def update(self, L, R, h):  # Time: O(logN), Space: O(N)\n        def pull(x):\n            while x > 1:\n                x //= 2\n                self.tree[x] = self.query_fn(self.tree[x*2], self.tree[x*2+1])\n                if self.lazy[x] is not None:\n                    self.tree[x] = self.update_fn(self.tree[x], self.lazy[x])\n\n        L += self.N\n        R += self.N\n        L0, R0 = L, R\n        while L <= R:\n            if L & 1:  # is right child\n                self.__apply(L, h) \n                L += 1\n            if R & 1 == 0:  # is left child\n                self.__apply(R, h)\n                R -= 1\n            L //= 2\n            R //= 2\n        pull(L0)\n        pull(R0)\n\n    def query(self, L, R):  # Time: O(logN), Space: O(N)\n        def push(x):\n            n = 2**self.H\n            while n != 1:\n                y = x // n\n                if self.lazy[y] is not None:\n                    self.__apply(y*2, self.lazy[y])\n                    self.__apply(y*2 + 1, self.lazy[y])\n                    self.lazy[y] = None\n                n //= 2\n\n        result = None\n        if L > R:\n            return result\n\n        L += self.N\n        R += self.N\n        push(L)\n        push(R)\n        while L <= R:\n            if L & 1:  # is right child\n                result = self.query_fn(result, self.tree[L])\n                L += 1\n            if R & 1 == 0:  # is left child\n                result = self.query_fn(result, self.tree[R])\n                R -= 1\n            L //= 2\n            R //= 2\n        return result\n    \n    def __str__(self):\n        showList = []\n        for i in xrange(self.N):\n            showList.append(self.query(i, i))\n        return \",\".join(map(str, showList))\n\n\n# Time:  O(nlogn)\n# Space: O(n)\n# optimized from Solution5\nclass Solution4(object):\n    def lengthOfLIS(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        val_to_idx = {num:i for i, num in enumerate(sorted(set(nums)))}\n        st = SegmentTree(len(val_to_idx))\n        for x in nums:\n            st.update(val_to_idx[x], val_to_idx[x], st.query(0, val_to_idx[x]-1)+1 if val_to_idx[x] >= 1 else 1)\n        return st.query(0, len(val_to_idx)-1) if len(val_to_idx) >= 1 else 0\n\n\n# Time:  O(n^2)\n# Space: O(n)\n# Traditional DP solution.\nclass Solution5(object):\n    def lengthOfLIS(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        dp = []  # dp[i]: the length of LIS ends with nums[i]\n        for i in xrange(len(nums)):\n            dp.append(1)\n            for j in xrange(i):\n                if nums[j] < nums[i]:\n                    dp[i] = max(dp[i], dp[j] + 1)\n        return max(dp) if dp else 0\n\n",
+          "reviewedCode": "# Time:  O(nlogn)\n# Space: O(n)\n\nimport bisect\n\n\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position.\nclass Solution(object):\n    def lengthOfLIS(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.\n        LIS = []\n        def insert(target):\n            left = bisect.bisect_left(LIS, target)\n            # If not found, append the target.\n            if left == len(LIS):\n                LIS.append(target)\n            else:\n                LIS[left] = target\n    \n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for num in nums:\n            insert(num)\n        return len(LIS)\n\n\n# Time:  O(nlogn)\n# Space: O(n)\nclass Solution2(object):\n    def lengthOfLIS(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        LIS = []\n        def insert(target):\n            left, right = 0, len(LIS) - 1\n            # Find the first index \"left\" which satisfies LIS[left] >= target\n            while left <= right:\n                mid = left + (right - left) // 2\n                # [Reader note] Decision point\n                # Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads.\n                if LIS[mid] >= target:\n                    right = mid - 1\n                else:\n                    left = mid + 1\n            # If not found, append the target.\n            if left == len(LIS):\n                LIS.append(target)\n            else:\n                LIS[left] = target\n\n        for num in nums:\n            insert(num)\n\n        return len(LIS)\n\n\n# Time:  O(nlogn)\n# Space: O(n)\n# bit, fenwick tree\nclass Solution3(object):\n    def lengthOfLIS(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        class BIT(object):  # 0-indexed.\n            def __init__(self, n, default=0, fn=lambda x, y: x+y):\n                self.__bit = [default]*(n+1)  # Extra one for dummy node.\n                self.__default = default\n                self.__fn = fn\n\n            def update(self, i, val):\n                i += 1  # Extra one for dummy node.\n                while i < len(self.__bit):\n                    self.__bit[i] = self.__fn(self.__bit[i], val)\n                    i += (i & -i)\n\n            def query(self, i):\n                i += 1  # Extra one for dummy node.\n                ret = self.__default\n                while i > 0:\n                    ret = self.__fn(ret, self.__bit[i])\n                    i -= (i & -i)\n                return ret\n    \n        lookup = {x:i for i, x in enumerate(sorted(set(nums)))}\n        bit = BIT(len(lookup), fn=max)\n        for x in nums:\n            bit.update(lookup[x], bit.query(lookup[x]-1)+1)\n        return bit.query(len(lookup)-1)\n\n\n# Range Maximum Query\nclass SegmentTree(object):  # 0-based index\n    def __init__(self, N,\n                 build_fn=lambda x, y: [y]*(2*x),\n                 query_fn=lambda x, y: y if x is None else max(x, y),  # (lambda x, y: y if x is None else min(x, y))\n                 update_fn=lambda x, y: y,\n                 default_val=0):\n        self.N = N\n        self.H = (N-1).bit_length()\n        self.query_fn = query_fn\n        self.update_fn = update_fn\n        self.default_val = default_val\n        self.tree = build_fn(N, default_val)\n        self.lazy = [None]*N\n\n    def __apply(self, x, val):\n        self.tree[x] = self.update_fn(self.tree[x], val)\n        if x < self.N:\n            self.lazy[x] = self.update_fn(self.lazy[x], val)\n\n    def update(self, L, R, h):  # Time: O(logN), Space: O(N)\n        def pull(x):\n            while x > 1:\n                x //= 2\n                self.tree[x] = self.query_fn(self.tree[x*2], self.tree[x*2+1])\n                if self.lazy[x] is not None:\n                    self.tree[x] = self.update_fn(self.tree[x], self.lazy[x])\n\n        L += self.N\n        R += self.N\n        L0, R0 = L, R\n        while L <= R:\n            if L & 1:  # is right child\n                self.__apply(L, h) \n                L += 1\n            if R & 1 == 0:  # is left child\n                self.__apply(R, h)\n                R -= 1\n            L //= 2\n            R //= 2\n        pull(L0)\n        pull(R0)\n\n    def query(self, L, R):  # Time: O(logN), Space: O(N)\n        def push(x):\n            n = 2**self.H\n            while n != 1:\n                y = x // n\n                if self.lazy[y] is not None:\n                    self.__apply(y*2, self.lazy[y])\n                    self.__apply(y*2 + 1, self.lazy[y])\n                    self.lazy[y] = None\n                n //= 2\n\n        result = None\n        if L > R:\n            return result\n\n        L += self.N\n        R += self.N\n        push(L)\n        push(R)\n        while L <= R:\n            if L & 1:  # is right child\n                result = self.query_fn(result, self.tree[L])\n                L += 1\n            if R & 1 == 0:  # is left child\n                result = self.query_fn(result, self.tree[R])\n                R -= 1\n            L //= 2\n            R //= 2\n        return result\n    \n    def __str__(self):\n        showList = []\n        for i in xrange(self.N):\n            showList.append(self.query(i, i))\n        return \",\".join(map(str, showList))\n\n\n# Time:  O(nlogn)\n# Space: O(n)\n# optimized from Solution5\nclass Solution4(object):\n    def lengthOfLIS(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        val_to_idx = {num:i for i, num in enumerate(sorted(set(nums)))}\n        st = SegmentTree(len(val_to_idx))\n        for x in nums:\n            st.update(val_to_idx[x], val_to_idx[x], st.query(0, val_to_idx[x]-1)+1 if val_to_idx[x] >= 1 else 1)\n        return st.query(0, len(val_to_idx)-1) if len(val_to_idx) >= 1 else 0\n\n\n# Time:  O(n^2)\n# Space: O(n)\n# Traditional DP solution.\nclass Solution5(object):\n    def lengthOfLIS(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        dp = []  # dp[i]: the length of LIS ends with nums[i]\n        for i in xrange(len(nums)):\n            dp.append(1)\n            for j in xrange(i):\n                if nums[j] < nums[i]:\n                    dp[i] = max(dp[i], dp[j] + 1)\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return max(dp) if dp else 0\n",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(nlogn)",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 7,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position."
+            },
+            {
+              "line": 13,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings."
+            },
+            {
+              "line": 22,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 41,
+              "label": "Decision point",
+              "note": "Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+            },
+            {
+              "line": 204,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a major milestone DP problem because it teaches how to define a sequence state around 'best ending here.'",
+            "whatToNotice": "Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.",
+            "riskPoint": "The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0300-0399-0300.longest-increasing-subsequence-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0300-0399/0300.Longest%20Increasing%20Subsequence/Solution.py",
+          "localPath": "doocs_leetcode/solution/0300-0399/0300.Longest Increasing Subsequence/Solution.py",
+          "relativePath": "solution/0300-0399/0300.Longest Increasing Subsequence/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "class Solution:\n    def lengthOfLIS(self, nums: List[int]) -> int:\n        n = len(nums)\n        f = [1] * n\n        for i in range(1, n):\n            for j in range(i):\n                if nums[j] < nums[i]:\n                    f[i] = max(f[i], f[j] + 1)\n        return max(f)\n",
+          "originalCode": "class Solution:\n    def lengthOfLIS(self, nums: List[int]) -> int:\n        n = len(nums)\n        f = [1] * n\n        for i in range(1, n):\n            for j in range(i):\n                if nums[j] < nums[i]:\n                    f[i] = max(f[i], f[j] + 1)\n        return max(f)\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position.\nclass Solution:\n    def lengthOfLIS(self, nums: List[int]) -> int:\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.\n        n = len(nums)\n        f = [1] * n\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for i in range(1, n):\n            for j in range(i):\n                # [Reader note] Decision point\n                # Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads.\n                if nums[j] < nums[i]:\n                    f[i] = max(f[i], f[j] + 1)\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return max(f)",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings."
+            },
+            {
+              "line": 5,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 7,
+              "label": "Decision point",
+              "note": "Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+            },
+            {
+              "line": 9,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a major milestone DP problem because it teaches how to define a sequence state around 'best ending here.'",
+            "whatToNotice": "Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.",
+            "riskPoint": "The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 6,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-cpp-0300-longest-increasing-subsequence.cpp",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/cpp/0300-longest-increasing-subsequence.cpp",
+          "localPath": "neetcode-gh_leetcode/cpp/0300-longest-increasing-subsequence.cpp",
+          "relativePath": "cpp/0300-longest-increasing-subsequence.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "article+code",
+          "code": "/*\n    Given int array, return length of longest increasing subsequence\n    Ex. nums = [10,9,2,5,3,7,101,18] -> 4, [2,3,7,101]\n\n    Why DP? 1) Max/min of smth, 2) make decisions based on prev decisions\n    \"Decision\": is it worth it to consider this number?\n    If use may contribute to better LIS, but may also eliminate an even better LIS\n\n    Framework to solve DP:\n    1) Need some function or array that represents ans to the problem (dp array)\n    2) Way to transition b/w states (recurrence relation), depends on question\n    3) Need a base case (initial solution for every subproblem)\n\n    Recurrence relation: dp[i] = max(dp[j] + 1)\n    Base case: dp[i] = 1, since every element on its own has an LIS of 1\n\n    Time: O(n^2)\n    Space: O(n)\n*/\n\nclass Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        int n = nums.size();\n        vector<int> dp(n, 1);\n        \n        int result = 1;\n        \n        for (int i = 1; i < n; i++) {\n            for (int j = 0; j < i; j++) {\n                if (nums[j] < nums[i]) {\n                    dp[i] = max(dp[i], dp[j] + 1);\n                }\n            }\n            result = max(result, dp[i]);\n        }\n        \n        return result;\n    }\n};\n",
+          "originalCode": "/*\n    Given int array, return length of longest increasing subsequence\n    Ex. nums = [10,9,2,5,3,7,101,18] -> 4, [2,3,7,101]\n\n    Why DP? 1) Max/min of smth, 2) make decisions based on prev decisions\n    \"Decision\": is it worth it to consider this number?\n    If use may contribute to better LIS, but may also eliminate an even better LIS\n\n    Framework to solve DP:\n    1) Need some function or array that represents ans to the problem (dp array)\n    2) Way to transition b/w states (recurrence relation), depends on question\n    3) Need a base case (initial solution for every subproblem)\n\n    Recurrence relation: dp[i] = max(dp[j] + 1)\n    Base case: dp[i] = 1, since every element on its own has an LIS of 1\n\n    Time: O(n^2)\n    Space: O(n)\n*/\n\nclass Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        int n = nums.size();\n        vector<int> dp(n, 1);\n        \n        int result = 1;\n        \n        for (int i = 1; i < n; i++) {\n            for (int j = 0; j < i; j++) {\n                if (nums[j] < nums[i]) {\n                    dp[i] = max(dp[i], dp[j] + 1);\n                }\n            }\n            result = max(result, dp[i]);\n        }\n        \n        return result;\n    }\n};\n",
+          "reviewedCode": "/*\n    Given int array, return length of longest increasing subsequence\n    Ex. nums = [10,9,2,5,3,7,101,18] -> 4, [2,3,7,101]\n\n    Why DP? 1) Max/min of smth, 2) make decisions based on prev decisions\n    \"Decision\": is it worth it to consider this number?\n    If use may contribute to better LIS, but may also eliminate an even better LIS\n\n    Framework to solve DP:\n    1) Need some function or array that represents ans to the problem (dp array)\n    2) Way to transition b/w states (recurrence relation), depends on question\n    3) Need a base case (initial solution for every subproblem)\n\n    Recurrence relation: dp[i] = max(dp[j] + 1)\n    Base case: dp[i] = 1, since every element on its own has an LIS of 1\n\n    Time: O(n^2)\n    Space: O(n)\n*/\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position.\nclass Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.\n        int n = nums.size();\n        vector<int> dp(n, 1);\n        \n        int result = 1;\n        \n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = 1; i < n; i++) {\n            for (int j = 0; j < i; j++) {\n                // [Reader note] Decision point\n                // Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads.\n                if (nums[j] < nums[i]) {\n                    dp[i] = max(dp[i], dp[j] + 1);\n                }\n            }\n            result = max(result, dp[i]);\n        }\n        \n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return result;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 21,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position."
+            },
+            {
+              "line": 24,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings."
+            },
+            {
+              "line": 29,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 31,
+              "label": "Decision point",
+              "note": "Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+            },
+            {
+              "line": 38,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a major milestone DP problem because it teaches how to define a sequence state around 'best ending here.'",
+            "whatToNotice": "Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.",
+            "riskPoint": "The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+          }
+        },
+        {
+          "id": "kamyu104_leetcode-solutions-c-longest-increasing-subsequence.cpp",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/C%2B%2B/longest-increasing-subsequence.cpp",
+          "localPath": "kamyu104_LeetCode-Solutions/C++/longest-increasing-subsequence.cpp",
+          "relativePath": "C++/longest-increasing-subsequence.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Time:  O(nlogn)\n// Space: O(n)\n\n// Binary search solution with STL.\nclass Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        vector<int> LIS;\n\n        for (const auto& num : nums) {\n            insert(&LIS, num);\n        }\n\n        return LIS.size();\n    }\n\nprivate:\n    void insert(vector<int> *LIS, const int target) {\n        // Find the first index \"left\" which satisfies LIS[left] >= target\n        auto it = lower_bound(LIS->begin(), LIS->end(), target);\n\n        // If not found, append the target.\n        if (it == LIS->end()) {\n            LIS->emplace_back(target);\n        } else {\n            *it = target;\n        }\n    }\n};\n\n// Binary search solution.\nclass Solution2 {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        vector<int> LIS;\n\n        for (const auto& num : nums) {\n            insert(&LIS, num);\n        }\n\n        return LIS.size();\n    }\n\nprivate:\n    void insert(vector<int> *LIS, const int target) {\n        int left = 0, right = LIS->size() - 1;\n        auto comp = [](int x, int target) { return x >= target; };\n\n        // Find the first index \"left\" which satisfies LIS[left] >= target\n        while (left <= right) {\n            int mid = left + (right - left) / 2;\n            if (comp((*LIS)[mid], target)) {\n                right = mid - 1;\n            } else {\n                left = mid + 1;\n            }\n        }\n\n        // If not found, append the target.\n        if (left == LIS->size()) {\n            LIS->emplace_back(target);\n        } else {\n            (*LIS)[left] = target;\n        }\n    }\n};\n\n// Time:  O(nlogn)\n// Space: O(n)\n// bit, fenwick tree\nclass Solution3 {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        set<int> sorted_nums(cbegin(nums), cend(nums));\n        unordered_map<int, int> val_to_idx;\n        for (const auto& num : sorted_nums) {\n            val_to_idx[num] = size(val_to_idx);\n        }\n        const auto& fn = [](const auto& a, const auto& b) {\n            return max(a, b);\n        };\n\n        BIT<int> bit(size(val_to_idx), 0, fn);\n        for (const auto& x : nums) {\n            bit.update(val_to_idx[x], bit.query(val_to_idx[x] - 1) + 1);\n        }\n        return bit.query(size(val_to_idx) - 1);\n    }\n\nprivate:\n    template<typename T>\n    class BIT {\n    public:\n        BIT(int n, T val, const function<T (T, T)> fn)\n          : bit_(n + 1, val),\n            fn_(fn) {  // 0-indexed\n        }\n        \n        void update(int i, T val) {\n            ++i;\n            for (; i < size(bit_); i += lower_bit(i)) {\n                bit_[i] = fn_(bit_[i], val);\n            }\n        }\n\n        T query(int i) const {\n            ++i;\n            auto total = bit_[0];\n            for (; i > 0; i -= lower_bit(i)) {\n                total = fn_(total, bit_[i]);\n            }\n            return total;\n        }\n    \n    private:\n        int lower_bit(int i) const {\n            return i & -i;\n        }\n        \n        vector<T> bit_;\n        const function<T (T, T)> fn_;\n    };\n};\n\n// Time:  O(nlogn)\n// Space: O(n)\n// optimized from Solution5\nclass Solution4 {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        set<int> sorted_nums(cbegin(nums), cend(nums));\n        unordered_map<int, int> val_to_idx;\n        for (const auto& x : sorted_nums) {\n            val_to_idx[x] = size(val_to_idx);\n        }\n        SegmentTree st(size(val_to_idx));\n        for (const auto& x : nums) {\n            st.update(val_to_idx[x], val_to_idx[x],\n                      (val_to_idx[x] >= 1) ? st.query(0, val_to_idx[x] - 1) + 1 : 1);\n        }\n        return (size(val_to_idx) >= 1) ? st.query(0, size(val_to_idx) - 1) : 0;\n    }\n\nprivate:\n    class SegmentTree {\n    public:\n        SegmentTree(int N)\n            : N_(N),\n              tree_(2 * N),\n              lazy_(N)\n        {\n            H_ = 1;\n            while ((1 << H_) < N) {\n                ++H_;\n            }\n        }\n\n        void update(int L, int R, int h) {\n            L += N_; R += N_;\n            int L0 = L, R0 = R;\n            while (L <= R) {\n                if ((L & 1) == 1) {\n                    apply(L++, h);\n                }\n                if ((R & 1) == 0) {\n                    apply(R--, h);\n                }\n                L >>= 1; R >>= 1;\n            }\n            pull(L0); pull(R0);\n        }\n\n        int query(int L, int R) {\n            L += N_; R += N_;\n            auto result = 0;\n            push(L); push(R);\n            while (L <= R) {\n                if ((L & 1) == 1) {\n                    result = max(result, tree_[L++]);\n                }\n                if ((R & 1) == 0) {\n                    result = max(result, tree_[R--]);\n                }\n                L >>= 1; R >>= 1;\n            }\n            return result;\n        }\n\n    private:\n        int N_, H_;\n        vector<int> tree_, lazy_;\n\n        void apply(int x, int val) {\n            tree_[x] = max(tree_[x], val);\n            if (x < N_) {\n                lazy_[x] = max(lazy_[x], val);\n            }\n        }\n\n        void pull(int x) {\n            while (x > 1) {\n                x >>= 1;\n                tree_[x] = max(tree_[x * 2], tree_[x * 2 + 1]);\n                tree_[x] = max(tree_[x], lazy_[x]);\n            }\n        }\n\n        void push(int x) {\n            for (int h = H_; h > 0; --h) {\n                int y = x >> h;\n                if (lazy_[y] > 0) {\n                    apply(y * 2, lazy_[y]);\n                    apply(y * 2 + 1, lazy_[y]);\n                    lazy_[y] = 0;\n                }\n            }\n        }\n    };\n};\n\n// Time:  O(n^2)\n// Space: O(n)\n// Traditional DP solution.\nclass Solution5 {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        const int n = nums.size();\n        vector<int> dp(n, 1);  // dp[i]: the length of LIS ends with nums[i]\n        int res = 0;\n        for (int i = 0; i < n; ++i) {\n            for (int j = 0; j < i; ++j) {\n                if (nums[j] < nums[i]) {\n                    dp[i] = max(dp[i], dp[j] + 1);\n                }\n            }\n            res = max(res, dp[i]);\n        }\n        return res;\n    }\n};\n",
+          "originalCode": "// Time:  O(nlogn)\n// Space: O(n)\n\n// Binary search solution with STL.\nclass Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        vector<int> LIS;\n\n        for (const auto& num : nums) {\n            insert(&LIS, num);\n        }\n\n        return LIS.size();\n    }\n\nprivate:\n    void insert(vector<int> *LIS, const int target) {\n        // Find the first index \"left\" which satisfies LIS[left] >= target\n        auto it = lower_bound(LIS->begin(), LIS->end(), target);\n\n        // If not found, append the target.\n        if (it == LIS->end()) {\n            LIS->emplace_back(target);\n        } else {\n            *it = target;\n        }\n    }\n};\n\n// Binary search solution.\nclass Solution2 {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        vector<int> LIS;\n\n        for (const auto& num : nums) {\n            insert(&LIS, num);\n        }\n\n        return LIS.size();\n    }\n\nprivate:\n    void insert(vector<int> *LIS, const int target) {\n        int left = 0, right = LIS->size() - 1;\n        auto comp = [](int x, int target) { return x >= target; };\n\n        // Find the first index \"left\" which satisfies LIS[left] >= target\n        while (left <= right) {\n            int mid = left + (right - left) / 2;\n            if (comp((*LIS)[mid], target)) {\n                right = mid - 1;\n            } else {\n                left = mid + 1;\n            }\n        }\n\n        // If not found, append the target.\n        if (left == LIS->size()) {\n            LIS->emplace_back(target);\n        } else {\n            (*LIS)[left] = target;\n        }\n    }\n};\n\n// Time:  O(nlogn)\n// Space: O(n)\n// bit, fenwick tree\nclass Solution3 {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        set<int> sorted_nums(cbegin(nums), cend(nums));\n        unordered_map<int, int> val_to_idx;\n        for (const auto& num : sorted_nums) {\n            val_to_idx[num] = size(val_to_idx);\n        }\n        const auto& fn = [](const auto& a, const auto& b) {\n            return max(a, b);\n        };\n\n        BIT<int> bit(size(val_to_idx), 0, fn);\n        for (const auto& x : nums) {\n            bit.update(val_to_idx[x], bit.query(val_to_idx[x] - 1) + 1);\n        }\n        return bit.query(size(val_to_idx) - 1);\n    }\n\nprivate:\n    template<typename T>\n    class BIT {\n    public:\n        BIT(int n, T val, const function<T (T, T)> fn)\n          : bit_(n + 1, val),\n            fn_(fn) {  // 0-indexed\n        }\n        \n        void update(int i, T val) {\n            ++i;\n            for (; i < size(bit_); i += lower_bit(i)) {\n                bit_[i] = fn_(bit_[i], val);\n            }\n        }\n\n        T query(int i) const {\n            ++i;\n            auto total = bit_[0];\n            for (; i > 0; i -= lower_bit(i)) {\n                total = fn_(total, bit_[i]);\n            }\n            return total;\n        }\n    \n    private:\n        int lower_bit(int i) const {\n            return i & -i;\n        }\n        \n        vector<T> bit_;\n        const function<T (T, T)> fn_;\n    };\n};\n\n// Time:  O(nlogn)\n// Space: O(n)\n// optimized from Solution5\nclass Solution4 {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        set<int> sorted_nums(cbegin(nums), cend(nums));\n        unordered_map<int, int> val_to_idx;\n        for (const auto& x : sorted_nums) {\n            val_to_idx[x] = size(val_to_idx);\n        }\n        SegmentTree st(size(val_to_idx));\n        for (const auto& x : nums) {\n            st.update(val_to_idx[x], val_to_idx[x],\n                      (val_to_idx[x] >= 1) ? st.query(0, val_to_idx[x] - 1) + 1 : 1);\n        }\n        return (size(val_to_idx) >= 1) ? st.query(0, size(val_to_idx) - 1) : 0;\n    }\n\nprivate:\n    class SegmentTree {\n    public:\n        SegmentTree(int N)\n            : N_(N),\n              tree_(2 * N),\n              lazy_(N)\n        {\n            H_ = 1;\n            while ((1 << H_) < N) {\n                ++H_;\n            }\n        }\n\n        void update(int L, int R, int h) {\n            L += N_; R += N_;\n            int L0 = L, R0 = R;\n            while (L <= R) {\n                if ((L & 1) == 1) {\n                    apply(L++, h);\n                }\n                if ((R & 1) == 0) {\n                    apply(R--, h);\n                }\n                L >>= 1; R >>= 1;\n            }\n            pull(L0); pull(R0);\n        }\n\n        int query(int L, int R) {\n            L += N_; R += N_;\n            auto result = 0;\n            push(L); push(R);\n            while (L <= R) {\n                if ((L & 1) == 1) {\n                    result = max(result, tree_[L++]);\n                }\n                if ((R & 1) == 0) {\n                    result = max(result, tree_[R--]);\n                }\n                L >>= 1; R >>= 1;\n            }\n            return result;\n        }\n\n    private:\n        int N_, H_;\n        vector<int> tree_, lazy_;\n\n        void apply(int x, int val) {\n            tree_[x] = max(tree_[x], val);\n            if (x < N_) {\n                lazy_[x] = max(lazy_[x], val);\n            }\n        }\n\n        void pull(int x) {\n            while (x > 1) {\n                x >>= 1;\n                tree_[x] = max(tree_[x * 2], tree_[x * 2 + 1]);\n                tree_[x] = max(tree_[x], lazy_[x]);\n            }\n        }\n\n        void push(int x) {\n            for (int h = H_; h > 0; --h) {\n                int y = x >> h;\n                if (lazy_[y] > 0) {\n                    apply(y * 2, lazy_[y]);\n                    apply(y * 2 + 1, lazy_[y]);\n                    lazy_[y] = 0;\n                }\n            }\n        }\n    };\n};\n\n// Time:  O(n^2)\n// Space: O(n)\n// Traditional DP solution.\nclass Solution5 {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        const int n = nums.size();\n        vector<int> dp(n, 1);  // dp[i]: the length of LIS ends with nums[i]\n        int res = 0;\n        for (int i = 0; i < n; ++i) {\n            for (int j = 0; j < i; ++j) {\n                if (nums[j] < nums[i]) {\n                    dp[i] = max(dp[i], dp[j] + 1);\n                }\n            }\n            res = max(res, dp[i]);\n        }\n        return res;\n    }\n};\n",
+          "reviewedCode": "// Time:  O(nlogn)\n// Space: O(n)\n\n// Binary search solution with STL.\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position.\nclass Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        vector<int> LIS;\n\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.\n        for (const auto& num : nums) {\n            insert(&LIS, num);\n        }\n\n        return LIS.size();\n    }\n\nprivate:\n    void insert(vector<int> *LIS, const int target) {\n        // Find the first index \"left\" which satisfies LIS[left] >= target\n        auto it = lower_bound(LIS->begin(), LIS->end(), target);\n\n        // If not found, append the target.\n        // [Reader note] Decision point\n        // Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads.\n        if (it == LIS->end()) {\n            LIS->emplace_back(target);\n        } else {\n            *it = target;\n        }\n    }\n};\n\n// Binary search solution.\nclass Solution2 {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        vector<int> LIS;\n\n        for (const auto& num : nums) {\n            insert(&LIS, num);\n        }\n\n        return LIS.size();\n    }\n\nprivate:\n    void insert(vector<int> *LIS, const int target) {\n        int left = 0, right = LIS->size() - 1;\n        auto comp = [](int x, int target) { return x >= target; };\n\n        // Find the first index \"left\" which satisfies LIS[left] >= target\n        while (left <= right) {\n            int mid = left + (right - left) / 2;\n            if (comp((*LIS)[mid], target)) {\n                right = mid - 1;\n            } else {\n                left = mid + 1;\n            }\n        }\n\n        // If not found, append the target.\n        if (left == LIS->size()) {\n            LIS->emplace_back(target);\n        } else {\n            (*LIS)[left] = target;\n        }\n    }\n};\n\n// Time:  O(nlogn)\n// Space: O(n)\n// bit, fenwick tree\nclass Solution3 {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        set<int> sorted_nums(cbegin(nums), cend(nums));\n        unordered_map<int, int> val_to_idx;\n        for (const auto& num : sorted_nums) {\n            val_to_idx[num] = size(val_to_idx);\n        }\n        const auto& fn = [](const auto& a, const auto& b) {\n            return max(a, b);\n        };\n\n        BIT<int> bit(size(val_to_idx), 0, fn);\n        for (const auto& x : nums) {\n            bit.update(val_to_idx[x], bit.query(val_to_idx[x] - 1) + 1);\n        }\n        return bit.query(size(val_to_idx) - 1);\n    }\n\nprivate:\n    template<typename T>\n    class BIT {\n    public:\n        BIT(int n, T val, const function<T (T, T)> fn)\n          : bit_(n + 1, val),\n            fn_(fn) {  // 0-indexed\n        }\n        \n        void update(int i, T val) {\n            ++i;\n            for (; i < size(bit_); i += lower_bit(i)) {\n                bit_[i] = fn_(bit_[i], val);\n            }\n        }\n\n        T query(int i) const {\n            ++i;\n            auto total = bit_[0];\n            for (; i > 0; i -= lower_bit(i)) {\n                total = fn_(total, bit_[i]);\n            }\n            return total;\n        }\n    \n    private:\n        int lower_bit(int i) const {\n            return i & -i;\n        }\n        \n        vector<T> bit_;\n        const function<T (T, T)> fn_;\n    };\n};\n\n// Time:  O(nlogn)\n// Space: O(n)\n// optimized from Solution5\nclass Solution4 {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        set<int> sorted_nums(cbegin(nums), cend(nums));\n        unordered_map<int, int> val_to_idx;\n        for (const auto& x : sorted_nums) {\n            val_to_idx[x] = size(val_to_idx);\n        }\n        SegmentTree st(size(val_to_idx));\n        for (const auto& x : nums) {\n            st.update(val_to_idx[x], val_to_idx[x],\n                      (val_to_idx[x] >= 1) ? st.query(0, val_to_idx[x] - 1) + 1 : 1);\n        }\n        return (size(val_to_idx) >= 1) ? st.query(0, size(val_to_idx) - 1) : 0;\n    }\n\nprivate:\n    class SegmentTree {\n    public:\n        SegmentTree(int N)\n            : N_(N),\n              tree_(2 * N),\n              lazy_(N)\n        {\n            H_ = 1;\n            while ((1 << H_) < N) {\n                ++H_;\n            }\n        }\n\n        void update(int L, int R, int h) {\n            L += N_; R += N_;\n            int L0 = L, R0 = R;\n            while (L <= R) {\n                if ((L & 1) == 1) {\n                    apply(L++, h);\n                }\n                if ((R & 1) == 0) {\n                    apply(R--, h);\n                }\n                L >>= 1; R >>= 1;\n            }\n            pull(L0); pull(R0);\n        }\n\n        int query(int L, int R) {\n            L += N_; R += N_;\n            auto result = 0;\n            push(L); push(R);\n            while (L <= R) {\n                if ((L & 1) == 1) {\n                    result = max(result, tree_[L++]);\n                }\n                if ((R & 1) == 0) {\n                    result = max(result, tree_[R--]);\n                }\n                L >>= 1; R >>= 1;\n            }\n            return result;\n        }\n\n    private:\n        int N_, H_;\n        vector<int> tree_, lazy_;\n\n        void apply(int x, int val) {\n            tree_[x] = max(tree_[x], val);\n            if (x < N_) {\n                lazy_[x] = max(lazy_[x], val);\n            }\n        }\n\n        void pull(int x) {\n            while (x > 1) {\n                x >>= 1;\n                tree_[x] = max(tree_[x * 2], tree_[x * 2 + 1]);\n                tree_[x] = max(tree_[x], lazy_[x]);\n            }\n        }\n\n        void push(int x) {\n            for (int h = H_; h > 0; --h) {\n                int y = x >> h;\n                if (lazy_[y] > 0) {\n                    apply(y * 2, lazy_[y]);\n                    apply(y * 2 + 1, lazy_[y]);\n                    lazy_[y] = 0;\n                }\n            }\n        }\n    };\n};\n\n// Time:  O(n^2)\n// Space: O(n)\n// Traditional DP solution.\nclass Solution5 {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        const int n = nums.size();\n        vector<int> dp(n, 1);  // dp[i]: the length of LIS ends with nums[i]\n        int res = 0;\n        for (int i = 0; i < n; ++i) {\n            for (int j = 0; j < i; ++j) {\n                if (nums[j] < nums[i]) {\n                    dp[i] = max(dp[i], dp[j] + 1);\n                }\n            }\n            res = max(res, dp[i]);\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return res;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(nlogn)",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 5,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position."
+            },
+            {
+              "line": 10,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings."
+            },
+            {
+              "line": 23,
+              "label": "Decision point",
+              "note": "Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+            },
+            {
+              "line": 238,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a major milestone DP problem because it teaches how to define a sequence state around 'best ending here.'",
+            "whatToNotice": "Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.",
+            "riskPoint": "The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0300-0399-0300.longest-increasing-subsequence-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0300-0399/0300.Longest%20Increasing%20Subsequence/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/0300-0399/0300.Longest Increasing Subsequence/Solution.cpp",
+          "relativePath": "solution/0300-0399/0300.Longest Increasing Subsequence/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        int n = nums.size();\n        vector<int> f(n, 1);\n        for (int i = 1; i < n; ++i) {\n            for (int j = 0; j < i; ++j) {\n                if (nums[j] < nums[i]) {\n                    f[i] = max(f[i], f[j] + 1);\n                }\n            }\n        }\n        return *max_element(f.begin(), f.end());\n    }\n};",
+          "originalCode": "class Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        int n = nums.size();\n        vector<int> f(n, 1);\n        for (int i = 1; i < n; ++i) {\n            for (int j = 0; j < i; ++j) {\n                if (nums[j] < nums[i]) {\n                    f[i] = max(f[i], f[j] + 1);\n                }\n            }\n        }\n        return *max_element(f.begin(), f.end());\n    }\n};",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position.\nclass Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.\n        int n = nums.size();\n        vector<int> f(n, 1);\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = 1; i < n; ++i) {\n            for (int j = 0; j < i; ++j) {\n                // [Reader note] Decision point\n                // Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads.\n                if (nums[j] < nums[i]) {\n                    f[i] = max(f[i], f[j] + 1);\n                }\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return *max_element(f.begin(), f.end());\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings."
+            },
+            {
+              "line": 6,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 8,
+              "label": "Decision point",
+              "note": "Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+            },
+            {
+              "line": 13,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a major milestone DP problem because it teaches how to define a sequence state around 'best ending here.'",
+            "whatToNotice": "Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.",
+            "riskPoint": "The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+          }
+        },
+        {
+          "id": "wisdompeak_leetcode-greedy-300.longest-increasing-subsequence-300.longest-increasing-subsequence_v1.cpp",
+          "repository": "wisdompeak_LeetCode",
+          "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+          "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/Greedy/300.Longest-Increasing-Subsequence/300.Longest-Increasing-Subsequence_v1.cpp",
+          "localPath": "wisdompeak_LeetCode/Greedy/300.Longest-Increasing-Subsequence/300.Longest-Increasing-Subsequence_v1.cpp",
+          "relativePath": "Greedy/300.Longest-Increasing-Subsequence/300.Longest-Increasing-Subsequence_v1.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+readme",
+          "code": "class Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) \n    {\n        int n = nums.size();\n        vector<int>dp(n,1);\n        for (int i=0; i<n; i++)\n        {\n            for (int j=0; j<i; j++)\n            {\n                if (nums[j]<nums[i])\n                    dp[i] = max(dp[i], dp[j]+1);\n            }\n        }\n        \n        int ret = 0;\n        for (int i=0; i<n; i++)\n            ret = max(ret, dp[i]);\n        \n        return ret;\n\n    }\n};\n",
+          "originalCode": "class Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) \n    {\n        int n = nums.size();\n        vector<int>dp(n,1);\n        for (int i=0; i<n; i++)\n        {\n            for (int j=0; j<i; j++)\n            {\n                if (nums[j]<nums[i])\n                    dp[i] = max(dp[i], dp[j]+1);\n            }\n        }\n        \n        int ret = 0;\n        for (int i=0; i<n; i++)\n            ret = max(ret, dp[i]);\n        \n        return ret;\n\n    }\n};\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position.\nclass Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) \n    {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.\n        int n = nums.size();\n        vector<int>dp(n,1);\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i=0; i<n; i++)\n        {\n            for (int j=0; j<i; j++)\n            {\n                // [Reader note] Decision point\n                // Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads.\n                if (nums[j]<nums[i])\n                    dp[i] = max(dp[i], dp[j]+1);\n            }\n        }\n        \n        int ret = 0;\n        for (int i=0; i<n; i++)\n            ret = max(ret, dp[i]);\n        \n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return ret;\n\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position."
+            },
+            {
+              "line": 5,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings."
+            },
+            {
+              "line": 7,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 11,
+              "label": "Decision point",
+              "note": "Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+            },
+            {
+              "line": 20,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a major milestone DP problem because it teaches how to define a sequence state around 'best ending here.'",
+            "whatToNotice": "Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.",
+            "riskPoint": "The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+          }
+        },
+        {
+          "id": "wisdompeak_leetcode-greedy-300.longest-increasing-subsequence-300.longest-increasing-subsequence_v2.cpp",
+          "repository": "wisdompeak_LeetCode",
+          "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+          "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/Greedy/300.Longest-Increasing-Subsequence/300.Longest-Increasing-Subsequence_v2.cpp",
+          "localPath": "wisdompeak_LeetCode/Greedy/300.Longest-Increasing-Subsequence/300.Longest-Increasing-Subsequence_v2.cpp",
+          "relativePath": "Greedy/300.Longest-Increasing-Subsequence/300.Longest-Increasing-Subsequence_v2.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+readme",
+          "code": "class Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) \n    {\n        int n = nums.size();              \n        vector<int>q(n, INT_MAX);\n        for (int i=0; i<n; i++)\n        {\n            auto iter = lower_bound(q.begin(),q.end(),nums[i]);\n            *iter = nums[i];\n        }\n        for (int i = n - 1; i >= 0; i--)\n        {\n            if (q[i] != INT_MAX)\n                return i + 1;  \n        }\n        return 0;    \n    }\n};\n",
+          "originalCode": "class Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) \n    {\n        int n = nums.size();              \n        vector<int>q(n, INT_MAX);\n        for (int i=0; i<n; i++)\n        {\n            auto iter = lower_bound(q.begin(),q.end(),nums[i]);\n            *iter = nums[i];\n        }\n        for (int i = n - 1; i >= 0; i--)\n        {\n            if (q[i] != INT_MAX)\n                return i + 1;  \n        }\n        return 0;    \n    }\n};\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position.\nclass Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) \n    {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.\n        int n = nums.size();              \n        vector<int>q(n, INT_MAX);\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i=0; i<n; i++)\n        {\n            auto iter = lower_bound(q.begin(),q.end(),nums[i]);\n            *iter = nums[i];\n        }\n        for (int i = n - 1; i >= 0; i--)\n        {\n            // [Reader note] Decision point\n            // Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads.\n            if (q[i] != INT_MAX)\n                return i + 1;  \n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return 0;    \n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position."
+            },
+            {
+              "line": 5,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings."
+            },
+            {
+              "line": 7,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 14,
+              "label": "Decision point",
+              "note": "Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+            },
+            {
+              "line": 17,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a major milestone DP problem because it teaches how to define a sequence state around 'best ending here.'",
+            "whatToNotice": "Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.",
+            "riskPoint": "The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+          }
+        },
+        {
+          "id": "haoel_leetcode-algorithms-cpp-longestincreasingsubsequence-longestincreasingsubsequence.cpp",
+          "repository": "haoel_leetcode",
+          "repositoryUrl": "https://github.com/haoel/leetcode",
+          "sourceUrl": "https://github.com/haoel/leetcode/blob/master/algorithms/cpp/longestIncreasingSubsequence/longestIncreasingSubsequence.cpp",
+          "localPath": "haoel_leetcode/algorithms/cpp/longestIncreasingSubsequence/longestIncreasingSubsequence.cpp",
+          "relativePath": "algorithms/cpp/longestIncreasingSubsequence/longestIncreasingSubsequence.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Source : https://leetcode.com/problems/longest-increasing-subsequence/\n// Author : Calinescu Valentin, Hao Chen\n// Date   : 2015-11-06\n\n/*************************************************************************************** \n *\n * Given an unsorted array of integers, find the length of longest increasing\n * subsequence.\n *\n * For example,\n * Given [10, 9, 2, 5, 3, 7, 101, 18],\n * The longest increasing subsequence is [2, 3, 7, 101], therefore the length is 4.\n * Note that there may be more than one LIS combination, it is only necessary for yo\n * to return the length.\n * \n * Your algorithm should run in O(n2) complexity.\n * \n * Follow up: Could you improve it to O(n log n) time complexity?\n * \n * Credits:\n * Special thanks to @pbrother for adding this problem and creating all test cases.\n *               \n ***************************************************************************************/\n\n\n\n// O(n^2) - dynamic programming\nclass Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        \n        int len = nums.size();\n        int maxLen = 0;\n        vector<int> dp(len, 1);\n        \n        for (int i=0; i<len; i++) {\n            for(int j=0; j<i; j++) {\n                if ( nums[j] < nums[i] ) {\n                    dp[i] = max(dp[i], dp[j] + 1);\n                }\n            }\n            maxLen = max(maxLen, dp[i]);\n        }\n        return maxLen;\n    }\n};\n\n\nclass Solution {\npublic:\n    \n/* \n * Solution 1 - O(N^2)\n * =========\n *\n * LIS - longest increasing subsequence\n *\n * We iterate through the elements to find the LIS that ends with the current element. \n * To do that we need to look at all of the previous elements and find one smaller than\n * the current one so that we can add the current one to the sequence terminated in the \n * smaller one. The length of the LIS ending in the current element is the length of the\n * LIS ending in the smaller one + 1. To find the maximum current LIS we need to use the\n * maximum previous LIS that satisfies the conditions.\n * \n */\n    vector <int> longest_LIS;\n    int lengthOfLIS(vector<int>& nums) {\n        int answer = 0;\n        if(nums.size())\n        {   \n            longest_LIS.push_back(1);\n            answer = 1;\n            for(int i = 1; i < nums.size(); i++)\n            {\n                int maximum = 1;\n                for(int j = 0; j < longest_LIS.size(); j++)\n                    if(nums[i] > nums[j])\n                        maximum = max(maximum, longest_LIS[j] + 1);\n                longest_LIS.push_back(maximum);\n                answer = max(maximum, answer);\n            }\n        }\n        return answer;\n    }\n/* \n * Solution 2 - O(N * logN)\n * =========\n *\n * LIS - longest increasing subsequence\n * \n * We iterate through the elements to find the position of the current element in the\n * current LIS. After we find its position we change the LIS replacing the next biggest \n * element with the current one or increase the size of the sequence if the current element\n * is bigger than the biggest one. This way we keep the LIS with the smallest possible\n * elements. By keeping any other LIS we can encounter an element that could have been added\n * to the LIS with the smallest elements, but can't be added to the current one, therefore\n * missing the solution.\n * \n */\n    vector <int> longest_subsequence; // the LIS\n    vector <int> nums;\n    int binary_search(int number)\n    {\n        int start = 0, end = longest_subsequence.size() - 1;\n        if(start == end)\n        {\n            if(number > longest_subsequence[start])\n                return start + 1;\n            else\n                return start;\n        }\n        while(start < end)\n        {\n            if(start == end - 1)\n            {\n                if(number > longest_subsequence[start] && number <= longest_subsequence[end])\n                    return end;\n                else if(number <= longest_subsequence[start])\n                    return start;\n                else\n                    return end + 1;\n            }\n            int middle = (start + end + 1) / 2;\n            if(longest_subsequence[middle] < number)\n                start = middle;\n            else\n                end = middle;\n        }\n    }\n    int lengthOfLIS(vector<int>& nums) {\n        int answer = 0;\n        if(nums.size())\n        {   \n            answer = 1;\n            longest_subsequence.push_back(nums[0]);\n            for(int i = 1; i < nums.size(); i++)\n            {\n                int position = binary_search(nums[i]);\n                if(position == longest_subsequence.size())\n                    longest_subsequence.push_back(nums[i]);\n                else\n                    longest_subsequence[position] = nums[i];\n                answer = max(answer, position + 1);\n            }\n        }\n        return answer;\n    }\n};\n",
+          "originalCode": "// Source : https://leetcode.com/problems/longest-increasing-subsequence/\n// Author : Calinescu Valentin, Hao Chen\n// Date   : 2015-11-06\n\n/*************************************************************************************** \n *\n * Given an unsorted array of integers, find the length of longest increasing\n * subsequence.\n *\n * For example,\n * Given [10, 9, 2, 5, 3, 7, 101, 18],\n * The longest increasing subsequence is [2, 3, 7, 101], therefore the length is 4.\n * Note that there may be more than one LIS combination, it is only necessary for yo\n * to return the length.\n * \n * Your algorithm should run in O(n2) complexity.\n * \n * Follow up: Could you improve it to O(n log n) time complexity?\n * \n * Credits:\n * Special thanks to @pbrother for adding this problem and creating all test cases.\n *               \n ***************************************************************************************/\n\n\n\n// O(n^2) - dynamic programming\nclass Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        \n        int len = nums.size();\n        int maxLen = 0;\n        vector<int> dp(len, 1);\n        \n        for (int i=0; i<len; i++) {\n            for(int j=0; j<i; j++) {\n                if ( nums[j] < nums[i] ) {\n                    dp[i] = max(dp[i], dp[j] + 1);\n                }\n            }\n            maxLen = max(maxLen, dp[i]);\n        }\n        return maxLen;\n    }\n};\n\n\nclass Solution {\npublic:\n    \n/* \n * Solution 1 - O(N^2)\n * =========\n *\n * LIS - longest increasing subsequence\n *\n * We iterate through the elements to find the LIS that ends with the current element. \n * To do that we need to look at all of the previous elements and find one smaller than\n * the current one so that we can add the current one to the sequence terminated in the \n * smaller one. The length of the LIS ending in the current element is the length of the\n * LIS ending in the smaller one + 1. To find the maximum current LIS we need to use the\n * maximum previous LIS that satisfies the conditions.\n * \n */\n    vector <int> longest_LIS;\n    int lengthOfLIS(vector<int>& nums) {\n        int answer = 0;\n        if(nums.size())\n        {   \n            longest_LIS.push_back(1);\n            answer = 1;\n            for(int i = 1; i < nums.size(); i++)\n            {\n                int maximum = 1;\n                for(int j = 0; j < longest_LIS.size(); j++)\n                    if(nums[i] > nums[j])\n                        maximum = max(maximum, longest_LIS[j] + 1);\n                longest_LIS.push_back(maximum);\n                answer = max(maximum, answer);\n            }\n        }\n        return answer;\n    }\n/* \n * Solution 2 - O(N * logN)\n * =========\n *\n * LIS - longest increasing subsequence\n * \n * We iterate through the elements to find the position of the current element in the\n * current LIS. After we find its position we change the LIS replacing the next biggest \n * element with the current one or increase the size of the sequence if the current element\n * is bigger than the biggest one. This way we keep the LIS with the smallest possible\n * elements. By keeping any other LIS we can encounter an element that could have been added\n * to the LIS with the smallest elements, but can't be added to the current one, therefore\n * missing the solution.\n * \n */\n    vector <int> longest_subsequence; // the LIS\n    vector <int> nums;\n    int binary_search(int number)\n    {\n        int start = 0, end = longest_subsequence.size() - 1;\n        if(start == end)\n        {\n            if(number > longest_subsequence[start])\n                return start + 1;\n            else\n                return start;\n        }\n        while(start < end)\n        {\n            if(start == end - 1)\n            {\n                if(number > longest_subsequence[start] && number <= longest_subsequence[end])\n                    return end;\n                else if(number <= longest_subsequence[start])\n                    return start;\n                else\n                    return end + 1;\n            }\n            int middle = (start + end + 1) / 2;\n            if(longest_subsequence[middle] < number)\n                start = middle;\n            else\n                end = middle;\n        }\n    }\n    int lengthOfLIS(vector<int>& nums) {\n        int answer = 0;\n        if(nums.size())\n        {   \n            answer = 1;\n            longest_subsequence.push_back(nums[0]);\n            for(int i = 1; i < nums.size(); i++)\n            {\n                int position = binary_search(nums[i]);\n                if(position == longest_subsequence.size())\n                    longest_subsequence.push_back(nums[i]);\n                else\n                    longest_subsequence[position] = nums[i];\n                answer = max(answer, position + 1);\n            }\n        }\n        return answer;\n    }\n};\n",
+          "reviewedCode": "// Source : https://leetcode.com/problems/longest-increasing-subsequence/\n// Author : Calinescu Valentin, Hao Chen\n// Date   : 2015-11-06\n\n/*************************************************************************************** \n *\n * Given an unsorted array of integers, find the length of longest increasing\n * subsequence.\n *\n * For example,\n * Given [10, 9, 2, 5, 3, 7, 101, 18],\n * The longest increasing subsequence is [2, 3, 7, 101], therefore the length is 4.\n * Note that there may be more than one LIS combination, it is only necessary for yo\n * to return the length.\n * \n * Your algorithm should run in O(n2) complexity.\n * \n * Follow up: Could you improve it to O(n log n) time complexity?\n * \n * Credits:\n * Special thanks to @pbrother for adding this problem and creating all test cases.\n *               \n ***************************************************************************************/\n\n\n\n// O(n^2) - dynamic programming\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position.\nclass Solution {\npublic:\n    int lengthOfLIS(vector<int>& nums) {\n        \n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.\n        int len = nums.size();\n        int maxLen = 0;\n        vector<int> dp(len, 1);\n        \n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i=0; i<len; i++) {\n            for(int j=0; j<i; j++) {\n                // [Reader note] Decision point\n                // Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads.\n                if ( nums[j] < nums[i] ) {\n                    dp[i] = max(dp[i], dp[j] + 1);\n                }\n            }\n            maxLen = max(maxLen, dp[i]);\n        }\n        return maxLen;\n    }\n};\n\n\nclass Solution {\npublic:\n    \n/* \n * Solution 1 - O(N^2)\n * =========\n *\n * LIS - longest increasing subsequence\n *\n * We iterate through the elements to find the LIS that ends with the current element. \n * To do that we need to look at all of the previous elements and find one smaller than\n * the current one so that we can add the current one to the sequence terminated in the \n * smaller one. The length of the LIS ending in the current element is the length of the\n * LIS ending in the smaller one + 1. To find the maximum current LIS we need to use the\n * maximum previous LIS that satisfies the conditions.\n * \n */\n    vector <int> longest_LIS;\n    int lengthOfLIS(vector<int>& nums) {\n        int answer = 0;\n        if(nums.size())\n        {   \n            longest_LIS.push_back(1);\n            answer = 1;\n            for(int i = 1; i < nums.size(); i++)\n            {\n                int maximum = 1;\n                for(int j = 0; j < longest_LIS.size(); j++)\n                    if(nums[i] > nums[j])\n                        maximum = max(maximum, longest_LIS[j] + 1);\n                longest_LIS.push_back(maximum);\n                answer = max(maximum, answer);\n            }\n        }\n        return answer;\n    }\n/* \n * Solution 2 - O(N * logN)\n * =========\n *\n * LIS - longest increasing subsequence\n * \n * We iterate through the elements to find the position of the current element in the\n * current LIS. After we find its position we change the LIS replacing the next biggest \n * element with the current one or increase the size of the sequence if the current element\n * is bigger than the biggest one. This way we keep the LIS with the smallest possible\n * elements. By keeping any other LIS we can encounter an element that could have been added\n * to the LIS with the smallest elements, but can't be added to the current one, therefore\n * missing the solution.\n * \n */\n    vector <int> longest_subsequence; // the LIS\n    vector <int> nums;\n    int binary_search(int number)\n    {\n        int start = 0, end = longest_subsequence.size() - 1;\n        if(start == end)\n        {\n            if(number > longest_subsequence[start])\n                return start + 1;\n            else\n                return start;\n        }\n        while(start < end)\n        {\n            if(start == end - 1)\n            {\n                if(number > longest_subsequence[start] && number <= longest_subsequence[end])\n                    return end;\n                else if(number <= longest_subsequence[start])\n                    return start;\n                else\n                    return end + 1;\n            }\n            int middle = (start + end + 1) / 2;\n            if(longest_subsequence[middle] < number)\n                start = middle;\n            else\n                end = middle;\n        }\n    }\n    int lengthOfLIS(vector<int>& nums) {\n        int answer = 0;\n        if(nums.size())\n        {   \n            answer = 1;\n            longest_subsequence.push_back(nums[0]);\n            for(int i = 1; i < nums.size(); i++)\n            {\n                int position = binary_search(nums[i]);\n                if(position == longest_subsequence.size())\n                    longest_subsequence.push_back(nums[i]);\n                else\n                    longest_subsequence[position] = nums[i];\n                answer = max(answer, position + 1);\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return answer;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 28,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position."
+            },
+            {
+              "line": 32,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings."
+            },
+            {
+              "line": 36,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 38,
+              "label": "Decision point",
+              "note": "Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+            },
+            {
+              "line": 146,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a major milestone DP problem because it teaches how to define a sequence state around 'best ending here.'",
+            "whatToNotice": "Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.",
+            "riskPoint": "The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-java-0300-longest-increasing-subsequence.java",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/java/0300-longest-increasing-subsequence.java",
+          "localPath": "neetcode-gh_leetcode/java/0300-longest-increasing-subsequence.java",
+          "relativePath": "java/0300-longest-increasing-subsequence.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "article+code",
+          "code": "class Solution {\n\n    // Dynamic programming, O(n^2)\n    public int lengthOfLIS(int[] nums) {\n        if (nums.length == 1) return 1;\n\n        int[] LIS = new int[nums.length];\n        Arrays.fill(LIS, 1);\n        int maximumSoFar = 1;\n\n        for (int i = nums.length - 1; i >= 0; i--) {\n            for (int j = i + 1; j < nums.length; j++) {\n                if (nums[i] < nums[j]) {\n                    LIS[i] = Math.max(1 + LIS[j], LIS[i]);\n                }\n            }\n            maximumSoFar = Math.max(maximumSoFar, LIS[i]);\n        }\n        return maximumSoFar;\n    }\n\n    // Binary search, O(nlogn)\n    public int lengthOfLIS(int[] nums) {\n        List<Integer> lis = new ArrayList<>(nums.length);\n\n        for (int n : nums) {\n            int i = Collections.binarySearch(lis, n);\n            if (i < 0) i = -i - 1;\n\n            if (i == lis.size())\n                lis.add(n);\n            else\n                lis.set(i, n);\n        }\n        return lis.size();\n    }\n}\n",
+          "originalCode": "class Solution {\n\n    // Dynamic programming, O(n^2)\n    public int lengthOfLIS(int[] nums) {\n        if (nums.length == 1) return 1;\n\n        int[] LIS = new int[nums.length];\n        Arrays.fill(LIS, 1);\n        int maximumSoFar = 1;\n\n        for (int i = nums.length - 1; i >= 0; i--) {\n            for (int j = i + 1; j < nums.length; j++) {\n                if (nums[i] < nums[j]) {\n                    LIS[i] = Math.max(1 + LIS[j], LIS[i]);\n                }\n            }\n            maximumSoFar = Math.max(maximumSoFar, LIS[i]);\n        }\n        return maximumSoFar;\n    }\n\n    // Binary search, O(nlogn)\n    public int lengthOfLIS(int[] nums) {\n        List<Integer> lis = new ArrayList<>(nums.length);\n\n        for (int n : nums) {\n            int i = Collections.binarySearch(lis, n);\n            if (i < 0) i = -i - 1;\n\n            if (i == lis.size())\n                lis.add(n);\n            else\n                lis.set(i, n);\n        }\n        return lis.size();\n    }\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position.\nclass Solution {\n\n    // Dynamic programming, O(n^2)\n    public int lengthOfLIS(int[] nums) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.\n        if (nums.length == 1) return 1;\n\n        int[] LIS = new int[nums.length];\n        Arrays.fill(LIS, 1);\n        int maximumSoFar = 1;\n\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = nums.length - 1; i >= 0; i--) {\n            for (int j = i + 1; j < nums.length; j++) {\n                // [Reader note] Decision point\n                // Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads.\n                if (nums[i] < nums[j]) {\n                    LIS[i] = Math.max(1 + LIS[j], LIS[i]);\n                }\n            }\n            maximumSoFar = Math.max(maximumSoFar, LIS[i]);\n        }\n        return maximumSoFar;\n    }\n\n    // Binary search, O(nlogn)\n    public int lengthOfLIS(int[] nums) {\n        List<Integer> lis = new ArrayList<>(nums.length);\n\n        for (int n : nums) {\n            int i = Collections.binarySearch(lis, n);\n            if (i < 0) i = -i - 1;\n\n            if (i == lis.size())\n                lis.add(n);\n            else\n                lis.set(i, n);\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return lis.size();\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position."
+            },
+            {
+              "line": 5,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings."
+            },
+            {
+              "line": 11,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 13,
+              "label": "Decision point",
+              "note": "Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+            },
+            {
+              "line": 35,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a major milestone DP problem because it teaches how to define a sequence state around 'best ending here.'",
+            "whatToNotice": "Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.",
+            "riskPoint": "The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0300-0399-0300.longest-increasing-subsequence-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0300-0399/0300.Longest%20Increasing%20Subsequence/Solution.java",
+          "localPath": "doocs_leetcode/solution/0300-0399/0300.Longest Increasing Subsequence/Solution.java",
+          "relativePath": "solution/0300-0399/0300.Longest Increasing Subsequence/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\n    public int lengthOfLIS(int[] nums) {\n        int n = nums.length;\n        int[] f = new int[n];\n        Arrays.fill(f, 1);\n        int ans = 1;\n        for (int i = 1; i < n; ++i) {\n            for (int j = 0; j < i; ++j) {\n                if (nums[j] < nums[i]) {\n                    f[i] = Math.max(f[i], f[j] + 1);\n                }\n            }\n            ans = Math.max(ans, f[i]);\n        }\n        return ans;\n    }\n}",
+          "originalCode": "class Solution {\n    public int lengthOfLIS(int[] nums) {\n        int n = nums.length;\n        int[] f = new int[n];\n        Arrays.fill(f, 1);\n        int ans = 1;\n        for (int i = 1; i < n; ++i) {\n            for (int j = 0; j < i; ++j) {\n                if (nums[j] < nums[i]) {\n                    f[i] = Math.max(f[i], f[j] + 1);\n                }\n            }\n            ans = Math.max(ans, f[i]);\n        }\n        return ans;\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position.\nclass Solution {\n    public int lengthOfLIS(int[] nums) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.\n        int n = nums.length;\n        int[] f = new int[n];\n        Arrays.fill(f, 1);\n        int ans = 1;\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = 1; i < n; ++i) {\n            for (int j = 0; j < i; ++j) {\n                // [Reader note] Decision point\n                // Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads.\n                if (nums[j] < nums[i]) {\n                    f[i] = Math.max(f[i], f[j] + 1);\n                }\n            }\n            ans = Math.max(ans, f[i]);\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return ans;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings."
+            },
+            {
+              "line": 7,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 9,
+              "label": "Decision point",
+              "note": "Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+            },
+            {
+              "line": 15,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a major milestone DP problem because it teaches how to define a sequence state around 'best ending here.'",
+            "whatToNotice": "Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.",
+            "riskPoint": "The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-go-0300-longest-increasing-subsequence.go",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/go/0300-longest-increasing-subsequence.go",
+          "localPath": "neetcode-gh_leetcode/go/0300-longest-increasing-subsequence.go",
+          "relativePath": "go/0300-longest-increasing-subsequence.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "article+code",
+          "code": "func lengthOfLIS(nums []int) int {\n\tcache := make([]int, len(nums))\n\tLIS := 0\n\tfor i := range nums {\n\t\tcurMax := 0\n\t\tfor j := 0; j < i+1; j++ {\n\t\t\tif nums[j] < nums[i] {\n\t\t\t\tif curMax < cache[j] {\n\t\t\t\t\tcurMax = cache[j]\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t\tcache[i] = curMax + 1\n\t\tif cache[i] > LIS {\n\t\t\tLIS = cache[i]\n\t\t}\n\t}\n\treturn LIS\n}\n",
+          "originalCode": "func lengthOfLIS(nums []int) int {\n\tcache := make([]int, len(nums))\n\tLIS := 0\n\tfor i := range nums {\n\t\tcurMax := 0\n\t\tfor j := 0; j < i+1; j++ {\n\t\t\tif nums[j] < nums[i] {\n\t\t\t\tif curMax < cache[j] {\n\t\t\t\t\tcurMax = cache[j]\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t\tcache[i] = curMax + 1\n\t\tif cache[i] > LIS {\n\t\t\tLIS = cache[i]\n\t\t}\n\t}\n\treturn LIS\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position.\nfunc lengthOfLIS(nums []int) int {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.\n\tcache := make([]int, len(nums))\n\tLIS := 0\n\t// [Reader note] Main pass\n\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\tfor i := range nums {\n\t\tcurMax := 0\n\t\tfor j := 0; j < i+1; j++ {\n\t\t\t// [Reader note] Decision point\n\t\t\t// Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads.\n\t\t\tif nums[j] < nums[i] {\n\t\t\t\tif curMax < cache[j] {\n\t\t\t\t\tcurMax = cache[j]\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t\tcache[i] = curMax + 1\n\t\tif cache[i] > LIS {\n\t\t\tLIS = cache[i]\n\t\t}\n\t}\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn LIS\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings."
+            },
+            {
+              "line": 4,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 7,
+              "label": "Decision point",
+              "note": "Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+            },
+            {
+              "line": 18,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a major milestone DP problem because it teaches how to define a sequence state around 'best ending here.'",
+            "whatToNotice": "Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.",
+            "riskPoint": "The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0300-0399-0300.longest-increasing-subsequence-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0300-0399/0300.Longest%20Increasing%20Subsequence/Solution.go",
+          "localPath": "doocs_leetcode/solution/0300-0399/0300.Longest Increasing Subsequence/Solution.go",
+          "relativePath": "solution/0300-0399/0300.Longest Increasing Subsequence/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "func lengthOfLIS(nums []int) int {\n\tn := len(nums)\n\tf := make([]int, n)\n\tfor i := range f {\n\t\tf[i] = 1\n\t}\n\tans := 1\n\tfor i := 1; i < n; i++ {\n\t\tfor j := 0; j < i; j++ {\n\t\t\tif nums[j] < nums[i] {\n\t\t\t\tf[i] = max(f[i], f[j]+1)\n\t\t\t\tans = max(ans, f[i])\n\t\t\t}\n\t\t}\n\t}\n\treturn ans\n}",
+          "originalCode": "func lengthOfLIS(nums []int) int {\n\tn := len(nums)\n\tf := make([]int, n)\n\tfor i := range f {\n\t\tf[i] = 1\n\t}\n\tans := 1\n\tfor i := 1; i < n; i++ {\n\t\tfor j := 0; j < i; j++ {\n\t\t\tif nums[j] < nums[i] {\n\t\t\t\tf[i] = max(f[i], f[j]+1)\n\t\t\t\tans = max(ans, f[i])\n\t\t\t}\n\t\t}\n\t}\n\treturn ans\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position.\nfunc lengthOfLIS(nums []int) int {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.\n\tn := len(nums)\n\tf := make([]int, n)\n\t// [Reader note] Main pass\n\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\tfor i := range f {\n\t\tf[i] = 1\n\t}\n\tans := 1\n\tfor i := 1; i < n; i++ {\n\t\tfor j := 0; j < i; j++ {\n\t\t\t// [Reader note] Decision point\n\t\t\t// Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads.\n\t\t\tif nums[j] < nums[i] {\n\t\t\t\tf[i] = max(f[i], f[j]+1)\n\t\t\t\tans = max(ans, f[i])\n\t\t\t}\n\t\t}\n\t}\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn ans\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings."
+            },
+            {
+              "line": 4,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 10,
+              "label": "Decision point",
+              "note": "Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+            },
+            {
+              "line": 16,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a major milestone DP problem because it teaches how to define a sequence state around 'best ending here.'",
+            "whatToNotice": "Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.",
+            "riskPoint": "The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+          }
+        }
+      ]
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0300-0399-0300.longest-increasing-subsequence-solution.ts",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0300-0399/0300.Longest%20Increasing%20Subsequence/Solution.ts",
+          "localPath": "doocs_leetcode/solution/0300-0399/0300.Longest Increasing Subsequence/Solution.ts",
+          "relativePath": "solution/0300-0399/0300.Longest Increasing Subsequence/Solution.ts",
+          "languageId": "typescript",
+          "languageLabel": "TypeScript",
+          "coverageType": "code+explanation",
+          "code": "function lengthOfLIS(nums: number[]): number {\n    const n = nums.length;\n    const f: number[] = new Array(n).fill(1);\n    for (let i = 1; i < n; ++i) {\n        for (let j = 0; j < i; ++j) {\n            if (nums[j] < nums[i]) {\n                f[i] = Math.max(f[i], f[j] + 1);\n            }\n        }\n    }\n    return Math.max(...f);\n}\n",
+          "originalCode": "function lengthOfLIS(nums: number[]): number {\n    const n = nums.length;\n    const f: number[] = new Array(n).fill(1);\n    for (let i = 1; i < n; ++i) {\n        for (let j = 0; j < i; ++j) {\n            if (nums[j] < nums[i]) {\n                f[i] = Math.max(f[i], f[j] + 1);\n            }\n        }\n    }\n    return Math.max(...f);\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position.\nfunction lengthOfLIS(nums: number[]): number {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.\n    const n = nums.length;\n    const f: number[] = new Array(n).fill(1);\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (let i = 1; i < n; ++i) {\n        for (let j = 0; j < i; ++j) {\n            // [Reader note] Decision point\n            // Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads.\n            if (nums[j] < nums[i]) {\n                f[i] = Math.max(f[i], f[j] + 1);\n            }\n        }\n    }\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return Math.max(...f);\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings."
+            },
+            {
+              "line": 4,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 6,
+              "label": "Decision point",
+              "note": "Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+            },
+            {
+              "line": 11,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a major milestone DP problem because it teaches how to define a sequence state around 'best ending here.'",
+            "whatToNotice": "Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.",
+            "riskPoint": "The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+          }
+        }
+      ]
+    },
+    {
+      "id": "javascript",
+      "label": "JavaScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-javascript-0300-longest-increasing-subsequence.js",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/javascript/0300-longest-increasing-subsequence.js",
+          "localPath": "neetcode-gh_leetcode/javascript/0300-longest-increasing-subsequence.js",
+          "relativePath": "javascript/0300-longest-increasing-subsequence.js",
+          "languageId": "javascript",
+          "languageLabel": "JavaScript",
+          "coverageType": "article+code",
+          "code": "/**\n * DP - Bottom Up\n * Array - Tabulation\n * Time O(N^2) | Space O(N)\n * https://leetcode.com/problems/longest-increasing-subsequence/\n * @param {number[]} nums\n * @return {number}\n */\nvar lengthOfLIS = (nums) => {\n    const tabu = initTabu(nums); /*               | Space O(N) */\n\n    linearSearch(nums, tabu); /* Time O(N * N) | Space O(N)*/\n\n    return Math.max(...tabu); /* Time O(N) */\n};\n\nconst initTabu = (nums) => new Array(nums.length).fill(1);\n\nvar linearSearch = (nums, tabu) => {\n    for (let right = 1; right < nums.length; right++) {\n        /* Time O(N) */\n        for (let left = 0; left < right; left++) {\n            /* Time O(N) */\n            const canUpdate = nums[left] < nums[right];\n            if (!canUpdate) continue;\n\n            const [_left, _right] = [tabu[left] + 1, tabu[right]];\n            tabu[right] = Math.max(_right, _left); /* Space O(N) */\n        }\n    }\n};\n\n/**\n * Array - Subsequence\n * Time O(N^2) | Space O(N)\n * https://leetcode.com/problems/longest-increasing-subsequence/\n * @param {number[]} nums\n * @return {number}\n */\nvar lengthOfLIS = (nums) => {\n    const subsequence = linearSort(nums); /* Time O(N * N) | Space O(N) */\n\n    return subsequence.length;\n};\n\nvar linearSort = (nums, subsequence = []) => {\n    for (const num of nums) {\n        /* Time O(N) */\n        const max = subsequence[subsequence.length - 1];\n\n        const canAdd = max < num;\n        if (canAdd) {\n            subsequence.push(num);\n            continue;\n        } /* Space O(N) */\n\n        const index = getMax(subsequence, num); /* Time O(N) */\n\n        subsequence[index] = num;\n    }\n\n    return subsequence;\n};\n\nconst getMax = (subsequence, num, index = 0) => {\n    const isLess = () => subsequence[index] < num;\n    while (isLess()) index++; /* Time O(N) */\n\n    return index;\n};\n\n/**\n * Array - Subsequence\n * Time O(N * log(N)) | Space O(N)\n * https://leetcode.com/problems/longest-increasing-subsequence/\n * @param {number[]} nums\n * @return {number}\n */\nvar lengthOfLIS = (nums) => {\n    const subsequence = logarithmicSort(nums); /* Time O(N * log(N) */\n\n    return subsequence.length;\n};\n\nvar logarithmicSort = (nums, subsequence = []) => {\n    for (const num of nums) {\n        /* Time O(N) */\n        const max = subsequence[subsequence.length - 1];\n\n        const canAdd = max < num;\n        if (canAdd) {\n            subsequence.push(num);\n            continue;\n        } /* Space O(N) */\n\n        const index = binarySearch(num, subsequence); /* Time O(log(N)) */\n\n        subsequence[index] = num;\n    }\n\n    return subsequence;\n};\n\nconst binarySearch = (num, subsequence) => {\n    let [left, right] = [0, subsequence.length - 1];\n\n    while (left < right) {\n        /* Time O(log(N)) */\n        const mid = (left + right) >> 1;\n        const guess = subsequence[mid];\n\n        const isNumTarget = num === guess;\n        if (isNumTarget) return mid;\n\n        const isNumGreater = guess < num;\n        if (isNumGreater) left = mid + 1;\n\n        const isNumLess = num < guess;\n        if (isNumLess) right = mid;\n    }\n\n    return left;\n};\n",
+          "originalCode": "/**\n * DP - Bottom Up\n * Array - Tabulation\n * Time O(N^2) | Space O(N)\n * https://leetcode.com/problems/longest-increasing-subsequence/\n * @param {number[]} nums\n * @return {number}\n */\nvar lengthOfLIS = (nums) => {\n    const tabu = initTabu(nums); /*               | Space O(N) */\n\n    linearSearch(nums, tabu); /* Time O(N * N) | Space O(N)*/\n\n    return Math.max(...tabu); /* Time O(N) */\n};\n\nconst initTabu = (nums) => new Array(nums.length).fill(1);\n\nvar linearSearch = (nums, tabu) => {\n    for (let right = 1; right < nums.length; right++) {\n        /* Time O(N) */\n        for (let left = 0; left < right; left++) {\n            /* Time O(N) */\n            const canUpdate = nums[left] < nums[right];\n            if (!canUpdate) continue;\n\n            const [_left, _right] = [tabu[left] + 1, tabu[right]];\n            tabu[right] = Math.max(_right, _left); /* Space O(N) */\n        }\n    }\n};\n\n/**\n * Array - Subsequence\n * Time O(N^2) | Space O(N)\n * https://leetcode.com/problems/longest-increasing-subsequence/\n * @param {number[]} nums\n * @return {number}\n */\nvar lengthOfLIS = (nums) => {\n    const subsequence = linearSort(nums); /* Time O(N * N) | Space O(N) */\n\n    return subsequence.length;\n};\n\nvar linearSort = (nums, subsequence = []) => {\n    for (const num of nums) {\n        /* Time O(N) */\n        const max = subsequence[subsequence.length - 1];\n\n        const canAdd = max < num;\n        if (canAdd) {\n            subsequence.push(num);\n            continue;\n        } /* Space O(N) */\n\n        const index = getMax(subsequence, num); /* Time O(N) */\n\n        subsequence[index] = num;\n    }\n\n    return subsequence;\n};\n\nconst getMax = (subsequence, num, index = 0) => {\n    const isLess = () => subsequence[index] < num;\n    while (isLess()) index++; /* Time O(N) */\n\n    return index;\n};\n\n/**\n * Array - Subsequence\n * Time O(N * log(N)) | Space O(N)\n * https://leetcode.com/problems/longest-increasing-subsequence/\n * @param {number[]} nums\n * @return {number}\n */\nvar lengthOfLIS = (nums) => {\n    const subsequence = logarithmicSort(nums); /* Time O(N * log(N) */\n\n    return subsequence.length;\n};\n\nvar logarithmicSort = (nums, subsequence = []) => {\n    for (const num of nums) {\n        /* Time O(N) */\n        const max = subsequence[subsequence.length - 1];\n\n        const canAdd = max < num;\n        if (canAdd) {\n            subsequence.push(num);\n            continue;\n        } /* Space O(N) */\n\n        const index = binarySearch(num, subsequence); /* Time O(log(N)) */\n\n        subsequence[index] = num;\n    }\n\n    return subsequence;\n};\n\nconst binarySearch = (num, subsequence) => {\n    let [left, right] = [0, subsequence.length - 1];\n\n    while (left < right) {\n        /* Time O(log(N)) */\n        const mid = (left + right) >> 1;\n        const guess = subsequence[mid];\n\n        const isNumTarget = num === guess;\n        if (isNumTarget) return mid;\n\n        const isNumGreater = guess < num;\n        if (isNumGreater) left = mid + 1;\n\n        const isNumLess = num < guess;\n        if (isNumLess) right = mid;\n    }\n\n    return left;\n};\n",
+          "reviewedCode": "/**\n * DP - Bottom Up\n * Array - Tabulation\n * Time O(N^2) | Space O(N)\n * https://leetcode.com/problems/longest-increasing-subsequence/\n * @param {number[]} nums\n * @return {number}\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position.\nvar lengthOfLIS = (nums) => {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.\n    const tabu = initTabu(nums); /*               | Space O(N) */\n\n    linearSearch(nums, tabu); /* Time O(N * N) | Space O(N)*/\n\n    return Math.max(...tabu); /* Time O(N) */\n};\n\nconst initTabu = (nums) => new Array(nums.length).fill(1);\n\nvar linearSearch = (nums, tabu) => {\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (let right = 1; right < nums.length; right++) {\n        /* Time O(N) */\n        for (let left = 0; left < right; left++) {\n            /* Time O(N) */\n            const canUpdate = nums[left] < nums[right];\n            // [Reader note] Decision point\n            // Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads.\n            if (!canUpdate) continue;\n\n            const [_left, _right] = [tabu[left] + 1, tabu[right]];\n            tabu[right] = Math.max(_right, _left); /* Space O(N) */\n        }\n    }\n};\n\n/**\n * Array - Subsequence\n * Time O(N^2) | Space O(N)\n * https://leetcode.com/problems/longest-increasing-subsequence/\n * @param {number[]} nums\n * @return {number}\n */\nvar lengthOfLIS = (nums) => {\n    const subsequence = linearSort(nums); /* Time O(N * N) | Space O(N) */\n\n    return subsequence.length;\n};\n\nvar linearSort = (nums, subsequence = []) => {\n    for (const num of nums) {\n        /* Time O(N) */\n        const max = subsequence[subsequence.length - 1];\n\n        const canAdd = max < num;\n        if (canAdd) {\n            subsequence.push(num);\n            continue;\n        } /* Space O(N) */\n\n        const index = getMax(subsequence, num); /* Time O(N) */\n\n        subsequence[index] = num;\n    }\n\n    return subsequence;\n};\n\nconst getMax = (subsequence, num, index = 0) => {\n    const isLess = () => subsequence[index] < num;\n    while (isLess()) index++; /* Time O(N) */\n\n    return index;\n};\n\n/**\n * Array - Subsequence\n * Time O(N * log(N)) | Space O(N)\n * https://leetcode.com/problems/longest-increasing-subsequence/\n * @param {number[]} nums\n * @return {number}\n */\nvar lengthOfLIS = (nums) => {\n    const subsequence = logarithmicSort(nums); /* Time O(N * log(N) */\n\n    return subsequence.length;\n};\n\nvar logarithmicSort = (nums, subsequence = []) => {\n    for (const num of nums) {\n        /* Time O(N) */\n        const max = subsequence[subsequence.length - 1];\n\n        const canAdd = max < num;\n        if (canAdd) {\n            subsequence.push(num);\n            continue;\n        } /* Space O(N) */\n\n        const index = binarySearch(num, subsequence); /* Time O(log(N)) */\n\n        subsequence[index] = num;\n    }\n\n    return subsequence;\n};\n\nconst binarySearch = (num, subsequence) => {\n    let [left, right] = [0, subsequence.length - 1];\n\n    while (left < right) {\n        /* Time O(log(N)) */\n        const mid = (left + right) >> 1;\n        const guess = subsequence[mid];\n\n        const isNumTarget = num === guess;\n        if (isNumTarget) return mid;\n\n        const isNumGreater = guess < num;\n        if (isNumGreater) left = mid + 1;\n\n        const isNumLess = num < guess;\n        if (isNumLess) right = mid;\n    }\n\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return left;\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time O(N^2) | Space O(N)",
+            "const tabu = initTabu(nums); /*               | Space O(N) */",
+            "linearSearch(nums, tabu); /* Time O(N * N) | Space O(N)*/"
+          ],
+          "annotations": [
+            {
+              "line": 9,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position."
+            },
+            {
+              "line": 10,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings."
+            },
+            {
+              "line": 20,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 25,
+              "label": "Decision point",
+              "note": "Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+            },
+            {
+              "line": 122,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a major milestone DP problem because it teaches how to define a sequence state around 'best ending here.'",
+            "whatToNotice": "Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.",
+            "riskPoint": "The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+          }
+        }
+      ]
+    },
+    {
+      "id": "csharp",
+      "label": "C#",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-csharp-0300-longest-increasing-subsequence.cs",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/csharp/0300-longest-increasing-subsequence.cs",
+          "localPath": "neetcode-gh_leetcode/csharp/0300-longest-increasing-subsequence.cs",
+          "relativePath": "csharp/0300-longest-increasing-subsequence.cs",
+          "languageId": "csharp",
+          "languageLabel": "C#",
+          "coverageType": "article+code",
+          "code": "public class Solution {\n    public int LengthOfLIS(int[] nums) {\n         int[] dp = new int[nums.Length];\n            Array.Fill(dp, 1);\n\n            for (int i = nums.Length - 1; i >= 0; i--)\n            {\n                for (int j = i + 1; j < nums.Length; j++)\n                {\n                    if (nums[i] < nums[j])\n                    {\n                        dp[i] = Math.Max(dp[i], 1 + dp[j]);\n                    }\n                }\n            }\n            return dp.Max();\n    }\n}\n",
+          "originalCode": "public class Solution {\n    public int LengthOfLIS(int[] nums) {\n         int[] dp = new int[nums.Length];\n            Array.Fill(dp, 1);\n\n            for (int i = nums.Length - 1; i >= 0; i--)\n            {\n                for (int j = i + 1; j < nums.Length; j++)\n                {\n                    if (nums[i] < nums[j])\n                    {\n                        dp[i] = Math.Max(dp[i], 1 + dp[j]);\n                    }\n                }\n            }\n            return dp.Max();\n    }\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position.\npublic class Solution {\n    public int LengthOfLIS(int[] nums) {\n         // [Reader note] State setup\n         // This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.\n         int[] dp = new int[nums.Length];\n            Array.Fill(dp, 1);\n\n            // [Reader note] Main pass\n            // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for (int i = nums.Length - 1; i >= 0; i--)\n            {\n                for (int j = i + 1; j < nums.Length; j++)\n                {\n                    // [Reader note] Decision point\n                    // Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads.\n                    if (nums[i] < nums[j])\n                    {\n                        dp[i] = Math.Max(dp[i], 1 + dp[j]);\n                    }\n                }\n            }\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return dp.Max();\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings."
+            },
+            {
+              "line": 6,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 10,
+              "label": "Decision point",
+              "note": "Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+            },
+            {
+              "line": 16,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a major milestone DP problem because it teaches how to define a sequence state around 'best ending here.'",
+            "whatToNotice": "Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.",
+            "riskPoint": "The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+          }
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "label": "C",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-c-0300-longest-increasing-subsequence.c",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/c/0300-longest-increasing-subsequence.c",
+          "localPath": "neetcode-gh_leetcode/c/0300-longest-increasing-subsequence.c",
+          "relativePath": "c/0300-longest-increasing-subsequence.c",
+          "languageId": "c",
+          "languageLabel": "C",
+          "coverageType": "article+code",
+          "code": "/*\nGiven an integer array nums, return the length of the longest strictly increasing subsequence.\nTime: O(nlog(n))\nSpace: O(n)\n*/\n\nint lengthOfLIS(int* nums, int numsSize){\n    int max=0, mid, i, j;\n    int* dp = calloc(numsSize, sizeof(int)); // dp[k] is the minimal last value of a subsequence of size k+1;\n    dp[0] = nums[0];\n    for (int k=0; k<numsSize; k++) {\n        i=0, j=max;\n        while (i!=j) {\n            mid = (i+j)/2;\n            if (dp[mid]<nums[k])\n                i=mid+1;\n            else\n                j=mid;\n        }\n        dp[i] = nums[k];\n        if (i==max)\n            max++;\n    }\n    free(dp);\n    return max;\n}\n",
+          "originalCode": "/*\nGiven an integer array nums, return the length of the longest strictly increasing subsequence.\nTime: O(nlog(n))\nSpace: O(n)\n*/\n\nint lengthOfLIS(int* nums, int numsSize){\n    int max=0, mid, i, j;\n    int* dp = calloc(numsSize, sizeof(int)); // dp[k] is the minimal last value of a subsequence of size k+1;\n    dp[0] = nums[0];\n    for (int k=0; k<numsSize; k++) {\n        i=0, j=max;\n        while (i!=j) {\n            mid = (i+j)/2;\n            if (dp[mid]<nums[k])\n                i=mid+1;\n            else\n                j=mid;\n        }\n        dp[i] = nums[k];\n        if (i==max)\n            max++;\n    }\n    free(dp);\n    return max;\n}\n",
+          "reviewedCode": "/*\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position.\nGiven an integer array nums, return the length of the longest strictly increasing subsequence.\nTime: O(nlog(n))\nSpace: O(n)\n*/\n\nint lengthOfLIS(int* nums, int numsSize){\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.\n    int max=0, mid, i, j;\n    int* dp = calloc(numsSize, sizeof(int)); // dp[k] is the minimal last value of a subsequence of size k+1;\n    dp[0] = nums[0];\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (int k=0; k<numsSize; k++) {\n        i=0, j=max;\n        while (i!=j) {\n            mid = (i+j)/2;\n            // [Reader note] Decision point\n            // Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads.\n            if (dp[mid]<nums[k])\n                i=mid+1;\n            else\n                j=mid;\n        }\n        dp[i] = nums[k];\n        if (i==max)\n            max++;\n    }\n    free(dp);\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return max;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time: O(nlog(n))",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 2,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Ask what the best increasing chain looks like if it must end at this position."
+            },
+            {
+              "line": 8,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings."
+            },
+            {
+              "line": 11,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 15,
+              "label": "Decision point",
+              "note": "Pay attention here: The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+            },
+            {
+              "line": 25,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "This is a major milestone DP problem because it teaches how to define a sequence state around 'best ending here.'",
+            "whatToNotice": "Sequence-state reasoning, comparing current choices against prior history, and separating subsequences from substrings.",
+            "riskPoint": "The problem is conceptually clean, but the non-adjacent subsequence idea trips up many first reads."
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "neetcode-gh_leetcode-articles-longest-increasing-subsequence.md",
+      "repository": "neetcode-gh_leetcode",
+      "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+      "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/articles/longest-increasing-subsequence.md",
+      "localPath": "neetcode-gh_leetcode/articles/longest-increasing-subsequence.md",
+      "relativePath": "articles/longest-increasing-subsequence.md",
+      "title": "longest increasing subsequence",
+      "excerpt": "## Prerequisites Before attempting this problem, you should be comfortable with: - **Dynamic Programming** - Both top-down (memoization) and bottom-up approaches for tracking optimal subsequences - **Binary Search** - Finding insertion positions in a sorted array to achieve O(n log n) time complexity - **Recursion** - Breaking down the problem into subproblems of including or excluding each element --- ## 1. Recursi..."
+    },
+    {
+      "id": "neetcode-gh_leetcode-hints-longest-increasing-subsequence.md",
+      "repository": "neetcode-gh_leetcode",
+      "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+      "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/hints/longest-increasing-subsequence.md",
+      "localPath": "neetcode-gh_leetcode/hints/longest-increasing-subsequence.md",
+      "relativePath": "hints/longest-increasing-subsequence.md",
+      "title": "longest increasing subsequence",
+      "excerpt": "<br> <details class=\"hint-accordion\"> <summary>Recommended Time & Space Complexity</summary> <p> You should aim for a solution as good or better than <code>O(n ^ 2)</code> time and <code>O(n ^ 2)</code> space, where <code>n</code> is the size of the input array. </p> </details> <br> <details class=\"hint-accordion\"> <summary>Hint 1</summary> <p> A subsequence is formed by selecting elements while maintaining their or..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0300-0399-0300.longest-increasing-subsequence-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0300-0399/0300.Longest%20Increasing%20Subsequence/README.md",
+      "localPath": "doocs_leetcode/solution/0300-0399/0300.Longest Increasing Subsequence/README.md",
+      "relativePath": "solution/0300-0399/0300.Longest Increasing Subsequence/README.md",
+      "title": "[300. \u6700\u957f\u9012\u589e\u5b50\u5e8f\u5217](https://leetcode.cn/problems/longest-increasing-subsequence)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/0300-0399/0300.Longest%20Increasing%20Subsequence/README.md tags: - \u6570\u7ec4 - \u4e8c\u5206\u67e5\u627e - \u52a8\u6001\u89c4\u5212 --- <!-- problem:start --> # [300. \u6700\u957f\u9012\u589e\u5b50\u5e8f\u5217](https://leetcode.cn/problems/longest-increasing-subsequence) [English Version](/solution/0300-0399/0300.Longest%20Increasing%20Subsequence/README_EN.md) ## \u9898\u76ee\u63cf\u8ff0 <!-- description:start --> <p>\u7ed9\u4f60..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0300-0399-0300.longest-increasing-subsequence-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0300-0399/0300.Longest%20Increasing%20Subsequence/README_EN.md",
+      "localPath": "doocs_leetcode/solution/0300-0399/0300.Longest Increasing Subsequence/README_EN.md",
+      "relativePath": "solution/0300-0399/0300.Longest Increasing Subsequence/README_EN.md",
+      "title": "[300. Longest Increasing Subsequence](https://leetcode.com/problems/longest-increasing-subsequence)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/0300-0399/0300.Longest%20Increasing%20Subsequence/README_EN.md tags: - Array - Binary Search - Dynamic Programming --- <!-- problem:start --> # [300. Longest Increasing Subsequence](https://leetcode.com/problems/longest-increasing-subsequence) [\u4e2d\u6587\u6587\u6863](/solution/0300-0399/0300.Longest%20Increasing%20Subsequence/README...."
+    },
+    {
+      "id": "wisdompeak_leetcode-greedy-300.longest-increasing-subsequence-readme.md",
+      "repository": "wisdompeak_LeetCode",
+      "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+      "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/Greedy/300.Longest-Increasing-Subsequence/Readme.md",
+      "localPath": "wisdompeak_LeetCode/Greedy/300.Longest-Increasing-Subsequence/Readme.md",
+      "relativePath": "Greedy/300.Longest-Increasing-Subsequence/Readme.md",
+      "title": "300.Longest-Increasing-Subsequence",
+      "excerpt": "### 300.Longest-Increasing-Subsequence #### \u89e3\u6cd51\uff1aDP \u8fd9\u662f\u7b2cII\u7c7b\u57fa\u672c\u578b\u7684\u52a8\u6001\u89c4\u5212\u3002\u6211\u4eec\u8003\u8651\u4ee5nums[i]\u4e3a\u7ed3\u5c3e\u7684LIS\u7684\u7b2c\u4e8c\u5927\u5143\u7d20\u662f\u4ec0\u4e48\uff1f\u4e8e\u662f\u6211\u4eec\u5728i\u4e4b\u524d\u7684\u6240\u6709index\u91cc\u627e\u4e00\u4e2a\u6700\u597d\u7684j\uff1a\u5982\u679cnums[j]<nums[i]\uff0c\u90a3\u4e48\u4ee5j\u4e3a\u7ed3\u5c3e\u7684LIS\u5c31\u53ef\u4ee5\u88ab\u6536\u7f16\u8fdb\u4ee5i\u4e3a\u7ed3\u5c3e\u7684LIS\u3002\u663e\u7136\uff0c\u6700\u597d\u7684j\u5c31\u662fdp[j]\u6700\u5927\u7684\u90a3\u4e2a\u3002 DP\u7684\u65f6\u95f4\u590d\u6742\u5ea6\u662fo(N^2) #### \u89e3\u6cd52\uff1aGreedy \u8d2a\u5fc3\u7b97\u6cd5\u4e2d\u7684\u7ecf\u5178\u9898\uff1a\u6c42\u6700\u957f\u5b50\u5e8f\u5217\u3002\u65f6\u95f4\u590d\u6742\u5ea6\u53ef\u4ee5\u662fo(NlogN) \u904d\u5386\u6240\u6709\u5143\u7d20\uff0c\u7ef4\u62a4\u4e00\u4e2a\u9012\u589e\u7684\u6570\u7ec4q\uff1a\u5f53q\u4e3a\u7a7a\uff0c\u6216\u8005\u65b0\u5143\u7d20val\u5927\u4e8eq.back()\u65f6\u52a0\u5165q\u5c3e\uff1b\u5426\u5219\uff0c\u5bfb\u627eq\u4e2d\u7b2c\u4e00\u4e2a\u9002\u5408val\u63d2\u5165\u7684\u4f4d\u7f6e\uff08\u539fq\u5e8f\u5217\u91cc\u7b2c\u4e00\u4e2a\u5927\u4e8e\u7b49\u4e8eval\u7684\u4f4d\u7f6e\uff09\uff0c\u66ff\u6362\u6210val\u3002 \u8fd9\u4e48\u505a\u7684\u76ee\u7684\u662f\uff1a\u867d\u7136LIS\u7684\u957f\u5ea6\u5e76\u6ca1\u6709\u6539\u53d8\uff0c\u4f46\u662f\u4f7f\u5f97\u5f53\u524dq\u91cc\u9762\u7684LIS\u201c\u53d8\u77ee\u4e86\u201d\uff0c\u66f4\u6709\u5229\u4e8e\u540e\u7eed\u5143\u7d20\u52a0\u5165\u8fdb\u6765\u6784\u5efa\u66f4\u957f\u7684LIS\u3002 \u4e3e\u4e2a\u4f8b\u5b50\uff1a1..."
+    }
+  ]
+}

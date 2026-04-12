@@ -1,0 +1,895 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "palindrome-partitioning",
+  "problemTitle": "Palindrome Partitioning",
+  "problemNumber": 131,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go",
+      "typescript",
+      "javascript",
+      "csharp",
+      "kotlin"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go",
+      "TypeScript",
+      "JavaScript",
+      "C#",
+      "Kotlin"
+    ],
+    "solutionCount": 15,
+    "writeupCount": 5,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 3,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-python-palindrome-partitioning.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/palindrome-partitioning.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/palindrome-partitioning.py",
+          "relativePath": "Python/palindrome-partitioning.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(n^2 ~ 2^n)\n# Space: O(n^2)\n\nclass Solution(object):\n    def partition(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: List[List[str]]\n        \"\"\"\n        is_palindrome = [[False] * len(s) for i in xrange(len(s))]\n        for i in reversed(xrange(len(s))):\n            for j in xrange(i, len(s)):\n                is_palindrome[i][j] = s[i] == s[j] and ((j - i < 2) or is_palindrome[i + 1][j - 1])\n\n        sub_partition = [[] for _ in xrange(len(s))]\n        for i in reversed(xrange(len(s))):\n            for j in xrange(i, len(s)):\n                if is_palindrome[i][j]:\n                    if j + 1 < len(s):\n                        for p in sub_partition[j + 1]:\n                            sub_partition[i].append([s[i:j + 1]] + p)\n                    else:\n                        sub_partition[i].append([s[i:j + 1]])\n\n        return sub_partition[0]\n\n\n# Time:  O(2^n)\n# Space: O(n)\n# recursive solution\nclass Solution2(object):\n    def partition(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: List[List[str]]\n        \"\"\"\n        result = []\n        self.partitionRecu(result, [], s, 0)\n        return result\n\n    def partitionRecu(self, result, cur, s, i):\n        if i == len(s):\n            result.append(list(cur))\n        else:\n            for j in xrange(i, len(s)):\n                if self.isPalindrome(s[i: j + 1]):\n                    cur.append(s[i: j + 1])\n                    self.partitionRecu(result, cur, s, j + 1)\n                    cur.pop()\n\n    def isPalindrome(self, s):\n        for i in xrange(len(s) / 2):\n            if s[i] != s[-(i + 1)]:\n                return False\n        return True\n\n",
+          "originalCode": "# Time:  O(n^2 ~ 2^n)\n# Space: O(n^2)\n\nclass Solution(object):\n    def partition(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: List[List[str]]\n        \"\"\"\n        is_palindrome = [[False] * len(s) for i in xrange(len(s))]\n        for i in reversed(xrange(len(s))):\n            for j in xrange(i, len(s)):\n                is_palindrome[i][j] = s[i] == s[j] and ((j - i < 2) or is_palindrome[i + 1][j - 1])\n\n        sub_partition = [[] for _ in xrange(len(s))]\n        for i in reversed(xrange(len(s))):\n            for j in xrange(i, len(s)):\n                if is_palindrome[i][j]:\n                    if j + 1 < len(s):\n                        for p in sub_partition[j + 1]:\n                            sub_partition[i].append([s[i:j + 1]] + p)\n                    else:\n                        sub_partition[i].append([s[i:j + 1]])\n\n        return sub_partition[0]\n\n\n# Time:  O(2^n)\n# Space: O(n)\n# recursive solution\nclass Solution2(object):\n    def partition(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: List[List[str]]\n        \"\"\"\n        result = []\n        self.partitionRecu(result, [], s, 0)\n        return result\n\n    def partitionRecu(self, result, cur, s, i):\n        if i == len(s):\n            result.append(list(cur))\n        else:\n            for j in xrange(i, len(s)):\n                if self.isPalindrome(s[i: j + 1]):\n                    cur.append(s[i: j + 1])\n                    self.partitionRecu(result, cur, s, j + 1)\n                    cur.pop()\n\n    def isPalindrome(self, s):\n        for i in xrange(len(s) / 2):\n            if s[i] != s[-(i + 1)]:\n                return False\n        return True\n\n",
+          "reviewedCode": "# Time:  O(n^2 ~ 2^n)\n# Space: O(n^2)\n\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix.\nclass Solution(object):\n    def partition(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: List[List[str]]\n        \"\"\"\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks.\n        is_palindrome = [[False] * len(s) for i in xrange(len(s))]\n        for i in reversed(xrange(len(s))):\n            for j in xrange(i, len(s)):\n                is_palindrome[i][j] = s[i] == s[j] and ((j - i < 2) or is_palindrome[i + 1][j - 1])\n\n        sub_partition = [[] for _ in xrange(len(s))]\n        for i in reversed(xrange(len(s))):\n            for j in xrange(i, len(s)):\n                # [Reader note] Decision point\n                # Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests.\n                if is_palindrome[i][j]:\n                    if j + 1 < len(s):\n                        for p in sub_partition[j + 1]:\n                            sub_partition[i].append([s[i:j + 1]] + p)\n                    else:\n                        sub_partition[i].append([s[i:j + 1]])\n\n        return sub_partition[0]\n\n\n# Time:  O(2^n)\n# Space: O(n)\n# recursive solution\nclass Solution2(object):\n    def partition(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: List[List[str]]\n        \"\"\"\n        result = []\n        self.partitionRecu(result, [], s, 0)\n        return result\n\n    def partitionRecu(self, result, cur, s, i):\n        if i == len(s):\n            result.append(list(cur))\n        else:\n            for j in xrange(i, len(s)):\n                if self.isPalindrome(s[i: j + 1]):\n                    cur.append(s[i: j + 1])\n                    self.partitionRecu(result, cur, s, j + 1)\n                    cur.pop()\n\n    def isPalindrome(self, s):\n        for i in xrange(len(s) / 2):\n            if s[i] != s[-(i + 1)]:\n                return False\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return True\n",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n^2 ~ 2^n)",
+            "Space: O(n^2)"
+          ],
+          "annotations": [
+            {
+              "line": 4,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix."
+            },
+            {
+              "line": 10,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks."
+            },
+            {
+              "line": 18,
+              "label": "Decision point",
+              "note": "Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+            },
+            {
+              "line": 55,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a richer backtracking problem that still stays readable and adds a meaningful validation layer to the search.",
+            "whatToNotice": "Partition-based recursion, candidate validation, and balancing path growth against local checks.",
+            "riskPoint": "The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0100-0199-0131.palindrome-partitioning-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0100-0199/0131.Palindrome%20Partitioning/Solution.py",
+          "localPath": "doocs_leetcode/solution/0100-0199/0131.Palindrome Partitioning/Solution.py",
+          "relativePath": "solution/0100-0199/0131.Palindrome Partitioning/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "class Solution:\n    def partition(self, s: str) -> List[List[str]]:\n        def dfs(i: int):\n            if i == n:\n                ans.append(t[:])\n                return\n            for j in range(i, n):\n                if f[i][j]:\n                    t.append(s[i : j + 1])\n                    dfs(j + 1)\n                    t.pop()\n\n        n = len(s)\n        f = [[True] * n for _ in range(n)]\n        for i in range(n - 1, -1, -1):\n            for j in range(i + 1, n):\n                f[i][j] = s[i] == s[j] and f[i + 1][j - 1]\n        ans = []\n        t = []\n        dfs(0)\n        return ans\n",
+          "originalCode": "class Solution:\n    def partition(self, s: str) -> List[List[str]]:\n        def dfs(i: int):\n            if i == n:\n                ans.append(t[:])\n                return\n            for j in range(i, n):\n                if f[i][j]:\n                    t.append(s[i : j + 1])\n                    dfs(j + 1)\n                    t.pop()\n\n        n = len(s)\n        f = [[True] * n for _ in range(n)]\n        for i in range(n - 1, -1, -1):\n            for j in range(i + 1, n):\n                f[i][j] = s[i] == s[j] and f[i + 1][j - 1]\n        ans = []\n        t = []\n        dfs(0)\n        return ans\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix.\nclass Solution:\n    def partition(self, s: str) -> List[List[str]]:\n        def dfs(i: int):\n            # [Reader note] State setup\n            # This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks.\n            if i == n:\n                ans.append(t[:])\n                return\n            # [Reader note] Main pass\n            # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for j in range(i, n):\n                # [Reader note] Decision point\n                # Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests.\n                if f[i][j]:\n                    t.append(s[i : j + 1])\n                    dfs(j + 1)\n                    t.pop()\n\n        n = len(s)\n        f = [[True] * n for _ in range(n)]\n        for i in range(n - 1, -1, -1):\n            for j in range(i + 1, n):\n                f[i][j] = s[i] == s[j] and f[i + 1][j - 1]\n        ans = []\n        t = []\n        dfs(0)\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return ans",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks."
+            },
+            {
+              "line": 7,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 8,
+              "label": "Decision point",
+              "note": "Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+            },
+            {
+              "line": 21,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a richer backtracking problem that still stays readable and adds a meaningful validation layer to the search.",
+            "whatToNotice": "Partition-based recursion, candidate validation, and balancing path growth against local checks.",
+            "riskPoint": "The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+          }
+        },
+        {
+          "id": "wisdompeak_leetcode-dynamic_programming-131.palindrome-partitioning-131.palindrome-partitioning.py",
+          "repository": "wisdompeak_LeetCode",
+          "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+          "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/Dynamic_Programming/131.Palindrome-Partitioning/131.Palindrome-Partitioning.py",
+          "localPath": "wisdompeak_LeetCode/Dynamic_Programming/131.Palindrome-Partitioning/131.Palindrome-Partitioning.py",
+          "relativePath": "Dynamic_Programming/131.Palindrome-Partitioning/131.Palindrome-Partitioning.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+readme",
+          "code": "class Solution:\n    def partition(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: List[List[str]]\n        \"\"\"\n        N = len(s)\n        dp = [[0 for _ in range(N)] for _ in range(N)]\n        for i in range(N):\n            dp[i][i]=1\n        for i in range(N-1):\n            if s[i]==s[i+1]: dp[i][i+1]=1\n        for length in range(3,N+1):\n            for start in range(N-length+1):\n                if s[start]==s[start+length-1] and dp[start+1][start+length-2]==1:\n                    dp[start][start+length-1]=1     \n                                   \n        ret,combo = [],[]\n        def DFS(start,combo,ret):\n            if start==N: \n                ret.append(combo)\n                return\n            for i in range(start,N):\n                if dp[start][i]==1: \n                    DFS(i+1,combo+[s[start:i+1]],ret)\n            return        \n        \n        DFS(0,combo,ret)\n        return ret\n",
+          "originalCode": "class Solution:\n    def partition(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: List[List[str]]\n        \"\"\"\n        N = len(s)\n        dp = [[0 for _ in range(N)] for _ in range(N)]\n        for i in range(N):\n            dp[i][i]=1\n        for i in range(N-1):\n            if s[i]==s[i+1]: dp[i][i+1]=1\n        for length in range(3,N+1):\n            for start in range(N-length+1):\n                if s[start]==s[start+length-1] and dp[start+1][start+length-2]==1:\n                    dp[start][start+length-1]=1     \n                                   \n        ret,combo = [],[]\n        def DFS(start,combo,ret):\n            if start==N: \n                ret.append(combo)\n                return\n            for i in range(start,N):\n                if dp[start][i]==1: \n                    DFS(i+1,combo+[s[start:i+1]],ret)\n            return        \n        \n        DFS(0,combo,ret)\n        return ret\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix.\nclass Solution:\n    def partition(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: List[List[str]]\n        \"\"\"\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks.\n        N = len(s)\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        dp = [[0 for _ in range(N)] for _ in range(N)]\n        for i in range(N):\n            dp[i][i]=1\n        for i in range(N-1):\n            # [Reader note] Decision point\n            # Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests.\n            if s[i]==s[i+1]: dp[i][i+1]=1\n        for length in range(3,N+1):\n            for start in range(N-length+1):\n                if s[start]==s[start+length-1] and dp[start+1][start+length-2]==1:\n                    dp[start][start+length-1]=1     \n                                   \n        ret,combo = [],[]\n        def DFS(start,combo,ret):\n            if start==N: \n                ret.append(combo)\n                return\n            for i in range(start,N):\n                if dp[start][i]==1: \n                    DFS(i+1,combo+[s[start:i+1]],ret)\n            return        \n        \n        DFS(0,combo,ret)\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return ret",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix."
+            },
+            {
+              "line": 7,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks."
+            },
+            {
+              "line": 8,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 12,
+              "label": "Decision point",
+              "note": "Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+            },
+            {
+              "line": 29,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a richer backtracking problem that still stays readable and adds a meaningful validation layer to the search.",
+            "whatToNotice": "Partition-based recursion, candidate validation, and balancing path growth against local checks.",
+            "riskPoint": "The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 4,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-cpp-0131-palindrome-partitioning.cpp",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/cpp/0131-palindrome-partitioning.cpp",
+          "localPath": "neetcode-gh_leetcode/cpp/0131-palindrome-partitioning.cpp",
+          "relativePath": "cpp/0131-palindrome-partitioning.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "article+code",
+          "code": "/*\n    Given a string, partition such that every substring is a palindrome, return all possible ones\n    Ex. s = \"aab\" -> [[\"a\",\"a\",\"b\"],[\"aa\",\"b\"]], s = \"a\" -> [[\"a\"]]\n\n    Generate all possible substrings at idx, if palindrome potential candidate, backtrack after\n\n    Time: O(n x 2^n)\n    Space: O(n)\n*/\n\nclass Solution {\npublic:\n    vector<vector<string>> partition(string s) {\n        vector<string> curr;\n        vector<vector<string>> result;\n        dfs(s, 0, curr, result);\n        return result;\n    }\nprivate:\n    void dfs(string s, int start, vector<string>& curr, vector<vector<string>>& result) {\n        if (start == s.size()) {\n            result.push_back(curr);\n            return;\n        }\n        for (int i = start; i < s.size(); i++) {\n            if (isPalindrome(s, start, i)) {\n                string str = s.substr(start, i - start + 1);\n                curr.push_back(str);\n                dfs(s, i + 1, curr, result);\n                curr.pop_back();\n            }\n        }\n    }\n    bool isPalindrome(string s, int left, int right) {\n        while (left < right) {\n            if (s[left] != s[right]) {\n                return false;\n            }\n            left++;\n            right--;\n        }\n        return true;\n    }\n};\n",
+          "originalCode": "/*\n    Given a string, partition such that every substring is a palindrome, return all possible ones\n    Ex. s = \"aab\" -> [[\"a\",\"a\",\"b\"],[\"aa\",\"b\"]], s = \"a\" -> [[\"a\"]]\n\n    Generate all possible substrings at idx, if palindrome potential candidate, backtrack after\n\n    Time: O(n x 2^n)\n    Space: O(n)\n*/\n\nclass Solution {\npublic:\n    vector<vector<string>> partition(string s) {\n        vector<string> curr;\n        vector<vector<string>> result;\n        dfs(s, 0, curr, result);\n        return result;\n    }\nprivate:\n    void dfs(string s, int start, vector<string>& curr, vector<vector<string>>& result) {\n        if (start == s.size()) {\n            result.push_back(curr);\n            return;\n        }\n        for (int i = start; i < s.size(); i++) {\n            if (isPalindrome(s, start, i)) {\n                string str = s.substr(start, i - start + 1);\n                curr.push_back(str);\n                dfs(s, i + 1, curr, result);\n                curr.pop_back();\n            }\n        }\n    }\n    bool isPalindrome(string s, int left, int right) {\n        while (left < right) {\n            if (s[left] != s[right]) {\n                return false;\n            }\n            left++;\n            right--;\n        }\n        return true;\n    }\n};\n",
+          "reviewedCode": "/*\n    Given a string, partition such that every substring is a palindrome, return all possible ones\n    Ex. s = \"aab\" -> [[\"a\",\"a\",\"b\"],[\"aa\",\"b\"]], s = \"a\" -> [[\"a\"]]\n\n    Generate all possible substrings at idx, if palindrome potential candidate, backtrack after\n\n    Time: O(n x 2^n)\n    Space: O(n)\n*/\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix.\nclass Solution {\npublic:\n    vector<vector<string>> partition(string s) {\n        vector<string> curr;\n        vector<vector<string>> result;\n        dfs(s, 0, curr, result);\n        return result;\n    }\nprivate:\n    void dfs(string s, int start, vector<string>& curr, vector<vector<string>>& result) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks.\n        if (start == s.size()) {\n            result.push_back(curr);\n            return;\n        }\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = start; i < s.size(); i++) {\n            // [Reader note] Decision point\n            // Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests.\n            if (isPalindrome(s, start, i)) {\n                string str = s.substr(start, i - start + 1);\n                curr.push_back(str);\n                dfs(s, i + 1, curr, result);\n                curr.pop_back();\n            }\n        }\n    }\n    bool isPalindrome(string s, int left, int right) {\n        while (left < right) {\n            if (s[left] != s[right]) {\n                return false;\n            }\n            left++;\n            right--;\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return true;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time: O(n x 2^n)",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 11,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix."
+            },
+            {
+              "line": 21,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks."
+            },
+            {
+              "line": 25,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 26,
+              "label": "Decision point",
+              "note": "Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+            },
+            {
+              "line": 42,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a richer backtracking problem that still stays readable and adds a meaningful validation layer to the search.",
+            "whatToNotice": "Partition-based recursion, candidate validation, and balancing path growth against local checks.",
+            "riskPoint": "The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0100-0199-0131.palindrome-partitioning-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0100-0199/0131.Palindrome%20Partitioning/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/0100-0199/0131.Palindrome Partitioning/Solution.cpp",
+          "relativePath": "solution/0100-0199/0131.Palindrome Partitioning/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\npublic:\n    vector<vector<string>> partition(string s) {\n        int n = s.size();\n        bool f[n][n];\n        memset(f, true, sizeof(f));\n        for (int i = n - 1; i >= 0; --i) {\n            for (int j = i + 1; j < n; ++j) {\n                f[i][j] = s[i] == s[j] && f[i + 1][j - 1];\n            }\n        }\n        vector<vector<string>> ans;\n        vector<string> t;\n        auto dfs = [&](this auto&& dfs, int i) -> void {\n            if (i == n) {\n                ans.emplace_back(t);\n                return;\n            }\n            for (int j = i; j < n; ++j) {\n                if (f[i][j]) {\n                    t.emplace_back(s.substr(i, j - i + 1));\n                    dfs(j + 1);\n                    t.pop_back();\n                }\n            }\n        };\n        dfs(0);\n        return ans;\n    }\n};\n",
+          "originalCode": "class Solution {\npublic:\n    vector<vector<string>> partition(string s) {\n        int n = s.size();\n        bool f[n][n];\n        memset(f, true, sizeof(f));\n        for (int i = n - 1; i >= 0; --i) {\n            for (int j = i + 1; j < n; ++j) {\n                f[i][j] = s[i] == s[j] && f[i + 1][j - 1];\n            }\n        }\n        vector<vector<string>> ans;\n        vector<string> t;\n        auto dfs = [&](this auto&& dfs, int i) -> void {\n            if (i == n) {\n                ans.emplace_back(t);\n                return;\n            }\n            for (int j = i; j < n; ++j) {\n                if (f[i][j]) {\n                    t.emplace_back(s.substr(i, j - i + 1));\n                    dfs(j + 1);\n                    t.pop_back();\n                }\n            }\n        };\n        dfs(0);\n        return ans;\n    }\n};\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix.\nclass Solution {\npublic:\n    vector<vector<string>> partition(string s) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks.\n        int n = s.size();\n        bool f[n][n];\n        memset(f, true, sizeof(f));\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = n - 1; i >= 0; --i) {\n            for (int j = i + 1; j < n; ++j) {\n                f[i][j] = s[i] == s[j] && f[i + 1][j - 1];\n            }\n        }\n        vector<vector<string>> ans;\n        vector<string> t;\n        auto dfs = [&](this auto&& dfs, int i) -> void {\n            // [Reader note] Decision point\n            // Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests.\n            if (i == n) {\n                ans.emplace_back(t);\n                return;\n            }\n            for (int j = i; j < n; ++j) {\n                if (f[i][j]) {\n                    t.emplace_back(s.substr(i, j - i + 1));\n                    dfs(j + 1);\n                    t.pop_back();\n                }\n            }\n        };\n        dfs(0);\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return ans;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks."
+            },
+            {
+              "line": 7,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 15,
+              "label": "Decision point",
+              "note": "Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+            },
+            {
+              "line": 28,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a richer backtracking problem that still stays readable and adds a meaningful validation layer to the search.",
+            "whatToNotice": "Partition-based recursion, candidate validation, and balancing path growth against local checks.",
+            "riskPoint": "The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+          }
+        },
+        {
+          "id": "wisdompeak_leetcode-dynamic_programming-131.palindrome-partitioning-131.palindrome-partitioning.cpp",
+          "repository": "wisdompeak_LeetCode",
+          "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+          "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/Dynamic_Programming/131.Palindrome-Partitioning/131.Palindrome-Partitioning.cpp",
+          "localPath": "wisdompeak_LeetCode/Dynamic_Programming/131.Palindrome-Partitioning/131.Palindrome-Partitioning.cpp",
+          "relativePath": "Dynamic_Programming/131.Palindrome-Partitioning/131.Palindrome-Partitioning.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+readme",
+          "code": "class Solution {\n    int dp[16][16];\n    vector<vector<string>>rets;\n    int n;\n    string s;\npublic:\n    vector<vector<string>> partition(string s) \n    {\n        this->s = s;\n        n = s.size();\n        \n        for (int i=0; i<n; i++)\n            dp[i][i] = 1;\n        for (int i=0; i+1<n; i++)\n            dp[i][i+1] = s[i]==s[i+1];\n        for (int len = 3; len <=n; len++)\n            for (int i=0; i+len-1<n; i++)\n            {\n                int j = i+len-1;\n                if (s[i]==s[j])\n                    dp[i][j] = dp[i+1][j-1];\n                else\n                    dp[i][j] = 0;\n            }\n\n        vector<string>temp;\n        dfs(0, temp);\n\n        return rets;\n    }\n\n    void dfs(int i, vector<string>&temp)\n    {\n        if (i==n)\n        {\n            rets.push_back(temp);\n            return;\n        } \n        for (int j=i; j<n; j++)\n        {\n            if (dp[i][j])\n            {\n                temp.push_back(s.substr(i,j-i+1));\n                dfs(j+1, temp);\n                temp.pop_back();\n            }\n        }\n    }\n};\n",
+          "originalCode": "class Solution {\n    int dp[16][16];\n    vector<vector<string>>rets;\n    int n;\n    string s;\npublic:\n    vector<vector<string>> partition(string s) \n    {\n        this->s = s;\n        n = s.size();\n        \n        for (int i=0; i<n; i++)\n            dp[i][i] = 1;\n        for (int i=0; i+1<n; i++)\n            dp[i][i+1] = s[i]==s[i+1];\n        for (int len = 3; len <=n; len++)\n            for (int i=0; i+len-1<n; i++)\n            {\n                int j = i+len-1;\n                if (s[i]==s[j])\n                    dp[i][j] = dp[i+1][j-1];\n                else\n                    dp[i][j] = 0;\n            }\n\n        vector<string>temp;\n        dfs(0, temp);\n\n        return rets;\n    }\n\n    void dfs(int i, vector<string>&temp)\n    {\n        if (i==n)\n        {\n            rets.push_back(temp);\n            return;\n        } \n        for (int j=i; j<n; j++)\n        {\n            if (dp[i][j])\n            {\n                temp.push_back(s.substr(i,j-i+1));\n                dfs(j+1, temp);\n                temp.pop_back();\n            }\n        }\n    }\n};\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix.\nclass Solution {\n    int dp[16][16];\n    vector<vector<string>>rets;\n    int n;\n    string s;\npublic:\n    vector<vector<string>> partition(string s) \n    {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks.\n        this->s = s;\n        n = s.size();\n        \n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i=0; i<n; i++)\n            dp[i][i] = 1;\n        for (int i=0; i+1<n; i++)\n            dp[i][i+1] = s[i]==s[i+1];\n        for (int len = 3; len <=n; len++)\n            for (int i=0; i+len-1<n; i++)\n            {\n                int j = i+len-1;\n                // [Reader note] Decision point\n                // Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests.\n                if (s[i]==s[j])\n                    dp[i][j] = dp[i+1][j-1];\n                else\n                    dp[i][j] = 0;\n            }\n\n        vector<string>temp;\n        dfs(0, temp);\n\n        return rets;\n    }\n\n    void dfs(int i, vector<string>&temp)\n    {\n        if (i==n)\n        {\n            rets.push_back(temp);\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return;\n        } \n        for (int j=i; j<n; j++)\n        {\n            if (dp[i][j])\n            {\n                temp.push_back(s.substr(i,j-i+1));\n                dfs(j+1, temp);\n                temp.pop_back();\n            }\n        }\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix."
+            },
+            {
+              "line": 9,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks."
+            },
+            {
+              "line": 12,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 20,
+              "label": "Decision point",
+              "note": "Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+            },
+            {
+              "line": 37,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a richer backtracking problem that still stays readable and adds a meaningful validation layer to the search.",
+            "whatToNotice": "Partition-based recursion, candidate validation, and balancing path growth against local checks.",
+            "riskPoint": "The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+          }
+        },
+        {
+          "id": "haoel_leetcode-algorithms-cpp-palindromepartitioning-palindromepartitioning.cpp",
+          "repository": "haoel_leetcode",
+          "repositoryUrl": "https://github.com/haoel/leetcode",
+          "sourceUrl": "https://github.com/haoel/leetcode/blob/master/algorithms/cpp/palindromePartitioning/palindromePartitioning.cpp",
+          "localPath": "haoel_leetcode/algorithms/cpp/palindromePartitioning/palindromePartitioning.cpp",
+          "relativePath": "algorithms/cpp/palindromePartitioning/palindromePartitioning.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Source : https://oj.leetcode.com/problems/palindrome-partitioning/\n// Author : Hao Chen\n// Date   : 2014-08-21\n\n/********************************************************************************** \n* \n* Given a string s, partition s such that every substring of the partition is a palindrome.\n* \n* Return all possible palindrome partitioning of s.\n* \n* For example, given s = \"aab\",\n* \n* Return\n* \n*   [\n*     [\"aa\",\"b\"],\n*     [\"a\",\"a\",\"b\"]\n*   ]\n* \n*               \n**********************************************************************************/\n\n#include <iostream>\n#include <vector>\n#include <string>\nusing namespace std;\n\n\nbool isPalindrome(string &s, int start, int end)  {  \n\n    while(start < end)  \n    {  \n        if(s[start] != s[end]) { \n            return false;  \n        }\n        start++; end--;  \n    }  \n    return true;  \n}  \n\n// DFS - Deepth First Search\n//    \n//   For example: \"aaba\"\n//    \n//                     +------+           \n//              +------| aaba |-----+     \n//              |      +------+     |     \n//            +-v-+              +-v--+  \n//            | a |aba           | aa |ba\n//        +---+---+--+           +--+-+  \n//        |          |              |    \n//      +-v-+     +--v--+         +-v-+  \n//      | a |ba   | aba |\\0       | b |a \n//      +-+-+     +-----+         +-+-+  \n//        |        a, aba           |    \n//      +-v-+                     +-v-+  \n//      | b |a                    | a |\\0\n//      +-+-+                     +---+  \n//        |                      aa, b, a\n//      +-v-+                            \n//      | a |\\0                          \n//      +---+                            \n//    a, a, b, a                         \n//\n//   You can see this algorithm still can be optimized, becasue there are some dupliation.\n//   (  The optimization you can see the \"Palindrome Partitioning II\" )\n//\n   \nvoid partitionHelper(string &s, int start, vector<string> &output, vector< vector<string> > &result) {\n\n    if (start == s.size()) {\n        result.push_back(output);\n        return;\n    }\n    for(int i=start; i<s.size(); i++) {\n        if ( isPalindrome(s, start, i) == true ) {\n            //put the current palindrome substring into ouput\n            output.push_back(s.substr(start, i-start+1) );\n            //Recursively check the rest substring\n            partitionHelper(s, i+1, output, result);\n            //take out the current palindrome substring, in order to check longer substring.\n            output.pop_back();\n        }\n    }\n}\n\nvector< vector<string> > partition(string s) {\n\n    vector< vector<string> > result;\n    vector<string> output;\n\n    partitionHelper(s, 0,  output, result);\n\n    return result;\n\n}\n\nvoid printMatrix(vector< vector<string> > &matrix)\n{\n    for(int i=0; i<matrix.size(); i++){\n        cout << \"{ \";\n        for(int j=0; j< matrix[i].size(); j++) {\n            cout << matrix[i][j] << \", \";\n        }\n        cout << \"}\" << endl;\n    }\n    cout << endl;\n}\n\n\nint main(int argc, char** argv)\n{\n    string s(\"aab\");\n    if ( argc > 1 ){\n        s = argv[1];\n    }\n\n    vector< vector<string> > result = partition(s);\n\n    printMatrix(result);\n}\n",
+          "originalCode": "// Source : https://oj.leetcode.com/problems/palindrome-partitioning/\n// Author : Hao Chen\n// Date   : 2014-08-21\n\n/********************************************************************************** \n* \n* Given a string s, partition s such that every substring of the partition is a palindrome.\n* \n* Return all possible palindrome partitioning of s.\n* \n* For example, given s = \"aab\",\n* \n* Return\n* \n*   [\n*     [\"aa\",\"b\"],\n*     [\"a\",\"a\",\"b\"]\n*   ]\n* \n*               \n**********************************************************************************/\n\n#include <iostream>\n#include <vector>\n#include <string>\nusing namespace std;\n\n\nbool isPalindrome(string &s, int start, int end)  {  \n\n    while(start < end)  \n    {  \n        if(s[start] != s[end]) { \n            return false;  \n        }\n        start++; end--;  \n    }  \n    return true;  \n}  \n\n// DFS - Deepth First Search\n//    \n//   For example: \"aaba\"\n//    \n//                     +------+           \n//              +------| aaba |-----+     \n//              |      +------+     |     \n//            +-v-+              +-v--+  \n//            | a |aba           | aa |ba\n//        +---+---+--+           +--+-+  \n//        |          |              |    \n//      +-v-+     +--v--+         +-v-+  \n//      | a |ba   | aba |\\0       | b |a \n//      +-+-+     +-----+         +-+-+  \n//        |        a, aba           |    \n//      +-v-+                     +-v-+  \n//      | b |a                    | a |\\0\n//      +-+-+                     +---+  \n//        |                      aa, b, a\n//      +-v-+                            \n//      | a |\\0                          \n//      +---+                            \n//    a, a, b, a                         \n//\n//   You can see this algorithm still can be optimized, becasue there are some dupliation.\n//   (  The optimization you can see the \"Palindrome Partitioning II\" )\n//\n   \nvoid partitionHelper(string &s, int start, vector<string> &output, vector< vector<string> > &result) {\n\n    if (start == s.size()) {\n        result.push_back(output);\n        return;\n    }\n    for(int i=start; i<s.size(); i++) {\n        if ( isPalindrome(s, start, i) == true ) {\n            //put the current palindrome substring into ouput\n            output.push_back(s.substr(start, i-start+1) );\n            //Recursively check the rest substring\n            partitionHelper(s, i+1, output, result);\n            //take out the current palindrome substring, in order to check longer substring.\n            output.pop_back();\n        }\n    }\n}\n\nvector< vector<string> > partition(string s) {\n\n    vector< vector<string> > result;\n    vector<string> output;\n\n    partitionHelper(s, 0,  output, result);\n\n    return result;\n\n}\n\nvoid printMatrix(vector< vector<string> > &matrix)\n{\n    for(int i=0; i<matrix.size(); i++){\n        cout << \"{ \";\n        for(int j=0; j< matrix[i].size(); j++) {\n            cout << matrix[i][j] << \", \";\n        }\n        cout << \"}\" << endl;\n    }\n    cout << endl;\n}\n\n\nint main(int argc, char** argv)\n{\n    string s(\"aab\");\n    if ( argc > 1 ){\n        s = argv[1];\n    }\n\n    vector< vector<string> > result = partition(s);\n\n    printMatrix(result);\n}\n",
+          "reviewedCode": "// Source : https://oj.leetcode.com/problems/palindrome-partitioning/\n// Author : Hao Chen\n// Date   : 2014-08-21\n\n/********************************************************************************** \n* \n* Given a string s, partition s such that every substring of the partition is a palindrome.\n* \n* Return all possible palindrome partitioning of s.\n* \n* For example, given s = \"aab\",\n* \n* Return\n* \n*   [\n*     [\"aa\",\"b\"],\n*     [\"a\",\"a\",\"b\"]\n*   ]\n* \n*               \n**********************************************************************************/\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix.\n#include <iostream>\n#include <vector>\n#include <string>\nusing namespace std;\n\n\nbool isPalindrome(string &s, int start, int end)  {  \n\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    while(start < end)  \n    {  \n        // [Reader note] Decision point\n        // Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests.\n        if(s[start] != s[end]) { \n            return false;  \n        }\n        start++; end--;  \n    }  \n    return true;  \n}  \n\n// DFS - Deepth First Search\n//    \n//   For example: \"aaba\"\n//    \n//                     +------+           \n//              +------| aaba |-----+     \n//              |      +------+     |     \n//            +-v-+              +-v--+  \n//            | a |aba           | aa |ba\n//        +---+---+--+           +--+-+  \n//        |          |              |    \n//      +-v-+     +--v--+         +-v-+  \n//      | a |ba   | aba |\\0       | b |a \n//      +-+-+     +-----+         +-+-+  \n//        |        a, aba           |    \n//      +-v-+                     +-v-+  \n//      | b |a                    | a |\\0\n//      +-+-+                     +---+  \n//        |                      aa, b, a\n//      +-v-+                            \n//      | a |\\0                          \n//      +---+                            \n//    a, a, b, a                         \n//\n//   You can see this algorithm still can be optimized, becasue there are some dupliation.\n//   (  The optimization you can see the \"Palindrome Partitioning II\" )\n//\n   \nvoid partitionHelper(string &s, int start, vector<string> &output, vector< vector<string> > &result) {\n\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks.\n    if (start == s.size()) {\n        result.push_back(output);\n        return;\n    }\n    for(int i=start; i<s.size(); i++) {\n        if ( isPalindrome(s, start, i) == true ) {\n            //put the current palindrome substring into ouput\n            output.push_back(s.substr(start, i-start+1) );\n            //Recursively check the rest substring\n            partitionHelper(s, i+1, output, result);\n            //take out the current palindrome substring, in order to check longer substring.\n            output.pop_back();\n        }\n    }\n}\n\nvector< vector<string> > partition(string s) {\n\n    vector< vector<string> > result;\n    vector<string> output;\n\n    partitionHelper(s, 0,  output, result);\n\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return result;\n\n}\n\nvoid printMatrix(vector< vector<string> > &matrix)\n{\n    for(int i=0; i<matrix.size(); i++){\n        cout << \"{ \";\n        for(int j=0; j< matrix[i].size(); j++) {\n            cout << matrix[i][j] << \", \";\n        }\n        cout << \"}\" << endl;\n    }\n    cout << endl;\n}\n\n\nint main(int argc, char** argv)\n{\n    string s(\"aab\");\n    if ( argc > 1 ){\n        s = argv[1];\n    }\n\n    vector< vector<string> > result = partition(s);\n\n    printMatrix(result);\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 23,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix."
+            },
+            {
+              "line": 71,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks."
+            },
+            {
+              "line": 31,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 33,
+              "label": "Decision point",
+              "note": "Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+            },
+            {
+              "line": 94,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a richer backtracking problem that still stays readable and adds a meaningful validation layer to the search.",
+            "whatToNotice": "Partition-based recursion, candidate validation, and balancing path growth against local checks.",
+            "riskPoint": "The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-java-0131-palindrome-partitioning.java",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/java/0131-palindrome-partitioning.java",
+          "localPath": "neetcode-gh_leetcode/java/0131-palindrome-partitioning.java",
+          "relativePath": "java/0131-palindrome-partitioning.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "article+code",
+          "code": "public class Solution {\n\n    public List<List<String>> partition(String s) {\n        List<List<String>> res = new ArrayList<List<String>>();\n        if (s.equals(\"\")) {\n            res.add(new ArrayList<String>());\n            return res;\n        }\n        for (int i = 0; i < s.length(); i++) {\n            if (isPalindrome(s, i + 1)) {\n                for (List<String> list : partition(s.substring(i + 1))) {\n                    list.add(0, s.substring(0, i + 1));\n                    res.add(list);\n                }\n            }\n        }\n        return res;\n    }\n\n    public boolean isPalindrome(String s, int n) {\n        for (int i = 0; i < n / 2; i++) {\n            if (s.charAt(i) != s.charAt(n - i - 1)) return false;\n        }\n        return true;\n    }\n}\n",
+          "originalCode": "public class Solution {\n\n    public List<List<String>> partition(String s) {\n        List<List<String>> res = new ArrayList<List<String>>();\n        if (s.equals(\"\")) {\n            res.add(new ArrayList<String>());\n            return res;\n        }\n        for (int i = 0; i < s.length(); i++) {\n            if (isPalindrome(s, i + 1)) {\n                for (List<String> list : partition(s.substring(i + 1))) {\n                    list.add(0, s.substring(0, i + 1));\n                    res.add(list);\n                }\n            }\n        }\n        return res;\n    }\n\n    public boolean isPalindrome(String s, int n) {\n        for (int i = 0; i < n / 2; i++) {\n            if (s.charAt(i) != s.charAt(n - i - 1)) return false;\n        }\n        return true;\n    }\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix.\npublic class Solution {\n\n    public List<List<String>> partition(String s) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks.\n        List<List<String>> res = new ArrayList<List<String>>();\n        if (s.equals(\"\")) {\n            res.add(new ArrayList<String>());\n            return res;\n        }\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = 0; i < s.length(); i++) {\n            // [Reader note] Decision point\n            // Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests.\n            if (isPalindrome(s, i + 1)) {\n                for (List<String> list : partition(s.substring(i + 1))) {\n                    list.add(0, s.substring(0, i + 1));\n                    res.add(list);\n                }\n            }\n        }\n        return res;\n    }\n\n    public boolean isPalindrome(String s, int n) {\n        for (int i = 0; i < n / 2; i++) {\n            if (s.charAt(i) != s.charAt(n - i - 1)) return false;\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return true;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks."
+            },
+            {
+              "line": 9,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 10,
+              "label": "Decision point",
+              "note": "Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+            },
+            {
+              "line": 24,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a richer backtracking problem that still stays readable and adds a meaningful validation layer to the search.",
+            "whatToNotice": "Partition-based recursion, candidate validation, and balancing path growth against local checks.",
+            "riskPoint": "The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0100-0199-0131.palindrome-partitioning-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0100-0199/0131.Palindrome%20Partitioning/Solution.java",
+          "localPath": "doocs_leetcode/solution/0100-0199/0131.Palindrome Partitioning/Solution.java",
+          "relativePath": "solution/0100-0199/0131.Palindrome Partitioning/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\n    private int n;\n    private String s;\n    private boolean[][] f;\n    private List<String> t = new ArrayList<>();\n    private List<List<String>> ans = new ArrayList<>();\n\n    public List<List<String>> partition(String s) {\n        n = s.length();\n        f = new boolean[n][n];\n        for (int i = 0; i < n; ++i) {\n            Arrays.fill(f[i], true);\n        }\n        for (int i = n - 1; i >= 0; --i) {\n            for (int j = i + 1; j < n; ++j) {\n                f[i][j] = s.charAt(i) == s.charAt(j) && f[i + 1][j - 1];\n            }\n        }\n        this.s = s;\n        dfs(0);\n        return ans;\n    }\n\n    private void dfs(int i) {\n        if (i == s.length()) {\n            ans.add(new ArrayList<>(t));\n            return;\n        }\n        for (int j = i; j < n; ++j) {\n            if (f[i][j]) {\n                t.add(s.substring(i, j + 1));\n                dfs(j + 1);\n                t.remove(t.size() - 1);\n            }\n        }\n    }\n}",
+          "originalCode": "class Solution {\n    private int n;\n    private String s;\n    private boolean[][] f;\n    private List<String> t = new ArrayList<>();\n    private List<List<String>> ans = new ArrayList<>();\n\n    public List<List<String>> partition(String s) {\n        n = s.length();\n        f = new boolean[n][n];\n        for (int i = 0; i < n; ++i) {\n            Arrays.fill(f[i], true);\n        }\n        for (int i = n - 1; i >= 0; --i) {\n            for (int j = i + 1; j < n; ++j) {\n                f[i][j] = s.charAt(i) == s.charAt(j) && f[i + 1][j - 1];\n            }\n        }\n        this.s = s;\n        dfs(0);\n        return ans;\n    }\n\n    private void dfs(int i) {\n        if (i == s.length()) {\n            ans.add(new ArrayList<>(t));\n            return;\n        }\n        for (int j = i; j < n; ++j) {\n            if (f[i][j]) {\n                t.add(s.substring(i, j + 1));\n                dfs(j + 1);\n                t.remove(t.size() - 1);\n            }\n        }\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix.\nclass Solution {\n    private int n;\n    private String s;\n    private boolean[][] f;\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks.\n    private List<String> t = new ArrayList<>();\n    private List<List<String>> ans = new ArrayList<>();\n\n    public List<List<String>> partition(String s) {\n        n = s.length();\n        f = new boolean[n][n];\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int i = 0; i < n; ++i) {\n            Arrays.fill(f[i], true);\n        }\n        for (int i = n - 1; i >= 0; --i) {\n            for (int j = i + 1; j < n; ++j) {\n                f[i][j] = s.charAt(i) == s.charAt(j) && f[i + 1][j - 1];\n            }\n        }\n        this.s = s;\n        dfs(0);\n        return ans;\n    }\n\n    private void dfs(int i) {\n        // [Reader note] Decision point\n        // Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests.\n        if (i == s.length()) {\n            ans.add(new ArrayList<>(t));\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return;\n        }\n        for (int j = i; j < n; ++j) {\n            if (f[i][j]) {\n                t.add(s.substring(i, j + 1));\n                dfs(j + 1);\n                t.remove(t.size() - 1);\n            }\n        }\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix."
+            },
+            {
+              "line": 5,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks."
+            },
+            {
+              "line": 11,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 25,
+              "label": "Decision point",
+              "note": "Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+            },
+            {
+              "line": 27,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a richer backtracking problem that still stays readable and adds a meaningful validation layer to the search.",
+            "whatToNotice": "Partition-based recursion, candidate validation, and balancing path growth against local checks.",
+            "riskPoint": "The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-go-0131-palindrome-partitioning.go",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/go/0131-palindrome-partitioning.go",
+          "localPath": "neetcode-gh_leetcode/go/0131-palindrome-partitioning.go",
+          "relativePath": "go/0131-palindrome-partitioning.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "article+code",
+          "code": "package main\n\nfunc partition(s string) [][]string {\n\tans := make([][]string, 0)\n\tcurr := make([]string, 0)\n\tvar backtrack func(idx int)\n\tbacktrack = func(idx int) {\n\t\tif idx == len(s) {\n\t\t\tans = append(ans, append([]string{}, curr...))\n\t\t}\n\t\tfor i := idx; i < len(s); i++ {\n\t\t\tif isPalindrome(s[idx : i+1]) {\n\t\t\t\tcurr = append(curr, s[idx:i+1])\n\t\t\t\tbacktrack(i + 1)\n\t\t\t\tcurr = curr[:len(curr)-1]\n\t\t\t}\n\t\t}\n\t}\n\tbacktrack(0)\n\treturn ans\n}\n\nfunc isPalindrome(s string) bool {\n\tl := 0\n\tr := len(s) - 1\n\tfor l < r {\n\t\tif s[l] != s[r] {\n\t\t\treturn false\n\t\t}\n\t\tl++\n\t\tr--\n\t}\n\treturn true\n}\n",
+          "originalCode": "package main\n\nfunc partition(s string) [][]string {\n\tans := make([][]string, 0)\n\tcurr := make([]string, 0)\n\tvar backtrack func(idx int)\n\tbacktrack = func(idx int) {\n\t\tif idx == len(s) {\n\t\t\tans = append(ans, append([]string{}, curr...))\n\t\t}\n\t\tfor i := idx; i < len(s); i++ {\n\t\t\tif isPalindrome(s[idx : i+1]) {\n\t\t\t\tcurr = append(curr, s[idx:i+1])\n\t\t\t\tbacktrack(i + 1)\n\t\t\t\tcurr = curr[:len(curr)-1]\n\t\t\t}\n\t\t}\n\t}\n\tbacktrack(0)\n\treturn ans\n}\n\nfunc isPalindrome(s string) bool {\n\tl := 0\n\tr := len(s) - 1\n\tfor l < r {\n\t\tif s[l] != s[r] {\n\t\t\treturn false\n\t\t}\n\t\tl++\n\t\tr--\n\t}\n\treturn true\n}\n",
+          "reviewedCode": "package main\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix.\nfunc partition(s string) [][]string {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks.\n\tans := make([][]string, 0)\n\tcurr := make([]string, 0)\n\tvar backtrack func(idx int)\n\tbacktrack = func(idx int) {\n\t\tif idx == len(s) {\n\t\t\tans = append(ans, append([]string{}, curr...))\n\t\t}\n\t\t// [Reader note] Main pass\n\t\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\t\tfor i := idx; i < len(s); i++ {\n\t\t\t// [Reader note] Decision point\n\t\t\t// Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests.\n\t\t\tif isPalindrome(s[idx : i+1]) {\n\t\t\t\tcurr = append(curr, s[idx:i+1])\n\t\t\t\tbacktrack(i + 1)\n\t\t\t\tcurr = curr[:len(curr)-1]\n\t\t\t}\n\t\t}\n\t}\n\tbacktrack(0)\n\treturn ans\n}\n\nfunc isPalindrome(s string) bool {\n\tl := 0\n\tr := len(s) - 1\n\tfor l < r {\n\t\tif s[l] != s[r] {\n\t\t\treturn false\n\t\t}\n\t\tl++\n\t\tr--\n\t}\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn true\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 3,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks."
+            },
+            {
+              "line": 11,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 12,
+              "label": "Decision point",
+              "note": "Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+            },
+            {
+              "line": 33,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a richer backtracking problem that still stays readable and adds a meaningful validation layer to the search.",
+            "whatToNotice": "Partition-based recursion, candidate validation, and balancing path growth against local checks.",
+            "riskPoint": "The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-0100-0199-0131.palindrome-partitioning-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0100-0199/0131.Palindrome%20Partitioning/Solution.go",
+          "localPath": "doocs_leetcode/solution/0100-0199/0131.Palindrome Partitioning/Solution.go",
+          "relativePath": "solution/0100-0199/0131.Palindrome Partitioning/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "func partition(s string) (ans [][]string) {\n\tn := len(s)\n\tf := make([][]bool, n)\n\tfor i := range f {\n\t\tf[i] = make([]bool, n)\n\t\tfor j := range f[i] {\n\t\t\tf[i][j] = true\n\t\t}\n\t}\n\tfor i := n - 1; i >= 0; i-- {\n\t\tfor j := i + 1; j < n; j++ {\n\t\t\tf[i][j] = s[i] == s[j] && f[i+1][j-1]\n\t\t}\n\t}\n\tt := []string{}\n\tvar dfs func(int)\n\tdfs = func(i int) {\n\t\tif i == n {\n\t\t\tans = append(ans, append([]string(nil), t...))\n\t\t\treturn\n\t\t}\n\t\tfor j := i; j < n; j++ {\n\t\t\tif f[i][j] {\n\t\t\t\tt = append(t, s[i:j+1])\n\t\t\t\tdfs(j + 1)\n\t\t\t\tt = t[:len(t)-1]\n\t\t\t}\n\t\t}\n\t}\n\tdfs(0)\n\treturn\n}",
+          "originalCode": "func partition(s string) (ans [][]string) {\n\tn := len(s)\n\tf := make([][]bool, n)\n\tfor i := range f {\n\t\tf[i] = make([]bool, n)\n\t\tfor j := range f[i] {\n\t\t\tf[i][j] = true\n\t\t}\n\t}\n\tfor i := n - 1; i >= 0; i-- {\n\t\tfor j := i + 1; j < n; j++ {\n\t\t\tf[i][j] = s[i] == s[j] && f[i+1][j-1]\n\t\t}\n\t}\n\tt := []string{}\n\tvar dfs func(int)\n\tdfs = func(i int) {\n\t\tif i == n {\n\t\t\tans = append(ans, append([]string(nil), t...))\n\t\t\treturn\n\t\t}\n\t\tfor j := i; j < n; j++ {\n\t\t\tif f[i][j] {\n\t\t\t\tt = append(t, s[i:j+1])\n\t\t\t\tdfs(j + 1)\n\t\t\t\tt = t[:len(t)-1]\n\t\t\t}\n\t\t}\n\t}\n\tdfs(0)\n\treturn\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix.\nfunc partition(s string) (ans [][]string) {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks.\n\tn := len(s)\n\tf := make([][]bool, n)\n\t// [Reader note] Main pass\n\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\tfor i := range f {\n\t\tf[i] = make([]bool, n)\n\t\tfor j := range f[i] {\n\t\t\tf[i][j] = true\n\t\t}\n\t}\n\tfor i := n - 1; i >= 0; i-- {\n\t\tfor j := i + 1; j < n; j++ {\n\t\t\tf[i][j] = s[i] == s[j] && f[i+1][j-1]\n\t\t}\n\t}\n\tt := []string{}\n\tvar dfs func(int)\n\tdfs = func(i int) {\n\t\t// [Reader note] Decision point\n\t\t// Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests.\n\t\tif i == n {\n\t\t\tans = append(ans, append([]string(nil), t...))\n\t\t\treturn\n\t\t}\n\t\tfor j := i; j < n; j++ {\n\t\t\tif f[i][j] {\n\t\t\t\tt = append(t, s[i:j+1])\n\t\t\t\tdfs(j + 1)\n\t\t\t\tt = t[:len(t)-1]\n\t\t\t}\n\t\t}\n\t}\n\tdfs(0)\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks."
+            },
+            {
+              "line": 4,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 18,
+              "label": "Decision point",
+              "note": "Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+            },
+            {
+              "line": 31,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a richer backtracking problem that still stays readable and adds a meaningful validation layer to the search.",
+            "whatToNotice": "Partition-based recursion, candidate validation, and balancing path growth against local checks.",
+            "riskPoint": "The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+          }
+        }
+      ]
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-0100-0199-0131.palindrome-partitioning-solution.ts",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0100-0199/0131.Palindrome%20Partitioning/Solution.ts",
+          "localPath": "doocs_leetcode/solution/0100-0199/0131.Palindrome Partitioning/Solution.ts",
+          "relativePath": "solution/0100-0199/0131.Palindrome Partitioning/Solution.ts",
+          "languageId": "typescript",
+          "languageLabel": "TypeScript",
+          "coverageType": "code+explanation",
+          "code": "function partition(s: string): string[][] {\n    const n = s.length;\n    const f: boolean[][] = Array.from({ length: n }, () => Array(n).fill(true));\n    for (let i = n - 1; i >= 0; --i) {\n        for (let j = i + 1; j < n; ++j) {\n            f[i][j] = s[i] === s[j] && f[i + 1][j - 1];\n        }\n    }\n    const ans: string[][] = [];\n    const t: string[] = [];\n    const dfs = (i: number) => {\n        if (i === n) {\n            ans.push(t.slice());\n            return;\n        }\n        for (let j = i; j < n; ++j) {\n            if (f[i][j]) {\n                t.push(s.slice(i, j + 1));\n                dfs(j + 1);\n                t.pop();\n            }\n        }\n    };\n    dfs(0);\n    return ans;\n}\n",
+          "originalCode": "function partition(s: string): string[][] {\n    const n = s.length;\n    const f: boolean[][] = Array.from({ length: n }, () => Array(n).fill(true));\n    for (let i = n - 1; i >= 0; --i) {\n        for (let j = i + 1; j < n; ++j) {\n            f[i][j] = s[i] === s[j] && f[i + 1][j - 1];\n        }\n    }\n    const ans: string[][] = [];\n    const t: string[] = [];\n    const dfs = (i: number) => {\n        if (i === n) {\n            ans.push(t.slice());\n            return;\n        }\n        for (let j = i; j < n; ++j) {\n            if (f[i][j]) {\n                t.push(s.slice(i, j + 1));\n                dfs(j + 1);\n                t.pop();\n            }\n        }\n    };\n    dfs(0);\n    return ans;\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix.\nfunction partition(s: string): string[][] {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks.\n    const n = s.length;\n    const f: boolean[][] = Array.from({ length: n }, () => Array(n).fill(true));\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (let i = n - 1; i >= 0; --i) {\n        for (let j = i + 1; j < n; ++j) {\n            f[i][j] = s[i] === s[j] && f[i + 1][j - 1];\n        }\n    }\n    const ans: string[][] = [];\n    const t: string[] = [];\n    const dfs = (i: number) => {\n        // [Reader note] Decision point\n        // Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests.\n        if (i === n) {\n            ans.push(t.slice());\n            return;\n        }\n        for (let j = i; j < n; ++j) {\n            if (f[i][j]) {\n                t.push(s.slice(i, j + 1));\n                dfs(j + 1);\n                t.pop();\n            }\n        }\n    };\n    dfs(0);\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return ans;\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks."
+            },
+            {
+              "line": 4,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 12,
+              "label": "Decision point",
+              "note": "Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+            },
+            {
+              "line": 25,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a richer backtracking problem that still stays readable and adds a meaningful validation layer to the search.",
+            "whatToNotice": "Partition-based recursion, candidate validation, and balancing path growth against local checks.",
+            "riskPoint": "The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+          }
+        }
+      ]
+    },
+    {
+      "id": "javascript",
+      "label": "JavaScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-javascript-0131-palindrome-partitioning.js",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/javascript/0131-palindrome-partitioning.js",
+          "localPath": "neetcode-gh_leetcode/javascript/0131-palindrome-partitioning.js",
+          "relativePath": "javascript/0131-palindrome-partitioning.js",
+          "languageId": "javascript",
+          "languageLabel": "JavaScript",
+          "coverageType": "article+code",
+          "code": "/**\n * https://leetcode.com/problems/palindrome-partitioning/\n * Time O(N * 2^N) | Space O(N^2)\n * @param {string} s\n * @return {string[][]}\n */\nfunction partition(s, left = 0, _partition = [], partitions = []) {\n    const isBaseCase = s.length <= left;\n    if (isBaseCase) {\n        if (_partition.length) partitions.push(_partition.slice());\n\n        return partitions;\n    }\n\n    for (let right = left; right < s.length; right++) {\n        if (!isPalindrome(s, left, right)) continue;\n\n        backTrack(s, left, right, _partition, partitions);\n    }\n\n    return partitions;\n}\n\nconst backTrack = (s, left, right, _partition, partitions) => {\n    _partition.push(s.slice(left, right + 1));\n    partition(s, right + 1, _partition, partitions);\n    _partition.pop();\n};\n\nconst isPalindrome = (str, left, right) => {\n    while (left < right) {\n        const isSame = str[left] === str[right];\n        if (!isSame) return false;\n\n        left++;\n        right--;\n    }\n\n    return true;\n};\n",
+          "originalCode": "/**\n * https://leetcode.com/problems/palindrome-partitioning/\n * Time O(N * 2^N) | Space O(N^2)\n * @param {string} s\n * @return {string[][]}\n */\nfunction partition(s, left = 0, _partition = [], partitions = []) {\n    const isBaseCase = s.length <= left;\n    if (isBaseCase) {\n        if (_partition.length) partitions.push(_partition.slice());\n\n        return partitions;\n    }\n\n    for (let right = left; right < s.length; right++) {\n        if (!isPalindrome(s, left, right)) continue;\n\n        backTrack(s, left, right, _partition, partitions);\n    }\n\n    return partitions;\n}\n\nconst backTrack = (s, left, right, _partition, partitions) => {\n    _partition.push(s.slice(left, right + 1));\n    partition(s, right + 1, _partition, partitions);\n    _partition.pop();\n};\n\nconst isPalindrome = (str, left, right) => {\n    while (left < right) {\n        const isSame = str[left] === str[right];\n        if (!isSame) return false;\n\n        left++;\n        right--;\n    }\n\n    return true;\n};\n",
+          "reviewedCode": "/**\n * https://leetcode.com/problems/palindrome-partitioning/\n * Time O(N * 2^N) | Space O(N^2)\n * @param {string} s\n * @return {string[][]}\n */\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix.\nfunction partition(s, left = 0, _partition = [], partitions = []) {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks.\n    const isBaseCase = s.length <= left;\n    if (isBaseCase) {\n        if (_partition.length) partitions.push(_partition.slice());\n\n        return partitions;\n    }\n\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (let right = left; right < s.length; right++) {\n        // [Reader note] Decision point\n        // Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests.\n        if (!isPalindrome(s, left, right)) continue;\n\n        backTrack(s, left, right, _partition, partitions);\n    }\n\n    return partitions;\n}\n\nconst backTrack = (s, left, right, _partition, partitions) => {\n    _partition.push(s.slice(left, right + 1));\n    partition(s, right + 1, _partition, partitions);\n    _partition.pop();\n};\n\nconst isPalindrome = (str, left, right) => {\n    while (left < right) {\n        const isSame = str[left] === str[right];\n        if (!isSame) return false;\n\n        left++;\n        right--;\n    }\n\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return true;\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time O(N * 2^N) | Space O(N^2)"
+          ],
+          "annotations": [
+            {
+              "line": 7,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix."
+            },
+            {
+              "line": 8,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks."
+            },
+            {
+              "line": 15,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 16,
+              "label": "Decision point",
+              "note": "Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+            },
+            {
+              "line": 39,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a richer backtracking problem that still stays readable and adds a meaningful validation layer to the search.",
+            "whatToNotice": "Partition-based recursion, candidate validation, and balancing path growth against local checks.",
+            "riskPoint": "The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+          }
+        }
+      ]
+    },
+    {
+      "id": "csharp",
+      "label": "C#",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-csharp-0131-palindrome-partitioning.cs",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/csharp/0131-palindrome-partitioning.cs",
+          "localPath": "neetcode-gh_leetcode/csharp/0131-palindrome-partitioning.cs",
+          "relativePath": "csharp/0131-palindrome-partitioning.cs",
+          "languageId": "csharp",
+          "languageLabel": "C#",
+          "coverageType": "article+code",
+          "code": "public class Solution\n{\n    //O(N.2^N)\n    public IList<IList<string>> Partition(string s)\n    {\n        var result = new List<IList<string>>();\n        var stack = new List<string>();\n\n        void dfs(int i)\n        {\n            if (i >= s.Length)\n            {\n                result.Add(stack.ToList());\n                return;\n            }\n\n            for (var j = i; j < s.Length; j++)\n            {\n                if (IsPalindrome(s, i, j))\n                {\n                    stack.Add(s.Substring(i, j - i + 1));\n                    dfs(j + 1);\n                    stack.RemoveAt(stack.Count - 1);\n                }\n            }\n\n        }\n\n        dfs(0);\n\n        return result;\n    }\n\n    public bool IsPalindrome(string s, int l, int r)\n    {\n        while (l < r)\n        {\n            if (s[l] != s[r])\n                return false;\n            l++;\n            r--;\n        }\n\n        return true;\n    }\n}",
+          "originalCode": "public class Solution\n{\n    //O(N.2^N)\n    public IList<IList<string>> Partition(string s)\n    {\n        var result = new List<IList<string>>();\n        var stack = new List<string>();\n\n        void dfs(int i)\n        {\n            if (i >= s.Length)\n            {\n                result.Add(stack.ToList());\n                return;\n            }\n\n            for (var j = i; j < s.Length; j++)\n            {\n                if (IsPalindrome(s, i, j))\n                {\n                    stack.Add(s.Substring(i, j - i + 1));\n                    dfs(j + 1);\n                    stack.RemoveAt(stack.Count - 1);\n                }\n            }\n\n        }\n\n        dfs(0);\n\n        return result;\n    }\n\n    public bool IsPalindrome(string s, int l, int r)\n    {\n        while (l < r)\n        {\n            if (s[l] != s[r])\n                return false;\n            l++;\n            r--;\n        }\n\n        return true;\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix.\npublic class Solution\n{\n    //O(N.2^N)\n    public IList<IList<string>> Partition(string s)\n    {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks.\n        var result = new List<IList<string>>();\n        var stack = new List<string>();\n\n        void dfs(int i)\n        {\n            if (i >= s.Length)\n            {\n                result.Add(stack.ToList());\n                return;\n            }\n\n            // [Reader note] Main pass\n            // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for (var j = i; j < s.Length; j++)\n            {\n                // [Reader note] Decision point\n                // Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests.\n                if (IsPalindrome(s, i, j))\n                {\n                    stack.Add(s.Substring(i, j - i + 1));\n                    dfs(j + 1);\n                    stack.RemoveAt(stack.Count - 1);\n                }\n            }\n\n        }\n\n        dfs(0);\n\n        return result;\n    }\n\n    public bool IsPalindrome(string s, int l, int r)\n    {\n        while (l < r)\n        {\n            if (s[l] != s[r])\n                return false;\n            l++;\n            r--;\n        }\n\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return true;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix."
+            },
+            {
+              "line": 6,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks."
+            },
+            {
+              "line": 17,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 19,
+              "label": "Decision point",
+              "note": "Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+            },
+            {
+              "line": 44,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a richer backtracking problem that still stays readable and adds a meaningful validation layer to the search.",
+            "whatToNotice": "Partition-based recursion, candidate validation, and balancing path growth against local checks.",
+            "riskPoint": "The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+          }
+        }
+      ]
+    },
+    {
+      "id": "kotlin",
+      "label": "Kotlin",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-kotlin-0131-palindrome-partitioning.kt",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/kotlin/0131-palindrome-partitioning.kt",
+          "localPath": "neetcode-gh_leetcode/kotlin/0131-palindrome-partitioning.kt",
+          "relativePath": "kotlin/0131-palindrome-partitioning.kt",
+          "languageId": "kotlin",
+          "languageLabel": "Kotlin",
+          "coverageType": "article+code",
+          "code": "class Solution {\n    fun partition(s: String): List<List<String>> {\n        val res = mutableListOf<MutableList<String>>()\n        val part = mutableListOf<String>()\n\n        fun isPalindrome(_l: Int, _r: Int): Boolean {\n            var l = _l\n            var r = _r\n            while (l < r) {\n                if (s[l] != s[r])\n                    return false\n                l++\n                r--\n            }\n            return true\n        }\n\n        fun dfs(i: Int) {\n            if (i >= s.length) {\n                res.add(part.toMutableList())\n                return\n            }\n\n            for (j in i until s.length) {\n                if (isPalindrome(i, j)) {\n                    part.add(s.substring(i, j + 1))\n                    dfs(j + 1)\n                    part.removeAt(part.lastIndex)\n                }\n            }\n        }\n        \n        dfs(0)\n        return res\n    }\n}\n",
+          "originalCode": "class Solution {\n    fun partition(s: String): List<List<String>> {\n        val res = mutableListOf<MutableList<String>>()\n        val part = mutableListOf<String>()\n\n        fun isPalindrome(_l: Int, _r: Int): Boolean {\n            var l = _l\n            var r = _r\n            while (l < r) {\n                if (s[l] != s[r])\n                    return false\n                l++\n                r--\n            }\n            return true\n        }\n\n        fun dfs(i: Int) {\n            if (i >= s.length) {\n                res.add(part.toMutableList())\n                return\n            }\n\n            for (j in i until s.length) {\n                if (isPalindrome(i, j)) {\n                    part.add(s.substring(i, j + 1))\n                    dfs(j + 1)\n                    part.removeAt(part.lastIndex)\n                }\n            }\n        }\n        \n        dfs(0)\n        return res\n    }\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix.\nclass Solution {\n    fun partition(s: String): List<List<String>> {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks.\n        val res = mutableListOf<MutableList<String>>()\n        val part = mutableListOf<String>()\n\n        fun isPalindrome(_l: Int, _r: Int): Boolean {\n            var l = _l\n            var r = _r\n            // [Reader note] Main pass\n            // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            while (l < r) {\n                // [Reader note] Decision point\n                // Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests.\n                if (s[l] != s[r])\n                    return false\n                l++\n                r--\n            }\n            return true\n        }\n\n        fun dfs(i: Int) {\n            if (i >= s.length) {\n                res.add(part.toMutableList())\n                return\n            }\n\n            for (j in i until s.length) {\n                if (isPalindrome(i, j)) {\n                    part.add(s.substring(i, j + 1))\n                    dfs(j + 1)\n                    part.removeAt(part.lastIndex)\n                }\n            }\n        }\n        \n        dfs(0)\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return res\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Choose the next cut, validate that segment, and recurse on the untouched suffix."
+            },
+            {
+              "line": 3,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Partition-based recursion, candidate validation, and balancing path growth against local checks."
+            },
+            {
+              "line": 9,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 10,
+              "label": "Decision point",
+              "note": "Pay attention here: The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+            },
+            {
+              "line": 34,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a richer backtracking problem that still stays readable and adds a meaningful validation layer to the search.",
+            "whatToNotice": "Partition-based recursion, candidate validation, and balancing path growth against local checks.",
+            "riskPoint": "The branching is straightforward, but repeated substring checks can make the search feel heavier than the statement suggests."
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "neetcode-gh_leetcode-articles-palindrome-partitioning.md",
+      "repository": "neetcode-gh_leetcode",
+      "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+      "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/articles/palindrome-partitioning.md",
+      "localPath": "neetcode-gh_leetcode/articles/palindrome-partitioning.md",
+      "relativePath": "articles/palindrome-partitioning.md",
+      "title": "palindrome partitioning",
+      "excerpt": "## Prerequisites Before attempting this problem, you should be comfortable with: - **Backtracking** - Exploring all possible partitions and undoing choices to try alternatives - **Recursion** - Breaking down the problem into smaller subproblems - **Palindrome Checking** - Using two pointers to verify if a substring is a palindrome - **Dynamic Programming** - Precomputing palindrome substrings for O(1) lookup --- ##..."
+    },
+    {
+      "id": "neetcode-gh_leetcode-hints-palindrome-partitioning.md",
+      "repository": "neetcode-gh_leetcode",
+      "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+      "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/hints/palindrome-partitioning.md",
+      "localPath": "neetcode-gh_leetcode/hints/palindrome-partitioning.md",
+      "relativePath": "hints/palindrome-partitioning.md",
+      "title": "palindrome partitioning",
+      "excerpt": "<br> <details class=\"hint-accordion\"> <summary>Recommended Time & Space Complexity</summary> <p> You should aim for a solution with <code>O(n * (2^n))</code> time and <code>O(n)</code> space, where <code>n</code> is the length of the input string. </p> </details> <br> <details class=\"hint-accordion\"> <summary>Hint 1</summary> <p> For a given string there are <code>2^n</code> possible partitions because at each index..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0100-0199-0131.palindrome-partitioning-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0100-0199/0131.Palindrome%20Partitioning/README.md",
+      "localPath": "doocs_leetcode/solution/0100-0199/0131.Palindrome Partitioning/README.md",
+      "relativePath": "solution/0100-0199/0131.Palindrome Partitioning/README.md",
+      "title": "[131. \u5206\u5272\u56de\u6587\u4e32](https://leetcode.cn/problems/palindrome-partitioning)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/0100-0199/0131.Palindrome%20Partitioning/README.md tags: - \u5b57\u7b26\u4e32 - \u52a8\u6001\u89c4\u5212 - \u56de\u6eaf --- <!-- problem:start --> # [131. \u5206\u5272\u56de\u6587\u4e32](https://leetcode.cn/problems/palindrome-partitioning) [English Version](/solution/0100-0199/0131.Palindrome%20Partitioning/README_EN.md) ## \u9898\u76ee\u63cf\u8ff0 <!-- description:start --> <p>\u7ed9\u4f60\u4e00\u4e2a\u5b57\u7b26\u4e32 <code>s</code>\uff0c\u8bf7\u4f60\u5c06<em>..."
+    },
+    {
+      "id": "doocs_leetcode-solution-0100-0199-0131.palindrome-partitioning-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/0100-0199/0131.Palindrome%20Partitioning/README_EN.md",
+      "localPath": "doocs_leetcode/solution/0100-0199/0131.Palindrome Partitioning/README_EN.md",
+      "relativePath": "solution/0100-0199/0131.Palindrome Partitioning/README_EN.md",
+      "title": "[131. Palindrome Partitioning](https://leetcode.com/problems/palindrome-partitioning)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/0100-0199/0131.Palindrome%20Partitioning/README_EN.md tags: - String - Dynamic Programming - Backtracking --- <!-- problem:start --> # [131. Palindrome Partitioning](https://leetcode.com/problems/palindrome-partitioning) [\u4e2d\u6587\u6587\u6863](/solution/0100-0199/0131.Palindrome%20Partitioning/README.md) ## Description <!-- descript..."
+    },
+    {
+      "id": "wisdompeak_leetcode-dynamic_programming-131.palindrome-partitioning-readme.md",
+      "repository": "wisdompeak_LeetCode",
+      "repositoryUrl": "https://github.com/wisdompeak/LeetCode",
+      "sourceUrl": "https://github.com/wisdompeak/LeetCode/blob/master/Dynamic_Programming/131.Palindrome-Partitioning/Readme.md",
+      "localPath": "wisdompeak_LeetCode/Dynamic_Programming/131.Palindrome-Partitioning/Readme.md",
+      "relativePath": "Dynamic_Programming/131.Palindrome-Partitioning/Readme.md",
+      "title": "131.Palindrome-Partitioning",
+      "excerpt": "### 131.Palindrome-Partitioning \u9996\u5148\u9884\u5904\u7406\u5b57\u7b26\u4e32\uff0c\u7528\u533a\u95f4\u578bdp\u8ba1\u7b97\u51fa\u4efb\u610f\u4e24\u4e2aindex\u4e4b\u95f4\u7684substring\u662f\u5426\u662f\u56de\u6587\u4e32\uff0c\u8bb0\u505adp[i][j]. \u7136\u540e\u4ece\u7b2c\u4e00\u4e2a\u5b57\u7b26\u5f00\u59cb\u8fdb\u884c\u6df1\u5ea6\u4f18\u5148\u641c\u7d22\u3002\u8bbe\u8ba1dfs(i,temp)\uff0c\u8868\u793a\u8003\u8651\u4ee5\u5f53\u524d\u7684\u4f4d\u7f6ei\u4e3asubstring\u7684\u5f00\u5934\uff0c\u904d\u5386\u6709\u54ea\u4e9b\u4f4d\u7f6ej\u6ee1\u8db3[i:j]\u7684\u5b57\u7b26\u4e32\u6ee1\u8db3\u56de\u6587\uff08\u5373dp[i][j]=1\uff09\uff0c\u5c31\u5c06\u8be5\u5b57\u7b26\u4e32\u6536\u5f55\u8fdbtemp\uff0c\u7136\u540e\u9012\u5f52\u641c\u7d22\u7b2cj+1\u4e2a\u4f4d\u7f6e\u3002\u5982\u679cdfs\u7684\u53c2\u6570i\u8d70\u5230\u4e86n\uff0c\u8bf4\u660e\u6070\u597d\u5c06\u6574\u4e2as\u5206\u5272\u6210\u4e86\u82e5\u5e72\u6bb5\u56de\u6587\u4e32\uff0c\u5c31\u5c06\u8fd9\u7ec4\u5206\u5272\u7684\u5b50\u4e32temp\u52a0\u5165\u6700\u7ec8\u7b54\u6848\u3002 \u7279\u522b\u6ce8\u610f\uff0c\u8fd9\u4e2adfs\u5728\u56de\u6eaf\u7684\u65f6\u5019\u9700\u8981\u5c06temp\u672b\u5c3e\u52a0\u5165\u7684\u5b50\u4e32\u5f39\u51fa\u3002 [Leetcode Link](https://leetcode.com/problems/palindrome-partitioning/)"
+    }
+  ]
+}

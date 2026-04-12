@@ -1,0 +1,644 @@
+{
+  "generatedAt": "2026-04-11",
+  "problemId": "reorder-routes-to-make-all-paths-lead-to-the-city-zero",
+  "problemTitle": "Reorder Routes to Make All Paths Lead to the City Zero",
+  "problemNumber": 1466,
+  "summary": {
+    "hasSolutions": true,
+    "languageIds": [
+      "python",
+      "cpp",
+      "java",
+      "go",
+      "typescript",
+      "csharp",
+      "kotlin"
+    ],
+    "languageLabels": [
+      "Python",
+      "C++",
+      "Java",
+      "Go",
+      "TypeScript",
+      "C#",
+      "Kotlin"
+    ],
+    "solutionCount": 11,
+    "writeupCount": 3,
+    "primaryLanguageId": "python"
+  },
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "kamyu104_leetcode-solutions-python-reorder-routes-to-make-all-paths-lead-to-the-city-zero.py",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/Python/reorder-routes-to-make-all-paths-lead-to-the-city-zero.py",
+          "localPath": "kamyu104_LeetCode-Solutions/Python/reorder-routes-to-make-all-paths-lead-to-the-city-zero.py",
+          "relativePath": "Python/reorder-routes-to-make-all-paths-lead-to-the-city-zero.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "indexed-code",
+          "code": "# Time:  O(n)\n# Space: O(n)\n\nimport collections\n\n\nclass Solution(object):\n    def minReorder(self, n, connections):\n        \"\"\"\n        :type n: int\n        :type connections: List[List[int]]\n        :rtype: int\n        \"\"\"\n        lookup, graph = set(), collections.defaultdict(list)\n        for u, v in connections:\n            lookup.add(u*n+v)\n            graph[v].append(u)\n            graph[u].append(v) \n        result = 0\n        stk = [(-1, 0)]\n        while stk:\n            parent, u = stk.pop()\n            result += (parent*n+u in lookup)\n            for v in reversed(graph[u]):\n                if v == parent:\n                    continue\n                stk.append((u, v))\n        return result\n\n\n# Time:  O(n)\n# Space: O(n)\nimport collections\n\n\nclass Solution2(object):\n    def minReorder(self, n, connections):\n        \"\"\"\n        :type n: int\n        :type connections: List[List[int]]\n        :rtype: int\n        \"\"\"\n        def dfs(n, lookup, graph, parent, u):\n            result = (parent*n+u in lookup)\n            for v in graph[u]:\n                if v == parent:\n                    continue\n                result += dfs(n, lookup, graph, u, v)  \n            return result\n\n        lookup, graph = set(), collections.defaultdict(list)\n        for u, v in connections:\n            lookup.add(u*n+v)\n            graph[v].append(u)\n            graph[u].append(v) \n        return dfs(n, lookup, graph, -1, 0)\n",
+          "originalCode": "# Time:  O(n)\n# Space: O(n)\n\nimport collections\n\n\nclass Solution(object):\n    def minReorder(self, n, connections):\n        \"\"\"\n        :type n: int\n        :type connections: List[List[int]]\n        :rtype: int\n        \"\"\"\n        lookup, graph = set(), collections.defaultdict(list)\n        for u, v in connections:\n            lookup.add(u*n+v)\n            graph[v].append(u)\n            graph[u].append(v) \n        result = 0\n        stk = [(-1, 0)]\n        while stk:\n            parent, u = stk.pop()\n            result += (parent*n+u in lookup)\n            for v in reversed(graph[u]):\n                if v == parent:\n                    continue\n                stk.append((u, v))\n        return result\n\n\n# Time:  O(n)\n# Space: O(n)\nimport collections\n\n\nclass Solution2(object):\n    def minReorder(self, n, connections):\n        \"\"\"\n        :type n: int\n        :type connections: List[List[int]]\n        :rtype: int\n        \"\"\"\n        def dfs(n, lookup, graph, parent, u):\n            result = (parent*n+u in lookup)\n            for v in graph[u]:\n                if v == parent:\n                    continue\n                result += dfs(n, lookup, graph, u, v)  \n            return result\n\n        lookup, graph = set(), collections.defaultdict(list)\n        for u, v in connections:\n            lookup.add(u*n+v)\n            graph[v].append(u)\n            graph[u].append(v) \n        return dfs(n, lookup, graph, -1, 0)\n",
+          "reviewedCode": "# Time:  O(n)\n# Space: O(n)\n\nimport collections\n\n\n# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root.\nclass Solution(object):\n    def minReorder(self, n, connections):\n        \"\"\"\n        :type n: int\n        :type connections: List[List[int]]\n        :rtype: int\n        \"\"\"\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.\n        lookup, graph = set(), collections.defaultdict(list)\n        # [Reader note] Main pass\n        # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for u, v in connections:\n            lookup.add(u*n+v)\n            graph[v].append(u)\n            graph[u].append(v) \n        result = 0\n        stk = [(-1, 0)]\n        while stk:\n            parent, u = stk.pop()\n            result += (parent*n+u in lookup)\n            for v in reversed(graph[u]):\n                # [Reader note] Decision point\n                # Pay attention here: The main challenge is preserving original direction information while still traversing the whole graph flexibly.\n                if v == parent:\n                    continue\n                stk.append((u, v))\n        return result\n\n\n# Time:  O(n)\n# Space: O(n)\nimport collections\n\n\nclass Solution2(object):\n    def minReorder(self, n, connections):\n        \"\"\"\n        :type n: int\n        :type connections: List[List[int]]\n        :rtype: int\n        \"\"\"\n        def dfs(n, lookup, graph, parent, u):\n            result = (parent*n+u in lookup)\n            for v in graph[u]:\n                if v == parent:\n                    continue\n                result += dfs(n, lookup, graph, u, v)  \n            return result\n\n        lookup, graph = set(), collections.defaultdict(list)\n        for u, v in connections:\n            lookup.add(u*n+v)\n            graph[v].append(u)\n            graph[u].append(v) \n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return dfs(n, lookup, graph, -1, 0)",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n)",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 7,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root."
+            },
+            {
+              "line": 14,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning."
+            },
+            {
+              "line": 15,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 25,
+              "label": "Decision point",
+              "note": "Pay attention here: The main challenge is preserving original direction information while still traversing the whole graph flexibly."
+            },
+            {
+              "line": 56,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong modern graph Medium because the twist is concrete, readable, and still teaches careful traversal bookkeeping.",
+            "whatToNotice": "Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.",
+            "riskPoint": "The main challenge is preserving original direction information while still traversing the whole graph flexibly."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-1400-1499-1466.reorder-routes-to-make-all-paths-lead-to-the-city-zero-solution.py",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1400-1499/1466.Reorder%20Routes%20to%20Make%20All%20Paths%20Lead%20to%20the%20City%20Zero/Solution.py",
+          "localPath": "doocs_leetcode/solution/1400-1499/1466.Reorder Routes to Make All Paths Lead to the City Zero/Solution.py",
+          "relativePath": "solution/1400-1499/1466.Reorder Routes to Make All Paths Lead to the City Zero/Solution.py",
+          "languageId": "python",
+          "languageLabel": "Python",
+          "coverageType": "code+explanation",
+          "code": "class Solution:\n    def minReorder(self, n: int, connections: List[List[int]]) -> int:\n        def dfs(a: int, fa: int) -> int:\n            return sum(c + dfs(b, a) for b, c in g[a] if b != fa)\n\n        g = [[] for _ in range(n)]\n        for a, b in connections:\n            g[a].append((b, 1))\n            g[b].append((a, 0))\n        return dfs(0, -1)\n",
+          "originalCode": "class Solution:\n    def minReorder(self, n: int, connections: List[List[int]]) -> int:\n        def dfs(a: int, fa: int) -> int:\n            return sum(c + dfs(b, a) for b, c in g[a] if b != fa)\n\n        g = [[] for _ in range(n)]\n        for a, b in connections:\n            g[a].append((b, 1))\n            g[b].append((a, 0))\n        return dfs(0, -1)\n",
+          "reviewedCode": "# [Reader note] Entry point\n# Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root.\nclass Solution:\n    def minReorder(self, n: int, connections: List[List[int]]) -> int:\n        def dfs(a: int, fa: int) -> int:\n            # [Reader note] Main pass\n            # This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            return sum(c + dfs(b, a) for b, c in g[a] if b != fa)\n\n        # [Reader note] State setup\n        # This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.\n        g = [[] for _ in range(n)]\n        for a, b in connections:\n            g[a].append((b, 1))\n            g[b].append((a, 0))\n        # [Reader note] Return\n        # The final return exposes the result after the traversal and state updates have settled.\n        return dfs(0, -1)",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root."
+            },
+            {
+              "line": 6,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning."
+            },
+            {
+              "line": 4,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 10,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong modern graph Medium because the twist is concrete, readable, and still teaches careful traversal bookkeeping.",
+            "whatToNotice": "Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.",
+            "riskPoint": "The main challenge is preserving original direction information while still traversing the whole graph flexibly."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "sourceCount": 3,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-cpp-1466-reorder-routes-to-make-all-paths-lead-to-the-city-zero.cpp",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/cpp/1466-reorder-routes-to-make-all-paths-lead-to-the-city-zero.cpp",
+          "localPath": "neetcode-gh_leetcode/cpp/1466-reorder-routes-to-make-all-paths-lead-to-the-city-zero.cpp",
+          "relativePath": "cpp/1466-reorder-routes-to-make-all-paths-lead-to-the-city-zero.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "article+code",
+          "code": "class Solution {\npublic:\n    int minReorder(int n, vector<vector<int>>& connections) {\n        unordered_map<int, vector<pair<int, bool>>> graph;\n        unordered_set<int> visited;\n\n        for (int i = 0; i < n; i++)\n            graph[i] = vector<pair<int, bool>>{};\n\n        for (vector<int> connection : connections) {\n            graph[connection[0]].push_back(make_pair(connection[1], true));\n            graph[connection[1]].push_back(make_pair(connection[0], false));\n        }\n\n        int cnt = 0;\n        stack<int> stk;\n        stk.push(0);\n        visited.insert(0);\n\n        while (!stk.empty()) {\n            int u = stk.top();\n            stk.pop();\n            for (pair<int, bool> v : graph[u]) {\n                if (visited.count(v.first))\n                    continue;\n                stk.push(v.first);\n                visited.insert(v.first);\n                if (v.second)\n                    cnt += 1;\n            }\n        }\n\n        return cnt;\n    }\n};\n\n",
+          "originalCode": "class Solution {\npublic:\n    int minReorder(int n, vector<vector<int>>& connections) {\n        unordered_map<int, vector<pair<int, bool>>> graph;\n        unordered_set<int> visited;\n\n        for (int i = 0; i < n; i++)\n            graph[i] = vector<pair<int, bool>>{};\n\n        for (vector<int> connection : connections) {\n            graph[connection[0]].push_back(make_pair(connection[1], true));\n            graph[connection[1]].push_back(make_pair(connection[0], false));\n        }\n\n        int cnt = 0;\n        stack<int> stk;\n        stk.push(0);\n        visited.insert(0);\n\n        while (!stk.empty()) {\n            int u = stk.top();\n            stk.pop();\n            for (pair<int, bool> v : graph[u]) {\n                if (visited.count(v.first))\n                    continue;\n                stk.push(v.first);\n                visited.insert(v.first);\n                if (v.second)\n                    cnt += 1;\n            }\n        }\n\n        return cnt;\n    }\n};\n\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root.\nclass Solution {\npublic:\n    int minReorder(int n, vector<vector<int>>& connections) {\n        unordered_map<int, vector<pair<int, bool>>> graph;\n        unordered_set<int> visited;\n\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.\n        for (int i = 0; i < n; i++)\n            graph[i] = vector<pair<int, bool>>{};\n\n        for (vector<int> connection : connections) {\n            graph[connection[0]].push_back(make_pair(connection[1], true));\n            graph[connection[1]].push_back(make_pair(connection[0], false));\n        }\n\n        int cnt = 0;\n        stack<int> stk;\n        stk.push(0);\n        visited.insert(0);\n\n        while (!stk.empty()) {\n            int u = stk.top();\n            stk.pop();\n            for (pair<int, bool> v : graph[u]) {\n                // [Reader note] Decision point\n                // Pay attention here: The main challenge is preserving original direction information while still traversing the whole graph flexibly.\n                if (visited.count(v.first))\n                    continue;\n                stk.push(v.first);\n                visited.insert(v.first);\n                if (v.second)\n                    cnt += 1;\n            }\n        }\n\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return cnt;\n    }\n};\n",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root."
+            },
+            {
+              "line": 7,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning."
+            },
+            {
+              "line": 24,
+              "label": "Decision point",
+              "note": "Pay attention here: The main challenge is preserving original direction information while still traversing the whole graph flexibly."
+            },
+            {
+              "line": 33,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong modern graph Medium because the twist is concrete, readable, and still teaches careful traversal bookkeeping.",
+            "whatToNotice": "Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.",
+            "riskPoint": "The main challenge is preserving original direction information while still traversing the whole graph flexibly."
+          }
+        },
+        {
+          "id": "kamyu104_leetcode-solutions-c-reorder-routes-to-make-all-paths-lead-to-the-city-zero.cpp",
+          "repository": "kamyu104_LeetCode-Solutions",
+          "repositoryUrl": "https://github.com/kamyu104/LeetCode-Solutions",
+          "sourceUrl": "https://github.com/kamyu104/LeetCode-Solutions/blob/master/C%2B%2B/reorder-routes-to-make-all-paths-lead-to-the-city-zero.cpp",
+          "localPath": "kamyu104_LeetCode-Solutions/C++/reorder-routes-to-make-all-paths-lead-to-the-city-zero.cpp",
+          "relativePath": "C++/reorder-routes-to-make-all-paths-lead-to-the-city-zero.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "indexed-code",
+          "code": "// Time:  O(n)\n// Space: O(n)\n\nclass Solution {\npublic:\n    int minReorder(int n, vector<vector<int>>& connections) {\n        unordered_set<uint64_t> lookup;\n        unordered_map<int, vector<int>> graph;\n        for (const auto& connection : connections) {\n            lookup.emplace(uint64_t(connection[0]) * n + connection[1]);\n            graph[connection[0]].emplace_back(connection[1]);\n            graph[connection[1]].emplace_back(connection[0]);\n        }\n        int result = 0;\n        vector<pair<int, int>> stk = {{-1, 0}};\n        while (!stk.empty()) {\n            const auto [parent, u] = stk.back(); stk.pop_back();\n            for (const auto& v : graph[u]) {\n                if (v == parent) {\n                    continue;\n                }\n                stk.emplace_back(u, v);\n            }\n            result += lookup.count(uint64_t(parent) * n + u);\n        }\n        return result;\n    }\n};\n\n// Time:  O(n)\n// Space: O(n)\nclass Solution2 {\npublic:\n    int minReorder(int n, vector<vector<int>>& connections) {\n        unordered_set<uint64_t> lookup;\n        unordered_map<int, vector<int>> graph;\n        for (const auto& connection : connections) {\n            lookup.emplace(uint64_t(connection[0]) * n + connection[1]);\n            graph[connection[0]].emplace_back(connection[1]);\n            graph[connection[1]].emplace_back(connection[0]);\n        }\n        return dfs(n, lookup, graph, -1, 0);\n    }\n\nprivate:\n    int dfs(int n, const unordered_set<uint64_t>& lookup, const unordered_map<int, vector<int>>& graph, int parent, int u) {\n        int result = lookup.count(uint64_t(parent) * n + u);\n        for (const auto& v : graph.at(u)) {\n            if (v == parent) {\n                continue;\n            }\n            result += dfs(n, lookup, graph, u, v);\n        }\n        return result;\n    }\n};\n",
+          "originalCode": "// Time:  O(n)\n// Space: O(n)\n\nclass Solution {\npublic:\n    int minReorder(int n, vector<vector<int>>& connections) {\n        unordered_set<uint64_t> lookup;\n        unordered_map<int, vector<int>> graph;\n        for (const auto& connection : connections) {\n            lookup.emplace(uint64_t(connection[0]) * n + connection[1]);\n            graph[connection[0]].emplace_back(connection[1]);\n            graph[connection[1]].emplace_back(connection[0]);\n        }\n        int result = 0;\n        vector<pair<int, int>> stk = {{-1, 0}};\n        while (!stk.empty()) {\n            const auto [parent, u] = stk.back(); stk.pop_back();\n            for (const auto& v : graph[u]) {\n                if (v == parent) {\n                    continue;\n                }\n                stk.emplace_back(u, v);\n            }\n            result += lookup.count(uint64_t(parent) * n + u);\n        }\n        return result;\n    }\n};\n\n// Time:  O(n)\n// Space: O(n)\nclass Solution2 {\npublic:\n    int minReorder(int n, vector<vector<int>>& connections) {\n        unordered_set<uint64_t> lookup;\n        unordered_map<int, vector<int>> graph;\n        for (const auto& connection : connections) {\n            lookup.emplace(uint64_t(connection[0]) * n + connection[1]);\n            graph[connection[0]].emplace_back(connection[1]);\n            graph[connection[1]].emplace_back(connection[0]);\n        }\n        return dfs(n, lookup, graph, -1, 0);\n    }\n\nprivate:\n    int dfs(int n, const unordered_set<uint64_t>& lookup, const unordered_map<int, vector<int>>& graph, int parent, int u) {\n        int result = lookup.count(uint64_t(parent) * n + u);\n        for (const auto& v : graph.at(u)) {\n            if (v == parent) {\n                continue;\n            }\n            result += dfs(n, lookup, graph, u, v);\n        }\n        return result;\n    }\n};\n",
+          "reviewedCode": "// Time:  O(n)\n// Space: O(n)\n\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root.\nclass Solution {\npublic:\n    int minReorder(int n, vector<vector<int>>& connections) {\n        unordered_set<uint64_t> lookup;\n        unordered_map<int, vector<int>> graph;\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.\n        for (const auto& connection : connections) {\n            lookup.emplace(uint64_t(connection[0]) * n + connection[1]);\n            graph[connection[0]].emplace_back(connection[1]);\n            graph[connection[1]].emplace_back(connection[0]);\n        }\n        int result = 0;\n        vector<pair<int, int>> stk = {{-1, 0}};\n        while (!stk.empty()) {\n            const auto [parent, u] = stk.back(); stk.pop_back();\n            for (const auto& v : graph[u]) {\n                // [Reader note] Decision point\n                // Pay attention here: The main challenge is preserving original direction information while still traversing the whole graph flexibly.\n                if (v == parent) {\n                    continue;\n                }\n                stk.emplace_back(u, v);\n            }\n            result += lookup.count(uint64_t(parent) * n + u);\n        }\n        return result;\n    }\n};\n\n// Time:  O(n)\n// Space: O(n)\nclass Solution2 {\npublic:\n    int minReorder(int n, vector<vector<int>>& connections) {\n        unordered_set<uint64_t> lookup;\n        unordered_map<int, vector<int>> graph;\n        for (const auto& connection : connections) {\n            lookup.emplace(uint64_t(connection[0]) * n + connection[1]);\n            graph[connection[0]].emplace_back(connection[1]);\n            graph[connection[1]].emplace_back(connection[0]);\n        }\n        return dfs(n, lookup, graph, -1, 0);\n    }\n\nprivate:\n    int dfs(int n, const unordered_set<uint64_t>& lookup, const unordered_map<int, vector<int>>& graph, int parent, int u) {\n        int result = lookup.count(uint64_t(parent) * n + u);\n        for (const auto& v : graph.at(u)) {\n            if (v == parent) {\n                continue;\n            }\n            result += dfs(n, lookup, graph, u, v);\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return result;\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [
+            "Time:  O(n)",
+            "Space: O(n)"
+          ],
+          "annotations": [
+            {
+              "line": 4,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root."
+            },
+            {
+              "line": 9,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning."
+            },
+            {
+              "line": 19,
+              "label": "Decision point",
+              "note": "Pay attention here: The main challenge is preserving original direction information while still traversing the whole graph flexibly."
+            },
+            {
+              "line": 54,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong modern graph Medium because the twist is concrete, readable, and still teaches careful traversal bookkeeping.",
+            "whatToNotice": "Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.",
+            "riskPoint": "The main challenge is preserving original direction information while still traversing the whole graph flexibly."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-1400-1499-1466.reorder-routes-to-make-all-paths-lead-to-the-city-zero-solution.cpp",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1400-1499/1466.Reorder%20Routes%20to%20Make%20All%20Paths%20Lead%20to%20the%20City%20Zero/Solution.cpp",
+          "localPath": "doocs_leetcode/solution/1400-1499/1466.Reorder Routes to Make All Paths Lead to the City Zero/Solution.cpp",
+          "relativePath": "solution/1400-1499/1466.Reorder Routes to Make All Paths Lead to the City Zero/Solution.cpp",
+          "languageId": "cpp",
+          "languageLabel": "C++",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\npublic:\n    int minReorder(int n, vector<vector<int>>& connections) {\n        vector<pair<int, int>> g[n];\n        for (auto& e : connections) {\n            int a = e[0], b = e[1];\n            g[a].emplace_back(b, 1);\n            g[b].emplace_back(a, 0);\n        }\n        function<int(int, int)> dfs = [&](int a, int fa) {\n            int ans = 0;\n            for (auto& [b, c] : g[a]) {\n                if (b != fa) {\n                    ans += c + dfs(b, a);\n                }\n            }\n            return ans;\n        };\n        return dfs(0, -1);\n    }\n};",
+          "originalCode": "class Solution {\npublic:\n    int minReorder(int n, vector<vector<int>>& connections) {\n        vector<pair<int, int>> g[n];\n        for (auto& e : connections) {\n            int a = e[0], b = e[1];\n            g[a].emplace_back(b, 1);\n            g[b].emplace_back(a, 0);\n        }\n        function<int(int, int)> dfs = [&](int a, int fa) {\n            int ans = 0;\n            for (auto& [b, c] : g[a]) {\n                if (b != fa) {\n                    ans += c + dfs(b, a);\n                }\n            }\n            return ans;\n        };\n        return dfs(0, -1);\n    }\n};",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root.\nclass Solution {\npublic:\n    int minReorder(int n, vector<vector<int>>& connections) {\n        vector<pair<int, int>> g[n];\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (auto& e : connections) {\n            // [Reader note] State setup\n            // This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.\n            int a = e[0], b = e[1];\n            g[a].emplace_back(b, 1);\n            g[b].emplace_back(a, 0);\n        }\n        function<int(int, int)> dfs = [&](int a, int fa) {\n            int ans = 0;\n            for (auto& [b, c] : g[a]) {\n                // [Reader note] Decision point\n                // Pay attention here: The main challenge is preserving original direction information while still traversing the whole graph flexibly.\n                if (b != fa) {\n                    ans += c + dfs(b, a);\n                }\n            }\n            return ans;\n        };\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return dfs(0, -1);\n    }\n};",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root."
+            },
+            {
+              "line": 6,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning."
+            },
+            {
+              "line": 5,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 13,
+              "label": "Decision point",
+              "note": "Pay attention here: The main challenge is preserving original direction information while still traversing the whole graph flexibly."
+            },
+            {
+              "line": 19,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong modern graph Medium because the twist is concrete, readable, and still teaches careful traversal bookkeeping.",
+            "whatToNotice": "Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.",
+            "riskPoint": "The main challenge is preserving original direction information while still traversing the whole graph flexibly."
+          }
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "sourceCount": 2,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-java-1466-reorder-routes-to-make-all-paths-lead-to-the-city-zero.java",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/java/1466-reorder-routes-to-make-all-paths-lead-to-the-city-zero.java",
+          "localPath": "neetcode-gh_leetcode/java/1466-reorder-routes-to-make-all-paths-lead-to-the-city-zero.java",
+          "relativePath": "java/1466-reorder-routes-to-make-all-paths-lead-to-the-city-zero.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "article+code",
+          "code": "class Solution {\n    int res = 0;\n    HashMap<Integer, List<Integer>> graph = new HashMap<>();\n    HashSet<String> oldEdges = new HashSet<>();\n\n    public int minReorder(int n, int[][] connections) {\n        HashSet<Integer> visited = new HashSet<>();\n        for (int[] edges : connections){\n            int a = edges[0], b = edges[1];\n            String s = a + \"->\" + b;\n            oldEdges.add(s);\n            graph.computeIfAbsent(a, val -> new ArrayList<>()).add(b);\n            graph.computeIfAbsent(b, val -> new ArrayList<>()).add(a);\n        }\n        dfs(0, -1, visited);\n        return res-1;\n    }\n\n    private void dfs(int curr, int parent, HashSet<Integer> visited) {\n        if (visited.contains(curr))\n            return;\n        visited.add(curr);\n        String s = curr + \"->\" + parent;\n        if (!oldEdges.contains(s))\n            res++;\n        for (int child : graph.get(curr)){\n            dfs(child, curr, visited);\n        }\n    }\n}\n",
+          "originalCode": "class Solution {\n    int res = 0;\n    HashMap<Integer, List<Integer>> graph = new HashMap<>();\n    HashSet<String> oldEdges = new HashSet<>();\n\n    public int minReorder(int n, int[][] connections) {\n        HashSet<Integer> visited = new HashSet<>();\n        for (int[] edges : connections){\n            int a = edges[0], b = edges[1];\n            String s = a + \"->\" + b;\n            oldEdges.add(s);\n            graph.computeIfAbsent(a, val -> new ArrayList<>()).add(b);\n            graph.computeIfAbsent(b, val -> new ArrayList<>()).add(a);\n        }\n        dfs(0, -1, visited);\n        return res-1;\n    }\n\n    private void dfs(int curr, int parent, HashSet<Integer> visited) {\n        if (visited.contains(curr))\n            return;\n        visited.add(curr);\n        String s = curr + \"->\" + parent;\n        if (!oldEdges.contains(s))\n            res++;\n        for (int child : graph.get(curr)){\n            dfs(child, curr, visited);\n        }\n    }\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root.\nclass Solution {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.\n    int res = 0;\n    HashMap<Integer, List<Integer>> graph = new HashMap<>();\n    HashSet<String> oldEdges = new HashSet<>();\n\n    public int minReorder(int n, int[][] connections) {\n        HashSet<Integer> visited = new HashSet<>();\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (int[] edges : connections){\n            int a = edges[0], b = edges[1];\n            String s = a + \"->\" + b;\n            oldEdges.add(s);\n            graph.computeIfAbsent(a, val -> new ArrayList<>()).add(b);\n            graph.computeIfAbsent(b, val -> new ArrayList<>()).add(a);\n        }\n        dfs(0, -1, visited);\n        return res-1;\n    }\n\n    private void dfs(int curr, int parent, HashSet<Integer> visited) {\n        // [Reader note] Decision point\n        // Pay attention here: The main challenge is preserving original direction information while still traversing the whole graph flexibly.\n        if (visited.contains(curr))\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return;\n        visited.add(curr);\n        String s = curr + \"->\" + parent;\n        if (!oldEdges.contains(s))\n            res++;\n        for (int child : graph.get(curr)){\n            dfs(child, curr, visited);\n        }\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning."
+            },
+            {
+              "line": 8,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 20,
+              "label": "Decision point",
+              "note": "Pay attention here: The main challenge is preserving original direction information while still traversing the whole graph flexibly."
+            },
+            {
+              "line": 21,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong modern graph Medium because the twist is concrete, readable, and still teaches careful traversal bookkeeping.",
+            "whatToNotice": "Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.",
+            "riskPoint": "The main challenge is preserving original direction information while still traversing the whole graph flexibly."
+          }
+        },
+        {
+          "id": "doocs_leetcode-solution-1400-1499-1466.reorder-routes-to-make-all-paths-lead-to-the-city-zero-solution.java",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1400-1499/1466.Reorder%20Routes%20to%20Make%20All%20Paths%20Lead%20to%20the%20City%20Zero/Solution.java",
+          "localPath": "doocs_leetcode/solution/1400-1499/1466.Reorder Routes to Make All Paths Lead to the City Zero/Solution.java",
+          "relativePath": "solution/1400-1499/1466.Reorder Routes to Make All Paths Lead to the City Zero/Solution.java",
+          "languageId": "java",
+          "languageLabel": "Java",
+          "coverageType": "code+explanation",
+          "code": "class Solution {\n    private List<int[]>[] g;\n\n    public int minReorder(int n, int[][] connections) {\n        g = new List[n];\n        Arrays.setAll(g, k -> new ArrayList<>());\n        for (var e : connections) {\n            int a = e[0], b = e[1];\n            g[a].add(new int[] {b, 1});\n            g[b].add(new int[] {a, 0});\n        }\n        return dfs(0, -1);\n    }\n\n    private int dfs(int a, int fa) {\n        int ans = 0;\n        for (var e : g[a]) {\n            int b = e[0], c = e[1];\n            if (b != fa) {\n                ans += c + dfs(b, a);\n            }\n        }\n        return ans;\n    }\n}",
+          "originalCode": "class Solution {\n    private List<int[]>[] g;\n\n    public int minReorder(int n, int[][] connections) {\n        g = new List[n];\n        Arrays.setAll(g, k -> new ArrayList<>());\n        for (var e : connections) {\n            int a = e[0], b = e[1];\n            g[a].add(new int[] {b, 1});\n            g[b].add(new int[] {a, 0});\n        }\n        return dfs(0, -1);\n    }\n\n    private int dfs(int a, int fa) {\n        int ans = 0;\n        for (var e : g[a]) {\n            int b = e[0], c = e[1];\n            if (b != fa) {\n                ans += c + dfs(b, a);\n            }\n        }\n        return ans;\n    }\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root.\nclass Solution {\n    private List<int[]>[] g;\n\n    public int minReorder(int n, int[][] connections) {\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.\n        g = new List[n];\n        Arrays.setAll(g, k -> new ArrayList<>());\n        // [Reader note] Main pass\n        // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n        for (var e : connections) {\n            int a = e[0], b = e[1];\n            g[a].add(new int[] {b, 1});\n            g[b].add(new int[] {a, 0});\n        }\n        return dfs(0, -1);\n    }\n\n    private int dfs(int a, int fa) {\n        int ans = 0;\n        for (var e : g[a]) {\n            int b = e[0], c = e[1];\n            // [Reader note] Decision point\n            // Pay attention here: The main challenge is preserving original direction information while still traversing the whole graph flexibly.\n            if (b != fa) {\n                ans += c + dfs(b, a);\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return ans;\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root."
+            },
+            {
+              "line": 5,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning."
+            },
+            {
+              "line": 7,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 19,
+              "label": "Decision point",
+              "note": "Pay attention here: The main challenge is preserving original direction information while still traversing the whole graph flexibly."
+            },
+            {
+              "line": 23,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong modern graph Medium because the twist is concrete, readable, and still teaches careful traversal bookkeeping.",
+            "whatToNotice": "Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.",
+            "riskPoint": "The main challenge is preserving original direction information while still traversing the whole graph flexibly."
+          }
+        }
+      ]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-1400-1499-1466.reorder-routes-to-make-all-paths-lead-to-the-city-zero-solution.go",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1400-1499/1466.Reorder%20Routes%20to%20Make%20All%20Paths%20Lead%20to%20the%20City%20Zero/Solution.go",
+          "localPath": "doocs_leetcode/solution/1400-1499/1466.Reorder Routes to Make All Paths Lead to the City Zero/Solution.go",
+          "relativePath": "solution/1400-1499/1466.Reorder Routes to Make All Paths Lead to the City Zero/Solution.go",
+          "languageId": "go",
+          "languageLabel": "Go",
+          "coverageType": "code+explanation",
+          "code": "func minReorder(n int, connections [][]int) int {\n\tg := make([][][2]int, n)\n\tfor _, e := range connections {\n\t\ta, b := e[0], e[1]\n\t\tg[a] = append(g[a], [2]int{b, 1})\n\t\tg[b] = append(g[b], [2]int{a, 0})\n\t}\n\tvar dfs func(int, int) int\n\tdfs = func(a, fa int) (ans int) {\n\t\tfor _, e := range g[a] {\n\t\t\tif b, c := e[0], e[1]; b != fa {\n\t\t\t\tans += c + dfs(b, a)\n\t\t\t}\n\t\t}\n\t\treturn\n\t}\n\treturn dfs(0, -1)\n}",
+          "originalCode": "func minReorder(n int, connections [][]int) int {\n\tg := make([][][2]int, n)\n\tfor _, e := range connections {\n\t\ta, b := e[0], e[1]\n\t\tg[a] = append(g[a], [2]int{b, 1})\n\t\tg[b] = append(g[b], [2]int{a, 0})\n\t}\n\tvar dfs func(int, int) int\n\tdfs = func(a, fa int) (ans int) {\n\t\tfor _, e := range g[a] {\n\t\t\tif b, c := e[0], e[1]; b != fa {\n\t\t\t\tans += c + dfs(b, a)\n\t\t\t}\n\t\t}\n\t\treturn\n\t}\n\treturn dfs(0, -1)\n}",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root.\nfunc minReorder(n int, connections [][]int) int {\n\t// [Reader note] State setup\n\t// This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.\n\tg := make([][][2]int, n)\n\t// [Reader note] Main pass\n\t// This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n\tfor _, e := range connections {\n\t\ta, b := e[0], e[1]\n\t\tg[a] = append(g[a], [2]int{b, 1})\n\t\tg[b] = append(g[b], [2]int{a, 0})\n\t}\n\tvar dfs func(int, int) int\n\tdfs = func(a, fa int) (ans int) {\n\t\tfor _, e := range g[a] {\n\t\t\t// [Reader note] Decision point\n\t\t\t// Pay attention here: The main challenge is preserving original direction information while still traversing the whole graph flexibly.\n\t\t\tif b, c := e[0], e[1]; b != fa {\n\t\t\t\tans += c + dfs(b, a)\n\t\t\t}\n\t\t}\n\t\treturn\n\t}\n\t// [Reader note] Return\n\t// The final return exposes the result after the traversal and state updates have settled.\n\treturn dfs(0, -1)\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning."
+            },
+            {
+              "line": 3,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 11,
+              "label": "Decision point",
+              "note": "Pay attention here: The main challenge is preserving original direction information while still traversing the whole graph flexibly."
+            },
+            {
+              "line": 17,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong modern graph Medium because the twist is concrete, readable, and still teaches careful traversal bookkeeping.",
+            "whatToNotice": "Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.",
+            "riskPoint": "The main challenge is preserving original direction information while still traversing the whole graph flexibly."
+          }
+        }
+      ]
+    },
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "doocs_leetcode-solution-1400-1499-1466.reorder-routes-to-make-all-paths-lead-to-the-city-zero-solution.ts",
+          "repository": "doocs_leetcode",
+          "repositoryUrl": "https://github.com/doocs/leetcode",
+          "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1400-1499/1466.Reorder%20Routes%20to%20Make%20All%20Paths%20Lead%20to%20the%20City%20Zero/Solution.ts",
+          "localPath": "doocs_leetcode/solution/1400-1499/1466.Reorder Routes to Make All Paths Lead to the City Zero/Solution.ts",
+          "relativePath": "solution/1400-1499/1466.Reorder Routes to Make All Paths Lead to the City Zero/Solution.ts",
+          "languageId": "typescript",
+          "languageLabel": "TypeScript",
+          "coverageType": "code+explanation",
+          "code": "function minReorder(n: number, connections: number[][]): number {\n    const g: [number, number][][] = Array.from({ length: n }, () => []);\n    for (const [a, b] of connections) {\n        g[a].push([b, 1]);\n        g[b].push([a, 0]);\n    }\n    const dfs = (a: number, fa: number): number => {\n        let ans = 0;\n        for (const [b, c] of g[a]) {\n            if (b !== fa) {\n                ans += c + dfs(b, a);\n            }\n        }\n        return ans;\n    };\n    return dfs(0, -1);\n}\n",
+          "originalCode": "function minReorder(n: number, connections: number[][]): number {\n    const g: [number, number][][] = Array.from({ length: n }, () => []);\n    for (const [a, b] of connections) {\n        g[a].push([b, 1]);\n        g[b].push([a, 0]);\n    }\n    const dfs = (a: number, fa: number): number => {\n        let ans = 0;\n        for (const [b, c] of g[a]) {\n            if (b !== fa) {\n                ans += c + dfs(b, a);\n            }\n        }\n        return ans;\n    };\n    return dfs(0, -1);\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root.\nfunction minReorder(n: number, connections: number[][]): number {\n    // [Reader note] State setup\n    // This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.\n    const g: [number, number][][] = Array.from({ length: n }, () => []);\n    // [Reader note] Main pass\n    // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n    for (const [a, b] of connections) {\n        g[a].push([b, 1]);\n        g[b].push([a, 0]);\n    }\n    const dfs = (a: number, fa: number): number => {\n        let ans = 0;\n        for (const [b, c] of g[a]) {\n            // [Reader note] Decision point\n            // Pay attention here: The main challenge is preserving original direction information while still traversing the whole graph flexibly.\n            if (b !== fa) {\n                ans += c + dfs(b, a);\n            }\n        }\n        return ans;\n    };\n    // [Reader note] Return\n    // The final return exposes the result after the traversal and state updates have settled.\n    return dfs(0, -1);\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root."
+            },
+            {
+              "line": 2,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning."
+            },
+            {
+              "line": 3,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 10,
+              "label": "Decision point",
+              "note": "Pay attention here: The main challenge is preserving original direction information while still traversing the whole graph flexibly."
+            },
+            {
+              "line": 16,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong modern graph Medium because the twist is concrete, readable, and still teaches careful traversal bookkeeping.",
+            "whatToNotice": "Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.",
+            "riskPoint": "The main challenge is preserving original direction information while still traversing the whole graph flexibly."
+          }
+        }
+      ]
+    },
+    {
+      "id": "csharp",
+      "label": "C#",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-csharp-1466-reorder-routes-to-make-all-paths-lead-to-the-city-zero.cs",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/csharp/1466-reorder-routes-to-make-all-paths-lead-to-the-city-zero.cs",
+          "localPath": "neetcode-gh_leetcode/csharp/1466-reorder-routes-to-make-all-paths-lead-to-the-city-zero.cs",
+          "relativePath": "csharp/1466-reorder-routes-to-make-all-paths-lead-to-the-city-zero.cs",
+          "languageId": "csharp",
+          "languageLabel": "C#",
+          "coverageType": "article+code",
+          "code": "public class Solution {\n  public int MinReorder(int n, int[][] connections)\n        {\n            if (connections == null || connections?.Length < 2) return 0;\n\n            Dictionary<int, HashSet<int>> paths = new Dictionary<int, HashSet<int>>();\n            List<int>[] graph = new List<int>[n];\n            foreach (var connection in connections)\n            {\n                if (!paths.ContainsKey(connection[0]))\n                    paths.Add(connection[0], new HashSet<int>());\n\n                paths[connection[0]].Add(connection[1]);\n\n                if (graph[connection[0]] == null)\n                    graph[connection[0]] = new List<int>();\n                graph[connection[0]].Add(connection[1]);\n\n                if (graph[connection[1]] == null)\n                    graph[connection[1]] = new List<int>();\n                graph[connection[1]].Add(connection[0]);\n            }\n            int cnt = 0;\n            HashSet<int> visited = new HashSet<int>();\n            DFSMinReorder(graph, 0, paths, visited, ref cnt);\n            return cnt;\n        }\n\n        private void DFSMinReorder(List<int>[] graph, int u, Dictionary<int, HashSet<int>> paths, HashSet<int> visited, ref int cnt)\n        {\n            visited.Add(u);\n\n            if (graph[u] != null)\n            {\n                foreach (var v in graph[u])\n                {\n                    if (!visited.Contains(v))\n                    {\n                        if (paths.ContainsKey(u) && paths[u].Contains(v))\n                            cnt++;\n\n                        DFSMinReorder(graph, v, paths, visited, ref cnt);\n                    }\n                }\n            }\n        }\n}\n",
+          "originalCode": "public class Solution {\n  public int MinReorder(int n, int[][] connections)\n        {\n            if (connections == null || connections?.Length < 2) return 0;\n\n            Dictionary<int, HashSet<int>> paths = new Dictionary<int, HashSet<int>>();\n            List<int>[] graph = new List<int>[n];\n            foreach (var connection in connections)\n            {\n                if (!paths.ContainsKey(connection[0]))\n                    paths.Add(connection[0], new HashSet<int>());\n\n                paths[connection[0]].Add(connection[1]);\n\n                if (graph[connection[0]] == null)\n                    graph[connection[0]] = new List<int>();\n                graph[connection[0]].Add(connection[1]);\n\n                if (graph[connection[1]] == null)\n                    graph[connection[1]] = new List<int>();\n                graph[connection[1]].Add(connection[0]);\n            }\n            int cnt = 0;\n            HashSet<int> visited = new HashSet<int>();\n            DFSMinReorder(graph, 0, paths, visited, ref cnt);\n            return cnt;\n        }\n\n        private void DFSMinReorder(List<int>[] graph, int u, Dictionary<int, HashSet<int>> paths, HashSet<int> visited, ref int cnt)\n        {\n            visited.Add(u);\n\n            if (graph[u] != null)\n            {\n                foreach (var v in graph[u])\n                {\n                    if (!visited.Contains(v))\n                    {\n                        if (paths.ContainsKey(u) && paths[u].Contains(v))\n                            cnt++;\n\n                        DFSMinReorder(graph, v, paths, visited, ref cnt);\n                    }\n                }\n            }\n        }\n}\n",
+          "reviewedCode": "// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root.\npublic class Solution {\n  public int MinReorder(int n, int[][] connections)\n        {\n            // [Reader note] State setup\n            // This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.\n            if (connections == null || connections?.Length < 2) return 0;\n\n            Dictionary<int, HashSet<int>> paths = new Dictionary<int, HashSet<int>>();\n            List<int>[] graph = new List<int>[n];\n            foreach (var connection in connections)\n            {\n                if (!paths.ContainsKey(connection[0]))\n                    paths.Add(connection[0], new HashSet<int>());\n\n                paths[connection[0]].Add(connection[1]);\n\n                if (graph[connection[0]] == null)\n                    graph[connection[0]] = new List<int>();\n                graph[connection[0]].Add(connection[1]);\n\n                if (graph[connection[1]] == null)\n                    graph[connection[1]] = new List<int>();\n                graph[connection[1]].Add(connection[0]);\n            }\n            int cnt = 0;\n            HashSet<int> visited = new HashSet<int>();\n            DFSMinReorder(graph, 0, paths, visited, ref cnt);\n            // [Reader note] Return\n            // The final return exposes the result after the traversal and state updates have settled.\n            return cnt;\n        }\n\n        private void DFSMinReorder(List<int>[] graph, int u, Dictionary<int, HashSet<int>> paths, HashSet<int> visited, ref int cnt)\n        {\n            visited.Add(u);\n\n            if (graph[u] != null)\n            {\n                foreach (var v in graph[u])\n                {\n                    if (!visited.Contains(v))\n                    {\n                        if (paths.ContainsKey(u) && paths[u].Contains(v))\n                            cnt++;\n\n                        DFSMinReorder(graph, v, paths, visited, ref cnt);\n                    }\n                }\n            }\n        }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 1,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root."
+            },
+            {
+              "line": 4,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning."
+            },
+            {
+              "line": 26,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong modern graph Medium because the twist is concrete, readable, and still teaches careful traversal bookkeeping.",
+            "whatToNotice": "Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.",
+            "riskPoint": "The main challenge is preserving original direction information while still traversing the whole graph flexibly."
+          }
+        }
+      ]
+    },
+    {
+      "id": "kotlin",
+      "label": "Kotlin",
+      "sourceCount": 1,
+      "sources": [
+        {
+          "id": "neetcode-gh_leetcode-kotlin-1466-reorder-routes-to-make-all-paths-lead-to-the-city-zero.kt",
+          "repository": "neetcode-gh_leetcode",
+          "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+          "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/kotlin/1466-reorder-routes-to-make-all-paths-lead-to-the-city-zero.kt",
+          "localPath": "neetcode-gh_leetcode/kotlin/1466-reorder-routes-to-make-all-paths-lead-to-the-city-zero.kt",
+          "relativePath": "kotlin/1466-reorder-routes-to-make-all-paths-lead-to-the-city-zero.kt",
+          "languageId": "kotlin",
+          "languageLabel": "Kotlin",
+          "coverageType": "article+code",
+          "code": "/*\n* DFS Solution\n*/\nclass Solution {\n    fun minReorder(n: Int, connections: Array<IntArray>): Int {\n\n        val neighbors = ArrayList<ArrayList<Int>>().apply {\n            for (i in 0 until n)\n                this.add(ArrayList<Int>())\n            for ((u,v) in connections) {\n                this.get(u).apply { this.add(v) }\n                this.get(v).apply { this.add(u) }\n            }\n        }\n\n        val edges = HashSet<String>().apply {\n            for ((u,v) in connections)\n                this.add(\"$u:$v\")\n        }\n\n        var changes = 0\n        val visited = BooleanArray(n)\n\n        fun dfs(n: Int) {\n            for (nei in neighbors[n]) {\n                if (visited[nei] == true)\n                    continue\n                if (\"$nei:$n\" !in edges)\n                    changes++\n                visited[nei] = true\n                dfs(nei)\n            }\n        }\n\n        visited[0] = true\n        dfs(0)\n\n        return changes\n    }\n}\n\n/*\n* BFS Solution\n*/\nclass Solution {\n    fun minReorder(n: Int, connections: Array<IntArray>): Int {\n        // node -> (adjacentNode,isArtificialEdge)\n        val adjacencyList = mutableMapOf<Int, MutableList<Pair<Int, Boolean>>>()\n        connections.forEach { (u, v) -> // O(E)\n            adjacencyList.getOrPut(u) { mutableListOf() }.add(Pair(v, false))\n            adjacencyList.getOrPut(v) { mutableListOf() }.add(Pair(u, true))\n        }\n        val queue = LinkedList<Int>().apply { add(0) }\n        val visitedNodes = hashSetOf<Int>().apply { add(0) }\n        var minNumberOfEdgesToReOrient = 0\n        while (queue.isNotEmpty()) {\n            val removedNode = queue.remove()\n            for ((adjacentNode, isConnectedArtificially) in adjacencyList[removedNode] ?: mutableListOf()) {\n                if (adjacentNode in visitedNodes) continue\n                if (!isConnectedArtificially) minNumberOfEdgesToReOrient++\n                visitedNodes.add(adjacentNode)\n                queue.add(adjacentNode)\n            }\n        }\n        return minNumberOfEdgesToReOrient\n    }\n}\n",
+          "originalCode": "/*\n* DFS Solution\n*/\nclass Solution {\n    fun minReorder(n: Int, connections: Array<IntArray>): Int {\n\n        val neighbors = ArrayList<ArrayList<Int>>().apply {\n            for (i in 0 until n)\n                this.add(ArrayList<Int>())\n            for ((u,v) in connections) {\n                this.get(u).apply { this.add(v) }\n                this.get(v).apply { this.add(u) }\n            }\n        }\n\n        val edges = HashSet<String>().apply {\n            for ((u,v) in connections)\n                this.add(\"$u:$v\")\n        }\n\n        var changes = 0\n        val visited = BooleanArray(n)\n\n        fun dfs(n: Int) {\n            for (nei in neighbors[n]) {\n                if (visited[nei] == true)\n                    continue\n                if (\"$nei:$n\" !in edges)\n                    changes++\n                visited[nei] = true\n                dfs(nei)\n            }\n        }\n\n        visited[0] = true\n        dfs(0)\n\n        return changes\n    }\n}\n\n/*\n* BFS Solution\n*/\nclass Solution {\n    fun minReorder(n: Int, connections: Array<IntArray>): Int {\n        // node -> (adjacentNode,isArtificialEdge)\n        val adjacencyList = mutableMapOf<Int, MutableList<Pair<Int, Boolean>>>()\n        connections.forEach { (u, v) -> // O(E)\n            adjacencyList.getOrPut(u) { mutableListOf() }.add(Pair(v, false))\n            adjacencyList.getOrPut(v) { mutableListOf() }.add(Pair(u, true))\n        }\n        val queue = LinkedList<Int>().apply { add(0) }\n        val visitedNodes = hashSetOf<Int>().apply { add(0) }\n        var minNumberOfEdgesToReOrient = 0\n        while (queue.isNotEmpty()) {\n            val removedNode = queue.remove()\n            for ((adjacentNode, isConnectedArtificially) in adjacencyList[removedNode] ?: mutableListOf()) {\n                if (adjacentNode in visitedNodes) continue\n                if (!isConnectedArtificially) minNumberOfEdgesToReOrient++\n                visitedNodes.add(adjacentNode)\n                queue.add(adjacentNode)\n            }\n        }\n        return minNumberOfEdgesToReOrient\n    }\n}\n",
+          "reviewedCode": "/*\n* DFS Solution\n*/\n// [Reader note] Entry point\n// Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root.\nclass Solution {\n    fun minReorder(n: Int, connections: Array<IntArray>): Int {\n\n        // [Reader note] State setup\n        // This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.\n        val neighbors = ArrayList<ArrayList<Int>>().apply {\n            // [Reader note] Main pass\n            // This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch.\n            for (i in 0 until n)\n                this.add(ArrayList<Int>())\n            for ((u,v) in connections) {\n                this.get(u).apply { this.add(v) }\n                this.get(v).apply { this.add(u) }\n            }\n        }\n\n        val edges = HashSet<String>().apply {\n            for ((u,v) in connections)\n                this.add(\"$u:$v\")\n        }\n\n        var changes = 0\n        val visited = BooleanArray(n)\n\n        fun dfs(n: Int) {\n            for (nei in neighbors[n]) {\n                // [Reader note] Decision point\n                // Pay attention here: The main challenge is preserving original direction information while still traversing the whole graph flexibly.\n                if (visited[nei] == true)\n                    continue\n                if (\"$nei:$n\" !in edges)\n                    changes++\n                visited[nei] = true\n                dfs(nei)\n            }\n        }\n\n        visited[0] = true\n        dfs(0)\n\n        return changes\n    }\n}\n\n/*\n* BFS Solution\n*/\nclass Solution {\n    fun minReorder(n: Int, connections: Array<IntArray>): Int {\n        // node -> (adjacentNode,isArtificialEdge)\n        val adjacencyList = mutableMapOf<Int, MutableList<Pair<Int, Boolean>>>()\n        connections.forEach { (u, v) -> // O(E)\n            adjacencyList.getOrPut(u) { mutableListOf() }.add(Pair(v, false))\n            adjacencyList.getOrPut(v) { mutableListOf() }.add(Pair(u, true))\n        }\n        val queue = LinkedList<Int>().apply { add(0) }\n        val visitedNodes = hashSetOf<Int>().apply { add(0) }\n        var minNumberOfEdgesToReOrient = 0\n        while (queue.isNotEmpty()) {\n            val removedNode = queue.remove()\n            for ((adjacentNode, isConnectedArtificially) in adjacencyList[removedNode] ?: mutableListOf()) {\n                if (adjacentNode in visitedNodes) continue\n                if (!isConnectedArtificially) minNumberOfEdgesToReOrient++\n                visitedNodes.add(adjacentNode)\n                queue.add(adjacentNode)\n            }\n        }\n        // [Reader note] Return\n        // The final return exposes the result after the traversal and state updates have settled.\n        return minNumberOfEdgesToReOrient\n    }\n}",
+          "embeddedSuccessfully": true,
+          "readerEnhancementsAdded": true,
+          "enhancementNote": "Based on the attributed upstream source file. Reader-oriented explanatory comments were added for study use.",
+          "complexityHints": [],
+          "annotations": [
+            {
+              "line": 4,
+              "label": "Entry point",
+              "note": "Start from the core routine and keep this mental model in view: Traverse the network freely, but keep enough edge metadata to judge each road relative to the root."
+            },
+            {
+              "line": 7,
+              "label": "State setup",
+              "note": "This setup stage creates the state needed for the invariant or partial result: Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning."
+            },
+            {
+              "line": 8,
+              "label": "Main pass",
+              "note": "This is the main sweep where the implementation earns its efficiency instead of restarting work from scratch."
+            },
+            {
+              "line": 26,
+              "label": "Decision point",
+              "note": "Pay attention here: The main challenge is preserving original direction information while still traversing the whole graph flexibly."
+            },
+            {
+              "line": 65,
+              "label": "Return",
+              "note": "The final return exposes the result after the traversal and state updates have settled."
+            }
+          ],
+          "implementationReview": {
+            "whyThisVersion": "It is a strong modern graph Medium because the twist is concrete, readable, and still teaches careful traversal bookkeeping.",
+            "whatToNotice": "Undirected traversal over directed facts, lightweight edge annotations, and root-oriented reasoning.",
+            "riskPoint": "The main challenge is preserving original direction information while still traversing the whole graph flexibly."
+          }
+        }
+      ]
+    }
+  ],
+  "writeups": [
+    {
+      "id": "neetcode-gh_leetcode-articles-reorder-routes-to-make-all-paths-lead-to-the-city-zero.md",
+      "repository": "neetcode-gh_leetcode",
+      "repositoryUrl": "https://github.com/neetcode-gh/leetcode",
+      "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/main/articles/reorder-routes-to-make-all-paths-lead-to-the-city-zero.md",
+      "localPath": "neetcode-gh_leetcode/articles/reorder-routes-to-make-all-paths-lead-to-the-city-zero.md",
+      "relativePath": "articles/reorder-routes-to-make-all-paths-lead-to-the-city-zero.md",
+      "title": "reorder routes to make all paths lead to the city zero",
+      "excerpt": "## Prerequisites Before attempting this problem, you should be comfortable with: - **Graph Representation** - Building adjacency lists from edge lists to represent graph connections - **Depth First Search (DFS)** - Recursively traversing all nodes in a graph while tracking visited nodes - **Breadth First Search (BFS)** - Level-by-level graph traversal using a queue - **Hash Set** - Efficiently storing and checking e..."
+    },
+    {
+      "id": "doocs_leetcode-solution-1400-1499-1466.reorder-routes-to-make-all-paths-lead-to-the-city-zero-readme.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1400-1499/1466.Reorder%20Routes%20to%20Make%20All%20Paths%20Lead%20to%20the%20City%20Zero/README.md",
+      "localPath": "doocs_leetcode/solution/1400-1499/1466.Reorder Routes to Make All Paths Lead to the City Zero/README.md",
+      "relativePath": "solution/1400-1499/1466.Reorder Routes to Make All Paths Lead to the City Zero/README.md",
+      "title": "[1466. \u91cd\u65b0\u89c4\u5212\u8def\u7ebf](https://leetcode.cn/problems/reorder-routes-to-make-all-paths-lead-to-the-city-zero)",
+      "excerpt": "--- comments: true difficulty: \u4e2d\u7b49 edit_url: https://github.com/doocs/leetcode/edit/main/solution/1400-1499/1466.Reorder%20Routes%20to%20Make%20All%20Paths%20Lead%20to%20the%20City%20Zero/README.md rating: 1633 source: \u7b2c 191 \u573a\u5468\u8d5b Q3 tags: - \u6df1\u5ea6\u4f18\u5148\u641c\u7d22 - \u5e7f\u5ea6\u4f18\u5148\u641c\u7d22 - \u56fe --- <!-- problem:start --> # [1466. \u91cd\u65b0\u89c4\u5212\u8def\u7ebf](https://leetcode.cn/problems/reorder-routes-to-make-all-paths-lead-to-the-city-zero) [English Version](/solution/140..."
+    },
+    {
+      "id": "doocs_leetcode-solution-1400-1499-1466.reorder-routes-to-make-all-paths-lead-to-the-city-zero-readme_en.md",
+      "repository": "doocs_leetcode",
+      "repositoryUrl": "https://github.com/doocs/leetcode",
+      "sourceUrl": "https://github.com/doocs/leetcode/blob/main/solution/1400-1499/1466.Reorder%20Routes%20to%20Make%20All%20Paths%20Lead%20to%20the%20City%20Zero/README_EN.md",
+      "localPath": "doocs_leetcode/solution/1400-1499/1466.Reorder Routes to Make All Paths Lead to the City Zero/README_EN.md",
+      "relativePath": "solution/1400-1499/1466.Reorder Routes to Make All Paths Lead to the City Zero/README_EN.md",
+      "title": "[1466. Reorder Routes to Make All Paths Lead to the City Zero](https://leetcode.com/problems/reorder-routes-to-make-all-paths-lead-to-the-city-zero)",
+      "excerpt": "--- comments: true difficulty: Medium edit_url: https://github.com/doocs/leetcode/edit/main/solution/1400-1499/1466.Reorder%20Routes%20to%20Make%20All%20Paths%20Lead%20to%20the%20City%20Zero/README_EN.md rating: 1633 source: Weekly Contest 191 Q3 tags: - Depth-First Search - Breadth-First Search - Graph --- <!-- problem:start --> # [1466. Reorder Routes to Make All Paths Lead to the City Zero](https://leetcode.com/p..."
+    }
+  ]
+}
