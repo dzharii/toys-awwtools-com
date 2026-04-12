@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Huge Page Object Recorder Chat Fixture</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0d1117;
+        --panel: rgba(20, 27, 37, 0.88);
+        --card: rgba(255, 255, 255, 0.04);
+        --line: rgba(255, 255, 255, 0.09);
+        --text: #f7efe8;
+        --muted: #c8bbb0;
+        --accent: #ff8e5b;
+        --accent-2: #3ec0b1;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Georgia, "Times New Roman", serif;
+        background:
+          radial-gradient(circle at top right, rgba(255, 142, 91, 0.18), transparent 28%),
+          radial-gradient(circle at bottom left, rgba(62, 192, 177, 0.16), transparent 36%),
+          linear-gradient(135deg, #0d1117, #140d0b 90%);
+        color: var(--text);
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 18px;
+        min-height: 100vh;
+        padding: 18px;
+      }
+
+      .shell,
+      .sidebar,
+      .topbar,
+      .transcript,
+      .composer,
+      .row,
+      .message,
+      .stats {
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: var(--panel);
+      }
+
+      .sidebar {
+        padding: 16px;
+        display: grid;
+        align-content: start;
+        gap: 12px;
+      }
+
+      .shell {
+        padding: 16px;
+        display: grid;
+        gap: 14px;
+        grid-template-rows: auto auto 1fr auto;
+      }
+
+      .brand {
+        padding: 10px 12px;
+        border-radius: 18px;
+        background:
+          linear-gradient(135deg, rgba(255, 142, 91, 0.18), rgba(62, 192, 177, 0.12));
+      }
+
+      .row,
+      .message,
+      .stats {
+        padding: 14px;
+      }
+
+      .row {
+        display: grid;
+        gap: 6px;
+        cursor: pointer;
+      }
+
+      .row:hover,
+      button:hover {
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+
+      .row .eyebrow,
+      .stats .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .topbar {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        gap: 14px;
+        padding: 14px;
+      }
+
+      .topbar input {
+        width: 100%;
+        min-height: 44px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: rgba(0, 0, 0, 0.18);
+        color: var(--text);
+        padding: 0 12px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+
+      .transcript {
+        padding: 16px;
+        overflow: auto;
+        display: grid;
+        gap: 12px;
+      }
+
+      .message {
+        display: grid;
+        gap: 8px;
+      }
+
+      .message-meta {
+        display: flex;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .composer {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        padding: 14px;
+        align-items: end;
+      }
+
+      .composer textarea {
+        width: 100%;
+        min-height: 120px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: rgba(0, 0, 0, 0.16);
+        color: var(--text);
+        padding: 12px;
+        resize: vertical;
+      }
+
+      .composer-actions {
+        display: grid;
+        gap: 10px;
+      }
+
+      button {
+        min-height: 46px;
+        padding: 0 14px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text);
+        cursor: pointer;
+        font: inherit;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: rgba(255, 142, 91, 0.18);
+      }
+
+      .send-button {
+        background:
+          linear-gradient(135deg, rgba(255, 142, 91, 0.92), rgba(62, 192, 177, 0.8));
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 24px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(255, 142, 91, 0.18);
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      @media (max-width: 960px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+
+        .topbar,
+        .composer {
+          grid-template-columns: 1fr;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar" aria-label="Conversation sidebar" data-testid="conversation-sidebar">
+        <div class="brand">
+          <div class="eyebrow">Operator Console</div>
+          <h1 style="margin: 4px 0 0;">Huge Chat</h1>
+          <p class="muted">A deliberate fixture with good and bad selector signals.</p>
+        </div>
+        <button type="button" aria-label="Create new conversation" data-testid="new-chat-button">New Chat</button>
+        <label class="row" for="sidebar-search">
+          <span class="eyebrow">Search</span>
+          <input id="sidebar-search" name="sidebar-search" type="search" placeholder="Search conversations…" aria-label="Search conversations" />
+        </label>
+        <div class="row c0f2a8b-block css-19xy7l" data-testid="conversation-row" role="button" tabindex="0">
+          <strong>Launch Notes</strong>
+          <span class="muted">Selectors for tonight</span>
+          <div class="message-meta"><span>8:42 PM</span><span class="badge">2</span></div>
+        </div>
+        <div class="row q9t4n3a-block css-11ab2d" data-testid="conversation-row" role="button" tabindex="0">
+          <strong>Replay Audit</strong>
+          <span class="muted">Failed menu trigger</span>
+          <div class="message-meta"><span>Yesterday</span><span class="badge">5</span></div>
+        </div>
+        <div class="row z7d8k2f-block css-87pl20" data-testid="conversation-row" role="button" tabindex="0">
+          <strong>Transcript Sweep</strong>
+          <span class="muted">Collection heuristics</span>
+          <div class="message-meta"><span>11:15 AM</span><span class="badge">1</span></div>
+        </div>
+      </aside>
+
+      <main class="shell">
+        <section class="topbar">
+          <div class="stats" data-testid="workspace-header">
+            <div class="eyebrow">Current Workspace</div>
+            <h2 style="margin: 8px 0 6px;">Selector Quality Review</h2>
+            <p class="muted">
+              Use this fixture to test transcript inference, repeated message collection detection, and composer scoping.
+            </p>
+          </div>
+          <div class="stats-grid">
+            <div class="stats">
+              <div class="eyebrow">Unread</div>
+              <strong>8</strong>
+            </div>
+            <div class="stats">
+              <div class="eyebrow">Pinned</div>
+              <strong>3</strong>
+            </div>
+            <div class="stats">
+              <div class="eyebrow">Latency</div>
+              <strong>124 ms</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="topbar" aria-label="Toolbar">
+          <label class="row" for="thread-search">
+            <span class="eyebrow">Thread Filter</span>
+            <input
+              id="thread-search"
+              name="thread-search"
+              type="search"
+              inputmode="search"
+              autocomplete="off"
+              placeholder="Filter transcript…"
+              aria-label="Filter transcript"
+              spellcheck="false"
+            />
+          </label>
+          <div class="stats">
+            <div class="eyebrow">Actions</div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px;">
+              <button type="button" aria-label="Open attachments">Attach</button>
+              <button type="button" aria-label="Insert emoji">Emoji</button>
+              <button type="button" aria-label="More conversation actions">More</button>
+            </div>
+          </div>
+        </section>
+
+        <section
+          class="transcript"
+          aria-label="Chat transcript"
+          role="log"
+          data-testid="chat-transcript"
+          style="min-height: 420px;"
+        >
+          <article class="message k2a91d-card css-8843qa" data-testid="message-item">
+            <div class="message-meta">
+              <strong data-testid="message-sender">Analyst</strong>
+              <time aria-label="Sent at 8:41 PM">8:41 PM</time>
+            </div>
+            <div data-testid="message-body">The area selection should infer this region as the transcript, not as one isolated message node.</div>
+            <div class="message-meta">
+              <button type="button" aria-label="React to message">🙂</button>
+              <button type="button" aria-label="More message actions">•••</button>
+            </div>
+          </article>
+
+          <article class="message u7q11v-card css-12plmn" data-testid="message-item">
+            <div class="message-meta">
+              <strong data-testid="message-sender">Recorder</strong>
+              <time aria-label="Sent at 8:42 PM">8:42 PM</time>
+            </div>
+            <div data-testid="message-body">The send button is icon-friendly because it has a stable data-testid and aria-label instead of text only.</div>
+            <div class="message-meta">
+              <button type="button" aria-label="React to message">👍</button>
+              <button type="button" aria-label="More message actions">•••</button>
+            </div>
+          </article>
+
+          <article class="message w0m44t-card css-44zzqa" data-testid="message-item">
+            <div class="message-meta">
+              <strong data-testid="message-sender">Operator</strong>
+              <time aria-label="Sent at 8:43 PM">8:43 PM</time>
+            </div>
+            <div data-testid="message-body">Generated-looking classes exist in this fixture so selector scoring can penalize them.</div>
+            <div class="message-meta">
+              <button type="button" aria-label="React to message">🔥</button>
+              <button type="button" aria-label="More message actions">•••</button>
+            </div>
+          </article>
+        </section>
+
+        <form class="composer" aria-label="Message composer" data-testid="message-composer">
+          <label class="row" for="message-input">
+            <span class="eyebrow">Composer</span>
+            <textarea
+              id="message-input"
+              name="message-input"
+              aria-label="Message input"
+              data-testid="message-input"
+              placeholder="Write the next automation note…"
+            ></textarea>
+          </label>
+          <div class="composer-actions">
+            <button type="button" aria-label="Attach file" title="Attach file">Attach</button>
+            <button type="button" aria-label="Insert emoji" title="Insert emoji">Emoji</button>
+            <button
+              type="submit"
+              class="send-button"
+              data-testid="send-button"
+              aria-label="Send message"
+              title="Send message"
+            >
+              Send
+            </button>
+          </div>
+        </form>
+      </main>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#11161d" />
+    <title>Huge Page Object Recorder Bookmarklet</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #11161d;
+        --bg-2: #19222e;
+        --line: rgba(232, 238, 244, 0.14);
+        --line-strong: rgba(232, 238, 244, 0.28);
+        --panel: rgba(22, 29, 39, 0.94);
+        --panel-soft: rgba(29, 37, 48, 0.88);
+        --panel-ghost: rgba(255, 255, 255, 0.03);
+        --text: #f4f7fb;
+        --muted: #a9b3c0;
+        --accent: #8dc1ff;
+        --accent-2: #ffd26d;
+        --accent-3: #7de0c3;
+        --shadow: 0 26px 72px rgba(0, 0, 0, 0.34);
+        --radius-lg: 28px;
+        --radius-md: 18px;
+        --radius-sm: 12px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background:
+          radial-gradient(circle at top left, rgba(141, 193, 255, 0.12), transparent 32%),
+          radial-gradient(circle at bottom right, rgba(125, 224, 195, 0.1), transparent 36%),
+          linear-gradient(135deg, var(--bg), var(--bg-2));
+        color: var(--text);
+      }
+
+      body {
+        font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        padding: 24px;
+      }
+
+      a,
+      button {
+        color: inherit;
+        font: inherit;
+      }
+
+      .page {
+        max-width: 1280px;
+        margin: 0 auto;
+        display: grid;
+        gap: 20px;
+      }
+
+      .hero,
+      .brief,
+      .workbench,
+      .guide-card,
+      .window-card,
+      .spec-card {
+        border: 1px solid var(--line);
+        background: var(--panel);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow);
+      }
+
+      .hero {
+        padding: 24px;
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(320px, 420px);
+        gap: 20px;
+      }
+
+      .eyebrow,
+      .kicker,
+      .label {
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-size: 11px;
+        color: var(--accent-2);
+      }
+
+      h1,
+      h2,
+      h3,
+      p,
+      ul {
+        margin: 0;
+      }
+
+      h1,
+      h2 {
+        text-wrap: balance;
+      }
+
+      h1 {
+        font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+        font-size: clamp(2.7rem, 6vw, 5.4rem);
+        line-height: 0.92;
+        max-width: 11ch;
+      }
+
+      h2 {
+        font-size: 1rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      p,
+      li {
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      .hero-copy {
+        display: grid;
+        gap: 16px;
+      }
+
+      .hero-actions,
+      .pill-row,
+      .meta-row,
+      .fixture-actions,
+      .window-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .button {
+        min-height: 44px;
+        padding: 0 16px;
+        border-radius: 999px;
+        border: 1px solid var(--line-strong);
+        text-decoration: none;
+        cursor: pointer;
+        background: linear-gradient(180deg, rgba(141, 193, 255, 0.18), rgba(141, 193, 255, 0.08));
+        transition: transform 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: rgba(141, 193, 255, 0.18);
+      }
+
+      .button:hover {
+        transform: translateY(-1px);
+        border-color: rgba(141, 193, 255, 0.52);
+      }
+
+      .button.secondary {
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .button:focus-visible {
+        outline: 2px solid rgba(141, 193, 255, 0.84);
+        outline-offset: 3px;
+      }
+
+      .brief {
+        padding: 20px;
+        display: grid;
+        gap: 12px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02)),
+          var(--panel-soft);
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 26px;
+        padding: 0 10px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.03);
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .hero-aside {
+        display: grid;
+        gap: 12px;
+      }
+
+      .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .meta-card {
+        padding: 14px;
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--line);
+      }
+
+      .meta-card strong {
+        display: block;
+        margin-top: 6px;
+        font-size: 1.2rem;
+      }
+
+      .workbench {
+        padding: 18px;
+        display: grid;
+        gap: 16px;
+      }
+
+      .workbench-head {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: flex-end;
+        justify-content: space-between;
+      }
+
+      .workbench-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.85fr);
+        gap: 16px;
+      }
+
+      .window-card {
+        padding: 14px;
+        border-radius: 22px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)),
+          #0f141b;
+      }
+
+      .window-shell {
+        border: 1px solid rgba(226, 234, 243, 0.18);
+        border-radius: 18px;
+        overflow: hidden;
+        background: #e8eaee;
+        color: #171c22;
+      }
+
+      .window-bar,
+      .window-toolbar,
+      .window-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 0 12px;
+      }
+
+      .window-bar {
+        min-height: 38px;
+        background: linear-gradient(180deg, #f6f6f8, #d9dce2);
+        border-bottom: 1px solid rgba(21, 26, 34, 0.16);
+      }
+
+      .window-lights {
+        display: flex;
+        gap: 6px;
+      }
+
+      .window-light {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: #ff5f57;
+      }
+
+      .window-light:nth-child(2) {
+        background: #ffbd2f;
+      }
+
+      .window-light:nth-child(3) {
+        background: #28c840;
+      }
+
+      .window-toolbar {
+        min-height: 40px;
+        background: #dfe4ea;
+        border-bottom: 1px solid rgba(21, 26, 34, 0.12);
+      }
+
+      .mini-button,
+      .mini-pill {
+        min-height: 26px;
+        padding: 0 9px;
+        border-radius: 8px;
+        border: 1px solid rgba(21, 26, 34, 0.18);
+        background: linear-gradient(180deg, #ffffff, #d9dee6);
+        font-size: 12px;
+      }
+
+      .mini-pill {
+        display: inline-flex;
+        align-items: center;
+        background: #f7f8fa;
+      }
+
+      .window-main {
+        display: grid;
+        grid-template-columns: 210px 1fr;
+        min-height: 460px;
+      }
+
+      .window-nav,
+      .window-inspector {
+        padding: 12px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .window-nav {
+        background: #f5f7fa;
+        border-right: 1px solid rgba(21, 26, 34, 0.12);
+        align-content: start;
+      }
+
+      .nav-row,
+      .inspector-panel {
+        border-radius: 12px;
+        border: 1px solid rgba(21, 26, 34, 0.13);
+        background: #ffffff;
+      }
+
+      .nav-row {
+        padding: 9px;
+        display: grid;
+        gap: 4px;
+      }
+
+      .nav-row.active {
+        background: #dbeafe;
+      }
+
+      .inspector-panel {
+        padding: 10px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .code-field {
+        padding: 10px;
+        border-radius: 10px;
+        background: #edf2f7;
+        border: 1px solid rgba(21, 26, 34, 0.12);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 12px;
+        color: #112030;
+        overflow: auto;
+        white-space: pre;
+      }
+
+      .window-footer {
+        min-height: 42px;
+        background: #dfe4ea;
+        border-top: 1px solid rgba(21, 26, 34, 0.12);
+      }
+
+      .guide-column {
+        display: grid;
+        gap: 12px;
+      }
+
+      .guide-card,
+      .spec-card {
+        padding: 16px;
+        border-radius: 22px;
+        background: var(--panel-soft);
+      }
+
+      .guide-card ul,
+      .spec-card ul {
+        padding-left: 18px;
+      }
+
+      .fixture-frame {
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.035);
+        padding: 14px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .fixture-grid {
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        gap: 12px;
+        min-height: 400px;
+      }
+
+      .fixture-sidebar,
+      .fixture-body,
+      .fixture-transcript,
+      .fixture-composer,
+      .fixture-row,
+      .fixture-message {
+        border-radius: 16px;
+        border: 1px solid var(--line);
+      }
+
+      .fixture-sidebar,
+      .fixture-body {
+        background: var(--panel-ghost);
+      }
+
+      .fixture-sidebar {
+        padding: 12px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .fixture-body {
+        padding: 12px;
+        display: grid;
+        gap: 12px;
+        grid-template-rows: 1fr auto;
+      }
+
+      .fixture-row,
+      .fixture-message,
+      .fixture-composer {
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .fixture-transcript {
+        padding: 12px;
+        display: grid;
+        gap: 10px;
+        overflow: auto;
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .fixture-composer {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+      }
+
+      .fixture-composer textarea {
+        width: 100%;
+        min-height: 90px;
+        padding: 10px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        background: rgba(0, 0, 0, 0.18);
+        color: var(--text);
+        resize: vertical;
+      }
+
+      .spec-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .button {
+          transition: none;
+        }
+      }
+
+      @media (max-width: 1080px) {
+        .hero,
+        .workbench-grid,
+        .spec-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 760px) {
+        body {
+          padding: 14px;
+        }
+
+        .fixture-grid,
+        .window-main,
+        .fixture-composer {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow">Bookmarklet Utility Window</div>
+          <h1>Inspect live UI like a compact desktop tool, not a broken demo card.</h1>
+          <p>
+            Huge Page Object Recorder scans a live page, promotes meaningful controls and regions, reranks
+            selector heuristics, and exports page-object JSON without turning the whole experience into a
+            sloppy inspector pile.
+          </p>
+          <div class="pill-row">
+            <span class="pill">Self-contained bookmarklet bundle</span>
+            <span class="pill">Region-first selector modeling</span>
+            <span class="pill">Shadow DOM isolated inspector</span>
+          </div>
+          <div class="hero-actions">
+            <button class="button" type="button" id="run-on-page">Run On This Page</button>
+            <a class="button secondary" href="./examples/chat.html">Open Full Chat Fixture</a>
+            <a class="button secondary" href="./readme.md">Read Project Notes</a>
+          </div>
+        </div>
+
+        <aside class="hero-aside">
+          <section class="brief">
+            <div class="kicker">Product Brief</div>
+            <p>
+              The tool stays near the page edge, keeps long selectors inside proper code fields, and lets you
+              move between scan, selection, heuristic review, testing, and export without losing context.
+            </p>
+          </section>
+          <div class="meta-grid">
+            <article class="meta-card">
+              <div class="label">Build</div>
+              <strong>Readable</strong>
+              <p>Readable non-minified bundle produced by Bun.</p>
+            </article>
+            <article class="meta-card">
+              <div class="label">Runtime</div>
+              <strong>Injected</strong>
+              <p>Overlay lives inside the current page and cleans up after itself.</p>
+            </article>
+            <article class="meta-card">
+              <div class="label">Focus</div>
+              <strong>Selectors</strong>
+              <p>Stable attributes, region scope, collection items, and manual override.</p>
+            </article>
+            <article class="meta-card">
+              <div class="label">Output</div>
+              <strong>JSON</strong>
+              <p>Structured page-object export for later Playwright, Puppeteer, or Selenium generation.</p>
+            </article>
+          </div>
+        </aside>
+      </section>
+
+      <section class="workbench">
+        <div class="workbench-head">
+          <div>
+            <div class="kicker">Window Study</div>
+            <h2>Operating-System Utility Window Direction</h2>
+          </div>
+          <div class="meta-row">
+            <span class="pill">macOS-inspired calm theme</span>
+            <span class="pill">Windows XP-inspired inverse default</span>
+          </div>
+        </div>
+
+        <div class="workbench-grid">
+          <article class="window-card" aria-label="Window specimen">
+            <div class="window-shell">
+              <div class="window-bar">
+                <div class="window-lights">
+                  <span class="window-light"></span>
+                  <span class="window-light"></span>
+                  <span class="window-light"></span>
+                </div>
+                <strong>Page Object Recorder</strong>
+                <span class="label" style="color:#55606d;">inspect mode · 3 selected</span>
+              </div>
+              <div class="window-toolbar">
+                <div class="window-actions">
+                  <button class="mini-button" type="button">Scan</button>
+                  <button class="mini-button" type="button">Select Element</button>
+                  <button class="mini-button" type="button">Select Area</button>
+                </div>
+                <span class="mini-pill">3 selected</span>
+              </div>
+              <div class="window-main">
+                <div class="window-nav">
+                  <div class="nav-row active">
+                    <strong>composer</strong>
+                    <span style="color:#66717d;">region · 92% confidence</span>
+                  </div>
+                  <div class="nav-row">
+                    <strong>messageInput</strong>
+                    <span style="color:#66717d;">control · 87% confidence</span>
+                  </div>
+                  <div class="nav-row">
+                    <strong>sendButton</strong>
+                    <span style="color:#66717d;">control · 84% confidence</span>
+                  </div>
+                </div>
+                <div class="window-inspector">
+                  <div class="inspector-panel">
+                    <span class="label" style="color:#69717d;">Current Object</span>
+                    <strong>sendButton</strong>
+                    <div class="meta-row">
+                      <span class="mini-pill">button</span>
+                      <span class="mini-pill">inside composer</span>
+                      <span class="mini-pill">84% confidence</span>
+                    </div>
+                  </div>
+                  <div class="inspector-panel">
+                    <span class="label" style="color:#69717d;">Heuristic</span>
+                    <button class="mini-button" type="button">Region-Scoped Semantic</button>
+                  </div>
+                  <div class="inspector-panel">
+                    <span class="label" style="color:#69717d;">Selector</span>
+                    <div class="code-field">[data-testid="send-button"]</div>
+                    <div class="meta-row">
+                      <span class="mini-pill">CSS</span>
+                      <span class="mini-pill">Score 58</span>
+                      <span class="mini-pill">Matches 1</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="window-footer">
+                <div class="window-actions">
+                  <button class="mini-button" type="button">Copy JSON</button>
+                  <button class="mini-button" type="button">Show JSON</button>
+                </div>
+                <span class="label" style="color:#56616d;">clipboard ready</span>
+              </div>
+            </div>
+          </article>
+
+          <div class="guide-column">
+            <article class="guide-card">
+              <div class="kicker">What Improved</div>
+              <ul>
+                <li>The overlay now mounts safely on Trusted Types pages because the UI is built with explicit DOM APIs.</li>
+                <li>The tool lives in a shadow root, so host page CSS cannot flatten or distort the inspector window.</li>
+                <li>Long selector strings stay inside monospace editor fields instead of blowing out the entire layout.</li>
+              </ul>
+            </article>
+
+            <article class="guide-card">
+              <div class="kicker">Primary Flow</div>
+              <ul>
+                <li>Scan the page to collect visible automation-relevant candidates.</li>
+                <li>Use hover selection or drag-area selection to capture regions, controls, and collections.</li>
+                <li>Rerun heuristics, test selectors, compare alternatives, then copy exported JSON.</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+
+        <section class="fixture-frame" aria-label="Embedded mini fixture">
+          <div class="fixture-actions">
+            <div>
+              <div class="kicker">Fixture Preview</div>
+              <h2>Embedded Chat-Like Surface</h2>
+            </div>
+            <span class="pill">Sidebar</span>
+            <span class="pill">Transcript</span>
+            <span class="pill">Composer</span>
+          </div>
+
+          <div class="fixture-grid">
+            <aside class="fixture-sidebar" aria-label="Conversation sidebar">
+              <div class="fixture-row" data-testid="new-chat-row">New Chat</div>
+              <div class="fixture-row" data-testid="conversation-row-alpha">Launch Notes</div>
+              <div class="fixture-row" data-testid="conversation-row-beta">Selector Ideas</div>
+              <div class="fixture-row" data-testid="conversation-row-gamma">Regression Radar</div>
+            </aside>
+
+            <section class="fixture-body">
+              <div class="fixture-transcript" aria-label="Transcript preview">
+                <article class="fixture-message" data-testid="message-card">
+                  <strong>Analyst</strong>
+                  <p>Area selection should infer the transcript and repeated message collection before one fixed node.</p>
+                </article>
+                <article class="fixture-message" data-testid="message-card">
+                  <strong>Recorder</strong>
+                  <p>The send button should rank stable authored selectors above generated class chains.</p>
+                </article>
+              </div>
+
+              <form class="fixture-composer" aria-label="Message composer preview">
+                <textarea
+                  aria-label="Message input"
+                  data-testid="message-input"
+                  placeholder="Write the next automation note…"
+                ></textarea>
+                <div class="fixture-actions">
+                  <button class="button secondary" type="button">Attach</button>
+                  <button class="button" type="submit">Send</button>
+                </div>
+              </form>
+            </section>
+          </div>
+        </section>
+      </section>
+
+      <section class="spec-grid">
+        <article class="spec-card">
+          <div class="kicker">Selector Strategy</div>
+          <ul>
+            <li>Stable attributes first, but region scoping wins when a control belongs inside a meaningful parent.</li>
+            <li>Collection item mode promotes repeated units instead of one brittle instance.</li>
+            <li>Manual selector mode remains editable and testable without being overwritten automatically.</li>
+          </ul>
+        </article>
+        <article class="spec-card">
+          <div class="kicker">Tool Behavior</div>
+          <ul>
+            <li>Window drag and resize keep the title bar reachable and the panel inside the viewport.</li>
+            <li>Toolbar, navigator, inspector, and footer stay structurally stable while the main body scrolls internally.</li>
+            <li>Themes invert desktop defaults: macOS gets XP-inspired framing; Windows and Linux get the calmer macOS-like panel.</li>
+          </ul>
+        </article>
+        <article class="spec-card">
+          <div class="kicker">Validation</div>
+          <ul>
+            <li>The project builds with Bun into a single readable bookmarklet file.</li>
+            <li>Pure logic and safety constraints are covered by Bun tests and static assertions.</li>
+            <li>The chat fixture exists for manual validation on real pages and bookmarklet paste-run testing.</li>
+          </ul>
+        </article>
+      </section>
+    </main>
+
+    <script>
+      document.getElementById("run-on-page").addEventListener("click", async () => {
+        const response = await fetch("./dist/bookmarklet.js", { cache: "no-store" });
+        const source = await response.text();
+        window.eval(source);
+      });
+    </script>
+  </body>
+</html>

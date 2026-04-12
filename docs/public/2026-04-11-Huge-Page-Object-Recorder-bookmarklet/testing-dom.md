@@ -1,0 +1,4 @@
+ - https://bun.com/docs/test/dom
+ - https://bun.com/docs/test/lifecycle
+ - https://bun.com/guides/test/happy-dom
+ - https://github.com/capricorn86/happy-dom/wiki/Setup-as-Test-Environment
