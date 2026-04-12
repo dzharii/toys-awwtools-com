@@ -66,6 +66,7 @@ test.describe.serial("Explorer acceptance @acceptance", () => {
     await expect(explorer.detailPane).toBeVisible();
     await expect(explorer.roadmapPanel).toBeVisible();
     await expect(explorer.roadmapSvg).toBeVisible();
+    await expect(page.locator("body")).not.toContainText("undefined");
     expect(await explorer.getVisibleRowCount()).toBeGreaterThan(20);
     await explorer.takeScreenshot("initial-page-load");
     logger.log("Assertion complete: workspace is visible.");
@@ -184,6 +185,33 @@ test.describe.serial("Explorer acceptance @acceptance", () => {
     await expect(page.locator("body")).toHaveAttribute("data-detail-expanded", "true");
     await explorer.takeScreenshot("detail-pane-expanded");
     logger.log("Assertion complete: detail pane widened materially.");
+  });
+
+  test("pick next and clear saved state behave like explicit user controls @acceptance", async ({ page }, testInfo) => {
+    const logger = createLogger(process.env.BROWSER_TEST_LOG_FILE, { mirrorToConsole: false }).child(
+      `[${sanitizeSegment(testInfo.title)}]`,
+    );
+    const explorer = new ExplorerPage(page, logger);
+    page.__explorer = explorer;
+    page.__testInfo = testInfo;
+    page.__testSlug = sanitizeSegment(testInfo.title);
+
+    logger.log("Test start.");
+    await explorer.open();
+    await explorer.selectProblemByTitle("Decode Ways");
+    await explorer.pickNext();
+    await expect(explorer.detailTitle).not.toContainText("Decode Ways");
+
+    await explorer.selectProblemByTitle("Decode Ways");
+    await explorer.markSolved();
+    await explorer.togglePinned();
+    await explorer.writeNote("Clear state acceptance note.");
+    await explorer.clearSavedState();
+    await expect(page.getByTestId("problem-note")).toHaveValue("");
+    await expect(page.getByTestId("detail-solved")).toHaveText("Mark solved");
+    await expect(page.getByTestId("detail-pinned")).toHaveText("Pin problem");
+    await expect(page.locator("body")).not.toContainText("Clear state acceptance note.");
+    logger.log("Assertion complete: pick-next and clear-state controls behaved correctly.");
   });
 
   test("topic guide navigation works from the main explorer @acceptance", async ({ page }, testInfo) => {

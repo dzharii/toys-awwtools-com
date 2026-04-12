@@ -28,6 +28,8 @@ class ExploratorySession {
     this.observations = [];
     this.screenshots = [];
     this.browserProcessesBefore = [];
+    this.previousScreenshotDir = null;
+    this.previousRunId = null;
   }
 
   async start(sessionMeta = {}) {
@@ -37,6 +39,11 @@ class ExploratorySession {
     const environmentSummary = collectEnvironmentSummary(this.projectRoot);
     const environmentFile = path.join(this.sessionRoot, "environment.json");
     fs.writeFileSync(environmentFile, `${JSON.stringify(environmentSummary, null, 2)}\n`, "utf8");
+
+    this.previousScreenshotDir = process.env.BROWSER_TEST_SCREENSHOT_DIR;
+    this.previousRunId = process.env.BROWSER_TEST_RUN_ID;
+    process.env.BROWSER_TEST_SCREENSHOT_DIR = this.screenshotDir;
+    process.env.BROWSER_TEST_RUN_ID = this.runId;
 
     this.browserProcessesBefore = listBrowserProcesses();
 
@@ -119,6 +126,11 @@ class ExploratorySession {
       reportPath: this.reportPath,
       manifestPath: this.manifestPath,
     });
+
+    if (typeof this.previousScreenshotDir === "string") process.env.BROWSER_TEST_SCREENSHOT_DIR = this.previousScreenshotDir;
+    else delete process.env.BROWSER_TEST_SCREENSHOT_DIR;
+    if (typeof this.previousRunId === "string") process.env.BROWSER_TEST_RUN_ID = this.previousRunId;
+    else delete process.env.BROWSER_TEST_RUN_ID;
   }
 
   async captureStep(options) {
@@ -139,7 +151,19 @@ class ExploratorySession {
     });
 
     const snapshot = await this.explorer.collectSnapshot();
-    await this.page.screenshot({ path: screenshotPath, fullPage: true });
+    if (options.screenshotTarget) {
+      await this.explorer.takeFocusedScreenshot(
+        `${this.sessionSlug}-${stepId}-${stepSlug}`,
+        options.screenshotTarget,
+        {
+          ...(options.screenshotFullPage === false ? {} : {}),
+        },
+      );
+      const focusedPath = path.join(this.screenshotDir, `${this.runId}-${sanitizeSegment(`${this.sessionSlug}-${stepId}-${stepSlug}`)}.png`);
+      recordScreenshotPath(focusedPath, screenshotPath);
+    } else {
+      await this.page.screenshot({ path: screenshotPath, fullPage: options.screenshotFullPage !== false });
+    }
 
     const record = {
       stepId,
@@ -152,6 +176,7 @@ class ExploratorySession {
       reviewQuestions: options.reviewQuestions || [],
       snapshot,
       screenshotPath,
+      screenshotTarget: options.screenshotTarget || "full-page",
     };
 
     this.screenshots.push(record);
@@ -234,6 +259,7 @@ class ExploratorySession {
       `- Solution languages: ${record.snapshot.solutionLanguages.length ? record.snapshot.solutionLanguages.join(" | ") : "n/a"}`,
       `- Sample visible titles: ${record.snapshot.sampleTitles.length ? record.snapshot.sampleTitles.join(" | ") : "n/a"}`,
       `- Screenshot: [${path.basename(record.screenshotPath)}](./screenshots/${path.basename(record.screenshotPath)})`,
+      `- Screenshot target: ${record.screenshotTarget}`,
       "",
     ];
     fs.appendFileSync(this.reportPath, `${lines.join("\n")}\n`, "utf8");
@@ -267,6 +293,13 @@ function describeAction(action) {
   const type = action.type || "unknown";
   const value = action.value ?? action.text ?? action.label ?? "";
   return value ? `${type}(${value})` : type;
+}
+
+function recordScreenshotPath(actualPath, expectedPath) {
+  if (actualPath === expectedPath) return;
+  if (fs.existsSync(actualPath) && !fs.existsSync(expectedPath)) {
+    fs.renameSync(actualPath, expectedPath);
+  }
 }
 
 module.exports = {

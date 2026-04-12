@@ -128,6 +128,7 @@ Reusable charters currently included:
 
 - `charters/explorer-desktop-sweep.json`
 - `charters/explorer-content-expansion-sweep.json`
+- `charters/explorer-full-product-hostile-audit.json`
 - `charters/explorer-suggestions006-audit.json`
 - `charters/explorer-suggestions007-audit.json`
 
@@ -148,6 +149,19 @@ The content-expansion sweep covers:
 4. the solution workspace
 5. a prefix-sums search flow
 6. the new prefix-sums guide
+
+The full hostile audit covers:
+
+1. landing trust and feature inventory
+2. left rail and advanced filters
+3. recommendations and guide-strip quality
+4. roadmap operation and density
+5. compact catalog scanning
+6. narrow search/sort states
+7. saved-state combination and reload
+8. widened detail reading quality
+9. inline and modal solution surfaces
+10. topic-guide quality and return path
 
 The suggestions006 audit covers:
 
@@ -197,6 +211,14 @@ Supported actions:
 - `selectSolutionLanguage`
 - `selectSolutionSource`
 - `toggleDetailWidth`
+- `togglePinned`
+- `toggleCompactCatalog`
+- `setSort`
+- `toggleAdvancedFilters`
+- `clickSidebarToken`
+- `scrollSurface`
+- `reload`
+- `clearSavedState`
 - `selectInlineSolutionLanguage`
 - `openInlineSolutionSpoiler`
 - `markSolved`

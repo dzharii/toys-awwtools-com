@@ -258,7 +258,7 @@
         (guide) => `
           <a class="guide-link" href="${guide.path}">
             <strong>${escapeHtml(guide.title)}</strong>
-            <span>Concept page with examples and traces</span>
+            <span>${escapeHtml(getGuideSummary(guide, 72))}</span>
           </a>
         `,
       )
@@ -469,7 +469,7 @@
         (guide) => `
           <a class="guide-link" href="${guide.path}" data-testid="guide-link">
             <strong>${escapeHtml(guide.title)}</strong>
-            <span>${escapeHtml(guide.description)}</span>
+            <span>${escapeHtml(getGuideSummary(guide, 72))}</span>
           </a>
         `,
       )
@@ -1775,6 +1775,22 @@
     const markdownMatch = raw.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
     if (markdownMatch) return markdownMatch[1];
     return raw.replace(/^#+\s*/, "").trim();
+  }
+
+  function getGuideSummary(guide, maxLength = 96) {
+    const raw =
+      guide?.description ||
+      guide?.summary ||
+      guideLibrary[guide?.id || ""]?.summary ||
+      "Pattern guide with fit signals, review prompts, and linked practice.";
+    const normalized = String(raw).replace(/\s+/g, " ").trim();
+    if (normalized.length <= maxLength) return normalized;
+    const shortened = normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd();
+    const boundary = shortened.lastIndexOf(" ");
+    if (boundary > Math.max(18, maxLength * 0.55)) {
+      return `${shortened.slice(0, boundary).trimEnd()}…`;
+    }
+    return `${shortened}…`;
   }
 
   function metaPill(text, tone = "") {

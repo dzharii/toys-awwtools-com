@@ -191,8 +191,32 @@ async function executeAction(session, action) {
     case "markSolved":
       await session.explorer.markSolved();
       return;
+    case "togglePinned":
+      await session.explorer.togglePinned();
+      return;
     case "writeNote":
       await session.explorer.writeNote(action.value || "");
+      return;
+    case "toggleCompactCatalog":
+      await session.explorer.toggleCompactCatalog();
+      return;
+    case "setSort":
+      await session.explorer.setSort(action.value);
+      return;
+    case "toggleAdvancedFilters":
+      await session.explorer.toggleAdvancedFilters();
+      return;
+    case "clickSidebarToken":
+      await session.explorer.clickSidebarToken(action.value);
+      return;
+    case "scrollSurface":
+      await session.explorer.scrollSurface(action.target || action.surface || action.value, action.position || "bottom");
+      return;
+    case "reload":
+      await session.explorer.reload();
+      return;
+    case "clearSavedState":
+      await session.explorer.clearSavedState();
       return;
     case "observe":
       session.addObservation(action.value || "Observation recorded from charter action.", {

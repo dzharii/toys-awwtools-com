@@ -8,8 +8,14 @@ class ExplorerPage {
     this.page = page;
     this.logger = logger;
     this.baseUrl = options.baseUrl || process.env.PLAYWRIGHT_BASE_URL || "";
+    this.orientationRail = page.getByTestId("orientation-rail");
+    this.topbar = page.getByTestId("topbar");
+    this.overviewRow = page.getByTestId("overview-row");
+    this.workspace = page.getByTestId("workspace");
     this.catalogPane = page.getByTestId("catalog-pane");
     this.detailPane = page.getByTestId("detail-pane");
+    this.catalogScroll = page.getByTestId("catalog-scroll");
+    this.detailScroll = page.getByTestId("detail-scroll");
     this.phaseGroups = page.getByTestId("phase-groups");
     this.detailTitle = page.getByTestId("detail-title");
     this.repoGrid = page.getByTestId("repo-grid");
@@ -18,6 +24,7 @@ class ExplorerPage {
     this.searchInput = page.getByTestId("search-input");
     this.activeFilterBar = page.getByTestId("active-filter-bar");
     this.listCount = page.locator("#list-count");
+    this.pickNextButton = page.getByTestId("pick-next-button");
     this.solutionDialog = page.getByTestId("solution-dialog");
     this.solutionLanguageTabs = page.getByTestId("solution-language-tabs");
     this.solutionSourceTabs = page.getByTestId("solution-source-tabs");
@@ -92,6 +99,12 @@ class ExplorerPage {
     await expect(button).toHaveAttribute("data-active", "true");
   }
 
+  async pickNext() {
+    this.logger.log("Picking next recommendation.");
+    await expect(this.pickNextButton).toBeVisible();
+    await this.pickNextButton.click();
+  }
+
   async resetFilters() {
     this.logger.log("Resetting filters.");
     await this.page.getByTestId("reset-filters-button").click();
@@ -124,10 +137,38 @@ class ExplorerPage {
     await this.page.getByTestId("detail-solved").click();
   }
 
+  async togglePinned() {
+    this.logger.log("Toggling selected problem pin state.");
+    await this.page.getByTestId("detail-pinned").click();
+  }
+
   async toggleDetailWidth() {
     const button = this.page.getByTestId("toggle-detail-width");
     await expect(button).toBeVisible();
     await button.click();
+  }
+
+  async toggleCompactCatalog() {
+    this.logger.log("Toggling compact catalog mode.");
+    await this.page.locator("#compact-toggle").click();
+  }
+
+  async setSort(value) {
+    this.logger.log("Changing sort mode.", { value });
+    await this.page.getByTestId("sort-select").selectOption(value);
+  }
+
+  async clearSavedState() {
+    this.logger.log("Clearing saved state.");
+    this.page.once("dialog", (dialog) => dialog.accept());
+    await this.page.locator("#clear-state-button").click();
+    await this.waitUntilReady();
+  }
+
+  async reload() {
+    this.logger.log("Reloading explorer.");
+    await this.page.reload({ waitUntil: "domcontentloaded" });
+    await this.waitUntilReady();
   }
 
   async getDetailPaneWidth() {
@@ -207,9 +248,56 @@ class ExplorerPage {
     await link.click();
   }
 
+  async toggleAdvancedFilters() {
+    const summary = this.page.locator(".sidebar-details > summary");
+    await expect(summary).toBeVisible();
+    await summary.click();
+  }
+
+  async clickSidebarToken(text) {
+    const button = this.page.locator(".sidebar .token").filter({ hasText: text }).first();
+    await expect(button).toBeVisible();
+    await button.click();
+  }
+
   async goBackToExplorer() {
     await this.page.goto(this.resolveUrl("/index.html"), { waitUntil: "domcontentloaded" });
     await this.waitUntilReady();
+  }
+
+  async scrollSurface(target, position = "bottom") {
+    const locator = this.resolveSurface(target);
+    const normalized = typeof position === "string" ? position : String(position);
+    this.logger.log("Scrolling surface.", { target, position: normalized });
+    await locator.evaluate((element, targetPosition) => {
+      const max = Math.max(0, element.scrollHeight - element.clientHeight);
+      let top = 0;
+      if (targetPosition === "bottom") top = max;
+      else if (targetPosition === "middle") top = Math.round(max / 2);
+      else if (targetPosition === "top") top = 0;
+      else {
+        const value = Number(targetPosition);
+        top = Number.isFinite(value) ? Math.max(0, Math.min(max, value)) : 0;
+      }
+      element.scrollTo({ top, behavior: "instant" });
+    }, normalized);
+    await this.page.waitForTimeout(200);
+  }
+
+  async takeFocusedScreenshot(name, target, options = {}) {
+    const runId = process.env.BROWSER_TEST_RUN_ID || "manual";
+    const screenshotDir = process.env.BROWSER_TEST_SCREENSHOT_DIR || path.join(process.cwd(), "browser-tests", "screenshots");
+    fs.mkdirSync(screenshotDir, { recursive: true });
+    const filename = `${runId}-${sanitizeSegment(name)}.png`;
+    const filePath = path.join(screenshotDir, filename);
+    const locator = this.resolveLocatorTarget(target);
+    await locator.screenshot({
+      path: filePath,
+      animations: "disabled",
+      ...(options || {}),
+    });
+    this.logger.log("Captured focused screenshot.", { target, filePath });
+    return filePath;
   }
 
   async collectSnapshot() {
@@ -239,6 +327,42 @@ class ExplorerPage {
     await this.page.screenshot({ path: filePath, fullPage: true });
     this.logger.log("Captured screenshot.", { filePath });
     return filePath;
+  }
+
+  resolveSurface(target) {
+    switch (target) {
+      case "catalog":
+        return this.catalogScroll;
+      case "detail":
+        return this.detailScroll;
+      case "window":
+        return this.page.locator("html");
+      default:
+        return this.resolveLocatorTarget(target);
+    }
+  }
+
+  resolveLocatorTarget(target) {
+    if (!target || target === "page" || target === "app-shell") {
+      return this.page.getByTestId("app-shell");
+    }
+    if (target.startsWith("testid:")) {
+      return this.page.getByTestId(target.slice("testid:".length));
+    }
+    if (target.startsWith("selector:")) {
+      return this.page.locator(target.slice("selector:".length));
+    }
+    const known = {
+      sidebar: this.orientationRail,
+      topbar: this.topbar,
+      overview: this.overviewRow,
+      roadmap: this.roadmapPanel,
+      workspace: this.workspace,
+      catalog: this.catalogPane,
+      detail: this.detailPane,
+      "solution-dialog": this.solutionDialog,
+    };
+    return known[target] || this.page.locator(target);
   }
 }
 
