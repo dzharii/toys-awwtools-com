@@ -2,7 +2,22 @@ import { exportJsonText } from "./export.js";
 import { createObjectModel } from "./heuristics.js";
 import { analyzeAreaSelection } from "./regions.js";
 import { scanDocument } from "./scanner.js";
+import {
+  createInitialSessionState,
+  isSessionDirty,
+  loadSessionSnapshot,
+  markSessionChanged,
+  markSessionExported,
+  saveSessionSnapshot,
+} from "./session-core.js";
 import { applicableHeuristics, buildSelectorState, chooseAutomaticHeuristic } from "./selectors.js";
+import {
+  capturePopupGeometry,
+  closePopupWindow,
+  isPopupAlive,
+  monitorPopupClosed,
+  openRecorderPopup,
+} from "./popup-manager.js";
 import {
   createButton,
   createInput,
@@ -12,7 +27,7 @@ import {
   replaceChildren,
 } from "./ui/dom.js";
 import { getToolStyles } from "./ui/styles.js";
-import { chooseDefaultTheme, cycleTheme, getThemeMeta } from "./ui/themes.js";
+import { cycleTheme, getThemeMeta } from "./ui/themes.js";
 import {
   TOOL_GLOBAL_KEY,
   TOOL_IGNORE_ATTRIBUTE,
@@ -22,13 +37,13 @@ import {
   serializeError,
 } from "./utils.js";
 
-const SESSION_KEY = `${TOOL_NAMESPACE}:window-state`;
 const WINDOW_MIN_WIDTH = 360;
 const WINDOW_MIN_HEIGHT = 420;
 const WINDOW_DEFAULT_WIDTH = 520;
 const WINDOW_DEFAULT_HEIGHT = 680;
 const WINDOW_MARGIN = 12;
 const TITLE_VISIBLE_WIDTH = 180;
+const POPUP_MONITOR_INTERVAL_MS = 450;
 
 function createToolNode(document, tagName, options = {}, children = []) {
   const element = createNode(
@@ -120,32 +135,6 @@ function defaultFrame(windowObject) {
   );
 }
 
-function loadSessionState(windowObject) {
-  try {
-    const raw = windowObject.sessionStorage?.getItem(SESSION_KEY);
-    if (!raw) {
-      return null;
-    }
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
-function saveSessionState(windowObject, state) {
-  try {
-    windowObject.sessionStorage?.setItem(
-      SESSION_KEY,
-      JSON.stringify({
-        frame: state.frame,
-        themeId: state.themeId,
-      }),
-    );
-  } catch {
-    // ignore session storage failures
-  }
-}
-
 function detectSelectorType(selector) {
   return selector.trim().startsWith("/") || selector.trim().startsWith("(") ? "xpath" : "css";
 }
@@ -181,34 +170,25 @@ function buildPageContext(windowObject, documentObject) {
 
 export function createOverlayApp(windowObject = window) {
   const documentObject = windowObject.document;
-  const savedState = loadSessionState(windowObject);
-
-  const state = {
-    mounted: false,
-    scanRecords: [],
-    selectedObjects: [],
-    selectedObjectId: null,
-    hoverRecord: null,
-    mode: "inspect",
-    dragSelection: null,
-    counter: 1,
-    themeId: savedState?.themeId ?? chooseDefaultTheme(windowObject),
-    frame: clampFrame(savedState?.frame ?? defaultFrame(windowObject), windowObject),
-    heuristicFilter: "",
-    heuristicMenuOpen: false,
-    exportPreviewVisible: false,
-    exportText: "",
-    statusMessage: "Ready to scan the current page for automation-relevant objects.",
-    interaction: null,
-  };
+  const savedState = loadSessionSnapshot(windowObject);
+  const state = createInitialSessionState(windowObject, { savedState });
+  state.frame = clampFrame(savedState?.frame ?? defaultFrame(windowObject), windowObject);
+  state.popupGeometry = state.popupGeometry ?? null;
+  state.sessionId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  state.popupMonitor = null;
+  state.popupBeforeUnloadHandler = null;
+  state.popupBlurCleanup = null;
 
   const refs = {};
 
   function persistWindowState() {
-    saveSessionState(windowObject, state);
+    saveSessionSnapshot(windowObject, state);
   }
 
   function applyWindowFrame() {
+    if (!refs.window || state.hostMode === "popup") {
+      return;
+    }
     state.frame = clampFrame(state.frame, windowObject);
     refs.window.style.left = `${state.frame.left}px`;
     refs.window.style.top = `${state.frame.top}px`;
@@ -231,6 +211,11 @@ export function createOverlayApp(windowObject = window) {
     return state.selectedObjects.find((item) => item.id === state.selectedObjectId) ?? null;
   }
 
+  function trackSessionChange() {
+    markSessionChanged(state);
+    persistWindowState();
+  }
+
   function clearMatches() {
     refs.matchLayer?.replaceChildren();
   }
@@ -249,6 +234,155 @@ export function createOverlayApp(windowObject = window) {
     refs.themeButton.textContent = "Theme";
     refs.themeButton.title = `Switch theme (current: ${meta.label})`;
     persistWindowState();
+  }
+
+  function applyHostModeUi() {
+    if (!refs.shell || !refs.window) {
+      return;
+    }
+    refs.shell.dataset.hostMode = state.hostMode;
+    refs.window.dataset.hostMode = state.hostMode;
+    if (refs.openPopupButton) {
+      refs.openPopupButton.hidden = state.hostMode !== "inline";
+    }
+    if (refs.returnToPageButton) {
+      refs.returnToPageButton.hidden = state.hostMode !== "popup";
+    }
+    if (refs.focusPageButton) {
+      refs.focusPageButton.hidden = state.hostMode !== "popup";
+    }
+    refs.closeButton.textContent = state.hostMode === "popup" ? "Close recorder" : "×";
+    refs.closeButton.classList.toggle(`${TOOL_NAMESPACE}-close-text`, state.hostMode === "popup");
+    persistWindowState();
+  }
+
+  function stopPopupMonitor() {
+    state.popupMonitor?.stop?.();
+    state.popupMonitor = null;
+
+    if (state.popupWindow && state.popupBeforeUnloadHandler) {
+      try {
+        state.popupWindow.removeEventListener("beforeunload", state.popupBeforeUnloadHandler);
+      } catch {
+        // ignore
+      }
+    }
+    state.popupBeforeUnloadHandler = null;
+  }
+
+  function setPopupTitle(popupWindow) {
+    if (!popupWindow?.document) {
+      return;
+    }
+    const inspectedTitle = normalizeWhitespace(documentObject.title) || normalizeWhitespace(windowObject.location.hostname);
+    popupWindow.document.title = `Page Object Recorder - ${inspectedTitle || "Page"}`;
+  }
+
+  function preparePopupDocument(popupWindow) {
+    const popupDocument = popupWindow.document;
+    popupDocument.body.style.margin = "0";
+    popupDocument.body.style.minHeight = "100vh";
+    popupDocument.documentElement.style.minHeight = "100vh";
+    popupDocument.documentElement.style.background = "#f0f0f0";
+    setPopupTitle(popupWindow);
+  }
+
+  function moveHostToDocument(targetDocument) {
+    if (!refs.host || !targetDocument) {
+      return;
+    }
+    if (refs.host.ownerDocument === targetDocument && refs.host.isConnected) {
+      return;
+    }
+    targetDocument.documentElement.append(refs.host);
+  }
+
+  function restoreInlineHost(reason = "popup-closed") {
+    if (state.hostMode !== "popup") {
+      return;
+    }
+
+    if (state.popupWindow) {
+      state.popupGeometry = capturePopupGeometry(state.popupWindow) ?? state.popupGeometry;
+    }
+
+    stopPopupMonitor();
+    moveHostToDocument(documentObject);
+    state.popupWindow = null;
+    state.hostMode = "inline";
+    applyHostModeUi();
+    applyWindowFrame();
+    render();
+    if (reason === "popup-native-close") {
+      setStatus("Popup closed. Recorder was restored to the page.");
+    }
+  }
+
+  function watchPopupWindow(popupWindow) {
+    stopPopupMonitor();
+    state.popupBeforeUnloadHandler = (event) => {
+      if (!isSessionDirty(state)) {
+        return;
+      }
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    popupWindow.addEventListener("beforeunload", state.popupBeforeUnloadHandler);
+    state.popupMonitor = monitorPopupClosed(
+      popupWindow,
+      () => {
+        if (state.popupCloseReason === "return-inline" || state.popupCloseReason === "session-destroy") {
+          state.popupCloseReason = null;
+          return;
+        }
+        restoreInlineHost("popup-native-close");
+      },
+      POPUP_MONITOR_INTERVAL_MS,
+    );
+  }
+
+  function openInPopupWindow() {
+    if (state.mode === "area" && state.dragSelection) {
+      state.dragSelection = null;
+      refs.dragBox.style.display = "none";
+      clearAreaPreview();
+    }
+
+    const popup = openRecorderPopup(windowObject, {
+      currentPopup: state.popupWindow,
+      geometry: state.popupGeometry ?? undefined,
+      title: "Page Object Recorder",
+    });
+
+    if (popup.blocked || !popup.popupWindow) {
+      setStatus("Popup window was blocked by the browser. Allow popups for this page and try again.");
+      render();
+      return;
+    }
+
+    const popupWindow = popup.popupWindow;
+    state.popupWindow = popupWindow;
+    state.popupCloseReason = null;
+    preparePopupDocument(popupWindow);
+    moveHostToDocument(popupWindow.document);
+    state.hostMode = "popup";
+    applyHostModeUi();
+    watchPopupWindow(popupWindow);
+    popupWindow.focus?.();
+    setStatus(popup.reused ? "Recorder popup focused." : "Recorder detached into popup window.");
+    render();
+  }
+
+  function returnToInlineFromPopup() {
+    if (state.hostMode !== "popup") {
+      return;
+    }
+    const popupWindow = state.popupWindow;
+    state.popupCloseReason = "return-inline";
+    restoreInlineHost("return-inline");
+    closePopupWindow(popupWindow);
+    setStatus("Recorder returned to the page.");
+    render();
   }
 
   function assignExistingParent(objectModel) {
@@ -335,6 +469,7 @@ export function createOverlayApp(windowObject = window) {
     applySelectorState(objectModel, options);
     state.selectedObjects.push(objectModel);
     state.selectedObjectId = objectModel.id;
+    trackSessionChange();
     setStatus(`Selected ${objectModel.name} (${describeSelection(objectModel)}).`);
     render();
   }
@@ -358,6 +493,7 @@ export function createOverlayApp(windowObject = window) {
     }
 
     clearMatches();
+    trackSessionChange();
     setStatus(`Removed ${exists.name} from selected objects.`);
     render();
   }
@@ -451,6 +587,7 @@ export function createOverlayApp(windowObject = window) {
       };
       setStatus(readableError(error));
     }
+    trackSessionChange();
     render();
   }
 
@@ -493,10 +630,14 @@ export function createOverlayApp(windowObject = window) {
     refs.exportPreview.value = state.exportText;
     if (copyToClipboard) {
       windowObject.navigator.clipboard?.writeText(state.exportText).then(
-        () => setStatus("Exported JSON copied to clipboard."),
+        () => {
+          markSessionExported(state);
+          setStatus("Exported JSON copied to clipboard.");
+        },
         () => setStatus("Clipboard copy failed. JSON remains available in the export preview."),
       );
     }
+    persistWindowState();
   }
 
   function buildSummaryPills(objectModel) {
@@ -665,6 +806,7 @@ export function createOverlayApp(windowObject = window) {
                 objectModel.manualSelector = "";
                 objectModel.manualSelectorType = "css";
                 applySelectorState(objectModel, { heuristicId: heuristic.id });
+                trackSessionChange();
                 setStatus(`Heuristic changed to ${heuristic.label}.`);
                 render();
               },
@@ -722,6 +864,7 @@ export function createOverlayApp(windowObject = window) {
                   manualSelector: candidate.selector,
                   manualSelectorType: candidate.selectorType,
                 });
+                trackSessionChange();
                 setStatus("Alternative selector promoted to manual mode.");
                 render();
               },
@@ -828,6 +971,7 @@ export function createOverlayApp(windowObject = window) {
     if (state.exportPreviewVisible) {
       updateExportText(false);
     }
+    persistWindowState();
     render();
   }
 
@@ -983,6 +1127,9 @@ export function createOverlayApp(windowObject = window) {
       state.selectedObjects.push(objectModel);
     }
     state.selectedObjectId = areaObjects[0]?.id ?? state.selectedObjectId;
+    if (areaObjects.length) {
+      trackSessionChange();
+    }
     setStatus(
       areaObjects.length
         ? `Area selection produced ${areaObjects.length} candidate page objects.`
@@ -1050,6 +1197,9 @@ export function createOverlayApp(windowObject = window) {
 
   function bindWindowInteractions() {
     refs.titlebar.addEventListener("pointerdown", (event) => {
+      if (state.hostMode === "popup") {
+        return;
+      }
       if (event.target.closest("button")) {
         return;
       }
@@ -1062,6 +1212,9 @@ export function createOverlayApp(windowObject = window) {
 
     for (const handle of refs.resizeHandles) {
       handle.addEventListener("pointerdown", (event) => {
+        if (state.hostMode === "popup") {
+          return;
+        }
         beginInteraction("resize", {
           edge: handle.dataset.edge,
           startPointer: { x: event.clientX, y: event.clientY },
@@ -1073,8 +1226,15 @@ export function createOverlayApp(windowObject = window) {
     }
 
     refs.closeButton.addEventListener("click", destroy);
+    refs.openPopupButton.addEventListener("click", openInPopupWindow);
+    refs.returnToPageButton.addEventListener("click", returnToInlineFromPopup);
+    refs.focusPageButton.addEventListener("click", () => {
+      windowObject.focus();
+      setStatus("Focused the inspected page.");
+    });
     refs.themeButton.addEventListener("click", () => {
       state.themeId = cycleTheme(state.themeId);
+      trackSessionChange();
       applyTheme();
       setStatus(`Theme changed to ${getThemeMeta(state.themeId).label}.`);
     });
@@ -1085,12 +1245,14 @@ export function createOverlayApp(windowObject = window) {
       refs.dragBox.style.display = "none";
       state.dragSelection = null;
       clearAreaPreview();
+      trackSessionChange();
       setStatus("Inspect mode enabled. Move over the page and click a highlighted object.");
       render();
     });
     refs.modeButtons.area.addEventListener("click", () => {
       state.mode = "area";
       clearHover();
+      trackSessionChange();
       setStatus("Area mode enabled. Drag a rectangle over the page.");
       render();
     });
@@ -1101,6 +1263,7 @@ export function createOverlayApp(windowObject = window) {
       state.exportText = "";
       clearMatches();
       clearAreaPreview();
+      trackSessionChange();
       setStatus("Cleared selected page objects.");
       render();
     });
@@ -1128,6 +1291,7 @@ export function createOverlayApp(windowObject = window) {
         manualSelector: objectModel.manualSelector,
         manualSelectorType: objectModel.manualSelectorType,
       });
+      trackSessionChange();
       setStatus("Selector switched to manual mode.");
       render();
     });
@@ -1147,17 +1311,31 @@ export function createOverlayApp(windowObject = window) {
       applySelectorState(objectModel, {
         heuristicId: objectModel.heuristicId === "manualSelector" ? chooseAutomaticHeuristic(objectModel) : objectModel.heuristicId,
       });
+      trackSessionChange();
       setStatus("Heuristic rerun completed.");
       render();
     });
     refs.copyButton.addEventListener("click", () => {
       updateExportText(true);
       state.exportPreviewVisible = true;
+      persistWindowState();
       render();
     });
     refs.toggleJsonButton.addEventListener("click", () => {
       updateExportVisibility(!state.exportPreviewVisible);
     });
+
+    refs.host.addEventListener("pointerdown", (event) => {
+      if (!state.heuristicMenuOpen) {
+        return;
+      }
+      const path = event.composedPath?.() ?? [];
+      const insideHeuristic = path.includes(refs.heuristicAnchor);
+      if (!insideHeuristic && closeHeuristicMenuIfOpen()) {
+        render();
+      }
+    }, true);
+    refs.host.addEventListener("keydown", onGlobalKeyDown, true);
   }
 
   function buildShadowUi() {
@@ -1220,6 +1398,20 @@ export function createOverlayApp(windowObject = window) {
     refs.themeButton = createButton(documentObject, {
       className: `${TOOL_NAMESPACE}-button`,
     });
+    refs.openPopupButton = createButton(documentObject, {
+      className: `${TOOL_NAMESPACE}-button`,
+      text: "Open in popup window",
+    });
+    refs.returnToPageButton = createButton(documentObject, {
+      className: `${TOOL_NAMESPACE}-button`,
+      text: "Return to page",
+      attrs: { hidden: true },
+    });
+    refs.focusPageButton = createButton(documentObject, {
+      className: `${TOOL_NAMESPACE}-button`,
+      text: "Focus inspected page",
+      attrs: { hidden: true },
+    });
     refs.closeButton = createButton(documentObject, {
       className: `${TOOL_NAMESPACE}-button ${TOOL_NAMESPACE}-close`,
       attrs: { "aria-label": "Close recorder" },
@@ -1227,7 +1419,7 @@ export function createOverlayApp(windowObject = window) {
     });
     const chromeRight = createToolNode(documentObject, "div", {
       className: `${TOOL_NAMESPACE}-chrome`,
-    }, [refs.themeButton, refs.closeButton]);
+    }, [refs.openPopupButton, refs.returnToPageButton, refs.focusPageButton, refs.themeButton, refs.closeButton]);
     refs.titlebar.append(chromeLeft, titleMeta, chromeRight);
 
     const toolbar = createToolNode(documentObject, "div", {
@@ -1467,6 +1659,7 @@ export function createOverlayApp(windowObject = window) {
     buildShadowUi();
     mountPageOverlays();
     applyTheme();
+    applyHostModeUi();
     applyWindowFrame();
     bindWindowInteractions();
     refreshScanRecords();
@@ -1485,6 +1678,10 @@ export function createOverlayApp(windowObject = window) {
   }
 
   function reopen() {
+    if (state.hostMode === "popup") {
+      returnToInlineFromPopup();
+    }
+    moveHostToDocument(documentObject);
     refs.host.style.display = "block";
     state.mode = "inspect";
     setStatus("Tool reopened.");
@@ -1492,6 +1689,11 @@ export function createOverlayApp(windowObject = window) {
   }
 
   function destroy() {
+    state.popupCloseReason = "session-destroy";
+    stopPopupMonitor();
+    state.popupGeometry = capturePopupGeometry(state.popupWindow) ?? state.popupGeometry;
+    closePopupWindow(state.popupWindow);
+    state.popupWindow = null;
     clearMatches();
     clearAreaPreview();
     clearHover();
@@ -1503,6 +1705,7 @@ export function createOverlayApp(windowObject = window) {
     windowObject.removeEventListener("resize", applyWindowFrame);
     refs.host?.remove();
     unmountPageOverlays();
+    persistWindowState();
     delete windowObject[TOOL_GLOBAL_KEY];
   }
 

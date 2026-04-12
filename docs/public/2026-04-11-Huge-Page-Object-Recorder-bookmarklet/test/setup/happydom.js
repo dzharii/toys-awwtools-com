@@ -48,4 +48,12 @@ afterEach(() => {
       document.head.innerHTML = "";
     }
   }
+  if (typeof window !== "undefined") {
+    try {
+      window.sessionStorage?.clear?.();
+      window.localStorage?.clear?.();
+    } catch {
+      // ignore storage cleanup failures in test environment
+    }
+  }
 });

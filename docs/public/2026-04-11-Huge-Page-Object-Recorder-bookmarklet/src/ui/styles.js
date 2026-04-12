@@ -125,6 +125,19 @@ export function getToolStyles() {
       user-select: none;
     }
 
+    .${TOOL_NAMESPACE}-shell[data-host-mode="popup"] .${TOOL_NAMESPACE}-window {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      min-width: 0;
+      min-height: 0;
+      border-radius: 0;
+      border-left: 0;
+      border-right: 0;
+      box-shadow: none;
+    }
+
     .${TOOL_NAMESPACE}-titlebar,
     .${TOOL_NAMESPACE}-toolbar,
     .${TOOL_NAMESPACE}-footer {
@@ -142,6 +155,15 @@ export function getToolStyles() {
       border-bottom: 1px solid var(--tool-border-strong);
       cursor: move;
       grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+
+    .${TOOL_NAMESPACE}-shell[data-host-mode="popup"] .${TOOL_NAMESPACE}-titlebar {
+      cursor: default;
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .${TOOL_NAMESPACE}-shell[data-host-mode="popup"] .${TOOL_NAMESPACE}-titlebar > .${TOOL_NAMESPACE}-chrome:first-child {
+      display: none;
     }
 
     .${TOOL_NAMESPACE}-titlemeta {
@@ -292,6 +314,11 @@ export function getToolStyles() {
     .${TOOL_NAMESPACE}-close {
       min-width: 28px;
       padding: 0;
+    }
+
+    .${TOOL_NAMESPACE}-close-text {
+      min-width: auto;
+      padding: 0 10px;
     }
 
     .${TOOL_NAMESPACE}-field,
@@ -551,6 +578,11 @@ export function getToolStyles() {
       background: transparent;
       pointer-events: auto;
       z-index: 5;
+    }
+
+    .${TOOL_NAMESPACE}-shell[data-host-mode="popup"] .${TOOL_NAMESPACE}-traffic,
+    .${TOOL_NAMESPACE}-shell[data-host-mode="popup"] .${TOOL_NAMESPACE}-resize {
+      display: none;
     }
 
     .${TOOL_NAMESPACE}-resize[data-edge="n"],
