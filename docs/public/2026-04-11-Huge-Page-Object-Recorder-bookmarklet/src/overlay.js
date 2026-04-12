@@ -1,6 +1,6 @@
 import { exportJsonText } from "./export.js";
 import { createObjectModel } from "./heuristics.js";
-import { analyzeAreaSelection } from "./regions.js";
+import { analyzeAreaSelection, previewAreaCandidates } from "./regions.js";
 import { scanDocument } from "./scanner.js";
 import {
   createInitialSessionState,
@@ -72,13 +72,11 @@ function setOverlayStyle(element, style) {
   Object.assign(element.style, style);
 }
 
-function rectsOverlap(left, right) {
-  return !(
-    left.right <= right.left ||
-    left.left >= right.right ||
-    left.bottom <= right.top ||
-    left.top >= right.bottom
-  );
+function liveRect(element, fallbackRect = null) {
+  if (typeof element?.getBoundingClientRect === "function") {
+    return rectFrom(element.getBoundingClientRect());
+  }
+  return rectFrom(fallbackRect ?? {});
 }
 
 function groupedKinds() {
@@ -178,6 +176,7 @@ export function createOverlayApp(windowObject = window) {
   state.popupMonitor = null;
   state.popupBeforeUnloadHandler = null;
   state.popupBlurCleanup = null;
+  state.overlayRefreshRequested = false;
 
   const refs = {};
 
@@ -235,6 +234,122 @@ export function createOverlayApp(windowObject = window) {
     if (refs.highlight) {
       refs.highlight.style.display = "none";
     }
+    scheduleOverlayRefresh();
+  }
+
+  function resolveObjectElement(objectModel) {
+    if (!objectModel) {
+      return null;
+    }
+
+    if (objectModel.element && objectModel.element.ownerDocument === documentObject) {
+      return objectModel.element;
+    }
+
+    if (!objectModel.selector) {
+      return null;
+    }
+
+    try {
+      if (objectModel.selectorType === "css") {
+        objectModel.element = documentObject.querySelector(objectModel.selector);
+      } else {
+        const result = documentObject.evaluate(
+          objectModel.selector,
+          documentObject,
+          null,
+          windowObject.XPathResult.FIRST_ORDERED_NODE_TYPE,
+          null,
+        );
+        objectModel.element = result.singleNodeValue;
+      }
+    } catch {
+      objectModel.element = null;
+    }
+
+    return objectModel.element ?? null;
+  }
+
+  function renderSelectedHighlights() {
+    if (!refs.selectionLayer) {
+      return;
+    }
+
+    const markers = [];
+    for (const objectModel of state.selectedObjects.slice(0, 18)) {
+      const element = resolveObjectElement(objectModel);
+      if (!element) {
+        continue;
+      }
+      const rect = liveRect(element, objectModel.features?.boundingRect);
+      if (!rect.width || !rect.height) {
+        continue;
+      }
+      const marker = createToolNode(documentObject, "div", {
+        attrs: { "data-overlay-role": "selected" },
+      });
+      setOverlayStyle(marker, {
+        position: "fixed",
+        left: `${rect.left}px`,
+        top: `${rect.top}px`,
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+        borderRadius: "8px",
+        border:
+          objectModel.id === state.selectedObjectId
+            ? "2px solid rgba(30, 188, 121, 0.95)"
+            : "1px solid rgba(38, 167, 235, 0.88)",
+        background:
+          objectModel.id === state.selectedObjectId
+            ? "rgba(30, 188, 121, 0.12)"
+            : "rgba(38, 167, 235, 0.08)",
+        pointerEvents: "none",
+      });
+      markers.push(marker);
+    }
+    replaceChildren(refs.selectionLayer, markers);
+  }
+
+  function renderHoverHighlight() {
+    if (!refs.highlight) {
+      return;
+    }
+    const hoverElement = state.hoverRecord?.element ?? null;
+    if (!hoverElement) {
+      refs.highlight.style.display = "none";
+      return;
+    }
+    const rect = liveRect(hoverElement, state.hoverRecord?.features?.boundingRect);
+    if (!rect.width || !rect.height) {
+      refs.highlight.style.display = "none";
+      return;
+    }
+    refs.highlight.style.display = "block";
+    setRectStyle(refs.highlight, rect);
+  }
+
+  function refreshOverlayGeometry() {
+    state.overlayRefreshRequested = false;
+    renderHoverHighlight();
+    renderSelectedHighlights();
+  }
+
+  function scheduleOverlayRefresh() {
+    if (state.overlayRefreshRequested) {
+      return;
+    }
+    state.overlayRefreshRequested = true;
+    const schedule =
+      typeof windowObject.requestAnimationFrame === "function"
+        ? windowObject.requestAnimationFrame.bind(windowObject)
+        : (callback) => windowObject.setTimeout(callback, 16);
+    schedule(() => {
+      refreshOverlayGeometry();
+    });
+  }
+
+  function onOverlayLayoutEvent() {
+    scheduleOverlayRefresh();
   }
 
   function applyTheme() {
@@ -547,8 +662,7 @@ export function createOverlayApp(windowObject = window) {
       inferredType: record.inferredType ?? model.inferredType,
       confidence: record.confidence ?? model.confidence,
     };
-    refs.highlight.style.display = "block";
-    setRectStyle(refs.highlight, state.hoverRecord.features.boundingRect);
+    scheduleOverlayRefresh();
     setStatus(`Hover ${state.hoverRecord.inferredType} · ${(state.hoverRecord.confidence * 100).toFixed(0)}% confidence`);
   }
 
@@ -622,15 +736,20 @@ export function createOverlayApp(windowObject = window) {
       return;
     }
 
-    const overlapping = state.scanRecords
-      .filter((record) => rectsOverlap(record.features.boundingRect, areaRect))
-      .slice(0, 28);
+    const overlapping = previewAreaCandidates(
+      state.scanRecords.map((record) => ({
+        ...record,
+        element: record.element,
+      })),
+      areaRect,
+      24,
+    );
 
     replaceChildren(
       refs.areaLayer,
       overlapping.map((record) => {
         const marker = createToolNode(documentObject, "div");
-        const rect = record.features.boundingRect;
+        const rect = liveRect(record.element, record.features?.boundingRect);
         setOverlayStyle(marker, {
           position: "fixed",
           left: `${rect.left}px`,
@@ -638,8 +757,8 @@ export function createOverlayApp(windowObject = window) {
           width: `${rect.width}px`,
           height: `${rect.height}px`,
           borderRadius: "8px",
-          border: "1px solid rgba(31, 118, 255, 0.78)",
-          background: "rgba(31, 118, 255, 0.09)",
+          border: "1px solid rgba(243, 145, 26, 0.84)",
+          background: "rgba(243, 145, 26, 0.13)",
           pointerEvents: "none",
         });
         return marker;
@@ -986,6 +1105,7 @@ export function createOverlayApp(windowObject = window) {
     renderDetails();
     refs.status.textContent = state.statusMessage;
     refs.exportPreviewWrap.hidden = !state.exportPreviewVisible;
+    scheduleOverlayRefresh();
   }
 
   function updateExportVisibility(nextVisible) {
@@ -1003,12 +1123,20 @@ export function createOverlayApp(windowObject = window) {
     });
     setOverlayStyle(refs.highlight, {
       position: "fixed",
-      zIndex: "2147483643",
+      zIndex: "2147483644",
       pointerEvents: "none",
       borderRadius: "10px",
       border: "2px solid rgba(30, 117, 255, 0.95)",
       background: "rgba(30, 117, 255, 0.12)",
-      boxShadow: "0 0 0 1px rgba(255,255,255,0.55), 0 0 0 9999px rgba(10, 26, 52, 0.04)",
+      boxShadow: "0 0 0 1px rgba(255,255,255,0.55), 0 0 0 9999px rgba(10, 26, 52, 0.03)",
+    });
+
+    refs.selectionLayer = createToolNode(documentObject, "div");
+    setOverlayStyle(refs.selectionLayer, {
+      position: "fixed",
+      inset: "0",
+      zIndex: "2147483643",
+      pointerEvents: "none",
     });
 
     refs.dragBox = createToolNode(documentObject, "div", {
@@ -1016,7 +1144,7 @@ export function createOverlayApp(windowObject = window) {
     });
     setOverlayStyle(refs.dragBox, {
       position: "fixed",
-      zIndex: "2147483644",
+      zIndex: "2147483646",
       pointerEvents: "none",
       borderRadius: "8px",
       border: "2px solid rgba(245, 150, 35, 0.98)",
@@ -1036,15 +1164,22 @@ export function createOverlayApp(windowObject = window) {
     setOverlayStyle(refs.areaLayer, {
       position: "fixed",
       inset: "0",
-      zIndex: "2147483641",
+      zIndex: "2147483645",
       pointerEvents: "none",
     });
 
-    documentObject.documentElement.append(refs.areaLayer, refs.matchLayer, refs.highlight, refs.dragBox);
+    documentObject.documentElement.append(
+      refs.matchLayer,
+      refs.selectionLayer,
+      refs.highlight,
+      refs.areaLayer,
+      refs.dragBox,
+    );
   }
 
   function unmountPageOverlays() {
     refs.areaLayer?.remove();
+    refs.selectionLayer?.remove();
     refs.highlight?.remove();
     refs.dragBox?.remove();
     refs.matchLayer?.remove();
@@ -1167,6 +1302,15 @@ export function createOverlayApp(windowObject = window) {
       if (!insideHeuristic && closeHeuristicMenuIfOpen()) {
         render();
       }
+    }
+
+    if (
+      state.mode === "inspect" &&
+      state.hoverRecord &&
+      !event.target.closest?.(`[${TOOL_IGNORE_ATTRIBUTE}="true"]`)
+    ) {
+      event.preventDefault();
+      return;
     }
 
     if (state.mode === "area" && !event.target.closest?.(`[${TOOL_IGNORE_ATTRIBUTE}="true"]`)) {
@@ -1691,7 +1835,25 @@ export function createOverlayApp(windowObject = window) {
     documentObject.addEventListener("pointerdown", onGlobalPointerDown, true);
     documentObject.addEventListener("click", onGlobalClick, true);
     documentObject.addEventListener("keydown", onGlobalKeyDown, true);
+    documentObject.addEventListener("scroll", onOverlayLayoutEvent, true);
     windowObject.addEventListener("resize", applyWindowFrame);
+    windowObject.addEventListener("resize", onOverlayLayoutEvent, true);
+
+    refs.layoutMutationObserver = new windowObject.MutationObserver(() => {
+      onOverlayLayoutEvent();
+    });
+    refs.layoutMutationObserver.observe(documentObject.documentElement, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      characterData: true,
+    });
+    if (typeof windowObject.ResizeObserver === "function") {
+      refs.layoutResizeObserver = new windowObject.ResizeObserver(() => {
+        onOverlayLayoutEvent();
+      });
+      refs.layoutResizeObserver.observe(documentObject.documentElement);
+    }
 
     state.mounted = true;
     state.mode = "inspect";
@@ -1724,7 +1886,11 @@ export function createOverlayApp(windowObject = window) {
     documentObject.removeEventListener("pointerdown", onGlobalPointerDown, true);
     documentObject.removeEventListener("click", onGlobalClick, true);
     documentObject.removeEventListener("keydown", onGlobalKeyDown, true);
+    documentObject.removeEventListener("scroll", onOverlayLayoutEvent, true);
     windowObject.removeEventListener("resize", applyWindowFrame);
+    windowObject.removeEventListener("resize", onOverlayLayoutEvent, true);
+    refs.layoutMutationObserver?.disconnect();
+    refs.layoutResizeObserver?.disconnect();
     refs.host?.remove();
     unmountPageOverlays();
     persistWindowState();

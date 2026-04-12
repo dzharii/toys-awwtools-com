@@ -2,6 +2,10 @@
 
 This project is a JavaScript-only bookmarklet-style tool for turning a live page into structured page-object metadata.
 
+![image-20260412133425448](readme.assets/image-20260412133425448.png)
+
+
+
 ## What it does
 
 - injects an overlay into the current page

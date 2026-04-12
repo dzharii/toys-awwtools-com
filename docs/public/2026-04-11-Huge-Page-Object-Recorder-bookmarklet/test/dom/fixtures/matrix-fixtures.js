@@ -314,6 +314,7 @@ function buildShellFixture(mutate = {}) {
     moreButtonText: "More",
     actionSignal: "generated-id-plus-aria-label",
     repeatedLinks: 6,
+    wideSummaryWrapper: false,
     ...mutate,
   };
 
@@ -356,6 +357,9 @@ function buildShellFixture(mutate = {}) {
       });
       link.href = `/item-${index + 1}`;
       link.textContent = `Item ${index + 1}`;
+      if (index === 0) {
+        aliases.firstNavLink = link;
+      }
       nav.append(link);
     }
 
@@ -412,6 +416,30 @@ function buildShellFixture(mutate = {}) {
   statusNode.textContent = "Status: sent";
   aliases.statusNode = statusNode;
   shell.append(statusNode);
+
+  if (options.wideSummaryWrapper) {
+    const wideSummary = setRect(document.createElement("div"), {
+      left: 280,
+      top: 270,
+      width: 860,
+      height: 44,
+    });
+    wideSummary.id = "wide-summary";
+    aliases.wideSummary = wideSummary;
+
+    const wideSummaryText = setRect(document.createElement("span"), {
+      left: 300,
+      top: 280,
+      width: 220,
+      height: 20,
+    });
+    wideSummaryText.id = "wide-summary-text";
+    wideSummaryText.textContent = "Local summary text";
+    aliases.wideSummaryText = wideSummaryText;
+
+    wideSummary.append(wideSummaryText);
+    shell.append(wideSummary);
+  }
 
   if (options.noiseProfile === "generated-classes") {
     addGeneratedNoise(shell);
