@@ -133,9 +133,10 @@ export function getToolStyles() {
       min-width: 0;
       min-height: 0;
       border-radius: 0;
-      border-left: 0;
-      border-right: 0;
+      border: 0;
       box-shadow: none;
+      background: linear-gradient(180deg, #f3f4f8 0%, #ecedf2 100%);
+      grid-template-rows: 46px var(--tool-toolbar-height) minmax(0, 1fr) 44px;
     }
 
     .${TOOL_NAMESPACE}-titlebar,
@@ -160,10 +161,45 @@ export function getToolStyles() {
     .${TOOL_NAMESPACE}-shell[data-host-mode="popup"] .${TOOL_NAMESPACE}-titlebar {
       cursor: default;
       grid-template-columns: minmax(0, 1fr) auto;
+      min-height: 46px;
+      padding: 0 14px;
+      background: linear-gradient(180deg, #ffffff 0%, #eceef5 100%);
     }
 
     .${TOOL_NAMESPACE}-shell[data-host-mode="popup"] .${TOOL_NAMESPACE}-titlebar > .${TOOL_NAMESPACE}-chrome:first-child {
       display: none;
+    }
+
+    .${TOOL_NAMESPACE}-shell[data-host-mode="popup"] .${TOOL_NAMESPACE}-toolbar {
+      padding: 0 14px;
+      min-height: 42px;
+      border-top: 1px solid color-mix(in srgb, var(--tool-border-strong) 42%, transparent);
+      border-bottom: 1px solid color-mix(in srgb, var(--tool-border-strong) 58%, transparent);
+      background: linear-gradient(180deg, #f7f8fc 0%, #eceff6 100%);
+    }
+
+    .${TOOL_NAMESPACE}-shell[data-host-mode="popup"] .${TOOL_NAMESPACE}-main {
+      padding: 10px;
+      gap: 10px;
+      background: linear-gradient(180deg, #f4f5f9 0%, #eeeff4 100%);
+    }
+
+    .${TOOL_NAMESPACE}-shell[data-host-mode="popup"] .${TOOL_NAMESPACE}-navigator,
+    .${TOOL_NAMESPACE}-shell[data-host-mode="popup"] .${TOOL_NAMESPACE}-inspector {
+      border: 1px solid color-mix(in srgb, var(--tool-border-strong) 44%, transparent);
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--tool-window-panel) 82%, white 18%);
+    }
+
+    .${TOOL_NAMESPACE}-shell[data-host-mode="popup"] .${TOOL_NAMESPACE}-navigator {
+      border-right: 1px solid color-mix(in srgb, var(--tool-border-strong) 44%, transparent);
+    }
+
+    .${TOOL_NAMESPACE}-shell[data-host-mode="popup"] .${TOOL_NAMESPACE}-footer {
+      padding: 0 14px;
+      min-height: 44px;
+      border-top: 1px solid color-mix(in srgb, var(--tool-border-strong) 58%, transparent);
+      background: linear-gradient(180deg, #f7f8fc 0%, #eceff6 100%);
     }
 
     .${TOOL_NAMESPACE}-titlemeta {
@@ -653,6 +689,10 @@ export function getToolStyles() {
       .${TOOL_NAMESPACE}-navigator {
         border-right: 0;
         border-bottom: 1px solid var(--tool-border);
+      }
+
+      .${TOOL_NAMESPACE}-shell[data-host-mode="popup"] .${TOOL_NAMESPACE}-main {
+        padding: 8px;
       }
     }
   `;

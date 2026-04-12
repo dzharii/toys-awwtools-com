@@ -98,6 +98,13 @@ describe("overlay popup", () => {
 
   test("transfers to popup and returns inline with state preserved", () => {
     const { aliases } = buildFixture("chat", { sendButtonSignal: "data-testid" });
+    window.sessionStorage.setItem(
+      "huge-page-object-recorder:window-state",
+      JSON.stringify({
+        frame: { left: 660, top: 380, width: 440, height: 320 },
+        themeId: "macos",
+      }),
+    );
     const app = createOverlayApp(window);
     app.mount();
 
@@ -121,9 +128,16 @@ describe("overlay popup", () => {
       expect(Boolean(popupHost)).toBe(true);
       const popupShadow = popupHost.shadowRoot;
       const shell = popupShadow.querySelector(`.${TOOL_NAMESPACE}-shell`);
+      const popupWindowNode = popupShadow.querySelector(`.${TOOL_NAMESPACE}-window`);
       expect(shell?.dataset.hostMode).toBe("popup");
       expect(findButton(popupShadow, "Open in popup window")?.hidden).toBe(true);
       expect(findButton(popupShadow, "Return to page")?.hidden).toBe(false);
+      expect(popupWindowNode?.style.left).toBe("");
+      expect(popupWindowNode?.style.top).toBe("");
+      expect(popupWindowNode?.style.width).toBe("");
+      expect(popupWindowNode?.style.height).toBe("");
+      expect(popup.document.documentElement.style.overflow).toBe("hidden");
+      expect(popup.document.body.style.overflow).toBe("hidden");
 
       findButton(popupShadow, "Return to page")?.click();
 
@@ -131,7 +145,12 @@ describe("overlay popup", () => {
       expect(Boolean(host)).toBe(true);
       const restoredShadow = host.shadowRoot;
       const restoredShell = restoredShadow.querySelector(`.${TOOL_NAMESPACE}-shell`);
+      const restoredWindowNode = restoredShadow.querySelector(`.${TOOL_NAMESPACE}-window`);
       expect(restoredShell?.dataset.hostMode).toBe("inline");
+      expect(Boolean(restoredWindowNode?.style.left)).toBe(true);
+      expect(Boolean(restoredWindowNode?.style.top)).toBe(true);
+      expect(Boolean(restoredWindowNode?.style.width)).toBe(true);
+      expect(Boolean(restoredWindowNode?.style.height)).toBe(true);
       const afterTransferCount = Array.from(
         restoredShadow.querySelectorAll(`.${TOOL_NAMESPACE}-pill`),
       ).find((node) => node.textContent?.includes("selected"))?.textContent;

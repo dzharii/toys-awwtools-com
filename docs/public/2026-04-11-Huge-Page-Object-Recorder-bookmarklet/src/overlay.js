@@ -197,6 +197,16 @@ export function createOverlayApp(windowObject = window) {
     persistWindowState();
   }
 
+  function clearWindowFrameStyles() {
+    if (!refs.window) {
+      return;
+    }
+    refs.window.style.left = "";
+    refs.window.style.top = "";
+    refs.window.style.width = "";
+    refs.window.style.height = "";
+  }
+
   function setStatus(message) {
     state.statusMessage = message;
     if (refs.status) {
@@ -253,6 +263,11 @@ export function createOverlayApp(windowObject = window) {
     }
     refs.closeButton.textContent = state.hostMode === "popup" ? "Close recorder" : "×";
     refs.closeButton.classList.toggle(`${TOOL_NAMESPACE}-close-text`, state.hostMode === "popup");
+    if (state.hostMode === "popup") {
+      clearWindowFrameStyles();
+    } else {
+      applyWindowFrame();
+    }
     persistWindowState();
   }
 
@@ -280,10 +295,18 @@ export function createOverlayApp(windowObject = window) {
 
   function preparePopupDocument(popupWindow) {
     const popupDocument = popupWindow.document;
+    popupDocument.documentElement.style.margin = "0";
+    popupDocument.documentElement.style.width = "100%";
+    popupDocument.documentElement.style.height = "100%";
+    popupDocument.documentElement.style.overflow = "hidden";
     popupDocument.body.style.margin = "0";
+    popupDocument.body.style.width = "100%";
     popupDocument.body.style.minHeight = "100vh";
+    popupDocument.body.style.height = "100%";
+    popupDocument.body.style.overflow = "hidden";
+    popupDocument.body.style.background = "linear-gradient(180deg, #ececef 0%, #e4e5e9 100%)";
     popupDocument.documentElement.style.minHeight = "100vh";
-    popupDocument.documentElement.style.background = "#f0f0f0";
+    popupDocument.documentElement.style.background = "#e7e8ec";
     setPopupTitle(popupWindow);
   }
 
@@ -311,7 +334,6 @@ export function createOverlayApp(windowObject = window) {
     state.popupWindow = null;
     state.hostMode = "inline";
     applyHostModeUi();
-    applyWindowFrame();
     render();
     if (reason === "popup-native-close") {
       setStatus("Popup closed. Recorder was restored to the page.");
