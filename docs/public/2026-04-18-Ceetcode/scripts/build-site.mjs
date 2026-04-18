@@ -7,7 +7,8 @@ const distDir = path.join(root, "dist");
 const assetsDir = path.join(distDir, "assets");
 const vendorDistDir = path.join(distDir, "vendor", "wasm-clang");
 
-await fs.rm(distDir, { recursive: true, force: true });
+await fs.mkdir(distDir, { recursive: true });
+await emptyDirectory(distDir);
 await fs.mkdir(assetsDir, { recursive: true });
 await fs.mkdir(vendorDistDir, { recursive: true });
 
@@ -24,7 +25,7 @@ await run("bun", [
 ]);
 await run("bun", ["build", "worker/run.worker.ts", "--target", "browser", "--format", "iife", "--outfile", path.join(assetsDir, "run.worker.js")]);
 
-await copy(path.join(root, "index.html"), path.join(distDir, "index.html"));
+await copy(path.join(root, "index.dist.html"), path.join(distDir, "index.html"));
 await copy(path.join(root, "style.css"), path.join(distDir, "style.css"));
 await copy(path.join(root, "sw.js"), path.join(distDir, "sw.js"));
 
@@ -40,6 +41,14 @@ console.log(`Build complete -> ${distDir}`);
 async function copy(from, to) {
   await fs.mkdir(path.dirname(to), { recursive: true });
   await fs.copyFile(from, to);
+}
+
+async function emptyDirectory(dir) {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const target = path.join(dir, entry.name);
+    await fs.rm(target, { recursive: true, force: true });
+  }
 }
 
 async function run(command, args) {

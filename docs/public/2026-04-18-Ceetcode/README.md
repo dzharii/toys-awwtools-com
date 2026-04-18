@@ -53,6 +53,9 @@ npm run serve:dist
 
 Then open `http://127.0.0.1:4173/`.
 
+For GitHub Pages in this repository, publish and open:
+- `/public/2026-04-18-Ceetcode/dist/`
+
 ## Testing
 
 ```bash
@@ -74,6 +77,15 @@ This project uses an evidence-first development loop:
 4. keep compiler/runtime integration replaceable via a bounded adapter layer.
 
 The goal is shipping a working browser product while preserving backend replaceability and explicit technical reasoning.
+
+## Release Workflow (GitHub Pages)
+
+This project uses manual static artifact publishing.
+
+1. Run `npm run build`.
+2. Run `npm run test:acceptance`.
+3. Commit source changes **and** updated `dist/`.
+4. Push to the repository so Pages serves the new build from `/dist/`.
 
 ## Tools and Dependencies Used
 

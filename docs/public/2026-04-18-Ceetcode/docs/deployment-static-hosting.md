@@ -18,6 +18,9 @@ npm run build
 Build output is generated in:
 - `dist/`
 
+On GitHub Pages in this monorepo, the runtime entry URL is:
+- `/public/2026-04-18-Ceetcode/dist/`
+
 ## What must be deployed
 
 Deploy the full `dist/` directory, including:
@@ -32,7 +35,8 @@ Deploy the full `dist/` directory, including:
 
 - Serve files over HTTP(S) as static assets.
 - Ensure correct content type for Wasm binaries (`application/wasm`) where possible.
-- Keep paths rooted at `/` (the current app uses absolute paths such as `/assets/main.js` and `/vendor/...`).
+- Keep `dist/` structure intact (`assets/`, `vendor/`, `sw.js`).
+- Runtime paths are base-relative, so subpath hosting is supported.
 
 ## Local production check
 
@@ -44,12 +48,14 @@ Open `http://127.0.0.1:4173/` and run at least one problem before publishing.
 
 ## GitHub Pages deployment (recommended pattern)
 
-Use a workflow that:
-1. installs Node + Bun,
-2. runs `npm ci`, `npm run validate`, `npm run build`,
-3. publishes `dist/` as Pages artifact.
+This project uses manual artifact publishing:
 
-Note: this app currently expects root-relative paths. Deploy to a root domain or configure hosting so `/` maps to the app root.
+1. Run `npm run build`.
+2. Commit updated `dist/` output.
+3. Push repository changes.
+
+The landing link in `docs/index.html` should target:
+- `/public/2026-04-18-Ceetcode/dist/`
 
 ## Netlify / Cloudflare Pages / Vercel static
 
@@ -68,5 +74,6 @@ Use the same build command:
 1. `npm run validate`
 2. `npm run build`
 3. `npm run test:acceptance`
-4. smoke-test deployed site (load + run + compile-error + runtime-error path)
-5. verify social preview metadata (Open Graph/Twitter tags in `index.html`)
+4. commit and push updated `dist/`
+5. smoke-test deployed site (load + run + compile-error + runtime-error path)
+6. verify social preview metadata (Open Graph/Twitter tags in `dist/index.html`)

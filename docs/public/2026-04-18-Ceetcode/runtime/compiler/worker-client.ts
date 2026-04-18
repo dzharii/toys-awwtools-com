@@ -34,8 +34,12 @@ export class WorkerCompilerClient {
     this.runWorker = this.createRunWorker();
   }
 
+  private resolveWorkerUrl(fileName: string): URL {
+    return new URL(`./${fileName}`, import.meta.url);
+  }
+
   private createCompileWorker(): Worker {
-    const worker = new Worker("/assets/compile.worker.js");
+    const worker = new Worker(this.resolveWorkerUrl("compile.worker.js"));
     worker.onmessage = (event: MessageEvent<CompileWorkerResponse>) => {
       const { requestId, payload } = event.data;
       const pending = this.pendingCompile.get(requestId);
@@ -54,7 +58,7 @@ export class WorkerCompilerClient {
   }
 
   private createRunWorker(): Worker {
-    const worker = new Worker("/assets/run.worker.js");
+    const worker = new Worker(this.resolveWorkerUrl("run.worker.js"));
     worker.onmessage = (event: MessageEvent<RunWorkerResponse>) => {
       const { requestId, payload } = event.data;
       const pending = this.pendingRun.get(requestId);

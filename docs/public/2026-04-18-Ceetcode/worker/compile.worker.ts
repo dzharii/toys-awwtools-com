@@ -27,7 +27,10 @@ declare const API: new (options: {
 };
 
 const globalSelf = self as DedicatedWorkerGlobalScope;
-(globalSelf as unknown as { importScripts: (...urls: string[]) => void }).importScripts("/vendor/wasm-clang/shared.js");
+const vendorBaseUrl = new URL("../vendor/wasm-clang/", globalSelf.location.href);
+const vendorAssetUrl = (name: string): string => new URL(name, vendorBaseUrl).toString();
+
+(globalSelf as unknown as { importScripts: (...urls: string[]) => void }).importScripts(vendorAssetUrl("shared.js"));
 
 let compilerApiPromise: Promise<InstanceType<typeof API>> | null = null;
 
@@ -56,10 +59,10 @@ function buildApi(): Promise<InstanceType<typeof API>> {
       hostWrite: (chunk) => {
         compileLog += chunk;
       },
-      clang: "/vendor/wasm-clang/clang",
-      lld: "/vendor/wasm-clang/lld",
-      memfs: "/vendor/wasm-clang/memfs",
-      sysroot: "/vendor/wasm-clang/sysroot.tar"
+      clang: vendorAssetUrl("clang"),
+      lld: vendorAssetUrl("lld"),
+      memfs: vendorAssetUrl("memfs"),
+      sysroot: vendorAssetUrl("sysroot.tar")
     }) as InstanceType<typeof API> & { __getLog?: () => string; __clearLog?: () => void };
 
     api.__getLog = () => compileLog;

@@ -1,15 +1,15 @@
 const CACHE_NAME = "ceetcode-static-v1";
 const PRECACHE_URLS = [
-  "/",
-  "/index.html",
-  "/style.css",
-  "/assets/main.js",
-  "/assets/compile.worker.js",
-  "/assets/run.worker.js",
-  "/vendor/wasm-clang/clang",
-  "/vendor/wasm-clang/lld",
-  "/vendor/wasm-clang/memfs",
-  "/vendor/wasm-clang/sysroot.tar"
+  "./",
+  "./index.html",
+  "./style.css",
+  "./assets/main.js",
+  "./assets/compile.worker.js",
+  "./assets/run.worker.js",
+  "./vendor/wasm-clang/clang",
+  "./vendor/wasm-clang/lld",
+  "./vendor/wasm-clang/memfs",
+  "./vendor/wasm-clang/sysroot.tar"
 ];
 
 self.addEventListener("install", (event) => {

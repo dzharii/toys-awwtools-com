@@ -520,7 +520,7 @@ function initializeEditor(): void {
 function registerServiceWorker(): void {
   if (!("serviceWorker" in navigator)) return;
 
-  void navigator.serviceWorker.register("/sw.js").catch((error) => {
+  void navigator.serviceWorker.register("./sw.js").catch((error) => {
     console.warn("Service worker registration failed", error);
   });
 }
