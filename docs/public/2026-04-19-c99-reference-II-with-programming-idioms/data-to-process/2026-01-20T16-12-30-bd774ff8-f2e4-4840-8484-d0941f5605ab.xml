@@ -1,0 +1,1897 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<document version="1.0" standard="C99" xml:lang="en">
+
+  <textFormatting>
+    <policy id="fmt.minimal.html" name="Minimal inline HTML in text nodes">
+      <scope>
+        <allowedIn>summary</allowedIn>
+        <allowedIn>description</allowedIn>
+        <allowedIn>notes</allowedIn>
+        <allowedIn>constraints</allowedIn>
+        <allowedIn>returns</allowedIn>
+      </scope>
+      <allowedTags>
+        <tag name="p" kind="block"/>
+        <tag name="strong" kind="inline"/>
+        <tag name="em" kind="inline"/>
+        <tag name="code" kind="inline"/>
+        <tag name="a" kind="inline"/>
+        <tag name="br" kind="inline"/>
+      </allowedTags>
+      <restrictions>
+        <r>No tags beyond allowedTags.</r>
+        <r>Prefer &lt;code&gt; blocks for code samples.</r>
+      </restrictions>
+    </policy>
+  </textFormatting>
+
+  <category id="strings.raw_memory" name="Strings and raw memory (byte and wide)">
+    <summary><![CDATA[
+<p>
+Primitives for working with raw memory buffers, NUL-terminated byte strings, and NUL-terminated wide strings.
+These APIs are the standard toolkit for copying, comparing, searching, tokenizing, and transforming data in-place.
+</p>
+<p>
+Use the raw-memory functions when you are working with counted buffers (not NUL-terminated), and use the string
+functions when you are working with NUL-terminated sequences. For safety and portability, always size your
+destinations correctly, know whether overlap is permitted, and treat locale-sensitive operations (for example
+collation/transform) as distinct from byte-wise comparisons.
+</p>
+]]></summary>
+
+    <keywords>
+      <kw>string.h</kw>
+      <kw>wchar.h</kw>
+      <kw>memcpy</kw>
+      <kw>memmove</kw>
+      <kw>buffer overlap</kw>
+      <kw>NUL terminator</kw>
+      <kw>strlen</kw>
+      <kw>strcmp</kw>
+      <kw>strncpy</kw>
+      <kw>strtok</kw>
+      <kw>strerror</kw>
+      <kw>wide string</kw>
+      <kw>multibyte</kw>
+      <kw>mbstate_t</kw>
+      <kw>swprintf</kw>
+    </keywords>
+
+    <header id="hdr.string" name="string.h">
+      <summary><![CDATA[
+<p>
+Byte-level raw memory and NUL-terminated byte string operations. The memory functions operate on counted buffers.
+The string functions generally require NUL-terminated inputs and often require sufficient space in the destination
+for the copied data plus the terminating NUL.
+</p>
+]]></summary>
+
+      <notes>
+        <note id="n.string.shared.overlap" severity="important" topic="overlap">
+          <description><![CDATA[
+<p>
+Overlapping copy: use <code>memmove</code> (or <code>wmemmove</code> for wide). Using <code>memcpy</code> (or <code>wmemcpy</code>) with overlap is undefined behavior.
+</p>
+]]></description>
+        </note>
+        <note id="n.string.shared.termination" severity="important" topic="nul-termination">
+          <description><![CDATA[
+<p>
+Functions like <code>strcpy</code>, <code>strcat</code>, and friends require that inputs are NUL-terminated.
+If you have counted data that may contain NULs, use the <code>mem*</code> family instead.
+</p>
+]]></description>
+        </note>
+        <note id="n.string.shared.strncpy" severity="warning" topic="common-pitfall">
+          <description><![CDATA[
+<p>
+<code>strncpy</code> does not guarantee NUL-termination if the source length is at least <code>n</code>. Many bugs come from assuming it always terminates.
+If you need a guaranteed terminator, you must add it yourself.
+</p>
+]]></description>
+        </note>
+        <note id="n.string.shared.strtok" severity="warning" topic="reentrancy">
+          <description><![CDATA[
+<p>
+<code>strtok</code> modifies the input buffer and uses internal state. It is not suitable for nested parsing or concurrent use.
+Use <code>wcstok</code> for wide strings; for byte strings, consider a manual scan if you need explicit state.
+</p>
+]]></description>
+        </note>
+      </notes>
+
+      <function id="fn.memcpy" name="memcpy" kind="function">
+        <signature>void *memcpy(void *dest, const void *src, size_t n);</signature>
+        <summary><![CDATA[
+<p>Copies <code>n</code> bytes from <code>src</code> to <code>dest</code>. The memory regions must not overlap.</p>
+]]></summary>
+        <parameters>
+          <param id="p.memcpy.dest" name="dest" direction="out" type="void *">
+            <description><![CDATA[
+<p>Destination buffer, must have at least <code>n</code> bytes available.</p>
+]]></description>
+          </param>
+          <param id="p.memcpy.src" name="src" direction="in" type="const void *">
+            <description><![CDATA[
+<p>Source buffer, must have at least <code>n</code> bytes readable.</p>
+]]></description>
+          </param>
+          <param id="p.memcpy.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Number of bytes to copy.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.memcpy.no_overlap" severity="important">
+                <description><![CDATA[
+<p><code>dest</code> and <code>src</code> must not overlap. If they can overlap, use <code>memmove</code>.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="void *">
+            <description><![CDATA[
+<p>Returns <code>dest</code>.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.memcpy.copy_struct" lang="c99">
+            <title>Copy fixed-size bytes into a struct field</title>
+            <code><![CDATA[
+#include <string.h>
+#include <stdint.h>
+
+struct Header {
+    uint8_t magic[4];
+};
+
+void set_magic(struct Header *h, const uint8_t src[4]) {
+    /* Regions do not overlap; memcpy is correct. */
+    memcpy(h->magic, src, 4u);
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.memmove" name="memmove" kind="function">
+        <signature>void *memmove(void *dest, const void *src, size_t n);</signature>
+        <summary><![CDATA[
+<p>Copies <code>n</code> bytes from <code>src</code> to <code>dest</code>. The regions may overlap.</p>
+]]></summary>
+        <parameters>
+          <param id="p.memmove.dest" name="dest" direction="out" type="void *">
+            <description><![CDATA[
+<p>Destination buffer, must have at least <code>n</code> bytes available.</p>
+]]></description>
+          </param>
+          <param id="p.memmove.src" name="src" direction="in" type="const void *">
+            <description><![CDATA[
+<p>Source buffer, must have at least <code>n</code> bytes readable.</p>
+]]></description>
+          </param>
+          <param id="p.memmove.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Number of bytes to move.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="void *">
+            <description><![CDATA[
+<p>Returns <code>dest</code>.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.memmove.delete_range" lang="c99">
+            <title>Delete a slice from a byte buffer in place (overlap-safe)</title>
+            <code><![CDATA[
+#include <string.h>
+#include <stddef.h>
+
+/* Delete [pos, pos+len) from buf of length *n, shifting tail left. */
+void delete_range(unsigned char *buf, size_t *n, size_t pos, size_t len) {
+    if (pos > *n) return;
+    if (len > *n - pos) len = *n - pos;
+
+    /* Regions overlap: must use memmove. */
+    memmove(buf + pos, buf + pos + len, (*n - pos - len));
+    *n -= len;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.memset" name="memset" kind="function">
+        <signature>void *memset(void *s, int c, size_t n);</signature>
+        <summary><![CDATA[
+<p>Sets the first <code>n</code> bytes of the object pointed to by <code>s</code> to the byte value <code>(unsigned char)c</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.memset.s" name="s" direction="inout" type="void *">
+            <description><![CDATA[
+<p>Buffer to fill, must have at least <code>n</code> bytes writable.</p>
+]]></description>
+          </param>
+          <param id="p.memset.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Fill byte value; only the low 8 bits are used.</p>
+]]></description>
+          </param>
+          <param id="p.memset.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Number of bytes to set.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="void *">
+            <description><![CDATA[
+<p>Returns <code>s</code>.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.memset.zero_init" lang="c99">
+            <title>Zero-initialize a buffer</title>
+            <code><![CDATA[
+#include <string.h>
+#include <stddef.h>
+
+void clear_bytes(void *p, size_t n) {
+    memset(p, 0, n);
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.memcmp" name="memcmp" kind="function">
+        <signature>int memcmp(const void *s1, const void *s2, size_t n);</signature>
+        <summary><![CDATA[
+<p>Compares the first <code>n</code> bytes of two buffers lexicographically as unsigned bytes.</p>
+]]></summary>
+        <parameters>
+          <param id="p.memcmp.s1" name="s1" direction="in" type="const void *">
+            <description><![CDATA[
+<p>First buffer, must have at least <code>n</code> bytes readable.</p>
+]]></description>
+          </param>
+          <param id="p.memcmp.s2" name="s2" direction="in" type="const void *">
+            <description><![CDATA[
+<p>Second buffer, must have at least <code>n</code> bytes readable.</p>
+]]></description>
+          </param>
+          <param id="p.memcmp.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Number of bytes to compare.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Less than 0 if s1 &lt; s2, 0 if equal, greater than 0 if s1 &gt; s2 (based on the first differing byte).</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.memcmp.not_string" severity="important" topic="semantics">
+            <description><![CDATA[
+<p><code>memcmp</code> is for counted buffers. It does not stop at NUL and is not a locale-aware string compare.</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.memchr" name="memchr" kind="function">
+        <signature>void *memchr(const void *s, int c, size_t n);</signature>
+        <summary><![CDATA[
+<p>Searches the first <code>n</code> bytes of <code>s</code> for the first occurrence of the byte <code>(unsigned char)c</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.memchr.s" name="s" direction="in" type="const void *">
+            <description><![CDATA[
+<p>Buffer to search, must have at least <code>n</code> bytes readable.</p>
+]]></description>
+          </param>
+          <param id="p.memchr.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Target byte; only the low 8 bits are used.</p>
+]]></description>
+          </param>
+          <param id="p.memchr.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Number of bytes to scan.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="void *">
+            <description><![CDATA[
+<p>Pointer to the matching byte within <code>s</code>, or NULL if not found.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.strlen" name="strlen" kind="function">
+        <signature>size_t strlen(const char *s);</signature>
+        <summary><![CDATA[
+<p>Returns the length of the NUL-terminated byte string <code>s</code>, not including the terminating NUL.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strlen.s" name="s" direction="in" type="const char *">
+            <description><![CDATA[
+<p>NUL-terminated string. Must contain a terminating NUL within accessible memory.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.strlen.must_terminate" severity="important">
+                <description><![CDATA[
+<p>If <code>s</code> is not properly terminated, <code>strlen</code> will read past bounds (undefined behavior).</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="size_t">
+            <description><![CDATA[
+<p>Number of bytes before the first NUL.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.strlen.performance" severity="info" topic="performance">
+            <description><![CDATA[
+<p>Repeated <code>strlen</code> calls on the same string are O(n) each. Cache the result if needed.</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.strcmp" name="strcmp" kind="function">
+        <signature>int strcmp(const char *s1, const char *s2);</signature>
+        <summary><![CDATA[
+<p>Compares two NUL-terminated byte strings lexicographically using unsigned char ordering.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strcmp.s1" name="s1" direction="in" type="const char *">
+            <description><![CDATA[
+<p>First NUL-terminated string.</p>
+]]></description>
+          </param>
+          <param id="p.strcmp.s2" name="s2" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Second NUL-terminated string.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Less than 0 if s1 &lt; s2, 0 if equal, greater than 0 if s1 &gt; s2 (based on the first differing byte).</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.strcmp.locale" severity="important" topic="collation">
+            <description><![CDATA[
+<p><code>strcmp</code> is byte-wise, not locale collation. For locale-aware ordering, use <code>strcoll</code> (not in this category list).</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.strncmp" name="strncmp" kind="function">
+        <signature>int strncmp(const char *s1, const char *s2, size_t n);</signature>
+        <summary><![CDATA[
+<p>Compares up to <code>n</code> bytes of two NUL-terminated strings, stopping early if a NUL is reached.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strncmp.s1" name="s1" direction="in" type="const char *">
+            <description><![CDATA[
+<p>First NUL-terminated string.</p>
+]]></description>
+          </param>
+          <param id="p.strncmp.s2" name="s2" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Second NUL-terminated string.</p>
+]]></description>
+          </param>
+          <param id="p.strncmp.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Maximum number of bytes to compare.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Less than 0, 0, or greater than 0 as with <code>strcmp</code>, but limited to at most <code>n</code> bytes.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.strncmp.prefix" severity="info" topic="prefix-check">
+            <description><![CDATA[
+<p>
+For prefix checks, ensure lengths match your intent. Example: <code>strncmp(s, "ab", 2) == 0</code> matches "ab" and "abc".
+</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.strcpy" name="strcpy" kind="function">
+        <signature>char *strcpy(char *dest, const char *src);</signature>
+        <summary><![CDATA[
+<p>Copies the NUL-terminated string <code>src</code> (including terminator) into <code>dest</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strcpy.dest" name="dest" direction="out" type="char *">
+            <description><![CDATA[
+<p>Destination buffer, must be large enough for all of <code>src</code> plus the terminating NUL.</p>
+]]></description>
+          </param>
+          <param id="p.strcpy.src" name="src" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Source NUL-terminated string.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="char *">
+            <description><![CDATA[
+<p>Returns <code>dest</code>.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.strcpy.safety" severity="warning" topic="buffer-size">
+            <description><![CDATA[
+<p><code>strcpy</code> has no bounds parameter. Use only when you have a proven bound for <code>dest</code>.</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.strncpy" name="strncpy" kind="function">
+        <signature>char *strncpy(char *dest, const char *src, size_t n);</signature>
+        <summary><![CDATA[
+<p>
+Copies up to <code>n</code> bytes from <code>src</code> into <code>dest</code>. If <code>src</code> is shorter than <code>n</code>,
+pads <code>dest</code> with NUL bytes. If <code>src</code> is at least <code>n</code> bytes, no terminator is written.
+</p>
+]]></summary>
+        <parameters>
+          <param id="p.strncpy.dest" name="dest" direction="out" type="char *">
+            <description><![CDATA[
+<p>Destination buffer, must have at least <code>n</code> bytes writable.</p>
+]]></description>
+          </param>
+          <param id="p.strncpy.src" name="src" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Source NUL-terminated string (read stops at NUL or after <code>n</code> bytes, whichever comes first).</p>
+]]></description>
+          </param>
+          <param id="p.strncpy.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Maximum number of bytes to write to <code>dest</code>.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.strncpy.no_termination" severity="important">
+                <description><![CDATA[
+<p>If <code>src</code> length is at least <code>n</code>, <code>dest</code> will not be NUL-terminated. Add a terminator yourself if required.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="char *">
+            <description><![CDATA[
+<p>Returns <code>dest</code>.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.strncpy.safe_terminate" lang="c99">
+            <title>Copy with explicit terminator</title>
+            <code><![CDATA[
+#include <string.h>
+#include <stddef.h>
+
+void copy_token(char *dst, size_t cap, const char *src) {
+    if (cap == 0) return;
+
+    /* Copy at most cap-1 bytes and always terminate. */
+    strncpy(dst, src, cap - 1u);
+    dst[cap - 1u] = '\0';
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.strcat" name="strcat" kind="function">
+        <signature>char *strcat(char *dest, const char *src);</signature>
+        <summary><![CDATA[
+<p>Appends the NUL-terminated string <code>src</code> to the end of <code>dest</code>, overwriting <code>dest</code>'s terminator and writing a new one.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strcat.dest" name="dest" direction="inout" type="char *">
+            <description><![CDATA[
+<p>Destination NUL-terminated string with enough free space to hold the result.</p>
+]]></description>
+          </param>
+          <param id="p.strcat.src" name="src" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Source NUL-terminated string to append.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="char *">
+            <description><![CDATA[
+<p>Returns <code>dest</code>.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.strcat.safety" severity="warning" topic="buffer-size">
+            <description><![CDATA[
+<p><code>strcat</code> has no bounds parameter. Use only with proven remaining capacity, or prefer a bounded approach using <code>strncat</code> plus explicit accounting.</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.strncat" name="strncat" kind="function">
+        <signature>char *strncat(char *dest, const char *src, size_t n);</signature>
+        <summary><![CDATA[
+<p>
+Appends up to <code>n</code> bytes from <code>src</code> to <code>dest</code>, and then writes a terminating NUL.
+Stops early if a NUL is encountered in <code>src</code>.
+</p>
+]]></summary>
+        <parameters>
+          <param id="p.strncat.dest" name="dest" direction="inout" type="char *">
+            <description><![CDATA[
+<p>Destination NUL-terminated string with space for the additional bytes plus one NUL terminator.</p>
+]]></description>
+          </param>
+          <param id="p.strncat.src" name="src" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Source NUL-terminated string.</p>
+]]></description>
+          </param>
+          <param id="p.strncat.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Maximum number of bytes to append from <code>src</code> (excluding the final NUL which is always written).</p>
+]]></description>
+            <constraints>
+              <constraint id="c.strncat.capacity" severity="important">
+                <description><![CDATA[
+<p>
+You must still ensure destination capacity: <code>strlen(dest) + min(strlen(src), n) + 1</code> bytes total.
+</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="char *">
+            <description><![CDATA[
+<p>Returns <code>dest</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.strchr" name="strchr" kind="function">
+        <signature>char *strchr(const char *s, int c);</signature>
+        <summary><![CDATA[
+<p>Finds the first occurrence of character <code>(char)c</code> in <code>s</code>, including possibly the terminating NUL.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strchr.s" name="s" direction="in" type="const char *">
+            <description><![CDATA[
+<p>NUL-terminated string to search.</p>
+]]></description>
+          </param>
+          <param id="p.strchr.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Character to find, converted to <code>char</code>. Use 0 to locate the terminator.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="char *">
+            <description><![CDATA[
+<p>Pointer to the first match within <code>s</code>, or NULL if not found.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.strrchr" name="strrchr" kind="function">
+        <signature>char *strrchr(const char *s, int c);</signature>
+        <summary><![CDATA[
+<p>Finds the last occurrence of character <code>(char)c</code> in <code>s</code>, including possibly the terminating NUL.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strrchr.s" name="s" direction="in" type="const char *">
+            <description><![CDATA[
+<p>NUL-terminated string to search.</p>
+]]></description>
+          </param>
+          <param id="p.strrchr.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Character to find, converted to <code>char</code>. Use 0 to locate the terminator.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="char *">
+            <description><![CDATA[
+<p>Pointer to the last match within <code>s</code>, or NULL if not found.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.strstr" name="strstr" kind="function">
+        <signature>char *strstr(const char *haystack, const char *needle);</signature>
+        <summary><![CDATA[
+<p>Finds the first occurrence of substring <code>needle</code> within <code>haystack</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strstr.haystack" name="haystack" direction="in" type="const char *">
+            <description><![CDATA[
+<p>NUL-terminated string to search.</p>
+]]></description>
+          </param>
+          <param id="p.strstr.needle" name="needle" direction="in" type="const char *">
+            <description><![CDATA[
+<p>NUL-terminated substring to find. If empty, the result is <code>haystack</code>.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="char *">
+            <description><![CDATA[
+<p>Pointer to the start of the first match within <code>haystack</code>, or NULL if not found.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.strstr.find_extension" lang="c99">
+            <title>Find a file extension separator</title>
+            <code><![CDATA[
+#include <string.h>
+
+const char *find_dot(const char *path) {
+    /* Use strrchr for last '.', but strstr shown as substring search pattern. */
+    return strrchr(path, '.');
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.strtok" name="strtok" kind="function">
+        <signature>char *strtok(char *s, const char *delim);</signature>
+        <summary><![CDATA[
+<p>Tokenizes <code>s</code> by replacing delimiter characters with NUL and returning successive tokens across calls.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strtok.s" name="s" direction="inout" type="char *">
+            <description><![CDATA[
+<p>
+String to tokenize on the first call, then NULL on subsequent calls to continue tokenizing the same string.
+The buffer is modified in place.
+</p>
+]]></description>
+          </param>
+          <param id="p.strtok.delim" name="delim" direction="in" type="const char *">
+            <description><![CDATA[
+<p>NUL-terminated set of delimiter characters.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="char *">
+            <description><![CDATA[
+<p>Pointer to the next token, or NULL when no tokens remain.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.strtok.modifies" severity="important" topic="input-mutated">
+            <description><![CDATA[
+<p><code>strtok</code> overwrites delimiters with NUL. If you need the original string, work on a copy.</p>
+]]></description>
+          </note>
+        </notes>
+        <examples>
+          <example id="ex.strtok.split_csv_simple" lang="c99">
+            <title>Split a simple comma-separated line in place</title>
+            <code><![CDATA[
+#include <string.h>
+#include <stdio.h>
+
+void print_fields(char *line) {
+    /* line is modified in-place. */
+    const char *delim = ",";
+
+    char *tok = strtok(line, delim);
+    while (tok != NULL) {
+        puts(tok);
+        tok = strtok(NULL, delim);
+    }
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.strspn" name="strspn" kind="function">
+        <signature>size_t strspn(const char *s, const char *accept);</signature>
+        <summary><![CDATA[
+<p>Returns the length of the initial segment of <code>s</code> consisting only of bytes from <code>accept</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strspn.s" name="s" direction="in" type="const char *">
+            <description><![CDATA[
+<p>NUL-terminated string to scan.</p>
+]]></description>
+          </param>
+          <param id="p.strspn.accept" name="accept" direction="in" type="const char *">
+            <description><![CDATA[
+<p>NUL-terminated set of accepted characters.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="size_t">
+            <description><![CDATA[
+<p>Number of bytes in the initial accepted prefix.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.strcspn" name="strcspn" kind="function">
+        <signature>size_t strcspn(const char *s, const char *reject);</signature>
+        <summary><![CDATA[
+<p>Returns the length of the initial segment of <code>s</code> consisting of bytes not in <code>reject</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strcspn.s" name="s" direction="in" type="const char *">
+            <description><![CDATA[
+<p>NUL-terminated string to scan.</p>
+]]></description>
+          </param>
+          <param id="p.strcspn.reject" name="reject" direction="in" type="const char *">
+            <description><![CDATA[
+<p>NUL-terminated set of rejected characters.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="size_t">
+            <description><![CDATA[
+<p>Number of bytes in the initial segment containing no rejected characters.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.strpbrk" name="strpbrk" kind="function">
+        <signature>char *strpbrk(const char *s, const char *accept);</signature>
+        <summary><![CDATA[
+<p>Finds the first character in <code>s</code> that matches any character from <code>accept</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strpbrk.s" name="s" direction="in" type="const char *">
+            <description><![CDATA[
+<p>NUL-terminated string to search.</p>
+]]></description>
+          </param>
+          <param id="p.strpbrk.accept" name="accept" direction="in" type="const char *">
+            <description><![CDATA[
+<p>NUL-terminated set of accepted characters.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="char *">
+            <description><![CDATA[
+<p>Pointer to the first matching character in <code>s</code>, or NULL if none found.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.strerror" name="strerror" kind="function">
+        <signature>char *strerror(int errnum);</signature>
+        <summary><![CDATA[
+<p>Returns a pointer to a human-readable message describing error number <code>errnum</code> (commonly values from <code>errno</code>).</p>
+]]></summary>
+        <parameters>
+          <param id="p.strerror.errnum" name="errnum" direction="in" type="int">
+            <description><![CDATA[
+<p>Error code to describe (often <code>errno</code>).</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="char *">
+            <description><![CDATA[
+<p>Pointer to a NUL-terminated message string. The storage may be reused by subsequent calls.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.strerror.storage" severity="important" topic="lifetime">
+            <description><![CDATA[
+<p>The returned pointer may refer to static storage that is overwritten by later calls. Copy it if you need to keep it.</p>
+]]></description>
+          </note>
+        </notes>
+        <examples>
+          <example id="ex.strerror.format_errno" lang="c99">
+            <title>Format errno for logging</title>
+            <code><![CDATA[
+#include <string.h>
+#include <errno.h>
+#include <stdio.h>
+
+void log_errno(const char *where) {
+    int e = errno;
+    /* Copy if you need to keep the message beyond this point. */
+    printf("%s: errno=%d (%s)\n", where, e, strerror(e));
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.warnings.missing_entries" name="_category_note" kind="internal_note">
+        <summary><![CDATA[
+<p>
+This category list intentionally includes only the functions you specified from <code>string.h</code>.
+Other standard functions also exist in <code>string.h</code> (for example <code>strcoll</code>, <code>strxfrm</code>), but they are not included here.
+</p>
+]]></summary>
+      </function>
+
+    </header>
+
+    <header id="hdr.wchar" name="wchar.h">
+      <summary><![CDATA[
+<p>
+Wide character and wide string operations, plus multibyte to wide conversion utilities and wide formatted output helpers.
+Use these when your program processes wide strings (<code>wchar_t</code>) and when you need locale-aware multibyte decoding.
+</p>
+<p>
+Conversion functions use an explicit <code>mbstate_t</code> state object to support stateful encodings.
+When in doubt, initialize a state to zero and reuse it consistently for a stream.
+</p>
+]]></summary>
+
+      <notes>
+        <note id="n.wchar.shared.termination" severity="important" topic="nul-termination">
+          <description><![CDATA[
+<p>
+The <code>wcs*</code> string functions expect NUL-terminated wide strings.
+The <code>wmem*</code> functions operate on counted wide buffers and do not require a terminator.
+</p>
+]]></description>
+        </note>
+        <note id="n.wchar.shared.overlap" severity="important" topic="overlap">
+          <description><![CDATA[
+<p>
+Overlapping copy: use <code>wmemmove</code>. Using <code>wmemcpy</code> with overlap is undefined behavior.
+</p>
+]]></description>
+        </note>
+        <note id="n.wchar.shared.mbstate" severity="important" topic="mbstate_t">
+          <description><![CDATA[
+<p>
+For multibyte conversions, pass a valid <code>mbstate_t *</code>. A zero-initialized state represents the initial shift state.
+Using a consistent state object is critical for stateful encodings.
+</p>
+]]></description>
+        </note>
+      </notes>
+
+      <function id="fn.wcslen" name="wcslen" kind="function">
+        <signature>size_t wcslen(const wchar_t *s);</signature>
+        <summary><![CDATA[
+<p>Returns the length of NUL-terminated wide string <code>s</code>, not including the terminating wide NUL.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcslen.s" name="s" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>NUL-terminated wide string. Must contain a terminator within accessible memory.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="size_t">
+            <description><![CDATA[
+<p>Number of wide characters before the first wide NUL.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcscmp" name="wcscmp" kind="function">
+        <signature>int wcscmp(const wchar_t *s1, const wchar_t *s2);</signature>
+        <summary><![CDATA[
+<p>Compares two NUL-terminated wide strings lexicographically (code unit order, not locale collation).</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcscmp.s1" name="s1" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>First NUL-terminated wide string.</p>
+]]></description>
+          </param>
+          <param id="p.wcscmp.s2" name="s2" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>Second NUL-terminated wide string.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Less than 0, 0, or greater than 0 based on the first differing wide character.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcsncmp" name="wcsncmp" kind="function">
+        <signature>int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n);</signature>
+        <summary><![CDATA[
+<p>Compares up to <code>n</code> wide characters of two wide strings, stopping early at a wide NUL.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcsncmp.s1" name="s1" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>First NUL-terminated wide string.</p>
+]]></description>
+          </param>
+          <param id="p.wcsncmp.s2" name="s2" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>Second NUL-terminated wide string.</p>
+]]></description>
+          </param>
+          <param id="p.wcsncmp.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Maximum number of wide characters to compare.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Less than 0, 0, or greater than 0, limited to at most <code>n</code> wide characters.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcscpy" name="wcscpy" kind="function">
+        <signature>wchar_t *wcscpy(wchar_t *dest, const wchar_t *src);</signature>
+        <summary><![CDATA[
+<p>Copies the wide string <code>src</code> (including terminator) into <code>dest</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcscpy.dest" name="dest" direction="out" type="wchar_t *">
+            <description><![CDATA[
+<p>Destination buffer, must have enough space for all of <code>src</code> plus the terminating wide NUL.</p>
+]]></description>
+          </param>
+          <param id="p.wcscpy.src" name="src" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>Source NUL-terminated wide string.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wchar_t *">
+            <description><![CDATA[
+<p>Returns <code>dest</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcsncpy" name="wcsncpy" kind="function">
+        <signature>wchar_t *wcsncpy(wchar_t *dest, const wchar_t *src, size_t n);</signature>
+        <summary><![CDATA[
+<p>
+Copies up to <code>n</code> wide characters from <code>src</code> into <code>dest</code>. Pads with wide NULs if <code>src</code> is shorter.
+If <code>src</code> length is at least <code>n</code>, no terminator is written.
+</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcsncpy.dest" name="dest" direction="out" type="wchar_t *">
+            <description><![CDATA[
+<p>Destination buffer with at least <code>n</code> writable wide characters.</p>
+]]></description>
+          </param>
+          <param id="p.wcsncpy.src" name="src" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>Source NUL-terminated wide string.</p>
+]]></description>
+          </param>
+          <param id="p.wcsncpy.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Maximum number of wide characters to write.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.wcsncpy.no_termination" severity="important">
+                <description><![CDATA[
+<p>If <code>src</code> is at least <code>n</code> wide characters long, <code>dest</code> is not terminated. Add a terminator if required.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wchar_t *">
+            <description><![CDATA[
+<p>Returns <code>dest</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcscat" name="wcscat" kind="function">
+        <signature>wchar_t *wcscat(wchar_t *dest, const wchar_t *src);</signature>
+        <summary><![CDATA[
+<p>Appends wide string <code>src</code> to <code>dest</code>, writing a new terminating wide NUL.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcscat.dest" name="dest" direction="inout" type="wchar_t *">
+            <description><![CDATA[
+<p>Destination NUL-terminated wide string with enough free capacity.</p>
+]]></description>
+          </param>
+          <param id="p.wcscat.src" name="src" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>Source NUL-terminated wide string to append.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wchar_t *">
+            <description><![CDATA[
+<p>Returns <code>dest</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcsncat" name="wcsncat" kind="function">
+        <signature>wchar_t *wcsncat(wchar_t *dest, const wchar_t *src, size_t n);</signature>
+        <summary><![CDATA[
+<p>
+Appends up to <code>n</code> wide characters from <code>src</code> to <code>dest</code>, then terminates with a wide NUL.
+Stops early if a wide NUL occurs in <code>src</code>.
+</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcsncat.dest" name="dest" direction="inout" type="wchar_t *">
+            <description><![CDATA[
+<p>Destination NUL-terminated wide string with enough capacity for appended data plus terminator.</p>
+]]></description>
+          </param>
+          <param id="p.wcsncat.src" name="src" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>Source NUL-terminated wide string.</p>
+]]></description>
+          </param>
+          <param id="p.wcsncat.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Maximum number of wide characters to append (excluding the final terminator).</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wchar_t *">
+            <description><![CDATA[
+<p>Returns <code>dest</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcschr" name="wcschr" kind="function">
+        <signature>wchar_t *wcschr(const wchar_t *s, wchar_t c);</signature>
+        <summary><![CDATA[
+<p>Finds the first occurrence of wide character <code>c</code> in <code>s</code>, including possibly the terminating wide NUL.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcschr.s" name="s" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>NUL-terminated wide string to search.</p>
+]]></description>
+          </param>
+          <param id="p.wcschr.c" name="c" direction="in" type="wchar_t">
+            <description><![CDATA[
+<p>Wide character to find. Use L'\0' to locate the terminator.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wchar_t *">
+            <description><![CDATA[
+<p>Pointer to first match, or NULL if not found.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcsrchr" name="wcsrchr" kind="function">
+        <signature>wchar_t *wcsrchr(const wchar_t *s, wchar_t c);</signature>
+        <summary><![CDATA[
+<p>Finds the last occurrence of wide character <code>c</code> in <code>s</code>, including possibly the terminating wide NUL.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcsrchr.s" name="s" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>NUL-terminated wide string to search.</p>
+]]></description>
+          </param>
+          <param id="p.wcsrchr.c" name="c" direction="in" type="wchar_t">
+            <description><![CDATA[
+<p>Wide character to find.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wchar_t *">
+            <description><![CDATA[
+<p>Pointer to last match, or NULL if not found.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcsstr" name="wcsstr" kind="function">
+        <signature>wchar_t *wcsstr(const wchar_t *haystack, const wchar_t *needle);</signature>
+        <summary><![CDATA[
+<p>Finds the first occurrence of substring <code>needle</code> within <code>haystack</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcsstr.haystack" name="haystack" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>NUL-terminated wide string to search.</p>
+]]></description>
+          </param>
+          <param id="p.wcsstr.needle" name="needle" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>NUL-terminated wide substring to find. If empty, the result is <code>haystack</code>.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wchar_t *">
+            <description><![CDATA[
+<p>Pointer to first match, or NULL if not found.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcstok" name="wcstok" kind="function">
+        <signature>wchar_t *wcstok(wchar_t *s, const wchar_t *delim, wchar_t **ptr);</signature>
+        <summary><![CDATA[
+<p>
+Tokenizes a wide string in place. Unlike <code>strtok</code>, <code>wcstok</code> uses an explicit state pointer <code>ptr</code>,
+making the state caller-managed.
+</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcstok.s" name="s" direction="inout" type="wchar_t *">
+            <description><![CDATA[
+<p>String to tokenize on first call, then NULL to continue.</p>
+]]></description>
+          </param>
+          <param id="p.wcstok.delim" name="delim" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>NUL-terminated set of delimiter wide characters.</p>
+]]></description>
+          </param>
+          <param id="p.wcstok.ptr" name="ptr" direction="inout" type="wchar_t **">
+            <description><![CDATA[
+<p>Caller-managed tokenizer state. Must point to a <code>wchar_t *</code> variable that persists across calls.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.wcstok.ptr_required" severity="important">
+                <description><![CDATA[
+<p><code>ptr</code> must not be NULL. It carries the scan position between calls.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wchar_t *">
+            <description><![CDATA[
+<p>Pointer to next token, or NULL when no tokens remain.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.wcstok.split" lang="c99">
+            <title>Split a wide string with explicit state</title>
+            <code><![CDATA[
+#include <wchar.h>
+#include <stdio.h>
+
+void print_wfields(wchar_t *line) {
+    wchar_t *state = NULL;
+    const wchar_t *delim = L",";
+
+    wchar_t *tok = wcstok(line, delim, &state);
+    while (tok != NULL) {
+        /* Print using wide I/O if desired; here just show call shape. */
+        /* wprintf(L"%ls\n", tok); */
+        tok = wcstok(NULL, delim, &state);
+    }
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.wcsxfrm" name="wcsxfrm" kind="function">
+        <signature>size_t wcsxfrm(wchar_t *dest, const wchar_t *src, size_t n);</signature>
+        <summary><![CDATA[
+<p>
+Transforms <code>src</code> into a form suitable for locale-aware comparison using <code>wcscoll</code>-like ordering.
+The transformed sequence is placed into <code>dest</code> if <code>n</code> permits.
+</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcsxfrm.dest" name="dest" direction="out" type="wchar_t *">
+            <description><![CDATA[
+<p>Destination buffer for the transformed form. May be NULL if <code>n</code> is 0 to query required length.</p>
+]]></description>
+          </param>
+          <param id="p.wcsxfrm.src" name="src" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>Source NUL-terminated wide string to transform.</p>
+]]></description>
+          </param>
+          <param id="p.wcsxfrm.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Maximum number of wide characters to write to <code>dest</code>, including the terminator.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="size_t">
+            <description><![CDATA[
+<p>
+Returns the length of the transformed string (not including terminator). If return value is at least <code>n</code>,
+the output was truncated and you should allocate a larger buffer.
+</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcscoll" name="wcscoll" kind="function">
+        <signature>int wcscoll(const wchar_t *s1, const wchar_t *s2);</signature>
+        <summary><![CDATA[
+<p>Compares two wide strings using the current locale collation order (unlike <code>wcscmp</code> which is code unit order).</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcscoll.s1" name="s1" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>First NUL-terminated wide string.</p>
+]]></description>
+          </param>
+          <param id="p.wcscoll.s2" name="s2" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>Second NUL-terminated wide string.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Less than 0, 0, or greater than 0 depending on locale collation order.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.wcscoll.locale" severity="important" topic="locale">
+            <description><![CDATA[
+<p>Collation depends on the active locale (typically <code>LC_COLLATE</code>).</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.wmemcpy" name="wmemcpy" kind="function">
+        <signature>wchar_t *wmemcpy(wchar_t *dest, const wchar_t *src, size_t n);</signature>
+        <summary><![CDATA[
+<p>Copies <code>n</code> wide characters from <code>src</code> to <code>dest</code>. Regions must not overlap.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wmemcpy.dest" name="dest" direction="out" type="wchar_t *">
+            <description><![CDATA[
+<p>Destination buffer with at least <code>n</code> wide characters writable.</p>
+]]></description>
+          </param>
+          <param id="p.wmemcpy.src" name="src" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>Source buffer with at least <code>n</code> wide characters readable.</p>
+]]></description>
+          </param>
+          <param id="p.wmemcpy.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Number of wide characters to copy.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.wmemcpy.no_overlap" severity="important">
+                <description><![CDATA[
+<p>Buffers must not overlap. Use <code>wmemmove</code> if overlap is possible.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wchar_t *">
+            <description><![CDATA[
+<p>Returns <code>dest</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wmemmove" name="wmemmove" kind="function">
+        <signature>wchar_t *wmemmove(wchar_t *dest, const wchar_t *src, size_t n);</signature>
+        <summary><![CDATA[
+<p>Copies <code>n</code> wide characters from <code>src</code> to <code>dest</code>. Regions may overlap.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wmemmove.dest" name="dest" direction="out" type="wchar_t *">
+            <description><![CDATA[
+<p>Destination buffer with at least <code>n</code> wide characters writable.</p>
+]]></description>
+          </param>
+          <param id="p.wmemmove.src" name="src" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>Source buffer with at least <code>n</code> wide characters readable.</p>
+]]></description>
+          </param>
+          <param id="p.wmemmove.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Number of wide characters to move.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wchar_t *">
+            <description><![CDATA[
+<p>Returns <code>dest</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wmemset" name="wmemset" kind="function">
+        <signature>wchar_t *wmemset(wchar_t *s, wchar_t c, size_t n);</signature>
+        <summary><![CDATA[
+<p>Sets the first <code>n</code> wide characters of <code>s</code> to <code>c</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wmemset.s" name="s" direction="inout" type="wchar_t *">
+            <description><![CDATA[
+<p>Buffer to fill, must be writable for <code>n</code> wide characters.</p>
+]]></description>
+          </param>
+          <param id="p.wmemset.c" name="c" direction="in" type="wchar_t">
+            <description><![CDATA[
+<p>Fill wide character value.</p>
+]]></description>
+          </param>
+          <param id="p.wmemset.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Number of wide characters to set.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wchar_t *">
+            <description><![CDATA[
+<p>Returns <code>s</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wmemcmp" name="wmemcmp" kind="function">
+        <signature>int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n);</signature>
+        <summary><![CDATA[
+<p>Compares the first <code>n</code> wide characters of two buffers.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wmemcmp.s1" name="s1" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>First buffer with at least <code>n</code> readable wide characters.</p>
+]]></description>
+          </param>
+          <param id="p.wmemcmp.s2" name="s2" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>Second buffer with at least <code>n</code> readable wide characters.</p>
+]]></description>
+          </param>
+          <param id="p.wmemcmp.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Number of wide characters to compare.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Less than 0, 0, or greater than 0 based on the first differing wide character.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wmemchr" name="wmemchr" kind="function">
+        <signature>wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n);</signature>
+        <summary><![CDATA[
+<p>Searches the first <code>n</code> wide characters of <code>s</code> for the first occurrence of <code>c</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wmemchr.s" name="s" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>Buffer to search, with at least <code>n</code> readable wide characters.</p>
+]]></description>
+          </param>
+          <param id="p.wmemchr.c" name="c" direction="in" type="wchar_t">
+            <description><![CDATA[
+<p>Target wide character.</p>
+]]></description>
+          </param>
+          <param id="p.wmemchr.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Maximum number of wide characters to scan.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wchar_t *">
+            <description><![CDATA[
+<p>Pointer to the first match, or NULL if not found.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.btowc" name="btowc" kind="function">
+        <signature>wint_t btowc(int c);</signature>
+        <summary><![CDATA[
+<p>Converts a single byte <code>c</code> to a wide character if possible in the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.btowc.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Byte value to convert, typically <code>EOF</code> or an unsigned byte value (0..UCHAR_MAX).</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wint_t">
+            <description><![CDATA[
+<p>Converted wide character, or <code>WEOF</code> if <code>c</code> is <code>EOF</code> or not convertible as a single byte.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wctob" name="wctob" kind="function">
+        <signature>int wctob(wint_t c);</signature>
+        <summary><![CDATA[
+<p>Converts a wide character <code>c</code> to a single byte if representable as a single-byte character in the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wctob.c" name="c" direction="in" type="wint_t">
+            <description><![CDATA[
+<p>Wide character to convert, or <code>WEOF</code>.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Converted unsigned byte value (as an <code>unsigned char</code> promoted to int), or <code>EOF</code> if not representable.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.mbrlen" name="mbrlen" kind="function">
+        <signature>size_t mbrlen(const char *s, size_t n, mbstate_t *ps);</signature>
+        <summary><![CDATA[
+<p>Determines the number of bytes that make up the next multibyte character in <code>s</code>, using conversion state <code>ps</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.mbrlen.s" name="s" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Pointer to bytes to examine, or NULL to reset/query the shift state (implementation-defined behavior but widely used as reset).</p>
+]]></description>
+          </param>
+          <param id="p.mbrlen.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Maximum number of bytes available at <code>s</code>.</p>
+]]></description>
+          </param>
+          <param id="p.mbrlen.ps" name="ps" direction="inout" type="mbstate_t *">
+            <description><![CDATA[
+<p>Pointer to conversion state object. If NULL, an internal static state may be used.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.mbrlen.state" severity="important">
+                <description><![CDATA[
+<p>Prefer a caller-owned <code>mbstate_t</code> to avoid hidden shared state and to support stream decoding safely.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="size_t">
+            <description><![CDATA[
+<p>
+Returns number of bytes for the next character; 0 if the next character is the terminating NUL; (size_t)-1 on encoding error;
+(size_t)-2 if the next character is incomplete with the given <code>n</code>.
+</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.mbrtowc" name="mbrtowc" kind="function">
+        <signature>size_t mbrtowc(wchar_t *pwc, const char *s, size_t n, mbstate_t *ps);</signature>
+        <summary><![CDATA[
+<p>Converts the next multibyte character from <code>s</code> to a wide character stored in <code>*pwc</code>, using state <code>ps</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.mbrtowc.pwc" name="pwc" direction="out" type="wchar_t *">
+            <description><![CDATA[
+<p>Output location for the converted wide character. May be NULL if you only want to advance state/validate.</p>
+]]></description>
+          </param>
+          <param id="p.mbrtowc.s" name="s" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Pointer to bytes to convert, or NULL to reset the shift state.</p>
+]]></description>
+          </param>
+          <param id="p.mbrtowc.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Maximum number of bytes available at <code>s</code>.</p>
+]]></description>
+          </param>
+          <param id="p.mbrtowc.ps" name="ps" direction="inout" type="mbstate_t *">
+            <description><![CDATA[
+<p>Pointer to conversion state. If NULL, an internal static state may be used.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="size_t">
+            <description><![CDATA[
+<p>
+Returns number of bytes consumed; 0 if converted character is wide NUL; (size_t)-1 on encoding error; (size_t)-2 if incomplete.
+</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.mbrtowc.stream_decode" lang="c99">
+            <title>Decode a multibyte buffer into wide characters with explicit state</title>
+            <code><![CDATA[
+#include <wchar.h>
+#include <stddef.h>
+
+size_t decode_some(const char *in, size_t in_len, wchar_t *out, size_t out_cap) {
+    mbstate_t st;
+    /* Zero-initialize conversion state. */
+    st = (mbstate_t){0};
+
+    size_t i = 0;
+    size_t o = 0;
+
+    while (i < in_len && o < out_cap) {
+        wchar_t wc = 0;
+        size_t r = mbrtowc(&wc, in + i, in_len - i, &st);
+
+        if (r == (size_t)-1) {
+            /* Encoding error. */
+            break;
+        }
+        if (r == (size_t)-2) {
+            /* Incomplete character at end of buffer. */
+            break;
+        }
+        if (r == 0) {
+            /* Reached terminating NUL. */
+            out[o++] = L'\0';
+            break;
+        }
+
+        out[o++] = wc;
+        i += r;
+    }
+
+    return o;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.wcrtomb" name="wcrtomb" kind="function">
+        <signature>size_t wcrtomb(char *s, wchar_t wc, mbstate_t *ps);</signature>
+        <summary><![CDATA[
+<p>Converts wide character <code>wc</code> to its multibyte sequence, writing into <code>s</code>, using state <code>ps</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcrtomb.s" name="s" direction="out" type="char *">
+            <description><![CDATA[
+<p>Destination buffer for the multibyte sequence. Must have enough space for at least <code>MB_CUR_MAX</code> bytes. If NULL, resets state.</p>
+]]></description>
+          </param>
+          <param id="p.wcrtomb.wc" name="wc" direction="in" type="wchar_t">
+            <description><![CDATA[
+<p>Wide character to convert.</p>
+]]></description>
+          </param>
+          <param id="p.wcrtomb.ps" name="ps" direction="inout" type="mbstate_t *">
+            <description><![CDATA[
+<p>Pointer to conversion state; if NULL, an internal static state may be used.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="size_t">
+            <description><![CDATA[
+<p>Number of bytes written; (size_t)-1 on encoding error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.mbsrtowcs" name="mbsrtowcs" kind="function">
+        <signature>size_t mbsrtowcs(wchar_t *dest, const char **src, size_t len, mbstate_t *ps);</signature>
+        <summary><![CDATA[
+<p>
+Converts a multibyte string starting at <code>*src</code> into wide characters. Updates <code>*src</code> as input is consumed.
+Stops after converting a terminating NUL or after producing <code>len</code> wide characters.
+</p>
+]]></summary>
+        <parameters>
+          <param id="p.mbsrtowcs.dest" name="dest" direction="out" type="wchar_t *">
+            <description><![CDATA[
+<p>Destination buffer for wide characters. May be NULL to query required length.</p>
+]]></description>
+          </param>
+          <param id="p.mbsrtowcs.src" name="src" direction="inout" type="const char **">
+            <description><![CDATA[
+<p>
+Pointer to the input pointer. On success, updated to point after the last converted byte, or set to NULL if the terminator was converted.
+</p>
+]]></description>
+            <constraints>
+              <constraint id="c.mbsrtowcs.src_nonnull" severity="important">
+                <description><![CDATA[
+<p><code>src</code> must not be NULL, and <code>*src</code> must point to a valid NUL-terminated multibyte string.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+          <param id="p.mbsrtowcs.len" name="len" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Maximum number of wide characters to store in <code>dest</code>.</p>
+]]></description>
+          </param>
+          <param id="p.mbsrtowcs.ps" name="ps" direction="inout" type="mbstate_t *">
+            <description><![CDATA[
+<p>Pointer to conversion state; if NULL, an internal static state may be used.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="size_t">
+            <description><![CDATA[
+<p>
+Number of wide characters written (excluding the terminating wide NUL). Returns (size_t)-1 on encoding error.
+</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcsrtombs" name="wcsrtombs" kind="function">
+        <signature>size_t wcsrtombs(char *dest, const wchar_t **src, size_t len, mbstate_t *ps);</signature>
+        <summary><![CDATA[
+<p>
+Converts a wide string starting at <code>*src</code> into multibyte characters. Updates <code>*src</code> as input is consumed.
+Stops after converting the terminating wide NUL or after producing <code>len</code> bytes.
+</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcsrtombs.dest" name="dest" direction="out" type="char *">
+            <description><![CDATA[
+<p>Destination buffer for multibyte bytes. May be NULL to query required length.</p>
+]]></description>
+          </param>
+          <param id="p.wcsrtombs.src" name="src" direction="inout" type="const wchar_t **">
+            <description><![CDATA[
+<p>
+Pointer to the wide input pointer. On success, updated similarly to <code>mbsrtowcs</code>, potentially set to NULL when terminator is converted.
+</p>
+]]></description>
+          </param>
+          <param id="p.wcsrtombs.len" name="len" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Maximum number of bytes to store in <code>dest</code>.</p>
+]]></description>
+          </param>
+          <param id="p.wcsrtombs.ps" name="ps" direction="inout" type="mbstate_t *">
+            <description><![CDATA[
+<p>Pointer to conversion state; if NULL, an internal static state may be used.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="size_t">
+            <description><![CDATA[
+<p>
+Number of bytes written (excluding the terminating NUL). Returns (size_t)-1 on encoding error.
+</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.swprintf" name="swprintf" kind="function">
+        <signature>int swprintf(wchar_t *s, size_t n, const wchar_t *format, ...);</signature>
+        <summary><![CDATA[
+<p>Formats wide output according to <code>format</code> and writes into <code>s</code>, writing at most <code>n</code> wide characters including terminator.</p>
+]]></summary>
+        <parameters>
+          <param id="p.swprintf.s" name="s" direction="out" type="wchar_t *">
+            <description><![CDATA[
+<p>Destination wide buffer.</p>
+]]></description>
+          </param>
+          <param id="p.swprintf.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Capacity of <code>s</code> in wide characters, including space for the terminating wide NUL.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.swprintf.capacity" severity="important">
+                <description><![CDATA[
+<p>Always pass the true buffer capacity. Do not guess. This is your primary safety guarantee.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+          <param id="p.swprintf.format" name="format" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>Wide format string (printf-style). Must be NUL-terminated.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of wide characters written (excluding terminator), or a negative value on encoding/formatting error.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.swprintf.format_path" lang="c99">
+            <title>Build a wide string with bounded formatting</title>
+            <code><![CDATA[
+#include <wchar.h>
+
+int build_message(wchar_t *buf, size_t cap, int code) {
+    /* cap is in wide characters, not bytes. */
+    return swprintf(buf, cap, L"status=%d", code);
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.vswprintf" name="vswprintf" kind="function">
+        <signature>int vswprintf(wchar_t *s, size_t n, const wchar_t *format, va_list arg);</signature>
+        <summary><![CDATA[
+<p>Variadic-list form of <code>swprintf</code>, writing formatted wide output into <code>s</code> with capacity <code>n</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.vswprintf.s" name="s" direction="out" type="wchar_t *">
+            <description><![CDATA[
+<p>Destination wide buffer.</p>
+]]></description>
+          </param>
+          <param id="p.vswprintf.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Capacity of <code>s</code> in wide characters, including terminator.</p>
+]]></description>
+          </param>
+          <param id="p.vswprintf.format" name="format" direction="in" type="const wchar_t *">
+            <description><![CDATA[
+<p>Wide format string.</p>
+]]></description>
+          </param>
+          <param id="p.vswprintf.arg" name="arg" direction="in" type="va_list">
+            <description><![CDATA[
+<p>Argument list created with <code>va_start</code> by the caller.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of wide characters written (excluding terminator), or a negative value on error.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.vswprintf.wrap" lang="c99">
+            <title>Wrapper that formats from a va_list</title>
+            <code><![CDATA[
+#include <wchar.h>
+#include <stdarg.h>
+
+int wfmt(wchar_t *buf, size_t cap, const wchar_t *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    int r = vswprintf(buf, cap, fmt, ap);
+    va_end(ap);
+    return r;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.wchar.category_note" name="_category_note" kind="internal_note">
+        <summary><![CDATA[
+<p>
+This category list intentionally includes only the wide-string and conversion functions you specified from <code>wchar.h</code>.
+Wide I/O functions (for example <code>fgetwc</code>, <code>fputwc</code>) are part of a separate I/O category.
+</p>
+]]></summary>
+      </function>
+
+    </header>
+
+  </category>
+
+</document>
+

@@ -1,0 +1,1911 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<document version="1.0" standard="C99" xml:lang="en">
+
+  <textFormatting>
+    <policy id="fmt.minimal.html" name="Minimal inline HTML in text nodes">
+      <scope>
+        <allowedIn>summary</allowedIn>
+        <allowedIn>description</allowedIn>
+        <allowedIn>notes</allowedIn>
+        <allowedIn>constraints</allowedIn>
+        <allowedIn>returns</allowedIn>
+      </scope>
+      <allowedTags>
+        <tag name="p" kind="block"/>
+        <tag name="strong" kind="inline"/>
+        <tag name="em" kind="inline"/>
+        <tag name="code" kind="inline"/>
+        <tag name="a" kind="inline"/>
+        <tag name="br" kind="inline"/>
+      </allowedTags>
+      <restrictions>
+        <r>No tags beyond allowedTags.</r>
+        <r>Prefer &lt;code&gt; blocks for code samples.</r>
+      </restrictions>
+    </policy>
+  </textFormatting>
+
+  <category id="math.real.complex.fenv" name="Math (real, complex, and floating environment)">
+    <summary><![CDATA[
+<p>
+Numerical computing primitives for real and complex arithmetic and for controlling/inspecting the floating-point environment.
+This category covers three closely related modules:
+(1) real math from <code>math.h</code>, including rounding, decomposition, transcendental functions, and robust helpers such as <code>fmin</code>/<code>fmax</code>;
+(2) complex arithmetic from <code>complex.h</code>, mirroring many real functions for complex numbers plus accessors;
+(3) floating-point environment control from <code>fenv.h</code>, used to query and manage exceptions (invalid, overflow, etc.) and rounding modes.
+</p>
+<p>
+Portability guidance: prefer functions designed to handle NaNs and signed zero predictably (<code>fmin</code>, <code>fmax</code>, <code>copysign</code>);
+avoid assuming a particular floating-point format; do not rely on <code>errno</code> alone for detecting floating exceptions; and use <code>fenv.h</code>
+only when you have a clear numerical need because behavior may depend on compiler flags and runtime environment.
+</p>
+]]></summary>
+
+    <keywords>
+      <kw>math</kw>
+      <kw>complex</kw>
+      <kw>fenv</kw>
+      <kw>rounding</kw>
+      <kw>exceptions</kw>
+      <kw>NaN</kw>
+      <kw>infinity</kw>
+      <kw>fmin</kw>
+      <kw>fmax</kw>
+      <kw>copysign</kw>
+      <kw>nextafter</kw>
+      <kw>sqrt</kw>
+      <kw>pow</kw>
+      <kw>log</kw>
+      <kw>exp</kw>
+      <kw>sin</kw>
+      <kw>cos</kw>
+      <kw>tan</kw>
+      <kw>cabs</kw>
+      <kw>csqrt</kw>
+      <kw>feclearexcept</kw>
+      <kw>fetestexcept</kw>
+      <kw>fesetround</kw>
+    </keywords>
+
+    <notes>
+      <note id="n.math.domain_range" severity="important" topic="domain_range">
+        <description><![CDATA[
+<p>
+Many functions have domain restrictions (for example <code>sqrt(x)</code> for x &lt; 0, <code>log(x)</code> for x &lt;= 0).
+Results and error signaling use a mix of special values (NaN, +/-inf), floating exceptions, and possibly <code>errno</code>.
+If you need robust detection, prefer checking with <code>fenv.h</code> exceptions (and/or <code>isnan</code>/<code>isfinite</code> where available).
+</p>
+]]></description>
+      </note>
+      <note id="n.math.errno" severity="info" topic="errno">
+        <description><![CDATA[
+<p>
+C99 permits but does not require setting <code>errno</code> for math errors. Do not depend on <code>errno</code> alone for correctness.
+If you use <code>errno</code>, set it to 0 before the call and check after, and also consider floating exceptions.
+</p>
+]]></description>
+      </note>
+      <note id="n.math.rounding" severity="important" topic="rounding_modes">
+        <description><![CDATA[
+<p>
+Rounding-related functions differ:
+<code>floor</code>/<code>ceil</code> return floating results;
+<code>round</code> rounds half away from zero (returns floating);
+<code>rint</code>/<code>nearbyint</code> round according to the current rounding mode (returns floating);
+<code>lround</code>/<code>llround</code> return integers and raise range issues if unrepresentable.
+</p>
+]]></description>
+      </note>
+      <note id="n.math.fenv.compiler" severity="warning" topic="fenv_compiler_flags">
+        <description><![CDATA[
+<p>
+Floating environment behavior can be affected by compiler optimizations (for example fast-math) that assume no NaNs/infinities
+or ignore exception semantics. If you rely on <code>fenv.h</code>, ensure your build settings preserve required semantics.
+</p>
+]]></description>
+      </note>
+      <note id="n.math.complex" severity="important" topic="complex_numbers">
+        <description><![CDATA[
+<p>
+Complex functions operate on <code>double complex</code> (and related types) and may produce NaNs or infinities for some inputs.
+Use accessors like <code>creal</code>/<code>cimag</code> for decomposition and <code>cabs</code> for magnitude.
+</p>
+]]></description>
+      </note>
+    </notes>
+
+    <header id="hdr.math" name="math.h">
+      <summary><![CDATA[
+<p>
+Real-valued mathematical functions: classification helpers, decomposition, rounding, power/log/exp, trig and hyperbolic families,
+and numeric utilities that handle NaNs and signed zero sensibly.
+</p>
+]]></summary>
+
+      <function id="fn.fabs" name="fabs" kind="function">
+        <signature>double fabs(double x);</signature>
+        <summary><![CDATA[
+<p>Returns the absolute value of <code>x</code> as a double.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fabs.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Absolute value; preserves NaN as NaN.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fmod" name="fmod" kind="function">
+        <signature>double fmod(double x, double y);</signature>
+        <summary><![CDATA[
+<p>Computes the floating-point remainder of <code>x / y</code> with the same sign as <code>x</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fmod.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Dividend.</p>
+]]></description>
+          </param>
+          <param id="p.fmod.y" name="y" direction="in" type="double">
+            <description><![CDATA[
+<p>Divisor.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.fmod.y_nonzero" severity="important">
+                <description><![CDATA[
+<p>If <code>y</code> is 0, the result is domain error (typically NaN) and may raise FE_INVALID.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Remainder <code>r</code> such that <code>x = q*y + r</code> with integer-like <code>q</code>, and <code>|r| &lt; |y|</code>.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.fmod.wrap_angle" lang="c99">
+            <title>Wrap an angle into (-pi, pi]</title>
+            <code><![CDATA[
+#include <math.h>
+
+double wrap_pi(double a) {
+    const double two_pi = 2.0 * acos(-1.0);
+    a = fmod(a, two_pi);
+    if (a <= -acos(-1.0)) a += two_pi;
+    if (a >  acos(-1.0))  a -= two_pi;
+    return a;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.remainder" name="remainder" kind="function">
+        <signature>double remainder(double x, double y);</signature>
+        <summary><![CDATA[
+<p>Computes the IEEE-style remainder of <code>x / y</code>, where the quotient is rounded to the nearest integer (ties to even).</p>
+]]></summary>
+        <parameters>
+          <param id="p.remainder.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Dividend.</p>
+]]></description>
+          </param>
+          <param id="p.remainder.y" name="y" direction="in" type="double">
+            <description><![CDATA[
+<p>Divisor.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.remainder.y_nonzero" severity="important">
+                <description><![CDATA[
+<p>If <code>y</code> is 0, domain error (often NaN) and may raise FE_INVALID.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Remainder with magnitude at most <code>|y|/2</code>, using tie-to-even rounding of the quotient.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.modf" name="modf" kind="function">
+        <signature>double modf(double x, double *iptr);</signature>
+        <summary><![CDATA[
+<p>Splits <code>x</code> into fractional and integral parts.</p>
+]]></summary>
+        <parameters>
+          <param id="p.modf.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value.</p>
+]]></description>
+          </param>
+          <param id="p.modf.iptr" name="iptr" direction="out" type="double *">
+            <description><![CDATA[
+<p>Receives the integral part of <code>x</code> (as a double).</p>
+]]></description>
+            <constraints>
+              <constraint id="c.modf.iptr_nonnull" severity="important">
+                <description><![CDATA[
+<p><code>iptr</code> must be non-NULL.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Fractional part of <code>x</code>, with the same sign as <code>x</code>.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.modf.split" lang="c99">
+            <title>Split into integer and fraction</title>
+            <code><![CDATA[
+#include <math.h>
+
+void split(double x, double *i, double *f) {
+    *f = modf(x, i);
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.frexp" name="frexp" kind="function">
+        <signature>double frexp(double x, int *exp);</signature>
+        <summary><![CDATA[
+<p>Decomposes <code>x</code> into mantissa and exponent: <code>x = m * 2^e</code> with <code>m</code> in [0.5, 1) (or 0).</p>
+]]></summary>
+        <parameters>
+          <param id="p.frexp.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value.</p>
+]]></description>
+          </param>
+          <param id="p.frexp.exp" name="exp" direction="out" type="int *">
+            <description><![CDATA[
+<p>Receives exponent value <code>e</code>.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.frexp.exp_nonnull" severity="important">
+                <description><![CDATA[
+<p><code>exp</code> must be non-NULL.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Mantissa <code>m</code>. If <code>x</code> is 0, returns 0 and stores 0 in <code>*exp</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ldexp" name="ldexp" kind="function">
+        <signature>double ldexp(double x, int exp);</signature>
+        <summary><![CDATA[
+<p>Computes <code>x * 2^exp</code>, typically the inverse of <code>frexp</code> (modulo rounding).</p>
+]]></summary>
+        <parameters>
+          <param id="p.ldexp.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Mantissa-like input.</p>
+]]></description>
+          </param>
+          <param id="p.ldexp.exp" name="exp" direction="in" type="int">
+            <description><![CDATA[
+<p>Exponent power of two.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Scaled value; may overflow to infinity or underflow toward 0, possibly raising exceptions.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fmin" name="fmin" kind="function">
+        <signature>double fmin(double x, double y);</signature>
+        <summary><![CDATA[
+<p>Returns the smaller of <code>x</code> and <code>y</code>, with defined NaN handling (if one is NaN, returns the other).</p>
+]]></summary>
+        <parameters>
+          <param id="p.fmin.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>First value.</p>
+]]></description>
+          </param>
+          <param id="p.fmin.y" name="y" direction="in" type="double">
+            <description><![CDATA[
+<p>Second value.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Minimum, preferring the numeric argument if the other is NaN. Preserves signed zero semantics per specification.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.fmin.vs_operator" severity="important" topic="nan_handling">
+            <description><![CDATA[
+<p>Prefer <code>fmin</code> over <code>(x &lt; y ? x : y)</code> when NaN behavior matters.</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.fmax" name="fmax" kind="function">
+        <signature>double fmax(double x, double y);</signature>
+        <summary><![CDATA[
+<p>Returns the larger of <code>x</code> and <code>y</code>, with defined NaN handling.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fmax.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>First value.</p>
+]]></description>
+          </param>
+          <param id="p.fmax.y" name="y" direction="in" type="double">
+            <description><![CDATA[
+<p>Second value.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Maximum, preferring the numeric argument if the other is NaN.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.copysign" name="copysign" kind="function">
+        <signature>double copysign(double x, double y);</signature>
+        <summary><![CDATA[
+<p>Returns a value with the magnitude of <code>x</code> and the sign of <code>y</code> (including signed zero).</p>
+]]></summary>
+        <parameters>
+          <param id="p.copysign.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Magnitude source.</p>
+]]></description>
+          </param>
+          <param id="p.copysign.y" name="y" direction="in" type="double">
+            <description><![CDATA[
+<p>Sign source.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Magnitude from <code>x</code> with sign bit from <code>y</code>.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.copysign.force_sign" lang="c99">
+            <title>Force a value to be negative or positive without branching</title>
+            <code><![CDATA[
+#include <math.h>
+
+double force_positive(double x) { return copysign(x, 1.0); }
+double force_negative(double x) { return copysign(x, -1.0); }
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.nextafter" name="nextafter" kind="function">
+        <signature>double nextafter(double x, double y);</signature>
+        <summary><![CDATA[
+<p>Returns the next representable double after <code>x</code> in the direction of <code>y</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.nextafter.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Starting value.</p>
+]]></description>
+          </param>
+          <param id="p.nextafter.y" name="y" direction="in" type="double">
+            <description><![CDATA[
+<p>Direction target. If <code>y</code> is greater than <code>x</code>, moves upward; if less, downward; if equal, returns <code>x</code>.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Adjacent representable value, possibly raising overflow/underflow exceptions at the edges.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.nextafter_open_interval" lang="c99">
+            <title>Create an open interval endpoint</title>
+            <code><![CDATA[
+#include <math.h>
+
+/* Returns the largest representable value strictly less than x. */
+double prev_double(double x) {
+    return nextafter(x, -INFINITY);
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.nexttoward" name="nexttoward" kind="function">
+        <signature>double nexttoward(double x, long double y);</signature>
+        <summary><![CDATA[
+<p>Like <code>nextafter</code>, but the direction is specified as <code>long double</code> for better precision of the target.</p>
+]]></summary>
+        <parameters>
+          <param id="p.nexttoward.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Starting value.</p>
+]]></description>
+          </param>
+          <param id="p.nexttoward.y" name="y" direction="in" type="long double">
+            <description><![CDATA[
+<p>Direction target as long double.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Adjacent representable value after <code>x</code> toward <code>y</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.floor" name="floor" kind="function">
+        <signature>double floor(double x);</signature>
+        <summary><![CDATA[
+<p>Rounds <code>x</code> toward negative infinity, returning an integral-valued double.</p>
+]]></summary>
+        <parameters>
+          <param id="p.floor.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Largest integral value not greater than <code>x</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ceil" name="ceil" kind="function">
+        <signature>double ceil(double x);</signature>
+        <summary><![CDATA[
+<p>Rounds <code>x</code> toward positive infinity, returning an integral-valued double.</p>
+]]></summary>
+        <parameters>
+          <param id="p.ceil.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Smallest integral value not less than <code>x</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.trunc" name="trunc" kind="function">
+        <signature>double trunc(double x);</signature>
+        <summary><![CDATA[
+<p>Rounds <code>x</code> toward zero, returning an integral-valued double.</p>
+]]></summary>
+        <parameters>
+          <param id="p.trunc.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Integral value by truncation toward zero.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.round" name="round" kind="function">
+        <signature>double round(double x);</signature>
+        <summary><![CDATA[
+<p>Rounds <code>x</code> to the nearest integer value, with halfway cases rounded away from zero.</p>
+]]></summary>
+        <parameters>
+          <param id="p.round.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Nearest integral-valued double.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.lround" name="lround" kind="function">
+        <signature>long lround(double x);</signature>
+        <summary><![CDATA[
+<p>Rounds to the nearest integer, halfway away from zero, and returns as <code>long</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.lround.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.lround.range" severity="important">
+                <description><![CDATA[
+<p>If the rounded value is outside the range of <code>long</code>, the behavior is undefined or raises an invalid exception depending on implementation.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="long">
+            <description><![CDATA[
+<p>Rounded integer result.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.llround" name="llround" kind="function">
+        <signature>long long llround(double x);</signature>
+        <summary><![CDATA[
+<p>Rounds to the nearest integer, halfway away from zero, and returns as <code>long long</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.llround.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="long long">
+            <description><![CDATA[
+<p>Rounded integer result.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.nearbyint" name="nearbyint" kind="function">
+        <signature>double nearbyint(double x);</signature>
+        <summary><![CDATA[
+<p>Rounds according to the current rounding mode and returns an integral-valued double, typically without raising FE_INEXACT.</p>
+]]></summary>
+        <parameters>
+          <param id="p.nearbyint.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Integral-valued double according to current rounding mode.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.rint" name="rint" kind="function">
+        <signature>double rint(double x);</signature>
+        <summary><![CDATA[
+<p>Rounds according to the current rounding mode and returns an integral-valued double (may raise FE_INEXACT).</p>
+]]></summary>
+        <parameters>
+          <param id="p.rint.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Integral-valued double according to current rounding mode.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.sqrt" name="sqrt" kind="function">
+        <signature>double sqrt(double x);</signature>
+        <summary><![CDATA[
+<p>Computes the square root of <code>x</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.sqrt.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value. Domain is x &gt;= 0 for real results.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Square root. For x &lt; 0, typically returns NaN and may raise FE_INVALID.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.sqrt_hypot" lang="c99">
+            <title>Prefer hypot for sqrt(x*x + y*y)</title>
+            <code><![CDATA[
+#include <math.h>
+
+double length2d(double x, double y) {
+    return hypot(x, y);
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.cbrt" name="cbrt" kind="function">
+        <signature>double cbrt(double x);</signature>
+        <summary><![CDATA[
+<p>Computes the real cube root of <code>x</code>, preserving the sign for negative inputs.</p>
+]]></summary>
+        <parameters>
+          <param id="p.cbrt.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Cube root.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.hypot" name="hypot" kind="function">
+        <signature>double hypot(double x, double y);</signature>
+        <summary><![CDATA[
+<p>Computes <code>sqrt(x*x + y*y)</code> with reduced overflow/underflow risk.</p>
+]]></summary>
+        <parameters>
+          <param id="p.hypot.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>First component.</p>
+]]></description>
+          </param>
+          <param id="p.hypot.y" name="y" direction="in" type="double">
+            <description><![CDATA[
+<p>Second component.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Hypotenuse length.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.pow" name="pow" kind="function">
+        <signature>double pow(double x, double y);</signature>
+        <summary><![CDATA[
+<p>Computes <code>x</code> raised to the power <code>y</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.pow.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Base.</p>
+]]></description>
+          </param>
+          <param id="p.pow.y" name="y" direction="in" type="double">
+            <description><![CDATA[
+<p>Exponent.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Power result; may overflow to infinity or underflow, and may return NaN for some domain combinations.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.pow_int_exp" lang="c99">
+            <title>Integer exponent: consider a loop for exactness and speed</title>
+            <code><![CDATA[
+#include <math.h>
+
+double powi(double x, int n) {
+    double r = 1.0;
+    int e = n;
+    if (e < 0) { x = 1.0 / x; e = -e; }
+
+    while (e) {
+        if (e & 1) r *= x;
+        x *= x;
+        e >>= 1;
+    }
+    return r;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.exp" name="exp" kind="function">
+        <signature>double exp(double x);</signature>
+        <summary><![CDATA[
+<p>Computes e raised to <code>x</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.exp.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Exponent.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Exponential result; may overflow to infinity for large x or underflow toward 0 for very negative x.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.expm1" name="expm1" kind="function">
+        <signature>double expm1(double x);</signature>
+        <summary><![CDATA[
+<p>Computes <code>exp(x) - 1</code> accurately for small <code>x</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.expm1.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Exponent.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Accurate <code>exp(x) - 1</code>.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.expm1_small" lang="c99">
+            <title>Stable computation for small x</title>
+            <code><![CDATA[
+#include <math.h>
+
+double relative_growth(double x) {
+    /* Better than exp(x) - 1 when x is near 0. */
+    return expm1(x);
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.log" name="log" kind="function">
+        <signature>double log(double x);</signature>
+        <summary><![CDATA[
+<p>Computes the natural logarithm of <code>x</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.log.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value. Domain: x &gt; 0 for real results.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Natural log; for x &lt; 0 returns NaN; for x == 0 returns -infinity, typically raising FE_DIVBYZERO.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.log10" name="log10" kind="function">
+        <signature>double log10(double x);</signature>
+        <summary><![CDATA[
+<p>Computes base-10 logarithm of <code>x</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.log10.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value. Domain: x &gt; 0 for real results.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Base-10 log.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.log1p" name="log1p" kind="function">
+        <signature>double log1p(double x);</signature>
+        <summary><![CDATA[
+<p>Computes <code>log(1 + x)</code> accurately for small <code>x</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.log1p.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value. Domain: x &gt; -1 for real results.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Accurate <code>log(1 + x)</code>.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.log1p_small" lang="c99">
+            <title>Stable log(1+x) for small x</title>
+            <code><![CDATA[
+#include <math.h>
+
+double log_one_plus(double x) {
+    return log1p(x);
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.sin" name="sin" kind="function">
+        <signature>double sin(double x);</signature>
+        <summary><![CDATA[
+<p>Computes sine of <code>x</code> (radians).</p>
+]]></summary>
+        <parameters>
+          <param id="p.sin.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Angle in radians.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Sine value.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cos" name="cos" kind="function">
+        <signature>double cos(double x);</signature>
+        <summary><![CDATA[
+<p>Computes cosine of <code>x</code> (radians).</p>
+]]></summary>
+        <parameters>
+          <param id="p.cos.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Angle in radians.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Cosine value.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.tan" name="tan" kind="function">
+        <signature>double tan(double x);</signature>
+        <summary><![CDATA[
+<p>Computes tangent of <code>x</code> (radians).</p>
+]]></summary>
+        <parameters>
+          <param id="p.tan.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Angle in radians.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Tangent value; may overflow near odd multiples of pi/2.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.asin" name="asin" kind="function">
+        <signature>double asin(double x);</signature>
+        <summary><![CDATA[
+<p>Computes arcsine of <code>x</code> (returns radians).</p>
+]]></summary>
+        <parameters>
+          <param id="p.asin.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value. Domain: [-1, 1] for real results.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Arcsine in radians; outside domain typically returns NaN and may raise FE_INVALID.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.acos" name="acos" kind="function">
+        <signature>double acos(double x);</signature>
+        <summary><![CDATA[
+<p>Computes arccosine of <code>x</code> (returns radians).</p>
+]]></summary>
+        <parameters>
+          <param id="p.acos.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value. Domain: [-1, 1] for real results.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Arccosine in radians.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.atan" name="atan" kind="function">
+        <signature>double atan(double x);</signature>
+        <summary><![CDATA[
+<p>Computes arctangent of <code>x</code> (returns radians).</p>
+]]></summary>
+        <parameters>
+          <param id="p.atan.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Arctangent in radians.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.atan2" name="atan2" kind="function">
+        <signature>double atan2(double y, double x);</signature>
+        <summary><![CDATA[
+<p>Computes arctangent of <code>y/x</code> using the signs of both to determine the correct quadrant.</p>
+]]></summary>
+        <parameters>
+          <param id="p.atan2.y" name="y" direction="in" type="double">
+            <description><![CDATA[
+<p>Y coordinate.</p>
+]]></description>
+          </param>
+          <param id="p.atan2.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>X coordinate.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Angle in radians, typically in [-pi, pi].</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.atan2_angle" lang="c99">
+            <title>Compute polar angle from x,y</title>
+            <code><![CDATA[
+#include <math.h>
+
+double angle(double x, double y) {
+    return atan2(y, x);
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.sinh" name="sinh" kind="function">
+        <signature>double sinh(double x);</signature>
+        <summary><![CDATA[
+<p>Computes hyperbolic sine of <code>x</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.sinh.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Hyperbolic sine; may overflow for large |x|.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cosh" name="cosh" kind="function">
+        <signature>double cosh(double x);</signature>
+        <summary><![CDATA[
+<p>Computes hyperbolic cosine of <code>x</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.cosh.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Hyperbolic cosine; may overflow for large |x|.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.tanh" name="tanh" kind="function">
+        <signature>double tanh(double x);</signature>
+        <summary><![CDATA[
+<p>Computes hyperbolic tangent of <code>x</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.tanh.x" name="x" direction="in" type="double">
+            <description><![CDATA[
+<p>Input value.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Hyperbolic tangent.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.math.category_note" name="_category_note" kind="internal_note">
+        <summary><![CDATA[
+<p>
+This header entry includes the math.h functions you listed. Many of these have float/long double variants in the standard, but this
+document focuses on the canonical double forms for cross-platform usage, mirroring the approach used in earlier categories.
+</p>
+]]></summary>
+      </function>
+    </header>
+
+    <header id="hdr.complex" name="complex.h">
+      <summary><![CDATA[
+<p>
+Complex arithmetic over <code>double complex</code>. Includes accessors (<code>creal</code>, <code>cimag</code>), magnitude/phase
+(<code>cabs</code>, <code>carg</code>), and complex analogues of exp/log/pow/sqrt and trig/hyperbolic functions.
+</p>
+]]></summary>
+
+      <function id="fn.creal" name="creal" kind="function">
+        <signature>double creal(double complex z);</signature>
+        <summary><![CDATA[
+<p>Returns the real part of complex number <code>z</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.creal.z" name="z" direction="in" type="double complex">
+            <description><![CDATA[
+<p>Complex input.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Real component.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cimag" name="cimag" kind="function">
+        <signature>double cimag(double complex z);</signature>
+        <summary><![CDATA[
+<p>Returns the imaginary part of complex number <code>z</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.cimag.z" name="z" direction="in" type="double complex">
+            <description><![CDATA[
+<p>Complex input.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Imaginary component.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cabs" name="cabs" kind="function">
+        <signature>double cabs(double complex z);</signature>
+        <summary><![CDATA[
+<p>Returns the magnitude (modulus) of <code>z</code>, equivalent to <code>hypot(creal(z), cimag(z))</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.cabs.z" name="z" direction="in" type="double complex">
+            <description><![CDATA[
+<p>Complex input.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Magnitude.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.carg" name="carg" kind="function">
+        <signature>double carg(double complex z);</signature>
+        <summary><![CDATA[
+<p>Returns the phase angle (argument) of <code>z</code>, typically in radians.</p>
+]]></summary>
+        <parameters>
+          <param id="p.carg.z" name="z" direction="in" type="double complex">
+            <description><![CDATA[
+<p>Complex input.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Argument angle.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.conj" name="conj" kind="function">
+        <signature>double complex conj(double complex z);</signature>
+        <summary><![CDATA[
+<p>Returns the complex conjugate of <code>z</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.conj.z" name="z" direction="in" type="double complex">
+            <description><![CDATA[
+<p>Complex input.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double complex">
+            <description><![CDATA[
+<p>Conjugate value.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.conj_inner_product" lang="c99">
+            <title>Complex inner product term</title>
+            <code><![CDATA[
+#include <complex.h>
+
+double complex inner_term(double complex a, double complex b) {
+    return conj(a) * b;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.cproj" name="cproj" kind="function">
+        <signature>double complex cproj(double complex z);</signature>
+        <summary><![CDATA[
+<p>Projects <code>z</code> onto the Riemann sphere (useful for handling infinities consistently).</p>
+]]></summary>
+        <parameters>
+          <param id="p.cproj.z" name="z" direction="in" type="double complex">
+            <description><![CDATA[
+<p>Complex input.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double complex">
+            <description><![CDATA[
+<p>Projected complex value.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cexp" name="cexp" kind="function">
+        <signature>double complex cexp(double complex z);</signature>
+        <summary><![CDATA[
+<p>Computes the complex exponential of <code>z</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.cexp.z" name="z" direction="in" type="double complex">
+            <description><![CDATA[
+<p>Complex input.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double complex">
+            <description><![CDATA[
+<p>Complex exponential result.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.clog" name="clog" kind="function">
+        <signature>double complex clog(double complex z);</signature>
+        <summary><![CDATA[
+<p>Computes the complex natural logarithm of <code>z</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.clog.z" name="z" direction="in" type="double complex">
+            <description><![CDATA[
+<p>Complex input.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double complex">
+            <description><![CDATA[
+<p>Complex logarithm.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cpow" name="cpow" kind="function">
+        <signature>double complex cpow(double complex x, double complex y);</signature>
+        <summary><![CDATA[
+<p>Computes complex power <code>x^y</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.cpow.x" name="x" direction="in" type="double complex">
+            <description><![CDATA[
+<p>Complex base.</p>
+]]></description>
+          </param>
+          <param id="p.cpow.y" name="y" direction="in" type="double complex">
+            <description><![CDATA[
+<p>Complex exponent.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double complex">
+            <description><![CDATA[
+<p>Complex power result.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.csqrt" name="csqrt" kind="function">
+        <signature>double complex csqrt(double complex z);</signature>
+        <summary><![CDATA[
+<p>Computes the complex square root of <code>z</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.csqrt.z" name="z" direction="in" type="double complex">
+            <description><![CDATA[
+<p>Complex input.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double complex">
+            <description><![CDATA[
+<p>Complex square root.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.csqrt_negative_real" lang="c99">
+            <title>Square root of a negative real without NaN</title>
+            <code><![CDATA[
+#include <complex.h>
+
+double complex sqrt_neg(double x) {
+    /* If x is negative real, csqrt produces an imaginary result. */
+    return csqrt(x + 0.0 * I);
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.ccos" name="ccos" kind="function">
+        <signature>double complex ccos(double complex z);</signature>
+        <summary><![CDATA[
+<p>Computes complex cosine of <code>z</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.ccos.z" name="z" direction="in" type="double complex">
+            <description><![CDATA[
+<p>Complex input.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double complex">
+            <description><![CDATA[
+<p>Complex cosine.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.csin" name="csin" kind="function">
+        <signature>double complex csin(double complex z);</signature>
+        <summary><![CDATA[
+<p>Computes complex sine of <code>z</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.csin.z" name="z" direction="in" type="double complex">
+            <description><![CDATA[
+<p>Complex input.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double complex">
+            <description><![CDATA[
+<p>Complex sine.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ctan" name="ctan" kind="function">
+        <signature>double complex ctan(double complex z);</signature>
+        <summary><![CDATA[
+<p>Computes complex tangent of <code>z</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.ctan.z" name="z" direction="in" type="double complex">
+            <description><![CDATA[
+<p>Complex input.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double complex">
+            <description><![CDATA[
+<p>Complex tangent.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ccosh" name="ccosh" kind="function">
+        <signature>double complex ccosh(double complex z);</signature>
+        <summary><![CDATA[
+<p>Computes complex hyperbolic cosine of <code>z</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.ccosh.z" name="z" direction="in" type="double complex">
+            <description><![CDATA[
+<p>Complex input.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double complex">
+            <description><![CDATA[
+<p>Complex hyperbolic cosine.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.csinh" name="csinh" kind="function">
+        <signature>double complex csinh(double complex z);</signature>
+        <summary><![CDATA[
+<p>Computes complex hyperbolic sine of <code>z</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.csinh.z" name="z" direction="in" type="double complex">
+            <description><![CDATA[
+<p>Complex input.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double complex">
+            <description><![CDATA[
+<p>Complex hyperbolic sine.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ctanh" name="ctanh" kind="function">
+        <signature>double complex ctanh(double complex z);</signature>
+        <summary><![CDATA[
+<p>Computes complex hyperbolic tangent of <code>z</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.ctanh.z" name="z" direction="in" type="double complex">
+            <description><![CDATA[
+<p>Complex input.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double complex">
+            <description><![CDATA[
+<p>Complex hyperbolic tangent.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.complex.category_note" name="_category_note" kind="internal_note">
+        <summary><![CDATA[
+<p>
+This header entry includes the complex.h functions you listed, documented in their double-complex forms for portability and consistency.
+</p>
+]]></summary>
+      </function>
+    </header>
+
+    <header id="hdr.fenv" name="fenv.h">
+      <summary><![CDATA[
+<p>
+Floating-point environment control: clear, raise, test, and save/restore floating exceptions and control rounding modes.
+This is used in numerically sensitive code (validation, reproducibility, and error detection) and requires careful attention to compiler settings.
+</p>
+]]></summary>
+
+      <function id="fn.feclearexcept" name="feclearexcept" kind="function">
+        <signature>int feclearexcept(int excepts);</signature>
+        <summary><![CDATA[
+<p>Clears the floating-point exception flags specified by <code>excepts</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.feclearexcept.excepts" name="excepts" direction="in" type="int">
+            <description><![CDATA[
+<p>
+Bitmask of exceptions, typically combining <code>FE_INVALID</code>, <code>FE_DIVBYZERO</code>, <code>FE_OVERFLOW</code>, <code>FE_UNDERFLOW</code>, <code>FE_INEXACT</code>.
+You may also use <code>FE_ALL_EXCEPT</code>.
+</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>0 on success, non-zero if the operation is not supported for the requested flags.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fegetexceptflag" name="fegetexceptflag" kind="function">
+        <signature>int fegetexceptflag(fexcept_t *flagp, int excepts);</signature>
+        <summary><![CDATA[
+<p>Stores the state of specified exception flags into <code>*flagp</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fegetexceptflag.flagp" name="flagp" direction="out" type="fexcept_t *">
+            <description><![CDATA[
+<p>Receives an opaque snapshot of the requested exception flags.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.fegetexceptflag.nonnull" severity="important">
+                <description><![CDATA[
+<p><code>flagp</code> must be non-NULL.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+          <param id="p.fegetexceptflag.excepts" name="excepts" direction="in" type="int">
+            <description><![CDATA[
+<p>Bitmask selecting which exception flags to snapshot.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>0 on success, non-zero on failure.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.feraiseexcept" name="feraiseexcept" kind="function">
+        <signature>int feraiseexcept(int excepts);</signature>
+        <summary><![CDATA[
+<p>Raises the floating-point exceptions specified by <code>excepts</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.feraiseexcept.excepts" name="excepts" direction="in" type="int">
+            <description><![CDATA[
+<p>Bitmask of exceptions to raise.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>0 on success, non-zero on failure or if unsupported.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fesetexceptflag" name="fesetexceptflag" kind="function">
+        <signature>int fesetexceptflag(const fexcept_t *flagp, int excepts);</signature>
+        <summary><![CDATA[
+<p>Sets the exception flags specified by <code>excepts</code> to the state stored in <code>*flagp</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fesetexceptflag.flagp" name="flagp" direction="in" type="const fexcept_t *">
+            <description><![CDATA[
+<p>Pointer to a previously captured exception-flag snapshot.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.fesetexceptflag.nonnull" severity="important">
+                <description><![CDATA[
+<p><code>flagp</code> must be non-NULL.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+          <param id="p.fesetexceptflag.excepts" name="excepts" direction="in" type="int">
+            <description><![CDATA[
+<p>Bitmask selecting which exception flags to update.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>0 on success, non-zero on failure.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fetestexcept" name="fetestexcept" kind="function">
+        <signature>int fetestexcept(int excepts);</signature>
+        <summary><![CDATA[
+<p>Tests which of the specified floating-point exception flags are currently set.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fetestexcept.excepts" name="excepts" direction="in" type="int">
+            <description><![CDATA[
+<p>Bitmask of exceptions to test (or <code>FE_ALL_EXCEPT</code>).</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Bitwise OR of the exceptions that are currently set among those requested.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.fenv.detect_domain_error" lang="c99">
+            <title>Detect invalid operation using fenv around a computation</title>
+            <code><![CDATA[
+#include <math.h>
+#include <fenv.h>
+
+int sqrt_checked(double x, double *out) {
+    (void)feclearexcept(FE_ALL_EXCEPT);
+
+    double r = sqrt(x);
+
+    if (fetestexcept(FE_INVALID)) {
+        return 0;
+    }
+
+    *out = r;
+    return 1;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.fegetround" name="fegetround" kind="function">
+        <signature>int fegetround(void);</signature>
+        <summary><![CDATA[
+<p>Gets the current floating-point rounding mode.</p>
+]]></summary>
+        <parameters/>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>One of <code>FE_TONEAREST</code>, <code>FE_DOWNWARD</code>, <code>FE_UPWARD</code>, <code>FE_TOWARDZERO</code> (values are implementation-defined).</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fesetround" name="fesetround" kind="function">
+        <signature>int fesetround(int round);</signature>
+        <summary><![CDATA[
+<p>Sets the floating-point rounding mode.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fesetround.round" name="round" direction="in" type="int">
+            <description><![CDATA[
+<p>Requested rounding mode, typically one of <code>FE_TONEAREST</code>, <code>FE_DOWNWARD</code>, <code>FE_UPWARD</code>, <code>FE_TOWARDZERO</code>.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.fesetround.valid" severity="important">
+                <description><![CDATA[
+<p>Pass a supported rounding mode. If unsupported, the function returns non-zero and the rounding mode may remain unchanged.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>0 on success, non-zero on failure.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.fesetround_scope" lang="c99">
+            <title>Temporarily change rounding mode and restore it</title>
+            <code><![CDATA[
+#include <fenv.h>
+#include <math.h>
+
+double round_down_then_restore(double x) {
+    fenv_t env;
+    if (fegetenv(&env) != 0) {
+        return floor(x);
+    }
+
+    if (fesetround(FE_DOWNWARD) != 0) {
+        return floor(x);
+    }
+
+    double r = rint(x);
+
+    (void)fesetenv(&env);
+    return r;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.fegetenv" name="fegetenv" kind="function">
+        <signature>int fegetenv(fenv_t *envp);</signature>
+        <summary><![CDATA[
+<p>Stores the current floating-point environment into <code>*envp</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fegetenv.envp" name="envp" direction="out" type="fenv_t *">
+            <description><![CDATA[
+<p>Receives an opaque snapshot of the floating-point environment.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.fegetenv.nonnull" severity="important">
+                <description><![CDATA[
+<p><code>envp</code> must be non-NULL.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>0 on success, non-zero on failure.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.feholdexcept" name="feholdexcept" kind="function">
+        <signature>int feholdexcept(fenv_t *envp);</signature>
+        <summary><![CDATA[
+<p>Saves the current environment to <code>*envp</code>, then clears exception flags and may install a non-stop mode.</p>
+]]></summary>
+        <parameters>
+          <param id="p.feholdexcept.envp" name="envp" direction="out" type="fenv_t *">
+            <description><![CDATA[
+<p>Receives the saved environment.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>0 on success, non-zero on failure.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.feholdexcept_isolate" lang="c99">
+            <title>Isolate floating exceptions during a sensitive calculation</title>
+            <code><![CDATA[
+#include <math.h>
+#include <fenv.h>
+
+int compute_isolated(double x, double *out, int *excepts_out) {
+    fenv_t env;
+    if (feholdexcept(&env) != 0) return 0;
+
+    double r = log(x);
+
+    int ex = fetestexcept(FE_ALL_EXCEPT);
+
+    (void)feupdateenv(&env); /* Restore and re-raise exceptions that occurred. */
+
+    *out = r;
+    *excepts_out = ex;
+    return 1;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.fesetenv" name="fesetenv" kind="function">
+        <signature>int fesetenv(const fenv_t *envp);</signature>
+        <summary><![CDATA[
+<p>Restores the floating-point environment from <code>*envp</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fesetenv.envp" name="envp" direction="in" type="const fenv_t *">
+            <description><![CDATA[
+<p>Previously saved environment snapshot.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.fesetenv.nonnull" severity="important">
+                <description><![CDATA[
+<p><code>envp</code> must be non-NULL.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>0 on success, non-zero on failure.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.feupdateenv" name="feupdateenv" kind="function">
+        <signature>int feupdateenv(const fenv_t *envp);</signature>
+        <summary><![CDATA[
+<p>Restores the environment from <code>*envp</code> and then raises any exceptions that were set when the function was called.</p>
+]]></summary>
+        <parameters>
+          <param id="p.feupdateenv.envp" name="envp" direction="in" type="const fenv_t *">
+            <description><![CDATA[
+<p>Previously saved environment snapshot.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>0 on success, non-zero on failure.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fenv.category_note" name="_category_note" kind="internal_note">
+        <summary><![CDATA[
+<p>
+This header entry includes the fenv.h functions you listed. Exception and rounding behavior can be sensitive to compiler settings,
+so document build constraints when these facilities are part of correctness.
+</p>
+]]></summary>
+      </function>
+
+    </header>
+
+  </category>
+
+</document>
+

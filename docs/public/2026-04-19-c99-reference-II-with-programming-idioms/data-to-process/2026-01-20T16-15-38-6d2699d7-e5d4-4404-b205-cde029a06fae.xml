@@ -1,0 +1,732 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<document version="1.0" standard="C99" xml:lang="en">
+
+  <textFormatting>
+    <policy id="fmt.minimal.html" name="Minimal inline HTML in text nodes">
+      <scope>
+        <allowedIn>summary</allowedIn>
+        <allowedIn>description</allowedIn>
+        <allowedIn>notes</allowedIn>
+        <allowedIn>constraints</allowedIn>
+        <allowedIn>returns</allowedIn>
+      </scope>
+      <allowedTags>
+        <tag name="p" kind="block"/>
+        <tag name="strong" kind="inline"/>
+        <tag name="em" kind="inline"/>
+        <tag name="code" kind="inline"/>
+        <tag name="a" kind="inline"/>
+        <tag name="br" kind="inline"/>
+      </allowedTags>
+      <restrictions>
+        <r>No tags beyond allowedTags.</r>
+        <r>Prefer &lt;code&gt; blocks for code samples.</r>
+      </restrictions>
+    </policy>
+  </textFormatting>
+
+  <category id="localization.time_date" name="Localization and time/date">
+    <summary><![CDATA[
+<p>
+Process-wide localization controls and calendar/clock utilities. The locale APIs control how the C library interprets and formats
+culture-sensitive data (notably numeric formatting and time formatting via <code>strftime</code>). The time/date APIs provide timestamps,
+calendar conversions, CPU time measurement, and formatting helpers.
+</p>
+<p>
+These facilities are portable but have important pitfalls: locales are process-global and can affect unrelated code; many time formatting
+and conversion routines return pointers to static storage and are not thread-safe; and "calendar time" semantics depend on the host
+time zone and daylight saving rules. Prefer defensive usage: copy returned strings promptly, validate conversion results, and keep
+examples explicit about UTC vs local time.
+</p>
+]]></summary>
+
+    <keywords>
+      <kw>locale</kw>
+      <kw>setlocale</kw>
+      <kw>localeconv</kw>
+      <kw>time</kw>
+      <kw>difftime</kw>
+      <kw>clock</kw>
+      <kw>mktime</kw>
+      <kw>strftime</kw>
+      <kw>gmtime</kw>
+      <kw>localtime</kw>
+      <kw>asctime</kw>
+      <kw>ctime</kw>
+      <kw>timezone</kw>
+      <kw>DST</kw>
+    </keywords>
+
+    <notes>
+      <note id="n.locale.global" severity="important" topic="global_state">
+        <description><![CDATA[
+<p>
+The active locale is process-global. Calling <code>setlocale</code> can change behavior of formatting/parsing across the entire program,
+including libraries you did not write. If you must change locale, do so in a controlled place and document it.
+</p>
+]]></description>
+      </note>
+      <note id="n.time.static_storage" severity="important" topic="thread_safety">
+        <description><![CDATA[
+<p>
+Some time functions (<code>asctime</code>, <code>ctime</code>, and typically <code>gmtime</code>/<code>localtime</code>) may return pointers to static storage
+that can be overwritten by subsequent calls. Copy results immediately if you need to keep them, and avoid concurrent use across threads
+unless your platform provides safer alternatives outside the C standard.
+</p>
+]]></description>
+      </note>
+      <note id="n.time.utc_vs_local" severity="important" topic="utc_local">
+        <description><![CDATA[
+<p>
+UTC and local time are different conversions. <code>gmtime</code> converts to UTC broken-down time, <code>localtime</code> converts using the current
+time zone and daylight saving rules. Make the choice explicit in your code and documentation.
+</p>
+]]></description>
+      </note>
+      <note id="n.time.dst_mktime" severity="warning" topic="dst">
+        <description><![CDATA[
+<p>
+<code>mktime</code> interprets <code>struct tm</code> as local time. Around DST transitions, some local times are ambiguous or nonexistent.
+To let the library determine DST, set <code>tm_isdst = -1</code> before calling <code>mktime</code>.
+</p>
+]]></description>
+      </note>
+    </notes>
+
+    <header id="hdr.locale" name="locale.h">
+      <summary><![CDATA[
+<p>
+Locale selection and locale-specific formatting conventions. Primarily used to control cultural conventions such as decimal separator
+and date/time formatting for <code>strftime</code>. In C99, locale selection is process-wide.
+</p>
+]]></summary>
+
+      <function id="fn.setlocale" name="setlocale" kind="function">
+        <signature>char *setlocale(int category, const char *locale);</signature>
+        <summary><![CDATA[
+<p>Sets or queries the program's current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.setlocale.category" name="category" direction="in" type="int">
+            <description><![CDATA[
+<p>
+Locale category to set or query: <code>LC_ALL</code>, <code>LC_CTYPE</code>, <code>LC_NUMERIC</code>, <code>LC_TIME</code>, <code>LC_COLLATE</code>,
+<code>LC_MONETARY</code>, or <code>LC_MESSAGES</code> (if provided by the implementation).
+</p>
+]]></description>
+          </param>
+          <param id="p.setlocale.locale" name="locale" direction="in" type="const char *">
+            <description><![CDATA[
+<p>
+Locale name string. If NULL, <code>setlocale</code> does not change the locale and returns the current setting for <code>category</code>.
+An empty string "" typically means "use the environment's default locale".
+</p>
+]]></description>
+            <constraints>
+              <constraint id="c.setlocale.names" severity="info">
+                <description><![CDATA[
+<p>Supported locale names are implementation-defined and depend on the host environment.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="char *">
+            <description><![CDATA[
+<p>
+On success returns a pointer to a string identifying the current locale setting for <code>category</code>. On failure returns NULL and leaves the locale unchanged.
+The returned pointer may refer to internal static storage and can be invalidated by later <code>setlocale</code> calls.
+</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.setlocale.copy" severity="important" topic="lifetime">
+            <description><![CDATA[
+<p>Copy the returned string if you need to retain it across future locale changes.</p>
+]]></description>
+          </note>
+        </notes>
+        <examples>
+          <example id="ex.setlocale.use_user_default" lang="c99">
+            <title>Adopt the user's default locale for time formatting</title>
+            <code><![CDATA[
+#include <locale.h>
+
+int enable_user_locale_for_time(void) {
+    /* Use environment's default locale for LC_TIME only. */
+    return setlocale(LC_TIME, "") != NULL;
+}
+]]></code>
+          </example>
+          <example id="ex.setlocale.query_current" lang="c99">
+            <title>Query current numeric locale without changing it</title>
+            <code><![CDATA[
+#include <locale.h>
+
+const char *current_numeric_locale(void) {
+    /* Returns an internal pointer; copy it if you need long-term storage. */
+    return setlocale(LC_NUMERIC, NULL);
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.localeconv" name="localeconv" kind="function">
+        <signature>struct lconv *localeconv(void);</signature>
+        <summary><![CDATA[
+<p>Returns locale-specific formatting information (notably numeric and monetary conventions).</p>
+]]></summary>
+        <parameters/>
+        <returns>
+          <return type="struct lconv *">
+            <description><![CDATA[
+<p>
+Pointer to a <code>struct lconv</code> describing current locale conventions. The object and its strings may be in static storage and can be overwritten
+by subsequent calls or locale changes.
+</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.localeconv.decimal" severity="important" topic="numeric_format">
+            <description><![CDATA[
+<p>
+<code>lconv-&gt;decimal_point</code> and <code>lconv-&gt;thousands_sep</code> describe numeric formatting conventions. Do not assume "." as the decimal separator
+when formatting for humans under non-"C" locales.
+</p>
+]]></description>
+          </note>
+        </notes>
+        <examples>
+          <example id="ex.localeconv_decimal_point" lang="c99">
+            <title>Read the current decimal separator</title>
+            <code><![CDATA[
+#include <locale.h>
+
+const char *decimal_point_string(void) {
+    struct lconv *lc = localeconv();
+    return lc ? lc->decimal_point : ".";
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+    </header>
+
+    <header id="hdr.time" name="time.h">
+      <summary><![CDATA[
+<p>
+Time and date utilities: current calendar time, elapsed time computations, CPU time measurement, conversions between timestamps and
+broken-down time, and formatting into strings. Many operations depend on the host time zone and locale.
+</p>
+]]></summary>
+
+      <function id="fn.time" name="time" kind="function">
+        <signature>time_t time(time_t *tloc);</signature>
+        <summary><![CDATA[
+<p>Returns the current calendar time as a <code>time_t</code> value (typically seconds since an epoch), or (time_t)-1 on failure.</p>
+]]></summary>
+        <parameters>
+          <param id="p.time.tloc" name="tloc" direction="out" type="time_t *">
+            <description><![CDATA[
+<p>If non-NULL, stores the returned time value into <code>*tloc</code>.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="time_t">
+            <description><![CDATA[
+<p>Current calendar time, or (time_t)-1 if the time is not available.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.time_now" lang="c99">
+            <title>Get current timestamp and validate</title>
+            <code><![CDATA[
+#include <time.h>
+
+int get_now(time_t *out) {
+    time_t t = time(NULL);
+    if (t == (time_t)-1) return 0;
+    *out = t;
+    return 1;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.difftime" name="difftime" kind="function">
+        <signature>double difftime(time_t time1, time_t time0);</signature>
+        <summary><![CDATA[
+<p>Computes the difference <code>time1 - time0</code> in seconds, returned as a <code>double</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.difftime.time1" name="time1" direction="in" type="time_t">
+            <description><![CDATA[
+<p>Later (or first) time value.</p>
+]]></description>
+          </param>
+          <param id="p.difftime.time0" name="time0" direction="in" type="time_t">
+            <description><![CDATA[
+<p>Earlier (or second) time value.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Difference in seconds as a double. Use this rather than subtracting time_t directly for portability.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.difftime_elapsed" lang="c99">
+            <title>Measure elapsed wall time between two timestamps</title>
+            <code><![CDATA[
+#include <time.h>
+
+double elapsed_seconds(time_t start, time_t end) {
+    return difftime(end, start);
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.clock" name="clock" kind="function">
+        <signature>clock_t clock(void);</signature>
+        <summary><![CDATA[
+<p>Returns processor time consumed by the program since start, measured in <code>CLOCKS_PER_SEC</code> ticks per second.</p>
+]]></summary>
+        <parameters/>
+        <returns>
+          <return type="clock_t">
+            <description><![CDATA[
+<p>CPU time ticks, or (clock_t)-1 if the processor time is not available.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.clock.wall_vs_cpu" severity="important" topic="measurement">
+            <description><![CDATA[
+<p>
+<code>clock</code> measures CPU time, not wall-clock time. It is useful for CPU-bound benchmarking, not for measuring real elapsed time.
+Resolution and meaning are implementation-defined.
+</p>
+]]></description>
+          </note>
+        </notes>
+        <examples>
+          <example id="ex.clock_benchmark" lang="c99">
+            <title>CPU-time benchmark for a function</title>
+            <code><![CDATA[
+#include <time.h>
+
+double cpu_seconds_for(void (*fn)(void)) {
+    clock_t a = clock();
+    if (a == (clock_t)-1) return -1.0;
+
+    fn();
+
+    clock_t b = clock();
+    if (b == (clock_t)-1) return -1.0;
+
+    return (double)(b - a) / (double)CLOCKS_PER_SEC;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.mktime" name="mktime" kind="function">
+        <signature>time_t mktime(struct tm *timeptr);</signature>
+        <summary><![CDATA[
+<p>Converts broken-down local time in <code>*timeptr</code> to calendar time (<code>time_t</code>), normalizing fields as needed.</p>
+]]></summary>
+        <parameters>
+          <param id="p.mktime.timeptr" name="timeptr" direction="inout" type="struct tm *">
+            <description><![CDATA[
+<p>
+Broken-down local time input. Fields may be normalized by the function (for example if <code>tm_mday</code> is out of range).
+Set <code>tm_isdst</code> to -1 to let the library determine daylight saving time.
+</p>
+]]></description>
+            <constraints>
+              <constraint id="c.mktime.localtime" severity="important">
+                <description><![CDATA[
+<p><code>mktime</code> interprets the input as local time, not UTC.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="time_t">
+            <description><![CDATA[
+<p>Calendar time equivalent, or (time_t)-1 if the conversion is not representable.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.mktime_add_days" lang="c99">
+            <title>Add N days in local time using normalization</title>
+            <code><![CDATA[
+#include <time.h>
+
+int add_days_local(time_t t, int days, time_t *out) {
+    struct tm *lt = localtime(&t);
+    if (!lt) return 0;
+
+    struct tm tmp = *lt;     /* Copy because localtime may use static storage. */
+    tmp.tm_isdst = -1;       /* Let library recompute DST. */
+    tmp.tm_mday += days;     /* mktime will normalize month/year overflow. */
+
+    time_t r = mktime(&tmp);
+    if (r == (time_t)-1) return 0;
+
+    *out = r;
+    return 1;
+}
+]]></code>
+          </example>
+          <example id="ex.mktime_build_local_datetime" lang="c99">
+            <title>Build a local datetime (YYYY-MM-DD HH:MM:SS) and convert to time_t</title>
+            <code><![CDATA[
+#include <time.h>
+
+int make_local_time(int y, int mon, int d, int hh, int mm, int ss, time_t *out) {
+    struct tm t;
+    t.tm_year = y - 1900;    /* years since 1900 */
+    t.tm_mon  = mon - 1;     /* months since January: 0..11 */
+    t.tm_mday = d;
+    t.tm_hour = hh;
+    t.tm_min  = mm;
+    t.tm_sec  = ss;
+    t.tm_isdst = -1;
+
+    time_t r = mktime(&t);
+    if (r == (time_t)-1) return 0;
+
+    *out = r;
+    return 1;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.strftime" name="strftime" kind="function">
+        <signature>size_t strftime(char *s, size_t max, const char *format, const struct tm *timeptr);</signature>
+        <summary><![CDATA[
+<p>Formats broken-down time into a byte string according to <code>format</code> and the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strftime.s" name="s" direction="out" type="char *">
+            <description><![CDATA[
+<p>Destination buffer for the formatted string.</p>
+]]></description>
+          </param>
+          <param id="p.strftime.max" name="max" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Capacity of <code>s</code> in bytes, including the terminating NUL.</p>
+]]></description>
+          </param>
+          <param id="p.strftime.format" name="format" direction="in" type="const char *">
+            <description><![CDATA[
+<p>
+Format string. Interpretation is specified by the C standard for common specifiers; output language and some details depend on the current locale.
+</p>
+]]></description>
+          </param>
+          <param id="p.strftime.timeptr" name="timeptr" direction="in" type="const struct tm *">
+            <description><![CDATA[
+<p>Broken-down time to format.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="size_t">
+            <description><![CDATA[
+<p>Number of bytes written excluding the terminating NUL. Returns 0 if the result does not fit in the buffer.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.strftime.locale" severity="important" topic="locale">
+            <description><![CDATA[
+<p>Month and weekday names and some representations are locale-dependent. Set <code>LC_TIME</code> appropriately if you need localized output.</p>
+]]></description>
+          </note>
+        </notes>
+        <examples>
+          <example id="ex.strftime_iso_like_local" lang="c99">
+            <title>Format local time into an ISO-like string</title>
+            <code><![CDATA[
+#include <time.h>
+
+int format_local_iso(time_t t, char *buf, size_t cap) {
+    struct tm *lt = localtime(&t);
+    if (!lt) return 0;
+
+    struct tm tmp = *lt;
+    /* Example: 2026-01-20 14:03:05 */
+    return strftime(buf, cap, "%Y-%m-%d %H:%M:%S", &tmp) != 0;
+}
+]]></code>
+          </example>
+          <example id="ex.strftime_rfcish_utc" lang="c99">
+            <title>Format UTC time with an explicit UTC marker</title>
+            <code><![CDATA[
+#include <time.h>
+
+int format_utc_rfcish(time_t t, char *buf, size_t cap) {
+    struct tm *gt = gmtime(&t);
+    if (!gt) return 0;
+
+    struct tm tmp = *gt;
+    /* Example: Tue, 20 Jan 2026 22:03:05 UTC */
+    return strftime(buf, cap, "%a, %d %b %Y %H:%M:%S UTC", &tmp) != 0;
+}
+]]></code>
+          </example>
+          <example id="ex.strftime_buffer_growth" lang="c99">
+            <title>Grow a buffer until strftime fits (malloc/realloc)</title>
+            <code><![CDATA[
+#include <time.h>
+#include <stdlib.h>
+
+char *format_time_alloc(const struct tm *t, const char *fmt) {
+    size_t cap = 64;
+    char *buf = (char *)malloc(cap);
+    if (!buf) return NULL;
+
+    for (;;) {
+        size_t n = strftime(buf, cap, fmt, t);
+        if (n != 0) {
+            return buf;
+        }
+        if (cap > (SIZE_MAX / 2u)) {
+            free(buf);
+            return NULL;
+        }
+        cap *= 2u;
+        char *tmp = (char *)realloc(buf, cap);
+        if (!tmp) {
+            free(buf);
+            return NULL;
+        }
+        buf = tmp;
+    }
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.gmtime" name="gmtime" kind="function">
+        <signature>struct tm *gmtime(const time_t *timer);</signature>
+        <summary><![CDATA[
+<p>Converts calendar time <code>*timer</code> to broken-down UTC time.</p>
+]]></summary>
+        <parameters>
+          <param id="p.gmtime.timer" name="timer" direction="in" type="const time_t *">
+            <description><![CDATA[
+<p>Pointer to calendar time value.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="struct tm *">
+            <description><![CDATA[
+<p>Pointer to a <code>struct tm</code> result, or NULL on failure. The result may be stored in static storage.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.gmtime_copy" lang="c99">
+            <title>Convert to UTC and copy out immediately</title>
+            <code><![CDATA[
+#include <time.h>
+
+int to_utc_tm(time_t t, struct tm *out) {
+    struct tm *p = gmtime(&t);
+    if (!p) return 0;
+    *out = *p;
+    return 1;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.localtime" name="localtime" kind="function">
+        <signature>struct tm *localtime(const time_t *timer);</signature>
+        <summary><![CDATA[
+<p>Converts calendar time <code>*timer</code> to broken-down local time using the host time zone rules.</p>
+]]></summary>
+        <parameters>
+          <param id="p.localtime.timer" name="timer" direction="in" type="const time_t *">
+            <description><![CDATA[
+<p>Pointer to calendar time value.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="struct tm *">
+            <description><![CDATA[
+<p>Pointer to a <code>struct tm</code> result, or NULL on failure. The result may be stored in static storage.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.localtime_copy" lang="c99">
+            <title>Convert to local time and copy out immediately</title>
+            <code><![CDATA[
+#include <time.h>
+
+int to_local_tm(time_t t, struct tm *out) {
+    struct tm *p = localtime(&t);
+    if (!p) return 0;
+    *out = *p;
+    return 1;
+}
+]]></code>
+          </example>
+          <example id="ex.localtime_fields" lang="c99">
+            <title>Extract calendar fields safely</title>
+            <code><![CDATA[
+#include <time.h>
+
+int local_ymd(time_t t, int *y, int *m, int *d) {
+    struct tm tmp;
+    if (!to_local_tm(t, &tmp)) return 0;
+
+    *y = tmp.tm_year + 1900;
+    *m = tmp.tm_mon + 1;
+    *d = tmp.tm_mday;
+    return 1;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.asctime" name="asctime" kind="function">
+        <signature>char *asctime(const struct tm *timeptr);</signature>
+        <summary><![CDATA[
+<p>Formats broken-down time into a fixed, implementation-defined string representation and returns a pointer to it.</p>
+]]></summary>
+        <parameters>
+          <param id="p.asctime.timeptr" name="timeptr" direction="in" type="const struct tm *">
+            <description><![CDATA[
+<p>Broken-down time to format.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="char *">
+            <description><![CDATA[
+<p>Pointer to an internal static string. The contents may be overwritten by subsequent calls. Typically ends with a newline.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.asctime.recommendation" severity="important" topic="best_practice">
+            <description><![CDATA[
+<p>
+Prefer <code>strftime</code> for controlled formatting and buffer management. Use <code>asctime</code> mainly for quick debugging,
+and copy the result immediately.
+</p>
+]]></description>
+          </note>
+        </notes>
+        <examples>
+          <example id="ex.asctime_copy" lang="c99">
+            <title>Use asctime for debugging and copy the result</title>
+            <code><![CDATA[
+#include <time.h>
+#include <string.h>
+
+int asctime_copy(const struct tm *t, char *buf, size_t cap) {
+    const char *s = asctime(t);
+    if (!s) return 0;
+    /* Copy with truncation; for logs/debug only. */
+    if (cap == 0) return 0;
+    strncpy(buf, s, cap - 1u);
+    buf[cap - 1u] = '\0';
+    return 1;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.ctime" name="ctime" kind="function">
+        <signature>char *ctime(const time_t *timer);</signature>
+        <summary><![CDATA[
+<p>Equivalent to <code>asctime(localtime(timer))</code> in typical implementations: converts calendar time to a human-readable string.</p>
+]]></summary>
+        <parameters>
+          <param id="p.ctime.timer" name="timer" direction="in" type="const time_t *">
+            <description><![CDATA[
+<p>Pointer to calendar time value.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="char *">
+            <description><![CDATA[
+<p>Pointer to an internal static string (often ending with a newline). The contents may be overwritten by subsequent time calls.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.ctime.recommendation" severity="important" topic="best_practice">
+            <description><![CDATA[
+<p>Prefer <code>strftime</code> for predictable output and explicit choice of UTC vs local time.</p>
+]]></description>
+          </note>
+        </notes>
+        <examples>
+          <example id="ex.ctime_quick" lang="c99">
+            <title>Quick human-readable timestamp (debug only)</title>
+            <code><![CDATA[
+#include <time.h>
+#include <stdio.h>
+
+void print_now_debug(void) {
+    time_t now = time(NULL);
+    if (now == (time_t)-1) return;
+
+    const char *s = ctime(&now);
+    if (!s) return;
+
+    /* ctime string often ends with newline already. */
+    fputs(s, stdout);
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.time.category_note" name="_category_note" kind="internal_note">
+        <summary><![CDATA[
+<p>
+This header entry covers the full time.h function list you provided: <code>time</code>, <code>difftime</code>, <code>clock</code>, <code>mktime</code>,
+<code>strftime</code>, <code>gmtime</code>, <code>localtime</code>, <code>asctime</code>, <code>ctime</code>. The tricky parts are UTC vs local time,
+DST ambiguity, locale-dependent formatting, and static-storage return values; the examples emphasize defensive patterns for those.
+</p>
+]]></summary>
+      </function>
+
+    </header>
+
+  </category>
+
+</document>
+

@@ -1,0 +1,1495 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<document version="1.0" standard="C99" xml:lang="en">
+
+  <textFormatting>
+    <policy id="fmt.minimal.html" name="Minimal inline HTML in text nodes">
+      <scope>
+        <allowedIn>summary</allowedIn>
+        <allowedIn>description</allowedIn>
+        <allowedIn>notes</allowedIn>
+        <allowedIn>constraints</allowedIn>
+        <allowedIn>returns</allowedIn>
+      </scope>
+      <allowedTags>
+        <tag name="p" kind="block"/>
+        <tag name="strong" kind="inline"/>
+        <tag name="em" kind="inline"/>
+        <tag name="code" kind="inline"/>
+        <tag name="a" kind="inline"/>
+        <tag name="br" kind="inline"/>
+      </allowedTags>
+      <restrictions>
+        <r>No tags beyond allowedTags.</r>
+        <r>Prefer &lt;code&gt; blocks for code samples.</r>
+      </restrictions>
+    </policy>
+  </textFormatting>
+
+  <category id="text.classification.case_mapping" name="Text classification and case mapping">
+    <summary><![CDATA[
+<p>
+Character classification and case mapping for bytes and wide characters. These APIs are the standard, portable way
+to test whether a character is a digit/letter/space/punctuation and to convert case.
+</p>
+<p>
+Use these functions to write parsers, tokenizers, input validators, and normalization steps (for example, case-folding
+a command or identifier). For safety and portability, always respect the required input domains (for example,
+cast byte input to <code>unsigned char</code> before calling <code>ctype.h</code> functions), and remember that results
+may depend on the active locale (typically <code>LC_CTYPE</code>).
+</p>
+]]></summary>
+
+    <keywords>
+      <kw>ctype</kw>
+      <kw>wctype</kw>
+      <kw>classification</kw>
+      <kw>case mapping</kw>
+      <kw>locale</kw>
+      <kw>LC_CTYPE</kw>
+      <kw>unsigned char</kw>
+      <kw>EOF</kw>
+      <kw>wint_t</kw>
+      <kw>WEOF</kw>
+      <kw>Unicode</kw>
+      <kw>parsing</kw>
+      <kw>tokenizer</kw>
+    </keywords>
+
+    <header id="hdr.ctype" name="ctype.h">
+      <summary><![CDATA[
+<p>
+Byte-oriented character classification and case mapping. The classification predicates return non-zero for true and 0 for false.
+These functions often exist as macros for performance; treat them as pure, side-effect-free predicates.
+</p>
+<p>
+Input safety rule: the argument must be <code>EOF</code> or representable as <code>unsigned char</code>. Passing a negative
+<code>char</code> value directly is undefined behavior on platforms where <code>char</code> is signed.
+</p>
+]]></summary>
+
+      <function id="fn.isalnum" name="isalnum" kind="function_or_macro">
+        <signature>int isalnum(int c);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>c</code> is alphanumeric (a letter or a decimal digit) according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.isalnum.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Character value to test, as <code>EOF</code> or a value representable as <code>unsigned char</code>.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.ctype.domain" severity="important">
+                <description><![CDATA[
+<p>Passing any value other than <code>EOF</code> or an <code>unsigned char</code> value is undefined behavior.</p>
+]]></description>
+              </constraint>
+              <constraint id="c.ctype.locale" severity="info">
+                <description><![CDATA[
+<p>Classification depends on the active locale. In the "C" locale, behavior matches basic ASCII classes.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if alphanumeric, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.isalnum.identifier_scan" lang="c99">
+            <title>Scan a token of [A-Za-z0-9] in a locale-aware way</title>
+            <code><![CDATA[
+#include <ctype.h>
+#include <stddef.h>
+
+size_t scan_alnum_token(const char *s) {
+    size_t i = 0;
+    while (s[i] != '\0') {
+        unsigned char uc = (unsigned char)s[i];
+        if (!isalnum((int)uc)) {
+            break;
+        }
+        ++i;
+    }
+    return i;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.isalpha" name="isalpha" kind="function_or_macro">
+        <signature>int isalpha(int c);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>c</code> is an alphabetic character according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.isalpha.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Character value to test, as <code>EOF</code> or an <code>unsigned char</code> value.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.isalpha.domain" severity="important">
+                <description><![CDATA[
+<p>Cast byte data to <code>unsigned char</code> before passing to <code>isalpha</code>.</p>
+]]></description>
+              </constraint>
+              <constraint id="c.isalpha.locale" severity="info">
+                <description><![CDATA[
+<p>Locale-dependent. Use explicit ASCII checks if you require ASCII-only behavior.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if alphabetic, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.isalpha.word_start" lang="c99">
+            <title>Find the first alphabetic character</title>
+            <code><![CDATA[
+#include <ctype.h>
+#include <stddef.h>
+
+size_t find_first_alpha(const char *s) {
+    for (size_t i = 0; s[i] != '\0'; ++i) {
+        unsigned char uc = (unsigned char)s[i];
+        if (isalpha((int)uc)) {
+            return i;
+        }
+    }
+    return (size_t)-1;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.isdigit" name="isdigit" kind="function_or_macro">
+        <signature>int isdigit(int c);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>c</code> is a decimal digit ('0'..'9'). In C99, this classification is not locale-variant for ASCII digits.</p>
+]]></summary>
+        <parameters>
+          <param id="p.isdigit.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Character value to test, as <code>EOF</code> or an <code>unsigned char</code> value.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.isdigit.domain" severity="important">
+                <description><![CDATA[
+<p>Do not pass a negative <code>char</code> value. Cast to <code>unsigned char</code> first.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if a decimal digit, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.isdigit.count_digits" lang="c99">
+            <title>Count digits in a string safely</title>
+            <code><![CDATA[
+#include <ctype.h>
+#include <stddef.h>
+
+size_t count_digits(const char *s) {
+    size_t n = 0;
+    for (size_t i = 0; s[i] != '\0'; ++i) {
+        unsigned char uc = (unsigned char)s[i];
+        if (isdigit((int)uc)) {
+            ++n;
+        }
+    }
+    return n;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.isspace" name="isspace" kind="function_or_macro">
+        <signature>int isspace(int c);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>c</code> is whitespace (for example space, tab, newline) according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.isspace.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Character value to test, as <code>EOF</code> or an <code>unsigned char</code> value.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.isspace.domain" severity="important">
+                <description><![CDATA[
+<p>Cast byte input to <code>unsigned char</code> before calling.</p>
+]]></description>
+              </constraint>
+              <constraint id="c.isspace.locale" severity="info">
+                <description><![CDATA[
+<p>Whitespace set can vary by locale beyond the basic ASCII set.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if whitespace, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.isspace.trim_left" lang="c99">
+            <title>Trim leading whitespace</title>
+            <code><![CDATA[
+#include <ctype.h>
+#include <stddef.h>
+
+size_t trim_left_index(const char *s) {
+    size_t i = 0;
+    while (s[i] != '\0') {
+        unsigned char uc = (unsigned char)s[i];
+        if (!isspace((int)uc)) {
+            break;
+        }
+        ++i;
+    }
+    return i;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.islower" name="islower" kind="function_or_macro">
+        <signature>int islower(int c);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>c</code> is a lowercase letter according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.islower.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Character value to test, as <code>EOF</code> or an <code>unsigned char</code> value.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.islower.domain" severity="important">
+                <description><![CDATA[
+<p>Undefined behavior if <code>c</code> is neither <code>EOF</code> nor an <code>unsigned char</code> value.</p>
+]]></description>
+              </constraint>
+              <constraint id="c.islower.locale" severity="info">
+                <description><![CDATA[
+<p>Locale-dependent. For ASCII-only rules, use explicit range checks ('a'..'z').</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if lowercase, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.islower.any_lower" lang="c99">
+            <title>Detect whether a string contains any lowercase letters</title>
+            <code><![CDATA[
+#include <ctype.h>
+#include <stddef.h>
+
+int contains_lowercase(const char *s) {
+    for (size_t i = 0; s[i] != '\0'; ++i) {
+        unsigned char uc = (unsigned char)s[i];
+        if (islower((int)uc)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.isupper" name="isupper" kind="function_or_macro">
+        <signature>int isupper(int c);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>c</code> is an uppercase letter according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.isupper.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Character value to test, as <code>EOF</code> or an <code>unsigned char</code> value.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.isupper.domain" severity="important">
+                <description><![CDATA[
+<p>Cast to <code>unsigned char</code> when passing a <code>char</code> value.</p>
+]]></description>
+              </constraint>
+              <constraint id="c.isupper.locale" severity="info">
+                <description><![CDATA[
+<p>Locale-dependent. For ASCII-only behavior, use explicit range checks ('A'..'Z').</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if uppercase, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.isupper.all_upper" lang="c99">
+            <title>Check whether all letters in a token are uppercase</title>
+            <code><![CDATA[
+#include <ctype.h>
+#include <stddef.h>
+
+int token_is_all_upper(const char *s) {
+    int saw_letter = 0;
+    for (size_t i = 0; s[i] != '\0'; ++i) {
+        unsigned char uc = (unsigned char)s[i];
+        if (isalpha((int)uc)) {
+            saw_letter = 1;
+            if (!isupper((int)uc)) {
+                return 0;
+            }
+        }
+    }
+    return saw_letter ? 1 : 0;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.ispunct" name="ispunct" kind="function_or_macro">
+        <signature>int ispunct(int c);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>c</code> is a punctuation character (neither alphanumeric nor whitespace) according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.ispunct.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Character value to test, as <code>EOF</code> or an <code>unsigned char</code> value.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.ispunct.domain" severity="important">
+                <description><![CDATA[
+<p>Pass only <code>EOF</code> or values representable as <code>unsigned char</code>.</p>
+]]></description>
+              </constraint>
+              <constraint id="c.ispunct.locale" severity="info">
+                <description><![CDATA[
+<p>Punctuation set is locale-dependent. If you need a fixed ASCII punctuation set, define it explicitly.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if punctuation, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.ispunct.strip_punct" lang="c99">
+            <title>Copy only non-punctuation characters</title>
+            <code><![CDATA[
+#include <ctype.h>
+#include <stddef.h>
+
+size_t copy_without_punct(char *dst, size_t cap, const char *src) {
+    size_t j = 0;
+    for (size_t i = 0; src[i] != '\0' && j + 1 < cap; ++i) {
+        unsigned char uc = (unsigned char)src[i];
+        if (!ispunct((int)uc)) {
+            dst[j++] = (char)uc;
+        }
+    }
+    dst[j] = '\0';
+    return j;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.isprint" name="isprint" kind="function_or_macro">
+        <signature>int isprint(int c);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>c</code> is printable (including space) according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.isprint.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Character value to test, as <code>EOF</code> or an <code>unsigned char</code> value.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.isprint.domain" severity="important">
+                <description><![CDATA[
+<p>Undefined behavior if given a negative <code>char</code> value that is not <code>EOF</code>.</p>
+]]></description>
+              </constraint>
+              <constraint id="c.isprint.locale" severity="info">
+                <description><![CDATA[
+<p>What counts as printable may vary by locale and encoding.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if printable, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.isprint.sanitize" lang="c99">
+            <title>Sanitize bytes: replace non-printables with '.'</title>
+            <code><![CDATA[
+#include <ctype.h>
+#include <stddef.h>
+
+void sanitize_printable(char *s) {
+    for (size_t i = 0; s[i] != '\0'; ++i) {
+        unsigned char uc = (unsigned char)s[i];
+        if (!isprint((int)uc)) {
+            s[i] = '.';
+        }
+    }
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.iscntrl" name="iscntrl" kind="function_or_macro">
+        <signature>int iscntrl(int c);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>c</code> is a control character according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.iscntrl.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Character value to test, as <code>EOF</code> or an <code>unsigned char</code> value.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.iscntrl.domain" severity="important">
+                <description><![CDATA[
+<p>Cast to <code>unsigned char</code> when testing a <code>char</code>.</p>
+]]></description>
+              </constraint>
+              <constraint id="c.iscntrl.locale" severity="info">
+                <description><![CDATA[
+<p>Locale-dependent. In the "C" locale, ASCII control characters typically satisfy this predicate.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if control character, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.iscntrl.reject_controls" lang="c99">
+            <title>Reject strings containing control characters</title>
+            <code><![CDATA[
+#include <ctype.h>
+#include <stddef.h>
+
+int has_control_chars(const char *s) {
+    for (size_t i = 0; s[i] != '\0'; ++i) {
+        unsigned char uc = (unsigned char)s[i];
+        if (iscntrl((int)uc)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.isxdigit" name="isxdigit" kind="function_or_macro">
+        <signature>int isxdigit(int c);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>c</code> is a hexadecimal digit ('0'..'9', 'a'..'f', 'A'..'F') according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.isxdigit.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Character value to test, as <code>EOF</code> or an <code>unsigned char</code> value.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.isxdigit.domain" severity="important">
+                <description><![CDATA[
+<p>Only pass <code>EOF</code> or an <code>unsigned char</code> value.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if a hexadecimal digit, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.isxdigit.scan_hex" lang="c99">
+            <title>Scan a run of hex digits</title>
+            <code><![CDATA[
+#include <ctype.h>
+#include <stddef.h>
+
+size_t scan_hex_digits(const char *s) {
+    size_t i = 0;
+    while (s[i] != '\0') {
+        unsigned char uc = (unsigned char)s[i];
+        if (!isxdigit((int)uc)) {
+            break;
+        }
+        ++i;
+    }
+    return i;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.tolower" name="tolower" kind="function_or_macro">
+        <signature>int tolower(int c);</signature>
+        <summary><![CDATA[
+<p>Converts <code>c</code> to lowercase if it has a lowercase mapping in the current locale; otherwise returns <code>c</code> unchanged.</p>
+]]></summary>
+        <parameters>
+          <param id="p.tolower.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Character value to convert, as <code>EOF</code> or an <code>unsigned char</code> value.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.tolower.domain" severity="important">
+                <description><![CDATA[
+<p>Passing a negative <code>char</code> value (other than <code>EOF</code>) is undefined behavior. Cast to <code>unsigned char</code>.</p>
+]]></description>
+              </constraint>
+              <constraint id="c.tolower.locale" severity="info">
+                <description><![CDATA[
+<p>Mapping is locale-dependent. For ASCII-only behavior, map 'A'..'Z' explicitly.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Lowercased character value if applicable; otherwise the original value. If input is <code>EOF</code>, returns <code>EOF</code>.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.tolower.safe_cast" severity="important" topic="input-domain">
+            <description><![CDATA[
+<p>
+When converting a byte stored in a <code>char</code>, use <code>tolower((unsigned char)ch)</code>.
+This avoids undefined behavior on platforms where <code>char</code> is signed.
+</p>
+]]></description>
+          </note>
+        </notes>
+        <examples>
+          <example id="ex.tolower.ascii_fold_command" lang="c99">
+            <title>Lowercase a command token safely (byte string)</title>
+            <code><![CDATA[
+#include <ctype.h>
+#include <stddef.h>
+
+void lowercase_in_place(char *s) {
+    for (size_t i = 0; s[i] != '\0'; ++i) {
+        unsigned char uc = (unsigned char)s[i];
+        int lc = tolower((int)uc);
+        s[i] = (char)lc;
+    }
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.toupper" name="toupper" kind="function_or_macro">
+        <signature>int toupper(int c);</signature>
+        <summary><![CDATA[
+<p>Converts <code>c</code> to uppercase if it has an uppercase mapping in the current locale; otherwise returns <code>c</code> unchanged.</p>
+]]></summary>
+        <parameters>
+          <param id="p.toupper.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Character value to convert, as <code>EOF</code> or an <code>unsigned char</code> value.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.toupper.domain" severity="important">
+                <description><![CDATA[
+<p>Undefined behavior unless <code>c</code> is <code>EOF</code> or representable as <code>unsigned char</code>.</p>
+]]></description>
+              </constraint>
+              <constraint id="c.toupper.locale" severity="info">
+                <description><![CDATA[
+<p>Mapping is locale-dependent. For ASCII-only behavior, map 'a'..'z' explicitly.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Uppercased character value if applicable; otherwise the original value. If input is <code>EOF</code>, returns <code>EOF</code>.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.toupper.headerize" lang="c99">
+            <title>Uppercase a token safely (byte string)</title>
+            <code><![CDATA[
+#include <ctype.h>
+#include <stddef.h>
+
+void uppercase_in_place(char *s) {
+    for (size_t i = 0; s[i] != '\0'; ++i) {
+        unsigned char uc = (unsigned char)s[i];
+        int uc2 = toupper((int)uc);
+        s[i] = (char)uc2;
+    }
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+    </header>
+
+    <header id="hdr.wctype" name="wctype.h">
+      <summary><![CDATA[
+<p>
+Wide-character classification and case mapping. Use these functions when working with <code>wchar_t</code> and <code>wint_t</code>
+values (for example, when processing wide strings or locale-dependent wide character input).
+</p>
+<p>
+Input safety rule: arguments must be <code>WEOF</code> or representable as <code>wint_t</code> values corresponding to valid wide characters.
+Like <code>ctype.h</code>, behavior depends on the active locale (typically <code>LC_CTYPE</code>).
+</p>
+]]></summary>
+
+      <function id="fn.iswalnum" name="iswalnum" kind="function_or_macro">
+        <signature>int iswalnum(wint_t wc);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>wc</code> is alphanumeric according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.iswalnum.wc" name="wc" direction="in" type="wint_t">
+            <description><![CDATA[
+<p>Wide character value to test, as <code>WEOF</code> or a valid wide character representable as <code>wint_t</code>.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.wctype.domain" severity="important">
+                <description><![CDATA[
+<p>Passing values that are neither <code>WEOF</code> nor valid wide characters yields unspecified or undefined behavior depending on implementation.</p>
+]]></description>
+              </constraint>
+              <constraint id="c.wctype.locale" severity="info">
+                <description><![CDATA[
+<p>Classification is locale-dependent.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if alphanumeric, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.iswalnum.scan" lang="c99">
+            <title>Scan an alphanumeric prefix in a wide string</title>
+            <code><![CDATA[
+#include <wctype.h>
+#include <wchar.h>
+#include <stddef.h>
+
+size_t scan_walnum_prefix(const wchar_t *s) {
+    size_t i = 0;
+    while (s[i] != L'\0') {
+        if (!iswalnum((wint_t)s[i])) {
+            break;
+        }
+        ++i;
+    }
+    return i;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.iswalpha" name="iswalpha" kind="function_or_macro">
+        <signature>int iswalpha(wint_t wc);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>wc</code> is alphabetic according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.iswalpha.wc" name="wc" direction="in" type="wint_t">
+            <description><![CDATA[
+<p>Wide character value to test, as <code>WEOF</code> or a valid wide character.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.iswalpha.locale" severity="info">
+                <description><![CDATA[
+<p>Locale-dependent; do not assume ASCII-only semantics.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if alphabetic, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.iswalpha.find" lang="c99">
+            <title>Find first alphabetic wide character</title>
+            <code><![CDATA[
+#include <wctype.h>
+#include <wchar.h>
+#include <stddef.h>
+
+size_t find_first_walpha(const wchar_t *s) {
+    for (size_t i = 0; s[i] != L'\0'; ++i) {
+        if (iswalpha((wint_t)s[i])) {
+            return i;
+        }
+    }
+    return (size_t)-1;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.iswblank" name="iswblank" kind="function_or_macro">
+        <signature>int iswblank(wint_t wc);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>wc</code> is a blank character (typically space or horizontal tab) according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.iswblank.wc" name="wc" direction="in" type="wint_t">
+            <description><![CDATA[
+<p>Wide character value to test, as <code>WEOF</code> or a valid wide character.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.iswblank.locale" severity="info">
+                <description><![CDATA[
+<p>Exact set of "blank" characters can be locale-dependent.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if blank, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.iswblank.skip" lang="c99">
+            <title>Skip leading blanks in a wide string</title>
+            <code><![CDATA[
+#include <wctype.h>
+#include <wchar.h>
+#include <stddef.h>
+
+size_t skip_wblanks(const wchar_t *s) {
+    size_t i = 0;
+    while (s[i] != L'\0') {
+        if (!iswblank((wint_t)s[i])) {
+            break;
+        }
+        ++i;
+    }
+    return i;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.iswcntrl" name="iswcntrl" kind="function_or_macro">
+        <signature>int iswcntrl(wint_t wc);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>wc</code> is a control character according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.iswcntrl.wc" name="wc" direction="in" type="wint_t">
+            <description><![CDATA[
+<p>Wide character value to test, as <code>WEOF</code> or a valid wide character.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if a control character, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.iswcntrl.reject" lang="c99">
+            <title>Detect control characters in a wide string</title>
+            <code><![CDATA[
+#include <wctype.h>
+#include <wchar.h>
+
+int wide_has_controls(const wchar_t *s) {
+    for (; *s != L'\0'; ++s) {
+        if (iswcntrl((wint_t)*s)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.iswdigit" name="iswdigit" kind="function_or_macro">
+        <signature>int iswdigit(wint_t wc);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>wc</code> is a decimal digit according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.iswdigit.wc" name="wc" direction="in" type="wint_t">
+            <description><![CDATA[
+<p>Wide character value to test, as <code>WEOF</code> or a valid wide character.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.iswdigit.locale" severity="info">
+                <description><![CDATA[
+<p>Unlike byte <code>isdigit</code>, wide digit classification may include locale-specific digits depending on implementation.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if a digit, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.iswdigit.count" lang="c99">
+            <title>Count digit characters in a wide string</title>
+            <code><![CDATA[
+#include <wctype.h>
+#include <wchar.h>
+#include <stddef.h>
+
+size_t count_wdigits(const wchar_t *s) {
+    size_t n = 0;
+    for (size_t i = 0; s[i] != L'\0'; ++i) {
+        if (iswdigit((wint_t)s[i])) {
+            ++n;
+        }
+    }
+    return n;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.iswgraph" name="iswgraph" kind="function_or_macro">
+        <signature>int iswgraph(wint_t wc);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>wc</code> is a graphical character (printable excluding space) according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.iswgraph.wc" name="wc" direction="in" type="wint_t">
+            <description><![CDATA[
+<p>Wide character value to test.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if graphical, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.iswgraph.filter" lang="c99">
+            <title>Filter out non-graphical characters</title>
+            <code><![CDATA[
+#include <wctype.h>
+#include <wchar.h>
+#include <stddef.h>
+
+size_t copy_wgraph(wchar_t *dst, size_t cap, const wchar_t *src) {
+    size_t j = 0;
+    for (size_t i = 0; src[i] != L'\0' && j + 1 < cap; ++i) {
+        if (iswgraph((wint_t)src[i])) {
+            dst[j++] = src[i];
+        }
+    }
+    dst[j] = L'\0';
+    return j;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.iswlower" name="iswlower" kind="function_or_macro">
+        <signature>int iswlower(wint_t wc);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>wc</code> is a lowercase wide letter according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.iswlower.wc" name="wc" direction="in" type="wint_t">
+            <description><![CDATA[
+<p>Wide character value to test.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if lowercase, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.iswlower.any" lang="c99">
+            <title>Detect lowercase in a wide string</title>
+            <code><![CDATA[
+#include <wctype.h>
+#include <wchar.h>
+
+int wide_contains_lower(const wchar_t *s) {
+    for (; *s != L'\0'; ++s) {
+        if (iswlower((wint_t)*s)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.iswprint" name="iswprint" kind="function_or_macro">
+        <signature>int iswprint(wint_t wc);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>wc</code> is printable (including space) according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.iswprint.wc" name="wc" direction="in" type="wint_t">
+            <description><![CDATA[
+<p>Wide character value to test.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if printable, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.iswprint.sanitize" lang="c99">
+            <title>Replace non-printable wide characters with '?'</title>
+            <code><![CDATA[
+#include <wctype.h>
+#include <wchar.h>
+
+void sanitize_wprintable(wchar_t *s) {
+    for (; *s != L'\0'; ++s) {
+        if (!iswprint((wint_t)*s)) {
+            *s = L'?';
+        }
+    }
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.iswpunct" name="iswpunct" kind="function_or_macro">
+        <signature>int iswpunct(wint_t wc);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>wc</code> is punctuation (neither alphanumeric nor whitespace) according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.iswpunct.wc" name="wc" direction="in" type="wint_t">
+            <description><![CDATA[
+<p>Wide character value to test.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if punctuation, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.iswpunct.strip" lang="c99">
+            <title>Remove punctuation from a wide string</title>
+            <code><![CDATA[
+#include <wctype.h>
+#include <wchar.h>
+#include <stddef.h>
+
+size_t copy_without_wpunct(wchar_t *dst, size_t cap, const wchar_t *src) {
+    size_t j = 0;
+    for (size_t i = 0; src[i] != L'\0' && j + 1 < cap; ++i) {
+        if (!iswpunct((wint_t)src[i])) {
+            dst[j++] = src[i];
+        }
+    }
+    dst[j] = L'\0';
+    return j;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.iswspace" name="iswspace" kind="function_or_macro">
+        <signature>int iswspace(wint_t wc);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>wc</code> is whitespace according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.iswspace.wc" name="wc" direction="in" type="wint_t">
+            <description><![CDATA[
+<p>Wide character value to test.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if whitespace, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.iswspace.trim" lang="c99">
+            <title>Trim leading whitespace in a wide string</title>
+            <code><![CDATA[
+#include <wctype.h>
+#include <wchar.h>
+#include <stddef.h>
+
+size_t trim_left_wspace(const wchar_t *s) {
+    size_t i = 0;
+    while (s[i] != L'\0') {
+        if (!iswspace((wint_t)s[i])) {
+            break;
+        }
+        ++i;
+    }
+    return i;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.iswupper" name="iswupper" kind="function_or_macro">
+        <signature>int iswupper(wint_t wc);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>wc</code> is an uppercase wide letter according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.iswupper.wc" name="wc" direction="in" type="wint_t">
+            <description><![CDATA[
+<p>Wide character value to test.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if uppercase, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.iswupper.all" lang="c99">
+            <title>Check if all letters in a wide string are uppercase</title>
+            <code><![CDATA[
+#include <wctype.h>
+#include <wchar.h>
+
+int wide_letters_all_upper(const wchar_t *s) {
+    int saw_letter = 0;
+    for (; *s != L'\0'; ++s) {
+        wint_t wc = (wint_t)*s;
+        if (iswalpha(wc)) {
+            saw_letter = 1;
+            if (!iswupper(wc)) {
+                return 0;
+            }
+        }
+    }
+    return saw_letter ? 1 : 0;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.iswxdigit" name="iswxdigit" kind="function_or_macro">
+        <signature>int iswxdigit(wint_t wc);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>wc</code> is a hexadecimal digit according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.iswxdigit.wc" name="wc" direction="in" type="wint_t">
+            <description><![CDATA[
+<p>Wide character value to test.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if a hexadecimal digit, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.iswxdigit.scan" lang="c99">
+            <title>Scan hex digits in a wide string</title>
+            <code><![CDATA[
+#include <wctype.h>
+#include <wchar.h>
+#include <stddef.h>
+
+size_t scan_whex(const wchar_t *s) {
+    size_t i = 0;
+    while (s[i] != L'\0') {
+        if (!iswxdigit((wint_t)s[i])) {
+            break;
+        }
+        ++i;
+    }
+    return i;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.towlower" name="towlower" kind="function_or_macro">
+        <signature>wint_t towlower(wint_t wc);</signature>
+        <summary><![CDATA[
+<p>Converts <code>wc</code> to lowercase if it has a lowercase mapping in the current locale; otherwise returns <code>wc</code> unchanged.</p>
+]]></summary>
+        <parameters>
+          <param id="p.towlower.wc" name="wc" direction="in" type="wint_t">
+            <description><![CDATA[
+<p>Wide character value to convert, as <code>WEOF</code> or a valid wide character.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.towlower.locale" severity="info">
+                <description><![CDATA[
+<p>Mapping depends on locale. Case conversion for wide characters can be more complex than ASCII.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wint_t">
+            <description><![CDATA[
+<p>Lowercased wide character if applicable; otherwise original. If input is <code>WEOF</code>, returns <code>WEOF</code>.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.towlower.fold" lang="c99">
+            <title>Lowercase a wide string in place</title>
+            <code><![CDATA[
+#include <wctype.h>
+#include <wchar.h>
+
+void wide_lowercase_in_place(wchar_t *s) {
+    for (; *s != L'\0'; ++s) {
+        *s = (wchar_t)towlower((wint_t)*s);
+    }
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.towupper" name="towupper" kind="function_or_macro">
+        <signature>wint_t towupper(wint_t wc);</signature>
+        <summary><![CDATA[
+<p>Converts <code>wc</code> to uppercase if it has an uppercase mapping in the current locale; otherwise returns <code>wc</code> unchanged.</p>
+]]></summary>
+        <parameters>
+          <param id="p.towupper.wc" name="wc" direction="in" type="wint_t">
+            <description><![CDATA[
+<p>Wide character value to convert, as <code>WEOF</code> or a valid wide character.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wint_t">
+            <description><![CDATA[
+<p>Uppercased wide character if applicable; otherwise original. If input is <code>WEOF</code>, returns <code>WEOF</code>.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.towupper.fold" lang="c99">
+            <title>Uppercase a wide string in place</title>
+            <code><![CDATA[
+#include <wctype.h>
+#include <wchar.h>
+
+void wide_uppercase_in_place(wchar_t *s) {
+    for (; *s != L'\0'; ++s) {
+        *s = (wchar_t)towupper((wint_t)*s);
+    }
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.wctype" name="wctype" kind="function">
+        <signature>wctype_t wctype(const char *property);</signature>
+        <summary><![CDATA[
+<p>
+Maps a property name to a <code>wctype_t</code> classification descriptor that can be used with <code>iswctype</code>
+(if you choose to include it) or for caching a classification category by name.
+</p>
+<p>
+Standard property names correspond to the <code>isw*</code> classes, such as "alpha", "digit", "space", "upper", "lower",
+"xdigit", and related names. If the property is not recognized, returns 0.
+</p>
+]]></summary>
+        <parameters>
+          <param id="p.wctype.property" name="property" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Nul-terminated property name string. Examples include "alpha", "digit", "space", "upper", "lower", "xdigit".</p>
+]]></description>
+            <constraints>
+              <constraint id="c.wctype.property_null" severity="important">
+                <description><![CDATA[
+<p><code>property</code> must not be NULL.</p>
+]]></description>
+              </constraint>
+              <constraint id="c.wctype.property_locale" severity="info">
+                <description><![CDATA[
+<p>Property interpretation depends on the current locale.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wctype_t">
+            <description><![CDATA[
+<p>Classification descriptor for the named property, or 0 if the name is not recognized.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.wctype.cache" severity="important" topic="performance">
+            <description><![CDATA[
+<p>
+If you need dynamic selection by name, call <code>wctype</code> once and cache the returned descriptor instead of
+repeating string lookups.
+</p>
+]]></description>
+          </note>
+        </notes>
+        <examples>
+          <example id="ex.wctype.lookup" lang="c99">
+            <title>Lookup and validate a classification property name</title>
+            <code><![CDATA[
+#include <wctype.h>
+#include <wchar.h>
+
+wctype_t get_class_or_zero(const char *name) {
+    /* name must be non-NULL and NUL-terminated */
+    wctype_t t = wctype(name);
+    return t; /* 0 means "unknown property" */
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.wctrans" name="wctrans" kind="function">
+        <signature>wctrans_t wctrans(const char *property);</signature>
+        <summary><![CDATA[
+<p>
+Maps a transformation property name to a <code>wctrans_t</code> descriptor used by <code>towctrans</code>.
+Standard transformation property names include "tolower" and "toupper".
+</p>
+<p>If the property is not recognized, returns 0.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wctrans.property" name="property" direction="in" type="const char *">
+            <description><![CDATA[
+<p>Nul-terminated transformation name string, typically "tolower" or "toupper".</p>
+]]></description>
+            <constraints>
+              <constraint id="c.wctrans.property_null" severity="important">
+                <description><![CDATA[
+<p><code>property</code> must not be NULL.</p>
+]]></description>
+              </constraint>
+              <constraint id="c.wctrans.locale" severity="info">
+                <description><![CDATA[
+<p>Transformation behavior depends on the current locale.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wctrans_t">
+            <description><![CDATA[
+<p>Transformation descriptor, or 0 if the name is not recognized.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.wctrans.lookup" lang="c99">
+            <title>Lookup a case transformation descriptor by name</title>
+            <code><![CDATA[
+#include <wctype.h>
+
+wctrans_t get_transformation(const char *name) {
+    /* name must be non-NULL */
+    return wctrans(name); /* 0 means "unknown transformation" */
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.towctrans" name="towctrans" kind="function">
+        <signature>wint_t towctrans(wint_t wc, wctrans_t desc);</signature>
+        <summary><![CDATA[
+<p>Applies the transformation described by <code>desc</code> to <code>wc</code> and returns the transformed wide character.</p>
+]]></summary>
+        <parameters>
+          <param id="p.towctrans.wc" name="wc" direction="in" type="wint_t">
+            <description><![CDATA[
+<p>Wide character value to transform, as <code>WEOF</code> or a valid wide character.</p>
+]]></description>
+          </param>
+          <param id="p.towctrans.desc" name="desc" direction="in" type="wctrans_t">
+            <description><![CDATA[
+<p>Transformation descriptor returned by <code>wctrans</code>. A value of 0 indicates an invalid or unknown descriptor.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.towctrans.desc_valid" severity="important">
+                <description><![CDATA[
+<p>Do not pass 0 as <code>desc</code>. Validate the result of <code>wctrans</code> before calling.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wint_t">
+            <description><![CDATA[
+<p>Transformed wide character. If <code>wc</code> is <code>WEOF</code>, returns <code>WEOF</code>.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.towctrans.dynamic_case" lang="c99">
+            <title>Apply case conversion selected by name</title>
+            <code><![CDATA[
+#include <wctype.h>
+#include <wchar.h>
+
+void wide_apply_case(wchar_t *s, const char *which) {
+    wctrans_t tr = wctrans(which);
+    if (tr == 0) {
+        /* Unknown transformation name */
+        return;
+    }
+
+    for (; *s != L'\0'; ++s) {
+        *s = (wchar_t)towctrans((wint_t)*s, tr);
+    }
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+    </header>
+
+  </category>
+
+</document>
+
