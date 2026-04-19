@@ -145,6 +145,7 @@ test.describe.serial("Ceetcode acceptance @acceptance", () => {
     await expect(page.getByTestId("editor-panel")).toBeVisible();
     await expect(page.getByTestId("problem-select")).toBeVisible();
     await expect(page.getByTestId("share-button")).toBeVisible();
+    await expect(page.getByTestId("format-button")).toBeVisible();
     await expect(page.getByTestId("run-button")).toBeVisible();
     await expect(page.getByTestId("reset-button")).toBeVisible();
     await expect(page.getByTestId("run-status")).toHaveText(/Idle/);
@@ -243,6 +244,37 @@ test.describe.serial("Ceetcode acceptance @acceptance", () => {
     await captureVisualState(page, testInfo, "scratchpad-new");
   });
 
+  test("format action normalizes indentation for C blocks @acceptance", async ({ page }, testInfo) => {
+    await openWorkspace(page);
+    await page.getByTestId("problem-select").selectOption("new");
+
+    await replaceEditorSource(
+      page,
+      `int problem(void) {
+if (1) {
+return 0;
+}
+return 0;
+}`
+    );
+
+    await page.getByTestId("format-button").click();
+
+    const formattedSource = await page.evaluate(() => {
+      const debug = (
+        window as {
+          ceetcodeDebug?: {
+            getSource?: () => string;
+          };
+        }
+      ).ceetcodeDebug;
+      return debug?.getSource?.() ?? "";
+    });
+
+    expect(formattedSource).toContain("\n    if (1) {\n        return 0;\n    }\n");
+    await captureVisualState(page, testInfo, "format-action");
+  });
+
   test("signal-state problem runs with boundary-focused official tests @acceptance", async ({ page }, testInfo) => {
     await openWorkspace(page);
 
@@ -335,6 +367,9 @@ test.describe.serial("Ceetcode acceptance @acceptance", () => {
     await expect(page.getByTestId("tests-list")).toContainText("FAIL");
     await expect(page.getByTestId("tests-list")).toContainText("Expected:");
     await expect(page.getByTestId("tests-list")).toContainText("Actual:");
+    await expect(page.getByTestId("tests-list")).toContainText("Show Input");
+    await page.locator(".result-details summary").first().click();
+    await expect(page.getByTestId("tests-list")).toContainText("\"nums\": [");
 
     await captureVisualState(page, testInfo, "run-fail");
   });
@@ -461,7 +496,7 @@ int isPalindromeAscii(const char* s) {
     await expect(page.locator(".tabs")).toBeVisible();
     await expect(page.locator("body")).toHaveAttribute("data-mobile-view", "problem");
 
-    await page.getByRole("button", { name: "Code" }).click();
+    await page.getByRole("button", { name: "Editor" }).click();
     await expect(page.locator("body")).toHaveAttribute("data-mobile-view", "editor");
     await expect(page.getByTestId("editor-panel")).toBeVisible();
 
@@ -476,11 +511,11 @@ int isPalindromeAscii(const char* s) {
 }`
     );
 
-    await page.getByRole("button", { name: "Problem" }).click();
+    await page.getByRole("button", { name: "Statement" }).click();
     await expect(page.locator("body")).toHaveAttribute("data-mobile-view", "problem");
     await expect(page.getByTestId("problem-panel")).toBeVisible();
 
-    await page.getByRole("button", { name: "Code" }).click();
+    await page.getByRole("button", { name: "Editor" }).click();
     await expect(page.locator(EDITOR_CONTENT)).toContainText("mobile-view-marker");
 
     await captureVisualState(page, testInfo, "mobile-toggle");

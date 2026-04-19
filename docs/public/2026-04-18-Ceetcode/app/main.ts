@@ -1,8 +1,9 @@
 import { EditorState } from "@codemirror/state";
 import { cpp } from "@codemirror/lang-cpp";
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
-import { bracketMatching, foldGutter, indentOnInput } from "@codemirror/language";
+import { HighlightStyle, bracketMatching, foldGutter, indentOnInput, indentRange, indentUnit, syntaxHighlighting } from "@codemirror/language";
 import { drawSelection, EditorView, highlightActiveLine, keymap, lineNumbers } from "@codemirror/view";
+import { tags } from "@lezer/highlight";
 import { marked } from "marked";
 import { parseCustomTests } from "../runtime/custom-tests";
 import { parseHarnessOutput, stripAnsi } from "../runtime/harness/parse-harness-output";
@@ -36,6 +37,14 @@ interface LatestRunView {
   testsHtml: string;
 }
 
+interface DetailedTestResult {
+  status: "PASS" | "FAIL";
+  name: string;
+  expected: string;
+  actual: string;
+  inputJson: string;
+}
+
 interface AppUnhandledError {
   id: number;
   source: string;
@@ -66,6 +75,7 @@ const runLog = createLogger("Run", "Submission");
 const settingsLog = createLogger("Settings", "Logging");
 const unhandledLog = createLogger("Runtime", "Unhandled");
 const shareLog = createLogger("UI", "Share");
+const editorLog = createLogger("UI", "Editor");
 
 const shareHashKey = "share";
 
@@ -204,16 +214,18 @@ appRoot.innerHTML = `
       <h1>Ceetcode</h1>
       <span class="mono">C99 browser runtime</span>
       <span class="spacer"></span>
-      <div class="tabs" role="tablist" aria-label="Mobile views">
-        <button class="tab-button" data-mobile-target="problem" type="button">Problem</button>
-        <button class="tab-button" data-mobile-target="editor" type="button">Code</button>
+      <div class="tabs" role="tablist" aria-label="Workspace view">
+        <span class="tabs-label">View</span>
+        <button class="tab-button" data-mobile-target="problem" type="button">Statement</button>
+        <button class="tab-button" data-mobile-target="editor" type="button">Editor</button>
       </div>
       <label>
-        Problem
+        Challenge
         <select id="problem-select" data-testid="problem-select"></select>
       </label>
       <button id="run-btn" class="primary" type="button" data-testid="run-button">Run</button>
       <button id="reset-btn" type="button" data-testid="reset-button">Reset To Starter</button>
+      <button id="format-btn" type="button" data-testid="format-button">Format</button>
       <button id="share-btn" type="button" data-testid="share-button">Share</button>
       <button id="settings-btn" type="button" data-testid="settings-button">Settings</button>
       <span id="run-status" class="status-badge status-idle" data-testid="run-status">Idle</span>
@@ -234,7 +246,7 @@ appRoot.innerHTML = `
         <header class="editor-toolbar">
           <span class="mono" id="active-problem-id"></span>
           <span class="spacer"></span>
-          <span class="mono" data-testid="shortcut-hint">Run: Ctrl/Cmd+Enter</span>
+          <span class="mono" data-testid="shortcut-hint">Run: Ctrl/Cmd+Enter • Format: Shift+Alt+F</span>
         </header>
         <div id="editor-host" class="editor-host" data-testid="editor"></div>
 
@@ -326,6 +338,7 @@ const problemContent = requiredElement(document.querySelector<HTMLElement>("#pro
 const activeProblemIdEl = requiredElement(document.querySelector<HTMLElement>("#active-problem-id"), "#active-problem-id");
 const runBtn = requiredElement(document.querySelector<HTMLButtonElement>("#run-btn"), "#run-btn");
 const resetBtn = requiredElement(document.querySelector<HTMLButtonElement>("#reset-btn"), "#reset-btn");
+const formatBtn = requiredElement(document.querySelector<HTMLButtonElement>("#format-btn"), "#format-btn");
 const shareBtn = requiredElement(document.querySelector<HTMLButtonElement>("#share-btn"), "#share-btn");
 const settingsBtn = requiredElement(document.querySelector<HTMLButtonElement>("#settings-btn"), "#settings-btn");
 const runStatusEl = requiredElement(document.querySelector<HTMLElement>("#run-status"), "#run-status");
@@ -390,6 +403,53 @@ let editor: EditorView;
 let draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
 let shareFeedbackTimer: ReturnType<typeof setTimeout> | null = null;
 
+const ceeCodeHighlightStyle = HighlightStyle.define([
+  { tag: tags.keyword, color: "#0e7490", fontWeight: "600" },
+  { tag: [tags.typeName, tags.className], color: "#8f3c7f", fontWeight: "600" },
+  { tag: [tags.string, tags.special(tags.string)], color: "#8a3b12" },
+  { tag: tags.number, color: "#0f6e66", fontWeight: "600" },
+  { tag: [tags.comment, tags.lineComment, tags.blockComment], color: "#6b7280", fontStyle: "italic" },
+  { tag: [tags.function(tags.variableName), tags.labelName], color: "#1b4d8a", fontWeight: "600" },
+  { tag: [tags.operator, tags.punctuation], color: "#374151" },
+  { tag: tags.variableName, color: "#1f2937" },
+  { tag: tags.invalid, color: "#b42318", textDecoration: "underline wavy" }
+]);
+
+const ceeCodeEditorTheme = EditorView.theme({
+  "&": {
+    backgroundColor: "#fcfcf9",
+    color: "#1f2933"
+  },
+  ".cm-scroller": {
+    fontFamily: "var(--mono)",
+    lineHeight: "1.52"
+  },
+  ".cm-content": {
+    caretColor: "#0f766e"
+  },
+  ".cm-cursor, .cm-dropCursor": {
+    borderLeftColor: "#0f766e"
+  },
+  ".cm-gutters": {
+    backgroundColor: "#f1f2eb",
+    color: "#7a7d6b",
+    borderRight: "1px solid #dadbcf"
+  },
+  ".cm-activeLine": {
+    backgroundColor: "rgba(15, 118, 110, 0.08)"
+  },
+  ".cm-activeLineGutter": {
+    backgroundColor: "rgba(15, 118, 110, 0.11)",
+    color: "#50605d"
+  },
+  "&.cm-focused": {
+    outline: "none"
+  },
+  "&.cm-focused .cm-selectionBackground, .cm-selectionBackground": {
+    backgroundColor: "rgba(14, 116, 144, 0.22)"
+  }
+});
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -435,6 +495,33 @@ function setShareFeedback(message: string, tone: "info" | "success" | "warning" 
       shareFeedbackTimer = null;
     }, 6000);
   }
+}
+
+function formatJsonPreview(value: unknown): string {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+}
+
+function formatSource(): void {
+  const changes = indentRange(editor.state, 0, editor.state.doc.length);
+  if (!changes.empty) {
+    editor.dispatch({
+      changes,
+      selection: editor.state.selection,
+      userEvent: "input.format"
+    });
+  }
+  scheduleDraftSave();
+  editorLog.info("Source formatted", {
+    context: {
+      problemId: activeProblem.id,
+      changed: !changes.empty,
+      length: readEditor().length
+    }
+  });
 }
 
 function buildSharePayloadFromCurrentState(): ShareStatePayloadV1 {
@@ -670,6 +757,7 @@ function setStatus(status: RunState["status"], phase: RunState["phase"], message
   runStatusEl.className = `status-badge status-${status}`;
   runBtn.disabled = status === "running";
   resetBtn.disabled = status === "running";
+  formatBtn.disabled = status === "running";
 }
 
 function renderDiagnostics(diagnostics: CompileDiagnostic[]): void {
@@ -690,6 +778,15 @@ function renderDiagnostics(diagnostics: CompileDiagnostic[]): void {
 function renderLatestRun(): void {
   summaryText.textContent = latestRun.summaryText;
   testsList.innerHTML = latestRun.testsHtml;
+  for (const details of [...testsList.querySelectorAll<HTMLDetailsElement>(".result-details")]) {
+    const summary = details.querySelector<HTMLElement>("summary");
+    if (!summary) continue;
+    const syncLabel = () => {
+      summary.textContent = details.open ? "Hide Input" : "Show Input";
+    };
+    syncLabel();
+    details.addEventListener("toggle", syncLabel);
+  }
   stdoutOutput.textContent = latestRun.consoleOutput || "(no stdout)";
   stderrOutput.textContent = "(stderr channel not exposed by current runtime adapter)";
   compileLogEl.textContent = stripAnsi(latestRun.compileLog) || "(no compile log)";
@@ -781,14 +878,29 @@ function setEditorForProblem(problem: ProblemDefinition): void {
   });
 }
 
-function buildTestsHtml(parsed: ReturnType<typeof parseHarnessOutput>): string {
-  return parsed.tests
+function buildTestsHtml(parsed: ReturnType<typeof parseHarnessOutput>, tests: TestCase[]): string {
+  const detailed: DetailedTestResult[] = parsed.tests.map((test) => {
+    const original = tests[test.index];
+    return {
+      status: test.status,
+      name: test.name,
+      expected: test.expected,
+      actual: test.actual,
+      inputJson: formatJsonPreview(original ? original.input : {})
+    };
+  });
+
+  return detailed
     .map((test) => {
       const cssClass = test.status === "PASS" ? "pass" : "fail";
       return `<article class="result-item ${cssClass}">
         <div><strong>${escapeHtml(test.name)}</strong> - ${escapeHtml(test.status)}</div>
         <div class="result-row">Expected: <span class="mono">${escapeHtml(test.expected)}</span></div>
         <div class="result-row">Actual: <span class="mono">${escapeHtml(test.actual)}</span></div>
+        <details class="result-details">
+          <summary>Show Input</summary>
+          <pre class="output-block result-input-block">${escapeHtml(test.inputJson)}</pre>
+        </details>
       </article>`;
     })
     .join("");
@@ -953,7 +1065,7 @@ async function runCurrentSubmission(): Promise<void> {
 
   const parsed = parseHarnessOutput(runPayload.runtimeLog);
   latestRun.consoleOutput = parsed.consoleLines.join("\n");
-  latestRun.testsHtml = buildTestsHtml(parsed);
+  latestRun.testsHtml = buildTestsHtml(parsed, tests);
 
   if (!parsed.summary) {
     runLog.error("Harness summary missing", {
@@ -1141,11 +1253,15 @@ function initializeEditor(): void {
     extensions: [
       lineNumbers(),
       history(),
+      EditorState.tabSize.of(4),
+      indentUnit.of("    "),
       bracketMatching(),
       foldGutter(),
       indentOnInput(),
       drawSelection(),
       highlightActiveLine(),
+      ceeCodeEditorTheme,
+      syntaxHighlighting(ceeCodeHighlightStyle),
       cpp(),
       keymap.of([
         ...defaultKeymap,
@@ -1155,6 +1271,13 @@ function initializeEditor(): void {
           key: "Mod-Enter",
           run: () => {
             void runCurrentSubmission();
+            return true;
+          }
+        },
+        {
+          key: "Shift-Alt-f",
+          run: () => {
+            formatSource();
             return true;
           }
         }
@@ -1172,7 +1295,7 @@ function initializeEditor(): void {
   });
   uiLog.info("Editor initialized", {
     subcategory: "Editor",
-    context: { language: "c99" }
+    context: { language: "c99", indentUnit: 4 }
   });
 }
 
@@ -1265,6 +1388,10 @@ shareBtn.addEventListener("click", async () => {
       context: { error: normalizeErrorText(error) }
     });
   }
+});
+
+formatBtn.addEventListener("click", () => {
+  formatSource();
 });
 
 runBtn.addEventListener("click", () => {
