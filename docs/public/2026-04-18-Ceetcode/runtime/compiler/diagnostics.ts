@@ -1,7 +1,9 @@
 import type { CompileDiagnostic } from "../types";
 import { stripAnsi } from "../harness/parse-harness-output";
+import { createLogger } from "../logging";
 
 const diagnosticRegex = /^(?<file>[^:\n]+):(?<line>\d+):(?<column>\d+):\s*(?<severity>warning|error|note|fatal error):\s*(?<message>.+)$/;
+const diagnosticLog = createLogger("Run", "Diagnostics");
 
 export function parseCompileDiagnostics(compilerLog: string): CompileDiagnostic[] {
   const diagnostics: CompileDiagnostic[] = [];
@@ -20,5 +22,8 @@ export function parseCompileDiagnostics(compilerLog: string): CompileDiagnostic[
     });
   }
 
+  diagnosticLog.info("Compile diagnostics parsed", {
+    context: { count: diagnostics.length }
+  });
   return diagnostics;
 }

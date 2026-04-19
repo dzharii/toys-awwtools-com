@@ -44,3 +44,9 @@ This keeps the following stable when backend changes:
 - Service worker (`sw.js`) caches app shell and compiler artifacts.
 - Compiler assets are local files in `dist/vendor/wasm-clang/`.
 - Drafts/custom tests/selected problem are persisted in `localStorage`.
+
+## Observability
+
+- Centralized logging lives in `runtime/logging.ts`.
+- Runtime log settings (level, formatter, decorative toggles) are persisted in `localStorage` key `ceetcode:logging_settings`.
+- UI settings are applied immediately through the Settings dialog in `app/main.ts`.

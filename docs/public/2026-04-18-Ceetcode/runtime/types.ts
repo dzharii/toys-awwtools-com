@@ -138,7 +138,8 @@ export type RunResponsePayload = RunSuccess | RunFailure;
 export const localStorageKeys = {
   selectedProblem: "ceetcode:selected_problem",
   draftPrefix: "ceetcode:draft:",
-  customPrefix: "ceetcode:custom_tests:"
+  customPrefix: "ceetcode:custom_tests:",
+  loggingSettings: "ceetcode:logging_settings"
 } as const;
 
 export const c99SupportMatrix: C99SupportItem[] = [

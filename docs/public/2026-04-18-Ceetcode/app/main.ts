@@ -6,6 +6,16 @@ import { drawSelection, EditorView, highlightActiveLine, keymap, lineNumbers } f
 import { marked } from "marked";
 import { parseCustomTests } from "../runtime/custom-tests";
 import { parseHarnessOutput, stripAnsi } from "../runtime/harness/parse-harness-output";
+import {
+  createLogger,
+  getLoggingSettings,
+  loggingFormatterNames,
+  loggingLevels,
+  subscribeLoggingSettings,
+  updateLoggingSettings,
+  type LoggingFormatterName,
+  type LoggingLevel
+} from "../runtime/logging";
 import { loadProblemCatalog } from "../runtime/problem-catalog";
 import { clearDraft, loadCustomTests, loadDraft, loadSelectedProblemId, saveCustomTests, saveDraft, saveSelectedProblemId } from "../runtime/storage";
 import { WorkerCompilerClient, type WorkerClientErrorEvent } from "../runtime/compiler/worker-client";
@@ -37,6 +47,12 @@ interface AppUnhandledError {
 
 const problems = loadProblemCatalog();
 const problemById = new Map(problems.map((problem) => [problem.id, problem]));
+
+const appLog = createLogger("App", "Lifecycle");
+const uiLog = createLogger("UI", "Interaction");
+const runLog = createLogger("Run", "Submission");
+const settingsLog = createLogger("Settings", "Logging");
+const unhandledLog = createLogger("Runtime", "Unhandled");
 
 const appRoot = document.querySelector<HTMLDivElement>("#app");
 if (!appRoot) {
@@ -78,12 +94,23 @@ function normalizeErrorText(value: unknown): string {
 
 const compilerClient = new WorkerCompilerClient({
   onError: (event: WorkerClientErrorEvent) => {
+    runLog.warn("Worker client reported an error", {
+      subcategory: "Worker",
+      context: { source: event.source, message: event.message }
+    });
     recordUnhandledError(event.source, event.message);
   }
 });
 const mobileView = window.matchMedia("(max-width: 1100px)").matches ? "problem" : "editor";
 
 document.body.dataset.mobileView = mobileView;
+appLog.info("Bootstrap starting", {
+  context: {
+    problemCount: problems.length,
+    initialProblemId: initialProblem.id,
+    mobileView
+  }
+});
 
 appRoot.innerHTML = `
   <details id="error-panel" class="error-panel" data-testid="error-panel">
@@ -110,6 +137,7 @@ appRoot.innerHTML = `
       </label>
       <button id="run-btn" class="primary" type="button" data-testid="run-button">Run</button>
       <button id="reset-btn" type="button" data-testid="reset-button">Reset To Starter</button>
+      <button id="settings-btn" type="button" data-testid="settings-button">Settings</button>
       <span id="run-status" class="status-badge status-idle" data-testid="run-status">Idle</span>
     </section>
 
@@ -167,6 +195,48 @@ appRoot.innerHTML = `
       </article>
     </section>
   </main>
+
+  <dialog id="settings-dialog" class="settings-dialog" data-testid="settings-dialog">
+    <div class="settings-dialog-body">
+      <header class="settings-dialog-header">
+        <h2>Settings</h2>
+        <button id="settings-close-btn" type="button" data-testid="settings-close-button">Close</button>
+      </header>
+
+      <section class="settings-section">
+        <h3>Logging</h3>
+        <p class="result-row">Control console tracing visibility and rendering style. Changes apply immediately and persist.</p>
+
+        <label>
+          Visible level
+          <select id="logging-level-select" data-testid="logging-level-select">
+            <option value="error">Errors only</option>
+            <option value="warn">Warnings + errors</option>
+            <option value="info">Info + warnings + errors</option>
+          </select>
+        </label>
+
+        <label>
+          Formatter
+          <select id="logging-formatter-select" data-testid="logging-formatter-select">
+            <option value="segments">Styled segments</option>
+            <option value="emoji">Emoji labels</option>
+            <option value="plain">Plain text</option>
+          </select>
+        </label>
+
+        <label class="settings-inline-toggle">
+          <input id="logging-emoji-toggle" data-testid="logging-emoji-toggle" type="checkbox" />
+          Show decorative category emoji
+        </label>
+
+        <label class="settings-inline-toggle">
+          <input id="logging-background-toggle" data-testid="logging-background-toggle" type="checkbox" />
+          Use styled label backgrounds
+        </label>
+      </section>
+    </div>
+  </dialog>
 `;
 
 const problemSelect = requiredElement(document.querySelector<HTMLSelectElement>("#problem-select"), "#problem-select");
@@ -177,6 +247,7 @@ const problemContent = requiredElement(document.querySelector<HTMLElement>("#pro
 const activeProblemIdEl = requiredElement(document.querySelector<HTMLElement>("#active-problem-id"), "#active-problem-id");
 const runBtn = requiredElement(document.querySelector<HTMLButtonElement>("#run-btn"), "#run-btn");
 const resetBtn = requiredElement(document.querySelector<HTMLButtonElement>("#reset-btn"), "#reset-btn");
+const settingsBtn = requiredElement(document.querySelector<HTMLButtonElement>("#settings-btn"), "#settings-btn");
 const runStatusEl = requiredElement(document.querySelector<HTMLElement>("#run-status"), "#run-status");
 const customTestsInput = requiredElement(
   document.querySelector<HTMLTextAreaElement>("#custom-tests-input"),
@@ -195,6 +266,27 @@ const errorPanelListEl = requiredElement(document.querySelector<HTMLElement>("#e
 const errorPanelClearBtn = requiredElement(
   document.querySelector<HTMLButtonElement>("#error-panel-clear"),
   "#error-panel-clear"
+);
+const settingsDialog = requiredElement(document.querySelector<HTMLDialogElement>("#settings-dialog"), "#settings-dialog");
+const settingsCloseBtn = requiredElement(
+  document.querySelector<HTMLButtonElement>("#settings-close-btn"),
+  "#settings-close-btn"
+);
+const loggingLevelSelect = requiredElement(
+  document.querySelector<HTMLSelectElement>("#logging-level-select"),
+  "#logging-level-select"
+);
+const loggingFormatterSelect = requiredElement(
+  document.querySelector<HTMLSelectElement>("#logging-formatter-select"),
+  "#logging-formatter-select"
+);
+const loggingEmojiToggle = requiredElement(
+  document.querySelector<HTMLInputElement>("#logging-emoji-toggle"),
+  "#logging-emoji-toggle"
+);
+const loggingBackgroundToggle = requiredElement(
+  document.querySelector<HTMLInputElement>("#logging-background-toggle"),
+  "#logging-background-toggle"
 );
 
 let activeProblem = initialProblem;
@@ -227,6 +319,22 @@ function escapeHtml(value: string): string {
 
 function formatErrorTimestamp(timestamp: number): string {
   return new Date(timestamp).toLocaleTimeString([], { hour12: false });
+}
+
+function isLoggingLevelValue(value: string): value is LoggingLevel {
+  return (loggingLevels as readonly string[]).includes(value);
+}
+
+function isLoggingFormatterValue(value: string): value is LoggingFormatterName {
+  return (loggingFormatterNames as readonly string[]).includes(value);
+}
+
+function syncLoggingControlValues(): void {
+  const current = getLoggingSettings();
+  loggingLevelSelect.value = current.level;
+  loggingFormatterSelect.value = current.formatter;
+  loggingEmojiToggle.checked = current.useDecorativeEmoji;
+  loggingBackgroundToggle.checked = current.useLabelBackgrounds;
 }
 
 function renderUnhandledErrors(): void {
@@ -289,15 +397,28 @@ function recordUnhandledError(source: string, message: string, options: { detail
     unhandledErrors = unhandledErrors.slice(unhandledErrors.length - maxUnhandledErrors);
   }
 
+  unhandledLog.error("Unhandled error captured", {
+    subcategory: source,
+    context: {
+      message: normalizedMessage,
+      details: normalizedDetails,
+      hasStack: Boolean(normalizedStack),
+      count: unhandledErrors.length
+    }
+  });
   renderUnhandledErrors();
 }
 
 function clearUnhandledErrors(): void {
   unhandledErrors = [];
+  unhandledLog.warn("Unhandled error panel cleared", {
+    context: { remaining: unhandledErrors.length }
+  });
   renderUnhandledErrors();
 }
 
 function registerUnhandledErrorCapture(): () => void {
+  unhandledLog.info("Registering global unhandled-error capture hooks");
   const onWindowError = (event: Event): void => {
     if (event instanceof ErrorEvent) {
       const location = event.filename ? `${event.filename}:${event.lineno}:${event.colno}` : undefined;
@@ -353,10 +474,17 @@ function registerUnhandledErrorCapture(): () => void {
     window.removeEventListener("error", onWindowError, true);
     window.removeEventListener("unhandledrejection", onUnhandledRejection);
     window.fetch = originalFetch;
+    unhandledLog.info("Unregistered global unhandled-error capture hooks");
   };
 }
 
 function setStatus(status: RunState["status"], phase: RunState["phase"], message: string): void {
+  if (runState.status !== status || runState.phase !== phase || runState.message !== message) {
+    runLog.info("Run status updated", {
+      subcategory: "Status",
+      context: { status, phase, message }
+    });
+  }
   runState = { status, phase, message };
   runStatusEl.textContent = message;
   runStatusEl.className = `status-badge status-${status}`;
@@ -389,6 +517,10 @@ function renderLatestRun(): void {
 }
 
 function renderProblem(problem: ProblemDefinition): void {
+  uiLog.info("Rendering problem content", {
+    subcategory: "Problem",
+    context: { problemId: problem.id, title: problem.title, visibleTests: problem.visibleTests.length }
+  });
   problemTitle.textContent = problem.title;
   problemMeta.textContent = `${problem.difficulty} • ${problem.summary}`;
   problemSignature.textContent = problem.signature.declaration;
@@ -459,6 +591,14 @@ function setEditorForProblem(problem: ProblemDefinition): void {
   writeEditor(draft ?? problem.starterCode);
   const custom = loadCustomTests(problem.id);
   customTestsInput.value = custom ?? problem.defaultCustomTestsJson;
+  uiLog.info("Editor state loaded for problem", {
+    subcategory: "Problem",
+    context: {
+      problemId: problem.id,
+      restoredDraft: draft !== null,
+      restoredCustomTests: custom !== null
+    }
+  });
 }
 
 function buildTestsHtml(parsed: ReturnType<typeof parseHarnessOutput>): string {
@@ -477,15 +617,30 @@ function buildTestsHtml(parsed: ReturnType<typeof parseHarnessOutput>): string {
 function normalizeCustomTests(problem: ProblemDefinition): { tests: TestCase[]; error: string | null } {
   const parsed = parseCustomTests(problem, customTestsInput.value);
   if (parsed.error) {
+    runLog.warn("Custom tests validation failed", {
+      subcategory: "CustomTests",
+      context: { problemId: problem.id, error: parsed.error }
+    });
     return parsed;
   }
 
   saveCustomTests(problem.id, customTestsInput.value);
+  runLog.info("Custom tests normalized", {
+    subcategory: "CustomTests",
+    context: { problemId: problem.id, customTestCount: parsed.tests.length }
+  });
   return parsed;
 }
 
 async function runCurrentSubmission(): Promise<void> {
   if (runState.status === "running") return;
+
+  runLog.info("Run requested", {
+    context: {
+      problemId: activeProblem.id,
+      sourceLength: readEditor().length
+    }
+  });
 
   const customResult = normalizeCustomTests(activeProblem);
   if (customResult.error) {
@@ -500,10 +655,25 @@ async function runCurrentSubmission(): Promise<void> {
     return;
   }
 
-  saveDraft(activeProblem.id, readEditor());
+  const source = readEditor();
+  saveDraft(activeProblem.id, source);
+  runLog.info("Draft persisted before run", {
+    subcategory: "Persistence",
+    context: { problemId: activeProblem.id, sourceLength: source.length }
+  });
 
   const tests = [...activeProblem.visibleTests, ...customResult.tests];
   const runId = `run-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  runLog.info("Compilation started", {
+    subcategory: "Compile",
+    context: {
+      runId,
+      problemId: activeProblem.id,
+      officialTests: activeProblem.visibleTests.length,
+      customTests: customResult.tests.length,
+      totalTests: tests.length
+    }
+  });
   setStatus("running", "compile", "Compiling");
 
   let compilePayload;
@@ -516,6 +686,10 @@ async function runCurrentSubmission(): Promise<void> {
     });
   } catch (error) {
     const compileMessage = (error as Error).message;
+    runLog.error("Compile worker request failed", {
+      subcategory: "Compile",
+      context: { runId, message: compileMessage, error }
+    });
     recordUnhandledError("compile-worker", `Compile worker failed: ${compileMessage}`, {
       stack: error instanceof Error ? error.stack : undefined
     });
@@ -533,6 +707,14 @@ async function runCurrentSubmission(): Promise<void> {
   latestRun.compileLog = compilePayload.compilerLog;
 
   if (!compilePayload.ok) {
+    runLog.warn("Compilation finished with diagnostics", {
+      subcategory: "Compile",
+      context: {
+        runId,
+        diagnostics: compilePayload.diagnostics.length,
+        message: compilePayload.message
+      }
+    });
     renderDiagnostics(compilePayload.diagnostics);
     latestRun.summaryText = compilePayload.message;
     latestRun.testsHtml = "";
@@ -544,6 +726,10 @@ async function runCurrentSubmission(): Promise<void> {
   }
 
   renderDiagnostics([]);
+  runLog.info("Compilation succeeded; runtime execution started", {
+    subcategory: "Runtime",
+    context: { runId, wasmByteLength: compilePayload.wasmBytes.byteLength }
+  });
   setStatus("running", "runtime", "Running");
 
   let runPayload;
@@ -554,6 +740,10 @@ async function runCurrentSubmission(): Promise<void> {
     });
   } catch (error) {
     const runMessage = (error as Error).message;
+    runLog.error("Runtime worker request failed", {
+      subcategory: "Runtime",
+      context: { runId, message: runMessage, error }
+    });
     recordUnhandledError("run-worker", `Run worker failed: ${runMessage}`, {
       stack: error instanceof Error ? error.stack : undefined
     });
@@ -569,6 +759,10 @@ async function runCurrentSubmission(): Promise<void> {
   latestRun.runtimeLog = runPayload.runtimeLog;
 
   if (!runPayload.ok) {
+    runLog.warn("Runtime execution failed", {
+      subcategory: "Runtime",
+      context: { runId, message: runPayload.message }
+    });
     latestRun.summaryText = runPayload.message;
     latestRun.testsHtml = "";
     latestRun.consoleOutput = stripAnsi(runPayload.runtimeLog);
@@ -582,6 +776,10 @@ async function runCurrentSubmission(): Promise<void> {
   latestRun.testsHtml = buildTestsHtml(parsed);
 
   if (!parsed.summary) {
+    runLog.error("Harness summary missing", {
+      subcategory: "Harness",
+      context: { runId, testRows: parsed.tests.length }
+    });
     latestRun.summaryText = "Harness summary was not produced by the runtime.";
     renderLatestRun();
     setStatus("failure", "tests", "Harness Error");
@@ -589,6 +787,15 @@ async function runCurrentSubmission(): Promise<void> {
   }
 
   latestRun.summaryText = `Passed ${parsed.summary.passed}/${parsed.summary.total}, Failed ${parsed.summary.failed}`;
+  runLog.info("Run completed", {
+    subcategory: "Summary",
+    context: {
+      runId,
+      passed: parsed.summary.passed,
+      failed: parsed.summary.failed,
+      total: parsed.summary.total
+    }
+  });
   renderLatestRun();
 
   if (parsed.summary.failed > 0) {
@@ -601,6 +808,10 @@ async function runCurrentSubmission(): Promise<void> {
 function resetToStarter(): void {
   writeEditor(activeProblem.starterCode);
   clearDraft(activeProblem.id);
+  uiLog.info("Reset source to starter code", {
+    subcategory: "Editor",
+    context: { problemId: activeProblem.id }
+  });
   setStatus("idle", "none", "Idle");
 }
 
@@ -609,6 +820,10 @@ function switchProblem(problemId: string): void {
   if (!next) return;
 
   saveDraft(activeProblem.id, readEditor());
+  uiLog.info("Switching active problem", {
+    subcategory: "Problem",
+    context: { fromProblemId: activeProblem.id, toProblemId: next.id }
+  });
   activeProblem = next;
   saveSelectedProblemId(problemId);
   renderProblem(activeProblem);
@@ -638,6 +853,10 @@ function initializeProblemSelect(): void {
 
   problemSelect.value = activeProblem.id;
   problemSelect.addEventListener("change", () => {
+    uiLog.info("Problem selector changed", {
+      subcategory: "Problem",
+      context: { selectedProblemId: problemSelect.value }
+    });
     switchProblem(problemSelect.value);
   });
 }
@@ -654,11 +873,81 @@ function initializeMobileTabs(): void {
   for (const button of tabButtons) {
     button.addEventListener("click", () => {
       document.body.dataset.mobileView = button.dataset.mobileTarget;
+      uiLog.info("Mobile view switched", {
+        subcategory: "Layout",
+        context: { mobileView: button.dataset.mobileTarget }
+      });
       syncButtons();
     });
   }
 
   syncButtons();
+}
+
+function initializeSettingsDialog(): void {
+  syncLoggingControlValues();
+
+  const unsubscribeSettings = subscribeLoggingSettings(() => {
+    syncLoggingControlValues();
+  });
+
+  settingsBtn.addEventListener("click", () => {
+    if (!settingsDialog.open) {
+      settingsDialog.showModal();
+      settingsLog.info("Settings dialog opened", { subcategory: "Dialog" });
+    }
+  });
+
+  settingsCloseBtn.addEventListener("click", () => {
+    settingsDialog.close();
+    settingsLog.info("Settings dialog closed", { subcategory: "Dialog" });
+  });
+
+  loggingLevelSelect.addEventListener("change", () => {
+    if (!isLoggingLevelValue(loggingLevelSelect.value)) {
+      return;
+    }
+    const next = updateLoggingSettings({ level: loggingLevelSelect.value });
+    settingsLog.info("Visible logging level changed", {
+      subcategory: "Preferences",
+      context: { level: next.level }
+    });
+  });
+
+  loggingFormatterSelect.addEventListener("change", () => {
+    if (!isLoggingFormatterValue(loggingFormatterSelect.value)) {
+      return;
+    }
+    const next = updateLoggingSettings({ formatter: loggingFormatterSelect.value });
+    settingsLog.info("Logging formatter changed", {
+      subcategory: "Preferences",
+      context: { formatter: next.formatter }
+    });
+  });
+
+  loggingEmojiToggle.addEventListener("change", () => {
+    const next = updateLoggingSettings({ useDecorativeEmoji: loggingEmojiToggle.checked });
+    settingsLog.info("Decorative emoji setting changed", {
+      subcategory: "Preferences",
+      context: { useDecorativeEmoji: next.useDecorativeEmoji }
+    });
+  });
+
+  loggingBackgroundToggle.addEventListener("change", () => {
+    const next = updateLoggingSettings({ useLabelBackgrounds: loggingBackgroundToggle.checked });
+    settingsLog.info("Label background setting changed", {
+      subcategory: "Preferences",
+      context: { useLabelBackgrounds: next.useLabelBackgrounds }
+    });
+  });
+
+  window.addEventListener(
+    "beforeunload",
+    () => {
+      unsubscribeSettings();
+    },
+    { once: true }
+  );
 }
 
 function initializeEditor(): void {
@@ -701,20 +990,43 @@ function initializeEditor(): void {
     state,
     parent: host
   });
-}
-
-function registerServiceWorker(): void {
-  if (!("serviceWorker" in navigator)) return;
-
-  void navigator.serviceWorker.register("./sw.js").catch((error) => {
-    recordUnhandledError("service-worker", `Service worker registration failed: ${normalizeErrorText(error)}`, {
-      stack: error instanceof Error ? error.stack : undefined
-    });
-    console.warn("Service worker registration failed", error);
+  uiLog.info("Editor initialized", {
+    subcategory: "Editor",
+    context: { language: "c99" }
   });
 }
 
+function registerServiceWorker(): void {
+  if (!("serviceWorker" in navigator)) {
+    appLog.warn("Service workers are not supported in this browser", {
+      subcategory: "ServiceWorker"
+    });
+    return;
+  }
+
+  void navigator.serviceWorker
+    .register("./sw.js")
+    .then((registration) => {
+      appLog.info("Service worker registered", {
+        subcategory: "ServiceWorker",
+        context: { scope: registration.scope }
+      });
+    })
+    .catch((error) => {
+      recordUnhandledError("service-worker", `Service worker registration failed: ${normalizeErrorText(error)}`, {
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      appLog.error("Service worker registration failed", {
+        subcategory: "ServiceWorker",
+        context: { error }
+      });
+    });
+}
+
 window.addEventListener("beforeunload", () => {
+  appLog.info("beforeunload received; disposing app resources", {
+    subcategory: "Lifecycle"
+  });
   if (unregisterUnhandledCapture) {
     unregisterUnhandledCapture();
     unregisterUnhandledCapture = null;
@@ -735,18 +1047,30 @@ renderUnhandledErrors();
 unregisterUnhandledCapture = registerUnhandledErrorCapture();
 initializeProblemSelect();
 initializeMobileTabs();
+initializeSettingsDialog();
 initializeEditor();
 renderProblem(activeProblem);
 setEditorForProblem(activeProblem);
 renderDiagnostics([]);
 renderLatestRun();
 registerServiceWorker();
+appLog.info("Bootstrap completed", {
+  context: { activeProblemId: activeProblem.id, loggingLevel: getLoggingSettings().level }
+});
 
 runBtn.addEventListener("click", () => {
+  uiLog.info("Run button clicked", {
+    subcategory: "Controls",
+    context: { activeProblemId: activeProblem.id }
+  });
   void runCurrentSubmission();
 });
 
 resetBtn.addEventListener("click", () => {
+  uiLog.info("Reset button clicked", {
+    subcategory: "Controls",
+    context: { activeProblemId: activeProblem.id }
+  });
   resetToStarter();
 });
 
@@ -758,6 +1082,9 @@ Object.assign(window, {
   ceetcodeDebug: {
     getSource: () => readEditor(),
     setSource: (source: string) => writeEditor(source),
-    reportUnhandledError: (source: string, message: string) => recordUnhandledError(source, message)
+    reportUnhandledError: (source: string, message: string) => recordUnhandledError(source, message),
+    getLoggingSettings: () => getLoggingSettings(),
+    setLoggingLevel: (level: LoggingLevel) => updateLoggingSettings({ level }),
+    setLoggingFormatter: (formatter: LoggingFormatterName) => updateLoggingSettings({ formatter })
   }
 });

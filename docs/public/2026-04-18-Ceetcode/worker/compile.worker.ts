@@ -2,6 +2,7 @@
 import type { CompileWorkerRequest, CompileWorkerResponse } from "../runtime/compiler/messages";
 import { generateHarnessSource } from "../runtime/harness/generate-harness";
 import { parseCompileDiagnostics } from "../runtime/compiler/diagnostics";
+import { createLogger } from "../runtime/logging";
 import type { CompileResponsePayload } from "../runtime/types";
 
 declare const API: new (options: {
@@ -33,9 +34,11 @@ const vendorAssetUrl = (name: string): string => new URL(name, vendorBaseUrl).to
 (globalSelf as unknown as { importScripts: (...urls: string[]) => void }).importScripts(vendorAssetUrl("shared.js"));
 
 let compilerApiPromise: Promise<InstanceType<typeof API>> | null = null;
+const compileWorkerLog = createLogger("Worker", "Compile");
 
 function buildApi(): Promise<InstanceType<typeof API>> {
   if (!compilerApiPromise) {
+    compileWorkerLog.info("Initializing compile worker API");
     let compileLog = "";
     const api = new API({
       readBuffer: async (filename) => {
@@ -54,8 +57,12 @@ function buildApi(): Promise<InstanceType<typeof API>> {
           const streamingResponse = response.clone();
           try {
             return await WebAssembly.compileStreaming(Promise.resolve(streamingResponse));
-          } catch {
+          } catch (streamingError) {
             // Some static hosts return a non-wasm content type; fall back to byte compilation.
+            compileWorkerLog.warn("compileStreaming failed; using ArrayBuffer fallback", {
+              subcategory: "WasmLoad",
+              context: { filename, reason: streamingError instanceof Error ? streamingError.message : String(streamingError) }
+            });
           }
         }
         const bytes = await response.arrayBuffer();
@@ -152,6 +159,15 @@ globalSelf.onmessage = async (event: MessageEvent<CompileWorkerRequest>) => {
   logApi.__clearLog();
 
   let responsePayload: CompileResponsePayload;
+  compileWorkerLog.info("Compile request received", {
+    context: {
+      requestId,
+      runId,
+      problemId: problem.id,
+      tests: tests.length,
+      sourceLength: source.length
+    }
+  });
 
   try {
     await compileWithClang(api, inputPath, generated.fullSource, objectPath);
@@ -168,6 +184,13 @@ globalSelf.onmessage = async (event: MessageEvent<CompileWorkerRequest>) => {
       compilerLog: logApi.__getLog(),
       generatedSource: generated.fullSource
     };
+    compileWorkerLog.info("Compile request succeeded", {
+      context: {
+        requestId,
+        runId,
+        wasmByteLength: wasmCopy.byteLength
+      }
+    });
 
     const response: CompileWorkerResponse = {
       requestId,
@@ -178,6 +201,13 @@ globalSelf.onmessage = async (event: MessageEvent<CompileWorkerRequest>) => {
     globalSelf.postMessage(response, [wasmCopy.buffer]);
     return;
   } catch (error) {
+    compileWorkerLog.error("Compile request failed", {
+      context: {
+        requestId,
+        runId,
+        message: error instanceof Error ? error.message : String(error)
+      }
+    });
     responsePayload = makeFailure(runId, logApi.__getLog(), generated.fullSource, (error as Error).message);
   }
 

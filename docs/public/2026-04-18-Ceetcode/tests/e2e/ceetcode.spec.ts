@@ -159,6 +159,54 @@ test.describe.serial("Ceetcode acceptance @acceptance", () => {
     await captureVisualState(page, testInfo, "shell-render");
   });
 
+  test("logging settings apply immediately and persist after reload @acceptance", async ({ page }, testInfo) => {
+    await openWorkspace(page);
+
+    await expect(page.getByTestId("settings-button")).toBeVisible();
+    await page.getByTestId("settings-button").click();
+    await expect(page.getByTestId("settings-dialog")).toHaveAttribute("open", "");
+
+    await page.getByTestId("logging-level-select").selectOption("info");
+    await page.getByTestId("logging-formatter-select").selectOption("plain");
+    await page.getByTestId("logging-emoji-toggle").uncheck();
+    await page.getByTestId("logging-background-toggle").uncheck();
+    await page.getByTestId("settings-close-button").click();
+
+    const runtimeSettings = await page.evaluate(() => {
+      const debug = (
+        window as {
+          ceetcodeDebug?: {
+            getLoggingSettings?: () => {
+              level: string;
+              formatter: string;
+              useDecorativeEmoji: boolean;
+              useLabelBackgrounds: boolean;
+            };
+          };
+        }
+      ).ceetcodeDebug;
+      return debug?.getLoggingSettings?.() ?? null;
+    });
+
+    expect(runtimeSettings).toEqual({
+      level: "info",
+      formatter: "plain",
+      useDecorativeEmoji: false,
+      useLabelBackgrounds: false
+    });
+
+    await page.reload();
+    await openWorkspace(page);
+    await page.getByTestId("settings-button").click();
+
+    await expect(page.getByTestId("logging-level-select")).toHaveValue("info");
+    await expect(page.getByTestId("logging-formatter-select")).toHaveValue("plain");
+    await expect(page.getByTestId("logging-emoji-toggle")).not.toBeChecked();
+    await expect(page.getByTestId("logging-background-toggle")).not.toBeChecked();
+
+    await captureVisualState(page, testInfo, "logging-settings");
+  });
+
   test("run workflow shows progress and passing summary @acceptance", async ({ page }, testInfo) => {
     await openWorkspace(page);
 

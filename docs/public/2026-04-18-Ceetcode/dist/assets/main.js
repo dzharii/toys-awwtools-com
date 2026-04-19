@@ -31995,7 +31995,354 @@ function date4(params) {
 
 // node_modules/zod/v4/classic/external.js
 config(en_default());
+// runtime/types.ts
+var argumentKindSchema = exports_external.enum(["int", "bool", "string", "int_array"]);
+var returnKindSchema = exports_external.enum(["int", "bool", "string"]);
+var functionArgSchema = exports_external.object({
+  name: exports_external.string().min(1),
+  cType: exports_external.string().min(1),
+  kind: argumentKindSchema,
+  description: exports_external.string().min(1)
+});
+var functionSignatureSchema = exports_external.object({
+  functionName: exports_external.string().min(1),
+  declaration: exports_external.string().min(1),
+  returnTypeC: exports_external.string().min(1),
+  returnKind: returnKindSchema,
+  arguments: exports_external.array(functionArgSchema)
+});
+var testInputValueSchema = exports_external.union([
+  exports_external.number().int(),
+  exports_external.boolean(),
+  exports_external.string(),
+  exports_external.array(exports_external.number().int())
+]);
+var testCaseSchema = exports_external.object({
+  name: exports_external.string().min(1),
+  input: exports_external.record(exports_external.string(), testInputValueSchema),
+  expected: exports_external.union([exports_external.number().int(), exports_external.boolean(), exports_external.string()]),
+  scope: exports_external.enum(["official", "custom"]).default("official")
+});
+var c99SupportItemSchema = exports_external.object({
+  header: exports_external.string(),
+  status: exports_external.enum(["supported", "emulated", "unsupported"]),
+  notes: exports_external.string()
+});
+var problemSchema = exports_external.object({
+  id: exports_external.string().min(1),
+  title: exports_external.string().min(1),
+  difficulty: exports_external.enum(["Easy", "Medium", "Hard"]),
+  summary: exports_external.string().min(1),
+  statementMarkdown: exports_external.string().min(1),
+  constraintsMarkdown: exports_external.string().min(1),
+  examplesMarkdown: exports_external.string().min(1),
+  signature: functionSignatureSchema,
+  starterCode: exports_external.string().min(1),
+  visibleTests: exports_external.array(testCaseSchema),
+  defaultCustomTestsJson: exports_external.string().min(2)
+});
+var compileDiagnosticSchema = exports_external.object({
+  file: exports_external.string(),
+  line: exports_external.number().int().positive(),
+  column: exports_external.number().int().positive(),
+  severity: exports_external.enum(["warning", "error", "note", "fatal error"]),
+  message: exports_external.string()
+});
+var localStorageKeys = {
+  selectedProblem: "ceetcode:selected_problem",
+  draftPrefix: "ceetcode:draft:",
+  customPrefix: "ceetcode:custom_tests:",
+  loggingSettings: "ceetcode:logging_settings"
+};
+var c99SupportMatrix = [
+  {
+    header: "<stdio.h>",
+    status: "supported",
+    notes: "printf, puts, and basic stream APIs work through WASI-backed libc."
+  },
+  {
+    header: "<stdlib.h>",
+    status: "supported",
+    notes: "malloc/free and common conversion functions are available."
+  },
+  {
+    header: "<string.h>",
+    status: "supported",
+    notes: "Core string and memory routines are available in the linked libc."
+  },
+  {
+    header: "<time.h>",
+    status: "emulated",
+    notes: "WASI time behavior is sandboxed and may differ from host OS semantics."
+  },
+  {
+    header: "<signal.h>",
+    status: "unsupported",
+    notes: "POSIX-style process signal semantics are not available in browser workers."
+  }
+];
+
+// runtime/logging.ts
+var loggingLevels = ["error", "warn", "info"];
+var loggingFormatterNames = ["plain", "emoji", "segments"];
+var projectMarker = "\uD83C\uDF47";
+var projectLabel = "Ceetcode";
+var loggingStorageKey = localStorageKeys.loggingSettings;
+var levelWeight = {
+  error: 0,
+  warn: 1,
+  info: 2
+};
+var defaultLoggingSettings = {
+  level: "error",
+  formatter: "segments",
+  useDecorativeEmoji: true,
+  useLabelBackgrounds: true
+};
+var listeners = new Set;
+var currentSettings = loadPersistedSettings();
+function cloneSettings(settings) {
+  return {
+    level: settings.level,
+    formatter: settings.formatter,
+    useDecorativeEmoji: settings.useDecorativeEmoji,
+    useLabelBackgrounds: settings.useLabelBackgrounds
+  };
+}
+function getStorage() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+function isLoggingLevel(value) {
+  return typeof value === "string" && loggingLevels.includes(value);
+}
+function isLoggingFormatterName(value) {
+  return typeof value === "string" && loggingFormatterNames.includes(value);
+}
+function normalizeSettings(input) {
+  return {
+    level: isLoggingLevel(input.level) ? input.level : defaultLoggingSettings.level,
+    formatter: isLoggingFormatterName(input.formatter) ? input.formatter : defaultLoggingSettings.formatter,
+    useDecorativeEmoji: typeof input.useDecorativeEmoji === "boolean" ? input.useDecorativeEmoji : defaultLoggingSettings.useDecorativeEmoji,
+    useLabelBackgrounds: typeof input.useLabelBackgrounds === "boolean" ? input.useLabelBackgrounds : defaultLoggingSettings.useLabelBackgrounds
+  };
+}
+function loadPersistedSettings() {
+  const storage = getStorage();
+  if (!storage) {
+    return cloneSettings(defaultLoggingSettings);
+  }
+  try {
+    const raw = storage.getItem(loggingStorageKey);
+    if (!raw) {
+      return cloneSettings(defaultLoggingSettings);
+    }
+    const parsed = JSON.parse(raw);
+    return normalizeSettings(parsed);
+  } catch {
+    return cloneSettings(defaultLoggingSettings);
+  }
+}
+function persistSettings(settings) {
+  const storage = getStorage();
+  if (!storage) {
+    return;
+  }
+  try {
+    storage.setItem(loggingStorageKey, JSON.stringify(settings));
+  } catch {}
+}
+function notifySettings(next) {
+  const snapshot = cloneSettings(next);
+  for (const listener of listeners) {
+    listener(snapshot);
+  }
+}
+function localIsoLike(timestamp) {
+  const pad2 = (value) => String(value).padStart(2, "0");
+  const pad3 = (value) => String(value).padStart(3, "0");
+  const year = timestamp.getFullYear();
+  const month = pad2(timestamp.getMonth() + 1);
+  const day = pad2(timestamp.getDate());
+  const hours = pad2(timestamp.getHours());
+  const minutes = pad2(timestamp.getMinutes());
+  const seconds = pad2(timestamp.getSeconds());
+  const millis = pad3(timestamp.getMilliseconds());
+  const offsetMinutes = -timestamp.getTimezoneOffset();
+  const sign = offsetMinutes >= 0 ? "+" : "-";
+  const absOffset = Math.abs(offsetMinutes);
+  const tzHours = pad2(Math.floor(absOffset / 60));
+  const tzMinutes = pad2(absOffset % 60);
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${millis}${sign}${tzHours}:${tzMinutes}`;
+}
+function compactJson(value) {
+  try {
+    return JSON.stringify(value, (_key, raw) => {
+      if (typeof raw === "bigint")
+        return raw.toString();
+      if (raw instanceof Error) {
+        return {
+          name: raw.name,
+          message: raw.message,
+          stack: raw.stack?.split(`
+`).slice(0, 4).join(" | ")
+        };
+      }
+      if (typeof raw === "string") {
+        return raw.length > 180 ? `${raw.slice(0, 177)}...` : raw;
+      }
+      if (Array.isArray(raw)) {
+        if (raw.length <= 12)
+          return raw;
+        return [...raw.slice(0, 12), `...(${raw.length - 12} more)`];
+      }
+      if (raw && typeof raw === "object") {
+        const entries = Object.entries(raw);
+        if (entries.length <= 12)
+          return raw;
+        const compact = {};
+        for (const [key, entryValue] of entries.slice(0, 12)) {
+          compact[key] = entryValue;
+        }
+        compact.__moreKeys = entries.length - 12;
+        return compact;
+      }
+      return raw;
+    });
+  } catch {
+    return '{"context":"unserializable"}';
+  }
+}
+function levelLabel(level) {
+  return level.toUpperCase();
+}
+function scopeLabel(event, useDecorativeEmoji) {
+  const scope = `${event.category}/${event.subcategory}`;
+  if (!useDecorativeEmoji) {
+    return scope;
+  }
+  const emojiMap = {
+    App: "\uD83E\uDDED",
+    UI: "\uD83D\uDDB1️",
+    Run: "\uD83C\uDFC1",
+    Worker: "\uD83E\uDDF5",
+    WorkerClient: "\uD83E\uDDF5",
+    Harness: "\uD83E\uDDEA",
+    Persistence: "\uD83D\uDCBE",
+    Settings: "⚙️",
+    Runtime: "\uD83D\uDEE0️",
+    Network: "\uD83C\uDF10"
+  };
+  const marker = emojiMap[event.category] ?? "\uD83D\uDD39";
+  return `${marker} ${scope}`;
+}
+function plainFormatter(event, settings) {
+  const prefix = `${projectMarker}[${projectLabel}][${levelLabel(event.level)}][${scopeLabel(event, settings.useDecorativeEmoji)}]`;
+  const contextPart = event.context ? ` ${compactJson(event.context)}` : "";
+  const timestampPart = ` (${localIsoLike(event.timestamp)})`;
+  return [`${prefix} ${event.message}${contextPart}${timestampPart}`];
+}
+function emojiFormatter(event, settings) {
+  const scope = scopeLabel(event, settings.useDecorativeEmoji);
+  const head = `${projectMarker}[${projectLabel}][${levelLabel(event.level)}][${scope}]`;
+  const contextPart = event.context ? ` ${compactJson(event.context)}` : "";
+  return [`${head} ${event.message}${contextPart} (${localIsoLike(event.timestamp)})`];
+}
+function segmentStyle(baseColor, useBackground) {
+  if (!useBackground) {
+    return `color:${baseColor};font-weight:600;`;
+  }
+  return `color:${baseColor};background:color-mix(in srgb, ${baseColor} 14%, transparent);padding:1px 4px;border-radius:4px;font-weight:700;`;
+}
+function segmentsFormatter(event, settings) {
+  const levelColor = event.level === "error" ? "#b42318" : event.level === "warn" ? "#b54708" : "#175cd3";
+  const scope = scopeLabel(event, settings.useDecorativeEmoji);
+  const contextText = event.context ? compactJson(event.context) : "";
+  const timestamp = localIsoLike(event.timestamp);
+  const format = `%c${projectMarker} ${projectLabel}` + `%c ${levelLabel(event.level)}` + `%c ${scope}` + `%c ${event.message}` + (contextText ? `%c ${contextText}` : "") + `%c ${timestamp}`;
+  const args = [
+    format,
+    segmentStyle("#5e35b1", settings.useLabelBackgrounds),
+    segmentStyle(levelColor, settings.useLabelBackgrounds),
+    segmentStyle("#0f766e", settings.useLabelBackgrounds),
+    "color:#101828;font-weight:500;",
+    "color:#667085;font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;"
+  ];
+  if (contextText) {
+    args.splice(5, 0, "color:#155eef;font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;");
+  }
+  return args;
+}
+var formatters = {
+  plain: plainFormatter,
+  emoji: emojiFormatter,
+  segments: segmentsFormatter
+};
+function shouldRender(level, threshold) {
+  return levelWeight[level] <= levelWeight[threshold];
+}
+function emitLog(event) {
+  const settings = currentSettings;
+  if (!shouldRender(event.level, settings.level)) {
+    return;
+  }
+  const formatter = formatters[settings.formatter] ?? formatters.segments;
+  const rendered = formatter(event, settings);
+  console.log(...rendered);
+}
+function normalizeLabel(value, fallback2) {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : fallback2;
+}
+function write(level, category, baseSubcategory, message, options) {
+  const event = {
+    level,
+    category: normalizeLabel(category, "General"),
+    subcategory: normalizeLabel(options?.subcategory ?? baseSubcategory, "General"),
+    message: normalizeLabel(message, "(empty message)"),
+    context: options?.context,
+    timestamp: new Date
+  };
+  emitLog(event);
+}
+function getLoggingSettings() {
+  return cloneSettings(currentSettings);
+}
+function setLoggingSettings(next) {
+  const normalized = normalizeSettings(next);
+  currentSettings = normalized;
+  persistSettings(normalized);
+  notifySettings(normalized);
+  return cloneSettings(normalized);
+}
+function updateLoggingSettings(patch) {
+  return setLoggingSettings({ ...currentSettings, ...patch });
+}
+function subscribeLoggingSettings(listener) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+function createLogger(category, defaultSubcategory = "General") {
+  const normalizedCategory = normalizeLabel(category, "General");
+  const normalizedSubcategory = normalizeLabel(defaultSubcategory, "General");
+  return {
+    info: (message, options) => write("info", normalizedCategory, normalizedSubcategory, message, options),
+    warn: (message, options) => write("warn", normalizedCategory, normalizedSubcategory, message, options),
+    error: (message, options) => write("error", normalizedCategory, normalizedSubcategory, message, options),
+    withSubcategory: (subcategory) => createLogger(normalizedCategory, subcategory)
+  };
+}
+
 // runtime/custom-tests.ts
+var customTestLog = createLogger("Run", "CustomTests");
 function schemaForKind(kind) {
   if (kind === "int")
     return exports_external.number().int();
@@ -32015,12 +32362,18 @@ function schemaForReturnKind(kind) {
 function parseCustomTests(problem, jsonText) {
   const trimmed = jsonText.trim();
   if (!trimmed) {
+    customTestLog.info("No custom tests provided", {
+      context: { problemId: problem.id }
+    });
     return { tests: [], error: null };
   }
   let parsedRaw;
   try {
     parsedRaw = JSON.parse(trimmed);
   } catch (error48) {
+    customTestLog.warn("Custom tests JSON parse failed", {
+      context: { problemId: problem.id, message: error48.message }
+    });
     return {
       tests: [],
       error: `Custom tests JSON parse error: ${error48.message}`
@@ -32035,6 +32388,12 @@ function parseCustomTests(problem, jsonText) {
   const arraySchema = exports_external.array(testSchema);
   const result = arraySchema.safeParse(parsedRaw);
   if (!result.success) {
+    customTestLog.warn("Custom tests schema validation failed", {
+      context: {
+        problemId: problem.id,
+        issue: result.error.issues[0]?.message ?? "invalid format"
+      }
+    });
     return { tests: [], error: `Custom tests validation error: ${result.error.issues[0]?.message ?? "invalid format"}` };
   }
   const tests = result.data.map((item) => ({
@@ -32043,12 +32402,16 @@ function parseCustomTests(problem, jsonText) {
     expected: item.expected,
     scope: "custom"
   }));
+  customTestLog.info("Custom tests parsed", {
+    context: { problemId: problem.id, count: tests.length }
+  });
   return { tests, error: null };
 }
 
 // runtime/harness/parse-harness-output.ts
 var TEST_PREFIX = "__CEETEST__|";
 var SUMMARY_PREFIX = "__CEESUMMARY__|";
+var harnessLog = createLogger("Harness", "Parser");
 function stripAnsi(value) {
   return value.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, "");
 }
@@ -32085,6 +32448,13 @@ function parseHarnessOutput(raw) {
     }
     consoleLines.push(line);
   }
+  harnessLog.info("Harness output parsed", {
+    context: {
+      tests: tests.length,
+      hasSummary: summary !== null,
+      consoleLines: consoleLines.length
+    }
+  });
   return { tests, summary, consoleLines };
 }
 
@@ -32275,128 +32645,103 @@ int isPalindromeAscii(const char* s) {
   }
 ];
 
-// runtime/types.ts
-var argumentKindSchema = exports_external.enum(["int", "bool", "string", "int_array"]);
-var returnKindSchema = exports_external.enum(["int", "bool", "string"]);
-var functionArgSchema = exports_external.object({
-  name: exports_external.string().min(1),
-  cType: exports_external.string().min(1),
-  kind: argumentKindSchema,
-  description: exports_external.string().min(1)
-});
-var functionSignatureSchema = exports_external.object({
-  functionName: exports_external.string().min(1),
-  declaration: exports_external.string().min(1),
-  returnTypeC: exports_external.string().min(1),
-  returnKind: returnKindSchema,
-  arguments: exports_external.array(functionArgSchema)
-});
-var testInputValueSchema = exports_external.union([
-  exports_external.number().int(),
-  exports_external.boolean(),
-  exports_external.string(),
-  exports_external.array(exports_external.number().int())
-]);
-var testCaseSchema = exports_external.object({
-  name: exports_external.string().min(1),
-  input: exports_external.record(exports_external.string(), testInputValueSchema),
-  expected: exports_external.union([exports_external.number().int(), exports_external.boolean(), exports_external.string()]),
-  scope: exports_external.enum(["official", "custom"]).default("official")
-});
-var c99SupportItemSchema = exports_external.object({
-  header: exports_external.string(),
-  status: exports_external.enum(["supported", "emulated", "unsupported"]),
-  notes: exports_external.string()
-});
-var problemSchema = exports_external.object({
-  id: exports_external.string().min(1),
-  title: exports_external.string().min(1),
-  difficulty: exports_external.enum(["Easy", "Medium", "Hard"]),
-  summary: exports_external.string().min(1),
-  statementMarkdown: exports_external.string().min(1),
-  constraintsMarkdown: exports_external.string().min(1),
-  examplesMarkdown: exports_external.string().min(1),
-  signature: functionSignatureSchema,
-  starterCode: exports_external.string().min(1),
-  visibleTests: exports_external.array(testCaseSchema),
-  defaultCustomTestsJson: exports_external.string().min(2)
-});
-var compileDiagnosticSchema = exports_external.object({
-  file: exports_external.string(),
-  line: exports_external.number().int().positive(),
-  column: exports_external.number().int().positive(),
-  severity: exports_external.enum(["warning", "error", "note", "fatal error"]),
-  message: exports_external.string()
-});
-var localStorageKeys = {
-  selectedProblem: "ceetcode:selected_problem",
-  draftPrefix: "ceetcode:draft:",
-  customPrefix: "ceetcode:custom_tests:"
-};
-var c99SupportMatrix = [
-  {
-    header: "<stdio.h>",
-    status: "supported",
-    notes: "printf, puts, and basic stream APIs work through WASI-backed libc."
-  },
-  {
-    header: "<stdlib.h>",
-    status: "supported",
-    notes: "malloc/free and common conversion functions are available."
-  },
-  {
-    header: "<string.h>",
-    status: "supported",
-    notes: "Core string and memory routines are available in the linked libc."
-  },
-  {
-    header: "<time.h>",
-    status: "emulated",
-    notes: "WASI time behavior is sandboxed and may differ from host OS semantics."
-  },
-  {
-    header: "<signal.h>",
-    status: "unsupported",
-    notes: "POSIX-style process signal semantics are not available in browser workers."
-  }
-];
-
 // runtime/problem-catalog.ts
+var problemLog = createLogger("App", "ProblemCatalog");
 function loadProblemCatalog() {
-  return problemCatalog.map((item) => problemSchema.parse(item));
+  const loaded = problemCatalog.map((item) => problemSchema.parse(item));
+  problemLog.info("Problem catalog loaded", {
+    context: { count: loaded.length, ids: loaded.map((problem) => problem.id) }
+  });
+  return loaded;
 }
 
 // runtime/storage.ts
+var storageLog = createLogger("Persistence", "Storage");
+var reportedStorageUnavailable = false;
+var reportedStorageWriteFailure = false;
 function safeStorage() {
   try {
     return window.localStorage;
-  } catch {
+  } catch (error48) {
+    if (!reportedStorageUnavailable) {
+      reportedStorageUnavailable = true;
+      storageLog.warn("Browser storage is unavailable; persistence will be disabled", {
+        context: { message: error48 instanceof Error ? error48.message : String(error48) }
+      });
+    }
     return null;
   }
 }
 function loadSelectedProblemId() {
-  return safeStorage()?.getItem(localStorageKeys.selectedProblem) ?? null;
+  const value = safeStorage()?.getItem(localStorageKeys.selectedProblem) ?? null;
+  storageLog.info("Selected problem loaded", {
+    context: { found: value !== null, problemId: value }
+  });
+  return value;
 }
 function saveSelectedProblemId(problemId) {
-  safeStorage()?.setItem(localStorageKeys.selectedProblem, problemId);
+  const storage = safeStorage();
+  if (!storage)
+    return;
+  try {
+    storage.setItem(localStorageKeys.selectedProblem, problemId);
+    storageLog.info("Selected problem saved", {
+      context: { problemId }
+    });
+  } catch (error48) {
+    if (!reportedStorageWriteFailure) {
+      reportedStorageWriteFailure = true;
+      storageLog.warn("Failed to persist selected problem", {
+        context: { message: error48 instanceof Error ? error48.message : String(error48) }
+      });
+    }
+  }
 }
 function loadDraft(problemId) {
   return safeStorage()?.getItem(`${localStorageKeys.draftPrefix}${problemId}`) ?? null;
 }
 function saveDraft(problemId, source) {
-  safeStorage()?.setItem(`${localStorageKeys.draftPrefix}${problemId}`, source);
+  const storage = safeStorage();
+  if (!storage)
+    return;
+  try {
+    storage.setItem(`${localStorageKeys.draftPrefix}${problemId}`, source);
+  } catch (error48) {
+    if (!reportedStorageWriteFailure) {
+      reportedStorageWriteFailure = true;
+      storageLog.warn("Failed to persist draft source", {
+        context: { problemId, message: error48 instanceof Error ? error48.message : String(error48) }
+      });
+    }
+  }
 }
 function clearDraft(problemId) {
   safeStorage()?.removeItem(`${localStorageKeys.draftPrefix}${problemId}`);
+  storageLog.info("Draft cleared", {
+    context: { problemId }
+  });
 }
 function loadCustomTests(problemId) {
   return safeStorage()?.getItem(`${localStorageKeys.customPrefix}${problemId}`) ?? null;
 }
 function saveCustomTests(problemId, value) {
-  safeStorage()?.setItem(`${localStorageKeys.customPrefix}${problemId}`, value);
+  const storage = safeStorage();
+  if (!storage)
+    return;
+  try {
+    storage.setItem(`${localStorageKeys.customPrefix}${problemId}`, value);
+  } catch (error48) {
+    if (!reportedStorageWriteFailure) {
+      reportedStorageWriteFailure = true;
+      storageLog.warn("Failed to persist custom tests", {
+        context: { problemId, message: error48 instanceof Error ? error48.message : String(error48) }
+      });
+    }
+  }
 }
 
 // runtime/compiler/worker-client.ts
+var workerLog = createLogger("WorkerClient", "Bridge");
 function randomId(prefix) {
   return `${prefix}-${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`;
 }
@@ -32409,6 +32754,7 @@ class WorkerCompilerClient {
   options;
   constructor(options = {}) {
     this.options = options;
+    workerLog.info("Initializing compiler/run workers");
     this.compileWorker = this.createCompileWorker();
     this.runWorker = this.createRunWorker();
   }
@@ -32420,17 +32766,24 @@ class WorkerCompilerClient {
   }
   createCompileWorker() {
     const worker = new Worker(this.resolveWorkerUrl("compile.worker.js"));
+    workerLog.info("Compile worker created");
     worker.onmessage = (event) => {
       const { requestId, payload } = event.data;
       const pending = this.pendingCompile.get(requestId);
       if (!pending)
         return;
       this.pendingCompile.delete(requestId);
+      workerLog.info("Compile worker response received", {
+        context: { requestId, ok: payload.ok, pending: this.pendingCompile.size }
+      });
       pending.resolve(payload);
     };
     worker.onerror = (event) => {
       const reason = new Error(`Compile worker error: ${event.message}`);
       this.emitError("compile-worker", reason.message);
+      workerLog.error("Compile worker error", {
+        context: { message: event.message, filename: event.filename, lineno: event.lineno, colno: event.colno }
+      });
       for (const [id, pending] of this.pendingCompile.entries()) {
         this.pendingCompile.delete(id);
         pending.reject(reason);
@@ -32440,17 +32793,24 @@ class WorkerCompilerClient {
   }
   createRunWorker() {
     const worker = new Worker(this.resolveWorkerUrl("run.worker.js"));
+    workerLog.info("Run worker created");
     worker.onmessage = (event) => {
       const { requestId, payload } = event.data;
       const pending = this.pendingRun.get(requestId);
       if (!pending)
         return;
       this.pendingRun.delete(requestId);
+      workerLog.info("Run worker response received", {
+        context: { requestId, ok: payload.ok, pending: this.pendingRun.size }
+      });
       pending.resolve(payload);
     };
     worker.onerror = (event) => {
       const reason = new Error(`Run worker error: ${event.message}`);
       this.emitError("run-worker", reason.message);
+      workerLog.error("Run worker error", {
+        context: { message: event.message, filename: event.filename, lineno: event.lineno, colno: event.colno }
+      });
       for (const [id, pending] of this.pendingRun.entries()) {
         this.pendingRun.delete(id);
         pending.reject(reason);
@@ -32461,6 +32821,9 @@ class WorkerCompilerClient {
   resetRunWorker() {
     this.runWorker.terminate();
     this.emitError("run-worker", "Run worker was reset.");
+    workerLog.warn("Run worker reset", {
+      context: { pendingRequests: this.pendingRun.size }
+    });
     for (const [id, pending] of this.pendingRun.entries()) {
       this.pendingRun.delete(id);
       pending.reject(new Error("Run worker was reset."));
@@ -32470,6 +32833,9 @@ class WorkerCompilerClient {
   resetCompileWorker() {
     this.compileWorker.terminate();
     this.emitError("compile-worker", "Compile worker was reset.");
+    workerLog.warn("Compile worker reset", {
+      context: { pendingRequests: this.pendingCompile.size }
+    });
     for (const [id, pending] of this.pendingCompile.entries()) {
       this.pendingCompile.delete(id);
       pending.reject(new Error("Compile worker was reset."));
@@ -32479,20 +32845,55 @@ class WorkerCompilerClient {
   async compile(payload, timeoutMs = 140000) {
     const requestId = randomId("compile");
     const message = { requestId, type: "compile", payload };
+    const startedAt = Date.now();
+    workerLog.info("Compile request dispatched", {
+      context: {
+        requestId,
+        runId: payload.runId,
+        sourceLength: payload.source.length,
+        tests: payload.tests.length
+      }
+    });
     const resultPromise = new Promise((resolve, reject) => {
       this.pendingCompile.set(requestId, { resolve, reject });
       this.compileWorker.postMessage(message);
     });
-    return this.withTimeout(resultPromise, timeoutMs, () => this.resetCompileWorker(), "Compilation timed out.");
+    const result = await this.withTimeout(resultPromise, timeoutMs, () => this.resetCompileWorker(), "Compilation timed out.");
+    workerLog.info("Compile request finished", {
+      context: {
+        requestId,
+        runId: payload.runId,
+        ok: result.ok,
+        elapsedMs: Date.now() - startedAt
+      }
+    });
+    return result;
   }
   async run(payload, timeoutMs = 20000) {
     const requestId = randomId("run");
     const message = { requestId, type: "run", payload };
+    const startedAt = Date.now();
+    workerLog.info("Run request dispatched", {
+      context: {
+        requestId,
+        runId: payload.runId,
+        wasmBytes: payload.wasmBytes.byteLength
+      }
+    });
     const resultPromise = new Promise((resolve, reject) => {
       this.pendingRun.set(requestId, { resolve, reject });
       this.runWorker.postMessage(message, [payload.wasmBytes]);
     });
-    return this.withTimeout(resultPromise, timeoutMs, () => this.resetRunWorker(), "Execution timed out.");
+    const result = await this.withTimeout(resultPromise, timeoutMs, () => this.resetRunWorker(), "Execution timed out.");
+    workerLog.info("Run request finished", {
+      context: {
+        requestId,
+        runId: payload.runId,
+        ok: result.ok,
+        elapsedMs: Date.now() - startedAt
+      }
+    });
+    return result;
   }
   async withTimeout(promise2, timeoutMs, onTimeout, timeoutMessage) {
     let timer = null;
@@ -32512,6 +32913,7 @@ class WorkerCompilerClient {
     }
   }
   dispose() {
+    workerLog.info("Disposing worker client");
     this.compileWorker.terminate();
     this.runWorker.terminate();
     this.pendingCompile.clear();
@@ -32522,6 +32924,11 @@ class WorkerCompilerClient {
 // app/main.ts
 var problems = loadProblemCatalog();
 var problemById = new Map(problems.map((problem) => [problem.id, problem]));
+var appLog = createLogger("App", "Lifecycle");
+var uiLog = createLogger("UI", "Interaction");
+var runLog = createLogger("Run", "Submission");
+var settingsLog = createLogger("Settings", "Logging");
+var unhandledLog = createLogger("Runtime", "Unhandled");
 var appRoot = document.querySelector("#app");
 if (!appRoot) {
   throw new Error("Missing #app root element.");
@@ -32559,11 +32966,22 @@ function normalizeErrorText(value) {
 }
 var compilerClient = new WorkerCompilerClient({
   onError: (event) => {
+    runLog.warn("Worker client reported an error", {
+      subcategory: "Worker",
+      context: { source: event.source, message: event.message }
+    });
     recordUnhandledError(event.source, event.message);
   }
 });
 var mobileView = window.matchMedia("(max-width: 1100px)").matches ? "problem" : "editor";
 document.body.dataset.mobileView = mobileView;
+appLog.info("Bootstrap starting", {
+  context: {
+    problemCount: problems.length,
+    initialProblemId: initialProblem.id,
+    mobileView
+  }
+});
 appRoot.innerHTML = `
   <details id="error-panel" class="error-panel" data-testid="error-panel">
     <summary id="error-panel-summary" class="error-panel-summary" data-testid="error-panel-summary">
@@ -32589,6 +33007,7 @@ appRoot.innerHTML = `
       </label>
       <button id="run-btn" class="primary" type="button" data-testid="run-button">Run</button>
       <button id="reset-btn" type="button" data-testid="reset-button">Reset To Starter</button>
+      <button id="settings-btn" type="button" data-testid="settings-button">Settings</button>
       <span id="run-status" class="status-badge status-idle" data-testid="run-status">Idle</span>
     </section>
 
@@ -32646,6 +33065,48 @@ appRoot.innerHTML = `
       </article>
     </section>
   </main>
+
+  <dialog id="settings-dialog" class="settings-dialog" data-testid="settings-dialog">
+    <div class="settings-dialog-body">
+      <header class="settings-dialog-header">
+        <h2>Settings</h2>
+        <button id="settings-close-btn" type="button" data-testid="settings-close-button">Close</button>
+      </header>
+
+      <section class="settings-section">
+        <h3>Logging</h3>
+        <p class="result-row">Control console tracing visibility and rendering style. Changes apply immediately and persist.</p>
+
+        <label>
+          Visible level
+          <select id="logging-level-select" data-testid="logging-level-select">
+            <option value="error">Errors only</option>
+            <option value="warn">Warnings + errors</option>
+            <option value="info">Info + warnings + errors</option>
+          </select>
+        </label>
+
+        <label>
+          Formatter
+          <select id="logging-formatter-select" data-testid="logging-formatter-select">
+            <option value="segments">Styled segments</option>
+            <option value="emoji">Emoji labels</option>
+            <option value="plain">Plain text</option>
+          </select>
+        </label>
+
+        <label class="settings-inline-toggle">
+          <input id="logging-emoji-toggle" data-testid="logging-emoji-toggle" type="checkbox" />
+          Show decorative category emoji
+        </label>
+
+        <label class="settings-inline-toggle">
+          <input id="logging-background-toggle" data-testid="logging-background-toggle" type="checkbox" />
+          Use styled label backgrounds
+        </label>
+      </section>
+    </div>
+  </dialog>
 `;
 var problemSelect = requiredElement(document.querySelector("#problem-select"), "#problem-select");
 var problemTitle = requiredElement(document.querySelector("#problem-title"), "#problem-title");
@@ -32655,6 +33116,7 @@ var problemContent = requiredElement(document.querySelector("#problem-content"),
 var activeProblemIdEl = requiredElement(document.querySelector("#active-problem-id"), "#active-problem-id");
 var runBtn = requiredElement(document.querySelector("#run-btn"), "#run-btn");
 var resetBtn = requiredElement(document.querySelector("#reset-btn"), "#reset-btn");
+var settingsBtn = requiredElement(document.querySelector("#settings-btn"), "#settings-btn");
 var runStatusEl = requiredElement(document.querySelector("#run-status"), "#run-status");
 var customTestsInput = requiredElement(document.querySelector("#custom-tests-input"), "#custom-tests-input");
 var diagnosticsEl = requiredElement(document.querySelector("#diagnostics"), "#diagnostics");
@@ -32668,6 +33130,12 @@ var errorPanel = requiredElement(document.querySelector("#error-panel"), "#error
 var errorPanelCountEl = requiredElement(document.querySelector("#error-panel-count"), "#error-panel-count");
 var errorPanelListEl = requiredElement(document.querySelector("#error-panel-list"), "#error-panel-list");
 var errorPanelClearBtn = requiredElement(document.querySelector("#error-panel-clear"), "#error-panel-clear");
+var settingsDialog = requiredElement(document.querySelector("#settings-dialog"), "#settings-dialog");
+var settingsCloseBtn = requiredElement(document.querySelector("#settings-close-btn"), "#settings-close-btn");
+var loggingLevelSelect = requiredElement(document.querySelector("#logging-level-select"), "#logging-level-select");
+var loggingFormatterSelect = requiredElement(document.querySelector("#logging-formatter-select"), "#logging-formatter-select");
+var loggingEmojiToggle = requiredElement(document.querySelector("#logging-emoji-toggle"), "#logging-emoji-toggle");
+var loggingBackgroundToggle = requiredElement(document.querySelector("#logging-background-toggle"), "#logging-background-toggle");
 var activeProblem = initialProblem;
 var runState = {
   status: "idle",
@@ -32689,6 +33157,19 @@ function escapeHtml(value) {
 }
 function formatErrorTimestamp(timestamp) {
   return new Date(timestamp).toLocaleTimeString([], { hour12: false });
+}
+function isLoggingLevelValue(value) {
+  return loggingLevels.includes(value);
+}
+function isLoggingFormatterValue(value) {
+  return loggingFormatterNames.includes(value);
+}
+function syncLoggingControlValues() {
+  const current = getLoggingSettings();
+  loggingLevelSelect.value = current.level;
+  loggingFormatterSelect.value = current.formatter;
+  loggingEmojiToggle.checked = current.useDecorativeEmoji;
+  loggingBackgroundToggle.checked = current.useLabelBackgrounds;
 }
 function renderUnhandledErrors() {
   errorPanelCountEl.textContent = String(unhandledErrors.length);
@@ -32736,13 +33217,26 @@ function recordUnhandledError(source, message, options = {}) {
   if (unhandledErrors.length > maxUnhandledErrors) {
     unhandledErrors = unhandledErrors.slice(unhandledErrors.length - maxUnhandledErrors);
   }
+  unhandledLog.error("Unhandled error captured", {
+    subcategory: source,
+    context: {
+      message: normalizedMessage,
+      details: normalizedDetails,
+      hasStack: Boolean(normalizedStack),
+      count: unhandledErrors.length
+    }
+  });
   renderUnhandledErrors();
 }
 function clearUnhandledErrors() {
   unhandledErrors = [];
+  unhandledLog.warn("Unhandled error panel cleared", {
+    context: { remaining: unhandledErrors.length }
+  });
   renderUnhandledErrors();
 }
 function registerUnhandledErrorCapture() {
+  unhandledLog.info("Registering global unhandled-error capture hooks");
   const onWindowError = (event) => {
     if (event instanceof ErrorEvent) {
       const location = event.filename ? `${event.filename}:${event.lineno}:${event.colno}` : undefined;
@@ -32783,9 +33277,16 @@ function registerUnhandledErrorCapture() {
     window.removeEventListener("error", onWindowError, true);
     window.removeEventListener("unhandledrejection", onUnhandledRejection);
     window.fetch = originalFetch;
+    unhandledLog.info("Unregistered global unhandled-error capture hooks");
   };
 }
 function setStatus(status, phase, message) {
+  if (runState.status !== status || runState.phase !== phase || runState.message !== message) {
+    runLog.info("Run status updated", {
+      subcategory: "Status",
+      context: { status, phase, message }
+    });
+  }
   runState = { status, phase, message };
   runStatusEl.textContent = message;
   runStatusEl.className = `status-badge status-${status}`;
@@ -32809,6 +33310,10 @@ function renderLatestRun() {
   runtimeLogEl.textContent = stripAnsi(latestRun.runtimeLog) || "(no runtime log)";
 }
 function renderProblem(problem) {
+  uiLog.info("Rendering problem content", {
+    subcategory: "Problem",
+    context: { problemId: problem.id, title: problem.title, visibleTests: problem.visibleTests.length }
+  });
   problemTitle.textContent = problem.title;
   problemMeta.textContent = `${problem.difficulty} • ${problem.summary}`;
   problemSignature.textContent = problem.signature.declaration;
@@ -32865,6 +33370,14 @@ function setEditorForProblem(problem) {
   writeEditor(draft ?? problem.starterCode);
   const custom2 = loadCustomTests(problem.id);
   customTestsInput.value = custom2 ?? problem.defaultCustomTestsJson;
+  uiLog.info("Editor state loaded for problem", {
+    subcategory: "Problem",
+    context: {
+      problemId: problem.id,
+      restoredDraft: draft !== null,
+      restoredCustomTests: custom2 !== null
+    }
+  });
 }
 function buildTestsHtml(parsed) {
   return parsed.tests.map((test) => {
@@ -32879,14 +33392,28 @@ function buildTestsHtml(parsed) {
 function normalizeCustomTests(problem) {
   const parsed = parseCustomTests(problem, customTestsInput.value);
   if (parsed.error) {
+    runLog.warn("Custom tests validation failed", {
+      subcategory: "CustomTests",
+      context: { problemId: problem.id, error: parsed.error }
+    });
     return parsed;
   }
   saveCustomTests(problem.id, customTestsInput.value);
+  runLog.info("Custom tests normalized", {
+    subcategory: "CustomTests",
+    context: { problemId: problem.id, customTestCount: parsed.tests.length }
+  });
   return parsed;
 }
 async function runCurrentSubmission() {
   if (runState.status === "running")
     return;
+  runLog.info("Run requested", {
+    context: {
+      problemId: activeProblem.id,
+      sourceLength: readEditor().length
+    }
+  });
   const customResult = normalizeCustomTests(activeProblem);
   if (customResult.error) {
     latestRun.summaryText = customResult.error;
@@ -32899,9 +33426,24 @@ async function runCurrentSubmission() {
     setStatus("failure", "tests", "Custom Tests Invalid");
     return;
   }
-  saveDraft(activeProblem.id, readEditor());
+  const source = readEditor();
+  saveDraft(activeProblem.id, source);
+  runLog.info("Draft persisted before run", {
+    subcategory: "Persistence",
+    context: { problemId: activeProblem.id, sourceLength: source.length }
+  });
   const tests = [...activeProblem.visibleTests, ...customResult.tests];
   const runId = `run-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  runLog.info("Compilation started", {
+    subcategory: "Compile",
+    context: {
+      runId,
+      problemId: activeProblem.id,
+      officialTests: activeProblem.visibleTests.length,
+      customTests: customResult.tests.length,
+      totalTests: tests.length
+    }
+  });
   setStatus("running", "compile", "Compiling");
   let compilePayload;
   try {
@@ -32913,6 +33455,10 @@ async function runCurrentSubmission() {
     });
   } catch (error48) {
     const compileMessage = error48.message;
+    runLog.error("Compile worker request failed", {
+      subcategory: "Compile",
+      context: { runId, message: compileMessage, error: error48 }
+    });
     recordUnhandledError("compile-worker", `Compile worker failed: ${compileMessage}`, {
       stack: error48 instanceof Error ? error48.stack : undefined
     });
@@ -32928,6 +33474,14 @@ async function runCurrentSubmission() {
   }
   latestRun.compileLog = compilePayload.compilerLog;
   if (!compilePayload.ok) {
+    runLog.warn("Compilation finished with diagnostics", {
+      subcategory: "Compile",
+      context: {
+        runId,
+        diagnostics: compilePayload.diagnostics.length,
+        message: compilePayload.message
+      }
+    });
     renderDiagnostics(compilePayload.diagnostics);
     latestRun.summaryText = compilePayload.message;
     latestRun.testsHtml = "";
@@ -32938,6 +33492,10 @@ async function runCurrentSubmission() {
     return;
   }
   renderDiagnostics([]);
+  runLog.info("Compilation succeeded; runtime execution started", {
+    subcategory: "Runtime",
+    context: { runId, wasmByteLength: compilePayload.wasmBytes.byteLength }
+  });
   setStatus("running", "runtime", "Running");
   let runPayload;
   try {
@@ -32947,6 +33505,10 @@ async function runCurrentSubmission() {
     });
   } catch (error48) {
     const runMessage = error48.message;
+    runLog.error("Runtime worker request failed", {
+      subcategory: "Runtime",
+      context: { runId, message: runMessage, error: error48 }
+    });
     recordUnhandledError("run-worker", `Run worker failed: ${runMessage}`, {
       stack: error48 instanceof Error ? error48.stack : undefined
     });
@@ -32960,6 +33522,10 @@ async function runCurrentSubmission() {
   }
   latestRun.runtimeLog = runPayload.runtimeLog;
   if (!runPayload.ok) {
+    runLog.warn("Runtime execution failed", {
+      subcategory: "Runtime",
+      context: { runId, message: runPayload.message }
+    });
     latestRun.summaryText = runPayload.message;
     latestRun.testsHtml = "";
     latestRun.consoleOutput = stripAnsi(runPayload.runtimeLog);
@@ -32972,12 +33538,25 @@ async function runCurrentSubmission() {
 `);
   latestRun.testsHtml = buildTestsHtml(parsed);
   if (!parsed.summary) {
+    runLog.error("Harness summary missing", {
+      subcategory: "Harness",
+      context: { runId, testRows: parsed.tests.length }
+    });
     latestRun.summaryText = "Harness summary was not produced by the runtime.";
     renderLatestRun();
     setStatus("failure", "tests", "Harness Error");
     return;
   }
   latestRun.summaryText = `Passed ${parsed.summary.passed}/${parsed.summary.total}, Failed ${parsed.summary.failed}`;
+  runLog.info("Run completed", {
+    subcategory: "Summary",
+    context: {
+      runId,
+      passed: parsed.summary.passed,
+      failed: parsed.summary.failed,
+      total: parsed.summary.total
+    }
+  });
   renderLatestRun();
   if (parsed.summary.failed > 0) {
     setStatus("failure", "tests", "Tests Failed");
@@ -32988,6 +33567,10 @@ async function runCurrentSubmission() {
 function resetToStarter() {
   writeEditor(activeProblem.starterCode);
   clearDraft(activeProblem.id);
+  uiLog.info("Reset source to starter code", {
+    subcategory: "Editor",
+    context: { problemId: activeProblem.id }
+  });
   setStatus("idle", "none", "Idle");
 }
 function switchProblem(problemId) {
@@ -32995,6 +33578,10 @@ function switchProblem(problemId) {
   if (!next)
     return;
   saveDraft(activeProblem.id, readEditor());
+  uiLog.info("Switching active problem", {
+    subcategory: "Problem",
+    context: { fromProblemId: activeProblem.id, toProblemId: next.id }
+  });
   activeProblem = next;
   saveSelectedProblemId(problemId);
   renderProblem(activeProblem);
@@ -33020,6 +33607,10 @@ function initializeProblemSelect() {
   }
   problemSelect.value = activeProblem.id;
   problemSelect.addEventListener("change", () => {
+    uiLog.info("Problem selector changed", {
+      subcategory: "Problem",
+      context: { selectedProblemId: problemSelect.value }
+    });
     switchProblem(problemSelect.value);
   });
 }
@@ -33033,10 +33624,67 @@ function initializeMobileTabs() {
   for (const button of tabButtons) {
     button.addEventListener("click", () => {
       document.body.dataset.mobileView = button.dataset.mobileTarget;
+      uiLog.info("Mobile view switched", {
+        subcategory: "Layout",
+        context: { mobileView: button.dataset.mobileTarget }
+      });
       syncButtons();
     });
   }
   syncButtons();
+}
+function initializeSettingsDialog() {
+  syncLoggingControlValues();
+  const unsubscribeSettings = subscribeLoggingSettings(() => {
+    syncLoggingControlValues();
+  });
+  settingsBtn.addEventListener("click", () => {
+    if (!settingsDialog.open) {
+      settingsDialog.showModal();
+      settingsLog.info("Settings dialog opened", { subcategory: "Dialog" });
+    }
+  });
+  settingsCloseBtn.addEventListener("click", () => {
+    settingsDialog.close();
+    settingsLog.info("Settings dialog closed", { subcategory: "Dialog" });
+  });
+  loggingLevelSelect.addEventListener("change", () => {
+    if (!isLoggingLevelValue(loggingLevelSelect.value)) {
+      return;
+    }
+    const next = updateLoggingSettings({ level: loggingLevelSelect.value });
+    settingsLog.info("Visible logging level changed", {
+      subcategory: "Preferences",
+      context: { level: next.level }
+    });
+  });
+  loggingFormatterSelect.addEventListener("change", () => {
+    if (!isLoggingFormatterValue(loggingFormatterSelect.value)) {
+      return;
+    }
+    const next = updateLoggingSettings({ formatter: loggingFormatterSelect.value });
+    settingsLog.info("Logging formatter changed", {
+      subcategory: "Preferences",
+      context: { formatter: next.formatter }
+    });
+  });
+  loggingEmojiToggle.addEventListener("change", () => {
+    const next = updateLoggingSettings({ useDecorativeEmoji: loggingEmojiToggle.checked });
+    settingsLog.info("Decorative emoji setting changed", {
+      subcategory: "Preferences",
+      context: { useDecorativeEmoji: next.useDecorativeEmoji }
+    });
+  });
+  loggingBackgroundToggle.addEventListener("change", () => {
+    const next = updateLoggingSettings({ useLabelBackgrounds: loggingBackgroundToggle.checked });
+    settingsLog.info("Label background setting changed", {
+      subcategory: "Preferences",
+      context: { useLabelBackgrounds: next.useLabelBackgrounds }
+    });
+  });
+  window.addEventListener("beforeunload", () => {
+    unsubscribeSettings();
+  }, { once: true });
 }
 function initializeEditor() {
   const host = document.querySelector("#editor-host");
@@ -33077,18 +33725,37 @@ function initializeEditor() {
     state,
     parent: host
   });
+  uiLog.info("Editor initialized", {
+    subcategory: "Editor",
+    context: { language: "c99" }
+  });
 }
 function registerServiceWorker() {
-  if (!("serviceWorker" in navigator))
+  if (!("serviceWorker" in navigator)) {
+    appLog.warn("Service workers are not supported in this browser", {
+      subcategory: "ServiceWorker"
+    });
     return;
-  navigator.serviceWorker.register("./sw.js").catch((error48) => {
+  }
+  navigator.serviceWorker.register("./sw.js").then((registration) => {
+    appLog.info("Service worker registered", {
+      subcategory: "ServiceWorker",
+      context: { scope: registration.scope }
+    });
+  }).catch((error48) => {
     recordUnhandledError("service-worker", `Service worker registration failed: ${normalizeErrorText(error48)}`, {
       stack: error48 instanceof Error ? error48.stack : undefined
     });
-    console.warn("Service worker registration failed", error48);
+    appLog.error("Service worker registration failed", {
+      subcategory: "ServiceWorker",
+      context: { error: error48 }
+    });
   });
 }
 window.addEventListener("beforeunload", () => {
+  appLog.info("beforeunload received; disposing app resources", {
+    subcategory: "Lifecycle"
+  });
   if (unregisterUnhandledCapture) {
     unregisterUnhandledCapture();
     unregisterUnhandledCapture = null;
@@ -33107,16 +33774,28 @@ renderUnhandledErrors();
 unregisterUnhandledCapture = registerUnhandledErrorCapture();
 initializeProblemSelect();
 initializeMobileTabs();
+initializeSettingsDialog();
 initializeEditor();
 renderProblem(activeProblem);
 setEditorForProblem(activeProblem);
 renderDiagnostics([]);
 renderLatestRun();
 registerServiceWorker();
+appLog.info("Bootstrap completed", {
+  context: { activeProblemId: activeProblem.id, loggingLevel: getLoggingSettings().level }
+});
 runBtn.addEventListener("click", () => {
+  uiLog.info("Run button clicked", {
+    subcategory: "Controls",
+    context: { activeProblemId: activeProblem.id }
+  });
   runCurrentSubmission();
 });
 resetBtn.addEventListener("click", () => {
+  uiLog.info("Reset button clicked", {
+    subcategory: "Controls",
+    context: { activeProblemId: activeProblem.id }
+  });
   resetToStarter();
 });
 customTestsInput.addEventListener("input", () => {
@@ -33126,6 +33805,9 @@ Object.assign(window, {
   ceetcodeDebug: {
     getSource: () => readEditor(),
     setSource: (source) => writeEditor(source),
-    reportUnhandledError: (source, message) => recordUnhandledError(source, message)
+    reportUnhandledError: (source, message) => recordUnhandledError(source, message),
+    getLoggingSettings: () => getLoggingSettings(),
+    setLoggingLevel: (level) => updateLoggingSettings({ level }),
+    setLoggingFormatter: (formatter) => updateLoggingSettings({ formatter })
   }
 });

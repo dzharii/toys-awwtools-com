@@ -1,5 +1,8 @@
 import { z } from "zod";
+import { createLogger } from "./logging";
 import type { ProblemDefinition, TestCase, ArgumentKind } from "./types";
+
+const customTestLog = createLogger("Run", "CustomTests");
 
 function schemaForKind(kind: ArgumentKind) {
   if (kind === "int") return z.number().int();
@@ -17,6 +20,9 @@ function schemaForReturnKind(kind: ProblemDefinition["signature"]["returnKind"])
 export function parseCustomTests(problem: ProblemDefinition, jsonText: string): { tests: TestCase[]; error: string | null } {
   const trimmed = jsonText.trim();
   if (!trimmed) {
+    customTestLog.info("No custom tests provided", {
+      context: { problemId: problem.id }
+    });
     return { tests: [], error: null };
   }
 
@@ -24,6 +30,9 @@ export function parseCustomTests(problem: ProblemDefinition, jsonText: string): 
   try {
     parsedRaw = JSON.parse(trimmed);
   } catch (error) {
+    customTestLog.warn("Custom tests JSON parse failed", {
+      context: { problemId: problem.id, message: (error as Error).message }
+    });
     return {
       tests: [],
       error: `Custom tests JSON parse error: ${(error as Error).message}`
@@ -43,6 +52,12 @@ export function parseCustomTests(problem: ProblemDefinition, jsonText: string): 
   const arraySchema = z.array(testSchema);
   const result = arraySchema.safeParse(parsedRaw);
   if (!result.success) {
+    customTestLog.warn("Custom tests schema validation failed", {
+      context: {
+        problemId: problem.id,
+        issue: result.error.issues[0]?.message ?? "invalid format"
+      }
+    });
     return { tests: [], error: `Custom tests validation error: ${result.error.issues[0]?.message ?? "invalid format"}` };
   }
 
@@ -53,5 +68,8 @@ export function parseCustomTests(problem: ProblemDefinition, jsonText: string): 
     scope: "custom"
   }));
 
+  customTestLog.info("Custom tests parsed", {
+    context: { problemId: problem.id, count: tests.length }
+  });
   return { tests, error: null };
 }

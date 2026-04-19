@@ -1,7 +1,9 @@
 import type { ParsedHarnessOutput, HarnessSummary, HarnessTestResult } from "../types";
+import { createLogger } from "../logging";
 
 const TEST_PREFIX = "__CEETEST__|";
 const SUMMARY_PREFIX = "__CEESUMMARY__|";
+const harnessLog = createLogger("Harness", "Parser");
 
 export function stripAnsi(value: string): string {
   return value.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, "");
@@ -45,5 +47,12 @@ export function parseHarnessOutput(raw: string): ParsedHarnessOutput {
     consoleLines.push(line);
   }
 
+  harnessLog.info("Harness output parsed", {
+    context: {
+      tests: tests.length,
+      hasSummary: summary !== null,
+      consoleLines: consoleLines.length
+    }
+  });
   return { tests, summary, consoleLines };
 }

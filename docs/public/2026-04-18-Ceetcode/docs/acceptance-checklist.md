@@ -18,4 +18,5 @@
 - Compile/runtime/test distinction: separate states and UI labeling verified by acceptance e2e scenarios.
 - Acceptance runner: `npm run test:acceptance` executes tagged critical scenarios.
 - Browser error gate: acceptance tests fail on any `console.error` or uncaught `pageerror`.
+- Logging system: centralized logger with level filtering, formatter selection, runtime settings dialog, and persisted preferences.
 - TCC checkpoint: explicit experiments and evidence recorded in `research/`.

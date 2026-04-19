@@ -182,4 +182,20 @@ When setting up project testing, create a separate test area owned by this proje
 
 Testing is part of acceptance, not an optional afterthought. Repeatedly use browser testing while implementing UI, workers, harness behavior, persistence, and runtime flows. Validate not only that the application functions, but that it behaves clearly and reliably from the person's point of view.
 
+## R00. Logging requirements
+
+Use the centralized logger in `runtime/logging.ts` for all new instrumentation.
+
+Do not add new ad hoc `console.log`, `console.warn`, or `console.error` call patterns in application code. Route logs through `createLogger(category, subcategory)` so formatting, filtering, and persistence remain consistent.
+
+Before adding logs, read `docs/logging.md`. That document is the quick reference for:
+
+- required message shape,
+- categories and subcategories,
+- context payload rules,
+- logging settings persistence behavior,
+- real code examples for correct usage.
+
+When implementing new features, include meaningful logs at subsystem boundaries (initialization, worker communication, run lifecycle, settings changes, persistence failures, and fallback/error paths) while avoiding noisy per-line tracing.
+
 

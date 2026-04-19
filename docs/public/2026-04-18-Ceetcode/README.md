@@ -22,6 +22,7 @@ Ceetcode is designed as a focused C99 practice workspace for algorithm-style fun
 - Compile diagnostics with severity and source position metadata.
 - Draft persistence per problem and last-opened problem restoration.
 - Offline-capable static assets via service worker caching.
+- Centralized structured console logging with runtime-configurable levels and formatters.
 - Acceptance browser tests with automatic failure on browser console/runtime errors.
 
 ## Inspiration and Attribution
@@ -37,6 +38,7 @@ All product and company names above are trademarks of their respective owners. N
 - [`docs/deployment-static-hosting.md`](docs/deployment-static-hosting.md): build, deploy, and host this project on static platforms.
 - [`docs/runtime-c99-support.md`](docs/runtime-c99-support.md): current C99 runtime/library support status and limitations.
 - [`docs/testing.md`](docs/testing.md): acceptance and exploratory browser testing strategy and commands.
+- [`docs/logging.md`](docs/logging.md): centralized logging model, formatter/level settings, and instrumentation examples.
 - [`docs/acceptance-checklist.md`](docs/acceptance-checklist.md): milestone-oriented acceptance coverage summary.
 - [`docs/dependency-rationale.md`](docs/dependency-rationale.md): all dependencies/tools used and why each is part of the stack.
 - [`docs/licensing-and-attribution.md`](docs/licensing-and-attribution.md): vendored artifact licensing status and attribution references.

@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
 import type { RunWorkerRequest, RunWorkerResponse } from "../runtime/compiler/messages";
+import { createLogger } from "../runtime/logging";
 import type { RunResponsePayload } from "../runtime/types";
 
 declare const API: new (options: {
@@ -25,9 +26,11 @@ const vendorAssetUrl = (name: string): string => new URL(name, vendorBaseUrl).to
 (globalSelf as unknown as { importScripts: (...urls: string[]) => void }).importScripts(vendorAssetUrl("shared.js"));
 
 let runtimeApiPromise: Promise<InstanceType<typeof API>> | null = null;
+const runWorkerLog = createLogger("Worker", "Runtime");
 
 function buildApi(): Promise<InstanceType<typeof API>> {
   if (!runtimeApiPromise) {
+    runWorkerLog.info("Initializing runtime worker API");
     let runtimeLog = "";
     const api = new API({
       readBuffer: async (filename) => {
@@ -46,8 +49,12 @@ function buildApi(): Promise<InstanceType<typeof API>> {
           const streamingResponse = response.clone();
           try {
             return await WebAssembly.compileStreaming(Promise.resolve(streamingResponse));
-          } catch {
+          } catch (streamingError) {
             // Some static hosts return a non-wasm content type; fall back to byte compilation.
+            runWorkerLog.warn("compileStreaming failed; using ArrayBuffer fallback", {
+              subcategory: "WasmLoad",
+              context: { filename, reason: streamingError instanceof Error ? streamingError.message : String(streamingError) }
+            });
           }
         }
         return WebAssembly.compile(await response.arrayBuffer());
@@ -95,6 +102,9 @@ globalSelf.onmessage = async (event: MessageEvent<RunWorkerRequest>) => {
   logApi.__clearLog();
 
   let responsePayload: RunResponsePayload;
+  runWorkerLog.info("Run request received", {
+    context: { requestId, runId, wasmByteLength: wasmBytes.byteLength }
+  });
 
   try {
     const bytes = new Uint8Array(wasmBytes);
@@ -107,7 +117,17 @@ globalSelf.onmessage = async (event: MessageEvent<RunWorkerRequest>) => {
       runId,
       runtimeLog: logApi.__getLog()
     };
+    runWorkerLog.info("Run request succeeded", {
+      context: { requestId, runId }
+    });
   } catch (error) {
+    runWorkerLog.error("Run request failed", {
+      context: {
+        requestId,
+        runId,
+        message: error instanceof Error ? error.message : String(error)
+      }
+    });
     responsePayload = makeFailure(runId, logApi.__getLog(), (error as Error).message);
   }
 
