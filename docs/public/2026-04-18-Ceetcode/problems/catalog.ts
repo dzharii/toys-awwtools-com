@@ -96,6 +96,110 @@ int problem(void) {
 ]`
   },
   {
+    id: "signal-state-from-remaining-time",
+    title: "Signal State From Remaining Time",
+    difficulty: "Easy",
+    summary: "Return the signal color from a countdown timer based on exact and interval rules.",
+    statementMarkdown:
+      "You are given an integer `timer` representing seconds left on a traffic signal countdown. Return the current signal color using these rules:\n\n- `timer == 0` -> `\"Green\"`\n- `timer == 30` -> `\"Orange\"`\n- `30 < timer <= 90` -> `\"Red\"`\n- otherwise -> `\"Invalid\"`\n\nReturn text must match expected spelling and capitalization exactly.",
+    examplesMarkdown:
+      "- Input: `60` -> Output: `\"Red\"`\n- Input: `5` -> Output: `\"Invalid\"`\n- Input: `0` -> Output: `\"Green\"`\n- Input: `30` -> Output: `\"Orange\"`\n- Input: `90` -> Output: `\"Red\"`",
+    constraintsMarkdown:
+      "- `timer` is an integer.\n- Follow the rule order exactly.\n- Edge values around `0`, `30`, and `90` are critical.",
+    signature: {
+      functionName: "trafficSignal",
+      declaration: "char* trafficSignal(int timer)",
+      returnTypeC: "char*",
+      returnKind: "string",
+      arguments: [{ name: "timer", cType: "int", kind: "int", description: "Seconds left on signal countdown" }]
+    },
+    starterCode: `char* trafficSignal(int timer) {
+    static char green[] = "Green";
+    static char orange[] = "Orange";
+    static char red[] = "Red";
+    static char invalid[] = "Invalid";
+
+    if (timer == 0) {
+        return green;
+    }
+    if (timer == 30) {
+        return orange;
+    }
+    if (timer > 30 && timer <= 90) {
+        return red;
+    }
+    return invalid;
+}`,
+    visibleTests: [
+      {
+        name: "negative-invalid",
+        input: { timer: -1 },
+        expected: "Invalid",
+        scope: "official"
+      },
+      {
+        name: "zero-green",
+        input: { timer: 0 },
+        expected: "Green",
+        scope: "official"
+      },
+      {
+        name: "one-invalid",
+        input: { timer: 1 },
+        expected: "Invalid",
+        scope: "official"
+      },
+      {
+        name: "twenty-nine-invalid",
+        input: { timer: 29 },
+        expected: "Invalid",
+        scope: "official"
+      },
+      {
+        name: "thirty-orange",
+        input: { timer: 30 },
+        expected: "Orange",
+        scope: "official"
+      },
+      {
+        name: "thirty-one-red",
+        input: { timer: 31 },
+        expected: "Red",
+        scope: "official"
+      },
+      {
+        name: "eighty-nine-red",
+        input: { timer: 89 },
+        expected: "Red",
+        scope: "official"
+      },
+      {
+        name: "ninety-red",
+        input: { timer: 90 },
+        expected: "Red",
+        scope: "official"
+      },
+      {
+        name: "ninety-one-invalid",
+        input: { timer: 91 },
+        expected: "Invalid",
+        scope: "official"
+      }
+    ],
+    defaultCustomTestsJson: `[
+  {
+    "name": "custom-middle-red",
+    "input": { "timer": 60 },
+    "expected": "Red"
+  },
+  {
+    "name": "custom-far-invalid",
+    "input": { "timer": 1000 },
+    "expected": "Invalid"
+  }
+]`
+  },
+  {
     id: "valid-palindrome-ascii",
     title: "Valid Palindrome ASCII",
     difficulty: "Easy",

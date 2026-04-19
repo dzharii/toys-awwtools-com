@@ -243,6 +243,26 @@ test.describe.serial("Ceetcode acceptance @acceptance", () => {
     await captureVisualState(page, testInfo, "scratchpad-new");
   });
 
+  test("signal-state problem runs with boundary-focused official tests @acceptance", async ({ page }, testInfo) => {
+    await openWorkspace(page);
+
+    await page.getByTestId("problem-select").selectOption("signal-state-from-remaining-time");
+    await expect(page.locator(EDITOR_CONTENT)).toContainText("char* trafficSignal(int timer)");
+    await expect(page.locator("#problem-content")).toContainText("timer == 0");
+    await expect(page.locator("#problem-content")).toContainText("timer == 30");
+    await expect(page.locator("#problem-content")).toContainText("30 < timer <= 90");
+
+    await page.getByTestId("run-button").click();
+    await waitForRunToFinish(page);
+
+    await expect(page.getByTestId("run-status")).toHaveText(/All Tests Passed/);
+    await expect(page.getByTestId("summary-text")).toContainText("Failed 0");
+    await expect(page.getByTestId("tests-list")).toContainText("thirty-orange");
+    await expect(page.getByTestId("tests-list")).toContainText("ninety-one-invalid");
+
+    await captureVisualState(page, testInfo, "signal-state-problem");
+  });
+
   test("share hash restores selected problem, source, and custom tests @acceptance", async ({ page }, testInfo) => {
     await openWorkspace(page);
     await page.getByTestId("problem-select").selectOption("best-time-buy-sell-stock");
