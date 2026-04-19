@@ -34190,16 +34190,75 @@ function decodeSharePayload(encoded) {
   }
   return parsed;
 }
-function decodeShareFromHash(hash2) {
+function normalizeFragmentQuery(hash2) {
   if (!hash2.startsWith("#"))
     return null;
-  const raw = hash2.slice(1);
-  if (!raw.startsWith(`${shareHashKey}=`))
+  const raw = hash2.slice(1).trim();
+  if (!raw)
+    return "";
+  return raw.startsWith("?") ? raw.slice(1) : raw;
+}
+function extractShareEncodedFromHash(hash2) {
+  const fragmentQuery = normalizeFragmentQuery(hash2);
+  if (fragmentQuery === null || fragmentQuery === "")
     return null;
-  const encoded = raw.slice(`${shareHashKey}=`.length);
+  try {
+    const params = new URLSearchParams(fragmentQuery);
+    const encoded = params.get(shareHashKey);
+    if (encoded && encoded.trim()) {
+      return encoded.trim();
+    }
+  } catch {}
+  const sharePrefix = `${shareHashKey}=`;
+  if (fragmentQuery.startsWith(sharePrefix)) {
+    const encoded = fragmentQuery.slice(sharePrefix.length).split("&", 1)[0]?.trim() ?? "";
+    return encoded || null;
+  }
+  return null;
+}
+function decodeShareFromHash(hash2) {
+  const encoded = extractShareEncodedFromHash(hash2);
   if (!encoded)
     return null;
   return { encoded, payload: decodeSharePayload(encoded) };
+}
+function removeShareFromHash(hash2) {
+  const fragmentQuery = normalizeFragmentQuery(hash2);
+  if (fragmentQuery === null || fragmentQuery === "") {
+    return { removed: false, nextHash: hash2 };
+  }
+  try {
+    const params = new URLSearchParams(fragmentQuery);
+    if (!params.has(shareHashKey)) {
+      return { removed: false, nextHash: hash2 };
+    }
+    params.delete(shareHashKey);
+    const next = params.toString();
+    return { removed: true, nextHash: next ? `#${next}` : "" };
+  } catch {
+    const sharePrefix = `${shareHashKey}=`;
+    if (!fragmentQuery.startsWith(sharePrefix)) {
+      return { removed: false, nextHash: hash2 };
+    }
+    const tail = fragmentQuery.slice(fragmentQuery.indexOf("&") + 1).trim();
+    return { removed: true, nextHash: tail && tail !== fragmentQuery ? `#${tail}` : "" };
+  }
+}
+function consumeIncomingShareHash() {
+  const currentHash = window.location.hash;
+  const cleaned = removeShareFromHash(currentHash);
+  if (!cleaned.removed) {
+    return;
+  }
+  const nextUrl = `${window.location.pathname}${window.location.search}${cleaned.nextHash}`;
+  window.history.replaceState(window.history.state, "", nextUrl);
+  shareLog.info("Share hash consumed and removed", {
+    context: {
+      removedShare: true,
+      previousHash: currentHash || "(none)",
+      remainingHash: cleaned.nextHash || "(none)"
+    }
+  });
 }
 var appRoot = document.querySelector("#app");
 if (!appRoot) {
@@ -34660,6 +34719,9 @@ function applyIncomingShareState() {
     shareLog.warn("Incoming share payload is invalid", {
       context: { error: incomingShareError }
     });
+    shareLog.warn("Share hash retained due to invalid payload", {
+      context: { hash: window.location.hash || "(none)" }
+    });
     setShareFeedback(incomingShareError, "warning");
     return;
   }
@@ -34687,6 +34749,7 @@ function applyIncomingShareState() {
     saveCustomTests(activeProblem.id, payload.customTests);
     setStatus("idle", "none", "Idle");
     setShareFeedback("Shared problem was unavailable. Opened in New scratchpad.", "warning");
+    consumeIncomingShareHash();
     shareLog.warn("Share payload fallback to scratchpad", {
       context: { requestedProblemId: payload.problemId, fallbackProblemId: activeProblem.id }
     });
@@ -34705,6 +34768,7 @@ function applyIncomingShareState() {
   saveCustomTests(activeProblem.id, payload.customTests);
   setStatus("idle", "none", "Idle");
   setShareFeedback("Shared state loaded.", "success");
+  consumeIncomingShareHash();
   shareLog.info("Share payload applied", {
     context: {
       problemId: activeProblem.id,

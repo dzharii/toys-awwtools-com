@@ -117,13 +117,82 @@ function decodeSharePayload(encoded: string): ShareStatePayloadV1 {
   return parsed as ShareStatePayloadV1;
 }
 
-function decodeShareFromHash(hash: string): DecodedShareState | null {
+function normalizeFragmentQuery(hash: string): string | null {
   if (!hash.startsWith("#")) return null;
-  const raw = hash.slice(1);
-  if (!raw.startsWith(`${shareHashKey}=`)) return null;
-  const encoded = raw.slice(`${shareHashKey}=`.length);
+  const raw = hash.slice(1).trim();
+  if (!raw) return "";
+  return raw.startsWith("?") ? raw.slice(1) : raw;
+}
+
+function extractShareEncodedFromHash(hash: string): string | null {
+  const fragmentQuery = normalizeFragmentQuery(hash);
+  if (fragmentQuery === null || fragmentQuery === "") return null;
+
+  try {
+    const params = new URLSearchParams(fragmentQuery);
+    const encoded = params.get(shareHashKey);
+    if (encoded && encoded.trim()) {
+      return encoded.trim();
+    }
+  } catch {
+    // Keep manual fallback below for malformed fragment text.
+  }
+
+  const sharePrefix = `${shareHashKey}=`;
+  if (fragmentQuery.startsWith(sharePrefix)) {
+    const encoded = fragmentQuery.slice(sharePrefix.length).split("&", 1)[0]?.trim() ?? "";
+    return encoded || null;
+  }
+
+  return null;
+}
+
+function decodeShareFromHash(hash: string): DecodedShareState | null {
+  const encoded = extractShareEncodedFromHash(hash);
   if (!encoded) return null;
   return { encoded, payload: decodeSharePayload(encoded) };
+}
+
+function removeShareFromHash(hash: string): { removed: boolean; nextHash: string } {
+  const fragmentQuery = normalizeFragmentQuery(hash);
+  if (fragmentQuery === null || fragmentQuery === "") {
+    return { removed: false, nextHash: hash };
+  }
+
+  try {
+    const params = new URLSearchParams(fragmentQuery);
+    if (!params.has(shareHashKey)) {
+      return { removed: false, nextHash: hash };
+    }
+    params.delete(shareHashKey);
+    const next = params.toString();
+    return { removed: true, nextHash: next ? `#${next}` : "" };
+  } catch {
+    const sharePrefix = `${shareHashKey}=`;
+    if (!fragmentQuery.startsWith(sharePrefix)) {
+      return { removed: false, nextHash: hash };
+    }
+    const tail = fragmentQuery.slice(fragmentQuery.indexOf("&") + 1).trim();
+    return { removed: true, nextHash: tail && tail !== fragmentQuery ? `#${tail}` : "" };
+  }
+}
+
+function consumeIncomingShareHash(): void {
+  const currentHash = window.location.hash;
+  const cleaned = removeShareFromHash(currentHash);
+  if (!cleaned.removed) {
+    return;
+  }
+
+  const nextUrl = `${window.location.pathname}${window.location.search}${cleaned.nextHash}`;
+  window.history.replaceState(window.history.state, "", nextUrl);
+  shareLog.info("Share hash consumed and removed", {
+    context: {
+      removedShare: true,
+      previousHash: currentHash || "(none)",
+      remainingHash: cleaned.nextHash || "(none)"
+    }
+  });
 }
 
 const appRoot = document.querySelector<HTMLDivElement>("#app");
@@ -656,6 +725,9 @@ function applyIncomingShareState(): void {
     shareLog.warn("Incoming share payload is invalid", {
       context: { error: incomingShareError }
     });
+    shareLog.warn("Share hash retained due to invalid payload", {
+      context: { hash: window.location.hash || "(none)" }
+    });
     setShareFeedback(incomingShareError, "warning");
     return;
   }
@@ -686,6 +758,7 @@ function applyIncomingShareState(): void {
     saveCustomTests(activeProblem.id, payload.customTests);
     setStatus("idle", "none", "Idle");
     setShareFeedback("Shared problem was unavailable. Opened in New scratchpad.", "warning");
+    consumeIncomingShareHash();
     shareLog.warn("Share payload fallback to scratchpad", {
       context: { requestedProblemId: payload.problemId, fallbackProblemId: activeProblem.id }
     });
@@ -706,6 +779,7 @@ function applyIncomingShareState(): void {
   saveCustomTests(activeProblem.id, payload.customTests);
   setStatus("idle", "none", "Idle");
   setShareFeedback("Shared state loaded.", "success");
+  consumeIncomingShareHash();
   shareLog.info("Share payload applied", {
     context: {
       problemId: activeProblem.id,

@@ -763,12 +763,49 @@ return 0;
       return debug?.buildShareUrl?.() ?? "";
     });
     expect(shareUrl).toContain("#share=");
+    const shareUrlWithExtraHashParam = `${shareUrl}&view=docs`;
 
+    await page.goto("about:blank");
     await page.goto(shareUrl);
     await expect(page.getByTestId("workspace")).toBeVisible();
     await expect(page.getByTestId("problem-select")).toHaveValue("best-time-buy-sell-stock");
     await expect(page.locator(EDITOR_CONTENT)).toContainText("share-state-marker");
     await expect(page.getByTestId("custom-tests-input")).toHaveValue(/share-custom-case/);
+    await expect
+      .poll(async () => {
+        return new URL(page.url()).hash;
+      })
+      .toBe("");
+
+    await replaceEditorSource(
+      page,
+      `int maxProfit(int* prices, int pricesSize) {
+    // local-after-share-edit
+    (void)prices;
+    (void)pricesSize;
+    return 99;
+}`
+    );
+    await page.waitForTimeout(600);
+    await page.reload();
+    await expect(page.locator(EDITOR_CONTENT)).toContainText("local-after-share-edit");
+    await expect
+      .poll(async () => {
+        return new URL(page.url()).hash;
+      })
+      .toBe("");
+
+    await page.goto("about:blank");
+    await page.goto(shareUrlWithExtraHashParam);
+    await expect(page.getByTestId("workspace")).toBeVisible();
+    await expect(page.getByTestId("problem-select")).toHaveValue("best-time-buy-sell-stock");
+    await expect(page.locator(EDITOR_CONTENT)).toContainText("share-state-marker");
+    await expect(page.getByTestId("custom-tests-input")).toHaveValue(/share-custom-case/);
+    await expect
+      .poll(async () => {
+        return new URL(page.url()).hash;
+      })
+      .toBe("#view=docs");
 
     await page.getByTestId("run-button").click();
     await waitForRunToFinish(page);
