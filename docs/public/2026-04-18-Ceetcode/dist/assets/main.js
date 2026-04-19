@@ -33737,11 +33737,12 @@ function registerServiceWorker() {
     });
     return;
   }
-  navigator.serviceWorker.register("./sw.js").then((registration) => {
+  navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" }).then((registration) => {
     appLog.info("Service worker registered", {
       subcategory: "ServiceWorker",
       context: { scope: registration.scope }
     });
+    registration.update();
   }).catch((error48) => {
     recordUnhandledError("service-worker", `Service worker registration failed: ${normalizeErrorText(error48)}`, {
       stack: error48 instanceof Error ? error48.stack : undefined

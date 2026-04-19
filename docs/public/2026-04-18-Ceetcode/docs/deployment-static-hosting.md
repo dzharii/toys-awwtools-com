@@ -31,12 +31,21 @@ Deploy the full `dist/` directory, including:
 - `vendor/wasm-clang/*`
 - `vendor/meta/versions.json`
 
+Critical compiler assets in `vendor/wasm-clang/` include:
+- `clang.wasm`
+- `lld.wasm`
+- `memfs.wasm`
+- `sysroot.tar`
+
 ## Hosting requirements
 
 - Serve files over HTTP(S) as static assets.
-- Ensure correct content type for Wasm binaries (`application/wasm`) where possible.
+- Ensure `.wasm` files are reachable without rewrite/fallback routing.
+- Prefer correct Wasm MIME (`application/wasm`) for `.wasm` responses.
 - Keep `dist/` structure intact (`assets/`, `vendor/`, `sw.js`).
 - Runtime paths are base-relative, so subpath hosting is supported.
+
+If your static host rewrites unknown paths to `index.html` (common in some preview servers), compiler startup can fail because HTML bytes are not valid wasm. Keep direct file serving enabled for `dist/vendor/wasm-clang/*.wasm`.
 
 ## Local production check
 
@@ -66,6 +75,7 @@ Use the same build command:
 ## Caching and updates
 
 - Service worker caches app shell and compiler assets for offline reuse.
+- Service worker uses a versioned cache and network-first fetch for `assets/*` and `vendor/wasm-clang/*` to reduce stale-worker issues after deploy.
 - When updating vendored runtime/compiler assets, rebuild and redeploy full `dist/`.
 - Keep `vendor/meta/versions.json` updated (`npm run validate`) to preserve traceability.
 

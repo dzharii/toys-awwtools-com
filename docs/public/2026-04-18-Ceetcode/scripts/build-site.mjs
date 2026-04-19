@@ -34,6 +34,10 @@ for (const file of vendorFiles) {
   await copy(path.join(root, "vendor", "wasm-clang", file), path.join(vendorDistDir, file));
 }
 
+for (const wasmFile of ["clang", "lld", "memfs"]) {
+  await copy(path.join(root, "vendor", "wasm-clang", wasmFile), path.join(vendorDistDir, `${wasmFile}.wasm`));
+}
+
 await copy(path.join(root, "vendor", "meta", "versions.json"), path.join(distDir, "vendor", "meta", "versions.json"));
 
 console.log(`Build complete -> ${distDir}`);

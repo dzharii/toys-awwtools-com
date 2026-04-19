@@ -1005,12 +1005,13 @@ function registerServiceWorker(): void {
   }
 
   void navigator.serviceWorker
-    .register("./sw.js")
+    .register("./sw.js", { updateViaCache: "none" })
     .then((registration) => {
       appLog.info("Service worker registered", {
         subcategory: "ServiceWorker",
         context: { scope: registration.scope }
       });
+      void registration.update();
     })
     .catch((error) => {
       recordUnhandledError("service-worker", `Service worker registration failed: ${normalizeErrorText(error)}`, {

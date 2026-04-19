@@ -13993,6 +13993,59 @@
   globalSelf.importScripts(vendorAssetUrl("shared.js"));
   var compilerApiPromise = null;
   var compileWorkerLog = createLogger("Worker", "Compile");
+  var wasmMagic = [0, 97, 115, 109];
+  function isWasmBinary(bytes) {
+    return bytes.length >= 4 && bytes[0] === wasmMagic[0] && bytes[1] === wasmMagic[1] && bytes[2] === wasmMagic[2] && bytes[3] === wasmMagic[3];
+  }
+  function formatMagic(bytes) {
+    return [...bytes.slice(0, 4)].map((value) => value.toString(16).padStart(2, "0")).join(" ");
+  }
+  function previewAscii(bytes) {
+    const previewBytes = bytes.slice(0, 96);
+    const text = new TextDecoder().decode(previewBytes).replace(/\s+/g, " ").trim();
+    return text.slice(0, 80);
+  }
+  async function fetchWasmBytes(filename) {
+    const response = await fetch(filename);
+    if (!response.ok) {
+      throw new Error(`Failed to load wasm module ${filename}: HTTP ${response.status}`);
+    }
+    const bytes = await response.arrayBuffer();
+    const view = new Uint8Array(bytes);
+    const contentType = response.headers.get("content-type") ?? "unknown";
+    const resolvedUrl = response.url || filename;
+    if (!isWasmBinary(view)) {
+      throw new Error(`Invalid wasm bytes for ${filename} (${resolvedUrl}); content-type=${contentType}; magic=${formatMagic(view)}; preview="${previewAscii(view)}"`);
+    }
+    return { bytes, contentType, resolvedUrl };
+  }
+  async function compileWasmModule(filename) {
+    const { bytes, contentType, resolvedUrl } = await fetchWasmBytes(filename);
+    if (WebAssembly.compileStreaming && /^application\/wasm(?:;|$)/i.test(contentType)) {
+      try {
+        const streamResponse = new Response(bytes, {
+          headers: { "Content-Type": "application/wasm" }
+        });
+        return await WebAssembly.compileStreaming(Promise.resolve(streamResponse));
+      } catch (streamingError) {
+        compileWorkerLog.warn("compileStreaming failed; using ArrayBuffer fallback", {
+          subcategory: "WasmLoad",
+          context: {
+            filename,
+            resolvedUrl,
+            reason: streamingError instanceof Error ? streamingError.message : String(streamingError)
+          }
+        });
+      }
+    }
+    if (!/^application\/wasm(?:;|$)/i.test(contentType)) {
+      compileWorkerLog.warn("Wasm module served without application/wasm MIME; using ArrayBuffer compile fallback", {
+        subcategory: "WasmLoad",
+        context: { filename, resolvedUrl, contentType }
+      });
+    }
+    return WebAssembly.compile(bytes);
+  }
   function buildApi() {
     if (!compilerApiPromise) {
       compileWorkerLog.info("Initializing compile worker API");
@@ -14005,38 +14058,23 @@
           }
           return response.arrayBuffer();
         },
-        compileStreaming: async (filename) => {
-          const response = await fetch(filename);
-          if (!response.ok) {
-            throw new Error(`Failed to compile module ${filename}: HTTP ${response.status}`);
-          }
-          if (WebAssembly.compileStreaming) {
-            const streamingResponse = response.clone();
-            try {
-              return await WebAssembly.compileStreaming(Promise.resolve(streamingResponse));
-            } catch (streamingError) {
-              compileWorkerLog.warn("compileStreaming failed; using ArrayBuffer fallback", {
-                subcategory: "WasmLoad",
-                context: { filename, reason: streamingError instanceof Error ? streamingError.message : String(streamingError) }
-              });
-            }
-          }
-          const bytes = await response.arrayBuffer();
-          return WebAssembly.compile(bytes);
-        },
+        compileStreaming: compileWasmModule,
         hostWrite: (chunk) => {
           compileLog += chunk;
         },
-        clang: vendorAssetUrl("clang"),
-        lld: vendorAssetUrl("lld"),
-        memfs: vendorAssetUrl("memfs"),
+        clang: vendorAssetUrl("clang.wasm"),
+        lld: vendorAssetUrl("lld.wasm"),
+        memfs: vendorAssetUrl("memfs.wasm"),
         sysroot: vendorAssetUrl("sysroot.tar")
       });
       api2.__getLog = () => compileLog;
       api2.__clearLog = () => {
         compileLog = "";
       };
-      compilerApiPromise = api2.ready.then(() => api2);
+      compilerApiPromise = api2.ready.then(() => api2).catch((error48) => {
+        compilerApiPromise = null;
+        throw error48;
+      });
     }
     return compilerApiPromise;
   }
@@ -14070,9 +14108,6 @@
     const inputPath = `${runId}.c`;
     const objectPath = `${runId}.o`;
     const wasmPath = `${runId}.wasm`;
-    const api2 = await buildApi();
-    const logApi = api2;
-    logApi.__clearLog();
     let responsePayload;
     compileWorkerLog.info("Compile request received", {
       context: {
@@ -14084,6 +14119,9 @@
       }
     });
     try {
+      const api2 = await buildApi();
+      const logApi = api2;
+      logApi.__clearLog();
       await compileWithClang(api2, inputPath, generated.fullSource, objectPath);
       await linkObject(api2, objectPath, wasmPath);
       const wasmView = api2.memfs.getFileContents(wasmPath);
@@ -14118,7 +14156,8 @@
           message: error48 instanceof Error ? error48.message : String(error48)
         }
       });
-      responsePayload = makeFailure(runId, logApi.__getLog(), generated.fullSource, error48.message);
+      const logApi = await compilerApiPromise?.catch(() => null);
+      responsePayload = makeFailure(runId, logApi ? logApi.__getLog() : "", generated.fullSource, error48 instanceof Error ? error48.message : String(error48));
     }
     const response = {
       requestId,
