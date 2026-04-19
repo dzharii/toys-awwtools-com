@@ -144,6 +144,7 @@ test.describe.serial("Ceetcode acceptance @acceptance", () => {
     await expect(page.getByTestId("problem-panel")).toBeVisible();
     await expect(page.getByTestId("editor-panel")).toBeVisible();
     await expect(page.getByTestId("problem-select")).toBeVisible();
+    await expect(page.getByTestId("share-button")).toBeVisible();
     await expect(page.getByTestId("run-button")).toBeVisible();
     await expect(page.getByTestId("reset-button")).toBeVisible();
     await expect(page.getByTestId("run-status")).toHaveText(/Idle/);
@@ -155,6 +156,7 @@ test.describe.serial("Ceetcode acceptance @acceptance", () => {
     await expect(page.locator("#problem-content")).toContainText("Constraints");
     await expect(page.locator("#problem-content")).toContainText("Visible Tests");
     await expect(page.locator("#problem-content")).toContainText("C99 Runtime Support Matrix");
+    await expect(page.locator("[data-testid='problem-select'] option").first()).toHaveText("New");
 
     await captureVisualState(page, testInfo, "shell-render");
   });
@@ -209,6 +211,7 @@ test.describe.serial("Ceetcode acceptance @acceptance", () => {
 
   test("run workflow shows progress and passing summary @acceptance", async ({ page }, testInfo) => {
     await openWorkspace(page);
+    await page.getByTestId("problem-select").selectOption("two-sum-pair-index");
 
     const statuses = await runAndCollectStatuses(page);
 
@@ -221,6 +224,74 @@ test.describe.serial("Ceetcode acceptance @acceptance", () => {
     await expect(page.getByTestId("tests-list")).toContainText("sample-basic");
 
     await captureVisualState(page, testInfo, "run-pass");
+  });
+
+  test("scratchpad New is runnable and keeps playground flow frictionless @acceptance", async ({ page }, testInfo) => {
+    await openWorkspace(page);
+
+    await page.getByTestId("problem-select").selectOption("new");
+    await expect(page.locator(EDITOR_CONTENT)).toContainText("int problem(void)");
+    await expect(page.locator(EDITOR_CONTENT)).toContainText("Hello, world!");
+
+    await page.getByTestId("run-button").click();
+    await waitForRunToFinish(page);
+
+    await expect(page.getByTestId("run-status")).toHaveText(/All Tests Passed/);
+    await expect(page.getByTestId("tests-list")).toContainText("scratchpad-run");
+    await expect(page.getByTestId("stdout-output")).toContainText("Hello, world!");
+
+    await captureVisualState(page, testInfo, "scratchpad-new");
+  });
+
+  test("share hash restores selected problem, source, and custom tests @acceptance", async ({ page }, testInfo) => {
+    await openWorkspace(page);
+    await page.getByTestId("problem-select").selectOption("best-time-buy-sell-stock");
+    await replaceEditorSource(
+      page,
+      `int maxProfit(int* prices, int pricesSize) {
+    // share-state-marker
+    (void)prices;
+    (void)pricesSize;
+    return 42;
+}`
+    );
+    await page.getByTestId("custom-tests-input").fill(
+      JSON.stringify(
+        [
+          {
+            name: "share-custom-case",
+            input: { prices: [9, 1, 10], pricesSize: 3 },
+            expected: 9
+          }
+        ],
+        null,
+        2
+      )
+    );
+
+    const shareUrl = await page.evaluate(() => {
+      const debug = (
+        window as {
+          ceetcodeDebug?: {
+            buildShareUrl?: () => string;
+          };
+        }
+      ).ceetcodeDebug;
+      return debug?.buildShareUrl?.() ?? "";
+    });
+    expect(shareUrl).toContain("#share=");
+
+    await page.goto(shareUrl);
+    await expect(page.getByTestId("workspace")).toBeVisible();
+    await expect(page.getByTestId("problem-select")).toHaveValue("best-time-buy-sell-stock");
+    await expect(page.locator(EDITOR_CONTENT)).toContainText("share-state-marker");
+    await expect(page.getByTestId("custom-tests-input")).toHaveValue(/share-custom-case/);
+
+    await page.getByTestId("run-button").click();
+    await waitForRunToFinish(page);
+    await expect(page.getByTestId("tests-list")).toContainText("share-custom-case");
+
+    await captureVisualState(page, testInfo, "share-restore");
   });
 
   test("failed tests show expected versus actual details @acceptance", async ({ page }, testInfo) => {

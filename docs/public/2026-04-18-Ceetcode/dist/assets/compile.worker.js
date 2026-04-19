@@ -70,6 +70,7 @@
   }
   function generateHarnessSource(problem, userSource, tests) {
     const sections = [];
+    const isScratchpadProblem = problem.id === "new";
     sections.push(`#include <stdio.h>`);
     sections.push(`#include <string.h>`);
     sections.push(`#include <stdint.h>`);
@@ -119,13 +120,22 @@
         sections.push(`    cee_print_escaped(cee_actual_${index});`);
         sections.push(`    printf("\\n");`);
       } else {
-        const expectedLiteral = buildExpectedLiteral(problem, test.expected);
-        const expectedDisplay = buildExpectedDisplay(problem, test.expected);
-        sections.push(`    int cee_expected_${index} = ${expectedLiteral};`);
         sections.push(`    int cee_actual_${index} = ${problem.signature.functionName}(${callExpressions.join(", ")});`);
-        sections.push(`    int cee_pass_${index} = (cee_actual_${index} == cee_expected_${index});`);
+        if (isScratchpadProblem && test.scope === "official") {
+          sections.push(`    int cee_expected_${index} = cee_actual_${index};`);
+          sections.push(`    int cee_pass_${index} = 1;`);
+        } else {
+          const expectedLiteral = buildExpectedLiteral(problem, test.expected);
+          sections.push(`    int cee_expected_${index} = ${expectedLiteral};`);
+          sections.push(`    int cee_pass_${index} = (cee_actual_${index} == cee_expected_${index});`);
+        }
         sections.push(`    if (cee_pass_${index}) { cee_passed++; } else { cee_failed++; }`);
-        sections.push(`    printf("__CEETEST__|${index}|%s|${escapeCString(test.name)}|${escapeCString(expectedDisplay)}|%d\\n", cee_pass_${index} ? "PASS" : "FAIL", cee_actual_${index});`);
+        if (isScratchpadProblem && test.scope === "official") {
+          sections.push(`    printf("__CEETEST__|${index}|%s|${escapeCString(test.name)}|any|%d\\n", cee_pass_${index} ? "PASS" : "FAIL", cee_actual_${index});`);
+        } else {
+          const expectedDisplay = buildExpectedDisplay(problem, test.expected);
+          sections.push(`    printf("__CEETEST__|${index}|%s|${escapeCString(test.name)}|${escapeCString(expectedDisplay)}|%d\\n", cee_pass_${index} ? "PASS" : "FAIL", cee_actual_${index});`);
+        }
       }
     });
     sections.push(``);

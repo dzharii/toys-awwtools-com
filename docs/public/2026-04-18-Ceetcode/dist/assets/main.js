@@ -32461,6 +32461,39 @@ function parseHarnessOutput(raw) {
 // problems/catalog.ts
 var problemCatalog = [
   {
+    id: "new",
+    title: "New",
+    difficulty: "Easy",
+    summary: "Scratchpad playground for arbitrary C99 experimentation.",
+    statementMarkdown: "Use this scratchpad to run arbitrary C99 code in the browser runtime. This is not a scored challenge; it is a reusable playground.",
+    examplesMarkdown: `- Edit the starter code freely.
+- Add temporary print statements.
+- Use Run to inspect compile/runtime logs and output quickly.`,
+    constraintsMarkdown: "- Keep code valid C99.\n- The default harness executes `problem()` and reports runtime behavior.\n- Add optional custom tests when you want explicit checks.",
+    signature: {
+      functionName: "problem",
+      declaration: "int problem(void)",
+      returnTypeC: "int",
+      returnKind: "int",
+      arguments: []
+    },
+    starterCode: `#include <stdio.h>
+
+int problem(void) {
+    printf("Hello, world!\\n");
+    return 0;
+}`,
+    visibleTests: [
+      {
+        name: "scratchpad-run",
+        input: {},
+        expected: 0,
+        scope: "official"
+      }
+    ],
+    defaultCustomTestsJson: `[]`
+  },
+  {
     id: "two-sum-pair-index",
     title: "Two Sum Pair Index",
     difficulty: "Easy",
@@ -32647,8 +32680,16 @@ int isPalindromeAscii(const char* s) {
 
 // runtime/problem-catalog.ts
 var problemLog = createLogger("App", "ProblemCatalog");
+var scratchpadProblemId = "new";
 function loadProblemCatalog() {
   const loaded = problemCatalog.map((item) => problemSchema.parse(item));
+  loaded.sort((left, right) => {
+    if (left.id === scratchpadProblemId && right.id !== scratchpadProblemId)
+      return -1;
+    if (right.id === scratchpadProblemId && left.id !== scratchpadProblemId)
+      return 1;
+    return 0;
+  });
   problemLog.info("Problem catalog loaded", {
     context: { count: loaded.length, ids: loaded.map((problem) => problem.id) }
   });
@@ -32929,6 +32970,46 @@ var uiLog = createLogger("UI", "Interaction");
 var runLog = createLogger("Run", "Submission");
 var settingsLog = createLogger("Settings", "Logging");
 var unhandledLog = createLogger("Runtime", "Unhandled");
+var shareLog = createLogger("UI", "Share");
+var shareHashKey = "share";
+function encodeBase64Url(value) {
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+  for (let index = 0;index < bytes.length; index += 1) {
+    binary += String.fromCharCode(bytes[index]);
+  }
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+function decodeBase64Url(value) {
+  const padded = value.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(value.length / 4) * 4, "=");
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0;index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return new TextDecoder().decode(bytes);
+}
+function encodeSharePayload(payload) {
+  return encodeBase64Url(JSON.stringify(payload));
+}
+function decodeSharePayload(encoded) {
+  const parsed = JSON.parse(decodeBase64Url(encoded));
+  if (parsed.version !== 1 || typeof parsed.problemId !== "string" || typeof parsed.source !== "string" || typeof parsed.customTests !== "string") {
+    throw new Error("Unsupported or malformed share payload.");
+  }
+  return parsed;
+}
+function decodeShareFromHash(hash2) {
+  if (!hash2.startsWith("#"))
+    return null;
+  const raw = hash2.slice(1);
+  if (!raw.startsWith(`${shareHashKey}=`))
+    return null;
+  const encoded = raw.slice(`${shareHashKey}=`.length);
+  if (!encoded)
+    return null;
+  return { encoded, payload: decodeSharePayload(encoded) };
+}
 var appRoot = document.querySelector("#app");
 if (!appRoot) {
   throw new Error("Missing #app root element.");
@@ -32939,12 +33020,25 @@ function requiredElement(value, selector) {
   }
   return value;
 }
+var incomingShareState = null;
+var incomingShareError = null;
+try {
+  incomingShareState = decodeShareFromHash(window.location.hash);
+} catch (error48) {
+  incomingShareError = `Share link ignored: ${normalizeErrorText(error48)}`;
+}
+function firstNonScratchpadProblem() {
+  return problems.find((problem) => problem.id !== scratchpadProblemId) ?? problems[0];
+}
 var initialProblem = (() => {
+  if (incomingShareState) {
+    return problemById.get(incomingShareState.payload.problemId) ?? problemById.get(scratchpadProblemId) ?? problems[0];
+  }
   const storedId = loadSelectedProblemId();
   if (storedId && problemById.has(storedId)) {
     return problemById.get(storedId);
   }
-  return problems[0];
+  return firstNonScratchpadProblem();
 })();
 var unhandledErrors = [];
 var nextUnhandledErrorId = 1;
@@ -33007,8 +33101,10 @@ appRoot.innerHTML = `
       </label>
       <button id="run-btn" class="primary" type="button" data-testid="run-button">Run</button>
       <button id="reset-btn" type="button" data-testid="reset-button">Reset To Starter</button>
+      <button id="share-btn" type="button" data-testid="share-button">Share</button>
       <button id="settings-btn" type="button" data-testid="settings-button">Settings</button>
       <span id="run-status" class="status-badge status-idle" data-testid="run-status">Idle</span>
+      <span id="share-feedback" class="share-feedback" data-testid="share-feedback" role="status" aria-live="polite"></span>
     </section>
 
     <section class="workspace" data-testid="workspace">
@@ -33116,8 +33212,10 @@ var problemContent = requiredElement(document.querySelector("#problem-content"),
 var activeProblemIdEl = requiredElement(document.querySelector("#active-problem-id"), "#active-problem-id");
 var runBtn = requiredElement(document.querySelector("#run-btn"), "#run-btn");
 var resetBtn = requiredElement(document.querySelector("#reset-btn"), "#reset-btn");
+var shareBtn = requiredElement(document.querySelector("#share-btn"), "#share-btn");
 var settingsBtn = requiredElement(document.querySelector("#settings-btn"), "#settings-btn");
 var runStatusEl = requiredElement(document.querySelector("#run-status"), "#run-status");
+var shareFeedbackEl = requiredElement(document.querySelector("#share-feedback"), "#share-feedback");
 var customTestsInput = requiredElement(document.querySelector("#custom-tests-input"), "#custom-tests-input");
 var diagnosticsEl = requiredElement(document.querySelector("#diagnostics"), "#diagnostics");
 var summaryText = requiredElement(document.querySelector("#summary-text"), "#summary-text");
@@ -33152,6 +33250,7 @@ var latestRun = {
 };
 var editor;
 var draftSaveTimer = null;
+var shareFeedbackTimer = null;
 function escapeHtml(value) {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;");
 }
@@ -33170,6 +33269,93 @@ function syncLoggingControlValues() {
   loggingFormatterSelect.value = current.formatter;
   loggingEmojiToggle.checked = current.useDecorativeEmoji;
   loggingBackgroundToggle.checked = current.useLabelBackgrounds;
+}
+function setShareFeedback(message, tone = "info", sticky = false) {
+  shareFeedbackEl.textContent = message;
+  shareFeedbackEl.dataset.tone = tone;
+  if (shareFeedbackTimer !== null) {
+    clearTimeout(shareFeedbackTimer);
+    shareFeedbackTimer = null;
+  }
+  if (!sticky && message) {
+    shareFeedbackTimer = setTimeout(() => {
+      shareFeedbackEl.textContent = "";
+      shareFeedbackEl.dataset.tone = "info";
+      shareFeedbackTimer = null;
+    }, 6000);
+  }
+}
+function buildSharePayloadFromCurrentState() {
+  return {
+    version: 1,
+    problemId: activeProblem.id,
+    source: readEditor(),
+    customTests: customTestsInput.value
+  };
+}
+function buildShareUrl(payload) {
+  const encoded = encodeSharePayload(payload);
+  const shareUrl = new URL(window.location.href);
+  shareUrl.hash = `${shareHashKey}=${encoded}`;
+  return shareUrl.toString();
+}
+function applyIncomingShareState() {
+  if (incomingShareError) {
+    shareLog.warn("Incoming share payload is invalid", {
+      context: { error: incomingShareError }
+    });
+    setShareFeedback(incomingShareError, "warning");
+    return;
+  }
+  if (!incomingShareState) {
+    return;
+  }
+  const payload = incomingShareState.payload;
+  const requestedProblem = problemById.get(payload.problemId);
+  if (!requestedProblem) {
+    const fallback2 = problemById.get(scratchpadProblemId);
+    if (!fallback2) {
+      shareLog.warn("Share payload referenced missing problem and scratchpad fallback is unavailable", {
+        context: { requestedProblemId: payload.problemId }
+      });
+      return;
+    }
+    activeProblem = fallback2;
+    saveSelectedProblemId(activeProblem.id);
+    problemSelect.value = activeProblem.id;
+    renderProblem(activeProblem);
+    setEditorForProblem(activeProblem);
+    writeEditor(payload.source);
+    customTestsInput.value = payload.customTests;
+    saveDraft(activeProblem.id, payload.source);
+    saveCustomTests(activeProblem.id, payload.customTests);
+    setStatus("idle", "none", "Idle");
+    setShareFeedback("Shared problem was unavailable. Opened in New scratchpad.", "warning");
+    shareLog.warn("Share payload fallback to scratchpad", {
+      context: { requestedProblemId: payload.problemId, fallbackProblemId: activeProblem.id }
+    });
+    return;
+  }
+  if (activeProblem.id !== requestedProblem.id) {
+    activeProblem = requestedProblem;
+    saveSelectedProblemId(activeProblem.id);
+    problemSelect.value = activeProblem.id;
+    renderProblem(activeProblem);
+    setEditorForProblem(activeProblem);
+  }
+  writeEditor(payload.source);
+  customTestsInput.value = payload.customTests;
+  saveDraft(activeProblem.id, payload.source);
+  saveCustomTests(activeProblem.id, payload.customTests);
+  setStatus("idle", "none", "Idle");
+  setShareFeedback("Shared state loaded.", "success");
+  shareLog.info("Share payload applied", {
+    context: {
+      problemId: activeProblem.id,
+      sourceLength: payload.source.length,
+      customTestsLength: payload.customTests.length
+    }
+  });
 }
 function renderUnhandledErrors() {
   errorPanelCountEl.textContent = String(unhandledErrors.length);
@@ -33602,7 +33788,7 @@ function initializeProblemSelect() {
   for (const problem of problems) {
     const option = document.createElement("option");
     option.value = problem.id;
-    option.textContent = `${problem.title} (${problem.difficulty})`;
+    option.textContent = problem.id === scratchpadProblemId ? problem.title : `${problem.title} (${problem.difficulty})`;
     problemSelect.appendChild(option);
   }
   problemSelect.value = activeProblem.id;
@@ -33779,11 +33965,37 @@ initializeSettingsDialog();
 initializeEditor();
 renderProblem(activeProblem);
 setEditorForProblem(activeProblem);
+applyIncomingShareState();
 renderDiagnostics([]);
 renderLatestRun();
 registerServiceWorker();
 appLog.info("Bootstrap completed", {
   context: { activeProblemId: activeProblem.id, loggingLevel: getLoggingSettings().level }
+});
+shareBtn.addEventListener("click", async () => {
+  const payload = buildSharePayloadFromCurrentState();
+  const url2 = buildShareUrl(payload);
+  shareLog.info("Share URL generated", {
+    context: {
+      problemId: payload.problemId,
+      sourceLength: payload.source.length,
+      customTestsLength: payload.customTests.length
+    }
+  });
+  try {
+    if (!navigator.clipboard || !window.isSecureContext) {
+      throw new Error("Clipboard API unavailable in current context.");
+    }
+    await navigator.clipboard.writeText(url2);
+    setShareFeedback("Share link copied.", "success");
+    shareLog.info("Share URL copied to clipboard");
+  } catch (error48) {
+    setShareFeedback("Clipboard copy failed. Use manual copy prompt.", "warning");
+    window.prompt("Copy share link:", url2);
+    shareLog.warn("Clipboard copy failed; fallback prompt shown", {
+      context: { error: normalizeErrorText(error48) }
+    });
+  }
 });
 runBtn.addEventListener("click", () => {
   uiLog.info("Run button clicked", {
@@ -33809,6 +34021,7 @@ Object.assign(window, {
     reportUnhandledError: (source, message) => recordUnhandledError(source, message),
     getLoggingSettings: () => getLoggingSettings(),
     setLoggingLevel: (level) => updateLoggingSettings({ level }),
-    setLoggingFormatter: (formatter) => updateLoggingSettings({ formatter })
+    setLoggingFormatter: (formatter) => updateLoggingSettings({ formatter }),
+    buildShareUrl: () => buildShareUrl(buildSharePayloadFromCurrentState())
   }
 });

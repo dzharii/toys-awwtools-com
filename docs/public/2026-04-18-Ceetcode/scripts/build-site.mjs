@@ -28,6 +28,7 @@ await run("bun", ["build", "worker/run.worker.ts", "--target", "browser", "--for
 await copy(path.join(root, "index.dist.html"), path.join(distDir, "index.html"));
 await copy(path.join(root, "style.css"), path.join(distDir, "style.css"));
 await copy(path.join(root, "sw.js"), path.join(distDir, "sw.js"));
+await copyDirectory(path.join(root, "static"), distDir);
 
 const vendorFiles = ["clang", "lld", "memfs", "shared.js", "sysroot.tar", "LICENSE", "LICENSE.llvm", "README.md"];
 for (const file of vendorFiles) {
@@ -52,6 +53,27 @@ async function emptyDirectory(dir) {
   for (const entry of entries) {
     const target = path.join(dir, entry.name);
     await fs.rm(target, { recursive: true, force: true });
+  }
+}
+
+async function copyDirectory(fromDir, toDir) {
+  try {
+    const entries = await fs.readdir(fromDir, { withFileTypes: true });
+    for (const entry of entries) {
+      const src = path.join(fromDir, entry.name);
+      const dst = path.join(toDir, entry.name);
+      if (entry.isDirectory()) {
+        await fs.mkdir(dst, { recursive: true });
+        await copyDirectory(src, dst);
+      } else if (entry.isFile()) {
+        await copy(src, dst);
+      }
+    }
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+      return;
+    }
+    throw error;
   }
 }
 

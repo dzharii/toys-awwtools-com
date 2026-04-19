@@ -2,6 +2,40 @@ import type { ProblemDefinition } from "../runtime/types";
 
 export const problemCatalog: ProblemDefinition[] = [
   {
+    id: "new",
+    title: "New",
+    difficulty: "Easy",
+    summary: "Scratchpad playground for arbitrary C99 experimentation.",
+    statementMarkdown:
+      "Use this scratchpad to run arbitrary C99 code in the browser runtime. This is not a scored challenge; it is a reusable playground.",
+    examplesMarkdown:
+      "- Edit the starter code freely.\n- Add temporary print statements.\n- Use Run to inspect compile/runtime logs and output quickly.",
+    constraintsMarkdown:
+      "- Keep code valid C99.\n- The default harness executes `problem()` and reports runtime behavior.\n- Add optional custom tests when you want explicit checks.",
+    signature: {
+      functionName: "problem",
+      declaration: "int problem(void)",
+      returnTypeC: "int",
+      returnKind: "int",
+      arguments: []
+    },
+    starterCode: `#include <stdio.h>
+
+int problem(void) {
+    printf("Hello, world!\\n");
+    return 0;
+}`,
+    visibleTests: [
+      {
+        name: "scratchpad-run",
+        input: {},
+        expected: 0,
+        scope: "official"
+      }
+    ],
+    defaultCustomTestsJson: `[]`
+  },
+  {
     id: "two-sum-pair-index",
     title: "Two Sum Pair Index",
     difficulty: "Easy",

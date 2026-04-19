@@ -16,6 +16,9 @@
 - Problem model: machine-readable function signatures and harness-driven tests.
 - Draft persistence: per-problem localStorage persistence and last-opened restore verified in acceptance e2e.
 - Compile/runtime/test distinction: separate states and UI labeling verified by acceptance e2e scenarios.
+- Scratchpad mode: built-in `New` problem appears first and runs as a low-friction C99 playground.
+- Share model: hash-based state sharing restores selected problem + source + custom tests without backend storage.
+- Social/brand assets: Open Graph/Twitter metadata and favicon set generated and wired for static deployment.
 - Acceptance runner: `npm run test:acceptance` executes tagged critical scenarios.
 - Browser error gate: acceptance tests fail on any `console.error` or uncaught `pageerror`.
 - Logging system: centralized logger with level filtering, formatter selection, runtime settings dialog, and persisted preferences.

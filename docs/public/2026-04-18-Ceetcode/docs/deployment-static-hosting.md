@@ -27,6 +27,8 @@ Deploy the full `dist/` directory, including:
 - `index.html`
 - `style.css`
 - `sw.js`
+- `favicon.ico`, `favicon-*.png`, `apple-touch-icon.png`
+- `social/og-image.png`
 - `assets/*`
 - `vendor/wasm-clang/*`
 - `vendor/meta/versions.json`

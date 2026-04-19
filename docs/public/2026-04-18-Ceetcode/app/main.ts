@@ -16,7 +16,7 @@ import {
   type LoggingFormatterName,
   type LoggingLevel
 } from "../runtime/logging";
-import { loadProblemCatalog } from "../runtime/problem-catalog";
+import { loadProblemCatalog, scratchpadProblemId } from "../runtime/problem-catalog";
 import { clearDraft, loadCustomTests, loadDraft, loadSelectedProblemId, saveCustomTests, saveDraft, saveSelectedProblemId } from "../runtime/storage";
 import { WorkerCompilerClient, type WorkerClientErrorEvent } from "../runtime/compiler/worker-client";
 import { c99SupportMatrix, type CompileDiagnostic, type ProblemDefinition, type TestCase } from "../runtime/types";
@@ -45,6 +45,18 @@ interface AppUnhandledError {
   stack?: string;
 }
 
+interface ShareStatePayloadV1 {
+  version: 1;
+  problemId: string;
+  source: string;
+  customTests: string;
+}
+
+interface DecodedShareState {
+  payload: ShareStatePayloadV1;
+  encoded: string;
+}
+
 const problems = loadProblemCatalog();
 const problemById = new Map(problems.map((problem) => [problem.id, problem]));
 
@@ -53,6 +65,54 @@ const uiLog = createLogger("UI", "Interaction");
 const runLog = createLogger("Run", "Submission");
 const settingsLog = createLogger("Settings", "Logging");
 const unhandledLog = createLogger("Runtime", "Unhandled");
+const shareLog = createLogger("UI", "Share");
+
+const shareHashKey = "share";
+
+function encodeBase64Url(value: string): string {
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+  for (let index = 0; index < bytes.length; index += 1) {
+    binary += String.fromCharCode(bytes[index]);
+  }
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function decodeBase64Url(value: string): string {
+  const padded = value.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(value.length / 4) * 4, "=");
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return new TextDecoder().decode(bytes);
+}
+
+function encodeSharePayload(payload: ShareStatePayloadV1): string {
+  return encodeBase64Url(JSON.stringify(payload));
+}
+
+function decodeSharePayload(encoded: string): ShareStatePayloadV1 {
+  const parsed = JSON.parse(decodeBase64Url(encoded)) as Partial<ShareStatePayloadV1>;
+  if (
+    parsed.version !== 1 ||
+    typeof parsed.problemId !== "string" ||
+    typeof parsed.source !== "string" ||
+    typeof parsed.customTests !== "string"
+  ) {
+    throw new Error("Unsupported or malformed share payload.");
+  }
+  return parsed as ShareStatePayloadV1;
+}
+
+function decodeShareFromHash(hash: string): DecodedShareState | null {
+  if (!hash.startsWith("#")) return null;
+  const raw = hash.slice(1);
+  if (!raw.startsWith(`${shareHashKey}=`)) return null;
+  const encoded = raw.slice(`${shareHashKey}=`.length);
+  if (!encoded) return null;
+  return { encoded, payload: decodeSharePayload(encoded) };
+}
 
 const appRoot = document.querySelector<HTMLDivElement>("#app");
 if (!appRoot) {
@@ -66,12 +126,29 @@ function requiredElement<T extends Element>(value: T | null, selector: string): 
   return value;
 }
 
+let incomingShareState: DecodedShareState | null = null;
+let incomingShareError: string | null = null;
+
+try {
+  incomingShareState = decodeShareFromHash(window.location.hash);
+} catch (error) {
+  incomingShareError = `Share link ignored: ${normalizeErrorText(error)}`;
+}
+
+function firstNonScratchpadProblem(): ProblemDefinition {
+  return problems.find((problem) => problem.id !== scratchpadProblemId) ?? problems[0];
+}
+
 const initialProblem = (() => {
+  if (incomingShareState) {
+    return problemById.get(incomingShareState.payload.problemId) ?? problemById.get(scratchpadProblemId) ?? problems[0];
+  }
+
   const storedId = loadSelectedProblemId();
   if (storedId && problemById.has(storedId)) {
     return problemById.get(storedId) as ProblemDefinition;
   }
-  return problems[0];
+  return firstNonScratchpadProblem();
 })();
 
 let unhandledErrors: AppUnhandledError[] = [];
@@ -137,8 +214,10 @@ appRoot.innerHTML = `
       </label>
       <button id="run-btn" class="primary" type="button" data-testid="run-button">Run</button>
       <button id="reset-btn" type="button" data-testid="reset-button">Reset To Starter</button>
+      <button id="share-btn" type="button" data-testid="share-button">Share</button>
       <button id="settings-btn" type="button" data-testid="settings-button">Settings</button>
       <span id="run-status" class="status-badge status-idle" data-testid="run-status">Idle</span>
+      <span id="share-feedback" class="share-feedback" data-testid="share-feedback" role="status" aria-live="polite"></span>
     </section>
 
     <section class="workspace" data-testid="workspace">
@@ -247,8 +326,10 @@ const problemContent = requiredElement(document.querySelector<HTMLElement>("#pro
 const activeProblemIdEl = requiredElement(document.querySelector<HTMLElement>("#active-problem-id"), "#active-problem-id");
 const runBtn = requiredElement(document.querySelector<HTMLButtonElement>("#run-btn"), "#run-btn");
 const resetBtn = requiredElement(document.querySelector<HTMLButtonElement>("#reset-btn"), "#reset-btn");
+const shareBtn = requiredElement(document.querySelector<HTMLButtonElement>("#share-btn"), "#share-btn");
 const settingsBtn = requiredElement(document.querySelector<HTMLButtonElement>("#settings-btn"), "#settings-btn");
 const runStatusEl = requiredElement(document.querySelector<HTMLElement>("#run-status"), "#run-status");
+const shareFeedbackEl = requiredElement(document.querySelector<HTMLElement>("#share-feedback"), "#share-feedback");
 const customTestsInput = requiredElement(
   document.querySelector<HTMLTextAreaElement>("#custom-tests-input"),
   "#custom-tests-input"
@@ -307,6 +388,7 @@ let latestRun: LatestRunView = {
 
 let editor: EditorView;
 let draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
+let shareFeedbackTimer: ReturnType<typeof setTimeout> | null = null;
 
 function escapeHtml(value: string): string {
   return value
@@ -335,6 +417,104 @@ function syncLoggingControlValues(): void {
   loggingFormatterSelect.value = current.formatter;
   loggingEmojiToggle.checked = current.useDecorativeEmoji;
   loggingBackgroundToggle.checked = current.useLabelBackgrounds;
+}
+
+function setShareFeedback(message: string, tone: "info" | "success" | "warning" = "info", sticky = false): void {
+  shareFeedbackEl.textContent = message;
+  shareFeedbackEl.dataset.tone = tone;
+
+  if (shareFeedbackTimer !== null) {
+    clearTimeout(shareFeedbackTimer);
+    shareFeedbackTimer = null;
+  }
+
+  if (!sticky && message) {
+    shareFeedbackTimer = setTimeout(() => {
+      shareFeedbackEl.textContent = "";
+      shareFeedbackEl.dataset.tone = "info";
+      shareFeedbackTimer = null;
+    }, 6000);
+  }
+}
+
+function buildSharePayloadFromCurrentState(): ShareStatePayloadV1 {
+  return {
+    version: 1,
+    problemId: activeProblem.id,
+    source: readEditor(),
+    customTests: customTestsInput.value
+  };
+}
+
+function buildShareUrl(payload: ShareStatePayloadV1): string {
+  const encoded = encodeSharePayload(payload);
+  const shareUrl = new URL(window.location.href);
+  shareUrl.hash = `${shareHashKey}=${encoded}`;
+  return shareUrl.toString();
+}
+
+function applyIncomingShareState(): void {
+  if (incomingShareError) {
+    shareLog.warn("Incoming share payload is invalid", {
+      context: { error: incomingShareError }
+    });
+    setShareFeedback(incomingShareError, "warning");
+    return;
+  }
+
+  if (!incomingShareState) {
+    return;
+  }
+
+  const payload = incomingShareState.payload;
+  const requestedProblem = problemById.get(payload.problemId);
+  if (!requestedProblem) {
+    const fallback = problemById.get(scratchpadProblemId);
+    if (!fallback) {
+      shareLog.warn("Share payload referenced missing problem and scratchpad fallback is unavailable", {
+        context: { requestedProblemId: payload.problemId }
+      });
+      return;
+    }
+
+    activeProblem = fallback;
+    saveSelectedProblemId(activeProblem.id);
+    problemSelect.value = activeProblem.id;
+    renderProblem(activeProblem);
+    setEditorForProblem(activeProblem);
+    writeEditor(payload.source);
+    customTestsInput.value = payload.customTests;
+    saveDraft(activeProblem.id, payload.source);
+    saveCustomTests(activeProblem.id, payload.customTests);
+    setStatus("idle", "none", "Idle");
+    setShareFeedback("Shared problem was unavailable. Opened in New scratchpad.", "warning");
+    shareLog.warn("Share payload fallback to scratchpad", {
+      context: { requestedProblemId: payload.problemId, fallbackProblemId: activeProblem.id }
+    });
+    return;
+  }
+
+  if (activeProblem.id !== requestedProblem.id) {
+    activeProblem = requestedProblem;
+    saveSelectedProblemId(activeProblem.id);
+    problemSelect.value = activeProblem.id;
+    renderProblem(activeProblem);
+    setEditorForProblem(activeProblem);
+  }
+
+  writeEditor(payload.source);
+  customTestsInput.value = payload.customTests;
+  saveDraft(activeProblem.id, payload.source);
+  saveCustomTests(activeProblem.id, payload.customTests);
+  setStatus("idle", "none", "Idle");
+  setShareFeedback("Shared state loaded.", "success");
+  shareLog.info("Share payload applied", {
+    context: {
+      problemId: activeProblem.id,
+      sourceLength: payload.source.length,
+      customTestsLength: payload.customTests.length
+    }
+  });
 }
 
 function renderUnhandledErrors(): void {
@@ -847,7 +1027,7 @@ function initializeProblemSelect(): void {
   for (const problem of problems) {
     const option = document.createElement("option");
     option.value = problem.id;
-    option.textContent = `${problem.title} (${problem.difficulty})`;
+    option.textContent = problem.id === scratchpadProblemId ? problem.title : `${problem.title} (${problem.difficulty})`;
     problemSelect.appendChild(option);
   }
 
@@ -1052,11 +1232,39 @@ initializeSettingsDialog();
 initializeEditor();
 renderProblem(activeProblem);
 setEditorForProblem(activeProblem);
+applyIncomingShareState();
 renderDiagnostics([]);
 renderLatestRun();
 registerServiceWorker();
 appLog.info("Bootstrap completed", {
   context: { activeProblemId: activeProblem.id, loggingLevel: getLoggingSettings().level }
+});
+
+shareBtn.addEventListener("click", async () => {
+  const payload = buildSharePayloadFromCurrentState();
+  const url = buildShareUrl(payload);
+  shareLog.info("Share URL generated", {
+    context: {
+      problemId: payload.problemId,
+      sourceLength: payload.source.length,
+      customTestsLength: payload.customTests.length
+    }
+  });
+
+  try {
+    if (!navigator.clipboard || !window.isSecureContext) {
+      throw new Error("Clipboard API unavailable in current context.");
+    }
+    await navigator.clipboard.writeText(url);
+    setShareFeedback("Share link copied.", "success");
+    shareLog.info("Share URL copied to clipboard");
+  } catch (error) {
+    setShareFeedback("Clipboard copy failed. Use manual copy prompt.", "warning");
+    window.prompt("Copy share link:", url);
+    shareLog.warn("Clipboard copy failed; fallback prompt shown", {
+      context: { error: normalizeErrorText(error) }
+    });
+  }
 });
 
 runBtn.addEventListener("click", () => {
@@ -1086,6 +1294,7 @@ Object.assign(window, {
     reportUnhandledError: (source: string, message: string) => recordUnhandledError(source, message),
     getLoggingSettings: () => getLoggingSettings(),
     setLoggingLevel: (level: LoggingLevel) => updateLoggingSettings({ level }),
-    setLoggingFormatter: (formatter: LoggingFormatterName) => updateLoggingSettings({ formatter })
+    setLoggingFormatter: (formatter: LoggingFormatterName) => updateLoggingSettings({ formatter }),
+    buildShareUrl: () => buildShareUrl(buildSharePayloadFromCurrentState())
   }
 });
