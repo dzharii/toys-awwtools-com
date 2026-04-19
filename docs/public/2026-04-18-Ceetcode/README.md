@@ -42,6 +42,7 @@ All product and company names above are trademarks of their respective owners. N
 - [`docs/runtime-c99-support.md`](docs/runtime-c99-support.md): current C99 runtime/library support status and limitations.
 - [`docs/testing.md`](docs/testing.md): acceptance and exploratory browser testing strategy and commands.
 - [`docs/logging.md`](docs/logging.md): centralized logging model, formatter/level settings, and instrumentation examples.
+- [`docs/reference-workflow.md`](docs/reference-workflow.md): embedded reference usage, warm reopen behavior, and selection-driven lookup.
 - [`docs/social-assets.md`](docs/social-assets.md): source logos, generated icon/social outputs, and metadata wiring.
 - [`docs/acceptance-checklist.md`](docs/acceptance-checklist.md): milestone-oriented acceptance coverage summary.
 - [`docs/dependency-rationale.md`](docs/dependency-rationale.md): all dependencies/tools used and why each is part of the stack.

@@ -21,6 +21,7 @@ import { loadProblemCatalog, scratchpadProblemId } from "../runtime/problem-cata
 import { clearDraft, loadCustomTests, loadDraft, loadSelectedProblemId, saveCustomTests, saveDraft, saveSelectedProblemId } from "../runtime/storage";
 import { WorkerCompilerClient, type WorkerClientErrorEvent } from "../runtime/compiler/worker-client";
 import { c99SupportMatrix, type CompileDiagnostic, type ProblemDefinition, type TestCase } from "../runtime/types";
+import { C99ReferenceWindowIntegration } from "./integrations/c99-reference-window";
 
 interface RunState {
   status: "idle" | "running" | "success" | "failure";
@@ -76,6 +77,7 @@ const settingsLog = createLogger("Settings", "Logging");
 const unhandledLog = createLogger("Runtime", "Unhandled");
 const shareLog = createLogger("UI", "Share");
 const editorLog = createLogger("UI", "Editor");
+const referenceLog = createLogger("UI", "Reference");
 
 const shareHashKey = "share";
 
@@ -211,25 +213,36 @@ appRoot.innerHTML = `
 
   <main class="shell">
     <section class="topbar" aria-label="workspace controls">
-      <h1>Ceetcode</h1>
-      <span class="mono">C99 browser runtime</span>
-      <span class="spacer"></span>
-      <div class="tabs" role="tablist" aria-label="Workspace view">
-        <span class="tabs-label">View</span>
-        <button class="tab-button" data-mobile-target="problem" type="button">Statement</button>
-        <button class="tab-button" data-mobile-target="editor" type="button">Editor</button>
+      <div class="topbar-row topbar-row-primary">
+        <h1>Ceetcode</h1>
+        <span class="mono">C99 browser runtime</span>
+        <span class="spacer"></span>
+        <div class="tabs" role="tablist" aria-label="Workspace view">
+          <span class="tabs-label">View</span>
+          <button class="tab-button" data-mobile-target="problem" type="button">Statement</button>
+          <button class="tab-button" data-mobile-target="editor" type="button">Editor</button>
+        </div>
+        <label class="challenge-picker">
+          Challenge
+          <select id="problem-select" data-testid="problem-select"></select>
+        </label>
+        <div class="primary-action-group" data-testid="primary-action-group">
+          <button id="run-btn" class="primary" type="button" data-testid="run-button">Run</button>
+          <button id="format-btn" type="button" data-testid="format-button">Format</button>
+          <button id="reference-btn" type="button" data-testid="reference-button">Reference</button>
+          <button id="share-btn" type="button" data-testid="share-button">Share</button>
+        </div>
+        <span id="run-status" class="status-badge status-idle" data-testid="run-status">Idle</span>
+        <span id="share-feedback" class="share-feedback" data-testid="share-feedback" role="status" aria-live="polite"></span>
       </div>
-      <label>
-        Challenge
-        <select id="problem-select" data-testid="problem-select"></select>
-      </label>
-      <button id="run-btn" class="primary" type="button" data-testid="run-button">Run</button>
-      <button id="reset-btn" type="button" data-testid="reset-button">Reset To Starter</button>
-      <button id="format-btn" type="button" data-testid="format-button">Format</button>
-      <button id="share-btn" type="button" data-testid="share-button">Share</button>
-      <button id="settings-btn" type="button" data-testid="settings-button">Settings</button>
-      <span id="run-status" class="status-badge status-idle" data-testid="run-status">Idle</span>
-      <span id="share-feedback" class="share-feedback" data-testid="share-feedback" role="status" aria-live="polite"></span>
+      <div class="topbar-row topbar-row-utility">
+        <span class="spacer"></span>
+        <div class="utility-action-group" data-testid="utility-action-group">
+          <button id="settings-btn" type="button" data-testid="settings-button">Settings</button>
+          <button id="help-btn" type="button" data-testid="help-button">Help</button>
+          <button id="reset-btn" class="danger-soft" type="button" data-testid="reset-button">Reset To Starter</button>
+        </div>
+      </div>
     </section>
 
     <section class="workspace" data-testid="workspace">
@@ -328,6 +341,44 @@ appRoot.innerHTML = `
       </section>
     </div>
   </dialog>
+
+  <dialog id="reset-confirm-dialog" class="settings-dialog reset-dialog" data-testid="reset-confirm-dialog">
+    <div class="settings-dialog-body">
+      <header class="settings-dialog-header">
+        <h2>Reset Draft</h2>
+      </header>
+      <section class="settings-section">
+        <p class="result-row">
+          This will replace your current code for this challenge with the starter template.
+        </p>
+        <p class="result-row">
+          This action cannot be undone.
+        </p>
+        <div class="dialog-actions">
+          <button id="reset-cancel-btn" type="button" data-testid="reset-cancel-button">Cancel</button>
+          <button id="reset-confirm-btn" class="danger-soft" type="button" data-testid="reset-confirm-button">Reset Draft</button>
+        </div>
+      </section>
+    </div>
+  </dialog>
+
+  <dialog id="help-dialog" class="settings-dialog help-dialog" data-testid="help-dialog">
+    <div class="settings-dialog-body">
+      <header class="settings-dialog-header">
+        <h2>Workflow Help</h2>
+        <button id="help-close-btn" type="button" data-testid="help-close-button">Close</button>
+      </header>
+      <section class="settings-section">
+        <h3>Run Loop</h3>
+        <p class="result-row">Use <span class="mono">Run</span> to compile and execute tests. Use <span class="mono">Format</span> before running when needed.</p>
+        <h3>Reference</h3>
+        <p class="result-row">Select a symbol in the editor (example: <span class="mono">printf</span>) then open <span class="mono">Reference</span>. The lookup is seeded from your selection.</p>
+        <p class="result-row">Closing the reference hides the window. Reopening restores the same loaded state and entry.</p>
+        <h3>Safety</h3>
+        <p class="result-row"><span class="mono">Reset To Starter</span> is destructive and always requires confirmation.</p>
+      </section>
+    </div>
+  </dialog>
 `;
 
 const problemSelect = requiredElement(document.querySelector<HTMLSelectElement>("#problem-select"), "#problem-select");
@@ -341,6 +392,8 @@ const resetBtn = requiredElement(document.querySelector<HTMLButtonElement>("#res
 const formatBtn = requiredElement(document.querySelector<HTMLButtonElement>("#format-btn"), "#format-btn");
 const shareBtn = requiredElement(document.querySelector<HTMLButtonElement>("#share-btn"), "#share-btn");
 const settingsBtn = requiredElement(document.querySelector<HTMLButtonElement>("#settings-btn"), "#settings-btn");
+const helpBtn = requiredElement(document.querySelector<HTMLButtonElement>("#help-btn"), "#help-btn");
+const referenceBtn = requiredElement(document.querySelector<HTMLButtonElement>("#reference-btn"), "#reference-btn");
 const runStatusEl = requiredElement(document.querySelector<HTMLElement>("#run-status"), "#run-status");
 const shareFeedbackEl = requiredElement(document.querySelector<HTMLElement>("#share-feedback"), "#share-feedback");
 const customTestsInput = requiredElement(
@@ -365,6 +418,23 @@ const settingsDialog = requiredElement(document.querySelector<HTMLDialogElement>
 const settingsCloseBtn = requiredElement(
   document.querySelector<HTMLButtonElement>("#settings-close-btn"),
   "#settings-close-btn"
+);
+const resetConfirmDialog = requiredElement(
+  document.querySelector<HTMLDialogElement>("#reset-confirm-dialog"),
+  "#reset-confirm-dialog"
+);
+const resetCancelBtn = requiredElement(
+  document.querySelector<HTMLButtonElement>("#reset-cancel-btn"),
+  "#reset-cancel-btn"
+);
+const resetConfirmBtn = requiredElement(
+  document.querySelector<HTMLButtonElement>("#reset-confirm-btn"),
+  "#reset-confirm-btn"
+);
+const helpDialog = requiredElement(document.querySelector<HTMLDialogElement>("#help-dialog"), "#help-dialog");
+const helpCloseBtn = requiredElement(
+  document.querySelector<HTMLButtonElement>("#help-close-btn"),
+  "#help-close-btn"
 );
 const loggingLevelSelect = requiredElement(
   document.querySelector<HTMLSelectElement>("#logging-level-select"),
@@ -400,6 +470,7 @@ let latestRun: LatestRunView = {
 };
 
 let editor: EditorView;
+let referenceIntegration: C99ReferenceWindowIntegration | null = null;
 let draftSaveTimer: ReturnType<typeof setTimeout> | null = null;
 let shareFeedbackTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -520,6 +591,46 @@ function formatSource(): void {
       problemId: activeProblem.id,
       changed: !changes.empty,
       length: readEditor().length
+    }
+  });
+}
+
+function getReferenceSearchSeedFromEditor(): string {
+  const selection = editor.state.selection.main;
+  if (!selection.empty) {
+    const selectedText = editor.state.sliceDoc(selection.from, selection.to).trim();
+    if (selectedText) {
+      return selectedText;
+    }
+  }
+  return "";
+}
+
+function insertReferenceSnippetIntoEditor(snippetText: string, insertionMode: string): void {
+  if (!snippetText) {
+    return;
+  }
+
+  const selection = editor.state.selection.main;
+  const from = selection.from;
+  const to = selection.to;
+  const insert = snippetText;
+  const cursor = from + insert.length;
+
+  editor.dispatch({
+    changes: { from, to, insert },
+    selection: { anchor: cursor, head: cursor },
+    scrollIntoView: true,
+    userEvent: "input.paste"
+  });
+
+  scheduleDraftSave();
+  editorLog.info("Snippet inserted from reference", {
+    subcategory: "Reference",
+    context: {
+      insertionMode,
+      snippetLength: snippetText.length,
+      problemId: activeProblem.id
     }
   });
 }
@@ -1107,6 +1218,16 @@ function resetToStarter(): void {
   setStatus("idle", "none", "Idle");
 }
 
+function requestResetToStarter(): void {
+  if (!resetConfirmDialog.open) {
+    resetConfirmDialog.showModal();
+    uiLog.warn("Reset confirmation dialog opened", {
+      subcategory: "Controls",
+      context: { activeProblemId: activeProblem.id }
+    });
+  }
+}
+
 function switchProblem(problemId: string): void {
   const next = problemById.get(problemId);
   if (!next) return;
@@ -1242,6 +1363,69 @@ function initializeSettingsDialog(): void {
   );
 }
 
+function initializeWorkflowDialogs(): void {
+  helpBtn.addEventListener("click", () => {
+    if (!helpDialog.open) {
+      helpDialog.showModal();
+      uiLog.info("Help dialog opened", { subcategory: "Dialog" });
+    }
+  });
+
+  helpCloseBtn.addEventListener("click", () => {
+    helpDialog.close();
+    uiLog.info("Help dialog closed", { subcategory: "Dialog" });
+  });
+
+  resetBtn.addEventListener("click", () => {
+    uiLog.warn("Reset button clicked", {
+      subcategory: "Controls",
+      context: { activeProblemId: activeProblem.id }
+    });
+    requestResetToStarter();
+  });
+
+  resetCancelBtn.addEventListener("click", () => {
+    resetConfirmDialog.close();
+    uiLog.info("Reset confirmation canceled", {
+      subcategory: "Controls",
+      context: { activeProblemId: activeProblem.id }
+    });
+  });
+
+  resetConfirmBtn.addEventListener("click", () => {
+    resetConfirmDialog.close();
+    resetToStarter();
+    uiLog.warn("Reset confirmation accepted", {
+      subcategory: "Controls",
+      context: { activeProblemId: activeProblem.id }
+    });
+  });
+}
+
+function initializeReferenceWindowIntegration(): void {
+  referenceIntegration = new C99ReferenceWindowIntegration({
+    logger: referenceLog,
+    onUnhandledError: (source, message, options) => {
+      recordUnhandledError(source, message, options);
+    },
+    onSnippetInsertRequested: (snippetText, insertionMode) => {
+      insertReferenceSnippetIntoEditor(snippetText, insertionMode);
+    }
+  });
+
+  referenceBtn.addEventListener("click", () => {
+    const searchSeed = getReferenceSearchSeedFromEditor();
+    referenceIntegration?.openEmbedded(searchSeed);
+    referenceLog.info("Embedded reference window requested", {
+      subcategory: "Window",
+      context: {
+        searchSeed: searchSeed || null,
+        activeProblemId: activeProblem.id
+      }
+    });
+  });
+}
+
 function initializeEditor(): void {
   const host = document.querySelector<HTMLDivElement>("#editor-host");
   if (!host) {
@@ -1335,6 +1519,10 @@ window.addEventListener("beforeunload", () => {
     unregisterUnhandledCapture();
     unregisterUnhandledCapture = null;
   }
+  if (referenceIntegration) {
+    referenceIntegration.dispose();
+    referenceIntegration = null;
+  }
   if (editor) {
     saveDraft(activeProblem.id, readEditor());
   }
@@ -1352,7 +1540,9 @@ unregisterUnhandledCapture = registerUnhandledErrorCapture();
 initializeProblemSelect();
 initializeMobileTabs();
 initializeSettingsDialog();
+initializeWorkflowDialogs();
 initializeEditor();
+initializeReferenceWindowIntegration();
 renderProblem(activeProblem);
 setEditorForProblem(activeProblem);
 applyIncomingShareState();
@@ -1402,14 +1592,6 @@ runBtn.addEventListener("click", () => {
   void runCurrentSubmission();
 });
 
-resetBtn.addEventListener("click", () => {
-  uiLog.info("Reset button clicked", {
-    subcategory: "Controls",
-    context: { activeProblemId: activeProblem.id }
-  });
-  resetToStarter();
-});
-
 customTestsInput.addEventListener("input", () => {
   saveCustomTests(activeProblem.id, customTestsInput.value);
 });
@@ -1422,6 +1604,13 @@ Object.assign(window, {
     getLoggingSettings: () => getLoggingSettings(),
     setLoggingLevel: (level: LoggingLevel) => updateLoggingSettings({ level }),
     setLoggingFormatter: (formatter: LoggingFormatterName) => updateLoggingSettings({ formatter }),
-    buildShareUrl: () => buildShareUrl(buildSharePayloadFromCurrentState())
+    buildShareUrl: () => buildShareUrl(buildSharePayloadFromCurrentState()),
+    openReference: () => referenceIntegration?.openEmbedded(getReferenceSearchSeedFromEditor()),
+    openReferenceStandalone: () => referenceIntegration?.openStandalone(),
+    openHelp: () => {
+      if (!helpDialog.open) {
+        helpDialog.showModal();
+      }
+    }
   }
 });

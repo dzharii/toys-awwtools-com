@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { Page, TestInfo } from "@playwright/test";
+import type { FrameLocator, Page, TestInfo } from "@playwright/test";
 
 interface BrowserIssues {
   consoleErrors: string[];
@@ -12,6 +12,123 @@ const EDITOR_CONTENT = "[data-testid='editor'] .cm-content";
 async function openWorkspace(page: Page): Promise<void> {
   await page.goto("/");
   await expect(page.getByTestId("workspace")).toBeVisible();
+}
+
+async function openReferenceWindow(page: Page): Promise<void> {
+  await page.getByTestId("reference-button").click();
+  await expect(page.getByTestId("reference-window-window")).toBeVisible();
+  const frame = page.frameLocator("[data-testid='reference-iframe']");
+  await expect(frame.locator("#searchInput")).toBeVisible({ timeout: 45_000 });
+  await expect(frame.locator("#toc")).toBeVisible({ timeout: 45_000 });
+}
+
+async function searchReference(frame: FrameLocator, query: string): Promise<void> {
+  const searchInput = frame.locator("#searchInput");
+  await expect(searchInput).toBeVisible({ timeout: 45_000 });
+  await searchInput.evaluate((node, value) => {
+    const input = node as HTMLInputElement;
+    input.value = String(value ?? "");
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  }, query);
+  await searchInput.press("Enter");
+}
+
+async function beginLongTaskCapture(page: Page): Promise<boolean> {
+  return page.evaluate(() => {
+    if (typeof PerformanceObserver === "undefined") {
+      return false;
+    }
+
+    const supported = PerformanceObserver.supportedEntryTypes?.includes("longtask") ?? false;
+    if (!supported) {
+      return false;
+    }
+
+    const globalObject = window as unknown as {
+      __ceetcodeLongTaskEntries?: number[];
+      __ceetcodeLongTaskObserver?: PerformanceObserver;
+    };
+
+    globalObject.__ceetcodeLongTaskEntries = [];
+    const observer = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        if (entry.entryType === "longtask") {
+          globalObject.__ceetcodeLongTaskEntries?.push(entry.duration);
+        }
+      }
+    });
+    observer.observe({ entryTypes: ["longtask"] });
+    globalObject.__ceetcodeLongTaskObserver = observer;
+    return true;
+  });
+}
+
+async function endLongTaskCapture(page: Page): Promise<{ count: number; maxDurationMs: number; durations: number[] }> {
+  return page.evaluate(() => {
+    const globalObject = window as unknown as {
+      __ceetcodeLongTaskEntries?: number[];
+      __ceetcodeLongTaskObserver?: PerformanceObserver;
+    };
+
+    globalObject.__ceetcodeLongTaskObserver?.disconnect();
+    const durations = [...(globalObject.__ceetcodeLongTaskEntries ?? [])];
+    return {
+      count: durations.length,
+      maxDurationMs: durations.length > 0 ? Math.max(...durations) : 0,
+      durations
+    };
+  });
+}
+
+async function beginLongTaskCaptureInFrame(frame: FrameLocator): Promise<boolean> {
+  const frameRoot = frame.locator("body");
+  await expect(frameRoot).toBeVisible();
+  return frameRoot.evaluate(() => {
+    if (typeof PerformanceObserver === "undefined") {
+      return false;
+    }
+
+    const supported = PerformanceObserver.supportedEntryTypes?.includes("longtask") ?? false;
+    if (!supported) {
+      return false;
+    }
+
+    const globalObject = window as unknown as {
+      __ceetcodeLongTaskEntries?: number[];
+      __ceetcodeLongTaskObserver?: PerformanceObserver;
+    };
+
+    globalObject.__ceetcodeLongTaskEntries = [];
+    const observer = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        if (entry.entryType === "longtask") {
+          globalObject.__ceetcodeLongTaskEntries?.push(entry.duration);
+        }
+      }
+    });
+    observer.observe({ entryTypes: ["longtask"] });
+    globalObject.__ceetcodeLongTaskObserver = observer;
+    return true;
+  });
+}
+
+async function endLongTaskCaptureInFrame(frame: FrameLocator): Promise<{ count: number; maxDurationMs: number; durations: number[] }> {
+  const frameRoot = frame.locator("body");
+  await expect(frameRoot).toBeVisible();
+  return frameRoot.evaluate(() => {
+    const globalObject = window as unknown as {
+      __ceetcodeLongTaskEntries?: number[];
+      __ceetcodeLongTaskObserver?: PerformanceObserver;
+    };
+
+    globalObject.__ceetcodeLongTaskObserver?.disconnect();
+    const durations = [...(globalObject.__ceetcodeLongTaskEntries ?? [])];
+    return {
+      count: durations.length,
+      maxDurationMs: durations.length > 0 ? Math.max(...durations) : 0,
+      durations
+    };
+  });
 }
 
 async function replaceEditorSource(page: Page, source: string): Promise<void> {
@@ -59,6 +176,40 @@ async function runAndCollectStatuses(page: Page): Promise<string[]> {
 async function captureVisualState(page: Page, testInfo: TestInfo, label: string): Promise<void> {
   const stateSnapshot = await page.evaluate(() => {
     const byTestId = (id: string) => document.querySelector<HTMLElement>(`[data-testid=\"${id}\"]`);
+    const captureRect = (id: string) => {
+      const el = byTestId(id);
+      if (!el) return null;
+      const rect = el.getBoundingClientRect();
+      return {
+        x: Math.round(rect.x),
+        y: Math.round(rect.y),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+        right: Math.round(rect.right),
+        bottom: Math.round(rect.bottom)
+      };
+    };
+
+    const keyControlIds = [
+      "problem-select",
+      "run-button",
+      "reset-button",
+      "format-button",
+      "share-button",
+      "settings-button",
+      "help-button",
+      "reference-button",
+      "run-status",
+      "problem-panel",
+      "editor-panel",
+      "error-panel"
+    ];
+
+    const controlGeometry = Object.fromEntries(
+      keyControlIds.map((id) => [id, captureRect(id)])
+    );
+
+    const referenceWindowRect = captureRect("reference-window-window");
 
     return {
       title: document.querySelector("#problem-title")?.textContent?.trim() ?? "",
@@ -70,7 +221,13 @@ async function captureVisualState(page: Page, testInfo: TestInfo, label: string)
         document.querySelector<HTMLDetailsElement>("[data-testid='error-panel']")?.open ?? false,
       testsPreview: byTestId("tests-list")?.textContent?.trim() ?? "",
       stdoutPreview: byTestId("stdout-output")?.textContent?.trim() ?? "",
-      stderrPreview: byTestId("stderr-output")?.textContent?.trim() ?? ""
+      stderrPreview: byTestId("stderr-output")?.textContent?.trim() ?? "",
+      controlGeometry,
+      referenceWindowRect,
+      viewport: {
+        width: window.innerWidth,
+        height: window.innerHeight
+      }
     };
   });
 
@@ -145,6 +302,8 @@ test.describe.serial("Ceetcode acceptance @acceptance", () => {
     await expect(page.getByTestId("editor-panel")).toBeVisible();
     await expect(page.getByTestId("problem-select")).toBeVisible();
     await expect(page.getByTestId("share-button")).toBeVisible();
+    await expect(page.getByTestId("reference-button")).toBeVisible();
+    await expect(page.getByTestId("help-button")).toBeVisible();
     await expect(page.getByTestId("format-button")).toBeVisible();
     await expect(page.getByTestId("run-button")).toBeVisible();
     await expect(page.getByTestId("reset-button")).toBeVisible();
@@ -208,6 +367,278 @@ test.describe.serial("Ceetcode acceptance @acceptance", () => {
     await expect(page.getByTestId("logging-background-toggle")).not.toBeChecked();
 
     await captureVisualState(page, testInfo, "logging-settings");
+  });
+
+  test("embedded reference window opens, searches printf, and updates title @acceptance", async ({ page }, testInfo) => {
+    await openWorkspace(page);
+    await openReferenceWindow(page);
+
+    const frame = page.frameLocator("[data-testid='reference-iframe']");
+    await searchReference(frame, "printf");
+
+    await expect(frame.locator(".search-hint")).toContainText(/Found|No matches/);
+    await expect(frame.locator(".search-results .toc-link").first()).toContainText(/printf/i);
+    await expect(page.getByTestId("reference-window-title")).toContainText(/printf/i, { timeout: 20_000 });
+
+    await captureVisualState(page, testInfo, "reference-embedded-printf");
+  });
+
+  test("reference window supports drag and resize interactions @acceptance", async ({ page }, testInfo) => {
+    await openWorkspace(page);
+    await openReferenceWindow(page);
+
+    const windowLocator = page.getByTestId("reference-window-window");
+    const titleBar = windowLocator.locator(".tool-window-titlebar");
+    const resizeHandle = windowLocator.locator(".tool-window-resize-handle.handle-nw");
+
+    const beforeDrag = await windowLocator.boundingBox();
+    expect(beforeDrag).not.toBeNull();
+    if (!beforeDrag) {
+      throw new Error("Reference window bounding box unavailable before drag.");
+    }
+
+    const titleBarBox = await titleBar.boundingBox();
+    expect(titleBarBox).not.toBeNull();
+    if (!titleBarBox) {
+      throw new Error("Reference window title bar bounding box unavailable.");
+    }
+
+    await page.mouse.move(titleBarBox.x + titleBarBox.width / 2, titleBarBox.y + titleBarBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(titleBarBox.x + titleBarBox.width / 2 + 150, titleBarBox.y + titleBarBox.height / 2 + 120);
+    await page.mouse.up();
+
+    const afterDrag = await windowLocator.boundingBox();
+    expect(afterDrag).not.toBeNull();
+    if (!afterDrag) {
+      throw new Error("Reference window bounding box unavailable after drag.");
+    }
+    expect(Math.abs(afterDrag.x - beforeDrag.x)).toBeGreaterThan(20);
+    expect(Math.abs(afterDrag.y - beforeDrag.y)).toBeGreaterThan(20);
+
+    const beforeResize = afterDrag;
+    const handleBox = await resizeHandle.boundingBox();
+    expect(handleBox).not.toBeNull();
+    if (!handleBox) {
+      throw new Error("Resize handle bounding box unavailable.");
+    }
+
+    await page.mouse.move(handleBox.x + handleBox.width / 2, handleBox.y + handleBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(handleBox.x - 140, handleBox.y - 110);
+    await page.mouse.up();
+
+    const afterResize = await windowLocator.boundingBox();
+    expect(afterResize).not.toBeNull();
+    if (!afterResize) {
+      throw new Error("Reference window bounding box unavailable after resize.");
+    }
+    expect(afterResize.width).toBeGreaterThan(beforeResize.width);
+    expect(afterResize.height).toBeGreaterThan(beforeResize.height);
+
+    await captureVisualState(page, testInfo, "reference-window-drag-resize");
+  });
+
+  test("reference drag stays under long-task performance budget @acceptance", async ({ page }, testInfo) => {
+    await openWorkspace(page);
+    await openReferenceWindow(page);
+
+    const windowLocator = page.getByTestId("reference-window-window");
+    const titleBar = windowLocator.locator(".tool-window-titlebar");
+    const titleBarBox = await titleBar.boundingBox();
+    expect(titleBarBox).not.toBeNull();
+    if (!titleBarBox) {
+      throw new Error("Reference window title bar bounding box unavailable.");
+    }
+
+    const longTaskSupported = await beginLongTaskCapture(page);
+    if (longTaskSupported) {
+      const startX = titleBarBox.x + titleBarBox.width * 0.5;
+      const startY = titleBarBox.y + titleBarBox.height * 0.5;
+      await page.mouse.move(startX, startY);
+      await page.mouse.down();
+      for (let step = 1; step <= 6; step += 1) {
+        await page.mouse.move(startX + step * 26, startY + step * 16);
+      }
+      await page.mouse.up();
+      await page.waitForTimeout(100);
+    }
+
+    const longTaskSummary = longTaskSupported
+      ? await endLongTaskCapture(page)
+      : { count: 0, maxDurationMs: 0, durations: [] as number[] };
+
+    await testInfo.attach("reference-drag-longtasks.json", {
+      body: JSON.stringify({ supported: longTaskSupported, ...longTaskSummary }, null, 2),
+      contentType: "application/json"
+    });
+
+    if (longTaskSupported) {
+      expect(
+        longTaskSummary.maxDurationMs,
+        `reference drag max long task exceeded budget: ${longTaskSummary.maxDurationMs}ms`
+      ).toBeLessThan(50);
+    }
+
+    await captureVisualState(page, testInfo, "reference-drag-performance");
+  });
+
+  test("reference snippet Use action inserts memset snippet into editor @acceptance", async ({ page }, testInfo) => {
+    await openWorkspace(page);
+    await page.locator(EDITOR_CONTENT).click();
+    await page.keyboard.press("ControlOrMeta+End");
+
+    await openReferenceWindow(page);
+    const frame = page.frameLocator("[data-testid='reference-iframe']");
+    await searchReference(frame, "memset");
+    await expect(frame.locator(".search-results .toc-link").first()).toContainText(/memset/i);
+    await expect(page.getByTestId("reference-window-title")).toContainText(/memset/i, { timeout: 20_000 });
+
+    const memsetCard = frame.locator(".function-card").filter({ has: frame.getByRole("heading", { name: /memset/i }) }).first();
+    await expect(memsetCard).toBeVisible();
+    await memsetCard.locator(".snippet-button").first().click();
+    await expect(page.locator(EDITOR_CONTENT)).toContainText("memset");
+
+    await captureVisualState(page, testInfo, "reference-snippet-insert");
+  });
+
+  test("reference pop out opens standalone window with full reference experience @acceptance", async ({ page }, testInfo) => {
+    await openWorkspace(page);
+    await openReferenceWindow(page);
+
+    const popupPromise = page.waitForEvent("popup");
+    await page.getByTestId("reference-window-popout").click();
+    const popup = await popupPromise;
+    await popup.waitForLoadState("domcontentloaded");
+    await expect(popup).toHaveURL(/external-app-c99-reference/);
+    await expect(popup.locator("#searchInput")).toBeVisible({ timeout: 45_000 });
+    await expect(popup.locator("body")).not.toHaveClass(/embedded-mode/);
+    await popup.close();
+
+    await captureVisualState(page, testInfo, "reference-popout");
+  });
+
+  test("reference closes and reopens without losing loaded state @acceptance", async ({ page }, testInfo) => {
+    await openWorkspace(page);
+    await openReferenceWindow(page);
+
+    const frame = page.frameLocator("[data-testid='reference-iframe']");
+    await searchReference(frame, "printf");
+    await expect(page.getByTestId("reference-window-title")).toContainText(/printf/i, { timeout: 20_000 });
+
+    await page.getByTestId("reference-window-close").click();
+    await expect(page.getByTestId("reference-window-window")).toBeHidden();
+
+    await page.getByTestId("reference-button").click();
+    await expect(page.getByTestId("reference-window-window")).toBeVisible();
+    await expect(page.getByTestId("reference-window-title")).toContainText(/printf/i);
+    await expect(frame.locator("#searchInput")).toHaveValue(/printf/i);
+
+    await captureVisualState(page, testInfo, "reference-reopen-state");
+  });
+
+  test("embedded reference keeps search controls visible at narrow window widths @acceptance", async ({ page }, testInfo) => {
+    await openWorkspace(page);
+    await openReferenceWindow(page);
+
+    const windowLocator = page.getByTestId("reference-window-window");
+    const resizeHandle = windowLocator.locator(".tool-window-resize-handle.handle-w");
+    const handleBox = await resizeHandle.boundingBox();
+    expect(handleBox).not.toBeNull();
+    if (!handleBox) {
+      throw new Error("West resize handle bounding box unavailable.");
+    }
+
+    await page.mouse.move(handleBox.x + handleBox.width / 2, handleBox.y + handleBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(handleBox.x + 240, handleBox.y + 10);
+    await page.mouse.up();
+
+    const frame = page.frameLocator("[data-testid='reference-iframe']");
+    await expect(frame.locator("#searchInput")).toBeVisible();
+    await expect(frame.locator("#toc")).toBeVisible();
+    await searchReference(frame, "memset");
+    await expect(frame.locator(".search-results .toc-link").first()).toContainText(/memset/i);
+
+    await captureVisualState(page, testInfo, "reference-narrow-search");
+  });
+
+  test("embedded reference search typing stays within long-task budget @acceptance", async ({ page }, testInfo) => {
+    await openWorkspace(page);
+    await openReferenceWindow(page);
+
+    const frame = page.frameLocator("[data-testid='reference-iframe']");
+    const searchInput = frame.locator("#searchInput");
+    await expect(searchInput).toBeVisible();
+
+    const longTaskSupported = await beginLongTaskCaptureInFrame(frame);
+    if (longTaskSupported) {
+      await searchInput.click();
+      await searchInput.fill("");
+      await searchInput.type("memset", { delay: 18 });
+      await page.waitForTimeout(180);
+    }
+
+    const longTaskSummary = longTaskSupported
+      ? await endLongTaskCaptureInFrame(frame)
+      : { count: 0, maxDurationMs: 0, durations: [] as number[] };
+
+    await testInfo.attach("reference-search-longtasks.json", {
+      body: JSON.stringify({ supported: longTaskSupported, ...longTaskSummary }, null, 2),
+      contentType: "application/json"
+    });
+
+    if (longTaskSupported) {
+      const over120 = longTaskSummary.durations.filter((duration) => duration > 120);
+      const over250 = longTaskSummary.durations.filter((duration) => duration > 250);
+      expect(
+        longTaskSummary.maxDurationMs,
+        `reference search typing produced an extreme long task: ${longTaskSummary.maxDurationMs}ms`
+      ).toBeLessThan(450);
+      expect(
+        over250.length,
+        `reference search typing produced repeated heavy long tasks (>250ms): ${JSON.stringify(over250)}`
+      ).toBeLessThanOrEqual(1);
+      expect(
+        over120.length,
+        `reference search typing produced too many long tasks (>120ms): ${JSON.stringify(over120)}`
+      ).toBeLessThanOrEqual(2);
+    }
+
+    await expect(frame.locator(".search-results .toc-link").first()).toContainText(/memset/i);
+    await captureVisualState(page, testInfo, "reference-search-performance");
+  });
+
+  test("reset requires explicit confirmation and help dialog is discoverable @acceptance", async ({ page }, testInfo) => {
+    await openWorkspace(page);
+    await page.getByTestId("problem-select").selectOption("new");
+    await replaceEditorSource(
+      page,
+      `int problem(void) {
+    // danger-reset-marker
+    return 7;
+}`
+    );
+
+    await page.getByTestId("reset-button").click();
+    await expect(page.getByTestId("reset-confirm-dialog")).toHaveAttribute("open", "");
+    await page.getByTestId("reset-cancel-button").click();
+    await expect(page.getByTestId("reset-confirm-dialog")).not.toHaveAttribute("open", "");
+    await expect(page.locator(EDITOR_CONTENT)).toContainText("danger-reset-marker");
+
+    await page.getByTestId("reset-button").click();
+    await page.getByTestId("reset-confirm-button").click();
+    await expect(page.locator(EDITOR_CONTENT)).not.toContainText("danger-reset-marker");
+    await expect(page.locator(EDITOR_CONTENT)).toContainText("Hello, world!");
+
+    await page.getByTestId("help-button").click();
+    await expect(page.getByTestId("help-dialog")).toHaveAttribute("open", "");
+    await expect(page.getByTestId("help-dialog")).toContainText(/select a symbol/i);
+    await expect(page.getByTestId("help-dialog")).toContainText("Reset To Starter");
+    await page.getByTestId("help-close-button").click();
+    await expect(page.getByTestId("help-dialog")).not.toHaveAttribute("open", "");
+
+    await captureVisualState(page, testInfo, "reset-confirm-and-help");
   });
 
   test("run workflow shows progress and passing summary @acceptance", async ({ page }, testInfo) => {

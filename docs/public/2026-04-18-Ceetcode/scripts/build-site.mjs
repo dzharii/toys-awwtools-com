@@ -29,6 +29,7 @@ await copy(path.join(root, "index.dist.html"), path.join(distDir, "index.html"))
 await copy(path.join(root, "style.css"), path.join(distDir, "style.css"));
 await copy(path.join(root, "sw.js"), path.join(distDir, "sw.js"));
 await copyDirectory(path.join(root, "static"), distDir);
+await copyDirectory(path.join(root, "external-app-c99-reference"), path.join(distDir, "external-app-c99-reference"));
 
 const vendorFiles = ["clang", "lld", "memfs", "shared.js", "sysroot.tar", "LICENSE", "LICENSE.llvm", "README.md"];
 for (const file of vendorFiles) {

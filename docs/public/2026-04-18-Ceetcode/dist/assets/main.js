@@ -33250,6 +33250,907 @@ class WorkerCompilerClient {
   }
 }
 
+// app/tool-window/pointer-session.ts
+function beginPointerSession(options) {
+  const { startEvent, onMove, onEnd } = options;
+  if (startEvent.button !== 0) {
+    return;
+  }
+  const pointerId = startEvent.pointerId;
+  const startX = startEvent.clientX;
+  const startY = startEvent.clientY;
+  const target = startEvent.currentTarget;
+  if (target instanceof Element && "setPointerCapture" in target) {
+    try {
+      target.setPointerCapture(pointerId);
+    } catch {}
+  }
+  const onPointerMove = (moveEvent) => {
+    if (moveEvent.pointerId !== pointerId) {
+      return;
+    }
+    moveEvent.preventDefault();
+    onMove(moveEvent.clientX - startX, moveEvent.clientY - startY, moveEvent);
+  };
+  const finish = (endEvent) => {
+    if (endEvent.pointerId !== pointerId) {
+      return;
+    }
+    window.removeEventListener("pointermove", onPointerMove);
+    window.removeEventListener("pointerup", finish);
+    window.removeEventListener("pointercancel", finish);
+    if (target instanceof Element && "releasePointerCapture" in target) {
+      try {
+        target.releasePointerCapture(pointerId);
+      } catch {}
+    }
+    if (onEnd) {
+      onEnd(endEvent);
+    }
+  };
+  window.addEventListener("pointermove", onPointerMove);
+  window.addEventListener("pointerup", finish);
+  window.addEventListener("pointercancel", finish);
+  startEvent.preventDefault();
+}
+
+// app/tool-window/drag.ts
+function clamp(value, min, max) {
+  if (value < min)
+    return min;
+  if (value > max)
+    return max;
+  return value;
+}
+function getViewportBounds() {
+  return {
+    width: window.innerWidth,
+    height: window.innerHeight
+  };
+}
+function clampPosition(geometry, viewportMargin) {
+  const viewport = getViewportBounds();
+  const minLeft = viewportMargin;
+  const maxLeft = viewport.width - geometry.width - viewportMargin;
+  const minTop = viewportMargin;
+  const maxTop = viewport.height - geometry.height - viewportMargin;
+  const left = maxLeft < minLeft ? Math.round((viewport.width - geometry.width) / 2) : clamp(geometry.left, minLeft, maxLeft);
+  const top2 = maxTop < minTop ? Math.round((viewport.height - geometry.height) / 2) : clamp(geometry.top, minTop, maxTop);
+  return {
+    ...geometry,
+    left,
+    top: top2
+  };
+}
+function attachDragBehavior(options) {
+  const viewportMargin = options.viewportMargin ?? 10;
+  const onPointerDown = (event) => {
+    const target = event.target;
+    if (target instanceof HTMLElement && target.closest("button")) {
+      return;
+    }
+    options.bringToFront();
+    const startGeometry = options.getGeometry();
+    let latestGeometry = startGeometry;
+    options.onInteractionStart?.();
+    beginPointerSession({
+      startEvent: event,
+      onMove: (deltaX, deltaY) => {
+        const unclamped = {
+          ...startGeometry,
+          left: startGeometry.left + deltaX,
+          top: startGeometry.top + deltaY
+        };
+        latestGeometry = clampPosition(unclamped, viewportMargin);
+        options.onPreviewOffset(latestGeometry.left - startGeometry.left, latestGeometry.top - startGeometry.top);
+      },
+      onEnd: () => {
+        options.onPreviewOffset(0, 0);
+        options.onCommitGeometry(latestGeometry);
+        options.onInteractionEnd?.();
+      }
+    });
+  };
+  options.dragHandle.addEventListener("pointerdown", onPointerDown);
+  return () => {
+    options.dragHandle.removeEventListener("pointerdown", onPointerDown);
+  };
+}
+
+// app/tool-window/resize.ts
+function clamp2(value, min, max) {
+  if (value < min)
+    return min;
+  if (value > max)
+    return max;
+  return value;
+}
+function normalizeGeometry(geometry, direction, minWidth, minHeight, viewportMargin) {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  let left = geometry.left;
+  let top2 = geometry.top;
+  let right = geometry.left + geometry.width;
+  let bottom = geometry.top + geometry.height;
+  if (right - left < minWidth) {
+    if (direction.includes("w") && !direction.includes("e")) {
+      left = right - minWidth;
+    } else {
+      right = left + minWidth;
+    }
+  }
+  if (bottom - top2 < minHeight) {
+    if (direction.includes("n") && !direction.includes("s")) {
+      top2 = bottom - minHeight;
+    } else {
+      bottom = top2 + minHeight;
+    }
+  }
+  if (left < viewportMargin) {
+    if (direction.includes("w") && !direction.includes("e")) {
+      left = viewportMargin;
+    }
+  }
+  if (top2 < viewportMargin) {
+    if (direction.includes("n") && !direction.includes("s")) {
+      top2 = viewportMargin;
+    }
+  }
+  const maxRight = viewportWidth - viewportMargin;
+  const maxBottom = viewportHeight - viewportMargin;
+  if (right > maxRight) {
+    if (direction.includes("e") && !direction.includes("w")) {
+      right = maxRight;
+    }
+  }
+  if (bottom > maxBottom) {
+    if (direction.includes("s") && !direction.includes("n")) {
+      bottom = maxBottom;
+    }
+  }
+  const width = clamp2(right - left, minWidth, Math.max(minWidth, viewportWidth - viewportMargin * 2));
+  const height = clamp2(bottom - top2, minHeight, Math.max(minHeight, viewportHeight - viewportMargin * 2));
+  left = clamp2(left, viewportMargin, Math.max(viewportMargin, viewportWidth - viewportMargin - width));
+  top2 = clamp2(top2, viewportMargin, Math.max(viewportMargin, viewportHeight - viewportMargin - height));
+  return {
+    left,
+    top: top2,
+    width,
+    height
+  };
+}
+function attachResizeBehavior(options) {
+  const viewportMargin = options.viewportMargin ?? 10;
+  const onPointerDown = (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+    const handle = target.closest("[data-resize-dir]");
+    if (!handle) {
+      return;
+    }
+    const resizeDirection = handle.dataset.resizeDir;
+    if (!resizeDirection) {
+      return;
+    }
+    const startGeometry = options.getGeometry();
+    options.bringToFront();
+    options.onInteractionStart?.();
+    beginPointerSession({
+      startEvent: event,
+      onMove: (deltaX, deltaY) => {
+        let left = startGeometry.left;
+        let top2 = startGeometry.top;
+        let width = startGeometry.width;
+        let height = startGeometry.height;
+        if (resizeDirection.includes("e")) {
+          width = startGeometry.width + deltaX;
+        }
+        if (resizeDirection.includes("s")) {
+          height = startGeometry.height + deltaY;
+        }
+        if (resizeDirection.includes("w")) {
+          left = startGeometry.left + deltaX;
+          width = startGeometry.width - deltaX;
+        }
+        if (resizeDirection.includes("n")) {
+          top2 = startGeometry.top + deltaY;
+          height = startGeometry.height - deltaY;
+        }
+        const normalized = normalizeGeometry({ left, top: top2, width, height }, resizeDirection, options.minWidth, options.minHeight, viewportMargin);
+        options.setGeometry(normalized);
+      },
+      onEnd: () => {
+        options.onInteractionEnd?.();
+      }
+    });
+  };
+  options.rootElement.addEventListener("pointerdown", onPointerDown);
+  return () => {
+    options.rootElement.removeEventListener("pointerdown", onPointerDown);
+  };
+}
+
+// app/tool-window/floating-window.ts
+var DEFAULT_VIEWPORT_MARGIN = 10;
+var nextFloatingWindowZIndex = 1300;
+function clamp3(value, min, max) {
+  if (value < min)
+    return min;
+  if (value > max)
+    return max;
+  return value;
+}
+function createResizeHandle(direction) {
+  const handle = document.createElement("div");
+  handle.className = `tool-window-resize-handle handle-${direction}`;
+  handle.dataset.resizeDir = direction;
+  handle.setAttribute("aria-hidden", "true");
+  return handle;
+}
+function isFiniteNumber(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+class FloatingToolWindow {
+  options;
+  root;
+  titleElement;
+  contentElement;
+  interactionOverlay;
+  dragCleanup;
+  resizeCleanup;
+  geometry;
+  previewOffset = { x: 0, y: 0 };
+  interactionPhase = "idle";
+  rafId = null;
+  isCurrentlyOpen = false;
+  constructor(options) {
+    this.options = options;
+    const viewportMargin = options.viewportMargin ?? DEFAULT_VIEWPORT_MARGIN;
+    this.geometry = this.buildDefaultGeometry();
+    this.root = document.createElement("div");
+    this.root.className = "tool-window";
+    this.root.dataset.toolWindowId = options.id;
+    this.root.dataset.testid = `${options.id}-window`;
+    this.root.setAttribute("data-testid", `${options.id}-window`);
+    this.root.hidden = true;
+    const titleBar = document.createElement("header");
+    titleBar.className = "tool-window-titlebar";
+    titleBar.dataset.dragHandle = "true";
+    const titleGroup = document.createElement("div");
+    titleGroup.className = "tool-window-title-group";
+    const titleText = document.createElement("span");
+    titleText.className = "tool-window-title";
+    titleText.textContent = options.title;
+    titleText.setAttribute("data-testid", `${options.id}-title`);
+    this.titleElement = titleText;
+    titleGroup.appendChild(titleText);
+    const controls = document.createElement("div");
+    controls.className = "tool-window-controls";
+    const popoutButton = document.createElement("button");
+    popoutButton.type = "button";
+    popoutButton.className = "tool-window-control tool-window-control-popout";
+    popoutButton.textContent = "Pop Out";
+    popoutButton.title = "Open in new tab";
+    popoutButton.setAttribute("data-testid", `${options.id}-popout`);
+    popoutButton.addEventListener("click", () => {
+      options.onRequestOpenStandalone?.();
+    });
+    const closeButton = document.createElement("button");
+    closeButton.type = "button";
+    closeButton.className = "tool-window-control tool-window-control-close";
+    closeButton.textContent = "Close";
+    closeButton.title = "Close";
+    closeButton.setAttribute("data-testid", `${options.id}-close`);
+    closeButton.addEventListener("click", () => {
+      this.close();
+      options.onRequestClose?.();
+    });
+    controls.appendChild(popoutButton);
+    controls.appendChild(closeButton);
+    titleBar.appendChild(titleGroup);
+    titleBar.appendChild(controls);
+    const body = document.createElement("div");
+    body.className = "tool-window-body";
+    body.setAttribute("data-testid", `${options.id}-body`);
+    this.contentElement = body;
+    this.interactionOverlay = document.createElement("div");
+    this.interactionOverlay.className = "tool-window-interaction-overlay";
+    this.interactionOverlay.textContent = "Adjusting window...";
+    this.interactionOverlay.setAttribute("aria-hidden", "true");
+    body.appendChild(this.interactionOverlay);
+    this.root.appendChild(titleBar);
+    this.root.appendChild(body);
+    const resizeDirections = ["n", "s", "e", "w", "ne", "nw", "se", "sw"];
+    for (const direction of resizeDirections) {
+      this.root.appendChild(createResizeHandle(direction));
+    }
+    document.body.appendChild(this.root);
+    this.dragCleanup = attachDragBehavior({
+      dragHandle: titleBar,
+      getGeometry: () => this.geometry,
+      onPreviewOffset: (deltaX, deltaY) => {
+        this.previewOffset = {
+          x: Math.round(deltaX),
+          y: Math.round(deltaY)
+        };
+        this.scheduleVisualSync();
+      },
+      onCommitGeometry: (next) => {
+        this.geometry = next;
+        this.previewOffset = { x: 0, y: 0 };
+        this.scheduleVisualSync();
+        this.persistGeometry();
+      },
+      bringToFront: () => this.bringToFront(),
+      onInteractionStart: () => {
+        this.interactionPhase = "dragging";
+        this.scheduleVisualSync();
+      },
+      onInteractionEnd: () => {
+        this.interactionPhase = "idle";
+        this.scheduleVisualSync();
+      },
+      viewportMargin
+    });
+    this.resizeCleanup = attachResizeBehavior({
+      rootElement: this.root,
+      getGeometry: () => this.geometry,
+      setGeometry: (next) => {
+        this.geometry = next;
+        this.scheduleVisualSync();
+      },
+      bringToFront: () => this.bringToFront(),
+      onInteractionStart: () => {
+        this.interactionPhase = "resizing";
+        this.scheduleVisualSync();
+      },
+      onInteractionEnd: () => {
+        this.interactionPhase = "idle";
+        this.scheduleVisualSync();
+        this.persistGeometry();
+      },
+      minWidth: options.minWidth,
+      minHeight: options.minHeight,
+      viewportMargin
+    });
+    this.root.addEventListener("pointerdown", () => {
+      this.bringToFront();
+    });
+    this.root.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        this.close();
+        options.onRequestClose?.();
+      }
+    });
+    this.applyPersistedGeometry();
+    this.flushVisualSync();
+    window.addEventListener("resize", this.handleWindowResize);
+  }
+  handleWindowResize = () => {
+    const viewportMargin = this.options.viewportMargin ?? DEFAULT_VIEWPORT_MARGIN;
+    const maxWidth = Math.max(this.options.minWidth, window.innerWidth - viewportMargin * 2);
+    const maxHeight = Math.max(this.options.minHeight, window.innerHeight - viewportMargin * 2);
+    const width = clamp3(this.geometry.width, this.options.minWidth, maxWidth);
+    const height = clamp3(this.geometry.height, this.options.minHeight, maxHeight);
+    const left = clamp3(this.geometry.left, viewportMargin, Math.max(viewportMargin, window.innerWidth - viewportMargin - width));
+    const top2 = clamp3(this.geometry.top, viewportMargin, Math.max(viewportMargin, window.innerHeight - viewportMargin - height));
+    this.geometry = { left, top: top2, width, height };
+    this.scheduleVisualSync();
+    this.persistGeometry();
+  };
+  buildDefaultGeometry() {
+    const viewportMargin = this.options.viewportMargin ?? DEFAULT_VIEWPORT_MARGIN;
+    const widthRatio = this.options.defaultWidthRatio ?? 0.5;
+    const heightRatio = this.options.defaultHeightRatio ?? 0.72;
+    const maxWidth = Math.max(this.options.minWidth, Math.min(this.options.maxWidth ?? 1120, window.innerWidth - viewportMargin * 2));
+    const maxHeight = Math.max(this.options.minHeight, Math.min(this.options.maxHeight ?? 860, window.innerHeight - viewportMargin * 2));
+    const width = clamp3(Math.round(window.innerWidth * widthRatio), this.options.minWidth, maxWidth);
+    const height = clamp3(Math.round(window.innerHeight * heightRatio), this.options.minHeight, maxHeight);
+    const left = clamp3(Math.round((window.innerWidth - width) / 2), viewportMargin, Math.max(viewportMargin, window.innerWidth - viewportMargin - width));
+    const top2 = clamp3(Math.round((window.innerHeight - height) / 2) - 24, viewportMargin, Math.max(viewportMargin, window.innerHeight - viewportMargin - height));
+    return { left, top: top2, width, height };
+  }
+  scheduleVisualSync() {
+    if (this.rafId !== null) {
+      return;
+    }
+    this.rafId = window.requestAnimationFrame(() => {
+      this.rafId = null;
+      this.flushVisualSync();
+    });
+  }
+  flushVisualSync() {
+    this.root.style.left = `${Math.round(this.geometry.left)}px`;
+    this.root.style.top = `${Math.round(this.geometry.top)}px`;
+    this.root.style.width = `${Math.round(this.geometry.width)}px`;
+    this.root.style.height = `${Math.round(this.geometry.height)}px`;
+    if (this.previewOffset.x !== 0 || this.previewOffset.y !== 0) {
+      this.root.style.transform = `translate3d(${this.previewOffset.x}px, ${this.previewOffset.y}px, 0)`;
+    } else {
+      this.root.style.transform = "";
+    }
+    this.root.classList.toggle("is-dragging", this.interactionPhase === "dragging");
+    this.root.classList.toggle("is-resizing", this.interactionPhase === "resizing");
+    this.root.classList.toggle("is-interacting", this.interactionPhase !== "idle");
+  }
+  bringToFront() {
+    nextFloatingWindowZIndex += 1;
+    this.root.style.zIndex = String(nextFloatingWindowZIndex);
+  }
+  applyPersistedGeometry() {
+    if (!this.options.storageKey) {
+      return;
+    }
+    try {
+      const raw = window.localStorage.getItem(this.options.storageKey);
+      if (!raw) {
+        return;
+      }
+      const parsed = JSON.parse(raw);
+      if (!isFiniteNumber(parsed.left) || !isFiniteNumber(parsed.top) || !isFiniteNumber(parsed.width) || !isFiniteNumber(parsed.height)) {
+        return;
+      }
+      this.geometry = {
+        left: parsed.left,
+        top: parsed.top,
+        width: parsed.width,
+        height: parsed.height
+      };
+      this.handleWindowResize();
+    } catch {}
+  }
+  persistGeometry() {
+    if (!this.options.storageKey) {
+      return;
+    }
+    try {
+      window.localStorage.setItem(this.options.storageKey, JSON.stringify(this.geometry));
+    } catch {}
+  }
+  setTitle(nextTitle) {
+    this.titleElement.textContent = nextTitle;
+  }
+  getContentElement() {
+    return this.contentElement;
+  }
+  getGeometry() {
+    return { ...this.geometry };
+  }
+  isOpen() {
+    return this.isCurrentlyOpen;
+  }
+  open() {
+    if (this.isCurrentlyOpen) {
+      this.bringToFront();
+      return;
+    }
+    this.flushVisualSync();
+    this.root.hidden = false;
+    this.root.setAttribute("aria-hidden", "false");
+    this.isCurrentlyOpen = true;
+    this.bringToFront();
+    this.options.onOpenStateChanged?.(true);
+  }
+  close() {
+    if (!this.isCurrentlyOpen) {
+      return;
+    }
+    this.previewOffset = { x: 0, y: 0 };
+    this.interactionPhase = "idle";
+    this.flushVisualSync();
+    this.root.hidden = true;
+    this.root.setAttribute("aria-hidden", "true");
+    this.isCurrentlyOpen = false;
+    this.options.onOpenStateChanged?.(false);
+  }
+  dispose() {
+    window.removeEventListener("resize", this.handleWindowResize);
+    if (this.rafId !== null) {
+      window.cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+    this.dragCleanup();
+    this.resizeCleanup();
+    this.root.remove();
+  }
+}
+
+// app/integrations/c99-reference-window.ts
+var EMBED_CONTRACT_NAMESPACE = "awwtools.c99-reference.embed";
+var EMBED_SCHEMA_VERSION = 1;
+var STARTUP_HASH_KEY = "embedded-reference-config";
+function normalizeText(value, fallback2 = "") {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed || fallback2;
+  }
+  return fallback2;
+}
+function buildReferenceBaseCandidates() {
+  const href = new URL(window.location.href);
+  return [new URL("./external-app-c99-reference/", href), new URL("../external-app-c99-reference/", href)];
+}
+function ensureTrailingSlash(url2) {
+  if (!url2.pathname.endsWith("/")) {
+    url2.pathname = `${url2.pathname}/`;
+  }
+  return url2;
+}
+function tokenizeReferenceSearchSeed(raw) {
+  const normalized = raw.trim();
+  if (!normalized)
+    return "";
+  const token = normalized.match(/[A-Za-z_][A-Za-z0-9_]*/)?.[0] ?? "";
+  return token;
+}
+
+class C99ReferenceWindowIntegration {
+  log;
+  onUnhandledError;
+  onSnippetInsertRequested;
+  shell;
+  frame;
+  baseCandidates;
+  activeCandidateIndex = 0;
+  currentStartupSearch = "";
+  hasLoadedFrameSource = false;
+  ready = false;
+  fallbackAttempted = false;
+  startupTimeoutId = null;
+  disposed = false;
+  constructor(options) {
+    this.log = options.logger;
+    this.onUnhandledError = options.onUnhandledError;
+    this.onSnippetInsertRequested = options.onSnippetInsertRequested;
+    this.baseCandidates = buildReferenceBaseCandidates().map((candidate) => ensureTrailingSlash(candidate));
+    this.shell = new FloatingToolWindow({
+      id: "reference-window",
+      title: "C99 Reference",
+      minWidth: 420,
+      minHeight: 320,
+      defaultWidthRatio: 0.48,
+      defaultHeightRatio: 0.72,
+      maxWidth: 1160,
+      maxHeight: 900,
+      storageKey: "ceetcode.reference.window.geometry.v1",
+      onRequestOpenStandalone: () => this.openStandalone(),
+      onRequestClose: () => {
+        this.log.info("Embedded reference window closed", {
+          subcategory: "Window"
+        });
+      }
+    });
+    this.frame = document.createElement("iframe");
+    this.frame.className = "reference-window-frame";
+    this.frame.title = "C99 reference";
+    this.frame.loading = "eager";
+    this.frame.referrerPolicy = "same-origin";
+    this.frame.setAttribute("data-testid", "reference-iframe");
+    this.shell.getContentElement().appendChild(this.frame);
+    this.frame.addEventListener("load", () => {
+      this.log.info("Reference iframe loaded", {
+        subcategory: "Load",
+        context: {
+          candidateIndex: this.activeCandidateIndex,
+          frameSrc: this.frame.src
+        }
+      });
+    });
+    window.addEventListener("message", this.onWindowMessage);
+  }
+  openEmbedded(seedText = "") {
+    const searchSeed = tokenizeReferenceSearchSeed(seedText);
+    const wasOpen = this.shell.isOpen();
+    this.shell.open();
+    if (!this.hasLoadedFrameSource) {
+      this.currentStartupSearch = searchSeed;
+      this.shell.setTitle("C99 Reference");
+      this.loadCandidate(0);
+      return;
+    }
+    if (searchSeed && this.ready) {
+      this.executeReferenceSearch(searchSeed);
+      return;
+    }
+    if (!wasOpen) {
+      this.log.info("Embedded reference reopened from warm state", {
+        subcategory: "Window"
+      });
+    }
+  }
+  openStandalone() {
+    const activeBase = this.baseCandidates[this.activeCandidateIndex] ?? this.baseCandidates[0];
+    const standaloneUrl = new URL("index.html", activeBase);
+    window.open(standaloneUrl.toString(), "_blank", "noopener,noreferrer");
+    this.log.info("Reference opened in standalone tab", {
+      subcategory: "Window",
+      context: {
+        url: standaloneUrl.toString()
+      }
+    });
+  }
+  closeEmbedded() {
+    this.shell.close();
+  }
+  dispose() {
+    if (this.disposed) {
+      return;
+    }
+    this.disposed = true;
+    if (this.startupTimeoutId !== null) {
+      clearTimeout(this.startupTimeoutId);
+      this.startupTimeoutId = null;
+    }
+    window.removeEventListener("message", this.onWindowMessage);
+    this.shell.dispose();
+  }
+  loadCandidate(candidateIndex) {
+    const candidate = this.baseCandidates[candidateIndex];
+    if (!candidate) {
+      this.onUnhandledError("reference", "No reference URL candidates are available.");
+      return;
+    }
+    this.ready = false;
+    this.fallbackAttempted = candidateIndex > 0;
+    this.activeCandidateIndex = candidateIndex;
+    this.hasLoadedFrameSource = true;
+    const startupConfig = this.buildStartupConfig(this.currentStartupSearch);
+    const encodedConfig = encodeURIComponent(JSON.stringify(startupConfig));
+    const frameUrl = new URL("index.html", candidate);
+    frameUrl.hash = `${STARTUP_HASH_KEY}=${encodedConfig}`;
+    this.frame.src = frameUrl.toString();
+    this.startReadyTimeout();
+    this.log.info("Embedded reference requested", {
+      subcategory: "Load",
+      context: {
+        candidateIndex,
+        searchSeed: this.currentStartupSearch,
+        frameUrl: frameUrl.toString()
+      }
+    });
+  }
+  startReadyTimeout() {
+    if (this.startupTimeoutId !== null) {
+      clearTimeout(this.startupTimeoutId);
+    }
+    this.startupTimeoutId = setTimeout(() => {
+      if (this.ready) {
+        return;
+      }
+      if (!this.fallbackAttempted && this.baseCandidates.length > 1) {
+        this.log.warn("Primary embedded reference URL did not signal ready; trying fallback", {
+          subcategory: "Load",
+          context: {
+            previousCandidateIndex: this.activeCandidateIndex
+          }
+        });
+        this.loadCandidate(1);
+        return;
+      }
+      this.onUnhandledError("reference", "Embedded C99 reference did not finish initialization.", {
+        details: this.frame.src
+      });
+    }, 5000);
+  }
+  buildStartupConfig(initialSearchQueryText) {
+    return {
+      schemaVersion: EMBED_SCHEMA_VERSION,
+      embeddingMode: {
+        isEmbeddedInsideHostApplication: true,
+        embeddedPresentationMode: "panel",
+        hideStandaloneTopNavigation: true,
+        hideStandaloneFooterArea: true,
+        useCompactSpacing: true
+      },
+      initialViewState: {
+        initialFocusTarget: initialSearchQueryText ? "search-input" : "none"
+      },
+      initialSearchState: {
+        initialSearchQueryText,
+        initialSearchMatchMode: "best-effort",
+        autoRunInitialSearch: Boolean(initialSearchQueryText)
+      },
+      hostThemeState: {
+        hostThemeMode: "named-host-preset",
+        hostColorTokenPresetName: "ceetcode-light"
+      },
+      integrationHints: {
+        snippetActionMode: "insert-into-host-editor",
+        enableOutboundHeightReporting: true,
+        enableHashDrivenInternalNavigation: true
+      }
+    };
+  }
+  postToFrame(messageType, payload = {}, requestIdentifier) {
+    const contentWindow = this.frame.contentWindow;
+    if (!contentWindow) {
+      return;
+    }
+    const envelope = {
+      contractNamespace: EMBED_CONTRACT_NAMESPACE,
+      schemaVersion: EMBED_SCHEMA_VERSION,
+      messageType,
+      payload
+    };
+    if (requestIdentifier) {
+      envelope.requestIdentifier = requestIdentifier;
+    }
+    contentWindow.postMessage(envelope, window.location.origin);
+  }
+  onWindowMessage = (event) => {
+    if (event.origin !== window.location.origin) {
+      return;
+    }
+    if (!this.frame.contentWindow || event.source !== this.frame.contentWindow) {
+      return;
+    }
+    const data = event.data;
+    if (!data || typeof data !== "object") {
+      return;
+    }
+    const envelope = data;
+    if (envelope.contractNamespace !== EMBED_CONTRACT_NAMESPACE) {
+      return;
+    }
+    const message = {
+      messageType: normalizeText(envelope.messageType),
+      payload: envelope.payload && typeof envelope.payload === "object" ? envelope.payload : {},
+      requestIdentifier: normalizeText(envelope.requestIdentifier, "") || null
+    };
+    if (!message.messageType) {
+      return;
+    }
+    this.handleEmbedMessage(message);
+  };
+  handleEmbedMessage(message) {
+    switch (message.messageType) {
+      case "REFERENCE_EMBED_READY":
+        this.onEmbedReady(message.payload);
+        break;
+      case "REFERENCE_CURRENT_ENTRY_CHANGED":
+        this.onCurrentEntryChanged(message.payload);
+        break;
+      case "REFERENCE_SNIPPET_INSERT_REQUESTED":
+        this.onSnippetInsertEvent(message.payload);
+        break;
+      case "REFERENCE_SNIPPET_COPY_REQUESTED":
+        this.onSnippetCopyEvent(message.payload);
+        break;
+      case "REFERENCE_ERROR_EVENT":
+        this.onEmbedError(message.payload);
+        break;
+      case "REFERENCE_SEARCH_STATE_CHANGED":
+        this.log.info("Reference search state changed", {
+          subcategory: "Events",
+          context: {
+            searchQueryText: normalizeText(message.payload.searchQueryText),
+            visibleResultCount: typeof message.payload.visibleResultCount === "number" ? message.payload.visibleResultCount : null
+          }
+        });
+        break;
+      default:
+        break;
+    }
+  }
+  onEmbedReady(payload) {
+    this.ready = true;
+    if (this.startupTimeoutId !== null) {
+      clearTimeout(this.startupTimeoutId);
+      this.startupTimeoutId = null;
+    }
+    this.log.info("Reference iframe reported ready", {
+      subcategory: "Events",
+      context: {
+        referenceApplicationIdentifier: normalizeText(payload.referenceApplicationIdentifier),
+        candidateIndex: this.activeCandidateIndex
+      }
+    });
+    this.postToFrame("INITIALIZE_REFERENCE_EMBEDDING_CONTEXT", {
+      hostApplicationIdentifier: "ceetcode",
+      embeddedPresentationMode: "panel",
+      hideStandaloneTopNavigation: true,
+      hideStandaloneFooterArea: true,
+      useCompactSpacing: true,
+      hostThemeMode: "named-host-preset",
+      snippetActionMode: "insert-into-host-editor",
+      enableOutboundHeightReporting: true,
+      enableHashDrivenInternalNavigation: true
+    });
+    this.postToFrame("APPLY_HOST_THEME_TOKENS", {
+      themeTokenMap: this.buildThemeTokenMap()
+    });
+    this.postToFrame("REQUEST_CURRENT_REFERENCE_STATE", {
+      includeCurrentEntryState: true,
+      includeCurrentSearchState: true,
+      includeCurrentHeightMeasurement: false
+    });
+  }
+  buildThemeTokenMap() {
+    const computed = getComputedStyle(document.documentElement);
+    const read = (token, fallback2) => {
+      const value = computed.getPropertyValue(token).trim();
+      return value || fallback2;
+    };
+    return {
+      "--embedded-reference-background-color": read("--bg", "#f7f7f5"),
+      "--embedded-reference-panel-color": read("--panel", "#ffffff"),
+      "--embedded-reference-surface-color": read("--panel-subtle", "#f0efe9"),
+      "--embedded-reference-text-color": read("--text", "#1f1f1a"),
+      "--embedded-reference-muted-text-color": read("--muted", "#5d5f52"),
+      "--embedded-reference-border-color": read("--border", "#d6d8cc"),
+      "--embedded-reference-accent-color": read("--accent", "#0f766e"),
+      "--embedded-reference-link-color": read("--accent", "#0f766e"),
+      "--embedded-reference-code-background-color": "#f2f2ec",
+      "--embedded-reference-code-text-color": read("--text", "#1f1f1a"),
+      "--embedded-reference-search-highlight-color": "#fff2ad",
+      "--embedded-reference-font-family": read("--ui", '"Atkinson Hyperlegible", "Segoe UI", "Helvetica Neue", sans-serif'),
+      "--embedded-reference-font-size": "15px",
+      "--embedded-reference-line-height": "1.5",
+      "--embedded-reference-border-radius": "10px",
+      "--embedded-reference-spacing-unit": "0.9rem"
+    };
+  }
+  onCurrentEntryChanged(payload) {
+    const entryTitle = normalizeText(payload.entryTitle);
+    this.shell.setTitle(entryTitle ? `C99 Reference - ${entryTitle}` : "C99 Reference");
+  }
+  onSnippetInsertEvent(payload) {
+    const snippetText = normalizeText(payload.snippetText);
+    if (!snippetText) {
+      return;
+    }
+    const insertionMode = normalizeText(payload.insertionMode, "insert-at-cursor");
+    this.onSnippetInsertRequested(snippetText, insertionMode);
+    this.log.info("Reference snippet insert requested", {
+      subcategory: "Snippet",
+      context: {
+        snippetIdentifier: normalizeText(payload.snippetIdentifier),
+        snippetLength: snippetText.length,
+        insertionMode
+      }
+    });
+  }
+  onSnippetCopyEvent(payload) {
+    const snippetText = normalizeText(payload.snippetText);
+    if (!snippetText) {
+      return;
+    }
+    navigator.clipboard.writeText(snippetText).then(() => {
+      this.log.info("Reference snippet copied to clipboard", {
+        subcategory: "Snippet",
+        context: {
+          snippetIdentifier: normalizeText(payload.snippetIdentifier),
+          snippetLength: snippetText.length
+        }
+      });
+    }).catch((error48) => {
+      this.onUnhandledError("reference", `Reference snippet copy failed: ${normalizeText(error48, String(error48))}`);
+    });
+  }
+  onEmbedError(payload) {
+    const errorCode = normalizeText(payload.errorCode, "REFERENCE_ERROR");
+    const errorMessage = normalizeText(payload.errorMessage, "Unknown reference embed error.");
+    this.log.warn("Reference embed reported error", {
+      subcategory: "Events",
+      context: {
+        errorCode,
+        errorMessage,
+        relatedRequestIdentifier: normalizeText(payload.relatedRequestIdentifier)
+      }
+    });
+    this.onUnhandledError("reference", `${errorCode}: ${errorMessage}`);
+  }
+  executeReferenceSearch(searchQueryText) {
+    this.postToFrame("EXECUTE_REFERENCE_SEARCH", {
+      searchQueryText,
+      searchMatchMode: "best-effort"
+    });
+  }
+}
+
 // app/main.ts
 var problems = loadProblemCatalog();
 var problemById = new Map(problems.map((problem) => [problem.id, problem]));
@@ -33260,6 +34161,7 @@ var settingsLog = createLogger("Settings", "Logging");
 var unhandledLog = createLogger("Runtime", "Unhandled");
 var shareLog = createLogger("UI", "Share");
 var editorLog = createLogger("UI", "Editor");
+var referenceLog = createLogger("UI", "Reference");
 var shareHashKey = "share";
 function encodeBase64Url(value) {
   const bytes = new TextEncoder().encode(value);
@@ -33377,25 +34279,36 @@ appRoot.innerHTML = `
 
   <main class="shell">
     <section class="topbar" aria-label="workspace controls">
-      <h1>Ceetcode</h1>
-      <span class="mono">C99 browser runtime</span>
-      <span class="spacer"></span>
-      <div class="tabs" role="tablist" aria-label="Workspace view">
-        <span class="tabs-label">View</span>
-        <button class="tab-button" data-mobile-target="problem" type="button">Statement</button>
-        <button class="tab-button" data-mobile-target="editor" type="button">Editor</button>
+      <div class="topbar-row topbar-row-primary">
+        <h1>Ceetcode</h1>
+        <span class="mono">C99 browser runtime</span>
+        <span class="spacer"></span>
+        <div class="tabs" role="tablist" aria-label="Workspace view">
+          <span class="tabs-label">View</span>
+          <button class="tab-button" data-mobile-target="problem" type="button">Statement</button>
+          <button class="tab-button" data-mobile-target="editor" type="button">Editor</button>
+        </div>
+        <label class="challenge-picker">
+          Challenge
+          <select id="problem-select" data-testid="problem-select"></select>
+        </label>
+        <div class="primary-action-group" data-testid="primary-action-group">
+          <button id="run-btn" class="primary" type="button" data-testid="run-button">Run</button>
+          <button id="format-btn" type="button" data-testid="format-button">Format</button>
+          <button id="reference-btn" type="button" data-testid="reference-button">Reference</button>
+          <button id="share-btn" type="button" data-testid="share-button">Share</button>
+        </div>
+        <span id="run-status" class="status-badge status-idle" data-testid="run-status">Idle</span>
+        <span id="share-feedback" class="share-feedback" data-testid="share-feedback" role="status" aria-live="polite"></span>
       </div>
-      <label>
-        Challenge
-        <select id="problem-select" data-testid="problem-select"></select>
-      </label>
-      <button id="run-btn" class="primary" type="button" data-testid="run-button">Run</button>
-      <button id="reset-btn" type="button" data-testid="reset-button">Reset To Starter</button>
-      <button id="format-btn" type="button" data-testid="format-button">Format</button>
-      <button id="share-btn" type="button" data-testid="share-button">Share</button>
-      <button id="settings-btn" type="button" data-testid="settings-button">Settings</button>
-      <span id="run-status" class="status-badge status-idle" data-testid="run-status">Idle</span>
-      <span id="share-feedback" class="share-feedback" data-testid="share-feedback" role="status" aria-live="polite"></span>
+      <div class="topbar-row topbar-row-utility">
+        <span class="spacer"></span>
+        <div class="utility-action-group" data-testid="utility-action-group">
+          <button id="settings-btn" type="button" data-testid="settings-button">Settings</button>
+          <button id="help-btn" type="button" data-testid="help-button">Help</button>
+          <button id="reset-btn" class="danger-soft" type="button" data-testid="reset-button">Reset To Starter</button>
+        </div>
+      </div>
     </section>
 
     <section class="workspace" data-testid="workspace">
@@ -33494,6 +34407,44 @@ appRoot.innerHTML = `
       </section>
     </div>
   </dialog>
+
+  <dialog id="reset-confirm-dialog" class="settings-dialog reset-dialog" data-testid="reset-confirm-dialog">
+    <div class="settings-dialog-body">
+      <header class="settings-dialog-header">
+        <h2>Reset Draft</h2>
+      </header>
+      <section class="settings-section">
+        <p class="result-row">
+          This will replace your current code for this challenge with the starter template.
+        </p>
+        <p class="result-row">
+          This action cannot be undone.
+        </p>
+        <div class="dialog-actions">
+          <button id="reset-cancel-btn" type="button" data-testid="reset-cancel-button">Cancel</button>
+          <button id="reset-confirm-btn" class="danger-soft" type="button" data-testid="reset-confirm-button">Reset Draft</button>
+        </div>
+      </section>
+    </div>
+  </dialog>
+
+  <dialog id="help-dialog" class="settings-dialog help-dialog" data-testid="help-dialog">
+    <div class="settings-dialog-body">
+      <header class="settings-dialog-header">
+        <h2>Workflow Help</h2>
+        <button id="help-close-btn" type="button" data-testid="help-close-button">Close</button>
+      </header>
+      <section class="settings-section">
+        <h3>Run Loop</h3>
+        <p class="result-row">Use <span class="mono">Run</span> to compile and execute tests. Use <span class="mono">Format</span> before running when needed.</p>
+        <h3>Reference</h3>
+        <p class="result-row">Select a symbol in the editor (example: <span class="mono">printf</span>) then open <span class="mono">Reference</span>. The lookup is seeded from your selection.</p>
+        <p class="result-row">Closing the reference hides the window. Reopening restores the same loaded state and entry.</p>
+        <h3>Safety</h3>
+        <p class="result-row"><span class="mono">Reset To Starter</span> is destructive and always requires confirmation.</p>
+      </section>
+    </div>
+  </dialog>
 `;
 var problemSelect = requiredElement(document.querySelector("#problem-select"), "#problem-select");
 var problemTitle = requiredElement(document.querySelector("#problem-title"), "#problem-title");
@@ -33506,6 +34457,8 @@ var resetBtn = requiredElement(document.querySelector("#reset-btn"), "#reset-btn
 var formatBtn = requiredElement(document.querySelector("#format-btn"), "#format-btn");
 var shareBtn = requiredElement(document.querySelector("#share-btn"), "#share-btn");
 var settingsBtn = requiredElement(document.querySelector("#settings-btn"), "#settings-btn");
+var helpBtn = requiredElement(document.querySelector("#help-btn"), "#help-btn");
+var referenceBtn = requiredElement(document.querySelector("#reference-btn"), "#reference-btn");
 var runStatusEl = requiredElement(document.querySelector("#run-status"), "#run-status");
 var shareFeedbackEl = requiredElement(document.querySelector("#share-feedback"), "#share-feedback");
 var customTestsInput = requiredElement(document.querySelector("#custom-tests-input"), "#custom-tests-input");
@@ -33522,6 +34475,11 @@ var errorPanelListEl = requiredElement(document.querySelector("#error-panel-list
 var errorPanelClearBtn = requiredElement(document.querySelector("#error-panel-clear"), "#error-panel-clear");
 var settingsDialog = requiredElement(document.querySelector("#settings-dialog"), "#settings-dialog");
 var settingsCloseBtn = requiredElement(document.querySelector("#settings-close-btn"), "#settings-close-btn");
+var resetConfirmDialog = requiredElement(document.querySelector("#reset-confirm-dialog"), "#reset-confirm-dialog");
+var resetCancelBtn = requiredElement(document.querySelector("#reset-cancel-btn"), "#reset-cancel-btn");
+var resetConfirmBtn = requiredElement(document.querySelector("#reset-confirm-btn"), "#reset-confirm-btn");
+var helpDialog = requiredElement(document.querySelector("#help-dialog"), "#help-dialog");
+var helpCloseBtn = requiredElement(document.querySelector("#help-close-btn"), "#help-close-btn");
 var loggingLevelSelect = requiredElement(document.querySelector("#logging-level-select"), "#logging-level-select");
 var loggingFormatterSelect = requiredElement(document.querySelector("#logging-formatter-select"), "#logging-formatter-select");
 var loggingEmojiToggle = requiredElement(document.querySelector("#logging-emoji-toggle"), "#logging-emoji-toggle");
@@ -33541,6 +34499,7 @@ var latestRun = {
   testsHtml: ""
 };
 var editor;
+var referenceIntegration = null;
 var draftSaveTimer = null;
 var shareFeedbackTimer = null;
 var ceeCodeHighlightStyle = HighlightStyle.define([
@@ -33644,6 +34603,41 @@ function formatSource() {
       problemId: activeProblem.id,
       changed: !changes.empty,
       length: readEditor().length
+    }
+  });
+}
+function getReferenceSearchSeedFromEditor() {
+  const selection = editor.state.selection.main;
+  if (!selection.empty) {
+    const selectedText = editor.state.sliceDoc(selection.from, selection.to).trim();
+    if (selectedText) {
+      return selectedText;
+    }
+  }
+  return "";
+}
+function insertReferenceSnippetIntoEditor(snippetText, insertionMode) {
+  if (!snippetText) {
+    return;
+  }
+  const selection = editor.state.selection.main;
+  const from = selection.from;
+  const to = selection.to;
+  const insert2 = snippetText;
+  const cursor = from + insert2.length;
+  editor.dispatch({
+    changes: { from, to, insert: insert2 },
+    selection: { anchor: cursor, head: cursor },
+    scrollIntoView: true,
+    userEvent: "input.paste"
+  });
+  scheduleDraftSave();
+  editorLog.info("Snippet inserted from reference", {
+    subcategory: "Reference",
+    context: {
+      insertionMode,
+      snippetLength: snippetText.length,
+      problemId: activeProblem.id
     }
   });
 }
@@ -34146,6 +35140,15 @@ function resetToStarter() {
   });
   setStatus("idle", "none", "Idle");
 }
+function requestResetToStarter() {
+  if (!resetConfirmDialog.open) {
+    resetConfirmDialog.showModal();
+    uiLog.warn("Reset confirmation dialog opened", {
+      subcategory: "Controls",
+      context: { activeProblemId: activeProblem.id }
+    });
+  }
+}
 function switchProblem(problemId) {
   const next = problemById.get(problemId);
   if (!next)
@@ -34259,6 +35262,62 @@ function initializeSettingsDialog() {
     unsubscribeSettings();
   }, { once: true });
 }
+function initializeWorkflowDialogs() {
+  helpBtn.addEventListener("click", () => {
+    if (!helpDialog.open) {
+      helpDialog.showModal();
+      uiLog.info("Help dialog opened", { subcategory: "Dialog" });
+    }
+  });
+  helpCloseBtn.addEventListener("click", () => {
+    helpDialog.close();
+    uiLog.info("Help dialog closed", { subcategory: "Dialog" });
+  });
+  resetBtn.addEventListener("click", () => {
+    uiLog.warn("Reset button clicked", {
+      subcategory: "Controls",
+      context: { activeProblemId: activeProblem.id }
+    });
+    requestResetToStarter();
+  });
+  resetCancelBtn.addEventListener("click", () => {
+    resetConfirmDialog.close();
+    uiLog.info("Reset confirmation canceled", {
+      subcategory: "Controls",
+      context: { activeProblemId: activeProblem.id }
+    });
+  });
+  resetConfirmBtn.addEventListener("click", () => {
+    resetConfirmDialog.close();
+    resetToStarter();
+    uiLog.warn("Reset confirmation accepted", {
+      subcategory: "Controls",
+      context: { activeProblemId: activeProblem.id }
+    });
+  });
+}
+function initializeReferenceWindowIntegration() {
+  referenceIntegration = new C99ReferenceWindowIntegration({
+    logger: referenceLog,
+    onUnhandledError: (source, message, options) => {
+      recordUnhandledError(source, message, options);
+    },
+    onSnippetInsertRequested: (snippetText, insertionMode) => {
+      insertReferenceSnippetIntoEditor(snippetText, insertionMode);
+    }
+  });
+  referenceBtn.addEventListener("click", () => {
+    const searchSeed = getReferenceSearchSeedFromEditor();
+    referenceIntegration?.openEmbedded(searchSeed);
+    referenceLog.info("Embedded reference window requested", {
+      subcategory: "Window",
+      context: {
+        searchSeed: searchSeed || null,
+        activeProblemId: activeProblem.id
+      }
+    });
+  });
+}
 function initializeEditor() {
   const host = document.querySelector("#editor-host");
   if (!host) {
@@ -34345,6 +35404,10 @@ window.addEventListener("beforeunload", () => {
     unregisterUnhandledCapture();
     unregisterUnhandledCapture = null;
   }
+  if (referenceIntegration) {
+    referenceIntegration.dispose();
+    referenceIntegration = null;
+  }
   if (editor) {
     saveDraft(activeProblem.id, readEditor());
   }
@@ -34360,7 +35423,9 @@ unregisterUnhandledCapture = registerUnhandledErrorCapture();
 initializeProblemSelect();
 initializeMobileTabs();
 initializeSettingsDialog();
+initializeWorkflowDialogs();
 initializeEditor();
+initializeReferenceWindowIntegration();
 renderProblem(activeProblem);
 setEditorForProblem(activeProblem);
 applyIncomingShareState();
@@ -34405,13 +35470,6 @@ runBtn.addEventListener("click", () => {
   });
   runCurrentSubmission();
 });
-resetBtn.addEventListener("click", () => {
-  uiLog.info("Reset button clicked", {
-    subcategory: "Controls",
-    context: { activeProblemId: activeProblem.id }
-  });
-  resetToStarter();
-});
 customTestsInput.addEventListener("input", () => {
   saveCustomTests(activeProblem.id, customTestsInput.value);
 });
@@ -34423,6 +35481,13 @@ Object.assign(window, {
     getLoggingSettings: () => getLoggingSettings(),
     setLoggingLevel: (level) => updateLoggingSettings({ level }),
     setLoggingFormatter: (formatter) => updateLoggingSettings({ formatter }),
-    buildShareUrl: () => buildShareUrl(buildSharePayloadFromCurrentState())
+    buildShareUrl: () => buildShareUrl(buildSharePayloadFromCurrentState()),
+    openReference: () => referenceIntegration?.openEmbedded(getReferenceSearchSeedFromEditor()),
+    openReferenceStandalone: () => referenceIntegration?.openStandalone(),
+    openHelp: () => {
+      if (!helpDialog.open) {
+        helpDialog.showModal();
+      }
+    }
   }
 });
