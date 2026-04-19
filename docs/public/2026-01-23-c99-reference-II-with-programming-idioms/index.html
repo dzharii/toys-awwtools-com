@@ -240,6 +240,59 @@ size_t find_first_alpha(const char* s) {
         </examples>
       </function>
 
+      <function id="fn.isblank" name="isblank" kind="function_or_macro">
+        <signature>int isblank(int c);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>c</code> is a standard blank character (space or horizontal tab in the "C" locale), with locale-dependent extensions possible.</p>
+]]></summary>
+        <parameters>
+          <param id="p.isblank.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Character value to test, as <code>EOF</code> or an <code>unsigned char</code> value.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.isblank.domain" severity="important">
+                <description><![CDATA[
+<p>Passing values outside <code>EOF</code> and the <code>unsigned char</code> range is undefined behavior.</p>
+]]></description>
+              </constraint>
+              <constraint id="c.isblank.locale" severity="info">
+                <description><![CDATA[
+<p>Character class membership can depend on the active locale.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if blank, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.isblank.count" lang="c99">
+            <title>Count spaces/tabs without treating newlines as blanks</title>
+            <code><![CDATA[
+#include <ctype.h>
+#include <stddef.h>
+
+size_t count_blanks(const char* s) {
+    size_t n = 0;
+    for (size_t i = 0; s[i] != '\0'; ++i) {
+        unsigned char uc = (unsigned char)s[i];
+        if (isblank((int)uc)) {
+            ++n;
+        }
+    }
+    return n;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
       <function id="fn.isdigit" name="isdigit" kind="function_or_macro">
         <signature>int isdigit(int c);</signature>
         <summary><![CDATA[
@@ -282,6 +335,58 @@ size_t count_digits(const char* s) {
         }
     }
     return n;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.isgraph" name="isgraph" kind="function_or_macro">
+        <signature>int isgraph(int c);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>c</code> has a graphical representation (printable and not a space) according to the current locale.</p>
+]]></summary>
+        <parameters>
+          <param id="p.isgraph.c" name="c" direction="in" type="int">
+            <description><![CDATA[
+<p>Character value to test, as <code>EOF</code> or an <code>unsigned char</code> value.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.isgraph.domain" severity="important">
+                <description><![CDATA[
+<p>Cast byte input to <code>unsigned char</code> before calling to avoid undefined behavior.</p>
+]]></description>
+              </constraint>
+              <constraint id="c.isgraph.locale" severity="info">
+                <description><![CDATA[
+<p>Graphical classification is locale-dependent.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if graphical, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.isgraph.first" lang="c99">
+            <title>Find the first non-space printable character</title>
+            <code><![CDATA[
+#include <ctype.h>
+#include <stddef.h>
+
+size_t first_graph_index(const char* s) {
+    for (size_t i = 0; s[i] != '\0'; ++i) {
+        unsigned char uc = (unsigned char)s[i];
+        if (isgraph((int)uc)) {
+            return i;
+        }
+    }
+    return (size_t)-1;
 }
 ]]></code>
           </example>
@@ -1306,6 +1411,61 @@ size_t scan_whex(const wchar_t* s) {
         </examples>
       </function>
 
+      <function id="fn.iswctype" name="iswctype" kind="function">
+        <signature>int iswctype(wint_t wc, wctype_t desc);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>wc</code> has the wide-character class described by <code>desc</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.iswctype.wc" name="wc" direction="in" type="wint_t">
+            <description><![CDATA[
+<p>Wide character value to test, typically from a <code>wchar_t</code> converted to <code>wint_t</code>.</p>
+]]></description>
+          </param>
+          <param id="p.iswctype.desc" name="desc" direction="in" type="wctype_t">
+            <description><![CDATA[
+<p>Classification descriptor returned by <code>wctype</code>.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.iswctype.desc_valid" severity="important">
+                <description><![CDATA[
+<p>Use a descriptor returned by <code>wctype</code>. If lookup returns 0, treat it as "unknown property" and avoid calling <code>iswctype</code>.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if <code>wc</code> satisfies the requested property, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.iswctype.dynamic_property" lang="c99">
+            <title>Classify wide text with a runtime-selected property</title>
+            <code><![CDATA[
+#include <wctype.h>
+#include <wchar.h>
+
+int contains_property(const wchar_t* s, const char* property) {
+    wctype_t desc = wctype(property);
+    if (desc == 0) {
+        return 0;
+    }
+    for (; *s != L'\0'; ++s) {
+        if (iswctype((wint_t)*s, desc)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
       <function id="fn.towlower" name="towlower" kind="function_or_macro">
         <signature>wint_t towlower(wint_t wc);</signature>
         <summary><![CDATA[
@@ -1952,6 +2112,51 @@ void clear_bytes(void* p, size_t n) {
         </notes>
       </function>
 
+      <function id="fn.strcoll" name="strcoll" kind="function">
+        <signature>int strcoll(const char* s1, const char* s2);</signature>
+        <summary><![CDATA[
+<p>Compares two NUL-terminated strings using locale-specific collation rules.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strcoll.s1" name="s1" direction="in" type="const char*">
+            <description><![CDATA[
+<p>First NUL-terminated string.</p>
+]]></description>
+          </param>
+          <param id="p.strcoll.s2" name="s2" direction="in" type="const char*">
+            <description><![CDATA[
+<p>Second NUL-terminated string.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Less than 0 if <code>s1</code> collates before <code>s2</code>, 0 if equivalent under collation, greater than 0 otherwise.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.strcoll.locale" severity="important" topic="locale">
+            <description><![CDATA[
+<p><code>strcoll</code> depends on the active <code>LC_COLLATE</code> locale category. Results can change after <code>setlocale</code>.</p>
+]]></description>
+          </note>
+        </notes>
+        <examples>
+          <example id="ex.strcoll.locale_compare" lang="c99">
+            <title>Locale-aware string ordering</title>
+            <code><![CDATA[
+#include <string.h>
+
+int locale_less(const char* a, const char* b) {
+    return strcoll(a, b) < 0;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
       <function id="fn.strncmp" name="strncmp" kind="function">
         <signature>int strncmp(const char* s1, const char* s2, size_t n);</signature>
         <summary><![CDATA[
@@ -1990,6 +2195,58 @@ For prefix checks, ensure lengths match your intent. Example: <code>strncmp(s, "
 ]]></description>
           </note>
         </notes>
+      </function>
+
+      <function id="fn.strxfrm" name="strxfrm" kind="function">
+        <signature>size_t strxfrm(char* s1, const char* s2, size_t n);</signature>
+        <summary><![CDATA[
+<p>Transforms <code>s2</code> into a collation key in <code>s1</code> so that <code>strcmp</code> on transformed keys matches <code>strcoll</code> ordering.</p>
+]]></summary>
+        <parameters>
+          <param id="p.strxfrm.s1" name="s1" direction="out" type="char*">
+            <description><![CDATA[
+<p>Destination buffer for the transformed collation key.</p>
+]]></description>
+          </param>
+          <param id="p.strxfrm.s2" name="s2" direction="in" type="const char*">
+            <description><![CDATA[
+<p>Source NUL-terminated string to transform.</p>
+]]></description>
+          </param>
+          <param id="p.strxfrm.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Capacity of <code>s1</code> in bytes.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="size_t">
+            <description><![CDATA[
+<p>Length of the full transformed key (excluding terminating NUL). If return value is at least <code>n</code>, output was truncated.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.strxfrm.keys" lang="c99">
+            <title>Compare locale collation keys safely</title>
+            <code><![CDATA[
+#include <string.h>
+
+int compare_collation_keys(const char* a, const char* b) {
+    char ka[128];
+    char kb[128];
+    size_t na = strxfrm(ka, a, sizeof ka);
+    size_t nb = strxfrm(kb, b, sizeof kb);
+
+    if (na >= sizeof ka || nb >= sizeof kb) {
+        /* Fallback when transformed keys are truncated. */
+        return strcoll(a, b);
+    }
+    return strcmp(ka, kb);
+}
+]]></code>
+          </example>
+        </examples>
       </function>
 
       <function id="fn.strcpy" name="strcpy" kind="function">
@@ -2268,6 +2525,13 @@ The buffer is modified in place.
             <description><![CDATA[
 <p>NUL-terminated set of delimiter characters.</p>
 ]]></description>
+            <constraints>
+              <constraint id="c.strtok.delim_nonnull" severity="important">
+                <description><![CDATA[
+<p><code>delim</code> must point to a valid NUL-terminated string and must not be NULL.</p>
+]]></description>
+              </constraint>
+            </constraints>
           </param>
         </parameters>
         <returns>
@@ -2281,6 +2545,11 @@ The buffer is modified in place.
           <note id="n.strtok.modifies" severity="important" topic="input-mutated">
             <description><![CDATA[
 <p><code>strtok</code> overwrites delimiters with NUL. If you need the original string, work on a copy.</p>
+]]></description>
+          </note>
+          <note id="n.strtok.state" severity="important" topic="stateful-api">
+            <description><![CDATA[
+<p><code>strtok</code> uses internal saved state between calls. It is not reentrant; complete one tokenization sequence before starting another on the same thread.</p>
 ]]></description>
           </note>
         </notes>
@@ -2431,8 +2700,7 @@ void log_errno(const char* where) {
       <function id="fn.warnings.missing_entries" name="_category_note" kind="internal_note">
         <summary><![CDATA[
 <p>
-This category list intentionally includes only the functions you specified from <code>string.h</code>.
-Other standard functions also exist in <code>string.h</code> (for example <code>strcoll</code>, <code>strxfrm</code>), but they are not included here.
+This category now includes the full C99 <code>string.h</code> function set.
 </p>
 ]]></summary>
       </function>
@@ -2760,6 +3028,84 @@ Stops early if a wide NUL occurs in <code>src</code>.
         </returns>
       </function>
 
+      <function id="fn.wcscspn" name="wcscspn" kind="function">
+        <signature>size_t wcscspn(const wchar_t* s1, const wchar_t* s2);</signature>
+        <summary><![CDATA[
+<p>Returns the length of the initial segment of <code>s1</code> containing no characters from <code>s2</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcscspn.s1" name="s1" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>NUL-terminated wide string to scan.</p>
+]]></description>
+          </param>
+          <param id="p.wcscspn.s2" name="s2" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>NUL-terminated set of reject characters.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="size_t">
+            <description><![CDATA[
+<p>Count of leading wide characters in <code>s1</code> not present in <code>s2</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcsspn" name="wcsspn" kind="function">
+        <signature>size_t wcsspn(const wchar_t* s1, const wchar_t* s2);</signature>
+        <summary><![CDATA[
+<p>Returns the length of the initial segment of <code>s1</code> containing only characters from <code>s2</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcsspn.s1" name="s1" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>NUL-terminated wide string to scan.</p>
+]]></description>
+          </param>
+          <param id="p.wcsspn.s2" name="s2" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>NUL-terminated set of accepted characters.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="size_t">
+            <description><![CDATA[
+<p>Count of leading wide characters in <code>s1</code> that are present in <code>s2</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcspbrk" name="wcspbrk" kind="function">
+        <signature>wchar_t* wcspbrk(const wchar_t* s1, const wchar_t* s2);</signature>
+        <summary><![CDATA[
+<p>Finds the first wide character in <code>s1</code> that matches any character from <code>s2</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcspbrk.s1" name="s1" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>NUL-terminated wide string to search.</p>
+]]></description>
+          </param>
+          <param id="p.wcspbrk.s2" name="s2" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>NUL-terminated set of candidate characters.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="wchar_t*">
+            <description><![CDATA[
+<p>Pointer to first matching character in <code>s1</code>, or NULL if none is found.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
       <function id="fn.wcstok" name="wcstok" kind="function">
         <signature>wchar_t* wcstok(wchar_t* s, const wchar_t* delim, wchar_t**ptr);</signature>
         <summary><![CDATA[
@@ -2799,6 +3145,18 @@ making the state caller-managed.
 ]]></description>
           </return>
         </returns>
+        <notes>
+          <note id="n.wcstok.mutates" severity="important" topic="input-mutated">
+            <description><![CDATA[
+<p><code>wcstok</code> modifies the input buffer by writing wide NUL terminators at delimiter boundaries.</p>
+]]></description>
+          </note>
+          <note id="n.wcstok.sequence" severity="info" topic="call-sequence">
+            <description><![CDATA[
+<p>First call in a sequence uses non-NULL <code>s</code>; subsequent calls use NULL and reuse the same state object.</p>
+]]></description>
+          </note>
+        </notes>
         <examples>
           <example id="ex.wcstok.split" lang="c99">
             <title>Split a wide string with explicit state</title>
@@ -3096,6 +3454,208 @@ the output was truncated and you should allocate a larger buffer.
         </returns>
       </function>
 
+      <function id="fn.wcstod" name="wcstod" kind="function">
+        <signature>double wcstod(const wchar_t* nptr, wchar_t** endptr);</signature>
+        <summary><![CDATA[
+<p>Converts an initial portion of the wide string <code>nptr</code> to <code>double</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcstod.nptr" name="nptr" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>Input wide string; leading wide whitespace is skipped, then an optional sign and floating literal are parsed.</p>
+]]></description>
+          </param>
+          <param id="p.wcstod.endptr" name="endptr" direction="out" type="wchar_t**">
+            <description><![CDATA[
+<p>If non-NULL, receives a pointer to the first unconverted wide character.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Converted value. Returns 0.0 if no conversion occurs; on overflow/underflow, sets <code>errno</code> to <code>ERANGE</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcstof" name="wcstof" kind="function">
+        <signature>float wcstof(const wchar_t* nptr, wchar_t** endptr);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>wcstod</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcstof.nptr" name="nptr" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>Input wide string.</p>
+]]></description>
+          </param>
+          <param id="p.wcstof.endptr" name="endptr" direction="out" type="wchar_t**">
+            <description><![CDATA[
+<p>Optional pointer to first unconverted wide character.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Converted <code>float</code> value, with the same conversion/error behavior family as <code>wcstod</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcstold" name="wcstold" kind="function">
+        <signature>long double wcstold(const wchar_t* nptr, wchar_t** endptr);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>wcstod</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcstold.nptr" name="nptr" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>Input wide string.</p>
+]]></description>
+          </param>
+          <param id="p.wcstold.endptr" name="endptr" direction="out" type="wchar_t**">
+            <description><![CDATA[
+<p>Optional pointer to first unconverted wide character.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Converted <code>long double</code> value.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcstol" name="wcstol" kind="function">
+        <signature>long wcstol(const wchar_t* nptr, wchar_t** endptr, int base);</signature>
+        <summary><![CDATA[
+<p>Converts an initial portion of wide string <code>nptr</code> to <code>long</code> using the given base.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcstol.nptr" name="nptr" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>Input wide string.</p>
+]]></description>
+          </param>
+          <param id="p.wcstol.endptr" name="endptr" direction="out" type="wchar_t**">
+            <description><![CDATA[
+<p>If non-NULL, receives a pointer to the first unconverted wide character.</p>
+]]></description>
+          </param>
+          <param id="p.wcstol.base" name="base" direction="in" type="int">
+            <description><![CDATA[
+<p>Base in [2, 36], or 0 for auto-detection (prefix-based).</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="long">
+            <description><![CDATA[
+<p>Converted value. Returns 0 when no conversion occurs; sets <code>errno</code> to <code>ERANGE</code> on range error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcstoll" name="wcstoll" kind="function">
+        <signature>long long wcstoll(const wchar_t* nptr, wchar_t** endptr, int base);</signature>
+        <summary><![CDATA[
+<p><code>long long</code> variant of <code>wcstol</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcstoll.nptr" name="nptr" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>Input wide string.</p>
+]]></description>
+          </param>
+          <param id="p.wcstoll.endptr" name="endptr" direction="out" type="wchar_t**">
+            <description><![CDATA[
+<p>Optional pointer to first unconverted wide character.</p>
+]]></description>
+          </param>
+          <param id="p.wcstoll.base" name="base" direction="in" type="int">
+            <description><![CDATA[
+<p>Base in [2, 36], or 0 for auto-detection.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="long long">
+            <description><![CDATA[
+<p>Converted <code>long long</code> value.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcstoul" name="wcstoul" kind="function">
+        <signature>unsigned long wcstoul(const wchar_t* nptr, wchar_t** endptr, int base);</signature>
+        <summary><![CDATA[
+<p>Converts an initial portion of wide string <code>nptr</code> to <code>unsigned long</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcstoul.nptr" name="nptr" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>Input wide string.</p>
+]]></description>
+          </param>
+          <param id="p.wcstoul.endptr" name="endptr" direction="out" type="wchar_t**">
+            <description><![CDATA[
+<p>Optional pointer to first unconverted wide character.</p>
+]]></description>
+          </param>
+          <param id="p.wcstoul.base" name="base" direction="in" type="int">
+            <description><![CDATA[
+<p>Base in [2, 36], or 0 for auto-detection.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="unsigned long">
+            <description><![CDATA[
+<p>Converted <code>unsigned long</code> value.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcstoull" name="wcstoull" kind="function">
+        <signature>unsigned long long wcstoull(const wchar_t* nptr, wchar_t** endptr, int base);</signature>
+        <summary><![CDATA[
+<p><code>unsigned long long</code> variant of <code>wcstoul</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcstoull.nptr" name="nptr" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>Input wide string.</p>
+]]></description>
+          </param>
+          <param id="p.wcstoull.endptr" name="endptr" direction="out" type="wchar_t**">
+            <description><![CDATA[
+<p>Optional pointer to first unconverted wide character.</p>
+]]></description>
+          </param>
+          <param id="p.wcstoull.base" name="base" direction="in" type="int">
+            <description><![CDATA[
+<p>Base in [2, 36], or 0 for auto-detection.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="unsigned long long">
+            <description><![CDATA[
+<p>Converted <code>unsigned long long</code> value.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
       <function id="fn.mbrlen" name="mbrlen" kind="function">
         <signature>size_t mbrlen(const char* s, size_t n, mbstate_t *ps);</signature>
         <summary><![CDATA[
@@ -3137,6 +3697,27 @@ Returns number of bytes for the next character; 0 if the next character is the t
         </returns>
       </function>
 
+      <function id="fn.mbsinit" name="mbsinit" kind="function">
+        <signature>int mbsinit(const mbstate_t *ps);</signature>
+        <summary><![CDATA[
+<p>Tests whether conversion state object <code>*ps</code> is in the initial shift state.</p>
+]]></summary>
+        <parameters>
+          <param id="p.mbsinit.ps" name="ps" direction="in" type="const mbstate_t*">
+            <description><![CDATA[
+<p>Pointer to state object; if NULL, the state is considered initial.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Nonzero if initial state, 0 otherwise.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
       <function id="fn.mbrtowc" name="mbrtowc" kind="function">
         <signature>size_t mbrtowc(wchar_t* pwc, const char* s, size_t n, mbstate_t *ps);</signature>
         <summary><![CDATA[
@@ -3173,6 +3754,13 @@ Returns number of bytes consumed; 0 if converted character is wide NUL; (size_t)
 ]]></description>
           </return>
         </returns>
+        <notes>
+          <note id="n.mbrtowc.eilseq" severity="important" topic="encoding_error">
+            <description><![CDATA[
+<p>On encoding error, returns <code>(size_t)-1</code>, stores <code>EILSEQ</code> in <code>errno</code>, and leaves conversion state unspecified.</p>
+]]></description>
+          </note>
+        </notes>
         <examples>
           <example id="ex.mbrtowc.stream_decode" lang="c99">
             <title>Decode a multibyte buffer into wide characters with explicit state</title>
@@ -3246,6 +3834,13 @@ size_t decode_some(const char* in, size_t in_len, wchar_t* out, size_t out_cap) 
 ]]></description>
           </return>
         </returns>
+        <notes>
+          <note id="n.wcrtomb.eilseq" severity="important" topic="encoding_error">
+            <description><![CDATA[
+<p>On encoding error, returns <code>(size_t)-1</code>, stores <code>EILSEQ</code> in <code>errno</code>, and leaves conversion state unspecified.</p>
+]]></description>
+          </note>
+        </notes>
       </function>
 
       <function id="fn.mbsrtowcs" name="mbsrtowcs" kind="function">
@@ -3336,6 +3931,42 @@ Pointer to the wide input pointer. On success, updated similarly to <code>mbsrto
 <p>
 Number of bytes written (excluding the terminating NUL). Returns (size_t)-1 on encoding error.
 </p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcsftime" name="wcsftime" kind="function">
+        <signature>size_t wcsftime(wchar_t* s, size_t maxsize, const wchar_t* format, const struct tm* timeptr);</signature>
+        <summary><![CDATA[
+<p>Formats date/time from <code>*timeptr</code> into wide string <code>s</code> according to <code>format</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcsftime.s" name="s" direction="out" type="wchar_t*">
+            <description><![CDATA[
+<p>Destination wide buffer.</p>
+]]></description>
+          </param>
+          <param id="p.wcsftime.maxsize" name="maxsize" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Maximum number of wide characters writable in <code>s</code>, including terminating wide NUL.</p>
+]]></description>
+          </param>
+          <param id="p.wcsftime.format" name="format" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>Wide format string using <code>strftime</code>-style conversion specifiers.</p>
+]]></description>
+          </param>
+          <param id="p.wcsftime.timeptr" name="timeptr" direction="in" type="const struct tm*">
+            <description><![CDATA[
+<p>Pointer to broken-down time structure.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="size_t">
+            <description><![CDATA[
+<p>Number of wide characters placed in <code>s</code> (excluding terminator), or 0 if result does not fit.</p>
 ]]></description>
           </return>
         </returns>
@@ -3448,8 +4079,8 @@ int wfmt(wchar_t* buf, size_t cap, const wchar_t* fmt, ...) {
       <function id="fn.wchar.category_note" name="_category_note" kind="internal_note">
         <summary><![CDATA[
 <p>
-This category list intentionally includes only the wide-string and conversion functions you specified from <code>wchar.h</code>.
-Wide I/O functions (for example <code>fgetwc</code>, <code>fputwc</code>) are part of a separate I/O category.
+This category now covers the C99 non-I/O portion of <code>wchar.h</code>: wide string/memory operations,
+numeric/time conversions, and multibyte conversion state helpers. Wide stream I/O is documented in the separate wide I/O category.
 </p>
 ]]></summary>
       </function>
@@ -3641,6 +4272,49 @@ unsigned char* read_entire_file(const char* path, size_t* out_size) {
     fclose(f);
     *out_size = n;
     return buf;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.freopen" name="freopen" kind="function">
+        <signature>FILE* freopen(const char* filename, const char* mode, FILE* stream);</signature>
+        <summary><![CDATA[
+<p>Reopens <code>stream</code> with a new file and mode, often used for stream redirection.</p>
+]]></summary>
+        <parameters>
+          <param id="p.freopen.filename" name="filename" direction="in" type="const char*">
+            <description><![CDATA[
+<p>Path to open. Passing NULL requests mode change/reopen semantics for the same file where supported.</p>
+]]></description>
+          </param>
+          <param id="p.freopen.mode" name="mode" direction="in" type="const char*">
+            <description><![CDATA[
+<p>Mode string as with <code>fopen</code> (for example "rb", "w", "a+").</p>
+]]></description>
+          </param>
+          <param id="p.freopen.stream" name="stream" direction="inout" type="FILE*">
+            <description><![CDATA[
+<p>Existing stream to be reopened.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="FILE*">
+            <description><![CDATA[
+<p>Stream pointer on success, NULL on failure.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.freopen.redirect_stdout" lang="c99">
+            <title>Redirect stdout to a file</title>
+            <code><![CDATA[
+#include <stdio.h>
+
+int redirect_stdout(const char* path) {
+    return freopen(path, "wb", stdout) != NULL;
 }
 ]]></code>
           </example>
@@ -3848,6 +4522,32 @@ int write_exact(FILE* f, const void* buf, size_t n) {
         </examples>
       </function>
 
+      <function id="fn.fgetpos" name="fgetpos" kind="function">
+        <signature>int fgetpos(FILE* stream, fpos_t* pos);</signature>
+        <summary><![CDATA[
+<p>Stores the current file position indicator (including conversion state where relevant) into <code>*pos</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fgetpos.stream" name="stream" direction="in" type="FILE*">
+            <description><![CDATA[
+<p>Stream to query.</p>
+]]></description>
+          </param>
+          <param id="p.fgetpos.pos" name="pos" direction="out" type="fpos_t*">
+            <description><![CDATA[
+<p>Output position object.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>0 on success, non-zero on failure.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
       <function id="fn.fseek" name="fseek" kind="function">
         <signature>int fseek(FILE* stream, long offset, int whence);</signature>
         <summary><![CDATA[
@@ -3868,6 +4568,13 @@ int write_exact(FILE* f, const void* buf, size_t n) {
             <description><![CDATA[
 <p>One of <code>SEEK_SET</code>, <code>SEEK_CUR</code>, <code>SEEK_END</code>.</p>
 ]]></description>
+            <constraints>
+              <constraint id="c.fseek.whence_valid" severity="important">
+                <description><![CDATA[
+<p><code>whence</code> must be exactly one of <code>SEEK_SET</code>, <code>SEEK_CUR</code>, or <code>SEEK_END</code>.</p>
+]]></description>
+              </constraint>
+            </constraints>
           </param>
         </parameters>
         <returns>
@@ -3888,6 +4595,32 @@ Seeking in text streams can have restrictions on some platforms. For portable ra
         </notes>
       </function>
 
+      <function id="fn.fsetpos" name="fsetpos" kind="function">
+        <signature>int fsetpos(FILE* stream, const fpos_t* pos);</signature>
+        <summary><![CDATA[
+<p>Sets the stream position indicator from <code>*pos</code> as obtained by <code>fgetpos</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fsetpos.stream" name="stream" direction="in" type="FILE*">
+            <description><![CDATA[
+<p>Stream to reposition.</p>
+]]></description>
+          </param>
+          <param id="p.fsetpos.pos" name="pos" direction="in" type="const fpos_t*">
+            <description><![CDATA[
+<p>Saved position previously produced by <code>fgetpos</code>.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>0 on success, non-zero on failure.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
       <function id="fn.ftell" name="ftell" kind="function">
         <signature>long ftell(FILE* stream);</signature>
         <summary><![CDATA[
@@ -3898,6 +4631,13 @@ Seeking in text streams can have restrictions on some platforms. For portable ra
             <description><![CDATA[
 <p>Stream to query.</p>
 ]]></description>
+            <constraints>
+              <constraint id="c.ftell.stream_valid" severity="important">
+                <description><![CDATA[
+<p><code>stream</code> must be a valid open stream. Check for <code>-1L</code> to detect failure.</p>
+]]></description>
+              </constraint>
+            </constraints>
           </param>
         </parameters>
         <returns>
@@ -4069,6 +4809,13 @@ Temporary name generation without creating the file is inherently vulnerable to 
 ]]></description>
           </return>
         </returns>
+        <notes>
+          <note id="n.tmpnam.deprecated_practice" severity="warning" topic="security">
+            <description><![CDATA[
+<p>Do not use <code>tmpnam</code> for secure temporary files. The name can be guessed or replaced before you open it.</p>
+]]></description>
+          </note>
+        </notes>
       </function>
 
       <function id="fn.setvbuf" name="setvbuf" kind="function">
@@ -4098,6 +4845,13 @@ User-provided buffer, or NULL to have the implementation allocate one. If provid
             <description><![CDATA[
 <p>Buffer size in bytes (meaningful for buffered modes).</p>
 ]]></description>
+            <constraints>
+              <constraint id="c.setvbuf.mode_size" severity="important">
+                <description><![CDATA[
+<p>When <code>mode</code> is buffered (<code>_IOFBF</code> or <code>_IOLBF</code>) and <code>buf</code> is non-NULL, <code>size</code> should be the actual size of <code>buf</code>.</p>
+]]></description>
+              </constraint>
+            </constraints>
           </param>
         </parameters>
         <returns>
@@ -4188,6 +4942,51 @@ void configure_stdout(void) {
         </returns>
       </function>
 
+      <function id="fn.fscanf" name="fscanf" kind="function">
+        <signature>int fscanf(FILE* stream, const char* format, ...);</signature>
+        <summary><![CDATA[
+<p>Reads formatted input from <code>stream</code> according to <code>format</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fscanf.stream" name="stream" direction="in" type="FILE*">
+            <description><![CDATA[
+<p>Input stream.</p>
+]]></description>
+          </param>
+          <param id="p.fscanf.format" name="format" direction="in" type="const char*">
+            <description><![CDATA[
+<p>Format string describing expected input.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.fscanf.widths" severity="important">
+                <description><![CDATA[
+<p>Use field widths for string conversions (for example <code>%31s</code>) to prevent buffer overflow.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of assigned input items, or EOF before first assignment on input failure.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.fscanf.read_pair" lang="c99">
+            <title>Read two integers and validate assignment count</title>
+            <code><![CDATA[
+#include <stdio.h>
+
+int read_int_pair(FILE* in, int* a, int* b) {
+    return fscanf(in, "%d %d", a, b) == 2;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
       <function id="fn.printf" name="printf" kind="function">
         <signature>int printf(const char* format, ...);</signature>
         <summary><![CDATA[
@@ -4207,6 +5006,41 @@ void configure_stdout(void) {
 ]]></description>
           </return>
         </returns>
+      </function>
+
+      <function id="fn.scanf" name="scanf" kind="function">
+        <signature>int scanf(const char* format, ...);</signature>
+        <summary><![CDATA[
+<p>Reads formatted input from <code>stdin</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.scanf.format" name="format" direction="in" type="const char*">
+            <description><![CDATA[
+<p>Format string describing expected input from standard input.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.scanf.widths" severity="important">
+                <description><![CDATA[
+<p>Use explicit widths for string reads and always validate return value.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of assigned input items, or EOF before first assignment on input failure.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.scanf.interactive" severity="warning" topic="input_robustness">
+            <description><![CDATA[
+<p>Interactive parsing with <code>scanf</code> can be brittle. For robust input handling, read lines with <code>fgets</code> and parse explicitly.</p>
+]]></description>
+          </note>
+        </notes>
       </function>
 
       <function id="fn.snprintf" name="snprintf" kind="function">
@@ -4256,6 +5090,84 @@ int build_msg(char* buf, size_t cap, const char* name, int code) {
         return 0;
     }
     return 1;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.sprintf" name="sprintf" kind="function">
+        <signature>int sprintf(char* s, const char* format, ...);</signature>
+        <summary><![CDATA[
+<p>Writes formatted output to <code>s</code> without a capacity parameter.</p>
+]]></summary>
+        <parameters>
+          <param id="p.sprintf.s" name="s" direction="out" type="char*">
+            <description><![CDATA[
+<p>Destination buffer (must be sufficiently large for the entire output plus NUL).</p>
+]]></description>
+          </param>
+          <param id="p.sprintf.format" name="format" direction="in" type="const char*">
+            <description><![CDATA[
+<p>Format string.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of characters written (excluding terminating NUL), or negative on encoding/output error.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.sprintf.unsafe" severity="warning" topic="buffer_overflow">
+            <description><![CDATA[
+<p><code>sprintf</code> is unsafe for unbounded output. Prefer <code>snprintf</code> in new code.</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.sscanf" name="sscanf" kind="function">
+        <signature>int sscanf(const char* s, const char* format, ...);</signature>
+        <summary><![CDATA[
+<p>Reads formatted input from a NUL-terminated byte string.</p>
+]]></summary>
+        <parameters>
+          <param id="p.sscanf.s" name="s" direction="in" type="const char*">
+            <description><![CDATA[
+<p>Source string to parse.</p>
+]]></description>
+          </param>
+          <param id="p.sscanf.format" name="format" direction="in" type="const char*">
+            <description><![CDATA[
+<p>Format string describing expected fields.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.sscanf.widths" severity="important">
+                <description><![CDATA[
+<p>Use width limits for string conversions to keep parsing bounded.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of assigned items, or EOF before first assignment on input failure.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.sscanf.key_value" lang="c99">
+            <title>Parse key=value with bounded key width</title>
+            <code><![CDATA[
+#include <stdio.h>
+
+int parse_key_value(const char* line, char* key, int* value) {
+    return sscanf(line, "%31[^=]=%d", key, value) == 2;
 }
 ]]></code>
           </example>
@@ -4350,6 +5262,132 @@ int build_msg(char* buf, size_t cap, const char* name, int code) {
           <return type="int">
             <description><![CDATA[
 <p>Would-have-written count excluding NUL, truncated if >= n, negative on error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.vfscanf" name="vfscanf" kind="function">
+        <signature>int vfscanf(FILE* stream, const char* format, va_list arg);</signature>
+        <summary><![CDATA[
+<p>Varargs-list form of <code>fscanf</code>, reading formatted input from <code>stream</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.vfscanf.stream" name="stream" direction="in" type="FILE*">
+            <description><![CDATA[
+<p>Input stream.</p>
+]]></description>
+          </param>
+          <param id="p.vfscanf.format" name="format" direction="in" type="const char*">
+            <description><![CDATA[
+<p>Input format string.</p>
+]]></description>
+          </param>
+          <param id="p.vfscanf.arg" name="arg" direction="in" type="va_list">
+            <description><![CDATA[
+<p>Argument list initialized by the caller with <code>va_start</code>.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of assigned input items, or EOF before first assignment on input failure.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.vscanf" name="vscanf" kind="function">
+        <signature>int vscanf(const char* format, va_list arg);</signature>
+        <summary><![CDATA[
+<p>Varargs-list form of <code>scanf</code>, reading from <code>stdin</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.vscanf.format" name="format" direction="in" type="const char*">
+            <description><![CDATA[
+<p>Input format string.</p>
+]]></description>
+          </param>
+          <param id="p.vscanf.arg" name="arg" direction="in" type="va_list">
+            <description><![CDATA[
+<p>Argument list initialized by the caller.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of assigned input items, or EOF before first assignment on input failure.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.vsprintf" name="vsprintf" kind="function">
+        <signature>int vsprintf(char* s, const char* format, va_list arg);</signature>
+        <summary><![CDATA[
+<p>Varargs-list form of <code>sprintf</code>, writing formatted output to <code>s</code> without a capacity limit.</p>
+]]></summary>
+        <parameters>
+          <param id="p.vsprintf.s" name="s" direction="out" type="char*">
+            <description><![CDATA[
+<p>Destination buffer.</p>
+]]></description>
+          </param>
+          <param id="p.vsprintf.format" name="format" direction="in" type="const char*">
+            <description><![CDATA[
+<p>Format string.</p>
+]]></description>
+          </param>
+          <param id="p.vsprintf.arg" name="arg" direction="in" type="va_list">
+            <description><![CDATA[
+<p>Argument list from <code>va_start</code>.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of characters written (excluding terminating NUL), or negative on encoding/output error.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.vsprintf.unsafe" severity="warning" topic="buffer_overflow">
+            <description><![CDATA[
+<p><code>vsprintf</code> is unsafe for unbounded output. Prefer <code>vsnprintf</code> in new code.</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.vsscanf" name="vsscanf" kind="function">
+        <signature>int vsscanf(const char* s, const char* format, va_list arg);</signature>
+        <summary><![CDATA[
+<p>Varargs-list form of <code>sscanf</code>, parsing formatted input from a string.</p>
+]]></summary>
+        <parameters>
+          <param id="p.vsscanf.s" name="s" direction="in" type="const char*">
+            <description><![CDATA[
+<p>Input string to parse.</p>
+]]></description>
+          </param>
+          <param id="p.vsscanf.format" name="format" direction="in" type="const char*">
+            <description><![CDATA[
+<p>Input format string.</p>
+]]></description>
+          </param>
+          <param id="p.vsscanf.arg" name="arg" direction="in" type="va_list">
+            <description><![CDATA[
+<p>Argument list initialized by the caller.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of assigned input items, or EOF before first assignment on input failure.</p>
 ]]></description>
           </return>
         </returns>
@@ -4452,6 +5490,13 @@ int build_msg(char* buf, size_t cap, const char* name, int code) {
 ]]></description>
           </return>
         </returns>
+        <notes>
+          <note id="n.putc.macro_eval" severity="important" topic="macro_evaluation">
+            <description><![CDATA[
+<p>If implemented as a macro, <code>putc</code> may evaluate <code>stream</code> more than once. Avoid side-effect expressions as arguments.</p>
+]]></description>
+          </note>
+        </notes>
       </function>
 
       <function id="fn.putchar" name="putchar" kind="function_or_macro">
@@ -4589,6 +5634,13 @@ Because valid bytes are 0..UCHAR_MAX and EOF is negative, always store the resul
 ]]></description>
           </return>
         </returns>
+        <notes>
+          <note id="n.getc.macro_eval" severity="important" topic="macro_evaluation">
+            <description><![CDATA[
+<p>If implemented as a macro, <code>getc</code> may evaluate <code>stream</code> more than once. Do not pass expressions with side effects.</p>
+]]></description>
+          </note>
+        </notes>
       </function>
 
       <function id="fn.getchar" name="getchar" kind="function_or_macro">
@@ -4604,6 +5656,46 @@ Because valid bytes are 0..UCHAR_MAX and EOF is negative, always store the resul
 ]]></description>
           </return>
         </returns>
+      </function>
+
+      <function id="fn.gets" name="gets" kind="function">
+        <signature>char* gets(char* s);</signature>
+        <summary><![CDATA[
+<p>Reads a line from <code>stdin</code> into <code>s</code> until newline or EOF, discarding the newline if present.</p>
+]]></summary>
+        <parameters>
+          <param id="p.gets.s" name="s" direction="out" type="char*">
+            <description><![CDATA[
+<p>Destination buffer.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.gets.no_bound" severity="critical">
+                <description><![CDATA[
+<p><code>gets</code> has no way to limit input length and cannot be used safely. It can overflow buffers.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="char*">
+            <description><![CDATA[
+<p><code>s</code> on success; NULL on EOF before any character or on read error.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.gets.unsafe" severity="critical" topic="security">
+            <description><![CDATA[
+<p>Do not use this function in production code. Use <code>fgets</code> with an explicit buffer size instead.</p>
+]]></description>
+          </note>
+          <note id="n.gets.removed" severity="important" topic="standards">
+            <description><![CDATA[
+<p><code>gets</code> exists in C99, but it was removed from C11 due to inherent safety risks.</p>
+]]></description>
+          </note>
+        </notes>
       </function>
 
       <function id="fn.ungetc" name="ungetc" kind="function">
@@ -4670,6 +5762,69 @@ int skip_spaces_and_peek(FILE* in) {
         </examples>
       </function>
 
+      <function id="fn.clearerr" name="clearerr" kind="function">
+        <signature>void clearerr(FILE* stream);</signature>
+        <summary><![CDATA[
+<p>Clears end-of-file and error indicators for <code>stream</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.clearerr.stream" name="stream" direction="in" type="FILE*">
+            <description><![CDATA[
+<p>Stream whose status flags should be reset.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="void">
+            <description><![CDATA[
+<p>No return value.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.feof" name="feof" kind="function">
+        <signature>int feof(FILE* stream);</signature>
+        <summary><![CDATA[
+<p>Tests whether the end-of-file indicator is set for <code>stream</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.feof.stream" name="stream" direction="in" type="FILE*">
+            <description><![CDATA[
+<p>Stream to inspect.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if EOF indicator is set, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ferror" name="ferror" kind="function">
+        <signature>int ferror(FILE* stream);</signature>
+        <summary><![CDATA[
+<p>Tests whether the error indicator is set for <code>stream</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.ferror.stream" name="stream" direction="in" type="FILE*">
+            <description><![CDATA[
+<p>Stream to inspect.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Non-zero if error indicator is set, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
       <function id="fn.perror" name="perror" kind="function">
         <signature>void perror(const char* s);</signature>
         <summary><![CDATA[
@@ -4721,8 +5876,8 @@ int try_open(const char* path) {
       <function id="fn.stdio.category_note" name="_category_note" kind="internal_note">
         <summary><![CDATA[
 <p>
-This category includes the stdio.h functions you specified. Other standard stdio facilities exist (for example <code>feof</code>, <code>ferror</code>,
-<code>clearerr</code>, <code>fscanf</code>, <code>fgets</code> variants, and more) and can be added as separate entries if desired.
+This category includes the full C99 <code>stdio.h</code> byte-oriented function set.
+Unsafe legacy APIs such as <code>gets</code> are included for standard completeness and clearly marked as unsafe.
 </p>
 ]]></summary>
       </function>
@@ -4994,11 +6149,302 @@ void read_wlines(FILE* in) {
         </notes>
       </function>
 
+      <function id="fn.fwide" name="fwide" kind="function">
+        <signature>int fwide(FILE* stream, int mode);</signature>
+        <summary><![CDATA[
+<p>Queries or sets stream orientation (byte-oriented vs wide-oriented) for <code>stream</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fwide.stream" name="stream" direction="in" type="FILE*">
+            <description><![CDATA[
+<p>Target stream.</p>
+]]></description>
+          </param>
+          <param id="p.fwide.mode" name="mode" direction="in" type="int">
+            <description><![CDATA[
+<p>Negative prefers byte orientation, positive prefers wide orientation, 0 queries current orientation.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Negative for byte-oriented, positive for wide-oriented, 0 if still unoriented.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fwprintf" name="fwprintf" kind="function">
+        <signature>int fwprintf(FILE* stream, const wchar_t* format, ...);</signature>
+        <summary><![CDATA[
+<p>Writes formatted wide output to <code>stream</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fwprintf.stream" name="stream" direction="in" type="FILE*">
+            <description><![CDATA[
+<p>Destination stream.</p>
+]]></description>
+          </param>
+          <param id="p.fwprintf.format" name="format" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>Wide format string.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of wide characters written, or a negative value on error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wprintf" name="wprintf" kind="function">
+        <signature>int wprintf(const wchar_t* format, ...);</signature>
+        <summary><![CDATA[
+<p>Equivalent to <code>fwprintf(stdout, format, ...)</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wprintf.format" name="format" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>Wide format string.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of wide characters written, or a negative value on error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.vfwprintf" name="vfwprintf" kind="function">
+        <signature>int vfwprintf(FILE* stream, const wchar_t* format, va_list arg);</signature>
+        <summary><![CDATA[
+<p><code>va_list</code> form of <code>fwprintf</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.vfwprintf.stream" name="stream" direction="in" type="FILE*">
+            <description><![CDATA[
+<p>Destination stream.</p>
+]]></description>
+          </param>
+          <param id="p.vfwprintf.format" name="format" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>Wide format string.</p>
+]]></description>
+          </param>
+          <param id="p.vfwprintf.arg" name="arg" direction="in" type="va_list">
+            <description><![CDATA[
+<p>Caller-managed argument list.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of wide characters written, or a negative value on error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.vwprintf" name="vwprintf" kind="function">
+        <signature>int vwprintf(const wchar_t* format, va_list arg);</signature>
+        <summary><![CDATA[
+<p><code>va_list</code> form of <code>wprintf</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.vwprintf.format" name="format" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>Wide format string.</p>
+]]></description>
+          </param>
+          <param id="p.vwprintf.arg" name="arg" direction="in" type="va_list">
+            <description><![CDATA[
+<p>Caller-managed argument list.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of wide characters written, or a negative value on error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fwscanf" name="fwscanf" kind="function">
+        <signature>int fwscanf(FILE* stream, const wchar_t* format, ...);</signature>
+        <summary><![CDATA[
+<p>Reads formatted wide input from <code>stream</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.fwscanf.stream" name="stream" direction="in" type="FILE*">
+            <description><![CDATA[
+<p>Input stream.</p>
+]]></description>
+          </param>
+          <param id="p.fwscanf.format" name="format" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>Wide format string. Use field widths for bounded string reads.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of input items assigned, or <code>EOF</code> if input failure occurs before any conversion.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wscanf" name="wscanf" kind="function">
+        <signature>int wscanf(const wchar_t* format, ...);</signature>
+        <summary><![CDATA[
+<p>Equivalent to <code>fwscanf(stdin, format, ...)</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wscanf.format" name="format" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>Wide format string for input conversion.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of input items assigned, or <code>EOF</code> on early input failure.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.vfwscanf" name="vfwscanf" kind="function">
+        <signature>int vfwscanf(FILE* stream, const wchar_t* format, va_list arg);</signature>
+        <summary><![CDATA[
+<p><code>va_list</code> form of <code>fwscanf</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.vfwscanf.stream" name="stream" direction="in" type="FILE*">
+            <description><![CDATA[
+<p>Input stream.</p>
+]]></description>
+          </param>
+          <param id="p.vfwscanf.format" name="format" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>Wide format string.</p>
+]]></description>
+          </param>
+          <param id="p.vfwscanf.arg" name="arg" direction="in" type="va_list">
+            <description><![CDATA[
+<p>Caller-managed argument list.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of input items assigned, or <code>EOF</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.vwscanf" name="vwscanf" kind="function">
+        <signature>int vwscanf(const wchar_t* format, va_list arg);</signature>
+        <summary><![CDATA[
+<p><code>va_list</code> form of <code>wscanf</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.vwscanf.format" name="format" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>Wide format string.</p>
+]]></description>
+          </param>
+          <param id="p.vwscanf.arg" name="arg" direction="in" type="va_list">
+            <description><![CDATA[
+<p>Caller-managed argument list.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of input items assigned, or <code>EOF</code>.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.swscanf" name="swscanf" kind="function">
+        <signature>int swscanf(const wchar_t* s, const wchar_t* format, ...);</signature>
+        <summary><![CDATA[
+<p>Reads formatted data from wide string <code>s</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.swscanf.s" name="s" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>Input wide string buffer.</p>
+]]></description>
+          </param>
+          <param id="p.swscanf.format" name="format" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>Wide format string.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of input items assigned.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.vswscanf" name="vswscanf" kind="function">
+        <signature>int vswscanf(const wchar_t* s, const wchar_t* format, va_list arg);</signature>
+        <summary><![CDATA[
+<p><code>va_list</code> form of <code>swscanf</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.vswscanf.s" name="s" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>Input wide string.</p>
+]]></description>
+          </param>
+          <param id="p.vswscanf.format" name="format" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>Wide format string.</p>
+]]></description>
+          </param>
+          <param id="p.vswscanf.arg" name="arg" direction="in" type="va_list">
+            <description><![CDATA[
+<p>Caller-managed argument list.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of input items assigned.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
       <function id="fn.wideio.category_note" name="_category_note" kind="internal_note">
         <summary><![CDATA[
 <p>
-This header entry includes only the wide I/O functions you specified. The full <code>wchar.h</code> header also contains wide string and conversion
-functions that belong in the strings/raw-memory category.
+This category now covers the C99 wide I/O function set from <code>wchar.h</code>, including stream orientation, formatted wide output/input,
+character/string wide I/O, and pushback behavior.
 </p>
 ]]></summary>
       </function>
@@ -5232,6 +6678,13 @@ int* alloc_ints(size_t count) {
             <description><![CDATA[
 <p>Existing allocation from <code>malloc</code>/<code>calloc</code>/<code>realloc</code>, or NULL to behave like <code>malloc</code>.</p>
 ]]></description>
+            <constraints>
+              <constraint id="c.realloc.oldptr_invalid_after_success" severity="important">
+                <description><![CDATA[
+<p>On success, the old pointer value becomes invalid, even if reallocation happened in place. Use only the returned pointer.</p>
+]]></description>
+              </constraint>
+            </constraints>
           </param>
           <param id="p.realloc.size" name="size" direction="in" type="size_t">
             <description><![CDATA[
@@ -5354,6 +6807,34 @@ int grow(void**p, size_t* cap, size_t new_cap) {
           <note id="n.exit.handlers" severity="important" topic="atexit">
             <description><![CDATA[
 <p>Runs functions registered with <code>atexit</code> (in reverse registration order) and flushes/ closes standard I/O streams.</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn._Exit" name="_Exit" kind="function">
+        <signature>void _Exit(int status);</signature>
+        <summary><![CDATA[
+<p>Terminates the program immediately without running <code>atexit</code> handlers and without normal stdio flushing.</p>
+]]></summary>
+        <parameters>
+          <param id="p._Exit.status" name="status" direction="in" type="int">
+            <description><![CDATA[
+<p>Exit status code, typically <code>EXIT_SUCCESS</code> or <code>EXIT_FAILURE</code>.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="void">
+            <description><![CDATA[
+<p>Does not return.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n._Exit.fast_termination" severity="important" topic="termination">
+            <description><![CDATA[
+<p>Use only when immediate termination is required. Cleanup hooks and buffered output are skipped.</p>
 ]]></description>
           </note>
         </notes>
@@ -5553,6 +7034,118 @@ int rand_below(int n) {
 ]]></code>
           </example>
         </examples>
+      </function>
+
+      <function id="fn.atof" name="atof" kind="function">
+        <signature>double atof(const char* nptr);</signature>
+        <summary><![CDATA[
+<p>Converts a byte string to <code>double</code> (equivalent to <code>strtod(nptr, NULL)</code> for many uses).</p>
+]]></summary>
+        <parameters>
+          <param id="p.atof.nptr" name="nptr" direction="in" type="const char*">
+            <description><![CDATA[
+<p>Input string to parse as floating-point.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.atof.no_diagnostics" severity="warning">
+                <description><![CDATA[
+<p><code>atof</code> does not provide end-pointer diagnostics. Prefer <code>strtod</code> for robust parsing.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Converted floating-point value.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.atoi" name="atoi" kind="function">
+        <signature>int atoi(const char* nptr);</signature>
+        <summary><![CDATA[
+<p>Converts a byte string to <code>int</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.atoi.nptr" name="nptr" direction="in" type="const char*">
+            <description><![CDATA[
+<p>Input string to parse as decimal integer.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.atoi.no_diagnostics" severity="warning">
+                <description><![CDATA[
+<p><code>atoi</code> has no error reporting for invalid text or overflow. Prefer <code>strtol</code> for checked conversion.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Converted integer value.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.atol" name="atol" kind="function">
+        <signature>long int atol(const char* nptr);</signature>
+        <summary><![CDATA[
+<p>Converts a byte string to <code>long int</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.atol.nptr" name="nptr" direction="in" type="const char*">
+            <description><![CDATA[
+<p>Input string to parse as decimal integer.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.atol.no_diagnostics" severity="warning">
+                <description><![CDATA[
+<p><code>atol</code> provides no end-pointer or range diagnostics. Prefer <code>strtol</code>.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="long int">
+            <description><![CDATA[
+<p>Converted long integer value.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.atoll" name="atoll" kind="function">
+        <signature>long long int atoll(const char* nptr);</signature>
+        <summary><![CDATA[
+<p>Converts a byte string to <code>long long int</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.atoll.nptr" name="nptr" direction="in" type="const char*">
+            <description><![CDATA[
+<p>Input string to parse as decimal integer.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.atoll.no_diagnostics" severity="warning">
+                <description><![CDATA[
+<p><code>atoll</code> provides no end-pointer or range diagnostics. Prefer <code>strtoll</code>.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="long long int">
+            <description><![CDATA[
+<p>Converted long long integer value.</p>
+]]></description>
+          </return>
+        </returns>
       </function>
 
       <function id="fn.strtol" name="strtol" kind="function">
@@ -6004,6 +7597,158 @@ int mod_positive(int x, int m) {
         </returns>
       </function>
 
+      <function id="fn.mblen" name="mblen" kind="function">
+        <signature>int mblen(const char* s, size_t n);</signature>
+        <summary><![CDATA[
+<p>Returns the number of bytes in the next multibyte character from <code>s</code>, using internal conversion state.</p>
+]]></summary>
+        <parameters>
+          <param id="p.mblen.s" name="s" direction="in" type="const char*">
+            <description><![CDATA[
+<p>Input byte sequence, or NULL to reset/query conversion state behavior.</p>
+]]></description>
+          </param>
+          <param id="p.mblen.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Maximum number of bytes available at <code>s</code>.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Byte count for next multibyte character, 0 for NUL, or -1 on encoding error.</p>
+]]></description>
+          </return>
+        </returns>
+        <notes>
+          <note id="n.mblen.stateful" severity="important" topic="state">
+            <description><![CDATA[
+<p><code>mblen</code> uses internal state. Prefer restartable functions (<code>mbrlen</code>/<code>mbrtowc</code>) for explicit state control.</p>
+]]></description>
+          </note>
+        </notes>
+      </function>
+
+      <function id="fn.mbtowc" name="mbtowc" kind="function">
+        <signature>int mbtowc(wchar_t* pwc, const char* s, size_t n);</signature>
+        <summary><![CDATA[
+<p>Converts the next multibyte character from <code>s</code> to wide character <code>*pwc</code>, using internal conversion state.</p>
+]]></summary>
+        <parameters>
+          <param id="p.mbtowc.pwc" name="pwc" direction="out" type="wchar_t*">
+            <description><![CDATA[
+<p>Output location for converted wide character (may be NULL for state/validation usage).</p>
+]]></description>
+          </param>
+          <param id="p.mbtowc.s" name="s" direction="in" type="const char*">
+            <description><![CDATA[
+<p>Input byte sequence, or NULL for reset semantics.</p>
+]]></description>
+          </param>
+          <param id="p.mbtowc.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Maximum bytes available from <code>s</code>.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of bytes consumed, 0 for NUL, or -1 on encoding error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wctomb" name="wctomb" kind="function">
+        <signature>int wctomb(char* s, wchar_t wchar);</signature>
+        <summary><![CDATA[
+<p>Converts a wide character to its multibyte representation, using internal conversion state.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wctomb.s" name="s" direction="out" type="char*">
+            <description><![CDATA[
+<p>Destination buffer for multibyte output, or NULL for reset semantics.</p>
+]]></description>
+          </param>
+          <param id="p.wctomb.wchar" name="wchar" direction="in" type="wchar_t">
+            <description><![CDATA[
+<p>Wide character to convert.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Number of bytes written, or -1 on encoding error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.mbstowcs" name="mbstowcs" kind="function">
+        <signature>size_t mbstowcs(wchar_t* pwcs, const char* s, size_t n);</signature>
+        <summary><![CDATA[
+<p>Converts a multibyte string to wide characters, writing at most <code>n</code> wide characters.</p>
+]]></summary>
+        <parameters>
+          <param id="p.mbstowcs.pwcs" name="pwcs" direction="out" type="wchar_t*">
+            <description><![CDATA[
+<p>Destination wide-character buffer.</p>
+]]></description>
+          </param>
+          <param id="p.mbstowcs.s" name="s" direction="in" type="const char*">
+            <description><![CDATA[
+<p>Source NUL-terminated multibyte string.</p>
+]]></description>
+          </param>
+          <param id="p.mbstowcs.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Maximum wide characters to write.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="size_t">
+            <description><![CDATA[
+<p>Number of wide characters written (excluding terminating wide NUL), or <code>(size_t)-1</code> on conversion error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.wcstombs" name="wcstombs" kind="function">
+        <signature>size_t wcstombs(char* s, const wchar_t* pwcs, size_t n);</signature>
+        <summary><![CDATA[
+<p>Converts a wide-character string to multibyte bytes, writing at most <code>n</code> bytes.</p>
+]]></summary>
+        <parameters>
+          <param id="p.wcstombs.s" name="s" direction="out" type="char*">
+            <description><![CDATA[
+<p>Destination byte buffer.</p>
+]]></description>
+          </param>
+          <param id="p.wcstombs.pwcs" name="pwcs" direction="in" type="const wchar_t*">
+            <description><![CDATA[
+<p>Source NUL-terminated wide string.</p>
+]]></description>
+          </param>
+          <param id="p.wcstombs.n" name="n" direction="in" type="size_t">
+            <description><![CDATA[
+<p>Maximum bytes to write.</p>
+]]></description>
+          </param>
+        </parameters>
+        <returns>
+          <return type="size_t">
+            <description><![CDATA[
+<p>Number of bytes written (excluding terminating NUL), or <code>(size_t)-1</code> on conversion error.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
       <function id="fn.qsort" name="qsort" kind="function">
         <signature>void qsort(void* base, size_t nmemb, size_t size, int (*compar)(const void* , const void* ));</signature>
         <summary><![CDATA[
@@ -6141,8 +7886,7 @@ int contains_int(const int* arr, size_t n, int value) {
       <function id="fn.stdlib.category_note" name="_category_note" kind="internal_note">
         <summary><![CDATA[
 <p>
-This header entry includes only the stdlib.h functions you listed: allocation, termination hooks, environment/system, rand/srand,
-numeric parsing (strto*), abs/labs/llabs, div/ldiv/lldiv, qsort/bsearch. Other stdlib.h functions exist but are out of scope here.
+This header entry now includes the full C99 <code>stdlib.h</code> function set covered by this reference.
 </p>
 ]]></summary>
       </function>
@@ -6157,6 +7901,100 @@ Portable parsing helpers for maximum-width integers. These are useful when you w
 Includes both byte string and wide string variants.
 </p>
 ]]></summary>
+
+      <function id="fn.imaxabs" name="imaxabs" kind="function">
+        <signature>intmax_t imaxabs(intmax_t j);</signature>
+        <summary><![CDATA[
+<p>Computes the absolute value of <code>j</code> as <code>intmax_t</code>.</p>
+]]></summary>
+        <parameters>
+          <param id="p.imaxabs.j" name="j" direction="in" type="intmax_t">
+            <description><![CDATA[
+<p>Input value.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.imaxabs.min" severity="important">
+                <description><![CDATA[
+<p>If <code>j == INTMAX_MIN</code>, the absolute value is not representable; avoid this input when you require defined behavior.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="intmax_t">
+            <description><![CDATA[
+<p>Absolute value of <code>j</code> when representable.</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.imaxabs.safe" lang="c99">
+            <title>Compute magnitude with INTMAX_MIN guard</title>
+            <code><![CDATA[
+#include <inttypes.h>
+#include <stdint.h>
+
+intmax_t magnitude_or_zero(intmax_t v, int* ok) {
+    if (v == INTMAX_MIN) {
+        if (ok) *ok = 0;
+        return 0;
+    }
+    if (ok) *ok = 1;
+    return imaxabs(v);
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
+
+      <function id="fn.imaxdiv" name="imaxdiv" kind="function">
+        <signature>imaxdiv_t imaxdiv(intmax_t numer, intmax_t denom);</signature>
+        <summary><![CDATA[
+<p>Computes integer quotient and remainder of <code>numer / denom</code> as an <code>imaxdiv_t</code> pair.</p>
+]]></summary>
+        <parameters>
+          <param id="p.imaxdiv.numer" name="numer" direction="in" type="intmax_t">
+            <description><![CDATA[
+<p>Numerator value.</p>
+]]></description>
+          </param>
+          <param id="p.imaxdiv.denom" name="denom" direction="in" type="intmax_t">
+            <description><![CDATA[
+<p>Denominator value.</p>
+]]></description>
+            <constraints>
+              <constraint id="c.imaxdiv.nonzero" severity="important">
+                <description><![CDATA[
+<p><code>denom</code> must not be zero.</p>
+]]></description>
+              </constraint>
+            </constraints>
+          </param>
+        </parameters>
+        <returns>
+          <return type="imaxdiv_t">
+            <description><![CDATA[
+<p>Structure containing quotient (<code>quot</code>) and remainder (<code>rem</code>).</p>
+]]></description>
+          </return>
+        </returns>
+        <examples>
+          <example id="ex.imaxdiv.minutes_seconds" lang="c99">
+            <title>Split total seconds into minutes and seconds</title>
+            <code><![CDATA[
+#include <inttypes.h>
+
+int split_seconds(intmax_t total_seconds, imaxdiv_t* out) {
+    if (out == 0) return 0;
+    if (total_seconds < 0) return 0;
+    *out = imaxdiv(total_seconds, 60);
+    return 1;
+}
+]]></code>
+          </example>
+        </examples>
+      </function>
 
       <function id="fn.strtoimax" name="strtoimax" kind="function">
         <signature>intmax_t strtoimax(const char* nptr, char**endptr, int base);</signature>
@@ -6315,8 +8153,9 @@ int parse_intmax_strict(const char* s, intmax_t *out) {
       <function id="fn.inttypes.category_note" name="_category_note" kind="internal_note">
         <summary><![CDATA[
 <p>
-This header entry includes the inttypes.h parsing functions you listed: <code>strtoimax</code>, <code>strtoumax</code>, <code>wcstoimax</code>, <code>wcstoumax</code>.
-Other inttypes.h facilities (format macros and printf/scanf support for fixed-width types) are out of scope here.
+This header entry includes C99 inttypes.h integer helpers covered by this reference: <code>imaxabs</code>, <code>imaxdiv</code>,
+<code>strtoimax</code>, <code>strtoumax</code>, <code>wcstoimax</code>, and <code>wcstoumax</code>.
+Format macros and printf/scanf conversion macros are documented separately from function entries.
 </p>
 ]]></summary>
       </function>
@@ -6879,6 +8718,13 @@ char* format_time_alloc(const struct tm* t, const char* fmt) {
 ]]></description>
           </return>
         </returns>
+        <notes>
+          <note id="n.gmtime.static_storage" severity="important" topic="storage_lifetime">
+            <description><![CDATA[
+<p>Result storage may be shared static memory overwritten by subsequent time-conversion calls. Copy immediately if you need to retain data.</p>
+]]></description>
+          </note>
+        </notes>
         <examples>
           <example id="ex.gmtime_copy" lang="c99">
             <title>Convert to UTC and copy out immediately</title>
@@ -6915,6 +8761,18 @@ int to_utc_tm(time_t t, struct tm* out) {
 ]]></description>
           </return>
         </returns>
+        <notes>
+          <note id="n.localtime.static_storage" severity="important" topic="storage_lifetime">
+            <description><![CDATA[
+<p>Result storage may be shared static memory overwritten by subsequent time-conversion calls. Copy immediately if you need to retain data.</p>
+]]></description>
+          </note>
+          <note id="n.localtime.tz_dependence" severity="info" topic="timezone">
+            <description><![CDATA[
+<p>Conversion depends on host timezone and DST rules at runtime. Results can vary across environments.</p>
+]]></description>
+          </note>
+        </notes>
         <examples>
           <example id="ex.localtime_copy" lang="c99">
             <title>Convert to local time and copy out immediately</title>
@@ -6958,6 +8816,13 @@ int local_ymd(time_t t, int* y, int* m, int* d) {
             <description><![CDATA[
 <p>Broken-down time to format.</p>
 ]]></description>
+            <constraints>
+              <constraint id="c.asctime.timeptr_nonnull" severity="important">
+                <description><![CDATA[
+<p><code>timeptr</code> must be non-NULL and point to a valid <code>struct tm</code>.</p>
+]]></description>
+              </constraint>
+            </constraints>
           </param>
         </parameters>
         <returns>
@@ -7008,6 +8873,13 @@ int asctime_copy(const struct tm* t, char* buf, size_t cap) {
             <description><![CDATA[
 <p>Pointer to calendar time value.</p>
 ]]></description>
+            <constraints>
+              <constraint id="c.ctime.timer_nonnull" severity="important">
+                <description><![CDATA[
+<p><code>timer</code> must be non-NULL and point to a valid <code>time_t</code> value.</p>
+]]></description>
+              </constraint>
+            </constraints>
           </param>
         </parameters>
         <returns>
@@ -8216,11 +10088,2041 @@ double angle(double x, double y) {
         </returns>
       </function>
 
+      <function id="fn.acosf" name="acosf" kind="function">
+        <signature>float acosf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>acos</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.acosh" name="acosh" kind="function">
+        <signature>double acosh(double x);</signature>
+        <summary><![CDATA[
+<p>C99 math.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.acoshf" name="acoshf" kind="function">
+        <signature>float acoshf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>acosh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.acoshl" name="acoshl" kind="function">
+        <signature>long double acoshl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>acosh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.acosl" name="acosl" kind="function">
+        <signature>long double acosl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>acos</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.asinf" name="asinf" kind="function">
+        <signature>float asinf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>asin</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.asinh" name="asinh" kind="function">
+        <signature>double asinh(double x);</signature>
+        <summary><![CDATA[
+<p>C99 math.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.asinhf" name="asinhf" kind="function">
+        <signature>float asinhf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>asinh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.asinhl" name="asinhl" kind="function">
+        <signature>long double asinhl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>asinh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.asinl" name="asinl" kind="function">
+        <signature>long double asinl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>asin</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.atan2f" name="atan2f" kind="function">
+        <signature>float atan2f(float y, float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>atan2</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.atan2l" name="atan2l" kind="function">
+        <signature>long double atan2l(long double y, long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>atan2</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.atanf" name="atanf" kind="function">
+        <signature>float atanf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>atan</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.atanh" name="atanh" kind="function">
+        <signature>double atanh(double x);</signature>
+        <summary><![CDATA[
+<p>C99 math.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.atanhf" name="atanhf" kind="function">
+        <signature>float atanhf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>atanh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.atanhl" name="atanhl" kind="function">
+        <signature>long double atanhl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>atanh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.atanl" name="atanl" kind="function">
+        <signature>long double atanl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>atan</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cbrtf" name="cbrtf" kind="function">
+        <signature>float cbrtf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>cbrt</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cbrtl" name="cbrtl" kind="function">
+        <signature>long double cbrtl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>cbrt</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ceilf" name="ceilf" kind="function">
+        <signature>float ceilf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>ceil</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ceill" name="ceill" kind="function">
+        <signature>long double ceill(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>ceil</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.copysignf" name="copysignf" kind="function">
+        <signature>float copysignf(float x, float y);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>copysign</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.copysignl" name="copysignl" kind="function">
+        <signature>long double copysignl(long double x, long double y);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>copysign</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cosf" name="cosf" kind="function">
+        <signature>float cosf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>cos</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.coshf" name="coshf" kind="function">
+        <signature>float coshf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>cosh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.coshl" name="coshl" kind="function">
+        <signature>long double coshl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>cosh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cosl" name="cosl" kind="function">
+        <signature>long double cosl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>cos</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.erf" name="erf" kind="function">
+        <signature>double erf(double x);</signature>
+        <summary><![CDATA[
+<p>C99 math.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.erfc" name="erfc" kind="function">
+        <signature>double erfc(double x);</signature>
+        <summary><![CDATA[
+<p>C99 math.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.erfcf" name="erfcf" kind="function">
+        <signature>float erfcf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>erfc</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.erfcl" name="erfcl" kind="function">
+        <signature>long double erfcl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>erfc</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.erff" name="erff" kind="function">
+        <signature>float erff(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>erf</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.erfl" name="erfl" kind="function">
+        <signature>long double erfl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>erf</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.exp2" name="exp2" kind="function">
+        <signature>double exp2(double x);</signature>
+        <summary><![CDATA[
+<p>C99 math.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.exp2f" name="exp2f" kind="function">
+        <signature>float exp2f(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>exp2</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.exp2l" name="exp2l" kind="function">
+        <signature>long double exp2l(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>exp2</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.expf" name="expf" kind="function">
+        <signature>float expf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>exp</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.expl" name="expl" kind="function">
+        <signature>long double expl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>exp</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.expm1f" name="expm1f" kind="function">
+        <signature>float expm1f(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>expm1</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.expm1l" name="expm1l" kind="function">
+        <signature>long double expm1l(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>expm1</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fabsf" name="fabsf" kind="function">
+        <signature>float fabsf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>fabs</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fabsl" name="fabsl" kind="function">
+        <signature>long double fabsl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>fabs</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fdim" name="fdim" kind="function">
+        <signature>double fdim(double x, double y);</signature>
+        <summary><![CDATA[
+<p>C99 math.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fdimf" name="fdimf" kind="function">
+        <signature>float fdimf(float x, float y);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>fdim</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fdiml" name="fdiml" kind="function">
+        <signature>long double fdiml(long double x, long double y);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>fdim</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.floorf" name="floorf" kind="function">
+        <signature>float floorf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>floor</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.floorl" name="floorl" kind="function">
+        <signature>long double floorl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>floor</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fma" name="fma" kind="function">
+        <signature>double fma(double x, double y, double z);</signature>
+        <summary><![CDATA[
+<p>C99 math.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fmaf" name="fmaf" kind="function">
+        <signature>float fmaf(float x, float y, float z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>fma</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fmal" name="fmal" kind="function">
+        <signature>long double fmal(long double x, long double y, long double z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>fma</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fmaxf" name="fmaxf" kind="function">
+        <signature>float fmaxf(float x, float y);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>fmax</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fmaxl" name="fmaxl" kind="function">
+        <signature>long double fmaxl(long double x, long double y);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>fmax</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fminf" name="fminf" kind="function">
+        <signature>float fminf(float x, float y);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>fmin</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fminl" name="fminl" kind="function">
+        <signature>long double fminl(long double x, long double y);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>fmin</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fmodf" name="fmodf" kind="function">
+        <signature>float fmodf(float x, float y);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>fmod</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fmodl" name="fmodl" kind="function">
+        <signature>long double fmodl(long double x, long double y);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>fmod</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.frexpf" name="frexpf" kind="function">
+        <signature>float frexpf(float value, int* exp);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>frexp</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.frexpl" name="frexpl" kind="function">
+        <signature>long double frexpl(long double value, int* exp);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>frexp</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.hypotf" name="hypotf" kind="function">
+        <signature>float hypotf(float x, float y);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>hypot</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.hypotl" name="hypotl" kind="function">
+        <signature>long double hypotl(long double x, long double y);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>hypot</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ilogb" name="ilogb" kind="function">
+        <signature>int ilogb(double x);</signature>
+        <summary><![CDATA[
+<p>C99 math.h function.</p>
+]]></summary>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ilogbf" name="ilogbf" kind="function">
+        <signature>int ilogbf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>ilogb</code>.</p>
+]]></summary>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ilogbl" name="ilogbl" kind="function">
+        <signature>int ilogbl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>ilogb</code>.</p>
+]]></summary>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ldexpf" name="ldexpf" kind="function">
+        <signature>float ldexpf(float x, int exp);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>ldexp</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ldexpl" name="ldexpl" kind="function">
+        <signature>long double ldexpl(long double x, int exp);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>ldexp</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.lgamma" name="lgamma" kind="function">
+        <signature>double lgamma(double x);</signature>
+        <summary><![CDATA[
+<p>C99 math.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.lgammaf" name="lgammaf" kind="function">
+        <signature>float lgammaf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>lgamma</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.lgammal" name="lgammal" kind="function">
+        <signature>long double lgammal(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>lgamma</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.llrint" name="llrint" kind="function">
+        <signature>long long int llrint(double x);</signature>
+        <summary><![CDATA[
+<p>C99 math.h function.</p>
+]]></summary>
+        <returns>
+          <return type="long long int">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.llrintf" name="llrintf" kind="function">
+        <signature>long long int llrintf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>llrint</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long long int">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.llrintl" name="llrintl" kind="function">
+        <signature>long long int llrintl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>llrint</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long long int">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.llroundf" name="llroundf" kind="function">
+        <signature>long long int llroundf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>llround</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long long int">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.llroundl" name="llroundl" kind="function">
+        <signature>long long int llroundl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>llround</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long long int">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.log10f" name="log10f" kind="function">
+        <signature>float log10f(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>log10</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.log10l" name="log10l" kind="function">
+        <signature>long double log10l(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>log10</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.log1pf" name="log1pf" kind="function">
+        <signature>float log1pf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>log1p</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.log1pl" name="log1pl" kind="function">
+        <signature>long double log1pl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>log1p</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.log2" name="log2" kind="function">
+        <signature>double log2(double x);</signature>
+        <summary><![CDATA[
+<p>C99 math.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.log2f" name="log2f" kind="function">
+        <signature>float log2f(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>log2</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.log2l" name="log2l" kind="function">
+        <signature>long double log2l(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>log2</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.logb" name="logb" kind="function">
+        <signature>double logb(double x);</signature>
+        <summary><![CDATA[
+<p>C99 math.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.logbf" name="logbf" kind="function">
+        <signature>float logbf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>logb</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.logbl" name="logbl" kind="function">
+        <signature>long double logbl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>logb</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.logf" name="logf" kind="function">
+        <signature>float logf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>log</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.logl" name="logl" kind="function">
+        <signature>long double logl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>log</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.lrint" name="lrint" kind="function">
+        <signature>long int lrint(double x);</signature>
+        <summary><![CDATA[
+<p>C99 math.h function.</p>
+]]></summary>
+        <returns>
+          <return type="long int">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.lrintf" name="lrintf" kind="function">
+        <signature>long int lrintf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>lrint</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long int">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.lrintl" name="lrintl" kind="function">
+        <signature>long int lrintl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>lrint</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long int">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.lroundf" name="lroundf" kind="function">
+        <signature>long int lroundf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>lround</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long int">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.lroundl" name="lroundl" kind="function">
+        <signature>long int lroundl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>lround</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long int">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.modff" name="modff" kind="function">
+        <signature>float modff(float value, float* iptr);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>modf</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.modfl" name="modfl" kind="function">
+        <signature>long double modfl(long double value, long double* iptr);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>modf</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.nan" name="nan" kind="function">
+        <signature>double nan(const char* tagp);</signature>
+        <summary><![CDATA[
+<p>C99 math.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.nanf" name="nanf" kind="function">
+        <signature>float nanf(const char* tagp);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>nan</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.nanl" name="nanl" kind="function">
+        <signature>long double nanl(const char* tagp);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>nan</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.nearbyintf" name="nearbyintf" kind="function">
+        <signature>float nearbyintf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>nearbyint</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.nearbyintl" name="nearbyintl" kind="function">
+        <signature>long double nearbyintl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>nearbyint</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.nextafterf" name="nextafterf" kind="function">
+        <signature>float nextafterf(float x, float y);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>nextafter</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.nextafterl" name="nextafterl" kind="function">
+        <signature>long double nextafterl(long double x, long double y);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>nextafter</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.nexttowardf" name="nexttowardf" kind="function">
+        <signature>float nexttowardf(float x, long double y);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>nexttoward</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.nexttowardl" name="nexttowardl" kind="function">
+        <signature>long double nexttowardl(long double x, long double y);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>nexttoward</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.powf" name="powf" kind="function">
+        <signature>float powf(float x, float y);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>pow</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.powl" name="powl" kind="function">
+        <signature>long double powl(long double x, long double y);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>pow</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.remainderf" name="remainderf" kind="function">
+        <signature>float remainderf(float x, float y);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>remainder</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.remainderl" name="remainderl" kind="function">
+        <signature>long double remainderl(long double x, long double y);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>remainder</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.remquo" name="remquo" kind="function">
+        <signature>double remquo(double x, double y, int* quo);</signature>
+        <summary><![CDATA[
+<p>C99 math.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.remquof" name="remquof" kind="function">
+        <signature>float remquof(float x, float y, int* quo);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>remquo</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.remquol" name="remquol" kind="function">
+        <signature>long double remquol(long double x, long double y, int* quo);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>remquo</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.rintf" name="rintf" kind="function">
+        <signature>float rintf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>rint</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.rintl" name="rintl" kind="function">
+        <signature>long double rintl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>rint</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.roundf" name="roundf" kind="function">
+        <signature>float roundf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>round</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.roundl" name="roundl" kind="function">
+        <signature>long double roundl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>round</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.scalbln" name="scalbln" kind="function">
+        <signature>double scalbln(double x, long int n);</signature>
+        <summary><![CDATA[
+<p>C99 math.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.scalblnf" name="scalblnf" kind="function">
+        <signature>float scalblnf(float x, long int n);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>scalbln</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.scalblnl" name="scalblnl" kind="function">
+        <signature>long double scalblnl(long double x, long int n);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>scalbln</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.scalbn" name="scalbn" kind="function">
+        <signature>double scalbn(double x, int n);</signature>
+        <summary><![CDATA[
+<p>C99 math.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.scalbnf" name="scalbnf" kind="function">
+        <signature>float scalbnf(float x, int n);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>scalbn</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.scalbnl" name="scalbnl" kind="function">
+        <signature>long double scalbnl(long double x, int n);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>scalbn</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.sinf" name="sinf" kind="function">
+        <signature>float sinf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>sin</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.sinhf" name="sinhf" kind="function">
+        <signature>float sinhf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>sinh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.sinhl" name="sinhl" kind="function">
+        <signature>long double sinhl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>sinh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.sinl" name="sinl" kind="function">
+        <signature>long double sinl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>sin</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.sqrtf" name="sqrtf" kind="function">
+        <signature>float sqrtf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>sqrt</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.sqrtl" name="sqrtl" kind="function">
+        <signature>long double sqrtl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>sqrt</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.tanf" name="tanf" kind="function">
+        <signature>float tanf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>tan</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.tanhf" name="tanhf" kind="function">
+        <signature>float tanhf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>tanh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.tanhl" name="tanhl" kind="function">
+        <signature>long double tanhl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>tanh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.tanl" name="tanl" kind="function">
+        <signature>long double tanl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>tan</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.tgamma" name="tgamma" kind="function">
+        <signature>double tgamma(double x);</signature>
+        <summary><![CDATA[
+<p>C99 math.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.tgammaf" name="tgammaf" kind="function">
+        <signature>float tgammaf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>tgamma</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.tgammal" name="tgammal" kind="function">
+        <signature>long double tgammal(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>tgamma</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.truncf" name="truncf" kind="function">
+        <signature>float truncf(float x);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>trunc</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.truncl" name="truncl" kind="function">
+        <signature>long double truncl(long double x);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>trunc</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.fpclassify" name="fpclassify" kind="function_or_macro">
+        <signature>int fpclassify(real-floating x);</signature>
+        <summary><![CDATA[
+<p>Classifies <code>x</code> as <code>FP_NAN</code>, <code>FP_INFINITE</code>, <code>FP_ZERO</code>, <code>FP_SUBNORMAL</code>, or <code>FP_NORMAL</code>.</p>
+]]></summary>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>One of the <code>FP_*</code> classification macro values.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.isfinite" name="isfinite" kind="function_or_macro">
+        <signature>int isfinite(real-floating x);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>x</code> is finite (not infinite and not NaN).</p>
+]]></summary>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Nonzero if finite, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.isinf" name="isinf" kind="function_or_macro">
+        <signature>int isinf(real-floating x);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>x</code> is infinite.</p>
+]]></summary>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Nonzero if infinite, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.isnan" name="isnan" kind="function_or_macro">
+        <signature>int isnan(real-floating x);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>x</code> is NaN.</p>
+]]></summary>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Nonzero if NaN, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.isnormal" name="isnormal" kind="function_or_macro">
+        <signature>int isnormal(real-floating x);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>x</code> is a normal finite nonzero floating-point value.</p>
+]]></summary>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Nonzero for normal numbers, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.signbit" name="signbit" kind="function_or_macro">
+        <signature>int signbit(real-floating x);</signature>
+        <summary><![CDATA[
+<p>Tests whether the sign bit of <code>x</code> is set.</p>
+]]></summary>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Nonzero when sign bit is set (including negative zero), otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.isgreater" name="isgreater" kind="function_or_macro">
+        <signature>int isgreater(real-floating x, real-floating y);</signature>
+        <summary><![CDATA[
+<p>Quiet relational comparison for <code>x &gt; y</code>.</p>
+]]></summary>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Nonzero if <code>x &gt; y</code>, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.isgreaterequal" name="isgreaterequal" kind="function_or_macro">
+        <signature>int isgreaterequal(real-floating x, real-floating y);</signature>
+        <summary><![CDATA[
+<p>Quiet relational comparison for <code>x &gt;= y</code>.</p>
+]]></summary>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Nonzero if <code>x &gt;= y</code>, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.isless" name="isless" kind="function_or_macro">
+        <signature>int isless(real-floating x, real-floating y);</signature>
+        <summary><![CDATA[
+<p>Quiet relational comparison for <code>x &lt; y</code>.</p>
+]]></summary>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Nonzero if <code>x &lt; y</code>, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.islessequal" name="islessequal" kind="function_or_macro">
+        <signature>int islessequal(real-floating x, real-floating y);</signature>
+        <summary><![CDATA[
+<p>Quiet relational comparison for <code>x &lt;= y</code>.</p>
+]]></summary>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Nonzero if <code>x &lt;= y</code>, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.islessgreater" name="islessgreater" kind="function_or_macro">
+        <signature>int islessgreater(real-floating x, real-floating y);</signature>
+        <summary><![CDATA[
+<p>Quiet relational comparison for <code>x &lt; y || x &gt; y</code>.</p>
+]]></summary>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Nonzero when values are ordered and unequal, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.isunordered" name="isunordered" kind="function_or_macro">
+        <signature>int isunordered(real-floating x, real-floating y);</signature>
+        <summary><![CDATA[
+<p>Tests whether <code>x</code> and <code>y</code> are unordered (at least one is NaN).</p>
+]]></summary>
+        <returns>
+          <return type="int">
+            <description><![CDATA[
+<p>Nonzero if unordered, otherwise 0.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
       <function id="fn.math.category_note" name="_category_note" kind="internal_note">
         <summary><![CDATA[
 <p>
-This header entry includes the math.h functions you listed. Many of these have float/long double variants in the standard, but this
-document focuses on the canonical double forms for cross-platform usage, mirroring the approach used in earlier categories.
+This category now covers the full C99 math function set from <code>math.h</code>, including float/long double variants and
+classification/comparison macros.
 </p>
 ]]></summary>
       </function>
@@ -8600,10 +12502,710 @@ double complex sqrt_neg(double x) {
         </returns>
       </function>
 
+      <function id="fn.cabsf" name="cabsf" kind="function">
+        <signature>float cabsf(float complex z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>cabs</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cabsl" name="cabsl" kind="function">
+        <signature>long double cabsl(long double complex z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>cabs</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cacos" name="cacos" kind="function">
+        <signature>double complex cacos(double complex z);</signature>
+        <summary><![CDATA[
+<p>C99 complex.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cacosf" name="cacosf" kind="function">
+        <signature>float complex cacosf(float complex z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>cacos</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cacosh" name="cacosh" kind="function">
+        <signature>double complex cacosh(double complex z);</signature>
+        <summary><![CDATA[
+<p>C99 complex.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cacoshf" name="cacoshf" kind="function">
+        <signature>float complex cacoshf(float complex z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>cacosh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cacoshl" name="cacoshl" kind="function">
+        <signature>long double complex cacoshl(long double complex z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>cacosh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cacosl" name="cacosl" kind="function">
+        <signature>long double complex cacosl(long double complex z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>cacos</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cargf" name="cargf" kind="function">
+        <signature>float cargf(float complex z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>carg</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cargl" name="cargl" kind="function">
+        <signature>long double cargl(long double complex z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>carg</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.casin" name="casin" kind="function">
+        <signature>double complex casin(double complex z);</signature>
+        <summary><![CDATA[
+<p>C99 complex.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.casinf" name="casinf" kind="function">
+        <signature>float complex casinf(float complex z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>casin</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.casinh" name="casinh" kind="function">
+        <signature>double complex casinh(double complex z);</signature>
+        <summary><![CDATA[
+<p>C99 complex.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.casinhf" name="casinhf" kind="function">
+        <signature>float complex casinhf(float complex z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>casinh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.casinhl" name="casinhl" kind="function">
+        <signature>long double complex casinhl(long double complex z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>casinh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.casinl" name="casinl" kind="function">
+        <signature>long double complex casinl(long double complex z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>casin</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.catan" name="catan" kind="function">
+        <signature>double complex catan(double complex z);</signature>
+        <summary><![CDATA[
+<p>C99 complex.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.catanf" name="catanf" kind="function">
+        <signature>float complex catanf(float complex z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>catan</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.catanh" name="catanh" kind="function">
+        <signature>double complex catanh(double complex z);</signature>
+        <summary><![CDATA[
+<p>C99 complex.h function.</p>
+]]></summary>
+        <returns>
+          <return type="double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.catanhf" name="catanhf" kind="function">
+        <signature>float complex catanhf(float complex z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>catanh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.catanhl" name="catanhl" kind="function">
+        <signature>long double complex catanhl(long double complex z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>catanh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.catanl" name="catanl" kind="function">
+        <signature>long double complex catanl(long double complex z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>catan</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ccosf" name="ccosf" kind="function">
+        <signature>float complex ccosf(float complex z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>ccos</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ccoshf" name="ccoshf" kind="function">
+        <signature>float complex ccoshf(float complex z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>ccosh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ccoshl" name="ccoshl" kind="function">
+        <signature>long double complex ccoshl(long double complex z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>ccosh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ccosl" name="ccosl" kind="function">
+        <signature>long double complex ccosl(long double complex z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>ccos</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cexpf" name="cexpf" kind="function">
+        <signature>float complex cexpf(float complex z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>cexp</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cexpl" name="cexpl" kind="function">
+        <signature>long double complex cexpl(long double complex z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>cexp</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cimagf" name="cimagf" kind="function">
+        <signature>float cimagf(float complex z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>cimag</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cimagl" name="cimagl" kind="function">
+        <signature>long double cimagl(long double complex z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>cimag</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.clogf" name="clogf" kind="function">
+        <signature>float complex clogf(float complex z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>clog</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.clogl" name="clogl" kind="function">
+        <signature>long double complex clogl(long double complex z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>clog</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.conjf" name="conjf" kind="function">
+        <signature>float complex conjf(float complex z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>conj</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.conjl" name="conjl" kind="function">
+        <signature>long double complex conjl(long double complex z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>conj</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cpowf" name="cpowf" kind="function">
+        <signature>float complex cpowf(float complex x, float complex y);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>cpow</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cpowl" name="cpowl" kind="function">
+        <signature>long double complex cpowl(long double complex x, long double complex y);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>cpow</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cprojf" name="cprojf" kind="function">
+        <signature>float complex cprojf(float complex z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>cproj</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.cprojl" name="cprojl" kind="function">
+        <signature>long double complex cprojl(long double complex z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>cproj</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.crealf" name="crealf" kind="function">
+        <signature>float crealf(float complex z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>creal</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.creall" name="creall" kind="function">
+        <signature>long double creall(long double complex z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>creal</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.csinf" name="csinf" kind="function">
+        <signature>float complex csinf(float complex z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>csin</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.csinhf" name="csinhf" kind="function">
+        <signature>float complex csinhf(float complex z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>csinh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.csinhl" name="csinhl" kind="function">
+        <signature>long double complex csinhl(long double complex z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>csinh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.csinl" name="csinl" kind="function">
+        <signature>long double complex csinl(long double complex z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>csin</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.csqrtf" name="csqrtf" kind="function">
+        <signature>float complex csqrtf(float complex z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>csqrt</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.csqrtl" name="csqrtl" kind="function">
+        <signature>long double complex csqrtl(long double complex z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>csqrt</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ctanf" name="ctanf" kind="function">
+        <signature>float complex ctanf(float complex z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>ctan</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ctanhf" name="ctanhf" kind="function">
+        <signature>float complex ctanhf(float complex z);</signature>
+        <summary><![CDATA[
+<p><code>float</code> variant of <code>ctanh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="float complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ctanhl" name="ctanhl" kind="function">
+        <signature>long double complex ctanhl(long double complex z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>ctanh</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
+      <function id="fn.ctanl" name="ctanl" kind="function">
+        <signature>long double complex ctanl(long double complex z);</signature>
+        <summary><![CDATA[
+<p><code>long double</code> variant of <code>ctan</code>.</p>
+]]></summary>
+        <returns>
+          <return type="long double complex">
+            <description><![CDATA[
+<p>Result as specified by C99.</p>
+]]></description>
+          </return>
+        </returns>
+      </function>
+
       <function id="fn.complex.category_note" name="_category_note" kind="internal_note">
         <summary><![CDATA[
 <p>
-This header entry includes the complex.h functions you listed, documented in their double-complex forms for portability and consistency.
+This category now covers the full C99 <code>complex.h</code> function set, including float, double, and long double complex variants.
 </p>
 ]]></summary>
       </function>
@@ -9261,12 +13863,16 @@ from multiple sources and merged into a single consistent format.
         <example id="ex.id-0001.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-/* Scan a null-terminated string */
-const unsigned char* p = (const unsigned char*)buffer;  /* buffer is null-terminated */
-int c;
-while ((c = *p++) != 0) {
-    /* use c - p has already advanced */
-    process_char(c);
+#include <ctype.h>
+#include <stddef.h>
+
+size_t skip_spaces(const char* s) {
+    size_t n = 0;
+    int ch;
+    while ((ch = (unsigned char)s[n]) != '\0' && isspace(ch)) {
+        ++n;
+    }
+    return n;
 }
 ]]></code>
         </example>
@@ -9502,15 +14108,13 @@ void use_defaults(void) {
           <code><![CDATA[
 #include <stddef.h>
 
-/* buf may not be null-terminated; n is the buffer capacity */
-const unsigned char* buf = get_unterminated_buffer();
-size_t n = get_buffer_length();
-
-size_t i = 0;
-for (; i < n && buf[i] != '\0'; ++i) {
-    /* process buf[i] */
+size_t find_nul_or_limit(const char* s, size_t max_len) {
+    size_t i = 0;
+    while (i < max_len && s[i] != '\0') {
+        ++i;
+    }
+    return i;
 }
-/* i now holds the length found, or n if no null terminator */
 ]]></code>
         </example>
       </examples>
@@ -9732,17 +14336,11 @@ unsigned char buf[BUF_SZ];
 #include <stdio.h>
 #include <string.h>
 
-void process_file(const char* path) {
-    FILE* fp = fopen(path, "r");
-    if (!fp) return;
-
-    char line[1024];
-    while (fgets(line, sizeof line, fp)) {
-        line[strcspn(line, "\n")] = '\0';  /* trim newline */
-        /* use line */
-        process_line(line);
+void process_file(FILE* in) {
+    char buf[256];
+    while (fgets(buf, sizeof(buf), in) != NULL) {
+        buf[strcspn(buf, "\n")] = '\0';
     }
-    fclose(fp);
 }
 ]]></code>
         </example>
@@ -9830,12 +14428,9 @@ int resize_buffer(void** p, size_t n) {
 #include <stdio.h>
 #include <stddef.h>
 
-void build_path(char* dst, size_t dst_sz, const char* a, const char* b) {
-    int m = snprintf(dst, dst_sz, "%s/%s", a, b);
-    if (m < 0 || (size_t)m >= dst_sz) {
-        /* truncated or error */
-        handle_truncation();
-    }
+int build_path(char* out, size_t cap, const char* dir, const char* file) {
+    int n = snprintf(out, cap, "%s/%s", dir, file);
+    return (n >= 0 && (size_t)n < cap) ? 1 : 0;
 }
 ]]></code>
         </example>
@@ -9850,23 +14445,16 @@ void build_path(char* dst, size_t dst_sz, const char* a, const char* b) {
           <title>Example</title>
           <code><![CDATA[
 #include <stdlib.h>
-#include <ctype.h>
+#include <errno.h>
 
-void parse_numbers(const char* input) {
-    char* p = (char*)input;
-    char* end;
-
-    while (*p) {
-        long v = strtol(p, &end, 10);
-        if (end == p) break;  /* not a number, stop */
-
-        /* use v */
-        process_value(v);
-
-        p = end;
-        /* skip whitespace/separators */
-        while (*p && (isspace(*p) || *p == ',')) p++;
-    }
+int parse_number(const char* s, int* out) {
+    char* end = NULL;
+    long v;
+    errno = 0;
+    v = strtol(s, &end, 10);
+    if (end == s || *end != '\0' || errno != 0) return 0;
+    *out = (int)v;
+    return 1;
 }
 ]]></code>
         </example>
@@ -10157,24 +14745,12 @@ const char* s = "ネコ";
           <code><![CDATA[
 #include <stdio.h>
 
-void process_file(const char* path) {
-    FILE* fp = fopen(path, "rb");
-    if (!fp) return;
-
-    unsigned char buf[4096];
-    size_t n;
-
-    while ((n = fread(buf, 1, sizeof buf, fp)) != 0) {
-        /* process buf[0..n) */
-        handle_data(buf, n);
+int process_file(FILE* in, FILE* out) {
+    int ch;
+    while ((ch = fgetc(in)) != EOF) {
+        if (fputc(ch, out) == EOF) return 0;
     }
-
-    if (ferror(fp)) {
-        /* I/O error occurred */
-        handle_error();
-    }
-
-    fclose(fp);
+    return ferror(in) ? 0 : 1;
 }
 ]]></code>
         </example>
@@ -10323,14 +14899,9 @@ void check_bit(unsigned flags, unsigned bit) {
         <example id="ex.id-0036.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-#include <stddef.h>
-
-void* ptr = get_pointer();
-int ok = !!ptr;  /* converts any non-zero to 1, zero to 0 */
-
-/* Or with stdbool.h for proper bool type */
-#include <stdbool.h>
-bool valid = (ptr != NULL);
+int normalize_bool(int value) {
+    return !!value;
+}
 ]]></code>
         </example>
       </examples>
@@ -10550,11 +15121,13 @@ bool stack_char_fla_pop(stack_char_fla* stack, char* out) {
           <title>Example</title>
           <code><![CDATA[
 #include <stddef.h>
-#include <stdint.h>
 
-if (b != 0 && a > SIZE_MAX / b) return -1;   /* a * b would overflow size_t */
-
-if (a > SIZE_MAX - b) return -1;            /* a + b would overflow size_t */
+int checked_mul_add(size_t a, size_t b, size_t c, size_t* out) {
+    if (a != 0 && b > ((size_t)-1) / a) return 0;
+    if (c > ((size_t)-1) - (a * b)) return 0;
+    *out = a * b + c;
+    return 1;
+}
 ]]></code>
         </example>
       </examples>
@@ -10980,9 +15553,15 @@ double complex compute_complex(void) {
         <example id="ex.id-0061.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-use_point(&(struct Point){ .x = 1, .y = 2 });
+typedef struct { int x; int y; } Point;
 
-memcpy(dst, (unsigned char[]){0xDE,0xAD,0xBE,0xEF}, 4);
+int dot(const Point* a, const Point* b) {
+    return a->x * b->x + a->y * b->y;
+}
+
+int demo(void) {
+    return dot(&(Point){1, 2}, &(Point){3, 4});
+}
 ]]></code>
         </example>
       </examples>
@@ -11536,8 +16115,12 @@ size_t count_trailing_zeros(unsigned int value) {
         <example id="ex.id-0080.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-if (array_count < ARRAY_CAP) {
-    array[array_count++] = value;
+#include <stddef.h>
+
+int push_int(int* buf, size_t cap, size_t* count, int value) {
+    if (*count >= cap) return 0;
+    buf[(*count)++] = value;
+    return 1;
 }
 ]]></code>
         </example>
@@ -11746,7 +16329,11 @@ FILE* create_temp_file(void) {
         <example id="ex.id-0090.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-if (isalpha((unsigned char)c)) { /* ... */ }
+#include <ctype.h>
+
+int is_hex_digit_char(char c) {
+    return isxdigit((unsigned char)c);
+}
 ]]></code>
         </example>
       </examples>
@@ -12063,10 +16650,16 @@ void dfs(Node* node, int* visited) {
         <example id="ex.id-0102.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-struct Config cfg = {
-    .timeout_ms = 250,
-    .retries = 3,
-    .path = "/tmp/app.sock",
+typedef struct {
+    int width;
+    int height;
+    int fullscreen;
+} AppConfig;
+
+AppConfig cfg = {
+    .width = 800,
+    .height = 600,
+    .fullscreen = 0
 };
 ]]></code>
         </example>
@@ -12193,10 +16786,10 @@ int main(int argc, char* argv[]) {
 
     <function id="fn.idiom.id-0106" name="idiom: Execute procedures depending on options" kind="idiom">
       <signature>int main(int argc, char* argv[]) {</signature>
-      <summary><![CDATA[<p>Execute different procedures based on parsed command-line options using getopt.</p>]]></summary>
+      <summary><![CDATA[<p>Execute different procedures based on parsed command-line options using a portable C99 argv parser.</p>]]></summary>
       <notes>
-        <note id="note.id-0106.1" severity="warning" topic="portability">
-          <description><![CDATA[<p>getopt is POSIX, not C99 standard. For portable C99, parse argv manually.</p>]]></description>
+        <note id="note.id-0106.1" severity="info" topic="portability">
+          <description><![CDATA[<p>This version avoids <code>getopt</code> and uses only C99-standard argument parsing.</p>]]></description>
         </note>
         <note id="note.id-0106.2" severity="info" topic="source">
           <description><![CDATA[<p>Source: <a href="https://programming-idioms.org/idiom/162/execute-procedures-depending-on-options">https://programming-idioms.org/idiom/162/execute-procedures-depending-on-options</a></p>]]></description>
@@ -12206,17 +16799,17 @@ int main(int argc, char* argv[]) {
         <example id="ex.id-0106.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-#include <unistd.h>
+#include <string.h>
 
-void bat(void);  /* forward declarations */
-void fox(void);
+void bat(void) {}
+void fox(void) {}
 
 int main(int argc, char* argv[]) {
-    int opt;
-    while ((opt = getopt(argc, argv, "bf")) != -1) {
-        if (opt == 'b') {
+    int i;
+    for (i = 1; i < argc; ++i) {
+        if (strcmp(argv[i], "-b") == 0) {
             bat();
-        } else if (opt == 'f') {
+        } else if (strcmp(argv[i], "-f") == 0) {
             fox();
         }
     }
@@ -12697,11 +17290,11 @@ long file_size(const char* path) {
     </function>
 
     <function id="fn.idiom.id-0120" name="idiom: Get folder containing current program" kind="idiom">
-      <signature>char* executable_directory(void) {</signature>
-      <summary><![CDATA[<p>Determine the directory containing the currently executing program on Unix-like systems. Returns a dynamically allocated string that must be freed by caller, or NULL on error.</p>]]></summary>
+      <signature>char* directory_from_argv0(const char* argv0) {</signature>
+      <summary><![CDATA[<p>Best-effort extraction of a program directory from <code>argv[0]</code> in portable C99. Returns a dynamically allocated string the caller must free.</p>]]></summary>
       <notes>
         <note id="note.id-0120.1" severity="warning" topic="portability">
-          <description><![CDATA[<p>This implementation is POSIX-specific (readlink with /proc/self/exe works on Linux). Not portable to C99 standard alone.</p>]]></description>
+          <description><![CDATA[<p><code>argv[0]</code> is not guaranteed to be an absolute path. This is a best-effort heuristic; platform-specific APIs are needed for robust executable-path discovery.</p>]]></description>
         </note>
         <note id="note.id-0120.2" severity="info" topic="source">
           <description><![CDATA[<p>Source: <a href="https://programming-idioms.org/idiom/107/get-folder-containing-current-program">https://programming-idioms.org/idiom/107/get-folder-containing-current-program</a></p>]]></description>
@@ -12711,30 +17304,28 @@ long file_size(const char* path) {
         <example id="ex.id-0120.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-#include <unistd.h>
-#include <limits.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
-char* executable_directory(void) {
-    char path[PATH_MAX];
-    ssize_t len = readlink("/proc/self/exe", path, sizeof(path) - 1);
-    if (len < 0) {
+char* directory_from_argv0(const char* argv0) {
+    const char* last_slash;
+    size_t len;
+    char* out;
+    if (!argv0) {
         return NULL;
     }
-    path[len] = '\0';
-
-    /* Find last slash */
-    char* last_slash = strrchr(path, '/');
+    last_slash = strrchr(argv0, '/');
     if (!last_slash) {
-        return NULL;  /* no directory component */
+        return NULL;
     }
-
-    /* Truncate at last slash to get directory */
-    *last_slash = '\0';
-
-    /* Return allocated copy */
-    return strdup(path);
+    len = (size_t)(last_slash - argv0);
+    out = (char*)malloc(len + 1u);
+    if (!out) {
+        return NULL;
+    }
+    memcpy(out, argv0, len);
+    out[len] = '\0';
+    return out;
 }
 ]]></code>
         </example>
@@ -12799,8 +17390,16 @@ bool square_checked(int value, int* result) {
         <example id="ex.id-0123.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-const unsigned char* b = buf;
-for (size_t i = 0; i < n; ++i) printf("%02X", (unsigned)b[i]);
+#include <stddef.h>
+#include <stdio.h>
+
+void dump_hex(const void* buf, size_t n) {
+    const unsigned char* b = (const unsigned char*)buf;
+    size_t i;
+    for (i = 0; i < n; ++i) {
+        printf("%02X", (unsigned)b[i]);
+    }
+}
 ]]></code>
         </example>
       </examples>
@@ -13238,7 +17837,16 @@ double elapsed_seconds(clock_t start, clock_t end) {
         <example id="ex.id-0140.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-memset(&s, 0, sizeof s);
+#include <string.h>
+
+typedef struct {
+    int a;
+    double b;
+} S;
+
+void zero_struct(S* s) {
+    memset(s, 0, sizeof *s);
+}
 ]]></code>
         </example>
       </examples>
@@ -13595,12 +18203,24 @@ result integer_parse_uint32_from_string(const char* input, size_t input_size, ui
         <example id="ex.id-0150.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-for (char* p = s; *p; ) {
-    char* end;
-    long v = strtol(p, &end, 10);
-    if (end == p) break;     /* no progress */
-    /* use v */
-    p = end;
+#include <stdlib.h>
+#include <ctype.h>
+#include <stddef.h>
+
+size_t parse_numbers(const char* s, long* out, size_t cap) {
+    size_t n = 0;
+    char* end = NULL;
+    while (*s != '\0' && n < cap) {
+        long v = strtol(s, &end, 10);
+        if (end == s) {
+            ++s;
+            continue;
+        }
+        out[n++] = v;
+        s = end;
+        while (isspace((unsigned char)*s)) ++s;
+    }
+    return n;
 }
 ]]></code>
         </example>
@@ -13772,10 +18392,14 @@ for (int* p = a, *e = a + n; p != e; ++p) {
         <example id="ex.id-0157.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-int saved = errno;
-/* cleanup that might call functions touching errno */
-errno = saved;
-return -1;
+#include <errno.h>
+#include <stdio.h>
+
+void cleanup_preserving_errno(FILE* f) {
+    int saved_errno = errno;
+    if (f) fclose(f);
+    errno = saved_errno;
+}
 ]]></code>
         </example>
       </examples>
@@ -13788,8 +18412,12 @@ return -1;
         <example id="ex.id-0158.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-printf("n=%zu\n", n);
-printf("p=%p\n", (void*)p);
+#include <stdio.h>
+#include <stddef.h>
+
+void print_size_and_pointer(size_t n, const void* p) {
+    printf("n=%zu ptr=%p\n", n, p);
+}
 ]]></code>
         </example>
       </examples>
@@ -13863,8 +18491,7 @@ void print_integer_array(const unsigned char* a, size_t n) {
         }
     }
     putchar(']');
-    putchar('
-');
+    putchar('\n');
 }
 ]]></code>
         </example>
@@ -14313,8 +18940,14 @@ void reverse_ints(int* array, size_t count) {
         <example id="ex.id-0178.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-for (size_t i = n; i-- > 0; ) {
-    /* uses i = n-1 down to 0 */
+#include <stddef.h>
+
+void reverse_visit(const int* a, size_t n, void (*visit)(int)) {
+    size_t i = n;
+    while (i > 0) {
+        --i;
+        visit(a[i]);
+    }
 }
 ]]></code>
         </example>
@@ -14732,7 +19365,7 @@ int array_int_compare(const void* a, const void* b) {
 
     <function id="fn.idiom.id-0191" name="idiom: Source code inclusion" kind="idiom">
       <signature>void foo(void) {</signature>
-      <summary><![CDATA[<p>Include source code from another file directly into a function body.</p>]]></summary>
+      <summary><![CDATA[<p>Demonstrate source inclusion style without external file dependency.</p>]]></summary>
       <notes>
         <note id="note.id-0191.1" severity="info" topic="source">
           <description><![CDATA[<p>Source: <a href="https://programming-idioms.org/idiom/127/source-code-inclusion">https://programming-idioms.org/idiom/127/source-code-inclusion</a></p>]]></description>
@@ -14743,7 +19376,9 @@ int array_int_compare(const void* a, const void* b) {
           <title>Example</title>
           <code><![CDATA[
 void foo(void) {
-#include "foobody.txt"
+#define FOO_BODY() do { /* inlined body */ } while (0)
+    FOO_BODY();
+#undef FOO_BODY
 
 }
 ]]></code>
@@ -14864,14 +19499,11 @@ const char* msg = "line " STR(__LINE__);
         <example id="ex.id-0197.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-void dispatch(int c1, int c2, int c3) {
-    if (c1) {
-        f1();
-    } else if (c2) {
-        f2();
-    } else if (c3) {
-        f3();
-    }
+const char* classify(int x) {
+    if (x < 0) return "negative";
+    if (x == 0) return "zero";
+    if (x < 10) return "small";
+    return "large";
 }
 ]]></code>
         </example>
@@ -14943,14 +19575,24 @@ void swap_ints(int* a, int* b) {
         <example id="ex.id-0200.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-switch (state) {
-case S_START:
-    /* ... */
-    state = S_BODY;
-    /* fall through */
-case S_BODY:
-    /* ... */
-    break;
+typedef enum { ST_INIT, ST_RUN, ST_DONE } State;
+
+State step(State s, int event) {
+    switch (s) {
+        case ST_INIT:
+            if (event) {
+                s = ST_RUN;
+            }
+            /* fall through */
+        case ST_RUN:
+            if (!event) {
+                s = ST_DONE;
+            }
+            break;
+        case ST_DONE:
+            break;
+    }
+    return s;
 }
 ]]></code>
         </example>
@@ -14987,8 +19629,14 @@ bool is_empty(const char* s) {
         <example id="ex.id-0202.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-for (const unsigned char* p = (const unsigned char*)s; *p; ++p) {
-    /* ... */
+#include <stddef.h>
+
+size_t count_char(const char* s, char target) {
+    size_t n = 0;
+    for (; *s != '\0'; ++s) {
+        if (*s == target) ++n;
+    }
+    return n;
 }
 ]]></code>
         </example>
@@ -15002,7 +19650,17 @@ for (const unsigned char* p = (const unsigned char*)s; *p; ++p) {
         <example id="ex.id-0203.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-for (i = 0, p = a; i < n; ++i, ++p) { /* ... */ }
+#include <stddef.h>
+
+size_t copy_until_nul(char* dst, const char* src, size_t cap) {
+    size_t i = 0;
+    if (cap == 0) return 0;
+    while (i + 1 < cap && (dst[i] = src[i], src[i] != '\0')) {
+        ++i;
+    }
+    if (i + 1 == cap) dst[cap - 1] = '\0';
+    return i;
+}
 ]]></code>
         </example>
       </examples>
@@ -15028,12 +19686,20 @@ for (i = 0, p = a; i < n; ++i, ++p) { /* ... */ }
         <example id="ex.id-0205.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-for (char* p = s; *p; ) {
-    p += strspn(p, " \t");
-    size_t len = strcspn(p, " \t");
-    if (len == 0) break;
-    /* token is p..p+len */
-    p += len;
+#include <string.h>
+#include <stddef.h>
+
+size_t split_csv(char* s, char** out, size_t cap) {
+    size_t n = 0;
+    while (*s != '\0' && n < cap) {
+        out[n++] = s;
+        s += strcspn(s, ",");
+        if (*s == ',') {
+            *s = '\0';
+            ++s;
+        }
+    }
+    return n;
 }
 ]]></code>
         </example>
@@ -15195,7 +19861,12 @@ void saxpy(float* restrict y, const float* restrict x, size_t n, float a);
         <example id="ex.id-0213.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-size_t n = sizeof (struct Header){0};
+typedef struct {
+    int x;
+    double y;
+} Pair;
+
+enum { PAIR_SIZE = (int)sizeof (Pair){0} };
 ]]></code>
         </example>
       </examples>
@@ -15231,8 +19902,11 @@ void seed_random_with_time(void) {
         <example id="ex.id-0215.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-char key[32];
-if (sscanf(line, "%31[^=]=%*s", key) == 1) { /* key before '=' */ }
+#include <stdio.h>
+
+int parse_key_value(const char* line, char key[32], char value[64]) {
+    return sscanf(line, "%31[^=]=%63s", key, value) == 2;
+}
 ]]></code>
         </example>
       </examples>
@@ -15344,39 +20018,53 @@ T *p = calloc(count, sizeof *p);
         <example id="ex.id-0220.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-int x = 0;
-int a[10] = {0};
-struct S s = {0};
+struct S {
+    int x;
+    double y;
+};
+
+void demo_zero_init(void) {
+    int x = 0;
+    int a[10] = {0};
+    struct S s = {0};
+    (void)x;
+    (void)a[0];
+    (void)s.x;
+}
 ]]></code>
         </example>
       </examples>
     </function>
 
     <function id="fn.idiom.id-0221" name="idiom: Generic tuple types using macros" kind="idiom">
-      <signature>#define Tuple2(T1, T2)</signature>
-      <summary><![CDATA[<p>Create lightweight tuple types for returning multiple values from functions without needing explicit semantic names. C23 standardizes that tagged types with the same name and contents are compatible. Note: Breaks with pointer types due to preprocessor token pasting limitations.</p>]]></summary>
+      <signature>#define DECL_TUPLE2(Name, T1, T2)</signature>
+      <summary><![CDATA[<p>Create reusable tuple-like structs via macros and keep the type name stable so function declarations and definitions stay compatible.</p>]]></summary>
       <notes>
         <note id="note.id-0221.1" severity="info" topic="source">
           <description><![CDATA[<p>Source: <a href="https://www.unix.dog/~yosh/blog/c-habits-for-me.html">https://www.unix.dog/~yosh/blog/c-habits-for-me.html</a></p>]]></description>
         </note>
         <note id="note.id-0221.2" severity="warning" topic="limitation">
-          <description><![CDATA[<p>Does not work with pointer types (e.g., <code>char*</code>) due to token pasting issues. Use typedef or explicit struct name as workaround.</p>]]></description>
+          <description><![CDATA[<p>Use an explicit macro parameter for the struct name. Re-expanding anonymous/derived names in multiple scopes can produce incompatible types.</p>]]></description>
         </note>
       </notes>
       <examples>
         <example id="ex.id-0221.1" lang="c99">
           <title>Example</title>
           <code><![CDATA[
-#define Tuple2(T1, T2)           \
-    struct Tuple2_##T1##_##T2 {  \
-        T1 a;                    \
-        T2 b;                    \
-    }
+#include <stddef.h>
 
-/* Usage example */
-Tuple2(int, int) find_min_max(const int* array, size_t count) {
-    Tuple2(int, int) result = {array[0], array[0]};
-    for (size_t i = 1; i < count; i++) {
+#define DECL_TUPLE2(Name, T1, T2) \
+    typedef struct Name {         \
+        T1 a;                     \
+        T2 b;                     \
+    } Name
+
+DECL_TUPLE2(IntPair, int, int);
+
+IntPair find_min_max(const int* array, size_t count) {
+    IntPair result = {array[0], array[0]};
+    size_t i;
+    for (i = 1; i < count; ++i) {
         if (array[i] < result.a) result.a = array[i];
         if (array[i] > result.b) result.b = array[i];
     }
