@@ -32406,9 +32406,14 @@ class WorkerCompilerClient {
   runWorker;
   pendingCompile = new Map;
   pendingRun = new Map;
-  constructor() {
+  options;
+  constructor(options = {}) {
+    this.options = options;
     this.compileWorker = this.createCompileWorker();
     this.runWorker = this.createRunWorker();
+  }
+  emitError(source, message) {
+    this.options.onError?.({ source, message });
   }
   resolveWorkerUrl(fileName) {
     return new URL(`./${fileName}`, import.meta.url);
@@ -32425,6 +32430,7 @@ class WorkerCompilerClient {
     };
     worker.onerror = (event) => {
       const reason = new Error(`Compile worker error: ${event.message}`);
+      this.emitError("compile-worker", reason.message);
       for (const [id, pending] of this.pendingCompile.entries()) {
         this.pendingCompile.delete(id);
         pending.reject(reason);
@@ -32444,6 +32450,7 @@ class WorkerCompilerClient {
     };
     worker.onerror = (event) => {
       const reason = new Error(`Run worker error: ${event.message}`);
+      this.emitError("run-worker", reason.message);
       for (const [id, pending] of this.pendingRun.entries()) {
         this.pendingRun.delete(id);
         pending.reject(reason);
@@ -32453,6 +32460,7 @@ class WorkerCompilerClient {
   }
   resetRunWorker() {
     this.runWorker.terminate();
+    this.emitError("run-worker", "Run worker was reset.");
     for (const [id, pending] of this.pendingRun.entries()) {
       this.pendingRun.delete(id);
       pending.reject(new Error("Run worker was reset."));
@@ -32461,6 +32469,7 @@ class WorkerCompilerClient {
   }
   resetCompileWorker() {
     this.compileWorker.terminate();
+    this.emitError("compile-worker", "Compile worker was reset.");
     for (const [id, pending] of this.pendingCompile.entries()) {
       this.pendingCompile.delete(id);
       pending.reject(new Error("Compile worker was reset."));
@@ -32530,10 +32539,41 @@ var initialProblem = (() => {
   }
   return problems[0];
 })();
-var compilerClient = new WorkerCompilerClient;
+var unhandledErrors = [];
+var nextUnhandledErrorId = 1;
+var unregisterUnhandledCapture = null;
+var maxUnhandledErrors = 200;
+function normalizeErrorText(value) {
+  if (typeof value === "string" && value.trim())
+    return value.trim();
+  if (value instanceof Error && value.message.trim())
+    return value.message.trim();
+  if (typeof value === "object" && value !== null) {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+  return String(value || "Unknown error");
+}
+var compilerClient = new WorkerCompilerClient({
+  onError: (event) => {
+    recordUnhandledError(event.source, event.message);
+  }
+});
 var mobileView = window.matchMedia("(max-width: 1100px)").matches ? "problem" : "editor";
 document.body.dataset.mobileView = mobileView;
 appRoot.innerHTML = `
+  <details id="error-panel" class="error-panel" data-testid="error-panel">
+    <summary id="error-panel-summary" class="error-panel-summary" data-testid="error-panel-summary">
+      <span class="error-panel-title">Unhandled Errors</span>
+      <span id="error-panel-count" class="error-panel-count mono" data-testid="error-panel-count">0</span>
+      <button id="error-panel-clear" class="error-panel-clear" type="button" data-testid="error-panel-clear">Clear</button>
+    </summary>
+    <div id="error-panel-list" class="error-panel-list" data-testid="error-panel-list"></div>
+  </details>
+
   <main class="shell">
     <section class="topbar" aria-label="workspace controls">
       <h1>Ceetcode</h1>
@@ -32624,6 +32664,10 @@ var stdoutOutput = requiredElement(document.querySelector("#stdout-output"), "#s
 var stderrOutput = requiredElement(document.querySelector("#stderr-output"), "#stderr-output");
 var compileLogEl = requiredElement(document.querySelector("#compile-log"), "#compile-log");
 var runtimeLogEl = requiredElement(document.querySelector("#runtime-log"), "#runtime-log");
+var errorPanel = requiredElement(document.querySelector("#error-panel"), "#error-panel");
+var errorPanelCountEl = requiredElement(document.querySelector("#error-panel-count"), "#error-panel-count");
+var errorPanelListEl = requiredElement(document.querySelector("#error-panel-list"), "#error-panel-list");
+var errorPanelClearBtn = requiredElement(document.querySelector("#error-panel-clear"), "#error-panel-clear");
 var activeProblem = initialProblem;
 var runState = {
   status: "idle",
@@ -32642,6 +32686,104 @@ var editor;
 var draftSaveTimer = null;
 function escapeHtml(value) {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;");
+}
+function formatErrorTimestamp(timestamp) {
+  return new Date(timestamp).toLocaleTimeString([], { hour12: false });
+}
+function renderUnhandledErrors() {
+  errorPanelCountEl.textContent = String(unhandledErrors.length);
+  errorPanel.dataset.hasErrors = unhandledErrors.length > 0 ? "true" : "false";
+  if (unhandledErrors.length === 0) {
+    errorPanelListEl.innerHTML = "<div class='result-row'>No unhandled errors captured.</div>";
+    return;
+  }
+  const html = [...unhandledErrors].reverse().map((entry) => {
+    const detailsBlocks = [];
+    if (entry.details) {
+      detailsBlocks.push(`<div class="result-row">Details: <span class="mono">${escapeHtml(entry.details)}</span></div>`);
+    }
+    if (entry.stack) {
+      detailsBlocks.push(`<pre class="output-block error-panel-stack">${escapeHtml(entry.stack)}</pre>`);
+    }
+    return `<article class="error-panel-item">
+        <div class="error-panel-item-header">
+          <strong>${escapeHtml(entry.message)}</strong>
+        </div>
+        <div class="result-row">Source: <span class="mono">${escapeHtml(entry.source)}</span> • ${escapeHtml(formatErrorTimestamp(entry.timestamp))}</div>
+        ${detailsBlocks.join("")}
+      </article>`;
+  }).join("");
+  errorPanelListEl.innerHTML = html;
+}
+function recordUnhandledError(source, message, options = {}) {
+  const normalizedMessage = normalizeErrorText(message);
+  const normalizedSource = normalizeErrorText(source);
+  const normalizedDetails = options.details ? normalizeErrorText(options.details) : undefined;
+  const normalizedStack = options.stack ? normalizeErrorText(options.stack) : undefined;
+  const last = unhandledErrors[unhandledErrors.length - 1];
+  if (last && last.source === normalizedSource && last.message === normalizedMessage && Date.now() - last.timestamp < 900) {
+    return;
+  }
+  unhandledErrors.push({
+    id: nextUnhandledErrorId,
+    source: normalizedSource,
+    message: normalizedMessage,
+    timestamp: Date.now(),
+    details: normalizedDetails,
+    stack: normalizedStack
+  });
+  nextUnhandledErrorId += 1;
+  if (unhandledErrors.length > maxUnhandledErrors) {
+    unhandledErrors = unhandledErrors.slice(unhandledErrors.length - maxUnhandledErrors);
+  }
+  renderUnhandledErrors();
+}
+function clearUnhandledErrors() {
+  unhandledErrors = [];
+  renderUnhandledErrors();
+}
+function registerUnhandledErrorCapture() {
+  const onWindowError = (event) => {
+    if (event instanceof ErrorEvent) {
+      const location = event.filename ? `${event.filename}:${event.lineno}:${event.colno}` : undefined;
+      recordUnhandledError("window", event.message || "Unhandled window error", {
+        details: location,
+        stack: event.error instanceof Error ? event.error.stack : undefined
+      });
+      return;
+    }
+    const target = event.target;
+    if (target instanceof HTMLScriptElement || target instanceof HTMLLinkElement || target instanceof HTMLImageElement) {
+      const targetUrl = target instanceof HTMLLinkElement ? target.href || "(unknown)" : target.src || "(unknown)";
+      recordUnhandledError("network", `Resource failed to load: ${targetUrl}`);
+    }
+  };
+  const onUnhandledRejection = (event) => {
+    const reason = event.reason;
+    recordUnhandledError("promise", normalizeErrorText(reason), {
+      stack: reason instanceof Error ? reason.stack : undefined
+    });
+  };
+  const originalFetch = window.fetch.bind(window);
+  window.fetch = async (...args) => {
+    try {
+      return await originalFetch(...args);
+    } catch (error48) {
+      const requestTarget = args[0];
+      const targetText = typeof requestTarget === "string" ? requestTarget : requestTarget instanceof URL ? requestTarget.toString() : requestTarget instanceof Request ? requestTarget.url : "(unknown request)";
+      recordUnhandledError("network", `Fetch request failed: ${targetText}`, {
+        stack: error48 instanceof Error ? error48.stack : undefined
+      });
+      throw error48;
+    }
+  };
+  window.addEventListener("error", onWindowError, true);
+  window.addEventListener("unhandledrejection", onUnhandledRejection);
+  return () => {
+    window.removeEventListener("error", onWindowError, true);
+    window.removeEventListener("unhandledrejection", onUnhandledRejection);
+    window.fetch = originalFetch;
+  };
 }
 function setStatus(status, phase, message) {
   runState = { status, phase, message };
@@ -32770,7 +32912,11 @@ async function runCurrentSubmission() {
       tests
     });
   } catch (error48) {
-    latestRun.summaryText = `Compile worker failed: ${error48.message}`;
+    const compileMessage = error48.message;
+    recordUnhandledError("compile-worker", `Compile worker failed: ${compileMessage}`, {
+      stack: error48 instanceof Error ? error48.stack : undefined
+    });
+    latestRun.summaryText = `Compile worker failed: ${compileMessage}`;
     latestRun.testsHtml = "";
     latestRun.consoleOutput = "";
     latestRun.compileLog = "";
@@ -32800,7 +32946,11 @@ async function runCurrentSubmission() {
       wasmBytes: compilePayload.wasmBytes
     });
   } catch (error48) {
-    latestRun.summaryText = `Run worker failed: ${error48.message}`;
+    const runMessage = error48.message;
+    recordUnhandledError("run-worker", `Run worker failed: ${runMessage}`, {
+      stack: error48 instanceof Error ? error48.stack : undefined
+    });
+    latestRun.summaryText = `Run worker failed: ${runMessage}`;
     latestRun.testsHtml = "";
     latestRun.consoleOutput = "";
     latestRun.runtimeLog = "";
@@ -32932,15 +33082,29 @@ function registerServiceWorker() {
   if (!("serviceWorker" in navigator))
     return;
   navigator.serviceWorker.register("./sw.js").catch((error48) => {
+    recordUnhandledError("service-worker", `Service worker registration failed: ${normalizeErrorText(error48)}`, {
+      stack: error48 instanceof Error ? error48.stack : undefined
+    });
     console.warn("Service worker registration failed", error48);
   });
 }
 window.addEventListener("beforeunload", () => {
+  if (unregisterUnhandledCapture) {
+    unregisterUnhandledCapture();
+    unregisterUnhandledCapture = null;
+  }
   if (editor) {
     saveDraft(activeProblem.id, readEditor());
   }
   compilerClient.dispose();
 });
+errorPanelClearBtn.addEventListener("click", (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  clearUnhandledErrors();
+});
+renderUnhandledErrors();
+unregisterUnhandledCapture = registerUnhandledErrorCapture();
 initializeProblemSelect();
 initializeMobileTabs();
 initializeEditor();
@@ -32961,6 +33125,7 @@ customTestsInput.addEventListener("input", () => {
 Object.assign(window, {
   ceetcodeDebug: {
     getSource: () => readEditor(),
-    setSource: (source) => writeEditor(source)
+    setSource: (source) => writeEditor(source),
+    reportUnhandledError: (source, message) => recordUnhandledError(source, message)
   }
 });

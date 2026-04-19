@@ -65,6 +65,9 @@ async function captureVisualState(page: Page, testInfo: TestInfo, label: string)
       runStatus: byTestId("run-status")?.textContent?.trim() ?? "",
       summary: byTestId("summary-text")?.textContent?.trim() ?? "",
       diagnostics: byTestId("diagnostics")?.textContent?.trim() ?? "",
+      unhandledErrorCount: byTestId("error-panel-count")?.textContent?.trim() ?? "",
+      unhandledErrorPanelOpen:
+        document.querySelector<HTMLDetailsElement>("[data-testid='error-panel']")?.open ?? false,
       testsPreview: byTestId("tests-list")?.textContent?.trim() ?? "",
       stdoutPreview: byTestId("stdout-output")?.textContent?.trim() ?? "",
       stderrPreview: byTestId("stderr-output")?.textContent?.trim() ?? ""
@@ -144,6 +147,8 @@ test.describe.serial("Ceetcode acceptance @acceptance", () => {
     await expect(page.getByTestId("run-button")).toBeVisible();
     await expect(page.getByTestId("reset-button")).toBeVisible();
     await expect(page.getByTestId("run-status")).toHaveText(/Idle/);
+    await expect(page.getByTestId("error-panel")).toBeVisible();
+    await expect(page.getByTestId("error-panel-count")).toHaveText("0");
 
     await expect(page.locator("#problem-content")).toContainText("Statement");
     await expect(page.locator("#problem-content")).toContainText("Examples");
@@ -340,5 +345,35 @@ int isPalindromeAscii(const char* s) {
     await expect(page.locator(EDITOR_CONTENT)).toContainText("mobile-view-marker");
 
     await captureVisualState(page, testInfo, "mobile-toggle");
+  });
+
+  test("unhandled error panel captures, expands, and clears without blocking workflow @acceptance", async ({ page }, testInfo) => {
+    await openWorkspace(page);
+
+    await expect(page.getByTestId("error-panel-count")).toHaveText("0");
+    await expect(page.getByTestId("error-panel")).not.toHaveAttribute("open", "");
+
+    await page.evaluate(() => {
+      const debug = (
+        window as {
+          ceetcodeDebug?: {
+            reportUnhandledError?: (source: string, message: string) => void;
+          };
+        }
+      ).ceetcodeDebug;
+      debug?.reportUnhandledError?.("window", "synthetic-panel-error");
+    });
+
+    await expect(page.getByTestId("error-panel-count")).toHaveText("1");
+    await page.getByTestId("error-panel-summary").click();
+    await expect(page.getByTestId("error-panel")).toHaveAttribute("open", "");
+    await expect(page.getByTestId("error-panel-list")).toContainText("synthetic-panel-error");
+
+    await page.getByTestId("error-panel-clear").click();
+    await expect(page.getByTestId("error-panel-count")).toHaveText("0");
+    await expect(page.getByTestId("error-panel-list")).toContainText("No unhandled errors captured");
+
+    await expect(page.getByTestId("run-button")).toBeEnabled();
+    await captureVisualState(page, testInfo, "unhandled-errors-panel");
   });
 });

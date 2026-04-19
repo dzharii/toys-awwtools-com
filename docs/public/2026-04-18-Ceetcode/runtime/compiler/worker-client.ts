@@ -16,6 +16,15 @@ interface PendingRequest<T> {
   reject: (reason?: unknown) => void;
 }
 
+export interface WorkerClientErrorEvent {
+  source: "compile-worker" | "run-worker";
+  message: string;
+}
+
+interface WorkerCompilerClientOptions {
+  onError?: (event: WorkerClientErrorEvent) => void;
+}
+
 function randomId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`;
 }
@@ -29,9 +38,16 @@ export class WorkerCompilerClient {
 
   private pendingRun = new Map<string, PendingRequest<RunResponsePayload>>();
 
-  constructor() {
+  private readonly options: WorkerCompilerClientOptions;
+
+  constructor(options: WorkerCompilerClientOptions = {}) {
+    this.options = options;
     this.compileWorker = this.createCompileWorker();
     this.runWorker = this.createRunWorker();
+  }
+
+  private emitError(source: WorkerClientErrorEvent["source"], message: string): void {
+    this.options.onError?.({ source, message });
   }
 
   private resolveWorkerUrl(fileName: string): URL {
@@ -49,6 +65,7 @@ export class WorkerCompilerClient {
     };
     worker.onerror = (event) => {
       const reason = new Error(`Compile worker error: ${event.message}`);
+      this.emitError("compile-worker", reason.message);
       for (const [id, pending] of this.pendingCompile.entries()) {
         this.pendingCompile.delete(id);
         pending.reject(reason);
@@ -68,6 +85,7 @@ export class WorkerCompilerClient {
     };
     worker.onerror = (event) => {
       const reason = new Error(`Run worker error: ${event.message}`);
+      this.emitError("run-worker", reason.message);
       for (const [id, pending] of this.pendingRun.entries()) {
         this.pendingRun.delete(id);
         pending.reject(reason);
@@ -78,6 +96,7 @@ export class WorkerCompilerClient {
 
   private resetRunWorker(): void {
     this.runWorker.terminate();
+    this.emitError("run-worker", "Run worker was reset.");
     for (const [id, pending] of this.pendingRun.entries()) {
       this.pendingRun.delete(id);
       pending.reject(new Error("Run worker was reset."));
@@ -87,6 +106,7 @@ export class WorkerCompilerClient {
 
   private resetCompileWorker(): void {
     this.compileWorker.terminate();
+    this.emitError("compile-worker", "Compile worker was reset.");
     for (const [id, pending] of this.pendingCompile.entries()) {
       this.pendingCompile.delete(id);
       pending.reject(new Error("Compile worker was reset."));

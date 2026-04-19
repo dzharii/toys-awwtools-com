@@ -43,7 +43,12 @@ function buildApi(): Promise<InstanceType<typeof API>> {
           throw new Error(`Failed to compile module ${filename}: HTTP ${response.status}`);
         }
         if (WebAssembly.compileStreaming) {
-          return WebAssembly.compileStreaming(Promise.resolve(response));
+          const streamingResponse = response.clone();
+          try {
+            return await WebAssembly.compileStreaming(Promise.resolve(streamingResponse));
+          } catch {
+            // Some static hosts return a non-wasm content type; fall back to byte compilation.
+          }
         }
         return WebAssembly.compile(await response.arrayBuffer());
       },

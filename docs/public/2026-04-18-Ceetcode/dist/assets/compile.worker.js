@@ -176,7 +176,10 @@
             throw new Error(`Failed to compile module ${filename}: HTTP ${response.status}`);
           }
           if (WebAssembly.compileStreaming) {
-            return WebAssembly.compileStreaming(Promise.resolve(response));
+            const streamingResponse = response.clone();
+            try {
+              return await WebAssembly.compileStreaming(Promise.resolve(streamingResponse));
+            } catch {}
           }
           const bytes = await response.arrayBuffer();
           return WebAssembly.compile(bytes);

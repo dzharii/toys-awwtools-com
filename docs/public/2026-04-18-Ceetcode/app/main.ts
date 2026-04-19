@@ -8,7 +8,7 @@ import { parseCustomTests } from "../runtime/custom-tests";
 import { parseHarnessOutput, stripAnsi } from "../runtime/harness/parse-harness-output";
 import { loadProblemCatalog } from "../runtime/problem-catalog";
 import { clearDraft, loadCustomTests, loadDraft, loadSelectedProblemId, saveCustomTests, saveDraft, saveSelectedProblemId } from "../runtime/storage";
-import { WorkerCompilerClient } from "../runtime/compiler/worker-client";
+import { WorkerCompilerClient, type WorkerClientErrorEvent } from "../runtime/compiler/worker-client";
 import { c99SupportMatrix, type CompileDiagnostic, type ProblemDefinition, type TestCase } from "../runtime/types";
 
 interface RunState {
@@ -24,6 +24,15 @@ interface LatestRunView {
   consoleOutput: string;
   summaryText: string;
   testsHtml: string;
+}
+
+interface AppUnhandledError {
+  id: number;
+  source: string;
+  message: string;
+  timestamp: number;
+  details?: string;
+  stack?: string;
 }
 
 const problems = loadProblemCatalog();
@@ -49,12 +58,43 @@ const initialProblem = (() => {
   return problems[0];
 })();
 
-const compilerClient = new WorkerCompilerClient();
+let unhandledErrors: AppUnhandledError[] = [];
+let nextUnhandledErrorId = 1;
+let unregisterUnhandledCapture: (() => void) | null = null;
+const maxUnhandledErrors = 200;
+
+function normalizeErrorText(value: unknown): string {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (value instanceof Error && value.message.trim()) return value.message.trim();
+  if (typeof value === "object" && value !== null) {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+  return String(value || "Unknown error");
+}
+
+const compilerClient = new WorkerCompilerClient({
+  onError: (event: WorkerClientErrorEvent) => {
+    recordUnhandledError(event.source, event.message);
+  }
+});
 const mobileView = window.matchMedia("(max-width: 1100px)").matches ? "problem" : "editor";
 
 document.body.dataset.mobileView = mobileView;
 
 appRoot.innerHTML = `
+  <details id="error-panel" class="error-panel" data-testid="error-panel">
+    <summary id="error-panel-summary" class="error-panel-summary" data-testid="error-panel-summary">
+      <span class="error-panel-title">Unhandled Errors</span>
+      <span id="error-panel-count" class="error-panel-count mono" data-testid="error-panel-count">0</span>
+      <button id="error-panel-clear" class="error-panel-clear" type="button" data-testid="error-panel-clear">Clear</button>
+    </summary>
+    <div id="error-panel-list" class="error-panel-list" data-testid="error-panel-list"></div>
+  </details>
+
   <main class="shell">
     <section class="topbar" aria-label="workspace controls">
       <h1>Ceetcode</h1>
@@ -149,6 +189,13 @@ const stdoutOutput = requiredElement(document.querySelector<HTMLElement>("#stdou
 const stderrOutput = requiredElement(document.querySelector<HTMLElement>("#stderr-output"), "#stderr-output");
 const compileLogEl = requiredElement(document.querySelector<HTMLElement>("#compile-log"), "#compile-log");
 const runtimeLogEl = requiredElement(document.querySelector<HTMLElement>("#runtime-log"), "#runtime-log");
+const errorPanel = requiredElement(document.querySelector<HTMLDetailsElement>("#error-panel"), "#error-panel");
+const errorPanelCountEl = requiredElement(document.querySelector<HTMLElement>("#error-panel-count"), "#error-panel-count");
+const errorPanelListEl = requiredElement(document.querySelector<HTMLElement>("#error-panel-list"), "#error-panel-list");
+const errorPanelClearBtn = requiredElement(
+  document.querySelector<HTMLButtonElement>("#error-panel-clear"),
+  "#error-panel-clear"
+);
 
 let activeProblem = initialProblem;
 let runState: RunState = {
@@ -176,6 +223,137 @@ function escapeHtml(value: string): string {
     .replace(/>/g, "&gt;")
     .replace(/\"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function formatErrorTimestamp(timestamp: number): string {
+  return new Date(timestamp).toLocaleTimeString([], { hour12: false });
+}
+
+function renderUnhandledErrors(): void {
+  errorPanelCountEl.textContent = String(unhandledErrors.length);
+  errorPanel.dataset.hasErrors = unhandledErrors.length > 0 ? "true" : "false";
+
+  if (unhandledErrors.length === 0) {
+    errorPanelListEl.innerHTML = "<div class='result-row'>No unhandled errors captured.</div>";
+    return;
+  }
+
+  const html = [...unhandledErrors]
+    .reverse()
+    .map((entry) => {
+      const detailsBlocks: string[] = [];
+      if (entry.details) {
+        detailsBlocks.push(`<div class="result-row">Details: <span class="mono">${escapeHtml(entry.details)}</span></div>`);
+      }
+      if (entry.stack) {
+        detailsBlocks.push(`<pre class="output-block error-panel-stack">${escapeHtml(entry.stack)}</pre>`);
+      }
+
+      return `<article class="error-panel-item">
+        <div class="error-panel-item-header">
+          <strong>${escapeHtml(entry.message)}</strong>
+        </div>
+        <div class="result-row">Source: <span class="mono">${escapeHtml(entry.source)}</span> • ${escapeHtml(
+          formatErrorTimestamp(entry.timestamp)
+        )}</div>
+        ${detailsBlocks.join("")}
+      </article>`;
+    })
+    .join("");
+
+  errorPanelListEl.innerHTML = html;
+}
+
+function recordUnhandledError(source: string, message: string, options: { details?: string; stack?: string } = {}): void {
+  const normalizedMessage = normalizeErrorText(message);
+  const normalizedSource = normalizeErrorText(source);
+  const normalizedDetails = options.details ? normalizeErrorText(options.details) : undefined;
+  const normalizedStack = options.stack ? normalizeErrorText(options.stack) : undefined;
+
+  const last = unhandledErrors[unhandledErrors.length - 1];
+  if (last && last.source === normalizedSource && last.message === normalizedMessage && Date.now() - last.timestamp < 900) {
+    return;
+  }
+
+  unhandledErrors.push({
+    id: nextUnhandledErrorId,
+    source: normalizedSource,
+    message: normalizedMessage,
+    timestamp: Date.now(),
+    details: normalizedDetails,
+    stack: normalizedStack
+  });
+
+  nextUnhandledErrorId += 1;
+  if (unhandledErrors.length > maxUnhandledErrors) {
+    unhandledErrors = unhandledErrors.slice(unhandledErrors.length - maxUnhandledErrors);
+  }
+
+  renderUnhandledErrors();
+}
+
+function clearUnhandledErrors(): void {
+  unhandledErrors = [];
+  renderUnhandledErrors();
+}
+
+function registerUnhandledErrorCapture(): () => void {
+  const onWindowError = (event: Event): void => {
+    if (event instanceof ErrorEvent) {
+      const location = event.filename ? `${event.filename}:${event.lineno}:${event.colno}` : undefined;
+      recordUnhandledError("window", event.message || "Unhandled window error", {
+        details: location,
+        stack: event.error instanceof Error ? event.error.stack : undefined
+      });
+      return;
+    }
+
+    const target = event.target;
+    if (target instanceof HTMLScriptElement || target instanceof HTMLLinkElement || target instanceof HTMLImageElement) {
+      const targetUrl =
+        target instanceof HTMLLinkElement
+          ? target.href || "(unknown)"
+          : target.src || "(unknown)";
+      recordUnhandledError("network", `Resource failed to load: ${targetUrl}`);
+    }
+  };
+
+  const onUnhandledRejection = (event: PromiseRejectionEvent): void => {
+    const reason = event.reason;
+    recordUnhandledError("promise", normalizeErrorText(reason), {
+      stack: reason instanceof Error ? reason.stack : undefined
+    });
+  };
+
+  const originalFetch = window.fetch.bind(window);
+  window.fetch = (async (...args: Parameters<typeof fetch>) => {
+    try {
+      return await originalFetch(...args);
+    } catch (error) {
+      const requestTarget = args[0];
+      const targetText =
+        typeof requestTarget === "string"
+          ? requestTarget
+          : requestTarget instanceof URL
+            ? requestTarget.toString()
+            : requestTarget instanceof Request
+              ? requestTarget.url
+              : "(unknown request)";
+      recordUnhandledError("network", `Fetch request failed: ${targetText}`, {
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      throw error;
+    }
+  }) as typeof window.fetch;
+
+  window.addEventListener("error", onWindowError, true);
+  window.addEventListener("unhandledrejection", onUnhandledRejection);
+
+  return () => {
+    window.removeEventListener("error", onWindowError, true);
+    window.removeEventListener("unhandledrejection", onUnhandledRejection);
+    window.fetch = originalFetch;
+  };
 }
 
 function setStatus(status: RunState["status"], phase: RunState["phase"], message: string): void {
@@ -337,7 +515,11 @@ async function runCurrentSubmission(): Promise<void> {
       tests
     });
   } catch (error) {
-    latestRun.summaryText = `Compile worker failed: ${(error as Error).message}`;
+    const compileMessage = (error as Error).message;
+    recordUnhandledError("compile-worker", `Compile worker failed: ${compileMessage}`, {
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    latestRun.summaryText = `Compile worker failed: ${compileMessage}`;
     latestRun.testsHtml = "";
     latestRun.consoleOutput = "";
     latestRun.compileLog = "";
@@ -371,7 +553,11 @@ async function runCurrentSubmission(): Promise<void> {
       wasmBytes: compilePayload.wasmBytes
     });
   } catch (error) {
-    latestRun.summaryText = `Run worker failed: ${(error as Error).message}`;
+    const runMessage = (error as Error).message;
+    recordUnhandledError("run-worker", `Run worker failed: ${runMessage}`, {
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    latestRun.summaryText = `Run worker failed: ${runMessage}`;
     latestRun.testsHtml = "";
     latestRun.consoleOutput = "";
     latestRun.runtimeLog = "";
@@ -521,17 +707,32 @@ function registerServiceWorker(): void {
   if (!("serviceWorker" in navigator)) return;
 
   void navigator.serviceWorker.register("./sw.js").catch((error) => {
+    recordUnhandledError("service-worker", `Service worker registration failed: ${normalizeErrorText(error)}`, {
+      stack: error instanceof Error ? error.stack : undefined
+    });
     console.warn("Service worker registration failed", error);
   });
 }
 
 window.addEventListener("beforeunload", () => {
+  if (unregisterUnhandledCapture) {
+    unregisterUnhandledCapture();
+    unregisterUnhandledCapture = null;
+  }
   if (editor) {
     saveDraft(activeProblem.id, readEditor());
   }
   compilerClient.dispose();
 });
 
+errorPanelClearBtn.addEventListener("click", (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  clearUnhandledErrors();
+});
+
+renderUnhandledErrors();
+unregisterUnhandledCapture = registerUnhandledErrorCapture();
 initializeProblemSelect();
 initializeMobileTabs();
 initializeEditor();
@@ -556,6 +757,7 @@ customTestsInput.addEventListener("input", () => {
 Object.assign(window, {
   ceetcodeDebug: {
     getSource: () => readEditor(),
-    setSource: (source: string) => writeEditor(source)
+    setSource: (source: string) => writeEditor(source),
+    reportUnhandledError: (source: string, message: string) => recordUnhandledError(source, message)
   }
 });
