@@ -26,10 +26,21 @@ This project is a single-page, offline-first C99 standard library reference. It 
   index.html
   styles.css
   app.js
+  embed-api-quickstart.md
   data-to-process/   # Source XML files (read-only input)
   inspiration/       # Reference example used during implementation
   lib-asvd-microlight-0.0.7/
 ```
+
+## Embedded integration
+
+This reference also supports an iframe embed contract for same-origin host applications.
+
+- Startup configuration is read from `#embedded-reference-config=...` in the URL hash.
+- Runtime host control and outbound events use `window.postMessage()` with namespace `awwtools.c99-reference.embed`.
+- Theme customization is exposed through `--embedded-reference-*` CSS tokens.
+
+See `embed-api-quickstart.md` for examples, message types, and integration rules.
 
 ## How it works
 
