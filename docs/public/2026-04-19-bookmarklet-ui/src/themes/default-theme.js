@@ -1,0 +1,30 @@
+import { PUBLIC_TOKENS } from "../core/constants.js";
+
+export const DEFAULT_THEME = {
+  [PUBLIC_TOKENS.workspaceBg]: "rgba(0, 0, 0, 0)",
+  [PUBLIC_TOKENS.windowBg]: "#eef1f5",
+  [PUBLIC_TOKENS.panelBg]: "#f8fafc",
+  [PUBLIC_TOKENS.titlebarActiveBg]: "rgba(46, 92, 142, 0.78)",
+  [PUBLIC_TOKENS.titlebarInactiveBg]: "rgba(136, 145, 160, 0.84)",
+  [PUBLIC_TOKENS.titlebarFg]: "#f8fbff",
+  [PUBLIC_TOKENS.borderStrong]: "#232a33",
+  [PUBLIC_TOKENS.borderSubtle]: "#9ba5b3",
+  [PUBLIC_TOKENS.focusRing]: "#154fbc",
+  [PUBLIC_TOKENS.buttonBg]: "#f1f4f8",
+  [PUBLIC_TOKENS.buttonFg]: "#111720",
+  [PUBLIC_TOKENS.buttonActiveBg]: "#dbe3ee",
+  [PUBLIC_TOKENS.inputBg]: "#ffffff",
+  [PUBLIC_TOKENS.inputFg]: "#111720",
+  [PUBLIC_TOKENS.menuBg]: "#f8fbff",
+  [PUBLIC_TOKENS.menuFg]: "#0e1621",
+  [PUBLIC_TOKENS.selectionBg]: "#1f5eae",
+  [PUBLIC_TOKENS.selectionFg]: "#f2f8ff",
+  [PUBLIC_TOKENS.statusbarBg]: "#e5e8ee",
+  [PUBLIC_TOKENS.shadowDepth]: "0 12px 32px rgba(0, 0, 0, 0.18)",
+  [PUBLIC_TOKENS.frostOpacity]: "0.9",
+  [PUBLIC_TOKENS.space1]: "4px",
+  [PUBLIC_TOKENS.space2]: "8px",
+  [PUBLIC_TOKENS.space3]: "12px",
+  [PUBLIC_TOKENS.controlHeight]: "30px",
+  [PUBLIC_TOKENS.titleHeight]: "32px"
+};
