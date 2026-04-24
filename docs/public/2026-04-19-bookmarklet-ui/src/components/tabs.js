@@ -35,6 +35,8 @@ const TAB_PANEL_STYLES = css`
   :host { display: block; }
 `;
 
+let nextTabsId = 0;
+
 export class AwwTabPanel extends HTMLElement {
   constructor() {
     super();
@@ -49,9 +51,13 @@ export class AwwTabs extends HTMLElement {
   #panels = [];
   #selected = 0;
   #observer = null;
+  #internalUpdate = false;
+  #idPrefix;
 
   constructor() {
     super();
+    nextTabsId += 1;
+    this.#idPrefix = `awwbookmarklet-tabs-${nextTabsId}`;
     const shadow = this.attachShadow({ mode: "open" });
     adoptStyles(shadow, [BASE_COMPONENT_STYLES, TABS_STYLES]);
     shadow.innerHTML = `<div id="tablist" role="tablist" part="tablist"></div><div id="panels" part="panels"><slot></slot></div>`;
@@ -62,7 +68,9 @@ export class AwwTabs extends HTMLElement {
 
   connectedCallback() {
     this.#refresh();
-    this.#observer = new MutationObserver(() => this.#refresh());
+    this.#observer = new MutationObserver(() => {
+      if (!this.#internalUpdate) this.#refresh();
+    });
     this.#observer.observe(this, { childList: true, attributes: true, subtree: true, attributeFilter: ["label", "selected"] });
   }
 
@@ -72,8 +80,9 @@ export class AwwTabs extends HTMLElement {
   }
 
   #refresh() {
-    this.#panels = [...this.querySelectorAll(TAGS.tabPanel)];
+    this.#panels = [...this.children].filter((child) => child.tagName.toLowerCase() === TAGS.tabPanel);
     if (!this.#panels.length) {
+      this.#tabs = [];
       this.shadowRoot.querySelector("#tablist").textContent = "";
       return;
     }
@@ -87,9 +96,9 @@ export class AwwTabs extends HTMLElement {
     this.#tabs = this.#panels.map((panel, index) => {
       const tab = document.createElement("button");
       tab.type = "button";
-      tab.id = `${this.id || "tabs"}-tab-${index}`;
+      tab.id = `${this.id || this.#idPrefix}-tab-${index}`;
       tab.setAttribute("role", "tab");
-      tab.setAttribute("aria-controls", `${this.id || "tabs"}-panel-${index}`);
+      tab.setAttribute("aria-controls", `${this.id || this.#idPrefix}-panel-${index}`);
       tab.textContent = panel.getAttribute("label") || `Tab ${index + 1}`;
       tab.dataset.index = String(index);
       tab.tabIndex = index === this.#selected ? 0 : -1;
@@ -102,6 +111,8 @@ export class AwwTabs extends HTMLElement {
   }
 
   #applySelection(index, focusTab = true) {
+    if (!this.#tabs.length) return;
+
     this.#selected = (index + this.#tabs.length) % this.#tabs.length;
 
     this.#tabs.forEach((tab, tabIndex) => {
@@ -111,13 +122,20 @@ export class AwwTabs extends HTMLElement {
       if (focusTab && selected) tab.focus();
     });
 
-    this.#panels.forEach((panel, panelIndex) => {
-      panel.toggleAttribute("selected", panelIndex === this.#selected);
-      panel.hidden = panelIndex !== this.#selected;
-      panel.id = `${this.id || "tabs"}-panel-${panelIndex}`;
-      panel.setAttribute("role", "tabpanel");
-      panel.setAttribute("aria-labelledby", `${this.id || "tabs"}-tab-${panelIndex}`);
-    });
+    this.#internalUpdate = true;
+    try {
+      this.#panels.forEach((panel, panelIndex) => {
+        panel.toggleAttribute("selected", panelIndex === this.#selected);
+        panel.hidden = panelIndex !== this.#selected;
+        panel.id = `${this.id || this.#idPrefix}-panel-${panelIndex}`;
+        panel.setAttribute("role", "tabpanel");
+        panel.setAttribute("aria-labelledby", `${this.id || this.#idPrefix}-tab-${panelIndex}`);
+      });
+    } finally {
+      queueMicrotask(() => {
+        this.#internalUpdate = false;
+      });
+    }
   }
 
   #onClick = (event) => {

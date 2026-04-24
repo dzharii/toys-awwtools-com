@@ -19,8 +19,14 @@ export function openBookmarkletWindow(builder, { ownerPrefix = "bookmarklet-tool
   if (rect) win.setRect(rect);
   record.root.append(win);
 
-  const release = () => releaseDesktopRoot(owner);
+  let released = false;
+  const release = () => {
+    if (released) return;
+    released = true;
+    releaseDesktopRoot(owner);
+  };
   win.addEventListener("awwbookmarklet-window-closed", release, { once: true });
+  win.addEventListener("awwbookmarklet-window-disconnected", release, { once: true });
   win.addEventListener("awwbookmarklet-window-close-request", () => {
     queueMicrotask(() => {
       if (!win.isConnected) release();
@@ -42,8 +48,10 @@ export function shutdownAll() {
 
 registerAllComponents();
 
-globalThis.awwbookmarklet = {
+globalThis.awwtools = globalThis.awwtools || {};
+globalThis.awwtools.bookmarkletUi = {
   openWindow: openBookmarkletWindow,
   bootstrapExampleTool,
   shutdownAll
 };
+globalThis.awwbookmarklet = globalThis.awwtools.bookmarkletUi;

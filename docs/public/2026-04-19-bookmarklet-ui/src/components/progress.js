@@ -26,7 +26,24 @@ export class AwwProgress extends HTMLElement {
     this.control = shadow.querySelector("progress");
   }
 
+  get value() { return this.control.value; }
+  set value(nextValue) { this.setAttribute("value", String(nextValue ?? "")); }
+  get max() { return this.control.max; }
+  set max(nextValue) { this.setAttribute("max", String(nextValue ?? "")); }
+
   attributeChangedCallback(name, _prev, next) {
+    if (name === "value") {
+      if (next === null) this.control.removeAttribute("value");
+      else this.control.value = Number(next);
+      return;
+    }
+
+    if (name === "max") {
+      if (next === null) this.control.removeAttribute("max");
+      else this.control.max = Number(next);
+      return;
+    }
+
     if (next === null) {
       this.control.removeAttribute(name);
       return;

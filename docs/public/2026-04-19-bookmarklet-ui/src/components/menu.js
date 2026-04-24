@@ -76,6 +76,8 @@ export class AwwMenu extends HTMLElement {
   #activeIndex = -1;
   #typeahead = "";
   #typeaheadTimer = 0;
+  #restoreParent = null;
+  #restoreNextSibling = null;
 
   constructor() {
     super();
@@ -85,35 +87,65 @@ export class AwwMenu extends HTMLElement {
 
     this.addEventListener("keydown", this.#onKeyDown);
     this.addEventListener("click", this.#onClick);
+    shadow.querySelector("slot").addEventListener("slotchange", () => this.#resetItems());
   }
 
   connectedCallback() {
     this.hidden = false;
     this.setAttribute("aria-hidden", this.hasAttribute("open") ? "false" : "true");
-    this.shadowRoot.querySelector("slot").addEventListener("slotchange", () => this.#resetItems());
     this.#resetItems();
+  }
+
+  disconnectedCallback() {
+    clearTimeout(this.#typeaheadTimer);
   }
 
   getItems() {
     return [...this.children].filter(isMenuItem);
   }
 
-  openAt(anchorRect) {
+  portalTo(container) {
+    if (!container || this.parentNode === container) return;
+    if (!this.#restoreParent) {
+      this.#restoreParent = this.parentNode;
+      this.#restoreNextSibling = this.nextSibling;
+    }
+    container.append(this);
+  }
+
+  restorePortal() {
+    if (!this.#restoreParent) return;
+
+    const parent = this.#restoreParent;
+    const nextSibling = this.#restoreNextSibling?.parentNode === parent ? this.#restoreNextSibling : null;
+    this.#restoreParent = null;
+    this.#restoreNextSibling = null;
+
+    if (parent.isConnected) parent.insertBefore(this, nextSibling);
+  }
+
+  openAtViewportRect(anchorRect) {
+    this.style.left = "-9999px";
+    this.style.top = "-9999px";
+    this.setAttribute("open", "");
+
     const width = Math.max(200, this.offsetWidth || 220);
-    const viewportW = window.visualViewport?.width ?? window.innerWidth;
-    const viewportH = window.visualViewport?.height ?? window.innerHeight;
+    const viewport = window.visualViewport;
+    const viewportX = viewport?.offsetLeft ?? 0;
+    const viewportY = viewport?.offsetTop ?? 0;
+    const viewportW = viewport?.width ?? window.innerWidth;
+    const viewportH = viewport?.height ?? window.innerHeight;
     const menuHeight = this.offsetHeight || Math.min(viewportH * 0.5, 240);
 
     let left = anchorRect.left;
     let top = anchorRect.bottom + 2;
 
-    if (left + width > viewportW - 6) left = viewportW - width - 6;
-    if (top + menuHeight > viewportH - 6) top = Math.max(6, anchorRect.top - menuHeight - 2);
+    if (left + width > viewportX + viewportW - 6) left = viewportX + viewportW - width - 6;
+    if (top + menuHeight > viewportY + viewportH - 6) top = Math.max(viewportY + 6, anchorRect.top - menuHeight - 2);
 
-    this.style.left = `${Math.max(6, left)}px`;
-    this.style.top = `${Math.max(6, top)}px`;
+    this.style.left = `${Math.max(viewportX + 6, left)}px`;
+    this.style.top = `${Math.max(viewportY + 6, top)}px`;
 
-    this.setAttribute("open", "");
     this.setAttribute("aria-hidden", "false");
     this.#activeIndex = -1;
   }
@@ -122,6 +154,7 @@ export class AwwMenu extends HTMLElement {
     this.removeAttribute("open");
     this.setAttribute("aria-hidden", "true");
     this.#highlight(-1);
+    this.restorePortal();
   }
 
   focusFirst() {
@@ -141,7 +174,7 @@ export class AwwMenu extends HTMLElement {
 
   #onClick = (event) => {
     const target = event.target.closest("[role='menuitem']");
-    if (!target || target.hasAttribute("disabled")) return;
+    if (!target || !isMenuItem(target)) return;
 
     const command = target.getAttribute("data-command") || "";
     if (command) {

@@ -45,15 +45,25 @@ export class AwwRadio extends HTMLElement {
     shadow.innerHTML = `<label><input type="radio" part="control" /><span part="label"><slot></slot></span></label>`;
 
     this.control = shadow.querySelector("input");
-    this.control.addEventListener("change", () => {
+    this.control.addEventListener("change", (event) => {
+      event.stopPropagation();
       this.toggleAttribute("checked", this.control.checked);
+      if (this.control.checked) this.#uncheckRadioGroupPeers();
       this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     });
   }
 
+  get checked() { return this.hasAttribute("checked"); }
+  set checked(value) { this.toggleAttribute("checked", Boolean(value)); }
+  get disabled() { return this.hasAttribute("disabled"); }
+  set disabled(value) { this.toggleAttribute("disabled", Boolean(value)); }
+  get value() { return this.getAttribute("value") ?? "on"; }
+  set value(nextValue) { this.setAttribute("value", String(nextValue ?? "")); }
+
   attributeChangedCallback(name, _prev, next) {
     if (name === "checked") {
       this.control.checked = this.hasAttribute("checked");
+      if (this.control.checked) this.#uncheckRadioGroupPeers();
       return;
     }
 
@@ -68,5 +78,16 @@ export class AwwRadio extends HTMLElement {
     }
 
     this.control.setAttribute(name, next);
+  }
+
+  #uncheckRadioGroupPeers() {
+    const name = this.getAttribute("name");
+    if (!name) return;
+
+    const root = this.getRootNode();
+    const peers = root.querySelectorAll?.("awwbookmarklet-radio") ?? [];
+    for (const peer of peers) {
+      if (peer !== this && peer.getAttribute("name") === name) peer.removeAttribute("checked");
+    }
   }
 }

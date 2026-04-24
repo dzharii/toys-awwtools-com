@@ -38,11 +38,12 @@ export class AwwIconButton extends HTMLElement {
 
     this.control = shadow.querySelector("button");
     this.control.addEventListener("click", (event) => {
+      event.stopPropagation();
       if (this.disabled) {
         event.preventDefault();
         return;
       }
-      this.dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true }));
+      this.dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true, cancelable: true }));
     });
   }
 

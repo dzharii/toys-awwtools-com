@@ -35,7 +35,7 @@ const SELECT_STYLES = css`
   select:disabled { opacity: 0.65; }
 `;
 
-const MIRRORED = ["disabled", "name"];
+const MIRRORED = ["disabled", "name", "value"];
 
 export class AwwSelect extends HTMLElement {
   static observedAttributes = MIRRORED;
@@ -48,7 +48,9 @@ export class AwwSelect extends HTMLElement {
     shadow.innerHTML = `<div class="wrap"><select part="control"></select><span class="arrow" aria-hidden="true"></span></div>`;
 
     this.control = shadow.querySelector("select");
-    this.control.addEventListener("change", () => {
+    this.control.addEventListener("change", (event) => {
+      event.stopPropagation();
+      this.setAttribute("value", this.control.value);
       this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     });
   }
@@ -64,14 +66,24 @@ export class AwwSelect extends HTMLElement {
     this.#observer = null;
   }
 
+  get value() { return this.control.value; }
+  set value(nextValue) { this.setAttribute("value", String(nextValue ?? "")); }
+  get disabled() { return this.hasAttribute("disabled"); }
+  set disabled(value) { this.toggleAttribute("disabled", Boolean(value)); }
+
   attributeChangedCallback(name, _prev, next) {
-    if (next === null) {
-      this.control.removeAttribute(name);
+    if (name === "disabled") {
+      this.control.disabled = this.hasAttribute("disabled");
       return;
     }
 
-    if (name === "disabled") {
-      this.control.disabled = this.hasAttribute("disabled");
+    if (name === "value") {
+      this.control.value = next ?? "";
+      return;
+    }
+
+    if (next === null) {
+      this.control.removeAttribute(name);
       return;
     }
 
@@ -89,6 +101,13 @@ export class AwwSelect extends HTMLElement {
       clone.disabled = option.disabled;
       clone.selected = option.selected;
       this.control.append(clone);
+    }
+
+    const value = this.getAttribute("value");
+    if (value !== null) {
+      this.control.value = value;
+    } else if (this.control.selectedIndex >= 0) {
+      this.setAttribute("value", this.control.value);
     }
   }
 }

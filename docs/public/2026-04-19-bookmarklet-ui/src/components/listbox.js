@@ -24,16 +24,29 @@ const LISTBOX_STYLES = css`
     color: var(--awwbookmarklet-selection-fg, #f2f8ff);
     border-color: var(--awwbookmarklet-border-strong, #232a33);
   }
+
+  ::slotted([role="option"][aria-disabled="true"]) {
+    opacity: 0.55;
+  }
 `;
+
+let nextListboxId = 0;
+
+function isEnabledOption(item) {
+  return item.getAttribute("role") === "option" && item.getAttribute("aria-disabled") !== "true";
+}
 
 export class AwwListbox extends HTMLElement {
   #options = [];
   #selected = -1;
   #typeahead = "";
   #typeaheadTimer = 0;
+  #idPrefix;
 
   constructor() {
     super();
+    nextListboxId += 1;
+    this.#idPrefix = `awwbookmarklet-listbox-${nextListboxId}`;
     const shadow = this.attachShadow({ mode: "open" });
     adoptStyles(shadow, [BASE_COMPONENT_STYLES, LISTBOX_STYLES]);
     shadow.innerHTML = `<div id="list" role="listbox" part="list" tabindex="0"><slot></slot></div>`;
@@ -46,8 +59,16 @@ export class AwwListbox extends HTMLElement {
   connectedCallback() { this.#refresh(); }
 
   #refresh() {
-    this.#options = [...this.children].filter((item) => item.getAttribute("role") === "option");
-    if (!this.#options.length) return;
+    this.#options = [...this.children].filter(isEnabledOption);
+    if (!this.#options.length) {
+      this.#selected = -1;
+      this.shadowRoot.querySelector("#list").removeAttribute("aria-activedescendant");
+      return;
+    }
+
+    this.#options.forEach((option, index) => {
+      if (!option.id) option.id = `${this.#idPrefix}-option-${index}`;
+    });
 
     this.#selected = this.#options.findIndex((item) => item.getAttribute("aria-selected") === "true");
     if (this.#selected < 0) this.#selected = 0;
@@ -66,6 +87,8 @@ export class AwwListbox extends HTMLElement {
       option.dataset.selected = selected ? "true" : "false";
     });
 
+    this.shadowRoot.querySelector("#list").setAttribute("aria-activedescendant", this.#options[this.#selected].id);
+
     if (emit) {
       const selectedOption = this.#options[this.#selected];
       this.dispatchEvent(new CustomEvent("change", {
@@ -81,7 +104,7 @@ export class AwwListbox extends HTMLElement {
 
   #onClick = (event) => {
     const target = event.target.closest("[role='option']");
-    if (!target) return;
+    if (!target || target.getAttribute("aria-disabled") === "true") return;
     const index = this.#options.indexOf(target);
     if (index !== -1) this.#applySelection(index, true);
   };

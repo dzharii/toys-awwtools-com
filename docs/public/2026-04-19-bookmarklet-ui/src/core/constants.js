@@ -1,4 +1,4 @@
-export const FRAMEWORK_VERSION = "1.0.0";
+export const FRAMEWORK_VERSION = "0.1.0";
 
 export const TAGS = {
   desktopRoot: "awwbookmarklet-desktop-root",
@@ -23,9 +23,9 @@ export const TAGS = {
 };
 
 export const GLOBAL_SYMBOLS = {
-  rootsByVersion: Symbol.for("awwbookmarklet.desktopRootsByVersion"),
-  primaryRoot: Symbol.for("awwbookmarklet.desktopRoot"),
-  version: Symbol.for("awwbookmarklet.frameworkVersion")
+  rootsByVersion: Symbol.for("awwtools.bookmarkletUi.overlayRootsByVersion"),
+  lastAcquiredRoot: Symbol.for("awwtools.bookmarkletUi.lastAcquiredRoot"),
+  version: Symbol.for("awwtools.bookmarkletUi.frameworkVersion")
 };
 
 export const ROOT_Z_INDEX = 2147481000;

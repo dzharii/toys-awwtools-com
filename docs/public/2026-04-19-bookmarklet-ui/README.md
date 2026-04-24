@@ -18,9 +18,10 @@ A bookmarklet-safe UI shell for floating tool windows on arbitrary web pages.
 
 - Public custom elements are prefixed `awwbookmarklet-`
 - Public CSS variables are prefixed `--awwbookmarklet-`
+- Public runtime API is exposed at `globalThis.awwtools.bookmarkletUi`
 - Registration is idempotent (`customElements.define` guarded)
-- One desktop root per framework version, discoverable via global symbols
-- Desktop overlay is non-blocking (`pointer-events: none`) with interactive descendants opting in
+- One overlay root per framework version, discoverable via namespaced global symbols
+- Overlay root is non-blocking (`pointer-events: none`) with interactive descendants opting in
 
 ## Build
 

@@ -24,15 +24,31 @@ export class AwwRange extends HTMLElement {
     shadow.innerHTML = `<input type="range" part="control" />`;
 
     this.control = shadow.querySelector("input");
-    this.control.addEventListener("input", () => {
+    this.control.addEventListener("input", (event) => {
+      event.stopPropagation();
       this.setAttribute("value", this.control.value);
       this.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
     });
+    this.control.addEventListener("change", (event) => {
+      event.stopPropagation();
+      this.setAttribute("value", this.control.value);
+      this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+    });
   }
+
+  get value() { return this.control.value; }
+  set value(nextValue) { this.setAttribute("value", String(nextValue ?? "")); }
+  get disabled() { return this.hasAttribute("disabled"); }
+  set disabled(value) { this.toggleAttribute("disabled", Boolean(value)); }
 
   attributeChangedCallback(name, _prev, next) {
     if (name === "disabled") {
       this.control.disabled = this.hasAttribute("disabled");
+      return;
+    }
+
+    if (name === "value") {
+      this.control.value = next ?? "";
       return;
     }
 

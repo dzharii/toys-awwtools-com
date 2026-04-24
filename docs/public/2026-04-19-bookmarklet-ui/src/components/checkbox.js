@@ -44,11 +44,19 @@ export class AwwCheckbox extends HTMLElement {
     shadow.innerHTML = `<label><input type="checkbox" part="control" /><span part="label"><slot></slot></span></label>`;
 
     this.control = shadow.querySelector("input");
-    this.control.addEventListener("change", () => {
+    this.control.addEventListener("change", (event) => {
+      event.stopPropagation();
       this.toggleAttribute("checked", this.control.checked);
       this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     });
   }
+
+  get checked() { return this.hasAttribute("checked"); }
+  set checked(value) { this.toggleAttribute("checked", Boolean(value)); }
+  get disabled() { return this.hasAttribute("disabled"); }
+  set disabled(value) { this.toggleAttribute("disabled", Boolean(value)); }
+  get value() { return this.getAttribute("value") ?? "on"; }
+  set value(nextValue) { this.setAttribute("value", String(nextValue ?? "")); }
 
   attributeChangedCallback(name, _prev, next) {
     if (name === "checked") {

@@ -38,8 +38,10 @@ const MENUBAR_STYLES = css`
 export class AwwMenubar extends HTMLElement {
   #triggers = [];
   #menus = new Map();
+  #wiredMenus = new WeakSet();
   #activeTrigger = -1;
   #openMenuName = "";
+  #window = null;
 
   constructor() {
     super();
@@ -52,22 +54,21 @@ export class AwwMenubar extends HTMLElement {
     shadow.querySelector("slot").addEventListener("slotchange", () => this.#refresh());
     this.addEventListener("keydown", this.#onKeyDown);
     this.addEventListener("click", this.#onClick);
-    this.addEventListener("awwbookmarklet-menu-dismiss", this.#onDismissMenu);
-    this.addEventListener("awwbookmarklet-menu-select", this.#onDismissMenu);
-    this.addEventListener("awwbookmarklet-command", this.#onRunCommand);
   }
 
   connectedCallback() {
     this.#refresh();
     document.addEventListener("pointerdown", this.#onDocumentPointerDown, true);
 
-    this.closest("awwbookmarklet-window")?.addEventListener("awwbookmarklet-window-system-menu", () => this.openFirstMenu(), {
-      passive: true
-    });
+    this.#window = this.closest("awwbookmarklet-window");
+    this.#window?.addEventListener("awwbookmarklet-window-system-menu", this.#onWindowSystemMenu);
   }
 
   disconnectedCallback() {
     document.removeEventListener("pointerdown", this.#onDocumentPointerDown, true);
+    this.#window?.removeEventListener("awwbookmarklet-window-system-menu", this.#onWindowSystemMenu);
+    this.#window = null;
+    this.closeAllMenus();
   }
 
   openFirstMenu() {
@@ -84,13 +85,17 @@ export class AwwMenubar extends HTMLElement {
 
   #refresh() {
     const children = [...this.children];
+    const openMenus = [...this.#menus.entries()].filter(([, menu]) => menu.isConnected && menu.parentNode !== this);
 
     this.#triggers = children.filter((node) => node.hasAttribute("data-menu"));
-    this.#menus.clear();
+    this.#menus = new Map(openMenus);
 
     for (const menu of children.filter((node) => node.tagName.toLowerCase() === "awwbookmarklet-menu")) {
       const name = menu.getAttribute("name") || "";
-      if (name) this.#menus.set(name, menu);
+      if (name) {
+        this.#menus.set(name, menu);
+        this.#wireMenu(menu);
+      }
     }
 
     this.#triggers.forEach((trigger, index) => {
@@ -109,7 +114,9 @@ export class AwwMenubar extends HTMLElement {
     this.closeAllMenus();
 
     trigger.dataset.open = "true";
-    menu.openAt(trigger.getBoundingClientRect());
+    const overlayRoot = this.closest("awwbookmarklet-window")?.closest("awwbookmarklet-desktop-root");
+    menu.portalTo(overlayRoot);
+    menu.openAtViewportRect(trigger.getBoundingClientRect());
     this.#openMenuName = menuName;
 
     if (focusMenu) menu.focusFirst();
@@ -175,7 +182,9 @@ export class AwwMenubar extends HTMLElement {
   };
 
   #onDocumentPointerDown = (event) => {
-    if (!this.contains(event.target)) this.closeAllMenus();
+    const target = event.target;
+    const insideMenu = [...this.#menus.values()].some((menu) => menu.contains(target));
+    if (!this.contains(target) && !insideMenu) this.closeAllMenus();
   };
 
   #onRunCommand = (event) => {
@@ -187,4 +196,16 @@ export class AwwMenubar extends HTMLElement {
       trigger: event.detail.source
     });
   };
+
+  #onWindowSystemMenu = () => {
+    this.openFirstMenu();
+  };
+
+  #wireMenu(menu) {
+    if (this.#wiredMenus.has(menu)) return;
+    this.#wiredMenus.add(menu);
+    menu.addEventListener("awwbookmarklet-menu-dismiss", this.#onDismissMenu);
+    menu.addEventListener("awwbookmarklet-menu-select", this.#onDismissMenu);
+    menu.addEventListener("awwbookmarklet-command", this.#onRunCommand);
+  }
 }

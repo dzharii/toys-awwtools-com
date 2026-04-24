@@ -35,6 +35,7 @@ export function buildExampleToolWindow({ title = "Page Extraction Tool" } = {}) 
   const toolbar = document.createElement("div");
   toolbar.slot = "toolbar";
   toolbar.style.display = "flex";
+  toolbar.style.flexWrap = "wrap";
   toolbar.style.gap = "8px";
   toolbar.style.padding = "6px 8px";
   toolbar.style.alignItems = "center";
@@ -53,7 +54,7 @@ export function buildExampleToolWindow({ title = "Page Extraction Tool" } = {}) 
   body.style.gap = "12px";
   body.innerHTML = `
     <${TAGS.group} caption="Target">
-      <div style="display:grid; grid-template-columns: 1fr auto auto; gap:8px; align-items:center;">
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:8px; align-items:center;">
         <${TAGS.input} id="target-input" placeholder="CSS selector or current selection"></${TAGS.input}>
         <${TAGS.button} id="target-refresh">Refresh</${TAGS.button}>
         <${TAGS.button} id="target-pick">Pick Again</${TAGS.button}>
@@ -61,7 +62,7 @@ export function buildExampleToolWindow({ title = "Page Extraction Tool" } = {}) 
     </${TAGS.group}>
 
     <${TAGS.panel}>
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
         <${TAGS.group} caption="Options">
           <div style="display:grid; gap:8px;">
             <${TAGS.checkbox} checked id="opt-trim">Trim whitespace</${TAGS.checkbox}>
@@ -92,7 +93,7 @@ export function buildExampleToolWindow({ title = "Page Extraction Tool" } = {}) 
     </${TAGS.panel}>
 
     <${TAGS.group} caption="Actions">
-      <div style="display:grid; grid-template-columns: minmax(150px, 1fr) 1fr; gap:12px; align-items:center;">
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; align-items:center;">
         <div style="display:grid; gap:8px;">
           <label style="display:grid; gap:4px;">Preset
             <${TAGS.select} id="preset-select">
@@ -107,7 +108,7 @@ export function buildExampleToolWindow({ title = "Page Extraction Tool" } = {}) 
         </div>
         <div style="display:grid; gap:8px;">
           <${TAGS.progress} id="run-progress" value="0" max="100"></${TAGS.progress}>
-          <div style="display:flex; justify-content:flex-end; gap:8px;">
+          <div style="display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px;">
             <${TAGS.button} id="action-run">Run</${TAGS.button}>
             <${TAGS.button} id="action-close">Close</${TAGS.button}>
           </div>
@@ -131,10 +132,8 @@ export function buildExampleToolWindow({ title = "Page Extraction Tool" } = {}) 
     body.dataset.mode = mode;
     if (mode === "Compact") {
       body.style.gap = "8px";
-      win.style.minWidth = "300px";
     } else {
       body.style.gap = "12px";
-      win.style.minWidth = "320px";
     }
   };
 
@@ -186,7 +185,7 @@ export function buildExampleToolWindow({ title = "Page Extraction Tool" } = {}) 
   });
 
   body.querySelector("#confidence-range").addEventListener("input", (event) => {
-    statusCount().textContent = `${event.target.getAttribute("value")}% confidence`;
+    statusCount().textContent = `${event.target.value}% confidence`;
   });
 
   return win;

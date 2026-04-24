@@ -42,7 +42,7 @@ export function acquireDesktopRoot(owner = "default-owner", version = FRAMEWORK_
   }
 
   record.owners.add(owner);
-  globalThis[GLOBAL_SYMBOLS.primaryRoot] = record.root;
+  globalThis[GLOBAL_SYMBOLS.lastAcquiredRoot] = record.root;
   globalThis[GLOBAL_SYMBOLS.version] = version;
 
   return record;
@@ -59,8 +59,8 @@ export function releaseDesktopRoot(owner = "default-owner", version = FRAMEWORK_
   record.destroy();
   roots.delete(version);
 
-  if (globalThis[GLOBAL_SYMBOLS.primaryRoot] === record.root) {
-    delete globalThis[GLOBAL_SYMBOLS.primaryRoot];
+  if (globalThis[GLOBAL_SYMBOLS.lastAcquiredRoot] === record.root) {
+    delete globalThis[GLOBAL_SYMBOLS.lastAcquiredRoot];
   }
 }
 
@@ -76,7 +76,7 @@ export function emergencyTeardown(version = FRAMEWORK_VERSION) {
       record.destroy();
       roots.delete(key);
     }
-    delete globalThis[GLOBAL_SYMBOLS.primaryRoot];
+    delete globalThis[GLOBAL_SYMBOLS.lastAcquiredRoot];
     return;
   }
 
@@ -84,7 +84,7 @@ export function emergencyTeardown(version = FRAMEWORK_VERSION) {
   if (!record) return;
   record.destroy();
   roots.delete(version);
-  if (globalThis[GLOBAL_SYMBOLS.primaryRoot] === record.root) {
-    delete globalThis[GLOBAL_SYMBOLS.primaryRoot];
+  if (globalThis[GLOBAL_SYMBOLS.lastAcquiredRoot] === record.root) {
+    delete globalThis[GLOBAL_SYMBOLS.lastAcquiredRoot];
   }
 }

@@ -1,4 +1,4 @@
-import { clampRect, rectToStyle } from "../core/geometry.js";
+import { clampRect, rectToStyle, resizeRectFromEdges } from "../core/geometry.js";
 import { adoptStyles, BASE_COMPONENT_STYLES, css } from "../core/styles.js";
 
 const WINDOW_STYLES = css`
@@ -11,8 +11,8 @@ const WINDOW_STYLES = css`
     background: var(--awwbookmarklet-window-bg, #eef1f5);
     box-shadow: var(--awwbookmarklet-shadow-depth, 0 12px 32px rgba(0, 0, 0, 0.18));
     border-radius: 0;
-    min-width: 320px;
-    min-height: 200px;
+    min-width: 0;
+    min-height: 0;
     overflow: hidden;
     color: var(--awwbookmarklet-input-fg, #111720);
     will-change: transform;
@@ -39,7 +39,7 @@ const WINDOW_STYLES = css`
     background: linear-gradient(
       180deg,
       color-mix(in srgb, var(--awwbookmarklet-titlebar-active-bg, rgba(46, 92, 142, 0.78)) 88%, #ffffff 12%),
-      var(--awwbookmarklet-titlebar-active-bg, rgba(46, 92, 142, 0.78))
+      color-mix(in srgb, var(--awwbookmarklet-titlebar-active-bg, rgba(46, 92, 142, 0.78)) calc(var(--awwbookmarklet-frost-opacity, 0.9) * 100%), transparent)
     );
     color: var(--awwbookmarklet-titlebar-fg, #f8fbff);
     border-bottom: 1px solid var(--awwbookmarklet-border-strong, #232a33);
@@ -52,8 +52,8 @@ const WINDOW_STYLES = css`
     background: var(--awwbookmarklet-titlebar-inactive-bg, rgba(136, 145, 160, 0.84));
   }
 
-  .system,
-  .title-command {
+  .system-menu-button,
+  .window-command-button {
     border: 1px solid color-mix(in srgb, var(--awwbookmarklet-border-strong, #232a33) 70%, #ffffff 30%);
     border-radius: 0;
     background: rgba(255, 255, 255, 0.08);
@@ -65,14 +65,14 @@ const WINDOW_STYLES = css`
     line-height: 1;
   }
 
-  .system:focus-visible,
-  .title-command:focus-visible {
+  .system-menu-button:focus-visible,
+  .window-command-button:focus-visible {
     outline: none;
     box-shadow: var(--_ring);
   }
 
-  .system:active,
-  .title-command:active {
+  .system-menu-button:active,
+  .window-command-button:active {
     background: rgba(0, 0, 0, 0.18);
   }
 
@@ -149,10 +149,10 @@ export class AwwWindow extends HTMLElement {
     shadow.innerHTML = `
       <div class="shell" part="shell" role="dialog" aria-label="Bookmarklet window">
         <div class="titlebar" part="titlebar">
-          <button class="system" part="system-button" type="button" aria-label="System menu">◫</button>
+          <button class="system-menu-button" part="system-menu-button" type="button" aria-label="System menu">◫</button>
           <div class="title" part="title"></div>
           <div class="title-commands" part="title-commands">
-            <button class="title-command close" part="close-button" type="button" aria-label="Close">×</button>
+            <button class="window-command-button close" part="close-button" type="button" aria-label="Close">×</button>
           </div>
         </div>
         <div class="region menubar" part="menubar-region" hidden><slot name="menubar"></slot></div>
@@ -197,6 +197,7 @@ export class AwwWindow extends HTMLElement {
     this.#manager = null;
     this.removeEventListener("pointerdown", this.#onPointerDownHost);
     this.#teardownPointerFlow();
+    this.dispatchEvent(new CustomEvent("awwbookmarklet-window-disconnected"));
   }
 
   attributeChangedCallback(name) {
@@ -241,7 +242,7 @@ export class AwwWindow extends HTMLElement {
   #bindInteractions() {
     const shadow = this.shadowRoot;
     const titlebar = shadow.querySelector(".titlebar");
-    const systemButton = shadow.querySelector(".system");
+    const systemButton = shadow.querySelector(".system-menu-button");
     const closeButton = shadow.querySelector(".close");
 
     titlebar.addEventListener("pointerdown", this.#onPointerDownTitlebar);
@@ -291,7 +292,7 @@ export class AwwWindow extends HTMLElement {
     this.dispatchEvent(new CustomEvent("awwbookmarklet-window-system-menu", {
       bubbles: true,
       composed: true,
-      detail: { anchor: this.shadowRoot.querySelector(".system") }
+      detail: { anchor: this.shadowRoot.querySelector(".system-menu-button") }
     }));
   };
 
@@ -319,11 +320,13 @@ export class AwwWindow extends HTMLElement {
       startY: event.clientY,
       currentX: event.clientX,
       currentY: event.clientY,
-      startRect: this.getRect()
+      startRect: this.getRect(),
+      pointerId: event.pointerId,
+      target: event.currentTarget
     };
 
     this.shadowRoot.querySelector(".titlebar").style.cursor = "grabbing";
-    this.#attachPointerFlow();
+    this.#attachPointerFlow(event.currentTarget, event.pointerId);
   };
 
   #onPointerDownResize = (event) => {
@@ -342,22 +345,38 @@ export class AwwWindow extends HTMLElement {
       currentX: event.clientX,
       currentY: event.clientY,
       startRect: this.getRect(),
-      previewRect: this.getRect()
+      previewRect: this.getRect(),
+      pointerId: event.pointerId,
+      target: event.currentTarget
     };
 
-    this.#attachPointerFlow();
+    this.#attachPointerFlow(event.currentTarget, event.pointerId);
   };
 
-  #attachPointerFlow() {
+  #attachPointerFlow(target, pointerId) {
+    try {
+      target.setPointerCapture?.(pointerId);
+    } catch {
+      // Pointer capture is best-effort on arbitrary host pages.
+    }
     window.addEventListener("pointermove", this.#onPointerMove, { passive: true });
-    window.addEventListener("pointerup", this.#onPointerUp, { once: true });
-    window.addEventListener("pointercancel", this.#onPointerUp, { once: true });
+    window.addEventListener("pointerup", this.#onPointerUp);
+    window.addEventListener("pointercancel", this.#onPointerUp);
   }
 
   #teardownPointerFlow() {
+    const pointerState = this.#drag || this.#resize;
     window.removeEventListener("pointermove", this.#onPointerMove);
     window.removeEventListener("pointerup", this.#onPointerUp);
     window.removeEventListener("pointercancel", this.#onPointerUp);
+
+    if (pointerState?.target?.hasPointerCapture?.(pointerState.pointerId)) {
+      try {
+        pointerState.target.releasePointerCapture(pointerState.pointerId);
+      } catch {
+        // Ignore release races after cancelled pointer flows.
+      }
+    }
 
     if (this.#raf) {
       cancelAnimationFrame(this.#raf);
@@ -370,6 +389,7 @@ export class AwwWindow extends HTMLElement {
 
   #onPointerMove = (event) => {
     if (this.#drag) {
+      if (event.pointerId !== this.#drag.pointerId) return;
       this.#drag.currentX = event.clientX;
       this.#drag.currentY = event.clientY;
       this.#scheduleFrame();
@@ -377,13 +397,25 @@ export class AwwWindow extends HTMLElement {
     }
 
     if (this.#resize) {
+      if (event.pointerId !== this.#resize.pointerId) return;
       this.#resize.currentX = event.clientX;
       this.#resize.currentY = event.clientY;
       this.#scheduleFrame();
     }
   };
 
-  #onPointerUp = () => {
+  #onPointerUp = (event) => {
+    const pointerState = this.#drag || this.#resize;
+    if (pointerState && event.pointerId !== pointerState.pointerId) return;
+
+    if (pointerState?.target?.hasPointerCapture?.(pointerState.pointerId)) {
+      try {
+        pointerState.target.releasePointerCapture(pointerState.pointerId);
+      } catch {
+        // Ignore release races after cancelled pointer flows.
+      }
+    }
+
     if (this.#drag) {
       const dx = this.#drag.currentX - this.#drag.startX;
       const dy = this.#drag.currentY - this.#drag.startY;
@@ -424,24 +456,7 @@ export class AwwWindow extends HTMLElement {
     const { edge, startRect, startX, startY, currentX, currentY } = this.#resize;
     const dx = currentX - startX;
     const dy = currentY - startY;
-
-    let x = startRect.x;
-    let y = startRect.y;
-    let width = startRect.width;
-    let height = startRect.height;
-
-    if (edge.includes("e")) width = startRect.width + dx;
-    if (edge.includes("s")) height = startRect.height + dy;
-    if (edge.includes("w")) {
-      width = startRect.width - dx;
-      x = startRect.x + dx;
-    }
-    if (edge.includes("n")) {
-      height = startRect.height - dy;
-      y = startRect.y + dy;
-    }
-
-    const previewRect = clampRect({ x, y, width, height });
+    const previewRect = resizeRectFromEdges(startRect, edge, dx, dy);
     this.#resize.previewRect = previewRect;
     Object.assign(this.style, rectToStyle(previewRect));
   }

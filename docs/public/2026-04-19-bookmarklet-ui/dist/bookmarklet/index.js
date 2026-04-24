@@ -1,5 +1,5 @@
-// src/core/constants.js
-var FRAMEWORK_VERSION = "1.0.0";
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/core/constants.js
+var FRAMEWORK_VERSION = "0.1.0";
 var TAGS = {
   desktopRoot: "awwbookmarklet-desktop-root",
   window: "awwbookmarklet-window",
@@ -22,9 +22,9 @@ var TAGS = {
   statusbar: "awwbookmarklet-statusbar"
 };
 var GLOBAL_SYMBOLS = {
-  rootsByVersion: Symbol.for("awwbookmarklet.desktopRootsByVersion"),
-  primaryRoot: Symbol.for("awwbookmarklet.desktopRoot"),
-  version: Symbol.for("awwbookmarklet.frameworkVersion")
+  rootsByVersion: Symbol.for("awwtools.bookmarkletUi.overlayRootsByVersion"),
+  lastAcquiredRoot: Symbol.for("awwtools.bookmarkletUi.lastAcquiredRoot"),
+  version: Symbol.for("awwtools.bookmarkletUi.frameworkVersion")
 };
 var ROOT_Z_INDEX = 2147481000;
 var PUBLIC_TOKENS = {
@@ -66,7 +66,7 @@ var DEFAULT_GEOMETRY = {
   cascadeStep: 28
 };
 
-// src/core/define.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/core/define.js
 function defineOnce(tagName, ctor) {
   if (!customElements.get(tagName)) {
     customElements.define(tagName, ctor);
@@ -78,7 +78,7 @@ function defineMany(definitions) {
   }
 }
 
-// src/core/styles.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/core/styles.js
 var canAdoptSheets = typeof ShadowRoot !== "undefined" && "adoptedStyleSheets" in ShadowRoot.prototype && typeof CSSStyleSheet !== "undefined" && "replaceSync" in CSSStyleSheet.prototype;
 var sheetCache = new Map;
 var textCache = new Map;
@@ -168,7 +168,7 @@ var BASE_COMPONENT_STYLES = css`
   }
 `;
 
-// src/components/desktop-root.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/desktop-root.js
 var DESKTOP_ROOT_STYLES = css`
   :host {
     position: fixed;
@@ -206,7 +206,7 @@ class AwwDesktopRoot extends HTMLElement {
   }
 }
 
-// src/core/geometry.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/core/geometry.js
 function getViewportRect() {
   if (window.visualViewport) {
     return {
@@ -227,14 +227,44 @@ function clampRect(rect, viewport = getViewportRect(), options = DEFAULT_GEOMETR
   const minWidth = options.minWidth ?? DEFAULT_GEOMETRY.minWidth;
   const minHeight = options.minHeight ?? DEFAULT_GEOMETRY.minHeight;
   const minVisibleTitlebar = options.minVisibleTitlebar ?? DEFAULT_GEOMETRY.minVisibleTitlebar;
-  const width = Math.max(minWidth, Math.min(rect.width, viewport.width));
-  const height = Math.max(minHeight, Math.min(rect.height, viewport.height));
+  const effectiveMinWidth = Math.min(minWidth, viewport.width);
+  const effectiveMinHeight = Math.min(minHeight, viewport.height);
+  const width = Math.max(effectiveMinWidth, Math.min(rect.width, viewport.width));
+  const height = Math.max(effectiveMinHeight, Math.min(rect.height, viewport.height));
   const maxX = viewport.x + viewport.width - minVisibleTitlebar;
   const minX = viewport.x - width + minVisibleTitlebar;
   const maxY = viewport.y + viewport.height - minVisibleTitlebar;
   const x = Math.min(Math.max(rect.x, minX), maxX);
   const y = Math.min(Math.max(rect.y, viewport.y), maxY);
   return { x, y, width, height };
+}
+function clampSize(value, min, max) {
+  return Math.max(Math.min(min, max), Math.min(value, max));
+}
+function resizeRectFromEdges(startRect, edge, dx, dy, viewport = getViewportRect(), options = DEFAULT_GEOMETRY) {
+  const minWidth = options.minWidth ?? DEFAULT_GEOMETRY.minWidth;
+  const minHeight = options.minHeight ?? DEFAULT_GEOMETRY.minHeight;
+  const effectiveMinWidth = Math.min(minWidth, viewport.width);
+  const effectiveMinHeight = Math.min(minHeight, viewport.height);
+  const right = startRect.x + startRect.width;
+  const bottom = startRect.y + startRect.height;
+  let x = startRect.x;
+  let y = startRect.y;
+  let width = startRect.width;
+  let height = startRect.height;
+  if (edge.includes("e"))
+    width = clampSize(startRect.width + dx, effectiveMinWidth, viewport.width);
+  if (edge.includes("s"))
+    height = clampSize(startRect.height + dy, effectiveMinHeight, viewport.height);
+  if (edge.includes("w")) {
+    width = clampSize(startRect.width - dx, effectiveMinWidth, viewport.width);
+    x = right - width;
+  }
+  if (edge.includes("n")) {
+    height = clampSize(startRect.height - dy, effectiveMinHeight, viewport.height);
+    y = bottom - height;
+  }
+  return clampRect({ x, y, width, height }, viewport, options);
 }
 function getSpawnRect(index = 0, viewport = getViewportRect(), options = DEFAULT_GEOMETRY) {
   const width = Math.min(options.spawnWidth, viewport.width - 12);
@@ -256,7 +286,7 @@ function rectToStyle(rect) {
   };
 }
 
-// src/components/window.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/window.js
 var WINDOW_STYLES = css`
   :host {
     position: fixed;
@@ -267,8 +297,8 @@ var WINDOW_STYLES = css`
     background: var(--awwbookmarklet-window-bg, #eef1f5);
     box-shadow: var(--awwbookmarklet-shadow-depth, 0 12px 32px rgba(0, 0, 0, 0.18));
     border-radius: 0;
-    min-width: 320px;
-    min-height: 200px;
+    min-width: 0;
+    min-height: 0;
     overflow: hidden;
     color: var(--awwbookmarklet-input-fg, #111720);
     will-change: transform;
@@ -295,7 +325,7 @@ var WINDOW_STYLES = css`
     background: linear-gradient(
       180deg,
       color-mix(in srgb, var(--awwbookmarklet-titlebar-active-bg, rgba(46, 92, 142, 0.78)) 88%, #ffffff 12%),
-      var(--awwbookmarklet-titlebar-active-bg, rgba(46, 92, 142, 0.78))
+      color-mix(in srgb, var(--awwbookmarklet-titlebar-active-bg, rgba(46, 92, 142, 0.78)) calc(var(--awwbookmarklet-frost-opacity, 0.9) * 100%), transparent)
     );
     color: var(--awwbookmarklet-titlebar-fg, #f8fbff);
     border-bottom: 1px solid var(--awwbookmarklet-border-strong, #232a33);
@@ -308,8 +338,8 @@ var WINDOW_STYLES = css`
     background: var(--awwbookmarklet-titlebar-inactive-bg, rgba(136, 145, 160, 0.84));
   }
 
-  .system,
-  .title-command {
+  .system-menu-button,
+  .window-command-button {
     border: 1px solid color-mix(in srgb, var(--awwbookmarklet-border-strong, #232a33) 70%, #ffffff 30%);
     border-radius: 0;
     background: rgba(255, 255, 255, 0.08);
@@ -321,14 +351,14 @@ var WINDOW_STYLES = css`
     line-height: 1;
   }
 
-  .system:focus-visible,
-  .title-command:focus-visible {
+  .system-menu-button:focus-visible,
+  .window-command-button:focus-visible {
     outline: none;
     box-shadow: var(--_ring);
   }
 
-  .system:active,
-  .title-command:active {
+  .system-menu-button:active,
+  .window-command-button:active {
     background: rgba(0, 0, 0, 0.18);
   }
 
@@ -400,10 +430,10 @@ class AwwWindow extends HTMLElement {
     shadow.innerHTML = `
       <div class="shell" part="shell" role="dialog" aria-label="Bookmarklet window">
         <div class="titlebar" part="titlebar">
-          <button class="system" part="system-button" type="button" aria-label="System menu">◫</button>
+          <button class="system-menu-button" part="system-menu-button" type="button" aria-label="System menu">◫</button>
           <div class="title" part="title"></div>
           <div class="title-commands" part="title-commands">
-            <button class="title-command close" part="close-button" type="button" aria-label="Close">×</button>
+            <button class="window-command-button close" part="close-button" type="button" aria-label="Close">×</button>
           </div>
         </div>
         <div class="region menubar" part="menubar-region" hidden><slot name="menubar"></slot></div>
@@ -442,6 +472,7 @@ class AwwWindow extends HTMLElement {
     this.#manager = null;
     this.removeEventListener("pointerdown", this.#onPointerDownHost);
     this.#teardownPointerFlow();
+    this.dispatchEvent(new CustomEvent("awwbookmarklet-window-disconnected"));
   }
   attributeChangedCallback(name) {
     if (name === "title")
@@ -478,7 +509,7 @@ class AwwWindow extends HTMLElement {
   #bindInteractions() {
     const shadow = this.shadowRoot;
     const titlebar = shadow.querySelector(".titlebar");
-    const systemButton = shadow.querySelector(".system");
+    const systemButton = shadow.querySelector(".system-menu-button");
     const closeButton = shadow.querySelector(".close");
     titlebar.addEventListener("pointerdown", this.#onPointerDownTitlebar);
     systemButton.addEventListener("click", this.#onSystemClick);
@@ -519,7 +550,7 @@ class AwwWindow extends HTMLElement {
     this.dispatchEvent(new CustomEvent("awwbookmarklet-window-system-menu", {
       bubbles: true,
       composed: true,
-      detail: { anchor: this.shadowRoot.querySelector(".system") }
+      detail: { anchor: this.shadowRoot.querySelector(".system-menu-button") }
     }));
   };
   #onSystemDoubleClick = (event) => {
@@ -544,10 +575,12 @@ class AwwWindow extends HTMLElement {
       startY: event.clientY,
       currentX: event.clientX,
       currentY: event.clientY,
-      startRect: this.getRect()
+      startRect: this.getRect(),
+      pointerId: event.pointerId,
+      target: event.currentTarget
     };
     this.shadowRoot.querySelector(".titlebar").style.cursor = "grabbing";
-    this.#attachPointerFlow();
+    this.#attachPointerFlow(event.currentTarget, event.pointerId);
   };
   #onPointerDownResize = (event) => {
     if (!isPrimaryButton(event))
@@ -564,19 +597,30 @@ class AwwWindow extends HTMLElement {
       currentX: event.clientX,
       currentY: event.clientY,
       startRect: this.getRect(),
-      previewRect: this.getRect()
+      previewRect: this.getRect(),
+      pointerId: event.pointerId,
+      target: event.currentTarget
     };
-    this.#attachPointerFlow();
+    this.#attachPointerFlow(event.currentTarget, event.pointerId);
   };
-  #attachPointerFlow() {
+  #attachPointerFlow(target, pointerId) {
+    try {
+      target.setPointerCapture?.(pointerId);
+    } catch {}
     window.addEventListener("pointermove", this.#onPointerMove, { passive: true });
-    window.addEventListener("pointerup", this.#onPointerUp, { once: true });
-    window.addEventListener("pointercancel", this.#onPointerUp, { once: true });
+    window.addEventListener("pointerup", this.#onPointerUp);
+    window.addEventListener("pointercancel", this.#onPointerUp);
   }
   #teardownPointerFlow() {
+    const pointerState = this.#drag || this.#resize;
     window.removeEventListener("pointermove", this.#onPointerMove);
     window.removeEventListener("pointerup", this.#onPointerUp);
     window.removeEventListener("pointercancel", this.#onPointerUp);
+    if (pointerState?.target?.hasPointerCapture?.(pointerState.pointerId)) {
+      try {
+        pointerState.target.releasePointerCapture(pointerState.pointerId);
+      } catch {}
+    }
     if (this.#raf) {
       cancelAnimationFrame(this.#raf);
       this.#raf = 0;
@@ -586,18 +630,30 @@ class AwwWindow extends HTMLElement {
   }
   #onPointerMove = (event) => {
     if (this.#drag) {
+      if (event.pointerId !== this.#drag.pointerId)
+        return;
       this.#drag.currentX = event.clientX;
       this.#drag.currentY = event.clientY;
       this.#scheduleFrame();
       return;
     }
     if (this.#resize) {
+      if (event.pointerId !== this.#resize.pointerId)
+        return;
       this.#resize.currentX = event.clientX;
       this.#resize.currentY = event.clientY;
       this.#scheduleFrame();
     }
   };
-  #onPointerUp = () => {
+  #onPointerUp = (event) => {
+    const pointerState = this.#drag || this.#resize;
+    if (pointerState && event.pointerId !== pointerState.pointerId)
+      return;
+    if (pointerState?.target?.hasPointerCapture?.(pointerState.pointerId)) {
+      try {
+        pointerState.target.releasePointerCapture(pointerState.pointerId);
+      } catch {}
+    }
     if (this.#drag) {
       const dx = this.#drag.currentX - this.#drag.startX;
       const dy = this.#drag.currentY - this.#drag.startY;
@@ -636,29 +692,13 @@ class AwwWindow extends HTMLElement {
     const { edge, startRect, startX, startY, currentX, currentY } = this.#resize;
     const dx = currentX - startX;
     const dy = currentY - startY;
-    let x = startRect.x;
-    let y = startRect.y;
-    let width = startRect.width;
-    let height = startRect.height;
-    if (edge.includes("e"))
-      width = startRect.width + dx;
-    if (edge.includes("s"))
-      height = startRect.height + dy;
-    if (edge.includes("w")) {
-      width = startRect.width - dx;
-      x = startRect.x + dx;
-    }
-    if (edge.includes("n")) {
-      height = startRect.height - dy;
-      y = startRect.y + dy;
-    }
-    const previewRect = clampRect({ x, y, width, height });
+    const previewRect = resizeRectFromEdges(startRect, edge, dx, dy);
     this.#resize.previewRect = previewRect;
     Object.assign(this.style, rectToStyle(previewRect));
   }
 }
 
-// src/core/commands.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/core/commands.js
 class CommandRegistry {
   #commands = new Map;
   register(command) {
@@ -704,7 +744,7 @@ class CommandRegistry {
   }
 }
 
-// src/components/menubar.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/menubar.js
 var MENUBAR_STYLES = css`
   :host {
     display: block;
@@ -742,8 +782,10 @@ var MENUBAR_STYLES = css`
 class AwwMenubar extends HTMLElement {
   #triggers = [];
   #menus = new Map;
+  #wiredMenus = new WeakSet;
   #activeTrigger = -1;
   #openMenuName = "";
+  #window = null;
   constructor() {
     super();
     this.commandRegistry = new CommandRegistry;
@@ -753,19 +795,18 @@ class AwwMenubar extends HTMLElement {
     shadow.querySelector("slot").addEventListener("slotchange", () => this.#refresh());
     this.addEventListener("keydown", this.#onKeyDown);
     this.addEventListener("click", this.#onClick);
-    this.addEventListener("awwbookmarklet-menu-dismiss", this.#onDismissMenu);
-    this.addEventListener("awwbookmarklet-menu-select", this.#onDismissMenu);
-    this.addEventListener("awwbookmarklet-command", this.#onRunCommand);
   }
   connectedCallback() {
     this.#refresh();
     document.addEventListener("pointerdown", this.#onDocumentPointerDown, true);
-    this.closest("awwbookmarklet-window")?.addEventListener("awwbookmarklet-window-system-menu", () => this.openFirstMenu(), {
-      passive: true
-    });
+    this.#window = this.closest("awwbookmarklet-window");
+    this.#window?.addEventListener("awwbookmarklet-window-system-menu", this.#onWindowSystemMenu);
   }
   disconnectedCallback() {
     document.removeEventListener("pointerdown", this.#onDocumentPointerDown, true);
+    this.#window?.removeEventListener("awwbookmarklet-window-system-menu", this.#onWindowSystemMenu);
+    this.#window = null;
+    this.closeAllMenus();
   }
   openFirstMenu() {
     if (!this.#triggers.length)
@@ -782,12 +823,15 @@ class AwwMenubar extends HTMLElement {
   }
   #refresh() {
     const children = [...this.children];
+    const openMenus = [...this.#menus.entries()].filter(([, menu]) => menu.isConnected && menu.parentNode !== this);
     this.#triggers = children.filter((node) => node.hasAttribute("data-menu"));
-    this.#menus.clear();
+    this.#menus = new Map(openMenus);
     for (const menu of children.filter((node) => node.tagName.toLowerCase() === "awwbookmarklet-menu")) {
       const name = menu.getAttribute("name") || "";
-      if (name)
+      if (name) {
         this.#menus.set(name, menu);
+        this.#wireMenu(menu);
+      }
     }
     this.#triggers.forEach((trigger, index) => {
       trigger.setAttribute("role", "menuitem");
@@ -803,7 +847,9 @@ class AwwMenubar extends HTMLElement {
       return;
     this.closeAllMenus();
     trigger.dataset.open = "true";
-    menu.openAt(trigger.getBoundingClientRect());
+    const overlayRoot = this.closest("awwbookmarklet-window")?.closest("awwbookmarklet-desktop-root");
+    menu.portalTo(overlayRoot);
+    menu.openAtViewportRect(trigger.getBoundingClientRect());
     this.#openMenuName = menuName;
     if (focusMenu)
       menu.focusFirst();
@@ -860,7 +906,9 @@ class AwwMenubar extends HTMLElement {
       this.#triggers[this.#activeTrigger]?.focus();
   };
   #onDocumentPointerDown = (event) => {
-    if (!this.contains(event.target))
+    const target = event.target;
+    const insideMenu = [...this.#menus.values()].some((menu) => menu.contains(target));
+    if (!this.contains(target) && !insideMenu)
       this.closeAllMenus();
   };
   #onRunCommand = (event) => {
@@ -872,9 +920,20 @@ class AwwMenubar extends HTMLElement {
       trigger: event.detail.source
     });
   };
+  #onWindowSystemMenu = () => {
+    this.openFirstMenu();
+  };
+  #wireMenu(menu) {
+    if (this.#wiredMenus.has(menu))
+      return;
+    this.#wiredMenus.add(menu);
+    menu.addEventListener("awwbookmarklet-menu-dismiss", this.#onDismissMenu);
+    menu.addEventListener("awwbookmarklet-menu-select", this.#onDismissMenu);
+    menu.addEventListener("awwbookmarklet-command", this.#onRunCommand);
+  }
 }
 
-// src/components/menu.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/menu.js
 var MENU_STYLES = css`
   :host {
     position: fixed;
@@ -949,6 +1008,8 @@ class AwwMenu extends HTMLElement {
   #activeIndex = -1;
   #typeahead = "";
   #typeaheadTimer = 0;
+  #restoreParent = null;
+  #restoreNextSibling = null;
   constructor() {
     super();
     const shadow = this.attachShadow({ mode: "open" });
@@ -956,30 +1017,57 @@ class AwwMenu extends HTMLElement {
     shadow.innerHTML = `<div id="panel" part="panel" role="menu"><slot></slot></div>`;
     this.addEventListener("keydown", this.#onKeyDown);
     this.addEventListener("click", this.#onClick);
+    shadow.querySelector("slot").addEventListener("slotchange", () => this.#resetItems());
   }
   connectedCallback() {
     this.hidden = false;
     this.setAttribute("aria-hidden", this.hasAttribute("open") ? "false" : "true");
-    this.shadowRoot.querySelector("slot").addEventListener("slotchange", () => this.#resetItems());
     this.#resetItems();
+  }
+  disconnectedCallback() {
+    clearTimeout(this.#typeaheadTimer);
   }
   getItems() {
     return [...this.children].filter(isMenuItem);
   }
-  openAt(anchorRect) {
+  portalTo(container) {
+    if (!container || this.parentNode === container)
+      return;
+    if (!this.#restoreParent) {
+      this.#restoreParent = this.parentNode;
+      this.#restoreNextSibling = this.nextSibling;
+    }
+    container.append(this);
+  }
+  restorePortal() {
+    if (!this.#restoreParent)
+      return;
+    const parent = this.#restoreParent;
+    const nextSibling = this.#restoreNextSibling?.parentNode === parent ? this.#restoreNextSibling : null;
+    this.#restoreParent = null;
+    this.#restoreNextSibling = null;
+    if (parent.isConnected)
+      parent.insertBefore(this, nextSibling);
+  }
+  openAtViewportRect(anchorRect) {
+    this.style.left = "-9999px";
+    this.style.top = "-9999px";
+    this.setAttribute("open", "");
     const width = Math.max(200, this.offsetWidth || 220);
-    const viewportW = window.visualViewport?.width ?? window.innerWidth;
-    const viewportH = window.visualViewport?.height ?? window.innerHeight;
+    const viewport = window.visualViewport;
+    const viewportX = viewport?.offsetLeft ?? 0;
+    const viewportY = viewport?.offsetTop ?? 0;
+    const viewportW = viewport?.width ?? window.innerWidth;
+    const viewportH = viewport?.height ?? window.innerHeight;
     const menuHeight = this.offsetHeight || Math.min(viewportH * 0.5, 240);
     let left = anchorRect.left;
     let top = anchorRect.bottom + 2;
-    if (left + width > viewportW - 6)
-      left = viewportW - width - 6;
-    if (top + menuHeight > viewportH - 6)
-      top = Math.max(6, anchorRect.top - menuHeight - 2);
-    this.style.left = `${Math.max(6, left)}px`;
-    this.style.top = `${Math.max(6, top)}px`;
-    this.setAttribute("open", "");
+    if (left + width > viewportX + viewportW - 6)
+      left = viewportX + viewportW - width - 6;
+    if (top + menuHeight > viewportY + viewportH - 6)
+      top = Math.max(viewportY + 6, anchorRect.top - menuHeight - 2);
+    this.style.left = `${Math.max(viewportX + 6, left)}px`;
+    this.style.top = `${Math.max(viewportY + 6, top)}px`;
     this.setAttribute("aria-hidden", "false");
     this.#activeIndex = -1;
   }
@@ -987,6 +1075,7 @@ class AwwMenu extends HTMLElement {
     this.removeAttribute("open");
     this.setAttribute("aria-hidden", "true");
     this.#highlight(-1);
+    this.restorePortal();
   }
   focusFirst() {
     const items = this.getItems();
@@ -1006,7 +1095,7 @@ class AwwMenu extends HTMLElement {
   }
   #onClick = (event) => {
     const target = event.target.closest("[role='menuitem']");
-    if (!target || target.hasAttribute("disabled"))
+    if (!target || !isMenuItem(target))
       return;
     const command = target.getAttribute("data-command") || "";
     if (command) {
@@ -1086,7 +1175,7 @@ class AwwMenu extends HTMLElement {
   }
 }
 
-// src/components/button.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/button.js
 var BUTTON_STYLES = css`
   :host { display: inline-block; }
 
@@ -1117,11 +1206,12 @@ class AwwButton extends HTMLElement {
     shadow.innerHTML = `<button part="control" type="button"><slot></slot></button>`;
     this.control = shadow.querySelector("button");
     this.control.addEventListener("click", (event) => {
+      event.stopPropagation();
       if (this.disabled) {
         event.preventDefault();
         return;
       }
-      this.dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true }));
+      this.dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true, cancelable: true }));
     });
   }
   get disabled() {
@@ -1135,7 +1225,7 @@ class AwwButton extends HTMLElement {
   }
 }
 
-// src/components/icon-button.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/icon-button.js
 var ICON_BUTTON_STYLES = css`
   :host { display: inline-block; }
 
@@ -1172,11 +1262,12 @@ class AwwIconButton extends HTMLElement {
     shadow.innerHTML = `<button part="control" type="button"><slot></slot></button>`;
     this.control = shadow.querySelector("button");
     this.control.addEventListener("click", (event) => {
+      event.stopPropagation();
       if (this.disabled) {
         event.preventDefault();
         return;
       }
-      this.dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true }));
+      this.dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true, cancelable: true }));
     });
   }
   get disabled() {
@@ -1190,7 +1281,7 @@ class AwwIconButton extends HTMLElement {
   }
 }
 
-// src/components/input.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/input.js
 var INPUT_STYLES = css`
   :host { display: inline-block; min-width: 140px; }
 
@@ -1218,11 +1309,13 @@ class AwwInput extends HTMLElement {
     adoptStyles(shadow, [BASE_COMPONENT_STYLES, INPUT_STYLES]);
     shadow.innerHTML = `<input part="control" />`;
     this.control = shadow.querySelector("input");
-    this.control.addEventListener("input", () => {
+    this.control.addEventListener("input", (event) => {
+      event.stopPropagation();
       this.setAttribute("value", this.control.value);
       this.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
     });
-    this.control.addEventListener("change", () => {
+    this.control.addEventListener("change", (event) => {
+      event.stopPropagation();
       this.setAttribute("value", this.control.value);
       this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     });
@@ -1231,11 +1324,21 @@ class AwwInput extends HTMLElement {
     return this.control.value;
   }
   set value(nextValue) {
-    this.setAttribute("value", nextValue);
+    this.setAttribute("value", String(nextValue ?? ""));
+  }
+  get disabled() {
+    return this.hasAttribute("disabled");
+  }
+  set disabled(value) {
+    this.toggleAttribute("disabled", Boolean(value));
   }
   attributeChangedCallback(name, _prev, next) {
     if (name === "disabled") {
       this.control.disabled = this.hasAttribute("disabled");
+      return;
+    }
+    if (name === "value") {
+      this.control.value = next ?? "";
       return;
     }
     if (next === null) {
@@ -1246,7 +1349,7 @@ class AwwInput extends HTMLElement {
   }
 }
 
-// src/components/textarea.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/textarea.js
 var TEXTAREA_STYLES = css`
   :host { display: inline-block; min-width: 220px; }
 
@@ -1275,11 +1378,13 @@ class AwwTextarea extends HTMLElement {
     adoptStyles(shadow, [BASE_COMPONENT_STYLES, TEXTAREA_STYLES]);
     shadow.innerHTML = `<textarea part="control"></textarea>`;
     this.control = shadow.querySelector("textarea");
-    this.control.addEventListener("input", () => {
+    this.control.addEventListener("input", (event) => {
+      event.stopPropagation();
       this.setAttribute("value", this.control.value);
       this.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
     });
-    this.control.addEventListener("change", () => {
+    this.control.addEventListener("change", (event) => {
+      event.stopPropagation();
       this.setAttribute("value", this.control.value);
       this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     });
@@ -1288,7 +1393,13 @@ class AwwTextarea extends HTMLElement {
     return this.control.value;
   }
   set value(nextValue) {
-    this.setAttribute("value", nextValue);
+    this.setAttribute("value", String(nextValue ?? ""));
+  }
+  get disabled() {
+    return this.hasAttribute("disabled");
+  }
+  set disabled(value) {
+    this.toggleAttribute("disabled", Boolean(value));
   }
   attributeChangedCallback(name, _prev, next) {
     if (name === "disabled") {
@@ -1307,7 +1418,7 @@ class AwwTextarea extends HTMLElement {
   }
 }
 
-// src/components/checkbox.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/checkbox.js
 var CHECKBOX_STYLES = css`
   :host { display: inline-block; }
 
@@ -1349,10 +1460,29 @@ class AwwCheckbox extends HTMLElement {
     adoptStyles(shadow, [BASE_COMPONENT_STYLES, CHECKBOX_STYLES]);
     shadow.innerHTML = `<label><input type="checkbox" part="control" /><span part="label"><slot></slot></span></label>`;
     this.control = shadow.querySelector("input");
-    this.control.addEventListener("change", () => {
+    this.control.addEventListener("change", (event) => {
+      event.stopPropagation();
       this.toggleAttribute("checked", this.control.checked);
       this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     });
+  }
+  get checked() {
+    return this.hasAttribute("checked");
+  }
+  set checked(value) {
+    this.toggleAttribute("checked", Boolean(value));
+  }
+  get disabled() {
+    return this.hasAttribute("disabled");
+  }
+  set disabled(value) {
+    this.toggleAttribute("disabled", Boolean(value));
+  }
+  get value() {
+    return this.getAttribute("value") ?? "on";
+  }
+  set value(nextValue) {
+    this.setAttribute("value", String(nextValue ?? ""));
   }
   attributeChangedCallback(name, _prev, next) {
     if (name === "checked") {
@@ -1371,7 +1501,7 @@ class AwwCheckbox extends HTMLElement {
   }
 }
 
-// src/components/radio.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/radio.js
 var RADIO_STYLES = css`
   :host { display: inline-block; }
 
@@ -1414,14 +1544,37 @@ class AwwRadio extends HTMLElement {
     adoptStyles(shadow, [BASE_COMPONENT_STYLES, RADIO_STYLES]);
     shadow.innerHTML = `<label><input type="radio" part="control" /><span part="label"><slot></slot></span></label>`;
     this.control = shadow.querySelector("input");
-    this.control.addEventListener("change", () => {
+    this.control.addEventListener("change", (event) => {
+      event.stopPropagation();
       this.toggleAttribute("checked", this.control.checked);
+      if (this.control.checked)
+        this.#uncheckRadioGroupPeers();
       this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     });
+  }
+  get checked() {
+    return this.hasAttribute("checked");
+  }
+  set checked(value) {
+    this.toggleAttribute("checked", Boolean(value));
+  }
+  get disabled() {
+    return this.hasAttribute("disabled");
+  }
+  set disabled(value) {
+    this.toggleAttribute("disabled", Boolean(value));
+  }
+  get value() {
+    return this.getAttribute("value") ?? "on";
+  }
+  set value(nextValue) {
+    this.setAttribute("value", String(nextValue ?? ""));
   }
   attributeChangedCallback(name, _prev, next) {
     if (name === "checked") {
       this.control.checked = this.hasAttribute("checked");
+      if (this.control.checked)
+        this.#uncheckRadioGroupPeers();
       return;
     }
     if (name === "disabled") {
@@ -1434,9 +1587,20 @@ class AwwRadio extends HTMLElement {
     }
     this.control.setAttribute(name, next);
   }
+  #uncheckRadioGroupPeers() {
+    const name = this.getAttribute("name");
+    if (!name)
+      return;
+    const root = this.getRootNode();
+    const peers = root.querySelectorAll?.("awwbookmarklet-radio") ?? [];
+    for (const peer of peers) {
+      if (peer !== this && peer.getAttribute("name") === name)
+        peer.removeAttribute("checked");
+    }
+  }
 }
 
-// src/components/select.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/select.js
 var SELECT_STYLES = css`
   :host { display: inline-block; min-width: 160px; }
 
@@ -1471,7 +1635,7 @@ var SELECT_STYLES = css`
   select:focus-visible { outline: none; box-shadow: var(--_ring); }
   select:disabled { opacity: 0.65; }
 `;
-var MIRRORED3 = ["disabled", "name"];
+var MIRRORED3 = ["disabled", "name", "value"];
 
 class AwwSelect extends HTMLElement {
   static observedAttributes = MIRRORED3;
@@ -1482,7 +1646,9 @@ class AwwSelect extends HTMLElement {
     adoptStyles(shadow, [BASE_COMPONENT_STYLES, SELECT_STYLES]);
     shadow.innerHTML = `<div class="wrap"><select part="control"></select><span class="arrow" aria-hidden="true"></span></div>`;
     this.control = shadow.querySelector("select");
-    this.control.addEventListener("change", () => {
+    this.control.addEventListener("change", (event) => {
+      event.stopPropagation();
+      this.setAttribute("value", this.control.value);
       this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     });
   }
@@ -1495,13 +1661,29 @@ class AwwSelect extends HTMLElement {
     this.#observer?.disconnect();
     this.#observer = null;
   }
+  get value() {
+    return this.control.value;
+  }
+  set value(nextValue) {
+    this.setAttribute("value", String(nextValue ?? ""));
+  }
+  get disabled() {
+    return this.hasAttribute("disabled");
+  }
+  set disabled(value) {
+    this.toggleAttribute("disabled", Boolean(value));
+  }
   attributeChangedCallback(name, _prev, next) {
-    if (next === null) {
-      this.control.removeAttribute(name);
-      return;
-    }
     if (name === "disabled") {
       this.control.disabled = this.hasAttribute("disabled");
+      return;
+    }
+    if (name === "value") {
+      this.control.value = next ?? "";
+      return;
+    }
+    if (next === null) {
+      this.control.removeAttribute(name);
       return;
     }
     this.control.setAttribute(name, next);
@@ -1517,10 +1699,16 @@ class AwwSelect extends HTMLElement {
       clone.selected = option.selected;
       this.control.append(clone);
     }
+    const value = this.getAttribute("value");
+    if (value !== null) {
+      this.control.value = value;
+    } else if (this.control.selectedIndex >= 0) {
+      this.setAttribute("value", this.control.value);
+    }
   }
 }
 
-// src/components/range.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/range.js
 var RANGE_STYLES = css`
   :host { display: inline-block; min-width: 160px; }
 
@@ -1542,14 +1730,36 @@ class AwwRange extends HTMLElement {
     adoptStyles(shadow, [BASE_COMPONENT_STYLES, RANGE_STYLES]);
     shadow.innerHTML = `<input type="range" part="control" />`;
     this.control = shadow.querySelector("input");
-    this.control.addEventListener("input", () => {
+    this.control.addEventListener("input", (event) => {
+      event.stopPropagation();
       this.setAttribute("value", this.control.value);
       this.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
     });
+    this.control.addEventListener("change", (event) => {
+      event.stopPropagation();
+      this.setAttribute("value", this.control.value);
+      this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+    });
+  }
+  get value() {
+    return this.control.value;
+  }
+  set value(nextValue) {
+    this.setAttribute("value", String(nextValue ?? ""));
+  }
+  get disabled() {
+    return this.hasAttribute("disabled");
+  }
+  set disabled(value) {
+    this.toggleAttribute("disabled", Boolean(value));
   }
   attributeChangedCallback(name, _prev, next) {
     if (name === "disabled") {
       this.control.disabled = this.hasAttribute("disabled");
+      return;
+    }
+    if (name === "value") {
+      this.control.value = next ?? "";
       return;
     }
     if (next === null) {
@@ -1560,7 +1770,7 @@ class AwwRange extends HTMLElement {
   }
 }
 
-// src/components/progress.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/progress.js
 var PROGRESS_STYLES = css`
   :host { display: inline-block; min-width: 160px; }
 
@@ -1584,7 +1794,33 @@ class AwwProgress extends HTMLElement {
     shadow.innerHTML = `<progress part="control"></progress>`;
     this.control = shadow.querySelector("progress");
   }
+  get value() {
+    return this.control.value;
+  }
+  set value(nextValue) {
+    this.setAttribute("value", String(nextValue ?? ""));
+  }
+  get max() {
+    return this.control.max;
+  }
+  set max(nextValue) {
+    this.setAttribute("max", String(nextValue ?? ""));
+  }
   attributeChangedCallback(name, _prev, next) {
+    if (name === "value") {
+      if (next === null)
+        this.control.removeAttribute("value");
+      else
+        this.control.value = Number(next);
+      return;
+    }
+    if (name === "max") {
+      if (next === null)
+        this.control.removeAttribute("max");
+      else
+        this.control.max = Number(next);
+      return;
+    }
     if (next === null) {
       this.control.removeAttribute(name);
       return;
@@ -1593,7 +1829,7 @@ class AwwProgress extends HTMLElement {
   }
 }
 
-// src/components/tabs.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/tabs.js
 var TABS_STYLES = css`
   :host { display: block; border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3); background: var(--awwbookmarklet-panel-bg, #f8fafc); }
 
@@ -1626,6 +1862,7 @@ var TABS_STYLES = css`
 var TAB_PANEL_STYLES = css`
   :host { display: block; }
 `;
+var nextTabsId = 0;
 
 class AwwTabPanel extends HTMLElement {
   constructor() {
@@ -1641,8 +1878,12 @@ class AwwTabs extends HTMLElement {
   #panels = [];
   #selected = 0;
   #observer = null;
+  #internalUpdate = false;
+  #idPrefix;
   constructor() {
     super();
+    nextTabsId += 1;
+    this.#idPrefix = `awwbookmarklet-tabs-${nextTabsId}`;
     const shadow = this.attachShadow({ mode: "open" });
     adoptStyles(shadow, [BASE_COMPONENT_STYLES, TABS_STYLES]);
     shadow.innerHTML = `<div id="tablist" role="tablist" part="tablist"></div><div id="panels" part="panels"><slot></slot></div>`;
@@ -1651,7 +1892,10 @@ class AwwTabs extends HTMLElement {
   }
   connectedCallback() {
     this.#refresh();
-    this.#observer = new MutationObserver(() => this.#refresh());
+    this.#observer = new MutationObserver(() => {
+      if (!this.#internalUpdate)
+        this.#refresh();
+    });
     this.#observer.observe(this, { childList: true, attributes: true, subtree: true, attributeFilter: ["label", "selected"] });
   }
   disconnectedCallback() {
@@ -1659,8 +1903,9 @@ class AwwTabs extends HTMLElement {
     this.#observer = null;
   }
   #refresh() {
-    this.#panels = [...this.querySelectorAll(TAGS.tabPanel)];
+    this.#panels = [...this.children].filter((child) => child.tagName.toLowerCase() === TAGS.tabPanel);
     if (!this.#panels.length) {
+      this.#tabs = [];
       this.shadowRoot.querySelector("#tablist").textContent = "";
       return;
     }
@@ -1671,9 +1916,9 @@ class AwwTabs extends HTMLElement {
     this.#tabs = this.#panels.map((panel, index) => {
       const tab = document.createElement("button");
       tab.type = "button";
-      tab.id = `${this.id || "tabs"}-tab-${index}`;
+      tab.id = `${this.id || this.#idPrefix}-tab-${index}`;
       tab.setAttribute("role", "tab");
-      tab.setAttribute("aria-controls", `${this.id || "tabs"}-panel-${index}`);
+      tab.setAttribute("aria-controls", `${this.id || this.#idPrefix}-panel-${index}`);
       tab.textContent = panel.getAttribute("label") || `Tab ${index + 1}`;
       tab.dataset.index = String(index);
       tab.tabIndex = index === this.#selected ? 0 : -1;
@@ -1684,6 +1929,8 @@ class AwwTabs extends HTMLElement {
     this.#applySelection(this.#selected, false);
   }
   #applySelection(index, focusTab = true) {
+    if (!this.#tabs.length)
+      return;
     this.#selected = (index + this.#tabs.length) % this.#tabs.length;
     this.#tabs.forEach((tab, tabIndex) => {
       const selected = tabIndex === this.#selected;
@@ -1692,13 +1939,20 @@ class AwwTabs extends HTMLElement {
       if (focusTab && selected)
         tab.focus();
     });
-    this.#panels.forEach((panel, panelIndex) => {
-      panel.toggleAttribute("selected", panelIndex === this.#selected);
-      panel.hidden = panelIndex !== this.#selected;
-      panel.id = `${this.id || "tabs"}-panel-${panelIndex}`;
-      panel.setAttribute("role", "tabpanel");
-      panel.setAttribute("aria-labelledby", `${this.id || "tabs"}-tab-${panelIndex}`);
-    });
+    this.#internalUpdate = true;
+    try {
+      this.#panels.forEach((panel, panelIndex) => {
+        panel.toggleAttribute("selected", panelIndex === this.#selected);
+        panel.hidden = panelIndex !== this.#selected;
+        panel.id = `${this.id || this.#idPrefix}-panel-${panelIndex}`;
+        panel.setAttribute("role", "tabpanel");
+        panel.setAttribute("aria-labelledby", `${this.id || this.#idPrefix}-tab-${panelIndex}`);
+      });
+    } finally {
+      queueMicrotask(() => {
+        this.#internalUpdate = false;
+      });
+    }
   }
   #onClick = (event) => {
     const tab = event.target.closest("button[role='tab']");
@@ -1731,7 +1985,7 @@ class AwwTabs extends HTMLElement {
   };
 }
 
-// src/components/listbox.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/listbox.js
 var LISTBOX_STYLES = css`
   :host { display: block; }
 
@@ -1756,15 +2010,26 @@ var LISTBOX_STYLES = css`
     color: var(--awwbookmarklet-selection-fg, #f2f8ff);
     border-color: var(--awwbookmarklet-border-strong, #232a33);
   }
+
+  ::slotted([role="option"][aria-disabled="true"]) {
+    opacity: 0.55;
+  }
 `;
+var nextListboxId = 0;
+function isEnabledOption(item) {
+  return item.getAttribute("role") === "option" && item.getAttribute("aria-disabled") !== "true";
+}
 
 class AwwListbox extends HTMLElement {
   #options = [];
   #selected = -1;
   #typeahead = "";
   #typeaheadTimer = 0;
+  #idPrefix;
   constructor() {
     super();
+    nextListboxId += 1;
+    this.#idPrefix = `awwbookmarklet-listbox-${nextListboxId}`;
     const shadow = this.attachShadow({ mode: "open" });
     adoptStyles(shadow, [BASE_COMPONENT_STYLES, LISTBOX_STYLES]);
     shadow.innerHTML = `<div id="list" role="listbox" part="list" tabindex="0"><slot></slot></div>`;
@@ -1776,9 +2041,16 @@ class AwwListbox extends HTMLElement {
     this.#refresh();
   }
   #refresh() {
-    this.#options = [...this.children].filter((item) => item.getAttribute("role") === "option");
-    if (!this.#options.length)
+    this.#options = [...this.children].filter(isEnabledOption);
+    if (!this.#options.length) {
+      this.#selected = -1;
+      this.shadowRoot.querySelector("#list").removeAttribute("aria-activedescendant");
       return;
+    }
+    this.#options.forEach((option, index) => {
+      if (!option.id)
+        option.id = `${this.#idPrefix}-option-${index}`;
+    });
     this.#selected = this.#options.findIndex((item) => item.getAttribute("aria-selected") === "true");
     if (this.#selected < 0)
       this.#selected = 0;
@@ -1793,6 +2065,7 @@ class AwwListbox extends HTMLElement {
       option.setAttribute("aria-selected", selected ? "true" : "false");
       option.dataset.selected = selected ? "true" : "false";
     });
+    this.shadowRoot.querySelector("#list").setAttribute("aria-activedescendant", this.#options[this.#selected].id);
     if (emit) {
       const selectedOption = this.#options[this.#selected];
       this.dispatchEvent(new CustomEvent("change", {
@@ -1807,7 +2080,7 @@ class AwwListbox extends HTMLElement {
   }
   #onClick = (event) => {
     const target = event.target.closest("[role='option']");
-    if (!target)
+    if (!target || target.getAttribute("aria-disabled") === "true")
       return;
     const index = this.#options.indexOf(target);
     if (index !== -1)
@@ -1849,7 +2122,7 @@ class AwwListbox extends HTMLElement {
   };
 }
 
-// src/components/group.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/group.js
 var GROUP_STYLES = css`
   :host { display: block; }
 
@@ -1893,7 +2166,7 @@ class AwwGroup extends HTMLElement {
   }
 }
 
-// src/components/panel.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/panel.js
 var PANEL_STYLES = css`
   :host {
     display: block;
@@ -1912,7 +2185,7 @@ class AwwPanel extends HTMLElement {
   }
 }
 
-// src/components/statusbar.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/statusbar.js
 var STATUS_STYLES = css`
   :host {
     display: block;
@@ -1948,7 +2221,7 @@ class AwwStatusbar extends HTMLElement {
   }
 }
 
-// src/components/register-all.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/register-all.js
 function registerAllComponents() {
   defineMany([
     [TAGS.desktopRoot, AwwDesktopRoot],
@@ -1973,7 +2246,7 @@ function registerAllComponents() {
   ]);
 }
 
-// src/themes/default-theme.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/themes/default-theme.js
 var DEFAULT_THEME = {
   [PUBLIC_TOKENS.workspaceBg]: "rgba(0, 0, 0, 0)",
   [PUBLIC_TOKENS.windowBg]: "#eef1f5",
@@ -2003,7 +2276,7 @@ var DEFAULT_THEME = {
   [PUBLIC_TOKENS.titleHeight]: "32px"
 };
 
-// src/core/theme.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/core/theme.js
 class ThemeService {
   #theme;
   constructor(theme = DEFAULT_THEME) {
@@ -2024,7 +2297,7 @@ class ThemeService {
 }
 var defaultThemeService = new ThemeService(DEFAULT_THEME);
 
-// src/core/window-manager.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/core/window-manager.js
 class WindowManager {
   #windows = new Set;
   #activeWindow = null;
@@ -2096,7 +2369,7 @@ class WindowManager {
   }
 }
 
-// src/core/runtime.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/core/runtime.js
 function getGlobalMap() {
   if (!globalThis[GLOBAL_SYMBOLS.rootsByVersion]) {
     globalThis[GLOBAL_SYMBOLS.rootsByVersion] = new Map;
@@ -2130,7 +2403,7 @@ function acquireDesktopRoot(owner = "default-owner", version = FRAMEWORK_VERSION
     roots.set(version, record);
   }
   record.owners.add(owner);
-  globalThis[GLOBAL_SYMBOLS.primaryRoot] = record.root;
+  globalThis[GLOBAL_SYMBOLS.lastAcquiredRoot] = record.root;
   globalThis[GLOBAL_SYMBOLS.version] = version;
   return record;
 }
@@ -2144,8 +2417,8 @@ function releaseDesktopRoot(owner = "default-owner", version = FRAMEWORK_VERSION
     return;
   record.destroy();
   roots.delete(version);
-  if (globalThis[GLOBAL_SYMBOLS.primaryRoot] === record.root) {
-    delete globalThis[GLOBAL_SYMBOLS.primaryRoot];
+  if (globalThis[GLOBAL_SYMBOLS.lastAcquiredRoot] === record.root) {
+    delete globalThis[GLOBAL_SYMBOLS.lastAcquiredRoot];
   }
 }
 function emergencyTeardown(version = FRAMEWORK_VERSION) {
@@ -2155,7 +2428,7 @@ function emergencyTeardown(version = FRAMEWORK_VERSION) {
       record2.destroy();
       roots.delete(key);
     }
-    delete globalThis[GLOBAL_SYMBOLS.primaryRoot];
+    delete globalThis[GLOBAL_SYMBOLS.lastAcquiredRoot];
     return;
   }
   const record = roots.get(version);
@@ -2163,12 +2436,12 @@ function emergencyTeardown(version = FRAMEWORK_VERSION) {
     return;
   record.destroy();
   roots.delete(version);
-  if (globalThis[GLOBAL_SYMBOLS.primaryRoot] === record.root) {
-    delete globalThis[GLOBAL_SYMBOLS.primaryRoot];
+  if (globalThis[GLOBAL_SYMBOLS.lastAcquiredRoot] === record.root) {
+    delete globalThis[GLOBAL_SYMBOLS.lastAcquiredRoot];
   }
 }
 
-// src/demo/example-tool.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/demo/example-tool.js
 function iconPlus() {
   return `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="square"/></svg>`;
 }
@@ -2201,6 +2474,7 @@ function buildExampleToolWindow({ title = "Page Extraction Tool" } = {}) {
   const toolbar = document.createElement("div");
   toolbar.slot = "toolbar";
   toolbar.style.display = "flex";
+  toolbar.style.flexWrap = "wrap";
   toolbar.style.gap = "8px";
   toolbar.style.padding = "6px 8px";
   toolbar.style.alignItems = "center";
@@ -2217,7 +2491,7 @@ function buildExampleToolWindow({ title = "Page Extraction Tool" } = {}) {
   body.style.gap = "12px";
   body.innerHTML = `
     <${TAGS.group} caption="Target">
-      <div style="display:grid; grid-template-columns: 1fr auto auto; gap:8px; align-items:center;">
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:8px; align-items:center;">
         <${TAGS.input} id="target-input" placeholder="CSS selector or current selection"></${TAGS.input}>
         <${TAGS.button} id="target-refresh">Refresh</${TAGS.button}>
         <${TAGS.button} id="target-pick">Pick Again</${TAGS.button}>
@@ -2225,7 +2499,7 @@ function buildExampleToolWindow({ title = "Page Extraction Tool" } = {}) {
     </${TAGS.group}>
 
     <${TAGS.panel}>
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
         <${TAGS.group} caption="Options">
           <div style="display:grid; gap:8px;">
             <${TAGS.checkbox} checked id="opt-trim">Trim whitespace</${TAGS.checkbox}>
@@ -2256,7 +2530,7 @@ function buildExampleToolWindow({ title = "Page Extraction Tool" } = {}) {
     </${TAGS.panel}>
 
     <${TAGS.group} caption="Actions">
-      <div style="display:grid; grid-template-columns: minmax(150px, 1fr) 1fr; gap:12px; align-items:center;">
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; align-items:center;">
         <div style="display:grid; gap:8px;">
           <label style="display:grid; gap:4px;">Preset
             <${TAGS.select} id="preset-select">
@@ -2271,7 +2545,7 @@ function buildExampleToolWindow({ title = "Page Extraction Tool" } = {}) {
         </div>
         <div style="display:grid; gap:8px;">
           <${TAGS.progress} id="run-progress" value="0" max="100"></${TAGS.progress}>
-          <div style="display:flex; justify-content:flex-end; gap:8px;">
+          <div style="display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px;">
             <${TAGS.button} id="action-run">Run</${TAGS.button}>
             <${TAGS.button} id="action-close">Close</${TAGS.button}>
           </div>
@@ -2291,10 +2565,8 @@ function buildExampleToolWindow({ title = "Page Extraction Tool" } = {}) {
     body.dataset.mode = mode;
     if (mode === "Compact") {
       body.style.gap = "8px";
-      win.style.minWidth = "300px";
     } else {
       body.style.gap = "12px";
-      win.style.minWidth = "320px";
     }
   };
   const close = () => win.requestClose();
@@ -2337,12 +2609,12 @@ function buildExampleToolWindow({ title = "Page Extraction Tool" } = {}) {
     });
   });
   body.querySelector("#confidence-range").addEventListener("input", (event) => {
-    statusCount().textContent = `${event.target.getAttribute("value")}% confidence`;
+    statusCount().textContent = `${event.target.value}% confidence`;
   });
   return win;
 }
 
-// src/bookmarklet/index.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/bookmarklet/index.js
 var serial = 0;
 function nextOwner(prefix = "bookmarklet-tool") {
   serial += 1;
@@ -2356,8 +2628,15 @@ function openBookmarkletWindow(builder, { ownerPrefix = "bookmarklet-tool", rect
   if (rect)
     win.setRect(rect);
   record.root.append(win);
-  const release = () => releaseDesktopRoot(owner);
+  let released = false;
+  const release = () => {
+    if (released)
+      return;
+    released = true;
+    releaseDesktopRoot(owner);
+  };
   win.addEventListener("awwbookmarklet-window-closed", release, { once: true });
+  win.addEventListener("awwbookmarklet-window-disconnected", release, { once: true });
   win.addEventListener("awwbookmarklet-window-close-request", () => {
     queueMicrotask(() => {
       if (!win.isConnected)
@@ -2375,16 +2654,18 @@ function shutdownAll() {
   emergencyTeardown("*");
 }
 registerAllComponents();
-globalThis.awwbookmarklet = {
+globalThis.awwtools = globalThis.awwtools || {};
+globalThis.awwtools.bookmarkletUi = {
   openWindow: openBookmarkletWindow,
   bootstrapExampleTool,
   shutdownAll
 };
+globalThis.awwbookmarklet = globalThis.awwtools.bookmarkletUi;
 export {
   shutdownAll,
   openBookmarkletWindow,
   bootstrapExampleTool
 };
 
-//# debugId=CB4274FCB721BC1464756E2164756E21
+//# debugId=47F3945D9AF49B5864756E2164756E21
 //# sourceMappingURL=index.js.map
