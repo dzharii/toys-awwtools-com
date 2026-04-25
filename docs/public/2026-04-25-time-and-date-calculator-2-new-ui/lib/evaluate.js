@@ -26,7 +26,7 @@ import { createBusinessCalendar, createDefaultBusinessCalendar, isBusinessDay } 
 import { formatValue, getValueType } from "./format.js";
 import { TRANSFORMS } from "./keywords.js";
 
-const TIME_UNITS_TO_MILLISECONDS = {
+const TIMELINE_UNIT_MILLISECONDS = {
   hours: 60 * 60 * 1000,
   minutes: 60 * 1000,
   seconds: 1000,
@@ -47,11 +47,11 @@ function evalError(runtime, code, message, span, hints, extras) {
   return createEvaluationError(runtime.input, code, message, spanOrZero(span), hints, extras);
 }
 
-function withZoneHint(value, zoneHint) {
+function withPlainDateTimeZoneId(value, plainDateTimeZoneId) {
   if (value?.kind !== "PlainDate") {
     return value;
   }
-  return { ...value, zoneHint };
+  return { ...value, plainDateTimeZoneId };
 }
 
 function normalizeNowValue(nowValue, contextTimeZoneId) {
@@ -62,7 +62,7 @@ function normalizeNowValue(nowValue, contextTimeZoneId) {
   if (typeof nowValue === "string") {
     const parsed = parseIsoTimestampLiteral(nowValue);
     if (!parsed) {
-      return createZonedDateTime(Date.now(), contextTimeZoneId);
+      return null;
     }
     const value = buildZonedFromTimestampParts(parsed, contextTimeZoneId);
     return createZonedDateTime(value.epochMs, contextTimeZoneId);
@@ -76,7 +76,7 @@ function normalizeNowValue(nowValue, contextTimeZoneId) {
     return createZonedDateTime(nowValue, contextTimeZoneId);
   }
 
-  return createZonedDateTime(Date.now(), contextTimeZoneId);
+  return null;
 }
 
 export function createDefaultContext(overrides = {}) {
@@ -87,9 +87,11 @@ export function createDefaultContext(overrides = {}) {
   const calendarInput = overrides.businessCalendar || createDefaultBusinessCalendar();
   const businessCalendar = calendarInput.weekendDays ? createBusinessCalendar(calendarInput) : calendarInput;
 
+  const hasNowOverride = Object.hasOwn(overrides, "now");
+
   return {
     timeZoneId: validZone,
-    now: overrides.now || (() => createZonedDateTime(Date.now(), validZone)),
+    now: hasNowOverride ? overrides.now : () => createZonedDateTime(Date.now(), validZone),
     businessCalendar,
     placeResolver: typeof overrides.placeResolver === "function" ? overrides.placeResolver : undefined,
     invalidTimeZoneId: validateIanaTimeZone(requestedZone) ? null : requestedZone,
@@ -144,7 +146,7 @@ function applyInModifier(runtime, value, zoneId) {
     return createZonedDateTime(value.epochMs, zoneId);
   }
   if (value?.kind === "PlainDate") {
-    return withZoneHint(value, zoneId);
+    return withPlainDateTimeZoneId(value, zoneId);
   }
 
   throw evalError(
@@ -214,12 +216,12 @@ function applyDuration(runtime, left, duration, sign, unitSpan) {
     }
 
     if (duration.unit === "businessDays") {
-      const zoneId = left.zoneHint || runtime.context.timeZoneId;
+      const zoneId = left.plainDateTimeZoneId || runtime.context.timeZoneId;
       const shifted = shiftBusinessDays(left, amount, runtime, zoneId);
-      return withZoneHint(shifted, left.zoneHint);
+      return withPlainDateTimeZoneId(shifted, left.plainDateTimeZoneId);
     }
 
-    return withZoneHint(addPlainDateCalendar(left, duration.unit, amount), left.zoneHint);
+    return withPlainDateTimeZoneId(addPlainDateCalendar(left, duration.unit, amount), left.plainDateTimeZoneId);
   }
 
   if (left?.kind === "ZonedDateTime") {
@@ -232,7 +234,7 @@ function applyDuration(runtime, left, duration, sign, unitSpan) {
     }
 
     if (TIME_UNITS.has(duration.unit)) {
-      return addZonedTimeline(left, amount * TIME_UNITS_TO_MILLISECONDS[duration.unit]);
+      return addZonedTimeline(left, amount * TIMELINE_UNIT_MILLISECONDS[duration.unit]);
     }
   }
 
@@ -323,7 +325,7 @@ function evaluateAnchor(runtime, node, functionName) {
 
   if (functionName === "startOfDay") {
     if (argument?.kind === "PlainDate") {
-      const zoneId = argument.zoneHint || runtime.context.timeZoneId;
+      const zoneId = argument.plainDateTimeZoneId || runtime.context.timeZoneId;
       return startOfDayForPlainDate(argument, zoneId);
     }
     if (argument?.kind === "ZonedDateTime") {
@@ -334,7 +336,7 @@ function evaluateAnchor(runtime, node, functionName) {
 
   if (functionName === "endOfDay") {
     if (argument?.kind === "PlainDate") {
-      const zoneId = argument.zoneHint || runtime.context.timeZoneId;
+      const zoneId = argument.plainDateTimeZoneId || runtime.context.timeZoneId;
       const startNext = startOfDayForPlainDate(addPlainDateDays(argument, 1), zoneId);
       return addZonedTimeline(startNext, -1);
     }
@@ -502,6 +504,18 @@ export function evaluateAst(ast, contextInput = {}, input = "") {
 
     const nowRaw = typeof context.now === "function" ? context.now() : context.now;
     const sampledNow = normalizeNowValue(nowRaw, context.timeZoneId);
+    if (!sampledNow) {
+      return {
+        ok: false,
+        error: createEvaluationError(
+          input,
+          "E_EVAL_INVALID_NOW",
+          "Configured now must be a ZonedDateTime value, ISO timestamp string, Date, or finite epoch millisecond number.",
+          { startIndex: 0, endIndex: 0 },
+          ["Provide a valid ISO timestamp like 2026-02-08T12:00:00-08:00[America/Los_Angeles]."],
+        ),
+      };
+    }
 
     const runtime = {
       input,

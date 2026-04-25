@@ -60,7 +60,6 @@ const state = {
   fixtureContext: { ...FALLBACK_FIXTURES.context },
   placeResolverMap: {},
   holidaysRows: [],
-  businessCalendarSample: null,
   lastResult: null,
   lastErrorAbsoluteSpan: null,
 };
@@ -101,7 +100,7 @@ const elements = {
   contextDump: document.getElementById("contextDump"),
 };
 
-const debouncedEvaluate = debounce(() => runEvaluation({ immediate: false }), 200);
+const debouncedEvaluate = debounce(() => runEvaluation(), 200);
 
 init().catch((error) => {
   console.error(error);
@@ -116,16 +115,15 @@ async function init() {
   buildExamples();
   bindEvents();
   syncControlsFromState();
-  runEvaluation({ immediate: true });
+  runEvaluation();
 }
 
 async function loadReferenceData() {
-  const [fixtures, zones, resolverMap, holidays, businessCalendar] = await Promise.all([
+  const [fixtures, zones, resolverMap, holidays] = await Promise.all([
     loadJson(`${DATA_ROOT}/expression_fixtures.sample.json`, FALLBACK_FIXTURES),
     loadText(`${DATA_ROOT}/iana_zones_subset.sample.txt`, FALLBACK_ZONES.join("\n")),
     loadJson(`${DATA_ROOT}/place_resolver_min.sample.json`, {}),
     loadJson(`${DATA_ROOT}/holidays_us_2026_nager.sample.json`, []),
-    loadJson(`${DATA_ROOT}/business_calendar.sample.json`, null),
   ]);
 
   state.fixtureTests = Array.isArray(fixtures.tests) && fixtures.tests.length > 0 ? fixtures.tests : FALLBACK_FIXTURES.tests;
@@ -139,7 +137,6 @@ async function loadReferenceData() {
 
   state.placeResolverMap = resolverMap && typeof resolverMap === "object" ? resolverMap : {};
   state.holidaysRows = Array.isArray(holidays) ? holidays : [];
-  state.businessCalendarSample = businessCalendar;
 }
 
 function applyInitialDefaults() {
@@ -185,7 +182,7 @@ function bindEvents() {
   elements.expressionInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       markEvaluating();
-      requestAnimationFrame(() => runEvaluation({ immediate: true }));
+      requestAnimationFrame(() => runEvaluation());
     }
 
     if (event.key === "Escape") {
@@ -199,32 +196,32 @@ function bindEvents() {
     state.timeZoneId = elements.timeZoneInput.value.trim();
     validateTimeZoneInput();
     persistState();
-    runEvaluation({ immediate: true });
+    runEvaluation();
   });
 
   elements.nowModeSelect.addEventListener("change", () => {
     state.nowMode = elements.nowModeSelect.value;
     persistState();
-    runEvaluation({ immediate: true });
+    runEvaluation();
   });
 
   elements.calendarModeSelect.addEventListener("change", () => {
     state.businessCalendarMode = elements.calendarModeSelect.value;
     persistState();
-    runEvaluation({ immediate: true });
+    runEvaluation();
   });
 
   elements.resolverToggle.addEventListener("change", () => {
     state.resolverEnabled = elements.resolverToggle.checked;
     persistState();
-    runEvaluation({ immediate: true });
+    runEvaluation();
   });
 
   elements.developerToggle.addEventListener("change", () => {
     state.developerDetails = elements.developerToggle.checked;
     elements.developerSection.hidden = !state.developerDetails;
     persistState();
-    runEvaluation({ immediate: true });
+    runEvaluation();
   });
 
   elements.errorMessageButton.addEventListener("click", () => {
@@ -237,7 +234,7 @@ function bindEvents() {
   });
 }
 
-function runEvaluation({ immediate }) {
+function runEvaluation() {
   const lineInfo = getFirstNonEmptyLine(elements.expressionInput.value);
   if (!lineInfo) {
     state.lastResult = null;
@@ -531,7 +528,7 @@ function selectExample(example) {
   elements.expressionInput.value = example.expr;
   elements.expressionInput.focus();
   persistState();
-  runEvaluation({ immediate: true });
+  runEvaluation();
 }
 
 function getSelectedFixture() {

@@ -1,6 +1,6 @@
-Pull request title: Build a deterministic vanilla date/time expression library and demo calculator for fast, trustworthy date math.
+Pull request title: Build a fixed-context vanilla date/time expression library and demo calculator for fast, trustworthy date math.
 
-Users now get a **deterministic** date/time calculator that gives immediate, reliable results for common expressions like date shifts, anchors, business-day math, and zone changes, with precise span-based errors that make mistakes easy to fix.
+Users now get a **fixed-context** date/time calculator that gives immediate, reliable results for common expressions like date shifts, anchors, business-day math, and zone changes, with precise span-based errors that make mistakes easy to fix.
 
 This change delivers that value by separating language semantics into a reusable core library and keeping the browser UI as a thin consumer, so parsing, evaluation, formatting, and diagnostics are consistent across developer and end-user workflows.
 
@@ -15,3 +15,14 @@ The implementation adds a full expression engine under `lib/` and a production-s
 The UI in `app/main.js` wires context controls, local fixture loading, debounced evaluation, and developer diagnostics directly to library outputs. Notable functions include `runEvaluation` for first-non-empty-line execution, `renderEditorHighlight` for exact span visualization, and `buildEvaluationOptions` for explicit context mapping without duplicating language rules in the front end.
 
 This pull request also includes fixture-driven verification using the provided sample reference data, ensuring the delivered behavior matches expected outcomes for core expressions, error codes, and DST boundary cases.
+
+## Testing
+
+Run the core library test suite with Bun:
+
+```bash
+bun test
+bun test --coverage
+```
+
+Regression test failures are signals that observable core functionality changed. Treat each failure as something to investigate and resolve, but not as proof that the change is automatically wrong: if a breaking behavior change is truly required, update the affected fixture or assertion deliberately and document why.

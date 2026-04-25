@@ -1,5 +1,5 @@
 import { createParseError } from "./errors.js";
-import { foldCase, isWhitespace } from "./keywords.js";
+import { foldCase, isIdentifierPart, isIdentifierStart, isWhitespace } from "./keywords.js";
 
 const TIMESTAMP_RE =
   /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?(?:\[[A-Za-z_][A-Za-z0-9_./+-]*\])?)/;
@@ -16,14 +16,6 @@ const SIMPLE_TOKENS = new Map([
   ["<", "LT"],
   [">", "GT"],
 ]);
-
-function isWordStart(ch) {
-  return /[A-Za-z_]/.test(ch);
-}
-
-function isWordPart(ch) {
-  return /[A-Za-z0-9_./]/.test(ch);
-}
 
 function matchFrom(regex, input, index) {
   const slice = input.slice(index);
@@ -115,10 +107,10 @@ export function tokenize(input) {
       continue;
     }
 
-    if (isWordStart(ch)) {
+    if (isIdentifierStart(ch)) {
       const start = i;
       i += 1;
-      while (i < source.length && isWordPart(source[i])) {
+      while (i < source.length && isIdentifierPart(source[i])) {
         i += 1;
       }
       const text = source.slice(start, i);

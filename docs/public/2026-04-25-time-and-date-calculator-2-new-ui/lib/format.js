@@ -8,20 +8,30 @@ export function formatDuration(duration) {
   const sign = duration.amount < 0 ? "-" : "";
   const absolute = Math.abs(duration.amount);
 
-  if (duration.unit === "days") {
-    return `${sign}P${formatNumber(absolute)}D`;
+  switch (duration.unit) {
+    case "years":
+      return `${sign}P${formatNumber(absolute)}Y`;
+    case "months":
+      return `${sign}P${formatNumber(absolute)}M`;
+    case "weeks":
+      return `${sign}P${formatNumber(absolute)}W`;
+    case "days":
+      return `${sign}P${formatNumber(absolute)}D`;
+    case "businessDays":
+      return `${sign}P${formatNumber(absolute)}BD`;
+    case "hours":
+      return `${sign}PT${formatNumber(absolute)}H`;
+    case "minutes":
+      return `${sign}PT${formatNumber(absolute)}M`;
+    case "seconds":
+      return `${sign}PT${formatNumber(absolute)}S`;
+    case "milliseconds": {
+      const seconds = (absolute / 1000).toFixed(3).replace(/\.000$/, "").replace(/0+$/, "").replace(/\.$/, "");
+      return `${sign}PT${seconds}S`;
+    }
+    default:
+      throw new TypeError(`Unsupported duration unit '${duration.unit}'.`);
   }
-
-  if (duration.unit === "seconds") {
-    return `${sign}PT${formatNumber(absolute)}S`;
-  }
-
-  if (duration.unit === "milliseconds") {
-    const seconds = (absolute / 1000).toFixed(3).replace(/\.000$/, "").replace(/0+$/, "").replace(/\.$/, "");
-    return `${sign}PT${seconds}S`;
-  }
-
-  return `${sign}P${formatNumber(absolute)}D`;
 }
 
 export function formatValue(value, transform, context = {}) {
@@ -80,7 +90,7 @@ export function getValueType(value) {
     return "PlainDate";
   }
   if (value?.kind === "ZonedDateTime") {
-    return "ZonedDateTime";
+    return value.zoneKind === "offset" ? "OffsetDateTime" : "ZonedDateTime";
   }
   if (value?.kind === "Duration") {
     return "Duration";

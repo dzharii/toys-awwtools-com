@@ -220,8 +220,8 @@ export function epochFromLocalPartsInZone(parts, timeZoneId) {
   return guess;
 }
 
-export function createPlainDate(year, month, day, zoneHint) {
-  return { kind: "PlainDate", year, month, day, zoneHint };
+export function createPlainDate(year, month, day, plainDateTimeZoneId) {
+  return { kind: "PlainDate", year, month, day, plainDateTimeZoneId };
 }
 
 export function createZonedDateTime(epochMs, timeZoneId) {
@@ -271,9 +271,9 @@ export function plainDateToEpochDay(dateValue) {
   return Math.floor(Date.UTC(dateValue.year, dateValue.month - 1, dateValue.day) / DAY_MS);
 }
 
-export function epochDayToPlainDate(epochDay, zoneHint) {
+export function epochDayToPlainDate(epochDay, plainDateTimeZoneId) {
   const date = new Date(epochDay * DAY_MS);
-  return createPlainDate(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), zoneHint);
+  return createPlainDate(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), plainDateTimeZoneId);
 }
 
 export function comparePlainDate(a, b) {
@@ -284,7 +284,7 @@ export function comparePlainDate(a, b) {
 
 export function addPlainDateDays(dateValue, days) {
   const epochDay = plainDateToEpochDay(dateValue);
-  return epochDayToPlainDate(epochDay + days, dateValue.zoneHint);
+  return epochDayToPlainDate(epochDay + days, dateValue.plainDateTimeZoneId);
 }
 
 export function addPlainDateMonths(dateValue, months) {
@@ -292,13 +292,13 @@ export function addPlainDateMonths(dateValue, months) {
   const nextYear = Math.floor(totalMonths / 12);
   const nextMonth = (totalMonths % 12 + 12) % 12 + 1;
   const clampedDay = Math.min(dateValue.day, daysInMonth(nextYear, nextMonth));
-  return createPlainDate(nextYear, nextMonth, clampedDay, dateValue.zoneHint);
+  return createPlainDate(nextYear, nextMonth, clampedDay, dateValue.plainDateTimeZoneId);
 }
 
 export function addPlainDateYears(dateValue, years) {
   const nextYear = dateValue.year + years;
   const clampedDay = Math.min(dateValue.day, daysInMonth(nextYear, dateValue.month));
-  return createPlainDate(nextYear, dateValue.month, clampedDay, dateValue.zoneHint);
+  return createPlainDate(nextYear, dateValue.month, clampedDay, dateValue.plainDateTimeZoneId);
 }
 
 export function addPlainDateCalendar(dateValue, unit, amount) {

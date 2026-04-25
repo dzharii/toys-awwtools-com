@@ -21,8 +21,9 @@ export function createBusinessCalendar(input = {}) {
   }
 
   const weekendDays = new Set();
-  if (Array.isArray(input.weekendDays) && input.weekendDays.length > 0) {
-    for (const day of input.weekendDays) {
+  const weekendInput = input.weekendDays instanceof Set ? [...input.weekendDays] : input.weekendDays;
+  if (Array.isArray(weekendInput) && weekendInput.length > 0) {
+    for (const day of weekendInput) {
       if (typeof day === "number" && day >= 0 && day <= 6) {
         weekendDays.add(day);
       } else if (typeof day === "string") {
@@ -39,8 +40,9 @@ export function createBusinessCalendar(input = {}) {
   }
 
   const holidays = new Set();
-  if (Array.isArray(input.holidays)) {
-    for (const value of input.holidays) {
+  const holidayInput = input.holidays instanceof Set ? [...input.holidays] : input.holidays;
+  if (Array.isArray(holidayInput)) {
+    for (const value of holidayInput) {
       if (typeof value === "string") {
         holidays.add(value);
       } else if (value && typeof value.date === "string") {
