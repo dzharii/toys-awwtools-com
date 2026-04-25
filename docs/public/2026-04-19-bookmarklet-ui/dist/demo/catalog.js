@@ -34,7 +34,11 @@ var TAGS = {
   card: "awwbookmarklet-card",
   richPreview: "awwbookmarklet-rich-preview",
   browserPanel: "awwbookmarklet-browser-panel",
-  manualCopy: "awwbookmarklet-manual-copy"
+  manualCopy: "awwbookmarklet-manual-copy",
+  commandPalette: "awwbookmarklet-command-palette",
+  shortcutHelp: "awwbookmarklet-shortcut-help",
+  urlPicker: "awwbookmarklet-url-picker",
+  metricCard: "awwbookmarklet-metric-card"
 };
 var GLOBAL_SYMBOLS = {
   rootsByVersion: Symbol.for("awwtools.bookmarkletUi.overlayRootsByVersion"),
@@ -84,6 +88,7 @@ var PUBLIC_TOKENS = {
   overlayShadow: "--awwbookmarklet-overlay-shadow",
   cardBg: "--awwbookmarklet-card-bg",
   cardSelectedBg: "--awwbookmarklet-card-selected-bg",
+  metricBg: "--awwbookmarklet-metric-bg",
   codeBg: "--awwbookmarklet-code-bg",
   codeFg: "--awwbookmarklet-code-fg",
   shadowDepth: "--awwbookmarklet-shadow-depth",
@@ -4124,6 +4129,664 @@ class AwwManualCopy extends HTMLElement {
   }
 }
 
+// src/components/command-palette.js
+var COMMAND_PALETTE_STYLES = css`
+  :host {
+    display: block;
+    min-width: min(100%, 320px);
+  }
+
+  .palette {
+    display: grid;
+    gap: var(--awwbookmarklet-space-2, 8px);
+    min-width: 0;
+  }
+
+  input {
+    width: 100%;
+    min-height: var(--awwbookmarklet-size-control-h, 30px);
+    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    background: var(--awwbookmarklet-input-bg, #fff);
+    color: var(--awwbookmarklet-input-fg, #111720);
+    padding: 0 8px;
+    font: inherit;
+  }
+
+  input:focus-visible {
+    outline: none;
+    box-shadow: var(--_ring);
+  }
+
+  .list {
+    display: grid;
+    gap: 4px;
+    max-height: 280px;
+    overflow: auto;
+  }
+
+  .command {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: start;
+    border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    background: var(--awwbookmarklet-card-bg, #fbfcfe);
+    padding: 7px 8px;
+    text-align: left;
+    color: var(--awwbookmarklet-input-fg, #111720);
+    font: inherit;
+  }
+
+  .command[aria-selected="true"] {
+    border-color: var(--awwbookmarklet-selection-bg, #1f5eae);
+    background: var(--awwbookmarklet-card-selected-bg, #e8f1ff);
+  }
+
+  .command:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .label {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .meta,
+  .shortcut {
+    color: var(--awwbookmarklet-text-muted, #586272);
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .shortcut {
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    white-space: nowrap;
+  }
+
+  .empty {
+    border: 1px dashed var(--awwbookmarklet-border-subtle, #9ba5b3);
+    color: var(--awwbookmarklet-text-muted, #586272);
+    padding: var(--awwbookmarklet-space-3, 12px);
+    text-align: center;
+  }
+`;
+
+class AwwCommandPalette extends HTMLElement {
+  static observedAttributes = ["placeholder", "empty-text"];
+  #commands = [];
+  #filtered = [];
+  #activeIndex = 0;
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, COMMAND_PALETTE_STYLES]);
+    shadow.innerHTML = `
+      <section class="palette" part="palette">
+        <input part="input" type="search" autocomplete="off" spellcheck="false" aria-label="Filter commands" />
+        <div class="list" part="list" role="listbox" aria-label="Commands"></div>
+      </section>
+    `;
+    this.input = shadow.querySelector("input");
+    this.list = shadow.querySelector(".list");
+    this.input.addEventListener("input", () => this.#filter());
+    this.input.addEventListener("keydown", (event) => this.#onKeyDown(event));
+  }
+  connectedCallback() {
+    this.#render();
+  }
+  attributeChangedCallback() {
+    this.#render();
+  }
+  get commands() {
+    return this.#commands;
+  }
+  set commands(value) {
+    this.#commands = Array.isArray(value) ? value : [];
+    this.#filter();
+  }
+  focusInput() {
+    this.input?.focus();
+  }
+  #filter() {
+    const query = this.input?.value.trim().toLowerCase() || "";
+    this.#filtered = this.#commands.filter((command) => {
+      if (!query)
+        return true;
+      return [command.label, command.group, command.shortcut, ...command.keywords || []].join(" ").toLowerCase().includes(query);
+    });
+    this.#activeIndex = Math.min(this.#activeIndex, Math.max(0, this.#filtered.length - 1));
+    this.#renderList();
+    dispatchComponentEvent(this, "awwbookmarklet-command-palette-filter", { query, count: this.#filtered.length });
+  }
+  #render() {
+    if (!this.input)
+      return;
+    this.input.placeholder = this.getAttribute("placeholder") || "Type a command";
+    this.#filter();
+  }
+  #renderList() {
+    this.list.textContent = "";
+    if (!this.#filtered.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.setAttribute("part", "empty");
+      empty.textContent = this.getAttribute("empty-text") || "No matching commands.";
+      this.list.append(empty);
+      return;
+    }
+    this.#filtered.forEach((command, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "command";
+      button.setAttribute("part", "command");
+      button.disabled = Boolean(command.disabled);
+      button.setAttribute("role", "option");
+      button.setAttribute("aria-selected", index === this.#activeIndex ? "true" : "false");
+      button.innerHTML = `
+        <span>
+          <span class="label" part="label"></span>
+          <span class="meta" part="meta"></span>
+        </span>
+        <span class="shortcut" part="shortcut"></span>
+      `;
+      button.querySelector(".label").textContent = String(command.label || command.id || "Untitled command");
+      button.querySelector(".meta").textContent = [command.group, command.description].filter(Boolean).join(" - ");
+      button.querySelector(".shortcut").textContent = String(command.shortcut || "");
+      button.addEventListener("click", () => this.#execute(command));
+      this.list.append(button);
+    });
+  }
+  #onKeyDown(event) {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const step = event.key === "ArrowDown" ? 1 : -1;
+      const count = this.#filtered.length;
+      if (!count)
+        return;
+      this.#activeIndex = (this.#activeIndex + step + count) % count;
+      this.#renderList();
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const command = this.#filtered[this.#activeIndex];
+      if (command)
+        this.#execute(command);
+    }
+  }
+  #execute(command) {
+    if (command.disabled)
+      return;
+    dispatchComponentEvent(this, "awwbookmarklet-command-palette-execute", {
+      commandId: command.id || "",
+      command,
+      source: this
+    });
+    if (typeof command.run === "function")
+      command.run(command);
+  }
+}
+
+// src/components/shortcut-help.js
+var SHORTCUT_HELP_STYLES = css`
+  :host {
+    display: block;
+    min-width: 0;
+  }
+
+  .help {
+    display: grid;
+    gap: var(--awwbookmarklet-space-2, 8px);
+  }
+
+  .group {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .group-title {
+    color: var(--awwbookmarklet-text-muted, #586272);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 12px;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: minmax(88px, max-content) minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    min-width: 0;
+    border-top: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    padding-top: 5px;
+  }
+
+  kbd {
+    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    background: var(--awwbookmarklet-surface-inset-bg, #e7ebf1);
+    padding: 2px 5px;
+    font: inherit;
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    white-space: nowrap;
+  }
+
+  .description {
+    min-width: 0;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+`;
+
+class AwwShortcutHelp extends HTMLElement {
+  static observedAttributes = ["empty-text"];
+  #shortcuts = [];
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, SHORTCUT_HELP_STYLES]);
+    shadow.innerHTML = `<section class="help" part="help"></section>`;
+    this.helpNode = shadow.querySelector(".help");
+  }
+  connectedCallback() {
+    this.#render();
+  }
+  attributeChangedCallback() {
+    this.#render();
+  }
+  get shortcuts() {
+    return this.#shortcuts;
+  }
+  set shortcuts(value) {
+    this.#shortcuts = Array.isArray(value) ? value : [];
+    this.#render();
+  }
+  #render() {
+    if (!this.helpNode)
+      return;
+    this.helpNode.textContent = "";
+    if (!this.#shortcuts.length) {
+      const empty = document.createElement("div");
+      empty.setAttribute("part", "empty");
+      empty.textContent = this.getAttribute("empty-text") || "No shortcuts available.";
+      this.helpNode.append(empty);
+      return;
+    }
+    const groups = new Map;
+    for (const item of this.#shortcuts) {
+      const group = String(item.group || "General");
+      if (!groups.has(group))
+        groups.set(group, []);
+      groups.get(group).push(item);
+    }
+    for (const [group, items] of groups) {
+      const section = document.createElement("section");
+      section.className = "group";
+      section.setAttribute("part", "group");
+      const title = document.createElement("div");
+      title.className = "group-title";
+      title.setAttribute("part", "group-title");
+      title.textContent = group;
+      section.append(title);
+      for (const item of items) {
+        const row = document.createElement("div");
+        row.className = "row";
+        row.setAttribute("part", "row");
+        const key = document.createElement("kbd");
+        key.setAttribute("part", "shortcut");
+        key.textContent = String(item.shortcut || "");
+        const description = document.createElement("div");
+        description.className = "description";
+        description.setAttribute("part", "description");
+        description.textContent = String(item.description || item.label || "");
+        row.append(key, description);
+        section.append(row);
+      }
+      this.helpNode.append(section);
+    }
+  }
+}
+
+// src/core/url.js
+var DEFAULT_SEARCH_TEMPLATE = "https://www.google.com/search?q={query}";
+var BLOCKED_PROTOCOLS = new Set(["javascript:", "data:", "file:", "chrome:", "about:"]);
+function normalizeSearchTemplate(value, fallback = DEFAULT_SEARCH_TEMPLATE) {
+  const template = String(value || "").trim();
+  if (!template || !template.includes("{query}"))
+    return fallback;
+  try {
+    const probe = template.replace("{query}", "test");
+    const url = new URL(probe);
+    if (url.protocol !== "http:" && url.protocol !== "https:")
+      return fallback;
+    return template;
+  } catch {
+    return fallback;
+  }
+}
+function buildSearchUrl(query, template = DEFAULT_SEARCH_TEMPLATE) {
+  const normalized = normalizeSearchTemplate(template);
+  return normalized.replace("{query}", encodeURIComponent(String(query ?? "").trim()));
+}
+function resolveNavigationInput(value, template = DEFAULT_SEARCH_TEMPLATE) {
+  const input = String(value ?? "").trim();
+  if (!input)
+    return { kind: "ignore", input };
+  try {
+    const parsed = new URL(input);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return { kind: "navigate_url", input, targetUrl: parsed.href };
+    }
+    if (BLOCKED_PROTOCOLS.has(parsed.protocol)) {
+      return { kind: "blocked_protocol", input, protocol: parsed.protocol };
+    }
+  } catch {}
+  if (/^[\w.-]+\.[a-z]{2,}([/:?#].*)?$/i.test(input)) {
+    try {
+      return { kind: "navigate_url", input, targetUrl: new URL(`https://${input}`).href };
+    } catch {
+      return { kind: "search", input, query: input, targetUrl: buildSearchUrl(input, template) };
+    }
+  }
+  return { kind: "search", input, query: input, targetUrl: buildSearchUrl(input, template) };
+}
+function deriveHostname(value) {
+  try {
+    return new URL(String(value ?? "").trim()).hostname;
+  } catch {
+    return "";
+  }
+}
+
+// src/components/url-picker.js
+var URL_PICKER_STYLES = css`
+  :host {
+    display: block;
+    min-width: min(100%, 260px);
+  }
+
+  .picker {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  input {
+    width: 100%;
+    min-height: var(--awwbookmarklet-size-control-h, 30px);
+    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    background: var(--awwbookmarklet-input-bg, #fff);
+    color: var(--awwbookmarklet-input-fg, #111720);
+    padding: 0 8px;
+    font: inherit;
+  }
+
+  input:focus-visible {
+    outline: none;
+    box-shadow: var(--_ring);
+  }
+
+  .list {
+    display: none;
+    max-height: 240px;
+    overflow: auto;
+    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    background: var(--awwbookmarklet-menu-bg, #f8fbff);
+  }
+
+  :host([open]) .list {
+    display: grid;
+  }
+
+  .option {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    border: 0;
+    border-bottom: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    background: transparent;
+    color: var(--awwbookmarklet-menu-fg, #0e1621);
+    padding: 7px 8px;
+    text-align: left;
+    font: inherit;
+  }
+
+  .option[aria-selected="true"] {
+    background: var(--awwbookmarklet-card-selected-bg, #e8f1ff);
+  }
+
+  .title {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .meta {
+    color: var(--awwbookmarklet-text-muted, #586272);
+    font-size: 12px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+`;
+
+class AwwUrlPicker extends HTMLElement {
+  static observedAttributes = ["value", "placeholder", "search-template", "open"];
+  #suggestions = [];
+  #activeIndex = 0;
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, URL_PICKER_STYLES]);
+    shadow.innerHTML = `
+      <section class="picker" part="picker">
+        <input part="input" type="text" autocomplete="off" spellcheck="false" aria-label="URL or search query" />
+        <div class="list" part="list" role="listbox"></div>
+      </section>
+    `;
+    this.input = shadow.querySelector("input");
+    this.list = shadow.querySelector(".list");
+    this.input.addEventListener("input", () => this.#onInput());
+    this.input.addEventListener("focus", () => this.#openIfUseful());
+    this.input.addEventListener("keydown", (event) => this.#onKeyDown(event));
+  }
+  connectedCallback() {
+    this.#sync();
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  get value() {
+    return this.input?.value || "";
+  }
+  set value(nextValue) {
+    this.setAttribute("value", String(nextValue ?? ""));
+  }
+  get suggestions() {
+    return this.#suggestions;
+  }
+  set suggestions(value) {
+    this.#suggestions = Array.isArray(value) ? value : [];
+    this.#renderList();
+  }
+  close() {
+    this.removeAttribute("open");
+  }
+  #sync() {
+    if (!this.input)
+      return;
+    const value = this.getAttribute("value") || "";
+    if (this.input.value !== value)
+      this.input.value = value;
+    this.input.placeholder = this.getAttribute("placeholder") || "Type URL or search query";
+    this.#renderList();
+  }
+  #onInput() {
+    this.setAttribute("value", this.input.value);
+    this.#activeIndex = 0;
+    this.#openIfUseful();
+    dispatchComponentEvent(this, "awwbookmarklet-url-picker-query", {
+      query: this.input.value,
+      decision: this.#decision()
+    });
+  }
+  #openIfUseful() {
+    if (this.#suggestions.length || this.input.value.trim())
+      this.setAttribute("open", "");
+  }
+  #decision() {
+    return resolveNavigationInput(this.input.value, this.getAttribute("search-template") || undefined);
+  }
+  #onKeyDown(event) {
+    if (event.key === "Escape") {
+      this.close();
+      return;
+    }
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const count = this.#visibleItems().length;
+      if (!count)
+        return;
+      const step = event.key === "ArrowDown" ? 1 : -1;
+      this.#activeIndex = (this.#activeIndex + step + count) % count;
+      this.setAttribute("open", "");
+      this.#renderList();
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const item = this.#visibleItems()[this.#activeIndex];
+      if (item)
+        this.#apply(item);
+      else
+        this.#apply({ type: "direct", decision: this.#decision() });
+    }
+  }
+  #visibleItems() {
+    const decision = this.#decision();
+    const direct = decision.kind === "ignore" || decision.kind === "blocked_protocol" ? [] : [{ type: "direct", decision }];
+    return [...direct, ...this.#suggestions];
+  }
+  #renderList() {
+    if (!this.list)
+      return;
+    this.list.textContent = "";
+    const items = this.#visibleItems();
+    items.forEach((item, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "option";
+      button.setAttribute("part", "option");
+      button.setAttribute("role", "option");
+      button.setAttribute("aria-selected", index === this.#activeIndex ? "true" : "false");
+      const title = document.createElement("span");
+      title.className = "title";
+      title.setAttribute("part", "title");
+      const meta = document.createElement("span");
+      meta.className = "meta";
+      meta.setAttribute("part", "meta");
+      if (item.type === "direct") {
+        title.textContent = item.decision.kind === "navigate_url" ? `Open ${item.decision.targetUrl}` : `Search for "${item.decision.query}"`;
+        meta.textContent = item.decision.kind === "navigate_url" ? deriveHostname(item.decision.targetUrl) : item.decision.targetUrl;
+      } else {
+        title.textContent = String(item.title || item.label || item.url || "Untitled");
+        meta.textContent = String(item.description || item.url || "");
+      }
+      button.append(title, meta);
+      button.addEventListener("click", () => this.#apply(item));
+      this.list.append(button);
+    });
+  }
+  #apply(item) {
+    const decision = item.type === "direct" ? item.decision : { kind: "navigate_url", input: item.url || "", targetUrl: item.url || "" };
+    if (decision.kind === "blocked_protocol" || decision.kind === "ignore")
+      return;
+    this.value = decision.targetUrl || "";
+    this.close();
+    dispatchComponentEvent(this, "awwbookmarklet-url-picker-apply", { item, decision, source: this });
+  }
+}
+
+// src/components/metric-card.js
+var METRIC_CARD_STYLES = css`
+  :host {
+    display: block;
+    min-width: 0;
+  }
+
+  .metric {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    border: 1px solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    background: var(--awwbookmarklet-metric-bg, var(--awwbookmarklet-surface-raised-bg, #fff));
+    padding: var(--awwbookmarklet-space-2, 8px);
+  }
+
+  .label,
+  .description {
+    color: var(--awwbookmarklet-text-muted, #586272);
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .value {
+    font-size: 22px;
+    font-weight: 750;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+
+  .delta {
+    color: var(--_fg, var(--awwbookmarklet-text-muted, #586272));
+    font-size: 12px;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  :host([compact]) .value {
+    font-size: 18px;
+  }
+
+  :host([data-tone="info"]) { --_fg: var(--awwbookmarklet-info-fg, #123d7a); --_border: var(--awwbookmarklet-info-border, #7aa6e8); }
+  :host([data-tone="success"]) { --_fg: var(--awwbookmarklet-success-fg, #195b34); --_border: var(--awwbookmarklet-success-border, #72b98b); }
+  :host([data-tone="warning"]) { --_fg: var(--awwbookmarklet-warning-fg, #6d4b00); --_border: var(--awwbookmarklet-warning-border, #d9ad3b); }
+  :host([data-tone="danger"]) { --_fg: var(--awwbookmarklet-danger-fg, #8a1f17); --_border: var(--awwbookmarklet-danger-border, #d46a60); }
+`;
+
+class AwwMetricCard extends HTMLElement {
+  static observedAttributes = ["label", "value", "description", "delta", "tone"];
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, METRIC_CARD_STYLES]);
+    shadow.innerHTML = `
+      <section class="metric" part="metric">
+        <div class="label" part="label"><slot name="label"></slot><span data-label></span></div>
+        <div class="value" part="value"><slot name="value"></slot><span data-value></span></div>
+        <div class="delta" part="delta"><slot name="delta"></slot><span data-delta></span></div>
+        <div class="description" part="description"><slot name="description"></slot><span data-description></span><slot></slot></div>
+      </section>
+    `;
+    this.labelNode = shadow.querySelector("[data-label]");
+    this.valueNode = shadow.querySelector("[data-value]");
+    this.deltaNode = shadow.querySelector("[data-delta]");
+    this.descriptionNode = shadow.querySelector("[data-description]");
+  }
+  connectedCallback() {
+    this.#sync();
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  #sync() {
+    this.dataset.tone = normalizeTone(this.getAttribute("tone"));
+    this.labelNode.textContent = this.getAttribute("label") || "";
+    this.valueNode.textContent = this.getAttribute("value") || "";
+    this.deltaNode.textContent = this.getAttribute("delta") || "";
+    this.descriptionNode.textContent = this.getAttribute("description") || "";
+  }
+}
+
 // src/components/register-all.js
 function registerAllComponents() {
   defineMany([
@@ -4160,7 +4823,11 @@ function registerAllComponents() {
     [TAGS.card, AwwCard],
     [TAGS.richPreview, AwwRichPreview],
     [TAGS.browserPanel, AwwBrowserPanel],
-    [TAGS.manualCopy, AwwManualCopy]
+    [TAGS.manualCopy, AwwManualCopy],
+    [TAGS.commandPalette, AwwCommandPalette],
+    [TAGS.shortcutHelp, AwwShortcutHelp],
+    [TAGS.urlPicker, AwwUrlPicker],
+    [TAGS.metricCard, AwwMetricCard]
   ]);
 }
 
@@ -4207,6 +4874,7 @@ var DEFAULT_THEME = {
   [PUBLIC_TOKENS.overlayShadow]: "0 18px 44px rgba(0, 0, 0, 0.24)",
   [PUBLIC_TOKENS.cardBg]: "#fbfcfe",
   [PUBLIC_TOKENS.cardSelectedBg]: "#e8f1ff",
+  [PUBLIC_TOKENS.metricBg]: "#ffffff",
   [PUBLIC_TOKENS.codeBg]: "#e8edf4",
   [PUBLIC_TOKENS.codeFg]: "#172131",
   [PUBLIC_TOKENS.shadowDepth]: "0 12px 32px rgba(0, 0, 0, 0.18)",
@@ -4755,6 +5423,56 @@ function buildWorkflowDemo() {
   wrap.querySelector("#demo-dialog-close").addEventListener("click", () => wrap.querySelector("#demo-dialog").close("demo"));
   return wrap;
 }
+function buildFieldMatrixDemo() {
+  return htmlNode(`
+    <div class="field-grid">
+      <${TAGS.field} label="Due at" help="This is the event deadline time." required>
+        <${TAGS.input} type="datetime-local" value="2026-04-25T17:30"></${TAGS.input}>
+      </${TAGS.field}>
+      <${TAGS.field} label="JPEG quality" help="Screenshot export quality." orientation="horizontal">
+        <${TAGS.input} type="number" min="1" max="100" value="82"></${TAGS.input}>
+        <span slot="suffix">%</span>
+      </${TAGS.field}>
+      <${TAGS.field} label="Reminder offset" error="Offset must be between 0 and 10080 minutes.">
+        <${TAGS.input} type="number" value="-1"></${TAGS.input}>
+        <span slot="suffix">min</span>
+      </${TAGS.field}>
+      <${TAGS.field} label="Capture mode" orientation="inline">
+        <${TAGS.select}><option selected>Visible viewport</option><option>Full page</option><option>Selected region</option></${TAGS.select}>
+      </${TAGS.field}>
+      <${TAGS.field} label="Disabled setting" help="Inherited from browser policy." disabled>
+        <${TAGS.checkbox} checked>Enable page toolbar</${TAGS.checkbox}>
+      </${TAGS.field}>
+      <${TAGS.field} label="Filename prefix">
+        <span slot="prefix">session-</span>
+        <${TAGS.input} value="research"></${TAGS.input}>
+      </${TAGS.field}>
+    </div>
+  `);
+}
+function buildFeedbackMatrixDemo() {
+  return htmlNode(`
+    <div class="demo-stack">
+      <div class="demo-row">
+        <${TAGS.statusLine}>Idle</${TAGS.statusLine}>
+        <${TAGS.statusLine} tone="info" busy>Loading suggestions</${TAGS.statusLine}>
+        <${TAGS.statusLine} tone="success">Saved</${TAGS.statusLine}>
+        <${TAGS.statusLine} tone="warning">Needs fallback</${TAGS.statusLine}>
+        <${TAGS.statusLine} tone="danger">Capture failed</${TAGS.statusLine}>
+      </div>
+      <${TAGS.alert} tone="info" title="Privacy note">Page content stays local until an explicit export action.</${TAGS.alert}>
+      <${TAGS.alert} tone="success" title="Draft restored" dismissible>
+        Previous session data is available.
+        <${TAGS.toolbar} slot="actions" density="compact" wrap>
+          <${TAGS.button}>Review</${TAGS.button}>
+          <${TAGS.button} variant="ghost">Dismiss</${TAGS.button}>
+        </${TAGS.toolbar}>
+      </${TAGS.alert}>
+      <${TAGS.alert} tone="warning" title="Browser blocked the preview">Open externally or retry after changing page policy.</${TAGS.alert}>
+      <${TAGS.alert} tone="danger" title="Clipboard denied">Use manual copy to finish the operation.</${TAGS.alert}>
+    </div>
+  `);
+}
 function buildRowsDemo() {
   return htmlNode(`
     <${TAGS.list} empty-text="No captured pages">
@@ -4774,12 +5492,29 @@ function buildRowsDemo() {
         <span slot="description">The row keeps actions separate from row activation.</span>
         <${TAGS.statusLine} slot="status" tone="warning" compact>Needs fallback</${TAGS.statusLine}>
       </${TAGS.listItem}>
+      <${TAGS.listItem} interactive tone="danger">
+        <span slot="leading" class="token">404</span>
+        <span slot="title">Untitled captured tab with a very long URL-only fallback title that still needs to wrap cleanly</span>
+        <span slot="meta">https://example.invalid/research/very/long/path?with=query-string</span>
+        <span slot="description">Failed captures, missing titles, and long URLs are normal data, not edge-case noise.</span>
+        <${TAGS.statusLine} slot="status" tone="danger" compact>Failed</${TAGS.statusLine}>
+      </${TAGS.listItem}>
     </${TAGS.list}>
     <${TAGS.card} tone="info">
       <span slot="title">Preview card</span>
       <span slot="meta">Reusable card shell</span>
       Cards provide a stable header, body, action, media, and footer surface for captured blocks or settings rows.
     </${TAGS.card}>
+  `);
+}
+function buildMetricDemo() {
+  return htmlNode(`
+    <div class="metric-grid">
+      <${TAGS.metricCard} label="Tabs" value="9" delta="+2" tone="info" description="Open browser surfaces"></${TAGS.metricCard}>
+      <${TAGS.metricCard} label="Captured" value="3" delta="Ready" tone="success" description="Blocks saved locally"></${TAGS.metricCard}>
+      <${TAGS.metricCard} label="Blocked" value="1" delta="Needs fallback" tone="warning" description="Iframe policy issue"></${TAGS.metricCard}>
+      <${TAGS.metricCard} label="Errors" value="0" delta="Stable" tone="neutral" description="No failed exports"></${TAGS.metricCard}>
+    </div>
   `);
 }
 function buildPreviewDemo() {
@@ -4801,10 +5536,160 @@ function buildPreviewDemo() {
 function buildStateDemo() {
   return htmlNode(`
     <${TAGS.emptyState} title="No filtered results" description="Try another search or clear the active filter."></${TAGS.emptyState}>
+    <div class="browser-state-grid">
+      <div class="surface-frame">
+        <${TAGS.stateOverlay} state="loading" label="Loading page snapshot"></${TAGS.stateOverlay}>
+      </div>
+      <div class="surface-frame">
+        <${TAGS.stateOverlay} state="error" label="Capture worker failed"></${TAGS.stateOverlay}>
+      </div>
+      <div class="surface-frame">
+        <${TAGS.stateOverlay} state="blocked" label="Preview is blocked by page policy"></${TAGS.stateOverlay}>
+      </div>
+    </div>
     <div class="surface-frame">
       <${TAGS.stateOverlay} state="blocked" label="Preview is blocked by page policy"></${TAGS.stateOverlay}>
+        <${TAGS.toolbar} slot="actions" density="compact" wrap>
+          <${TAGS.button}>Retry</${TAGS.button}>
+          <${TAGS.button} variant="ghost">Open externally</${TAGS.button}>
+        </${TAGS.toolbar}>
+      </${TAGS.stateOverlay}>
     </div>
     <${TAGS.manualCopy} label="Fallback copy" value="Manual fallback text from a failed clipboard write."></${TAGS.manualCopy}>
+  `);
+}
+function buildBrowserPanelStatesDemo() {
+  return htmlNode(`
+    <${TAGS.browserPanel} class="browser-demo" src="about:blank" title="Loaded browser panel">
+      <span slot="address">https://example.com/research</span>
+      <${TAGS.toolbar} slot="actions" density="compact">
+        <${TAGS.button} variant="ghost">Copy URL</${TAGS.button}>
+        <${TAGS.button} variant="ghost">Open</${TAGS.button}>
+      </${TAGS.toolbar}>
+    </${TAGS.browserPanel}>
+    <div class="browser-state-grid">
+      <div class="surface-frame">
+        <${TAGS.stateOverlay} state="loading" label="Browser panel loading"></${TAGS.stateOverlay}>
+      </div>
+      <div class="surface-frame">
+        <${TAGS.stateOverlay} state="blocked" label="Frame refused to load">
+          <${TAGS.toolbar} slot="actions" density="compact" wrap>
+            <${TAGS.button}>Retry</${TAGS.button}>
+            <${TAGS.button} variant="ghost">Open externally</${TAGS.button}>
+          </${TAGS.toolbar}>
+        </${TAGS.stateOverlay}>
+      </div>
+    </div>
+  `);
+}
+function buildCommandDemo() {
+  const wrap = htmlNode(`
+    <div class="demo-row">
+      <${TAGS.button} id="open-palette" variant="primary">Open command palette</${TAGS.button}>
+      <${TAGS.button} id="open-shortcuts">Open shortcuts</${TAGS.button}>
+      <${TAGS.button} id="toast-success">Success toast</${TAGS.button}>
+      <${TAGS.button} id="toast-warning" tone="warning">Warning toast</${TAGS.button}>
+      <${TAGS.button} id="toast-danger" tone="danger">Danger toast</${TAGS.button}>
+    </div>
+    <${TAGS.dialog} id="palette-dialog" modal label="Command palette" close-on-backdrop>
+      <span slot="title">Command palette</span>
+      <div class="palette-dialog-body">
+        <${TAGS.commandPalette} id="command-palette" placeholder="Type a command"></${TAGS.commandPalette}>
+        <${TAGS.shortcutHelp} id="inline-shortcuts"></${TAGS.shortcutHelp}>
+      </div>
+      <${TAGS.toolbar} slot="footer" align="end">
+        <${TAGS.button} id="palette-close">Close</${TAGS.button}>
+      </${TAGS.toolbar}>
+    </${TAGS.dialog}>
+    <${TAGS.dialog} id="shortcut-dialog" modal label="Keyboard shortcuts" close-on-backdrop>
+      <span slot="title">Keyboard shortcuts</span>
+      <${TAGS.shortcutHelp} id="shortcut-help"></${TAGS.shortcutHelp}>
+      <${TAGS.toolbar} slot="footer" align="end">
+        <${TAGS.button} id="shortcut-close">Close</${TAGS.button}>
+      </${TAGS.toolbar}>
+    </${TAGS.dialog}>
+  `);
+  const commands = [
+    { id: "tile.add", label: "Add tile", group: "Workspace", shortcut: "Alt+T", description: "Create a browser tile from the URL field.", keywords: ["browser", "url"] },
+    { id: "layout.monocle", label: "Switch to monocle", group: "Layout", shortcut: "Alt+M", description: "Focus one tile at a time." },
+    { id: "capture.copy", label: "Copy current capture", group: "Capture", shortcut: "Alt+Shift+C", description: "Copy selected page content." },
+    { id: "danger.clear", label: "Clear workspace", group: "Workspace", shortcut: "", description: "Remove all tiles after confirmation.", disabled: true }
+  ];
+  const shortcuts = [
+    { group: "Workspace", shortcut: "Alt+J", description: "Focus next tile" },
+    { group: "Workspace", shortcut: "Alt+K", description: "Focus previous tile" },
+    { group: "Layout", shortcut: "Alt+Enter", description: "Promote tile to master area" },
+    { group: "Tools", shortcut: "Alt+P", description: "Open command palette" }
+  ];
+  wrap.querySelector("#command-palette").commands = commands;
+  wrap.querySelector("#inline-shortcuts").shortcuts = shortcuts.slice(0, 3);
+  wrap.querySelector("#shortcut-help").shortcuts = shortcuts;
+  wrap.querySelector("#open-palette").addEventListener("click", () => {
+    wrap.querySelector("#palette-dialog").show();
+    queueMicrotask(() => wrap.querySelector("#command-palette").focusInput());
+  });
+  wrap.querySelector("#open-shortcuts").addEventListener("click", () => wrap.querySelector("#shortcut-dialog").show());
+  wrap.querySelector("#palette-close").addEventListener("click", () => wrap.querySelector("#palette-dialog").close("demo"));
+  wrap.querySelector("#shortcut-close").addEventListener("click", () => wrap.querySelector("#shortcut-dialog").close("demo"));
+  wrap.querySelector("#toast-success").addEventListener("click", () => showToast({ key: "demo-toast", message: "Copied current URL", tone: "success", timeout: 1800 }));
+  wrap.querySelector("#toast-warning").addEventListener("click", () => showToast({ key: "demo-toast", message: "Preview needs fallback", tone: "warning", timeout: 2200 }));
+  wrap.querySelector("#toast-danger").addEventListener("click", () => showToast({ key: "demo-toast", message: "Command failed", tone: "danger", timeout: 2600 }));
+  wrap.querySelector("#command-palette").addEventListener("awwbookmarklet-command-palette-execute", (event) => {
+    showToast({ key: "command", message: `Command: ${event.detail.commandId}`, tone: "info", timeout: 1600 });
+  });
+  return wrap;
+}
+function buildUrlPickerDemo() {
+  const wrap = htmlNode(`
+    <${TAGS.toolbar} density="compact" wrap>
+      <${TAGS.iconButton} label="Back">${icon("M10 4L6 8l4 4")}</${TAGS.iconButton}>
+      <${TAGS.iconButton} label="Forward">${icon("M6 4l4 4-4 4")}</${TAGS.iconButton}>
+      <${TAGS.urlPicker} id="demo-url-picker" placeholder="Type URL or search query"></${TAGS.urlPicker}>
+      <${TAGS.button} variant="primary">Add tile</${TAGS.button}>
+      <${TAGS.statusLine} compact tone="info">Idle</${TAGS.statusLine}>
+    </${TAGS.toolbar}>
+    <div class="callout">The picker demonstrates the Mini Browser and Multi Browser address pattern: direct URL, search fallback, recent/bookmark suggestions, and keyboard-friendly application events.</div>
+  `);
+  wrap.querySelector("#demo-url-picker").suggestions = [
+    { title: "AWW tools dashboard", url: "https://example.com/tools", description: "Recent workspace page" },
+    { title: "Bookmark: CSS reference", url: "https://developer.mozilla.org/en-US/docs/Web/CSS", description: "Manual bookmark" },
+    { title: "Session snapshot notes", url: "https://example.com/sessions/current", description: "Open from saved session" }
+  ];
+  wrap.querySelector("#demo-url-picker").addEventListener("awwbookmarklet-url-picker-apply", (event) => {
+    showToast({ key: "url-picker", message: `Navigate: ${event.detail.decision.targetUrl}`, tone: "info", timeout: 1800 });
+  });
+  return wrap;
+}
+function buildMiniBrowserSpecimen() {
+  return htmlNode(`
+    <div class="mini-browser-specimen">
+      <${TAGS.toolbar} density="compact" wrap>
+        <${TAGS.iconButton} label="Back">${icon("M10 4L6 8l4 4")}</${TAGS.iconButton}>
+        <${TAGS.iconButton} label="Forward">${icon("M6 4l4 4-4 4")}</${TAGS.iconButton}>
+        <${TAGS.urlPicker} id="mini-url-picker" value="https://example.com/research"></${TAGS.urlPicker}>
+        <${TAGS.button} variant="ghost">Page actions</${TAGS.button}>
+      </${TAGS.toolbar}>
+      <${TAGS.statusLine} tone="success" compact>Loaded example.com/research</${TAGS.statusLine}>
+      <div class="mini-browser-content">
+        <div class="mini-browser-page">
+          <h4>Mock browser content</h4>
+          <p>This composition replaces the local Mini Browser toolbar, status line, URL picker root, iframe surface, and page-action feedback with shared components.</p>
+        </div>
+      </div>
+    </div>
+  `);
+}
+function buildToolCoverageDemo() {
+  return htmlNode(`
+    <div class="tool-map">
+      <div class="tool-map-row"><strong>Rich Text to Markdown</strong><span>App shell, toolbar, rich preview/editor surface, status line, copy fallback, toast.</span></div>
+      <div class="tool-map-row"><strong>Page Screenshot</strong><span>Field units, capture status, preview surface, browser panel fallback, manual copy/download follow-up.</span></div>
+      <div class="tool-map-row"><strong>Page Content Select</strong><span>Panel headers, action toolbar, selected rows/cards, constrained rich preview, saved-session dialog.</span></div>
+      <div class="tool-map-row"><strong>Session Snapshot</strong><span>Metrics, capture rows, warning banners, JPEG quality field, ZIP/export states.</span></div>
+      <div class="tool-map-row"><strong>Notifications and Reminders</strong><span>Required date fields, disabled policy alert, grouped list items, metric cards.</span></div>
+      <div class="tool-map-row"><strong>Mini/Multi Browser</strong><span>URL picker, browser panel, command palette, shortcut help, toasts, blocked iframe states.</span></div>
+      <div class="tool-map-row"><strong>Bookmark Manager and Settings</strong><span>Search/filter toolbar, bookmark rows with actions, empty states, setting fields, danger confirmation dialog.</span></div>
+    </div>
   `);
 }
 function buildPage() {
@@ -4825,7 +5710,7 @@ function buildPage() {
     </header>
     <div class="catalog-summary">
       <div class="summary-item"><span class="summary-value">${componentCount}</span><span class="summary-label">registered custom elements</span></div>
-      <div class="summary-item"><span class="summary-value">3</span><span class="summary-label">showcase sections</span></div>
+      <div class="summary-item"><span class="summary-value">5</span><span class="summary-label">showcase sections</span></div>
       <div class="summary-item"><span class="summary-value">0</span><span class="summary-label">marketing panels</span></div>
       <div class="summary-item"><span class="summary-value">1</span><span class="summary-label">shared overlay root</span></div>
     </div>
@@ -4837,7 +5722,9 @@ function buildPage() {
     children: [
       specimen({ title: "Desktop shell", description: "Spawn windows in the shared overlay and validate focus, drag, resize, and status behavior.", tag: "runtime", span: 5, body: buildShellDemo() }),
       specimen({ title: "Control primitives", description: "Buttons, inputs, selection controls, range, and progress in one restrained specimen.", tag: "forms", span: 7, body: buildControlDemo() }),
-      specimen({ title: "Grouped layout", description: "Compact grouping, tabs, listbox, panel actions, and status composition.", tag: "layout", span: 12, body: buildLayoutDemo() })
+      specimen({ title: "Grouped layout", description: "Compact grouping, tabs, listbox, panel actions, and status composition.", tag: "layout", span: 12, body: buildLayoutDemo() }),
+      specimen({ title: "Field matrix", description: "Labels, help text, errors, units, disabled state, horizontal layout, and inline layout.", tag: "fields", span: 7, body: buildFieldMatrixDemo() }),
+      specimen({ title: "Feedback matrix", description: "Status lines and alerts cover neutral, info, success, warning, danger, dismissible, and action states.", tag: "feedback", span: 5, body: buildFeedbackMatrixDemo() })
     ]
   }), section({
     label: "Application Patterns",
@@ -4845,15 +5732,33 @@ function buildPage() {
     description: "Higher-order components are split into scan-friendly states so developers can inspect each responsibility.",
     children: [
       specimen({ title: "Application shell", description: "Header, action area, status line, alert, fields, dialog, and toast behavior.", tag: "workflow", span: 7, body: buildWorkflowDemo() }),
-      specimen({ title: "Rows and cards", description: "Selectable rows, row actions, status tones, and a reusable content card.", tag: "data", span: 5, body: buildRowsDemo() })
+      specimen({ title: "Rows and cards", description: "Selectable rows, row actions, status tones, imperfect data, and a reusable content card.", tag: "data", span: 8, body: buildRowsDemo() }),
+      specimen({ title: "Metrics", description: "Compact stat cards for reminders, sessions, capture counts, and workspace state.", tag: "metrics", span: 4, body: buildMetricDemo() })
     ]
   }), section({
     label: "Content States",
     title: "Preview, browser, and fallback states",
     description: "The messy realities of injected tools need first-class demos: rich imported HTML, iframe surfaces, blocked previews, empty states, and manual copy fallback.",
     children: [
-      specimen({ title: "Preview surfaces", description: "Rich content and browser iframe areas are given enough room to reveal overflow behavior.", tag: "content", span: 8, body: buildPreviewDemo() }),
-      specimen({ title: "Empty and blocked states", description: "Fallback UI is visible as a normal part of the system, not an afterthought.", tag: "fallback", span: 4, body: buildStateDemo() })
+      specimen({ title: "Preview surfaces", description: "Rich content and browser iframe areas are given enough room to reveal overflow behavior.", tag: "content", span: 7, body: buildPreviewDemo() }),
+      specimen({ title: "Browser panel states", description: "Loaded, loading, blocked, retry, and external-open states for Mini Browser and Multi Browser surfaces.", tag: "browser", span: 5, body: buildBrowserPanelStatesDemo() }),
+      specimen({ title: "Empty and blocked states", description: "Fallback UI is visible as a normal part of the system, not an afterthought.", tag: "fallback", span: 12, body: buildStateDemo() })
+    ]
+  }), section({
+    label: "Command Surfaces",
+    title: "Navigation, commands, shortcuts, and feedback",
+    description: "Overlay-heavy browser tools need URL entry, command discovery, shortcut help, and toast feedback before tile workspace migration is credible.",
+    children: [
+      specimen({ title: "URL picker", description: "Direct URL, search fallback, and suggestions through one event-driven address component.", tag: "navigation", span: 5, body: buildUrlPickerDemo() }),
+      specimen({ title: "Command palette and shortcuts", description: "A dialog-hosted command palette and shortcut help surface based on Multi Browser patterns.", tag: "commands", span: 7, body: buildCommandDemo() })
+    ]
+  }), section({
+    label: "Migration Proof",
+    title: "Reference-tool coverage map",
+    description: "These specimens show how the old local UI patterns map into shared components without copying app-specific CSS.",
+    children: [
+      specimen({ title: "Mini Browser composition", description: "Toolbar, URL picker, status, and browser surface assembled with the shared grammar.", tag: "browser app", span: 6, body: buildMiniBrowserSpecimen() }),
+      specimen({ title: "Tool coverage checklist", description: "Every reference tool family has a visible migration path represented in the catalog.", tag: "coverage", span: 6, body: buildToolCoverageDemo() })
     ]
   }));
   return page;
@@ -4871,5 +5776,5 @@ window.addEventListener("beforeunload", () => {
   releaseDesktopRoot(CATALOG_OWNER);
 });
 
-//# debugId=72635BE7EF3DDC0064756E2164756E21
+//# debugId=24D50DECC2E453B964756E2164756E21
 //# sourceMappingURL=catalog.js.map

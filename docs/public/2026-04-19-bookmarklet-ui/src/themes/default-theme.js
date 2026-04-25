@@ -42,6 +42,7 @@ export const DEFAULT_THEME = {
   [PUBLIC_TOKENS.overlayShadow]: "0 18px 44px rgba(0, 0, 0, 0.24)",
   [PUBLIC_TOKENS.cardBg]: "#fbfcfe",
   [PUBLIC_TOKENS.cardSelectedBg]: "#e8f1ff",
+  [PUBLIC_TOKENS.metricBg]: "#ffffff",
   [PUBLIC_TOKENS.codeBg]: "#e8edf4",
   [PUBLIC_TOKENS.codeFg]: "#172131",
   [PUBLIC_TOKENS.shadowDepth]: "0 12px 32px rgba(0, 0, 0, 0.18)",

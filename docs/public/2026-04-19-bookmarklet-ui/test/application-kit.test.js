@@ -4,6 +4,7 @@ import { TAGS, PUBLIC_TOKENS } from "../src/core/constants.js";
 import { copyToClipboard } from "../src/core/clipboard.js";
 import { createId, normalizeAlignment, normalizeDensity, normalizeOrientation, normalizeTone } from "../src/core/component-utils.js";
 import { sanitizeHtml } from "../src/core/sanitize.js";
+import { buildSearchUrl, deriveHostname, isHttpUrl, normalizeSearchTemplate, resolveNavigationInput } from "../src/core/url.js";
 
 test("application-kit tags are public", () => {
   assert.equal(TAGS.appShell, "awwbookmarklet-app-shell");
@@ -21,6 +22,10 @@ test("application-kit tags are public", () => {
   assert.equal(TAGS.richPreview, "awwbookmarklet-rich-preview");
   assert.equal(TAGS.browserPanel, "awwbookmarklet-browser-panel");
   assert.equal(TAGS.manualCopy, "awwbookmarklet-manual-copy");
+  assert.equal(TAGS.commandPalette, "awwbookmarklet-command-palette");
+  assert.equal(TAGS.shortcutHelp, "awwbookmarklet-shortcut-help");
+  assert.equal(TAGS.urlPicker, "awwbookmarklet-url-picker");
+  assert.equal(TAGS.metricCard, "awwbookmarklet-metric-card");
 });
 
 test("application-kit tokens have stable CSS variable names", () => {
@@ -29,6 +34,7 @@ test("application-kit tokens have stable CSS variable names", () => {
   assert.equal(PUBLIC_TOKENS.dangerBorder, "--awwbookmarklet-danger-border");
   assert.equal(PUBLIC_TOKENS.overlayBackdrop, "--awwbookmarklet-overlay-backdrop");
   assert.equal(PUBLIC_TOKENS.cardSelectedBg, "--awwbookmarklet-card-selected-bg");
+  assert.equal(PUBLIC_TOKENS.metricBg, "--awwbookmarklet-metric-bg");
   assert.equal(PUBLIC_TOKENS.codeBg, "--awwbookmarklet-code-bg");
 });
 
@@ -98,4 +104,15 @@ test("copyToClipboard reports empty payload", async () => {
   const result = await copyToClipboard({}, { navigator: { clipboard: {} } });
   assert.equal(result.ok, false);
   assert.equal(result.status, "empty");
+});
+
+test("URL helpers classify navigation, search, and blocked input", () => {
+  assert.equal(isHttpUrl("https://example.com/a"), true);
+  assert.equal(isHttpUrl("javascript:alert(1)"), false);
+  assert.equal(normalizeSearchTemplate("bad"), "https://www.google.com/search?q={query}");
+  assert.equal(buildSearchUrl("hello world", "https://search.example/?q={query}"), "https://search.example/?q=hello%20world");
+  assert.deepEqual(resolveNavigationInput("example.com/docs").kind, "navigate_url");
+  assert.deepEqual(resolveNavigationInput("plain search").kind, "search");
+  assert.deepEqual(resolveNavigationInput("javascript:alert(1)").kind, "blocked_protocol");
+  assert.equal(deriveHostname("https://example.com/path"), "example.com");
 });

@@ -33,6 +33,10 @@ import { AwwCard } from "./card.js";
 import { AwwRichPreview } from "./rich-preview.js";
 import { AwwBrowserPanel } from "./browser-panel.js";
 import { AwwManualCopy } from "./manual-copy.js";
+import { AwwCommandPalette } from "./command-palette.js";
+import { AwwShortcutHelp } from "./shortcut-help.js";
+import { AwwUrlPicker } from "./url-picker.js";
+import { AwwMetricCard } from "./metric-card.js";
 
 export function registerAllComponents() {
   defineMany([
@@ -69,6 +73,10 @@ export function registerAllComponents() {
     [TAGS.card, AwwCard],
     [TAGS.richPreview, AwwRichPreview],
     [TAGS.browserPanel, AwwBrowserPanel],
-    [TAGS.manualCopy, AwwManualCopy]
+    [TAGS.manualCopy, AwwManualCopy],
+    [TAGS.commandPalette, AwwCommandPalette],
+    [TAGS.shortcutHelp, AwwShortcutHelp],
+    [TAGS.urlPicker, AwwUrlPicker],
+    [TAGS.metricCard, AwwMetricCard]
   ]);
 }

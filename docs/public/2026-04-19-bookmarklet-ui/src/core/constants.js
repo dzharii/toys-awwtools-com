@@ -34,7 +34,11 @@ export const TAGS = {
   card: "awwbookmarklet-card",
   richPreview: "awwbookmarklet-rich-preview",
   browserPanel: "awwbookmarklet-browser-panel",
-  manualCopy: "awwbookmarklet-manual-copy"
+  manualCopy: "awwbookmarklet-manual-copy",
+  commandPalette: "awwbookmarklet-command-palette",
+  shortcutHelp: "awwbookmarklet-shortcut-help",
+  urlPicker: "awwbookmarklet-url-picker",
+  metricCard: "awwbookmarklet-metric-card"
 };
 
 export const GLOBAL_SYMBOLS = {
@@ -87,6 +91,7 @@ export const PUBLIC_TOKENS = {
   overlayShadow: "--awwbookmarklet-overlay-shadow",
   cardBg: "--awwbookmarklet-card-bg",
   cardSelectedBg: "--awwbookmarklet-card-selected-bg",
+  metricBg: "--awwbookmarklet-metric-bg",
   codeBg: "--awwbookmarklet-code-bg",
   codeFg: "--awwbookmarklet-code-fg",
   shadowDepth: "--awwbookmarklet-shadow-depth",

@@ -34,7 +34,11 @@ var TAGS = {
   card: "awwbookmarklet-card",
   richPreview: "awwbookmarklet-rich-preview",
   browserPanel: "awwbookmarklet-browser-panel",
-  manualCopy: "awwbookmarklet-manual-copy"
+  manualCopy: "awwbookmarklet-manual-copy",
+  commandPalette: "awwbookmarklet-command-palette",
+  shortcutHelp: "awwbookmarklet-shortcut-help",
+  urlPicker: "awwbookmarklet-url-picker",
+  metricCard: "awwbookmarklet-metric-card"
 };
 var GLOBAL_SYMBOLS = {
   rootsByVersion: Symbol.for("awwtools.bookmarkletUi.overlayRootsByVersion"),
@@ -84,6 +88,7 @@ var PUBLIC_TOKENS = {
   overlayShadow: "--awwbookmarklet-overlay-shadow",
   cardBg: "--awwbookmarklet-card-bg",
   cardSelectedBg: "--awwbookmarklet-card-selected-bg",
+  metricBg: "--awwbookmarklet-metric-bg",
   codeBg: "--awwbookmarklet-code-bg",
   codeFg: "--awwbookmarklet-code-fg",
   shadowDepth: "--awwbookmarklet-shadow-depth",
@@ -4124,6 +4129,664 @@ class AwwManualCopy extends HTMLElement {
   }
 }
 
+// src/components/command-palette.js
+var COMMAND_PALETTE_STYLES = css`
+  :host {
+    display: block;
+    min-width: min(100%, 320px);
+  }
+
+  .palette {
+    display: grid;
+    gap: var(--awwbookmarklet-space-2, 8px);
+    min-width: 0;
+  }
+
+  input {
+    width: 100%;
+    min-height: var(--awwbookmarklet-size-control-h, 30px);
+    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    background: var(--awwbookmarklet-input-bg, #fff);
+    color: var(--awwbookmarklet-input-fg, #111720);
+    padding: 0 8px;
+    font: inherit;
+  }
+
+  input:focus-visible {
+    outline: none;
+    box-shadow: var(--_ring);
+  }
+
+  .list {
+    display: grid;
+    gap: 4px;
+    max-height: 280px;
+    overflow: auto;
+  }
+
+  .command {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: start;
+    border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    background: var(--awwbookmarklet-card-bg, #fbfcfe);
+    padding: 7px 8px;
+    text-align: left;
+    color: var(--awwbookmarklet-input-fg, #111720);
+    font: inherit;
+  }
+
+  .command[aria-selected="true"] {
+    border-color: var(--awwbookmarklet-selection-bg, #1f5eae);
+    background: var(--awwbookmarklet-card-selected-bg, #e8f1ff);
+  }
+
+  .command:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .label {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .meta,
+  .shortcut {
+    color: var(--awwbookmarklet-text-muted, #586272);
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .shortcut {
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    white-space: nowrap;
+  }
+
+  .empty {
+    border: 1px dashed var(--awwbookmarklet-border-subtle, #9ba5b3);
+    color: var(--awwbookmarklet-text-muted, #586272);
+    padding: var(--awwbookmarklet-space-3, 12px);
+    text-align: center;
+  }
+`;
+
+class AwwCommandPalette extends HTMLElement {
+  static observedAttributes = ["placeholder", "empty-text"];
+  #commands = [];
+  #filtered = [];
+  #activeIndex = 0;
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, COMMAND_PALETTE_STYLES]);
+    shadow.innerHTML = `
+      <section class="palette" part="palette">
+        <input part="input" type="search" autocomplete="off" spellcheck="false" aria-label="Filter commands" />
+        <div class="list" part="list" role="listbox" aria-label="Commands"></div>
+      </section>
+    `;
+    this.input = shadow.querySelector("input");
+    this.list = shadow.querySelector(".list");
+    this.input.addEventListener("input", () => this.#filter());
+    this.input.addEventListener("keydown", (event) => this.#onKeyDown(event));
+  }
+  connectedCallback() {
+    this.#render();
+  }
+  attributeChangedCallback() {
+    this.#render();
+  }
+  get commands() {
+    return this.#commands;
+  }
+  set commands(value) {
+    this.#commands = Array.isArray(value) ? value : [];
+    this.#filter();
+  }
+  focusInput() {
+    this.input?.focus();
+  }
+  #filter() {
+    const query = this.input?.value.trim().toLowerCase() || "";
+    this.#filtered = this.#commands.filter((command) => {
+      if (!query)
+        return true;
+      return [command.label, command.group, command.shortcut, ...command.keywords || []].join(" ").toLowerCase().includes(query);
+    });
+    this.#activeIndex = Math.min(this.#activeIndex, Math.max(0, this.#filtered.length - 1));
+    this.#renderList();
+    dispatchComponentEvent(this, "awwbookmarklet-command-palette-filter", { query, count: this.#filtered.length });
+  }
+  #render() {
+    if (!this.input)
+      return;
+    this.input.placeholder = this.getAttribute("placeholder") || "Type a command";
+    this.#filter();
+  }
+  #renderList() {
+    this.list.textContent = "";
+    if (!this.#filtered.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.setAttribute("part", "empty");
+      empty.textContent = this.getAttribute("empty-text") || "No matching commands.";
+      this.list.append(empty);
+      return;
+    }
+    this.#filtered.forEach((command, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "command";
+      button.setAttribute("part", "command");
+      button.disabled = Boolean(command.disabled);
+      button.setAttribute("role", "option");
+      button.setAttribute("aria-selected", index === this.#activeIndex ? "true" : "false");
+      button.innerHTML = `
+        <span>
+          <span class="label" part="label"></span>
+          <span class="meta" part="meta"></span>
+        </span>
+        <span class="shortcut" part="shortcut"></span>
+      `;
+      button.querySelector(".label").textContent = String(command.label || command.id || "Untitled command");
+      button.querySelector(".meta").textContent = [command.group, command.description].filter(Boolean).join(" - ");
+      button.querySelector(".shortcut").textContent = String(command.shortcut || "");
+      button.addEventListener("click", () => this.#execute(command));
+      this.list.append(button);
+    });
+  }
+  #onKeyDown(event) {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const step = event.key === "ArrowDown" ? 1 : -1;
+      const count = this.#filtered.length;
+      if (!count)
+        return;
+      this.#activeIndex = (this.#activeIndex + step + count) % count;
+      this.#renderList();
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const command = this.#filtered[this.#activeIndex];
+      if (command)
+        this.#execute(command);
+    }
+  }
+  #execute(command) {
+    if (command.disabled)
+      return;
+    dispatchComponentEvent(this, "awwbookmarklet-command-palette-execute", {
+      commandId: command.id || "",
+      command,
+      source: this
+    });
+    if (typeof command.run === "function")
+      command.run(command);
+  }
+}
+
+// src/components/shortcut-help.js
+var SHORTCUT_HELP_STYLES = css`
+  :host {
+    display: block;
+    min-width: 0;
+  }
+
+  .help {
+    display: grid;
+    gap: var(--awwbookmarklet-space-2, 8px);
+  }
+
+  .group {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .group-title {
+    color: var(--awwbookmarklet-text-muted, #586272);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 12px;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: minmax(88px, max-content) minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    min-width: 0;
+    border-top: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    padding-top: 5px;
+  }
+
+  kbd {
+    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    background: var(--awwbookmarklet-surface-inset-bg, #e7ebf1);
+    padding: 2px 5px;
+    font: inherit;
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    white-space: nowrap;
+  }
+
+  .description {
+    min-width: 0;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+`;
+
+class AwwShortcutHelp extends HTMLElement {
+  static observedAttributes = ["empty-text"];
+  #shortcuts = [];
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, SHORTCUT_HELP_STYLES]);
+    shadow.innerHTML = `<section class="help" part="help"></section>`;
+    this.helpNode = shadow.querySelector(".help");
+  }
+  connectedCallback() {
+    this.#render();
+  }
+  attributeChangedCallback() {
+    this.#render();
+  }
+  get shortcuts() {
+    return this.#shortcuts;
+  }
+  set shortcuts(value) {
+    this.#shortcuts = Array.isArray(value) ? value : [];
+    this.#render();
+  }
+  #render() {
+    if (!this.helpNode)
+      return;
+    this.helpNode.textContent = "";
+    if (!this.#shortcuts.length) {
+      const empty = document.createElement("div");
+      empty.setAttribute("part", "empty");
+      empty.textContent = this.getAttribute("empty-text") || "No shortcuts available.";
+      this.helpNode.append(empty);
+      return;
+    }
+    const groups = new Map;
+    for (const item of this.#shortcuts) {
+      const group = String(item.group || "General");
+      if (!groups.has(group))
+        groups.set(group, []);
+      groups.get(group).push(item);
+    }
+    for (const [group, items] of groups) {
+      const section = document.createElement("section");
+      section.className = "group";
+      section.setAttribute("part", "group");
+      const title = document.createElement("div");
+      title.className = "group-title";
+      title.setAttribute("part", "group-title");
+      title.textContent = group;
+      section.append(title);
+      for (const item of items) {
+        const row = document.createElement("div");
+        row.className = "row";
+        row.setAttribute("part", "row");
+        const key = document.createElement("kbd");
+        key.setAttribute("part", "shortcut");
+        key.textContent = String(item.shortcut || "");
+        const description = document.createElement("div");
+        description.className = "description";
+        description.setAttribute("part", "description");
+        description.textContent = String(item.description || item.label || "");
+        row.append(key, description);
+        section.append(row);
+      }
+      this.helpNode.append(section);
+    }
+  }
+}
+
+// src/core/url.js
+var DEFAULT_SEARCH_TEMPLATE = "https://www.google.com/search?q={query}";
+var BLOCKED_PROTOCOLS = new Set(["javascript:", "data:", "file:", "chrome:", "about:"]);
+function normalizeSearchTemplate(value, fallback = DEFAULT_SEARCH_TEMPLATE) {
+  const template = String(value || "").trim();
+  if (!template || !template.includes("{query}"))
+    return fallback;
+  try {
+    const probe = template.replace("{query}", "test");
+    const url = new URL(probe);
+    if (url.protocol !== "http:" && url.protocol !== "https:")
+      return fallback;
+    return template;
+  } catch {
+    return fallback;
+  }
+}
+function buildSearchUrl(query, template = DEFAULT_SEARCH_TEMPLATE) {
+  const normalized = normalizeSearchTemplate(template);
+  return normalized.replace("{query}", encodeURIComponent(String(query ?? "").trim()));
+}
+function resolveNavigationInput(value, template = DEFAULT_SEARCH_TEMPLATE) {
+  const input = String(value ?? "").trim();
+  if (!input)
+    return { kind: "ignore", input };
+  try {
+    const parsed = new URL(input);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return { kind: "navigate_url", input, targetUrl: parsed.href };
+    }
+    if (BLOCKED_PROTOCOLS.has(parsed.protocol)) {
+      return { kind: "blocked_protocol", input, protocol: parsed.protocol };
+    }
+  } catch {}
+  if (/^[\w.-]+\.[a-z]{2,}([/:?#].*)?$/i.test(input)) {
+    try {
+      return { kind: "navigate_url", input, targetUrl: new URL(`https://${input}`).href };
+    } catch {
+      return { kind: "search", input, query: input, targetUrl: buildSearchUrl(input, template) };
+    }
+  }
+  return { kind: "search", input, query: input, targetUrl: buildSearchUrl(input, template) };
+}
+function deriveHostname(value) {
+  try {
+    return new URL(String(value ?? "").trim()).hostname;
+  } catch {
+    return "";
+  }
+}
+
+// src/components/url-picker.js
+var URL_PICKER_STYLES = css`
+  :host {
+    display: block;
+    min-width: min(100%, 260px);
+  }
+
+  .picker {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  input {
+    width: 100%;
+    min-height: var(--awwbookmarklet-size-control-h, 30px);
+    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    background: var(--awwbookmarklet-input-bg, #fff);
+    color: var(--awwbookmarklet-input-fg, #111720);
+    padding: 0 8px;
+    font: inherit;
+  }
+
+  input:focus-visible {
+    outline: none;
+    box-shadow: var(--_ring);
+  }
+
+  .list {
+    display: none;
+    max-height: 240px;
+    overflow: auto;
+    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    background: var(--awwbookmarklet-menu-bg, #f8fbff);
+  }
+
+  :host([open]) .list {
+    display: grid;
+  }
+
+  .option {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    border: 0;
+    border-bottom: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    background: transparent;
+    color: var(--awwbookmarklet-menu-fg, #0e1621);
+    padding: 7px 8px;
+    text-align: left;
+    font: inherit;
+  }
+
+  .option[aria-selected="true"] {
+    background: var(--awwbookmarklet-card-selected-bg, #e8f1ff);
+  }
+
+  .title {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .meta {
+    color: var(--awwbookmarklet-text-muted, #586272);
+    font-size: 12px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+`;
+
+class AwwUrlPicker extends HTMLElement {
+  static observedAttributes = ["value", "placeholder", "search-template", "open"];
+  #suggestions = [];
+  #activeIndex = 0;
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, URL_PICKER_STYLES]);
+    shadow.innerHTML = `
+      <section class="picker" part="picker">
+        <input part="input" type="text" autocomplete="off" spellcheck="false" aria-label="URL or search query" />
+        <div class="list" part="list" role="listbox"></div>
+      </section>
+    `;
+    this.input = shadow.querySelector("input");
+    this.list = shadow.querySelector(".list");
+    this.input.addEventListener("input", () => this.#onInput());
+    this.input.addEventListener("focus", () => this.#openIfUseful());
+    this.input.addEventListener("keydown", (event) => this.#onKeyDown(event));
+  }
+  connectedCallback() {
+    this.#sync();
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  get value() {
+    return this.input?.value || "";
+  }
+  set value(nextValue) {
+    this.setAttribute("value", String(nextValue ?? ""));
+  }
+  get suggestions() {
+    return this.#suggestions;
+  }
+  set suggestions(value) {
+    this.#suggestions = Array.isArray(value) ? value : [];
+    this.#renderList();
+  }
+  close() {
+    this.removeAttribute("open");
+  }
+  #sync() {
+    if (!this.input)
+      return;
+    const value = this.getAttribute("value") || "";
+    if (this.input.value !== value)
+      this.input.value = value;
+    this.input.placeholder = this.getAttribute("placeholder") || "Type URL or search query";
+    this.#renderList();
+  }
+  #onInput() {
+    this.setAttribute("value", this.input.value);
+    this.#activeIndex = 0;
+    this.#openIfUseful();
+    dispatchComponentEvent(this, "awwbookmarklet-url-picker-query", {
+      query: this.input.value,
+      decision: this.#decision()
+    });
+  }
+  #openIfUseful() {
+    if (this.#suggestions.length || this.input.value.trim())
+      this.setAttribute("open", "");
+  }
+  #decision() {
+    return resolveNavigationInput(this.input.value, this.getAttribute("search-template") || undefined);
+  }
+  #onKeyDown(event) {
+    if (event.key === "Escape") {
+      this.close();
+      return;
+    }
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const count = this.#visibleItems().length;
+      if (!count)
+        return;
+      const step = event.key === "ArrowDown" ? 1 : -1;
+      this.#activeIndex = (this.#activeIndex + step + count) % count;
+      this.setAttribute("open", "");
+      this.#renderList();
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const item = this.#visibleItems()[this.#activeIndex];
+      if (item)
+        this.#apply(item);
+      else
+        this.#apply({ type: "direct", decision: this.#decision() });
+    }
+  }
+  #visibleItems() {
+    const decision = this.#decision();
+    const direct = decision.kind === "ignore" || decision.kind === "blocked_protocol" ? [] : [{ type: "direct", decision }];
+    return [...direct, ...this.#suggestions];
+  }
+  #renderList() {
+    if (!this.list)
+      return;
+    this.list.textContent = "";
+    const items = this.#visibleItems();
+    items.forEach((item, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "option";
+      button.setAttribute("part", "option");
+      button.setAttribute("role", "option");
+      button.setAttribute("aria-selected", index === this.#activeIndex ? "true" : "false");
+      const title = document.createElement("span");
+      title.className = "title";
+      title.setAttribute("part", "title");
+      const meta = document.createElement("span");
+      meta.className = "meta";
+      meta.setAttribute("part", "meta");
+      if (item.type === "direct") {
+        title.textContent = item.decision.kind === "navigate_url" ? `Open ${item.decision.targetUrl}` : `Search for "${item.decision.query}"`;
+        meta.textContent = item.decision.kind === "navigate_url" ? deriveHostname(item.decision.targetUrl) : item.decision.targetUrl;
+      } else {
+        title.textContent = String(item.title || item.label || item.url || "Untitled");
+        meta.textContent = String(item.description || item.url || "");
+      }
+      button.append(title, meta);
+      button.addEventListener("click", () => this.#apply(item));
+      this.list.append(button);
+    });
+  }
+  #apply(item) {
+    const decision = item.type === "direct" ? item.decision : { kind: "navigate_url", input: item.url || "", targetUrl: item.url || "" };
+    if (decision.kind === "blocked_protocol" || decision.kind === "ignore")
+      return;
+    this.value = decision.targetUrl || "";
+    this.close();
+    dispatchComponentEvent(this, "awwbookmarklet-url-picker-apply", { item, decision, source: this });
+  }
+}
+
+// src/components/metric-card.js
+var METRIC_CARD_STYLES = css`
+  :host {
+    display: block;
+    min-width: 0;
+  }
+
+  .metric {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    border: 1px solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    background: var(--awwbookmarklet-metric-bg, var(--awwbookmarklet-surface-raised-bg, #fff));
+    padding: var(--awwbookmarklet-space-2, 8px);
+  }
+
+  .label,
+  .description {
+    color: var(--awwbookmarklet-text-muted, #586272);
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .value {
+    font-size: 22px;
+    font-weight: 750;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+
+  .delta {
+    color: var(--_fg, var(--awwbookmarklet-text-muted, #586272));
+    font-size: 12px;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  :host([compact]) .value {
+    font-size: 18px;
+  }
+
+  :host([data-tone="info"]) { --_fg: var(--awwbookmarklet-info-fg, #123d7a); --_border: var(--awwbookmarklet-info-border, #7aa6e8); }
+  :host([data-tone="success"]) { --_fg: var(--awwbookmarklet-success-fg, #195b34); --_border: var(--awwbookmarklet-success-border, #72b98b); }
+  :host([data-tone="warning"]) { --_fg: var(--awwbookmarklet-warning-fg, #6d4b00); --_border: var(--awwbookmarklet-warning-border, #d9ad3b); }
+  :host([data-tone="danger"]) { --_fg: var(--awwbookmarklet-danger-fg, #8a1f17); --_border: var(--awwbookmarklet-danger-border, #d46a60); }
+`;
+
+class AwwMetricCard extends HTMLElement {
+  static observedAttributes = ["label", "value", "description", "delta", "tone"];
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, METRIC_CARD_STYLES]);
+    shadow.innerHTML = `
+      <section class="metric" part="metric">
+        <div class="label" part="label"><slot name="label"></slot><span data-label></span></div>
+        <div class="value" part="value"><slot name="value"></slot><span data-value></span></div>
+        <div class="delta" part="delta"><slot name="delta"></slot><span data-delta></span></div>
+        <div class="description" part="description"><slot name="description"></slot><span data-description></span><slot></slot></div>
+      </section>
+    `;
+    this.labelNode = shadow.querySelector("[data-label]");
+    this.valueNode = shadow.querySelector("[data-value]");
+    this.deltaNode = shadow.querySelector("[data-delta]");
+    this.descriptionNode = shadow.querySelector("[data-description]");
+  }
+  connectedCallback() {
+    this.#sync();
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  #sync() {
+    this.dataset.tone = normalizeTone(this.getAttribute("tone"));
+    this.labelNode.textContent = this.getAttribute("label") || "";
+    this.valueNode.textContent = this.getAttribute("value") || "";
+    this.deltaNode.textContent = this.getAttribute("delta") || "";
+    this.descriptionNode.textContent = this.getAttribute("description") || "";
+  }
+}
+
 // src/components/register-all.js
 function registerAllComponents() {
   defineMany([
@@ -4160,7 +4823,11 @@ function registerAllComponents() {
     [TAGS.card, AwwCard],
     [TAGS.richPreview, AwwRichPreview],
     [TAGS.browserPanel, AwwBrowserPanel],
-    [TAGS.manualCopy, AwwManualCopy]
+    [TAGS.manualCopy, AwwManualCopy],
+    [TAGS.commandPalette, AwwCommandPalette],
+    [TAGS.shortcutHelp, AwwShortcutHelp],
+    [TAGS.urlPicker, AwwUrlPicker],
+    [TAGS.metricCard, AwwMetricCard]
   ]);
 }
 
@@ -4207,6 +4874,7 @@ var DEFAULT_THEME = {
   [PUBLIC_TOKENS.overlayShadow]: "0 18px 44px rgba(0, 0, 0, 0.24)",
   [PUBLIC_TOKENS.cardBg]: "#fbfcfe",
   [PUBLIC_TOKENS.cardSelectedBg]: "#e8f1ff",
+  [PUBLIC_TOKENS.metricBg]: "#ffffff",
   [PUBLIC_TOKENS.codeBg]: "#e8edf4",
   [PUBLIC_TOKENS.codeFg]: "#172131",
   [PUBLIC_TOKENS.shadowDepth]: "0 12px 32px rgba(0, 0, 0, 0.18)",
@@ -4660,5 +5328,5 @@ export {
   bootstrapExampleTool
 };
 
-//# debugId=06F20306B137C2DC64756E2164756E21
+//# debugId=CDFC8B040654E22564756E2164756E21
 //# sourceMappingURL=index.js.map
