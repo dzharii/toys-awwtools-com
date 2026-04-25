@@ -10,6 +10,7 @@ const BUTTON_STYLES = css`
     border-radius: 0;
     background: linear-gradient(180deg, color-mix(in srgb, var(--awwbookmarklet-button-bg, #f1f4f8) 92%, #ffffff 8%), var(--awwbookmarklet-button-bg, #f1f4f8));
     color: var(--awwbookmarklet-button-fg, #111720);
+    box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 var(--awwbookmarklet-border-subtle, #9ba5b3);
     padding: 0 12px;
     font: inherit;
     line-height: 1;
@@ -23,6 +24,7 @@ const BUTTON_STYLES = css`
   :host([variant="primary"]) button {
     background: var(--awwbookmarklet-selection-bg, #1f5eae);
     color: var(--awwbookmarklet-selection-fg, #f2f8ff);
+    box-shadow: inset 1px 1px 0 color-mix(in srgb, var(--awwbookmarklet-selection-bg, #1f5eae) 68%, #ffffff 32%), inset -1px -1px 0 color-mix(in srgb, var(--awwbookmarklet-selection-bg, #1f5eae) 72%, #000000 28%);
   }
 
   :host([variant="ghost"]) button {

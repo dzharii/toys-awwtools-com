@@ -366,27 +366,23 @@ var WINDOW_STYLES = css`
     align-items: center;
     gap: 6px;
     padding: 0 6px;
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--awwbookmarklet-titlebar-active-bg, rgba(46, 92, 142, 0.78)) 88%, #ffffff 12%),
-      color-mix(in srgb, var(--awwbookmarklet-titlebar-active-bg, rgba(46, 92, 142, 0.78)) calc(var(--awwbookmarklet-frost-opacity, 0.9) * 100%), transparent)
-    );
-    color: var(--awwbookmarklet-titlebar-fg, #f8fbff);
+    background: linear-gradient(180deg, #f7f9fb, var(--awwbookmarklet-titlebar-active-bg, #dce2e9));
+    color: var(--awwbookmarklet-titlebar-fg, #121820);
     border-bottom: 1px solid var(--awwbookmarklet-border-strong, #232a33);
-    backdrop-filter: blur(6px) saturate(1.1);
     cursor: grab;
     user-select: none;
   }
 
   :host([data-active="false"]) .titlebar {
-    background: var(--awwbookmarklet-titlebar-inactive-bg, rgba(136, 145, 160, 0.84));
+    background: linear-gradient(180deg, #eef2f6, var(--awwbookmarklet-titlebar-inactive-bg, #cfd5dd));
   }
 
   .system-menu-button,
   .window-command-button {
-    border: 1px solid color-mix(in srgb, var(--awwbookmarklet-border-strong, #232a33) 70%, #ffffff 30%);
+    border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
     border-radius: 0;
-    background: rgba(255, 255, 255, 0.08);
+    background: #edf1f5;
+    box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #a8b0ba;
     color: inherit;
     height: 22px;
     min-width: 22px;
@@ -403,7 +399,8 @@ var WINDOW_STYLES = css`
 
   .system-menu-button:active,
   .window-command-button:active {
-    background: rgba(0, 0, 0, 0.18);
+    background: var(--awwbookmarklet-button-active-bg, #d8dee6);
+    box-shadow: inset 1px 1px 0 #8e98a4, inset -1px -1px 0 #ffffff;
   }
 
   .title {
@@ -1230,6 +1227,7 @@ var BUTTON_STYLES = css`
     border-radius: 0;
     background: linear-gradient(180deg, color-mix(in srgb, var(--awwbookmarklet-button-bg, #f1f4f8) 92%, #ffffff 8%), var(--awwbookmarklet-button-bg, #f1f4f8));
     color: var(--awwbookmarklet-button-fg, #111720);
+    box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 var(--awwbookmarklet-border-subtle, #9ba5b3);
     padding: 0 12px;
     font: inherit;
     line-height: 1;
@@ -1243,6 +1241,7 @@ var BUTTON_STYLES = css`
   :host([variant="primary"]) button {
     background: var(--awwbookmarklet-selection-bg, #1f5eae);
     color: var(--awwbookmarklet-selection-fg, #f2f8ff);
+    box-shadow: inset 1px 1px 0 color-mix(in srgb, var(--awwbookmarklet-selection-bg, #1f5eae) 68%, #ffffff 32%), inset -1px -1px 0 color-mix(in srgb, var(--awwbookmarklet-selection-bg, #1f5eae) 72%, #000000 28%);
   }
 
   :host([variant="ghost"]) button {
@@ -4835,41 +4834,41 @@ function registerAllComponents() {
 var DEFAULT_THEME = {
   [PUBLIC_TOKENS.workspaceBg]: "rgba(0, 0, 0, 0)",
   [PUBLIC_TOKENS.windowBg]: "#eef1f5",
-  [PUBLIC_TOKENS.panelBg]: "#f8fafc",
-  [PUBLIC_TOKENS.titlebarActiveBg]: "rgba(46, 92, 142, 0.78)",
-  [PUBLIC_TOKENS.titlebarInactiveBg]: "rgba(136, 145, 160, 0.84)",
-  [PUBLIC_TOKENS.titlebarFg]: "#f8fbff",
-  [PUBLIC_TOKENS.borderStrong]: "#232a33",
-  [PUBLIC_TOKENS.borderSubtle]: "#9ba5b3",
-  [PUBLIC_TOKENS.focusRing]: "#154fbc",
-  [PUBLIC_TOKENS.buttonBg]: "#f1f4f8",
+  [PUBLIC_TOKENS.panelBg]: "#f3f5f7",
+  [PUBLIC_TOKENS.titlebarActiveBg]: "#dce2e9",
+  [PUBLIC_TOKENS.titlebarInactiveBg]: "#cfd5dd",
+  [PUBLIC_TOKENS.titlebarFg]: "#121820",
+  [PUBLIC_TOKENS.borderStrong]: "#4f5966",
+  [PUBLIC_TOKENS.borderSubtle]: "#a8b0ba",
+  [PUBLIC_TOKENS.focusRing]: "#174f9c",
+  [PUBLIC_TOKENS.buttonBg]: "#edf1f5",
   [PUBLIC_TOKENS.buttonFg]: "#111720",
-  [PUBLIC_TOKENS.buttonActiveBg]: "#dbe3ee",
-  [PUBLIC_TOKENS.inputBg]: "#ffffff",
+  [PUBLIC_TOKENS.buttonActiveBg]: "#d8dee6",
+  [PUBLIC_TOKENS.inputBg]: "#f8f9fa",
   [PUBLIC_TOKENS.inputFg]: "#111720",
-  [PUBLIC_TOKENS.menuBg]: "#f8fbff",
+  [PUBLIC_TOKENS.menuBg]: "#f3f5f7",
   [PUBLIC_TOKENS.menuFg]: "#0e1621",
   [PUBLIC_TOKENS.selectionBg]: "#1f5eae",
   [PUBLIC_TOKENS.selectionFg]: "#f2f8ff",
-  [PUBLIC_TOKENS.statusbarBg]: "#e5e8ee",
+  [PUBLIC_TOKENS.statusbarBg]: "#e2e7ed",
   [PUBLIC_TOKENS.appShellBg]: "#eef1f5",
-  [PUBLIC_TOKENS.surfaceRaisedBg]: "#ffffff",
-  [PUBLIC_TOKENS.surfaceInsetBg]: "#e7ebf1",
-  [PUBLIC_TOKENS.textMuted]: "#586272",
-  [PUBLIC_TOKENS.textHelp]: "#657184",
-  [PUBLIC_TOKENS.dividerColor]: "#c3cad4",
-  [PUBLIC_TOKENS.infoBg]: "#e7f0ff",
-  [PUBLIC_TOKENS.infoFg]: "#123d7a",
-  [PUBLIC_TOKENS.infoBorder]: "#7aa6e8",
-  [PUBLIC_TOKENS.successBg]: "#e5f5eb",
-  [PUBLIC_TOKENS.successFg]: "#195b34",
-  [PUBLIC_TOKENS.successBorder]: "#72b98b",
-  [PUBLIC_TOKENS.warningBg]: "#fff4d6",
-  [PUBLIC_TOKENS.warningFg]: "#6d4b00",
-  [PUBLIC_TOKENS.warningBorder]: "#d9ad3b",
-  [PUBLIC_TOKENS.dangerBg]: "#ffe8e6",
-  [PUBLIC_TOKENS.dangerFg]: "#8a1f17",
-  [PUBLIC_TOKENS.dangerBorder]: "#d46a60",
+  [PUBLIC_TOKENS.surfaceRaisedBg]: "#fbfcfd",
+  [PUBLIC_TOKENS.surfaceInsetBg]: "#dfe4ea",
+  [PUBLIC_TOKENS.textMuted]: "#44505f",
+  [PUBLIC_TOKENS.textHelp]: "#5f6a78",
+  [PUBLIC_TOKENS.dividerColor]: "#c7cdd5",
+  [PUBLIC_TOKENS.infoBg]: "#e8f2ff",
+  [PUBLIC_TOKENS.infoFg]: "#18549e",
+  [PUBLIC_TOKENS.infoBorder]: "#8db4e8",
+  [PUBLIC_TOKENS.successBg]: "#e7f4eb",
+  [PUBLIC_TOKENS.successFg]: "#1e6a3a",
+  [PUBLIC_TOKENS.successBorder]: "#86ba91",
+  [PUBLIC_TOKENS.warningBg]: "#fff4d8",
+  [PUBLIC_TOKENS.warningFg]: "#76520c",
+  [PUBLIC_TOKENS.warningBorder]: "#d7ad4d",
+  [PUBLIC_TOKENS.dangerBg]: "#fff0ee",
+  [PUBLIC_TOKENS.dangerFg]: "#a12824",
+  [PUBLIC_TOKENS.dangerBorder]: "#da7b73",
   [PUBLIC_TOKENS.overlayBackdrop]: "rgba(12, 18, 28, 0.38)",
   [PUBLIC_TOKENS.overlayShadow]: "0 18px 44px rgba(0, 0, 0, 0.24)",
   [PUBLIC_TOKENS.cardBg]: "#fbfcfe",
@@ -4877,8 +4876,8 @@ var DEFAULT_THEME = {
   [PUBLIC_TOKENS.metricBg]: "#ffffff",
   [PUBLIC_TOKENS.codeBg]: "#e8edf4",
   [PUBLIC_TOKENS.codeFg]: "#172131",
-  [PUBLIC_TOKENS.shadowDepth]: "0 12px 32px rgba(0, 0, 0, 0.18)",
-  [PUBLIC_TOKENS.frostOpacity]: "0.9",
+  [PUBLIC_TOKENS.shadowDepth]: "inset 1px 1px 0 #ffffff, inset -1px -1px 0 #a8b0ba",
+  [PUBLIC_TOKENS.frostOpacity]: "1",
   [PUBLIC_TOKENS.space1]: "4px",
   [PUBLIC_TOKENS.space2]: "8px",
   [PUBLIC_TOKENS.space3]: "12px",
@@ -5224,6 +5223,97 @@ function buildExampleToolWindow({ title = "Page Extraction Tool" } = {}) {
   return win;
 }
 
+// src/icons/retro-icons.js
+var BASE_ATTRS = `viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"`;
+var ICONS = {
+  logo: `<rect x="3" y="3" width="18" height="18" fill="currentColor" stroke="none"/><path d="M7 16V8h3l2 8 2-8h3v8" stroke="#f6f8fb"/><path d="M7 12h3M14 12h3" stroke="#f6f8fb"/>`,
+  window: `<rect x="4" y="5" width="16" height="14"/><path d="M4 9h16M7 7h1M10 7h1"/>`,
+  minimize: `<path d="M7 17h10"/>`,
+  maximize: `<rect x="7" y="7" width="10" height="10"/><path d="M10 4h10v10"/>`,
+  close: `<path d="M6 6l12 12M18 6L6 18"/>`,
+  menu: `<path d="M5 7h14M5 12h14M5 17h14"/>`,
+  panel: `<rect x="5" y="5" width="14" height="14"/><path d="M8 8h8M8 12h8M8 16h5"/>`,
+  back: `<path d="M14 6l-6 6 6 6M9 12h10"/>`,
+  forward: `<path d="M10 6l6 6-6 6M5 12h10"/>`,
+  refresh: `<path d="M18 8a7 7 0 1 0 1 6M18 4v4h-4"/>`,
+  search: `<circle cx="10" cy="10" r="5"/><path d="M14 14l6 6"/>`,
+  lock: `<rect x="6" y="10" width="12" height="10"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>`,
+  url: `<rect x="4" y="6" width="16" height="12"/><path d="M7 10h10M7 14h7"/>`,
+  link: `<path d="M10 8l2-2a4 4 0 0 1 6 6l-2 2M14 16l-2 2a4 4 0 0 1-6-6l2-2M9 15l6-6"/>`,
+  external: `<rect x="5" y="7" width="12" height="12"/><path d="M12 5h7v7M19 5l-8 8"/>`,
+  copyUrl: `<rect x="8" y="5" width="10" height="14"/><path d="M6 8H4v11h10v-2"/>`,
+  star: `<path d="M12 4l2.4 5 5.6.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.6-.8z"/>`,
+  fullscreen: `<path d="M5 10V5h5M14 5h5v5M19 14v5h-5M10 19H5v-5"/>`,
+  more: `<circle cx="6" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="18" cy="12" r="1" fill="currentColor" stroke="none"/>`,
+  capture: `<path d="M5 10V5h5M14 5h5v5M19 14v5h-5M10 19H5v-5M9 12h6"/>`,
+  console: `<rect x="4" y="6" width="16" height="12"/><path d="M7 10l3 2-3 2M12 15h5"/>`,
+  eye: `<path d="M3 12s3-5 9-5 9 5 9 5-3 5-9 5-9-5-9-5z"/><circle cx="12" cy="12" r="2"/>`,
+  upload: `<path d="M12 17V5M8 9l4-4 4 4M5 19h14"/>`,
+  dialog: `<rect x="5" y="6" width="14" height="12"/><path d="M5 10h14M8 8h1"/>`,
+  gear: `<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/>`,
+  sliders: `<path d="M5 7h14M5 12h14M5 17h14"/><rect x="8" y="5" width="3" height="4"/><rect x="14" y="10" width="3" height="4"/><rect x="6" y="15" width="3" height="4"/>`,
+  copy: `<rect x="8" y="5" width="10" height="14"/><path d="M6 8H4v11h10"/>`,
+  paste: `<path d="M9 5h6l1 3H8z"/><rect x="6" y="8" width="12" height="12"/>`,
+  cut: `<circle cx="7" cy="7" r="2"/><circle cx="7" cy="17" r="2"/><path d="M9 8l9 9M9 16l9-9"/>`,
+  edit: `<path d="M5 17l1 3 3-1 9-9-4-4zM13 7l4 4"/>`,
+  trash: `<path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13M10 10v7M14 10v7"/>`,
+  markdown: `<rect x="4" y="6" width="16" height="12"/><path d="M7 15V9l3 4 3-4v6M16 9v6M14 13l2 2 2-2"/>`,
+  folder: `<path d="M3 8h7l2 2h9v9H3z"/>`,
+  document: `<path d="M7 3h7l4 4v14H7zM14 3v5h4"/>`,
+  article: `<path d="M7 4h10v16H7zM10 8h4M10 12h4M10 16h4"/>`,
+  text: `<path d="M5 6h14M12 6v12M9 18h6"/>`,
+  image: `<rect x="5" y="6" width="14" height="12"/><path d="M7 16l4-5 3 3 2-2 3 4"/><circle cx="9" cy="9" r="1" fill="currentColor" stroke="none"/>`,
+  list: `<path d="M9 7h10M9 12h10M9 17h10"/><path d="M5 7h1M5 12h1M5 17h1"/>`,
+  table: `<rect x="4" y="5" width="16" height="14"/><path d="M4 10h16M4 15h16M10 5v14M15 5v14"/>`,
+  metrics: `<path d="M5 19V9M12 19V5M19 19v-7M3 19h18"/>`,
+  code: `<path d="M8 8l-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/>`,
+  note: `<path d="M6 4h12v14l-4 3H6zM14 18v3M9 8h6M9 12h6"/>`,
+  info: `<circle cx="12" cy="12" r="9"/><path d="M12 10v7M12 7h.01"/>`,
+  success: `<circle cx="12" cy="12" r="9"/><path d="M7 12l3 3 7-7"/>`,
+  warning: `<path d="M12 4l9 16H3zM12 9v5M12 17h.01"/>`,
+  error: `<circle cx="12" cy="12" r="9"/><path d="M8 8l8 8M16 8l-8 8"/>`,
+  neutral: `<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>`,
+  selected: `<rect x="5" y="5" width="14" height="14"/><path d="M8 12l3 3 5-6"/>`,
+  unselected: `<rect x="5" y="5" width="14" height="14"/>`,
+  radioSelected: `<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>`,
+  radio: `<circle cx="12" cy="12" r="8"/>`,
+  progress: `<rect x="5" y="9" width="14" height="6"/><path d="M6 12h8"/>`,
+  progressIndeterminate: `<rect x="5" y="9" width="14" height="6"/><path d="M7 14l4-4M12 14l4-4"/>`,
+  sync: `<path d="M18 8a7 7 0 0 0-12-1M6 4v4h4M6 16a7 7 0 0 0 12 1M18 20v-4h-4"/>`,
+  clock: `<circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/>`,
+  draft: `<path d="M6 4h12v16H6zM9 8h6M9 12h4"/><path d="M16 16l3 3"/>`,
+  shield: `<path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 12l2 2 4-5"/>`,
+  blocked: `<circle cx="12" cy="12" r="9"/><path d="M6 18L18 6"/>`,
+  frameBlocked: `<path d="M5 10V5h5M14 5h5v5M19 14v5h-5M10 19H5v-5" stroke-dasharray="4 3"/>`,
+  accessBlocked: `<rect x="6" y="10" width="12" height="10"/><path d="M8 10V7a4 4 0 0 1 8 0v3M9 15h6"/>`,
+  browserBlocked: `<rect x="4" y="6" width="16" height="12"/><path d="M4 10h16M8 14l8 0M9 17l6-6"/>`,
+  noResults: `<circle cx="10" cy="10" r="5"/><path d="M14 14l5 5M5 19h14" stroke-dasharray="3 3"/>`,
+  noCaptures: `<path d="M5 10V5h5M14 5h5v5M19 14v5h-5M10 19H5v-5" stroke-dasharray="4 3"/>`,
+  noSelection: `<rect x="5" y="5" width="14" height="14" stroke-dasharray="4 3"/>`,
+  retry: `<path d="M18 8a7 7 0 1 0 1 6M18 4v4h-4"/>`,
+  permissions: `<path d="M9 19a5 5 0 0 1 6-8M12 4a4 4 0 1 1 0 8M16 16h5M18.5 13.5v5"/>`,
+  grid: `<rect x="5" y="5" width="5" height="5"/><rect x="14" y="5" width="5" height="5"/><rect x="5" y="14" width="5" height="5"/><rect x="14" y="14" width="5" height="5"/>`,
+  filter: `<path d="M4 6h16l-6 7v5l-4 2v-7z"/>`,
+  sort: `<path d="M8 5v14M5 8l3-3 3 3M16 19V5M13 16l3 3 3-3"/>`,
+  columns: `<rect x="4" y="5" width="16" height="14"/><path d="M10 5v14M16 5v14"/>`,
+  pane: `<rect x="4" y="5" width="16" height="14"/><path d="M12 5v14"/>`
+};
+var ICON_NAMES = Object.freeze(Object.keys(ICONS));
+function iconSvg(name, { label = "", className = "ui-icon" } = {}) {
+  const body = ICONS[name] || ICONS.panel;
+  const accessibility = label ? `role="img" aria-label="${escapeHtml(label)}"` : `aria-hidden="true"`;
+  return `<svg class="${className}" ${BASE_ATTRS} ${accessibility}>${body}</svg>`;
+}
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
 // src/demo/catalog.js
 registerAllComponents();
 var CATALOG_OWNER = "catalog-page";
@@ -5233,9 +5323,6 @@ function nextOwner(prefix) {
   serial += 1;
   return `${prefix}-${serial}`;
 }
-function icon(path) {
-  return `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="${path}" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="square" stroke-linejoin="miter"/></svg>`;
-}
 function mountWindow(win, prefix) {
   const owner = nextOwner(prefix);
   const record = acquireDesktopRoot(owner);
@@ -5244,7 +5331,7 @@ function mountWindow(win, prefix) {
   return win;
 }
 function openExample() {
-  mountWindow(buildExampleToolWindow({ title: "Example Tool" }), "example");
+  mountWindow(buildExampleToolWindow({ title: "Session Capture Console" }), "example");
 }
 function openBlank() {
   const win = document.createElement(TAGS.window);
@@ -5257,615 +5344,619 @@ function openBlank() {
     </${TAGS.panel}>
     <${TAGS.statusbar} slot="statusbar"><span>Ready</span><span>Blank</span><span>No errors</span></${TAGS.statusbar}>
   `;
-  win.setRect({ x: 110, y: 80, width: 420, height: 260 });
+  win.setRect({ x: 110, y: 80, width: 430, height: 270 });
   mountWindow(win, "blank");
 }
-function specimen({ title, description, tag, span = 6, body, variant = "default", tone = "", footerNote = "" }) {
-  const node = document.createElement("section");
-  node.className = `specimen specimen--${variant} span-${span}${tone ? ` specimen--${tone}` : ""}`;
-  node.innerHTML = `
-    <header class="specimen-header">
-      <div>
-        <h3 class="specimen-title">${title}</h3>
-        ${description ? `<p class="specimen-desc">${description}</p>` : ""}
-      </div>
-      <p class="specimen-tag">${tag}</p>
-    </header>
-    <div class="specimen-body"></div>
-    ${footerNote ? `<footer class="specimen-footer">${footerNote}</footer>` : ""}
-  `;
-  node.querySelector(".specimen-body").append(body);
-  return node;
+function button(label, options = {}) {
+  const { variant = "secondary", icon = "", id = "", disabled = false, aria = "" } = options;
+  return `<button class="os-button os-button--${variant}"${id ? ` id="${id}"` : ""}${disabled ? " disabled" : ""}${aria ? ` aria-label="${aria}"` : ""}>${icon ? iconSvg(icon) : ""}<span>${label}</span></button>`;
 }
-function section({ label, title, description, children }) {
-  const node = document.createElement("section");
-  node.className = "catalog-section section-band";
-  node.innerHTML = `
-    <div class="section-heading">
-      <div>
-        <p class="section-label">${label}</p>
-        <h2>${title}</h2>
-      </div>
-      <p>${description}</p>
-    </div>
-    <div class="specimen-grid"></div>
-  `;
-  node.querySelector(".specimen-grid").append(...children);
-  return node;
+function iconButton(label, name, options = {}) {
+  const { id = "", pressed = false } = options;
+  return `<button class="icon-button"${id ? ` id="${id}"` : ""} aria-label="${label}"${pressed ? ` aria-pressed="true"` : ""}>${iconSvg(name)}</button>`;
 }
-function htmlNode(markup, className = "demo-stack") {
-  const node = document.createElement("div");
-  node.className = className;
-  node.innerHTML = markup;
-  return node;
+function keycap(text) {
+  return `<kbd class="keycap">${text}</kbd>`;
 }
-function componentTagList(items) {
-  return `<div class="component-tags">${items.map((item) => `<span>${item}</span>`).join("")}</div>`;
-}
-function showcaseFrame(markup) {
-  return htmlNode(`<div class="showcase-frame">${markup}</div>`, "showcase-wrap");
-}
-function toolCard({ name, legacy, components }) {
+function field(label, control, options = {}) {
+  const { help = "", error = "", required = false, disabled = false } = options;
   return `
-    <article class="migration-card">
-      <h4>${name}</h4>
-      <p>${legacy}</p>
-      ${componentTagList(components)}
+    <label class="field-row${disabled ? " is-disabled" : ""}${error ? " is-invalid" : ""}">
+      <span class="field-label">${label}${required ? `<span aria-hidden="true">*</span>` : ""}</span>
+      <span class="field-main">${control}${help ? `<small>${help}</small>` : ""}${error ? `<small class="field-error">${error}</small>` : ""}</span>
+    </label>
+  `;
+}
+function panel({ title, icon = "panel", meta = "", className = "", body = "", actions = "" }) {
+  return `
+    <section class="catalog-panel ${className}">
+      <header class="panel-titlebar">
+        <span class="panel-title">${iconSvg(icon)}<span>${title}</span></span>
+        ${meta ? `<span class="panel-meta">${meta}</span>` : ""}
+        ${actions ? `<span class="panel-actions">${actions}</span>` : ""}
+      </header>
+      <div class="panel-body">${body}</div>
+    </section>
+  `;
+}
+function miniWindow({ title, body, footer = "", className = "" }) {
+  return `
+    <div class="mini-window ${className}">
+      <div class="mini-titlebar">
+        <span>${iconSvg("window")} ${title}</span>
+        <span class="window-controls" aria-hidden="true"><i></i><i></i><i></i></span>
+      </div>
+      <div class="mini-body">${body}</div>
+      ${footer ? `<div class="mini-status">${footer}</div>` : ""}
+    </div>
+  `;
+}
+function stateCard(tone, icon, title, message, action = "") {
+  return `
+    <article class="state-card state-card--${tone}">
+      <span class="state-icon">${iconSvg(icon)}</span>
+      <span class="state-copy"><strong>${title}</strong><small>${message}</small></span>
+      ${action ? `<span class="state-action">${action}</span>` : ""}
     </article>
   `;
 }
-function stateMatrix(items) {
-  return htmlNode(`
-    <div class="state-matrix">
-      ${items.map((item) => `
-        <div class="state-cell">
-          <${TAGS.stateOverlay} state="${item.state}" label="${item.label}">
-            ${item.actions ? `<${TAGS.toolbar} slot="actions" density="compact" wrap>${item.actions}</${TAGS.toolbar}>` : ""}
-          </${TAGS.stateOverlay}>
-        </div>
-      `).join("")}
-    </div>
-  `);
+function metricRegister(items) {
+  return `<div class="metric-register">${items.map((item) => `
+    <div><span>${item.label}</span><strong>${item.value}</strong><small>${item.detail}</small></div>
+  `).join("")}</div>`;
 }
-var mockArticleSrcdoc = `<!doctype html>
-<html><head><style>
-body{margin:0;font:14px system-ui,sans-serif;color:#1a2433;background:#fff}
-.wrap{padding:18px;display:grid;gap:12px}
-h1{font-size:21px;margin:0}
-p{margin:0;line-height:1.45;color:#3f4b5c}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.card{border:1px solid #b9c2ce;background:#f5f7fa;padding:10px}
-.bar{height:10px;background:#2f6fb7;margin-top:6px}
-table{width:100%;border-collapse:collapse;font-size:12px}
-td,th{border:1px solid #cbd3de;padding:5px;text-align:left}
-</style></head><body><main class="wrap">
-<h1>Research Capture</h1>
-<p>Mock loaded document for iframe, overflow, and blocked-preview workflows.</p>
-<div class="grid"><div class="card">Selected text<div class="bar" style="width:78%"></div></div><div class="card">Images found<div class="bar" style="width:42%"></div></div></div>
-<table><tr><th>Block</th><th>Status</th></tr><tr><td>Article heading</td><td>Captured</td></tr><tr><td>Long quote</td><td>Needs review</td></tr></table>
-</main></body></html>`;
-function hydrateMockBrowser(panel) {
-  queueMicrotask(() => {
-    if (panel.addressFallback)
-      panel.addressFallback.textContent = "";
-    panel.frame?.setAttribute("srcdoc", mockArticleSrcdoc);
-  });
-}
-function buildShellDemo() {
-  return htmlNode(`
-    <div class="demo-row">
-      <${TAGS.button} id="open-example" variant="primary">Open Example Tool</${TAGS.button}>
-      <${TAGS.button} id="open-blank">Open Blank Window</${TAGS.button}>
-    </div>
-    <div class="callout">Floating windows are intentionally tested outside the document flow. Open both shells, then drag, resize, focus, and close them.</div>
-    <div class="token-strip">
-      <span class="token">${TAGS.window}</span>
-      <span class="token">${TAGS.menubar}</span>
-      <span class="token">${TAGS.statusbar}</span>
-    </div>
-  `);
-}
-function buildControlDemo() {
-  return htmlNode(`
-    <div class="demo-row">
-      <${TAGS.button} variant="primary">Primary</${TAGS.button}>
-      <${TAGS.button}>Default</${TAGS.button}>
-      <${TAGS.button} variant="ghost">Ghost</${TAGS.button}>
-      <${TAGS.button} tone="danger">Danger</${TAGS.button}>
-      <${TAGS.button} disabled>Disabled</${TAGS.button}>
-      <${TAGS.iconButton} label="Add">${icon("M8 3v10M3 8h10")}</${TAGS.iconButton}>
-      <${TAGS.iconButton} label="Remove" tone="danger">${icon("M4 8h8")}</${TAGS.iconButton}>
-    </div>
-    <div class="demo-two-col">
-      <div class="demo-stack">
-        <${TAGS.input} value="Inline input"></${TAGS.input}>
-        <${TAGS.textarea} rows="4" value="Inline textarea"></${TAGS.textarea}>
+function commandList(commands) {
+  return `
+    <div class="command-surface">
+      <label class="search-box">${iconSvg("search")}<input value="" placeholder="Type a command or search..." aria-label="Command search" /><span>${keycap("Ctrl+K")}</span></label>
+      <div class="command-list" role="listbox" aria-label="Commands">
+        ${commands.map((cmd, index) => `
+          <button class="command-row${index === 0 ? " is-selected" : ""}" type="button" role="option" aria-selected="${index === 0 ? "true" : "false"}">
+            ${iconSvg(cmd.icon)}
+            <span><strong>${cmd.title}</strong><small>${cmd.desc}</small></span>
+            <span class="shortcut">${cmd.keys.map(keycap).join("")}</span>
+          </button>
+        `).join("")}
       </div>
-      <div class="demo-stack">
-        <${TAGS.select}><option selected>Preset 1</option><option>Preset 2</option></${TAGS.select}>
-        <${TAGS.range} min="0" max="100" value="45"></${TAGS.range}>
-        <${TAGS.progress} value="45" max="100"></${TAGS.progress}>
-      </div>
+      <footer class="command-footer"><span>${keycap("↑")} ${keycap("↓")} Navigate</span><span>${keycap("Enter")} Execute</span><span>${keycap("Esc")} Close</span></footer>
     </div>
-    <div class="demo-row">
-      <${TAGS.checkbox} checked>Remember choice</${TAGS.checkbox}>
-      <${TAGS.radio} name="demo-inline" checked>Text</${TAGS.radio}>
-      <${TAGS.radio} name="demo-inline">HTML</${TAGS.radio}>
-    </div>
-  `);
-}
-function buildLayoutDemo() {
-  return htmlNode(`
-    <${TAGS.group} caption="Compact settings">
-      <${TAGS.tabs}>
-        <${TAGS.tabPanel} label="Settings" selected>
-          <${TAGS.listbox}>
-            <div role="option" aria-selected="true">Mode A</div>
-            <div role="option">Mode B</div>
-            <div role="option">Mode C</div>
-          </${TAGS.listbox}>
-        </${TAGS.tabPanel}>
-        <${TAGS.tabPanel} label="Status">
-          <${TAGS.statusbar}><span>Ready</span><span>3 items</span><span>Stable</span></${TAGS.statusbar}>
-        </${TAGS.tabPanel}>
-      </${TAGS.tabs}>
-    </${TAGS.group}>
-    <${TAGS.panel}>
-      <span slot="title">Panel with actions</span>
-      <span slot="subtitle">Header regions stay separate from body content.</span>
-      <${TAGS.toolbar} slot="actions" density="compact" wrap>
-        <${TAGS.button}>Apply</${TAGS.button}>
-        <${TAGS.button} variant="ghost">Reset</${TAGS.button}>
-      </${TAGS.toolbar}>
-      <p class="inline-note">This compact composition validates group, panel, tabs, listbox, toolbar, and status surfaces without hiding their boundaries.</p>
-    </${TAGS.panel}>
-  `);
-}
-function buildWorkflowDemo() {
-  const wrap = showcaseFrame(`
-    <${TAGS.appShell}>
-      <span slot="title">Session Capture Console</span>
-      <span slot="subtitle">Mock workflow for screenshot, reminder, and content-selection tools.</span>
-      <${TAGS.toolbar} slot="actions" wrap density="compact" align="end">
-        <${TAGS.button} variant="primary" command="capture.collect">Collect</${TAGS.button}>
-        <${TAGS.button} variant="ghost">Refresh</${TAGS.button}>
-        <${TAGS.button} tone="danger">Clear</${TAGS.button}>
-      </${TAGS.toolbar}>
-      <${TAGS.statusLine} slot="status" tone="success">Ready. 3 mock rows loaded.</${TAGS.statusLine}>
-      <div slot="body" class="demo-stack">
-        <${TAGS.alert} tone="warning" title="Draft available" dismissible>
-          A previous capture draft can be restored before starting a new run.
-          <${TAGS.toolbar} slot="actions" density="compact" wrap>
-            <${TAGS.button}>Restore</${TAGS.button}>
-            <${TAGS.button} variant="ghost">Start fresh</${TAGS.button}>
-          </${TAGS.toolbar}>
-        </${TAGS.alert}>
-
-        <${TAGS.panel}>
-          <span slot="title">Capture settings</span>
-          <${TAGS.toolbar} slot="actions" density="compact" wrap>
-            <${TAGS.button} id="demo-toast" variant="primary">Show toast</${TAGS.button}>
-            <${TAGS.button} id="demo-dialog-btn">Open dialog</${TAGS.button}>
-          </${TAGS.toolbar}>
-          <div class="field-grid">
-            <${TAGS.field} label="JPEG quality" help="Used by session screenshot exports." suffix="%" required>
-              <${TAGS.input} type="number" min="1" max="100" value="80"></${TAGS.input}>
-              <span slot="suffix">%</span>
-            </${TAGS.field}>
-            <${TAGS.field} label="Reminder delay" error="Delay must be at least 1 minute.">
-              <${TAGS.input} type="number" value="0"></${TAGS.input}>
-              <span slot="suffix">min</span>
-            </${TAGS.field}>
-          </div>
-        </${TAGS.panel}>
-      </div>
-    </${TAGS.appShell}>
-
-    <${TAGS.dialog} id="demo-dialog" modal label="Demo dialog" close-on-backdrop>
-      <span slot="title">Command-like dialog</span>
-      <p class="inline-note">This dialog uses the shared overlay and focus-restoration path.</p>
-      <${TAGS.toolbar} slot="footer" align="end">
-        <${TAGS.button} id="demo-dialog-close">Close</${TAGS.button}>
-      </${TAGS.toolbar}>
-    </${TAGS.dialog}>
-  `);
-  wrap.querySelector("#demo-toast").addEventListener("click", () => {
-    showToast({ key: "demo", message: "Saved mock draft", tone: "success", timeout: 1800 });
-  });
-  wrap.querySelector("#demo-dialog-btn").addEventListener("click", () => wrap.querySelector("#demo-dialog").show());
-  wrap.querySelector("#demo-dialog-close").addEventListener("click", () => wrap.querySelector("#demo-dialog").close("demo"));
-  return wrap;
-}
-function buildFieldMatrixDemo() {
-  return htmlNode(`
-    <div class="field-grid">
-      <${TAGS.field} label="Due at" help="This is the event deadline time." required>
-        <${TAGS.input} type="datetime-local" value="2026-04-25T17:30"></${TAGS.input}>
-      </${TAGS.field}>
-      <${TAGS.field} label="JPEG quality" help="Screenshot export quality." orientation="horizontal">
-        <${TAGS.input} type="number" min="1" max="100" value="82"></${TAGS.input}>
-        <span slot="suffix">%</span>
-      </${TAGS.field}>
-      <${TAGS.field} label="Reminder offset" error="Offset must be between 0 and 10080 minutes.">
-        <${TAGS.input} type="number" value="-1"></${TAGS.input}>
-        <span slot="suffix">min</span>
-      </${TAGS.field}>
-      <${TAGS.field} label="Capture mode" orientation="inline">
-        <${TAGS.select}><option selected>Visible viewport</option><option>Full page</option><option>Selected region</option></${TAGS.select}>
-      </${TAGS.field}>
-      <${TAGS.field} label="Disabled setting" help="Inherited from browser policy." disabled>
-        <${TAGS.checkbox} checked>Enable page toolbar</${TAGS.checkbox}>
-      </${TAGS.field}>
-      <${TAGS.field} label="Filename prefix">
-        <span slot="prefix">session-</span>
-        <${TAGS.input} value="research"></${TAGS.input}>
-      </${TAGS.field}>
-    </div>
-  `);
-}
-function buildFeedbackMatrixDemo() {
-  return htmlNode(`
-    <div class="demo-stack">
-      <div class="status-strip">
-        <${TAGS.statusLine}>Idle</${TAGS.statusLine}>
-        <${TAGS.statusLine} tone="info" busy>Loading suggestions</${TAGS.statusLine}>
-        <${TAGS.statusLine} tone="success">Saved</${TAGS.statusLine}>
-        <${TAGS.statusLine} tone="warning">Needs fallback</${TAGS.statusLine}>
-        <${TAGS.statusLine} tone="danger">Capture failed</${TAGS.statusLine}>
-      </div>
-      <${TAGS.alert} tone="info" title="Privacy note">Page content stays local until an explicit export action.</${TAGS.alert}>
-      <${TAGS.alert} tone="success" title="Draft restored" dismissible>
-        Previous session data is available.
-        <${TAGS.toolbar} slot="actions" density="compact" wrap>
-          <${TAGS.button}>Review</${TAGS.button}>
-          <${TAGS.button} variant="ghost">Dismiss</${TAGS.button}>
-        </${TAGS.toolbar}>
-      </${TAGS.alert}>
-      <${TAGS.alert} tone="warning" title="Browser blocked the preview">Open externally or retry after changing page policy.</${TAGS.alert}>
-      <${TAGS.alert} tone="danger" title="Clipboard denied">Use manual copy to finish the operation.</${TAGS.alert}>
-    </div>
-  `);
-}
-function buildRowsDemo() {
-  return htmlNode(`
-    <${TAGS.list} empty-text="No captured pages">
-      <${TAGS.listItem} selectable selected tone="success">
-        <span slot="title">Current research page</span>
-        <span slot="meta">example.com - captured just now</span>
-        <span slot="description">A long captured page title and description wrap without breaking the row layout.</span>
-        <${TAGS.statusLine} slot="status" tone="success" compact>Captured</${TAGS.statusLine}>
-        <${TAGS.toolbar} slot="actions" density="compact">
-          <${TAGS.iconButton} label="Copy">${icon("M5 3h7v9H5zM3 5h2v8h7")}</${TAGS.iconButton}>
-          <${TAGS.iconButton} label="Delete" tone="danger">${icon("M4 5h8M6 5v7m4-7v7M6 3h4l1 2H5z")}</${TAGS.iconButton}>
-        </${TAGS.toolbar}>
-      </${TAGS.listItem}>
-      <${TAGS.listItem} tone="warning">
-        <span slot="title">Blocked iframe page</span>
-        <span slot="meta">blocked.example</span>
-        <span slot="description">The row keeps actions separate from row activation.</span>
-        <${TAGS.statusLine} slot="status" tone="warning" compact>Needs fallback</${TAGS.statusLine}>
-      </${TAGS.listItem}>
-      <${TAGS.listItem} interactive tone="danger">
-        <span slot="leading" class="token">404</span>
-        <span slot="title">Untitled captured tab with a very long URL-only fallback title that still needs to wrap cleanly</span>
-        <span slot="meta">https://example.invalid/research/very/long/path?with=query-string</span>
-        <span slot="description">Failed captures, missing titles, and long URLs are normal data, not edge-case noise.</span>
-        <${TAGS.statusLine} slot="status" tone="danger" compact>Failed</${TAGS.statusLine}>
-      </${TAGS.listItem}>
-    </${TAGS.list}>
-    <${TAGS.card} tone="info">
-      <span slot="title">Preview card</span>
-      <span slot="meta">Reusable card shell</span>
-      Cards provide a stable header, body, action, media, and footer surface for captured blocks or settings rows.
-    </${TAGS.card}>
-  `);
-}
-function buildMetricDemo() {
-  return htmlNode(`
-    <div class="metric-grid">
-      <${TAGS.metricCard} label="Open tabs" value="9" delta="+2" tone="info" description="Browser surfaces in the workspace"></${TAGS.metricCard}>
-      <${TAGS.metricCard} label="Captured blocks" value="34" delta="12 new" tone="success" description="Saved locally in this session"></${TAGS.metricCard}>
-      <${TAGS.metricCard} label="Fallbacks" value="2" delta="Needs action" tone="warning" description="Iframe or clipboard policy issues"></${TAGS.metricCard}>
-    </div>
-  `);
-}
-function buildPreviewDemo() {
-  const wrap = htmlNode(`
-    <div class="preview-duo">
-    <div class="surface-frame rich-preview-frame">
-      <${TAGS.richPreview} id="kit-rich-preview" empty-text="No preview"></${TAGS.richPreview}>
-    </div>
-    <${TAGS.browserPanel} class="browser-demo" title="Mock browser panel" loading-label="Loading mock page">
-      <span slot="address">https://example.com/research/capture</span>
-      <${TAGS.toolbar} slot="actions" density="compact">
-        <${TAGS.button} variant="ghost">Inspect</${TAGS.button}>
-      </${TAGS.toolbar}>
-    </${TAGS.browserPanel}>
-    </div>
-  `);
-  wrap.querySelector("#kit-rich-preview").html = `
-    <h2>Quarterly research note</h2>
-    <p>Captured content can include <a href="https://example.com">links</a>, tables, images, quotes, and code while staying inside the preview surface.</p>
-    <table><tr><th>Page</th><th>Status</th></tr><tr><td>Very long table cell that should scroll instead of breaking the window</td><td>Captured</td></tr><tr><td>Follow-up checklist</td><td>Queued</td></tr></table>
-    <blockquote>Imported page content is constrained by the component and remains readable beside browser chrome.</blockquote>
-    <pre><code>const veryLongLine = "This code block is intentionally long so overflow stays inside the preview surface.";</code></pre>
   `;
-  hydrateMockBrowser(wrap.querySelector(TAGS.browserPanel));
-  return wrap;
 }
-function buildStateDemo() {
-  const matrix = stateMatrix([
-    { state: "empty", label: "No filtered results" },
-    { state: "loading", label: "Loading page snapshot" },
-    { state: "error", label: "Capture worker failed" },
-    { state: "blocked", label: "Preview blocked by page policy", actions: `<${TAGS.button}>Retry</${TAGS.button}><${TAGS.button} variant="ghost">Open externally</${TAGS.button}>` }
-  ]);
-  matrix.insertAdjacentHTML("beforeend", `
-    <${TAGS.manualCopy} label="Fallback copy" value="Manual fallback text from a failed clipboard write."></${TAGS.manualCopy}>
-  `);
-  return matrix;
-}
-function buildBrowserPanelStatesDemo() {
-  const wrap = htmlNode(`
-    <${TAGS.browserPanel} class="browser-demo" title="Loaded browser panel">
-      <span slot="address">https://example.com/research</span>
-      <${TAGS.toolbar} slot="actions" density="compact">
-        <${TAGS.button} variant="ghost">Copy URL</${TAGS.button}>
-        <${TAGS.button} variant="ghost">Open</${TAGS.button}>
-      </${TAGS.toolbar}>
-    </${TAGS.browserPanel}>
-    <div class="browser-state-grid">
-      <div class="surface-frame">
-        <${TAGS.stateOverlay} state="loading" label="Browser panel loading"></${TAGS.stateOverlay}>
-      </div>
-      <div class="surface-frame">
-        <${TAGS.stateOverlay} state="blocked" label="Frame refused to load">
-          <${TAGS.toolbar} slot="actions" density="compact" wrap>
-            <${TAGS.button}>Retry</${TAGS.button}>
-            <${TAGS.button} variant="ghost">Open externally</${TAGS.button}>
-          </${TAGS.toolbar}>
-        </${TAGS.stateOverlay}>
+function urlPicker() {
+  const rows = [
+    ["url", "https://example.com/research", "Current page"],
+    ["article", "https://example.com/research/notes", "Recent page"],
+    ["table", "https://example.com/research/data", "Recent page"],
+    ["clock", "https://example.com/research/archive", "Visited 2d ago"],
+    ["search", 'Search history for "research"', "Press Enter to search all history"]
+  ];
+  return `
+    <div class="url-surface">
+      <label class="select-like"><input value="https://example.com/research" aria-label="URL picker" /><button aria-label="Open URL suggestions">${iconSvg("menu")}</button></label>
+      <div class="url-list" role="listbox" aria-label="URL suggestions">
+        ${rows.map((row, index) => `
+          <button class="url-row${index === 0 ? " is-selected" : ""}" type="button" role="option" aria-selected="${index === 0 ? "true" : "false"}">
+            ${iconSvg(row[0])}<span><strong>${row[1]}</strong><small>${row[2]}</small></span>
+          </button>
+        `).join("")}
       </div>
     </div>
-  `);
-  hydrateMockBrowser(wrap.querySelector(TAGS.browserPanel));
-  return wrap;
+  `;
 }
-function buildCommandDemo() {
-  const wrap = htmlNode(`
-    <div class="command-showcase">
-      <${TAGS.commandPalette} id="inline-command-palette" placeholder="Search workspace commands"></${TAGS.commandPalette}>
-      <div class="demo-stack">
-        <${TAGS.shortcutHelp} id="inline-shortcuts"></${TAGS.shortcutHelp}>
-        <${TAGS.toolbar} density="compact" wrap>
-          <${TAGS.button} id="open-palette" variant="primary">Open dialog</${TAGS.button}>
-          <${TAGS.button} id="open-shortcuts">Shortcuts</${TAGS.button}>
-          <${TAGS.button} id="toast-success">Toast</${TAGS.button}>
-          <${TAGS.button} id="toast-warning" tone="warning">Warn</${TAGS.button}>
-          <${TAGS.button} id="toast-danger" tone="danger">Fail</${TAGS.button}>
-        </${TAGS.toolbar}>
-      </div>
+function browserToolbar(address = "https://example.com/research") {
+  return `
+    <div class="browser-toolbar">
+      ${iconButton("Back", "back")}
+      ${iconButton("Forward", "forward")}
+      ${iconButton("Refresh", "refresh")}
+      <label class="browser-address">${iconSvg("lock")}<input value="${address}" aria-label="Address" /></label>
+      ${iconButton("Bookmark", "star")}
+      ${iconButton("Fullscreen", "fullscreen", { pressed: true })}
+      ${iconButton("More", "more")}
     </div>
-    <${TAGS.dialog} id="palette-dialog" modal label="Command palette" close-on-backdrop>
-      <span slot="title">Command palette</span>
-      <div class="palette-dialog-body">
-        <${TAGS.commandPalette} id="command-palette" placeholder="Type a command"></${TAGS.commandPalette}>
-        <${TAGS.shortcutHelp} id="dialog-shortcuts"></${TAGS.shortcutHelp}>
-      </div>
-      <${TAGS.toolbar} slot="footer" align="end">
-        <${TAGS.button} id="palette-close">Close</${TAGS.button}>
-      </${TAGS.toolbar}>
-    </${TAGS.dialog}>
-    <${TAGS.dialog} id="shortcut-dialog" modal label="Keyboard shortcuts" close-on-backdrop>
-      <span slot="title">Keyboard shortcuts</span>
-      <${TAGS.shortcutHelp} id="shortcut-help"></${TAGS.shortcutHelp}>
-      <${TAGS.toolbar} slot="footer" align="end">
-        <${TAGS.button} id="shortcut-close">Close</${TAGS.button}>
-      </${TAGS.toolbar}>
-    </${TAGS.dialog}>
-  `);
-  const commands = [
-    { id: "tile.add", label: "Add tile", group: "Workspace", shortcut: "Alt+T", description: "Create a browser tile from the URL field.", keywords: ["browser", "url"] },
-    { id: "layout.monocle", label: "Switch to monocle", group: "Layout", shortcut: "Alt+M", description: "Focus one tile at a time." },
-    { id: "capture.copy", label: "Copy current capture", group: "Capture", shortcut: "Alt+Shift+C", description: "Copy selected page content." },
-    { id: "danger.clear", label: "Clear workspace", group: "Workspace", shortcut: "", description: "Remove all tiles after confirmation.", disabled: true }
-  ];
-  const shortcuts = [
-    { group: "Workspace", shortcut: "Alt+J", description: "Focus next tile" },
-    { group: "Workspace", shortcut: "Alt+K", description: "Focus previous tile" },
-    { group: "Layout", shortcut: "Alt+Enter", description: "Promote tile to master area" },
-    { group: "Tools", shortcut: "Alt+P", description: "Open command palette" }
-  ];
-  wrap.querySelector("#inline-command-palette").commands = commands;
-  wrap.querySelector("#command-palette").commands = commands;
-  wrap.querySelector("#inline-shortcuts").shortcuts = shortcuts.slice(0, 3);
-  wrap.querySelector("#dialog-shortcuts").shortcuts = shortcuts.slice(0, 3);
-  wrap.querySelector("#shortcut-help").shortcuts = shortcuts;
-  wrap.querySelector("#open-palette").addEventListener("click", () => {
-    wrap.querySelector("#palette-dialog").show();
-    queueMicrotask(() => wrap.querySelector("#command-palette").focusInput());
-  });
-  wrap.querySelector("#open-shortcuts").addEventListener("click", () => wrap.querySelector("#shortcut-dialog").show());
-  wrap.querySelector("#palette-close").addEventListener("click", () => wrap.querySelector("#palette-dialog").close("demo"));
-  wrap.querySelector("#shortcut-close").addEventListener("click", () => wrap.querySelector("#shortcut-dialog").close("demo"));
-  wrap.querySelector("#toast-success").addEventListener("click", () => showToast({ key: "demo-toast", message: "Copied current URL", tone: "success", timeout: 1800 }));
-  wrap.querySelector("#toast-warning").addEventListener("click", () => showToast({ key: "demo-toast", message: "Preview needs fallback", tone: "warning", timeout: 2200 }));
-  wrap.querySelector("#toast-danger").addEventListener("click", () => showToast({ key: "demo-toast", message: "Command failed", tone: "danger", timeout: 2600 }));
-  wrap.querySelector("#command-palette").addEventListener("awwbookmarklet-command-palette-execute", (event) => {
-    showToast({ key: "command", message: `Command: ${event.detail.commandId}`, tone: "info", timeout: 1600 });
-  });
-  wrap.querySelector("#inline-command-palette").addEventListener("awwbookmarklet-command-palette-execute", (event) => {
-    showToast({ key: "command", message: `Command: ${event.detail.commandId}`, tone: "info", timeout: 1600 });
-  });
-  return wrap;
+  `;
 }
-function buildUrlPickerDemo() {
-  const wrap = htmlNode(`
-    <div class="url-picker-showcase">
-      <${TAGS.toolbar} density="compact" wrap>
-        <${TAGS.iconButton} label="Back">${icon("M10 4L6 8l4 4")}</${TAGS.iconButton}>
-        <${TAGS.iconButton} label="Forward">${icon("M6 4l4 4-4 4")}</${TAGS.iconButton}>
-        <${TAGS.urlPicker} id="demo-url-picker" open value="notes about iframe fallback" placeholder="Type URL or search query"></${TAGS.urlPicker}>
-        <${TAGS.button} variant="primary">Add tile</${TAGS.button}>
-      </${TAGS.toolbar}>
-      <${TAGS.statusLine} compact tone="info">Search fallback preview with recent pages and bookmarks</${TAGS.statusLine}>
-    </div>
-  `);
-  wrap.querySelector("#demo-url-picker").suggestions = [
-    { title: "AWW tools dashboard", url: "https://example.com/tools", description: "Recent workspace page" },
-    { title: "Bookmark: CSS reference", url: "https://developer.mozilla.org/en-US/docs/Web/CSS", description: "Manual bookmark" },
-    { title: "Session snapshot notes", url: "https://example.com/sessions/current", description: "Open from saved session" }
-  ];
-  wrap.querySelector("#demo-url-picker").addEventListener("awwbookmarklet-url-picker-apply", (event) => {
-    showToast({ key: "url-picker", message: `Navigate: ${event.detail.decision.targetUrl}`, tone: "info", timeout: 1800 });
-  });
-  return wrap;
-}
-function buildMiniBrowserSpecimen() {
-  return showcaseFrame(`
-    <div class="mini-browser-specimen">
-      <${TAGS.toolbar} density="compact" wrap>
-        <${TAGS.iconButton} label="Back">${icon("M10 4L6 8l4 4")}</${TAGS.iconButton}>
-        <${TAGS.iconButton} label="Forward">${icon("M6 4l4 4-4 4")}</${TAGS.iconButton}>
-        <${TAGS.urlPicker} id="mini-url-picker" value="https://example.com/research"></${TAGS.urlPicker}>
-        <${TAGS.button} variant="ghost">Page actions</${TAGS.button}>
-      </${TAGS.toolbar}>
-      <${TAGS.statusLine} tone="success" compact>Loaded example.com/research</${TAGS.statusLine}>
-      <div class="mini-browser-content">
-        <div class="mini-browser-page">
-          <header>
-            <h4>Research workspace</h4>
-            <p>Mock loaded page with selected article regions and page-action feedback.</p>
-          </header>
-          <div class="mini-browser-columns">
-            <section>
-              <strong>Captured blocks</strong>
-              <p>Article heading, lead paragraph, comparison table, and code snippet.</p>
-            </section>
-            <section>
-              <strong>Page actions</strong>
-              <p>Copy markdown, open externally, pin tile, and retry blocked frame.</p>
-            </section>
-          </div>
-          <div class="mini-browser-table">
-            <span>Heading</span><span>Captured</span>
-            <span>Quote</span><span>Review</span>
-            <span>Image</span><span>Skipped</span>
-          </div>
+function systemOverview() {
+  return `
+    <section class="system-overview">
+      <div class="product-cell">
+        <div class="app-logo">${iconSvg("logo", { label: "AWW" })}</div>
+        <div>
+          <h1>Component Catalog for Constrained Bookmarklet Tools</h1>
+          <p>A curated set of primitives, patterns, and interaction tools for injection, capture, preview, commands, and resilient fallback paths.</p>
+        </div>
+        <div class="hero-actions">
+          ${button("Open Sample Tool", { variant: "primary", id: "hero-example" })}
+          ${button("Open Blank Window", { id: "hero-blank" })}
         </div>
       </div>
-    </div>
-  `);
+      ${miniWindow({
+    title: "System Preview / Session Capture Console",
+    className: "system-preview",
+    body: `
+          <div class="register-line"><span>Target</span><strong>https://example.org/reports</strong></div>
+          <div class="register-line"><span>Mode</span><strong>Bookmarklet / constrained</strong></div>
+          <div class="meter-row"><span>CPU</span><progress value="18" max="100"></progress><small>18%</small></div>
+        `,
+    footer: `<span>Ready</span><span>Policy: limited</span>`
+  })}
+      <div class="status-register">
+        <fieldset>
+          <legend>System Status</legend>
+          <div><span>Environment</span><strong>Browser</strong></div>
+          <div><span>Permissions</span><strong>Limited</strong></div>
+          <div><span>Migration mode</span><strong>Enabled</strong></div>
+          <div><span>Fallback mode</span><strong>Available</strong></div>
+          <hr />
+          <div><span>Last sync</span><strong>1m ago</strong></div>
+          <div><span>Local cache</span><strong>128 items</strong></div>
+        </fieldset>
+      </div>
+    </section>
+  `;
 }
-function buildToolCoverageDemo() {
-  return htmlNode(`
-    <div class="migration-grid">
-      ${toolCard({ name: "Rich Text to Markdown", legacy: "Local editor chrome and copy status.", components: ["app shell", "toolbar", "rich preview", "manual copy", "toast"] })}
-      ${toolCard({ name: "Page Screenshot", legacy: "Capture form with preview and export states.", components: ["field", "status line", "browser panel", "state overlay"] })}
-      ${toolCard({ name: "Page Content Select", legacy: "Selectable content rows and saved-session dialog.", components: ["list item", "card", "dialog", "rich preview"] })}
-      ${toolCard({ name: "Session Snapshot", legacy: "Capture dashboard with warnings and ZIP export.", components: ["metric card", "alert", "field", "progress"] })}
-      ${toolCard({ name: "Notifications", legacy: "Reminder forms, disabled policy states, and grouped results.", components: ["field", "alert", "list", "metric"] })}
-      ${toolCard({ name: "Mini/Multi Browser", legacy: "Address bar, tile commands, iframe fallback, and shortcuts.", components: ["url picker", "browser panel", "command palette", "shortcut help"] })}
-      ${toolCard({ name: "Bookmarks", legacy: "Searchable rows, setting forms, and danger confirmation.", components: ["toolbar", "list item", "empty state", "dialog"] })}
+function desktopShellPanel() {
+  return panel({
+    title: "Desktop Shell",
+    icon: "window",
+    meta: "runtime",
+    body: `
+      ${miniWindow({
+      title: "Floating Shell",
+      body: `
+          <p class="inline-note">Window runtime, focus, drag, resize, and status behavior.</p>
+          <div class="button-row">${button("Open Sample Tool", { variant: "primary", id: "open-example" })}${button("New Blank Window", { id: "open-blank" })}</div>
+        `,
+      footer: `<span>document: loaded</span><span>injection: active</span><span>mode: bookmarklet</span><span>statusbar: on</span>`
+    })}
+    `
+  });
+}
+function controlsPanel() {
+  return panel({
+    title: "Control Primitives",
+    icon: "sliders",
+    meta: "forms",
+    body: `
+      <div class="tab-sample"><button class="is-active">Buttons</button><button>Inputs</button><button>Selects</button><button>Checks</button><button>Sliders</button><button>Misc</button></div>
+      <div class="button-row">${button("Primary", { variant: "primary" })}${button("Default")}${button("Ghost", { variant: "ghost" })}${button("Danger", { variant: "danger" })}${button("Disabled", { disabled: true })}${iconButton("Add", "selected")}${iconButton("Remove", "minimize")}</div>
+      <div class="control-grid">
+        <input class="os-input" value="text input" aria-label="Text input" />
+        <select class="os-input" aria-label="Select option"><option>Select option</option></select>
+        <textarea class="os-input" rows="4" aria-label="Textarea">text area content...</textarea>
+        <div class="range-stack"><label><input type="range" value="60" /> <span>60%</span></label><progress value="72" max="100"></progress></div>
+      </div>
+      <div class="button-row checks"><label><input type="checkbox" checked /> Checkbox</label><label><input type="radio" checked name="demo-radio" /> Radio A</label><label><input type="radio" name="demo-radio" /> Radio B</label></div>
+    `
+  });
+}
+function fieldMatrixPanel() {
+  return panel({
+    title: "Field Matrix",
+    icon: "table",
+    meta: "fields",
+    body: `
+      <div class="field-matrix">
+        ${field("Label - required", `<input class="os-input" value="value" />`, { required: true })}
+        ${field("URL picker", `<select class="os-input"><option>https://example.com</option></select>`)}
+        ${field("Date and time", `<input class="os-input" type="datetime-local" value="2026-04-25T17:30" />`)}
+        ${field("Capture mode", `<select class="os-input"><option>Visible viewport</option><option>Full page</option></select>`)}
+        ${field("Reminder offset", `<input class="os-input" type="number" value="60" />`, { error: "Offset must be between 1 and 1680." })}
+        ${field("Filename prefix", `<input class="os-input" value="session_" />`, { help: "Letters, numbers, dash and underscore." })}
+        ${field("Disabled setting", `<label><input type="checkbox" disabled /> This option is disabled.</label>`, { disabled: true })}
+        ${field("Help text", `<input class="os-input" value="readable" />`, { help: "Help text explains the expected value." })}
+      </div>
+    `
+  });
+}
+function feedbackMatrixPanel() {
+  return panel({
+    title: "Feedback Matrix",
+    icon: "info",
+    meta: "states",
+    body: `
+      <div class="state-stack">
+        ${stateCard("info", "info", "Private note saved", "Your private note was saved successfully.", button("View note"))}
+        ${stateCard("warning", "warning", "Draft restored", "We restored a local draft from 2m ago.", button("Review"))}
+        ${stateCard("success", "success", "Export completed", "Blocks exported to markdown.", button("Open folder"))}
+        ${stateCard("danger", "error", "Upload denied", "Permissions policy blocked the upload.", button("Retry"))}
+        ${stateCard("neutral", "selected", "Browser blocked frame", "The frame refused to load content.", button("Open externally"))}
+      </div>
+    `
+  });
+}
+function appShellExamplePanel() {
+  return panel({
+    title: "Application Shell Example",
+    icon: "console",
+    meta: "workflow",
+    className: "span-8",
+    body: `
+      ${miniWindow({
+      title: "Session Capture Console",
+      body: `
+          <div class="menu-strip"><span>Console</span><span>Actions</span><span>View</span><span>Help</span><button>Collect</button><button>Refresh</button><button>Clear</button></div>
+          ${stateCard("warning", "warning", "Draft available", "A previous capture draft can be restored before starting a new run.", button("Review"))}
+          <div class="three-grid">
+            <div class="group-box"><strong>Target</strong><input class="os-input" value="https://example.org/articles/12345" /><small>Mode: constrained<br />Viewport: 1280 x 800<br />Injected: active</small></div>
+            <div class="group-box"><strong>Quick actions</strong>${button("Capture visible", { icon: "capture" })}${button("Open preview", { icon: "eye" })}${button("Copy as markdown", { icon: "markdown" })}</div>
+            <div class="group-box"><strong>Activity log</strong><small>10:12:45 Capture completed<br />10:12:40 Preview opened<br />10:12:35 Commands loaded</small></div>
+          </div>
+        `,
+      footer: `<span>Memory <progress value="34" max="100"></progress> 34%</span><span>DOM nodes: 1,842</span><span>Events: 24</span><span>Idle</span>`
+    })}
+    `
+  });
+}
+function browserStatePanel() {
+  return panel({
+    title: "Browser State Preview",
+    icon: "url",
+    meta: "context",
+    className: "span-4",
+    body: `
+      <div class="browser-panel-preview">
+        ${browserToolbar("https://example.com/research")}
+        <div class="metric-register three">
+          <div>${iconSvg("info")}<span>Selected text</span><strong>142 chars</strong></div>
+          <div>${iconSvg("image")}<span>Images found</span><strong>8</strong></div>
+          <div>${iconSvg("link")}<span>Links found</span><strong>12</strong></div>
+        </div>
+        ${stateCard("warning", "warning", "Frame refused to load", "The frame blocked access to this resource.", button("Retry") + button("Open externally"))}
+        <div class="mini-status"><span>Status: partially available</span><span>Policy: restricted</span></div>
+      </div>
+    `
+  });
+}
+function overviewScreen() {
+  return `
+    <div class="screen-heading"><strong>Overview / Shell & Primitives</strong><span>Foundational shell, controls, fields, feedback, command preview, and browser state inventory.</span></div>
+    <div class="screen-grid">
+      ${desktopShellPanel()}
+      ${controlsPanel()}
+      ${fieldMatrixPanel()}
+      ${feedbackMatrixPanel()}
+      ${appShellExamplePanel()}
+      ${browserStatePanel()}
     </div>
-  `);
+  `;
+}
+function primitivesScreen() {
+  return `
+    <div class="screen-heading"><strong>Primitives</strong><span>Strict control scale, field alignment, semantic feedback, state cues, and reusable pictogram assets.</span></div>
+    <div class="screen-grid">
+      ${desktopShellPanel()}
+      ${controlsPanel()}
+      ${fieldMatrixPanel()}
+      ${feedbackMatrixPanel()}
+      ${panel({
+    title: "Command Palette Preview",
+    icon: "console",
+    className: "span-6",
+    body: commandList(baseCommands().slice(0, 5))
+  })}
+      ${panel({
+    title: "Icon Grammar",
+    icon: "grid",
+    className: "span-6",
+    body: `<div class="icon-preview-grid">${ICON_NAMES.slice(0, 30).map((name) => `<span title="${name}">${iconSvg(name)}<small>${name}</small></span>`).join("")}</div>`
+  })}
+    </div>
+  `;
+}
+function appPatternsScreen() {
+  const commands = baseCommands();
+  return `
+    <div class="screen-heading"><strong>Application Patterns</strong><span>Composed patterns that solve common workflows in constrained environments.</span></div>
+    <div class="screen-grid">
+      ${appShellExamplePanel()}
+      ${panel({
+    title: "Rows & Cards",
+    icon: "list",
+    meta: "results",
+    className: "span-8",
+    body: `
+          <div class="results-toolbar"><input class="os-input" placeholder="Search results..." /><button>Filter</button><button>Sort: Newest</button>${iconButton("List view", "list", { pressed: true })}${iconButton("Grid view", "grid")}</div>
+          <div class="result-grid">${["Article Header", "Author Block", "Published Date", "Hero Image", "Summary Section", "Related Links"].map((title, index) => `
+            <article class="result-card"><label><input type="checkbox" ${index === 0 ? "checked" : ""}/> <strong>${title}</strong></label><small>Selector: ${index === 0 ? "h1:title" : ".capture-item"}<br />Text nodes: ${index + 1}</small><span class="ok-dot"></span> Captured · 10:1${index} AM</article>
+          `).join("")}</div>
+          <div class="pager"><span>Showing 1-6 of 34</span><button>|&lt;</button><button>&lt;</button><button class="is-active">1</button><button>2</button><button>3</button><button>&gt;</button><button>&gt;|</button></div>
+        `
+  })}
+      ${panel({ title: "Command Palette Preview", icon: "console", className: "span-4", body: commandList(commands.slice(0, 5)) })}
+      ${panel({
+    title: "Preview Pane",
+    icon: "eye",
+    className: "span-4",
+    body: `
+          <div class="document-surface compact">
+            <div class="tab-sample"><button class="is-active">Preview</button><button>HTML</button><button>Text</button><button>Markdown</button></div>
+            <article><h3>Understanding Constrained Environments</h3><p>Constrained bookmarklet tools run inside the page, not the page. Design for resilience, minimal footprint, and graceful fallbacks.</p><div class="image-placeholder"></div></article>
+            <div class="mini-status"><span>Viewport: 1280x800</span><span>Zoom: 100%</span><span>Theme: Auto</span></div>
+          </div>
+        `
+  })}
+      ${panel({ title: "Metrics & Status Compact", icon: "metrics", className: "span-4", body: metricRegister([
+    { label: "Captures", value: "24", detail: "+6 this hour" },
+    { label: "Preview opens", value: "18", detail: "+4 this hour" },
+    { label: "Commands run", value: "31", detail: "+9 this hour" },
+    { label: "Errors", value: "0", detail: "No change" },
+    { label: "Uptime", value: "2h 14m", detail: "Session time" }
+  ]) })}
+      ${panel({
+    title: "Feedback Matrix Inline",
+    icon: "info",
+    className: "span-8",
+    body: `<div class="inline-states">${stateCard("info", "info", "Private note saved", "Saved successfully.")}${stateCard("success", "success", "Export completed", "Markdown exported.")}${stateCard("warning", "warning", "Browser blocked frame", "Retry opened externally.")}${stateCard("danger", "error", "Upload denied", "Policy blocked upload.")}</div>`
+  })}
+    </div>
+  `;
+}
+function contentStatesScreen() {
+  return `
+    <div class="screen-grid">
+      ${panel({
+    title: "Browser Panel Preview",
+    icon: "url",
+    className: "span-6",
+    body: `
+          ${browserToolbar("https://example.com/research/market-trends")}
+          <div class="metric-register three"><div>${iconSvg("info")}<span>Selected text</span><strong>218 chars</strong></div><div>${iconSvg("image")}<span>Images found</span><strong>14</strong></div><div>${iconSvg("link")}<span>Links found</span><strong>9</strong></div></div>
+          ${stateCard("success", "success", "Capture completed", "Blocks exported to markdown.", button("Open folder"))}
+          ${stateCard("warning", "warning", "Draft restored", "We restored your draft from 2m ago.", button("Review draft"))}
+        `
+  })}
+      ${panel({
+    title: "Content State Matrix",
+    icon: "table",
+    className: "span-6",
+    actions: button("Legend"),
+    body: `
+          <table class="state-table">
+            <thead><tr><th>State</th><th>Preview panel</th><th>Document surface</th><th>Browser panel</th></tr></thead>
+            <tbody>
+              ${stateRow("Success", "success", ["Content captured", "Research Notes", "Capture completed"])}
+              ${stateRow("Warning", "warning", ["Partial capture", "Missing elements", "Draft restored"])}
+              ${stateRow("Error", "danger", ["Capture failed", "Unable to load", "Upload failed"])}
+              ${stateRow("Neutral", "neutral", ["No selection", "No content yet", "Idle"])}
+              ${stateRow("Blocked", "blocked", ["Preview blocked", "Access blocked", "Browser blocked frame"])}
+            </tbody>
+          </table>
+        `
+  })}
+      ${panel({
+    title: "Preview / Document Surface",
+    icon: "article",
+    className: "span-6",
+    body: `
+          <div class="document-surface">
+            <div class="editor-toolbar"><select><option>Markdown</option></select><button>B</button><button>I</button><button>H1</button><button>H2</button><button>•</button><button>Preview</button><button>Split</button></div>
+            <div class="split-doc"><section><h3># Market Research Notes</h3><p>This document captures key findings from the current session.</p><ul><li>Customer segments and behaviors</li><li>Competitive landscape</li><li>Opportunities and risks</li></ul></section><section><h3>Market Research Notes</h3><p>This document captures key findings from the current session.</p><ul><li>Customer segments and behaviors</li><li>Competitive landscape</li><li>Opportunities and risks</li></ul></section></div>
+            <div class="mini-status"><span>Words: 132</span><span>Chars: 871</span><span>All changes saved</span></div>
+          </div>
+        `
+  })}
+      ${panel({
+    title: "Fallback Copy & Manual Path",
+    icon: "copy",
+    className: "span-6",
+    actions: button("Options"),
+    body: `
+          ${stateCard("info", "info", "Automatic capture is not available", "Use manual copy or export your own content.")}
+          <div class="manual-grid"><div class="group-box"><strong>Manual copy steps</strong><ol><li>Select the content in the page.</li><li>Copy it to your clipboard (${keycap("Ctrl+C")}).</li><li>Paste into the document editor.</li><li>Add notes and export.</li></ol>${button("Open editor")}</div><div class="group-box"><strong>Helpful shortcuts</strong><dl><dt>Copy</dt><dd>Ctrl+C</dd><dt>Paste</dt><dd>Ctrl+V</dd><dt>Open editor</dt><dd>Ctrl+E</dd><dt>Export markdown</dt><dd>Ctrl+M</dd></dl></div></div>
+        `
+  })}
+      ${panel({ title: "Empty States", icon: "noResults", className: "span-4", body: `<div class="empty-grid">${emptyState("noCaptures", "No captures yet", "Start by capturing content from the browser.", "Capture now")}${emptyState("noResults", "No results found", "Try adjusting your search or filters.", "Clear filters")}${emptyState("folder", "Folder is empty", "Exports will appear here after capture.", "Open folder")}</div>` })}
+      ${panel({ title: "Blocked Preview States", icon: "blocked", className: "span-4", body: `<div class="empty-grid blocked">${emptyState("browserBlocked", "Frame refused to load", "The frame blocked access to this content.", "Open externally")}${emptyState("accessBlocked", "Preview blocked", "Your policy prevents previewing this content.", "Learn more")}${emptyState("frameBlocked", "Cross-origin blocked", "This content can't be previewed here.", "Try manual copy")}</div>` })}
+      ${panel({ title: "Feedback / Status Surfaces", icon: "info", className: "span-4", body: `<div class="state-stack">${stateCard("success", "success", "Export completed", "34 blocks exported successfully.", button("Open folder"))}${stateCard("warning", "warning", "Sync delayed", "We'll retry in the background.", button("Details"))}${stateCard("danger", "error", "Upload denied", "Permissions policy blocked upload.", button("Retry"))}${stateCard("neutral", "neutral", "Idle", "System is ready.", `<span class="ok-led"></span>`)}</div>` })}
+    </div>
+  `;
+}
+function stateRow(label, tone, values) {
+  const icon = tone === "blocked" ? "blocked" : tone === "danger" ? "error" : tone === "neutral" ? "neutral" : tone;
+  return `<tr><th>${iconSvg(icon)} ${label}</th>${values.map((value) => `<td><span class="matrix-cell matrix-cell--${tone}"><strong>${value}</strong><small>${tone === "blocked" ? "Structured fallback." : "State cue and message."}</small></span></td>`).join("")}</tr>`;
+}
+function emptyState(icon, title, copy, action) {
+  return `<article class="empty-state">${iconSvg(icon)}<strong>${title}</strong><small>${copy}</small>${button(action)}</article>`;
+}
+function commandSurfacesScreen() {
+  return `
+    <div class="screen-grid">
+      ${panel({ title: "Command Palette Preview", icon: "console", className: "span-6", body: commandList(baseCommands()) })}
+      ${panel({ title: "URL Picker / Suggestions", icon: "url", className: "span-3", body: urlPicker() })}
+      ${panel({
+    title: "Keyboard Shortcuts",
+    icon: "table",
+    className: "span-3",
+    body: `<dl class="shortcut-list">${[
+      ["Ctrl + K", "Open command palette"],
+      ["Ctrl + Shift + C", "Capture visible content"],
+      ["Ctrl + Alt + O", "Open capture console"],
+      ["Ctrl + Shift + P", "Toggle preview pane"],
+      ["Ctrl + C", "Copy selected text"],
+      ["Ctrl + E", "Export as markdown"],
+      ["Ctrl + F", "Search in page"],
+      ["Ctrl + ,", "Open settings"],
+      ["Esc", "Close overlays"],
+      ["Enter", "Confirm / Execute"]
+    ].map(([keys, desc]) => `<div><dt>${keys.split(" + ").map(keycap).join("<span>+</span>")}</dt><dd>${desc}</dd></div>`).join("")}</dl>`
+  })}
+      ${panel({
+    title: "Browser Action Surface",
+    icon: "capture",
+    className: "span-7",
+    body: `${browserToolbar()}<div class="action-grid">${button("Capture", { icon: "capture" })}${button("Preview", { icon: "eye" })}${button("Console", { icon: "console" })}${button("Export", { icon: "upload" })}${button("More", { icon: "more" })}</div><div class="inline-states">${stateCard("success", "success", "Capture completed", "Blocks exported to markdown.")}${stateCard("warning", "warning", "Python not detected", "Some features will be limited.", button("Open console"))}</div>`
+  })}
+      ${panel({
+    title: "Compact Shell Preview",
+    icon: "window",
+    className: "span-5",
+    body: miniWindow({
+      title: "Mini Capture Shell",
+      body: `<div class="shell-register"><span>doc: loaded</span><span>injection: active</span><span>mode: bookmarklet</span><span>statusbar: on</span><span>items: 34</span><span>last sync: 1m ago</span></div><div class="button-row">${button("Capture")}${button("Preview")}${button("Export")}${button("Settings")}</div>`
+    })
+  })}
+      ${panel({ title: "Feedback & Action Strip", icon: "info", className: "span-12", body: `<div class="action-strip">${stateCard("success", "success", "Success", "Operation completed.")}${stateCard("info", "info", "Info", "This is an informational note.")}${stateCard("warning", "warning", "Warn", "This action may have limits.")}${stateCard("danger", "error", "Error", "Something prevented this.")}<span class="strip-buttons">${button("Open dialog", { variant: "primary", id: "open-demo-dialog" })}${button("Toast", { id: "toast-success" })}${button("Warn", { id: "toast-warning" })}${button("Export")}${button("...", { aria: "More actions" })}</span></div>` })}
+    </div>
+  `;
+}
+function migrationProofScreen() {
+  const cards = [
+    ["Rich Text to Markdown", "Local editor chrome, preview tabs, markdown export, and manual copy fallback.", ["app shell", "preview", "manual copy"]],
+    ["Page Screenshot", "Capture form with browser preview, export states, and retry paths.", ["browser panel", "state"]],
+    ["Form Context Select", "Selectable content rows and saved-session dialog.", ["rows", "dialog"]],
+    ["Session Snapshot", "Capture dashboard with warnings and ZIP export.", ["register", "progress"]],
+    ["Notifications", "Reminder forms, disabled policy states, and grouped results.", ["field", "alert"]],
+    ["Mini/Multi Browser", "Address bar, tile commands, iframe fallback, and shortcuts.", ["url picker", "commands"]],
+    ["Bookmarklet", "Injection active status, mode register, and compact shell controls.", ["shell", "status"]],
+    ["Browser Panel", "Policy, cross-origin, and open-external states.", ["browser", "blocked"]],
+    ["Command Palette", "Keyboard-first command discovery with keycaps and selected rows.", ["commands", "keys"]],
+    ["Fallback Copy", "Manual path as resilient workflow, not panic state.", ["fallback", "copy"]],
+    ["Metrics", "Status-register counters replacing generic KPI cards.", ["register", "metrics"]]
+  ];
+  return `
+    <div class="screen-grid">
+      ${panel({
+    title: "Mini Browser Composition",
+    icon: "url",
+    className: "span-6",
+    body: `
+          <div class="mini-browser-composition">
+            ${browserToolbar("https://example.com/research")}
+            <div class="loaded-page">
+              <main><h3>Research workspace</h3><p>Mock loaded page with selected article regions and page-action feedback.</p><section class="selected-region"><strong>Selected article</strong><p>Lead paragraph, comparison table, and code snippet are ready for capture.</p></section><div class="data-table"><span>Heading</span><span>Captured</span><span>Quote</span><span>Review</span><span>Image</span><span>Skipped</span></div></main>
+              <aside><strong>Page actions</strong>${button("Copy markdown", { icon: "markdown" })}${button("Open externally", { icon: "external" })}${button("Retry blocked frame", { icon: "retry" })}</aside>
+            </div>
+            <div class="mini-status"><span>Loaded example.com/research</span><span>Selected blocks: 4</span><span>Policy: limited</span></div>
+          </div>
+        `
+  })}
+      ${panel({
+    title: "Migration Cards",
+    icon: "panel",
+    className: "span-6",
+    body: `<div class="migration-grid">${cards.map(([title, copy, tags]) => `<article class="migration-card"><h3>${title}</h3><p>${copy}</p><div>${tags.map((tag) => `<span>${tag}</span>`).join("")}</div></article>`).join("")}</div>`
+  })}
+      ${panel({
+    title: "Icon System Preview",
+    icon: "grid",
+    className: "span-12",
+    body: `<div class="icon-preview-grid">${ICON_NAMES.map((name) => `<span title="${name}">${iconSvg(name)}<small>${name}</small></span>`).join("")}</div>`
+  })}
+    </div>
+  `;
+}
+function baseCommands() {
+  return [
+    { icon: "capture", title: "Capture visible content", desc: "Capture the currently visible portion of the page", keys: ["Ctrl", "Shift", "C"] },
+    { icon: "console", title: "Open capture console", desc: "Open the session capture console", keys: ["Ctrl", "Alt", "O"] },
+    { icon: "eye", title: "Toggle preview pane", desc: "Show or hide the preview panel", keys: ["Ctrl", "Shift", "P"] },
+    { icon: "copy", title: "Copy selected text", desc: "Copy text from selection to clipboard", keys: ["Ctrl", "C"] },
+    { icon: "markdown", title: "Export as markdown", desc: "Export captured content as markdown", keys: ["Ctrl", "E"] },
+    { icon: "search", title: "Search in page", desc: "Find text within the current page", keys: ["Ctrl", "F"] },
+    { icon: "gear", title: "Open settings", desc: "Open bookmarklet settings", keys: ["Ctrl", ","] }
+  ];
 }
 function buildPage() {
-  const componentCount = Object.keys(TAGS).length;
   const page = document.createElement("main");
-  page.className = "catalog-page";
+  page.className = "catalog-app";
   page.innerHTML = `
-    <header class="catalog-hero">
-      <div>
-        <p class="catalog-kicker">AWW Bookmarklet UI Framework</p>
-        <h1 class="catalog-title">Component catalog for constrained bookmarklet tools</h1>
-        <p class="catalog-lede">A compact retro desktop kit for bookmarklets and extension tools: primitives, app shells, content previews, command surfaces, and realistic fallback paths.</p>
+    <section class="app-frame" aria-label="AWW Bookmarklet component catalog">
+      <header class="app-titlebar">
+        <div class="title-identity">${iconSvg("logo")}<span>Component Catalog for Constrained Bookmarklet Tools</span></div>
+        <div class="build-meta"><span>Build 0.9.0</span><span>RetroOS 3.11</span></div>
+        <div class="window-controls" aria-hidden="true"><i></i><i></i><i></i></div>
+      </header>
+      <nav class="menu-row" aria-label="Application menu"><button>File</button><button>Edit</button><button>View</button><button>Tools</button><button>Window</button><button>Help</button></nav>
+      ${systemOverview()}
+      <div class="catalog-tabs" role="tablist" aria-label="Catalog sections">
+        ${[
+    ["overview", "Overview"],
+    ["primitives", "Primitives"],
+    ["patterns", "App Patterns"],
+    ["states", "Content States"],
+    ["commands", "Command Surfaces"],
+    ["migration", "Migration Proof"]
+  ].map(([id, label], index) => `<button id="tab-${id}" role="tab" aria-controls="panel-${id}" aria-selected="${index === 0 ? "true" : "false"}" tabindex="${index === 0 ? "0" : "-1"}" data-tab="${id}">${label}</button>`).join("")}
       </div>
-      <div class="hero-console" aria-hidden="true">
-        <div class="hero-window-bar"><span></span><strong>Capture Console</strong><em>Ready</em></div>
-        <div class="hero-window-body">
-          <div class="hero-sidebar"><span></span><span></span><span></span></div>
-          <div class="hero-panel">
-            <div class="hero-line hero-line--wide"></div>
-            <div class="hero-line"></div>
-            <div class="hero-grid"><span></span><span></span><span></span><span></span></div>
-          </div>
-        </div>
-      </div>
-      <div class="hero-actions">
-        <${TAGS.button} id="hero-example" variant="primary">Open Tool</${TAGS.button}>
-        <${TAGS.button} id="hero-blank">Open Shell</${TAGS.button}>
-      </div>
-    </header>
-    <div class="coverage-rail">
-      <span><strong>${componentCount}</strong> custom elements</span>
-      <span>Primitives</span>
-      <span>App patterns</span>
-      <span>Content states</span>
-      <span>Command surfaces</span>
-      <span>Migration proof</span>
-    </div>
+      <section class="tab-panels">
+        <div id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" data-panel="overview">${overviewScreen()}</div>
+        <div id="panel-primitives" role="tabpanel" aria-labelledby="tab-primitives" data-panel="primitives" hidden>${primitivesScreen()}</div>
+        <div id="panel-patterns" role="tabpanel" aria-labelledby="tab-patterns" data-panel="patterns" hidden>${appPatternsScreen()}</div>
+        <div id="panel-states" role="tabpanel" aria-labelledby="tab-states" data-panel="states" hidden>${contentStatesScreen()}</div>
+        <div id="panel-commands" role="tabpanel" aria-labelledby="tab-commands" data-panel="commands" hidden>${commandSurfacesScreen()}</div>
+        <div id="panel-migration" role="tabpanel" aria-labelledby="tab-migration" data-panel="migration" hidden>${migrationProofScreen()}</div>
+      </section>
+      <footer class="bottom-status"><span>Ready</span><span>RetroOS 3.11</span><span>CAPS</span><span>NUM</span><span>SCRL</span></footer>
+    </section>
+    <${TAGS.dialog} id="demo-dialog" modal label="Demo dialog" close-on-backdrop>
+      <span slot="title">System dialog</span>
+      <p class="inline-note">The dialog uses the shared overlay path and inherits the retro system tokens.</p>
+      <${TAGS.toolbar} slot="footer" align="end"><${TAGS.button} id="demo-dialog-close">Close</${TAGS.button}></${TAGS.toolbar}>
+    </${TAGS.dialog}>
   `;
-  page.append(section({
-    label: "Foundation",
-    title: "Shell and primitive controls",
-    description: "The first section keeps low-level pieces visible and uncluttered before introducing composed app surfaces.",
-    children: [
-      specimen({ title: "Desktop shell", description: "Window runtime, focus, drag, resize, and status behavior.", tag: "runtime", span: 5, variant: "compact", body: buildShellDemo() }),
-      specimen({ title: "Control primitives", description: "Buttons, inputs, selection controls, range, and progress.", tag: "forms", span: 7, variant: "compact", body: buildControlDemo() }),
-      specimen({ title: "Grouped layout", description: "Groups, tabs, listbox, panel actions, and status composition.", tag: "layout", span: 12, variant: "compact", body: buildLayoutDemo() }),
-      specimen({ title: "Field matrix", description: "Labels, help, errors, units, disabled, horizontal, and inline layouts.", tag: "fields", span: 7, variant: "compact", body: buildFieldMatrixDemo() }),
-      specimen({ title: "Feedback matrix", description: "Status lines and alerts across tones and actions.", tag: "feedback", span: 5, variant: "compact", body: buildFeedbackMatrixDemo() })
-    ]
-  }), section({
-    label: "Application Patterns",
-    title: "Workflow surfaces without crowding",
-    description: "Higher-order components are split into scan-friendly states so developers can inspect each responsibility.",
-    children: [
-      specimen({ title: "Application shell", description: "The reference composition for migrated tools.", tag: "workflow", span: 12, variant: "showcase", tone: "primary", footerNote: "Includes dialog and toast actions without introducing app-specific CSS.", body: buildWorkflowDemo() }),
-      specimen({ title: "Rows and cards", description: "Selectable rows, row actions, status tones, imperfect data, and reusable content cards.", tag: "data", span: 8, body: buildRowsDemo() }),
-      specimen({ title: "Metrics", description: "Readable stat cards for session and browser state.", tag: "metrics", span: 4, variant: "compact", body: buildMetricDemo() })
-    ]
-  }), section({
-    label: "Content States",
-    title: "Preview, browser, and fallback states",
-    description: "The messy realities of injected tools need first-class demos: rich imported HTML, iframe surfaces, blocked previews, empty states, and manual copy fallback.",
-    children: [
-      specimen({ title: "Preview surfaces", description: "Nonblank rich content and iframe surfaces with overflow pressure.", tag: "content", span: 8, variant: "showcase", body: buildPreviewDemo() }),
-      specimen({ title: "Browser panel states", description: "Loaded, loading, blocked, retry, and external-open states.", tag: "browser", span: 4, body: buildBrowserPanelStatesDemo() }),
-      specimen({ title: "Empty and blocked states", description: "Fallback UI grouped as routine states, plus manual copy.", tag: "fallback", span: 12, variant: "compact", body: buildStateDemo() })
-    ]
-  }), section({
-    label: "Command Surfaces",
-    title: "Navigation, commands, shortcuts, and feedback",
-    description: "Overlay-heavy browser tools need URL entry, command discovery, shortcut help, and toast feedback before tile workspace migration is credible.",
-    children: [
-      specimen({ title: "URL picker", description: "Suggestions are open by default so the address behavior is visible.", tag: "navigation", span: 5, variant: "showcase", body: buildUrlPickerDemo() }),
-      specimen({ title: "Command palette and shortcuts", description: "Inline command discovery plus the interactive dialog path.", tag: "commands", span: 7, variant: "showcase", body: buildCommandDemo() })
-    ]
-  }), section({
-    label: "Migration Proof",
-    title: "Reference-tool coverage map",
-    description: "These specimens show how the old local UI patterns map into shared components without copying app-specific CSS.",
-    children: [
-      specimen({ title: "Mini Browser composition", description: "Toolbar, URL picker, status, and page surface assembled with the shared grammar.", tag: "browser app", span: 6, variant: "showcase", body: buildMiniBrowserSpecimen() }),
-      specimen({ title: "Migration cards", description: "Reference tools mapped to replacement components.", tag: "coverage", span: 6, body: buildToolCoverageDemo() })
-    ]
-  }));
   return page;
+}
+function selectTab(root, id, focus = false) {
+  const tabs = [...root.querySelectorAll("[role='tab'][data-tab]")];
+  const panels = [...root.querySelectorAll("[role='tabpanel'][data-panel]")];
+  tabs.forEach((tab) => {
+    const selected = tab.dataset.tab === id;
+    tab.setAttribute("aria-selected", selected ? "true" : "false");
+    tab.tabIndex = selected ? 0 : -1;
+    if (selected && focus)
+      tab.focus();
+  });
+  panels.forEach((panelNode) => {
+    panelNode.hidden = panelNode.dataset.panel !== id;
+  });
+}
+function wireInteractions(root) {
+  root.querySelector("#hero-example")?.addEventListener("click", openExample);
+  root.querySelector("#hero-blank")?.addEventListener("click", openBlank);
+  root.querySelectorAll("#open-example").forEach((node) => node.addEventListener("click", openExample));
+  root.querySelectorAll("#open-blank").forEach((node) => node.addEventListener("click", openBlank));
+  root.addEventListener("click", (event) => {
+    const tab = event.target.closest("[role='tab'][data-tab]");
+    if (tab)
+      selectTab(root, tab.dataset.tab, true);
+    if (event.target.closest("#toast-success"))
+      showToast({ key: "demo-toast", message: "Operation completed", tone: "success", timeout: 1800 });
+    if (event.target.closest("#toast-warning"))
+      showToast({ key: "demo-toast", message: "Manual fallback may be required", tone: "warning", timeout: 2200 });
+    if (event.target.closest("#open-demo-dialog"))
+      root.querySelector("#demo-dialog")?.show();
+    if (event.target.closest("#demo-dialog-close"))
+      root.querySelector("#demo-dialog")?.close("demo");
+  });
+  root.querySelector(".catalog-tabs")?.addEventListener("keydown", (event) => {
+    const tabs = [...root.querySelectorAll("[role='tab'][data-tab]")];
+    const current = tabs.findIndex((tab) => tab.getAttribute("aria-selected") === "true");
+    let next = current;
+    if (event.key === "ArrowRight")
+      next = (current + 1) % tabs.length;
+    else if (event.key === "ArrowLeft")
+      next = (current - 1 + tabs.length) % tabs.length;
+    else if (event.key === "Home")
+      next = 0;
+    else if (event.key === "End")
+      next = tabs.length - 1;
+    else
+      return;
+    event.preventDefault();
+    selectTab(root, tabs[next].dataset.tab, true);
+  });
 }
 function initCatalog() {
   const root = document.getElementById("catalog-root") || document.body;
-  root.append(buildPage());
-  root.querySelector("#hero-example").addEventListener("click", openExample);
-  root.querySelector("#hero-blank").addEventListener("click", openBlank);
-  root.querySelector("#open-example").addEventListener("click", openExample);
-  root.querySelector("#open-blank").addEventListener("click", openBlank);
+  const page = buildPage();
+  root.append(page);
+  wireInteractions(root);
 }
 initCatalog();
 window.addEventListener("beforeunload", () => {
   releaseDesktopRoot(CATALOG_OWNER);
 });
 
-//# debugId=EC9FCA86037F394464756E2164756E21
+//# debugId=0D59DFFE602FB1B264756E2164756E21
 //# sourceMappingURL=catalog.js.map

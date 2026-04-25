@@ -36,27 +36,23 @@ const WINDOW_STYLES = css`
     align-items: center;
     gap: 6px;
     padding: 0 6px;
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--awwbookmarklet-titlebar-active-bg, rgba(46, 92, 142, 0.78)) 88%, #ffffff 12%),
-      color-mix(in srgb, var(--awwbookmarklet-titlebar-active-bg, rgba(46, 92, 142, 0.78)) calc(var(--awwbookmarklet-frost-opacity, 0.9) * 100%), transparent)
-    );
-    color: var(--awwbookmarklet-titlebar-fg, #f8fbff);
+    background: linear-gradient(180deg, #f7f9fb, var(--awwbookmarklet-titlebar-active-bg, #dce2e9));
+    color: var(--awwbookmarklet-titlebar-fg, #121820);
     border-bottom: 1px solid var(--awwbookmarklet-border-strong, #232a33);
-    backdrop-filter: blur(6px) saturate(1.1);
     cursor: grab;
     user-select: none;
   }
 
   :host([data-active="false"]) .titlebar {
-    background: var(--awwbookmarklet-titlebar-inactive-bg, rgba(136, 145, 160, 0.84));
+    background: linear-gradient(180deg, #eef2f6, var(--awwbookmarklet-titlebar-inactive-bg, #cfd5dd));
   }
 
   .system-menu-button,
   .window-command-button {
-    border: 1px solid color-mix(in srgb, var(--awwbookmarklet-border-strong, #232a33) 70%, #ffffff 30%);
+    border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
     border-radius: 0;
-    background: rgba(255, 255, 255, 0.08);
+    background: #edf1f5;
+    box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #a8b0ba;
     color: inherit;
     height: 22px;
     min-width: 22px;
@@ -73,7 +69,8 @@ const WINDOW_STYLES = css`
 
   .system-menu-button:active,
   .window-command-button:active {
-    background: rgba(0, 0, 0, 0.18);
+    background: var(--awwbookmarklet-button-active-bg, #d8dee6);
+    box-shadow: inset 1px 1px 0 #8e98a4, inset -1px -1px 0 #ffffff;
   }
 
   .title {

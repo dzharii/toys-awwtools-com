@@ -366,27 +366,23 @@ var WINDOW_STYLES = css`
     align-items: center;
     gap: 6px;
     padding: 0 6px;
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--awwbookmarklet-titlebar-active-bg, rgba(46, 92, 142, 0.78)) 88%, #ffffff 12%),
-      color-mix(in srgb, var(--awwbookmarklet-titlebar-active-bg, rgba(46, 92, 142, 0.78)) calc(var(--awwbookmarklet-frost-opacity, 0.9) * 100%), transparent)
-    );
-    color: var(--awwbookmarklet-titlebar-fg, #f8fbff);
+    background: linear-gradient(180deg, #f7f9fb, var(--awwbookmarklet-titlebar-active-bg, #dce2e9));
+    color: var(--awwbookmarklet-titlebar-fg, #121820);
     border-bottom: 1px solid var(--awwbookmarklet-border-strong, #232a33);
-    backdrop-filter: blur(6px) saturate(1.1);
     cursor: grab;
     user-select: none;
   }
 
   :host([data-active="false"]) .titlebar {
-    background: var(--awwbookmarklet-titlebar-inactive-bg, rgba(136, 145, 160, 0.84));
+    background: linear-gradient(180deg, #eef2f6, var(--awwbookmarklet-titlebar-inactive-bg, #cfd5dd));
   }
 
   .system-menu-button,
   .window-command-button {
-    border: 1px solid color-mix(in srgb, var(--awwbookmarklet-border-strong, #232a33) 70%, #ffffff 30%);
+    border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
     border-radius: 0;
-    background: rgba(255, 255, 255, 0.08);
+    background: #edf1f5;
+    box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #a8b0ba;
     color: inherit;
     height: 22px;
     min-width: 22px;
@@ -403,7 +399,8 @@ var WINDOW_STYLES = css`
 
   .system-menu-button:active,
   .window-command-button:active {
-    background: rgba(0, 0, 0, 0.18);
+    background: var(--awwbookmarklet-button-active-bg, #d8dee6);
+    box-shadow: inset 1px 1px 0 #8e98a4, inset -1px -1px 0 #ffffff;
   }
 
   .title {
@@ -1230,6 +1227,7 @@ var BUTTON_STYLES = css`
     border-radius: 0;
     background: linear-gradient(180deg, color-mix(in srgb, var(--awwbookmarklet-button-bg, #f1f4f8) 92%, #ffffff 8%), var(--awwbookmarklet-button-bg, #f1f4f8));
     color: var(--awwbookmarklet-button-fg, #111720);
+    box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 var(--awwbookmarklet-border-subtle, #9ba5b3);
     padding: 0 12px;
     font: inherit;
     line-height: 1;
@@ -1243,6 +1241,7 @@ var BUTTON_STYLES = css`
   :host([variant="primary"]) button {
     background: var(--awwbookmarklet-selection-bg, #1f5eae);
     color: var(--awwbookmarklet-selection-fg, #f2f8ff);
+    box-shadow: inset 1px 1px 0 color-mix(in srgb, var(--awwbookmarklet-selection-bg, #1f5eae) 68%, #ffffff 32%), inset -1px -1px 0 color-mix(in srgb, var(--awwbookmarklet-selection-bg, #1f5eae) 72%, #000000 28%);
   }
 
   :host([variant="ghost"]) button {
@@ -4835,41 +4834,41 @@ function registerAllComponents() {
 var DEFAULT_THEME = {
   [PUBLIC_TOKENS.workspaceBg]: "rgba(0, 0, 0, 0)",
   [PUBLIC_TOKENS.windowBg]: "#eef1f5",
-  [PUBLIC_TOKENS.panelBg]: "#f8fafc",
-  [PUBLIC_TOKENS.titlebarActiveBg]: "rgba(46, 92, 142, 0.78)",
-  [PUBLIC_TOKENS.titlebarInactiveBg]: "rgba(136, 145, 160, 0.84)",
-  [PUBLIC_TOKENS.titlebarFg]: "#f8fbff",
-  [PUBLIC_TOKENS.borderStrong]: "#232a33",
-  [PUBLIC_TOKENS.borderSubtle]: "#9ba5b3",
-  [PUBLIC_TOKENS.focusRing]: "#154fbc",
-  [PUBLIC_TOKENS.buttonBg]: "#f1f4f8",
+  [PUBLIC_TOKENS.panelBg]: "#f3f5f7",
+  [PUBLIC_TOKENS.titlebarActiveBg]: "#dce2e9",
+  [PUBLIC_TOKENS.titlebarInactiveBg]: "#cfd5dd",
+  [PUBLIC_TOKENS.titlebarFg]: "#121820",
+  [PUBLIC_TOKENS.borderStrong]: "#4f5966",
+  [PUBLIC_TOKENS.borderSubtle]: "#a8b0ba",
+  [PUBLIC_TOKENS.focusRing]: "#174f9c",
+  [PUBLIC_TOKENS.buttonBg]: "#edf1f5",
   [PUBLIC_TOKENS.buttonFg]: "#111720",
-  [PUBLIC_TOKENS.buttonActiveBg]: "#dbe3ee",
-  [PUBLIC_TOKENS.inputBg]: "#ffffff",
+  [PUBLIC_TOKENS.buttonActiveBg]: "#d8dee6",
+  [PUBLIC_TOKENS.inputBg]: "#f8f9fa",
   [PUBLIC_TOKENS.inputFg]: "#111720",
-  [PUBLIC_TOKENS.menuBg]: "#f8fbff",
+  [PUBLIC_TOKENS.menuBg]: "#f3f5f7",
   [PUBLIC_TOKENS.menuFg]: "#0e1621",
   [PUBLIC_TOKENS.selectionBg]: "#1f5eae",
   [PUBLIC_TOKENS.selectionFg]: "#f2f8ff",
-  [PUBLIC_TOKENS.statusbarBg]: "#e5e8ee",
+  [PUBLIC_TOKENS.statusbarBg]: "#e2e7ed",
   [PUBLIC_TOKENS.appShellBg]: "#eef1f5",
-  [PUBLIC_TOKENS.surfaceRaisedBg]: "#ffffff",
-  [PUBLIC_TOKENS.surfaceInsetBg]: "#e7ebf1",
-  [PUBLIC_TOKENS.textMuted]: "#586272",
-  [PUBLIC_TOKENS.textHelp]: "#657184",
-  [PUBLIC_TOKENS.dividerColor]: "#c3cad4",
-  [PUBLIC_TOKENS.infoBg]: "#e7f0ff",
-  [PUBLIC_TOKENS.infoFg]: "#123d7a",
-  [PUBLIC_TOKENS.infoBorder]: "#7aa6e8",
-  [PUBLIC_TOKENS.successBg]: "#e5f5eb",
-  [PUBLIC_TOKENS.successFg]: "#195b34",
-  [PUBLIC_TOKENS.successBorder]: "#72b98b",
-  [PUBLIC_TOKENS.warningBg]: "#fff4d6",
-  [PUBLIC_TOKENS.warningFg]: "#6d4b00",
-  [PUBLIC_TOKENS.warningBorder]: "#d9ad3b",
-  [PUBLIC_TOKENS.dangerBg]: "#ffe8e6",
-  [PUBLIC_TOKENS.dangerFg]: "#8a1f17",
-  [PUBLIC_TOKENS.dangerBorder]: "#d46a60",
+  [PUBLIC_TOKENS.surfaceRaisedBg]: "#fbfcfd",
+  [PUBLIC_TOKENS.surfaceInsetBg]: "#dfe4ea",
+  [PUBLIC_TOKENS.textMuted]: "#44505f",
+  [PUBLIC_TOKENS.textHelp]: "#5f6a78",
+  [PUBLIC_TOKENS.dividerColor]: "#c7cdd5",
+  [PUBLIC_TOKENS.infoBg]: "#e8f2ff",
+  [PUBLIC_TOKENS.infoFg]: "#18549e",
+  [PUBLIC_TOKENS.infoBorder]: "#8db4e8",
+  [PUBLIC_TOKENS.successBg]: "#e7f4eb",
+  [PUBLIC_TOKENS.successFg]: "#1e6a3a",
+  [PUBLIC_TOKENS.successBorder]: "#86ba91",
+  [PUBLIC_TOKENS.warningBg]: "#fff4d8",
+  [PUBLIC_TOKENS.warningFg]: "#76520c",
+  [PUBLIC_TOKENS.warningBorder]: "#d7ad4d",
+  [PUBLIC_TOKENS.dangerBg]: "#fff0ee",
+  [PUBLIC_TOKENS.dangerFg]: "#a12824",
+  [PUBLIC_TOKENS.dangerBorder]: "#da7b73",
   [PUBLIC_TOKENS.overlayBackdrop]: "rgba(12, 18, 28, 0.38)",
   [PUBLIC_TOKENS.overlayShadow]: "0 18px 44px rgba(0, 0, 0, 0.24)",
   [PUBLIC_TOKENS.cardBg]: "#fbfcfe",
@@ -4877,8 +4876,8 @@ var DEFAULT_THEME = {
   [PUBLIC_TOKENS.metricBg]: "#ffffff",
   [PUBLIC_TOKENS.codeBg]: "#e8edf4",
   [PUBLIC_TOKENS.codeFg]: "#172131",
-  [PUBLIC_TOKENS.shadowDepth]: "0 12px 32px rgba(0, 0, 0, 0.18)",
-  [PUBLIC_TOKENS.frostOpacity]: "0.9",
+  [PUBLIC_TOKENS.shadowDepth]: "inset 1px 1px 0 #ffffff, inset -1px -1px 0 #a8b0ba",
+  [PUBLIC_TOKENS.frostOpacity]: "1",
   [PUBLIC_TOKENS.space1]: "4px",
   [PUBLIC_TOKENS.space2]: "8px",
   [PUBLIC_TOKENS.space3]: "12px",
@@ -5328,5 +5327,5 @@ export {
   bootstrapExampleTool
 };
 
-//# debugId=CDFC8B040654E22564756E2164756E21
+//# debugId=015722AC383C407F64756E2164756E21
 //# sourceMappingURL=index.js.map
