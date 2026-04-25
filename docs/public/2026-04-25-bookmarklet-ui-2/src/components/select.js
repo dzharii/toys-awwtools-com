@@ -1,4 +1,5 @@
 import { adoptStyles, BASE_COMPONENT_STYLES, css } from "../core/styles.js";
+import { FORM_ARIA_ATTRIBUTES } from "../core/form-attributes.js";
 
 const SELECT_STYLES = css`
   :host { display: inline-block; min-width: 160px; }
@@ -35,7 +36,7 @@ const SELECT_STYLES = css`
   select:disabled { opacity: 0.65; }
 `;
 
-const MIRRORED = ["disabled", "name", "value", "required"];
+const MIRRORED = ["disabled", "name", "value", "required", ...FORM_ARIA_ATTRIBUTES];
 
 export class AwwSelect extends HTMLElement {
   static observedAttributes = MIRRORED;

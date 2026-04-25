@@ -1,4 +1,5 @@
 import { adoptStyles, BASE_COMPONENT_STYLES, css } from "../core/styles.js";
+import { FORM_ARIA_ATTRIBUTES } from "../core/form-attributes.js";
 
 const INPUT_STYLES = css`
   :host { display: inline-block; min-width: 140px; }
@@ -18,7 +19,7 @@ const INPUT_STYLES = css`
   input:disabled { opacity: 0.65; }
 `;
 
-const MIRRORED_ATTRIBUTES = ["value", "placeholder", "disabled", "type", "name", "required", "min", "max", "step", "autocomplete", "spellcheck"];
+const MIRRORED_ATTRIBUTES = ["value", "placeholder", "disabled", "type", "name", "required", "min", "max", "step", "autocomplete", "spellcheck", "list", ...FORM_ARIA_ATTRIBUTES];
 
 export class AwwInput extends HTMLElement {
   static observedAttributes = MIRRORED_ATTRIBUTES;

@@ -1410,6 +1410,9 @@ class AwwIconButton extends HTMLElement {
   }
 }
 
+// src/core/form-attributes.js
+var FORM_ARIA_ATTRIBUTES = ["aria-label", "aria-labelledby", "aria-describedby", "aria-invalid"];
+
 // src/components/input.js
 var INPUT_STYLES = css`
   :host { display: inline-block; min-width: 140px; }
@@ -1428,7 +1431,7 @@ var INPUT_STYLES = css`
   input:focus-visible { outline: none; box-shadow: var(--_ring); }
   input:disabled { opacity: 0.65; }
 `;
-var MIRRORED_ATTRIBUTES = ["value", "placeholder", "disabled", "type", "name", "required", "min", "max", "step", "autocomplete", "spellcheck"];
+var MIRRORED_ATTRIBUTES = ["value", "placeholder", "disabled", "type", "name", "required", "min", "max", "step", "autocomplete", "spellcheck", "list", ...FORM_ARIA_ATTRIBUTES];
 
 class AwwInput extends HTMLElement {
   static observedAttributes = MIRRORED_ATTRIBUTES;
@@ -1501,7 +1504,7 @@ var TEXTAREA_STYLES = css`
   textarea:focus-visible { outline: none; box-shadow: var(--_ring); }
   textarea:disabled { opacity: 0.65; }
 `;
-var MIRRORED_ATTRIBUTES2 = ["value", "placeholder", "disabled", "rows", "name", "required", "autocomplete", "spellcheck"];
+var MIRRORED_ATTRIBUTES2 = ["value", "placeholder", "disabled", "rows", "name", "required", "autocomplete", "spellcheck", ...FORM_ARIA_ATTRIBUTES];
 
 class AwwTextarea extends HTMLElement {
   static observedAttributes = MIRRORED_ATTRIBUTES2;
@@ -1587,7 +1590,7 @@ var CHECKBOX_STYLES = css`
   input:focus-visible { outline: none; box-shadow: var(--_ring); }
   input:disabled + span { opacity: 0.6; }
 `;
-var MIRRORED = ["checked", "disabled", "name", "value"];
+var MIRRORED = ["checked", "disabled", "name", "value", ...FORM_ARIA_ATTRIBUTES];
 
 class AwwCheckbox extends HTMLElement {
   static observedAttributes = MIRRORED;
@@ -1671,7 +1674,7 @@ var RADIO_STYLES = css`
   input:focus-visible { outline: none; box-shadow: var(--_ring); }
   input:disabled + span { opacity: 0.6; }
 `;
-var MIRRORED2 = ["checked", "disabled", "name", "value"];
+var MIRRORED2 = ["checked", "disabled", "name", "value", ...FORM_ARIA_ATTRIBUTES];
 
 class AwwRadio extends HTMLElement {
   static observedAttributes = MIRRORED2;
@@ -1772,7 +1775,7 @@ var SELECT_STYLES = css`
   select:focus-visible { outline: none; box-shadow: var(--_ring); }
   select:disabled { opacity: 0.65; }
 `;
-var MIRRORED3 = ["disabled", "name", "value", "required"];
+var MIRRORED3 = ["disabled", "name", "value", "required", ...FORM_ARIA_ATTRIBUTES];
 
 class AwwSelect extends HTMLElement {
   static observedAttributes = MIRRORED3;
@@ -1977,8 +1980,12 @@ var TABS_STYLES = css`
   #tablist {
     display: flex;
     gap: 2px;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
     padding: 4px 4px 0;
     border-bottom: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    scrollbar-gutter: stable;
   }
 
   #tablist button {
@@ -1986,18 +1993,29 @@ var TABS_STYLES = css`
     border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
     border-bottom: 0;
     background: color-mix(in srgb, var(--awwbookmarklet-panel-bg, #f8fafc) 88%, #ced5df 12%);
+    color: var(--awwbookmarklet-input-fg, #111720);
     padding: 0 10px;
     font: inherit;
+    font-weight: 400;
     border-radius: 0;
+    white-space: nowrap;
   }
 
   #tablist button[aria-selected="true"] {
-    background: var(--awwbookmarklet-window-bg, #eef1f5);
+    background: var(--awwbookmarklet-window-bg, #ffffff);
+    color: var(--awwbookmarklet-input-fg, #111720);
+    font-weight: 700;
+    border-color: var(--awwbookmarklet-border-strong, #4f5966);
+    border-bottom-color: var(--awwbookmarklet-window-bg, #ffffff);
+    box-shadow: inset 0 3px 0 var(--awwbookmarklet-selection-bg, #1f5eae);
     position: relative;
     top: 1px;
   }
 
   #tablist button:focus-visible { outline: none; box-shadow: var(--_ring); }
+  #tablist button[aria-selected="true"]:focus-visible {
+    box-shadow: inset 0 3px 0 var(--awwbookmarklet-selection-bg, #1f5eae), var(--_ring);
+  }
   #panels { padding: var(--awwbookmarklet-space-2, 8px); }
 `;
 var TAB_PANEL_STYLES = css`

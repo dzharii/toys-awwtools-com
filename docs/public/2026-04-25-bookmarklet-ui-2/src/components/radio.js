@@ -1,4 +1,5 @@
 import { adoptStyles, BASE_COMPONENT_STYLES, css } from "../core/styles.js";
+import { FORM_ARIA_ATTRIBUTES } from "../core/form-attributes.js";
 
 const RADIO_STYLES = css`
   :host { display: inline-block; }
@@ -33,7 +34,7 @@ const RADIO_STYLES = css`
   input:disabled + span { opacity: 0.6; }
 `;
 
-const MIRRORED = ["checked", "disabled", "name", "value"];
+const MIRRORED = ["checked", "disabled", "name", "value", ...FORM_ARIA_ATTRIBUTES];
 
 export class AwwRadio extends HTMLElement {
   static observedAttributes = MIRRORED;

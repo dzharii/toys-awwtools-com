@@ -1,4 +1,5 @@
 import { adoptStyles, BASE_COMPONENT_STYLES, css } from "../core/styles.js";
+import { FORM_ARIA_ATTRIBUTES } from "../core/form-attributes.js";
 
 const TEXTAREA_STYLES = css`
   :host { display: inline-block; min-width: 220px; }
@@ -19,7 +20,7 @@ const TEXTAREA_STYLES = css`
   textarea:disabled { opacity: 0.65; }
 `;
 
-const MIRRORED_ATTRIBUTES = ["value", "placeholder", "disabled", "rows", "name", "required", "autocomplete", "spellcheck"];
+const MIRRORED_ATTRIBUTES = ["value", "placeholder", "disabled", "rows", "name", "required", "autocomplete", "spellcheck", ...FORM_ARIA_ATTRIBUTES];
 
 export class AwwTextarea extends HTMLElement {
   static observedAttributes = MIRRORED_ATTRIBUTES;
