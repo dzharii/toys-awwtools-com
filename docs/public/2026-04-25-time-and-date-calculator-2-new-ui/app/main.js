@@ -67,6 +67,8 @@ const state = {
   timeZoneId: "UTC",
   nowMode: "real",
   fixedNowIso: null,
+  fixedNowLocal: null,
+  fixedNowUserSet: false,
   businessCalendarMode: "weekday",
   resolverEnabled: false,
   developerDetails: false,
@@ -88,6 +90,8 @@ const elements = {
   resolverToggle: document.getElementById("resolverToggle"),
   developerToggle: document.getElementById("developerToggle"),
   nowMetric: document.getElementById("nowMetric"),
+  fixedNowField: document.getElementById("fixedNowField"),
+  fixedNowInput: document.getElementById("fixedNowInput"),
   evaluatingBadge: document.getElementById("evaluatingBadge"),
   lineBadge: document.getElementById("lineBadge"),
   expressionInput: document.getElementById("expressionInput"),
@@ -137,6 +141,7 @@ async function init() {
   buildExamples();
   bindEvents();
   syncControlsFromState();
+  persistState();
   runEvaluation();
 }
 
@@ -162,9 +167,10 @@ async function loadReferenceData() {
 }
 
 function applyInitialDefaults() {
-  if (!state.fixedNowIso) {
-    state.fixedNowIso = state.fixtureContext.now || FALLBACK_FIXTURES.context.now;
+  if (!state.fixedNowUserSet || !state.fixedNowLocal) {
+    state.fixedNowLocal = dateToDateTimeLocalValue(new Date());
   }
+  syncFixedNowIso();
 
   if (!state.timeZoneId) {
     state.timeZoneId = state.fixtureContext.timeZoneId || "UTC";
@@ -178,6 +184,8 @@ function applyInitialDefaults() {
 function syncControlsFromState() {
   elements.timeZoneInput.value = state.timeZoneId;
   elements.nowModeSelect.value = state.nowMode;
+  elements.fixedNowInput.value = state.fixedNowLocal;
+  elements.fixedNowField.hidden = state.nowMode !== "fixed";
   elements.calendarModeSelect.value = state.businessCalendarMode;
   elements.resolverToggle.checked = state.resolverEnabled;
   elements.developerToggle.checked = state.developerDetails;
@@ -224,8 +232,27 @@ function bindEvents() {
 
   elements.nowModeSelect.addEventListener("change", () => {
     state.nowMode = elements.nowModeSelect.value;
+    if (state.nowMode === "fixed" && !state.fixedNowLocal) {
+      state.fixedNowLocal = dateToDateTimeLocalValue(new Date());
+      syncFixedNowIso();
+      elements.fixedNowInput.value = state.fixedNowLocal;
+    }
+    if (state.nowMode === "fixed") {
+      state.fixedNowUserSet = true;
+    }
+    elements.fixedNowField.hidden = state.nowMode !== "fixed";
     persistState();
     runEvaluation();
+  });
+
+  elements.fixedNowInput.addEventListener("input", () => {
+    state.fixedNowLocal = elements.fixedNowInput.value || dateToDateTimeLocalValue(new Date());
+    state.fixedNowUserSet = true;
+    syncFixedNowIso();
+    persistState();
+    if (state.nowMode === "fixed") {
+      runEvaluation();
+    }
   });
 
   elements.calendarModeSelect.addEventListener("change", () => {
@@ -304,7 +331,7 @@ function buildEvaluationOptions() {
   // UI-to-library context mapping lives here so app semantics are still library-owned.
   const options = {
     timeZoneId: zoneInput,
-    now: state.nowMode === "fixed" ? () => state.fixedNowIso : () => new Date(),
+    now: state.nowMode === "fixed" ? () => getFixedNowDate() : () => new Date(),
     businessCalendar:
       state.businessCalendarMode === "holidays"
         ? businessCalendarFromUnitedStatesFederalHolidays([2025, 2026, 2027])
@@ -336,16 +363,35 @@ function updateNowMetric(value) {
     "description",
     value.startsWith("Error:")
       ? "Context cannot be evaluated"
-      : `${state.nowMode === "fixed" ? "Fixed fixture anchor" : "Real browser clock"}: ${value}`,
+      : `${state.nowMode === "fixed" ? "Fixed local date" : "Real browser clock"}: ${value}`,
   );
 }
 
 function compactNowValue(value) {
-  const match = String(value).match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(?::\d{2})?[+-]\d{2}:\d{2}\[([^\]]+)\]$/);
+  const match = String(value).match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(?::\d{2}(?:\.\d+)?)?[+-]\d{2}:\d{2}\[([^\]]+)\]$/);
   if (!match) {
     return value;
   }
   return `${match[1]} ${match[2]} ${match[3]}`;
+}
+
+function syncFixedNowIso() {
+  const fixedDate = getFixedNowDate();
+  state.fixedNowIso = Number.isNaN(fixedDate.getTime()) ? new Date().toISOString() : fixedDate.toISOString();
+}
+
+function getFixedNowDate() {
+  const date = state.fixedNowLocal ? new Date(state.fixedNowLocal) : new Date();
+  if (Number.isNaN(date.getTime())) {
+    return new Date();
+  }
+  return date;
+}
+
+function dateToDateTimeLocalValue(date) {
+  const validDate = date instanceof Date && !Number.isNaN(date.getTime()) ? date : new Date();
+  const offsetMs = validDate.getTimezoneOffset() * 60 * 1000;
+  return new Date(validDate.getTime() - offsetMs).toISOString().slice(0, 16);
 }
 
 function validateTimeZoneInput() {
@@ -500,6 +546,8 @@ function renderDeveloperDetails(result, context, lineInfo) {
     timeZoneId: context?.timeZoneId || state.timeZoneId,
     nowMode: state.nowMode,
     fixedNowIso: state.fixedNowIso,
+    fixedNowLocal: state.fixedNowLocal,
+    fixedNowUserSet: state.fixedNowUserSet,
     businessCalendarMode: state.businessCalendarMode,
     placeResolverEnabled: state.resolverEnabled,
   });
@@ -763,7 +811,11 @@ function hydrateState() {
     state.developerDetails = Boolean(persisted.developerDetails);
     state.expression = typeof persisted.expression === "string" ? persisted.expression : state.expression;
     state.selectedExampleId = typeof persisted.selectedExampleId === "string" ? persisted.selectedExampleId : null;
-    state.fixedNowIso = typeof persisted.fixedNowIso === "string" ? persisted.fixedNowIso : null;
+    state.fixedNowLocal = typeof persisted.fixedNowLocal === "string" ? persisted.fixedNowLocal : null;
+    if (!state.fixedNowLocal && typeof persisted.fixedNowIso === "string") {
+      state.fixedNowLocal = dateToDateTimeLocalValue(new Date(persisted.fixedNowIso));
+    }
+    state.fixedNowUserSet = Boolean(persisted.fixedNowUserSet);
   } catch {
     // Ignore malformed localStorage payloads.
   }
@@ -782,6 +834,8 @@ function persistState() {
         expression: state.expression,
         selectedExampleId: state.selectedExampleId,
         fixedNowIso: state.fixedNowIso,
+        fixedNowLocal: state.fixedNowLocal,
+        fixedNowUserSet: state.fixedNowUserSet,
       }),
     );
   } catch {

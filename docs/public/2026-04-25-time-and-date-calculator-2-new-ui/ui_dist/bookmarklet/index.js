@@ -1991,19 +1991,29 @@ var TABS_STYLES = css`
     border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
     border-bottom: 0;
     background: color-mix(in srgb, var(--awwbookmarklet-panel-bg, #f8fafc) 88%, #ced5df 12%);
+    color: var(--awwbookmarklet-input-fg, #111720);
     padding: 0 10px;
     font: inherit;
+    font-weight: 400;
     border-radius: 0;
     white-space: nowrap;
   }
 
   #tablist button[aria-selected="true"] {
-    background: var(--awwbookmarklet-window-bg, #eef1f5);
+    background: var(--awwbookmarklet-window-bg, #ffffff);
+    color: var(--awwbookmarklet-input-fg, #111720);
+    font-weight: 700;
+    border-color: var(--awwbookmarklet-border-strong, #4f5966);
+    border-bottom-color: var(--awwbookmarklet-window-bg, #ffffff);
+    box-shadow: inset 0 3px 0 var(--awwbookmarklet-selection-bg, #1f5eae);
     position: relative;
     top: 1px;
   }
 
   #tablist button:focus-visible { outline: none; box-shadow: var(--_ring); }
+  #tablist button[aria-selected="true"]:focus-visible {
+    box-shadow: inset 0 3px 0 var(--awwbookmarklet-selection-bg, #1f5eae), var(--_ring);
+  }
   #panels { padding: var(--awwbookmarklet-space-2, 8px); }
 `;
 var TAB_PANEL_STYLES = css`
