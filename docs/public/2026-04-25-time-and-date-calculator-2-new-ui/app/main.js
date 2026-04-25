@@ -1,5 +1,5 @@
 import {
-  businessCalendarFromNagerHolidays,
+  businessCalendarFromUnitedStatesFederalHolidays,
   createDefaultBusinessCalendar,
   evaluateExpression,
   validateIanaTimeZone,
@@ -15,6 +15,8 @@ const REQUIRED_CATEGORIES = [
   "Business day counting",
   "Time zones and places",
   "Formatting transforms",
+  "Weekdays",
+  "Holidays and observances",
   "Errors",
 ];
 
@@ -32,6 +34,9 @@ const FALLBACK_FIXTURES = {
     { expr: "business days between 2026-02-08 and 2026-02-23", type: "Number", expected: 10 },
     { expr: "now in Seattle", type: "EvaluationError", expectedCode: "E_EVAL_PLACE_RESOLVER_MISSING" },
     { expr: "now as date", type: "String", expected: "2026-02-08" },
+    { expr: "90 seconds as duration words", type: "String", expected: "1 minute and 30 seconds" },
+    { expr: "next Tuesday", type: "PlainDate", expected: "2026-02-10" },
+    { expr: "Thanksgiving 2026", type: "PlainDate", expected: "2026-11-26" },
     { expr: "02/08/2026 + 1d", type: "ParseError", expectedCode: "E_PARSE_INVALID_DATE_LITERAL" },
   ],
 };
@@ -43,6 +48,10 @@ const BUILTIN_EXAMPLES = [
   { expr: "business days between 2026-02-08 and 2026-02-23", category: "Business day counting" },
   { expr: "now in Seattle", category: "Time zones and places" },
   { expr: "now -> time", category: "Formatting transforms" },
+  { expr: "now + 3 hours as relative", category: "Formatting transforms" },
+  { expr: "Wednesday + 1 business day", category: "Weekdays" },
+  { expr: "Monday after Thanksgiving 2026", category: "Holidays and observances" },
+  { expr: "first business day after Thanksgiving 2026", category: "Holidays and observances" },
   { expr: "2026-02-08 as time", category: "Errors" },
 ];
 
@@ -284,7 +293,7 @@ function buildEvaluationOptions() {
     now: state.nowMode === "fixed" ? () => state.fixedNowIso : () => new Date(),
     businessCalendar:
       state.businessCalendarMode === "holidays"
-        ? businessCalendarFromNagerHolidays(state.holidaysRows)
+        ? businessCalendarFromUnitedStatesFederalHolidays([2025, 2026, 2027])
         : createDefaultBusinessCalendar(),
     placeResolver: state.resolverEnabled
       ? (placeName) => {
@@ -561,6 +570,19 @@ function categorizeExpression(expr, type) {
   if (text.includes(" as ") || text.includes("->")) {
     return "Formatting transforms";
   }
+  if (
+    text.includes("thanksgiving") ||
+    text.includes("holiday") ||
+    text.includes("observance") ||
+    text.includes("easter") ||
+    text.includes("christmas") ||
+    text.includes("memorial day")
+  ) {
+    return "Holidays and observances";
+  }
+  if (/\b(next|last|this)?\s*(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/.test(text)) {
+    return "Weekdays";
+  }
   return "Basics";
 }
 
@@ -597,6 +619,18 @@ function buildExplainSteps(ast, timeZoneId) {
 
     if (node.type === "TransformModifier") {
       steps.push(`formatted result as ${node.transformName}`);
+    }
+
+    if (node.type === "WeekdayExpression") {
+      steps.push(`resolved ${node.direction} ${node.weekdayName}`);
+    }
+
+    if (node.type === "HolidayExpression") {
+      steps.push(`resolved ${node.mode} holiday/observance: ${node.holidayName}`);
+    }
+
+    if (node.type === "HolidaySearchExpression") {
+      steps.push(`searched ${node.direction} ${node.category}`);
     }
 
     for (const key of Object.keys(node)) {

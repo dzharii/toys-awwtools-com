@@ -24,7 +24,9 @@ import {
 } from "./timezone.js";
 import { createBusinessCalendar, createDefaultBusinessCalendar, isBusinessDay } from "./business-calendar.js";
 import { formatValue, getValueType } from "./format.js";
-import { TRANSFORMS } from "./keywords.js";
+import { SUPPORTED_TRANSFORMS, supportedTransformList } from "./transform-names.js";
+import { createUnitedStatesHolidayCalendar } from "./us-holidays.js";
+import { resolveWeekday } from "./weekday.js";
 
 const TIMELINE_UNIT_MILLISECONDS = {
   hours: 60 * 60 * 1000,
@@ -88,12 +90,17 @@ export function createDefaultContext(overrides = {}) {
   const businessCalendar = calendarInput.weekendDays ? createBusinessCalendar(calendarInput) : calendarInput;
 
   const hasNowOverride = Object.hasOwn(overrides, "now");
+  const defaultHolidayCalendar = createUnitedStatesHolidayCalendar();
+  const holidayCalendar = Object.hasOwn(overrides, "holidayCalendar") ? overrides.holidayCalendar : defaultHolidayCalendar;
+  const observanceCalendar = Object.hasOwn(overrides, "observanceCalendar") ? overrides.observanceCalendar : holidayCalendar;
 
   return {
     timeZoneId: validZone,
     now: hasNowOverride ? overrides.now : () => createZonedDateTime(Date.now(), validZone),
     businessCalendar,
     placeResolver: typeof overrides.placeResolver === "function" ? overrides.placeResolver : undefined,
+    holidayCalendar,
+    observanceCalendar,
     invalidTimeZoneId: validateIanaTimeZone(requestedZone) ? null : requestedZone,
   };
 }
@@ -365,6 +372,18 @@ function toPlainDateForBusinessCount(value, runtime) {
   throw evalError(runtime, "E_EVAL_TYPE_MISMATCH", "Business-day counting requires date/time values.", runtime.currentSpan);
 }
 
+function toPlainDateForDateLike(value, runtime, span, label) {
+  if (value?.kind === "PlainDate") {
+    return value;
+  }
+  if (value?.kind === "ZonedDateTime") {
+    return plainDateFromZoned(value, runtime.context.timeZoneId);
+  }
+  throw evalError(runtime, "E_EVAL_TYPE_MISMATCH", `${label} requires a date-like value.`, span, [
+    "Use an ISO date, timestamp, weekday, holiday, or observance expression.",
+  ]);
+}
+
 function countBusinessDays(runtime, startValue, endValue) {
   const startDate = toPlainDateForBusinessCount(startValue, runtime);
   const endDate = toPlainDateForBusinessCount(endValue, runtime);
@@ -384,6 +403,17 @@ function countBusinessDays(runtime, startValue, endValue) {
   return forward ? count : -count;
 }
 
+function evaluateBusinessDayRelative(runtime, node) {
+  const targetValue = evaluateNode(runtime, node.target);
+  const targetDate = toPlainDateForDateLike(targetValue, runtime, node.target.span, "Business-day before/after");
+  const direction = node.relation === "after" ? 1 : -1;
+  let cursor = addPlainDateDays(targetDate, direction);
+  while (!isBusinessDay(cursor, runtime.context.timeZoneId, runtime.context.businessCalendar)) {
+    cursor = addPlainDateDays(cursor, direction);
+  }
+  return cursor;
+}
+
 function evaluateFunctionCall(runtime, node) {
   const name = node.canonicalName;
   if (name === "startofday") {
@@ -396,6 +426,59 @@ function evaluateFunctionCall(runtime, node) {
   throw evalError(runtime, "E_EVAL_UNKNOWN_FUNCTION", `Unknown function '${node.name}'.`, node.span, [
     "Supported functions: startOfDay(...), endOfDay(...).",
   ]);
+}
+
+function resolveHolidayYear(runtime, explicitYear) {
+  return explicitYear?.value ?? plainDateFromZoned(runtime.sampledNow, runtime.context.timeZoneId).year;
+}
+
+function evaluateHolidayExpression(runtime, node) {
+  const calendar = runtime.context.holidayCalendar;
+  if (!calendar?.resolve) {
+    throw evalError(runtime, "E_EVAL_HOLIDAY_CALENDAR_MISSING", "Holiday expressions require an enabled holiday calendar.", node.nameSpan || node.span, [
+      "Enable a holiday calendar or use an ISO date literal.",
+    ]);
+  }
+
+  const contextDate = plainDateFromZoned(runtime.sampledNow, runtime.context.timeZoneId);
+  const hasExplicitYear = Boolean(node.year);
+  let year = resolveHolidayYear(runtime, node.year);
+  let result = calendar.resolve(node.holidayName, year, node.mode);
+  if (!result) {
+    throw evalError(runtime, "E_EVAL_UNKNOWN_HOLIDAY", `Unknown holiday or observance '${node.holidayName}'.`, node.nameSpan || node.span, [
+      "Try Thanksgiving, Memorial Day, Independence Day, Easter, Mother's Day, or Black Friday.",
+    ]);
+  }
+  if (!hasExplicitYear && comparePlainDate(result.date, contextDate) <= 0) {
+    year += 1;
+    result = calendar.resolve(node.holidayName, year, node.mode);
+  }
+  return result.date;
+}
+
+function evaluateHolidaySearchExpression(runtime, node) {
+  const contextDate = plainDateFromZoned(runtime.sampledNow, runtime.context.timeZoneId);
+  if (node.category === "observance") {
+    const calendar = runtime.context.observanceCalendar;
+    if (!calendar?.nextObservance) {
+      throw evalError(runtime, "E_EVAL_OBSERVANCE_CALENDAR_MISSING", "Observance expressions require an enabled observance calendar.", node.span, [
+        "Enable an observance calendar or use an ISO date literal.",
+      ]);
+    }
+    if (node.direction !== "next") {
+      throw evalError(runtime, "E_EVAL_UNSUPPORTED_HOLIDAY_SEARCH", "Only next observance is supported.", node.span);
+    }
+    return calendar.nextObservance(contextDate).date;
+  }
+
+  const calendar = runtime.context.holidayCalendar;
+  if (!calendar?.nextFederal || !calendar?.lastFederal) {
+    throw evalError(runtime, "E_EVAL_HOLIDAY_CALENDAR_MISSING", "Holiday expressions require an enabled holiday calendar.", node.span, [
+      "Enable a holiday calendar or use an ISO date literal.",
+    ]);
+  }
+  const result = node.direction === "last" ? calendar.lastFederal(contextDate, node.mode) : calendar.nextFederal(contextDate, node.mode);
+  return result.date;
 }
 
 function evaluateNode(runtime, node) {
@@ -442,6 +525,19 @@ function evaluateNode(runtime, node) {
       return toDuration(node.unit, node.amount);
     case "NumberLiteral":
       return node.value;
+    case "WeekdayExpression": {
+      const baseDate = plainDateFromZoned(runtime.sampledNow, runtime.context.timeZoneId);
+      return resolveWeekday(baseDate, node.weekdayName, node.direction);
+    }
+    case "HolidayExpression":
+      return evaluateHolidayExpression(runtime, node);
+    case "HolidaySearchExpression":
+      return evaluateHolidaySearchExpression(runtime, node);
+    case "WeekdayRelativeExpression": {
+      const target = evaluateNode(runtime, node.target);
+      const baseDate = toPlainDateForDateLike(target, runtime, node.target.span, "Weekday before/after");
+      return resolveWeekday(baseDate, node.weekdayName, node.relation === "after" ? "next" : "last");
+    }
     case "AnchorExpression":
       return evaluateAnchor(runtime, node, node.anchorName);
     case "InModifier": {
@@ -451,9 +547,9 @@ function evaluateNode(runtime, node) {
     }
     case "TransformModifier": {
       const target = evaluateNode(runtime, node.target);
-      if (!TRANSFORMS.has(node.transformName)) {
+      if (!SUPPORTED_TRANSFORMS.has(node.transformName)) {
         throw evalError(runtime, "E_EVAL_UNKNOWN_TRANSFORM", `Unknown transform '${node.transformName}'.`, node.transformSpan, [
-          "Supported transforms: iso, date, time.",
+          `Supported transforms: ${supportedTransformList()}.`,
         ]);
       }
       if (node.transformName === "time" && target?.kind === "PlainDate") {
@@ -462,7 +558,7 @@ function evaluateNode(runtime, node) {
         ]);
       }
       try {
-        return formatValue(target, node.transformName, runtime.context);
+        return formatValue(target, node.transformName, { ...runtime.context, now: runtime.sampledNow });
       } catch (error) {
         throw evalError(runtime, "E_EVAL_TRANSFORM_FAILED", error.message, node.transformSpan);
       }
@@ -472,6 +568,8 @@ function evaluateNode(runtime, node) {
       const endValue = evaluateNode(runtime, node.end);
       return countBusinessDays(runtime, startValue, endValue);
     }
+    case "BusinessDayRelativeExpression":
+      return evaluateBusinessDayRelative(runtime, node);
     case "BinaryExpression":
       return evaluateBinaryExpression(runtime, node);
     case "ComparisonExpression": {

@@ -1,6 +1,13 @@
-import { createBusinessCalendar, createDefaultBusinessCalendar, businessCalendarFromNagerHolidays } from "./business-calendar.js";
+import {
+  createBusinessCalendar,
+  createDefaultBusinessCalendar,
+  businessCalendarFromNagerHolidays,
+  businessCalendarFromUnitedStatesFederalHolidays,
+} from "./business-calendar.js";
 import { evaluateAst, createDefaultContext } from "./evaluate.js";
 import { formatValue, getValueType } from "./format.js";
+import { createUnitedStatesHolidayCalendar } from "./us-holidays.js";
+import { resolveWeekday } from "./weekday.js";
 import { parse } from "./parse.js";
 import { tokenize } from "./tokenize.js";
 import { validateIanaTimeZone, zonedToIsoString } from "./timezone.js";
@@ -11,10 +18,13 @@ export {
   evaluateAst,
   formatValue,
   getValueType,
+  resolveWeekday,
   createDefaultContext,
   createBusinessCalendar,
   createDefaultBusinessCalendar,
   businessCalendarFromNagerHolidays,
+  businessCalendarFromUnitedStatesFederalHolidays,
+  createUnitedStatesHolidayCalendar,
   validateIanaTimeZone,
   zonedToIsoString,
 };

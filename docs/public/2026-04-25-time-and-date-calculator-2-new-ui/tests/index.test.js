@@ -1,14 +1,17 @@
 import { describe, expect, test } from "bun:test";
 import {
   businessCalendarFromNagerHolidays,
+  businessCalendarFromUnitedStatesFederalHolidays,
   createBusinessCalendar,
   createDefaultBusinessCalendar,
   createDefaultContext,
+  createUnitedStatesHolidayCalendar,
   evaluateAst,
   evaluateExpression,
   formatValue,
   getValueType,
   parse,
+  resolveWeekday,
   tokenize,
   validateIanaTimeZone,
   zonedToIsoString,
@@ -26,6 +29,9 @@ describe("index facade", () => {
     expect(typeof createBusinessCalendar).toBe("function");
     expect(typeof createDefaultBusinessCalendar).toBe("function");
     expect(typeof businessCalendarFromNagerHolidays).toBe("function");
+    expect(typeof businessCalendarFromUnitedStatesFederalHolidays).toBe("function");
+    expect(typeof createUnitedStatesHolidayCalendar).toBe("function");
+    expect(typeof resolveWeekday).toBe("function");
     expect(typeof validateIanaTimeZone).toBe("function");
     expect(typeof zonedToIsoString).toBe("function");
   });
@@ -50,4 +56,3 @@ describe("index facade", () => {
     expect(result.diagnostics.tokens[0].type).toBe("INVALID_DATE_SLASH");
   });
 });
-

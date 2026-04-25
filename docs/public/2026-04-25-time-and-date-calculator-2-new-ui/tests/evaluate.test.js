@@ -51,6 +51,28 @@ describe("evaluate", () => {
     expect(evaluateExpression("3 - 2", fixedContext).formatted).toBe("1");
     expect(evaluateExpression("now as date", fixedContext)).toMatchObject({ ok: true, valueType: "String", formatted: "2026-02-08" });
     expect(evaluateExpression("now -> time", fixedContext).formatted).toBe("12:00:00");
+    expect(evaluateExpression("90 seconds as duration words", fixedContext).formatted).toBe("1 minute and 30 seconds");
+    expect(evaluateExpression("93784 seconds as compact duration", fixedContext).formatted).toBe("1d 2h 3m 4s");
+    expect(evaluateExpression("2026-02-23 - 2026-02-08 as duration words", fixedContext).formatted).toBe("15 days");
+    expect(evaluateExpression("121 as ordinal", fixedContext).formatted).toBe("121st");
+    expect(evaluateExpression("2026-02-08 as ordinal date", fixedContext).formatted).toBe("February 8th, 2026");
+    expect(evaluateExpression("now as ordinal date", fixedContext).formatted).toBe("February 8th, 2026");
+    expect(evaluateExpression("2026-02-08T15:15:00-08:00 as clock", fixedContext).formatted).toBe("a quarter past three");
+  });
+
+  test("evaluates relative transform deterministically", () => {
+    expect(evaluateExpression("now as relative", fixedContext).formatted).toBe("now");
+    expect(evaluateExpression("now + 3 hours as relative", fixedContext).formatted).toBe("3 hours from now");
+    expect(evaluateExpression("now - 1 minute as relative", fixedContext).formatted).toBe("1 minute ago");
+    expect(evaluateExpression("2026-02-09 as relative", fixedContext).formatted).toBe("1 day from now");
+    expect(evaluateExpression("2026-02-01 as relative", fixedContext).formatted).toBe("7 days ago");
+
+    const dstContext = {
+      timeZoneId: "America/Los_Angeles",
+      now: () => "2026-03-07T12:00:00-08:00[America/Los_Angeles]",
+    };
+    expect(evaluateExpression("now + 1 day as relative", dstContext).formatted).toBe("1 day from now");
+    expect(evaluateExpression("now + 24 hours as relative", dstContext).formatted).toBe("24 hours from now");
   });
 
   test("evaluates business-day shifting and counting with calendars", () => {
@@ -106,8 +128,10 @@ describe("evaluate", () => {
     expect(evaluateExpression("2026-02-08 as time", fixedContext).error).toMatchObject({
       code: "E_EVAL_TIME_FORMAT_REQUIRES_TIME",
     });
-    expect(evaluateExpression("now as unknown", fixedContext).error).toMatchObject({ code: "E_EVAL_UNKNOWN_TRANSFORM" });
+    expect(evaluateExpression("now as unknown", fixedContext).error).toMatchObject({ code: "E_PARSE_UNKNOWN_TRANSFORM" });
     expect(evaluateExpression("1 as date", fixedContext).error).toMatchObject({ code: "E_EVAL_TRANSFORM_FAILED" });
+    expect(evaluateExpression("1 as duration words", fixedContext).error).toMatchObject({ code: "E_EVAL_TRANSFORM_FAILED" });
+    expect(evaluateExpression("2026-02-08 as clock", fixedContext).error).toMatchObject({ code: "E_EVAL_TRANSFORM_FAILED" });
     expect(evaluateExpression("foo()", fixedContext).error).toMatchObject({ code: "E_EVAL_UNKNOWN_FUNCTION" });
     expect(evaluateExpression("2026-02-08T12:00[Bad/Zone]", fixedContext).error).toMatchObject({
       code: "E_EVAL_INVALID_TIME_ZONE",

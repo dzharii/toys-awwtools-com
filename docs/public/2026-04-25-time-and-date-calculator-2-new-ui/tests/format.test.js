@@ -25,6 +25,12 @@ describe("format", () => {
     expect(formatValue(zoned, "date", { timeZoneId: "America/Los_Angeles" })).toBe("2026-02-08");
     expect(formatValue(createPlainDate(2026, 2, 8), "date")).toBe("2026-02-08");
     expect(formatValue(zoned, "time", { timeZoneId: "America/Los_Angeles" })).toBe("12:30:15");
+    expect(formatValue({ kind: "Duration", unit: "seconds", amount: 90 }, "durationWords")).toBe("1 minute and 30 seconds");
+    expect(formatValue({ kind: "Duration", unit: "seconds", amount: 93784 }, "duration")).toBe("1 day and 2 hours");
+    expect(formatValue({ kind: "Duration", unit: "seconds", amount: 90 }, "compactDuration")).toBe("1m 30s");
+    expect(formatValue(121, "ordinal")).toBe("121st");
+    expect(formatValue(createPlainDate(2026, 2, 8), "ordinalDate")).toBe("February 8th, 2026");
+    expect(formatValue(zoned, "clock", { timeZoneId: "America/Los_Angeles" })).toBe("half past twelve");
     expect(() => formatValue(1, "date")).toThrow("Date transform");
     expect(() => formatValue(createPlainDate(2026, 2, 8), "time")).toThrow("Time transform");
     expect(() => formatValue(1, "unknown")).toThrow("Unsupported transform");

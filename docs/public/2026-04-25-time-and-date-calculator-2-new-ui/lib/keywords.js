@@ -54,7 +54,7 @@ export function isIdentifierStart(ch) {
 }
 
 export function isIdentifierPart(ch) {
-  return /[A-Za-z0-9_./]/.test(ch);
+  return /[A-Za-z0-9_./']/.test(ch);
 }
 
 export function isWhitespace(ch) {

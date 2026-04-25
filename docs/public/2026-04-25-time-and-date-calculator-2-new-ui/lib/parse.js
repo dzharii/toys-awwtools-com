@@ -1,8 +1,12 @@
 import { createParseError } from "./errors.js";
 import { foldCase, normalizeUnitAlias } from "./keywords.js";
+import { canonicalTransformName, supportedTransformList } from "./transform-names.js";
 import { parseIsoDateLiteral, parseIsoTimestampLiteral } from "./timezone.js";
+import { matchHolidayAlias } from "./us-holidays.js";
+import { isWeekdayName } from "./weekday.js";
 
 const PRECEDENCE = {
+  TRANSFORM: 5,
   COMPARISON: 10,
   ADDITIVE: 20,
   POSTFIX: 30,
@@ -93,7 +97,7 @@ class Parser {
     while (true) {
       const token = this.peek();
 
-      if (this.isPostfixStart(token) && PRECEDENCE.POSTFIX >= minPrecedence) {
+      if (this.isInModifierStart(token) && PRECEDENCE.POSTFIX >= minPrecedence) {
         left = this.parsePostfix(left);
         continue;
       }
@@ -124,6 +128,26 @@ class Parser {
           span: spanFrom(left.span.startIndex, right.span.endIndex),
           operatorSpan: tokenSpan(operatorToken),
         };
+        continue;
+      }
+
+      if (this.isWeekdayRelativeOperator(token) && left.type === "WeekdayExpression" && PRECEDENCE.COMPARISON >= minPrecedence) {
+        const operatorToken = this.consume();
+        const target = this.parseExpression(PRECEDENCE.COMPARISON + 1);
+        left = {
+          type: "WeekdayRelativeExpression",
+          weekdayName: left.weekdayName,
+          relation: operatorToken.canonical,
+          target,
+          span: spanFrom(left.span.startIndex, target.span.endIndex),
+          weekdaySpan: left.weekdaySpan,
+          relationSpan: tokenSpan(operatorToken),
+        };
+        continue;
+      }
+
+      if (this.isTransformModifierStart(token) && PRECEDENCE.TRANSFORM >= minPrecedence) {
+        left = this.parseTransformModifier(left);
         continue;
       }
 
@@ -242,32 +266,73 @@ class Parser {
 
   parseTransformModifier(left) {
     const operator = this.at("ARROW") ? this.consume() : this.consumeWord("as", "E_PARSE_EXPECTED_AS", "Expected keyword 'as'.");
-    const transformToken = this.peek();
+    const firstTransformToken = this.peek();
 
-    if (transformToken.type !== "WORD") {
+    if (firstTransformToken.type !== "WORD") {
       throw this.errorAtToken(
-        transformToken,
+        firstTransformToken,
         "E_PARSE_EXPECTED_TRANSFORM",
         "Expected a transform name after the modifier.",
-        ["Supported transforms: iso, date, time."],
+        [`Supported transforms: ${supportedTransformList()}.`],
       );
     }
 
-    this.consume();
+    const startIndex = firstTransformToken.start;
+    let lastTransformToken = null;
+    const words = [];
+    let canonical = null;
+
+    while (this.peek().type === "WORD" && !this.isTransformTerminator(this.peek()) && words.length < 2) {
+      const token = this.consume();
+      words.push(token.text);
+      const maybeCanonical = canonicalTransformName(words.join(" "));
+      if (maybeCanonical) {
+        canonical = maybeCanonical;
+        lastTransformToken = token;
+      }
+    }
+
+    if (!canonical) {
+      const endToken = this.tokens[this.index - 1] || firstTransformToken;
+      throw createParseError(
+        this.input,
+        "E_PARSE_UNKNOWN_TRANSFORM",
+        `Unknown transform '${this.input.slice(startIndex, endToken.end)}'.`,
+        spanFrom(startIndex, endToken.end),
+        [`Supported transforms: ${supportedTransformList()}.`],
+      );
+    }
+
+    while (this.tokens[this.index - 1] !== lastTransformToken) {
+      this.index -= 1;
+    }
 
     return {
       type: "TransformModifier",
       target: left,
-      transformName: foldCase(transformToken.text),
+      transformName: canonical,
+      transformText: this.input.slice(startIndex, lastTransformToken.end),
       operator: operator.type === "ARROW" ? "->" : "as",
-      span: spanFrom(left.span.startIndex, transformToken.end),
+      span: spanFrom(left.span.startIndex, lastTransformToken.end),
       modifierSpan: tokenSpan(operator),
-      transformSpan: tokenSpan(transformToken),
+      transformSpan: spanFrom(startIndex, lastTransformToken.end),
     };
   }
 
-  isPostfixStart(token) {
-    return token.type === "ARROW" || (token.type === "WORD" && (token.canonical === "in" || token.canonical === "as"));
+  isTransformTerminator(token) {
+    return token.type !== "WORD" || ["as", "in", "and", "between"].includes(token.canonical);
+  }
+
+  isInModifierStart(token) {
+    return token.type === "WORD" && token.canonical === "in";
+  }
+
+  isTransformModifierStart(token) {
+    return token.type === "ARROW" || (token.type === "WORD" && token.canonical === "as");
+  }
+
+  isWeekdayRelativeOperator(token) {
+    return token.type === "WORD" && (token.canonical === "after" || token.canonical === "before");
   }
 
   parsePrimary() {
@@ -280,6 +345,10 @@ class Parser {
 
     if (this.tryBusinessDaysBetweenAhead()) {
       return this.parseBusinessDaysBetween();
+    }
+
+    if (this.tryBusinessDayRelativeAhead()) {
+      return this.parseBusinessDayRelative();
     }
 
     if (this.tryAnchorPhraseAhead("start", "of", "day")) {
@@ -342,6 +411,16 @@ class Parser {
         return this.parseFunctionCall();
       }
 
+      const holiday = this.tryParseHolidayExpression();
+      if (holiday) {
+        return holiday;
+      }
+
+      const weekday = this.tryParseWeekdayExpression();
+      if (weekday) {
+        return weekday;
+      }
+
       if (["now", "today", "yesterday", "tomorrow"].includes(word.canonical)) {
         this.consume();
         return {
@@ -385,6 +464,139 @@ class Parser {
       args,
       span: spanFrom(identifier.start, close.end),
     };
+  }
+
+  tryParseWeekdayExpression() {
+    const first = this.peek();
+    if (first.type !== "WORD") {
+      return null;
+    }
+
+    if (["next", "last", "this"].includes(first.canonical) && this.peek(1).type === "WORD" && isWeekdayName(this.peek(1).canonical)) {
+      const direction = first.canonical;
+      const weekday = this.peek(1);
+      this.consume();
+      this.consume();
+      return {
+        type: "WeekdayExpression",
+        weekdayName: weekday.canonical,
+        direction,
+        span: spanFrom(first.start, weekday.end),
+        weekdaySpan: tokenSpan(weekday),
+      };
+    }
+
+    if (isWeekdayName(first.canonical)) {
+      this.consume();
+      return {
+        type: "WeekdayExpression",
+        weekdayName: first.canonical,
+        direction: "bare",
+        span: tokenSpan(first),
+        weekdaySpan: tokenSpan(first),
+      };
+    }
+
+    return null;
+  }
+
+  tryParseHolidayExpression() {
+    const first = this.peek();
+    if (first.type !== "WORD") {
+      return null;
+    }
+
+    if (["next", "last"].includes(first.canonical)) {
+      const second = this.peek(1);
+      if (second.type === "WORD" && ["holiday", "observance"].includes(second.canonical)) {
+        this.consume();
+        this.consume();
+        return {
+          type: "HolidaySearchExpression",
+          direction: first.canonical,
+          category: second.canonical === "observance" ? "observance" : "federal",
+          mode: "default",
+          span: spanFrom(first.start, second.end),
+        };
+      }
+      if (second.type === "WORD" && ["federal", "observed"].includes(second.canonical) && this.peek(2).type === "WORD" && this.peek(2).canonical === "holiday") {
+        const third = this.peek(2);
+        this.consume();
+        this.consume();
+        this.consume();
+        return {
+          type: "HolidaySearchExpression",
+          direction: first.canonical,
+          category: "federal",
+          mode: second.canonical === "observed" ? "observed" : "default",
+          span: spanFrom(first.start, third.end),
+        };
+      }
+    }
+
+    if (["actual", "observed"].includes(first.canonical)) {
+      const parsed = this.parseHolidayNameAt(this.index + 1);
+      if (!parsed) {
+        return null;
+      }
+      this.consume();
+      this.index = parsed.nextIndex;
+      const year = this.consumeOptionalYear();
+      return {
+        type: "HolidayExpression",
+        holidayName: parsed.name,
+        mode: first.canonical,
+        year,
+        span: spanFrom(first.start, year?.span.endIndex ?? parsed.end),
+        nameSpan: spanFrom(parsed.start, parsed.end),
+      };
+    }
+
+    const parsed = this.parseHolidayNameAt(this.index);
+    if (!parsed) {
+      return null;
+    }
+    this.index = parsed.nextIndex;
+    const year = this.consumeOptionalYear();
+    return {
+      type: "HolidayExpression",
+      holidayName: parsed.name,
+      mode: "default",
+      year,
+      span: spanFrom(parsed.start, year?.span.endIndex ?? parsed.end),
+      nameSpan: spanFrom(parsed.start, parsed.end),
+    };
+  }
+
+  parseHolidayNameAt(index) {
+    const words = [];
+    let best = null;
+    for (let offset = 0; offset < 5; offset += 1) {
+      const token = this.tokens[index + offset];
+      if (!token || (token.type !== "WORD" && token.type !== "NUMBER")) {
+        break;
+      }
+      words.push(token.text);
+      const name = matchHolidayAlias(words);
+      if (name) {
+        best = {
+          name,
+          start: this.tokens[index].start,
+          end: token.end,
+          nextIndex: index + offset + 1,
+        };
+      }
+    }
+    return best;
+  }
+
+  consumeOptionalYear() {
+    const token = this.peek();
+    if (token.type !== "NUMBER" || !/^\d{4}$/.test(token.text)) {
+      return null;
+    }
+    this.consume();
+    return { value: Number(token.text), span: tokenSpan(token) };
   }
 
   parseAnchorPhrase(anchorName, consumedWords) {
@@ -432,6 +644,29 @@ class Parser {
       span: spanFrom(first.start, endExpr.span.endIndex),
       unitSpan: spanFrom(first.start, consumed.end),
       betweenSpan: tokenSpan(between),
+    };
+  }
+
+  parseBusinessDayRelative() {
+    const first = this.consume();
+    const business = this.consumeWord("business", "E_PARSE_EXPECTED_BUSINESS_DAYS", "Expected 'business day'.");
+    const day = this.consumeWord("day", "E_PARSE_EXPECTED_BUSINESS_DAYS", "Expected 'business day'.");
+    const relation = this.peek();
+    if (relation.type !== "WORD" || (relation.canonical !== "after" && relation.canonical !== "before")) {
+      throw this.errorAtToken(relation, "E_PARSE_EXPECTED_BEFORE_AFTER", "Expected 'before' or 'after'.", [
+        "Use: first business day after <date>",
+      ]);
+    }
+    this.consume();
+    const target = this.parseExpression(PRECEDENCE.COMPARISON + 1);
+    return {
+      type: "BusinessDayRelativeExpression",
+      selector: first.canonical,
+      relation: relation.canonical,
+      target,
+      span: spanFrom(first.start, target.span.endIndex),
+      phraseSpan: spanFrom(first.start, day.end),
+      relationSpan: tokenSpan(relation),
     };
   }
 
@@ -530,6 +765,20 @@ class Parser {
     }
     const token = this.peek(consumed);
     return token.type === "WORD" && token.canonical === "between";
+  }
+
+  tryBusinessDayRelativeAhead() {
+    const first = this.peek();
+    return (
+      first.type === "WORD" &&
+      (first.canonical === "first" || first.canonical === "last") &&
+      this.peek(1).type === "WORD" &&
+      this.peek(1).canonical === "business" &&
+      this.peek(2).type === "WORD" &&
+      this.peek(2).canonical === "day" &&
+      this.peek(3).type === "WORD" &&
+      (this.peek(3).canonical === "after" || this.peek(3).canonical === "before")
+    );
   }
 
   consumeBusinessDaysWords() {

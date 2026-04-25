@@ -1,183 +1,4 @@
-// src/core/constants.js
-var FRAMEWORK_VERSION = "0.1.0";
-var TAGS = {
-  desktopRoot: "awwbookmarklet-desktop-root",
-  window: "awwbookmarklet-window",
-  menubar: "awwbookmarklet-menubar",
-  menu: "awwbookmarklet-menu",
-  button: "awwbookmarklet-button",
-  iconButton: "awwbookmarklet-icon-button",
-  input: "awwbookmarklet-input",
-  textarea: "awwbookmarklet-textarea",
-  checkbox: "awwbookmarklet-checkbox",
-  radio: "awwbookmarklet-radio",
-  select: "awwbookmarklet-select",
-  range: "awwbookmarklet-range",
-  progress: "awwbookmarklet-progress",
-  tabs: "awwbookmarklet-tabs",
-  tabPanel: "awwbookmarklet-tab-panel",
-  listbox: "awwbookmarklet-listbox",
-  group: "awwbookmarklet-group",
-  panel: "awwbookmarklet-panel",
-  statusbar: "awwbookmarklet-statusbar",
-  appShell: "awwbookmarklet-app-shell",
-  toolbar: "awwbookmarklet-toolbar",
-  field: "awwbookmarklet-field",
-  statusLine: "awwbookmarklet-status-line",
-  alert: "awwbookmarklet-alert",
-  dialog: "awwbookmarklet-dialog",
-  toast: "awwbookmarklet-toast",
-  emptyState: "awwbookmarklet-empty-state",
-  stateOverlay: "awwbookmarklet-state-overlay",
-  list: "awwbookmarklet-list",
-  listItem: "awwbookmarklet-list-item",
-  card: "awwbookmarklet-card",
-  richPreview: "awwbookmarklet-rich-preview",
-  browserPanel: "awwbookmarklet-browser-panel",
-  manualCopy: "awwbookmarklet-manual-copy",
-  commandPalette: "awwbookmarklet-command-palette",
-  shortcutHelp: "awwbookmarklet-shortcut-help",
-  urlPicker: "awwbookmarklet-url-picker",
-  metricCard: "awwbookmarklet-metric-card"
-};
-var GLOBAL_SYMBOLS = {
-  rootsByVersion: Symbol.for("awwtools.bookmarkletUi.overlayRootsByVersion"),
-  lastAcquiredRoot: Symbol.for("awwtools.bookmarkletUi.lastAcquiredRoot"),
-  version: Symbol.for("awwtools.bookmarkletUi.frameworkVersion")
-};
-var ROOT_Z_INDEX = 2147481000;
-var PUBLIC_TOKENS = {
-  workspaceBg: "--awwbookmarklet-workspace-bg",
-  windowBg: "--awwbookmarklet-window-bg",
-  panelBg: "--awwbookmarklet-panel-bg",
-  titlebarActiveBg: "--awwbookmarklet-titlebar-active-bg",
-  titlebarInactiveBg: "--awwbookmarklet-titlebar-inactive-bg",
-  titlebarFg: "--awwbookmarklet-titlebar-fg",
-  borderStrong: "--awwbookmarklet-border-strong",
-  borderSubtle: "--awwbookmarklet-border-subtle",
-  focusRing: "--awwbookmarklet-focus-ring",
-  buttonBg: "--awwbookmarklet-button-bg",
-  buttonFg: "--awwbookmarklet-button-fg",
-  buttonActiveBg: "--awwbookmarklet-button-active-bg",
-  inputBg: "--awwbookmarklet-input-bg",
-  inputFg: "--awwbookmarklet-input-fg",
-  menuBg: "--awwbookmarklet-menu-bg",
-  menuFg: "--awwbookmarklet-menu-fg",
-  selectionBg: "--awwbookmarklet-selection-bg",
-  selectionFg: "--awwbookmarklet-selection-fg",
-  statusbarBg: "--awwbookmarklet-statusbar-bg",
-  appShellBg: "--awwbookmarklet-app-shell-bg",
-  surfaceRaisedBg: "--awwbookmarklet-surface-raised-bg",
-  surfaceInsetBg: "--awwbookmarklet-surface-inset-bg",
-  textMuted: "--awwbookmarklet-text-muted",
-  textHelp: "--awwbookmarklet-text-help",
-  dividerColor: "--awwbookmarklet-divider-color",
-  infoBg: "--awwbookmarklet-info-bg",
-  infoFg: "--awwbookmarklet-info-fg",
-  infoBorder: "--awwbookmarklet-info-border",
-  successBg: "--awwbookmarklet-success-bg",
-  successFg: "--awwbookmarklet-success-fg",
-  successBorder: "--awwbookmarklet-success-border",
-  warningBg: "--awwbookmarklet-warning-bg",
-  warningFg: "--awwbookmarklet-warning-fg",
-  warningBorder: "--awwbookmarklet-warning-border",
-  dangerBg: "--awwbookmarklet-danger-bg",
-  dangerFg: "--awwbookmarklet-danger-fg",
-  dangerBorder: "--awwbookmarklet-danger-border",
-  overlayBackdrop: "--awwbookmarklet-overlay-backdrop",
-  overlayShadow: "--awwbookmarklet-overlay-shadow",
-  cardBg: "--awwbookmarklet-card-bg",
-  cardSelectedBg: "--awwbookmarklet-card-selected-bg",
-  metricBg: "--awwbookmarklet-metric-bg",
-  codeBg: "--awwbookmarklet-code-bg",
-  codeFg: "--awwbookmarklet-code-fg",
-  shadowDepth: "--awwbookmarklet-shadow-depth",
-  frostOpacity: "--awwbookmarklet-frost-opacity",
-  space1: "--awwbookmarklet-space-1",
-  space2: "--awwbookmarklet-space-2",
-  space3: "--awwbookmarklet-space-3",
-  controlHeight: "--awwbookmarklet-size-control-h",
-  titleHeight: "--awwbookmarklet-size-title-h"
-};
-var DEFAULT_GEOMETRY = {
-  minWidth: 320,
-  minHeight: 200,
-  minVisibleTitlebar: 36,
-  spawnWidth: 520,
-  spawnHeight: 420,
-  spawnX: 60,
-  spawnY: 60,
-  cascadeStep: 28
-};
-
-// src/core/define.js
-function defineOnce(tagName, ctor) {
-  if (!customElements.get(tagName)) {
-    customElements.define(tagName, ctor);
-  }
-}
-function defineMany(definitions) {
-  for (const [tagName, ctor] of definitions) {
-    defineOnce(tagName, ctor);
-  }
-}
-
-// src/core/styles.js
-var canAdoptSheets = typeof ShadowRoot !== "undefined" && "adoptedStyleSheets" in ShadowRoot.prototype && typeof CSSStyleSheet !== "undefined" && "replaceSync" in CSSStyleSheet.prototype;
-var sheetCache = new Map;
-var textCache = new Map;
-function hashStyle(text) {
-  let hash = 0;
-  for (let i = 0;i < text.length; i += 1) {
-    hash = hash * 31 + text.charCodeAt(i) | 0;
-  }
-  return `s${Math.abs(hash)}`;
-}
-function getSheet(text) {
-  let sheet = sheetCache.get(text);
-  if (!sheet) {
-    sheet = new CSSStyleSheet;
-    sheet.replaceSync(text);
-    sheetCache.set(text, sheet);
-  }
-  return sheet;
-}
-function ensureStyleTag(shadowRoot, text) {
-  const key = hashStyle(text);
-  if (shadowRoot.querySelector(`style[data-aww-style='${key}']`))
-    return;
-  const style = document.createElement("style");
-  style.dataset.awwStyle = key;
-  style.textContent = text;
-  shadowRoot.append(style);
-}
-function adoptStyles(shadowRoot, styleTexts) {
-  if (canAdoptSheets) {
-    const adopted = shadowRoot.adoptedStyleSheets;
-    const next = [...adopted];
-    for (const text of styleTexts) {
-      const sheet = getSheet(text);
-      if (!next.includes(sheet))
-        next.push(sheet);
-    }
-    shadowRoot.adoptedStyleSheets = next;
-    return;
-  }
-  for (const text of styleTexts)
-    ensureStyleTag(shadowRoot, text);
-}
-function css(strings, ...values) {
-  let output = "";
-  for (let i = 0;i < strings.length; i += 1) {
-    output += strings[i];
-    if (i < values.length)
-      output += String(values[i] ?? "");
-  }
-  if (!textCache.has(output))
-    textCache.set(output, output);
-  return textCache.get(output);
-}
-var BASE_COMPONENT_STYLES = css`
+var x="0.1.0",a={desktopRoot:"awwbookmarklet-desktop-root",window:"awwbookmarklet-window",menubar:"awwbookmarklet-menubar",menu:"awwbookmarklet-menu",button:"awwbookmarklet-button",iconButton:"awwbookmarklet-icon-button",input:"awwbookmarklet-input",textarea:"awwbookmarklet-textarea",checkbox:"awwbookmarklet-checkbox",radio:"awwbookmarklet-radio",select:"awwbookmarklet-select",range:"awwbookmarklet-range",progress:"awwbookmarklet-progress",tabs:"awwbookmarklet-tabs",tabPanel:"awwbookmarklet-tab-panel",listbox:"awwbookmarklet-listbox",group:"awwbookmarklet-group",panel:"awwbookmarklet-panel",statusbar:"awwbookmarklet-statusbar",appShell:"awwbookmarklet-app-shell",toolbar:"awwbookmarklet-toolbar",field:"awwbookmarklet-field",statusLine:"awwbookmarklet-status-line",alert:"awwbookmarklet-alert",dialog:"awwbookmarklet-dialog",toast:"awwbookmarklet-toast",emptyState:"awwbookmarklet-empty-state",stateOverlay:"awwbookmarklet-state-overlay",list:"awwbookmarklet-list",listItem:"awwbookmarklet-list-item",card:"awwbookmarklet-card",richPreview:"awwbookmarklet-rich-preview",browserPanel:"awwbookmarklet-browser-panel",manualCopy:"awwbookmarklet-manual-copy",commandPalette:"awwbookmarklet-command-palette",shortcutHelp:"awwbookmarklet-shortcut-help",urlPicker:"awwbookmarklet-url-picker",metricCard:"awwbookmarklet-metric-card"},k={rootsByVersion:Symbol.for("awwtools.bookmarkletUi.overlayRootsByVersion"),lastAcquiredRoot:Symbol.for("awwtools.bookmarkletUi.lastAcquiredRoot"),version:Symbol.for("awwtools.bookmarkletUi.frameworkVersion")},B=2147481000,c={workspaceBg:"--awwbookmarklet-workspace-bg",windowBg:"--awwbookmarklet-window-bg",panelBg:"--awwbookmarklet-panel-bg",titlebarActiveBg:"--awwbookmarklet-titlebar-active-bg",titlebarInactiveBg:"--awwbookmarklet-titlebar-inactive-bg",titlebarFg:"--awwbookmarklet-titlebar-fg",borderStrong:"--awwbookmarklet-border-strong",borderSubtle:"--awwbookmarklet-border-subtle",focusRing:"--awwbookmarklet-focus-ring",buttonBg:"--awwbookmarklet-button-bg",buttonFg:"--awwbookmarklet-button-fg",buttonActiveBg:"--awwbookmarklet-button-active-bg",inputBg:"--awwbookmarklet-input-bg",inputFg:"--awwbookmarklet-input-fg",menuBg:"--awwbookmarklet-menu-bg",menuFg:"--awwbookmarklet-menu-fg",selectionBg:"--awwbookmarklet-selection-bg",selectionFg:"--awwbookmarklet-selection-fg",statusbarBg:"--awwbookmarklet-statusbar-bg",appShellBg:"--awwbookmarklet-app-shell-bg",surfaceRaisedBg:"--awwbookmarklet-surface-raised-bg",surfaceInsetBg:"--awwbookmarklet-surface-inset-bg",textMuted:"--awwbookmarklet-text-muted",textHelp:"--awwbookmarklet-text-help",dividerColor:"--awwbookmarklet-divider-color",infoBg:"--awwbookmarklet-info-bg",infoFg:"--awwbookmarklet-info-fg",infoBorder:"--awwbookmarklet-info-border",successBg:"--awwbookmarklet-success-bg",successFg:"--awwbookmarklet-success-fg",successBorder:"--awwbookmarklet-success-border",warningBg:"--awwbookmarklet-warning-bg",warningFg:"--awwbookmarklet-warning-fg",warningBorder:"--awwbookmarklet-warning-border",dangerBg:"--awwbookmarklet-danger-bg",dangerFg:"--awwbookmarklet-danger-fg",dangerBorder:"--awwbookmarklet-danger-border",overlayBackdrop:"--awwbookmarklet-overlay-backdrop",overlayShadow:"--awwbookmarklet-overlay-shadow",cardBg:"--awwbookmarklet-card-bg",cardSelectedBg:"--awwbookmarklet-card-selected-bg",metricBg:"--awwbookmarklet-metric-bg",codeBg:"--awwbookmarklet-code-bg",codeFg:"--awwbookmarklet-code-fg",shadowDepth:"--awwbookmarklet-shadow-depth",frostOpacity:"--awwbookmarklet-frost-opacity",space1:"--awwbookmarklet-space-1",space2:"--awwbookmarklet-space-2",space3:"--awwbookmarklet-space-3",controlHeight:"--awwbookmarklet-size-control-h",titleHeight:"--awwbookmarklet-size-title-h"},v={minWidth:320,minHeight:200,minVisibleTitlebar:36,spawnWidth:520,spawnHeight:420,spawnX:60,spawnY:60,cascadeStep:28};function Ct(t,e){if(!customElements.get(t))customElements.define(t,e)}function Dt(t){for(let[e,o]of t)Ct(e,o)}var le=typeof ShadowRoot<"u"&&"adoptedStyleSheets"in ShadowRoot.prototype&&typeof CSSStyleSheet<"u"&&"replaceSync"in CSSStyleSheet.prototype,zt=new Map,_t=new Map;function de(t){let e=0;for(let o=0;o<t.length;o+=1)e=e*31+t.charCodeAt(o)|0;return`s${Math.abs(e)}`}function ce(t){let e=zt.get(t);if(!e)e=new CSSStyleSheet,e.replaceSync(t),zt.set(t,e);return e}function he(t,e){let o=de(e);if(t.querySelector(`style[data-aww-style='${o}']`))return;let r=document.createElement("style");r.dataset.awwStyle=o,r.textContent=e,t.append(r)}function l(t,e){if(le){let r=[...t.adoptedStyleSheets];for(let i of e){let n=ce(i);if(!r.includes(n))r.push(n)}t.adoptedStyleSheets=r;return}for(let o of e)he(t,o)}function s(t,...e){let o="";for(let r=0;r<t.length;r+=1)if(o+=t[r],r<e.length)o+=String(e[r]??"");if(!_t.has(o))_t.set(o,o);return _t.get(o)}var d=s`
   @layer reset, tokens, base, components, states, utilities;
 
   @layer reset {
@@ -210,14 +31,11 @@ var BASE_COMPONENT_STYLES = css`
       color: var(--awwbookmarklet-selection-fg, #f2f8ff);
     }
   }
-`;
-
-// src/components/desktop-root.js
-var DESKTOP_ROOT_STYLES = css`
+`;var be=s`
   :host {
     position: fixed;
     inset: 0;
-    z-index: ${ROOT_Z_INDEX};
+    z-index: ${B};
     pointer-events: none;
     display: block;
     contain: layout style;
@@ -235,103 +53,11 @@ var DESKTOP_ROOT_STYLES = css`
   ::slotted(awwbookmarklet-menu) {
     pointer-events: auto;
   }
-`;
-
-class AwwDesktopRoot extends HTMLElement {
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, DESKTOP_ROOT_STYLES]);
-    shadow.innerHTML = `
+`;class O extends HTMLElement{constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,be]),t.innerHTML=`
       <div id="layer" part="layer">
         <slot></slot>
       </div>
-    `;
-  }
-}
-
-// src/core/geometry.js
-function getViewportRect() {
-  if (window.visualViewport) {
-    return {
-      x: window.visualViewport.offsetLeft,
-      y: window.visualViewport.offsetTop,
-      width: window.visualViewport.width,
-      height: window.visualViewport.height
-    };
-  }
-  return {
-    x: 0,
-    y: 0,
-    width: window.innerWidth,
-    height: window.innerHeight
-  };
-}
-function clampRect(rect, viewport = getViewportRect(), options = DEFAULT_GEOMETRY) {
-  const minWidth = options.minWidth ?? DEFAULT_GEOMETRY.minWidth;
-  const minHeight = options.minHeight ?? DEFAULT_GEOMETRY.minHeight;
-  const minVisibleTitlebar = options.minVisibleTitlebar ?? DEFAULT_GEOMETRY.minVisibleTitlebar;
-  const effectiveMinWidth = Math.min(minWidth, viewport.width);
-  const effectiveMinHeight = Math.min(minHeight, viewport.height);
-  const width = Math.max(effectiveMinWidth, Math.min(rect.width, viewport.width));
-  const height = Math.max(effectiveMinHeight, Math.min(rect.height, viewport.height));
-  const maxX = viewport.x + viewport.width - minVisibleTitlebar;
-  const minX = viewport.x - width + minVisibleTitlebar;
-  const maxY = viewport.y + viewport.height - minVisibleTitlebar;
-  const x = Math.min(Math.max(rect.x, minX), maxX);
-  const y = Math.min(Math.max(rect.y, viewport.y), maxY);
-  return { x, y, width, height };
-}
-function clampSize(value, min, max) {
-  return Math.max(Math.min(min, max), Math.min(value, max));
-}
-function resizeRectFromEdges(startRect, edge, dx, dy, viewport = getViewportRect(), options = DEFAULT_GEOMETRY) {
-  const minWidth = options.minWidth ?? DEFAULT_GEOMETRY.minWidth;
-  const minHeight = options.minHeight ?? DEFAULT_GEOMETRY.minHeight;
-  const effectiveMinWidth = Math.min(minWidth, viewport.width);
-  const effectiveMinHeight = Math.min(minHeight, viewport.height);
-  const right = startRect.x + startRect.width;
-  const bottom = startRect.y + startRect.height;
-  let x = startRect.x;
-  let y = startRect.y;
-  let width = startRect.width;
-  let height = startRect.height;
-  if (edge.includes("e"))
-    width = clampSize(startRect.width + dx, effectiveMinWidth, viewport.width);
-  if (edge.includes("s"))
-    height = clampSize(startRect.height + dy, effectiveMinHeight, viewport.height);
-  if (edge.includes("w")) {
-    width = clampSize(startRect.width - dx, effectiveMinWidth, viewport.width);
-    x = right - width;
-  }
-  if (edge.includes("n")) {
-    height = clampSize(startRect.height - dy, effectiveMinHeight, viewport.height);
-    y = bottom - height;
-  }
-  return clampRect({ x, y, width, height }, viewport, options);
-}
-function getSpawnRect(index = 0, viewport = getViewportRect(), options = DEFAULT_GEOMETRY) {
-  const width = Math.min(options.spawnWidth, viewport.width - 12);
-  const height = Math.min(options.spawnHeight, viewport.height - 12);
-  const proposed = {
-    x: viewport.x + options.spawnX + index * options.cascadeStep,
-    y: viewport.y + options.spawnY + index * options.cascadeStep,
-    width,
-    height
-  };
-  return clampRect(proposed, viewport, options);
-}
-function rectToStyle(rect) {
-  return {
-    left: `${Math.round(rect.x)}px`,
-    top: `${Math.round(rect.y)}px`,
-    width: `${Math.round(rect.width)}px`,
-    height: `${Math.round(rect.height)}px`
-  };
-}
-
-// src/components/window.js
-var WINDOW_STYLES = css`
+    `}}function L(){if(window.visualViewport)return{x:window.visualViewport.offsetLeft,y:window.visualViewport.offsetTop,width:window.visualViewport.width,height:window.visualViewport.height};return{x:0,y:0,width:window.innerWidth,height:window.innerHeight}}function A(t,e=L(),o=v){let r=o.minWidth??v.minWidth,i=o.minHeight??v.minHeight,n=o.minVisibleTitlebar??v.minVisibleTitlebar,h=Math.min(r,e.width),u=Math.min(i,e.height),p=Math.max(h,Math.min(t.width,e.width)),m=Math.max(u,Math.min(t.height,e.height)),M=e.x+e.width-n,S=e.x-p+n,y=e.y+e.height-n,b=Math.min(Math.max(t.x,S),M),f=Math.min(Math.max(t.y,e.y),y);return{x:b,y:f,width:p,height:m}}function q(t,e,o){return Math.max(Math.min(e,o),Math.min(t,o))}function Nt(t,e,o,r,i=L(),n=v){let h=n.minWidth??v.minWidth,u=n.minHeight??v.minHeight,p=Math.min(h,i.width),m=Math.min(u,i.height),M=t.x+t.width,S=t.y+t.height,y=t.x,b=t.y,f=t.width,T=t.height;if(e.includes("e"))f=q(t.width+o,p,i.width);if(e.includes("s"))T=q(t.height+r,m,i.height);if(e.includes("w"))f=q(t.width-o,p,i.width),y=M-f;if(e.includes("n"))T=q(t.height-r,m,i.height),b=S-T;return A({x:y,y:b,width:f,height:T},i,n)}function Bt(t=0,e=L(),o=v){let r=Math.min(o.spawnWidth,e.width-12),i=Math.min(o.spawnHeight,e.height-12),n={x:e.x+o.spawnX+t*o.cascadeStep,y:e.y+o.spawnY+t*o.cascadeStep,width:r,height:i};return A(n,e,o)}function H(t){return{left:`${Math.round(t.x)}px`,top:`${Math.round(t.y)}px`,width:`${Math.round(t.width)}px`,height:`${Math.round(t.height)}px`}}var ue=s`
   :host {
     position: fixed;
     display: block;
@@ -449,26 +175,7 @@ var WINDOW_STYLES = css`
   .resize-handle[data-edge="nw"] { inset: -4px auto auto -4px; width: 10px; height: 10px; cursor: nwse-resize; }
   .resize-handle[data-edge="se"] { inset: auto -4px -4px auto; width: 10px; height: 10px; cursor: nwse-resize; }
   .resize-handle[data-edge="sw"] { inset: auto auto -4px -4px; width: 10px; height: 10px; cursor: nesw-resize; }
-`;
-function closestEdge(handle) {
-  return handle?.dataset?.edge || "";
-}
-function isPrimaryButton(event) {
-  return event.button === 0;
-}
-
-class AwwWindow extends HTMLElement {
-  static observedAttributes = ["title", "closable"];
-  #rect = null;
-  #manager = null;
-  #drag = null;
-  #resize = null;
-  #raf = 0;
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, WINDOW_STYLES]);
-    shadow.innerHTML = `
+`;function pe(t){return t?.dataset?.edge||""}function Vt(t){return t.button===0}class $ extends HTMLElement{static observedAttributes=["title","closable"];#t=null;#e=null;#o=null;#r=null;#a=0;constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,ue]),t.innerHTML=`
       <div class="shell" part="shell" role="dialog" aria-label="Bookmarklet window">
         <div class="titlebar" part="titlebar">
           <button class="system-menu-button" part="system-menu-button" type="button" aria-label="System menu">◫</button>
@@ -491,302 +198,7 @@ class AwwWindow extends HTMLElement {
         <div class="resize-handle" data-edge="se"></div>
         <div class="resize-handle" data-edge="sw"></div>
       </div>
-    `;
-    this.#bindInteractions();
-  }
-  connectedCallback() {
-    if (!this.#rect) {
-      this.#rect = { x: 72, y: 72, width: 520, height: 420 };
-      this.#applyRect(this.#rect);
-    }
-    this.setAttribute("data-active", this.getAttribute("data-active") ?? "true");
-    this.#syncTitle();
-    this.#syncClosable();
-    this.#syncSlots();
-    const root = this.closest("awwbookmarklet-desktop-root");
-    this.#manager = root?.__awwManager ?? null;
-    this.#manager?.register(this);
-    this.addEventListener("pointerdown", this.#onPointerDownHost);
-  }
-  disconnectedCallback() {
-    this.#manager?.unregister(this);
-    this.#manager = null;
-    this.removeEventListener("pointerdown", this.#onPointerDownHost);
-    this.#teardownPointerFlow();
-    this.dispatchEvent(new CustomEvent("awwbookmarklet-window-disconnected"));
-  }
-  attributeChangedCallback(name) {
-    if (name === "title")
-      this.#syncTitle();
-    if (name === "closable")
-      this.#syncClosable();
-  }
-  getRect() {
-    return this.#rect ? { ...this.#rect } : null;
-  }
-  setRect(nextRect) {
-    this.#rect = clampRect(nextRect);
-    this.#applyRect(this.#rect);
-  }
-  setActive(isActive) {
-    this.setAttribute("data-active", String(Boolean(isActive)));
-  }
-  setZIndex(zIndex) {
-    this.style.zIndex = String(zIndex);
-  }
-  requestClose() {
-    if (!this.isClosable())
-      return;
-    const allowed = this.dispatchEvent(new CustomEvent("awwbookmarklet-window-close-request", { bubbles: true, composed: true, cancelable: true }));
-    if (!allowed)
-      return;
-    this.remove();
-    this.dispatchEvent(new CustomEvent("awwbookmarklet-window-closed", { bubbles: true, composed: true }));
-  }
-  isClosable() {
-    const raw = this.getAttribute("closable");
-    return raw === null ? true : raw !== "false";
-  }
-  #bindInteractions() {
-    const shadow = this.shadowRoot;
-    const titlebar = shadow.querySelector(".titlebar");
-    const systemButton = shadow.querySelector(".system-menu-button");
-    const closeButton = shadow.querySelector(".close");
-    titlebar.addEventListener("pointerdown", this.#onPointerDownTitlebar);
-    systemButton.addEventListener("click", this.#onSystemClick);
-    systemButton.addEventListener("dblclick", this.#onSystemDoubleClick);
-    systemButton.addEventListener("keydown", this.#onSystemKeyDown);
-    closeButton.addEventListener("click", () => this.requestClose());
-    for (const handle of shadow.querySelectorAll(".resize-handle")) {
-      handle.addEventListener("pointerdown", this.#onPointerDownResize);
-    }
-    for (const slotName of ["menubar", "toolbar", "statusbar"]) {
-      const slot = shadow.querySelector(`slot[name='${slotName}']`);
-      slot.addEventListener("slotchange", () => this.#syncSlots());
-    }
-  }
-  #syncTitle() {
-    const title = this.getAttribute("title") || "AWW Tool";
-    this.shadowRoot.querySelector(".title").textContent = title;
-    this.shadowRoot.querySelector(".shell").setAttribute("aria-label", title);
-  }
-  #syncClosable() {
-    this.shadowRoot.querySelector(".close").disabled = !this.isClosable();
-  }
-  #syncSlots() {
-    const shadow = this.shadowRoot;
-    const hasContent = (name) => shadow.querySelector(`slot[name='${name}']`).assignedElements({ flatten: true }).length > 0;
-    shadow.querySelector(".menubar").hidden = !hasContent("menubar");
-    shadow.querySelector(".toolbar").hidden = !hasContent("toolbar");
-    shadow.querySelector(".status").hidden = !hasContent("statusbar");
-  }
-  #applyRect(rect) {
-    Object.assign(this.style, rectToStyle(rect));
-  }
-  #onPointerDownHost = () => {
-    this.#manager?.focus(this);
-  };
-  #onSystemClick = (event) => {
-    event.stopPropagation();
-    this.dispatchEvent(new CustomEvent("awwbookmarklet-window-system-menu", {
-      bubbles: true,
-      composed: true,
-      detail: { anchor: this.shadowRoot.querySelector(".system-menu-button") }
-    }));
-  };
-  #onSystemDoubleClick = (event) => {
-    event.stopPropagation();
-    this.requestClose();
-  };
-  #onSystemKeyDown = (event) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      this.#onSystemClick(event);
-    }
-  };
-  #onPointerDownTitlebar = (event) => {
-    if (!isPrimaryButton(event))
-      return;
-    if (event.target.closest("button"))
-      return;
-    event.preventDefault();
-    this.#manager?.focus(this);
-    this.#drag = {
-      startX: event.clientX,
-      startY: event.clientY,
-      currentX: event.clientX,
-      currentY: event.clientY,
-      startRect: this.getRect(),
-      pointerId: event.pointerId,
-      target: event.currentTarget
-    };
-    this.shadowRoot.querySelector(".titlebar").style.cursor = "grabbing";
-    this.#attachPointerFlow(event.currentTarget, event.pointerId);
-  };
-  #onPointerDownResize = (event) => {
-    if (!isPrimaryButton(event))
-      return;
-    event.preventDefault();
-    const edge = closestEdge(event.currentTarget);
-    if (!edge)
-      return;
-    this.#manager?.focus(this);
-    this.#resize = {
-      edge,
-      startX: event.clientX,
-      startY: event.clientY,
-      currentX: event.clientX,
-      currentY: event.clientY,
-      startRect: this.getRect(),
-      previewRect: this.getRect(),
-      pointerId: event.pointerId,
-      target: event.currentTarget
-    };
-    this.#attachPointerFlow(event.currentTarget, event.pointerId);
-  };
-  #attachPointerFlow(target, pointerId) {
-    try {
-      target.setPointerCapture?.(pointerId);
-    } catch {}
-    window.addEventListener("pointermove", this.#onPointerMove, { passive: true });
-    window.addEventListener("pointerup", this.#onPointerUp);
-    window.addEventListener("pointercancel", this.#onPointerUp);
-  }
-  #teardownPointerFlow() {
-    const pointerState = this.#drag || this.#resize;
-    window.removeEventListener("pointermove", this.#onPointerMove);
-    window.removeEventListener("pointerup", this.#onPointerUp);
-    window.removeEventListener("pointercancel", this.#onPointerUp);
-    if (pointerState?.target?.hasPointerCapture?.(pointerState.pointerId)) {
-      try {
-        pointerState.target.releasePointerCapture(pointerState.pointerId);
-      } catch {}
-    }
-    if (this.#raf) {
-      cancelAnimationFrame(this.#raf);
-      this.#raf = 0;
-    }
-    this.style.transform = "";
-    this.shadowRoot.querySelector(".titlebar").style.cursor = "grab";
-  }
-  #onPointerMove = (event) => {
-    if (this.#drag) {
-      if (event.pointerId !== this.#drag.pointerId)
-        return;
-      this.#drag.currentX = event.clientX;
-      this.#drag.currentY = event.clientY;
-      this.#scheduleFrame();
-      return;
-    }
-    if (this.#resize) {
-      if (event.pointerId !== this.#resize.pointerId)
-        return;
-      this.#resize.currentX = event.clientX;
-      this.#resize.currentY = event.clientY;
-      this.#scheduleFrame();
-    }
-  };
-  #onPointerUp = (event) => {
-    const pointerState = this.#drag || this.#resize;
-    if (pointerState && event.pointerId !== pointerState.pointerId)
-      return;
-    if (pointerState?.target?.hasPointerCapture?.(pointerState.pointerId)) {
-      try {
-        pointerState.target.releasePointerCapture(pointerState.pointerId);
-      } catch {}
-    }
-    if (this.#drag) {
-      const dx = this.#drag.currentX - this.#drag.startX;
-      const dy = this.#drag.currentY - this.#drag.startY;
-      this.style.transform = "";
-      this.setRect({
-        ...this.#drag.startRect,
-        x: this.#drag.startRect.x + dx,
-        y: this.#drag.startRect.y + dy
-      });
-      this.#drag = null;
-    }
-    if (this.#resize) {
-      this.style.transform = "";
-      this.setRect(this.#resize.previewRect);
-      this.#resize = null;
-    }
-    this.#teardownPointerFlow();
-  };
-  #scheduleFrame() {
-    if (this.#raf)
-      return;
-    this.#raf = requestAnimationFrame(() => {
-      this.#raf = 0;
-      if (this.#drag)
-        this.#flushDragFrame();
-      if (this.#resize)
-        this.#flushResizeFrame();
-    });
-  }
-  #flushDragFrame() {
-    const dx = this.#drag.currentX - this.#drag.startX;
-    const dy = this.#drag.currentY - this.#drag.startY;
-    this.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
-  }
-  #flushResizeFrame() {
-    const { edge, startRect, startX, startY, currentX, currentY } = this.#resize;
-    const dx = currentX - startX;
-    const dy = currentY - startY;
-    const previewRect = resizeRectFromEdges(startRect, edge, dx, dy);
-    this.#resize.previewRect = previewRect;
-    Object.assign(this.style, rectToStyle(previewRect));
-  }
-}
-
-// src/core/commands.js
-class CommandRegistry {
-  #commands = new Map;
-  register(command) {
-    if (!command?.id || typeof command.run !== "function") {
-      throw new TypeError("Command must include stable id and run(context)");
-    }
-    this.#commands.set(command.id, command);
-    return () => this.#commands.delete(command.id);
-  }
-  has(id) {
-    return this.#commands.has(id);
-  }
-  resolve(id) {
-    return this.#commands.get(id) ?? null;
-  }
-  isEnabled(id, context = {}) {
-    const command = this.resolve(id);
-    if (!command)
-      return false;
-    return typeof command.isEnabled === "function" ? command.isEnabled(context) : true;
-  }
-  isChecked(id, context = {}) {
-    const command = this.resolve(id);
-    if (!command)
-      return false;
-    return typeof command.isChecked === "function" ? command.isChecked(context) : false;
-  }
-  run(id, context = {}) {
-    const command = this.resolve(id);
-    if (!command || !this.isEnabled(id, context))
-      return false;
-    command.run(context);
-    return true;
-  }
-  toJSON(context = {}) {
-    return [...this.#commands.values()].map((command) => ({
-      id: command.id,
-      label: command.label ?? command.id,
-      shortcut: command.shortcut ?? "",
-      enabled: typeof command.isEnabled === "function" ? command.isEnabled(context) : true,
-      checked: typeof command.isChecked === "function" ? command.isChecked(context) : false
-    }));
-  }
-}
-
-// src/components/menubar.js
-var MENUBAR_STYLES = css`
+    `,this.#i()}connectedCallback(){if(!this.#t)this.#t={x:72,y:72,width:520,height:420},this.#d(this.#t);this.setAttribute("data-active",this.getAttribute("data-active")??"true"),this.#l(),this.#s(),this.#n();let t=this.closest("awwbookmarklet-desktop-root");this.#e=t?.__awwManager??null,this.#e?.register(this),this.addEventListener("pointerdown",this.#c)}disconnectedCallback(){this.#e?.unregister(this),this.#e=null,this.removeEventListener("pointerdown",this.#c),this.#f(),this.dispatchEvent(new CustomEvent("awwbookmarklet-window-disconnected"))}attributeChangedCallback(t){if(t==="title")this.#l();if(t==="closable")this.#s()}getRect(){return this.#t?{...this.#t}:null}setRect(t){this.#t=A(t),this.#d(this.#t)}setActive(t){this.setAttribute("data-active",String(Boolean(t)))}setZIndex(t){this.style.zIndex=String(t)}requestClose(){if(!this.isClosable())return;if(!this.dispatchEvent(new CustomEvent("awwbookmarklet-window-close-request",{bubbles:!0,composed:!0,cancelable:!0})))return;this.remove(),this.dispatchEvent(new CustomEvent("awwbookmarklet-window-closed",{bubbles:!0,composed:!0}))}isClosable(){let t=this.getAttribute("closable");return t===null?!0:t!=="false"}#i(){let t=this.shadowRoot,e=t.querySelector(".titlebar"),o=t.querySelector(".system-menu-button"),r=t.querySelector(".close");e.addEventListener("pointerdown",this.#g),o.addEventListener("click",this.#h),o.addEventListener("dblclick",this.#b),o.addEventListener("keydown",this.#u),r.addEventListener("click",()=>this.requestClose());for(let i of t.querySelectorAll(".resize-handle"))i.addEventListener("pointerdown",this.#p);for(let i of["menubar","toolbar","statusbar"])t.querySelector(`slot[name='${i}']`).addEventListener("slotchange",()=>this.#n())}#l(){let t=this.getAttribute("title")||"AWW Tool";this.shadowRoot.querySelector(".title").textContent=t,this.shadowRoot.querySelector(".shell").setAttribute("aria-label",t)}#s(){this.shadowRoot.querySelector(".close").disabled=!this.isClosable()}#n(){let t=this.shadowRoot,e=(o)=>t.querySelector(`slot[name='${o}']`).assignedElements({flatten:!0}).length>0;t.querySelector(".menubar").hidden=!e("menubar"),t.querySelector(".toolbar").hidden=!e("toolbar"),t.querySelector(".status").hidden=!e("statusbar")}#d(t){Object.assign(this.style,H(t))}#c=()=>{this.#e?.focus(this)};#h=(t)=>{t.stopPropagation(),this.dispatchEvent(new CustomEvent("awwbookmarklet-window-system-menu",{bubbles:!0,composed:!0,detail:{anchor:this.shadowRoot.querySelector(".system-menu-button")}}))};#b=(t)=>{t.stopPropagation(),this.requestClose()};#u=(t)=>{if(t.key==="Enter"||t.key===" ")t.preventDefault(),this.#h(t)};#g=(t)=>{if(!Vt(t))return;if(t.target.closest("button"))return;t.preventDefault(),this.#e?.focus(this),this.#o={startX:t.clientX,startY:t.clientY,currentX:t.clientX,currentY:t.clientY,startRect:this.getRect(),pointerId:t.pointerId,target:t.currentTarget},this.shadowRoot.querySelector(".titlebar").style.cursor="grabbing",this.#w(t.currentTarget,t.pointerId)};#p=(t)=>{if(!Vt(t))return;t.preventDefault();let e=pe(t.currentTarget);if(!e)return;this.#e?.focus(this),this.#r={edge:e,startX:t.clientX,startY:t.clientY,currentX:t.clientX,currentY:t.clientY,startRect:this.getRect(),previewRect:this.getRect(),pointerId:t.pointerId,target:t.currentTarget},this.#w(t.currentTarget,t.pointerId)};#w(t,e){try{t.setPointerCapture?.(e)}catch{}window.addEventListener("pointermove",this.#k,{passive:!0}),window.addEventListener("pointerup",this.#m),window.addEventListener("pointercancel",this.#m)}#f(){let t=this.#o||this.#r;if(window.removeEventListener("pointermove",this.#k),window.removeEventListener("pointerup",this.#m),window.removeEventListener("pointercancel",this.#m),t?.target?.hasPointerCapture?.(t.pointerId))try{t.target.releasePointerCapture(t.pointerId)}catch{}if(this.#a)cancelAnimationFrame(this.#a),this.#a=0;this.style.transform="",this.shadowRoot.querySelector(".titlebar").style.cursor="grab"}#k=(t)=>{if(this.#o){if(t.pointerId!==this.#o.pointerId)return;this.#o.currentX=t.clientX,this.#o.currentY=t.clientY,this.#v();return}if(this.#r){if(t.pointerId!==this.#r.pointerId)return;this.#r.currentX=t.clientX,this.#r.currentY=t.clientY,this.#v()}};#m=(t)=>{let e=this.#o||this.#r;if(e&&t.pointerId!==e.pointerId)return;if(e?.target?.hasPointerCapture?.(e.pointerId))try{e.target.releasePointerCapture(e.pointerId)}catch{}if(this.#o){let o=this.#o.currentX-this.#o.startX,r=this.#o.currentY-this.#o.startY;this.style.transform="",this.setRect({...this.#o.startRect,x:this.#o.startRect.x+o,y:this.#o.startRect.y+r}),this.#o=null}if(this.#r)this.style.transform="",this.setRect(this.#r.previewRect),this.#r=null;this.#f()};#v(){if(this.#a)return;this.#a=requestAnimationFrame(()=>{if(this.#a=0,this.#o)this.#x();if(this.#r)this.#y()})}#x(){let t=this.#o.currentX-this.#o.startX,e=this.#o.currentY-this.#o.startY;this.style.transform=`translate3d(${t}px, ${e}px, 0)`}#y(){let{edge:t,startRect:e,startX:o,startY:r,currentX:i,currentY:n}=this.#r,h=i-o,u=n-r,p=Nt(e,t,h,u);this.#r.previewRect=p,Object.assign(this.style,H(p))}}class _{#t=new Map;register(t){if(!t?.id||typeof t.run!=="function")throw TypeError("Command must include stable id and run(context)");return this.#t.set(t.id,t),()=>this.#t.delete(t.id)}has(t){return this.#t.has(t)}resolve(t){return this.#t.get(t)??null}isEnabled(t,e={}){let o=this.resolve(t);if(!o)return!1;return typeof o.isEnabled==="function"?o.isEnabled(e):!0}isChecked(t,e={}){let o=this.resolve(t);if(!o)return!1;return typeof o.isChecked==="function"?o.isChecked(e):!1}run(t,e={}){let o=this.resolve(t);if(!o||!this.isEnabled(t,e))return!1;return o.run(e),!0}toJSON(t={}){return[...this.#t.values()].map((e)=>({id:e.id,label:e.label??e.id,shortcut:e.shortcut??"",enabled:typeof e.isEnabled==="function"?e.isEnabled(t):!0,checked:typeof e.isChecked==="function"?e.isChecked(t):!1}))}}var we=s`
   :host {
     display: block;
     pointer-events: auto;
@@ -818,164 +230,7 @@ var MENUBAR_STYLES = css`
     border-color: var(--awwbookmarklet-border-strong, #232a33);
     background: var(--awwbookmarklet-button-bg, #f1f4f8);
   }
-`;
-
-class AwwMenubar extends HTMLElement {
-  #triggers = [];
-  #menus = new Map;
-  #wiredMenus = new WeakSet;
-  #activeTrigger = -1;
-  #openMenuName = "";
-  #window = null;
-  constructor() {
-    super();
-    this.commandRegistry = new CommandRegistry;
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, MENUBAR_STYLES]);
-    shadow.innerHTML = `<div id="bar" role="menubar" part="bar"><slot></slot></div>`;
-    shadow.querySelector("slot").addEventListener("slotchange", () => this.#refresh());
-    this.addEventListener("keydown", this.#onKeyDown);
-    this.addEventListener("click", this.#onClick);
-  }
-  connectedCallback() {
-    this.#refresh();
-    document.addEventListener("pointerdown", this.#onDocumentPointerDown, true);
-    this.#window = this.closest("awwbookmarklet-window");
-    this.#window?.addEventListener("awwbookmarklet-window-system-menu", this.#onWindowSystemMenu);
-  }
-  disconnectedCallback() {
-    document.removeEventListener("pointerdown", this.#onDocumentPointerDown, true);
-    this.#window?.removeEventListener("awwbookmarklet-window-system-menu", this.#onWindowSystemMenu);
-    this.#window = null;
-    this.closeAllMenus();
-  }
-  openFirstMenu() {
-    if (!this.#triggers.length)
-      return;
-    this.#focusTrigger(0);
-    this.#openFromTrigger(this.#triggers[0], true);
-  }
-  closeAllMenus() {
-    for (const menu of this.#menus.values())
-      menu.close();
-    for (const trigger of this.#triggers)
-      delete trigger.dataset.open;
-    this.#openMenuName = "";
-  }
-  #refresh() {
-    const children = [...this.children];
-    const openMenus = [...this.#menus.entries()].filter(([, menu]) => menu.isConnected && menu.parentNode !== this);
-    this.#triggers = children.filter((node) => node.hasAttribute("data-menu"));
-    this.#menus = new Map(openMenus);
-    for (const menu of children.filter((node) => node.tagName.toLowerCase() === "awwbookmarklet-menu")) {
-      const name = menu.getAttribute("name") || "";
-      if (name) {
-        this.#menus.set(name, menu);
-        this.#wireMenu(menu);
-      }
-    }
-    this.#triggers.forEach((trigger, index) => {
-      trigger.setAttribute("role", "menuitem");
-      trigger.tabIndex = index === this.#activeTrigger ? 0 : -1;
-    });
-    if (this.#triggers.length && this.#activeTrigger === -1)
-      this.#focusTrigger(0);
-  }
-  #openFromTrigger(trigger, focusMenu = false) {
-    const menuName = trigger.getAttribute("data-menu");
-    const menu = this.#menus.get(menuName);
-    if (!menu)
-      return;
-    this.closeAllMenus();
-    trigger.dataset.open = "true";
-    const overlayRoot = this.closest("awwbookmarklet-window")?.closest("awwbookmarklet-desktop-root");
-    menu.portalTo(overlayRoot);
-    menu.openAtViewportRect(trigger.getBoundingClientRect());
-    this.#openMenuName = menuName;
-    if (focusMenu)
-      menu.focusFirst();
-  }
-  #focusTrigger(index) {
-    if (!this.#triggers.length)
-      return;
-    this.#activeTrigger = (index + this.#triggers.length) % this.#triggers.length;
-    this.#triggers.forEach((trigger, triggerIndex) => {
-      trigger.tabIndex = triggerIndex === this.#activeTrigger ? 0 : -1;
-    });
-    this.#triggers[this.#activeTrigger].focus();
-  }
-  #moveTrigger(step) {
-    this.#focusTrigger(this.#activeTrigger + step);
-    if (this.#openMenuName) {
-      const trigger = this.#triggers[this.#activeTrigger];
-      this.#openFromTrigger(trigger, true);
-    }
-  }
-  #onClick = (event) => {
-    const trigger = event.target.closest("[data-menu]");
-    if (!trigger || !this.contains(trigger))
-      return;
-    const alreadyOpen = trigger.dataset.open === "true";
-    if (alreadyOpen) {
-      this.closeAllMenus();
-      return;
-    }
-    this.#focusTrigger(this.#triggers.indexOf(trigger));
-    this.#openFromTrigger(trigger, true);
-  };
-  #onKeyDown = (event) => {
-    if (!this.#triggers.length)
-      return;
-    if (["ArrowRight", "ArrowLeft"].includes(event.key)) {
-      event.preventDefault();
-      this.#moveTrigger(event.key === "ArrowRight" ? 1 : -1);
-      return;
-    }
-    if (["Enter", " ", "ArrowDown"].includes(event.key)) {
-      event.preventDefault();
-      this.#openFromTrigger(this.#triggers[this.#activeTrigger], true);
-      return;
-    }
-    if (event.key === "Escape") {
-      event.preventDefault();
-      this.closeAllMenus();
-    }
-  };
-  #onDismissMenu = () => {
-    this.closeAllMenus();
-    if (this.#activeTrigger >= 0)
-      this.#triggers[this.#activeTrigger]?.focus();
-  };
-  #onDocumentPointerDown = (event) => {
-    const target = event.target;
-    const insideMenu = [...this.#menus.values()].some((menu) => menu.contains(target));
-    if (!this.contains(target) && !insideMenu)
-      this.closeAllMenus();
-  };
-  #onRunCommand = (event) => {
-    const commandId = event.detail?.commandId;
-    if (!commandId)
-      return;
-    this.commandRegistry.run(commandId, {
-      menubar: this,
-      trigger: event.detail.source
-    });
-  };
-  #onWindowSystemMenu = () => {
-    this.openFirstMenu();
-  };
-  #wireMenu(menu) {
-    if (this.#wiredMenus.has(menu))
-      return;
-    this.#wiredMenus.add(menu);
-    menu.addEventListener("awwbookmarklet-menu-dismiss", this.#onDismissMenu);
-    menu.addEventListener("awwbookmarklet-menu-select", this.#onDismissMenu);
-    menu.addEventListener("awwbookmarklet-command", this.#onRunCommand);
-  }
-}
-
-// src/components/menu.js
-var MENU_STYLES = css`
+`;class R extends HTMLElement{#t=[];#e=new Map;#o=new WeakSet;#r=-1;#a="";#i=null;constructor(){super();this.commandRegistry=new _;let t=this.attachShadow({mode:"open"});l(t,[d,we]),t.innerHTML='<div id="bar" role="menubar" part="bar"><slot></slot></div>',t.querySelector("slot").addEventListener("slotchange",()=>this.#l()),this.addEventListener("keydown",this.#h),this.addEventListener("click",this.#c)}connectedCallback(){this.#l(),document.addEventListener("pointerdown",this.#u,!0),this.#i=this.closest("awwbookmarklet-window"),this.#i?.addEventListener("awwbookmarklet-window-system-menu",this.#p)}disconnectedCallback(){document.removeEventListener("pointerdown",this.#u,!0),this.#i?.removeEventListener("awwbookmarklet-window-system-menu",this.#p),this.#i=null,this.closeAllMenus()}openFirstMenu(){if(!this.#t.length)return;this.#n(0),this.#s(this.#t[0],!0)}closeAllMenus(){for(let t of this.#e.values())t.close();for(let t of this.#t)delete t.dataset.open;this.#a=""}#l(){let t=[...this.children],e=[...this.#e.entries()].filter(([,o])=>o.isConnected&&o.parentNode!==this);this.#t=t.filter((o)=>o.hasAttribute("data-menu")),this.#e=new Map(e);for(let o of t.filter((r)=>r.tagName.toLowerCase()==="awwbookmarklet-menu")){let r=o.getAttribute("name")||"";if(r)this.#e.set(r,o),this.#w(o)}if(this.#t.forEach((o,r)=>{o.setAttribute("role","menuitem"),o.tabIndex=r===this.#r?0:-1}),this.#t.length&&this.#r===-1)this.#n(0)}#s(t,e=!1){let o=t.getAttribute("data-menu"),r=this.#e.get(o);if(!r)return;this.closeAllMenus(),t.dataset.open="true";let i=this.closest("awwbookmarklet-window")?.closest("awwbookmarklet-desktop-root");if(r.portalTo(i),r.openAtViewportRect(t.getBoundingClientRect()),this.#a=o,e)r.focusFirst()}#n(t){if(!this.#t.length)return;this.#r=(t+this.#t.length)%this.#t.length,this.#t.forEach((e,o)=>{e.tabIndex=o===this.#r?0:-1}),this.#t[this.#r].focus()}#d(t){if(this.#n(this.#r+t),this.#a){let e=this.#t[this.#r];this.#s(e,!0)}}#c=(t)=>{let e=t.target.closest("[data-menu]");if(!e||!this.contains(e))return;if(e.dataset.open==="true"){this.closeAllMenus();return}this.#n(this.#t.indexOf(e)),this.#s(e,!0)};#h=(t)=>{if(!this.#t.length)return;if(["ArrowRight","ArrowLeft"].includes(t.key)){t.preventDefault(),this.#d(t.key==="ArrowRight"?1:-1);return}if(["Enter"," ","ArrowDown"].includes(t.key)){t.preventDefault(),this.#s(this.#t[this.#r],!0);return}if(t.key==="Escape")t.preventDefault(),this.closeAllMenus()};#b=()=>{if(this.closeAllMenus(),this.#r>=0)this.#t[this.#r]?.focus()};#u=(t)=>{let e=t.target,o=[...this.#e.values()].some((r)=>r.contains(e));if(!this.contains(e)&&!o)this.closeAllMenus()};#g=(t)=>{let e=t.detail?.commandId;if(!e)return;this.commandRegistry.run(e,{menubar:this,trigger:t.detail.source})};#p=()=>{this.openFirstMenu()};#w(t){if(this.#o.has(t))return;this.#o.add(t),t.addEventListener("awwbookmarklet-menu-dismiss",this.#b),t.addEventListener("awwbookmarklet-menu-select",this.#b),t.addEventListener("awwbookmarklet-command",this.#g)}}var me=s`
   :host {
     position: fixed;
     display: none;
@@ -1037,187 +292,7 @@ var MENU_STYLES = css`
     opacity: 0.5;
     pointer-events: none;
   }
-`;
-function isSeparator(node) {
-  return node.hasAttribute("data-separator") || node.getAttribute("role") === "separator";
-}
-function isMenuItem(node) {
-  return !isSeparator(node) && !node.hasAttribute("disabled") && node.getAttribute("aria-disabled") !== "true";
-}
-
-class AwwMenu extends HTMLElement {
-  #activeIndex = -1;
-  #typeahead = "";
-  #typeaheadTimer = 0;
-  #restoreParent = null;
-  #restoreNextSibling = null;
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, MENU_STYLES]);
-    shadow.innerHTML = `<div id="panel" part="panel" role="menu"><slot></slot></div>`;
-    this.addEventListener("keydown", this.#onKeyDown);
-    this.addEventListener("click", this.#onClick);
-    shadow.querySelector("slot").addEventListener("slotchange", () => this.#resetItems());
-  }
-  connectedCallback() {
-    this.hidden = false;
-    this.setAttribute("aria-hidden", this.hasAttribute("open") ? "false" : "true");
-    this.#resetItems();
-  }
-  disconnectedCallback() {
-    clearTimeout(this.#typeaheadTimer);
-  }
-  getItems() {
-    return [...this.children].filter(isMenuItem);
-  }
-  portalTo(container) {
-    if (!container || this.parentNode === container)
-      return;
-    if (!this.#restoreParent) {
-      this.#restoreParent = this.parentNode;
-      this.#restoreNextSibling = this.nextSibling;
-    }
-    container.append(this);
-  }
-  restorePortal() {
-    if (!this.#restoreParent)
-      return;
-    const parent = this.#restoreParent;
-    const nextSibling = this.#restoreNextSibling?.parentNode === parent ? this.#restoreNextSibling : null;
-    this.#restoreParent = null;
-    this.#restoreNextSibling = null;
-    if (parent.isConnected)
-      parent.insertBefore(this, nextSibling);
-  }
-  openAtViewportRect(anchorRect) {
-    this.style.left = "-9999px";
-    this.style.top = "-9999px";
-    this.setAttribute("open", "");
-    const width = Math.max(200, this.offsetWidth || 220);
-    const viewport = window.visualViewport;
-    const viewportX = viewport?.offsetLeft ?? 0;
-    const viewportY = viewport?.offsetTop ?? 0;
-    const viewportW = viewport?.width ?? window.innerWidth;
-    const viewportH = viewport?.height ?? window.innerHeight;
-    const menuHeight = this.offsetHeight || Math.min(viewportH * 0.5, 240);
-    let left = anchorRect.left;
-    let top = anchorRect.bottom + 2;
-    if (left + width > viewportX + viewportW - 6)
-      left = viewportX + viewportW - width - 6;
-    if (top + menuHeight > viewportY + viewportH - 6)
-      top = Math.max(viewportY + 6, anchorRect.top - menuHeight - 2);
-    this.style.left = `${Math.max(viewportX + 6, left)}px`;
-    this.style.top = `${Math.max(viewportY + 6, top)}px`;
-    this.setAttribute("aria-hidden", "false");
-    this.#activeIndex = -1;
-  }
-  close() {
-    this.removeAttribute("open");
-    this.setAttribute("aria-hidden", "true");
-    this.#highlight(-1);
-    this.restorePortal();
-  }
-  focusFirst() {
-    const items = this.getItems();
-    if (items.length === 0)
-      return;
-    this.#highlight(0);
-    items[0].focus();
-  }
-  #resetItems() {
-    for (const node of this.children) {
-      if (isSeparator(node))
-        continue;
-      if (!node.hasAttribute("role"))
-        node.setAttribute("role", "menuitem");
-      node.tabIndex = -1;
-    }
-  }
-  #onClick = (event) => {
-    const target = event.target.closest("[role='menuitem']");
-    if (!target || !isMenuItem(target))
-      return;
-    const command = target.getAttribute("data-command") || "";
-    if (command) {
-      this.dispatchEvent(new CustomEvent("awwbookmarklet-command", {
-        bubbles: true,
-        composed: true,
-        detail: { commandId: command, source: target }
-      }));
-    }
-    this.dispatchEvent(new CustomEvent("awwbookmarklet-menu-select", { bubbles: true, composed: true }));
-  };
-  #onKeyDown = (event) => {
-    const items = this.getItems();
-    if (!items.length)
-      return;
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      const next = (this.#activeIndex + 1 + items.length) % items.length;
-      this.#highlight(next);
-      items[next].focus();
-      return;
-    }
-    if (event.key === "ArrowUp") {
-      event.preventDefault();
-      const next = (this.#activeIndex - 1 + items.length) % items.length;
-      this.#highlight(next);
-      items[next].focus();
-      return;
-    }
-    if (event.key === "Home") {
-      event.preventDefault();
-      this.#highlight(0);
-      items[0].focus();
-      return;
-    }
-    if (event.key === "End") {
-      event.preventDefault();
-      const last = items.length - 1;
-      this.#highlight(last);
-      items[last].focus();
-      return;
-    }
-    if (event.key === "Escape") {
-      event.preventDefault();
-      this.dispatchEvent(new CustomEvent("awwbookmarklet-menu-dismiss", { bubbles: true, composed: true }));
-      return;
-    }
-    if (event.key.length === 1 && /\S/.test(event.key)) {
-      this.#typeahead += event.key.toLowerCase();
-      clearTimeout(this.#typeaheadTimer);
-      this.#typeaheadTimer = setTimeout(() => {
-        this.#typeahead = "";
-      }, 450);
-      const index = items.findIndex((item) => item.textContent.trim().toLowerCase().startsWith(this.#typeahead));
-      if (index !== -1) {
-        this.#highlight(index);
-        items[index].focus();
-      }
-    }
-    if (event.key === "Enter" || event.key === " ") {
-      const target = items[this.#activeIndex];
-      if (!target)
-        return;
-      event.preventDefault();
-      target.click();
-    }
-  };
-  #highlight(index) {
-    const items = this.getItems();
-    this.#activeIndex = index;
-    items.forEach((item, itemIndex) => {
-      if (itemIndex === index)
-        item.dataset.highlighted = "true";
-      else
-        delete item.dataset.highlighted;
-    });
-  }
-}
-
-// src/components/button.js
-var BUTTON_STYLES = css`
+`;function Ut(t){return t.hasAttribute("data-separator")||t.getAttribute("role")==="separator"}function Ft(t){return!Ut(t)&&!t.hasAttribute("disabled")&&t.getAttribute("aria-disabled")!=="true"}class I extends HTMLElement{#t=-1;#e="";#o=0;#r=null;#a=null;constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,me]),t.innerHTML='<div id="panel" part="panel" role="menu"><slot></slot></div>',this.addEventListener("keydown",this.#s),this.addEventListener("click",this.#l),t.querySelector("slot").addEventListener("slotchange",()=>this.#i())}connectedCallback(){this.hidden=!1,this.setAttribute("aria-hidden",this.hasAttribute("open")?"false":"true"),this.#i()}disconnectedCallback(){clearTimeout(this.#o)}getItems(){return[...this.children].filter(Ft)}portalTo(t){if(!t||this.parentNode===t)return;if(!this.#r)this.#r=this.parentNode,this.#a=this.nextSibling;t.append(this)}restorePortal(){if(!this.#r)return;let t=this.#r,e=this.#a?.parentNode===t?this.#a:null;if(this.#r=null,this.#a=null,t.isConnected)t.insertBefore(this,e)}openAtViewportRect(t){this.style.left="-9999px",this.style.top="-9999px",this.setAttribute("open","");let e=Math.max(200,this.offsetWidth||220),o=window.visualViewport,r=o?.offsetLeft??0,i=o?.offsetTop??0,n=o?.width??window.innerWidth,h=o?.height??window.innerHeight,u=this.offsetHeight||Math.min(h*0.5,240),p=t.left,m=t.bottom+2;if(p+e>r+n-6)p=r+n-e-6;if(m+u>i+h-6)m=Math.max(i+6,t.top-u-2);this.style.left=`${Math.max(r+6,p)}px`,this.style.top=`${Math.max(i+6,m)}px`,this.setAttribute("aria-hidden","false"),this.#t=-1}close(){this.removeAttribute("open"),this.setAttribute("aria-hidden","true"),this.#n(-1),this.restorePortal()}focusFirst(){let t=this.getItems();if(t.length===0)return;this.#n(0),t[0].focus()}#i(){for(let t of this.children){if(Ut(t))continue;if(!t.hasAttribute("role"))t.setAttribute("role","menuitem");t.tabIndex=-1}}#l=(t)=>{let e=t.target.closest("[role='menuitem']");if(!e||!Ft(e))return;let o=e.getAttribute("data-command")||"";if(o)this.dispatchEvent(new CustomEvent("awwbookmarklet-command",{bubbles:!0,composed:!0,detail:{commandId:o,source:e}}));this.dispatchEvent(new CustomEvent("awwbookmarklet-menu-select",{bubbles:!0,composed:!0}))};#s=(t)=>{let e=this.getItems();if(!e.length)return;if(t.key==="ArrowDown"){t.preventDefault();let o=(this.#t+1+e.length)%e.length;this.#n(o),e[o].focus();return}if(t.key==="ArrowUp"){t.preventDefault();let o=(this.#t-1+e.length)%e.length;this.#n(o),e[o].focus();return}if(t.key==="Home"){t.preventDefault(),this.#n(0),e[0].focus();return}if(t.key==="End"){t.preventDefault();let o=e.length-1;this.#n(o),e[o].focus();return}if(t.key==="Escape"){t.preventDefault(),this.dispatchEvent(new CustomEvent("awwbookmarklet-menu-dismiss",{bubbles:!0,composed:!0}));return}if(t.key.length===1&&/\S/.test(t.key)){this.#e+=t.key.toLowerCase(),clearTimeout(this.#o),this.#o=setTimeout(()=>{this.#e=""},450);let o=e.findIndex((r)=>r.textContent.trim().toLowerCase().startsWith(this.#e));if(o!==-1)this.#n(o),e[o].focus()}if(t.key==="Enter"||t.key===" "){let o=e[this.#t];if(!o)return;t.preventDefault(),o.click()}};#n(t){let e=this.getItems();this.#t=t,e.forEach((o,r)=>{if(r===t)o.dataset.highlighted="true";else delete o.dataset.highlighted})}}var ge=s`
   :host { display: inline-block; }
 
   button {
@@ -1280,54 +355,7 @@ var BUTTON_STYLES = css`
     background: var(--awwbookmarklet-button-active-bg, #dbe3ee);
     box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.18);
   }
-`;
-
-class AwwButton extends HTMLElement {
-  static observedAttributes = ["disabled", "busy", "pressed"];
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, BUTTON_STYLES]);
-    shadow.innerHTML = `<button part="control" type="button"><slot></slot></button>`;
-    this.control = shadow.querySelector("button");
-    this.control.addEventListener("click", (event) => {
-      event.stopPropagation();
-      if (this.disabled || this.busy) {
-        event.preventDefault();
-        return;
-      }
-      const commandId = this.getAttribute("command");
-      if (commandId) {
-        this.dispatchEvent(new CustomEvent("awwbookmarklet-command-request", {
-          bubbles: true,
-          composed: true,
-          detail: { commandId, source: this }
-        }));
-      }
-      this.dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true, cancelable: true }));
-    });
-  }
-  get disabled() {
-    return this.hasAttribute("disabled");
-  }
-  set disabled(value) {
-    this.toggleAttribute("disabled", Boolean(value));
-  }
-  get busy() {
-    return this.hasAttribute("busy");
-  }
-  set busy(value) {
-    this.toggleAttribute("busy", Boolean(value));
-  }
-  attributeChangedCallback() {
-    this.control.disabled = this.disabled || this.busy;
-    this.control.setAttribute("aria-pressed", this.hasAttribute("pressed") ? "true" : "false");
-    this.control.setAttribute("aria-busy", this.busy ? "true" : "false");
-  }
-}
-
-// src/components/icon-button.js
-var ICON_BUTTON_STYLES = css`
+`;class P extends HTMLElement{static observedAttributes=["disabled","busy","pressed"];constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,ge]),t.innerHTML='<button part="control" type="button"><slot></slot></button>',this.control=t.querySelector("button"),this.control.addEventListener("click",(e)=>{if(e.stopPropagation(),this.disabled||this.busy){e.preventDefault();return}let o=this.getAttribute("command");if(o)this.dispatchEvent(new CustomEvent("awwbookmarklet-command-request",{bubbles:!0,composed:!0,detail:{commandId:o,source:this}}));this.dispatchEvent(new MouseEvent("click",{bubbles:!0,composed:!0,cancelable:!0}))})}get disabled(){return this.hasAttribute("disabled")}set disabled(t){this.toggleAttribute("disabled",Boolean(t))}get busy(){return this.hasAttribute("busy")}set busy(t){this.toggleAttribute("busy",Boolean(t))}attributeChangedCallback(){this.control.disabled=this.disabled||this.busy,this.control.setAttribute("aria-pressed",this.hasAttribute("pressed")?"true":"false"),this.control.setAttribute("aria-busy",this.busy?"true":"false")}}var fe=s`
   :host { display: inline-block; }
 
   button {
@@ -1361,57 +389,7 @@ var ICON_BUTTON_STYLES = css`
     stroke: currentColor;
     fill: none;
   }
-`;
-
-class AwwIconButton extends HTMLElement {
-  static observedAttributes = ["disabled", "busy", "pressed", "label", "aria-label"];
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, ICON_BUTTON_STYLES]);
-    shadow.innerHTML = `<button part="control" type="button"><slot></slot></button>`;
-    this.control = shadow.querySelector("button");
-    this.control.addEventListener("click", (event) => {
-      event.stopPropagation();
-      if (this.disabled || this.busy) {
-        event.preventDefault();
-        return;
-      }
-      const commandId = this.getAttribute("command");
-      if (commandId) {
-        this.dispatchEvent(new CustomEvent("awwbookmarklet-command-request", {
-          bubbles: true,
-          composed: true,
-          detail: { commandId, source: this }
-        }));
-      }
-      this.dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true, cancelable: true }));
-    });
-  }
-  get disabled() {
-    return this.hasAttribute("disabled");
-  }
-  set disabled(value) {
-    this.toggleAttribute("disabled", Boolean(value));
-  }
-  get busy() {
-    return this.hasAttribute("busy");
-  }
-  set busy(value) {
-    this.toggleAttribute("busy", Boolean(value));
-  }
-  attributeChangedCallback() {
-    this.control.disabled = this.disabled || this.busy;
-    const label = this.getAttribute("label") || this.getAttribute("aria-label") || "";
-    if (label)
-      this.control.setAttribute("aria-label", label);
-    this.control.setAttribute("aria-pressed", this.hasAttribute("pressed") ? "true" : "false");
-    this.control.setAttribute("aria-busy", this.busy ? "true" : "false");
-  }
-}
-
-// src/components/input.js
-var INPUT_STYLES = css`
+`;class Y extends HTMLElement{static observedAttributes=["disabled","busy","pressed","label","aria-label"];constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,fe]),t.innerHTML='<button part="control" type="button"><slot></slot></button>',this.control=t.querySelector("button"),this.control.addEventListener("click",(e)=>{if(e.stopPropagation(),this.disabled||this.busy){e.preventDefault();return}let o=this.getAttribute("command");if(o)this.dispatchEvent(new CustomEvent("awwbookmarklet-command-request",{bubbles:!0,composed:!0,detail:{commandId:o,source:this}}));this.dispatchEvent(new MouseEvent("click",{bubbles:!0,composed:!0,cancelable:!0}))})}get disabled(){return this.hasAttribute("disabled")}set disabled(t){this.toggleAttribute("disabled",Boolean(t))}get busy(){return this.hasAttribute("busy")}set busy(t){this.toggleAttribute("busy",Boolean(t))}attributeChangedCallback(){this.control.disabled=this.disabled||this.busy;let t=this.getAttribute("label")||this.getAttribute("aria-label")||"";if(t)this.control.setAttribute("aria-label",t);this.control.setAttribute("aria-pressed",this.hasAttribute("pressed")?"true":"false"),this.control.setAttribute("aria-busy",this.busy?"true":"false")}}var ke=s`
   :host { display: inline-block; min-width: 140px; }
 
   input {
@@ -1427,63 +405,7 @@ var INPUT_STYLES = css`
 
   input:focus-visible { outline: none; box-shadow: var(--_ring); }
   input:disabled { opacity: 0.65; }
-`;
-var MIRRORED_ATTRIBUTES = ["value", "placeholder", "disabled", "type", "name", "required", "min", "max", "step", "autocomplete", "spellcheck"];
-
-class AwwInput extends HTMLElement {
-  static observedAttributes = MIRRORED_ATTRIBUTES;
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, INPUT_STYLES]);
-    shadow.innerHTML = `<input part="control" />`;
-    this.control = shadow.querySelector("input");
-    this.control.addEventListener("input", (event) => {
-      event.stopPropagation();
-      this.setAttribute("value", this.control.value);
-      this.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
-    });
-    this.control.addEventListener("change", (event) => {
-      event.stopPropagation();
-      this.setAttribute("value", this.control.value);
-      this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-    });
-  }
-  get value() {
-    return this.control.value;
-  }
-  set value(nextValue) {
-    this.setAttribute("value", String(nextValue ?? ""));
-  }
-  get disabled() {
-    return this.hasAttribute("disabled");
-  }
-  set disabled(value) {
-    this.toggleAttribute("disabled", Boolean(value));
-  }
-  attributeChangedCallback(name, _prev, next) {
-    if (name === "disabled") {
-      this.control.disabled = this.hasAttribute("disabled");
-      return;
-    }
-    if (name === "required") {
-      this.control.required = this.hasAttribute("required");
-      return;
-    }
-    if (name === "value") {
-      this.control.value = next ?? "";
-      return;
-    }
-    if (next === null) {
-      this.control.removeAttribute(name);
-      return;
-    }
-    this.control.setAttribute(name, next);
-  }
-}
-
-// src/components/textarea.js
-var TEXTAREA_STYLES = css`
+`,ve=["value","placeholder","disabled","type","name","required","min","max","step","autocomplete","spellcheck"];class D extends HTMLElement{static observedAttributes=ve;constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,ke]),t.innerHTML='<input part="control" />',this.control=t.querySelector("input"),this.control.addEventListener("input",(e)=>{e.stopPropagation(),this.setAttribute("value",this.control.value),this.dispatchEvent(new Event("input",{bubbles:!0,composed:!0}))}),this.control.addEventListener("change",(e)=>{e.stopPropagation(),this.setAttribute("value",this.control.value),this.dispatchEvent(new Event("change",{bubbles:!0,composed:!0}))})}get value(){return this.control.value}set value(t){this.setAttribute("value",String(t??""))}get disabled(){return this.hasAttribute("disabled")}set disabled(t){this.toggleAttribute("disabled",Boolean(t))}attributeChangedCallback(t,e,o){if(t==="disabled"){this.control.disabled=this.hasAttribute("disabled");return}if(t==="required"){this.control.required=this.hasAttribute("required");return}if(t==="value"){this.control.value=o??"";return}if(o===null){this.control.removeAttribute(t);return}this.control.setAttribute(t,o)}}var xe=s`
   :host { display: inline-block; min-width: 220px; }
 
   textarea {
@@ -1500,63 +422,7 @@ var TEXTAREA_STYLES = css`
 
   textarea:focus-visible { outline: none; box-shadow: var(--_ring); }
   textarea:disabled { opacity: 0.65; }
-`;
-var MIRRORED_ATTRIBUTES2 = ["value", "placeholder", "disabled", "rows", "name", "required", "autocomplete", "spellcheck"];
-
-class AwwTextarea extends HTMLElement {
-  static observedAttributes = MIRRORED_ATTRIBUTES2;
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, TEXTAREA_STYLES]);
-    shadow.innerHTML = `<textarea part="control"></textarea>`;
-    this.control = shadow.querySelector("textarea");
-    this.control.addEventListener("input", (event) => {
-      event.stopPropagation();
-      this.setAttribute("value", this.control.value);
-      this.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
-    });
-    this.control.addEventListener("change", (event) => {
-      event.stopPropagation();
-      this.setAttribute("value", this.control.value);
-      this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-    });
-  }
-  get value() {
-    return this.control.value;
-  }
-  set value(nextValue) {
-    this.setAttribute("value", String(nextValue ?? ""));
-  }
-  get disabled() {
-    return this.hasAttribute("disabled");
-  }
-  set disabled(value) {
-    this.toggleAttribute("disabled", Boolean(value));
-  }
-  attributeChangedCallback(name, _prev, next) {
-    if (name === "disabled") {
-      this.control.disabled = this.hasAttribute("disabled");
-      return;
-    }
-    if (name === "required") {
-      this.control.required = this.hasAttribute("required");
-      return;
-    }
-    if (name === "value") {
-      this.control.value = next ?? "";
-      return;
-    }
-    if (next === null) {
-      this.control.removeAttribute(name);
-      return;
-    }
-    this.control.setAttribute(name, next);
-  }
-}
-
-// src/components/checkbox.js
-var CHECKBOX_STYLES = css`
+`,ye=["value","placeholder","disabled","rows","name","required","autocomplete","spellcheck"];class z extends HTMLElement{static observedAttributes=ye;constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,xe]),t.innerHTML='<textarea part="control"></textarea>',this.control=t.querySelector("textarea"),this.control.addEventListener("input",(e)=>{e.stopPropagation(),this.setAttribute("value",this.control.value),this.dispatchEvent(new Event("input",{bubbles:!0,composed:!0}))}),this.control.addEventListener("change",(e)=>{e.stopPropagation(),this.setAttribute("value",this.control.value),this.dispatchEvent(new Event("change",{bubbles:!0,composed:!0}))})}get value(){return this.control.value}set value(t){this.setAttribute("value",String(t??""))}get disabled(){return this.hasAttribute("disabled")}set disabled(t){this.toggleAttribute("disabled",Boolean(t))}attributeChangedCallback(t,e,o){if(t==="disabled"){this.control.disabled=this.hasAttribute("disabled");return}if(t==="required"){this.control.required=this.hasAttribute("required");return}if(t==="value"){this.control.value=o??"";return}if(o===null){this.control.removeAttribute(t);return}this.control.setAttribute(t,o)}}var Ae=s`
   :host { display: inline-block; }
 
   label {
@@ -1586,60 +452,7 @@ var CHECKBOX_STYLES = css`
 
   input:focus-visible { outline: none; box-shadow: var(--_ring); }
   input:disabled + span { opacity: 0.6; }
-`;
-var MIRRORED = ["checked", "disabled", "name", "value"];
-
-class AwwCheckbox extends HTMLElement {
-  static observedAttributes = MIRRORED;
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, CHECKBOX_STYLES]);
-    shadow.innerHTML = `<label><input type="checkbox" part="control" /><span part="label"><slot></slot></span></label>`;
-    this.control = shadow.querySelector("input");
-    this.control.addEventListener("change", (event) => {
-      event.stopPropagation();
-      this.toggleAttribute("checked", this.control.checked);
-      this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-    });
-  }
-  get checked() {
-    return this.hasAttribute("checked");
-  }
-  set checked(value) {
-    this.toggleAttribute("checked", Boolean(value));
-  }
-  get disabled() {
-    return this.hasAttribute("disabled");
-  }
-  set disabled(value) {
-    this.toggleAttribute("disabled", Boolean(value));
-  }
-  get value() {
-    return this.getAttribute("value") ?? "on";
-  }
-  set value(nextValue) {
-    this.setAttribute("value", String(nextValue ?? ""));
-  }
-  attributeChangedCallback(name, _prev, next) {
-    if (name === "checked") {
-      this.control.checked = this.hasAttribute("checked");
-      return;
-    }
-    if (name === "disabled") {
-      this.control.disabled = this.hasAttribute("disabled");
-      return;
-    }
-    if (next === null) {
-      this.control.removeAttribute(name);
-      return;
-    }
-    this.control.setAttribute(name, next);
-  }
-}
-
-// src/components/radio.js
-var RADIO_STYLES = css`
+`,Se=["checked","disabled","name","value"];class V extends HTMLElement{static observedAttributes=Se;constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,Ae]),t.innerHTML='<label><input type="checkbox" part="control" /><span part="label"><slot></slot></span></label>',this.control=t.querySelector("input"),this.control.addEventListener("change",(e)=>{e.stopPropagation(),this.toggleAttribute("checked",this.control.checked),this.dispatchEvent(new Event("change",{bubbles:!0,composed:!0}))})}get checked(){return this.hasAttribute("checked")}set checked(t){this.toggleAttribute("checked",Boolean(t))}get disabled(){return this.hasAttribute("disabled")}set disabled(t){this.toggleAttribute("disabled",Boolean(t))}get value(){return this.getAttribute("value")??"on"}set value(t){this.setAttribute("value",String(t??""))}attributeChangedCallback(t,e,o){if(t==="checked"){this.control.checked=this.hasAttribute("checked");return}if(t==="disabled"){this.control.disabled=this.hasAttribute("disabled");return}if(o===null){this.control.removeAttribute(t);return}this.control.setAttribute(t,o)}}var Ee=s`
   :host { display: inline-block; }
 
   label {
@@ -1670,75 +483,7 @@ var RADIO_STYLES = css`
 
   input:focus-visible { outline: none; box-shadow: var(--_ring); }
   input:disabled + span { opacity: 0.6; }
-`;
-var MIRRORED2 = ["checked", "disabled", "name", "value"];
-
-class AwwRadio extends HTMLElement {
-  static observedAttributes = MIRRORED2;
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, RADIO_STYLES]);
-    shadow.innerHTML = `<label><input type="radio" part="control" /><span part="label"><slot></slot></span></label>`;
-    this.control = shadow.querySelector("input");
-    this.control.addEventListener("change", (event) => {
-      event.stopPropagation();
-      this.toggleAttribute("checked", this.control.checked);
-      if (this.control.checked)
-        this.#uncheckRadioGroupPeers();
-      this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-    });
-  }
-  get checked() {
-    return this.hasAttribute("checked");
-  }
-  set checked(value) {
-    this.toggleAttribute("checked", Boolean(value));
-  }
-  get disabled() {
-    return this.hasAttribute("disabled");
-  }
-  set disabled(value) {
-    this.toggleAttribute("disabled", Boolean(value));
-  }
-  get value() {
-    return this.getAttribute("value") ?? "on";
-  }
-  set value(nextValue) {
-    this.setAttribute("value", String(nextValue ?? ""));
-  }
-  attributeChangedCallback(name, _prev, next) {
-    if (name === "checked") {
-      this.control.checked = this.hasAttribute("checked");
-      if (this.control.checked)
-        this.#uncheckRadioGroupPeers();
-      return;
-    }
-    if (name === "disabled") {
-      this.control.disabled = this.hasAttribute("disabled");
-      return;
-    }
-    if (next === null) {
-      this.control.removeAttribute(name);
-      return;
-    }
-    this.control.setAttribute(name, next);
-  }
-  #uncheckRadioGroupPeers() {
-    const name = this.getAttribute("name");
-    if (!name)
-      return;
-    const root = this.getRootNode();
-    const peers = root.querySelectorAll?.("awwbookmarklet-radio") ?? [];
-    for (const peer of peers) {
-      if (peer !== this && peer.getAttribute("name") === name)
-        peer.removeAttribute("checked");
-    }
-  }
-}
-
-// src/components/select.js
-var SELECT_STYLES = css`
+`,Me=["checked","disabled","name","value"];class F extends HTMLElement{static observedAttributes=Me;constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,Ee]),t.innerHTML='<label><input type="radio" part="control" /><span part="label"><slot></slot></span></label>',this.control=t.querySelector("input"),this.control.addEventListener("change",(e)=>{if(e.stopPropagation(),this.toggleAttribute("checked",this.control.checked),this.control.checked)this.#t();this.dispatchEvent(new Event("change",{bubbles:!0,composed:!0}))})}get checked(){return this.hasAttribute("checked")}set checked(t){this.toggleAttribute("checked",Boolean(t))}get disabled(){return this.hasAttribute("disabled")}set disabled(t){this.toggleAttribute("disabled",Boolean(t))}get value(){return this.getAttribute("value")??"on"}set value(t){this.setAttribute("value",String(t??""))}attributeChangedCallback(t,e,o){if(t==="checked"){if(this.control.checked=this.hasAttribute("checked"),this.control.checked)this.#t();return}if(t==="disabled"){this.control.disabled=this.hasAttribute("disabled");return}if(o===null){this.control.removeAttribute(t);return}this.control.setAttribute(t,o)}#t(){let t=this.getAttribute("name");if(!t)return;let o=this.getRootNode().querySelectorAll?.("awwbookmarklet-radio")??[];for(let r of o)if(r!==this&&r.getAttribute("name")===t)r.removeAttribute("checked")}}var Te=s`
   :host { display: inline-block; min-width: 160px; }
 
   .wrap { position: relative; }
@@ -1771,86 +516,7 @@ var SELECT_STYLES = css`
 
   select:focus-visible { outline: none; box-shadow: var(--_ring); }
   select:disabled { opacity: 0.65; }
-`;
-var MIRRORED3 = ["disabled", "name", "value", "required"];
-
-class AwwSelect extends HTMLElement {
-  static observedAttributes = MIRRORED3;
-  #observer = null;
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, SELECT_STYLES]);
-    shadow.innerHTML = `<div class="wrap"><select part="control"></select><span class="arrow" aria-hidden="true"></span></div>`;
-    this.control = shadow.querySelector("select");
-    this.control.addEventListener("change", (event) => {
-      event.stopPropagation();
-      this.setAttribute("value", this.control.value);
-      this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-    });
-  }
-  connectedCallback() {
-    this.#syncOptions();
-    this.#observer = new MutationObserver(() => this.#syncOptions());
-    this.#observer.observe(this, { childList: true, subtree: true, attributes: true, attributeFilter: ["selected", "disabled", "value"] });
-  }
-  disconnectedCallback() {
-    this.#observer?.disconnect();
-    this.#observer = null;
-  }
-  get value() {
-    return this.control.value;
-  }
-  set value(nextValue) {
-    this.setAttribute("value", String(nextValue ?? ""));
-  }
-  get disabled() {
-    return this.hasAttribute("disabled");
-  }
-  set disabled(value) {
-    this.toggleAttribute("disabled", Boolean(value));
-  }
-  attributeChangedCallback(name, _prev, next) {
-    if (name === "disabled") {
-      this.control.disabled = this.hasAttribute("disabled");
-      return;
-    }
-    if (name === "required") {
-      this.control.required = this.hasAttribute("required");
-      return;
-    }
-    if (name === "value") {
-      this.control.value = next ?? "";
-      return;
-    }
-    if (next === null) {
-      this.control.removeAttribute(name);
-      return;
-    }
-    this.control.setAttribute(name, next);
-  }
-  #syncOptions() {
-    const source = [...this.querySelectorAll("option")];
-    this.control.textContent = "";
-    for (const option of source) {
-      const clone = document.createElement("option");
-      clone.value = option.value;
-      clone.textContent = option.textContent;
-      clone.disabled = option.disabled;
-      clone.selected = option.selected;
-      this.control.append(clone);
-    }
-    const value = this.getAttribute("value");
-    if (value !== null) {
-      this.control.value = value;
-    } else if (this.control.selectedIndex >= 0) {
-      this.setAttribute("value", this.control.value);
-    }
-  }
-}
-
-// src/components/range.js
-var RANGE_STYLES = css`
+`,Le=["disabled","name","value","required"];class U extends HTMLElement{static observedAttributes=Le;#t=null;constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,Te]),t.innerHTML='<div class="wrap"><select part="control"></select><span class="arrow" aria-hidden="true"></span></div>',this.control=t.querySelector("select"),this.control.addEventListener("change",(e)=>{e.stopPropagation(),this.setAttribute("value",this.control.value),this.dispatchEvent(new Event("change",{bubbles:!0,composed:!0}))})}connectedCallback(){this.#e(),this.#t=new MutationObserver(()=>this.#e()),this.#t.observe(this,{childList:!0,subtree:!0,attributes:!0,attributeFilter:["selected","disabled","value"]})}disconnectedCallback(){this.#t?.disconnect(),this.#t=null}get value(){return this.control.value}set value(t){this.setAttribute("value",String(t??""))}get disabled(){return this.hasAttribute("disabled")}set disabled(t){this.toggleAttribute("disabled",Boolean(t))}attributeChangedCallback(t,e,o){if(t==="disabled"){this.control.disabled=this.hasAttribute("disabled");return}if(t==="required"){this.control.required=this.hasAttribute("required");return}if(t==="value"){this.control.value=o??"";return}if(o===null){this.control.removeAttribute(t);return}this.control.setAttribute(t,o)}#e(){let t=[...this.querySelectorAll("option")];this.control.textContent="";for(let o of t){let r=document.createElement("option");r.value=o.value,r.textContent=o.textContent,r.disabled=o.disabled,r.selected=o.selected,this.control.append(r)}let e=this.getAttribute("value");if(e!==null)this.control.value=e;else if(this.control.selectedIndex>=0)this.setAttribute("value",this.control.value)}}var Ce=s`
   :host { display: inline-block; min-width: 160px; }
 
   input[type="range"] {
@@ -1860,59 +526,7 @@ var RANGE_STYLES = css`
   }
 
   input[type="range"]:focus-visible { outline: none; box-shadow: var(--_ring); }
-`;
-var MIRRORED4 = ["min", "max", "step", "value", "disabled", "name"];
-
-class AwwRange extends HTMLElement {
-  static observedAttributes = MIRRORED4;
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, RANGE_STYLES]);
-    shadow.innerHTML = `<input type="range" part="control" />`;
-    this.control = shadow.querySelector("input");
-    this.control.addEventListener("input", (event) => {
-      event.stopPropagation();
-      this.setAttribute("value", this.control.value);
-      this.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
-    });
-    this.control.addEventListener("change", (event) => {
-      event.stopPropagation();
-      this.setAttribute("value", this.control.value);
-      this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-    });
-  }
-  get value() {
-    return this.control.value;
-  }
-  set value(nextValue) {
-    this.setAttribute("value", String(nextValue ?? ""));
-  }
-  get disabled() {
-    return this.hasAttribute("disabled");
-  }
-  set disabled(value) {
-    this.toggleAttribute("disabled", Boolean(value));
-  }
-  attributeChangedCallback(name, _prev, next) {
-    if (name === "disabled") {
-      this.control.disabled = this.hasAttribute("disabled");
-      return;
-    }
-    if (name === "value") {
-      this.control.value = next ?? "";
-      return;
-    }
-    if (next === null) {
-      this.control.removeAttribute(name);
-      return;
-    }
-    this.control.setAttribute(name, next);
-  }
-}
-
-// src/components/progress.js
-var PROGRESS_STYLES = css`
+`,_e=["min","max","step","value","disabled","name"];class W extends HTMLElement{static observedAttributes=_e;constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,Ce]),t.innerHTML='<input type="range" part="control" />',this.control=t.querySelector("input"),this.control.addEventListener("input",(e)=>{e.stopPropagation(),this.setAttribute("value",this.control.value),this.dispatchEvent(new Event("input",{bubbles:!0,composed:!0}))}),this.control.addEventListener("change",(e)=>{e.stopPropagation(),this.setAttribute("value",this.control.value),this.dispatchEvent(new Event("change",{bubbles:!0,composed:!0}))})}get value(){return this.control.value}set value(t){this.setAttribute("value",String(t??""))}get disabled(){return this.hasAttribute("disabled")}set disabled(t){this.toggleAttribute("disabled",Boolean(t))}attributeChangedCallback(t,e,o){if(t==="disabled"){this.control.disabled=this.hasAttribute("disabled");return}if(t==="value"){this.control.value=o??"";return}if(o===null){this.control.removeAttribute(t);return}this.control.setAttribute(t,o)}}var Ne=s`
   :host { display: inline-block; min-width: 160px; }
 
   progress {
@@ -1923,55 +537,7 @@ var PROGRESS_STYLES = css`
     background: var(--awwbookmarklet-panel-bg, #f8fafc);
     accent-color: var(--awwbookmarklet-selection-bg, #1f5eae);
   }
-`;
-var MIRRORED5 = ["value", "max"];
-
-class AwwProgress extends HTMLElement {
-  static observedAttributes = MIRRORED5;
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, PROGRESS_STYLES]);
-    shadow.innerHTML = `<progress part="control"></progress>`;
-    this.control = shadow.querySelector("progress");
-  }
-  get value() {
-    return this.control.value;
-  }
-  set value(nextValue) {
-    this.setAttribute("value", String(nextValue ?? ""));
-  }
-  get max() {
-    return this.control.max;
-  }
-  set max(nextValue) {
-    this.setAttribute("max", String(nextValue ?? ""));
-  }
-  attributeChangedCallback(name, _prev, next) {
-    if (name === "value") {
-      if (next === null)
-        this.control.removeAttribute("value");
-      else
-        this.control.value = Number(next);
-      return;
-    }
-    if (name === "max") {
-      if (next === null)
-        this.control.removeAttribute("max");
-      else
-        this.control.max = Number(next);
-      return;
-    }
-    if (next === null) {
-      this.control.removeAttribute(name);
-      return;
-    }
-    this.control.setAttribute(name, next);
-  }
-}
-
-// src/components/tabs.js
-var TABS_STYLES = css`
+`,Be=["value","max"];class j extends HTMLElement{static observedAttributes=Be;constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,Ne]),t.innerHTML='<progress part="control"></progress>',this.control=t.querySelector("progress")}get value(){return this.control.value}set value(t){this.setAttribute("value",String(t??""))}get max(){return this.control.max}set max(t){this.setAttribute("max",String(t??""))}attributeChangedCallback(t,e,o){if(t==="value"){if(o===null)this.control.removeAttribute("value");else this.control.value=Number(o);return}if(t==="max"){if(o===null)this.control.removeAttribute("max");else this.control.max=Number(o);return}if(o===null){this.control.removeAttribute(t);return}this.control.setAttribute(t,o)}}var Oe=s`
   :host { display: block; border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3); background: var(--awwbookmarklet-panel-bg, #f8fafc); }
 
   #tablist {
@@ -1999,135 +565,9 @@ var TABS_STYLES = css`
 
   #tablist button:focus-visible { outline: none; box-shadow: var(--_ring); }
   #panels { padding: var(--awwbookmarklet-space-2, 8px); }
-`;
-var TAB_PANEL_STYLES = css`
+`,qe=s`
   :host { display: block; }
-`;
-var nextTabsId = 0;
-
-class AwwTabPanel extends HTMLElement {
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, TAB_PANEL_STYLES]);
-    shadow.innerHTML = `<slot></slot>`;
-  }
-}
-
-class AwwTabs extends HTMLElement {
-  #tabs = [];
-  #panels = [];
-  #selected = 0;
-  #observer = null;
-  #internalUpdate = false;
-  #idPrefix;
-  constructor() {
-    super();
-    nextTabsId += 1;
-    this.#idPrefix = `awwbookmarklet-tabs-${nextTabsId}`;
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, TABS_STYLES]);
-    shadow.innerHTML = `<div id="tablist" role="tablist" part="tablist"></div><div id="panels" part="panels"><slot></slot></div>`;
-    shadow.querySelector("#tablist").addEventListener("keydown", this.#onKeyDown);
-    shadow.querySelector("#tablist").addEventListener("click", this.#onClick);
-  }
-  connectedCallback() {
-    this.#refresh();
-    this.#observer = new MutationObserver(() => {
-      if (!this.#internalUpdate)
-        this.#refresh();
-    });
-    this.#observer.observe(this, { childList: true, attributes: true, subtree: true, attributeFilter: ["label", "selected"] });
-  }
-  disconnectedCallback() {
-    this.#observer?.disconnect();
-    this.#observer = null;
-  }
-  #refresh() {
-    this.#panels = [...this.children].filter((child) => child.tagName.toLowerCase() === TAGS.tabPanel);
-    if (!this.#panels.length) {
-      this.#tabs = [];
-      this.shadowRoot.querySelector("#tablist").textContent = "";
-      return;
-    }
-    const selectedIndex = this.#panels.findIndex((panel) => panel.hasAttribute("selected"));
-    this.#selected = selectedIndex >= 0 ? selectedIndex : 0;
-    const tablist = this.shadowRoot.querySelector("#tablist");
-    tablist.textContent = "";
-    this.#tabs = this.#panels.map((panel, index) => {
-      const tab = document.createElement("button");
-      tab.type = "button";
-      tab.id = `${this.id || this.#idPrefix}-tab-${index}`;
-      tab.setAttribute("role", "tab");
-      tab.setAttribute("aria-controls", `${this.id || this.#idPrefix}-panel-${index}`);
-      tab.textContent = panel.getAttribute("label") || `Tab ${index + 1}`;
-      tab.dataset.index = String(index);
-      tab.tabIndex = index === this.#selected ? 0 : -1;
-      tab.setAttribute("aria-selected", index === this.#selected ? "true" : "false");
-      tablist.append(tab);
-      return tab;
-    });
-    this.#applySelection(this.#selected, false);
-  }
-  #applySelection(index, focusTab = true) {
-    if (!this.#tabs.length)
-      return;
-    this.#selected = (index + this.#tabs.length) % this.#tabs.length;
-    this.#tabs.forEach((tab, tabIndex) => {
-      const selected = tabIndex === this.#selected;
-      tab.tabIndex = selected ? 0 : -1;
-      tab.setAttribute("aria-selected", selected ? "true" : "false");
-      if (focusTab && selected)
-        tab.focus();
-    });
-    this.#internalUpdate = true;
-    try {
-      this.#panels.forEach((panel, panelIndex) => {
-        panel.toggleAttribute("selected", panelIndex === this.#selected);
-        panel.hidden = panelIndex !== this.#selected;
-        panel.id = `${this.id || this.#idPrefix}-panel-${panelIndex}`;
-        panel.setAttribute("role", "tabpanel");
-        panel.setAttribute("aria-labelledby", `${this.id || this.#idPrefix}-tab-${panelIndex}`);
-      });
-    } finally {
-      queueMicrotask(() => {
-        this.#internalUpdate = false;
-      });
-    }
-  }
-  #onClick = (event) => {
-    const tab = event.target.closest("button[role='tab']");
-    if (!tab)
-      return;
-    this.#applySelection(Number(tab.dataset.index), true);
-  };
-  #onKeyDown = (event) => {
-    if (!this.#tabs.length)
-      return;
-    if (event.key === "ArrowRight") {
-      event.preventDefault();
-      this.#applySelection(this.#selected + 1, true);
-      return;
-    }
-    if (event.key === "ArrowLeft") {
-      event.preventDefault();
-      this.#applySelection(this.#selected - 1, true);
-      return;
-    }
-    if (event.key === "Home") {
-      event.preventDefault();
-      this.#applySelection(0, true);
-      return;
-    }
-    if (event.key === "End") {
-      event.preventDefault();
-      this.#applySelection(this.#tabs.length - 1, true);
-    }
-  };
-}
-
-// src/components/listbox.js
-var LISTBOX_STYLES = css`
+`,Wt=0;class G extends HTMLElement{constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,qe]),t.innerHTML="<slot></slot>"}}class K extends HTMLElement{#t=[];#e=[];#o=0;#r=null;#a=!1;#i;constructor(){super();Wt+=1,this.#i=`awwbookmarklet-tabs-${Wt}`;let t=this.attachShadow({mode:"open"});l(t,[d,Oe]),t.innerHTML='<div id="tablist" role="tablist" part="tablist"></div><div id="panels" part="panels"><slot></slot></div>',t.querySelector("#tablist").addEventListener("keydown",this.#d),t.querySelector("#tablist").addEventListener("click",this.#n)}connectedCallback(){this.#l(),this.#r=new MutationObserver(()=>{if(!this.#a)this.#l()}),this.#r.observe(this,{childList:!0,attributes:!0,subtree:!0,attributeFilter:["label","selected"]})}disconnectedCallback(){this.#r?.disconnect(),this.#r=null}#l(){if(this.#e=[...this.children].filter((o)=>o.tagName.toLowerCase()===a.tabPanel),!this.#e.length){this.#t=[],this.shadowRoot.querySelector("#tablist").textContent="";return}let t=this.#e.findIndex((o)=>o.hasAttribute("selected"));this.#o=t>=0?t:0;let e=this.shadowRoot.querySelector("#tablist");e.textContent="",this.#t=this.#e.map((o,r)=>{let i=document.createElement("button");return i.type="button",i.id=`${this.id||this.#i}-tab-${r}`,i.setAttribute("role","tab"),i.setAttribute("aria-controls",`${this.id||this.#i}-panel-${r}`),i.textContent=o.getAttribute("label")||`Tab ${r+1}`,i.dataset.index=String(r),i.tabIndex=r===this.#o?0:-1,i.setAttribute("aria-selected",r===this.#o?"true":"false"),e.append(i),i}),this.#s(this.#o,!1)}#s(t,e=!0){if(!this.#t.length)return;this.#o=(t+this.#t.length)%this.#t.length,this.#t.forEach((o,r)=>{let i=r===this.#o;if(o.tabIndex=i?0:-1,o.setAttribute("aria-selected",i?"true":"false"),e&&i)o.focus()}),this.#a=!0;try{this.#e.forEach((o,r)=>{o.toggleAttribute("selected",r===this.#o),o.hidden=r!==this.#o,o.id=`${this.id||this.#i}-panel-${r}`,o.setAttribute("role","tabpanel"),o.setAttribute("aria-labelledby",`${this.id||this.#i}-tab-${r}`)})}finally{queueMicrotask(()=>{this.#a=!1})}}#n=(t)=>{let e=t.target.closest("button[role='tab']");if(!e)return;this.#s(Number(e.dataset.index),!0)};#d=(t)=>{if(!this.#t.length)return;if(t.key==="ArrowRight"){t.preventDefault(),this.#s(this.#o+1,!0);return}if(t.key==="ArrowLeft"){t.preventDefault(),this.#s(this.#o-1,!0);return}if(t.key==="Home"){t.preventDefault(),this.#s(0,!0);return}if(t.key==="End")t.preventDefault(),this.#s(this.#t.length-1,!0)}}var He=s`
   :host { display: block; }
 
   #list {
@@ -2155,116 +595,7 @@ var LISTBOX_STYLES = css`
   ::slotted([role="option"][aria-disabled="true"]) {
     opacity: 0.55;
   }
-`;
-var nextListboxId = 0;
-function isEnabledOption(item) {
-  return item.getAttribute("role") === "option" && item.getAttribute("aria-disabled") !== "true";
-}
-
-class AwwListbox extends HTMLElement {
-  #options = [];
-  #selected = -1;
-  #typeahead = "";
-  #typeaheadTimer = 0;
-  #idPrefix;
-  constructor() {
-    super();
-    nextListboxId += 1;
-    this.#idPrefix = `awwbookmarklet-listbox-${nextListboxId}`;
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, LISTBOX_STYLES]);
-    shadow.innerHTML = `<div id="list" role="listbox" part="list" tabindex="0"><slot></slot></div>`;
-    shadow.querySelector("#list").addEventListener("keydown", this.#onKeyDown);
-    shadow.querySelector("#list").addEventListener("click", this.#onClick);
-    shadow.querySelector("slot").addEventListener("slotchange", () => this.#refresh());
-  }
-  connectedCallback() {
-    this.#refresh();
-  }
-  #refresh() {
-    this.#options = [...this.children].filter(isEnabledOption);
-    if (!this.#options.length) {
-      this.#selected = -1;
-      this.shadowRoot.querySelector("#list").removeAttribute("aria-activedescendant");
-      return;
-    }
-    this.#options.forEach((option, index) => {
-      if (!option.id)
-        option.id = `${this.#idPrefix}-option-${index}`;
-    });
-    this.#selected = this.#options.findIndex((item) => item.getAttribute("aria-selected") === "true");
-    if (this.#selected < 0)
-      this.#selected = 0;
-    this.#applySelection(this.#selected, false);
-  }
-  #applySelection(index, emit = true) {
-    if (!this.#options.length)
-      return;
-    this.#selected = (index + this.#options.length) % this.#options.length;
-    this.#options.forEach((option, optionIndex) => {
-      const selected = optionIndex === this.#selected;
-      option.setAttribute("aria-selected", selected ? "true" : "false");
-      option.dataset.selected = selected ? "true" : "false";
-    });
-    this.shadowRoot.querySelector("#list").setAttribute("aria-activedescendant", this.#options[this.#selected].id);
-    if (emit) {
-      const selectedOption = this.#options[this.#selected];
-      this.dispatchEvent(new CustomEvent("change", {
-        bubbles: true,
-        composed: true,
-        detail: {
-          index: this.#selected,
-          value: selectedOption.getAttribute("data-value") ?? selectedOption.textContent?.trim() ?? ""
-        }
-      }));
-    }
-  }
-  #onClick = (event) => {
-    const target = event.target.closest("[role='option']");
-    if (!target || target.getAttribute("aria-disabled") === "true")
-      return;
-    const index = this.#options.indexOf(target);
-    if (index !== -1)
-      this.#applySelection(index, true);
-  };
-  #onKeyDown = (event) => {
-    if (!this.#options.length)
-      return;
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      this.#applySelection(this.#selected + 1, true);
-      return;
-    }
-    if (event.key === "ArrowUp") {
-      event.preventDefault();
-      this.#applySelection(this.#selected - 1, true);
-      return;
-    }
-    if (event.key === "Home") {
-      event.preventDefault();
-      this.#applySelection(0, true);
-      return;
-    }
-    if (event.key === "End") {
-      event.preventDefault();
-      this.#applySelection(this.#options.length - 1, true);
-      return;
-    }
-    if (event.key.length === 1 && /\S/.test(event.key)) {
-      this.#typeahead += event.key.toLowerCase();
-      clearTimeout(this.#typeaheadTimer);
-      this.#typeaheadTimer = setTimeout(() => {
-        this.#typeahead = "";
-      }, 450);
-      const index = this.#options.findIndex((option) => option.textContent?.trim().toLowerCase().startsWith(this.#typeahead));
-      if (index !== -1)
-        this.#applySelection(index, true);
-    }
-  };
-}
-
-// src/components/group.js
-var GROUP_STYLES = css`
+`,jt=0;function $e(t){return t.getAttribute("role")==="option"&&t.getAttribute("aria-disabled")!=="true"}class X extends HTMLElement{#t=[];#e=-1;#o="";#r=0;#a;constructor(){super();jt+=1,this.#a=`awwbookmarklet-listbox-${jt}`;let t=this.attachShadow({mode:"open"});l(t,[d,He]),t.innerHTML='<div id="list" role="listbox" part="list" tabindex="0"><slot></slot></div>',t.querySelector("#list").addEventListener("keydown",this.#n),t.querySelector("#list").addEventListener("click",this.#s),t.querySelector("slot").addEventListener("slotchange",()=>this.#i())}connectedCallback(){this.#i()}#i(){if(this.#t=[...this.children].filter($e),!this.#t.length){this.#e=-1,this.shadowRoot.querySelector("#list").removeAttribute("aria-activedescendant");return}if(this.#t.forEach((t,e)=>{if(!t.id)t.id=`${this.#a}-option-${e}`}),this.#e=this.#t.findIndex((t)=>t.getAttribute("aria-selected")==="true"),this.#e<0)this.#e=0;this.#l(this.#e,!1)}#l(t,e=!0){if(!this.#t.length)return;if(this.#e=(t+this.#t.length)%this.#t.length,this.#t.forEach((o,r)=>{let i=r===this.#e;o.setAttribute("aria-selected",i?"true":"false"),o.dataset.selected=i?"true":"false"}),this.shadowRoot.querySelector("#list").setAttribute("aria-activedescendant",this.#t[this.#e].id),e){let o=this.#t[this.#e];this.dispatchEvent(new CustomEvent("change",{bubbles:!0,composed:!0,detail:{index:this.#e,value:o.getAttribute("data-value")??o.textContent?.trim()??""}}))}}#s=(t)=>{let e=t.target.closest("[role='option']");if(!e||e.getAttribute("aria-disabled")==="true")return;let o=this.#t.indexOf(e);if(o!==-1)this.#l(o,!0)};#n=(t)=>{if(!this.#t.length)return;if(t.key==="ArrowDown"){t.preventDefault(),this.#l(this.#e+1,!0);return}if(t.key==="ArrowUp"){t.preventDefault(),this.#l(this.#e-1,!0);return}if(t.key==="Home"){t.preventDefault(),this.#l(0,!0);return}if(t.key==="End"){t.preventDefault(),this.#l(this.#t.length-1,!0);return}if(t.key.length===1&&/\S/.test(t.key)){this.#o+=t.key.toLowerCase(),clearTimeout(this.#r),this.#r=setTimeout(()=>{this.#o=""},450);let e=this.#t.findIndex((o)=>o.textContent?.trim().toLowerCase().startsWith(this.#o));if(e!==-1)this.#l(e,!0)}}}var Re=s`
   :host { display: block; }
 
   .group {
@@ -2283,32 +614,7 @@ var GROUP_STYLES = css`
     display: grid;
     gap: var(--awwbookmarklet-space-2, 8px);
   }
-`;
-
-class AwwGroup extends HTMLElement {
-  static observedAttributes = ["caption"];
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, GROUP_STYLES]);
-    shadow.innerHTML = `<section class="group" part="group"><div class="caption" part="caption"></div><div class="content" part="content"><slot></slot></div></section>`;
-  }
-  connectedCallback() {
-    this.#syncCaption();
-  }
-  attributeChangedCallback() {
-    this.#syncCaption();
-  }
-  #syncCaption() {
-    const caption = this.getAttribute("caption") || "";
-    const captionEl = this.shadowRoot.querySelector(".caption");
-    captionEl.textContent = caption;
-    captionEl.hidden = !caption;
-  }
-}
-
-// src/components/panel.js
-var PANEL_STYLES = css`
+`;class Z extends HTMLElement{static observedAttributes=["caption"];constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,Re]),t.innerHTML='<section class="group" part="group"><div class="caption" part="caption"></div><div class="content" part="content"><slot></slot></div></section>'}connectedCallback(){this.#t()}attributeChangedCallback(){this.#t()}#t(){let t=this.getAttribute("caption")||"",e=this.shadowRoot.querySelector(".caption");e.textContent=t,e.hidden=!t}}var Ie=s`
   :host {
     display: block;
     border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
@@ -2364,14 +670,7 @@ var PANEL_STYLES = css`
   :host([data-has-footer="true"]) .footer {
     display: block;
   }
-`;
-
-class AwwPanel extends HTMLElement {
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, PANEL_STYLES]);
-    shadow.innerHTML = `
+`;class J extends HTMLElement{constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,Ie]),t.innerHTML=`
       <section part="panel">
         <header class="header" part="header">
           <div class="heading" part="heading">
@@ -2383,28 +682,7 @@ class AwwPanel extends HTMLElement {
         <div class="body" part="body"><slot></slot></div>
         <footer class="footer" part="footer"><slot name="footer"></slot></footer>
       </section>
-    `;
-    this.titleSlot = shadow.querySelector("slot[name='title']");
-    this.subtitleSlot = shadow.querySelector("slot[name='subtitle']");
-    this.actionsSlot = shadow.querySelector("slot[name='actions']");
-    this.footerSlot = shadow.querySelector("slot[name='footer']");
-    [this.titleSlot, this.subtitleSlot, this.actionsSlot, this.footerSlot].forEach((slot) => {
-      slot.addEventListener("slotchange", () => this.#sync());
-    });
-  }
-  connectedCallback() {
-    this.#sync();
-  }
-  #sync() {
-    const hasHeader = [this.titleSlot, this.subtitleSlot, this.actionsSlot].some((slot) => slot.assignedNodes({ flatten: true }).length > 0);
-    const hasFooter = this.footerSlot.assignedNodes({ flatten: true }).length > 0;
-    this.dataset.hasHeader = hasHeader ? "true" : "false";
-    this.dataset.hasFooter = hasFooter ? "true" : "false";
-  }
-}
-
-// src/components/statusbar.js
-var STATUS_STYLES = css`
+    `,this.titleSlot=t.querySelector("slot[name='title']"),this.subtitleSlot=t.querySelector("slot[name='subtitle']"),this.actionsSlot=t.querySelector("slot[name='actions']"),this.footerSlot=t.querySelector("slot[name='footer']"),[this.titleSlot,this.subtitleSlot,this.actionsSlot,this.footerSlot].forEach((e)=>{e.addEventListener("slotchange",()=>this.#t())})}connectedCallback(){this.#t()}#t(){let t=[this.titleSlot,this.subtitleSlot,this.actionsSlot].some((o)=>o.assignedNodes({flatten:!0}).length>0),e=this.footerSlot.assignedNodes({flatten:!0}).length>0;this.dataset.hasHeader=t?"true":"false",this.dataset.hasFooter=e?"true":"false"}}var Pe=s`
   :host {
     display: block;
     background: var(--awwbookmarklet-statusbar-bg, #e5e8ee);
@@ -2428,19 +706,7 @@ var STATUS_STYLES = css`
   }
 
   ::slotted(*:last-child) { border-right: 0; }
-`;
-
-class AwwStatusbar extends HTMLElement {
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, STATUS_STYLES]);
-    shadow.innerHTML = `<div id="bar" role="status" part="bar"><slot></slot></div>`;
-  }
-}
-
-// src/components/app-shell.js
-var APP_SHELL_STYLES = css`
+`;class Q extends HTMLElement{constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,Pe]),t.innerHTML='<div id="bar" role="status" part="bar"><slot></slot></div>'}}var Ye=s`
   :host {
     display: block;
     min-height: 0;
@@ -2512,14 +778,7 @@ var APP_SHELL_STYLES = css`
       justify-content: start;
     }
   }
-`;
-
-class AwwAppShell extends HTMLElement {
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, APP_SHELL_STYLES]);
-    shadow.innerHTML = `
+`;class tt extends HTMLElement{constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,Ye]),t.innerHTML=`
       <section class="shell" part="shell">
         <header class="header" part="header">
           <div class="heading" part="heading">
@@ -2532,55 +791,7 @@ class AwwAppShell extends HTMLElement {
         <main class="body" part="body"><slot name="body"></slot><slot></slot></main>
         <footer class="footer" part="footer"><slot name="footer"></slot></footer>
       </section>
-    `;
-  }
-}
-
-// src/core/component-utils.js
-var TONES = new Set(["neutral", "info", "success", "warning", "danger"]);
-var DENSITIES = new Set(["compact", "normal", "spacious"]);
-var ALIGNMENTS = new Set(["start", "center", "end", "between"]);
-var ORIENTATIONS = new Set(["horizontal", "vertical", "inline"]);
-var idSerial = 0;
-function createId(prefix = "aww") {
-  idSerial += 1;
-  return `${prefix}-${idSerial}`;
-}
-function normalizeTone(value, fallback = "neutral") {
-  return TONES.has(value) ? value : fallback;
-}
-function normalizeDensity(value, fallback = "normal") {
-  return DENSITIES.has(value) ? value : fallback;
-}
-function normalizeAlignment(value, fallback = "start") {
-  return ALIGNMENTS.has(value) ? value : fallback;
-}
-function normalizeOrientation(value, fallback = "horizontal") {
-  return ORIENTATIONS.has(value) ? value : fallback;
-}
-function isFocusable(element) {
-  if (!element || element.disabled || element.getAttribute?.("aria-disabled") === "true")
-    return false;
-  if (element.tabIndex >= 0)
-    return true;
-  return /^(A|BUTTON|INPUT|SELECT|TEXTAREA)$/.test(element.tagName) && !element.hasAttribute("disabled");
-}
-function getFocusableElements(root) {
-  if (!root?.querySelectorAll)
-    return [];
-  return [...root.querySelectorAll("a[href],button,input,select,textarea,[tabindex]")].filter(isFocusable);
-}
-function dispatchComponentEvent(target, name, detail = {}, options = {}) {
-  return target.dispatchEvent(new CustomEvent(name, {
-    bubbles: true,
-    composed: true,
-    cancelable: Boolean(options.cancelable),
-    detail
-  }));
-}
-
-// src/components/toolbar.js
-var TOOLBAR_STYLES = css`
+    `}}var De=new Set(["neutral","info","success","warning","danger"]),ze=new Set(["compact","normal","spacious"]),Ve=new Set(["start","center","end","between"]),Fe=new Set(["horizontal","vertical","inline"]),Gt=0;function et(t="aww"){return Gt+=1,`${t}-${Gt}`}function g(t,e="neutral"){return De.has(t)?t:e}function Kt(t,e="normal"){return ze.has(t)?t:e}function Xt(t,e="start"){return Ve.has(t)?t:e}function ot(t,e="horizontal"){return Fe.has(t)?t:e}function Ue(t){if(!t||t.disabled||t.getAttribute?.("aria-disabled")==="true")return!1;if(t.tabIndex>=0)return!0;return/^(A|BUTTON|INPUT|SELECT|TEXTAREA)$/.test(t.tagName)&&!t.hasAttribute("disabled")}function Ot(t){if(!t?.querySelectorAll)return[];return[...t.querySelectorAll("a[href],button,input,select,textarea,[tabindex]")].filter(Ue)}function w(t,e,o={},r={}){return t.dispatchEvent(new CustomEvent(e,{bubbles:!0,composed:!0,cancelable:Boolean(r.cancelable),detail:o}))}var We=s`
   :host {
     display: flex;
     max-width: 100%;
@@ -2621,34 +832,7 @@ var TOOLBAR_STYLES = css`
   :host([busy]) {
     opacity: 0.72;
   }
-`;
-
-class AwwToolbar extends HTMLElement {
-  static observedAttributes = ["density", "align", "orientation", "disabled", "busy"];
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, TOOLBAR_STYLES]);
-    shadow.innerHTML = `<div class="toolbar" part="toolbar"><slot></slot></div>`;
-  }
-  connectedCallback() {
-    this.#sync();
-  }
-  attributeChangedCallback() {
-    this.#sync();
-  }
-  #sync() {
-    this.dataset.density = normalizeDensity(this.getAttribute("density"));
-    this.dataset.align = normalizeAlignment(this.getAttribute("align"));
-    const orientation = normalizeOrientation(this.getAttribute("orientation"), "horizontal");
-    if (this.getAttribute("orientation") !== orientation)
-      this.setAttribute("orientation", orientation);
-    this.setAttribute("aria-disabled", this.hasAttribute("disabled") || this.hasAttribute("busy") ? "true" : "false");
-  }
-}
-
-// src/components/field.js
-var FIELD_STYLES = css`
+`;class rt extends HTMLElement{static observedAttributes=["density","align","orientation","disabled","busy"];constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,We]),t.innerHTML='<div class="toolbar" part="toolbar"><slot></slot></div>'}connectedCallback(){this.#t()}attributeChangedCallback(){this.#t()}#t(){this.dataset.density=Kt(this.getAttribute("density")),this.dataset.align=Xt(this.getAttribute("align"));let t=ot(this.getAttribute("orientation"),"horizontal");if(this.getAttribute("orientation")!==t)this.setAttribute("orientation",t);this.setAttribute("aria-disabled",this.hasAttribute("disabled")||this.hasAttribute("busy")?"true":"false")}}var je=s`
   :host {
     display: grid;
     gap: 4px;
@@ -2718,22 +902,9 @@ var FIELD_STYLES = css`
   :host([disabled]) {
     opacity: 0.7;
   }
-`;
-
-class AwwField extends HTMLElement {
-  static observedAttributes = ["label", "help", "error", "required", "tone", "orientation", "disabled"];
-  #ids = {
-    label: createId("aww-field-label"),
-    help: createId("aww-field-help"),
-    error: createId("aww-field-error")
-  };
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, FIELD_STYLES]);
-    shadow.innerHTML = `
+`;class at extends HTMLElement{static observedAttributes=["label","help","error","required","tone","orientation","disabled"];#t={label:et("aww-field-label"),help:et("aww-field-help"),error:et("aww-field-error")};constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,je]),t.innerHTML=`
       <label class="field" part="field">
-        <span class="label" part="label" id="${this.#ids.label}"><slot name="label"></slot><span data-label-text></span><span class="required" aria-hidden="true"></span></span>
+        <span class="label" part="label" id="${this.#t.label}"><slot name="label"></slot><span data-label-text></span><span class="required" aria-hidden="true"></span></span>
         <span class="main" part="main">
           <span class="control-row" part="control-row">
             <slot name="prefix"></slot>
@@ -2742,63 +913,14 @@ class AwwField extends HTMLElement {
             <slot name="actions"></slot>
           </span>
           <span class="message" part="message">
-            <span id="${this.#ids.error}" data-error-text></span>
-            <span id="${this.#ids.help}" data-help-text></span>
+            <span id="${this.#t.error}" data-error-text></span>
+            <span id="${this.#t.help}" data-help-text></span>
             <slot name="error"></slot>
             <slot name="help"></slot>
           </span>
         </span>
       </label>
-    `;
-    this.controlSlot = shadow.querySelector("slot:not([name])");
-    this.labelText = shadow.querySelector("[data-label-text]");
-    this.helpText = shadow.querySelector("[data-help-text]");
-    this.errorText = shadow.querySelector("[data-error-text]");
-    this.requiredMark = shadow.querySelector(".required");
-    this.controlSlot.addEventListener("slotchange", () => this.#syncControl());
-  }
-  connectedCallback() {
-    this.#sync();
-  }
-  attributeChangedCallback() {
-    this.#sync();
-  }
-  #sync() {
-    const orientation = normalizeOrientation(this.getAttribute("orientation"), "vertical");
-    if (this.getAttribute("orientation") !== orientation)
-      this.setAttribute("orientation", orientation);
-    const error = this.getAttribute("error") || "";
-    this.dataset.invalid = error ? "true" : "false";
-    this.dataset.tone = error ? "danger" : normalizeTone(this.getAttribute("tone"));
-    this.labelText.textContent = this.getAttribute("label") || "";
-    this.helpText.textContent = error ? "" : this.getAttribute("help") || "";
-    this.errorText.textContent = error;
-    this.requiredMark.textContent = this.hasAttribute("required") ? " *" : "";
-    this.#syncControl();
-  }
-  #syncControl() {
-    const control = this.controlSlot.assignedElements({ flatten: true })[0];
-    if (!control)
-      return;
-    if (!control.hasAttribute("aria-labelledby"))
-      control.setAttribute("aria-labelledby", this.#ids.label);
-    const descriptions = [];
-    if (this.getAttribute("help"))
-      descriptions.push(this.#ids.help);
-    if (this.getAttribute("error"))
-      descriptions.push(this.#ids.error);
-    if (descriptions.length)
-      control.setAttribute("aria-describedby", descriptions.join(" "));
-    else
-      control.removeAttribute("aria-describedby");
-    control.toggleAttribute("required", this.hasAttribute("required"));
-    control.toggleAttribute("disabled", this.hasAttribute("disabled"));
-    control.setAttribute("aria-invalid", this.getAttribute("error") ? "true" : "false");
-  }
-}
-
-// src/components/status-line.js
-var STATUS_LINE_STYLES = css`
+    `,this.controlSlot=t.querySelector("slot:not([name])"),this.labelText=t.querySelector("[data-label-text]"),this.helpText=t.querySelector("[data-help-text]"),this.errorText=t.querySelector("[data-error-text]"),this.requiredMark=t.querySelector(".required"),this.controlSlot.addEventListener("slotchange",()=>this.#o())}connectedCallback(){this.#e()}attributeChangedCallback(){this.#e()}#e(){let t=ot(this.getAttribute("orientation"),"vertical");if(this.getAttribute("orientation")!==t)this.setAttribute("orientation",t);let e=this.getAttribute("error")||"";this.dataset.invalid=e?"true":"false",this.dataset.tone=e?"danger":g(this.getAttribute("tone")),this.labelText.textContent=this.getAttribute("label")||"",this.helpText.textContent=e?"":this.getAttribute("help")||"",this.errorText.textContent=e,this.requiredMark.textContent=this.hasAttribute("required")?" *":"",this.#o()}#o(){let t=this.controlSlot.assignedElements({flatten:!0})[0];if(!t)return;if(!t.hasAttribute("aria-labelledby"))t.setAttribute("aria-labelledby",this.#t.label);let e=[];if(this.getAttribute("help"))e.push(this.#t.help);if(this.getAttribute("error"))e.push(this.#t.error);if(e.length)t.setAttribute("aria-describedby",e.join(" "));else t.removeAttribute("aria-describedby");t.toggleAttribute("required",this.hasAttribute("required")),t.toggleAttribute("disabled",this.hasAttribute("disabled")),t.setAttribute("aria-invalid",this.getAttribute("error")?"true":"false")}}var Ge=s`
   :host {
     display: flex;
     align-items: center;
@@ -2833,39 +955,7 @@ var STATUS_LINE_STYLES = css`
   @keyframes pulse {
     50% { opacity: 0.28; }
   }
-`;
-
-class AwwStatusLine extends HTMLElement {
-  static observedAttributes = ["tone", "live", "busy"];
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, STATUS_LINE_STYLES]);
-    shadow.innerHTML = `<span class="dot" part="indicator" aria-hidden="true"></span><span part="text"><slot></slot></span>`;
-  }
-  connectedCallback() {
-    this.#sync();
-  }
-  attributeChangedCallback() {
-    this.#sync();
-  }
-  update(message, options = {}) {
-    if (options.tone)
-      this.setAttribute("tone", options.tone);
-    if (options.live)
-      this.setAttribute("live", options.live);
-    this.textContent = String(message ?? "");
-  }
-  #sync() {
-    this.dataset.tone = normalizeTone(this.getAttribute("tone"));
-    const live = this.getAttribute("live") || "polite";
-    this.setAttribute("aria-live", ["off", "polite", "assertive"].includes(live) ? live : "polite");
-    this.setAttribute("aria-busy", this.hasAttribute("busy") ? "true" : "false");
-  }
-}
-
-// src/components/alert.js
-var ALERT_STYLES = css`
+`;class it extends HTMLElement{static observedAttributes=["tone","live","busy"];constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,Ge]),t.innerHTML='<span class="dot" part="indicator" aria-hidden="true"></span><span part="text"><slot></slot></span>'}connectedCallback(){this.#t()}attributeChangedCallback(){this.#t()}update(t,e={}){if(e.tone)this.setAttribute("tone",e.tone);if(e.live)this.setAttribute("live",e.live);this.textContent=String(t??"")}#t(){this.dataset.tone=g(this.getAttribute("tone"));let t=this.getAttribute("live")||"polite";this.setAttribute("aria-live",["off","polite","assertive"].includes(t)?t:"polite"),this.setAttribute("aria-busy",this.hasAttribute("busy")?"true":"false")}}var Ke=s`
   :host {
     display: block;
   }
@@ -2928,15 +1018,7 @@ var ALERT_STYLES = css`
   :host([data-tone="success"]) { --_bg: var(--awwbookmarklet-success-bg, #e5f5eb); --_fg: var(--awwbookmarklet-success-fg, #195b34); --_border: var(--awwbookmarklet-success-border, #72b98b); }
   :host([data-tone="warning"]) { --_bg: var(--awwbookmarklet-warning-bg, #fff4d6); --_fg: var(--awwbookmarklet-warning-fg, #6d4b00); --_border: var(--awwbookmarklet-warning-border, #d9ad3b); }
   :host([data-tone="danger"]) { --_bg: var(--awwbookmarklet-danger-bg, #ffe8e6); --_fg: var(--awwbookmarklet-danger-fg, #8a1f17); --_border: var(--awwbookmarklet-danger-border, #d46a60); }
-`;
-
-class AwwAlert extends HTMLElement {
-  static observedAttributes = ["tone", "title", "dismissible", "open"];
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, ALERT_STYLES]);
-    shadow.innerHTML = `
+`;class st extends HTMLElement{static observedAttributes=["tone","title","dismissible","open"];constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,Ke]),t.innerHTML=`
       <section class="alert" part="alert">
         <div class="icon" part="icon"><slot name="icon"></slot></div>
         <div class="content" part="content">
@@ -2946,69 +1028,7 @@ class AwwAlert extends HTMLElement {
         </div>
         <button type="button" part="close-button" aria-label="Dismiss" hidden>x</button>
       </section>
-    `;
-    this.closeButton = shadow.querySelector("button");
-    this.titleText = shadow.querySelector("[data-title-text]");
-    this.closeButton.addEventListener("click", () => this.dismiss());
-  }
-  connectedCallback() {
-    if (!this.hasAttribute("open"))
-      this.setAttribute("open", "");
-    this.#sync();
-  }
-  attributeChangedCallback() {
-    this.#sync();
-  }
-  dismiss() {
-    const accepted = dispatchComponentEvent(this, "awwbookmarklet-alert-dismiss", { source: this }, { cancelable: true });
-    if (accepted)
-      this.removeAttribute("open");
-  }
-  #sync() {
-    this.dataset.tone = normalizeTone(this.getAttribute("tone"), "info");
-    this.closeButton.hidden = !this.hasAttribute("dismissible");
-    this.titleText.textContent = this.getAttribute("title") || "";
-    this.setAttribute("role", this.dataset.tone === "danger" ? "alert" : "status");
-  }
-}
-
-// src/core/overlay.js
-var OVERLAY_CLASS = "awwbookmarklet-overlay-layer";
-function getOverlayLayer() {
-  if (typeof document === "undefined")
-    return null;
-  const root = globalThis[GLOBAL_SYMBOLS.lastAcquiredRoot] || document.body || document.documentElement;
-  let layer = root.querySelector?.(`:scope > .${OVERLAY_CLASS}`);
-  if (!layer) {
-    layer = document.createElement("div");
-    layer.className = OVERLAY_CLASS;
-    Object.assign(layer.style, {
-      position: "fixed",
-      inset: "0",
-      pointerEvents: "none",
-      zIndex: String(ROOT_Z_INDEX + 5000)
-    });
-    root.append(layer);
-  }
-  return layer;
-}
-function portalElement(element) {
-  const layer = getOverlayLayer();
-  if (!layer || element.parentNode === layer)
-    return null;
-  const restore = { parent: element.parentNode, nextSibling: element.nextSibling };
-  layer.append(element);
-  return restore;
-}
-function restoreElement(element, restore) {
-  if (!restore?.parent?.isConnected)
-    return;
-  const next = restore.nextSibling?.parentNode === restore.parent ? restore.nextSibling : null;
-  restore.parent.insertBefore(element, next);
-}
-
-// src/components/dialog.js
-var DIALOG_STYLES = css`
+    `,this.closeButton=t.querySelector("button"),this.titleText=t.querySelector("[data-title-text]"),this.closeButton.addEventListener("click",()=>this.dismiss())}connectedCallback(){if(!this.hasAttribute("open"))this.setAttribute("open","");this.#t()}attributeChangedCallback(){this.#t()}dismiss(){if(w(this,"awwbookmarklet-alert-dismiss",{source:this},{cancelable:!0}))this.removeAttribute("open")}#t(){this.dataset.tone=g(this.getAttribute("tone"),"info"),this.closeButton.hidden=!this.hasAttribute("dismissible"),this.titleText.textContent=this.getAttribute("title")||"",this.setAttribute("role",this.dataset.tone==="danger"?"alert":"status")}}var Zt="awwbookmarklet-overlay-layer";function qt(){if(typeof document>"u")return null;let t=globalThis[k.lastAcquiredRoot]||document.body||document.documentElement,e=t.querySelector?.(`:scope > .${Zt}`);if(!e)e=document.createElement("div"),e.className=Zt,Object.assign(e.style,{position:"fixed",inset:"0",pointerEvents:"none",zIndex:String(B+5000)}),t.append(e);return e}function Jt(t){let e=qt();if(!e||t.parentNode===e)return null;let o={parent:t.parentNode,nextSibling:t.nextSibling};return e.append(t),o}function Ht(t,e){if(!e?.parent?.isConnected)return;let o=e.nextSibling?.parentNode===e.parent?e.nextSibling:null;e.parent.insertBefore(t,o)}var Xe=s`
   :host {
     position: fixed;
     inset: 0;
@@ -3077,17 +1097,7 @@ var DIALOG_STYLES = css`
     color: var(--awwbookmarklet-button-fg, #111720);
     font: inherit;
   }
-`;
-
-class AwwDialog extends HTMLElement {
-  static observedAttributes = ["open", "label", "modal"];
-  #restore = null;
-  #previousFocus = null;
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, DIALOG_STYLES]);
-    shadow.innerHTML = `
+`;class nt extends HTMLElement{static observedAttributes=["open","label","modal"];#t=null;#e=null;constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,Xe]),t.innerHTML=`
       <div class="backdrop" part="backdrop"></div>
       <section class="panel" part="panel" role="dialog" aria-modal="true" tabindex="-1">
         <header class="header" part="header">
@@ -3097,90 +1107,7 @@ class AwwDialog extends HTMLElement {
         <div class="body" part="body"><slot></slot></div>
         <footer class="footer" part="footer"><slot name="footer"></slot></footer>
       </section>
-    `;
-    this.panel = shadow.querySelector(".panel");
-    this.backdrop = shadow.querySelector(".backdrop");
-    this.closeButton = shadow.querySelector("button");
-    this.closeButton.addEventListener("click", () => this.close("button"));
-    this.backdrop.addEventListener("click", () => {
-      if (this.hasAttribute("close-on-backdrop"))
-        this.close("backdrop");
-    });
-    this.addEventListener("keydown", (event) => this.#onKeyDown(event));
-  }
-  connectedCallback() {
-    this.#sync();
-  }
-  disconnectedCallback() {
-    restoreElement(this, this.#restore);
-  }
-  attributeChangedCallback() {
-    this.#sync();
-  }
-  show() {
-    this.setAttribute("open", "");
-  }
-  close(reason = "api") {
-    const accepted = dispatchComponentEvent(this, "awwbookmarklet-dialog-cancel", { reason }, { cancelable: true });
-    if (!accepted)
-      return false;
-    this.removeAttribute("open");
-    dispatchComponentEvent(this, "awwbookmarklet-dialog-close", { reason });
-    return true;
-  }
-  #sync() {
-    this.panel.setAttribute("aria-label", this.getAttribute("label") || "Dialog");
-    if (this.hasAttribute("open")) {
-      if (!this.#restore)
-        this.#restore = portalElement(this);
-      this.#previousFocus ||= document.activeElement;
-      queueMicrotask(() => this.#focusInitial());
-      dispatchComponentEvent(this, "awwbookmarklet-dialog-open", { source: this });
-      return;
-    }
-    if (this.#restore) {
-      const previous = this.#previousFocus;
-      restoreElement(this, this.#restore);
-      this.#restore = null;
-      this.#previousFocus = null;
-      if (previous?.focus)
-        previous.focus();
-    }
-  }
-  #focusInitial() {
-    const focusable = getFocusableElements(this);
-    (focusable[0] || this.closeButton || this.panel).focus();
-  }
-  #onKeyDown(event) {
-    if (!this.hasAttribute("open"))
-      return;
-    if (event.key === "Escape" && this.getAttribute("close-on-escape") !== "false") {
-      event.preventDefault();
-      this.close("escape");
-      return;
-    }
-    if (event.key !== "Tab" || !this.hasAttribute("modal"))
-      return;
-    const focusable = getFocusableElements(this);
-    if (!focusable.length) {
-      event.preventDefault();
-      this.panel.focus();
-      return;
-    }
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  }
-}
-
-// src/components/toast.js
-var TOAST_STYLES = css`
+    `,this.panel=t.querySelector(".panel"),this.backdrop=t.querySelector(".backdrop"),this.closeButton=t.querySelector("button"),this.closeButton.addEventListener("click",()=>this.close("button")),this.backdrop.addEventListener("click",()=>{if(this.hasAttribute("close-on-backdrop"))this.close("backdrop")}),this.addEventListener("keydown",(e)=>this.#a(e))}connectedCallback(){this.#o()}disconnectedCallback(){Ht(this,this.#t)}attributeChangedCallback(){this.#o()}show(){this.setAttribute("open","")}close(t="api"){if(!w(this,"awwbookmarklet-dialog-cancel",{reason:t},{cancelable:!0}))return!1;return this.removeAttribute("open"),w(this,"awwbookmarklet-dialog-close",{reason:t}),!0}#o(){if(this.panel.setAttribute("aria-label",this.getAttribute("label")||"Dialog"),this.hasAttribute("open")){if(!this.#t)this.#t=Jt(this);this.#e||=document.activeElement,queueMicrotask(()=>this.#r()),w(this,"awwbookmarklet-dialog-open",{source:this});return}if(this.#t){let t=this.#e;if(Ht(this,this.#t),this.#t=null,this.#e=null,t?.focus)t.focus()}}#r(){(Ot(this)[0]||this.closeButton||this.panel).focus()}#a(t){if(!this.hasAttribute("open"))return;if(t.key==="Escape"&&this.getAttribute("close-on-escape")!=="false"){t.preventDefault(),this.close("escape");return}if(t.key!=="Tab"||!this.hasAttribute("modal"))return;let e=Ot(this);if(!e.length){t.preventDefault(),this.panel.focus();return}let o=e[0],r=e[e.length-1];if(t.shiftKey&&document.activeElement===o)t.preventDefault(),r.focus();else if(!t.shiftKey&&document.activeElement===r)t.preventDefault(),o.focus()}}var Ze=s`
   :host {
     display: block;
     pointer-events: auto;
@@ -3203,82 +1130,7 @@ var TOAST_STYLES = css`
     align-items: center;
     gap: 8px;
   }
-`;
-var activeToasts = new Map;
-function ensureStack() {
-  const layer = getOverlayLayer();
-  if (!layer)
-    return null;
-  let stack = layer.querySelector(":scope > [data-aww-toast-stack]");
-  if (!stack) {
-    stack = document.createElement("div");
-    stack.dataset.awwToastStack = "true";
-    Object.assign(stack.style, {
-      position: "fixed",
-      right: "12px",
-      bottom: "12px",
-      display: "grid",
-      gap: "8px",
-      justifyItems: "end",
-      pointerEvents: "none"
-    });
-    layer.append(stack);
-  }
-  return stack;
-}
-
-class AwwToast extends HTMLElement {
-  static observedAttributes = ["tone", "timeout"];
-  #timer = 0;
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, TOAST_STYLES]);
-    shadow.innerHTML = `<section class="toast" part="toast" role="status" aria-live="polite"><slot></slot></section>`;
-    this.addEventListener("mouseenter", () => clearTimeout(this.#timer));
-    this.addEventListener("mouseleave", () => this.startTimer());
-  }
-  connectedCallback() {
-    this.#sync();
-    this.startTimer();
-  }
-  disconnectedCallback() {
-    clearTimeout(this.#timer);
-  }
-  attributeChangedCallback() {
-    this.#sync();
-  }
-  startTimer() {
-    clearTimeout(this.#timer);
-    const timeout = Number(this.getAttribute("timeout") || "2800");
-    if (timeout <= 0)
-      return;
-    this.#timer = setTimeout(() => this.remove(), timeout);
-  }
-  #sync() {
-    this.dataset.tone = normalizeTone(this.getAttribute("tone"), "info");
-  }
-}
-function showToast({ message = "", tone = "info", timeout = 2800, key = "" } = {}) {
-  const stack = ensureStack();
-  if (!stack)
-    return null;
-  let toast = key ? activeToasts.get(key) : null;
-  if (!toast?.isConnected) {
-    toast = document.createElement("awwbookmarklet-toast");
-    if (key)
-      activeToasts.set(key, toast);
-    stack.append(toast);
-  }
-  toast.setAttribute("tone", tone);
-  toast.setAttribute("timeout", String(timeout));
-  toast.textContent = String(message ?? "");
-  toast.startTimer?.();
-  return toast;
-}
-
-// src/components/empty-state.js
-var EMPTY_STYLES = css`
+`,Qt=new Map;function Je(){let t=qt();if(!t)return null;let e=t.querySelector(":scope > [data-aww-toast-stack]");if(!e)e=document.createElement("div"),e.dataset.awwToastStack="true",Object.assign(e.style,{position:"fixed",right:"12px",bottom:"12px",display:"grid",gap:"8px",justifyItems:"end",pointerEvents:"none"}),t.append(e);return e}class lt extends HTMLElement{static observedAttributes=["tone","timeout"];#t=0;constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,Ze]),t.innerHTML='<section class="toast" part="toast" role="status" aria-live="polite"><slot></slot></section>',this.addEventListener("mouseenter",()=>clearTimeout(this.#t)),this.addEventListener("mouseleave",()=>this.startTimer())}connectedCallback(){this.#e(),this.startTimer()}disconnectedCallback(){clearTimeout(this.#t)}attributeChangedCallback(){this.#e()}startTimer(){clearTimeout(this.#t);let t=Number(this.getAttribute("timeout")||"2800");if(t<=0)return;this.#t=setTimeout(()=>this.remove(),t)}#e(){this.dataset.tone=g(this.getAttribute("tone"),"info")}}function te({message:t="",tone:e="info",timeout:o=2800,key:r=""}={}){let i=Je();if(!i)return null;let n=r?Qt.get(r):null;if(!n?.isConnected){if(n=document.createElement("awwbookmarklet-toast"),r)Qt.set(r,n);i.append(n)}return n.setAttribute("tone",e),n.setAttribute("timeout",String(o)),n.textContent=String(t??""),n.startTimer?.(),n}var Qe=s`
   :host {
     display: block;
     min-height: 96px;
@@ -3308,39 +1160,14 @@ var EMPTY_STYLES = css`
   .actions {
     margin-top: 4px;
   }
-`;
-
-class AwwEmptyState extends HTMLElement {
-  static observedAttributes = ["title", "description"];
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, EMPTY_STYLES]);
-    shadow.innerHTML = `
+`;class dt extends HTMLElement{static observedAttributes=["title","description"];constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,Qe]),t.innerHTML=`
       <section class="empty" part="empty">
         <div class="title" part="title"></div>
         <div class="description" part="description"></div>
         <div class="content" part="content"><slot></slot></div>
         <div class="actions" part="actions"><slot name="actions"></slot></div>
       </section>
-    `;
-    this.titleNode = shadow.querySelector(".title");
-    this.descriptionNode = shadow.querySelector(".description");
-  }
-  connectedCallback() {
-    this.#sync();
-  }
-  attributeChangedCallback() {
-    this.#sync();
-  }
-  #sync() {
-    this.titleNode.textContent = this.getAttribute("title") || "Nothing to show";
-    this.descriptionNode.textContent = this.getAttribute("description") || "";
-  }
-}
-
-// src/components/state-overlay.js
-var STATE_STYLES = css`
+    `,this.titleNode=t.querySelector(".title"),this.descriptionNode=t.querySelector(".description")}connectedCallback(){this.#t()}attributeChangedCallback(){this.#t()}#t(){this.titleNode.textContent=this.getAttribute("title")||"Nothing to show",this.descriptionNode.textContent=this.getAttribute("description")||""}}var to=s`
   :host {
     position: absolute;
     inset: 0;
@@ -3384,49 +1211,13 @@ var STATE_STYLES = css`
   @keyframes spin {
     to { rotate: 360deg; }
   }
-`;
-var STATE_TONES = {
-  loading: "info",
-  empty: "neutral",
-  error: "danger",
-  blocked: "warning",
-  success: "success",
-  custom: "neutral"
-};
-
-class AwwStateOverlay extends HTMLElement {
-  static observedAttributes = ["state", "label", "tone"];
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, STATE_STYLES]);
-    shadow.innerHTML = `
+`,eo={loading:"info",empty:"neutral",error:"danger",blocked:"warning",success:"success",custom:"neutral"};class ct extends HTMLElement{static observedAttributes=["state","label","tone"];constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,to]),t.innerHTML=`
       <section class="surface" part="surface">
         <div class="indicator" part="indicator" aria-hidden="true"></div>
         <div class="label" part="label"></div>
         <div part="actions"><slot name="actions"></slot></div>
       </section>
-    `;
-    this.labelNode = shadow.querySelector(".label");
-  }
-  connectedCallback() {
-    this.#sync();
-  }
-  attributeChangedCallback() {
-    this.#sync();
-  }
-  #sync() {
-    const state = this.getAttribute("state") || "loading";
-    const fallbackTone = STATE_TONES[state] || "neutral";
-    this.dataset.tone = normalizeTone(this.getAttribute("tone"), fallbackTone);
-    this.labelNode.textContent = this.getAttribute("label") || state;
-    this.setAttribute("role", state === "error" || state === "blocked" ? "alert" : "status");
-    this.setAttribute("aria-live", state === "error" || state === "blocked" ? "assertive" : "polite");
-  }
-}
-
-// src/components/list.js
-var LIST_STYLES = css`
+    `,this.labelNode=t.querySelector(".label")}connectedCallback(){this.#t()}attributeChangedCallback(){this.#t()}#t(){let t=this.getAttribute("state")||"loading",e=eo[t]||"neutral";this.dataset.tone=g(this.getAttribute("tone"),e),this.labelNode.textContent=this.getAttribute("label")||t,this.setAttribute("role",t==="error"||t==="blocked"?"alert":"status"),this.setAttribute("aria-live",t==="error"||t==="blocked"?"assertive":"polite")}}var oo=s`
   :host {
     display: block;
   }
@@ -3439,41 +1230,13 @@ var LIST_STYLES = css`
   .empty[hidden] {
     display: none;
   }
-`;
-
-class AwwList extends HTMLElement {
-  static observedAttributes = ["empty-text"];
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, LIST_STYLES]);
-    shadow.innerHTML = `
+`;class ht extends HTMLElement{static observedAttributes=["empty-text"];constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,oo]),t.innerHTML=`
       <div class="list" part="list" role="list"><slot></slot></div>
       <div class="empty" part="empty" hidden>
         <slot name="empty"></slot>
         <awwbookmarklet-empty-state></awwbookmarklet-empty-state>
       </div>
-    `;
-    this.slot = shadow.querySelector("slot:not([name])");
-    this.empty = shadow.querySelector(".empty");
-    this.emptyState = shadow.querySelector("awwbookmarklet-empty-state");
-    this.slot.addEventListener("slotchange", () => this.#sync());
-  }
-  connectedCallback() {
-    this.#sync();
-  }
-  attributeChangedCallback() {
-    this.#sync();
-  }
-  #sync() {
-    const items = this.slot.assignedElements({ flatten: true }).filter((node) => node.slot !== "empty");
-    this.empty.hidden = items.length > 0;
-    this.emptyState.setAttribute("title", this.getAttribute("empty-text") || "No items");
-  }
-}
-
-// src/components/list-item.js
-var LIST_ITEM_STYLES = css`
+    `,this.slot=t.querySelector("slot:not([name])"),this.empty=t.querySelector(".empty"),this.emptyState=t.querySelector("awwbookmarklet-empty-state"),this.slot.addEventListener("slotchange",()=>this.#t())}connectedCallback(){this.#t()}attributeChangedCallback(){this.#t()}#t(){let t=this.slot.assignedElements({flatten:!0}).filter((e)=>e.slot!=="empty");this.empty.hidden=t.length>0,this.emptyState.setAttribute("title",this.getAttribute("empty-text")||"No items")}}var ro=s`
   :host {
     display: block;
   }
@@ -3536,23 +1299,7 @@ var LIST_ITEM_STYLES = css`
       justify-content: start;
     }
   }
-`;
-function isActionClick(event) {
-  const path = event.composedPath?.() || [];
-  return path.some((node) => {
-    if (!node?.slot)
-      return false;
-    return node.slot === "actions" || node.slot === "trailing";
-  });
-}
-
-class AwwListItem extends HTMLElement {
-  static observedAttributes = ["tone", "selected", "disabled", "interactive", "selectable"];
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, LIST_ITEM_STYLES]);
-    shadow.innerHTML = `
+`;function ao(t){return(t.composedPath?.()||[]).some((o)=>{if(!o?.slot)return!1;return o.slot==="actions"||o.slot==="trailing"})}class bt extends HTMLElement{static observedAttributes=["tone","selected","disabled","interactive","selectable"];constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,ro]),t.innerHTML=`
       <article class="item" part="item" role="listitem" tabindex="-1">
         <div part="leading"><slot name="leading"></slot></div>
         <div class="main" part="main">
@@ -3566,45 +1313,7 @@ class AwwListItem extends HTMLElement {
         <div class="trailing" part="trailing"><slot name="trailing"></slot></div>
         <div class="actions" part="actions"><slot name="actions"></slot></div>
       </article>
-    `;
-    this.surface = shadow.querySelector(".item");
-    this.surface.addEventListener("click", (event) => this.#onClick(event));
-    this.surface.addEventListener("keydown", (event) => this.#onKeyDown(event));
-  }
-  connectedCallback() {
-    this.#sync();
-  }
-  attributeChangedCallback() {
-    this.#sync();
-  }
-  #sync() {
-    this.dataset.tone = normalizeTone(this.getAttribute("tone"));
-    this.surface.tabIndex = this.hasAttribute("interactive") || this.hasAttribute("selectable") ? 0 : -1;
-    this.surface.setAttribute("aria-selected", this.hasAttribute("selected") ? "true" : "false");
-    this.surface.setAttribute("aria-disabled", this.hasAttribute("disabled") ? "true" : "false");
-  }
-  #onClick(event) {
-    if (this.hasAttribute("disabled") || isActionClick(event))
-      return;
-    if (!this.hasAttribute("interactive") && !this.hasAttribute("selectable"))
-      return;
-    if (this.hasAttribute("selectable"))
-      this.toggleAttribute("selected", !this.hasAttribute("selected"));
-    dispatchComponentEvent(this, "awwbookmarklet-list-item-activate", {
-      selected: this.hasAttribute("selected"),
-      source: this
-    });
-  }
-  #onKeyDown(event) {
-    if (event.key !== "Enter" && event.key !== " ")
-      return;
-    event.preventDefault();
-    this.surface.click();
-  }
-}
-
-// src/components/card.js
-var CARD_STYLES = css`
+    `,this.surface=t.querySelector(".item"),this.surface.addEventListener("click",(e)=>this.#e(e)),this.surface.addEventListener("keydown",(e)=>this.#o(e))}connectedCallback(){this.#t()}attributeChangedCallback(){this.#t()}#t(){this.dataset.tone=g(this.getAttribute("tone")),this.surface.tabIndex=this.hasAttribute("interactive")||this.hasAttribute("selectable")?0:-1,this.surface.setAttribute("aria-selected",this.hasAttribute("selected")?"true":"false"),this.surface.setAttribute("aria-disabled",this.hasAttribute("disabled")?"true":"false")}#e(t){if(this.hasAttribute("disabled")||ao(t))return;if(!this.hasAttribute("interactive")&&!this.hasAttribute("selectable"))return;if(this.hasAttribute("selectable"))this.toggleAttribute("selected",!this.hasAttribute("selected"));w(this,"awwbookmarklet-list-item-activate",{selected:this.hasAttribute("selected"),source:this})}#o(t){if(t.key!=="Enter"&&t.key!==" ")return;t.preventDefault(),this.surface.click()}}var io=s`
   :host {
     display: block;
   }
@@ -3641,15 +1350,7 @@ var CARD_STYLES = css`
   :host([data-tone="success"]) { --_border: var(--awwbookmarklet-success-border, #72b98b); }
   :host([data-tone="warning"]) { --_border: var(--awwbookmarklet-warning-border, #d9ad3b); }
   :host([data-tone="danger"]) { --_border: var(--awwbookmarklet-danger-border, #d46a60); }
-`;
-
-class AwwCard extends HTMLElement {
-  static observedAttributes = ["tone"];
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, CARD_STYLES]);
-    shadow.innerHTML = `
+`;class ut extends HTMLElement{static observedAttributes=["tone"];constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,io]),t.innerHTML=`
       <article class="card" part="card">
         <div class="header" part="header">
           <div class="heading" part="heading">
@@ -3662,130 +1363,7 @@ class AwwCard extends HTMLElement {
         <div class="body" part="body"><slot></slot></div>
         <div class="footer" part="footer"><slot name="footer"></slot></div>
       </article>
-    `;
-  }
-  connectedCallback() {
-    this.#sync();
-  }
-  attributeChangedCallback() {
-    this.#sync();
-  }
-  #sync() {
-    this.dataset.tone = normalizeTone(this.getAttribute("tone"));
-  }
-}
-
-// src/core/sanitize.js
-var ALLOWED_TAGS = new Set([
-  "A",
-  "ABBR",
-  "B",
-  "BLOCKQUOTE",
-  "BR",
-  "CODE",
-  "DD",
-  "DIV",
-  "DL",
-  "DT",
-  "EM",
-  "H1",
-  "H2",
-  "H3",
-  "H4",
-  "H5",
-  "H6",
-  "HR",
-  "I",
-  "IMG",
-  "LI",
-  "OL",
-  "P",
-  "PRE",
-  "S",
-  "SPAN",
-  "STRONG",
-  "SUB",
-  "SUP",
-  "TABLE",
-  "TBODY",
-  "TD",
-  "TFOOT",
-  "TH",
-  "THEAD",
-  "TR",
-  "U",
-  "UL"
-]);
-var GLOBAL_ATTRS = new Set(["title", "aria-label", "aria-hidden", "role"]);
-var TABLE_ATTRS = new Set(["colspan", "rowspan"]);
-function isSafeUrl(value) {
-  const trimmed = String(value ?? "").trim().replace(/[\u0000-\u001f\s]+/g, "");
-  if (!trimmed)
-    return true;
-  if (trimmed.startsWith("#") || trimmed.startsWith("/") || trimmed.startsWith("./") || trimmed.startsWith("../"))
-    return true;
-  try {
-    const url = new URL(trimmed, "https://example.invalid/");
-    return ["http:", "https:", "mailto:"].includes(url.protocol);
-  } catch {
-    return false;
-  }
-}
-function sanitizeElement(element, options) {
-  for (const child of [...element.children])
-    sanitizeElement(child, options);
-  if (!ALLOWED_TAGS.has(element.tagName)) {
-    element.replaceWith(...element.childNodes);
-    return;
-  }
-  if (element.tagName === "IMG" && options.images === "hidden") {
-    element.remove();
-    return;
-  }
-  for (const attr of [...element.attributes]) {
-    const name = attr.name.toLowerCase();
-    const value = attr.value;
-    const isTableAttr = TABLE_ATTRS.has(name) && ["TD", "TH"].includes(element.tagName);
-    const keep = GLOBAL_ATTRS.has(name) || isTableAttr || element.tagName === "A" && ["href", "target", "rel"].includes(name) || element.tagName === "IMG" && ["src", "alt", "width", "height"].includes(name);
-    if (!keep || name.startsWith("on") || name === "style") {
-      element.removeAttribute(attr.name);
-      continue;
-    }
-    if ((name === "href" || name === "src") && !isSafeUrl(value)) {
-      element.removeAttribute(attr.name);
-    }
-  }
-  if (element.tagName === "A") {
-    if (element.hasAttribute("href") && options.links !== "plain") {
-      element.setAttribute("rel", "noopener noreferrer");
-      element.setAttribute("target", "_blank");
-    } else if (options.links === "plain") {
-      element.removeAttribute("href");
-    }
-  }
-}
-function sanitizeWithDomParser(html, options) {
-  const parser = new DOMParser;
-  const doc = parser.parseFromString(`<div>${String(html ?? "")}</div>`, "text/html");
-  const root = doc.body.firstElementChild;
-  sanitizeElement(root, options);
-  return root.innerHTML;
-}
-function sanitizeWithoutDomParser(html) {
-  return String(html ?? "").replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "").replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "").replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "").replace(/\s(href|src)\s*=\s*("|')?\s*javascript:[^"'\s>]*/gi, "").replace(/<\/?(iframe|object|embed|form|input|button|meta|link)[^>]*>/gi, "");
-}
-function sanitizeHtml(html, options = {}) {
-  const normalized = {
-    links: options.links || "safe",
-    images: options.images || "constrained"
-  };
-  if (typeof DOMParser !== "undefined")
-    return sanitizeWithDomParser(html, normalized);
-  return sanitizeWithoutDomParser(html);
-}
-
-// src/components/rich-preview.js
-var RICH_PREVIEW_STYLES = css`
+    `}connectedCallback(){this.#t()}attributeChangedCallback(){this.#t()}#t(){this.dataset.tone=g(this.getAttribute("tone"))}}var so=new Set(["A","ABBR","B","BLOCKQUOTE","BR","CODE","DD","DIV","DL","DT","EM","H1","H2","H3","H4","H5","H6","HR","I","IMG","LI","OL","P","PRE","S","SPAN","STRONG","SUB","SUP","TABLE","TBODY","TD","TFOOT","TH","THEAD","TR","U","UL"]),no=new Set(["title","aria-label","aria-hidden","role"]),lo=new Set(["colspan","rowspan"]);function co(t){let e=String(t??"").trim().replace(/[\u0000-\u001f\s]+/g,"");if(!e)return!0;if(e.startsWith("#")||e.startsWith("/")||e.startsWith("./")||e.startsWith("../"))return!0;try{let o=new URL(e,"https://example.invalid/");return["http:","https:","mailto:"].includes(o.protocol)}catch{return!1}}function ee(t,e){for(let o of[...t.children])ee(o,e);if(!so.has(t.tagName)){t.replaceWith(...t.childNodes);return}if(t.tagName==="IMG"&&e.images==="hidden"){t.remove();return}for(let o of[...t.attributes]){let r=o.name.toLowerCase(),i=o.value,n=lo.has(r)&&["TD","TH"].includes(t.tagName);if(!(no.has(r)||n||t.tagName==="A"&&["href","target","rel"].includes(r)||t.tagName==="IMG"&&["src","alt","width","height"].includes(r))||r.startsWith("on")||r==="style"){t.removeAttribute(o.name);continue}if((r==="href"||r==="src")&&!co(i))t.removeAttribute(o.name)}if(t.tagName==="A"){if(t.hasAttribute("href")&&e.links!=="plain")t.setAttribute("rel","noopener noreferrer"),t.setAttribute("target","_blank");else if(e.links==="plain")t.removeAttribute("href")}}function ho(t,e){let i=new DOMParser().parseFromString(`<div>${String(t??"")}</div>`,"text/html").body.firstElementChild;return ee(i,e),i.innerHTML}function bo(t){return String(t??"").replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi,"").replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi,"").replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi,"").replace(/\s(href|src)\s*=\s*("|')?\s*javascript:[^"'\s>]*/gi,"").replace(/<\/?(iframe|object|embed|form|input|button|meta|link)[^>]*>/gi,"")}function N(t,e={}){let o={links:e.links||"safe",images:e.images||"constrained"};if(typeof DOMParser<"u")return ho(t,o);return bo(t)}var uo=s`
   :host {
     display: block;
     min-width: 0;
@@ -3879,55 +1457,12 @@ var RICH_PREVIEW_STYLES = css`
     padding: 0;
     background: transparent;
   }
-`;
-
-class AwwRichPreview extends HTMLElement {
-  static observedAttributes = ["empty-text", "links", "images"];
-  #html = "";
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, RICH_PREVIEW_STYLES]);
-    shadow.innerHTML = `
+`;class pt extends HTMLElement{static observedAttributes=["empty-text","links","images"];#t="";constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,uo]),t.innerHTML=`
       <section class="wrap" part="wrap">
         <div class="empty" part="empty"></div>
         <div class="content" part="content"></div>
       </section>
-    `;
-    this.emptyNode = shadow.querySelector(".empty");
-    this.contentNode = shadow.querySelector(".content");
-  }
-  connectedCallback() {
-    this.#render();
-  }
-  attributeChangedCallback() {
-    this.#render();
-  }
-  get html() {
-    return this.#html;
-  }
-  set html(value) {
-    this.#html = sanitizeHtml(value, {
-      links: this.getAttribute("links") || "safe",
-      images: this.getAttribute("images") || "constrained"
-    });
-    this.#render();
-  }
-  setUnsafeHTML(value) {
-    this.#html = String(value ?? "");
-    this.#render();
-  }
-  #render() {
-    if (!this.contentNode)
-      return;
-    this.emptyNode.textContent = this.getAttribute("empty-text") || "Nothing to preview.";
-    this.contentNode.innerHTML = this.#html;
-    this.dataset.empty = this.#html.trim() ? "false" : "true";
-  }
-}
-
-// src/components/browser-panel.js
-var BROWSER_PANEL_STYLES = css`
+    `,this.emptyNode=t.querySelector(".empty"),this.contentNode=t.querySelector(".content")}connectedCallback(){this.#e()}attributeChangedCallback(){this.#e()}get html(){return this.#t}set html(t){this.#t=N(t,{links:this.getAttribute("links")||"safe",images:this.getAttribute("images")||"constrained"}),this.#e()}setUnsafeHTML(t){this.#t=String(t??""),this.#e()}#e(){if(!this.contentNode)return;this.emptyNode.textContent=this.getAttribute("empty-text")||"Nothing to preview.",this.contentNode.innerHTML=this.#t,this.dataset.empty=this.#t.trim()?"false":"true"}}var po=s`
   :host {
     display: grid;
     min-height: 220px;
@@ -3988,15 +1523,7 @@ var BROWSER_PANEL_STYLES = css`
     color: var(--awwbookmarklet-button-fg, #111720);
     font: inherit;
   }
-`;
-
-class AwwBrowserPanel extends HTMLElement {
-  static observedAttributes = ["src", "sandbox", "referrerpolicy", "loading", "error", "title", "loading-label", "error-label"];
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, BROWSER_PANEL_STYLES]);
-    shadow.innerHTML = `
+`;class wt extends HTMLElement{static observedAttributes=["src","sandbox","referrerpolicy","loading","error","title","loading-label","error-label"];constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,po]),t.innerHTML=`
       <section class="panel" part="panel">
         <div class="chrome" part="chrome">
           <div class="address" part="address"><slot name="address"></slot><span data-address></span></div>
@@ -4008,60 +1535,7 @@ class AwwBrowserPanel extends HTMLElement {
           <slot name="overlay"></slot>
         </div>
       </section>
-    `;
-    this.frame = shadow.querySelector("iframe");
-    this.addressFallback = shadow.querySelector("[data-address]");
-    this.overlay = shadow.querySelector("awwbookmarklet-state-overlay");
-    this.frame.addEventListener("load", () => {
-      this.removeAttribute("loading");
-      dispatchComponentEvent(this, "awwbookmarklet-frame-load", { src: this.src });
-    });
-    this.frame.addEventListener("error", () => {
-      this.setAttribute("error", "");
-      dispatchComponentEvent(this, "awwbookmarklet-frame-error", { src: this.src });
-    });
-  }
-  connectedCallback() {
-    this.#sync();
-  }
-  attributeChangedCallback() {
-    this.#sync();
-  }
-  get src() {
-    return this.getAttribute("src") || "";
-  }
-  set src(value) {
-    this.setAttribute("src", String(value ?? ""));
-  }
-  retry() {
-    dispatchComponentEvent(this, "awwbookmarklet-frame-retry", { src: this.src });
-    if (this.src) {
-      this.setAttribute("loading", "");
-      this.removeAttribute("error");
-      this.frame.src = this.src;
-    }
-  }
-  openExternally() {
-    dispatchComponentEvent(this, "awwbookmarklet-frame-fallback-open", { src: this.src });
-  }
-  #sync() {
-    if (!this.frame)
-      return;
-    const src = this.getAttribute("src") || "about:blank";
-    if (this.frame.getAttribute("src") !== src)
-      this.frame.setAttribute("src", src);
-    this.frame.setAttribute("title", this.getAttribute("title") || "Browser panel");
-    this.frame.setAttribute("sandbox", this.getAttribute("sandbox") || "allow-scripts allow-forms allow-same-origin");
-    this.frame.setAttribute("referrerpolicy", this.getAttribute("referrerpolicy") || "no-referrer");
-    this.addressFallback.textContent = this.getAttribute("src") || "No page loaded";
-    const error = this.hasAttribute("error");
-    this.overlay.setAttribute("state", error ? "blocked" : "loading");
-    this.overlay.setAttribute("label", error ? this.getAttribute("error-label") || "This page could not be loaded here." : this.getAttribute("loading-label") || "Loading page");
-  }
-}
-
-// src/components/manual-copy.js
-var MANUAL_COPY_STYLES = css`
+    `,this.frame=t.querySelector("iframe"),this.addressFallback=t.querySelector("[data-address]"),this.overlay=t.querySelector("awwbookmarklet-state-overlay"),this.frame.addEventListener("load",()=>{this.removeAttribute("loading"),w(this,"awwbookmarklet-frame-load",{src:this.src})}),this.frame.addEventListener("error",()=>{this.setAttribute("error",""),w(this,"awwbookmarklet-frame-error",{src:this.src})})}connectedCallback(){this.#t()}attributeChangedCallback(){this.#t()}get src(){return this.getAttribute("src")||""}set src(t){this.setAttribute("src",String(t??""))}retry(){if(w(this,"awwbookmarklet-frame-retry",{src:this.src}),this.src)this.setAttribute("loading",""),this.removeAttribute("error"),this.frame.src=this.src}openExternally(){w(this,"awwbookmarklet-frame-fallback-open",{src:this.src})}#t(){if(!this.frame)return;let t=this.getAttribute("src")||"about:blank";if(this.frame.getAttribute("src")!==t)this.frame.setAttribute("src",t);this.frame.setAttribute("title",this.getAttribute("title")||"Browser panel"),this.frame.setAttribute("sandbox",this.getAttribute("sandbox")||"allow-scripts allow-forms allow-same-origin"),this.frame.setAttribute("referrerpolicy",this.getAttribute("referrerpolicy")||"no-referrer"),this.addressFallback.textContent=this.getAttribute("src")||"No page loaded";let e=this.hasAttribute("error");this.overlay.setAttribute("state",e?"blocked":"loading"),this.overlay.setAttribute("label",e?this.getAttribute("error-label")||"This page could not be loaded here.":this.getAttribute("loading-label")||"Loading page")}}var wo=s`
   :host {
     display: block;
     border: 1px solid var(--awwbookmarklet-warning-border, #d9ad3b);
@@ -4088,48 +1562,13 @@ var MANUAL_COPY_STYLES = css`
     font: inherit;
     padding: 8px;
   }
-`;
-
-class AwwManualCopy extends HTMLElement {
-  static observedAttributes = ["label", "value"];
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, MANUAL_COPY_STYLES]);
-    shadow.innerHTML = `
+`;class mt extends HTMLElement{static observedAttributes=["label","value"];constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,wo]),t.innerHTML=`
       <section class="wrap" part="wrap">
         <div class="label" part="label"></div>
         <div part="description"><slot>Automatic copy is unavailable. Select the text below and copy it manually.</slot></div>
         <textarea part="control" readonly></textarea>
       </section>
-    `;
-    this.labelNode = shadow.querySelector(".label");
-    this.control = shadow.querySelector("textarea");
-  }
-  connectedCallback() {
-    this.#sync();
-  }
-  attributeChangedCallback() {
-    this.#sync();
-  }
-  get value() {
-    return this.control.value;
-  }
-  set value(next) {
-    this.setAttribute("value", String(next ?? ""));
-  }
-  selectText() {
-    this.control.focus();
-    this.control.select();
-  }
-  #sync() {
-    this.labelNode.textContent = this.getAttribute("label") || "Manual copy required";
-    this.control.value = this.getAttribute("value") || "";
-  }
-}
-
-// src/components/command-palette.js
-var COMMAND_PALETTE_STYLES = css`
+    `,this.labelNode=t.querySelector(".label"),this.control=t.querySelector("textarea")}connectedCallback(){this.#t()}attributeChangedCallback(){this.#t()}get value(){return this.control.value}set value(t){this.setAttribute("value",String(t??""))}selectText(){this.control.focus(),this.control.select()}#t(){this.labelNode.textContent=this.getAttribute("label")||"Manual copy required",this.control.value=this.getAttribute("value")||""}}var mo=s`
   :host {
     display: block;
     min-width: min(100%, 320px);
@@ -4209,126 +1648,18 @@ var COMMAND_PALETTE_STYLES = css`
     padding: var(--awwbookmarklet-space-3, 12px);
     text-align: center;
   }
-`;
-
-class AwwCommandPalette extends HTMLElement {
-  static observedAttributes = ["placeholder", "empty-text"];
-  #commands = [];
-  #filtered = [];
-  #activeIndex = 0;
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, COMMAND_PALETTE_STYLES]);
-    shadow.innerHTML = `
+`;class gt extends HTMLElement{static observedAttributes=["placeholder","empty-text"];#t=[];#e=[];#o=0;constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,mo]),t.innerHTML=`
       <section class="palette" part="palette">
         <input part="input" type="search" autocomplete="off" spellcheck="false" aria-label="Filter commands" />
         <div class="list" part="list" role="listbox" aria-label="Commands"></div>
       </section>
-    `;
-    this.input = shadow.querySelector("input");
-    this.list = shadow.querySelector(".list");
-    this.input.addEventListener("input", () => this.#filter());
-    this.input.addEventListener("keydown", (event) => this.#onKeyDown(event));
-  }
-  connectedCallback() {
-    this.#render();
-  }
-  attributeChangedCallback() {
-    this.#render();
-  }
-  get commands() {
-    return this.#commands;
-  }
-  set commands(value) {
-    this.#commands = Array.isArray(value) ? value : [];
-    this.#filter();
-  }
-  focusInput() {
-    this.input?.focus();
-  }
-  #filter() {
-    const query = this.input?.value.trim().toLowerCase() || "";
-    this.#filtered = this.#commands.filter((command) => {
-      if (!query)
-        return true;
-      return [command.label, command.group, command.shortcut, ...command.keywords || []].join(" ").toLowerCase().includes(query);
-    });
-    this.#activeIndex = Math.min(this.#activeIndex, Math.max(0, this.#filtered.length - 1));
-    this.#renderList();
-    dispatchComponentEvent(this, "awwbookmarklet-command-palette-filter", { query, count: this.#filtered.length });
-  }
-  #render() {
-    if (!this.input)
-      return;
-    this.input.placeholder = this.getAttribute("placeholder") || "Type a command";
-    this.#filter();
-  }
-  #renderList() {
-    this.list.textContent = "";
-    if (!this.#filtered.length) {
-      const empty = document.createElement("div");
-      empty.className = "empty";
-      empty.setAttribute("part", "empty");
-      empty.textContent = this.getAttribute("empty-text") || "No matching commands.";
-      this.list.append(empty);
-      return;
-    }
-    this.#filtered.forEach((command, index) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "command";
-      button.setAttribute("part", "command");
-      button.disabled = Boolean(command.disabled);
-      button.setAttribute("role", "option");
-      button.setAttribute("aria-selected", index === this.#activeIndex ? "true" : "false");
-      button.innerHTML = `
+    `,this.input=t.querySelector("input"),this.list=t.querySelector(".list"),this.input.addEventListener("input",()=>this.#r()),this.input.addEventListener("keydown",(e)=>this.#l(e))}connectedCallback(){this.#a()}attributeChangedCallback(){this.#a()}get commands(){return this.#t}set commands(t){this.#t=Array.isArray(t)?t:[],this.#r()}focusInput(){this.input?.focus()}#r(){let t=this.input?.value.trim().toLowerCase()||"";this.#e=this.#t.filter((e)=>{if(!t)return!0;return[e.label,e.group,e.shortcut,...e.keywords||[]].join(" ").toLowerCase().includes(t)}),this.#o=Math.min(this.#o,Math.max(0,this.#e.length-1)),this.#i(),w(this,"awwbookmarklet-command-palette-filter",{query:t,count:this.#e.length})}#a(){if(!this.input)return;this.input.placeholder=this.getAttribute("placeholder")||"Type a command",this.#r()}#i(){if(this.list.textContent="",!this.#e.length){let t=document.createElement("div");t.className="empty",t.setAttribute("part","empty"),t.textContent=this.getAttribute("empty-text")||"No matching commands.",this.list.append(t);return}this.#e.forEach((t,e)=>{let o=document.createElement("button");o.type="button",o.className="command",o.setAttribute("part","command"),o.disabled=Boolean(t.disabled),o.setAttribute("role","option"),o.setAttribute("aria-selected",e===this.#o?"true":"false"),o.innerHTML=`
         <span>
           <span class="label" part="label"></span>
           <span class="meta" part="meta"></span>
         </span>
         <span class="shortcut" part="shortcut"></span>
-      `;
-      button.querySelector(".label").textContent = String(command.label || command.id || "Untitled command");
-      button.querySelector(".meta").textContent = [command.group, command.description].filter(Boolean).join(" - ");
-      button.querySelector(".shortcut").textContent = String(command.shortcut || "");
-      button.addEventListener("click", () => this.#execute(command));
-      this.list.append(button);
-    });
-  }
-  #onKeyDown(event) {
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault();
-      const step = event.key === "ArrowDown" ? 1 : -1;
-      const count = this.#filtered.length;
-      if (!count)
-        return;
-      this.#activeIndex = (this.#activeIndex + step + count) % count;
-      this.#renderList();
-      return;
-    }
-    if (event.key === "Enter") {
-      event.preventDefault();
-      const command = this.#filtered[this.#activeIndex];
-      if (command)
-        this.#execute(command);
-    }
-  }
-  #execute(command) {
-    if (command.disabled)
-      return;
-    dispatchComponentEvent(this, "awwbookmarklet-command-palette-execute", {
-      commandId: command.id || "",
-      command,
-      source: this
-    });
-    if (typeof command.run === "function")
-      command.run(command);
-  }
-}
-
-// src/components/shortcut-help.js
-var SHORTCUT_HELP_STYLES = css`
+      `,o.querySelector(".label").textContent=String(t.label||t.id||"Untitled command"),o.querySelector(".meta").textContent=[t.group,t.description].filter(Boolean).join(" - "),o.querySelector(".shortcut").textContent=String(t.shortcut||""),o.addEventListener("click",()=>this.#s(t)),this.list.append(o)})}#l(t){if(t.key==="ArrowDown"||t.key==="ArrowUp"){t.preventDefault();let e=t.key==="ArrowDown"?1:-1,o=this.#e.length;if(!o)return;this.#o=(this.#o+e+o)%o,this.#i();return}if(t.key==="Enter"){t.preventDefault();let e=this.#e[this.#o];if(e)this.#s(e)}}#s(t){if(t.disabled)return;if(w(this,"awwbookmarklet-command-palette-execute",{commandId:t.id||"",command:t,source:this}),typeof t.run==="function")t.run(t)}}var go=s`
   :host {
     display: block;
     min-width: 0;
@@ -4376,130 +1707,7 @@ var SHORTCUT_HELP_STYLES = css`
     line-height: 1.35;
     overflow-wrap: anywhere;
   }
-`;
-
-class AwwShortcutHelp extends HTMLElement {
-  static observedAttributes = ["empty-text"];
-  #shortcuts = [];
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, SHORTCUT_HELP_STYLES]);
-    shadow.innerHTML = `<section class="help" part="help"></section>`;
-    this.helpNode = shadow.querySelector(".help");
-  }
-  connectedCallback() {
-    this.#render();
-  }
-  attributeChangedCallback() {
-    this.#render();
-  }
-  get shortcuts() {
-    return this.#shortcuts;
-  }
-  set shortcuts(value) {
-    this.#shortcuts = Array.isArray(value) ? value : [];
-    this.#render();
-  }
-  #render() {
-    if (!this.helpNode)
-      return;
-    this.helpNode.textContent = "";
-    if (!this.#shortcuts.length) {
-      const empty = document.createElement("div");
-      empty.setAttribute("part", "empty");
-      empty.textContent = this.getAttribute("empty-text") || "No shortcuts available.";
-      this.helpNode.append(empty);
-      return;
-    }
-    const groups = new Map;
-    for (const item of this.#shortcuts) {
-      const group = String(item.group || "General");
-      if (!groups.has(group))
-        groups.set(group, []);
-      groups.get(group).push(item);
-    }
-    for (const [group, items] of groups) {
-      const section = document.createElement("section");
-      section.className = "group";
-      section.setAttribute("part", "group");
-      const title = document.createElement("div");
-      title.className = "group-title";
-      title.setAttribute("part", "group-title");
-      title.textContent = group;
-      section.append(title);
-      for (const item of items) {
-        const row = document.createElement("div");
-        row.className = "row";
-        row.setAttribute("part", "row");
-        const key = document.createElement("kbd");
-        key.setAttribute("part", "shortcut");
-        key.textContent = String(item.shortcut || "");
-        const description = document.createElement("div");
-        description.className = "description";
-        description.setAttribute("part", "description");
-        description.textContent = String(item.description || item.label || "");
-        row.append(key, description);
-        section.append(row);
-      }
-      this.helpNode.append(section);
-    }
-  }
-}
-
-// src/core/url.js
-var DEFAULT_SEARCH_TEMPLATE = "https://www.google.com/search?q={query}";
-var BLOCKED_PROTOCOLS = new Set(["javascript:", "data:", "file:", "chrome:", "about:"]);
-function normalizeSearchTemplate(value, fallback = DEFAULT_SEARCH_TEMPLATE) {
-  const template = String(value || "").trim();
-  if (!template || !template.includes("{query}"))
-    return fallback;
-  try {
-    const probe = template.replace("{query}", "test");
-    const url = new URL(probe);
-    if (url.protocol !== "http:" && url.protocol !== "https:")
-      return fallback;
-    return template;
-  } catch {
-    return fallback;
-  }
-}
-function buildSearchUrl(query, template = DEFAULT_SEARCH_TEMPLATE) {
-  const normalized = normalizeSearchTemplate(template);
-  return normalized.replace("{query}", encodeURIComponent(String(query ?? "").trim()));
-}
-function resolveNavigationInput(value, template = DEFAULT_SEARCH_TEMPLATE) {
-  const input = String(value ?? "").trim();
-  if (!input)
-    return { kind: "ignore", input };
-  try {
-    const parsed = new URL(input);
-    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
-      return { kind: "navigate_url", input, targetUrl: parsed.href };
-    }
-    if (BLOCKED_PROTOCOLS.has(parsed.protocol)) {
-      return { kind: "blocked_protocol", input, protocol: parsed.protocol };
-    }
-  } catch {}
-  if (/^[\w.-]+\.[a-z]{2,}([/:?#].*)?$/i.test(input)) {
-    try {
-      return { kind: "navigate_url", input, targetUrl: new URL(`https://${input}`).href };
-    } catch {
-      return { kind: "search", input, query: input, targetUrl: buildSearchUrl(input, template) };
-    }
-  }
-  return { kind: "search", input, query: input, targetUrl: buildSearchUrl(input, template) };
-}
-function deriveHostname(value) {
-  try {
-    return new URL(String(value ?? "").trim()).hostname;
-  } catch {
-    return "";
-  }
-}
-
-// src/components/url-picker.js
-var URL_PICKER_STYLES = css`
+`;class ft extends HTMLElement{static observedAttributes=["empty-text"];#t=[];constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,go]),t.innerHTML='<section class="help" part="help"></section>',this.helpNode=t.querySelector(".help")}connectedCallback(){this.#e()}attributeChangedCallback(){this.#e()}get shortcuts(){return this.#t}set shortcuts(t){this.#t=Array.isArray(t)?t:[],this.#e()}#e(){if(!this.helpNode)return;if(this.helpNode.textContent="",!this.#t.length){let e=document.createElement("div");e.setAttribute("part","empty"),e.textContent=this.getAttribute("empty-text")||"No shortcuts available.",this.helpNode.append(e);return}let t=new Map;for(let e of this.#t){let o=String(e.group||"General");if(!t.has(o))t.set(o,[]);t.get(o).push(e)}for(let[e,o]of t){let r=document.createElement("section");r.className="group",r.setAttribute("part","group");let i=document.createElement("div");i.className="group-title",i.setAttribute("part","group-title"),i.textContent=e,r.append(i);for(let n of o){let h=document.createElement("div");h.className="row",h.setAttribute("part","row");let u=document.createElement("kbd");u.setAttribute("part","shortcut"),u.textContent=String(n.shortcut||"");let p=document.createElement("div");p.className="description",p.setAttribute("part","description"),p.textContent=String(n.description||n.label||""),h.append(u,p),r.append(h)}this.helpNode.append(r)}}}var fo=new Set(["javascript:","data:","file:","chrome:","about:"]);function oe(t){try{let e=new URL(String(t??"").trim());return e.protocol==="http:"||e.protocol==="https:"}catch{return!1}}function $t(t,e="https://www.google.com/search?q={query}"){let o=String(t||"").trim();if(!o||!o.includes("{query}"))return e;try{let r=o.replace("{query}","test"),i=new URL(r);if(i.protocol!=="http:"&&i.protocol!=="https:")return e;return o}catch{return e}}function kt(t,e="https://www.google.com/search?q={query}"){return $t(e).replace("{query}",encodeURIComponent(String(t??"").trim()))}function vt(t,e="https://www.google.com/search?q={query}"){let o=String(t??"").trim();if(!o)return{kind:"ignore",input:o};try{let r=new URL(o);if(r.protocol==="http:"||r.protocol==="https:")return{kind:"navigate_url",input:o,targetUrl:r.href};if(fo.has(r.protocol))return{kind:"blocked_protocol",input:o,protocol:r.protocol}}catch{}if(/^[\w.-]+\.[a-z]{2,}([/:?#].*)?$/i.test(o))try{return{kind:"navigate_url",input:o,targetUrl:new URL(`https://${o}`).href}}catch{return{kind:"search",input:o,query:o,targetUrl:kt(o,e)}}return{kind:"search",input:o,query:o,targetUrl:kt(o,e)}}function xt(t){try{return new URL(String(t??"").trim()).hostname}catch{return""}}var ko=s`
   :host {
     display: block;
     min-width: min(100%, 260px);
@@ -4566,147 +1774,12 @@ var URL_PICKER_STYLES = css`
     line-height: 1.35;
     overflow-wrap: anywhere;
   }
-`;
-
-class AwwUrlPicker extends HTMLElement {
-  static observedAttributes = ["value", "placeholder", "search-template", "open"];
-  #suggestions = [];
-  #activeIndex = 0;
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, URL_PICKER_STYLES]);
-    shadow.innerHTML = `
+`;class yt extends HTMLElement{static observedAttributes=["value","placeholder","search-template","open"];#t=[];#e=0;constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,ko]),t.innerHTML=`
       <section class="picker" part="picker">
         <input part="input" type="text" autocomplete="off" spellcheck="false" aria-label="URL or search query" />
         <div class="list" part="list" role="listbox"></div>
       </section>
-    `;
-    this.input = shadow.querySelector("input");
-    this.list = shadow.querySelector(".list");
-    this.input.addEventListener("input", () => this.#onInput());
-    this.input.addEventListener("focus", () => this.#openIfUseful());
-    this.input.addEventListener("keydown", (event) => this.#onKeyDown(event));
-  }
-  connectedCallback() {
-    this.#sync();
-  }
-  attributeChangedCallback() {
-    this.#sync();
-  }
-  get value() {
-    return this.input?.value || "";
-  }
-  set value(nextValue) {
-    this.setAttribute("value", String(nextValue ?? ""));
-  }
-  get suggestions() {
-    return this.#suggestions;
-  }
-  set suggestions(value) {
-    this.#suggestions = Array.isArray(value) ? value : [];
-    this.#renderList();
-  }
-  close() {
-    this.removeAttribute("open");
-  }
-  #sync() {
-    if (!this.input)
-      return;
-    const value = this.getAttribute("value") || "";
-    if (this.input.value !== value)
-      this.input.value = value;
-    this.input.placeholder = this.getAttribute("placeholder") || "Type URL or search query";
-    this.#renderList();
-  }
-  #onInput() {
-    this.setAttribute("value", this.input.value);
-    this.#activeIndex = 0;
-    this.#openIfUseful();
-    dispatchComponentEvent(this, "awwbookmarklet-url-picker-query", {
-      query: this.input.value,
-      decision: this.#decision()
-    });
-  }
-  #openIfUseful() {
-    if (this.#suggestions.length || this.input.value.trim())
-      this.setAttribute("open", "");
-  }
-  #decision() {
-    return resolveNavigationInput(this.input.value, this.getAttribute("search-template") || undefined);
-  }
-  #onKeyDown(event) {
-    if (event.key === "Escape") {
-      this.close();
-      return;
-    }
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault();
-      const count = this.#visibleItems().length;
-      if (!count)
-        return;
-      const step = event.key === "ArrowDown" ? 1 : -1;
-      this.#activeIndex = (this.#activeIndex + step + count) % count;
-      this.setAttribute("open", "");
-      this.#renderList();
-      return;
-    }
-    if (event.key === "Enter") {
-      event.preventDefault();
-      const item = this.#visibleItems()[this.#activeIndex];
-      if (item)
-        this.#apply(item);
-      else
-        this.#apply({ type: "direct", decision: this.#decision() });
-    }
-  }
-  #visibleItems() {
-    const decision = this.#decision();
-    const direct = decision.kind === "ignore" || decision.kind === "blocked_protocol" ? [] : [{ type: "direct", decision }];
-    return [...direct, ...this.#suggestions];
-  }
-  #renderList() {
-    if (!this.list)
-      return;
-    this.list.textContent = "";
-    const items = this.#visibleItems();
-    items.forEach((item, index) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "option";
-      button.setAttribute("part", "option");
-      button.setAttribute("role", "option");
-      button.setAttribute("aria-selected", index === this.#activeIndex ? "true" : "false");
-      const title = document.createElement("span");
-      title.className = "title";
-      title.setAttribute("part", "title");
-      const meta = document.createElement("span");
-      meta.className = "meta";
-      meta.setAttribute("part", "meta");
-      if (item.type === "direct") {
-        title.textContent = item.decision.kind === "navigate_url" ? `Open ${item.decision.targetUrl}` : `Search for "${item.decision.query}"`;
-        meta.textContent = item.decision.kind === "navigate_url" ? deriveHostname(item.decision.targetUrl) : item.decision.targetUrl;
-      } else {
-        title.textContent = String(item.title || item.label || item.url || "Untitled");
-        meta.textContent = String(item.description || item.url || "");
-      }
-      button.append(title, meta);
-      button.addEventListener("click", () => this.#apply(item));
-      this.list.append(button);
-    });
-  }
-  #apply(item) {
-    const decision = item.type === "direct" ? item.decision : { kind: "navigate_url", input: item.url || "", targetUrl: item.url || "" };
-    if (decision.kind === "blocked_protocol" || decision.kind === "ignore")
-      return;
-    this.value = decision.targetUrl || "";
-    this.close();
-    dispatchComponentEvent(this, "awwbookmarklet-url-picker-apply", { item, decision, source: this });
-  }
-}
-
-// src/components/metric-card.js
-var METRIC_CARD_STYLES = css`
+    `,this.input=t.querySelector("input"),this.list=t.querySelector(".list"),this.input.addEventListener("input",()=>this.#r()),this.input.addEventListener("focus",()=>this.#a()),this.input.addEventListener("keydown",(e)=>this.#l(e))}connectedCallback(){this.#o()}attributeChangedCallback(){this.#o()}get value(){return this.input?.value||""}set value(t){this.setAttribute("value",String(t??""))}get suggestions(){return this.#t}set suggestions(t){this.#t=Array.isArray(t)?t:[],this.#n()}close(){this.removeAttribute("open")}#o(){if(!this.input)return;let t=this.getAttribute("value")||"";if(this.input.value!==t)this.input.value=t;this.input.placeholder=this.getAttribute("placeholder")||"Type URL or search query",this.#n()}#r(){this.setAttribute("value",this.input.value),this.#e=0,this.#a(),w(this,"awwbookmarklet-url-picker-query",{query:this.input.value,decision:this.#i()})}#a(){if(this.#t.length||this.input.value.trim())this.setAttribute("open","")}#i(){return vt(this.input.value,this.getAttribute("search-template")||void 0)}#l(t){if(t.key==="Escape"){this.close();return}if(t.key==="ArrowDown"||t.key==="ArrowUp"){t.preventDefault();let e=this.#s().length;if(!e)return;let o=t.key==="ArrowDown"?1:-1;this.#e=(this.#e+o+e)%e,this.setAttribute("open",""),this.#n();return}if(t.key==="Enter"){t.preventDefault();let e=this.#s()[this.#e];if(e)this.#d(e);else this.#d({type:"direct",decision:this.#i()})}}#s(){let t=this.#i();return[...t.kind==="ignore"||t.kind==="blocked_protocol"?[]:[{type:"direct",decision:t}],...this.#t]}#n(){if(!this.list)return;this.list.textContent="",this.#s().forEach((e,o)=>{let r=document.createElement("button");r.type="button",r.className="option",r.setAttribute("part","option"),r.setAttribute("role","option"),r.setAttribute("aria-selected",o===this.#e?"true":"false");let i=document.createElement("span");i.className="title",i.setAttribute("part","title");let n=document.createElement("span");if(n.className="meta",n.setAttribute("part","meta"),e.type==="direct")i.textContent=e.decision.kind==="navigate_url"?`Open ${e.decision.targetUrl}`:`Search for "${e.decision.query}"`,n.textContent=e.decision.kind==="navigate_url"?xt(e.decision.targetUrl):e.decision.targetUrl;else i.textContent=String(e.title||e.label||e.url||"Untitled"),n.textContent=String(e.description||e.url||"");r.append(i,n),r.addEventListener("click",()=>this.#d(e)),this.list.append(r)})}#d(t){let e=t.type==="direct"?t.decision:{kind:"navigate_url",input:t.url||"",targetUrl:t.url||""};if(e.kind==="blocked_protocol"||e.kind==="ignore")return;this.value=e.targetUrl||"",this.close(),w(this,"awwbookmarklet-url-picker-apply",{item:t,decision:e,source:this})}}var vo=s`
   :host {
     display: block;
     min-width: 0;
@@ -4750,582 +1823,98 @@ var METRIC_CARD_STYLES = css`
   :host([data-tone="success"]) { --_fg: var(--awwbookmarklet-success-fg, #195b34); --_border: var(--awwbookmarklet-success-border, #72b98b); }
   :host([data-tone="warning"]) { --_fg: var(--awwbookmarklet-warning-fg, #6d4b00); --_border: var(--awwbookmarklet-warning-border, #d9ad3b); }
   :host([data-tone="danger"]) { --_fg: var(--awwbookmarklet-danger-fg, #8a1f17); --_border: var(--awwbookmarklet-danger-border, #d46a60); }
-`;
-
-class AwwMetricCard extends HTMLElement {
-  static observedAttributes = ["label", "value", "description", "delta", "tone"];
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
-    adoptStyles(shadow, [BASE_COMPONENT_STYLES, METRIC_CARD_STYLES]);
-    shadow.innerHTML = `
+`;class At extends HTMLElement{static observedAttributes=["label","value","description","delta","tone"];constructor(){super();let t=this.attachShadow({mode:"open"});l(t,[d,vo]),t.innerHTML=`
       <section class="metric" part="metric">
         <div class="label" part="label"><slot name="label"></slot><span data-label></span></div>
         <div class="value" part="value"><slot name="value"></slot><span data-value></span></div>
         <div class="delta" part="delta"><slot name="delta"></slot><span data-delta></span></div>
         <div class="description" part="description"><slot name="description"></slot><span data-description></span><slot></slot></div>
       </section>
-    `;
-    this.labelNode = shadow.querySelector("[data-label]");
-    this.valueNode = shadow.querySelector("[data-value]");
-    this.deltaNode = shadow.querySelector("[data-delta]");
-    this.descriptionNode = shadow.querySelector("[data-description]");
-  }
-  connectedCallback() {
-    this.#sync();
-  }
-  attributeChangedCallback() {
-    this.#sync();
-  }
-  #sync() {
-    this.dataset.tone = normalizeTone(this.getAttribute("tone"));
-    this.labelNode.textContent = this.getAttribute("label") || "";
-    this.valueNode.textContent = this.getAttribute("value") || "";
-    this.deltaNode.textContent = this.getAttribute("delta") || "";
-    this.descriptionNode.textContent = this.getAttribute("description") || "";
-  }
-}
-
-// src/components/register-all.js
-function registerAllComponents() {
-  defineMany([
-    [TAGS.desktopRoot, AwwDesktopRoot],
-    [TAGS.window, AwwWindow],
-    [TAGS.menubar, AwwMenubar],
-    [TAGS.menu, AwwMenu],
-    [TAGS.button, AwwButton],
-    [TAGS.iconButton, AwwIconButton],
-    [TAGS.input, AwwInput],
-    [TAGS.textarea, AwwTextarea],
-    [TAGS.checkbox, AwwCheckbox],
-    [TAGS.radio, AwwRadio],
-    [TAGS.select, AwwSelect],
-    [TAGS.range, AwwRange],
-    [TAGS.progress, AwwProgress],
-    [TAGS.tabs, AwwTabs],
-    [TAGS.tabPanel, AwwTabPanel],
-    [TAGS.listbox, AwwListbox],
-    [TAGS.group, AwwGroup],
-    [TAGS.panel, AwwPanel],
-    [TAGS.statusbar, AwwStatusbar],
-    [TAGS.appShell, AwwAppShell],
-    [TAGS.toolbar, AwwToolbar],
-    [TAGS.field, AwwField],
-    [TAGS.statusLine, AwwStatusLine],
-    [TAGS.alert, AwwAlert],
-    [TAGS.dialog, AwwDialog],
-    [TAGS.toast, AwwToast],
-    [TAGS.emptyState, AwwEmptyState],
-    [TAGS.stateOverlay, AwwStateOverlay],
-    [TAGS.list, AwwList],
-    [TAGS.listItem, AwwListItem],
-    [TAGS.card, AwwCard],
-    [TAGS.richPreview, AwwRichPreview],
-    [TAGS.browserPanel, AwwBrowserPanel],
-    [TAGS.manualCopy, AwwManualCopy],
-    [TAGS.commandPalette, AwwCommandPalette],
-    [TAGS.shortcutHelp, AwwShortcutHelp],
-    [TAGS.urlPicker, AwwUrlPicker],
-    [TAGS.metricCard, AwwMetricCard]
-  ]);
-}
-
-// src/themes/default-theme.js
-var DEFAULT_THEME = {
-  [PUBLIC_TOKENS.workspaceBg]: "rgba(0, 0, 0, 0)",
-  [PUBLIC_TOKENS.windowBg]: "#eef1f5",
-  [PUBLIC_TOKENS.panelBg]: "#f3f5f7",
-  [PUBLIC_TOKENS.titlebarActiveBg]: "#dce2e9",
-  [PUBLIC_TOKENS.titlebarInactiveBg]: "#cfd5dd",
-  [PUBLIC_TOKENS.titlebarFg]: "#121820",
-  [PUBLIC_TOKENS.borderStrong]: "#4f5966",
-  [PUBLIC_TOKENS.borderSubtle]: "#a8b0ba",
-  [PUBLIC_TOKENS.focusRing]: "#174f9c",
-  [PUBLIC_TOKENS.buttonBg]: "#edf1f5",
-  [PUBLIC_TOKENS.buttonFg]: "#111720",
-  [PUBLIC_TOKENS.buttonActiveBg]: "#d8dee6",
-  [PUBLIC_TOKENS.inputBg]: "#f8f9fa",
-  [PUBLIC_TOKENS.inputFg]: "#111720",
-  [PUBLIC_TOKENS.menuBg]: "#f3f5f7",
-  [PUBLIC_TOKENS.menuFg]: "#0e1621",
-  [PUBLIC_TOKENS.selectionBg]: "#1f5eae",
-  [PUBLIC_TOKENS.selectionFg]: "#f2f8ff",
-  [PUBLIC_TOKENS.statusbarBg]: "#e2e7ed",
-  [PUBLIC_TOKENS.appShellBg]: "#eef1f5",
-  [PUBLIC_TOKENS.surfaceRaisedBg]: "#fbfcfd",
-  [PUBLIC_TOKENS.surfaceInsetBg]: "#dfe4ea",
-  [PUBLIC_TOKENS.textMuted]: "#44505f",
-  [PUBLIC_TOKENS.textHelp]: "#5f6a78",
-  [PUBLIC_TOKENS.dividerColor]: "#c7cdd5",
-  [PUBLIC_TOKENS.infoBg]: "#e8f2ff",
-  [PUBLIC_TOKENS.infoFg]: "#18549e",
-  [PUBLIC_TOKENS.infoBorder]: "#8db4e8",
-  [PUBLIC_TOKENS.successBg]: "#e7f4eb",
-  [PUBLIC_TOKENS.successFg]: "#1e6a3a",
-  [PUBLIC_TOKENS.successBorder]: "#86ba91",
-  [PUBLIC_TOKENS.warningBg]: "#fff4d8",
-  [PUBLIC_TOKENS.warningFg]: "#76520c",
-  [PUBLIC_TOKENS.warningBorder]: "#d7ad4d",
-  [PUBLIC_TOKENS.dangerBg]: "#fff0ee",
-  [PUBLIC_TOKENS.dangerFg]: "#a12824",
-  [PUBLIC_TOKENS.dangerBorder]: "#da7b73",
-  [PUBLIC_TOKENS.overlayBackdrop]: "rgba(12, 18, 28, 0.38)",
-  [PUBLIC_TOKENS.overlayShadow]: "0 18px 44px rgba(0, 0, 0, 0.24)",
-  [PUBLIC_TOKENS.cardBg]: "#fbfcfe",
-  [PUBLIC_TOKENS.cardSelectedBg]: "#e8f1ff",
-  [PUBLIC_TOKENS.metricBg]: "#ffffff",
-  [PUBLIC_TOKENS.codeBg]: "#e8edf4",
-  [PUBLIC_TOKENS.codeFg]: "#172131",
-  [PUBLIC_TOKENS.shadowDepth]: "inset 1px 1px 0 #ffffff, inset -1px -1px 0 #a8b0ba",
-  [PUBLIC_TOKENS.frostOpacity]: "1",
-  [PUBLIC_TOKENS.space1]: "4px",
-  [PUBLIC_TOKENS.space2]: "8px",
-  [PUBLIC_TOKENS.space3]: "12px",
-  [PUBLIC_TOKENS.controlHeight]: "30px",
-  [PUBLIC_TOKENS.titleHeight]: "32px"
-};
-
-// src/core/theme.js
-class ThemeService {
-  #theme;
-  constructor(theme = DEFAULT_THEME) {
-    this.#theme = { ...theme };
-  }
-  get tokens() {
-    return { ...this.#theme };
-  }
-  setTheme(themePatch) {
-    this.#theme = { ...this.#theme, ...themePatch };
-    return this.tokens;
-  }
-  applyTheme(target) {
-    for (const [token, value] of Object.entries(this.#theme)) {
-      target.style.setProperty(token, value);
-    }
-  }
-}
-var defaultThemeService = new ThemeService(DEFAULT_THEME);
-
-// src/core/window-manager.js
-class WindowManager {
-  #windows = new Set;
-  #activeWindow = null;
-  #nextZ = 1;
-  #onViewportChange;
-  #destroyed = false;
-  constructor() {
-    this.#onViewportChange = () => this.clampAll();
-    window.addEventListener("resize", this.#onViewportChange, { passive: true });
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener("resize", this.#onViewportChange, { passive: true });
-      window.visualViewport.addEventListener("scroll", this.#onViewportChange, { passive: true });
-    }
-  }
-  register(win) {
-    if (this.#destroyed || this.#windows.has(win))
-      return;
-    this.#windows.add(win);
-    const rect = win.getRect();
-    if (!rect) {
-      win.setRect(this.getSpawnRect());
-    } else {
-      win.setRect(clampRect(rect));
-    }
-    this.focus(win);
-  }
-  unregister(win) {
-    if (!this.#windows.delete(win))
-      return;
-    if (this.#activeWindow === win) {
-      this.#activeWindow = null;
-      const fallback = [...this.#windows].at(-1) ?? null;
-      if (fallback)
-        this.focus(fallback);
-    }
-  }
-  getSpawnRect() {
-    return getSpawnRect(this.#windows.size, getViewportRect(), DEFAULT_GEOMETRY);
-  }
-  focus(win) {
-    if (!this.#windows.has(win))
-      return;
-    if (this.#activeWindow && this.#activeWindow !== win) {
-      this.#activeWindow.setActive(false);
-    }
-    this.#activeWindow = win;
-    win.setActive(true);
-    win.setZIndex(this.#nextZ++);
-  }
-  clampAll() {
-    for (const win of this.#windows) {
-      const rect = win.getRect();
-      if (!rect)
-        continue;
-      win.setRect(clampRect(rect));
-    }
-  }
-  destroy() {
-    if (this.#destroyed)
-      return;
-    this.#destroyed = true;
-    window.removeEventListener("resize", this.#onViewportChange);
-    if (window.visualViewport) {
-      window.visualViewport.removeEventListener("resize", this.#onViewportChange);
-      window.visualViewport.removeEventListener("scroll", this.#onViewportChange);
-    }
-    this.#windows.clear();
-    this.#activeWindow = null;
-  }
-}
-
-// src/core/runtime.js
-function getGlobalMap() {
-  if (!globalThis[GLOBAL_SYMBOLS.rootsByVersion]) {
-    globalThis[GLOBAL_SYMBOLS.rootsByVersion] = new Map;
-  }
-  return globalThis[GLOBAL_SYMBOLS.rootsByVersion];
-}
-function createDesktopRecord(version = FRAMEWORK_VERSION) {
-  const root = document.createElement(TAGS.desktopRoot);
-  root.dataset.version = version;
-  document.documentElement.append(root);
-  defaultThemeService.applyTheme(root);
-  const record = {
-    version,
-    root,
-    manager: new WindowManager,
-    owners: new Set,
-    destroy() {
-      this.manager.destroy();
-      this.root.remove();
-      this.owners.clear();
-    }
-  };
-  root.__awwManager = record.manager;
-  return record;
-}
-function acquireDesktopRoot(owner = "default-owner", version = FRAMEWORK_VERSION) {
-  const roots = getGlobalMap();
-  let record = roots.get(version);
-  if (!record || !record.root.isConnected) {
-    record = createDesktopRecord(version);
-    roots.set(version, record);
-  }
-  record.owners.add(owner);
-  globalThis[GLOBAL_SYMBOLS.lastAcquiredRoot] = record.root;
-  globalThis[GLOBAL_SYMBOLS.version] = version;
-  return record;
-}
-function releaseDesktopRoot(owner = "default-owner", version = FRAMEWORK_VERSION) {
-  const roots = getGlobalMap();
-  const record = roots.get(version);
-  if (!record)
-    return;
-  record.owners.delete(owner);
-  if (record.owners.size > 0)
-    return;
-  record.destroy();
-  roots.delete(version);
-  if (globalThis[GLOBAL_SYMBOLS.lastAcquiredRoot] === record.root) {
-    delete globalThis[GLOBAL_SYMBOLS.lastAcquiredRoot];
-  }
-}
-function emergencyTeardown(version = FRAMEWORK_VERSION) {
-  const roots = getGlobalMap();
-  if (version === "*") {
-    for (const [key, record2] of roots) {
-      record2.destroy();
-      roots.delete(key);
-    }
-    delete globalThis[GLOBAL_SYMBOLS.lastAcquiredRoot];
-    return;
-  }
-  const record = roots.get(version);
-  if (!record)
-    return;
-  record.destroy();
-  roots.delete(version);
-  if (globalThis[GLOBAL_SYMBOLS.lastAcquiredRoot] === record.root) {
-    delete globalThis[GLOBAL_SYMBOLS.lastAcquiredRoot];
-  }
-}
-
-// src/core/clipboard.js
-function normalizePayload(payload = {}) {
-  return {
-    text: String(payload.text ?? ""),
-    html: payload.html == null ? "" : String(payload.html),
-    imageBlob: payload.imageBlob ?? null
-  };
-}
-async function copyToClipboard(payload = {}, environment = globalThis) {
-  const normalized = normalizePayload(payload);
-  if (!normalized.text && !normalized.html && !normalized.imageBlob) {
-    return { ok: false, status: "empty", reason: "No clipboard payload was provided.", fallbackText: "" };
-  }
-  const nav = environment.navigator;
-  const clipboard = nav?.clipboard;
-  const fallbackText = normalized.text || normalized.html;
-  if (!clipboard) {
-    return { ok: false, status: "fallback", reason: "Clipboard API is unavailable.", fallbackText };
-  }
-  try {
-    if (normalized.html && typeof clipboard.write === "function" && typeof environment.ClipboardItem === "function") {
-      const item = new environment.ClipboardItem({
-        "text/html": new Blob([normalized.html], { type: "text/html" }),
-        "text/plain": new Blob([normalized.text || normalized.html], { type: "text/plain" })
-      });
-      await clipboard.write([item]);
-      return { ok: true, status: "success", method: "write" };
-    }
-    if (normalized.imageBlob && typeof clipboard.write === "function" && typeof environment.ClipboardItem === "function") {
-      const item = new environment.ClipboardItem({ [normalized.imageBlob.type || "image/png"]: normalized.imageBlob });
-      await clipboard.write([item]);
-      return { ok: true, status: "success", method: "write" };
-    }
-    if (typeof clipboard.writeText === "function" && fallbackText) {
-      await clipboard.writeText(fallbackText);
-      return { ok: true, status: "success", method: "writeText" };
-    }
-    return { ok: false, status: "fallback", reason: "Clipboard API cannot write this payload.", fallbackText };
-  } catch (error) {
-    return {
-      ok: false,
-      status: "failed",
-      reason: error?.message || "Clipboard write failed.",
-      error,
-      fallbackText
-    };
-  }
-}
-
-// src/demo/example-tool.js
-function iconPlus() {
-  return `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="square"/></svg>`;
-}
-function buildExampleToolWindow({ title = "Page Extraction Tool" } = {}) {
-  const win = document.createElement(TAGS.window);
-  win.setAttribute("title", title);
-  const menubar = document.createElement(TAGS.menubar);
-  menubar.slot = "menubar";
-  menubar.innerHTML = `
+    `,this.labelNode=t.querySelector("[data-label]"),this.valueNode=t.querySelector("[data-value]"),this.deltaNode=t.querySelector("[data-delta]"),this.descriptionNode=t.querySelector("[data-description]")}connectedCallback(){this.#t()}attributeChangedCallback(){this.#t()}#t(){this.dataset.tone=g(this.getAttribute("tone")),this.labelNode.textContent=this.getAttribute("label")||"",this.valueNode.textContent=this.getAttribute("value")||"",this.deltaNode.textContent=this.getAttribute("delta")||"",this.descriptionNode.textContent=this.getAttribute("description")||""}}function E(){Dt([[a.desktopRoot,O],[a.window,$],[a.menubar,R],[a.menu,I],[a.button,P],[a.iconButton,Y],[a.input,D],[a.textarea,z],[a.checkbox,V],[a.radio,F],[a.select,U],[a.range,W],[a.progress,j],[a.tabs,K],[a.tabPanel,G],[a.listbox,X],[a.group,Z],[a.panel,J],[a.statusbar,Q],[a.appShell,tt],[a.toolbar,rt],[a.field,at],[a.statusLine,it],[a.alert,st],[a.dialog,nt],[a.toast,lt],[a.emptyState,dt],[a.stateOverlay,ct],[a.list,ht],[a.listItem,bt],[a.card,ut],[a.richPreview,pt],[a.browserPanel,wt],[a.manualCopy,mt],[a.commandPalette,gt],[a.shortcutHelp,ft],[a.urlPicker,yt],[a.metricCard,At]])}function xo(){return'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="square"/></svg>'}function Rt({title:t="Page Extraction Tool"}={}){let e=document.createElement(a.window);e.setAttribute("title",t);let o=document.createElement(a.menubar);o.slot="menubar",o.innerHTML=`
     <button type="button" data-menu="file">File</button>
     <button type="button" data-menu="view">View</button>
     <button type="button" data-menu="help">Help</button>
 
-    <${TAGS.menu} name="file">
+    <${a.menu} name="file">
       <button type="button" data-command="tool.run">Run</button>
       <button type="button" data-command="tool.reset">Reset</button>
       <div data-separator role="separator"></div>
       <button type="button" data-command="tool.close">Close</button>
-    </${TAGS.menu}>
+    </${a.menu}>
 
-    <${TAGS.menu} name="view">
+    <${a.menu} name="view">
       <button type="button" data-command="view.compact">Compact Mode</button>
       <button type="button" data-command="view.normal">Normal Mode</button>
-    </${TAGS.menu}>
+    </${a.menu}>
 
-    <${TAGS.menu} name="help">
+    <${a.menu} name="help">
       <button type="button" data-command="help.about">About</button>
-    </${TAGS.menu}>
-  `;
-  const toolbar = document.createElement("div");
-  toolbar.slot = "toolbar";
-  toolbar.style.display = "flex";
-  toolbar.style.flexWrap = "wrap";
-  toolbar.style.gap = "8px";
-  toolbar.style.padding = "6px 8px";
-  toolbar.style.alignItems = "center";
-  toolbar.innerHTML = `
-    <${TAGS.iconButton} id="tool-refresh" aria-label="Refresh">${iconPlus()}</${TAGS.iconButton}>
-    <${TAGS.button} id="tool-run">Run</${TAGS.button}>
-    <${TAGS.button} id="tool-close">Close</${TAGS.button}>
-  `;
-  const status = document.createElement(TAGS.statusbar);
-  status.slot = "statusbar";
-  status.innerHTML = `<span id="status-main">Ready</span><span id="status-count">0 selected</span><span id="status-mode">Normal</span>`;
-  const body = document.createElement("div");
-  body.style.display = "grid";
-  body.style.gap = "12px";
-  body.innerHTML = `
-    <${TAGS.group} caption="Target">
+    </${a.menu}>
+  `;let r=document.createElement("div");r.slot="toolbar",r.style.display="flex",r.style.flexWrap="wrap",r.style.gap="8px",r.style.padding="6px 8px",r.style.alignItems="center",r.innerHTML=`
+    <${a.iconButton} id="tool-refresh" aria-label="Refresh">${xo()}</${a.iconButton}>
+    <${a.button} id="tool-run">Run</${a.button}>
+    <${a.button} id="tool-close">Close</${a.button}>
+  `;let i=document.createElement(a.statusbar);i.slot="statusbar",i.innerHTML='<span id="status-main">Ready</span><span id="status-count">0 selected</span><span id="status-mode">Normal</span>';let n=document.createElement("div");n.style.display="grid",n.style.gap="12px",n.innerHTML=`
+    <${a.group} caption="Target">
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:8px; align-items:center;">
-        <${TAGS.input} id="target-input" placeholder="CSS selector or current selection"></${TAGS.input}>
-        <${TAGS.button} id="target-refresh">Refresh</${TAGS.button}>
-        <${TAGS.button} id="target-pick">Pick Again</${TAGS.button}>
+        <${a.input} id="target-input" placeholder="CSS selector or current selection"></${a.input}>
+        <${a.button} id="target-refresh">Refresh</${a.button}>
+        <${a.button} id="target-pick">Pick Again</${a.button}>
       </div>
-    </${TAGS.group}>
+    </${a.group}>
 
-    <${TAGS.panel}>
+    <${a.panel}>
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
-        <${TAGS.group} caption="Options">
+        <${a.group} caption="Options">
           <div style="display:grid; gap:8px;">
-            <${TAGS.checkbox} checked id="opt-trim">Trim whitespace</${TAGS.checkbox}>
-            <${TAGS.checkbox} id="opt-links">Include links</${TAGS.checkbox}>
-            <${TAGS.checkbox} checked id="opt-visible">Only visible nodes</${TAGS.checkbox}>
+            <${a.checkbox} checked id="opt-trim">Trim whitespace</${a.checkbox}>
+            <${a.checkbox} id="opt-links">Include links</${a.checkbox}>
+            <${a.checkbox} checked id="opt-visible">Only visible nodes</${a.checkbox}>
             <div style="display:grid; gap:6px; margin-top:4px;">
-              <${TAGS.radio} name="mode" value="text" checked>Text</${TAGS.radio}>
-              <${TAGS.radio} name="mode" value="html">HTML</${TAGS.radio}>
+              <${a.radio} name="mode" value="text" checked>Text</${a.radio}>
+              <${a.radio} name="mode" value="html">HTML</${a.radio}>
             </div>
           </div>
-        </${TAGS.group}>
+        </${a.group}>
 
-        <${TAGS.group} caption="Output">
-          <${TAGS.tabs} id="output-tabs">
-            <${TAGS.tabPanel} label="Result" selected>
-              <${TAGS.textarea} id="result-output" rows="6" placeholder="Extraction result"></${TAGS.textarea}>
-            </${TAGS.tabPanel}>
-            <${TAGS.tabPanel} label="History">
-              <${TAGS.listbox} id="history-list">
+        <${a.group} caption="Output">
+          <${a.tabs} id="output-tabs">
+            <${a.tabPanel} label="Result" selected>
+              <${a.textarea} id="result-output" rows="6" placeholder="Extraction result"></${a.textarea}>
+            </${a.tabPanel}>
+            <${a.tabPanel} label="History">
+              <${a.listbox} id="history-list">
                 <div role="option" aria-selected="true" data-value="run-1">Run #1</div>
                 <div role="option" data-value="run-2">Run #2</div>
                 <div role="option" data-value="run-3">Run #3</div>
-              </${TAGS.listbox}>
-            </${TAGS.tabPanel}>
-          </${TAGS.tabs}>
-        </${TAGS.group}>
+              </${a.listbox}>
+            </${a.tabPanel}>
+          </${a.tabs}>
+        </${a.group}>
       </div>
-    </${TAGS.panel}>
+    </${a.panel}>
 
-    <${TAGS.group} caption="Actions">
+    <${a.group} caption="Actions">
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; align-items:center;">
         <div style="display:grid; gap:8px;">
           <label style="display:grid; gap:4px;">Preset
-            <${TAGS.select} id="preset-select">
+            <${a.select} id="preset-select">
               <option value="quick" selected>Quick</option>
               <option value="balanced">Balanced</option>
               <option value="full">Full</option>
-            </${TAGS.select}>
+            </${a.select}>
           </label>
           <label style="display:grid; gap:4px;">Confidence
-            <${TAGS.range} id="confidence-range" min="0" max="100" value="65"></${TAGS.range}>
+            <${a.range} id="confidence-range" min="0" max="100" value="65"></${a.range}>
           </label>
         </div>
         <div style="display:grid; gap:8px;">
-          <${TAGS.progress} id="run-progress" value="0" max="100"></${TAGS.progress}>
+          <${a.progress} id="run-progress" value="0" max="100"></${a.progress}>
           <div style="display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px;">
-            <${TAGS.button} id="action-run">Run</${TAGS.button}>
-            <${TAGS.button} id="action-close">Close</${TAGS.button}>
+            <${a.button} id="action-run">Run</${a.button}>
+            <${a.button} id="action-close">Close</${a.button}>
           </div>
         </div>
       </div>
-    </${TAGS.group}>
-  `;
-  win.append(menubar, toolbar, body, status);
-  const statusMain = () => status.querySelector("#status-main");
-  const statusCount = () => status.querySelector("#status-count");
-  const statusMode = () => status.querySelector("#status-mode");
-  const setStatus = (text) => {
-    statusMain().textContent = text;
-  };
-  const setMode = (mode) => {
-    statusMode().textContent = mode;
-    body.dataset.mode = mode;
-    if (mode === "Compact") {
-      body.style.gap = "8px";
-    } else {
-      body.style.gap = "12px";
-    }
-  };
-  const close = () => win.requestClose();
-  const run = () => {
-    setStatus("Running...");
-    const progress = body.querySelector("#run-progress");
-    let value = Number(progress.getAttribute("value") || "0");
-    value = Math.min(100, value + 35);
-    progress.setAttribute("value", String(value));
-    const output = body.querySelector("#result-output");
-    output.value = `Extracted ${value} records from ${body.querySelector("#target-input").value || "current page"}.`;
-    statusCount().textContent = `${Math.ceil(value / 10)} selected`;
-    setStatus(value >= 100 ? "Completed" : "Running step complete");
-  };
-  menubar.commandRegistry.register({ id: "tool.run", label: "Run", run });
-  menubar.commandRegistry.register({ id: "tool.reset", label: "Reset", run: () => {
-    body.querySelector("#run-progress").setAttribute("value", "0");
-    body.querySelector("#result-output").value = "";
-    setStatus("Ready");
-    statusCount().textContent = "0 selected";
-  } });
-  menubar.commandRegistry.register({ id: "tool.close", label: "Close", run: close });
-  menubar.commandRegistry.register({ id: "view.compact", label: "Compact", run: () => setMode("Compact") });
-  menubar.commandRegistry.register({ id: "view.normal", label: "Normal", run: () => setMode("Normal") });
-  menubar.commandRegistry.register({ id: "help.about", label: "About", run: () => setStatus("AWW Bookmarklet Framework v1") });
-  toolbar.querySelector("#tool-run").addEventListener("click", run);
-  toolbar.querySelector("#tool-close").addEventListener("click", close);
-  toolbar.querySelector("#tool-refresh").addEventListener("click", () => setStatus("Refreshed target snapshot"));
-  body.querySelector("#target-refresh").addEventListener("click", () => setStatus("Target refreshed"));
-  body.querySelector("#target-pick").addEventListener("click", () => setStatus("Pick mode enabled"));
-  body.querySelector("#action-run").addEventListener("click", run);
-  body.querySelector("#action-close").addEventListener("click", close);
-  body.querySelector("#history-list").addEventListener("change", (event) => {
-    setStatus(`History selected: ${event.detail.value}`);
-  });
-  body.querySelectorAll(`${TAGS.radio}[name='mode']`).forEach((radio) => {
-    radio.addEventListener("change", () => {
-      if (radio.hasAttribute("checked"))
-        setStatus(`Mode switched to ${radio.getAttribute("value")}`);
-    });
-  });
-  body.querySelector("#confidence-range").addEventListener("input", (event) => {
-    statusCount().textContent = `${event.target.value}% confidence`;
-  });
-  return win;
-}
-
-// src/bookmarklet/index.js
-var serial = 0;
-function nextOwner(prefix = "bookmarklet-tool") {
-  serial += 1;
-  return `${prefix}-${serial}`;
-}
-function openBookmarkletWindow(builder, { ownerPrefix = "bookmarklet-tool", rect = null } = {}) {
-  registerAllComponents();
-  const owner = nextOwner(ownerPrefix);
-  const record = acquireDesktopRoot(owner);
-  const win = typeof builder === "function" ? builder() : buildExampleToolWindow();
-  if (rect)
-    win.setRect(rect);
-  record.root.append(win);
-  let released = false;
-  const release = () => {
-    if (released)
-      return;
-    released = true;
-    releaseDesktopRoot(owner);
-  };
-  win.addEventListener("awwbookmarklet-window-closed", release, { once: true });
-  win.addEventListener("awwbookmarklet-window-disconnected", release, { once: true });
-  win.addEventListener("awwbookmarklet-window-close-request", () => {
-    queueMicrotask(() => {
-      if (!win.isConnected)
-        release();
-    });
-  });
-  return win;
-}
-function bootstrapExampleTool() {
-  return openBookmarkletWindow(() => buildExampleToolWindow({ title: "Page Extraction Tool" }), {
-    ownerPrefix: "example-tool"
-  });
-}
-function shutdownAll() {
-  emergencyTeardown("*");
-}
-registerAllComponents();
-globalThis.awwtools = globalThis.awwtools || {};
-globalThis.awwtools.bookmarkletUi = {
-  openWindow: openBookmarkletWindow,
-  bootstrapExampleTool,
-  shutdownAll,
-  copyToClipboard,
-  showToast
-};
-globalThis.awwbookmarklet = globalThis.awwtools.bookmarkletUi;
-export {
-  shutdownAll,
-  openBookmarkletWindow,
-  bootstrapExampleTool
-};
-
-//# debugId=015722AC383C407F64756E2164756E21
-//# sourceMappingURL=index.js.map
+    </${a.group}>
+  `,e.append(o,r,n,i);let h=()=>i.querySelector("#status-main"),u=()=>i.querySelector("#status-count"),p=()=>i.querySelector("#status-mode"),m=(b)=>{h().textContent=b},M=(b)=>{if(p().textContent=b,n.dataset.mode=b,b==="Compact")n.style.gap="8px";else n.style.gap="12px"},S=()=>e.requestClose(),y=()=>{m("Running...");let b=n.querySelector("#run-progress"),f=Number(b.getAttribute("value")||"0");f=Math.min(100,f+35),b.setAttribute("value",String(f));let T=n.querySelector("#result-output");T.value=`Extracted ${f} records from ${n.querySelector("#target-input").value||"current page"}.`,u().textContent=`${Math.ceil(f/10)} selected`,m(f>=100?"Completed":"Running step complete")};return o.commandRegistry.register({id:"tool.run",label:"Run",run:y}),o.commandRegistry.register({id:"tool.reset",label:"Reset",run:()=>{n.querySelector("#run-progress").setAttribute("value","0"),n.querySelector("#result-output").value="",m("Ready"),u().textContent="0 selected"}}),o.commandRegistry.register({id:"tool.close",label:"Close",run:S}),o.commandRegistry.register({id:"view.compact",label:"Compact",run:()=>M("Compact")}),o.commandRegistry.register({id:"view.normal",label:"Normal",run:()=>M("Normal")}),o.commandRegistry.register({id:"help.about",label:"About",run:()=>m("AWW Bookmarklet Framework v1")}),r.querySelector("#tool-run").addEventListener("click",y),r.querySelector("#tool-close").addEventListener("click",S),r.querySelector("#tool-refresh").addEventListener("click",()=>m("Refreshed target snapshot")),n.querySelector("#target-refresh").addEventListener("click",()=>m("Target refreshed")),n.querySelector("#target-pick").addEventListener("click",()=>m("Pick mode enabled")),n.querySelector("#action-run").addEventListener("click",y),n.querySelector("#action-close").addEventListener("click",S),n.querySelector("#history-list").addEventListener("change",(b)=>{m(`History selected: ${b.detail.value}`)}),n.querySelectorAll(`${a.radio}[name='mode']`).forEach((b)=>{b.addEventListener("change",()=>{if(b.hasAttribute("checked"))m(`Mode switched to ${b.getAttribute("value")}`)})}),n.querySelector("#confidence-range").addEventListener("input",(b)=>{u().textContent=`${b.target.value}% confidence`}),e}function yo(t={}){return{text:String(t.text??""),html:t.html==null?"":String(t.html),imageBlob:t.imageBlob??null}}async function re(t={},e=globalThis){let o=yo(t);if(!o.text&&!o.html&&!o.imageBlob)return{ok:!1,status:"empty",reason:"No clipboard payload was provided.",fallbackText:""};let i=e.navigator?.clipboard,n=o.text||o.html;if(!i)return{ok:!1,status:"fallback",reason:"Clipboard API is unavailable.",fallbackText:n};try{if(o.html&&typeof i.write==="function"&&typeof e.ClipboardItem==="function"){let h=new e.ClipboardItem({"text/html":new Blob([o.html],{type:"text/html"}),"text/plain":new Blob([o.text||o.html],{type:"text/plain"})});return await i.write([h]),{ok:!0,status:"success",method:"write"}}if(o.imageBlob&&typeof i.write==="function"&&typeof e.ClipboardItem==="function"){let h=new e.ClipboardItem({[o.imageBlob.type||"image/png"]:o.imageBlob});return await i.write([h]),{ok:!0,status:"success",method:"write"}}if(typeof i.writeText==="function"&&n)return await i.writeText(n),{ok:!0,status:"success",method:"writeText"};return{ok:!1,status:"fallback",reason:"Clipboard API cannot write this payload.",fallbackText:n}}catch(h){return{ok:!1,status:"failed",reason:h?.message||"Clipboard write failed.",error:h,fallbackText:n}}}var St={[c.workspaceBg]:"rgba(0, 0, 0, 0)",[c.windowBg]:"#eef1f5",[c.panelBg]:"#f3f5f7",[c.titlebarActiveBg]:"#dce2e9",[c.titlebarInactiveBg]:"#cfd5dd",[c.titlebarFg]:"#121820",[c.borderStrong]:"#4f5966",[c.borderSubtle]:"#a8b0ba",[c.focusRing]:"#174f9c",[c.buttonBg]:"#edf1f5",[c.buttonFg]:"#111720",[c.buttonActiveBg]:"#d8dee6",[c.inputBg]:"#f8f9fa",[c.inputFg]:"#111720",[c.menuBg]:"#f3f5f7",[c.menuFg]:"#0e1621",[c.selectionBg]:"#1f5eae",[c.selectionFg]:"#f2f8ff",[c.statusbarBg]:"#e2e7ed",[c.appShellBg]:"#eef1f5",[c.surfaceRaisedBg]:"#fbfcfd",[c.surfaceInsetBg]:"#dfe4ea",[c.textMuted]:"#44505f",[c.textHelp]:"#5f6a78",[c.dividerColor]:"#c7cdd5",[c.infoBg]:"#e8f2ff",[c.infoFg]:"#18549e",[c.infoBorder]:"#8db4e8",[c.successBg]:"#e7f4eb",[c.successFg]:"#1e6a3a",[c.successBorder]:"#86ba91",[c.warningBg]:"#fff4d8",[c.warningFg]:"#76520c",[c.warningBorder]:"#d7ad4d",[c.dangerBg]:"#fff0ee",[c.dangerFg]:"#a12824",[c.dangerBorder]:"#da7b73",[c.overlayBackdrop]:"rgba(12, 18, 28, 0.38)",[c.overlayShadow]:"0 18px 44px rgba(0, 0, 0, 0.24)",[c.cardBg]:"#fbfcfe",[c.cardSelectedBg]:"#e8f1ff",[c.metricBg]:"#ffffff",[c.codeBg]:"#e8edf4",[c.codeFg]:"#172131",[c.shadowDepth]:"inset 1px 1px 0 #ffffff, inset -1px -1px 0 #a8b0ba",[c.frostOpacity]:"1",[c.space1]:"4px",[c.space2]:"8px",[c.space3]:"12px",[c.controlHeight]:"30px",[c.titleHeight]:"32px"};class Et{#t;constructor(t=St){this.#t={...t}}get tokens(){return{...this.#t}}setTheme(t){return this.#t={...this.#t,...t},this.tokens}applyTheme(t){for(let[e,o]of Object.entries(this.#t))t.style.setProperty(e,o)}}var C=new Et(St);class It{#t=new Set;#e=null;#o=1;#r;#a=!1;constructor(){if(this.#r=()=>this.clampAll(),window.addEventListener("resize",this.#r,{passive:!0}),window.visualViewport)window.visualViewport.addEventListener("resize",this.#r,{passive:!0}),window.visualViewport.addEventListener("scroll",this.#r,{passive:!0})}register(t){if(this.#a||this.#t.has(t))return;this.#t.add(t);let e=t.getRect();if(!e)t.setRect(this.getSpawnRect());else t.setRect(A(e));this.focus(t)}unregister(t){if(!this.#t.delete(t))return;if(this.#e===t){this.#e=null;let e=[...this.#t].at(-1)??null;if(e)this.focus(e)}}getSpawnRect(){return Bt(this.#t.size,L(),v)}focus(t){if(!this.#t.has(t))return;if(this.#e&&this.#e!==t)this.#e.setActive(!1);this.#e=t,t.setActive(!0),t.setZIndex(this.#o++)}clampAll(){for(let t of this.#t){let e=t.getRect();if(!e)continue;t.setRect(A(e))}}destroy(){if(this.#a)return;if(this.#a=!0,window.removeEventListener("resize",this.#r),window.visualViewport)window.visualViewport.removeEventListener("resize",this.#r),window.visualViewport.removeEventListener("scroll",this.#r);this.#t.clear(),this.#e=null}}function Mt(){if(!globalThis[k.rootsByVersion])globalThis[k.rootsByVersion]=new Map;return globalThis[k.rootsByVersion]}function Ao(t=x){let e=document.createElement(a.desktopRoot);e.dataset.version=t,document.documentElement.append(e),C.applyTheme(e);let o={version:t,root:e,manager:new It,owners:new Set,destroy(){this.manager.destroy(),this.root.remove(),this.owners.clear()}};return e.__awwManager=o.manager,o}function Tt(t="default-owner",e=x){let o=Mt(),r=o.get(e);if(!r||!r.root.isConnected)r=Ao(e),o.set(e,r);return r.owners.add(t),globalThis[k.lastAcquiredRoot]=r.root,globalThis[k.version]=e,r}function Lt(t="default-owner",e=x){let o=Mt(),r=o.get(e);if(!r)return;if(r.owners.delete(t),r.owners.size>0)return;if(r.destroy(),o.delete(e),globalThis[k.lastAcquiredRoot]===r.root)delete globalThis[k.lastAcquiredRoot]}function Pt(t=x){return Mt().get(t)??null}function ae(t=x){let e=Mt();if(t==="*"){for(let[r,i]of e)i.destroy(),e.delete(r);delete globalThis[k.lastAcquiredRoot];return}let o=e.get(t);if(!o)return;if(o.destroy(),e.delete(t),globalThis[k.lastAcquiredRoot]===o.root)delete globalThis[k.lastAcquiredRoot]}var Yt={logo:'<rect x="3" y="3" width="18" height="18" fill="currentColor" stroke="none"/><path d="M7 16V8h3l2 8 2-8h3v8" stroke="#f6f8fb"/><path d="M7 12h3M14 12h3" stroke="#f6f8fb"/>',window:'<rect x="4" y="5" width="16" height="14"/><path d="M4 9h16M7 7h1M10 7h1"/>',minimize:'<path d="M7 17h10"/>',maximize:'<rect x="7" y="7" width="10" height="10"/><path d="M10 4h10v10"/>',close:'<path d="M6 6l12 12M18 6L6 18"/>',menu:'<path d="M5 7h14M5 12h14M5 17h14"/>',panel:'<rect x="5" y="5" width="14" height="14"/><path d="M8 8h8M8 12h8M8 16h5"/>',back:'<path d="M14 6l-6 6 6 6M9 12h10"/>',forward:'<path d="M10 6l6 6-6 6M5 12h10"/>',refresh:'<path d="M18 8a7 7 0 1 0 1 6M18 4v4h-4"/>',search:'<circle cx="10" cy="10" r="5"/><path d="M14 14l6 6"/>',lock:'<rect x="6" y="10" width="12" height="10"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>',url:'<rect x="4" y="6" width="16" height="12"/><path d="M7 10h10M7 14h7"/>',link:'<path d="M10 8l2-2a4 4 0 0 1 6 6l-2 2M14 16l-2 2a4 4 0 0 1-6-6l2-2M9 15l6-6"/>',external:'<rect x="5" y="7" width="12" height="12"/><path d="M12 5h7v7M19 5l-8 8"/>',copyUrl:'<rect x="8" y="5" width="10" height="14"/><path d="M6 8H4v11h10v-2"/>',star:'<path d="M12 4l2.4 5 5.6.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.6-.8z"/>',fullscreen:'<path d="M5 10V5h5M14 5h5v5M19 14v5h-5M10 19H5v-5"/>',more:'<circle cx="6" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="18" cy="12" r="1" fill="currentColor" stroke="none"/>',capture:'<path d="M5 10V5h5M14 5h5v5M19 14v5h-5M10 19H5v-5M9 12h6"/>',console:'<rect x="4" y="6" width="16" height="12"/><path d="M7 10l3 2-3 2M12 15h5"/>',eye:'<path d="M3 12s3-5 9-5 9 5 9 5-3 5-9 5-9-5-9-5z"/><circle cx="12" cy="12" r="2"/>',upload:'<path d="M12 17V5M8 9l4-4 4 4M5 19h14"/>',dialog:'<rect x="5" y="6" width="14" height="12"/><path d="M5 10h14M8 8h1"/>',gear:'<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/>',sliders:'<path d="M5 7h14M5 12h14M5 17h14"/><rect x="8" y="5" width="3" height="4"/><rect x="14" y="10" width="3" height="4"/><rect x="6" y="15" width="3" height="4"/>',copy:'<rect x="8" y="5" width="10" height="14"/><path d="M6 8H4v11h10"/>',paste:'<path d="M9 5h6l1 3H8z"/><rect x="6" y="8" width="12" height="12"/>',cut:'<circle cx="7" cy="7" r="2"/><circle cx="7" cy="17" r="2"/><path d="M9 8l9 9M9 16l9-9"/>',edit:'<path d="M5 17l1 3 3-1 9-9-4-4zM13 7l4 4"/>',trash:'<path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13M10 10v7M14 10v7"/>',markdown:'<rect x="4" y="6" width="16" height="12"/><path d="M7 15V9l3 4 3-4v6M16 9v6M14 13l2 2 2-2"/>',folder:'<path d="M3 8h7l2 2h9v9H3z"/>',document:'<path d="M7 3h7l4 4v14H7zM14 3v5h4"/>',article:'<path d="M7 4h10v16H7zM10 8h4M10 12h4M10 16h4"/>',text:'<path d="M5 6h14M12 6v12M9 18h6"/>',image:'<rect x="5" y="6" width="14" height="12"/><path d="M7 16l4-5 3 3 2-2 3 4"/><circle cx="9" cy="9" r="1" fill="currentColor" stroke="none"/>',list:'<path d="M9 7h10M9 12h10M9 17h10"/><path d="M5 7h1M5 12h1M5 17h1"/>',table:'<rect x="4" y="5" width="16" height="14"/><path d="M4 10h16M4 15h16M10 5v14M15 5v14"/>',metrics:'<path d="M5 19V9M12 19V5M19 19v-7M3 19h18"/>',code:'<path d="M8 8l-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/>',note:'<path d="M6 4h12v14l-4 3H6zM14 18v3M9 8h6M9 12h6"/>',info:'<circle cx="12" cy="12" r="9"/><path d="M12 10v7M12 7h.01"/>',success:'<circle cx="12" cy="12" r="9"/><path d="M7 12l3 3 7-7"/>',warning:'<path d="M12 4l9 16H3zM12 9v5M12 17h.01"/>',error:'<circle cx="12" cy="12" r="9"/><path d="M8 8l8 8M16 8l-8 8"/>',neutral:'<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>',selected:'<rect x="5" y="5" width="14" height="14"/><path d="M8 12l3 3 5-6"/>',unselected:'<rect x="5" y="5" width="14" height="14"/>',radioSelected:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>',radio:'<circle cx="12" cy="12" r="8"/>',progress:'<rect x="5" y="9" width="14" height="6"/><path d="M6 12h8"/>',progressIndeterminate:'<rect x="5" y="9" width="14" height="6"/><path d="M7 14l4-4M12 14l4-4"/>',sync:'<path d="M18 8a7 7 0 0 0-12-1M6 4v4h4M6 16a7 7 0 0 0 12 1M18 20v-4h-4"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/>',draft:'<path d="M6 4h12v16H6zM9 8h6M9 12h4"/><path d="M16 16l3 3"/>',shield:'<path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 12l2 2 4-5"/>',blocked:'<circle cx="12" cy="12" r="9"/><path d="M6 18L18 6"/>',frameBlocked:'<path d="M5 10V5h5M14 5h5v5M19 14v5h-5M10 19H5v-5" stroke-dasharray="4 3"/>',accessBlocked:'<rect x="6" y="10" width="12" height="10"/><path d="M8 10V7a4 4 0 0 1 8 0v3M9 15h6"/>',browserBlocked:'<rect x="4" y="6" width="16" height="12"/><path d="M4 10h16M8 14l8 0M9 17l6-6"/>',noResults:'<circle cx="10" cy="10" r="5"/><path d="M14 14l5 5M5 19h14" stroke-dasharray="3 3"/>',noCaptures:'<path d="M5 10V5h5M14 5h5v5M19 14v5h-5M10 19H5v-5" stroke-dasharray="4 3"/>',noSelection:'<rect x="5" y="5" width="14" height="14" stroke-dasharray="4 3"/>',retry:'<path d="M18 8a7 7 0 1 0 1 6M18 4v4h-4"/>',permissions:'<path d="M9 19a5 5 0 0 1 6-8M12 4a4 4 0 1 1 0 8M16 16h5M18.5 13.5v5"/>',grid:'<rect x="5" y="5" width="5" height="5"/><rect x="14" y="5" width="5" height="5"/><rect x="5" y="14" width="5" height="5"/><rect x="14" y="14" width="5" height="5"/>',filter:'<path d="M4 6h16l-6 7v5l-4 2v-7z"/>',sort:'<path d="M8 5v14M5 8l3-3 3 3M16 19V5M13 16l3 3 3-3"/>',columns:'<rect x="4" y="5" width="16" height="14"/><path d="M10 5v14M16 5v14"/>',pane:'<rect x="4" y="5" width="16" height="14"/><path d="M12 5v14"/>'},So=Object.freeze(Object.keys(Yt));function Eo(t,{label:e="",className:o="ui-icon"}={}){let r=Yt[t]||Yt.panel,i=e?`role="img" aria-label="${Mo(e)}"`:'aria-hidden="true"';return`<svg class="${o}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" ${i}>${r}</svg>`}function Mo(t){return String(t).replace(/[&<>"']/g,(e)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[e])}var ie=0;function se(t="bookmarklet-tool"){return ie+=1,`${t}-${ie}`}function To(t,e){if(!String(t||"").startsWith("awwbookmarklet-"))throw Error("Custom bookmarklet component tags must use the awwbookmarklet- prefix.");return Ct(t,e),customElements.get(t)}function Lo({title:t="AWW Tool",rect:e=null,closable:o=!0,content:r=null}={}){E();let i=document.createElement(a.window);if(i.setAttribute("title",t),o===!1)i.setAttribute("closable","false");if(e)i.setRect(e);if(r)if(typeof r==="string")i.innerHTML=N(r);else i.append(r);return i}function ne(t,{ownerPrefix:e="bookmarklet-tool",rect:o=null}={}){E();let r=se(e),i=Tt(r),n=typeof t==="function"?t():Rt();if(o)n.setRect(o);i.root.append(n);let h=!1,u=()=>{if(h)return;h=!0,Lt(r)};return n.addEventListener("awwbookmarklet-window-closed",u,{once:!0}),n.addEventListener("awwbookmarklet-window-disconnected",u,{once:!0}),n.addEventListener("awwbookmarklet-window-close-request",()=>{queueMicrotask(()=>{if(!n.isConnected)u()})}),n}function Co(t,{ownerPrefix:e="bookmarklet-tool",rect:o=null}={}){E();let r=se(e),i=Tt(r);if(o&&typeof t.setRect==="function")t.setRect(o);i.root.append(t);let n=!1,h=()=>{if(n)return;n=!0,Lt(r)};return t.addEventListener("awwbookmarklet-window-closed",h,{once:!0}),t.addEventListener("awwbookmarklet-window-disconnected",h,{once:!0}),t}function _o(){return ne(()=>Rt({title:"Page Extraction Tool"}),{ownerPrefix:"example-tool"})}function No(t,e=null){let o=C.setTheme(t||{}),r=e||Pt(x)?.root;if(r)C.applyTheme(r);return o}function Bo(){ae("*")}E();globalThis.awwtools=globalThis.awwtools||{};globalThis.awwtools.bookmarkletUi={version:x,tags:a,tokens:c,geometry:v,registerAllComponents:E,defineComponent:To,createWindow:Lo,openWindow:ne,mountWindow:Co,bootstrapExampleTool:_o,shutdownAll:Bo,acquireDesktopRoot:Tt,releaseDesktopRoot:Lt,getDesktopRecord:Pt,setTheme:No,themeService:C,ThemeService:Et,CommandRegistry:_,styles:{adoptStyles:l,base:d,css:s},url:{buildSearchUrl:kt,deriveHostname:xt,isHttpUrl:oe,normalizeSearchTemplate:$t,resolveNavigationInput:vt},sanitizeHtml:N,copyToClipboard:re,showToast:te};globalThis.awwbookmarklet=globalThis.awwtools.bookmarkletUi;export{Bo as shutdownAll,te as showToast,No as setTheme,N as sanitizeHtml,vt as resolveNavigationInput,Nt as resizeRectFromEdges,Lt as releaseDesktopRoot,E as registerAllComponents,H as rectToStyle,ne as openBookmarkletWindow,$t as normalizeSearchTemplate,Co as mountWindow,oe as isHttpUrl,Eo as iconSvg,L as getViewportRect,Bt as getSpawnRect,Pt as getDesktopRecord,xt as deriveHostname,Ct as defineOnce,To as defineBookmarkletComponent,C as defaultThemeService,s as css,Lo as createWindow,re as copyToClipboard,A as clampRect,kt as buildSearchUrl,_o as bootstrapExampleTool,l as adoptStyles,Tt as acquireDesktopRoot,Et as ThemeService,a as TAGS,c as PUBLIC_TOKENS,So as ICON_NAMES,x as FRAMEWORK_VERSION,St as DEFAULT_THEME,v as DEFAULT_GEOMETRY,_ as CommandRegistry,d as BASE_COMPONENT_STYLES,$ as AwwWindow,yt as AwwUrlPicker,rt as AwwToolbar,lt as AwwToast,z as AwwTextarea,K as AwwTabs,G as AwwTabPanel,Q as AwwStatusbar,it as AwwStatusLine,ct as AwwStateOverlay,ft as AwwShortcutHelp,U as AwwSelect,pt as AwwRichPreview,W as AwwRange,F as AwwRadio,j as AwwProgress,J as AwwPanel,At as AwwMetricCard,R as AwwMenubar,I as AwwMenu,mt as AwwManualCopy,X as AwwListbox,bt as AwwListItem,ht as AwwList,D as AwwInput,Y as AwwIconButton,Z as AwwGroup,at as AwwField,dt as AwwEmptyState,nt as AwwDialog,O as AwwDesktopRoot,gt as AwwCommandPalette,V as AwwCheckbox,ut as AwwCard,P as AwwButton,wt as AwwBrowserPanel,tt as AwwAppShell,st as AwwAlert};

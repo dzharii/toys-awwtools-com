@@ -30,6 +30,15 @@ describe("parse", () => {
     });
     expect(parseExpression("now as date").ast).toMatchObject({ type: "TransformModifier", transformName: "date", operator: "as" });
     expect(parseExpression("now -> time").ast).toMatchObject({ type: "TransformModifier", transformName: "time", operator: "->" });
+    expect(parseExpression("now as relative").ast).toMatchObject({ type: "TransformModifier", transformName: "relative" });
+    expect(parseExpression("90 seconds as duration words").ast).toMatchObject({ type: "TransformModifier", transformName: "durationWords" });
+    expect(parseExpression("90 seconds as compact duration").ast).toMatchObject({ type: "TransformModifier", transformName: "compactDuration" });
+    expect(parseExpression("2026-02-08 as ordinal date").ast).toMatchObject({
+      type: "TransformModifier",
+      transformName: "ordinalDate",
+      transformSpan: { startIndex: 14, endIndex: 26 },
+    });
+    expect(parseExpression("now AS Duration Words").ast).toMatchObject({ type: "TransformModifier", transformName: "durationWords" });
     expect(parseExpression("end of day 2026-02-08").ast).toMatchObject({ type: "AnchorExpression", anchorName: "endOfDay" });
     expect(parseExpression("start of day 2026-02-08").ast).toMatchObject({ type: "AnchorExpression", anchorName: "startOfDay" });
     expect(parseExpression("startOfDay(now, today)").ast).toMatchObject({ type: "FunctionCall", canonicalName: "startofday", args: [{}, {}] });
@@ -48,6 +57,34 @@ describe("parse", () => {
       type: "BusinessDaysBetween",
       start: { type: "PlainDateLiteral", value: "2026-02-08" },
       end: { type: "PlainDateLiteral", value: "2026-02-23" },
+    });
+  });
+
+  test("parses weekday expressions", () => {
+    expect(parseExpression("Monday").ast).toMatchObject({ type: "WeekdayExpression", weekdayName: "monday", direction: "bare" });
+    expect(parseExpression("next Tuesday").ast).toMatchObject({ type: "WeekdayExpression", weekdayName: "tuesday", direction: "next" });
+    expect(parseExpression("last Friday").ast).toMatchObject({ type: "WeekdayExpression", weekdayName: "friday", direction: "last" });
+    expect(parseExpression("this Wednesday").ast).toMatchObject({ type: "WeekdayExpression", weekdayName: "wednesday", direction: "this" });
+  });
+
+  test("parses holiday expressions", () => {
+    expect(parseExpression("Thanksgiving 2026").ast).toMatchObject({ type: "HolidayExpression", holidayName: "thanksgiving", year: { value: 2026 } });
+    expect(parseExpression("actual Independence Day 2026").ast).toMatchObject({ type: "HolidayExpression", mode: "actual" });
+    expect(parseExpression("observed Independence Day 2026").ast).toMatchObject({ type: "HolidayExpression", mode: "observed" });
+    expect(parseExpression("next holiday").ast).toMatchObject({ type: "HolidaySearchExpression", direction: "next", category: "federal" });
+    expect(parseExpression("last holiday").ast).toMatchObject({ type: "HolidaySearchExpression", direction: "last", category: "federal" });
+    expect(parseExpression("next observance").ast).toMatchObject({ type: "HolidaySearchExpression", direction: "next", category: "observance" });
+    expect(parseExpression("Monday after Thanksgiving 2026").ast).toMatchObject({
+      type: "WeekdayRelativeExpression",
+      weekdayName: "monday",
+      relation: "after",
+      target: { type: "HolidayExpression" },
+    });
+    expect(parseExpression("first business day after Thanksgiving 2026").ast).toMatchObject({
+      type: "BusinessDayRelativeExpression",
+      selector: "first",
+      relation: "after",
+      target: { type: "HolidayExpression" },
     });
   });
 
@@ -71,6 +108,7 @@ describe("parse", () => {
     expect(parseExpression("2026-02-08T25:00").error).toMatchObject({ code: "E_PARSE_INVALID_TIMESTAMP_LITERAL" });
     expect(parseExpression("now in").error).toMatchObject({ code: "E_PARSE_EXPECTED_ZONE_OR_PLACE" });
     expect(parseExpression("now ->").error).toMatchObject({ code: "E_PARSE_EXPECTED_TRANSFORM" });
+    expect(parseExpression("now as banana mode").error).toMatchObject({ code: "E_PARSE_UNKNOWN_TRANSFORM" });
     expect(parseExpression("banana").error).toMatchObject({ code: "E_PARSE_UNEXPECTED_TOKEN" });
     expect(parseExpression("1fortnight").error).toMatchObject({ code: "E_PARSE_UNKNOWN_UNIT" });
     expect(parseExpression("1 fortnight").error).toMatchObject({ code: "E_PARSE_UNKNOWN_UNIT" });

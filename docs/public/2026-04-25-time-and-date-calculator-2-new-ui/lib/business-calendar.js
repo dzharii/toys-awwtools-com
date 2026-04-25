@@ -1,5 +1,6 @@
 import { plainDateDayOfWeek, plainDateToString } from "./timezone.js";
 import { weekdayNameToIndex } from "./keywords.js";
+import { createUnitedStatesHolidayCalendar } from "./us-holidays.js";
 
 export function createDefaultBusinessCalendar() {
   return {
@@ -68,6 +69,21 @@ export function businessCalendarFromNagerHolidays(holidayRows = []) {
     weekendDays: ["SATURDAY", "SUNDAY"],
     holidays,
     description: "Mon-Fri with public holidays",
+  });
+}
+
+export function businessCalendarFromUnitedStatesFederalHolidays(years = []) {
+  const calendar = createUnitedStatesHolidayCalendar();
+  const holidayDates = [];
+  for (const year of years) {
+    if (Number.isInteger(year)) {
+      holidayDates.push(...calendar.observedFederalHolidayDates(year));
+    }
+  }
+  return createBusinessCalendar({
+    weekendDays: ["SATURDAY", "SUNDAY"],
+    holidays: holidayDates,
+    description: "Mon-Fri with observed US federal holidays",
   });
 }
 
