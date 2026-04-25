@@ -18,6 +18,21 @@ import { AwwListbox } from "./listbox.js";
 import { AwwGroup } from "./group.js";
 import { AwwPanel } from "./panel.js";
 import { AwwStatusbar } from "./statusbar.js";
+import { AwwAppShell } from "./app-shell.js";
+import { AwwToolbar } from "./toolbar.js";
+import { AwwField } from "./field.js";
+import { AwwStatusLine } from "./status-line.js";
+import { AwwAlert } from "./alert.js";
+import { AwwDialog } from "./dialog.js";
+import { AwwToast } from "./toast.js";
+import { AwwEmptyState } from "./empty-state.js";
+import { AwwStateOverlay } from "./state-overlay.js";
+import { AwwList } from "./list.js";
+import { AwwListItem } from "./list-item.js";
+import { AwwCard } from "./card.js";
+import { AwwRichPreview } from "./rich-preview.js";
+import { AwwBrowserPanel } from "./browser-panel.js";
+import { AwwManualCopy } from "./manual-copy.js";
 
 export function registerAllComponents() {
   defineMany([
@@ -39,6 +54,21 @@ export function registerAllComponents() {
     [TAGS.listbox, AwwListbox],
     [TAGS.group, AwwGroup],
     [TAGS.panel, AwwPanel],
-    [TAGS.statusbar, AwwStatusbar]
+    [TAGS.statusbar, AwwStatusbar],
+    [TAGS.appShell, AwwAppShell],
+    [TAGS.toolbar, AwwToolbar],
+    [TAGS.field, AwwField],
+    [TAGS.statusLine, AwwStatusLine],
+    [TAGS.alert, AwwAlert],
+    [TAGS.dialog, AwwDialog],
+    [TAGS.toast, AwwToast],
+    [TAGS.emptyState, AwwEmptyState],
+    [TAGS.stateOverlay, AwwStateOverlay],
+    [TAGS.list, AwwList],
+    [TAGS.listItem, AwwListItem],
+    [TAGS.card, AwwCard],
+    [TAGS.richPreview, AwwRichPreview],
+    [TAGS.browserPanel, AwwBrowserPanel],
+    [TAGS.manualCopy, AwwManualCopy]
   ]);
 }

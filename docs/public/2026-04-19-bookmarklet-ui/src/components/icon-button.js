@@ -17,6 +17,15 @@ const ICON_BUTTON_STYLES = css`
 
   button:focus-visible { outline: none; box-shadow: var(--_ring); }
   button:active { background: var(--awwbookmarklet-button-active-bg, #dbe3ee); }
+  button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  :host([tone="danger"]) button { border-color: var(--awwbookmarklet-danger-border, #d46a60); color: var(--awwbookmarklet-danger-fg, #8a1f17); }
+  :host([tone="warning"]) button { border-color: var(--awwbookmarklet-warning-border, #d9ad3b); color: var(--awwbookmarklet-warning-fg, #6d4b00); }
+  :host([tone="success"]) button { border-color: var(--awwbookmarklet-success-border, #72b98b); color: var(--awwbookmarklet-success-fg, #195b34); }
+  :host([pressed]) button {
+    background: var(--awwbookmarklet-button-active-bg, #dbe3ee);
+    box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.18);
+  }
 
   ::slotted(svg) {
     width: 16px;
@@ -28,7 +37,7 @@ const ICON_BUTTON_STYLES = css`
 `;
 
 export class AwwIconButton extends HTMLElement {
-  static observedAttributes = ["disabled"];
+  static observedAttributes = ["disabled", "busy", "pressed", "label", "aria-label"];
 
   constructor() {
     super();
@@ -39,9 +48,17 @@ export class AwwIconButton extends HTMLElement {
     this.control = shadow.querySelector("button");
     this.control.addEventListener("click", (event) => {
       event.stopPropagation();
-      if (this.disabled) {
+      if (this.disabled || this.busy) {
         event.preventDefault();
         return;
+      }
+      const commandId = this.getAttribute("command");
+      if (commandId) {
+        this.dispatchEvent(new CustomEvent("awwbookmarklet-command-request", {
+          bubbles: true,
+          composed: true,
+          detail: { commandId, source: this }
+        }));
       }
       this.dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true, cancelable: true }));
     });
@@ -55,7 +72,19 @@ export class AwwIconButton extends HTMLElement {
     this.toggleAttribute("disabled", Boolean(value));
   }
 
+  get busy() {
+    return this.hasAttribute("busy");
+  }
+
+  set busy(value) {
+    this.toggleAttribute("busy", Boolean(value));
+  }
+
   attributeChangedCallback() {
-    this.control.disabled = this.disabled;
+    this.control.disabled = this.disabled || this.busy;
+    const label = this.getAttribute("label") || this.getAttribute("aria-label") || "";
+    if (label) this.control.setAttribute("aria-label", label);
+    this.control.setAttribute("aria-pressed", this.hasAttribute("pressed") ? "true" : "false");
+    this.control.setAttribute("aria-busy", this.busy ? "true" : "false");
   }
 }

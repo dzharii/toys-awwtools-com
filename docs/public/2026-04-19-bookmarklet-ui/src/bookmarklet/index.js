@@ -1,5 +1,7 @@
 import { registerAllComponents } from "../components/register-all.js";
 import { acquireDesktopRoot, emergencyTeardown, releaseDesktopRoot } from "../core/runtime.js";
+import { copyToClipboard } from "../core/clipboard.js";
+import { showToast } from "../components/toast.js";
 import { buildExampleToolWindow } from "../demo/example-tool.js";
 
 let serial = 0;
@@ -52,6 +54,8 @@ globalThis.awwtools = globalThis.awwtools || {};
 globalThis.awwtools.bookmarkletUi = {
   openWindow: openBookmarkletWindow,
   bootstrapExampleTool,
-  shutdownAll
+  shutdownAll,
+  copyToClipboard,
+  showToast
 };
 globalThis.awwbookmarklet = globalThis.awwtools.bookmarkletUi;

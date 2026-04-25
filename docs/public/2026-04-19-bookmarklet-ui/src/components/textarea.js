@@ -19,7 +19,7 @@ const TEXTAREA_STYLES = css`
   textarea:disabled { opacity: 0.65; }
 `;
 
-const MIRRORED_ATTRIBUTES = ["value", "placeholder", "disabled", "rows", "name"];
+const MIRRORED_ATTRIBUTES = ["value", "placeholder", "disabled", "rows", "name", "required", "autocomplete", "spellcheck"];
 
 export class AwwTextarea extends HTMLElement {
   static observedAttributes = MIRRORED_ATTRIBUTES;
@@ -51,6 +51,11 @@ export class AwwTextarea extends HTMLElement {
   attributeChangedCallback(name, _prev, next) {
     if (name === "disabled") {
       this.control.disabled = this.hasAttribute("disabled");
+      return;
+    }
+
+    if (name === "required") {
+      this.control.required = this.hasAttribute("required");
       return;
     }
 

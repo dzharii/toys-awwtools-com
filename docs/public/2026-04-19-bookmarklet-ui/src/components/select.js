@@ -35,7 +35,7 @@ const SELECT_STYLES = css`
   select:disabled { opacity: 0.65; }
 `;
 
-const MIRRORED = ["disabled", "name", "value"];
+const MIRRORED = ["disabled", "name", "value", "required"];
 
 export class AwwSelect extends HTMLElement {
   static observedAttributes = MIRRORED;
@@ -74,6 +74,11 @@ export class AwwSelect extends HTMLElement {
   attributeChangedCallback(name, _prev, next) {
     if (name === "disabled") {
       this.control.disabled = this.hasAttribute("disabled");
+      return;
+    }
+
+    if (name === "required") {
+      this.control.required = this.hasAttribute("required");
       return;
     }
 

@@ -1,4 +1,4 @@
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/core/constants.js
+// src/core/constants.js
 var FRAMEWORK_VERSION = "0.1.0";
 var TAGS = {
   desktopRoot: "awwbookmarklet-desktop-root",
@@ -19,7 +19,22 @@ var TAGS = {
   listbox: "awwbookmarklet-listbox",
   group: "awwbookmarklet-group",
   panel: "awwbookmarklet-panel",
-  statusbar: "awwbookmarklet-statusbar"
+  statusbar: "awwbookmarklet-statusbar",
+  appShell: "awwbookmarklet-app-shell",
+  toolbar: "awwbookmarklet-toolbar",
+  field: "awwbookmarklet-field",
+  statusLine: "awwbookmarklet-status-line",
+  alert: "awwbookmarklet-alert",
+  dialog: "awwbookmarklet-dialog",
+  toast: "awwbookmarklet-toast",
+  emptyState: "awwbookmarklet-empty-state",
+  stateOverlay: "awwbookmarklet-state-overlay",
+  list: "awwbookmarklet-list",
+  listItem: "awwbookmarklet-list-item",
+  card: "awwbookmarklet-card",
+  richPreview: "awwbookmarklet-rich-preview",
+  browserPanel: "awwbookmarklet-browser-panel",
+  manualCopy: "awwbookmarklet-manual-copy"
 };
 var GLOBAL_SYMBOLS = {
   rootsByVersion: Symbol.for("awwtools.bookmarkletUi.overlayRootsByVersion"),
@@ -47,6 +62,30 @@ var PUBLIC_TOKENS = {
   selectionBg: "--awwbookmarklet-selection-bg",
   selectionFg: "--awwbookmarklet-selection-fg",
   statusbarBg: "--awwbookmarklet-statusbar-bg",
+  appShellBg: "--awwbookmarklet-app-shell-bg",
+  surfaceRaisedBg: "--awwbookmarklet-surface-raised-bg",
+  surfaceInsetBg: "--awwbookmarklet-surface-inset-bg",
+  textMuted: "--awwbookmarklet-text-muted",
+  textHelp: "--awwbookmarklet-text-help",
+  dividerColor: "--awwbookmarklet-divider-color",
+  infoBg: "--awwbookmarklet-info-bg",
+  infoFg: "--awwbookmarklet-info-fg",
+  infoBorder: "--awwbookmarklet-info-border",
+  successBg: "--awwbookmarklet-success-bg",
+  successFg: "--awwbookmarklet-success-fg",
+  successBorder: "--awwbookmarklet-success-border",
+  warningBg: "--awwbookmarklet-warning-bg",
+  warningFg: "--awwbookmarklet-warning-fg",
+  warningBorder: "--awwbookmarklet-warning-border",
+  dangerBg: "--awwbookmarklet-danger-bg",
+  dangerFg: "--awwbookmarklet-danger-fg",
+  dangerBorder: "--awwbookmarklet-danger-border",
+  overlayBackdrop: "--awwbookmarklet-overlay-backdrop",
+  overlayShadow: "--awwbookmarklet-overlay-shadow",
+  cardBg: "--awwbookmarklet-card-bg",
+  cardSelectedBg: "--awwbookmarklet-card-selected-bg",
+  codeBg: "--awwbookmarklet-code-bg",
+  codeFg: "--awwbookmarklet-code-fg",
   shadowDepth: "--awwbookmarklet-shadow-depth",
   frostOpacity: "--awwbookmarklet-frost-opacity",
   space1: "--awwbookmarklet-space-1",
@@ -66,7 +105,7 @@ var DEFAULT_GEOMETRY = {
   cascadeStep: 28
 };
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/core/define.js
+// src/core/define.js
 function defineOnce(tagName, ctor) {
   if (!customElements.get(tagName)) {
     customElements.define(tagName, ctor);
@@ -78,7 +117,7 @@ function defineMany(definitions) {
   }
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/core/styles.js
+// src/core/styles.js
 var canAdoptSheets = typeof ShadowRoot !== "undefined" && "adoptedStyleSheets" in ShadowRoot.prototype && typeof CSSStyleSheet !== "undefined" && "replaceSync" in CSSStyleSheet.prototype;
 var sheetCache = new Map;
 var textCache = new Map;
@@ -168,7 +207,7 @@ var BASE_COMPONENT_STYLES = css`
   }
 `;
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/desktop-root.js
+// src/components/desktop-root.js
 var DESKTOP_ROOT_STYLES = css`
   :host {
     position: fixed;
@@ -206,7 +245,7 @@ class AwwDesktopRoot extends HTMLElement {
   }
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/core/geometry.js
+// src/core/geometry.js
 function getViewportRect() {
   if (window.visualViewport) {
     return {
@@ -286,7 +325,7 @@ function rectToStyle(rect) {
   };
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/window.js
+// src/components/window.js
 var WINDOW_STYLES = css`
   :host {
     position: fixed;
@@ -698,7 +737,7 @@ class AwwWindow extends HTMLElement {
   }
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/core/commands.js
+// src/core/commands.js
 class CommandRegistry {
   #commands = new Map;
   register(command) {
@@ -744,7 +783,7 @@ class CommandRegistry {
   }
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/menubar.js
+// src/components/menubar.js
 var MENUBAR_STYLES = css`
   :host {
     display: block;
@@ -933,7 +972,7 @@ class AwwMenubar extends HTMLElement {
   }
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/menu.js
+// src/components/menu.js
 var MENU_STYLES = css`
   :host {
     position: fixed;
@@ -1175,7 +1214,7 @@ class AwwMenu extends HTMLElement {
   }
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/button.js
+// src/components/button.js
 var BUTTON_STYLES = css`
   :host { display: inline-block; }
 
@@ -1195,10 +1234,52 @@ var BUTTON_STYLES = css`
   button:active { background: var(--awwbookmarklet-button-active-bg, #dbe3ee); }
   button:focus-visible { outline: none; box-shadow: var(--_ring); }
   button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  :host([variant="primary"]) button {
+    background: var(--awwbookmarklet-selection-bg, #1f5eae);
+    color: var(--awwbookmarklet-selection-fg, #f2f8ff);
+  }
+
+  :host([variant="ghost"]) button {
+    background: transparent;
+  }
+
+  :host([variant="link"]) button {
+    min-width: 0;
+    border-color: transparent;
+    background: transparent;
+    color: var(--awwbookmarklet-info-fg, #123d7a);
+    text-decoration: underline;
+    padding-inline: 4px;
+  }
+
+  :host([tone="danger"]) button {
+    border-color: var(--awwbookmarklet-danger-border, #d46a60);
+    color: var(--awwbookmarklet-danger-fg, #8a1f17);
+  }
+
+  :host([tone="warning"]) button {
+    border-color: var(--awwbookmarklet-warning-border, #d9ad3b);
+    color: var(--awwbookmarklet-warning-fg, #6d4b00);
+  }
+
+  :host([tone="success"]) button {
+    border-color: var(--awwbookmarklet-success-border, #72b98b);
+    color: var(--awwbookmarklet-success-fg, #195b34);
+  }
+
+  :host([busy]) button {
+    cursor: progress;
+  }
+
+  :host([pressed]) button {
+    background: var(--awwbookmarklet-button-active-bg, #dbe3ee);
+    box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.18);
+  }
 `;
 
 class AwwButton extends HTMLElement {
-  static observedAttributes = ["disabled"];
+  static observedAttributes = ["disabled", "busy", "pressed"];
   constructor() {
     super();
     const shadow = this.attachShadow({ mode: "open" });
@@ -1207,9 +1288,17 @@ class AwwButton extends HTMLElement {
     this.control = shadow.querySelector("button");
     this.control.addEventListener("click", (event) => {
       event.stopPropagation();
-      if (this.disabled) {
+      if (this.disabled || this.busy) {
         event.preventDefault();
         return;
+      }
+      const commandId = this.getAttribute("command");
+      if (commandId) {
+        this.dispatchEvent(new CustomEvent("awwbookmarklet-command-request", {
+          bubbles: true,
+          composed: true,
+          detail: { commandId, source: this }
+        }));
       }
       this.dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true, cancelable: true }));
     });
@@ -1220,12 +1309,20 @@ class AwwButton extends HTMLElement {
   set disabled(value) {
     this.toggleAttribute("disabled", Boolean(value));
   }
+  get busy() {
+    return this.hasAttribute("busy");
+  }
+  set busy(value) {
+    this.toggleAttribute("busy", Boolean(value));
+  }
   attributeChangedCallback() {
-    this.control.disabled = this.disabled;
+    this.control.disabled = this.disabled || this.busy;
+    this.control.setAttribute("aria-pressed", this.hasAttribute("pressed") ? "true" : "false");
+    this.control.setAttribute("aria-busy", this.busy ? "true" : "false");
   }
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/icon-button.js
+// src/components/icon-button.js
 var ICON_BUTTON_STYLES = css`
   :host { display: inline-block; }
 
@@ -1243,6 +1340,15 @@ var ICON_BUTTON_STYLES = css`
 
   button:focus-visible { outline: none; box-shadow: var(--_ring); }
   button:active { background: var(--awwbookmarklet-button-active-bg, #dbe3ee); }
+  button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  :host([tone="danger"]) button { border-color: var(--awwbookmarklet-danger-border, #d46a60); color: var(--awwbookmarklet-danger-fg, #8a1f17); }
+  :host([tone="warning"]) button { border-color: var(--awwbookmarklet-warning-border, #d9ad3b); color: var(--awwbookmarklet-warning-fg, #6d4b00); }
+  :host([tone="success"]) button { border-color: var(--awwbookmarklet-success-border, #72b98b); color: var(--awwbookmarklet-success-fg, #195b34); }
+  :host([pressed]) button {
+    background: var(--awwbookmarklet-button-active-bg, #dbe3ee);
+    box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.18);
+  }
 
   ::slotted(svg) {
     width: 16px;
@@ -1254,7 +1360,7 @@ var ICON_BUTTON_STYLES = css`
 `;
 
 class AwwIconButton extends HTMLElement {
-  static observedAttributes = ["disabled"];
+  static observedAttributes = ["disabled", "busy", "pressed", "label", "aria-label"];
   constructor() {
     super();
     const shadow = this.attachShadow({ mode: "open" });
@@ -1263,9 +1369,17 @@ class AwwIconButton extends HTMLElement {
     this.control = shadow.querySelector("button");
     this.control.addEventListener("click", (event) => {
       event.stopPropagation();
-      if (this.disabled) {
+      if (this.disabled || this.busy) {
         event.preventDefault();
         return;
+      }
+      const commandId = this.getAttribute("command");
+      if (commandId) {
+        this.dispatchEvent(new CustomEvent("awwbookmarklet-command-request", {
+          bubbles: true,
+          composed: true,
+          detail: { commandId, source: this }
+        }));
       }
       this.dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true, cancelable: true }));
     });
@@ -1276,12 +1390,23 @@ class AwwIconButton extends HTMLElement {
   set disabled(value) {
     this.toggleAttribute("disabled", Boolean(value));
   }
+  get busy() {
+    return this.hasAttribute("busy");
+  }
+  set busy(value) {
+    this.toggleAttribute("busy", Boolean(value));
+  }
   attributeChangedCallback() {
-    this.control.disabled = this.disabled;
+    this.control.disabled = this.disabled || this.busy;
+    const label = this.getAttribute("label") || this.getAttribute("aria-label") || "";
+    if (label)
+      this.control.setAttribute("aria-label", label);
+    this.control.setAttribute("aria-pressed", this.hasAttribute("pressed") ? "true" : "false");
+    this.control.setAttribute("aria-busy", this.busy ? "true" : "false");
   }
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/input.js
+// src/components/input.js
 var INPUT_STYLES = css`
   :host { display: inline-block; min-width: 140px; }
 
@@ -1299,7 +1424,7 @@ var INPUT_STYLES = css`
   input:focus-visible { outline: none; box-shadow: var(--_ring); }
   input:disabled { opacity: 0.65; }
 `;
-var MIRRORED_ATTRIBUTES = ["value", "placeholder", "disabled", "type", "name"];
+var MIRRORED_ATTRIBUTES = ["value", "placeholder", "disabled", "type", "name", "required", "min", "max", "step", "autocomplete", "spellcheck"];
 
 class AwwInput extends HTMLElement {
   static observedAttributes = MIRRORED_ATTRIBUTES;
@@ -1337,6 +1462,10 @@ class AwwInput extends HTMLElement {
       this.control.disabled = this.hasAttribute("disabled");
       return;
     }
+    if (name === "required") {
+      this.control.required = this.hasAttribute("required");
+      return;
+    }
     if (name === "value") {
       this.control.value = next ?? "";
       return;
@@ -1349,7 +1478,7 @@ class AwwInput extends HTMLElement {
   }
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/textarea.js
+// src/components/textarea.js
 var TEXTAREA_STYLES = css`
   :host { display: inline-block; min-width: 220px; }
 
@@ -1368,7 +1497,7 @@ var TEXTAREA_STYLES = css`
   textarea:focus-visible { outline: none; box-shadow: var(--_ring); }
   textarea:disabled { opacity: 0.65; }
 `;
-var MIRRORED_ATTRIBUTES2 = ["value", "placeholder", "disabled", "rows", "name"];
+var MIRRORED_ATTRIBUTES2 = ["value", "placeholder", "disabled", "rows", "name", "required", "autocomplete", "spellcheck"];
 
 class AwwTextarea extends HTMLElement {
   static observedAttributes = MIRRORED_ATTRIBUTES2;
@@ -1406,6 +1535,10 @@ class AwwTextarea extends HTMLElement {
       this.control.disabled = this.hasAttribute("disabled");
       return;
     }
+    if (name === "required") {
+      this.control.required = this.hasAttribute("required");
+      return;
+    }
     if (name === "value") {
       this.control.value = next ?? "";
       return;
@@ -1418,7 +1551,7 @@ class AwwTextarea extends HTMLElement {
   }
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/checkbox.js
+// src/components/checkbox.js
 var CHECKBOX_STYLES = css`
   :host { display: inline-block; }
 
@@ -1501,7 +1634,7 @@ class AwwCheckbox extends HTMLElement {
   }
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/radio.js
+// src/components/radio.js
 var RADIO_STYLES = css`
   :host { display: inline-block; }
 
@@ -1600,7 +1733,7 @@ class AwwRadio extends HTMLElement {
   }
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/select.js
+// src/components/select.js
 var SELECT_STYLES = css`
   :host { display: inline-block; min-width: 160px; }
 
@@ -1635,7 +1768,7 @@ var SELECT_STYLES = css`
   select:focus-visible { outline: none; box-shadow: var(--_ring); }
   select:disabled { opacity: 0.65; }
 `;
-var MIRRORED3 = ["disabled", "name", "value"];
+var MIRRORED3 = ["disabled", "name", "value", "required"];
 
 class AwwSelect extends HTMLElement {
   static observedAttributes = MIRRORED3;
@@ -1678,6 +1811,10 @@ class AwwSelect extends HTMLElement {
       this.control.disabled = this.hasAttribute("disabled");
       return;
     }
+    if (name === "required") {
+      this.control.required = this.hasAttribute("required");
+      return;
+    }
     if (name === "value") {
       this.control.value = next ?? "";
       return;
@@ -1708,7 +1845,7 @@ class AwwSelect extends HTMLElement {
   }
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/range.js
+// src/components/range.js
 var RANGE_STYLES = css`
   :host { display: inline-block; min-width: 160px; }
 
@@ -1770,7 +1907,7 @@ class AwwRange extends HTMLElement {
   }
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/progress.js
+// src/components/progress.js
 var PROGRESS_STYLES = css`
   :host { display: inline-block; min-width: 160px; }
 
@@ -1829,7 +1966,7 @@ class AwwProgress extends HTMLElement {
   }
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/tabs.js
+// src/components/tabs.js
 var TABS_STYLES = css`
   :host { display: block; border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3); background: var(--awwbookmarklet-panel-bg, #f8fafc); }
 
@@ -1985,7 +2122,7 @@ class AwwTabs extends HTMLElement {
   };
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/listbox.js
+// src/components/listbox.js
 var LISTBOX_STYLES = css`
   :host { display: block; }
 
@@ -2122,7 +2259,7 @@ class AwwListbox extends HTMLElement {
   };
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/group.js
+// src/components/group.js
 var GROUP_STYLES = css`
   :host { display: block; }
 
@@ -2166,13 +2303,62 @@ class AwwGroup extends HTMLElement {
   }
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/panel.js
+// src/components/panel.js
 var PANEL_STYLES = css`
   :host {
     display: block;
     border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
     background: var(--awwbookmarklet-panel-bg, #f8fafc);
     padding: var(--awwbookmarklet-space-2, 8px);
+  }
+
+  section {
+    display: grid;
+    gap: var(--awwbookmarklet-space-2, 8px);
+    min-width: 0;
+  }
+
+  .header {
+    display: none;
+    align-items: start;
+    justify-content: space-between;
+    gap: var(--awwbookmarklet-space-2, 8px);
+    border-bottom: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    padding-bottom: 6px;
+  }
+
+  :host([data-has-header="true"]) .header {
+    display: flex;
+  }
+
+  .heading {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .title {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .subtitle {
+    color: var(--awwbookmarklet-text-muted, #586272);
+    overflow-wrap: anywhere;
+  }
+
+  .body {
+    min-width: 0;
+  }
+
+  .footer {
+    display: none;
+    border-top: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    padding-top: 6px;
+  }
+
+  :host([data-has-footer="true"]) .footer {
+    display: block;
   }
 `;
 
@@ -2181,11 +2367,39 @@ class AwwPanel extends HTMLElement {
     super();
     const shadow = this.attachShadow({ mode: "open" });
     adoptStyles(shadow, [BASE_COMPONENT_STYLES, PANEL_STYLES]);
-    shadow.innerHTML = `<section part="panel"><slot></slot></section>`;
+    shadow.innerHTML = `
+      <section part="panel">
+        <header class="header" part="header">
+          <div class="heading" part="heading">
+            <div class="title" part="title"><slot name="title"></slot></div>
+            <div class="subtitle" part="subtitle"><slot name="subtitle"></slot></div>
+          </div>
+          <div part="actions"><slot name="actions"></slot></div>
+        </header>
+        <div class="body" part="body"><slot></slot></div>
+        <footer class="footer" part="footer"><slot name="footer"></slot></footer>
+      </section>
+    `;
+    this.titleSlot = shadow.querySelector("slot[name='title']");
+    this.subtitleSlot = shadow.querySelector("slot[name='subtitle']");
+    this.actionsSlot = shadow.querySelector("slot[name='actions']");
+    this.footerSlot = shadow.querySelector("slot[name='footer']");
+    [this.titleSlot, this.subtitleSlot, this.actionsSlot, this.footerSlot].forEach((slot) => {
+      slot.addEventListener("slotchange", () => this.#sync());
+    });
+  }
+  connectedCallback() {
+    this.#sync();
+  }
+  #sync() {
+    const hasHeader = [this.titleSlot, this.subtitleSlot, this.actionsSlot].some((slot) => slot.assignedNodes({ flatten: true }).length > 0);
+    const hasFooter = this.footerSlot.assignedNodes({ flatten: true }).length > 0;
+    this.dataset.hasHeader = hasHeader ? "true" : "false";
+    this.dataset.hasFooter = hasFooter ? "true" : "false";
   }
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/statusbar.js
+// src/components/statusbar.js
 var STATUS_STYLES = css`
   :host {
     display: block;
@@ -2221,7 +2435,1696 @@ class AwwStatusbar extends HTMLElement {
   }
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/components/register-all.js
+// src/components/app-shell.js
+var APP_SHELL_STYLES = css`
+  :host {
+    display: block;
+    min-height: 0;
+    background: var(--awwbookmarklet-app-shell-bg, #eef1f5);
+    color: var(--awwbookmarklet-input-fg, #111720);
+  }
+
+  .shell {
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    min-height: 0;
+    gap: var(--awwbookmarklet-space-2, 8px);
+    padding: var(--awwbookmarklet-space-3, 12px);
+  }
+
+  .header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: var(--awwbookmarklet-space-3, 12px);
+    min-width: 0;
+    border-bottom: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    padding-bottom: var(--awwbookmarklet-space-2, 8px);
+  }
+
+  .heading {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .title {
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+
+  .subtitle {
+    color: var(--awwbookmarklet-text-muted, #586272);
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: end;
+    min-width: min(100%, 180px);
+  }
+
+  .status ::slotted(*) { width: 100%; }
+
+  .body {
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .footer {
+    border-top: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    padding-top: var(--awwbookmarklet-space-2, 8px);
+  }
+
+  @media (max-width: 520px) {
+    .header {
+      display: grid;
+    }
+
+    .actions {
+      justify-content: start;
+    }
+  }
+`;
+
+class AwwAppShell extends HTMLElement {
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, APP_SHELL_STYLES]);
+    shadow.innerHTML = `
+      <section class="shell" part="shell">
+        <header class="header" part="header">
+          <div class="heading" part="heading">
+            <div class="title" part="title"><slot name="title"></slot></div>
+            <div class="subtitle" part="subtitle"><slot name="subtitle"></slot></div>
+          </div>
+          <div class="actions" part="actions"><slot name="actions"></slot></div>
+        </header>
+        <div class="status" part="status"><slot name="status"></slot></div>
+        <main class="body" part="body"><slot name="body"></slot><slot></slot></main>
+        <footer class="footer" part="footer"><slot name="footer"></slot></footer>
+      </section>
+    `;
+  }
+}
+
+// src/core/component-utils.js
+var TONES = new Set(["neutral", "info", "success", "warning", "danger"]);
+var DENSITIES = new Set(["compact", "normal", "spacious"]);
+var ALIGNMENTS = new Set(["start", "center", "end", "between"]);
+var ORIENTATIONS = new Set(["horizontal", "vertical", "inline"]);
+var idSerial = 0;
+function createId(prefix = "aww") {
+  idSerial += 1;
+  return `${prefix}-${idSerial}`;
+}
+function normalizeTone(value, fallback = "neutral") {
+  return TONES.has(value) ? value : fallback;
+}
+function normalizeDensity(value, fallback = "normal") {
+  return DENSITIES.has(value) ? value : fallback;
+}
+function normalizeAlignment(value, fallback = "start") {
+  return ALIGNMENTS.has(value) ? value : fallback;
+}
+function normalizeOrientation(value, fallback = "horizontal") {
+  return ORIENTATIONS.has(value) ? value : fallback;
+}
+function isFocusable(element) {
+  if (!element || element.disabled || element.getAttribute?.("aria-disabled") === "true")
+    return false;
+  if (element.tabIndex >= 0)
+    return true;
+  return /^(A|BUTTON|INPUT|SELECT|TEXTAREA)$/.test(element.tagName) && !element.hasAttribute("disabled");
+}
+function getFocusableElements(root) {
+  if (!root?.querySelectorAll)
+    return [];
+  return [...root.querySelectorAll("a[href],button,input,select,textarea,[tabindex]")].filter(isFocusable);
+}
+function dispatchComponentEvent(target, name, detail = {}, options = {}) {
+  return target.dispatchEvent(new CustomEvent(name, {
+    bubbles: true,
+    composed: true,
+    cancelable: Boolean(options.cancelable),
+    detail
+  }));
+}
+
+// src/components/toolbar.js
+var TOOLBAR_STYLES = css`
+  :host {
+    display: flex;
+    max-width: 100%;
+    opacity: 1;
+  }
+
+  :host([hidden]) { display: none !important; }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--_gap, var(--awwbookmarklet-space-2, 8px));
+    width: 100%;
+    min-width: 0;
+  }
+
+  :host([orientation="vertical"]) .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  :host([wrap]) .toolbar {
+    flex-wrap: wrap;
+  }
+
+  :host([data-align="center"]) .toolbar { justify-content: center; }
+  :host([data-align="end"]) .toolbar { justify-content: flex-end; }
+  :host([data-align="between"]) .toolbar { justify-content: space-between; }
+
+  :host([data-density="compact"]) { --_gap: 4px; }
+  :host([data-density="spacious"]) { --_gap: 12px; }
+
+  :host([busy]) .toolbar {
+    cursor: progress;
+  }
+
+  :host([disabled]),
+  :host([busy]) {
+    opacity: 0.72;
+  }
+`;
+
+class AwwToolbar extends HTMLElement {
+  static observedAttributes = ["density", "align", "orientation", "disabled", "busy"];
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, TOOLBAR_STYLES]);
+    shadow.innerHTML = `<div class="toolbar" part="toolbar"><slot></slot></div>`;
+  }
+  connectedCallback() {
+    this.#sync();
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  #sync() {
+    this.dataset.density = normalizeDensity(this.getAttribute("density"));
+    this.dataset.align = normalizeAlignment(this.getAttribute("align"));
+    const orientation = normalizeOrientation(this.getAttribute("orientation"), "horizontal");
+    if (this.getAttribute("orientation") !== orientation)
+      this.setAttribute("orientation", orientation);
+    this.setAttribute("aria-disabled", this.hasAttribute("disabled") || this.hasAttribute("busy") ? "true" : "false");
+  }
+}
+
+// src/components/field.js
+var FIELD_STYLES = css`
+  :host {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  :host([wide]) {
+    width: 100%;
+  }
+
+  .field {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  :host([orientation="horizontal"]) .field {
+    grid-template-columns: minmax(120px, 0.38fr) minmax(0, 1fr);
+    gap: 8px 12px;
+    align-items: start;
+  }
+
+  :host([orientation="inline"]) .field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .label {
+    font-weight: 650;
+    line-height: 1.25;
+  }
+
+  .required {
+    color: var(--awwbookmarklet-danger-fg, #8a1f17);
+  }
+
+  .control-row {
+    display: flex;
+    align-items: stretch;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .control-row ::slotted(*) {
+    min-width: 0;
+  }
+
+  .main {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .message {
+    min-height: 16px;
+    color: var(--awwbookmarklet-text-help, #657184);
+    font-size: 12px;
+    line-height: 1.3;
+  }
+
+  :host([data-tone="danger"]) .message,
+  :host([data-invalid="true"]) .message {
+    color: var(--awwbookmarklet-danger-fg, #8a1f17);
+  }
+
+  :host([disabled]) {
+    opacity: 0.7;
+  }
+`;
+
+class AwwField extends HTMLElement {
+  static observedAttributes = ["label", "help", "error", "required", "tone", "orientation", "disabled"];
+  #ids = {
+    label: createId("aww-field-label"),
+    help: createId("aww-field-help"),
+    error: createId("aww-field-error")
+  };
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, FIELD_STYLES]);
+    shadow.innerHTML = `
+      <label class="field" part="field">
+        <span class="label" part="label" id="${this.#ids.label}"><slot name="label"></slot><span data-label-text></span><span class="required" aria-hidden="true"></span></span>
+        <span class="main" part="main">
+          <span class="control-row" part="control-row">
+            <slot name="prefix"></slot>
+            <slot></slot>
+            <slot name="suffix"></slot>
+            <slot name="actions"></slot>
+          </span>
+          <span class="message" part="message">
+            <span id="${this.#ids.error}" data-error-text></span>
+            <span id="${this.#ids.help}" data-help-text></span>
+            <slot name="error"></slot>
+            <slot name="help"></slot>
+          </span>
+        </span>
+      </label>
+    `;
+    this.controlSlot = shadow.querySelector("slot:not([name])");
+    this.labelText = shadow.querySelector("[data-label-text]");
+    this.helpText = shadow.querySelector("[data-help-text]");
+    this.errorText = shadow.querySelector("[data-error-text]");
+    this.requiredMark = shadow.querySelector(".required");
+    this.controlSlot.addEventListener("slotchange", () => this.#syncControl());
+  }
+  connectedCallback() {
+    this.#sync();
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  #sync() {
+    const orientation = normalizeOrientation(this.getAttribute("orientation"), "vertical");
+    if (this.getAttribute("orientation") !== orientation)
+      this.setAttribute("orientation", orientation);
+    const error = this.getAttribute("error") || "";
+    this.dataset.invalid = error ? "true" : "false";
+    this.dataset.tone = error ? "danger" : normalizeTone(this.getAttribute("tone"));
+    this.labelText.textContent = this.getAttribute("label") || "";
+    this.helpText.textContent = error ? "" : this.getAttribute("help") || "";
+    this.errorText.textContent = error;
+    this.requiredMark.textContent = this.hasAttribute("required") ? " *" : "";
+    this.#syncControl();
+  }
+  #syncControl() {
+    const control = this.controlSlot.assignedElements({ flatten: true })[0];
+    if (!control)
+      return;
+    if (!control.hasAttribute("aria-labelledby"))
+      control.setAttribute("aria-labelledby", this.#ids.label);
+    const descriptions = [];
+    if (this.getAttribute("help"))
+      descriptions.push(this.#ids.help);
+    if (this.getAttribute("error"))
+      descriptions.push(this.#ids.error);
+    if (descriptions.length)
+      control.setAttribute("aria-describedby", descriptions.join(" "));
+    else
+      control.removeAttribute("aria-describedby");
+    control.toggleAttribute("required", this.hasAttribute("required"));
+    control.toggleAttribute("disabled", this.hasAttribute("disabled"));
+    control.setAttribute("aria-invalid", this.getAttribute("error") ? "true" : "false");
+  }
+}
+
+// src/components/status-line.js
+var STATUS_LINE_STYLES = css`
+  :host {
+    display: flex;
+    align-items: center;
+    min-height: 22px;
+    gap: 6px;
+    color: var(--awwbookmarklet-text-muted, #586272);
+    line-height: 1.35;
+  }
+
+  :host([compact]) {
+    min-height: 18px;
+    font-size: 12px;
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border: 1px solid currentColor;
+    background: currentColor;
+    flex: 0 0 auto;
+  }
+
+  :host([busy]) .dot {
+    animation: pulse 0.9s steps(2, end) infinite;
+  }
+
+  :host([data-tone="info"]) { color: var(--awwbookmarklet-info-fg, #123d7a); }
+  :host([data-tone="success"]) { color: var(--awwbookmarklet-success-fg, #195b34); }
+  :host([data-tone="warning"]) { color: var(--awwbookmarklet-warning-fg, #6d4b00); }
+  :host([data-tone="danger"]) { color: var(--awwbookmarklet-danger-fg, #8a1f17); }
+
+  @keyframes pulse {
+    50% { opacity: 0.28; }
+  }
+`;
+
+class AwwStatusLine extends HTMLElement {
+  static observedAttributes = ["tone", "live", "busy"];
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, STATUS_LINE_STYLES]);
+    shadow.innerHTML = `<span class="dot" part="indicator" aria-hidden="true"></span><span part="text"><slot></slot></span>`;
+  }
+  connectedCallback() {
+    this.#sync();
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  update(message, options = {}) {
+    if (options.tone)
+      this.setAttribute("tone", options.tone);
+    if (options.live)
+      this.setAttribute("live", options.live);
+    this.textContent = String(message ?? "");
+  }
+  #sync() {
+    this.dataset.tone = normalizeTone(this.getAttribute("tone"));
+    const live = this.getAttribute("live") || "polite";
+    this.setAttribute("aria-live", ["off", "polite", "assertive"].includes(live) ? live : "polite");
+    this.setAttribute("aria-busy", this.hasAttribute("busy") ? "true" : "false");
+  }
+}
+
+// src/components/alert.js
+var ALERT_STYLES = css`
+  :host {
+    display: block;
+  }
+
+  :host(:not([open])) {
+    display: none;
+  }
+
+  .alert {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--awwbookmarklet-space-2, 8px);
+    align-items: start;
+    border: 1px solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    background: var(--_bg, var(--awwbookmarklet-surface-raised-bg, #fff));
+    color: var(--_fg, var(--awwbookmarklet-input-fg, #111720));
+    padding: var(--awwbookmarklet-space-2, 8px);
+  }
+
+  :host([compact]) .alert {
+    padding: 6px;
+  }
+
+  .icon {
+    width: 14px;
+    height: 14px;
+    border: 1px solid currentColor;
+    background: currentColor;
+    margin-top: 2px;
+  }
+
+  .content {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .title {
+    font-weight: 700;
+  }
+
+  .message {
+    line-height: 1.4;
+  }
+
+  .actions {
+    margin-top: 4px;
+  }
+
+  button {
+    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    min-width: 24px;
+    height: 24px;
+  }
+
+  :host([data-tone="info"]) { --_bg: var(--awwbookmarklet-info-bg, #e7f0ff); --_fg: var(--awwbookmarklet-info-fg, #123d7a); --_border: var(--awwbookmarklet-info-border, #7aa6e8); }
+  :host([data-tone="success"]) { --_bg: var(--awwbookmarklet-success-bg, #e5f5eb); --_fg: var(--awwbookmarklet-success-fg, #195b34); --_border: var(--awwbookmarklet-success-border, #72b98b); }
+  :host([data-tone="warning"]) { --_bg: var(--awwbookmarklet-warning-bg, #fff4d6); --_fg: var(--awwbookmarklet-warning-fg, #6d4b00); --_border: var(--awwbookmarklet-warning-border, #d9ad3b); }
+  :host([data-tone="danger"]) { --_bg: var(--awwbookmarklet-danger-bg, #ffe8e6); --_fg: var(--awwbookmarklet-danger-fg, #8a1f17); --_border: var(--awwbookmarklet-danger-border, #d46a60); }
+`;
+
+class AwwAlert extends HTMLElement {
+  static observedAttributes = ["tone", "title", "dismissible", "open"];
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, ALERT_STYLES]);
+    shadow.innerHTML = `
+      <section class="alert" part="alert">
+        <div class="icon" part="icon"><slot name="icon"></slot></div>
+        <div class="content" part="content">
+          <div class="title" part="title"><slot name="title"></slot><span data-title-text></span></div>
+          <div class="message" part="message"><slot></slot></div>
+          <div class="actions" part="actions"><slot name="actions"></slot></div>
+        </div>
+        <button type="button" part="close-button" aria-label="Dismiss" hidden>x</button>
+      </section>
+    `;
+    this.closeButton = shadow.querySelector("button");
+    this.titleText = shadow.querySelector("[data-title-text]");
+    this.closeButton.addEventListener("click", () => this.dismiss());
+  }
+  connectedCallback() {
+    if (!this.hasAttribute("open"))
+      this.setAttribute("open", "");
+    this.#sync();
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  dismiss() {
+    const accepted = dispatchComponentEvent(this, "awwbookmarklet-alert-dismiss", { source: this }, { cancelable: true });
+    if (accepted)
+      this.removeAttribute("open");
+  }
+  #sync() {
+    this.dataset.tone = normalizeTone(this.getAttribute("tone"), "info");
+    this.closeButton.hidden = !this.hasAttribute("dismissible");
+    this.titleText.textContent = this.getAttribute("title") || "";
+    this.setAttribute("role", this.dataset.tone === "danger" ? "alert" : "status");
+  }
+}
+
+// src/core/overlay.js
+var OVERLAY_CLASS = "awwbookmarklet-overlay-layer";
+function getOverlayLayer() {
+  if (typeof document === "undefined")
+    return null;
+  const root = globalThis[GLOBAL_SYMBOLS.lastAcquiredRoot] || document.body || document.documentElement;
+  let layer = root.querySelector?.(`:scope > .${OVERLAY_CLASS}`);
+  if (!layer) {
+    layer = document.createElement("div");
+    layer.className = OVERLAY_CLASS;
+    Object.assign(layer.style, {
+      position: "fixed",
+      inset: "0",
+      pointerEvents: "none",
+      zIndex: String(ROOT_Z_INDEX + 5000)
+    });
+    root.append(layer);
+  }
+  return layer;
+}
+function portalElement(element) {
+  const layer = getOverlayLayer();
+  if (!layer || element.parentNode === layer)
+    return null;
+  const restore = { parent: element.parentNode, nextSibling: element.nextSibling };
+  layer.append(element);
+  return restore;
+}
+function restoreElement(element, restore) {
+  if (!restore?.parent?.isConnected)
+    return;
+  const next = restore.nextSibling?.parentNode === restore.parent ? restore.nextSibling : null;
+  restore.parent.insertBefore(element, next);
+}
+
+// src/components/dialog.js
+var DIALOG_STYLES = css`
+  :host {
+    position: fixed;
+    inset: 0;
+    display: none;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  :host([open]) {
+    display: grid;
+    place-items: center;
+  }
+
+  .backdrop {
+    position: absolute;
+    inset: 0;
+    background: var(--awwbookmarklet-overlay-backdrop, rgba(12, 18, 28, 0.38));
+    pointer-events: auto;
+  }
+
+  .panel {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    width: min(680px, calc(100vw - 32px));
+    max-height: min(620px, calc(100vh - 32px));
+    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    background: var(--awwbookmarklet-panel-bg, #f8fafc);
+    box-shadow: var(--awwbookmarklet-overlay-shadow, 0 18px 44px rgba(0,0,0,0.24));
+    pointer-events: auto;
+  }
+
+  .header,
+  .footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--awwbookmarklet-space-2, 8px);
+    padding: var(--awwbookmarklet-space-2, 8px);
+    background: var(--awwbookmarklet-surface-raised-bg, #fff);
+  }
+
+  .header {
+    border-bottom: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+  }
+
+  .footer {
+    border-top: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+  }
+
+  .title {
+    font-weight: 700;
+  }
+
+  .body {
+    min-height: 0;
+    overflow: auto;
+    padding: var(--awwbookmarklet-space-3, 12px);
+  }
+
+  button {
+    min-width: 28px;
+    min-height: 26px;
+    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    background: var(--awwbookmarklet-button-bg, #f1f4f8);
+    color: var(--awwbookmarklet-button-fg, #111720);
+    font: inherit;
+  }
+`;
+
+class AwwDialog extends HTMLElement {
+  static observedAttributes = ["open", "label", "modal"];
+  #restore = null;
+  #previousFocus = null;
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, DIALOG_STYLES]);
+    shadow.innerHTML = `
+      <div class="backdrop" part="backdrop"></div>
+      <section class="panel" part="panel" role="dialog" aria-modal="true" tabindex="-1">
+        <header class="header" part="header">
+          <div class="title" part="title"><slot name="title"></slot></div>
+          <button type="button" part="close-button" aria-label="Close">x</button>
+        </header>
+        <div class="body" part="body"><slot></slot></div>
+        <footer class="footer" part="footer"><slot name="footer"></slot></footer>
+      </section>
+    `;
+    this.panel = shadow.querySelector(".panel");
+    this.backdrop = shadow.querySelector(".backdrop");
+    this.closeButton = shadow.querySelector("button");
+    this.closeButton.addEventListener("click", () => this.close("button"));
+    this.backdrop.addEventListener("click", () => {
+      if (this.hasAttribute("close-on-backdrop"))
+        this.close("backdrop");
+    });
+    this.addEventListener("keydown", (event) => this.#onKeyDown(event));
+  }
+  connectedCallback() {
+    this.#sync();
+  }
+  disconnectedCallback() {
+    restoreElement(this, this.#restore);
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  show() {
+    this.setAttribute("open", "");
+  }
+  close(reason = "api") {
+    const accepted = dispatchComponentEvent(this, "awwbookmarklet-dialog-cancel", { reason }, { cancelable: true });
+    if (!accepted)
+      return false;
+    this.removeAttribute("open");
+    dispatchComponentEvent(this, "awwbookmarklet-dialog-close", { reason });
+    return true;
+  }
+  #sync() {
+    this.panel.setAttribute("aria-label", this.getAttribute("label") || "Dialog");
+    if (this.hasAttribute("open")) {
+      if (!this.#restore)
+        this.#restore = portalElement(this);
+      this.#previousFocus ||= document.activeElement;
+      queueMicrotask(() => this.#focusInitial());
+      dispatchComponentEvent(this, "awwbookmarklet-dialog-open", { source: this });
+      return;
+    }
+    if (this.#restore) {
+      const previous = this.#previousFocus;
+      restoreElement(this, this.#restore);
+      this.#restore = null;
+      this.#previousFocus = null;
+      if (previous?.focus)
+        previous.focus();
+    }
+  }
+  #focusInitial() {
+    const focusable = getFocusableElements(this);
+    (focusable[0] || this.closeButton || this.panel).focus();
+  }
+  #onKeyDown(event) {
+    if (!this.hasAttribute("open"))
+      return;
+    if (event.key === "Escape" && this.getAttribute("close-on-escape") !== "false") {
+      event.preventDefault();
+      this.close("escape");
+      return;
+    }
+    if (event.key !== "Tab" || !this.hasAttribute("modal"))
+      return;
+    const focusable = getFocusableElements(this);
+    if (!focusable.length) {
+      event.preventDefault();
+      this.panel.focus();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+}
+
+// src/components/toast.js
+var TOAST_STYLES = css`
+  :host {
+    display: block;
+    pointer-events: auto;
+    min-width: 220px;
+    max-width: min(420px, calc(100vw - 24px));
+    border: 1px solid var(--_border, var(--awwbookmarklet-border-strong, #232a33));
+    background: var(--_bg, var(--awwbookmarklet-surface-raised-bg, #fff));
+    color: var(--_fg, var(--awwbookmarklet-input-fg, #111720));
+    box-shadow: var(--awwbookmarklet-overlay-shadow, 0 18px 44px rgba(0,0,0,0.24));
+    padding: var(--awwbookmarklet-space-2, 8px);
+  }
+
+  :host([data-tone="info"]) { --_bg: var(--awwbookmarklet-info-bg, #e7f0ff); --_fg: var(--awwbookmarklet-info-fg, #123d7a); --_border: var(--awwbookmarklet-info-border, #7aa6e8); }
+  :host([data-tone="success"]) { --_bg: var(--awwbookmarklet-success-bg, #e5f5eb); --_fg: var(--awwbookmarklet-success-fg, #195b34); --_border: var(--awwbookmarklet-success-border, #72b98b); }
+  :host([data-tone="warning"]) { --_bg: var(--awwbookmarklet-warning-bg, #fff4d6); --_fg: var(--awwbookmarklet-warning-fg, #6d4b00); --_border: var(--awwbookmarklet-warning-border, #d9ad3b); }
+  :host([data-tone="danger"]) { --_bg: var(--awwbookmarklet-danger-bg, #ffe8e6); --_fg: var(--awwbookmarklet-danger-fg, #8a1f17); --_border: var(--awwbookmarklet-danger-border, #d46a60); }
+
+  .toast {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+`;
+var activeToasts = new Map;
+function ensureStack() {
+  const layer = getOverlayLayer();
+  if (!layer)
+    return null;
+  let stack = layer.querySelector(":scope > [data-aww-toast-stack]");
+  if (!stack) {
+    stack = document.createElement("div");
+    stack.dataset.awwToastStack = "true";
+    Object.assign(stack.style, {
+      position: "fixed",
+      right: "12px",
+      bottom: "12px",
+      display: "grid",
+      gap: "8px",
+      justifyItems: "end",
+      pointerEvents: "none"
+    });
+    layer.append(stack);
+  }
+  return stack;
+}
+
+class AwwToast extends HTMLElement {
+  static observedAttributes = ["tone", "timeout"];
+  #timer = 0;
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, TOAST_STYLES]);
+    shadow.innerHTML = `<section class="toast" part="toast" role="status" aria-live="polite"><slot></slot></section>`;
+    this.addEventListener("mouseenter", () => clearTimeout(this.#timer));
+    this.addEventListener("mouseleave", () => this.startTimer());
+  }
+  connectedCallback() {
+    this.#sync();
+    this.startTimer();
+  }
+  disconnectedCallback() {
+    clearTimeout(this.#timer);
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  startTimer() {
+    clearTimeout(this.#timer);
+    const timeout = Number(this.getAttribute("timeout") || "2800");
+    if (timeout <= 0)
+      return;
+    this.#timer = setTimeout(() => this.remove(), timeout);
+  }
+  #sync() {
+    this.dataset.tone = normalizeTone(this.getAttribute("tone"), "info");
+  }
+}
+function showToast({ message = "", tone = "info", timeout = 2800, key = "" } = {}) {
+  const stack = ensureStack();
+  if (!stack)
+    return null;
+  let toast = key ? activeToasts.get(key) : null;
+  if (!toast?.isConnected) {
+    toast = document.createElement("awwbookmarklet-toast");
+    if (key)
+      activeToasts.set(key, toast);
+    stack.append(toast);
+  }
+  toast.setAttribute("tone", tone);
+  toast.setAttribute("timeout", String(timeout));
+  toast.textContent = String(message ?? "");
+  toast.startTimer?.();
+  return toast;
+}
+
+// src/components/empty-state.js
+var EMPTY_STYLES = css`
+  :host {
+    display: block;
+    min-height: 96px;
+    border: 1px dashed var(--awwbookmarklet-border-subtle, #9ba5b3);
+    background: var(--awwbookmarklet-surface-inset-bg, #e7ebf1);
+    color: var(--awwbookmarklet-text-muted, #586272);
+    padding: var(--awwbookmarklet-space-3, 12px);
+  }
+
+  .empty {
+    display: grid;
+    place-items: center;
+    gap: 6px;
+    min-height: inherit;
+    text-align: center;
+  }
+
+  .title {
+    color: var(--awwbookmarklet-input-fg, #111720);
+    font-weight: 700;
+  }
+
+  .description {
+    line-height: 1.4;
+  }
+
+  .actions {
+    margin-top: 4px;
+  }
+`;
+
+class AwwEmptyState extends HTMLElement {
+  static observedAttributes = ["title", "description"];
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, EMPTY_STYLES]);
+    shadow.innerHTML = `
+      <section class="empty" part="empty">
+        <div class="title" part="title"></div>
+        <div class="description" part="description"></div>
+        <div class="content" part="content"><slot></slot></div>
+        <div class="actions" part="actions"><slot name="actions"></slot></div>
+      </section>
+    `;
+    this.titleNode = shadow.querySelector(".title");
+    this.descriptionNode = shadow.querySelector(".description");
+  }
+  connectedCallback() {
+    this.#sync();
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  #sync() {
+    this.titleNode.textContent = this.getAttribute("title") || "Nothing to show";
+    this.descriptionNode.textContent = this.getAttribute("description") || "";
+  }
+}
+
+// src/components/state-overlay.js
+var STATE_STYLES = css`
+  :host {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    min-height: 96px;
+    background: color-mix(in srgb, var(--awwbookmarklet-surface-raised-bg, #fff) 86%, transparent);
+    border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    z-index: 2;
+  }
+
+  :host([hidden]) { display: none !important; }
+
+  .surface {
+    display: grid;
+    gap: 8px;
+    justify-items: center;
+    max-width: min(420px, calc(100% - 24px));
+    padding: var(--awwbookmarklet-space-3, 12px);
+    text-align: center;
+    color: var(--_fg, var(--awwbookmarklet-input-fg, #111720));
+  }
+
+  .indicator {
+    width: 18px;
+    height: 18px;
+    border: 2px solid currentColor;
+    background: transparent;
+  }
+
+  :host([state="loading"]) .indicator {
+    border-style: dashed;
+    animation: spin 0.9s steps(8, end) infinite;
+  }
+
+  :host([data-tone="info"]) { --_fg: var(--awwbookmarklet-info-fg, #123d7a); }
+  :host([data-tone="success"]) { --_fg: var(--awwbookmarklet-success-fg, #195b34); }
+  :host([data-tone="warning"]) { --_fg: var(--awwbookmarklet-warning-fg, #6d4b00); }
+  :host([data-tone="danger"]) { --_fg: var(--awwbookmarklet-danger-fg, #8a1f17); }
+
+  @keyframes spin {
+    to { rotate: 360deg; }
+  }
+`;
+var STATE_TONES = {
+  loading: "info",
+  empty: "neutral",
+  error: "danger",
+  blocked: "warning",
+  success: "success",
+  custom: "neutral"
+};
+
+class AwwStateOverlay extends HTMLElement {
+  static observedAttributes = ["state", "label", "tone"];
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, STATE_STYLES]);
+    shadow.innerHTML = `
+      <section class="surface" part="surface">
+        <div class="indicator" part="indicator" aria-hidden="true"></div>
+        <div class="label" part="label"></div>
+        <div part="actions"><slot name="actions"></slot></div>
+      </section>
+    `;
+    this.labelNode = shadow.querySelector(".label");
+  }
+  connectedCallback() {
+    this.#sync();
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  #sync() {
+    const state = this.getAttribute("state") || "loading";
+    const fallbackTone = STATE_TONES[state] || "neutral";
+    this.dataset.tone = normalizeTone(this.getAttribute("tone"), fallbackTone);
+    this.labelNode.textContent = this.getAttribute("label") || state;
+    this.setAttribute("role", state === "error" || state === "blocked" ? "alert" : "status");
+    this.setAttribute("aria-live", state === "error" || state === "blocked" ? "assertive" : "polite");
+  }
+}
+
+// src/components/list.js
+var LIST_STYLES = css`
+  :host {
+    display: block;
+  }
+
+  .list {
+    display: grid;
+    gap: var(--awwbookmarklet-space-2, 8px);
+  }
+
+  .empty[hidden] {
+    display: none;
+  }
+`;
+
+class AwwList extends HTMLElement {
+  static observedAttributes = ["empty-text"];
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, LIST_STYLES]);
+    shadow.innerHTML = `
+      <div class="list" part="list" role="list"><slot></slot></div>
+      <div class="empty" part="empty" hidden>
+        <slot name="empty"></slot>
+        <awwbookmarklet-empty-state></awwbookmarklet-empty-state>
+      </div>
+    `;
+    this.slot = shadow.querySelector("slot:not([name])");
+    this.empty = shadow.querySelector(".empty");
+    this.emptyState = shadow.querySelector("awwbookmarklet-empty-state");
+    this.slot.addEventListener("slotchange", () => this.#sync());
+  }
+  connectedCallback() {
+    this.#sync();
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  #sync() {
+    const items = this.slot.assignedElements({ flatten: true }).filter((node) => node.slot !== "empty");
+    this.empty.hidden = items.length > 0;
+    this.emptyState.setAttribute("title", this.getAttribute("empty-text") || "No items");
+  }
+}
+
+// src/components/list-item.js
+var LIST_ITEM_STYLES = css`
+  :host {
+    display: block;
+  }
+
+  .item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--awwbookmarklet-space-2, 8px);
+    align-items: start;
+    border: 1px solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    background: var(--_bg, var(--awwbookmarklet-card-bg, #fbfcfe));
+    padding: var(--awwbookmarklet-space-2, 8px);
+    color: var(--_fg, var(--awwbookmarklet-input-fg, #111720));
+  }
+
+  :host([compact]) .item { padding: 6px; }
+  :host([interactive]) .item,
+  :host([selectable]) .item { cursor: pointer; }
+  :host([selected]) .item { --_bg: var(--awwbookmarklet-card-selected-bg, #e8f1ff); --_border: var(--awwbookmarklet-selection-bg, #1f5eae); }
+  :host([disabled]) .item { opacity: 0.58; cursor: not-allowed; }
+
+  .main {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .title {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .meta,
+  .description,
+  .status {
+    color: var(--awwbookmarklet-text-muted, #586272);
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: end;
+    min-width: 0;
+  }
+
+  :host([data-tone="info"]) { --_border: var(--awwbookmarklet-info-border, #7aa6e8); }
+  :host([data-tone="success"]) { --_border: var(--awwbookmarklet-success-border, #72b98b); }
+  :host([data-tone="warning"]) { --_border: var(--awwbookmarklet-warning-border, #d9ad3b); }
+  :host([data-tone="danger"]) { --_border: var(--awwbookmarklet-danger-border, #d46a60); }
+
+  @media (max-width: 520px) {
+    .item {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .actions,
+    .trailing {
+      grid-column: 1 / -1;
+      justify-content: start;
+    }
+  }
+`;
+function isActionClick(event) {
+  const path = event.composedPath?.() || [];
+  return path.some((node) => {
+    if (!node?.slot)
+      return false;
+    return node.slot === "actions" || node.slot === "trailing";
+  });
+}
+
+class AwwListItem extends HTMLElement {
+  static observedAttributes = ["tone", "selected", "disabled", "interactive", "selectable"];
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, LIST_ITEM_STYLES]);
+    shadow.innerHTML = `
+      <article class="item" part="item" role="listitem" tabindex="-1">
+        <div part="leading"><slot name="leading"></slot></div>
+        <div class="main" part="main">
+          <div class="title" part="title"><slot name="title"></slot></div>
+          <div class="meta" part="meta"><slot name="meta"></slot></div>
+          <div part="thumbnail"><slot name="thumbnail"></slot></div>
+          <div class="description" part="description"><slot name="description"></slot><slot></slot></div>
+          <div class="status" part="status"><slot name="status"></slot></div>
+          <div part="footer"><slot name="footer"></slot></div>
+        </div>
+        <div class="trailing" part="trailing"><slot name="trailing"></slot></div>
+        <div class="actions" part="actions"><slot name="actions"></slot></div>
+      </article>
+    `;
+    this.surface = shadow.querySelector(".item");
+    this.surface.addEventListener("click", (event) => this.#onClick(event));
+    this.surface.addEventListener("keydown", (event) => this.#onKeyDown(event));
+  }
+  connectedCallback() {
+    this.#sync();
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  #sync() {
+    this.dataset.tone = normalizeTone(this.getAttribute("tone"));
+    this.surface.tabIndex = this.hasAttribute("interactive") || this.hasAttribute("selectable") ? 0 : -1;
+    this.surface.setAttribute("aria-selected", this.hasAttribute("selected") ? "true" : "false");
+    this.surface.setAttribute("aria-disabled", this.hasAttribute("disabled") ? "true" : "false");
+  }
+  #onClick(event) {
+    if (this.hasAttribute("disabled") || isActionClick(event))
+      return;
+    if (!this.hasAttribute("interactive") && !this.hasAttribute("selectable"))
+      return;
+    if (this.hasAttribute("selectable"))
+      this.toggleAttribute("selected", !this.hasAttribute("selected"));
+    dispatchComponentEvent(this, "awwbookmarklet-list-item-activate", {
+      selected: this.hasAttribute("selected"),
+      source: this
+    });
+  }
+  #onKeyDown(event) {
+    if (event.key !== "Enter" && event.key !== " ")
+      return;
+    event.preventDefault();
+    this.surface.click();
+  }
+}
+
+// src/components/card.js
+var CARD_STYLES = css`
+  :host {
+    display: block;
+  }
+
+  .card {
+    display: grid;
+    gap: var(--awwbookmarklet-space-2, 8px);
+    border: 1px solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    background: var(--_bg, var(--awwbookmarklet-card-bg, #fbfcfe));
+    padding: var(--awwbookmarklet-space-2, 8px);
+  }
+
+  .header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: var(--awwbookmarklet-space-2, 8px);
+    min-width: 0;
+  }
+
+  .heading {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .title { font-weight: 700; overflow-wrap: anywhere; }
+  .meta { color: var(--awwbookmarklet-text-muted, #586272); overflow-wrap: anywhere; }
+  .body { min-width: 0; line-height: 1.4; }
+  .footer { border-top: 1px solid var(--awwbookmarklet-divider-color, #c3cad4); padding-top: 6px; }
+
+  :host([selected]) .card { --_bg: var(--awwbookmarklet-card-selected-bg, #e8f1ff); --_border: var(--awwbookmarklet-selection-bg, #1f5eae); }
+  :host([data-tone="info"]) { --_border: var(--awwbookmarklet-info-border, #7aa6e8); }
+  :host([data-tone="success"]) { --_border: var(--awwbookmarklet-success-border, #72b98b); }
+  :host([data-tone="warning"]) { --_border: var(--awwbookmarklet-warning-border, #d9ad3b); }
+  :host([data-tone="danger"]) { --_border: var(--awwbookmarklet-danger-border, #d46a60); }
+`;
+
+class AwwCard extends HTMLElement {
+  static observedAttributes = ["tone"];
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, CARD_STYLES]);
+    shadow.innerHTML = `
+      <article class="card" part="card">
+        <div class="header" part="header">
+          <div class="heading" part="heading">
+            <div class="title" part="title"><slot name="title"></slot></div>
+            <div class="meta" part="meta"><slot name="meta"></slot></div>
+          </div>
+          <div part="actions"><slot name="actions"></slot></div>
+        </div>
+        <div part="media"><slot name="media"></slot></div>
+        <div class="body" part="body"><slot></slot></div>
+        <div class="footer" part="footer"><slot name="footer"></slot></div>
+      </article>
+    `;
+  }
+  connectedCallback() {
+    this.#sync();
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  #sync() {
+    this.dataset.tone = normalizeTone(this.getAttribute("tone"));
+  }
+}
+
+// src/core/sanitize.js
+var ALLOWED_TAGS = new Set([
+  "A",
+  "ABBR",
+  "B",
+  "BLOCKQUOTE",
+  "BR",
+  "CODE",
+  "DD",
+  "DIV",
+  "DL",
+  "DT",
+  "EM",
+  "H1",
+  "H2",
+  "H3",
+  "H4",
+  "H5",
+  "H6",
+  "HR",
+  "I",
+  "IMG",
+  "LI",
+  "OL",
+  "P",
+  "PRE",
+  "S",
+  "SPAN",
+  "STRONG",
+  "SUB",
+  "SUP",
+  "TABLE",
+  "TBODY",
+  "TD",
+  "TFOOT",
+  "TH",
+  "THEAD",
+  "TR",
+  "U",
+  "UL"
+]);
+var GLOBAL_ATTRS = new Set(["title", "aria-label", "aria-hidden", "role"]);
+var TABLE_ATTRS = new Set(["colspan", "rowspan"]);
+function isSafeUrl(value) {
+  const trimmed = String(value ?? "").trim().replace(/[\u0000-\u001f\s]+/g, "");
+  if (!trimmed)
+    return true;
+  if (trimmed.startsWith("#") || trimmed.startsWith("/") || trimmed.startsWith("./") || trimmed.startsWith("../"))
+    return true;
+  try {
+    const url = new URL(trimmed, "https://example.invalid/");
+    return ["http:", "https:", "mailto:"].includes(url.protocol);
+  } catch {
+    return false;
+  }
+}
+function sanitizeElement(element, options) {
+  for (const child of [...element.children])
+    sanitizeElement(child, options);
+  if (!ALLOWED_TAGS.has(element.tagName)) {
+    element.replaceWith(...element.childNodes);
+    return;
+  }
+  if (element.tagName === "IMG" && options.images === "hidden") {
+    element.remove();
+    return;
+  }
+  for (const attr of [...element.attributes]) {
+    const name = attr.name.toLowerCase();
+    const value = attr.value;
+    const isTableAttr = TABLE_ATTRS.has(name) && ["TD", "TH"].includes(element.tagName);
+    const keep = GLOBAL_ATTRS.has(name) || isTableAttr || element.tagName === "A" && ["href", "target", "rel"].includes(name) || element.tagName === "IMG" && ["src", "alt", "width", "height"].includes(name);
+    if (!keep || name.startsWith("on") || name === "style") {
+      element.removeAttribute(attr.name);
+      continue;
+    }
+    if ((name === "href" || name === "src") && !isSafeUrl(value)) {
+      element.removeAttribute(attr.name);
+    }
+  }
+  if (element.tagName === "A") {
+    if (element.hasAttribute("href") && options.links !== "plain") {
+      element.setAttribute("rel", "noopener noreferrer");
+      element.setAttribute("target", "_blank");
+    } else if (options.links === "plain") {
+      element.removeAttribute("href");
+    }
+  }
+}
+function sanitizeWithDomParser(html, options) {
+  const parser = new DOMParser;
+  const doc = parser.parseFromString(`<div>${String(html ?? "")}</div>`, "text/html");
+  const root = doc.body.firstElementChild;
+  sanitizeElement(root, options);
+  return root.innerHTML;
+}
+function sanitizeWithoutDomParser(html) {
+  return String(html ?? "").replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "").replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "").replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "").replace(/\s(href|src)\s*=\s*("|')?\s*javascript:[^"'\s>]*/gi, "").replace(/<\/?(iframe|object|embed|form|input|button|meta|link)[^>]*>/gi, "");
+}
+function sanitizeHtml(html, options = {}) {
+  const normalized = {
+    links: options.links || "safe",
+    images: options.images || "constrained"
+  };
+  if (typeof DOMParser !== "undefined")
+    return sanitizeWithDomParser(html, normalized);
+  return sanitizeWithoutDomParser(html);
+}
+
+// src/components/rich-preview.js
+var RICH_PREVIEW_STYLES = css`
+  :host {
+    display: block;
+    min-width: 0;
+    border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    background: var(--awwbookmarklet-surface-raised-bg, #fff);
+  }
+
+  .wrap {
+    min-height: 96px;
+    max-width: 100%;
+    overflow: auto;
+    padding: var(--awwbookmarklet-space-3, 12px);
+  }
+
+  .empty {
+    color: var(--awwbookmarklet-text-muted, #586272);
+    display: none;
+  }
+
+  :host([data-empty="true"]) .empty {
+    display: block;
+  }
+
+  :host([data-empty="true"]) .content {
+    display: none;
+  }
+
+  .content {
+    color: var(--awwbookmarklet-input-fg, #111720);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  .content h1,
+  .content h2,
+  .content h3,
+  .content h4 {
+    margin: 0.7em 0 0.35em;
+    line-height: 1.2;
+  }
+
+  .content p,
+  .content ul,
+  .content ol,
+  .content blockquote,
+  .content pre,
+  .content table {
+    margin: 0 0 0.85em;
+  }
+
+  .content img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .content table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+  }
+
+  .content th,
+  .content td {
+    border: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    padding: 4px 6px;
+    vertical-align: top;
+  }
+
+  .content blockquote {
+    border-left: 3px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    padding-left: 10px;
+    color: var(--awwbookmarklet-text-muted, #586272);
+  }
+
+  .content pre {
+    overflow: auto;
+    max-width: 100%;
+    padding: 8px;
+    background: var(--awwbookmarklet-code-bg, #e8edf4);
+    color: var(--awwbookmarklet-code-fg, #172131);
+  }
+
+  .content code {
+    background: var(--awwbookmarklet-code-bg, #e8edf4);
+    color: var(--awwbookmarklet-code-fg, #172131);
+    padding: 0 3px;
+  }
+
+  .content pre code {
+    padding: 0;
+    background: transparent;
+  }
+`;
+
+class AwwRichPreview extends HTMLElement {
+  static observedAttributes = ["empty-text", "links", "images"];
+  #html = "";
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, RICH_PREVIEW_STYLES]);
+    shadow.innerHTML = `
+      <section class="wrap" part="wrap">
+        <div class="empty" part="empty"></div>
+        <div class="content" part="content"></div>
+      </section>
+    `;
+    this.emptyNode = shadow.querySelector(".empty");
+    this.contentNode = shadow.querySelector(".content");
+  }
+  connectedCallback() {
+    this.#render();
+  }
+  attributeChangedCallback() {
+    this.#render();
+  }
+  get html() {
+    return this.#html;
+  }
+  set html(value) {
+    this.#html = sanitizeHtml(value, {
+      links: this.getAttribute("links") || "safe",
+      images: this.getAttribute("images") || "constrained"
+    });
+    this.#render();
+  }
+  setUnsafeHTML(value) {
+    this.#html = String(value ?? "");
+    this.#render();
+  }
+  #render() {
+    if (!this.contentNode)
+      return;
+    this.emptyNode.textContent = this.getAttribute("empty-text") || "Nothing to preview.";
+    this.contentNode.innerHTML = this.#html;
+    this.dataset.empty = this.#html.trim() ? "false" : "true";
+  }
+}
+
+// src/components/browser-panel.js
+var BROWSER_PANEL_STYLES = css`
+  :host {
+    display: grid;
+    min-height: 220px;
+    min-width: 0;
+    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    background: var(--awwbookmarklet-surface-inset-bg, #e7ebf1);
+  }
+
+  .panel {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: inherit;
+    min-width: 0;
+  }
+
+  .chrome {
+    display: flex;
+    align-items: center;
+    gap: var(--awwbookmarklet-space-2, 8px);
+    padding: 6px;
+    border-bottom: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    background: var(--awwbookmarklet-surface-raised-bg, #fff);
+  }
+
+  .address {
+    flex: 1 1 auto;
+    min-width: 0;
+    color: var(--awwbookmarklet-text-muted, #586272);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    min-height: 180px;
+    border: 0;
+    background: #fff;
+  }
+
+  .overlay {
+    position: absolute;
+    inset: 31px 0 0;
+    display: none;
+  }
+
+  :host([loading]) .overlay,
+  :host([error]) .overlay {
+    display: block;
+  }
+
+  button {
+    min-height: 26px;
+    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    background: var(--awwbookmarklet-button-bg, #f1f4f8);
+    color: var(--awwbookmarklet-button-fg, #111720);
+    font: inherit;
+  }
+`;
+
+class AwwBrowserPanel extends HTMLElement {
+  static observedAttributes = ["src", "sandbox", "referrerpolicy", "loading", "error", "title", "loading-label", "error-label"];
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, BROWSER_PANEL_STYLES]);
+    shadow.innerHTML = `
+      <section class="panel" part="panel">
+        <div class="chrome" part="chrome">
+          <div class="address" part="address"><slot name="address"></slot><span data-address></span></div>
+          <div part="actions"><slot name="actions"></slot></div>
+        </div>
+        <iframe part="frame"></iframe>
+        <div class="overlay" part="overlay">
+          <awwbookmarklet-state-overlay></awwbookmarklet-state-overlay>
+          <slot name="overlay"></slot>
+        </div>
+      </section>
+    `;
+    this.frame = shadow.querySelector("iframe");
+    this.addressFallback = shadow.querySelector("[data-address]");
+    this.overlay = shadow.querySelector("awwbookmarklet-state-overlay");
+    this.frame.addEventListener("load", () => {
+      this.removeAttribute("loading");
+      dispatchComponentEvent(this, "awwbookmarklet-frame-load", { src: this.src });
+    });
+    this.frame.addEventListener("error", () => {
+      this.setAttribute("error", "");
+      dispatchComponentEvent(this, "awwbookmarklet-frame-error", { src: this.src });
+    });
+  }
+  connectedCallback() {
+    this.#sync();
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  get src() {
+    return this.getAttribute("src") || "";
+  }
+  set src(value) {
+    this.setAttribute("src", String(value ?? ""));
+  }
+  retry() {
+    dispatchComponentEvent(this, "awwbookmarklet-frame-retry", { src: this.src });
+    if (this.src) {
+      this.setAttribute("loading", "");
+      this.removeAttribute("error");
+      this.frame.src = this.src;
+    }
+  }
+  openExternally() {
+    dispatchComponentEvent(this, "awwbookmarklet-frame-fallback-open", { src: this.src });
+  }
+  #sync() {
+    if (!this.frame)
+      return;
+    const src = this.getAttribute("src") || "about:blank";
+    if (this.frame.getAttribute("src") !== src)
+      this.frame.setAttribute("src", src);
+    this.frame.setAttribute("title", this.getAttribute("title") || "Browser panel");
+    this.frame.setAttribute("sandbox", this.getAttribute("sandbox") || "allow-scripts allow-forms allow-same-origin");
+    this.frame.setAttribute("referrerpolicy", this.getAttribute("referrerpolicy") || "no-referrer");
+    this.addressFallback.textContent = this.getAttribute("src") || "No page loaded";
+    const error = this.hasAttribute("error");
+    this.overlay.setAttribute("state", error ? "blocked" : "loading");
+    this.overlay.setAttribute("label", error ? this.getAttribute("error-label") || "This page could not be loaded here." : this.getAttribute("loading-label") || "Loading page");
+  }
+}
+
+// src/components/manual-copy.js
+var MANUAL_COPY_STYLES = css`
+  :host {
+    display: block;
+    border: 1px solid var(--awwbookmarklet-warning-border, #d9ad3b);
+    background: var(--awwbookmarklet-warning-bg, #fff4d6);
+    color: var(--awwbookmarklet-warning-fg, #6d4b00);
+    padding: var(--awwbookmarklet-space-2, 8px);
+  }
+
+  .wrap {
+    display: grid;
+    gap: 6px;
+  }
+
+  .label {
+    font-weight: 700;
+  }
+
+  textarea {
+    min-height: 92px;
+    width: 100%;
+    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    background: var(--awwbookmarklet-input-bg, #fff);
+    color: var(--awwbookmarklet-input-fg, #111720);
+    font: inherit;
+    padding: 8px;
+  }
+`;
+
+class AwwManualCopy extends HTMLElement {
+  static observedAttributes = ["label", "value"];
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, MANUAL_COPY_STYLES]);
+    shadow.innerHTML = `
+      <section class="wrap" part="wrap">
+        <div class="label" part="label"></div>
+        <div part="description"><slot>Automatic copy is unavailable. Select the text below and copy it manually.</slot></div>
+        <textarea part="control" readonly></textarea>
+      </section>
+    `;
+    this.labelNode = shadow.querySelector(".label");
+    this.control = shadow.querySelector("textarea");
+  }
+  connectedCallback() {
+    this.#sync();
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  get value() {
+    return this.control.value;
+  }
+  set value(next) {
+    this.setAttribute("value", String(next ?? ""));
+  }
+  selectText() {
+    this.control.focus();
+    this.control.select();
+  }
+  #sync() {
+    this.labelNode.textContent = this.getAttribute("label") || "Manual copy required";
+    this.control.value = this.getAttribute("value") || "";
+  }
+}
+
+// src/components/register-all.js
 function registerAllComponents() {
   defineMany([
     [TAGS.desktopRoot, AwwDesktopRoot],
@@ -2242,11 +4145,26 @@ function registerAllComponents() {
     [TAGS.listbox, AwwListbox],
     [TAGS.group, AwwGroup],
     [TAGS.panel, AwwPanel],
-    [TAGS.statusbar, AwwStatusbar]
+    [TAGS.statusbar, AwwStatusbar],
+    [TAGS.appShell, AwwAppShell],
+    [TAGS.toolbar, AwwToolbar],
+    [TAGS.field, AwwField],
+    [TAGS.statusLine, AwwStatusLine],
+    [TAGS.alert, AwwAlert],
+    [TAGS.dialog, AwwDialog],
+    [TAGS.toast, AwwToast],
+    [TAGS.emptyState, AwwEmptyState],
+    [TAGS.stateOverlay, AwwStateOverlay],
+    [TAGS.list, AwwList],
+    [TAGS.listItem, AwwListItem],
+    [TAGS.card, AwwCard],
+    [TAGS.richPreview, AwwRichPreview],
+    [TAGS.browserPanel, AwwBrowserPanel],
+    [TAGS.manualCopy, AwwManualCopy]
   ]);
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/themes/default-theme.js
+// src/themes/default-theme.js
 var DEFAULT_THEME = {
   [PUBLIC_TOKENS.workspaceBg]: "rgba(0, 0, 0, 0)",
   [PUBLIC_TOKENS.windowBg]: "#eef1f5",
@@ -2267,6 +4185,30 @@ var DEFAULT_THEME = {
   [PUBLIC_TOKENS.selectionBg]: "#1f5eae",
   [PUBLIC_TOKENS.selectionFg]: "#f2f8ff",
   [PUBLIC_TOKENS.statusbarBg]: "#e5e8ee",
+  [PUBLIC_TOKENS.appShellBg]: "#eef1f5",
+  [PUBLIC_TOKENS.surfaceRaisedBg]: "#ffffff",
+  [PUBLIC_TOKENS.surfaceInsetBg]: "#e7ebf1",
+  [PUBLIC_TOKENS.textMuted]: "#586272",
+  [PUBLIC_TOKENS.textHelp]: "#657184",
+  [PUBLIC_TOKENS.dividerColor]: "#c3cad4",
+  [PUBLIC_TOKENS.infoBg]: "#e7f0ff",
+  [PUBLIC_TOKENS.infoFg]: "#123d7a",
+  [PUBLIC_TOKENS.infoBorder]: "#7aa6e8",
+  [PUBLIC_TOKENS.successBg]: "#e5f5eb",
+  [PUBLIC_TOKENS.successFg]: "#195b34",
+  [PUBLIC_TOKENS.successBorder]: "#72b98b",
+  [PUBLIC_TOKENS.warningBg]: "#fff4d6",
+  [PUBLIC_TOKENS.warningFg]: "#6d4b00",
+  [PUBLIC_TOKENS.warningBorder]: "#d9ad3b",
+  [PUBLIC_TOKENS.dangerBg]: "#ffe8e6",
+  [PUBLIC_TOKENS.dangerFg]: "#8a1f17",
+  [PUBLIC_TOKENS.dangerBorder]: "#d46a60",
+  [PUBLIC_TOKENS.overlayBackdrop]: "rgba(12, 18, 28, 0.38)",
+  [PUBLIC_TOKENS.overlayShadow]: "0 18px 44px rgba(0, 0, 0, 0.24)",
+  [PUBLIC_TOKENS.cardBg]: "#fbfcfe",
+  [PUBLIC_TOKENS.cardSelectedBg]: "#e8f1ff",
+  [PUBLIC_TOKENS.codeBg]: "#e8edf4",
+  [PUBLIC_TOKENS.codeFg]: "#172131",
   [PUBLIC_TOKENS.shadowDepth]: "0 12px 32px rgba(0, 0, 0, 0.18)",
   [PUBLIC_TOKENS.frostOpacity]: "0.9",
   [PUBLIC_TOKENS.space1]: "4px",
@@ -2276,7 +4218,7 @@ var DEFAULT_THEME = {
   [PUBLIC_TOKENS.titleHeight]: "32px"
 };
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/core/theme.js
+// src/core/theme.js
 class ThemeService {
   #theme;
   constructor(theme = DEFAULT_THEME) {
@@ -2297,7 +4239,7 @@ class ThemeService {
 }
 var defaultThemeService = new ThemeService(DEFAULT_THEME);
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/core/window-manager.js
+// src/core/window-manager.js
 class WindowManager {
   #windows = new Set;
   #activeWindow = null;
@@ -2369,7 +4311,7 @@ class WindowManager {
   }
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/core/runtime.js
+// src/core/runtime.js
 function getGlobalMap() {
   if (!globalThis[GLOBAL_SYMBOLS.rootsByVersion]) {
     globalThis[GLOBAL_SYMBOLS.rootsByVersion] = new Map;
@@ -2441,7 +4383,7 @@ function emergencyTeardown(version = FRAMEWORK_VERSION) {
   }
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/demo/example-tool.js
+// src/demo/example-tool.js
 function iconPlus() {
   return `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="square"/></svg>`;
 }
@@ -2614,7 +4556,7 @@ function buildExampleToolWindow({ title = "Page Extraction Tool" } = {}) {
   return win;
 }
 
-// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-19-bookmarklet-ui/src/demo/catalog.js
+// src/demo/catalog.js
 registerAllComponents();
 var CATALOG_OWNER = "catalog-page";
 acquireDesktopRoot(CATALOG_OWNER);
@@ -2623,69 +4565,311 @@ function nextOwner(prefix) {
   serial += 1;
   return `${prefix}-${serial}`;
 }
-function card(title, body) {
-  const node = document.createElement("section");
-  node.style.border = "1px solid #2a3340";
-  node.style.background = "rgba(248, 252, 255, 0.66)";
-  node.style.backdropFilter = "blur(2px)";
-  node.style.boxShadow = "0 8px 26px rgba(0,0,0,0.15)";
-  node.style.padding = "14px";
-  node.style.display = "grid";
-  node.style.gap = "10px";
-  node.innerHTML = `<h2 style="margin:0;font-size:16px;">${title}</h2><p style="margin:0;line-height:1.4;">${body}</p>`;
-  return node;
+function icon(path) {
+  return `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="${path}" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="square" stroke-linejoin="miter"/></svg>`;
 }
 function mountWindow(win, prefix) {
   const owner = nextOwner(prefix);
   const record = acquireDesktopRoot(owner);
   record.root.append(win);
-  const release = () => releaseDesktopRoot(owner);
-  win.addEventListener("awwbookmarklet-window-closed", release, { once: true });
+  win.addEventListener("awwbookmarklet-window-closed", () => releaseDesktopRoot(owner), { once: true });
   return win;
 }
 function openExample() {
-  const win = buildExampleToolWindow({ title: "Example Tool" });
-  mountWindow(win, "example");
+  mountWindow(buildExampleToolWindow({ title: "Example Tool" }), "example");
 }
 function openBlank() {
   const win = document.createElement(TAGS.window);
   win.setAttribute("title", "Blank Shell");
-  win.innerHTML = `<${TAGS.panel}><p style="margin:0 0 8px;">Movable, resizable shell with optional regions.</p><p style="margin:0;">Try narrow width to validate constrained layout behavior.</p></${TAGS.panel}><${TAGS.statusbar} slot="statusbar"><span>Ready</span><span>Blank</span><span>No errors</span></${TAGS.statusbar}>`;
+  win.innerHTML = `
+    <${TAGS.panel}>
+      <span slot="title">Empty workspace</span>
+      <p class="inline-note">Movable, resizable shell with optional regions.</p>
+      <p class="inline-note">Resize this window to check narrow layout behavior.</p>
+    </${TAGS.panel}>
+    <${TAGS.statusbar} slot="statusbar"><span>Ready</span><span>Blank</span><span>No errors</span></${TAGS.statusbar}>
+  `;
   win.setRect({ x: 110, y: 80, width: 420, height: 260 });
   mountWindow(win, "blank");
 }
-function buildInlineControls() {
-  const wrap = document.createElement("div");
-  wrap.style.display = "grid";
-  wrap.style.gap = "8px";
-  wrap.innerHTML = `<div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;"><${TAGS.button}>Primary</${TAGS.button}><${TAGS.button} disabled>Disabled</${TAGS.button}><${TAGS.iconButton} aria-label="Add"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></${TAGS.iconButton}></div><div style="display:grid; gap:8px; max-width:380px;"><${TAGS.input} value="Inline input"></${TAGS.input}><${TAGS.textarea} rows="4" value="Inline textarea"></${TAGS.textarea}></div><div style="display:flex; gap:10px; flex-wrap:wrap;"><${TAGS.checkbox} checked>Checkbox</${TAGS.checkbox}><${TAGS.radio} name="demo-inline" checked>Radio A</${TAGS.radio}><${TAGS.radio} name="demo-inline">Radio B</${TAGS.radio}></div><div style="display:grid; gap:8px; max-width:340px;"><${TAGS.select}><option selected>Preset 1</option><option>Preset 2</option></${TAGS.select}><${TAGS.range} min="0" max="100" value="45"></${TAGS.range}><${TAGS.progress} value="45" max="100"></${TAGS.progress}></div>`;
+function specimen({ title, description, tag, span = 6, body }) {
+  const node = document.createElement("section");
+  node.className = `specimen span-${span}`;
+  node.innerHTML = `
+    <header class="specimen-header">
+      <div>
+        <h3 class="specimen-title">${title}</h3>
+        <p class="specimen-desc">${description}</p>
+      </div>
+      <p class="specimen-tag">${tag}</p>
+    </header>
+    <div class="specimen-body"></div>
+  `;
+  node.querySelector(".specimen-body").append(body);
+  return node;
+}
+function section({ label, title, description, children }) {
+  const node = document.createElement("section");
+  node.className = "catalog-section";
+  node.innerHTML = `
+    <div class="section-heading">
+      <div>
+        <p class="section-label">${label}</p>
+        <h2>${title}</h2>
+      </div>
+      <p>${description}</p>
+    </div>
+    <div class="specimen-grid"></div>
+  `;
+  node.querySelector(".specimen-grid").append(...children);
+  return node;
+}
+function htmlNode(markup, className = "demo-stack") {
+  const node = document.createElement("div");
+  node.className = className;
+  node.innerHTML = markup;
+  return node;
+}
+function buildShellDemo() {
+  return htmlNode(`
+    <div class="demo-row">
+      <${TAGS.button} id="open-example" variant="primary">Open Example Tool</${TAGS.button}>
+      <${TAGS.button} id="open-blank">Open Blank Window</${TAGS.button}>
+    </div>
+    <div class="callout">Floating windows are intentionally tested outside the document flow. Open both shells, then drag, resize, focus, and close them.</div>
+    <div class="token-strip">
+      <span class="token">${TAGS.window}</span>
+      <span class="token">${TAGS.menubar}</span>
+      <span class="token">${TAGS.statusbar}</span>
+    </div>
+  `);
+}
+function buildControlDemo() {
+  return htmlNode(`
+    <div class="demo-row">
+      <${TAGS.button} variant="primary">Primary</${TAGS.button}>
+      <${TAGS.button}>Default</${TAGS.button}>
+      <${TAGS.button} variant="ghost">Ghost</${TAGS.button}>
+      <${TAGS.button} tone="danger">Danger</${TAGS.button}>
+      <${TAGS.button} disabled>Disabled</${TAGS.button}>
+      <${TAGS.iconButton} label="Add">${icon("M8 3v10M3 8h10")}</${TAGS.iconButton}>
+      <${TAGS.iconButton} label="Remove" tone="danger">${icon("M4 8h8")}</${TAGS.iconButton}>
+    </div>
+    <div class="demo-two-col">
+      <div class="demo-stack">
+        <${TAGS.input} value="Inline input"></${TAGS.input}>
+        <${TAGS.textarea} rows="4" value="Inline textarea"></${TAGS.textarea}>
+      </div>
+      <div class="demo-stack">
+        <${TAGS.select}><option selected>Preset 1</option><option>Preset 2</option></${TAGS.select}>
+        <${TAGS.range} min="0" max="100" value="45"></${TAGS.range}>
+        <${TAGS.progress} value="45" max="100"></${TAGS.progress}>
+      </div>
+    </div>
+    <div class="demo-row">
+      <${TAGS.checkbox} checked>Remember choice</${TAGS.checkbox}>
+      <${TAGS.radio} name="demo-inline" checked>Text</${TAGS.radio}>
+      <${TAGS.radio} name="demo-inline">HTML</${TAGS.radio}>
+    </div>
+  `);
+}
+function buildLayoutDemo() {
+  return htmlNode(`
+    <${TAGS.group} caption="Compact settings">
+      <${TAGS.tabs}>
+        <${TAGS.tabPanel} label="Settings" selected>
+          <${TAGS.listbox}>
+            <div role="option" aria-selected="true">Mode A</div>
+            <div role="option">Mode B</div>
+            <div role="option">Mode C</div>
+          </${TAGS.listbox}>
+        </${TAGS.tabPanel}>
+        <${TAGS.tabPanel} label="Status">
+          <${TAGS.statusbar}><span>Ready</span><span>3 items</span><span>Stable</span></${TAGS.statusbar}>
+        </${TAGS.tabPanel}>
+      </${TAGS.tabs}>
+    </${TAGS.group}>
+    <${TAGS.panel}>
+      <span slot="title">Panel with actions</span>
+      <span slot="subtitle">Header regions stay separate from body content.</span>
+      <${TAGS.toolbar} slot="actions" density="compact" wrap>
+        <${TAGS.button}>Apply</${TAGS.button}>
+        <${TAGS.button} variant="ghost">Reset</${TAGS.button}>
+      </${TAGS.toolbar}>
+      <p class="inline-note">This compact composition validates group, panel, tabs, listbox, toolbar, and status surfaces without hiding their boundaries.</p>
+    </${TAGS.panel}>
+  `);
+}
+function buildWorkflowDemo() {
+  const wrap = htmlNode(`
+    <${TAGS.appShell}>
+      <span slot="title">Session Capture Console</span>
+      <span slot="subtitle">Mock workflow for screenshot, reminder, and content-selection tools.</span>
+      <${TAGS.toolbar} slot="actions" wrap density="compact" align="end">
+        <${TAGS.button} variant="primary" command="capture.collect">Collect</${TAGS.button}>
+        <${TAGS.button} variant="ghost">Refresh</${TAGS.button}>
+        <${TAGS.button} tone="danger">Clear</${TAGS.button}>
+      </${TAGS.toolbar}>
+      <${TAGS.statusLine} slot="status" tone="success">Ready. 3 mock rows loaded.</${TAGS.statusLine}>
+      <div slot="body" class="demo-stack">
+        <${TAGS.alert} tone="warning" title="Draft available" dismissible>
+          A previous capture draft can be restored before starting a new run.
+          <${TAGS.toolbar} slot="actions" density="compact" wrap>
+            <${TAGS.button}>Restore</${TAGS.button}>
+            <${TAGS.button} variant="ghost">Start fresh</${TAGS.button}>
+          </${TAGS.toolbar}>
+        </${TAGS.alert}>
+
+        <${TAGS.panel}>
+          <span slot="title">Capture settings</span>
+          <${TAGS.toolbar} slot="actions" density="compact" wrap>
+            <${TAGS.button} id="demo-toast" variant="primary">Show toast</${TAGS.button}>
+            <${TAGS.button} id="demo-dialog-btn">Open dialog</${TAGS.button}>
+          </${TAGS.toolbar}>
+          <div class="field-grid">
+            <${TAGS.field} label="JPEG quality" help="Used by session screenshot exports." suffix="%" required>
+              <${TAGS.input} type="number" min="1" max="100" value="80"></${TAGS.input}>
+              <span slot="suffix">%</span>
+            </${TAGS.field}>
+            <${TAGS.field} label="Reminder delay" error="Delay must be at least 1 minute.">
+              <${TAGS.input} type="number" value="0"></${TAGS.input}>
+              <span slot="suffix">min</span>
+            </${TAGS.field}>
+          </div>
+        </${TAGS.panel}>
+      </div>
+    </${TAGS.appShell}>
+
+    <${TAGS.dialog} id="demo-dialog" modal label="Demo dialog" close-on-backdrop>
+      <span slot="title">Command-like dialog</span>
+      <p class="inline-note">This dialog uses the shared overlay and focus-restoration path.</p>
+      <${TAGS.toolbar} slot="footer" align="end">
+        <${TAGS.button} id="demo-dialog-close">Close</${TAGS.button}>
+      </${TAGS.toolbar}>
+    </${TAGS.dialog}>
+  `);
+  wrap.querySelector("#demo-toast").addEventListener("click", () => {
+    showToast({ key: "demo", message: "Saved mock draft", tone: "success", timeout: 1800 });
+  });
+  wrap.querySelector("#demo-dialog-btn").addEventListener("click", () => wrap.querySelector("#demo-dialog").show());
+  wrap.querySelector("#demo-dialog-close").addEventListener("click", () => wrap.querySelector("#demo-dialog").close("demo"));
   return wrap;
+}
+function buildRowsDemo() {
+  return htmlNode(`
+    <${TAGS.list} empty-text="No captured pages">
+      <${TAGS.listItem} selectable selected tone="success">
+        <span slot="title">Current research page</span>
+        <span slot="meta">example.com - captured just now</span>
+        <span slot="description">A long captured page title and description wrap without breaking the row layout.</span>
+        <${TAGS.statusLine} slot="status" tone="success" compact>Captured</${TAGS.statusLine}>
+        <${TAGS.toolbar} slot="actions" density="compact">
+          <${TAGS.iconButton} label="Copy">${icon("M5 3h7v9H5zM3 5h2v8h7")}</${TAGS.iconButton}>
+          <${TAGS.iconButton} label="Delete" tone="danger">${icon("M4 5h8M6 5v7m4-7v7M6 3h4l1 2H5z")}</${TAGS.iconButton}>
+        </${TAGS.toolbar}>
+      </${TAGS.listItem}>
+      <${TAGS.listItem} tone="warning">
+        <span slot="title">Blocked iframe page</span>
+        <span slot="meta">blocked.example</span>
+        <span slot="description">The row keeps actions separate from row activation.</span>
+        <${TAGS.statusLine} slot="status" tone="warning" compact>Needs fallback</${TAGS.statusLine}>
+      </${TAGS.listItem}>
+    </${TAGS.list}>
+    <${TAGS.card} tone="info">
+      <span slot="title">Preview card</span>
+      <span slot="meta">Reusable card shell</span>
+      Cards provide a stable header, body, action, media, and footer surface for captured blocks or settings rows.
+    </${TAGS.card}>
+  `);
+}
+function buildPreviewDemo() {
+  const wrap = htmlNode(`
+    <div class="surface-frame">
+      <${TAGS.richPreview} id="kit-rich-preview" empty-text="No preview"></${TAGS.richPreview}>
+    </div>
+    <${TAGS.browserPanel} class="browser-demo" src="about:blank" title="Mock browser panel" loading-label="Loading mock page"></${TAGS.browserPanel}>
+  `);
+  wrap.querySelector("#kit-rich-preview").html = `
+    <h2>Rich preview content</h2>
+    <p>Captured content can include <a href="https://example.com">links</a>, tables, images, quotes, and code.</p>
+    <table><tr><th>Page</th><th>Status</th></tr><tr><td>Very long table cell that should scroll instead of breaking the window</td><td>Captured</td></tr></table>
+    <blockquote>Imported page content is constrained by the component.</blockquote>
+    <pre><code>const veryLongLine = "This code block is intentionally long so overflow stays inside the preview surface.";</code></pre>
+  `;
+  return wrap;
+}
+function buildStateDemo() {
+  return htmlNode(`
+    <${TAGS.emptyState} title="No filtered results" description="Try another search or clear the active filter."></${TAGS.emptyState}>
+    <div class="surface-frame">
+      <${TAGS.stateOverlay} state="blocked" label="Preview is blocked by page policy"></${TAGS.stateOverlay}>
+    </div>
+    <${TAGS.manualCopy} label="Fallback copy" value="Manual fallback text from a failed clipboard write."></${TAGS.manualCopy}>
+  `);
+}
+function buildPage() {
+  const componentCount = Object.keys(TAGS).length;
+  const page = document.createElement("main");
+  page.className = "catalog-page";
+  page.innerHTML = `
+    <header class="catalog-hero">
+      <div>
+        <p class="catalog-kicker">AWW Bookmarklet UI Framework</p>
+        <h1 class="catalog-title">Component catalog for constrained bookmarklet tools</h1>
+        <p class="catalog-lede">This page stages the framework as reusable developer specimens: compact controls, shell behavior, workflow layout, content previews, and failure states.</p>
+      </div>
+      <div class="hero-actions">
+        <${TAGS.button} id="hero-example" variant="primary">Open Tool</${TAGS.button}>
+        <${TAGS.button} id="hero-blank">Open Shell</${TAGS.button}>
+      </div>
+    </header>
+    <div class="catalog-summary">
+      <div class="summary-item"><span class="summary-value">${componentCount}</span><span class="summary-label">registered custom elements</span></div>
+      <div class="summary-item"><span class="summary-value">3</span><span class="summary-label">showcase sections</span></div>
+      <div class="summary-item"><span class="summary-value">0</span><span class="summary-label">marketing panels</span></div>
+      <div class="summary-item"><span class="summary-value">1</span><span class="summary-label">shared overlay root</span></div>
+    </div>
+  `;
+  page.append(section({
+    label: "Foundation",
+    title: "Shell and primitive controls",
+    description: "The first section keeps low-level pieces visible and uncluttered before introducing composed app surfaces.",
+    children: [
+      specimen({ title: "Desktop shell", description: "Spawn windows in the shared overlay and validate focus, drag, resize, and status behavior.", tag: "runtime", span: 5, body: buildShellDemo() }),
+      specimen({ title: "Control primitives", description: "Buttons, inputs, selection controls, range, and progress in one restrained specimen.", tag: "forms", span: 7, body: buildControlDemo() }),
+      specimen({ title: "Grouped layout", description: "Compact grouping, tabs, listbox, panel actions, and status composition.", tag: "layout", span: 12, body: buildLayoutDemo() })
+    ]
+  }), section({
+    label: "Application Patterns",
+    title: "Workflow surfaces without crowding",
+    description: "Higher-order components are split into scan-friendly states so developers can inspect each responsibility.",
+    children: [
+      specimen({ title: "Application shell", description: "Header, action area, status line, alert, fields, dialog, and toast behavior.", tag: "workflow", span: 7, body: buildWorkflowDemo() }),
+      specimen({ title: "Rows and cards", description: "Selectable rows, row actions, status tones, and a reusable content card.", tag: "data", span: 5, body: buildRowsDemo() })
+    ]
+  }), section({
+    label: "Content States",
+    title: "Preview, browser, and fallback states",
+    description: "The messy realities of injected tools need first-class demos: rich imported HTML, iframe surfaces, blocked previews, empty states, and manual copy fallback.",
+    children: [
+      specimen({ title: "Preview surfaces", description: "Rich content and browser iframe areas are given enough room to reveal overflow behavior.", tag: "content", span: 8, body: buildPreviewDemo() }),
+      specimen({ title: "Empty and blocked states", description: "Fallback UI is visible as a normal part of the system, not an afterthought.", tag: "fallback", span: 4, body: buildStateDemo() })
+    ]
+  }));
+  return page;
 }
 function initCatalog() {
   const root = document.getElementById("catalog-root") || document.body;
-  const grid = document.createElement("div");
-  grid.style.display = "grid";
-  grid.style.gap = "14px";
-  grid.style.gridTemplateColumns = "repeat(auto-fit, minmax(300px, 1fr))";
-  const shellCard = card("Desktop Shell", "Open floating windows and validate drag, resize, focus, menu, and status behavior.");
-  const shellActions = document.createElement("div");
-  shellActions.style.display = "flex";
-  shellActions.style.gap = "8px";
-  shellActions.innerHTML = `<${TAGS.button} id="open-example">Open Example Tool</${TAGS.button}><${TAGS.button} id="open-blank">Open Blank Window</${TAGS.button}>`;
-  shellCard.append(shellActions);
-  const controlsCard = card("Controls", "Buttons, text fields, checks, radios, select, range, and progress primitives.");
-  controlsCard.append(buildInlineControls());
-  const layoutCard = card("Grouped Layout", "Groups, panels, tabs, listbox, and compact shell composition for constrained spaces.");
-  layoutCard.innerHTML += `<${TAGS.group} caption="Compact Example"><div style="display:grid; gap:8px;"><${TAGS.tabs}><${TAGS.tabPanel} label="Settings" selected><${TAGS.listbox}><div role="option" aria-selected="true">Mode A</div><div role="option">Mode B</div><div role="option">Mode C</div></${TAGS.listbox}></${TAGS.tabPanel}><${TAGS.tabPanel} label="Status"><${TAGS.statusbar}><span>Ready</span><span>3 items</span><span>Stable</span></${TAGS.statusbar}></${TAGS.tabPanel}></${TAGS.tabs}></div></${TAGS.group}>`;
-  grid.append(shellCard, controlsCard, layoutCard);
-  root.append(grid);
-  shellCard.querySelector("#open-example").addEventListener("click", openExample);
-  shellCard.querySelector("#open-blank").addEventListener("click", openBlank);
+  root.append(buildPage());
+  root.querySelector("#hero-example").addEventListener("click", openExample);
+  root.querySelector("#hero-blank").addEventListener("click", openBlank);
+  root.querySelector("#open-example").addEventListener("click", openExample);
+  root.querySelector("#open-blank").addEventListener("click", openBlank);
 }
 initCatalog();
 window.addEventListener("beforeunload", () => {
   releaseDesktopRoot(CATALOG_OWNER);
 });
 
-//# debugId=74E5EE6B704D70A564756E2164756E21
+//# debugId=72635BE7EF3DDC0064756E2164756E21
 //# sourceMappingURL=catalog.js.map

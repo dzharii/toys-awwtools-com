@@ -18,7 +18,7 @@ const INPUT_STYLES = css`
   input:disabled { opacity: 0.65; }
 `;
 
-const MIRRORED_ATTRIBUTES = ["value", "placeholder", "disabled", "type", "name"];
+const MIRRORED_ATTRIBUTES = ["value", "placeholder", "disabled", "type", "name", "required", "min", "max", "step", "autocomplete", "spellcheck"];
 
 export class AwwInput extends HTMLElement {
   static observedAttributes = MIRRORED_ATTRIBUTES;
@@ -61,6 +61,11 @@ export class AwwInput extends HTMLElement {
   attributeChangedCallback(name, _prev, next) {
     if (name === "disabled") {
       this.control.disabled = this.hasAttribute("disabled");
+      return;
+    }
+
+    if (name === "required") {
+      this.control.required = this.hasAttribute("required");
       return;
     }
 
