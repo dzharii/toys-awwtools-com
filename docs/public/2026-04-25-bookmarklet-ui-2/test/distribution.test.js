@@ -38,5 +38,13 @@ test("global API mirrors module extension points", () => {
 test("production build writes copyable dist documentation", () => {
   assert.match(buildSource, /distReadme/);
   assert.match(buildSource, /AWW Bookmarklet UI Framework - distributable/);
+  assert.match(buildSource, /single-file distribution artifact/);
   assert.match(buildSource, /writeFile\(join\(outdir, "README\.md"\)/);
+});
+
+test("distribution build stays readable in every mode", () => {
+  assert.match(buildSource, /splitting:\s*false/);
+  assert.match(buildSource, /minify:\s*false/);
+  assert.match(buildSource, /sourcemap:\s*"none"/);
+  assert.doesNotMatch(buildSource, /minify:\s*production/);
 });
