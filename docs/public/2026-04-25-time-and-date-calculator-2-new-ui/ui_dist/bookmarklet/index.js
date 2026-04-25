@@ -1428,7 +1428,8 @@ var INPUT_STYLES = css`
   input:focus-visible { outline: none; box-shadow: var(--_ring); }
   input:disabled { opacity: 0.65; }
 `;
-var MIRRORED_ATTRIBUTES = ["value", "placeholder", "disabled", "type", "name", "required", "min", "max", "step", "autocomplete", "spellcheck"];
+var FORM_ARIA_ATTRIBUTES = ["aria-label", "aria-labelledby", "aria-describedby", "aria-invalid"];
+var MIRRORED_ATTRIBUTES = ["value", "placeholder", "disabled", "type", "name", "required", "min", "max", "step", "autocomplete", "spellcheck", "list", ...FORM_ARIA_ATTRIBUTES];
 
 class AwwInput extends HTMLElement {
   static observedAttributes = MIRRORED_ATTRIBUTES;
@@ -1501,7 +1502,7 @@ var TEXTAREA_STYLES = css`
   textarea:focus-visible { outline: none; box-shadow: var(--_ring); }
   textarea:disabled { opacity: 0.65; }
 `;
-var MIRRORED_ATTRIBUTES2 = ["value", "placeholder", "disabled", "rows", "name", "required", "autocomplete", "spellcheck"];
+var MIRRORED_ATTRIBUTES2 = ["value", "placeholder", "disabled", "rows", "name", "required", "autocomplete", "spellcheck", ...FORM_ARIA_ATTRIBUTES];
 
 class AwwTextarea extends HTMLElement {
   static observedAttributes = MIRRORED_ATTRIBUTES2;
@@ -1587,7 +1588,7 @@ var CHECKBOX_STYLES = css`
   input:focus-visible { outline: none; box-shadow: var(--_ring); }
   input:disabled + span { opacity: 0.6; }
 `;
-var MIRRORED = ["checked", "disabled", "name", "value"];
+var MIRRORED = ["checked", "disabled", "name", "value", "aria-label", "aria-labelledby", "aria-describedby", "aria-invalid"];
 
 class AwwCheckbox extends HTMLElement {
   static observedAttributes = MIRRORED;
@@ -1671,7 +1672,7 @@ var RADIO_STYLES = css`
   input:focus-visible { outline: none; box-shadow: var(--_ring); }
   input:disabled + span { opacity: 0.6; }
 `;
-var MIRRORED2 = ["checked", "disabled", "name", "value"];
+var MIRRORED2 = ["checked", "disabled", "name", "value", "aria-label", "aria-labelledby", "aria-describedby", "aria-invalid"];
 
 class AwwRadio extends HTMLElement {
   static observedAttributes = MIRRORED2;
@@ -1772,7 +1773,7 @@ var SELECT_STYLES = css`
   select:focus-visible { outline: none; box-shadow: var(--_ring); }
   select:disabled { opacity: 0.65; }
 `;
-var MIRRORED3 = ["disabled", "name", "value", "required"];
+var MIRRORED3 = ["disabled", "name", "value", "required", ...FORM_ARIA_ATTRIBUTES];
 
 class AwwSelect extends HTMLElement {
   static observedAttributes = MIRRORED3;
@@ -1977,8 +1978,12 @@ var TABS_STYLES = css`
   #tablist {
     display: flex;
     gap: 2px;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
     padding: 4px 4px 0;
     border-bottom: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    scrollbar-gutter: stable;
   }
 
   #tablist button {
@@ -1989,6 +1994,7 @@ var TABS_STYLES = css`
     padding: 0 10px;
     font: inherit;
     border-radius: 0;
+    white-space: nowrap;
   }
 
   #tablist button[aria-selected="true"] {

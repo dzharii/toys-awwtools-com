@@ -7,144 +7,139 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="bg-orb bg-orb-a" aria-hidden="true"></div>
-    <div class="bg-orb bg-orb-b" aria-hidden="true"></div>
+    <awwbookmarklet-app-shell class="datecalc-shell">
+      <span slot="title">Time and Date Calculator</span>
+      <span slot="subtitle">Expression evaluator using a fixed test context, optional place resolution, and business calendar modes.</span>
 
-    <header class="topbar">
-      <div class="brand">
-        <p class="brand-eyebrow">Fixed-context Demo</p>
-        <h1>Time and Date Calculator</h1>
-      </div>
+      <awwbookmarklet-toolbar slot="actions" density="compact" align="end" wrap>
+        <awwbookmarklet-status-line id="evaluatingBadge" tone="info" compact hidden>Evaluating</awwbookmarklet-status-line>
+        <awwbookmarklet-status-line id="lineBadge" compact>Line 1</awwbookmarklet-status-line>
+      </awwbookmarklet-toolbar>
 
-      <div class="controls-grid">
-        <label class="control">
-          <span>Time Zone</span>
-          <input id="timeZoneInput" list="zoneSuggestions" autocomplete="off" spellcheck="false" />
-          <datalist id="zoneSuggestions"></datalist>
-          <small id="timeZoneValidation" class="hint"></small>
-        </label>
+      <awwbookmarklet-panel slot="status" class="context-panel">
+        <span slot="title">Evaluation Context</span>
+        <div class="context-grid">
+          <awwbookmarklet-field id="timeZoneField" label="Time Zone" help="">
+            <awwbookmarklet-input id="timeZoneInput" list="zoneSuggestions" autocomplete="off" spellcheck="false"></awwbookmarklet-input>
+            <datalist id="zoneSuggestions"></datalist>
+          </awwbookmarklet-field>
 
-        <label class="control">
-          <span>Now Mode</span>
-          <select id="nowModeSelect">
-            <option value="fixed">Fixed now</option>
-            <option value="real">Real now</option>
-          </select>
-        </label>
+          <awwbookmarklet-field label="Now Mode">
+            <awwbookmarklet-select id="nowModeSelect">
+              <option value="real">Real now</option>
+              <option value="fixed">Fixed now</option>
+            </awwbookmarklet-select>
+          </awwbookmarklet-field>
 
-        <label class="control">
-          <span>Business Calendar</span>
-          <select id="calendarModeSelect">
-            <option value="weekday">Mon-Fri (no holidays)</option>
-            <option value="holidays">Holidays enabled (US 2026 sample)</option>
-          </select>
-        </label>
+          <awwbookmarklet-field label="Business Calendar">
+            <awwbookmarklet-select id="calendarModeSelect">
+              <option value="weekday">Mon-Fri, no holidays</option>
+              <option value="holidays">US federal holidays</option>
+            </awwbookmarklet-select>
+          </awwbookmarklet-field>
 
-        <label class="control checkbox-control">
-          <input id="resolverToggle" type="checkbox" />
-          <span>Enable place names</span>
-        </label>
+          <awwbookmarklet-field label="Options">
+            <div class="stacked-controls">
+              <awwbookmarklet-checkbox id="resolverToggle">Enable place names</awwbookmarklet-checkbox>
+              <awwbookmarklet-checkbox id="developerToggle">Developer details</awwbookmarklet-checkbox>
+            </div>
+          </awwbookmarklet-field>
 
-        <label class="control checkbox-control">
-          <input id="developerToggle" type="checkbox" />
-          <span>Developer details</span>
-        </label>
-
-        <div class="control now-preview-block">
-          <span>Effective now</span>
-          <output id="nowPreview">Loading...</output>
+          <awwbookmarklet-metric-card id="nowMetric" class="now-metric" label="Effective now" value="Loading..." description="Current evaluation anchor"></awwbookmarklet-metric-card>
         </div>
-      </div>
-    </header>
+      </awwbookmarklet-panel>
 
-    <main class="layout">
-      <section class="panel editor-panel" aria-label="Expression editor">
-        <div class="panel-head">
-          <h2>Expression</h2>
-          <div class="status-group">
-            <span id="evaluatingBadge" class="badge subtle" hidden>Evaluating</span>
-            <span id="lineBadge" class="badge subtle">Line 1</span>
-          </div>
-        </div>
+      <main slot="body" class="workbench">
+        <section class="primary-grid" aria-label="Calculator workbench">
+          <awwbookmarklet-panel class="editor-panel" aria-label="Expression editor">
+            <span slot="title">Expression</span>
+            <span slot="subtitle">Only the first non-empty line is evaluated.</span>
+            <div slot="actions" id="fixtureBadge" class="system-badge">Custom input</div>
 
-        <div class="editor-wrap" id="editorWrap">
-          <pre id="editorHighlight" aria-hidden="true"></pre>
-          <textarea
-            id="expressionInput"
-            spellcheck="false"
-            autocomplete="off"
-            autocorrect="off"
-            autocapitalize="off"
-            aria-label="Date expression input"
-            placeholder="Type an expression like: now + 1d"
-          ></textarea>
-        </div>
-      </section>
+            <div class="editor-wrap" id="editorWrap">
+              <pre id="editorHighlight" aria-hidden="true"></pre>
+              <textarea
+                id="expressionInput"
+                spellcheck="false"
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="off"
+                aria-label="Date expression input"
+                placeholder="Type an expression like: now + 1d"
+              ></textarea>
+            </div>
+          </awwbookmarklet-panel>
 
-      <section class="panel output-panel" aria-live="polite" aria-label="Result panel">
-        <div class="panel-head">
-          <h2>Result</h2>
-          <div id="fixtureBadge" class="badge subtle">Custom input</div>
-        </div>
+          <awwbookmarklet-panel class="output-panel" aria-live="polite" aria-label="Result panel">
+            <span slot="title">Result</span>
+            <span slot="subtitle">Formatted value, type, context, and error diagnostics.</span>
 
-        <div id="idleState" class="state-block">
-          <p>Type an expression to evaluate.</p>
-          <div id="inlineExamples" class="chips" aria-label="Quick examples"></div>
-        </div>
+            <div id="idleState" class="state-block">
+              <awwbookmarklet-empty-state title="Ready" description="Type an expression to evaluate.">
+                <awwbookmarklet-toolbar slot="actions" id="inlineExamples" class="quick-actions" density="compact" wrap></awwbookmarklet-toolbar>
+              </awwbookmarklet-empty-state>
+            </div>
 
-        <div id="successState" class="state-block" hidden>
-          <p id="primaryOutput" class="primary-output"></p>
-          <div class="meta-row">
-            <span id="typeBadge" class="badge success"></span>
-            <span id="zoneBadge" class="badge"></span>
-          </div>
-          <p id="secondaryOutput" class="secondary-output"></p>
-          <div id="explainPanel" class="explain-panel" hidden>
-            <h3>Explain</h3>
-            <ul id="explainList"></ul>
-          </div>
-        </div>
+            <div id="successState" class="state-block" hidden>
+              <awwbookmarklet-card tone="success" class="result-card">
+                <span slot="title">Evaluated Value</span>
+                <span slot="meta" id="secondaryOutput"></span>
+                <p id="primaryOutput" class="primary-output"></p>
+                <div slot="footer" class="meta-row">
+                  <span id="typeBadge" class="system-badge success"></span>
+                  <span id="zoneBadge" class="system-badge"></span>
+                </div>
+              </awwbookmarklet-card>
 
-        <div id="errorState" class="state-block" hidden>
-          <button id="errorMessageButton" class="error-message" type="button"></button>
-          <p class="error-code">Code: <code id="errorCode"></code></p>
-          <p class="error-location">Location: <code id="errorLocation"></code></p>
-          <ul id="errorHints" class="error-hints"></ul>
-        </div>
-      </section>
-    </main>
+              <awwbookmarklet-panel id="explainPanel" class="explain-panel" hidden>
+                <span slot="title">Explain</span>
+                <div id="explainList" class="status-stack"></div>
+              </awwbookmarklet-panel>
+            </div>
 
-    <section class="panel examples-panel" aria-label="Examples gallery">
-      <div class="panel-head">
-        <h2>Examples</h2>
-        <p class="hint">Loaded from fixture data when available.</p>
-      </div>
-      <div id="examplesByCategory" class="examples-grid"></div>
-    </section>
+            <div id="errorState" class="state-block" hidden>
+              <awwbookmarklet-alert id="errorAlert" tone="danger" title="Expression Error" open>
+                <button id="errorMessageButton" class="link-button" type="button"></button>
+              </awwbookmarklet-alert>
+              <awwbookmarklet-list class="diagnostic-list">
+                <awwbookmarklet-list-item tone="danger">
+                  <span slot="title">Code</span>
+                  <code id="errorCode"></code>
+                </awwbookmarklet-list-item>
+                <awwbookmarklet-list-item tone="warning">
+                  <span slot="title">Location</span>
+                  <code id="errorLocation"></code>
+                </awwbookmarklet-list-item>
+              </awwbookmarklet-list>
+              <div id="errorHints" class="status-stack"></div>
+            </div>
+          </awwbookmarklet-panel>
+        </section>
 
-    <section id="developerSection" class="panel developer-panel" hidden>
-      <div class="panel-head">
-        <h2>Developer Details</h2>
-      </div>
-      <div class="developer-grid">
-        <details open>
-          <summary>Tokens</summary>
-          <pre id="tokensDump"></pre>
-        </details>
-        <details open>
-          <summary>AST</summary>
-          <pre id="astDump"></pre>
-        </details>
-        <details open>
-          <summary>Raw Value</summary>
-          <pre id="valueDump"></pre>
-        </details>
-        <details open>
-          <summary>Effective Context</summary>
-          <pre id="contextDump"></pre>
-        </details>
-      </div>
-    </section>
+        <awwbookmarklet-panel class="examples-panel" aria-label="Examples gallery">
+          <span slot="title">Examples</span>
+          <span slot="subtitle">Fixture and built-in expressions grouped by behavior.</span>
+          <awwbookmarklet-tabs id="examplesByCategory" class="examples-tabs"></awwbookmarklet-tabs>
+        </awwbookmarklet-panel>
+
+        <awwbookmarklet-panel id="developerSection" class="developer-panel" hidden>
+          <span slot="title">Developer Details</span>
+          <span slot="subtitle">Raw evaluator output for the selected expression.</span>
+          <awwbookmarklet-tabs class="developer-tabs">
+            <awwbookmarklet-tab-panel label="Tokens" selected><pre id="tokensDump" class="code-pane"></pre></awwbookmarklet-tab-panel>
+            <awwbookmarklet-tab-panel label="AST"><pre id="astDump" class="code-pane"></pre></awwbookmarklet-tab-panel>
+            <awwbookmarklet-tab-panel label="Raw Value"><pre id="valueDump" class="code-pane"></pre></awwbookmarklet-tab-panel>
+            <awwbookmarklet-tab-panel label="Context"><pre id="contextDump" class="code-pane"></pre></awwbookmarklet-tab-panel>
+          </awwbookmarklet-tabs>
+        </awwbookmarklet-panel>
+      </main>
+
+      <awwbookmarklet-statusbar slot="footer">
+        <span>Fixture context: US 2026 sample</span>
+        <span>Storage: local browser</span>
+        <span>Timezone validation stays non-blocking</span>
+      </awwbookmarklet-statusbar>
+    </awwbookmarklet-app-shell>
 
     <script type="module" src="./app/main.js"></script>
   </body>

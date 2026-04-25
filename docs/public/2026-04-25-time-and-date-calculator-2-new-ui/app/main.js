@@ -1,11 +1,17 @@
 import {
+  PUBLIC_TOKENS,
+  setTheme,
+  TAGS,
+} from "../ui_dist/bookmarklet/index.js";
+
+import {
   businessCalendarFromUnitedStatesFederalHolidays,
   createDefaultBusinessCalendar,
   evaluateExpression,
   validateIanaTimeZone,
 } from "../lib/index.js";
 
-const STORAGE_KEY = "datecalc.demo.state.v1";
+const STORAGE_KEY = "datecalc.demo.state.v2";
 const DATA_ROOT = "./reference_data/datecalc_reference_data";
 
 const REQUIRED_CATEGORIES = [
@@ -59,7 +65,7 @@ const state = {
   expression: "",
   selectedExampleId: null,
   timeZoneId: "UTC",
-  nowMode: "fixed",
+  nowMode: "real",
   fixedNowIso: null,
   businessCalendarMode: "weekday",
   resolverEnabled: false,
@@ -74,14 +80,14 @@ const state = {
 };
 
 const elements = {
+  timeZoneField: document.getElementById("timeZoneField"),
   timeZoneInput: document.getElementById("timeZoneInput"),
-  timeZoneValidation: document.getElementById("timeZoneValidation"),
   zoneSuggestions: document.getElementById("zoneSuggestions"),
   nowModeSelect: document.getElementById("nowModeSelect"),
   calendarModeSelect: document.getElementById("calendarModeSelect"),
   resolverToggle: document.getElementById("resolverToggle"),
   developerToggle: document.getElementById("developerToggle"),
-  nowPreview: document.getElementById("nowPreview"),
+  nowMetric: document.getElementById("nowMetric"),
   evaluatingBadge: document.getElementById("evaluatingBadge"),
   lineBadge: document.getElementById("lineBadge"),
   expressionInput: document.getElementById("expressionInput"),
@@ -113,10 +119,17 @@ const debouncedEvaluate = debounce(() => runEvaluation(), 200);
 
 init().catch((error) => {
   console.error(error);
-  elements.nowPreview.textContent = "Failed to initialize demo.";
+  elements.nowMetric.setAttribute("value", "Failed");
+  elements.nowMetric.setAttribute("tone", "danger");
+  elements.nowMetric.setAttribute("description", "Failed to initialize demo.");
 });
 
 async function init() {
+  setTheme({
+    [PUBLIC_TOKENS.selectionBg]: "#1f5eae",
+    [PUBLIC_TOKENS.focusRing]: "#174f9c",
+    [PUBLIC_TOKENS.controlHeight]: "30px",
+  });
   hydrateState();
   await loadReferenceData();
   applyInitialDefaults();
@@ -181,6 +194,7 @@ function bindEvents() {
     const lineInfo = getFirstNonEmptyLine(state.expression);
     if (!selected || !lineInfo || lineInfo.lineText !== selected.expr) {
       state.selectedExampleId = null;
+      updateExampleSelection();
     }
 
     markEvaluating();
@@ -252,14 +266,14 @@ function runEvaluation() {
     renderEditorHighlight(elements.expressionInput.value, null, "");
     renderDeveloperDetails(null, null, null);
     elements.lineBadge.textContent = "Line -";
-    elements.nowPreview.textContent = previewNowString(buildEvaluationOptions());
+    updateNowMetric(previewNowString(buildEvaluationOptions()));
     elements.evaluatingBadge.hidden = true;
     return;
   }
 
   elements.lineBadge.textContent = `Line ${lineInfo.lineNumber}`;
   const context = buildEvaluationOptions();
-  elements.nowPreview.textContent = previewNowString(context);
+  updateNowMetric(previewNowString(context));
 
   const result = evaluateExpression(lineInfo.lineText, context);
   state.lastResult = result;
@@ -315,19 +329,40 @@ function previewNowString(context) {
   return probe.formatted || String(probe.value);
 }
 
+function updateNowMetric(value) {
+  elements.nowMetric.setAttribute("value", compactNowValue(value));
+  elements.nowMetric.setAttribute("tone", value.startsWith("Error:") ? "danger" : "info");
+  elements.nowMetric.setAttribute(
+    "description",
+    value.startsWith("Error:")
+      ? "Context cannot be evaluated"
+      : `${state.nowMode === "fixed" ? "Fixed fixture anchor" : "Real browser clock"}: ${value}`,
+  );
+}
+
+function compactNowValue(value) {
+  const match = String(value).match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(?::\d{2})?[+-]\d{2}:\d{2}\[([^\]]+)\]$/);
+  if (!match) {
+    return value;
+  }
+  return `${match[1]} ${match[2]} ${match[3]}`;
+}
+
 function validateTimeZoneInput() {
   const zone = state.timeZoneId || "";
   if (!zone) {
-    elements.timeZoneValidation.textContent = "";
+    elements.timeZoneField.removeAttribute("error");
+    elements.timeZoneField.setAttribute("help", "");
     return;
   }
 
   if (validateIanaTimeZone(zone)) {
-    elements.timeZoneValidation.textContent = "";
+    elements.timeZoneField.removeAttribute("error");
+    elements.timeZoneField.setAttribute("help", "Valid IANA zone id.");
     return;
   }
 
-  elements.timeZoneValidation.textContent = "Invalid IANA zone id. Expression editing stays enabled.";
+  elements.timeZoneField.setAttribute("error", "Invalid IANA zone id. Editing stays enabled.");
 }
 
 function renderIdleState() {
@@ -335,7 +370,7 @@ function renderIdleState() {
   elements.successState.hidden = true;
   elements.errorState.hidden = true;
   elements.fixtureBadge.textContent = "Custom input";
-  elements.fixtureBadge.className = "badge subtle";
+  elements.fixtureBadge.className = "system-badge";
 }
 
 function renderSuccessState(result, context) {
@@ -353,7 +388,9 @@ function renderSuccessState(result, context) {
   elements.explainList.innerHTML = "";
   if (explainSteps.length > 0) {
     for (const step of explainSteps) {
-      const item = document.createElement("li");
+      const item = document.createElement(TAGS.statusLine);
+      item.setAttribute("compact", "");
+      item.setAttribute("tone", "info");
       item.textContent = step;
       elements.explainList.append(item);
     }
@@ -375,7 +412,9 @@ function renderErrorState(error, lineInfo) {
   elements.errorHints.innerHTML = "";
 
   for (const hint of error.hints || []) {
-    const item = document.createElement("li");
+    const item = document.createElement(TAGS.statusLine);
+    item.setAttribute("tone", "warning");
+    item.setAttribute("compact", "");
     item.textContent = hint;
     elements.errorHints.append(item);
   }
@@ -385,7 +424,7 @@ function updateFixtureBadge(lineInfo, result) {
   const selected = getSelectedFixture();
   if (!selected || lineInfo.lineText !== selected.expr) {
     elements.fixtureBadge.textContent = "Custom input";
-    elements.fixtureBadge.className = "badge subtle";
+    elements.fixtureBadge.className = "system-badge";
     return;
   }
 
@@ -394,7 +433,7 @@ function updateFixtureBadge(lineInfo, result) {
     : result.ok && selected.type === result.valueType && compareExpectedValue(selected.expected, result.formatted, result.value);
 
   elements.fixtureBadge.textContent = matches ? "Matches fixture" : "Differs from fixture";
-  elements.fixtureBadge.className = matches ? "badge success" : "badge subtle";
+  elements.fixtureBadge.className = matches ? "system-badge success" : "system-badge warning";
 }
 
 function compareExpectedValue(expected, formatted, rawValue) {
@@ -498,31 +537,44 @@ function buildExamples() {
 
   elements.examplesByCategory.innerHTML = "";
   for (const [category, entries] of grouped.entries()) {
-    const wrapper = document.createElement("section");
-    wrapper.className = "example-group";
-
-    const heading = document.createElement("h3");
-    heading.textContent = category;
-    wrapper.append(heading);
-
-    for (const entry of entries) {
-      const button = document.createElement("button");
-      button.className = "example-item";
-      button.type = "button";
-      button.textContent = entry.expr;
-      button.addEventListener("click", () => selectExample(entry));
-      wrapper.append(button);
+    const wrapper = document.createElement(TAGS.tabPanel);
+    wrapper.setAttribute("label", category);
+    if (elements.examplesByCategory.children.length === 0) {
+      wrapper.setAttribute("selected", "");
     }
 
+    const list = document.createElement(TAGS.list);
+    list.className = "example-list";
+    list.setAttribute("empty-text", "No examples in this category");
+
+    for (const entry of entries) {
+      const item = document.createElement(TAGS.listItem);
+      item.setAttribute("interactive", "");
+      item.dataset.exampleId = entry.id;
+      item.toggleAttribute("selected", entry.id === state.selectedExampleId);
+
+      const title = document.createElement("span");
+      title.slot = "title";
+      title.className = "example-code";
+      title.textContent = entry.expr;
+
+      const meta = document.createElement("span");
+      meta.slot = "meta";
+      meta.textContent = entry.fixture ? `Fixture: ${entry.fixture.type}` : "Built-in example";
+
+      item.append(title, meta);
+      item.addEventListener("awwbookmarklet-list-item-activate", () => selectExample(entry));
+      list.append(item);
+    }
+
+    wrapper.append(list);
     elements.examplesByCategory.append(wrapper);
   }
 
   const quickExamples = merged.slice(0, 4);
   elements.inlineExamples.innerHTML = "";
   for (const entry of quickExamples) {
-    const button = document.createElement("button");
-    button.className = "chip-btn";
-    button.type = "button";
+    const button = document.createElement(TAGS.button);
     button.textContent = entry.expr;
     button.addEventListener("click", () => selectExample(entry));
     elements.inlineExamples.append(button);
@@ -537,7 +589,15 @@ function selectExample(example) {
   elements.expressionInput.value = example.expr;
   elements.expressionInput.focus();
   persistState();
+  updateExampleSelection();
   runEvaluation();
+}
+
+function updateExampleSelection() {
+  const items = elements.examplesByCategory.querySelectorAll(`${TAGS.listItem}[data-example-id]`);
+  for (const item of items) {
+    item.toggleAttribute("selected", item.dataset.exampleId === state.selectedExampleId);
+  }
 }
 
 function getSelectedFixture() {
@@ -697,7 +757,7 @@ function hydrateState() {
   try {
     const persisted = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     state.timeZoneId = typeof persisted.timeZoneId === "string" ? persisted.timeZoneId : state.timeZoneId;
-    state.nowMode = persisted.nowMode === "real" ? "real" : "fixed";
+    state.nowMode = persisted.nowMode === "fixed" ? "fixed" : "real";
     state.businessCalendarMode = persisted.businessCalendarMode === "holidays" ? "holidays" : "weekday";
     state.resolverEnabled = Boolean(persisted.resolverEnabled);
     state.developerDetails = Boolean(persisted.developerDetails);
