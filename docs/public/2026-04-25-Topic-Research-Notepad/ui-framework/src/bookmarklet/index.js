@@ -61,6 +61,7 @@ export { AwwContextBar } from "../components/context-bar.js";
 export { AwwStatusStrip } from "../components/status-strip.js";
 export { AwwTitlebar } from "../components/titlebar.js";
 export { AwwContextPanel } from "../components/context-panel.js";
+export { AwwSplitPane, clampSplitValue, normalizeSplitDirection, splitValueFromPointerDelta } from "../components/split-pane.js";
 export { iconSvg, ICON_NAMES } from "../icons/retro-icons.js";
 export { DEFAULT_THEME } from "../themes/default-theme.js";
 export {

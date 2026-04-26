@@ -195,6 +195,8 @@
       return [c.text, c.attribution, c.sourceUrl].join(" ");
     if (block.type === "code")
       return [c.language, c.text].join(" ");
+    if (block.type === "paragraph" || block.type === "heading")
+      return c.text || stripTags(c.html || "");
     return c.text || JSON.stringify(c);
   }
   function normalizeSearchText(value) {
@@ -203,6 +205,9 @@
   function previewText(value) {
     const text = String(value || "").replace(/\s+/g, " ").trim();
     return text.length > 160 ? `${text.slice(0, 159)}...` : text;
+  }
+  function stripTags(value) {
+    return String(value || "").replace(/<[^>]*>/g, " ");
   }
   function byOrder(a, b) {
     return a.sortOrder - b.sortOrder || String(a.createdAt).localeCompare(String(b.createdAt));
@@ -231,5 +236,5 @@
   }
 })();
 
-//# debugId=06D3A30DDFE725CF64756E2164756E21
+//# debugId=96C522CEE31756C264756E2164756E21
 //# sourceMappingURL=storage-worker.js.map

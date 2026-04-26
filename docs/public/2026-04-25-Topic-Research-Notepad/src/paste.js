@@ -1,6 +1,7 @@
 import { BLOCK_TYPES } from "./constants.js";
 import { createBlock, createId, deriveDomain } from "./models.js";
 import { createLogger } from "./observability/logger.js";
+import { normalizeRichTextContent, sanitizeInlineHtml } from "./rich-text.js";
 
 const logger = createLogger("Paste");
 
@@ -55,7 +56,7 @@ function elementToBlock(pageId, element) {
   const text = collapseText(element.textContent || "");
   if (!text && tag !== "table") return null;
   if (/^h[1-6]$/.test(tag)) {
-    return createBlock({ pageId, type: BLOCK_TYPES.heading, content: { level: Math.min(3, Number(tag.slice(1))), text } });
+    return createBlock({ pageId, type: BLOCK_TYPES.heading, content: { level: Math.min(3, Number(tag.slice(1))), html: sanitizeInlineHtml(element.innerHTML), text } });
   }
   if (tag === "blockquote") {
     return createBlock({ pageId, type: BLOCK_TYPES.quote, content: { text, attribution: "", sourceUrl: "" } });
@@ -94,9 +95,9 @@ function elementToBlock(pageId, element) {
     });
   }
   if (["p", "div", "section", "article", "main"].includes(tag)) {
-    return createBlock({ pageId, type: BLOCK_TYPES.paragraph, content: { text } });
+    return createBlock({ pageId, type: BLOCK_TYPES.paragraph, content: normalizeRichTextContent({ html: element.innerHTML, text }) });
   }
-  return createBlock({ pageId, type: BLOCK_TYPES.paragraph, content: { text } });
+  return createBlock({ pageId, type: BLOCK_TYPES.paragraph, content: normalizeRichTextContent({ html: element.innerHTML, text }) });
 }
 
 function collapseText(value) {

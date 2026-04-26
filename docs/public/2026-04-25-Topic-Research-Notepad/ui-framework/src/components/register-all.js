@@ -42,6 +42,7 @@ import { AwwContextBar } from "./context-bar.js";
 import { AwwStatusStrip } from "./status-strip.js";
 import { AwwTitlebar } from "./titlebar.js";
 import { AwwContextPanel } from "./context-panel.js";
+import { AwwSplitPane } from "./split-pane.js";
 
 export function registerAllComponents() {
   defineMany([
@@ -87,6 +88,7 @@ export function registerAllComponents() {
     [TAGS.contextBar, AwwContextBar],
     [TAGS.statusStrip, AwwStatusStrip],
     [TAGS.titlebar, AwwTitlebar],
-    [TAGS.contextPanel, AwwContextPanel]
+    [TAGS.contextPanel, AwwContextPanel],
+    [TAGS.splitPane, AwwSplitPane]
   ]);
 }

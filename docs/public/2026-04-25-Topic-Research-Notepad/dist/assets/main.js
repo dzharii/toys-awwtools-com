@@ -43,7 +43,8 @@ var TAGS = {
   contextBar: "awwbookmarklet-context-bar",
   statusStrip: "awwbookmarklet-status-strip",
   titlebar: "awwbookmarklet-titlebar",
-  contextPanel: "awwbookmarklet-context-panel"
+  contextPanel: "awwbookmarklet-context-panel",
+  splitPane: "awwbookmarklet-split-pane"
 };
 var GLOBAL_SYMBOLS = {
   rootsByVersion: Symbol.for("awwtools.bookmarkletUi.overlayRootsByVersion"),
@@ -5718,6 +5719,259 @@ class AwwContextPanel extends HTMLElement {
     });
   }
 }
+var SPLITTER_SIZE = 8;
+var DEFAULT_VALUE = 280;
+var SPLIT_PANE_STYLES = css`
+  :host {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .container {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  :host([direction="horizontal"]) .container {
+    grid-template-columns: var(--_start-size, 280px) var(--_splitter-size, 8px) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  :host([direction="vertical"]) .container {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: var(--_start-size, 280px) var(--_splitter-size, 8px) minmax(0, 1fr);
+  }
+
+  .pane {
+    min-width: 0;
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .splitter {
+    display: grid;
+    place-items: center;
+    min-width: 0;
+    min-height: 0;
+    background: var(--awwbookmarklet-surface-inset-bg, #dfe4ea);
+    border: 0 solid var(--awwbookmarklet-border-subtle, #a8b0ba);
+    touch-action: none;
+    user-select: none;
+  }
+
+  :host([direction="horizontal"]) .splitter {
+    cursor: col-resize;
+    border-inline-width: 1px;
+  }
+
+  :host([direction="vertical"]) .splitter {
+    cursor: row-resize;
+    border-block-width: 1px;
+  }
+
+  :host([disabled]) .splitter {
+    cursor: default;
+    opacity: 0.65;
+  }
+
+  .splitter:focus-visible {
+    outline: none;
+    box-shadow: var(--_ring);
+    z-index: 1;
+  }
+
+  .grip {
+    width: 2px;
+    height: 28px;
+    background: var(--awwbookmarklet-border-subtle, #a8b0ba);
+    box-shadow: 3px 0 0 var(--awwbookmarklet-border-subtle, #a8b0ba);
+  }
+
+  :host([direction="vertical"]) .grip {
+    width: 28px;
+    height: 2px;
+    box-shadow: 0 3px 0 var(--awwbookmarklet-border-subtle, #a8b0ba);
+  }
+`;
+function clampSplitValue(value, { available, minStart = 160, minEnd = 240, maxStart = Infinity } = {}) {
+  const numericValue = toFiniteNumber(value, DEFAULT_VALUE);
+  const usable = Math.max(0, toFiniteNumber(available, 0));
+  const hardMin = Math.max(0, toFiniteNumber(minStart, 160));
+  const hardMax = Math.max(0, usable - Math.max(0, toFiniteNumber(minEnd, 240)));
+  const effectiveMax = Number.isFinite(maxStart) ? Math.min(hardMax, Math.max(0, maxStart)) : hardMax;
+  if (effectiveMax < hardMin)
+    return Math.max(0, Math.min(numericValue, hardMax));
+  return Math.min(Math.max(numericValue, hardMin), effectiveMax);
+}
+function splitValueFromPointerDelta(direction, input) {
+  return input.startValue + (direction === "vertical" ? input.clientY - input.startClientY : input.clientX - input.startClientX);
+}
+function normalizeSplitDirection(value) {
+  return value === "vertical" ? "vertical" : "horizontal";
+}
+var BaseHTMLElement = globalThis.HTMLElement || class {
+};
+
+class AwwSplitPane extends BaseHTMLElement {
+  static observedAttributes = ["direction", "value", "min-start", "min-end", "max-start", "disabled", "aria-label"];
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, SPLIT_PANE_STYLES]);
+    shadow.innerHTML = `
+      <div class="container" part="container">
+        <div class="pane start" part="start-pane"><slot name="start"></slot></div>
+        <div class="splitter" part="splitter" role="separator" tabindex="0">
+          <div class="grip" part="splitter-grip"></div>
+        </div>
+        <div class="pane end" part="end-pane"><slot name="end"></slot></div>
+      </div>
+    `;
+    this.splitter = shadow.querySelector(".splitter");
+    this.drag = null;
+    this.resizeObserver = null;
+    this.onPointerMove = (event) => this.#handlePointerMove(event);
+    this.onPointerUp = (event) => this.#finishPointer(event);
+  }
+  connectedCallback() {
+    if (!this.hasAttribute("direction"))
+      this.setAttribute("direction", "horizontal");
+    this.#sync();
+    this.splitter.addEventListener("pointerdown", (event) => this.#handlePointerDown(event));
+    this.splitter.addEventListener("keydown", (event) => this.#handleKeydown(event));
+    if (typeof ResizeObserver !== "undefined") {
+      this.resizeObserver = new ResizeObserver(() => this.#setValue(this.value, { emit: false, reflect: true }));
+      this.resizeObserver.observe(this);
+    } else {
+      window.addEventListener("resize", () => this.#setValue(this.value, { emit: false, reflect: true }));
+    }
+  }
+  disconnectedCallback() {
+    this.resizeObserver?.disconnect();
+    document.removeEventListener("pointermove", this.onPointerMove);
+    document.removeEventListener("pointerup", this.onPointerUp);
+    document.removeEventListener("pointercancel", this.onPointerUp);
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  get value() {
+    return toFiniteNumber(this.getAttribute("value"), DEFAULT_VALUE);
+  }
+  set value(next) {
+    this.#setValue(next, { emit: false, reflect: true });
+  }
+  get direction() {
+    return normalizeSplitDirection(this.getAttribute("direction"));
+  }
+  #sync() {
+    const direction = this.direction;
+    if (this.getAttribute("direction") !== direction)
+      this.setAttribute("direction", direction);
+    this.#setValue(this.value, { emit: false, reflect: false });
+    this.splitter?.setAttribute("aria-orientation", direction === "vertical" ? "horizontal" : "vertical");
+    this.splitter?.setAttribute("aria-label", this.getAttribute("aria-label") || "Resize panels");
+  }
+  #setValue(value, { emit = true, commit = false, dragging = false, reflect = true } = {}) {
+    const next = Math.round(this.#clamp(value));
+    if (reflect && this.getAttribute("value") !== String(next))
+      this.setAttribute("value", String(next));
+    this.style.setProperty("--_start-size", `${next}px`);
+    this.style.setProperty("--_splitter-size", `${SPLITTER_SIZE}px`);
+    this.#syncAria(next);
+    if (emit)
+      this.#emit(commit ? "awwbookmarklet-split-pane-resize-commit" : "awwbookmarklet-split-pane-resize", { value: next, direction: this.direction, dragging });
+  }
+  #clamp(value) {
+    const rect = this.getBoundingClientRect();
+    const available = (this.direction === "vertical" ? rect.height : rect.width) - SPLITTER_SIZE;
+    return clampSplitValue(value, {
+      available,
+      minStart: toFiniteNumber(this.getAttribute("min-start"), 160),
+      minEnd: toFiniteNumber(this.getAttribute("min-end"), 240),
+      maxStart: this.hasAttribute("max-start") ? toFiniteNumber(this.getAttribute("max-start"), Infinity) : Infinity
+    });
+  }
+  #syncAria(value) {
+    const rect = this.getBoundingClientRect();
+    const available = Math.max(0, (this.direction === "vertical" ? rect.height : rect.width) - SPLITTER_SIZE);
+    const min = Math.max(0, toFiniteNumber(this.getAttribute("min-start"), 160));
+    const max = Math.max(0, available - Math.max(0, toFiniteNumber(this.getAttribute("min-end"), 240)));
+    this.splitter?.setAttribute("aria-valuemin", String(Math.min(min, max)));
+    this.splitter?.setAttribute("aria-valuemax", String(max));
+    this.splitter?.setAttribute("aria-valuenow", String(value));
+  }
+  #handlePointerDown(event) {
+    if (this.hasAttribute("disabled"))
+      return;
+    event.preventDefault();
+    this.drag = {
+      pointerId: event.pointerId,
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      startValue: this.value
+    };
+    this.splitter.setPointerCapture?.(event.pointerId);
+    document.addEventListener("pointermove", this.onPointerMove);
+    document.addEventListener("pointerup", this.onPointerUp);
+    document.addEventListener("pointercancel", this.onPointerUp);
+  }
+  #handlePointerMove(event) {
+    if (!this.drag || event.pointerId !== this.drag.pointerId)
+      return;
+    const next = splitValueFromPointerDelta(this.direction, { ...this.drag, clientX: event.clientX, clientY: event.clientY });
+    this.#setValue(next, { dragging: true });
+  }
+  #finishPointer(event) {
+    if (!this.drag || event.pointerId !== this.drag.pointerId)
+      return;
+    this.splitter.releasePointerCapture?.(event.pointerId);
+    this.drag = null;
+    document.removeEventListener("pointermove", this.onPointerMove);
+    document.removeEventListener("pointerup", this.onPointerUp);
+    document.removeEventListener("pointercancel", this.onPointerUp);
+    this.#emit("awwbookmarklet-split-pane-resize-commit", { value: this.value, direction: this.direction });
+  }
+  #handleKeydown(event) {
+    if (this.hasAttribute("disabled"))
+      return;
+    const step = event.shiftKey ? 50 : 10;
+    const horizontal = this.direction === "horizontal";
+    const max = Number(this.splitter.getAttribute("aria-valuemax")) || this.value;
+    const min = Number(this.splitter.getAttribute("aria-valuemin")) || 0;
+    let next = null;
+    if (horizontal && event.key === "ArrowLeft")
+      next = this.value - step;
+    if (horizontal && event.key === "ArrowRight")
+      next = this.value + step;
+    if (!horizontal && event.key === "ArrowUp")
+      next = this.value - step;
+    if (!horizontal && event.key === "ArrowDown")
+      next = this.value + step;
+    if (event.key === "Home")
+      next = min;
+    if (event.key === "End")
+      next = max;
+    if (next === null)
+      return;
+    event.preventDefault();
+    this.#setValue(next, { dragging: false });
+    this.#emit("awwbookmarklet-split-pane-resize-commit", { value: this.value, direction: this.direction });
+  }
+  #emit(type, detail) {
+    this.dispatchEvent(new CustomEvent(type, { bubbles: true, detail }));
+  }
+}
+function toFiniteNumber(value, fallback) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : fallback;
+}
 function registerAllComponents() {
   defineMany([
     [TAGS.desktopRoot, AwwDesktopRoot],
@@ -5762,7 +6016,8 @@ function registerAllComponents() {
     [TAGS.contextBar, AwwContextBar],
     [TAGS.statusStrip, AwwStatusStrip],
     [TAGS.titlebar, AwwTitlebar],
-    [TAGS.contextPanel, AwwContextPanel]
+    [TAGS.contextPanel, AwwContextPanel],
+    [TAGS.splitPane, AwwSplitPane]
   ]);
 }
 function iconPlus() {
@@ -6605,8 +6860,167 @@ function summarizePayload(payload) {
   };
 }
 
+// src/rich-text.js
+var logger2 = createLogger("RichText");
+var ALLOWED_INLINE_TAGS = new Set(["A", "BR", "CODE", "EM", "MARK", "STRONG", "U"]);
+var BLOCK_BREAK_TAGS = new Set(["DIV", "P", "LI", "TR", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"]);
+function textToSafeHtml(text = "") {
+  return escapeHtml(text).replace(/\n/g, "<br>");
+}
+function normalizeRichTextContent(content = {}) {
+  const sourceHtml = typeof content.html === "string" && content.html ? content.html : textToSafeHtml(content.text || "");
+  const html = sanitizeInlineHtml(sourceHtml);
+  return { html, text: plainTextFromHtml(html) };
+}
+function sanitizeInlineHtml(html = "") {
+  if (typeof document === "undefined") {
+    return sanitizeInlineHtmlFallback(html);
+  }
+  const template = document.createElement("template");
+  template.innerHTML = String(html || "");
+  const stats = { removedElements: 0, removedAttributes: 0 };
+  const fragment = sanitizeChildren(template.content, stats);
+  const wrapper = document.createElement("div");
+  wrapper.append(fragment);
+  const output = normalizeInlineHtml(wrapper.innerHTML);
+  if (stats.removedElements || stats.removedAttributes)
+    logger2.debug("Sanitized inline HTML", { context: stats });
+  return output;
+}
+function plainTextFromHtml(html = "") {
+  if (typeof document === "undefined")
+    return stripTags(sanitizeInlineHtmlFallback(html)).replace(/\s+/g, " ").trim();
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = sanitizeInlineHtml(html);
+  return wrapper.innerText?.replace(/\u00a0/g, " ").trim() || wrapper.textContent?.replace(/\s+/g, " ").trim() || "";
+}
+function inlineHtmlToMarkdown(html = "") {
+  if (typeof document === "undefined")
+    return inlineHtmlToMarkdownFallback(html);
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = sanitizeInlineHtml(html);
+  return [...wrapper.childNodes].map(nodeToMarkdown).join("").replace(/\n{3,}/g, `
+
+`).trim();
+}
+function safeLinkHref(value = "") {
+  try {
+    const url = new URL(value, globalThis.location?.href || "https://example.invalid/");
+    return ["http:", "https:", "mailto:"].includes(url.protocol) ? url.href : "";
+  } catch {
+    return "";
+  }
+}
+function sanitizeChildren(parent, stats) {
+  const fragment = document.createDocumentFragment();
+  for (const child of [...parent.childNodes]) {
+    if (child.nodeType === Node.TEXT_NODE) {
+      fragment.append(document.createTextNode(child.textContent || ""));
+      continue;
+    }
+    if (child.nodeType !== Node.ELEMENT_NODE)
+      continue;
+    const tag = child.tagName;
+    if (tag === "SCRIPT" || tag === "STYLE" || tag === "IFRAME" || tag === "OBJECT" || tag === "EMBED" || tag === "FORM" || tag === "INPUT" || tag === "BUTTON") {
+      stats.removedElements += 1;
+      continue;
+    }
+    if (tag === "B") {
+      fragment.append(wrapAllowed("strong", child, stats));
+      continue;
+    }
+    if (tag === "I") {
+      fragment.append(wrapAllowed("em", child, stats));
+      continue;
+    }
+    if (ALLOWED_INLINE_TAGS.has(tag)) {
+      fragment.append(wrapAllowed(tag.toLowerCase(), child, stats));
+      continue;
+    }
+    if (BLOCK_BREAK_TAGS.has(tag) && fragment.childNodes.length)
+      fragment.append(document.createElement("br"));
+    fragment.append(sanitizeChildren(child, stats));
+    if (BLOCK_BREAK_TAGS.has(tag))
+      fragment.append(document.createElement("br"));
+    stats.removedElements += 1;
+  }
+  return fragment;
+}
+function wrapAllowed(tagName, source, stats) {
+  const element = document.createElement(tagName);
+  if (tagName === "a") {
+    const href = safeLinkHref(source.getAttribute("href") || "");
+    if (href) {
+      element.setAttribute("href", href);
+      element.setAttribute("rel", "noopener noreferrer");
+      element.setAttribute("target", "_blank");
+    }
+  }
+  stats.removedAttributes += Math.max(0, source.attributes.length - (tagName === "a" && element.hasAttribute("href") ? 1 : 0));
+  element.append(sanitizeChildren(source, stats));
+  if (tagName === "a" && !element.hasAttribute("href"))
+    return document.createTextNode(element.textContent || "");
+  return element;
+}
+function nodeToMarkdown(node) {
+  if (node.nodeType === Node.TEXT_NODE)
+    return node.textContent || "";
+  if (node.nodeType !== Node.ELEMENT_NODE)
+    return "";
+  const inner = [...node.childNodes].map(nodeToMarkdown).join("");
+  const tag = node.tagName;
+  if (tag === "BR")
+    return `
+`;
+  if (tag === "STRONG")
+    return `**${inner}**`;
+  if (tag === "EM")
+    return `_${inner}_`;
+  if (tag === "CODE")
+    return `\`${inner.replace(/`/g, "\\`")}\``;
+  if (tag === "MARK")
+    return `==${inner}==`;
+  if (tag === "U")
+    return inner;
+  if (tag === "A")
+    return node.getAttribute("href") ? `[${inner}](${node.getAttribute("href")})` : inner;
+  return inner;
+}
+function normalizeInlineHtml(html) {
+  return String(html || "").replace(/(<br>\s*){3,}/g, "<br><br>").replace(/^(<br>\s*)+|(\s*<br>)+$/g, "").trim();
+}
+function stripTags(value) {
+  return String(value || "").replace(/<[^>]*>/g, " ");
+}
+function sanitizeInlineHtmlFallback(html) {
+  let output = String(html || "").replace(/<\s*(script|style|iframe|object|embed|form|input|button)[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, "").replace(/<\s*br\s*\/?>/gi, "<br>").replace(/<\s*b(\s[^>]*)?>/gi, "<strong>").replace(/<\s*\/\s*b\s*>/gi, "</strong>").replace(/<\s*i(\s[^>]*)?>/gi, "<em>").replace(/<\s*\/\s*i\s*>/gi, "</em>");
+  output = output.replace(/<\s*\/?\s*([a-z0-9]+)([^>]*)>/gi, (match, rawTag, rawAttrs) => {
+    const tag = rawTag.toLowerCase();
+    if (match.startsWith("</"))
+      return ["strong", "em", "u", "code", "mark", "a"].includes(tag) ? `</${tag}>` : "";
+    if (tag === "br")
+      return "<br>";
+    if (!["strong", "em", "u", "code", "mark", "a"].includes(tag))
+      return "";
+    if (tag !== "a")
+      return `<${tag}>`;
+    const hrefMatch = String(rawAttrs || "").match(/\shref\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/i);
+    const href = hrefMatch ? hrefMatch[1].replace(/^['"]|['"]$/g, "") : "";
+    const safeHref = safeLinkHref(href);
+    return safeHref ? `<a href="${escapeHtml(safeHref)}" rel="noopener noreferrer" target="_blank">` : "";
+  });
+  return normalizeInlineHtml(output);
+}
+function inlineHtmlToMarkdownFallback(html) {
+  return sanitizeInlineHtmlFallback(html).replace(/<br>/gi, `
+`).replace(/<strong>([\s\S]*?)<\/strong>/gi, "**$1**").replace(/<em>([\s\S]*?)<\/em>/gi, "_$1_").replace(/<code>([\s\S]*?)<\/code>/gi, "`$1`").replace(/<mark>([\s\S]*?)<\/mark>/gi, "==$1==").replace(/<u>([\s\S]*?)<\/u>/gi, "$1").replace(/<a\s+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi, "[$2]($1)").replace(/<[^>]*>/g, "").trim();
+}
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+}
+
 // src/models.js
-var logger2 = createLogger("Models");
+var logger3 = createLogger("Models");
 var nowIso = () => new Date().toISOString();
 function createId2(prefix) {
   const value = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -6637,7 +7051,7 @@ function createBlock({ pageId, type = BLOCK_TYPES.paragraph, content, sortOrder 
 }
 function normalizePage(page = {}) {
   if (!isPlainObject(page))
-    logger2.warn("Normalizing malformed page record", { context: { receivedType: typeof page } });
+    logger3.warn("Normalizing malformed page record", { context: { receivedType: typeof page } });
   const value = isPlainObject(page) ? page : {};
   return {
     id: String(value.id || createId2("page")),
@@ -6656,11 +7070,11 @@ function normalizePage(page = {}) {
 }
 function normalizeBlock(block = {}) {
   if (!isPlainObject(block))
-    logger2.warn("Normalizing malformed block record", { context: { receivedType: typeof block } });
+    logger3.warn("Normalizing malformed block record", { context: { receivedType: typeof block } });
   const value = isPlainObject(block) ? block : {};
   const type = Object.values(BLOCK_TYPES).includes(value.type) ? value.type : String(value.type || "unknown");
   if (!Object.values(BLOCK_TYPES).includes(value.type))
-    logger2.warn("Normalizing unknown block type", { context: { blockId: value.id, type } });
+    logger3.warn("Normalizing unknown block type", { context: { blockId: value.id, type } });
   return {
     id: String(value.id || createId2("block")),
     pageId: String(value.pageId || ""),
@@ -6679,7 +7093,7 @@ function normalizeBlock(block = {}) {
 function defaultContentForType(type) {
   switch (type) {
     case BLOCK_TYPES.heading:
-      return { level: 2, text: "" };
+      return { level: 2, html: "", text: "" };
     case BLOCK_TYPES.quote:
       return { text: "", attribution: "", sourceUrl: "" };
     case BLOCK_TYPES.list:
@@ -6704,7 +7118,7 @@ function normalizeContent(type, content) {
   const value = isPlainObject(content) ? content : {};
   switch (type) {
     case BLOCK_TYPES.heading:
-      return { level: clampHeading(value.level), text: String(value.text || "") };
+      return { level: clampHeading(value.level), ...normalizeRichTextContent(value) };
     case BLOCK_TYPES.quote:
       return { text: String(value.text || ""), attribution: String(value.attribution || ""), sourceUrl: String(value.sourceUrl || "") };
     case BLOCK_TYPES.list:
@@ -6719,7 +7133,7 @@ function normalizeContent(type, content) {
     case BLOCK_TYPES.sourceLink:
       return normalizeSourceLink(value);
     case BLOCK_TYPES.paragraph:
-      return { text: String(value.text || "") };
+      return normalizeRichTextContent(value);
     default:
       return { raw: value, text: String(value.text || "") };
   }
@@ -6765,15 +7179,15 @@ function isPlainObject(value) {
 }
 
 // src/paste.js
-var logger3 = createLogger("Paste");
+var logger4 = createLogger("Paste");
 function blocksFromClipboard({ pageId, html = "", text = "" }) {
   if (html && typeof DOMParser !== "undefined") {
-    logger3.debug("Converting HTML clipboard payload", { context: { pageId, htmlLength: html.length, textLength: text.length } });
+    logger4.debug("Converting HTML clipboard payload", { context: { pageId, htmlLength: html.length, textLength: text.length } });
     return blocksFromHtml({ pageId, html });
   }
   if (html && typeof DOMParser === "undefined")
-    logger3.warn("DOMParser unavailable; falling back to stripped plain text", { context: { pageId, htmlLength: html.length } });
-  return blocksFromPlainText({ pageId, text: text || stripTags(html) });
+    logger4.warn("DOMParser unavailable; falling back to stripped plain text", { context: { pageId, htmlLength: html.length } });
+  return blocksFromPlainText({ pageId, text: text || stripTags2(html) });
 }
 function blocksFromPlainText({ pageId, text }) {
   const chunks = String(text || "").split(/\n{2,}/).map((part) => part.trim()).filter(Boolean);
@@ -6784,7 +7198,7 @@ function blocksFromPlainText({ pageId, text }) {
     content: looksLikeCode(part) ? { language: "", text: part } : { text: part },
     source: null
   }));
-  logger3.debug("Converted plain text clipboard payload", { context: { pageId, chunkCount: chunks.length, blockCount: blocks.length } });
+  logger4.debug("Converted plain text clipboard payload", { context: { pageId, chunkCount: chunks.length, blockCount: blocks.length } });
   return blocks;
 }
 function blocksFromHtml({ pageId, html }) {
@@ -6798,10 +7212,10 @@ function blocksFromHtml({ pageId, html }) {
       blocks.push(...Array.isArray(converted) ? converted : [converted]);
   }
   if (!blocks.length) {
-    logger3.warn("HTML clipboard produced no semantic blocks; falling back to plain text", { context: { pageId, removedNodeCount: unsafeNodes.length } });
+    logger4.warn("HTML clipboard produced no semantic blocks; falling back to plain text", { context: { pageId, removedNodeCount: unsafeNodes.length } });
     return blocksFromPlainText({ pageId, text: doc.body.textContent || "" });
   }
-  logger3.info("Converted HTML clipboard payload", { context: { pageId, removedNodeCount: unsafeNodes.length, blockCount: blocks.length } });
+  logger4.info("Converted HTML clipboard payload", { context: { pageId, removedNodeCount: unsafeNodes.length, blockCount: blocks.length } });
   return blocks.map((block, index) => ({ ...block, sortOrder: (index + 1) * 1000 }));
 }
 function elementToBlock(pageId, element) {
@@ -6810,7 +7224,7 @@ function elementToBlock(pageId, element) {
   if (!text && tag !== "table")
     return null;
   if (/^h[1-6]$/.test(tag)) {
-    return createBlock({ pageId, type: BLOCK_TYPES.heading, content: { level: Math.min(3, Number(tag.slice(1))), text } });
+    return createBlock({ pageId, type: BLOCK_TYPES.heading, content: { level: Math.min(3, Number(tag.slice(1))), html: sanitizeInlineHtml(element.innerHTML), text } });
   }
   if (tag === "blockquote") {
     return createBlock({ pageId, type: BLOCK_TYPES.quote, content: { text, attribution: "", sourceUrl: "" } });
@@ -6850,14 +7264,14 @@ function elementToBlock(pageId, element) {
     });
   }
   if (["p", "div", "section", "article", "main"].includes(tag)) {
-    return createBlock({ pageId, type: BLOCK_TYPES.paragraph, content: { text } });
+    return createBlock({ pageId, type: BLOCK_TYPES.paragraph, content: normalizeRichTextContent({ html: element.innerHTML, text }) });
   }
-  return createBlock({ pageId, type: BLOCK_TYPES.paragraph, content: { text } });
+  return createBlock({ pageId, type: BLOCK_TYPES.paragraph, content: normalizeRichTextContent({ html: element.innerHTML, text }) });
 }
 function collapseText(value) {
   return String(value || "").replace(/\s+/g, " ").trim();
 }
-function stripTags(value) {
+function stripTags2(value) {
   return String(value || "").replace(/<[^>]*>/g, " ");
 }
 function looksLikeCode(value) {
@@ -6865,18 +7279,18 @@ function looksLikeCode(value) {
 }
 
 // src/search.js
-var logger4 = createLogger("Search", "Indexing");
+var logger5 = createLogger("Search", "Indexing");
 
 // src/exporters.js
-var logger5 = createLogger("Export");
+var logger6 = createLogger("Export");
 function pageToMarkdown(page, blocks) {
-  logger5.debug("Rendering page to Markdown", { context: { pageId: page?.id, blockCount: blocks.length } });
+  logger6.debug("Rendering page to Markdown", { context: { pageId: page?.id, blockCount: blocks.length } });
   const lines = [`# ${escapeMarkdown(page.title)}`, ""];
   for (const block of blocks) {
     const c = block.content || {};
     switch (block.type) {
       case "heading":
-        lines.push(`${"#".repeat(Math.max(1, Math.min(6, c.level || 2)))} ${escapeMarkdown(c.text)}`, "");
+        lines.push(`${"#".repeat(Math.max(1, Math.min(6, c.level || 2)))} ${inlineHtmlToMarkdown(normalizeRichTextContent(c).html)}`, "");
         break;
       case "quote":
         lines.push(...String(c.text || "").split(`
@@ -6906,7 +7320,7 @@ function pageToMarkdown(page, blocks) {
         lines.push("");
         break;
       case "paragraph":
-        lines.push(c.text || "", "");
+        lines.push(inlineHtmlToMarkdown(normalizeRichTextContent(c).html), "");
         break;
       default:
         lines.push(`Unsupported block type: ${block.type}`, "```json", JSON.stringify(block.content, null, 2), "```", "");
@@ -6919,7 +7333,7 @@ function pageToMarkdown(page, blocks) {
 `;
 }
 function workspaceToBackup({ pages, blocks }) {
-  logger5.debug("Rendering workspace backup", { context: { pageCount: pages.length, blockCount: blocks.length, exportFormatVersion: EXPORT_FORMAT_VERSION } });
+  logger6.debug("Rendering workspace backup", { context: { pageCount: pages.length, blockCount: blocks.length, exportFormatVersion: EXPORT_FORMAT_VERSION } });
   return {
     format: "topic-research-notepad-backup",
     exportFormatVersion: EXPORT_FORMAT_VERSION,
@@ -6930,7 +7344,7 @@ function workspaceToBackup({ pages, blocks }) {
 }
 function downloadText(filename, text, type = "text/plain") {
   const blob = new Blob([text], { type });
-  logger5.info("Starting browser download", { context: { filename, type, byteLength: blob.size } });
+  logger6.info("Starting browser download", { context: { filename, type, byteLength: blob.size } });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
@@ -6965,8 +7379,67 @@ function filenameForPage(page, ext) {
   return `${slug}.${ext}`;
 }
 
+// src/block-transforms.js
+var BLOCK_TRANSFORMS = {
+  [BLOCK_TYPES.paragraph]: [BLOCK_TYPES.heading, BLOCK_TYPES.quote, BLOCK_TYPES.list, BLOCK_TYPES.table, BLOCK_TYPES.code, BLOCK_TYPES.sourceLink],
+  [BLOCK_TYPES.heading]: [BLOCK_TYPES.paragraph, BLOCK_TYPES.quote],
+  [BLOCK_TYPES.quote]: [BLOCK_TYPES.paragraph],
+  [BLOCK_TYPES.code]: [BLOCK_TYPES.paragraph],
+  [BLOCK_TYPES.list]: [BLOCK_TYPES.paragraph],
+  [BLOCK_TYPES.sourceLink]: [],
+  [BLOCK_TYPES.table]: []
+};
+function canTransformBlock(fromType, toType) {
+  return Boolean(BLOCK_TRANSFORMS[fromType]?.includes(toType));
+}
+function transformBlock(block, toType) {
+  if (block.type === toType)
+    return block;
+  if (!canTransformBlock(block.type, toType))
+    throw new Error(`Unsupported block transform: ${block.type} -> ${toType}`);
+  const text = textFromBlock(block);
+  const html = htmlFromBlock(block);
+  block.type = toType;
+  if (toType === BLOCK_TYPES.heading)
+    block.content = { level: 2, html, text };
+  else if (toType === BLOCK_TYPES.paragraph)
+    block.content = { html, text };
+  else if (toType === BLOCK_TYPES.quote)
+    block.content = { text, attribution: "", sourceUrl: "" };
+  else if (toType === BLOCK_TYPES.code)
+    block.content = { language: "", text };
+  else if (toType === BLOCK_TYPES.list) {
+    const items = text.split(/\n+/).filter(Boolean).map((line) => ({ id: createId2("item"), text: line }));
+    block.content = { ordered: false, items: items.length ? items : [{ id: createId2("item"), text: "" }] };
+  } else if (toType === BLOCK_TYPES.table) {
+    const col = createId2("col");
+    block.content = { columns: [{ id: col, label: "Notes" }], rows: [{ id: createId2("row"), cells: { [col]: text } }] };
+  } else if (toType === BLOCK_TYPES.sourceLink)
+    block.content = { url: "", title: text, note: "", domain: "", capturedText: "", capturedAt: new Date().toISOString() };
+  return block;
+}
+function textFromBlock(block) {
+  const c = block.content || {};
+  if (block.type === BLOCK_TYPES.heading || block.type === BLOCK_TYPES.paragraph)
+    return normalizeRichTextContent(c).text;
+  if (block.type === BLOCK_TYPES.quote)
+    return c.text || "";
+  if (block.type === BLOCK_TYPES.code)
+    return c.text || "";
+  if (block.type === BLOCK_TYPES.list)
+    return (c.items || []).map((item) => item.text).join(`
+`);
+  return c.text || "";
+}
+function htmlFromBlock(block) {
+  const c = block.content || {};
+  if (block.type === BLOCK_TYPES.heading || block.type === BLOCK_TYPES.paragraph)
+    return normalizeRichTextContent(c).html;
+  return textToSafeHtml(textFromBlock(block));
+}
+
 // src/ui.js
-var logger6 = createLogger("UI");
+var logger7 = createLogger("UI");
 var searchLogger = createLogger("Search", "UI");
 var exportLogger = createLogger("Export", "UI");
 
@@ -6981,7 +7454,9 @@ class TopicResearchApp {
       searchResults: [],
       status: { state: "loading", detail: "Opening local storage" },
       error: "",
-      focusedBlockId: ""
+      focusedBlockId: "",
+      sidebarWidth: 280,
+      slash: null
     };
     this.searchRun = 0;
     this.storage.addEventListener("save-status", (event) => {
@@ -6990,23 +7465,24 @@ class TopicResearchApp {
     });
   }
   async start() {
-    logger6.info("App start requested");
+    logger7.info("App start requested");
     this.renderShell();
     try {
       await this.storage.hello();
       const workspace = await this.storage.request("loadWorkspace");
-      logger6.info("Workspace loaded", { context: { pageCount: workspace.pages.length, blockCount: workspace.blocks.length, selectedPageId: workspace.settings.selectedPageId } });
+      logger7.info("Workspace loaded", { context: { pageCount: workspace.pages.length, blockCount: workspace.blocks.length, selectedPageId: workspace.settings.selectedPageId } });
       this.state.pages = workspace.pages.map(normalizePage);
       this.state.blocks = workspace.blocks.map(normalizeBlock);
       this.state.selectedPageId = workspace.settings.selectedPageId || this.state.pages[0]?.id || null;
+      this.state.sidebarWidth = normalizeSidebarWidth(workspace.settings.sidebarWidth);
       if (!this.state.pages.length)
         await this.createPage("Auth library comparison");
       this.state.status = { state: "saved", detail: "Local storage ready" };
       this.render();
       this.bindLifecycleFlush();
-      logger6.info("App start completed", { context: this.getRuntimeSnapshot() });
+      logger7.info("App start completed", { context: this.getRuntimeSnapshot() });
     } catch (error) {
-      logger6.error("App start failed", { context: { error: normalizeError(error) } });
+      logger7.error("App start failed", { context: { error: normalizeError(error) } });
       this.state.error = error.message;
       this.state.status = { state: "failed", detail: "Storage unavailable" };
       this.render();
@@ -7025,15 +7501,17 @@ class TopicResearchApp {
           <awwbookmarklet-button class="trn-button" data-action="clear-search">Clear</awwbookmarklet-button>
         </awwbookmarklet-toolbar>
         <main slot="body" class="trn-main">
-          <awwbookmarklet-panel class="trn-sidebar">
+          <awwbookmarklet-split-pane class="trn-layout-split" direction="horizontal" value="${this.state.sidebarWidth}" min-start="180" min-end="420" aria-label="Resize page sidebar">
+          <awwbookmarklet-panel slot="start" class="trn-sidebar">
             <div slot="title">Pages</div>
             <div data-role="page-list"></div>
           </awwbookmarklet-panel>
-          <awwbookmarklet-panel class="trn-editor-panel">
+          <awwbookmarklet-panel slot="end" class="trn-editor-panel">
             <div data-role="error"></div>
             <div data-role="search-results"></div>
             <div data-role="editor"></div>
           </awwbookmarklet-panel>
+          </awwbookmarklet-split-pane>
         </main>
         <awwbookmarklet-statusbar slot="footer" class="trn-statusbar">
           <span data-role="status" aria-live="polite"></span>
@@ -7043,8 +7521,12 @@ class TopicResearchApp {
     this.root.addEventListener("click", (event) => this.handleClick(event));
     this.root.addEventListener("input", (event) => this.handleInput(event));
     this.root.addEventListener("change", (event) => this.handleChange(event));
+    this.root.addEventListener("keydown", (event) => this.handleKeydown(event));
+    this.root.addEventListener("compositionstart", (event) => this.handleComposition(event, true));
+    this.root.addEventListener("compositionend", (event) => this.handleComposition(event, false));
     this.root.addEventListener("blur", (event) => this.handleBlur(event), true);
     this.root.addEventListener("paste", (event) => this.handlePaste(event));
+    this.root.addEventListener("awwbookmarklet-split-pane-resize-commit", (event) => this.handleSidebarResizeCommit(event));
   }
   render() {
     this.renderPages();
@@ -7057,7 +7539,7 @@ class TopicResearchApp {
     const list = this.root.querySelector('[data-role="page-list"]');
     list.innerHTML = sortByOrder(this.state.pages).map((page) => `
       <div class="trn-page-row ${page.id === this.state.selectedPageId ? "selected" : ""}" data-page-id="${escapeAttr(page.id)}">
-        <awwbookmarklet-button class="trn-page-button" data-action="select-page" title="Open page">${escapeHtml(page.title)}</awwbookmarklet-button>
+        <awwbookmarklet-button class="trn-page-button" data-action="select-page" title="Open page">${escapeHtml2(page.title)}</awwbookmarklet-button>
         <awwbookmarklet-button class="trn-icon-button" data-action="page-up" title="Move page up" aria-label="Move page up">&#8593;</awwbookmarklet-button>
         <awwbookmarklet-button class="trn-icon-button" data-action="page-down" title="Move page down" aria-label="Move page down">&#8595;</awwbookmarklet-button>
       </div>
@@ -7081,13 +7563,15 @@ class TopicResearchApp {
       <div class="trn-blocks" data-role="blocks">
         ${blocks.map((block) => this.renderBlock(block)).join("")}
       </div>
+      <div class="trn-pastebin" data-role="pastebin" contenteditable="true" aria-hidden="true"></div>
+      <div class="trn-slash-menu" data-role="slash-menu" hidden></div>
     `;
   }
   renderBlock(block) {
     return `
       <article class="trn-block ${block.id === this.state.focusedBlockId ? "is-focused" : ""}" data-block-id="${escapeAttr(block.id)}" data-type="${escapeAttr(block.type)}">
         <div class="trn-block-toolbar">
-          <span>${labelForType(block.type)}</span>
+          <span class="trn-block-type-label">${labelForType(block.type)}</span>
           <awwbookmarklet-button class="trn-icon-button" data-action="block-up" title="Move block up" aria-label="Move block up">&#8593;</awwbookmarklet-button>
           <awwbookmarklet-button class="trn-icon-button" data-action="block-down" title="Move block down" aria-label="Move block down">&#8595;</awwbookmarklet-button>
           <awwbookmarklet-button class="trn-icon-button danger" tone="danger" data-action="delete-block" title="Delete block" aria-label="Delete block">&times;</awwbookmarklet-button>
@@ -7100,9 +7584,9 @@ class TopicResearchApp {
     const c = block.content || {};
     switch (block.type) {
       case BLOCK_TYPES.heading:
-        return `<input class="trn-heading-input" data-field="text" value="${escapeAttr(c.text)}" placeholder="Heading" />`;
+        return richTextEditable(block, "heading", "Heading");
       case BLOCK_TYPES.quote:
-        return `<textarea class="trn-textarea quote" data-field="text" placeholder="Quote">${escapeHtml(c.text)}</textarea>
+        return `<textarea class="trn-textarea quote" data-field="text" placeholder="Quote">${escapeHtml2(c.text)}</textarea>
           <input class="trn-input" data-field="attribution" value="${escapeAttr(c.attribution)}" placeholder="Attribution" />
           <input class="trn-input" data-field="sourceUrl" value="${escapeAttr(c.sourceUrl)}" placeholder="Source URL" />`;
       case BLOCK_TYPES.list:
@@ -7117,19 +7601,26 @@ class TopicResearchApp {
         </table></div><awwbookmarklet-toolbar class="trn-table-actions" wrap density="compact"><awwbookmarklet-button class="trn-button" data-action="add-row">Add row</awwbookmarklet-button><awwbookmarklet-button class="trn-button" data-action="add-column">Add column</awwbookmarklet-button></awwbookmarklet-toolbar>`;
       case BLOCK_TYPES.code:
         return `<input class="trn-input" data-field="language" value="${escapeAttr(c.language)}" placeholder="Language" />
-          <textarea class="trn-textarea code" data-field="text" spellcheck="false">${escapeHtml(c.text)}</textarea>`;
+          <textarea class="trn-textarea code" data-field="text" spellcheck="false">${escapeHtml2(c.text)}</textarea>`;
       case BLOCK_TYPES.sourceLink:
-        return `<div class="trn-source-grid">
-          <input class="trn-input" data-field="url" value="${escapeAttr(c.url)}" placeholder="URL" />
-          <input class="trn-input" data-field="title" value="${escapeAttr(c.title)}" placeholder="Title" />
-          <input class="trn-input" data-field="note" value="${escapeAttr(c.note)}" placeholder="Note" />
-          <textarea class="trn-textarea" data-field="capturedText" placeholder="Captured text">${escapeHtml(c.capturedText)}</textarea>
-          ${c.url ? `<a class="trn-source-link" href="${escapeAttr(safeUrl(c.url))}" target="_blank" rel="noreferrer">Open ${escapeHtml(c.domain || deriveDomain(c.url) || "source")}</a>` : ""}
-        </div>`;
+        return `<details class="trn-source-details">
+          <summary>
+            <span class="trn-source-title">${escapeHtml2(c.title || c.domain || c.url || "Untitled source")}</span>
+            <span class="trn-source-domain">${escapeHtml2(c.domain || deriveDomain(c.url) || "")}</span>
+            ${c.url ? `<a class="trn-source-link" href="${escapeAttr(safeUrl(c.url))}" target="_blank" rel="noreferrer">Open</a>` : ""}
+          </summary>
+          ${c.note ? `<p class="trn-source-note">${escapeHtml2(c.note)}</p>` : ""}
+          <div class="trn-source-grid">
+            <input class="trn-input" data-field="url" value="${escapeAttr(c.url)}" placeholder="URL" />
+            <input class="trn-input" data-field="title" value="${escapeAttr(c.title)}" placeholder="Title" />
+            <input class="trn-input" data-field="note" value="${escapeAttr(c.note)}" placeholder="Note" />
+            <textarea class="trn-textarea" data-field="capturedText" placeholder="Captured text">${escapeHtml2(c.capturedText)}</textarea>
+          </div>
+        </details>`;
       case BLOCK_TYPES.paragraph:
-        return `<textarea class="trn-textarea" data-field="text" placeholder="Write a note">${escapeHtml(c.text)}</textarea>`;
+        return richTextEditable(block, "paragraph", "Write a note");
       default:
-        return `<div class="trn-unsupported">Unsupported block type: ${escapeHtml(block.type)}<pre>${escapeHtml(JSON.stringify(block.content, null, 2))}</pre></div>`;
+        return `<div class="trn-unsupported">Unsupported block type: ${escapeHtml2(block.type)}<pre>${escapeHtml2(JSON.stringify(block.content, null, 2))}</pre></div>`;
     }
   }
   renderSearchResults() {
@@ -7140,8 +7631,8 @@ class TopicResearchApp {
     }
     box.innerHTML = `<div class="trn-search-results">${this.state.searchResults.map((result) => `
       <button class="trn-search-result" data-action="open-search-result" data-page-id="${escapeAttr(result.pageId)}" data-block-id="${escapeAttr(result.blockId || "")}">
-        <strong>${escapeHtml(result.pageTitle)}</strong>
-        <span>${escapeHtml(result.rawPreview || result.kind)}</span>
+        <strong>${escapeHtml2(result.pageTitle)}</strong>
+        <span>${escapeHtml2(result.rawPreview || result.kind)}</span>
       </button>
     `).join("")}</div>`;
   }
@@ -7154,14 +7645,14 @@ class TopicResearchApp {
   }
   renderError() {
     const error = this.root.querySelector('[data-role="error"]');
-    error.innerHTML = this.state.error ? `<div class="trn-error">${escapeHtml(this.state.error)}</div>` : "";
+    error.innerHTML = this.state.error ? `<div class="trn-error">${escapeHtml2(this.state.error)}</div>` : "";
   }
   async handleClick(event) {
     const button = event.target.closest("[data-action]");
     if (!button)
       return;
     const action = button.dataset.action;
-    logger6.debug("UI action received", { context: { action } });
+    logger7.debug("UI action received", { context: { action } });
     try {
       if (action === "new-page")
         await this.createPage(prompt("Page title", "New research page") || "New research page");
@@ -7183,6 +7674,8 @@ class TopicResearchApp {
         this.addTableColumn(button.closest("[data-block-id]").dataset.blockId);
       if (action === "delete-row")
         this.deleteTableRow(button.closest("[data-block-id]").dataset.blockId, button.closest("[data-row-id]").dataset.rowId);
+      if (action === "slash-command")
+        await this.applySlashCommand(button.dataset.command);
       if (action === "export-md")
         await this.exportMarkdown();
       if (action === "export-json")
@@ -7192,7 +7685,7 @@ class TopicResearchApp {
       if (action === "open-search-result")
         await this.openSearchResult(button.dataset.pageId, button.dataset.blockId);
     } catch (error) {
-      logger6.error("UI action failed", { context: { action, error: normalizeError(error) } });
+      logger7.error("UI action failed", { context: { action, error: normalizeError(error) } });
       this.showError(error);
     }
   }
@@ -7207,7 +7700,7 @@ class TopicResearchApp {
       const page = this.selectedPage();
       page.title = target.value;
       page.updatedAt = nowIso();
-      logger6.debug("Page title edited", { context: { pageId: page.id, titleLength: target.value.length } });
+      logger7.debug("Page title edited", { context: { pageId: page.id, titleLength: target.value.length } });
       this.queuePageSave(page);
       this.renderPages();
       return;
@@ -7220,18 +7713,59 @@ class TopicResearchApp {
       return;
     this.applyBlockInput(block, target);
     block.updatedAt = nowIso();
-    logger6.debug("Block edit detected", { context: { blockId: block.id, pageId: block.pageId, type: block.type, field: target.dataset.field || target.dataset.listItem || target.dataset.tableCell || target.dataset.tableCol } });
+    logger7.debug("Block edit detected", { context: { blockId: block.id, pageId: block.pageId, type: block.type, field: target.dataset.field || target.dataset.listItem || target.dataset.tableCell || target.dataset.tableCol || target.dataset.richText } });
     this.queueBlockSave(block);
+    if (target.matches("[data-rich-text]"))
+      this.updateSlashMenu(target, block);
   }
   handleChange(event) {
     if (event.target.matches("[data-field], [data-list-item], [data-table-cell], [data-table-col]"))
       this.handleInput(event);
   }
   async handleBlur(event) {
-    if (event.target.matches("input, textarea")) {
+    if (event.target.matches("input, textarea, [contenteditable='true']")) {
       await this.storage.flush().catch((error) => {
         this.showError(error);
       });
+    }
+  }
+  async handleSidebarResizeCommit(event) {
+    if (!event.target.matches("awwbookmarklet-split-pane"))
+      return;
+    const value = normalizeSidebarWidth(event.detail.value);
+    this.state.sidebarWidth = value;
+    logger7.info("Sidebar width resize committed", { context: { value } });
+    await this.storage.request("setSetting", { key: "sidebarWidth", value }).catch((error) => this.showError(error));
+  }
+  handleComposition(event, composing) {
+    const editable = event.target.closest("[data-rich-text]");
+    if (editable)
+      editable.dataset.composing = composing ? "true" : "false";
+  }
+  async handleKeydown(event) {
+    const editable = event.target.closest("[data-rich-text]");
+    if (!editable)
+      return;
+    if (this.state.slash?.open) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        this.closeSlashMenu("escape");
+        return;
+      }
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        this.moveSlashSelection(event.key === "ArrowDown" ? 1 : -1);
+        return;
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        await this.applySlashCommand(this.state.slash.commands[this.state.slash.index]?.command);
+        return;
+      }
+    }
+    if (event.key === "Enter" && !event.shiftKey && editable.dataset.richText === "paragraph") {
+      event.preventDefault();
+      await this.splitParagraphBlock(editable);
     }
   }
   async handlePaste(event) {
@@ -7247,20 +7781,42 @@ class TopicResearchApp {
     if (!html && !text)
       return;
     event.preventDefault();
-    logger6.info("Paste event received", { context: { hasHtml: Boolean(html), hasText: Boolean(text), textLength: text.length, htmlLength: html.length } });
+    logger7.info("Paste event received", { context: { hasHtml: Boolean(html), hasText: Boolean(text), textLength: text.length, htmlLength: html.length } });
+    const editable = event.target.closest("[data-rich-text]");
+    if (editable && !looksLikeMultiBlockPaste(html, text)) {
+      this.captureBodyguardPaste(html || text);
+      const inlineHtml = sanitizeInlineHtml(html || textToHtml(text));
+      document.execCommand("insertHTML", false, inlineHtml);
+      const block = this.findBlock(blockEl.dataset.blockId);
+      if (block) {
+        this.applyBlockInput(block, editable);
+        block.updatedAt = nowIso();
+        this.queueBlockSave(block);
+        logger7.info("Sanitized inline paste inserted", { context: { blockId: block.id, htmlLength: inlineHtml.length } });
+      }
+      this.clearBodyguardPaste();
+      return;
+    }
+    this.captureBodyguardPaste(html || text);
     const newBlocks = blocksFromClipboard({ pageId: page.id, html, text });
-    logger6.info("Paste converted to blocks", { context: { pageId: page.id, blockCount: newBlocks.length, byType: countByType(newBlocks) } });
+    logger7.info("Paste converted to blocks", { context: { pageId: page.id, blockCount: newBlocks.length, byType: countByType(newBlocks) } });
     const current = this.blocksForPage(page.id);
     const insertAt = blockEl ? current.findIndex((block) => block.id === blockEl.dataset.blockId) + 1 : current.length;
     current.splice(insertAt, 0, ...newBlocks);
     current.forEach((block, index) => block.sortOrder = (index + 1) * 1000);
     this.state.blocks = this.state.blocks.filter((block) => block.pageId !== page.id).concat(current);
     await this.storage.request("replaceBlocks", { pageId: page.id, blocks: current });
-    logger6.info("Pasted blocks persisted", { context: { pageId: page.id, totalBlockCount: current.length } });
+    logger7.info("Pasted blocks persisted", { context: { pageId: page.id, totalBlockCount: current.length } });
+    this.clearBodyguardPaste();
     this.renderEditor();
   }
   applyBlockInput(block, target) {
     const c = block.content;
+    if (target.dataset.richText) {
+      const normalized = normalizeRichTextContent({ html: sanitizeInlineHtml(target.innerHTML) });
+      block.content = { ...c, ...normalized };
+      return;
+    }
     if (target.dataset.field) {
       c[target.dataset.field] = target.value;
       if (block.type === BLOCK_TYPES.sourceLink && target.dataset.field === "url")
@@ -7286,32 +7842,51 @@ class TopicResearchApp {
   async createPage(title) {
     const page = createPage({ title, sortOrder: (this.state.pages.length + 1) * 1000 });
     const block = createBlock({ pageId: page.id, type: BLOCK_TYPES.paragraph, content: { text: "" } });
-    logger6.info("Creating page", { context: { title, pageId: page.id, initialBlockId: block.id } });
+    logger7.info("Creating page", { context: { title, pageId: page.id, initialBlockId: block.id } });
     await this.storage.request("createPage", { page, blocks: [block] });
     this.state.pages.push(page);
     this.state.blocks.push(block);
     this.state.selectedPageId = page.id;
     this.render();
-    logger6.info("Page created", { context: { pageId: page.id, blockCount: 1 } });
+    logger7.info("Page created", { context: { pageId: page.id, blockCount: 1 } });
   }
   async selectPage(pageId) {
     await this.storage.flush();
     this.state.selectedPageId = pageId;
     await this.storage.request("setSetting", { key: "selectedPageId", value: pageId });
     this.render();
-    logger6.info("Page selected", { context: { pageId } });
+    logger7.info("Page selected", { context: { pageId } });
   }
   async addBlock(type) {
     const page = this.selectedPage();
     const block = createBlock({ pageId: page.id, type, sortOrder: (this.blocksForPage(page.id).length + 1) * 1000 });
-    logger6.info("Adding block", { context: { pageId: page.id, blockId: block.id, type } });
+    logger7.info("Adding block", { context: { pageId: page.id, blockId: block.id, type } });
     this.state.blocks.push(block);
     await this.storage.request("updateBlock", { block });
     this.renderEditor();
   }
+  async splitParagraphBlock(editable) {
+    const blockEl = editable.closest("[data-block-id]");
+    const block = this.findBlock(blockEl?.dataset.blockId);
+    const page = this.selectedPage();
+    if (!block || !page)
+      return;
+    this.applyBlockInput(block, editable);
+    block.updatedAt = nowIso();
+    const blocks = this.blocksForPage(page.id);
+    const index = blocks.findIndex((entry) => entry.id === block.id);
+    const next = createBlock({ pageId: page.id, type: BLOCK_TYPES.paragraph, sortOrder: (index + 2) * 1000 });
+    blocks.splice(index + 1, 0, next);
+    blocks.forEach((entry, order) => entry.sortOrder = (order + 1) * 1000);
+    this.state.blocks = this.state.blocks.filter((entry) => entry.pageId !== page.id).concat(blocks);
+    logger7.info("Paragraph split into new block", { context: { blockId: block.id, nextBlockId: next.id, pageId: page.id } });
+    await this.storage.request("replaceBlocks", { pageId: page.id, blocks });
+    this.renderEditor();
+    requestAnimationFrame(() => this.focusBlock(next.id));
+  }
   async deleteBlock(blockId) {
     this.state.blocks = this.state.blocks.filter((block) => block.id !== blockId);
-    logger6.info("Deleting block", { context: { blockId } });
+    logger7.info("Deleting block", { context: { blockId } });
     await this.storage.request("deleteBlock", { blockId });
     this.renderEditor();
   }
@@ -7325,7 +7900,7 @@ class TopicResearchApp {
     [blocks[index], blocks[swap]] = [blocks[swap], blocks[index]];
     blocks.forEach((block, order) => block.sortOrder = (order + 1) * 1000);
     this.state.blocks = this.state.blocks.filter((block) => block.pageId !== page.id).concat(blocks);
-    logger6.info("Moving block", { context: { blockId, pageId: page.id, direction } });
+    logger7.info("Moving block", { context: { blockId, pageId: page.id, direction } });
     await this.storage.request("reorderBlocks", { blocks });
     this.renderEditor();
   }
@@ -7338,7 +7913,7 @@ class TopicResearchApp {
     [pages[index], pages[swap]] = [pages[swap], pages[index]];
     pages.forEach((page, order) => page.sortOrder = (order + 1) * 1000);
     this.state.pages = pages;
-    logger6.info("Moving page", { context: { pageId, direction } });
+    logger7.info("Moving page", { context: { pageId, direction } });
     await this.storage.request("reorderPages", { pages });
     this.renderPages();
   }
@@ -7444,9 +8019,97 @@ class TopicResearchApp {
     this.storage.saveBlockDebounced(block).catch((error) => this.showError(error));
   }
   showError(error) {
-    logger6.error("User-visible error", { context: { error: normalizeError(error), selectedPageId: this.state.selectedPageId } });
+    logger7.error("User-visible error", { context: { error: normalizeError(error), selectedPageId: this.state.selectedPageId } });
     this.state.error = error?.message || String(error);
     this.renderError();
+  }
+  updateSlashMenu(editable, block) {
+    if (editable.dataset.composing === "true" || block.type !== BLOCK_TYPES.paragraph)
+      return;
+    const text = editable.textContent.trim();
+    const match = parseSlashCommandText(text);
+    if (!match) {
+      if (this.state.slash?.open)
+        this.closeSlashMenu("non-command-text");
+      return;
+    }
+    const commands = slashCommands().filter((entry) => entry.command.startsWith(match) || entry.aliases.some((alias) => alias.startsWith(match)));
+    if (!commands.length) {
+      this.closeSlashMenu("no-match");
+      return;
+    }
+    this.state.slash = { open: true, blockId: block.id, commands, index: 0 };
+    logger7.debug("Slash command menu opened", { context: { blockId: block.id, fragment: match, commandCount: commands.length } });
+    this.renderSlashMenu();
+  }
+  renderSlashMenu() {
+    const menu = this.root.querySelector('[data-role="slash-menu"]');
+    if (!menu || !this.state.slash?.open)
+      return;
+    const blockEl = this.root.querySelector(`[data-block-id="${CSS.escape(this.state.slash.blockId)}"]`);
+    const rect = blockEl?.getBoundingClientRect();
+    const rootRect = this.root.getBoundingClientRect();
+    menu.hidden = false;
+    menu.style.left = `${Math.max(12, (rect?.left || rootRect.left) - rootRect.left + 18)}px`;
+    menu.style.top = `${Math.max(12, (rect?.bottom || rootRect.top) - rootRect.top + 2)}px`;
+    menu.innerHTML = this.state.slash.commands.map((entry, index) => `
+      <button class="trn-slash-item ${index === this.state.slash.index ? "selected" : ""}" data-action="slash-command" data-command="${entry.command}">
+        <strong>${entry.label}</strong><span>${entry.hint}</span>
+      </button>
+    `).join("");
+  }
+  moveSlashSelection(delta) {
+    const slash = this.state.slash;
+    if (!slash?.open)
+      return;
+    slash.index = (slash.index + delta + slash.commands.length) % slash.commands.length;
+    this.renderSlashMenu();
+  }
+  closeSlashMenu(reason) {
+    if (this.state.slash?.open)
+      logger7.debug("Slash command menu closed", { context: { reason } });
+    this.state.slash = null;
+    const menu = this.root.querySelector('[data-role="slash-menu"]');
+    if (menu) {
+      menu.hidden = true;
+      menu.innerHTML = "";
+    }
+  }
+  async applySlashCommand(command) {
+    const slash = this.state.slash;
+    const targetType = slashCommands().find((entry) => entry.command === command)?.type;
+    if (!slash?.blockId || !targetType)
+      return;
+    const block = this.findBlock(slash.blockId);
+    if (!block)
+      return;
+    try {
+      block.content = normalizeRichTextContent({ text: "" });
+      transformBlock(block, targetType);
+      block.updatedAt = nowIso();
+      logger7.info("Slash command selected", { context: { blockId: block.id, command, targetType } });
+      await this.storage.request("updateBlock", { block });
+      this.closeSlashMenu("selected");
+      this.renderEditor();
+      requestAnimationFrame(() => this.focusBlock(block.id));
+    } catch (error) {
+      this.showError(error);
+    }
+  }
+  focusBlock(blockId) {
+    this.root.querySelector(`[data-block-id="${CSS.escape(blockId)}"] [data-rich-text], [data-block-id="${CSS.escape(blockId)}"] textarea, [data-block-id="${CSS.escape(blockId)}"] input`)?.focus();
+  }
+  captureBodyguardPaste(html) {
+    const pastebin = this.root.querySelector('[data-role="pastebin"]');
+    if (!pastebin)
+      return;
+    pastebin.innerHTML = sanitizeInlineHtml(html);
+    logger7.debug("Bodyguard pastebin captured payload", { context: { htmlLength: String(html || "").length, storedLength: pastebin.innerHTML.length } });
+  }
+  clearBodyguardPaste() {
+    const pastebin = this.root.querySelector('[data-role="pastebin"]');
+    if (pastebin)
+      pastebin.innerHTML = "";
   }
   getRuntimeSnapshot() {
     return {
@@ -7483,6 +8146,45 @@ function labelForType(type) {
     sourceLink: "Source"
   }[type] || type;
 }
+function richTextEditable(block, variant, placeholder) {
+  const content = normalizeRichTextContent(block.content || {});
+  return `<div
+    class="trn-rich-text trn-rich-text--${variant}"
+    contenteditable="true"
+    role="textbox"
+    aria-multiline="true"
+    aria-label="${escapeAttr(placeholder)}"
+    data-rich-text="${escapeAttr(variant)}"
+    data-placeholder="${escapeAttr(placeholder)}"
+  >${content.html}</div>`;
+}
+function parseSlashCommandText(text) {
+  const trimmed = String(text || "").trim();
+  return /^\/[a-z]*$/.test(trimmed) ? trimmed.slice(1) : null;
+}
+function slashCommands() {
+  return [
+    { command: "paragraph", aliases: ["p"], type: BLOCK_TYPES.paragraph, label: "Paragraph", hint: "Plain research text" },
+    { command: "heading", aliases: ["h"], type: BLOCK_TYPES.heading, label: "Heading", hint: "Section heading" },
+    { command: "quote", aliases: ["q"], type: BLOCK_TYPES.quote, label: "Quote", hint: "Quoted passage" },
+    { command: "list", aliases: ["li"], type: BLOCK_TYPES.list, label: "List", hint: "Bullet list" },
+    { command: "table", aliases: ["tbl"], type: BLOCK_TYPES.table, label: "Table", hint: "Simple research table" },
+    { command: "code", aliases: ["pre"], type: BLOCK_TYPES.code, label: "Code", hint: "Code or command block" },
+    { command: "source", aliases: ["src"], type: BLOCK_TYPES.sourceLink, label: "Source", hint: "Research reference" }
+  ];
+}
+function looksLikeMultiBlockPaste(html, text) {
+  if (html && /<(h[1-6]|p|div|blockquote|ul|ol|li|table|pre)\b/i.test(html))
+    return true;
+  return /\n\s*\n/.test(text || "");
+}
+function textToHtml(text) {
+  return escapeHtml2(text).replace(/\n/g, "<br>");
+}
+function normalizeSidebarWidth(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? Math.min(520, Math.max(180, Math.round(numeric))) : 280;
+}
 function safeUrl(value) {
   try {
     const url = new URL(value);
@@ -7491,16 +8193,16 @@ function safeUrl(value) {
     return "#";
   }
 }
-function escapeHtml(value) {
+function escapeHtml2(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 }
 function escapeAttr(value) {
-  return escapeHtml(value);
+  return escapeHtml2(value);
 }
 
 // src/main.js
-var logger7 = createLogger("App", "Bootstrap");
-logger7.info("App bootstrap start", {
+var logger8 = createLogger("App", "Bootstrap");
+logger8.info("App bootstrap start", {
   context: {
     dbName: DB_NAME,
     dbVersion: DB_VERSION,
@@ -7524,7 +8226,7 @@ setTheme({
 });
 var root = document.querySelector("#app");
 var workerUrl = new URL(import.meta.url.includes("/assets/") ? "../storage-worker.js" : "./storage-worker.js", import.meta.url);
-logger7.info("Creating storage client", { context: { workerUrl: workerUrl.href, storageMode: "worker" } });
+logger8.info("Creating storage client", { context: { workerUrl: workerUrl.href, storageMode: "worker" } });
 var storage = new StorageClient({ workerUrl });
 var app = new TopicResearchApp({ root, storage });
 installDebugHook({
@@ -7532,5 +8234,5 @@ installDebugHook({
 });
 app.start();
 
-//# debugId=590801A3CF9BBF9264756E2164756E21
+//# debugId=CDBCB70CB8FA761F64756E2164756E21
 //# sourceMappingURL=main.js.map

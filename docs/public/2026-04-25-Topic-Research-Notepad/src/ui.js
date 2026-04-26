@@ -3,6 +3,8 @@ import { createBlock, createId, createPage, deriveDomain, normalizeBlock, normal
 import { blocksFromClipboard } from "./paste.js";
 import { downloadText, filenameForPage, pageToMarkdown, workspaceToBackup } from "./exporters.js";
 import { createLogger, normalizeError } from "./observability/logger.js";
+import { transformBlock } from "./block-transforms.js";
+import { normalizeRichTextContent, sanitizeInlineHtml } from "./rich-text.js";
 
 const logger = createLogger("UI");
 const searchLogger = createLogger("Search", "UI");
@@ -20,6 +22,8 @@ export class TopicResearchApp {
       status: { state: "loading", detail: "Opening local storage" },
       error: "",
       focusedBlockId: "",
+      sidebarWidth: 280,
+      slash: null,
     };
     this.searchRun = 0;
     this.storage.addEventListener("save-status", (event) => {
@@ -38,6 +42,7 @@ export class TopicResearchApp {
       this.state.pages = workspace.pages.map(normalizePage);
       this.state.blocks = workspace.blocks.map(normalizeBlock);
       this.state.selectedPageId = workspace.settings.selectedPageId || this.state.pages[0]?.id || null;
+      this.state.sidebarWidth = normalizeSidebarWidth(workspace.settings.sidebarWidth);
       if (!this.state.pages.length) await this.createPage("Auth library comparison");
       this.state.status = { state: "saved", detail: "Local storage ready" };
       this.render();
@@ -64,15 +69,17 @@ export class TopicResearchApp {
           <awwbookmarklet-button class="trn-button" data-action="clear-search">Clear</awwbookmarklet-button>
         </awwbookmarklet-toolbar>
         <main slot="body" class="trn-main">
-          <awwbookmarklet-panel class="trn-sidebar">
+          <awwbookmarklet-split-pane class="trn-layout-split" direction="horizontal" value="${this.state.sidebarWidth}" min-start="180" min-end="420" aria-label="Resize page sidebar">
+          <awwbookmarklet-panel slot="start" class="trn-sidebar">
             <div slot="title">Pages</div>
             <div data-role="page-list"></div>
           </awwbookmarklet-panel>
-          <awwbookmarklet-panel class="trn-editor-panel">
+          <awwbookmarklet-panel slot="end" class="trn-editor-panel">
             <div data-role="error"></div>
             <div data-role="search-results"></div>
             <div data-role="editor"></div>
           </awwbookmarklet-panel>
+          </awwbookmarklet-split-pane>
         </main>
         <awwbookmarklet-statusbar slot="footer" class="trn-statusbar">
           <span data-role="status" aria-live="polite"></span>
@@ -82,8 +89,12 @@ export class TopicResearchApp {
     this.root.addEventListener("click", (event) => this.handleClick(event));
     this.root.addEventListener("input", (event) => this.handleInput(event));
     this.root.addEventListener("change", (event) => this.handleChange(event));
+    this.root.addEventListener("keydown", (event) => this.handleKeydown(event));
+    this.root.addEventListener("compositionstart", (event) => this.handleComposition(event, true));
+    this.root.addEventListener("compositionend", (event) => this.handleComposition(event, false));
     this.root.addEventListener("blur", (event) => this.handleBlur(event), true);
     this.root.addEventListener("paste", (event) => this.handlePaste(event));
+    this.root.addEventListener("awwbookmarklet-split-pane-resize-commit", (event) => this.handleSidebarResizeCommit(event));
   }
 
   render() {
@@ -123,6 +134,8 @@ export class TopicResearchApp {
       <div class="trn-blocks" data-role="blocks">
         ${blocks.map((block) => this.renderBlock(block)).join("")}
       </div>
+      <div class="trn-pastebin" data-role="pastebin" contenteditable="true" aria-hidden="true"></div>
+      <div class="trn-slash-menu" data-role="slash-menu" hidden></div>
     `;
   }
 
@@ -130,7 +143,7 @@ export class TopicResearchApp {
     return `
       <article class="trn-block ${block.id === this.state.focusedBlockId ? "is-focused" : ""}" data-block-id="${escapeAttr(block.id)}" data-type="${escapeAttr(block.type)}">
         <div class="trn-block-toolbar">
-          <span>${labelForType(block.type)}</span>
+          <span class="trn-block-type-label">${labelForType(block.type)}</span>
           <awwbookmarklet-button class="trn-icon-button" data-action="block-up" title="Move block up" aria-label="Move block up">&#8593;</awwbookmarklet-button>
           <awwbookmarklet-button class="trn-icon-button" data-action="block-down" title="Move block down" aria-label="Move block down">&#8595;</awwbookmarklet-button>
           <awwbookmarklet-button class="trn-icon-button danger" tone="danger" data-action="delete-block" title="Delete block" aria-label="Delete block">&times;</awwbookmarklet-button>
@@ -144,7 +157,7 @@ export class TopicResearchApp {
     const c = block.content || {};
     switch (block.type) {
       case BLOCK_TYPES.heading:
-        return `<input class="trn-heading-input" data-field="text" value="${escapeAttr(c.text)}" placeholder="Heading" />`;
+        return richTextEditable(block, "heading", "Heading");
       case BLOCK_TYPES.quote:
         return `<textarea class="trn-textarea quote" data-field="text" placeholder="Quote">${escapeHtml(c.text)}</textarea>
           <input class="trn-input" data-field="attribution" value="${escapeAttr(c.attribution)}" placeholder="Attribution" />
@@ -163,15 +176,22 @@ export class TopicResearchApp {
         return `<input class="trn-input" data-field="language" value="${escapeAttr(c.language)}" placeholder="Language" />
           <textarea class="trn-textarea code" data-field="text" spellcheck="false">${escapeHtml(c.text)}</textarea>`;
       case BLOCK_TYPES.sourceLink:
-        return `<div class="trn-source-grid">
-          <input class="trn-input" data-field="url" value="${escapeAttr(c.url)}" placeholder="URL" />
-          <input class="trn-input" data-field="title" value="${escapeAttr(c.title)}" placeholder="Title" />
-          <input class="trn-input" data-field="note" value="${escapeAttr(c.note)}" placeholder="Note" />
-          <textarea class="trn-textarea" data-field="capturedText" placeholder="Captured text">${escapeHtml(c.capturedText)}</textarea>
-          ${c.url ? `<a class="trn-source-link" href="${escapeAttr(safeUrl(c.url))}" target="_blank" rel="noreferrer">Open ${escapeHtml(c.domain || deriveDomain(c.url) || "source")}</a>` : ""}
-        </div>`;
+        return `<details class="trn-source-details">
+          <summary>
+            <span class="trn-source-title">${escapeHtml(c.title || c.domain || c.url || "Untitled source")}</span>
+            <span class="trn-source-domain">${escapeHtml(c.domain || deriveDomain(c.url) || "")}</span>
+            ${c.url ? `<a class="trn-source-link" href="${escapeAttr(safeUrl(c.url))}" target="_blank" rel="noreferrer">Open</a>` : ""}
+          </summary>
+          ${c.note ? `<p class="trn-source-note">${escapeHtml(c.note)}</p>` : ""}
+          <div class="trn-source-grid">
+            <input class="trn-input" data-field="url" value="${escapeAttr(c.url)}" placeholder="URL" />
+            <input class="trn-input" data-field="title" value="${escapeAttr(c.title)}" placeholder="Title" />
+            <input class="trn-input" data-field="note" value="${escapeAttr(c.note)}" placeholder="Note" />
+            <textarea class="trn-textarea" data-field="capturedText" placeholder="Captured text">${escapeHtml(c.capturedText)}</textarea>
+          </div>
+        </details>`;
       case BLOCK_TYPES.paragraph:
-        return `<textarea class="trn-textarea" data-field="text" placeholder="Write a note">${escapeHtml(c.text)}</textarea>`;
+        return richTextEditable(block, "paragraph", "Write a note");
       default:
         return `<div class="trn-unsupported">Unsupported block type: ${escapeHtml(block.type)}<pre>${escapeHtml(JSON.stringify(block.content, null, 2))}</pre></div>`;
     }
@@ -220,6 +240,7 @@ export class TopicResearchApp {
       if (action === "add-row") this.addTableRow(button.closest("[data-block-id]").dataset.blockId);
       if (action === "add-column") this.addTableColumn(button.closest("[data-block-id]").dataset.blockId);
       if (action === "delete-row") this.deleteTableRow(button.closest("[data-block-id]").dataset.blockId, button.closest("[data-row-id]").dataset.rowId);
+      if (action === "slash-command") await this.applySlashCommand(button.dataset.command);
       if (action === "export-md") await this.exportMarkdown();
       if (action === "export-json") await this.exportJson();
       if (action === "clear-search") this.clearSearch();
@@ -252,8 +273,9 @@ export class TopicResearchApp {
     if (!block) return;
     this.applyBlockInput(block, target);
     block.updatedAt = nowIso();
-    logger.debug("Block edit detected", { context: { blockId: block.id, pageId: block.pageId, type: block.type, field: target.dataset.field || target.dataset.listItem || target.dataset.tableCell || target.dataset.tableCol } });
+    logger.debug("Block edit detected", { context: { blockId: block.id, pageId: block.pageId, type: block.type, field: target.dataset.field || target.dataset.listItem || target.dataset.tableCell || target.dataset.tableCol || target.dataset.richText } });
     this.queueBlockSave(block);
+    if (target.matches("[data-rich-text]")) this.updateSlashMenu(target, block);
   }
 
   handleChange(event) {
@@ -261,10 +283,49 @@ export class TopicResearchApp {
   }
 
   async handleBlur(event) {
-    if (event.target.matches("input, textarea")) {
+    if (event.target.matches("input, textarea, [contenteditable='true']")) {
       await this.storage.flush().catch((error) => {
         this.showError(error);
       });
+    }
+  }
+
+  async handleSidebarResizeCommit(event) {
+    if (!event.target.matches("awwbookmarklet-split-pane")) return;
+    const value = normalizeSidebarWidth(event.detail.value);
+    this.state.sidebarWidth = value;
+    logger.info("Sidebar width resize committed", { context: { value } });
+    await this.storage.request("setSetting", { key: "sidebarWidth", value }).catch((error) => this.showError(error));
+  }
+
+  handleComposition(event, composing) {
+    const editable = event.target.closest("[data-rich-text]");
+    if (editable) editable.dataset.composing = composing ? "true" : "false";
+  }
+
+  async handleKeydown(event) {
+    const editable = event.target.closest("[data-rich-text]");
+    if (!editable) return;
+    if (this.state.slash?.open) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        this.closeSlashMenu("escape");
+        return;
+      }
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        this.moveSlashSelection(event.key === "ArrowDown" ? 1 : -1);
+        return;
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        await this.applySlashCommand(this.state.slash.commands[this.state.slash.index]?.command);
+        return;
+      }
+    }
+    if (event.key === "Enter" && !event.shiftKey && editable.dataset.richText === "paragraph") {
+      event.preventDefault();
+      await this.splitParagraphBlock(editable);
     }
   }
 
@@ -279,6 +340,22 @@ export class TopicResearchApp {
     if (!html && !text) return;
     event.preventDefault();
     logger.info("Paste event received", { context: { hasHtml: Boolean(html), hasText: Boolean(text), textLength: text.length, htmlLength: html.length } });
+    const editable = event.target.closest("[data-rich-text]");
+    if (editable && !looksLikeMultiBlockPaste(html, text)) {
+      this.captureBodyguardPaste(html || text);
+      const inlineHtml = sanitizeInlineHtml(html || textToHtml(text));
+      document.execCommand("insertHTML", false, inlineHtml);
+      const block = this.findBlock(blockEl.dataset.blockId);
+      if (block) {
+        this.applyBlockInput(block, editable);
+        block.updatedAt = nowIso();
+        this.queueBlockSave(block);
+        logger.info("Sanitized inline paste inserted", { context: { blockId: block.id, htmlLength: inlineHtml.length } });
+      }
+      this.clearBodyguardPaste();
+      return;
+    }
+    this.captureBodyguardPaste(html || text);
     const newBlocks = blocksFromClipboard({ pageId: page.id, html, text });
     logger.info("Paste converted to blocks", { context: { pageId: page.id, blockCount: newBlocks.length, byType: countByType(newBlocks) } });
     const current = this.blocksForPage(page.id);
@@ -288,11 +365,17 @@ export class TopicResearchApp {
     this.state.blocks = this.state.blocks.filter((block) => block.pageId !== page.id).concat(current);
     await this.storage.request("replaceBlocks", { pageId: page.id, blocks: current });
     logger.info("Pasted blocks persisted", { context: { pageId: page.id, totalBlockCount: current.length } });
+    this.clearBodyguardPaste();
     this.renderEditor();
   }
 
   applyBlockInput(block, target) {
     const c = block.content;
+    if (target.dataset.richText) {
+      const normalized = normalizeRichTextContent({ html: sanitizeInlineHtml(target.innerHTML) });
+      block.content = { ...c, ...normalized };
+      return;
+    }
     if (target.dataset.field) {
       c[target.dataset.field] = target.value;
       if (block.type === BLOCK_TYPES.sourceLink && target.dataset.field === "url") c.domain = deriveDomain(target.value);
@@ -339,6 +422,25 @@ export class TopicResearchApp {
     this.state.blocks.push(block);
     await this.storage.request("updateBlock", { block });
     this.renderEditor();
+  }
+
+  async splitParagraphBlock(editable) {
+    const blockEl = editable.closest("[data-block-id]");
+    const block = this.findBlock(blockEl?.dataset.blockId);
+    const page = this.selectedPage();
+    if (!block || !page) return;
+    this.applyBlockInput(block, editable);
+    block.updatedAt = nowIso();
+    const blocks = this.blocksForPage(page.id);
+    const index = blocks.findIndex((entry) => entry.id === block.id);
+    const next = createBlock({ pageId: page.id, type: BLOCK_TYPES.paragraph, sortOrder: (index + 2) * 1000 });
+    blocks.splice(index + 1, 0, next);
+    blocks.forEach((entry, order) => entry.sortOrder = (order + 1) * 1000);
+    this.state.blocks = this.state.blocks.filter((entry) => entry.pageId !== page.id).concat(blocks);
+    logger.info("Paragraph split into new block", { context: { blockId: block.id, nextBlockId: next.id, pageId: page.id } });
+    await this.storage.request("replaceBlocks", { pageId: page.id, blocks });
+    this.renderEditor();
+    requestAnimationFrame(() => this.focusBlock(next.id));
   }
 
   async deleteBlock(blockId) {
@@ -489,6 +591,93 @@ export class TopicResearchApp {
     this.renderError();
   }
 
+  updateSlashMenu(editable, block) {
+    if (editable.dataset.composing === "true" || block.type !== BLOCK_TYPES.paragraph) return;
+    const text = editable.textContent.trim();
+    const match = parseSlashCommandText(text);
+    if (!match) {
+      if (this.state.slash?.open) this.closeSlashMenu("non-command-text");
+      return;
+    }
+    const commands = slashCommands().filter((entry) => entry.command.startsWith(match) || entry.aliases.some((alias) => alias.startsWith(match)));
+    if (!commands.length) {
+      this.closeSlashMenu("no-match");
+      return;
+    }
+    this.state.slash = { open: true, blockId: block.id, commands, index: 0 };
+    logger.debug("Slash command menu opened", { context: { blockId: block.id, fragment: match, commandCount: commands.length } });
+    this.renderSlashMenu();
+  }
+
+  renderSlashMenu() {
+    const menu = this.root.querySelector('[data-role="slash-menu"]');
+    if (!menu || !this.state.slash?.open) return;
+    const blockEl = this.root.querySelector(`[data-block-id="${CSS.escape(this.state.slash.blockId)}"]`);
+    const rect = blockEl?.getBoundingClientRect();
+    const rootRect = this.root.getBoundingClientRect();
+    menu.hidden = false;
+    menu.style.left = `${Math.max(12, (rect?.left || rootRect.left) - rootRect.left + 18)}px`;
+    menu.style.top = `${Math.max(12, (rect?.bottom || rootRect.top) - rootRect.top + 2)}px`;
+    menu.innerHTML = this.state.slash.commands.map((entry, index) => `
+      <button class="trn-slash-item ${index === this.state.slash.index ? "selected" : ""}" data-action="slash-command" data-command="${entry.command}">
+        <strong>${entry.label}</strong><span>${entry.hint}</span>
+      </button>
+    `).join("");
+  }
+
+  moveSlashSelection(delta) {
+    const slash = this.state.slash;
+    if (!slash?.open) return;
+    slash.index = (slash.index + delta + slash.commands.length) % slash.commands.length;
+    this.renderSlashMenu();
+  }
+
+  closeSlashMenu(reason) {
+    if (this.state.slash?.open) logger.debug("Slash command menu closed", { context: { reason } });
+    this.state.slash = null;
+    const menu = this.root.querySelector('[data-role="slash-menu"]');
+    if (menu) {
+      menu.hidden = true;
+      menu.innerHTML = "";
+    }
+  }
+
+  async applySlashCommand(command) {
+    const slash = this.state.slash;
+    const targetType = slashCommands().find((entry) => entry.command === command)?.type;
+    if (!slash?.blockId || !targetType) return;
+    const block = this.findBlock(slash.blockId);
+    if (!block) return;
+    try {
+      block.content = normalizeRichTextContent({ text: "" });
+      transformBlock(block, targetType);
+      block.updatedAt = nowIso();
+      logger.info("Slash command selected", { context: { blockId: block.id, command, targetType } });
+      await this.storage.request("updateBlock", { block });
+      this.closeSlashMenu("selected");
+      this.renderEditor();
+      requestAnimationFrame(() => this.focusBlock(block.id));
+    } catch (error) {
+      this.showError(error);
+    }
+  }
+
+  focusBlock(blockId) {
+    this.root.querySelector(`[data-block-id="${CSS.escape(blockId)}"] [data-rich-text], [data-block-id="${CSS.escape(blockId)}"] textarea, [data-block-id="${CSS.escape(blockId)}"] input`)?.focus();
+  }
+
+  captureBodyguardPaste(html) {
+    const pastebin = this.root.querySelector('[data-role="pastebin"]');
+    if (!pastebin) return;
+    pastebin.innerHTML = sanitizeInlineHtml(html);
+    logger.debug("Bodyguard pastebin captured payload", { context: { htmlLength: String(html || "").length, storedLength: pastebin.innerHTML.length } });
+  }
+
+  clearBodyguardPaste() {
+    const pastebin = this.root.querySelector('[data-role="pastebin"]');
+    if (pastebin) pastebin.innerHTML = "";
+  }
+
   getRuntimeSnapshot() {
     return {
       storageMode: "worker",
@@ -525,6 +714,50 @@ function labelForType(type) {
     code: "Code",
     sourceLink: "Source",
   }[type] || type;
+}
+
+function richTextEditable(block, variant, placeholder) {
+  const content = normalizeRichTextContent(block.content || {});
+  return `<div
+    class="trn-rich-text trn-rich-text--${variant}"
+    contenteditable="true"
+    role="textbox"
+    aria-multiline="true"
+    aria-label="${escapeAttr(placeholder)}"
+    data-rich-text="${escapeAttr(variant)}"
+    data-placeholder="${escapeAttr(placeholder)}"
+  >${content.html}</div>`;
+}
+
+function parseSlashCommandText(text) {
+  const trimmed = String(text || "").trim();
+  return /^\/[a-z]*$/.test(trimmed) ? trimmed.slice(1) : null;
+}
+
+function slashCommands() {
+  return [
+    { command: "paragraph", aliases: ["p"], type: BLOCK_TYPES.paragraph, label: "Paragraph", hint: "Plain research text" },
+    { command: "heading", aliases: ["h"], type: BLOCK_TYPES.heading, label: "Heading", hint: "Section heading" },
+    { command: "quote", aliases: ["q"], type: BLOCK_TYPES.quote, label: "Quote", hint: "Quoted passage" },
+    { command: "list", aliases: ["li"], type: BLOCK_TYPES.list, label: "List", hint: "Bullet list" },
+    { command: "table", aliases: ["tbl"], type: BLOCK_TYPES.table, label: "Table", hint: "Simple research table" },
+    { command: "code", aliases: ["pre"], type: BLOCK_TYPES.code, label: "Code", hint: "Code or command block" },
+    { command: "source", aliases: ["src"], type: BLOCK_TYPES.sourceLink, label: "Source", hint: "Research reference" },
+  ];
+}
+
+function looksLikeMultiBlockPaste(html, text) {
+  if (html && /<(h[1-6]|p|div|blockquote|ul|ol|li|table|pre)\b/i.test(html)) return true;
+  return /\n\s*\n/.test(text || "");
+}
+
+function textToHtml(text) {
+  return escapeHtml(text).replace(/\n/g, "<br>");
+}
+
+function normalizeSidebarWidth(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? Math.min(520, Math.max(180, Math.round(numeric))) : 280;
 }
 
 function safeUrl(value) {

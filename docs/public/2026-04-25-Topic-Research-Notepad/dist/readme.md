@@ -8,7 +8,10 @@ Topic Research Notepad is a local-first browser research pad for collecting sour
 - IndexedDB persistence through Dexie 4.2.0, owned by a browser Worker.
 - Page and block records are stored separately so autosave writes target the edited record.
 - Supported block types: paragraph, heading, quote, list, table, code, and source link.
-- Pasted HTML is treated as untrusted and converted into internal blocks.
+- Paragraphs and headings use controlled contenteditable blocks with sanitized inline HTML.
+- Pasted HTML is treated as untrusted, quarantined through a bodyguard paste flow, and sanitized before insertion.
+- The Pages sidebar uses a keyboard-accessible split pane and persists its width locally.
+- Slash commands in empty paragraph blocks can create or transform common block types.
 - Local search covers page titles and block text.
 - Current page Markdown export and full workspace JSON backup are available.
 - UI uses the bundled retro bookmarklet component library and compatible app CSS.
@@ -27,3 +30,5 @@ The build command writes a static app to `dist/`. The source `index.html` also r
 ## Storage
 
 The database is `TopicResearchNotepadDB` version 1. Durable stores are `pages`, `blocks`, `searchIndex`, and `settings`. The search index is derived from page and block records and can be rebuilt.
+
+Paragraph and heading content may contain both `html` and `text`. `html` is sanitized inline markup; `text` is derived plain text for search, export previews, and compatibility.

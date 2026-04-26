@@ -1,5 +1,6 @@
 import { APP_DATA_FORMAT_VERSION, BLOCK_TYPES } from "./constants.js";
 import { createLogger } from "./observability/logger.js";
+import { normalizeRichTextContent } from "./rich-text.js";
 
 const logger = createLogger("Models");
 
@@ -109,7 +110,7 @@ export function normalizeBlock(block = {}) {
 export function defaultContentForType(type) {
   switch (type) {
     case BLOCK_TYPES.heading:
-      return { level: 2, text: "" };
+      return { level: 2, html: "", text: "" };
     case BLOCK_TYPES.quote:
       return { text: "", attribution: "", sourceUrl: "" };
     case BLOCK_TYPES.list:
@@ -135,7 +136,7 @@ export function normalizeContent(type, content) {
   const value = isPlainObject(content) ? content : {};
   switch (type) {
     case BLOCK_TYPES.heading:
-      return { level: clampHeading(value.level), text: String(value.text || "") };
+      return { level: clampHeading(value.level), ...normalizeRichTextContent(value) };
     case BLOCK_TYPES.quote:
       return { text: String(value.text || ""), attribution: String(value.attribution || ""), sourceUrl: String(value.sourceUrl || "") };
     case BLOCK_TYPES.list:
@@ -152,7 +153,7 @@ export function normalizeContent(type, content) {
     case BLOCK_TYPES.sourceLink:
       return normalizeSourceLink(value);
     case BLOCK_TYPES.paragraph:
-      return { text: String(value.text || "") };
+      return normalizeRichTextContent(value);
     default:
       return { raw: value, text: String(value.text || "") };
   }

@@ -77,10 +77,17 @@ textarea {
 }
 
 .trn-main {
-  display: grid;
-  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
-  gap: 8px;
+  display: block;
+  height: calc(100vh - 92px);
   min-height: 0;
+}
+
+.trn-layout-split {
+  height: 100%;
+}
+
+.trn-layout-split::part(splitter) {
+  margin: 0 4px;
 }
 
 .trn-sidebar,
@@ -95,6 +102,14 @@ textarea {
 
 .trn-editor-panel {
   background: #f3f5f7;
+}
+
+.trn-editor-panel::part(panel),
+.trn-editor-panel::part(body),
+.trn-sidebar::part(panel),
+.trn-sidebar::part(body) {
+  height: 100%;
+  min-height: 0;
 }
 
 button.trn-button,
@@ -213,34 +228,96 @@ button.trn-page-button {
 .trn-page-title-input {
   font-size: 20px;
   font-weight: 700;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  padding: 2px 0;
 }
 
 .trn-blocks {
   display: grid;
-  gap: 8px;
+  gap: 2px;
 }
 
 .trn-block {
-  border: 1px solid #767f8b;
-  background: #fbfcfd;
-  box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #c7cdd5;
-  padding: 6px;
+  position: relative;
+  border: 1px solid transparent;
+  background: transparent;
+  box-shadow: none;
+  padding: 3px 76px 3px 8px;
 }
 
+.trn-block:hover,
+.trn-block:focus-within,
 .trn-block.is-focused {
-  border-color: #174f9c;
-  box-shadow: inset 1px 1px 0 #fff, 0 0 0 2px rgba(23, 79, 156, 0.18);
+  border-color: #b5c0cd;
+  background: #fbfcfd;
+  box-shadow: inset 1px 1px 0 #fff;
 }
 
 .trn-block-toolbar {
+  position: absolute;
+  top: 4px;
+  right: 6px;
   justify-content: flex-end;
-  margin-bottom: 6px;
   color: #44505f;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+  z-index: 2;
+}
+
+.trn-block:hover .trn-block-toolbar,
+.trn-block:focus-within .trn-block-toolbar,
+.trn-block.is-focused .trn-block-toolbar {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.trn-block-type-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
 }
 
 .trn-block-toolbar span {
   margin-right: auto;
   font-weight: 700;
+}
+
+.trn-rich-text {
+  min-height: 1.55em;
+  color: #121820;
+  line-height: 1.58;
+  outline: none;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.trn-rich-text:empty::before {
+  content: attr(data-placeholder);
+  color: #7a8490;
+}
+
+.trn-rich-text:focus-visible {
+  box-shadow: 0 2px 0 #174f9c;
+}
+
+.trn-rich-text--paragraph {
+  font-size: 15px;
+}
+
+.trn-rich-text--heading {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+  padding-top: 8px;
+}
+
+.trn-rich-text a {
+  color: #174f9c;
 }
 
 .trn-textarea {
@@ -251,6 +328,9 @@ button.trn-page-button {
 
 .trn-textarea.quote {
   border-left: 4px solid #315f99;
+  background: #fbfcfd;
+  font-size: 15px;
+  line-height: 1.55;
 }
 
 .trn-textarea.code {
@@ -262,10 +342,37 @@ button.trn-page-button {
 .trn-source-grid {
   display: grid;
   gap: 6px;
+  margin-top: 8px;
+}
+
+.trn-source-details {
+  border-left: 3px solid #8492a3;
+  padding-left: 10px;
+}
+
+.trn-source-details summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.trn-source-title {
+  font-weight: 700;
+}
+
+.trn-source-domain,
+.trn-source-note {
+  color: #586272;
+}
+
+.trn-source-note {
+  margin: 6px 0 0;
 }
 
 .trn-source-link {
   color: #174f9c;
+  margin-left: auto;
 }
 
 .trn-list-items {
@@ -360,9 +467,54 @@ button.trn-page-button {
   color: #6d4b00;
 }
 
+.trn-pastebin {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0.01;
+  overflow: hidden;
+}
+
+.trn-slash-menu {
+  position: absolute;
+  z-index: 20;
+  width: min(280px, calc(100vw - 24px));
+  border: 1px solid #767f8b;
+  background: #f8fafc;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.18), inset 1px 1px 0 #fff;
+  padding: 4px;
+}
+
+.trn-slash-item {
+  display: grid;
+  gap: 1px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #121820;
+  padding: 6px;
+  text-align: left;
+}
+
+.trn-slash-item span {
+  color: #586272;
+}
+
+.trn-slash-item.selected,
+.trn-slash-item:hover {
+  background: #dce9fb;
+}
+
 @media (max-width: 760px) {
   .trn-main {
-    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .trn-layout-split {
+    display: grid;
+    gap: 8px;
   }
 
   .trn-sidebar {

@@ -1,5 +1,6 @@
 import { BLOCK_TYPES } from "./constants.js";
 import { createLogger } from "./observability/logger.js";
+import { normalizeRichTextContent } from "./rich-text.js";
 
 const logger = createLogger("Search", "Indexing");
 
@@ -12,7 +13,7 @@ export function textForBlock(block) {
   switch (block?.type) {
     case BLOCK_TYPES.heading:
     case BLOCK_TYPES.paragraph:
-      return c.text || "";
+      return normalizeRichTextContent(c).text;
     case BLOCK_TYPES.quote:
       return [c.text, c.attribution, c.sourceUrl].filter(Boolean).join(" ");
     case BLOCK_TYPES.list:

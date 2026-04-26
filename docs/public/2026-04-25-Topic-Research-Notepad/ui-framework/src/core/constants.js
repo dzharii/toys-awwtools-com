@@ -43,7 +43,8 @@ export const TAGS = {
   contextBar: "awwbookmarklet-context-bar",
   statusStrip: "awwbookmarklet-status-strip",
   titlebar: "awwbookmarklet-titlebar",
-  contextPanel: "awwbookmarklet-context-panel"
+  contextPanel: "awwbookmarklet-context-panel",
+  splitPane: "awwbookmarklet-split-pane"
 };
 
 export const GLOBAL_SYMBOLS = {

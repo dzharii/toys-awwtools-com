@@ -1,5 +1,6 @@
 import { EXPORT_FORMAT_VERSION } from "./constants.js";
 import { createLogger } from "./observability/logger.js";
+import { inlineHtmlToMarkdown, normalizeRichTextContent } from "./rich-text.js";
 import { textForBlock } from "./search.js";
 
 const logger = createLogger("Export");
@@ -11,7 +12,7 @@ export function pageToMarkdown(page, blocks) {
     const c = block.content || {};
     switch (block.type) {
       case "heading":
-        lines.push(`${"#".repeat(Math.max(1, Math.min(6, c.level || 2)))} ${escapeMarkdown(c.text)}`, "");
+        lines.push(`${"#".repeat(Math.max(1, Math.min(6, c.level || 2)))} ${inlineHtmlToMarkdown(normalizeRichTextContent(c).html)}`, "");
         break;
       case "quote":
         lines.push(...String(c.text || "").split("\n").map((line) => `> ${line}`));
@@ -36,7 +37,7 @@ export function pageToMarkdown(page, blocks) {
         lines.push("");
         break;
       case "paragraph":
-        lines.push(c.text || "", "");
+        lines.push(inlineHtmlToMarkdown(normalizeRichTextContent(c).html), "");
         break;
       default:
         lines.push(`Unsupported block type: ${block.type}`, "```json", JSON.stringify(block.content, null, 2), "```", "");

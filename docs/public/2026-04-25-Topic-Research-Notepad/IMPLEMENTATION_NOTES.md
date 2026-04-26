@@ -22,7 +22,19 @@ Safe debug helpers are exposed as `window.trnDebug`. See `OBSERVABILITY.md` for 
 
 ## UI Framework
 
-The app imports and initializes the provided retro bookmarklet UI framework from `ui-framework/dist/bookmarklet/index.js`. App CSS uses the same compact panel, toolbar, border, inset, and status-strip language. No framework source files were modified.
+The app imports and initializes the provided retro bookmarklet UI framework from `ui-framework/dist/bookmarklet/index.js`. App CSS uses the same compact panel, toolbar, border, inset, and status-strip language.
+
+The framework now includes `awwbookmarklet-split-pane`, a reusable two-pane web component with start/end slots, horizontal or vertical direction, pointer and keyboard resizing, min-size clamping, separator ARIA, Shadow DOM parts, and resize/resize-commit events. Topic Research Notepad uses it for the Pages sidebar and editor. The durable `sidebarWidth` setting is owned by the app storage layer, not by the generic component.
+
+## Editing Model
+
+Paragraph and heading blocks use one controlled `contenteditable` region per block. Storage remains block based and backward compatible: legacy `content.text` renders by escaping it to safe HTML, while new paragraph and heading edits store sanitized `content.html` plus derived `content.text`. Search and Markdown export read derived plain text or convert allowed inline HTML.
+
+Allowed inline HTML is deliberately small: `strong`, `em`, `u`, `code`, `mark`, `a[href]`, and `br`. Sanitization strips scripts, styles, iframes, forms, event handlers, external classes, inline styles, and unsupported attributes. Links are kept only for `http:`, `https:`, and `mailto:` URLs and are rendered with safe link attributes.
+
+Paste into rich text is intercepted before the browser can insert arbitrary markup. The app records the payload in an offscreen bodyguard pastebin for observability/debugging, sanitizes it, and then inserts only allowed inline HTML or converts multi-block paste through the existing detached clipboard-to-block pipeline.
+
+Slash commands are local block transforms, not a global command palette. Empty paragraph-like command text such as `/`, `/h`, `/quote`, `/source`, `/list`, `/table`, and `/code` opens a small menu. Selection uses an explicit transform map and preserves text where the conversion is safe.
 
 ## Deliberate Simplifications
 
@@ -30,6 +42,8 @@ Page and block ordering uses move up/down controls instead of drag-and-drop. Thi
 
 The table editor supports basic editable cells plus row and column insertion. It intentionally omits spreadsheet features such as formulas, sorting, filtering, merged cells, and rich cell formatting.
 
-Paste conversion keeps semantic structures but does not preserve inline formatting. This is intentional because external page styles and markup are untrusted.
+Paste conversion keeps semantic structures and limited safe inline formatting. External page styles and arbitrary markup are still untrusted and are stripped.
 
 Archive and import are not included in the first implementation. JSON backup is included so local evaluation data can be protected before future migrations.
+
+The contenteditable implementation intentionally does not include a full rich editor engine, collaborative editing, arbitrary typography, persisted source-details expansion state, page hierarchy, backlinks, tags, or drag-and-drop page trees.

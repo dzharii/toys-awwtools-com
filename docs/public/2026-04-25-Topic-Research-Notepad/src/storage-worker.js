@@ -210,6 +210,7 @@ function textForBlock(block) {
   if (block.type === "sourceLink") return [c.title, c.url, c.domain, c.note, c.capturedText].join(" ");
   if (block.type === "quote") return [c.text, c.attribution, c.sourceUrl].join(" ");
   if (block.type === "code") return [c.language, c.text].join(" ");
+  if (block.type === "paragraph" || block.type === "heading") return c.text || stripTags(c.html || "");
   return c.text || JSON.stringify(c);
 }
 
@@ -220,6 +221,10 @@ function normalizeSearchText(value) {
 function previewText(value) {
   const text = String(value || "").replace(/\s+/g, " ").trim();
   return text.length > 160 ? `${text.slice(0, 159)}...` : text;
+}
+
+function stripTags(value) {
+  return String(value || "").replace(/<[^>]*>/g, " ");
 }
 
 function byOrder(a, b) {
