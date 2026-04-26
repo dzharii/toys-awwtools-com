@@ -567,3 +567,5 @@ N00 Final Acceptance Review
   * [ ] Whether the app is ready for proof-of-concept evaluation.
   * [ ] Whether any issue may affect later Chrome extension integration.
 
+Once implementation is completed, edit the following file and add a new entry about this project into the at the end of the toys section of this file. Make sure that the link points to something that can be interactable and viewable by the user, maybe this folder or something like that, and readme file is properly formatted and exists, and the entry is valid. This is the final step of the implementation.
+File to edit: ../../index.html
