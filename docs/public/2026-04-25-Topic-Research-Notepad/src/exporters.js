@@ -1,7 +1,11 @@
 import { EXPORT_FORMAT_VERSION } from "./constants.js";
+import { createLogger } from "./observability/logger.js";
 import { textForBlock } from "./search.js";
 
+const logger = createLogger("Export");
+
 export function pageToMarkdown(page, blocks) {
+  logger.debug("Rendering page to Markdown", { context: { pageId: page?.id, blockCount: blocks.length } });
   const lines = [`# ${escapeMarkdown(page.title)}`, ""];
   for (const block of blocks) {
     const c = block.content || {};
@@ -42,6 +46,7 @@ export function pageToMarkdown(page, blocks) {
 }
 
 export function workspaceToBackup({ pages, blocks }) {
+  logger.debug("Rendering workspace backup", { context: { pageCount: pages.length, blockCount: blocks.length, exportFormatVersion: EXPORT_FORMAT_VERSION } });
   return {
     format: "topic-research-notepad-backup",
     exportFormatVersion: EXPORT_FORMAT_VERSION,
@@ -53,12 +58,16 @@ export function workspaceToBackup({ pages, blocks }) {
 
 export function downloadText(filename, text, type = "text/plain") {
   const blob = new Blob([text], { type });
+  logger.info("Starting browser download", { context: { filename, type, byteLength: blob.size } });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = filename;
+  anchor.hidden = true;
+  document.body.append(anchor);
   anchor.click();
-  URL.revokeObjectURL(url);
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 function tableToMarkdown(content) {

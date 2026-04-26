@@ -1,4 +1,7 @@
 import { APP_DATA_FORMAT_VERSION, BLOCK_TYPES } from "./constants.js";
+import { createLogger } from "./observability/logger.js";
+
+const logger = createLogger("Models");
 
 export const nowIso = () => new Date().toISOString();
 
@@ -64,37 +67,42 @@ export function createBlock({ pageId, type = BLOCK_TYPES.paragraph, content, sor
 }
 
 export function normalizePage(page = {}) {
+  if (!isPlainObject(page)) logger.warn("Normalizing malformed page record", { context: { receivedType: typeof page } });
+  const value = isPlainObject(page) ? page : {};
   return {
-    id: String(page.id || createId("page")),
-    title: String(page.title || "Untitled research"),
-    createdAt: page.createdAt || nowIso(),
-    updatedAt: page.updatedAt || page.createdAt || nowIso(),
-    archivedAt: page.archivedAt ?? null,
-    deletedAt: page.deletedAt ?? null,
-    sortOrder: Number.isFinite(page.sortOrder) ? page.sortOrder : 1000,
-    pinned: Boolean(page.pinned),
-    color: page.color ?? null,
-    summary: String(page.summary || ""),
-    metadata: isPlainObject(page.metadata) ? page.metadata : {},
-    dataFormatVersion: page.dataFormatVersion ?? APP_DATA_FORMAT_VERSION,
+    id: String(value.id || createId("page")),
+    title: String(value.title || "Untitled research"),
+    createdAt: value.createdAt || nowIso(),
+    updatedAt: value.updatedAt || value.createdAt || nowIso(),
+    archivedAt: value.archivedAt ?? null,
+    deletedAt: value.deletedAt ?? null,
+    sortOrder: Number.isFinite(value.sortOrder) ? value.sortOrder : 1000,
+    pinned: Boolean(value.pinned),
+    color: value.color ?? null,
+    summary: String(value.summary || ""),
+    metadata: isPlainObject(value.metadata) ? value.metadata : {},
+    dataFormatVersion: value.dataFormatVersion ?? APP_DATA_FORMAT_VERSION,
   };
 }
 
 export function normalizeBlock(block = {}) {
-  const type = Object.values(BLOCK_TYPES).includes(block.type) ? block.type : String(block.type || "unknown");
+  if (!isPlainObject(block)) logger.warn("Normalizing malformed block record", { context: { receivedType: typeof block } });
+  const value = isPlainObject(block) ? block : {};
+  const type = Object.values(BLOCK_TYPES).includes(value.type) ? value.type : String(value.type || "unknown");
+  if (!Object.values(BLOCK_TYPES).includes(value.type)) logger.warn("Normalizing unknown block type", { context: { blockId: value.id, type } });
   return {
-    id: String(block.id || createId("block")),
-    pageId: String(block.pageId || ""),
+    id: String(value.id || createId("block")),
+    pageId: String(value.pageId || ""),
     type,
-    sortOrder: Number.isFinite(block.sortOrder) ? block.sortOrder : 1000,
-    content: normalizeContent(type, block.content),
-    source: isPlainObject(block.source) ? block.source : null,
-    createdAt: block.createdAt || nowIso(),
-    updatedAt: block.updatedAt || block.createdAt || nowIso(),
-    archivedAt: block.archivedAt ?? null,
-    deletedAt: block.deletedAt ?? null,
-    contentVersion: Number.isFinite(block.contentVersion) ? block.contentVersion : 1,
-    metadata: isPlainObject(block.metadata) ? block.metadata : {},
+    sortOrder: Number.isFinite(value.sortOrder) ? value.sortOrder : 1000,
+    content: normalizeContent(type, value.content),
+    source: isPlainObject(value.source) ? value.source : null,
+    createdAt: value.createdAt || nowIso(),
+    updatedAt: value.updatedAt || value.createdAt || nowIso(),
+    archivedAt: value.archivedAt ?? null,
+    deletedAt: value.deletedAt ?? null,
+    contentVersion: Number.isFinite(value.contentVersion) ? value.contentVersion : 1,
+    metadata: isPlainObject(value.metadata) ? value.metadata : {},
   };
 }
 

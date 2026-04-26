@@ -12,5 +12,7 @@ Serve this folder or run `bun run build` and serve `dist/`.
 8. Export Markdown for a page with every block type and inspect the file.
 9. Export JSON backup and confirm it contains export metadata, pages, and blocks.
 10. Use browser devtools to inspect IndexedDB. Confirm `pages` and `blocks` are separate stores.
+11. Clear `TopicResearchNotepadDB`, reload, and confirm startup does not show `db.pages.where(...).equals(...).catch is not a function`.
+12. Open the console and confirm startup logs include `App/Bootstrap`, `StorageClient/WorkerBridge`, `StorageWorker`, and `Persistence` entries.
 
 Known browser-only behavior such as IndexedDB writes, Worker loading, and clipboard paste should be validated manually because Bun tests cover only pure logic.

@@ -1,7 +1,12 @@
 import { BLOCK_TYPES } from "./constants.js";
-import { createBlock, createPage, deriveDomain, normalizeBlock, normalizePage, nowIso, sortByOrder } from "./models.js";
+import { createBlock, createId, createPage, deriveDomain, normalizeBlock, normalizePage, nowIso, sortByOrder } from "./models.js";
 import { blocksFromClipboard } from "./paste.js";
 import { downloadText, filenameForPage, pageToMarkdown, workspaceToBackup } from "./exporters.js";
+import { createLogger, normalizeError } from "./observability/logger.js";
+
+const logger = createLogger("UI");
+const searchLogger = createLogger("Search", "UI");
+const exportLogger = createLogger("Export", "UI");
 
 export class TopicResearchApp {
   constructor({ root, storage }) {
@@ -14,7 +19,9 @@ export class TopicResearchApp {
       searchResults: [],
       status: { state: "loading", detail: "Opening local storage" },
       error: "",
+      focusedBlockId: "",
     };
+    this.searchRun = 0;
     this.storage.addEventListener("save-status", (event) => {
       this.state.status = event.detail;
       this.renderStatus();
@@ -22,10 +29,12 @@ export class TopicResearchApp {
   }
 
   async start() {
+    logger.info("App start requested");
     this.renderShell();
     try {
       await this.storage.hello();
       const workspace = await this.storage.request("loadWorkspace");
+      logger.info("Workspace loaded", { context: { pageCount: workspace.pages.length, blockCount: workspace.blocks.length, selectedPageId: workspace.settings.selectedPageId } });
       this.state.pages = workspace.pages.map(normalizePage);
       this.state.blocks = workspace.blocks.map(normalizeBlock);
       this.state.selectedPageId = workspace.settings.selectedPageId || this.state.pages[0]?.id || null;
@@ -33,7 +42,9 @@ export class TopicResearchApp {
       this.state.status = { state: "saved", detail: "Local storage ready" };
       this.render();
       this.bindLifecycleFlush();
+      logger.info("App start completed", { context: this.getRuntimeSnapshot() });
     } catch (error) {
+      logger.error("App start failed", { context: { error: normalizeError(error) } });
       this.state.error = error.message;
       this.state.status = { state: "failed", detail: "Storage unavailable" };
       this.render();
@@ -43,30 +54,29 @@ export class TopicResearchApp {
   renderShell() {
     this.root.innerHTML = `
       <awwbookmarklet-app-shell class="trn-shell">
-        <header class="trn-titlebar">
-          <div class="trn-title">Topic Research Notepad</div>
-          <div class="trn-actions">
-            <button class="trn-button" data-action="export-md">Export MD</button>
-            <button class="trn-button" data-action="export-json">Backup JSON</button>
-          </div>
-        </header>
-        <div class="trn-commandbar">
-          <button class="trn-button primary" data-action="new-page">New Page</button>
+        <awwbookmarklet-titlebar slot="title" value="Topic Research Notepad">
+          <awwbookmarklet-button slot="commands" class="trn-button" data-action="export-md">Export MD</awwbookmarklet-button>
+          <awwbookmarklet-button slot="commands" class="trn-button" data-action="export-json">Backup JSON</awwbookmarklet-button>
+        </awwbookmarklet-titlebar>
+        <awwbookmarklet-toolbar slot="status" class="trn-commandbar" wrap density="compact">
+          <awwbookmarklet-button class="trn-button primary" variant="primary" data-action="new-page">New Page</awwbookmarklet-button>
           <input class="trn-input" data-role="search" placeholder="Search local notes" />
-          <button class="trn-button" data-action="clear-search">Clear</button>
-        </div>
-        <main class="trn-main">
-          <aside class="trn-sidebar">
-            <div class="trn-panel-title">Pages</div>
+          <awwbookmarklet-button class="trn-button" data-action="clear-search">Clear</awwbookmarklet-button>
+        </awwbookmarklet-toolbar>
+        <main slot="body" class="trn-main">
+          <awwbookmarklet-panel class="trn-sidebar">
+            <div slot="title">Pages</div>
             <div data-role="page-list"></div>
-          </aside>
-          <section class="trn-editor-panel">
+          </awwbookmarklet-panel>
+          <awwbookmarklet-panel class="trn-editor-panel">
             <div data-role="error"></div>
             <div data-role="search-results"></div>
             <div data-role="editor"></div>
-          </section>
+          </awwbookmarklet-panel>
         </main>
-        <footer class="trn-statusbar" data-role="status"></footer>
+        <awwbookmarklet-statusbar slot="footer" class="trn-statusbar">
+          <span data-role="status" aria-live="polite"></span>
+        </awwbookmarklet-statusbar>
       </awwbookmarklet-app-shell>
     `;
     this.root.addEventListener("click", (event) => this.handleClick(event));
@@ -88,9 +98,9 @@ export class TopicResearchApp {
     const list = this.root.querySelector('[data-role="page-list"]');
     list.innerHTML = sortByOrder(this.state.pages).map((page) => `
       <div class="trn-page-row ${page.id === this.state.selectedPageId ? "selected" : ""}" data-page-id="${escapeAttr(page.id)}">
-        <button class="trn-page-button" data-action="select-page" title="Open page">${escapeHtml(page.title)}</button>
-        <button class="trn-icon-button" data-action="page-up" title="Move page up">^</button>
-        <button class="trn-icon-button" data-action="page-down" title="Move page down">v</button>
+        <awwbookmarklet-button class="trn-page-button" data-action="select-page" title="Open page">${escapeHtml(page.title)}</awwbookmarklet-button>
+        <awwbookmarklet-button class="trn-icon-button" data-action="page-up" title="Move page up" aria-label="Move page up">&#8593;</awwbookmarklet-button>
+        <awwbookmarklet-button class="trn-icon-button" data-action="page-down" title="Move page down" aria-label="Move page down">&#8595;</awwbookmarklet-button>
       </div>
     `).join("");
   }
@@ -106,9 +116,9 @@ export class TopicResearchApp {
     editor.innerHTML = `
       <div class="trn-page-head">
         <input class="trn-page-title-input" data-role="page-title" value="${escapeAttr(page.title)}" />
-        <div class="trn-block-add">
-          ${Object.values(BLOCK_TYPES).map((type) => `<button class="trn-button" data-action="add-block" data-type="${type}">${labelForType(type)}</button>`).join("")}
-        </div>
+        <awwbookmarklet-toolbar class="trn-block-add" wrap density="compact" aria-label="Add content block">
+          ${Object.values(BLOCK_TYPES).map((type) => `<awwbookmarklet-button class="trn-button" data-action="add-block" data-type="${type}">${labelForType(type)}</awwbookmarklet-button>`).join("")}
+        </awwbookmarklet-toolbar>
       </div>
       <div class="trn-blocks" data-role="blocks">
         ${blocks.map((block) => this.renderBlock(block)).join("")}
@@ -118,12 +128,12 @@ export class TopicResearchApp {
 
   renderBlock(block) {
     return `
-      <article class="trn-block" data-block-id="${escapeAttr(block.id)}" data-type="${escapeAttr(block.type)}">
+      <article class="trn-block ${block.id === this.state.focusedBlockId ? "is-focused" : ""}" data-block-id="${escapeAttr(block.id)}" data-type="${escapeAttr(block.type)}">
         <div class="trn-block-toolbar">
           <span>${labelForType(block.type)}</span>
-          <button class="trn-icon-button" data-action="block-up" title="Move block up">^</button>
-          <button class="trn-icon-button" data-action="block-down" title="Move block down">v</button>
-          <button class="trn-icon-button danger" data-action="delete-block" title="Delete block">x</button>
+          <awwbookmarklet-button class="trn-icon-button" data-action="block-up" title="Move block up" aria-label="Move block up">&#8593;</awwbookmarklet-button>
+          <awwbookmarklet-button class="trn-icon-button" data-action="block-down" title="Move block down" aria-label="Move block down">&#8595;</awwbookmarklet-button>
+          <awwbookmarklet-button class="trn-icon-button danger" tone="danger" data-action="delete-block" title="Delete block" aria-label="Delete block">&times;</awwbookmarklet-button>
         </div>
         ${this.renderBlockBody(block)}
       </article>
@@ -142,13 +152,13 @@ export class TopicResearchApp {
       case BLOCK_TYPES.list:
         return `<div class="trn-list-items">
           ${(c.items || []).map((item) => `<div class="trn-list-item" data-item-id="${escapeAttr(item.id)}"><input class="trn-input" data-list-item="${escapeAttr(item.id)}" value="${escapeAttr(item.text)}" /></div>`).join("")}
-          <button class="trn-button" data-action="add-list-item">Add item</button>
+          <awwbookmarklet-button class="trn-button" data-action="add-list-item">Add item</awwbookmarklet-button>
         </div>`;
       case BLOCK_TYPES.table:
         return `<div class="trn-table-wrap"><table class="trn-table">
           <thead><tr>${(c.columns || []).map((col) => `<th><input data-table-col="${escapeAttr(col.id)}" value="${escapeAttr(col.label)}" /></th>`).join("")}<th></th></tr></thead>
-          <tbody>${(c.rows || []).map((row) => `<tr data-row-id="${escapeAttr(row.id)}">${(c.columns || []).map((col) => `<td><input data-table-cell="${escapeAttr(row.id)}:${escapeAttr(col.id)}" value="${escapeAttr(row.cells?.[col.id] || "")}" /></td>`).join("")}<td><button class="trn-icon-button" data-action="delete-row">x</button></td></tr>`).join("")}</tbody>
-        </table></div><button class="trn-button" data-action="add-row">Add row</button><button class="trn-button" data-action="add-column">Add column</button>`;
+          <tbody>${(c.rows || []).map((row) => `<tr data-row-id="${escapeAttr(row.id)}">${(c.columns || []).map((col) => `<td><input data-table-cell="${escapeAttr(row.id)}:${escapeAttr(col.id)}" value="${escapeAttr(row.cells?.[col.id] || "")}" /></td>`).join("")}<td><awwbookmarklet-button class="trn-icon-button danger" tone="danger" data-action="delete-row" aria-label="Delete row">&times;</awwbookmarklet-button></td></tr>`).join("")}</tbody>
+        </table></div><awwbookmarklet-toolbar class="trn-table-actions" wrap density="compact"><awwbookmarklet-button class="trn-button" data-action="add-row">Add row</awwbookmarklet-button><awwbookmarklet-button class="trn-button" data-action="add-column">Add column</awwbookmarklet-button></awwbookmarklet-toolbar>`;
       case BLOCK_TYPES.code:
         return `<input class="trn-input" data-field="language" value="${escapeAttr(c.language)}" placeholder="Language" />
           <textarea class="trn-textarea code" data-field="text" spellcheck="false">${escapeHtml(c.text)}</textarea>`;
@@ -183,7 +193,10 @@ export class TopicResearchApp {
 
   renderStatus() {
     const status = this.root.querySelector('[data-role="status"]');
-    if (status) status.textContent = `${this.state.status.state}: ${this.state.status.detail}`;
+    if (status) {
+      status.textContent = `${this.state.status.state}: ${this.state.status.detail}`;
+      status.dataset.state = this.state.status.state;
+    }
   }
 
   renderError() {
@@ -195,25 +208,32 @@ export class TopicResearchApp {
     const button = event.target.closest("[data-action]");
     if (!button) return;
     const action = button.dataset.action;
-    if (action === "new-page") await this.createPage(prompt("Page title", "New research page") || "New research page");
-    if (action === "select-page") await this.selectPage(button.closest("[data-page-id]").dataset.pageId);
-    if (action === "add-block") await this.addBlock(button.dataset.type);
-    if (action === "delete-block") await this.deleteBlock(button.closest("[data-block-id]").dataset.blockId);
-    if (action === "block-up" || action === "block-down") await this.moveBlock(button.closest("[data-block-id]").dataset.blockId, action === "block-up" ? -1 : 1);
-    if (action === "page-up" || action === "page-down") await this.movePage(button.closest("[data-page-id]").dataset.pageId, action === "page-up" ? -1 : 1);
-    if (action === "add-list-item") this.addListItem(button.closest("[data-block-id]").dataset.blockId);
-    if (action === "add-row") this.addTableRow(button.closest("[data-block-id]").dataset.blockId);
-    if (action === "add-column") this.addTableColumn(button.closest("[data-block-id]").dataset.blockId);
-    if (action === "delete-row") this.deleteTableRow(button.closest("[data-block-id]").dataset.blockId, button.closest("[data-row-id]").dataset.rowId);
-    if (action === "export-md") await this.exportMarkdown();
-    if (action === "export-json") await this.exportJson();
-    if (action === "clear-search") this.clearSearch();
-    if (action === "open-search-result") await this.openSearchResult(button.dataset.pageId, button.dataset.blockId);
+    logger.debug("UI action received", { context: { action } });
+    try {
+      if (action === "new-page") await this.createPage(prompt("Page title", "New research page") || "New research page");
+      if (action === "select-page") await this.selectPage(button.closest("[data-page-id]").dataset.pageId);
+      if (action === "add-block") await this.addBlock(button.dataset.type);
+      if (action === "delete-block") await this.deleteBlock(button.closest("[data-block-id]").dataset.blockId);
+      if (action === "block-up" || action === "block-down") await this.moveBlock(button.closest("[data-block-id]").dataset.blockId, action === "block-up" ? -1 : 1);
+      if (action === "page-up" || action === "page-down") await this.movePage(button.closest("[data-page-id]").dataset.pageId, action === "page-up" ? -1 : 1);
+      if (action === "add-list-item") this.addListItem(button.closest("[data-block-id]").dataset.blockId);
+      if (action === "add-row") this.addTableRow(button.closest("[data-block-id]").dataset.blockId);
+      if (action === "add-column") this.addTableColumn(button.closest("[data-block-id]").dataset.blockId);
+      if (action === "delete-row") this.deleteTableRow(button.closest("[data-block-id]").dataset.blockId, button.closest("[data-row-id]").dataset.rowId);
+      if (action === "export-md") await this.exportMarkdown();
+      if (action === "export-json") await this.exportJson();
+      if (action === "clear-search") this.clearSearch();
+      if (action === "open-search-result") await this.openSearchResult(button.dataset.pageId, button.dataset.blockId);
+    } catch (error) {
+      logger.error("UI action failed", { context: { action, error: normalizeError(error) } });
+      this.showError(error);
+    }
   }
 
   handleInput(event) {
     const target = event.target;
     if (target.matches('[data-role="search"]')) {
+      searchLogger.debug("Search input changed", { context: { length: target.value.length } });
       this.search(target.value);
       return;
     }
@@ -221,7 +241,8 @@ export class TopicResearchApp {
       const page = this.selectedPage();
       page.title = target.value;
       page.updatedAt = nowIso();
-      this.storage.savePageDebounced(page);
+      logger.debug("Page title edited", { context: { pageId: page.id, titleLength: target.value.length } });
+      this.queuePageSave(page);
       this.renderPages();
       return;
     }
@@ -231,7 +252,8 @@ export class TopicResearchApp {
     if (!block) return;
     this.applyBlockInput(block, target);
     block.updatedAt = nowIso();
-    this.storage.saveBlockDebounced(block);
+    logger.debug("Block edit detected", { context: { blockId: block.id, pageId: block.pageId, type: block.type, field: target.dataset.field || target.dataset.listItem || target.dataset.tableCell || target.dataset.tableCol } });
+    this.queueBlockSave(block);
   }
 
   handleChange(event) {
@@ -239,7 +261,11 @@ export class TopicResearchApp {
   }
 
   async handleBlur(event) {
-    if (event.target.matches("input, textarea")) await this.storage.flush().catch((error) => this.state.error = error.message);
+    if (event.target.matches("input, textarea")) {
+      await this.storage.flush().catch((error) => {
+        this.showError(error);
+      });
+    }
   }
 
   async handlePaste(event) {
@@ -252,13 +278,16 @@ export class TopicResearchApp {
     const text = event.clipboardData?.getData("text/plain") || "";
     if (!html && !text) return;
     event.preventDefault();
+    logger.info("Paste event received", { context: { hasHtml: Boolean(html), hasText: Boolean(text), textLength: text.length, htmlLength: html.length } });
     const newBlocks = blocksFromClipboard({ pageId: page.id, html, text });
+    logger.info("Paste converted to blocks", { context: { pageId: page.id, blockCount: newBlocks.length, byType: countByType(newBlocks) } });
     const current = this.blocksForPage(page.id);
     const insertAt = blockEl ? current.findIndex((block) => block.id === blockEl.dataset.blockId) + 1 : current.length;
     current.splice(insertAt, 0, ...newBlocks);
     current.forEach((block, index) => block.sortOrder = (index + 1) * 1000);
     this.state.blocks = this.state.blocks.filter((block) => block.pageId !== page.id).concat(current);
     await this.storage.request("replaceBlocks", { pageId: page.id, blocks: current });
+    logger.info("Pasted blocks persisted", { context: { pageId: page.id, totalBlockCount: current.length } });
     this.renderEditor();
   }
 
@@ -286,11 +315,13 @@ export class TopicResearchApp {
   async createPage(title) {
     const page = createPage({ title, sortOrder: (this.state.pages.length + 1) * 1000 });
     const block = createBlock({ pageId: page.id, type: BLOCK_TYPES.paragraph, content: { text: "" } });
+    logger.info("Creating page", { context: { title, pageId: page.id, initialBlockId: block.id } });
     await this.storage.request("createPage", { page, blocks: [block] });
     this.state.pages.push(page);
     this.state.blocks.push(block);
     this.state.selectedPageId = page.id;
     this.render();
+    logger.info("Page created", { context: { pageId: page.id, blockCount: 1 } });
   }
 
   async selectPage(pageId) {
@@ -298,11 +329,13 @@ export class TopicResearchApp {
     this.state.selectedPageId = pageId;
     await this.storage.request("setSetting", { key: "selectedPageId", value: pageId });
     this.render();
+    logger.info("Page selected", { context: { pageId } });
   }
 
   async addBlock(type) {
     const page = this.selectedPage();
     const block = createBlock({ pageId: page.id, type, sortOrder: (this.blocksForPage(page.id).length + 1) * 1000 });
+    logger.info("Adding block", { context: { pageId: page.id, blockId: block.id, type } });
     this.state.blocks.push(block);
     await this.storage.request("updateBlock", { block });
     this.renderEditor();
@@ -310,6 +343,7 @@ export class TopicResearchApp {
 
   async deleteBlock(blockId) {
     this.state.blocks = this.state.blocks.filter((block) => block.id !== blockId);
+    logger.info("Deleting block", { context: { blockId } });
     await this.storage.request("deleteBlock", { blockId });
     this.renderEditor();
   }
@@ -323,6 +357,7 @@ export class TopicResearchApp {
     [blocks[index], blocks[swap]] = [blocks[swap], blocks[index]];
     blocks.forEach((block, order) => block.sortOrder = (order + 1) * 1000);
     this.state.blocks = this.state.blocks.filter((block) => block.pageId !== page.id).concat(blocks);
+    logger.info("Moving block", { context: { blockId, pageId: page.id, direction } });
     await this.storage.request("reorderBlocks", { blocks });
     this.renderEditor();
   }
@@ -335,71 +370,96 @@ export class TopicResearchApp {
     [pages[index], pages[swap]] = [pages[swap], pages[index]];
     pages.forEach((page, order) => page.sortOrder = (order + 1) * 1000);
     this.state.pages = pages;
+    logger.info("Moving page", { context: { pageId, direction } });
     await this.storage.request("reorderPages", { pages });
     this.renderPages();
   }
 
   addListItem(blockId) {
     const block = this.findBlock(blockId);
-    block.content.items.push({ id: crypto.randomUUID(), text: "" });
-    this.storage.saveBlockDebounced(block);
+    if (!block) return;
+    block.content.items.push({ id: createId("item"), text: "" });
+    this.queueBlockSave(block);
     this.renderEditor();
   }
 
   addTableRow(blockId) {
     const block = this.findBlock(blockId);
-    block.content.rows.push({ id: crypto.randomUUID(), cells: Object.fromEntries(block.content.columns.map((col) => [col.id, ""])) });
-    this.storage.saveBlockDebounced(block);
+    if (!block) return;
+    block.content.rows.push({ id: createId("row"), cells: Object.fromEntries(block.content.columns.map((col) => [col.id, ""])) });
+    this.queueBlockSave(block);
     this.renderEditor();
   }
 
   addTableColumn(blockId) {
     const block = this.findBlock(blockId);
-    const col = { id: crypto.randomUUID(), label: `Column ${block.content.columns.length + 1}` };
+    if (!block) return;
+    const col = { id: createId("col"), label: `Column ${block.content.columns.length + 1}` };
     block.content.columns.push(col);
     block.content.rows.forEach((row) => row.cells[col.id] = "");
-    this.storage.saveBlockDebounced(block);
+    this.queueBlockSave(block);
     this.renderEditor();
   }
 
   deleteTableRow(blockId, rowId) {
     const block = this.findBlock(blockId);
+    if (!block) return;
     block.content.rows = block.content.rows.filter((row) => row.id !== rowId);
-    if (!block.content.rows.length) this.addTableRow(blockId);
-    this.storage.saveBlockDebounced(block);
+    if (!block.content.rows.length) {
+      block.content.rows.push({ id: createId("row"), cells: Object.fromEntries(block.content.columns.map((col) => [col.id, ""])) });
+    }
+    this.queueBlockSave(block);
     this.renderEditor();
   }
 
   async search(query) {
+    const run = ++this.searchRun;
     if (!query.trim()) {
       this.state.searchResults = [];
       this.renderSearchResults();
       return;
     }
-    this.state.searchResults = await this.storage.request("search", { query });
+    const results = await this.storage.request("search", { query }).catch((error) => {
+      searchLogger.error("Search failed", { context: { query, error: normalizeError(error) } });
+      this.showError(error);
+      return [];
+    });
+    if (run !== this.searchRun) return;
+    this.state.searchResults = results;
+    searchLogger.info("Search completed", { context: { query, resultCount: results.length } });
     this.renderSearchResults();
   }
 
   clearSearch() {
+    this.searchRun++;
     this.root.querySelector('[data-role="search"]').value = "";
     this.state.searchResults = [];
     this.renderSearchResults();
+    searchLogger.info("Search cleared");
   }
 
   async openSearchResult(pageId, blockId) {
     await this.selectPage(pageId);
+    this.state.focusedBlockId = blockId || "";
+    this.renderEditor();
+    searchLogger.info("Search result opened", { context: { pageId, blockId } });
     if (blockId) requestAnimationFrame(() => this.root.querySelector(`[data-block-id="${CSS.escape(blockId)}"]`)?.scrollIntoView({ block: "center" }));
   }
 
   async exportMarkdown() {
+    exportLogger.info("Markdown export requested", { context: { selectedPageId: this.state.selectedPageId } });
     await this.storage.flush();
     const page = this.selectedPage();
+    if (!page) return;
+    exportLogger.info("Markdown export prepared", { context: { pageId: page.id, blockCount: this.blocksForPage(page.id).length } });
     downloadText(filenameForPage(page, "md"), pageToMarkdown(page, this.blocksForPage(page.id)), "text/markdown");
   }
 
   async exportJson() {
+    exportLogger.info("JSON backup requested");
     await this.storage.flush();
     const workspace = await this.storage.request("exportWorkspace");
+    exportLogger.info("JSON backup prepared", { context: { pageCount: workspace.pages.length, blockCount: workspace.blocks.length } });
     downloadText("topic-research-notepad-backup.json", JSON.stringify(workspaceToBackup(workspace), null, 2), "application/json");
   }
 
@@ -415,12 +475,44 @@ export class TopicResearchApp {
     return this.state.blocks.find((block) => block.id === blockId);
   }
 
+  queuePageSave(page) {
+    this.storage.savePageDebounced(page).catch((error) => this.showError(error));
+  }
+
+  queueBlockSave(block) {
+    this.storage.saveBlockDebounced(block).catch((error) => this.showError(error));
+  }
+
+  showError(error) {
+    logger.error("User-visible error", { context: { error: normalizeError(error), selectedPageId: this.state.selectedPageId } });
+    this.state.error = error?.message || String(error);
+    this.renderError();
+  }
+
+  getRuntimeSnapshot() {
+    return {
+      storageMode: "worker",
+      selectedPageId: this.state.selectedPageId,
+      pageCount: this.state.pages.length,
+      blockCount: this.state.blocks.length,
+      status: this.state.status,
+      lastError: this.state.error,
+    };
+  }
+
   bindLifecycleFlush() {
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "hidden") this.storage.flush();
+      if (document.visibilityState === "hidden") this.storage.flush().catch((error) => this.showError(error));
     });
-    window.addEventListener("pagehide", () => this.storage.flush());
+    window.addEventListener("pagehide", () => this.storage.flush().catch((error) => this.showError(error)));
   }
+}
+
+function countByType(blocks) {
+  return blocks.reduce((counts, block) => {
+    counts[block.type] = (counts[block.type] || 0) + 1;
+    return counts;
+  }, {});
 }
 
 function labelForType(type) {

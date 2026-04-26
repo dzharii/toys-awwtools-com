@@ -1,4 +1,7 @@
 import { BLOCK_TYPES } from "./constants.js";
+import { createLogger } from "./observability/logger.js";
+
+const logger = createLogger("Search", "Indexing");
 
 export function normalizeSearchText(value) {
   return String(value || "").toLowerCase().replace(/\s+/g, " ").trim();
@@ -35,6 +38,7 @@ export function previewText(value, max = 160) {
 
 export function indexEntriesForPage(page, blocks = [], stamp = new Date().toISOString()) {
   const pageText = page?.title || "";
+  logger.debug("Creating search index entries", { context: { pageId: page?.id, blockCount: blocks.length } });
   return [
     {
       id: `page:${page.id}`,

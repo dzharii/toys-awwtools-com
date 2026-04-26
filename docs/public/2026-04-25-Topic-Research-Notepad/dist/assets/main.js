@@ -6298,6 +6298,8 @@ globalThis.awwtools.bookmarkletUi = {
 globalThis.awwbookmarklet = globalThis.awwtools.bookmarkletUi;
 
 // src/constants.js
+var DB_NAME = "TopicResearchNotepadDB";
+var DB_VERSION = 1;
 var APP_DATA_FORMAT_VERSION = 1;
 var EXPORT_FORMAT_VERSION = 1;
 var WORKER_PROTOCOL_VERSION = 1;
@@ -6312,18 +6314,186 @@ var BLOCK_TYPES = Object.freeze({
   sourceLink: "sourceLink"
 });
 
+// src/observability/logger.js
+var loggingLevels = Object.freeze(["error", "warn", "info", "debug"]);
+var loggingFormatterNames = Object.freeze(["plain", "segments"]);
+var loggingStorageKey = "topicResearchNotepad.loggingSettings";
+var levelWeight = { error: 0, warn: 1, info: 2, debug: 3 };
+var levelColor = { error: "#b42318", warn: "#b54708", info: "#175cd3", debug: "#475467" };
+var defaultLoggingSettings = Object.freeze({
+  level: "debug",
+  formatter: "segments",
+  useLabelBackgrounds: true
+});
+var currentSettings = readSettings();
+var listeners = new Set;
+function createLogger(category, defaultSubcategory = "") {
+  const emit = (level, message, options = {}) => {
+    renderLog({
+      level,
+      category,
+      subcategory: options.subcategory ?? defaultSubcategory,
+      message,
+      context: options.context ?? {},
+      timestamp: new Date().toISOString()
+    });
+  };
+  return {
+    error: (message, options) => emit("error", message, options),
+    warn: (message, options) => emit("warn", message, options),
+    info: (message, options) => emit("info", message, options),
+    debug: (message, options) => emit("debug", message, options),
+    withSubcategory: (subcategory) => createLogger(category, subcategory)
+  };
+}
+function getLoggingSettings() {
+  return { ...currentSettings };
+}
+function setLoggingSettings(next) {
+  currentSettings = normalizeSettings(next);
+  persistSettings(currentSettings);
+  listeners.forEach((listener) => listener(getLoggingSettings()));
+  return getLoggingSettings();
+}
+function updateLoggingSettings(patch) {
+  return setLoggingSettings({ ...currentSettings, ...patch });
+}
+function installDebugHook(extra = {}) {
+  if (typeof window === "undefined")
+    return;
+  window.trnDebug = {
+    ...window.trnDebug || {},
+    getLoggingSettings,
+    setLoggingSettings,
+    updateLoggingSettings,
+    ...extra
+  };
+}
+function compactJson(value) {
+  const seen = new WeakSet;
+  try {
+    return JSON.stringify(value, (_key, raw) => {
+      if (typeof raw === "bigint")
+        return raw.toString();
+      if (raw instanceof Error)
+        return normalizeError(raw);
+      if (typeof raw === "string")
+        return raw.length > 240 ? `${raw.slice(0, 237)}...` : raw;
+      if (Array.isArray(raw))
+        return raw.length <= 20 ? raw : [...raw.slice(0, 20), `...(${raw.length - 20} more)`];
+      if (raw && typeof raw === "object") {
+        if (seen.has(raw))
+          return "[Circular]";
+        seen.add(raw);
+        const entries = Object.entries(raw);
+        if (entries.length <= 20)
+          return raw;
+        return Object.fromEntries([...entries.slice(0, 20), ["__moreKeys", entries.length - 20]]);
+      }
+      return raw;
+    });
+  } catch {
+    return '{"context":"unserializable"}';
+  }
+}
+function normalizeError(error) {
+  return {
+    name: error?.name || "Error",
+    message: error?.message || String(error),
+    code: error?.code,
+    stack: error?.stack ? String(error.stack).split(`
+`).slice(0, 6).join(" | ") : ""
+  };
+}
+function renderLog(event) {
+  const settings = currentSettings;
+  if (!shouldRender(event.level, settings.level))
+    return;
+  const rendered = settings.formatter === "plain" ? formatPlain(event) : formatSegments(event, settings);
+  console[event.level === "error" ? "error" : event.level === "warn" ? "warn" : "log"](...rendered);
+}
+function shouldRender(level, threshold) {
+  return levelWeight[level] <= levelWeight[threshold];
+}
+function formatPlain(event) {
+  const scope = [event.category, event.subcategory].filter(Boolean).join("/");
+  return [`[TRN] ${event.level.toUpperCase()} ${scope} ${event.message} ${compactJson(event.context)} ${event.timestamp}`];
+}
+function formatSegments(event, settings) {
+  const scope = [event.category, event.subcategory].filter(Boolean).join("/");
+  return [
+    "%c▣ TRN %c %s %c %s %c %s %c %s %c %s",
+    segmentStyle("#315f99", settings.useLabelBackgrounds),
+    segmentStyle(levelColor[event.level], settings.useLabelBackgrounds),
+    event.level.toUpperCase(),
+    segmentStyle("#0f766e", settings.useLabelBackgrounds),
+    scope,
+    "color:#121820;font-weight:700",
+    event.message,
+    "color:#344054",
+    compactJson(event.context),
+    "color:#667085",
+    event.timestamp
+  ];
+}
+function segmentStyle(color, withBackground) {
+  return withBackground ? `background:${color};color:#fff;border-radius:2px;padding:1px 4px;font-weight:700` : `color:${color};font-weight:700`;
+}
+function readSettings() {
+  const storage = getStorage();
+  if (!storage)
+    return { ...defaultLoggingSettings };
+  try {
+    return normalizeSettings(JSON.parse(storage.getItem(loggingStorageKey) || "{}"));
+  } catch {
+    return { ...defaultLoggingSettings };
+  }
+}
+function persistSettings(settings) {
+  const storage = getStorage();
+  if (!storage)
+    return;
+  try {
+    storage.setItem(loggingStorageKey, JSON.stringify(settings));
+  } catch {}
+}
+function getStorage() {
+  try {
+    return typeof localStorage === "undefined" ? null : localStorage;
+  } catch {
+    return null;
+  }
+}
+function normalizeSettings(value = {}) {
+  return {
+    level: loggingLevels.includes(value.level) ? value.level : defaultLoggingSettings.level,
+    formatter: loggingFormatterNames.includes(value.formatter) ? value.formatter : defaultLoggingSettings.formatter,
+    useLabelBackgrounds: typeof value.useLabelBackgrounds === "boolean" ? value.useLabelBackgrounds : defaultLoggingSettings.useLabelBackgrounds
+  };
+}
+
 // src/storage-client.js
+var logger = createLogger("StorageClient");
+var autosaveLogger = logger.withSubcategory("Autosave");
+var workerLogger = logger.withSubcategory("WorkerBridge");
+
 class StorageClient extends EventTarget {
   constructor({ workerUrl = new URL("./storage-worker.js", import.meta.url) } = {}) {
     super();
     this.worker = new Worker(workerUrl, { type: "classic" });
+    workerLogger.info("Storage worker created", { context: { workerUrl: String(workerUrl), workerType: "classic" } });
     this.nextId = 1;
     this.pending = new Map;
     this.debounced = new Map;
+    this.requestStartedAt = new Map;
     this.worker.addEventListener("message", (event) => this.handleMessage(event.data));
-    this.worker.addEventListener("error", (event) => this.emitStatus("failed", event.message || "Storage worker failed"));
+    this.worker.addEventListener("error", (event) => {
+      workerLogger.error("Storage worker error", { context: { message: event.message, filename: event.filename, lineno: event.lineno } });
+      this.emitStatus("failed", event.message || "Storage worker failed");
+    });
   }
   async hello() {
+    workerLogger.info("Starting worker protocol handshake", { context: { protocolVersion: WORKER_PROTOCOL_VERSION } });
     return this.request("hello", { protocolVersion: WORKER_PROTOCOL_VERSION });
   }
   request(type, payload = {}) {
@@ -6331,6 +6501,8 @@ class StorageClient extends EventTarget {
     const promise = new Promise((resolve, reject) => {
       this.pending.set(requestId, { resolve, reject });
     });
+    this.requestStartedAt.set(requestId, performance.now());
+    workerLogger.debug("Sending worker request", { context: { requestId, type, payload: summarizePayload(payload) } });
     this.worker.postMessage({ requestId, type, protocolVersion: WORKER_PROTOCOL_VERSION, payload });
     return promise;
   }
@@ -6341,27 +6513,38 @@ class StorageClient extends EventTarget {
     return this.schedule(`page:${page.id}`, () => this.request("updatePage", { page }), delay);
   }
   schedule(key, operation, delay) {
+    autosaveLogger.debug("Scheduling debounced save", { context: { key, delayMs: delay, replacingExisting: this.debounced.has(key) } });
     this.emitStatus("dirty", "Unsaved local changes");
     const previous = this.debounced.get(key);
     if (previous)
       clearTimeout(previous.timer);
     let resolvePromise;
-    const promise = previous?.promise || new Promise((resolve) => {
+    let rejectPromise;
+    const promise = previous?.promise || new Promise((resolve, reject) => {
       resolvePromise = resolve;
+      rejectPromise = reject;
     });
     const timer = setTimeout(async () => {
       this.debounced.delete(key);
       this.emitStatus("saving", "Saving locally");
       try {
         const result = await operation();
+        autosaveLogger.debug("Debounced save completed", { context: { key } });
         this.emitStatus("saved", "Saved locally");
         (previous?.resolve || resolvePromise)?.(result);
       } catch (error) {
+        autosaveLogger.error("Debounced save failed", { context: { key, error: normalizeError(error) } });
         this.emitStatus("failed", error.message);
-        (previous?.resolve || resolvePromise)?.(Promise.reject(error));
+        (previous?.reject || rejectPromise)?.(error);
       }
     }, delay);
-    this.debounced.set(key, { timer, operation, promise, resolve: previous?.resolve || resolvePromise });
+    this.debounced.set(key, {
+      timer,
+      operation,
+      promise,
+      resolve: previous?.resolve || resolvePromise,
+      reject: previous?.reject || rejectPromise
+    });
     return promise;
   }
   async flush() {
@@ -6369,30 +6552,61 @@ class StorageClient extends EventTarget {
     this.debounced.clear();
     if (!entries.length)
       return;
+    autosaveLogger.info("Flushing pending saves", { context: { count: entries.length, keys: entries.map(([key]) => key) } });
     this.emitStatus("saving", "Saving locally");
-    await Promise.all(entries.map(async ([, entry]) => {
-      clearTimeout(entry.timer);
-      const result = await entry.operation();
-      entry.resolve?.(result);
-    }));
-    this.emitStatus("saved", "Saved locally");
+    try {
+      await Promise.all(entries.map(async ([, entry]) => {
+        clearTimeout(entry.timer);
+        const result = await entry.operation();
+        entry.resolve?.(result);
+      }));
+      this.emitStatus("saved", "Saved locally");
+    } catch (error) {
+      entries.forEach(([, entry]) => entry.reject?.(error));
+      autosaveLogger.error("Flush failed", { context: { count: entries.length, error: normalizeError(error) } });
+      this.emitStatus("failed", error.message || "Save failed");
+      throw error;
+    }
   }
   handleMessage(message) {
     const pending = this.pending.get(message?.requestId);
     if (!pending)
       return;
     this.pending.delete(message.requestId);
+    const startedAt = this.requestStartedAt.get(message.requestId);
+    this.requestStartedAt.delete(message.requestId);
+    const durationMs = startedAt ? Math.round(performance.now() - startedAt) : null;
+    workerLogger.debug("Received worker response", { context: { requestId: message.requestId, type: message.type, ok: message.ok, durationMs } });
     if (message.ok)
       pending.resolve(message.data);
-    else
-      pending.reject(Object.assign(new Error(message.error?.message || "Storage request failed"), { code: message.error?.code }));
+    else {
+      const error = Object.assign(new Error(message.error?.message || "Storage request failed"), { code: message.error?.code });
+      workerLogger.error("Worker request failed", { context: { requestId: message.requestId, type: message.type, error: normalizeError(error) } });
+      pending.reject(error);
+    }
   }
   emitStatus(state, detail) {
+    logger.debug("Save status changed", { context: { state, detail } });
     this.dispatchEvent(new CustomEvent("save-status", { detail: { state, detail } }));
   }
 }
+function summarizePayload(payload) {
+  if (!payload || typeof payload !== "object")
+    return payload;
+  return {
+    keys: Object.keys(payload),
+    pageId: payload.pageId || payload.page?.id,
+    blockId: payload.blockId || payload.block?.id,
+    blockType: payload.block?.type,
+    blockCount: Array.isArray(payload.blocks) ? payload.blocks.length : undefined,
+    pageCount: Array.isArray(payload.pages) ? payload.pages.length : undefined,
+    query: payload.query,
+    key: payload.key
+  };
+}
 
 // src/models.js
+var logger2 = createLogger("Models");
 var nowIso = () => new Date().toISOString();
 function createId2(prefix) {
   const value = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -6422,36 +6636,44 @@ function createBlock({ pageId, type = BLOCK_TYPES.paragraph, content, sortOrder 
   });
 }
 function normalizePage(page = {}) {
+  if (!isPlainObject(page))
+    logger2.warn("Normalizing malformed page record", { context: { receivedType: typeof page } });
+  const value = isPlainObject(page) ? page : {};
   return {
-    id: String(page.id || createId2("page")),
-    title: String(page.title || "Untitled research"),
-    createdAt: page.createdAt || nowIso(),
-    updatedAt: page.updatedAt || page.createdAt || nowIso(),
-    archivedAt: page.archivedAt ?? null,
-    deletedAt: page.deletedAt ?? null,
-    sortOrder: Number.isFinite(page.sortOrder) ? page.sortOrder : 1000,
-    pinned: Boolean(page.pinned),
-    color: page.color ?? null,
-    summary: String(page.summary || ""),
-    metadata: isPlainObject(page.metadata) ? page.metadata : {},
-    dataFormatVersion: page.dataFormatVersion ?? APP_DATA_FORMAT_VERSION
+    id: String(value.id || createId2("page")),
+    title: String(value.title || "Untitled research"),
+    createdAt: value.createdAt || nowIso(),
+    updatedAt: value.updatedAt || value.createdAt || nowIso(),
+    archivedAt: value.archivedAt ?? null,
+    deletedAt: value.deletedAt ?? null,
+    sortOrder: Number.isFinite(value.sortOrder) ? value.sortOrder : 1000,
+    pinned: Boolean(value.pinned),
+    color: value.color ?? null,
+    summary: String(value.summary || ""),
+    metadata: isPlainObject(value.metadata) ? value.metadata : {},
+    dataFormatVersion: value.dataFormatVersion ?? APP_DATA_FORMAT_VERSION
   };
 }
 function normalizeBlock(block = {}) {
-  const type = Object.values(BLOCK_TYPES).includes(block.type) ? block.type : String(block.type || "unknown");
+  if (!isPlainObject(block))
+    logger2.warn("Normalizing malformed block record", { context: { receivedType: typeof block } });
+  const value = isPlainObject(block) ? block : {};
+  const type = Object.values(BLOCK_TYPES).includes(value.type) ? value.type : String(value.type || "unknown");
+  if (!Object.values(BLOCK_TYPES).includes(value.type))
+    logger2.warn("Normalizing unknown block type", { context: { blockId: value.id, type } });
   return {
-    id: String(block.id || createId2("block")),
-    pageId: String(block.pageId || ""),
+    id: String(value.id || createId2("block")),
+    pageId: String(value.pageId || ""),
     type,
-    sortOrder: Number.isFinite(block.sortOrder) ? block.sortOrder : 1000,
-    content: normalizeContent(type, block.content),
-    source: isPlainObject(block.source) ? block.source : null,
-    createdAt: block.createdAt || nowIso(),
-    updatedAt: block.updatedAt || block.createdAt || nowIso(),
-    archivedAt: block.archivedAt ?? null,
-    deletedAt: block.deletedAt ?? null,
-    contentVersion: Number.isFinite(block.contentVersion) ? block.contentVersion : 1,
-    metadata: isPlainObject(block.metadata) ? block.metadata : {}
+    sortOrder: Number.isFinite(value.sortOrder) ? value.sortOrder : 1000,
+    content: normalizeContent(type, value.content),
+    source: isPlainObject(value.source) ? value.source : null,
+    createdAt: value.createdAt || nowIso(),
+    updatedAt: value.updatedAt || value.createdAt || nowIso(),
+    archivedAt: value.archivedAt ?? null,
+    deletedAt: value.deletedAt ?? null,
+    contentVersion: Number.isFinite(value.contentVersion) ? value.contentVersion : 1,
+    metadata: isPlainObject(value.metadata) ? value.metadata : {}
   };
 }
 function defaultContentForType(type) {
@@ -6543,33 +6765,43 @@ function isPlainObject(value) {
 }
 
 // src/paste.js
+var logger3 = createLogger("Paste");
 function blocksFromClipboard({ pageId, html = "", text = "" }) {
   if (html && typeof DOMParser !== "undefined") {
+    logger3.debug("Converting HTML clipboard payload", { context: { pageId, htmlLength: html.length, textLength: text.length } });
     return blocksFromHtml({ pageId, html });
   }
+  if (html && typeof DOMParser === "undefined")
+    logger3.warn("DOMParser unavailable; falling back to stripped plain text", { context: { pageId, htmlLength: html.length } });
   return blocksFromPlainText({ pageId, text: text || stripTags(html) });
 }
 function blocksFromPlainText({ pageId, text }) {
   const chunks = String(text || "").split(/\n{2,}/).map((part) => part.trim()).filter(Boolean);
-  return (chunks.length ? chunks : [""]).map((part, index) => createBlock({
+  const blocks = (chunks.length ? chunks : [""]).map((part, index) => createBlock({
     pageId,
     type: looksLikeCode(part) ? BLOCK_TYPES.code : BLOCK_TYPES.paragraph,
     sortOrder: (index + 1) * 1000,
     content: looksLikeCode(part) ? { language: "", text: part } : { text: part },
     source: null
   }));
+  logger3.debug("Converted plain text clipboard payload", { context: { pageId, chunkCount: chunks.length, blockCount: blocks.length } });
+  return blocks;
 }
 function blocksFromHtml({ pageId, html }) {
   const doc = new DOMParser().parseFromString(html, "text/html");
-  doc.querySelectorAll("script,style,iframe,object,embed,link,meta").forEach((node) => node.remove());
+  const unsafeNodes = doc.querySelectorAll("script,style,iframe,object,embed,link,meta");
+  unsafeNodes.forEach((node) => node.remove());
   const blocks = [];
   for (const child of doc.body.children) {
     const converted = elementToBlock(pageId, child);
     if (converted)
       blocks.push(...Array.isArray(converted) ? converted : [converted]);
   }
-  if (!blocks.length)
+  if (!blocks.length) {
+    logger3.warn("HTML clipboard produced no semantic blocks; falling back to plain text", { context: { pageId, removedNodeCount: unsafeNodes.length } });
     return blocksFromPlainText({ pageId, text: doc.body.textContent || "" });
+  }
+  logger3.info("Converted HTML clipboard payload", { context: { pageId, removedNodeCount: unsafeNodes.length, blockCount: blocks.length } });
   return blocks.map((block, index) => ({ ...block, sortOrder: (index + 1) * 1000 }));
 }
 function elementToBlock(pageId, element) {
@@ -6632,8 +6864,13 @@ function looksLikeCode(value) {
   return /[{}`;]|^\s*(const|let|function|class|import|export|SELECT|curl)\b/m.test(value);
 }
 
+// src/search.js
+var logger4 = createLogger("Search", "Indexing");
+
 // src/exporters.js
+var logger5 = createLogger("Export");
 function pageToMarkdown(page, blocks) {
+  logger5.debug("Rendering page to Markdown", { context: { pageId: page?.id, blockCount: blocks.length } });
   const lines = [`# ${escapeMarkdown(page.title)}`, ""];
   for (const block of blocks) {
     const c = block.content || {};
@@ -6682,6 +6919,7 @@ function pageToMarkdown(page, blocks) {
 `;
 }
 function workspaceToBackup({ pages, blocks }) {
+  logger5.debug("Rendering workspace backup", { context: { pageCount: pages.length, blockCount: blocks.length, exportFormatVersion: EXPORT_FORMAT_VERSION } });
   return {
     format: "topic-research-notepad-backup",
     exportFormatVersion: EXPORT_FORMAT_VERSION,
@@ -6692,12 +6930,16 @@ function workspaceToBackup({ pages, blocks }) {
 }
 function downloadText(filename, text, type = "text/plain") {
   const blob = new Blob([text], { type });
+  logger5.info("Starting browser download", { context: { filename, type, byteLength: blob.size } });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = filename;
+  anchor.hidden = true;
+  document.body.append(anchor);
   anchor.click();
-  URL.revokeObjectURL(url);
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 function tableToMarkdown(content) {
   const columns = content.columns || [];
@@ -6724,6 +6966,10 @@ function filenameForPage(page, ext) {
 }
 
 // src/ui.js
+var logger6 = createLogger("UI");
+var searchLogger = createLogger("Search", "UI");
+var exportLogger = createLogger("Export", "UI");
+
 class TopicResearchApp {
   constructor({ root, storage }) {
     this.root = root;
@@ -6734,18 +6980,22 @@ class TopicResearchApp {
       selectedPageId: null,
       searchResults: [],
       status: { state: "loading", detail: "Opening local storage" },
-      error: ""
+      error: "",
+      focusedBlockId: ""
     };
+    this.searchRun = 0;
     this.storage.addEventListener("save-status", (event) => {
       this.state.status = event.detail;
       this.renderStatus();
     });
   }
   async start() {
+    logger6.info("App start requested");
     this.renderShell();
     try {
       await this.storage.hello();
       const workspace = await this.storage.request("loadWorkspace");
+      logger6.info("Workspace loaded", { context: { pageCount: workspace.pages.length, blockCount: workspace.blocks.length, selectedPageId: workspace.settings.selectedPageId } });
       this.state.pages = workspace.pages.map(normalizePage);
       this.state.blocks = workspace.blocks.map(normalizeBlock);
       this.state.selectedPageId = workspace.settings.selectedPageId || this.state.pages[0]?.id || null;
@@ -6754,7 +7004,9 @@ class TopicResearchApp {
       this.state.status = { state: "saved", detail: "Local storage ready" };
       this.render();
       this.bindLifecycleFlush();
+      logger6.info("App start completed", { context: this.getRuntimeSnapshot() });
     } catch (error) {
+      logger6.error("App start failed", { context: { error: normalizeError(error) } });
       this.state.error = error.message;
       this.state.status = { state: "failed", detail: "Storage unavailable" };
       this.render();
@@ -6763,30 +7015,29 @@ class TopicResearchApp {
   renderShell() {
     this.root.innerHTML = `
       <awwbookmarklet-app-shell class="trn-shell">
-        <header class="trn-titlebar">
-          <div class="trn-title">Topic Research Notepad</div>
-          <div class="trn-actions">
-            <button class="trn-button" data-action="export-md">Export MD</button>
-            <button class="trn-button" data-action="export-json">Backup JSON</button>
-          </div>
-        </header>
-        <div class="trn-commandbar">
-          <button class="trn-button primary" data-action="new-page">New Page</button>
+        <awwbookmarklet-titlebar slot="title" value="Topic Research Notepad">
+          <awwbookmarklet-button slot="commands" class="trn-button" data-action="export-md">Export MD</awwbookmarklet-button>
+          <awwbookmarklet-button slot="commands" class="trn-button" data-action="export-json">Backup JSON</awwbookmarklet-button>
+        </awwbookmarklet-titlebar>
+        <awwbookmarklet-toolbar slot="status" class="trn-commandbar" wrap density="compact">
+          <awwbookmarklet-button class="trn-button primary" variant="primary" data-action="new-page">New Page</awwbookmarklet-button>
           <input class="trn-input" data-role="search" placeholder="Search local notes" />
-          <button class="trn-button" data-action="clear-search">Clear</button>
-        </div>
-        <main class="trn-main">
-          <aside class="trn-sidebar">
-            <div class="trn-panel-title">Pages</div>
+          <awwbookmarklet-button class="trn-button" data-action="clear-search">Clear</awwbookmarklet-button>
+        </awwbookmarklet-toolbar>
+        <main slot="body" class="trn-main">
+          <awwbookmarklet-panel class="trn-sidebar">
+            <div slot="title">Pages</div>
             <div data-role="page-list"></div>
-          </aside>
-          <section class="trn-editor-panel">
+          </awwbookmarklet-panel>
+          <awwbookmarklet-panel class="trn-editor-panel">
             <div data-role="error"></div>
             <div data-role="search-results"></div>
             <div data-role="editor"></div>
-          </section>
+          </awwbookmarklet-panel>
         </main>
-        <footer class="trn-statusbar" data-role="status"></footer>
+        <awwbookmarklet-statusbar slot="footer" class="trn-statusbar">
+          <span data-role="status" aria-live="polite"></span>
+        </awwbookmarklet-statusbar>
       </awwbookmarklet-app-shell>
     `;
     this.root.addEventListener("click", (event) => this.handleClick(event));
@@ -6806,9 +7057,9 @@ class TopicResearchApp {
     const list = this.root.querySelector('[data-role="page-list"]');
     list.innerHTML = sortByOrder(this.state.pages).map((page) => `
       <div class="trn-page-row ${page.id === this.state.selectedPageId ? "selected" : ""}" data-page-id="${escapeAttr(page.id)}">
-        <button class="trn-page-button" data-action="select-page" title="Open page">${escapeHtml(page.title)}</button>
-        <button class="trn-icon-button" data-action="page-up" title="Move page up">^</button>
-        <button class="trn-icon-button" data-action="page-down" title="Move page down">v</button>
+        <awwbookmarklet-button class="trn-page-button" data-action="select-page" title="Open page">${escapeHtml(page.title)}</awwbookmarklet-button>
+        <awwbookmarklet-button class="trn-icon-button" data-action="page-up" title="Move page up" aria-label="Move page up">&#8593;</awwbookmarklet-button>
+        <awwbookmarklet-button class="trn-icon-button" data-action="page-down" title="Move page down" aria-label="Move page down">&#8595;</awwbookmarklet-button>
       </div>
     `).join("");
   }
@@ -6823,9 +7074,9 @@ class TopicResearchApp {
     editor.innerHTML = `
       <div class="trn-page-head">
         <input class="trn-page-title-input" data-role="page-title" value="${escapeAttr(page.title)}" />
-        <div class="trn-block-add">
-          ${Object.values(BLOCK_TYPES).map((type) => `<button class="trn-button" data-action="add-block" data-type="${type}">${labelForType(type)}</button>`).join("")}
-        </div>
+        <awwbookmarklet-toolbar class="trn-block-add" wrap density="compact" aria-label="Add content block">
+          ${Object.values(BLOCK_TYPES).map((type) => `<awwbookmarklet-button class="trn-button" data-action="add-block" data-type="${type}">${labelForType(type)}</awwbookmarklet-button>`).join("")}
+        </awwbookmarklet-toolbar>
       </div>
       <div class="trn-blocks" data-role="blocks">
         ${blocks.map((block) => this.renderBlock(block)).join("")}
@@ -6834,12 +7085,12 @@ class TopicResearchApp {
   }
   renderBlock(block) {
     return `
-      <article class="trn-block" data-block-id="${escapeAttr(block.id)}" data-type="${escapeAttr(block.type)}">
+      <article class="trn-block ${block.id === this.state.focusedBlockId ? "is-focused" : ""}" data-block-id="${escapeAttr(block.id)}" data-type="${escapeAttr(block.type)}">
         <div class="trn-block-toolbar">
           <span>${labelForType(block.type)}</span>
-          <button class="trn-icon-button" data-action="block-up" title="Move block up">^</button>
-          <button class="trn-icon-button" data-action="block-down" title="Move block down">v</button>
-          <button class="trn-icon-button danger" data-action="delete-block" title="Delete block">x</button>
+          <awwbookmarklet-button class="trn-icon-button" data-action="block-up" title="Move block up" aria-label="Move block up">&#8593;</awwbookmarklet-button>
+          <awwbookmarklet-button class="trn-icon-button" data-action="block-down" title="Move block down" aria-label="Move block down">&#8595;</awwbookmarklet-button>
+          <awwbookmarklet-button class="trn-icon-button danger" tone="danger" data-action="delete-block" title="Delete block" aria-label="Delete block">&times;</awwbookmarklet-button>
         </div>
         ${this.renderBlockBody(block)}
       </article>
@@ -6857,13 +7108,13 @@ class TopicResearchApp {
       case BLOCK_TYPES.list:
         return `<div class="trn-list-items">
           ${(c.items || []).map((item) => `<div class="trn-list-item" data-item-id="${escapeAttr(item.id)}"><input class="trn-input" data-list-item="${escapeAttr(item.id)}" value="${escapeAttr(item.text)}" /></div>`).join("")}
-          <button class="trn-button" data-action="add-list-item">Add item</button>
+          <awwbookmarklet-button class="trn-button" data-action="add-list-item">Add item</awwbookmarklet-button>
         </div>`;
       case BLOCK_TYPES.table:
         return `<div class="trn-table-wrap"><table class="trn-table">
           <thead><tr>${(c.columns || []).map((col) => `<th><input data-table-col="${escapeAttr(col.id)}" value="${escapeAttr(col.label)}" /></th>`).join("")}<th></th></tr></thead>
-          <tbody>${(c.rows || []).map((row) => `<tr data-row-id="${escapeAttr(row.id)}">${(c.columns || []).map((col) => `<td><input data-table-cell="${escapeAttr(row.id)}:${escapeAttr(col.id)}" value="${escapeAttr(row.cells?.[col.id] || "")}" /></td>`).join("")}<td><button class="trn-icon-button" data-action="delete-row">x</button></td></tr>`).join("")}</tbody>
-        </table></div><button class="trn-button" data-action="add-row">Add row</button><button class="trn-button" data-action="add-column">Add column</button>`;
+          <tbody>${(c.rows || []).map((row) => `<tr data-row-id="${escapeAttr(row.id)}">${(c.columns || []).map((col) => `<td><input data-table-cell="${escapeAttr(row.id)}:${escapeAttr(col.id)}" value="${escapeAttr(row.cells?.[col.id] || "")}" /></td>`).join("")}<td><awwbookmarklet-button class="trn-icon-button danger" tone="danger" data-action="delete-row" aria-label="Delete row">&times;</awwbookmarklet-button></td></tr>`).join("")}</tbody>
+        </table></div><awwbookmarklet-toolbar class="trn-table-actions" wrap density="compact"><awwbookmarklet-button class="trn-button" data-action="add-row">Add row</awwbookmarklet-button><awwbookmarklet-button class="trn-button" data-action="add-column">Add column</awwbookmarklet-button></awwbookmarklet-toolbar>`;
       case BLOCK_TYPES.code:
         return `<input class="trn-input" data-field="language" value="${escapeAttr(c.language)}" placeholder="Language" />
           <textarea class="trn-textarea code" data-field="text" spellcheck="false">${escapeHtml(c.text)}</textarea>`;
@@ -6896,8 +7147,10 @@ class TopicResearchApp {
   }
   renderStatus() {
     const status = this.root.querySelector('[data-role="status"]');
-    if (status)
+    if (status) {
       status.textContent = `${this.state.status.state}: ${this.state.status.detail}`;
+      status.dataset.state = this.state.status.state;
+    }
   }
   renderError() {
     const error = this.root.querySelector('[data-role="error"]');
@@ -6908,38 +7161,45 @@ class TopicResearchApp {
     if (!button)
       return;
     const action = button.dataset.action;
-    if (action === "new-page")
-      await this.createPage(prompt("Page title", "New research page") || "New research page");
-    if (action === "select-page")
-      await this.selectPage(button.closest("[data-page-id]").dataset.pageId);
-    if (action === "add-block")
-      await this.addBlock(button.dataset.type);
-    if (action === "delete-block")
-      await this.deleteBlock(button.closest("[data-block-id]").dataset.blockId);
-    if (action === "block-up" || action === "block-down")
-      await this.moveBlock(button.closest("[data-block-id]").dataset.blockId, action === "block-up" ? -1 : 1);
-    if (action === "page-up" || action === "page-down")
-      await this.movePage(button.closest("[data-page-id]").dataset.pageId, action === "page-up" ? -1 : 1);
-    if (action === "add-list-item")
-      this.addListItem(button.closest("[data-block-id]").dataset.blockId);
-    if (action === "add-row")
-      this.addTableRow(button.closest("[data-block-id]").dataset.blockId);
-    if (action === "add-column")
-      this.addTableColumn(button.closest("[data-block-id]").dataset.blockId);
-    if (action === "delete-row")
-      this.deleteTableRow(button.closest("[data-block-id]").dataset.blockId, button.closest("[data-row-id]").dataset.rowId);
-    if (action === "export-md")
-      await this.exportMarkdown();
-    if (action === "export-json")
-      await this.exportJson();
-    if (action === "clear-search")
-      this.clearSearch();
-    if (action === "open-search-result")
-      await this.openSearchResult(button.dataset.pageId, button.dataset.blockId);
+    logger6.debug("UI action received", { context: { action } });
+    try {
+      if (action === "new-page")
+        await this.createPage(prompt("Page title", "New research page") || "New research page");
+      if (action === "select-page")
+        await this.selectPage(button.closest("[data-page-id]").dataset.pageId);
+      if (action === "add-block")
+        await this.addBlock(button.dataset.type);
+      if (action === "delete-block")
+        await this.deleteBlock(button.closest("[data-block-id]").dataset.blockId);
+      if (action === "block-up" || action === "block-down")
+        await this.moveBlock(button.closest("[data-block-id]").dataset.blockId, action === "block-up" ? -1 : 1);
+      if (action === "page-up" || action === "page-down")
+        await this.movePage(button.closest("[data-page-id]").dataset.pageId, action === "page-up" ? -1 : 1);
+      if (action === "add-list-item")
+        this.addListItem(button.closest("[data-block-id]").dataset.blockId);
+      if (action === "add-row")
+        this.addTableRow(button.closest("[data-block-id]").dataset.blockId);
+      if (action === "add-column")
+        this.addTableColumn(button.closest("[data-block-id]").dataset.blockId);
+      if (action === "delete-row")
+        this.deleteTableRow(button.closest("[data-block-id]").dataset.blockId, button.closest("[data-row-id]").dataset.rowId);
+      if (action === "export-md")
+        await this.exportMarkdown();
+      if (action === "export-json")
+        await this.exportJson();
+      if (action === "clear-search")
+        this.clearSearch();
+      if (action === "open-search-result")
+        await this.openSearchResult(button.dataset.pageId, button.dataset.blockId);
+    } catch (error) {
+      logger6.error("UI action failed", { context: { action, error: normalizeError(error) } });
+      this.showError(error);
+    }
   }
   handleInput(event) {
     const target = event.target;
     if (target.matches('[data-role="search"]')) {
+      searchLogger.debug("Search input changed", { context: { length: target.value.length } });
       this.search(target.value);
       return;
     }
@@ -6947,7 +7207,8 @@ class TopicResearchApp {
       const page = this.selectedPage();
       page.title = target.value;
       page.updatedAt = nowIso();
-      this.storage.savePageDebounced(page);
+      logger6.debug("Page title edited", { context: { pageId: page.id, titleLength: target.value.length } });
+      this.queuePageSave(page);
       this.renderPages();
       return;
     }
@@ -6959,15 +7220,19 @@ class TopicResearchApp {
       return;
     this.applyBlockInput(block, target);
     block.updatedAt = nowIso();
-    this.storage.saveBlockDebounced(block);
+    logger6.debug("Block edit detected", { context: { blockId: block.id, pageId: block.pageId, type: block.type, field: target.dataset.field || target.dataset.listItem || target.dataset.tableCell || target.dataset.tableCol } });
+    this.queueBlockSave(block);
   }
   handleChange(event) {
     if (event.target.matches("[data-field], [data-list-item], [data-table-cell], [data-table-col]"))
       this.handleInput(event);
   }
   async handleBlur(event) {
-    if (event.target.matches("input, textarea"))
-      await this.storage.flush().catch((error) => this.state.error = error.message);
+    if (event.target.matches("input, textarea")) {
+      await this.storage.flush().catch((error) => {
+        this.showError(error);
+      });
+    }
   }
   async handlePaste(event) {
     const blocksContainer = event.target.closest('[data-role="blocks"]');
@@ -6982,13 +7247,16 @@ class TopicResearchApp {
     if (!html && !text)
       return;
     event.preventDefault();
+    logger6.info("Paste event received", { context: { hasHtml: Boolean(html), hasText: Boolean(text), textLength: text.length, htmlLength: html.length } });
     const newBlocks = blocksFromClipboard({ pageId: page.id, html, text });
+    logger6.info("Paste converted to blocks", { context: { pageId: page.id, blockCount: newBlocks.length, byType: countByType(newBlocks) } });
     const current = this.blocksForPage(page.id);
     const insertAt = blockEl ? current.findIndex((block) => block.id === blockEl.dataset.blockId) + 1 : current.length;
     current.splice(insertAt, 0, ...newBlocks);
     current.forEach((block, index) => block.sortOrder = (index + 1) * 1000);
     this.state.blocks = this.state.blocks.filter((block) => block.pageId !== page.id).concat(current);
     await this.storage.request("replaceBlocks", { pageId: page.id, blocks: current });
+    logger6.info("Pasted blocks persisted", { context: { pageId: page.id, totalBlockCount: current.length } });
     this.renderEditor();
   }
   applyBlockInput(block, target) {
@@ -7018,27 +7286,32 @@ class TopicResearchApp {
   async createPage(title) {
     const page = createPage({ title, sortOrder: (this.state.pages.length + 1) * 1000 });
     const block = createBlock({ pageId: page.id, type: BLOCK_TYPES.paragraph, content: { text: "" } });
+    logger6.info("Creating page", { context: { title, pageId: page.id, initialBlockId: block.id } });
     await this.storage.request("createPage", { page, blocks: [block] });
     this.state.pages.push(page);
     this.state.blocks.push(block);
     this.state.selectedPageId = page.id;
     this.render();
+    logger6.info("Page created", { context: { pageId: page.id, blockCount: 1 } });
   }
   async selectPage(pageId) {
     await this.storage.flush();
     this.state.selectedPageId = pageId;
     await this.storage.request("setSetting", { key: "selectedPageId", value: pageId });
     this.render();
+    logger6.info("Page selected", { context: { pageId } });
   }
   async addBlock(type) {
     const page = this.selectedPage();
     const block = createBlock({ pageId: page.id, type, sortOrder: (this.blocksForPage(page.id).length + 1) * 1000 });
+    logger6.info("Adding block", { context: { pageId: page.id, blockId: block.id, type } });
     this.state.blocks.push(block);
     await this.storage.request("updateBlock", { block });
     this.renderEditor();
   }
   async deleteBlock(blockId) {
     this.state.blocks = this.state.blocks.filter((block) => block.id !== blockId);
+    logger6.info("Deleting block", { context: { blockId } });
     await this.storage.request("deleteBlock", { blockId });
     this.renderEditor();
   }
@@ -7052,6 +7325,7 @@ class TopicResearchApp {
     [blocks[index], blocks[swap]] = [blocks[swap], blocks[index]];
     blocks.forEach((block, order) => block.sortOrder = (order + 1) * 1000);
     this.state.blocks = this.state.blocks.filter((block) => block.pageId !== page.id).concat(blocks);
+    logger6.info("Moving block", { context: { blockId, pageId: page.id, direction } });
     await this.storage.request("reorderBlocks", { blocks });
     this.renderEditor();
   }
@@ -7064,64 +7338,94 @@ class TopicResearchApp {
     [pages[index], pages[swap]] = [pages[swap], pages[index]];
     pages.forEach((page, order) => page.sortOrder = (order + 1) * 1000);
     this.state.pages = pages;
+    logger6.info("Moving page", { context: { pageId, direction } });
     await this.storage.request("reorderPages", { pages });
     this.renderPages();
   }
   addListItem(blockId) {
     const block = this.findBlock(blockId);
-    block.content.items.push({ id: crypto.randomUUID(), text: "" });
-    this.storage.saveBlockDebounced(block);
+    if (!block)
+      return;
+    block.content.items.push({ id: createId2("item"), text: "" });
+    this.queueBlockSave(block);
     this.renderEditor();
   }
   addTableRow(blockId) {
     const block = this.findBlock(blockId);
-    block.content.rows.push({ id: crypto.randomUUID(), cells: Object.fromEntries(block.content.columns.map((col) => [col.id, ""])) });
-    this.storage.saveBlockDebounced(block);
+    if (!block)
+      return;
+    block.content.rows.push({ id: createId2("row"), cells: Object.fromEntries(block.content.columns.map((col) => [col.id, ""])) });
+    this.queueBlockSave(block);
     this.renderEditor();
   }
   addTableColumn(blockId) {
     const block = this.findBlock(blockId);
-    const col = { id: crypto.randomUUID(), label: `Column ${block.content.columns.length + 1}` };
+    if (!block)
+      return;
+    const col = { id: createId2("col"), label: `Column ${block.content.columns.length + 1}` };
     block.content.columns.push(col);
     block.content.rows.forEach((row) => row.cells[col.id] = "");
-    this.storage.saveBlockDebounced(block);
+    this.queueBlockSave(block);
     this.renderEditor();
   }
   deleteTableRow(blockId, rowId) {
     const block = this.findBlock(blockId);
+    if (!block)
+      return;
     block.content.rows = block.content.rows.filter((row) => row.id !== rowId);
-    if (!block.content.rows.length)
-      this.addTableRow(blockId);
-    this.storage.saveBlockDebounced(block);
+    if (!block.content.rows.length) {
+      block.content.rows.push({ id: createId2("row"), cells: Object.fromEntries(block.content.columns.map((col) => [col.id, ""])) });
+    }
+    this.queueBlockSave(block);
     this.renderEditor();
   }
   async search(query) {
+    const run = ++this.searchRun;
     if (!query.trim()) {
       this.state.searchResults = [];
       this.renderSearchResults();
       return;
     }
-    this.state.searchResults = await this.storage.request("search", { query });
+    const results = await this.storage.request("search", { query }).catch((error) => {
+      searchLogger.error("Search failed", { context: { query, error: normalizeError(error) } });
+      this.showError(error);
+      return [];
+    });
+    if (run !== this.searchRun)
+      return;
+    this.state.searchResults = results;
+    searchLogger.info("Search completed", { context: { query, resultCount: results.length } });
     this.renderSearchResults();
   }
   clearSearch() {
+    this.searchRun++;
     this.root.querySelector('[data-role="search"]').value = "";
     this.state.searchResults = [];
     this.renderSearchResults();
+    searchLogger.info("Search cleared");
   }
   async openSearchResult(pageId, blockId) {
     await this.selectPage(pageId);
+    this.state.focusedBlockId = blockId || "";
+    this.renderEditor();
+    searchLogger.info("Search result opened", { context: { pageId, blockId } });
     if (blockId)
       requestAnimationFrame(() => this.root.querySelector(`[data-block-id="${CSS.escape(blockId)}"]`)?.scrollIntoView({ block: "center" }));
   }
   async exportMarkdown() {
+    exportLogger.info("Markdown export requested", { context: { selectedPageId: this.state.selectedPageId } });
     await this.storage.flush();
     const page = this.selectedPage();
+    if (!page)
+      return;
+    exportLogger.info("Markdown export prepared", { context: { pageId: page.id, blockCount: this.blocksForPage(page.id).length } });
     downloadText(filenameForPage(page, "md"), pageToMarkdown(page, this.blocksForPage(page.id)), "text/markdown");
   }
   async exportJson() {
+    exportLogger.info("JSON backup requested");
     await this.storage.flush();
     const workspace = await this.storage.request("exportWorkspace");
+    exportLogger.info("JSON backup prepared", { context: { pageCount: workspace.pages.length, blockCount: workspace.blocks.length } });
     downloadText("topic-research-notepad-backup.json", JSON.stringify(workspaceToBackup(workspace), null, 2), "application/json");
   }
   selectedPage() {
@@ -7133,13 +7437,40 @@ class TopicResearchApp {
   findBlock(blockId) {
     return this.state.blocks.find((block) => block.id === blockId);
   }
+  queuePageSave(page) {
+    this.storage.savePageDebounced(page).catch((error) => this.showError(error));
+  }
+  queueBlockSave(block) {
+    this.storage.saveBlockDebounced(block).catch((error) => this.showError(error));
+  }
+  showError(error) {
+    logger6.error("User-visible error", { context: { error: normalizeError(error), selectedPageId: this.state.selectedPageId } });
+    this.state.error = error?.message || String(error);
+    this.renderError();
+  }
+  getRuntimeSnapshot() {
+    return {
+      storageMode: "worker",
+      selectedPageId: this.state.selectedPageId,
+      pageCount: this.state.pages.length,
+      blockCount: this.state.blocks.length,
+      status: this.state.status,
+      lastError: this.state.error
+    };
+  }
   bindLifecycleFlush() {
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "hidden")
-        this.storage.flush();
+        this.storage.flush().catch((error) => this.showError(error));
     });
-    window.addEventListener("pagehide", () => this.storage.flush());
+    window.addEventListener("pagehide", () => this.storage.flush().catch((error) => this.showError(error)));
   }
+}
+function countByType(blocks) {
+  return blocks.reduce((counts, block) => {
+    counts[block.type] = (counts[block.type] || 0) + 1;
+    return counts;
+  }, {});
 }
 function labelForType(type) {
   return {
@@ -7168,6 +7499,19 @@ function escapeAttr(value) {
 }
 
 // src/main.js
+var logger7 = createLogger("App", "Bootstrap");
+logger7.info("App bootstrap start", {
+  context: {
+    dbName: DB_NAME,
+    dbVersion: DB_VERSION,
+    dataFormatVersion: APP_DATA_FORMAT_VERSION,
+    exportFormatVersion: EXPORT_FORMAT_VERSION,
+    workerProtocolVersion: WORKER_PROTOCOL_VERSION,
+    indexedDbAvailable: typeof indexedDB !== "undefined",
+    workerAvailable: typeof Worker !== "undefined",
+    cryptoUuidAvailable: Boolean(globalThis.crypto?.randomUUID)
+  }
+});
 setTheme({
   [PUBLIC_TOKENS.workspaceBg]: "#cfd5dd",
   [PUBLIC_TOKENS.windowBg]: "#e9edf2",
@@ -7180,9 +7524,13 @@ setTheme({
 });
 var root = document.querySelector("#app");
 var workerUrl = new URL(import.meta.url.includes("/assets/") ? "../storage-worker.js" : "./storage-worker.js", import.meta.url);
+logger7.info("Creating storage client", { context: { workerUrl: workerUrl.href, storageMode: "worker" } });
 var storage = new StorageClient({ workerUrl });
 var app = new TopicResearchApp({ root, storage });
+installDebugHook({
+  getRuntimeSnapshot: () => app.getRuntimeSnapshot()
+});
 app.start();
 
-//# debugId=F9D33DEC4442B62964756E2164756E21
+//# debugId=590801A3CF9BBF9264756E2164756E21
 //# sourceMappingURL=main.js.map

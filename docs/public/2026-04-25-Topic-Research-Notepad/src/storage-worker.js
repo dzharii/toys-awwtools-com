@@ -1,5 +1,14 @@
 /* global Dexie */
 try {
+  importScripts("./observability/worker-logger.js");
+} catch {
+  importScripts("../observability/worker-logger.js");
+}
+
+const logger = self.TRNLogger.createLogger("StorageWorker");
+const persistenceLogger = self.TRNLogger.createLogger("Persistence");
+
+try {
   importScripts("./vendor-libs/dexie-4.2.0.js");
 } catch {
   importScripts("../vendor-libs/dexie-4.2.0.js");
@@ -11,6 +20,15 @@ const APP_DATA_FORMAT_VERSION = 1;
 const WORKER_PROTOCOL_VERSION = 1;
 
 const db = new Dexie(DB_NAME);
+logger.info("Storage worker script loaded", {
+  context: {
+    dexieAvailable: typeof Dexie !== "undefined",
+    indexedDbAvailable: typeof indexedDB !== "undefined",
+    dbName: DB_NAME,
+    dbVersion: DB_VERSION,
+    protocolVersion: WORKER_PROTOCOL_VERSION,
+  },
+});
 db.version(DB_VERSION).stores({
   pages: "id, updatedAt, archivedAt, sortOrder, pinned",
   blocks: "id, pageId, [pageId+sortOrder], updatedAt, type, deletedAt",
@@ -20,11 +38,15 @@ db.version(DB_VERSION).stores({
 
 self.addEventListener("message", async (event) => {
   const { requestId, type, protocolVersion, payload = {} } = event.data || {};
+  const startedAt = performance.now();
+  logger.debug("Worker received request", { context: { requestId, type, protocolVersion, payload: summarizePayload(payload) } });
   try {
     if (protocolVersion !== WORKER_PROTOCOL_VERSION) throw structuredError("PROTOCOL_VERSION_MISMATCH", "Storage worker protocol version mismatch.");
     const data = await handleRequest(type, payload);
+    logger.debug("Worker completed request", { context: { requestId, type, durationMs: Math.round(performance.now() - startedAt), result: summarizePayload(data) } });
     self.postMessage({ requestId, ok: true, type: `${type}:result`, protocolVersion: WORKER_PROTOCOL_VERSION, data });
   } catch (error) {
+    logger.error("Worker request failed", { context: { requestId, type, durationMs: Math.round(performance.now() - startedAt), error: self.TRNLogger.normalizeError(error) } });
     self.postMessage({ requestId, ok: false, type: `${type}:error`, protocolVersion: WORKER_PROTOCOL_VERSION, error: toError(error) });
   }
 });
@@ -62,11 +84,9 @@ async function handleRequest(type, payload) {
 }
 
 async function loadWorkspace() {
-  const [pages, blocks, settings] = await Promise.all([
-    db.pages.where("deletedAt").equals(null).catch(() => db.pages.toArray()),
-    db.blocks.where("deletedAt").equals(null).catch(() => db.blocks.toArray()),
-    db.settings.toArray(),
-  ]);
+  persistenceLogger.debug("Loading workspace records", { context: { query: "toArray then filter", includeArchived: false } });
+  const [pages, blocks, settings] = await Promise.all([db.pages.toArray(), db.blocks.toArray(), db.settings.toArray()]);
+  persistenceLogger.info("Workspace records loaded", { context: { pageCount: pages.length, blockCount: blocks.length, settingsCount: settings.length } });
   return {
     pages: pages.filter((page) => !page.deletedAt && !page.archivedAt).sort(byOrder),
     blocks: blocks.filter((block) => !block.deletedAt).sort(byOrder),
@@ -75,6 +95,7 @@ async function loadWorkspace() {
 }
 
 async function createPage(page, blocks) {
+  persistenceLogger.info("Creating page transaction", { context: { pageId: page?.id, title: page?.title, blockCount: blocks.length } });
   await db.transaction("rw", db.pages, db.blocks, db.searchIndex, db.settings, async () => {
     await db.pages.put(page);
     await db.blocks.bulkPut(blocks);
@@ -86,6 +107,7 @@ async function createPage(page, blocks) {
 }
 
 async function updatePage(page) {
+  persistenceLogger.debug("Updating page", { context: { pageId: page?.id, title: page?.title } });
   await db.transaction("rw", db.pages, db.searchIndex, async () => {
     await db.pages.put(page);
     await indexPage(page);
@@ -94,6 +116,7 @@ async function updatePage(page) {
 }
 
 async function updateBlock(block) {
+  persistenceLogger.debug("Updating block", { context: { blockId: block?.id, pageId: block?.pageId, type: block?.type } });
   await db.transaction("rw", db.blocks, db.searchIndex, async () => {
     await db.blocks.put(block);
     await indexBlock(block);
@@ -102,6 +125,7 @@ async function updateBlock(block) {
 }
 
 async function replaceBlocks(pageId, blocks) {
+  persistenceLogger.info("Replacing page blocks", { context: { pageId, blockCount: blocks.length } });
   await db.transaction("rw", db.blocks, db.searchIndex, async () => {
     await db.blocks.bulkPut(blocks);
     await Promise.all(blocks.map(indexBlock));
@@ -111,6 +135,7 @@ async function replaceBlocks(pageId, blocks) {
 
 async function deleteBlock(blockId) {
   const updatedAt = new Date().toISOString();
+  persistenceLogger.info("Soft deleting block", { context: { blockId } });
   await db.transaction("rw", db.blocks, db.searchIndex, async () => {
     await db.blocks.update(blockId, { deletedAt: updatedAt, updatedAt });
     await db.searchIndex.delete(`block:${blockId}`);
@@ -119,17 +144,20 @@ async function deleteBlock(blockId) {
 }
 
 async function reorderPages(pages) {
+  persistenceLogger.info("Persisting page order", { context: { pageCount: pages.length } });
   await db.pages.bulkPut(pages);
   return pages;
 }
 
 async function reorderBlocks(blocks) {
+  persistenceLogger.info("Persisting block order", { context: { blockCount: blocks.length, pageId: blocks[0]?.pageId } });
   await db.blocks.bulkPut(blocks);
   await Promise.all(blocks.map(indexBlock));
   return blocks;
 }
 
 async function setSetting(key, value) {
+  persistenceLogger.debug("Writing setting", { context: { key, value } });
   await db.settings.put({ key, value, updatedAt: new Date().toISOString() });
   return { key, value };
 }
@@ -138,6 +166,7 @@ async function search(query) {
   const needle = normalizeSearchText(query);
   if (!needle) return [];
   const [entries, pages] = await Promise.all([db.searchIndex.toArray(), db.pages.toArray()]);
+  persistenceLogger.debug("Searching index", { context: { query, entryCount: entries.length, pageCount: pages.length } });
   const pageById = new Map(pages.map((page) => [page.id, page]));
   return entries
     .filter((entry) => entry.text.includes(needle))
@@ -147,6 +176,7 @@ async function search(query) {
 }
 
 async function indexPage(page) {
+  persistenceLogger.debug("Indexing page", { context: { pageId: page?.id } });
   await db.searchIndex.put({
     id: `page:${page.id}`,
     pageId: page.id,
@@ -160,6 +190,7 @@ async function indexPage(page) {
 }
 
 async function indexBlock(block) {
+  persistenceLogger.debug("Indexing block", { context: { blockId: block?.id, pageId: block?.pageId, type: block?.type } });
   await db.searchIndex.put({
     id: `block:${block.id}`,
     pageId: block.pageId,
@@ -201,4 +232,20 @@ function structuredError(code, message) {
 
 function toError(error) {
   return { code: error.code || "STORAGE_ERROR", message: error.message || String(error) };
+}
+
+function summarizePayload(payload) {
+  if (!payload || typeof payload !== "object") return payload;
+  return {
+    keys: Object.keys(payload),
+    pageId: payload.pageId || payload.page?.id,
+    blockId: payload.blockId || payload.block?.id,
+    blockType: payload.block?.type,
+    blockCount: Array.isArray(payload.blocks) ? payload.blocks.length : undefined,
+    pageCount: Array.isArray(payload.pages) ? payload.pages.length : undefined,
+    query: payload.query,
+    key: payload.key,
+    dbName: payload.dbName,
+    dbVersion: payload.dbVersion,
+  };
 }

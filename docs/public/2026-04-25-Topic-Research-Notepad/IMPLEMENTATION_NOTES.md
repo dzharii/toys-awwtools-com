@@ -12,6 +12,14 @@ Pages and blocks are separate durable records. Editing a title saves one page re
 
 Autosave is optimistic in the UI and debounced per page or block record. Blur, page switch, export, `visibilitychange`, and `pagehide` attempt to flush pending writes.
 
+Workspace loading intentionally uses terminal Dexie calls such as `toArray()` before filtering records. This avoids treating query builders or collections as Promises, which can produce `catch is not a function` errors during startup.
+
+## Observability
+
+Structured logging lives in `src/observability/logger.js` for the main thread and `src/observability/worker-logger.js` for the classic Worker. The proof-of-concept default log level is `debug` so storage startup, Worker messages, paste conversion, search, export, and user-visible errors can be diagnosed from the browser console.
+
+Safe debug helpers are exposed as `window.trnDebug`. See `OBSERVABILITY.md` for logging controls and startup failure diagnosis.
+
 ## UI Framework
 
 The app imports and initializes the provided retro bookmarklet UI framework from `ui-framework/dist/bookmarklet/index.js`. App CSS uses the same compact panel, toolbar, border, inset, and status-strip language. No framework source files were modified.

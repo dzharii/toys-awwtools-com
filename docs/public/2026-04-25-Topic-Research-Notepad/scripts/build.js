@@ -6,6 +6,7 @@ const dist = join(root, "dist");
 
 await rm(dist, { recursive: true, force: true });
 await mkdir(join(dist, "assets"), { recursive: true });
+await mkdir(join(dist, "observability"), { recursive: true });
 await mkdir(join(dist, "vendor-libs"), { recursive: true });
 await mkdir(join(dist, "ui-framework", "dist", "bookmarklet"), { recursive: true });
 
@@ -28,9 +29,11 @@ await Bun.build({
 });
 
 await cp("styles.css", join(dist, "styles.css"));
+await cp("src/observability/worker-logger.js", join(dist, "observability", "worker-logger.js"));
 await cp("vendor-libs/dexie-4.2.0.js", join(dist, "vendor-libs", "dexie-4.2.0.js"));
 await cp("ui-framework/dist/bookmarklet/index.js", join(dist, "ui-framework", "dist", "bookmarklet", "index.js"));
 await cp("readme.md", join(dist, "readme.md"));
+await cp("OBSERVABILITY.md", join(dist, "OBSERVABILITY.md"));
 
 await writeFile(
   join(dist, "index.html"),
