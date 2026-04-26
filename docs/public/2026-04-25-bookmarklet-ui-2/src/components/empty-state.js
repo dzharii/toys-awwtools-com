@@ -4,16 +4,17 @@ const EMPTY_STYLES = css`
   :host {
     display: block;
     min-height: 96px;
-    border: 1px dashed var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border: var(--_surface-border-width) dashed var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-radius: var(--_surface-radius);
     background: var(--awwbookmarklet-surface-inset-bg, #e7ebf1);
     color: var(--awwbookmarklet-text-muted, #586272);
-    padding: var(--awwbookmarklet-space-3, 12px);
+    padding: var(--awwbookmarklet-surface-padding, var(--awwbookmarklet-space-3, 12px));
   }
 
   .empty {
     display: grid;
     place-items: center;
-    gap: 6px;
+    gap: var(--awwbookmarklet-surface-gap, 6px);
     min-height: inherit;
     text-align: center;
   }

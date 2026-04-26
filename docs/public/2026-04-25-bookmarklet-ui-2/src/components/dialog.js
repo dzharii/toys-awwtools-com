@@ -29,7 +29,8 @@ const DIALOG_STYLES = css`
     grid-template-rows: auto minmax(0, 1fr) auto;
     width: min(680px, calc(100vw - 32px));
     max-height: min(620px, calc(100vh - 32px));
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_surface-radius);
     background: var(--awwbookmarklet-panel-bg, #f8fafc);
     box-shadow: var(--awwbookmarklet-overlay-shadow, 0 18px 44px rgba(0,0,0,0.24));
     pointer-events: auto;
@@ -40,17 +41,17 @@ const DIALOG_STYLES = css`
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--awwbookmarklet-space-2, 8px);
-    padding: var(--awwbookmarklet-space-2, 8px);
+    gap: var(--awwbookmarklet-surface-gap, var(--awwbookmarklet-space-2, 8px));
+    padding: var(--awwbookmarklet-surface-padding, var(--awwbookmarklet-space-2, 8px));
     background: var(--awwbookmarklet-surface-raised-bg, #fff);
   }
 
   .header {
-    border-bottom: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    border-bottom: var(--_surface-border-width) solid var(--awwbookmarklet-divider-color, #c3cad4);
   }
 
   .footer {
-    border-top: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    border-top: var(--_surface-border-width) solid var(--awwbookmarklet-divider-color, #c3cad4);
   }
 
   .title {
@@ -60,13 +61,14 @@ const DIALOG_STYLES = css`
   .body {
     min-height: 0;
     overflow: auto;
-    padding: var(--awwbookmarklet-space-3, 12px);
+    padding: var(--awwbookmarklet-window-body-padding, var(--awwbookmarklet-space-3, 12px));
   }
 
   button {
     min-width: 28px;
     min-height: 26px;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: var(--awwbookmarklet-button-bg, #f1f4f8);
     color: var(--awwbookmarklet-button-fg, #111720);
     font: inherit;

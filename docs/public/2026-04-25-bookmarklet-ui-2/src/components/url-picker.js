@@ -10,17 +10,19 @@ const URL_PICKER_STYLES = css`
 
   .picker {
     display: grid;
-    gap: 4px;
+    gap: var(--awwbookmarklet-space-1, 4px);
     min-width: 0;
   }
 
   input {
     width: 100%;
     min-height: var(--awwbookmarklet-size-control-h, 30px);
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: var(--awwbookmarklet-input-bg, #fff);
     color: var(--awwbookmarklet-input-fg, #111720);
-    padding: 0 8px;
+    padding-block: var(--awwbookmarklet-input-padding-y, var(--awwbookmarklet-control-padding-y, 0));
+    padding-inline: var(--awwbookmarklet-input-padding-x, 8px);
     font: inherit;
   }
 
@@ -33,7 +35,8 @@ const URL_PICKER_STYLES = css`
     display: none;
     max-height: 240px;
     overflow: auto;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_surface-radius);
     background: var(--awwbookmarklet-menu-bg, #f8fbff);
   }
 
@@ -46,10 +49,10 @@ const URL_PICKER_STYLES = css`
     gap: 2px;
     min-width: 0;
     border: 0;
-    border-bottom: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    border-bottom: var(--_surface-border-width) solid var(--awwbookmarklet-divider-color, #c3cad4);
     background: transparent;
     color: var(--awwbookmarklet-menu-fg, #0e1621);
-    padding: 7px 8px;
+    padding: var(--awwbookmarklet-card-padding, 8px);
     text-align: left;
     font: inherit;
   }

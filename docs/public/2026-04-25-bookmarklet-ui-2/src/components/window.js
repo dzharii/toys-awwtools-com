@@ -7,10 +7,12 @@ const WINDOW_STYLES = css`
     display: block;
     pointer-events: auto;
     contain: layout style;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    --_titlebar-active-top-bg: color-mix(in srgb, #f7f9fb calc(var(--awwbookmarklet-frost-opacity, 1) * 100%), var(--awwbookmarklet-titlebar-active-bg, #dce2e9));
+    --_titlebar-inactive-top-bg: color-mix(in srgb, #eef2f6 calc(var(--awwbookmarklet-frost-opacity, 1) * 100%), var(--awwbookmarklet-titlebar-inactive-bg, #cfd5dd));
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
     background: var(--awwbookmarklet-window-bg, #eef1f5);
     box-shadow: var(--awwbookmarklet-shadow-depth, 0 12px 32px rgba(0, 0, 0, 0.18));
-    border-radius: 0;
+    border-radius: var(--awwbookmarklet-radius-window, 0);
     min-width: 0;
     min-height: 0;
     overflow: hidden;
@@ -34,25 +36,26 @@ const WINDOW_STYLES = css`
     display: grid;
     grid-template-columns: 28px 1fr auto;
     align-items: center;
-    gap: 6px;
-    padding: 0 6px;
-    background: linear-gradient(180deg, #f7f9fb, var(--awwbookmarklet-titlebar-active-bg, #dce2e9));
+    gap: var(--awwbookmarklet-titlebar-gap, 6px);
+    padding-block: 0;
+    padding-inline: var(--awwbookmarklet-titlebar-padding-x, 6px);
+    background: linear-gradient(180deg, var(--_titlebar-active-top-bg), var(--awwbookmarklet-titlebar-active-bg, #dce2e9));
     color: var(--awwbookmarklet-titlebar-fg, #121820);
-    border-bottom: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border-bottom: var(--_surface-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
     cursor: grab;
     user-select: none;
   }
 
   :host([data-active="false"]) .titlebar {
-    background: linear-gradient(180deg, #eef2f6, var(--awwbookmarklet-titlebar-inactive-bg, #cfd5dd));
+    background: linear-gradient(180deg, var(--_titlebar-inactive-top-bg), var(--awwbookmarklet-titlebar-inactive-bg, #cfd5dd));
   }
 
   .system-menu-button,
   .window-command-button {
-    border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
-    border-radius: 0;
-    background: #edf1f5;
-    box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #a8b0ba;
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-radius: var(--_control-radius);
+    background: var(--awwbookmarklet-button-bg, #edf1f5);
+    box-shadow: var(--awwbookmarklet-button-shadow, inset 1px 1px 0 #ffffff, inset -1px -1px 0 #a8b0ba);
     color: inherit;
     height: 22px;
     min-width: 22px;
@@ -70,7 +73,7 @@ const WINDOW_STYLES = css`
   .system-menu-button:active,
   .window-command-button:active {
     background: var(--awwbookmarklet-button-active-bg, #d8dee6);
-    box-shadow: inset 1px 1px 0 #8e98a4, inset -1px -1px 0 #ffffff;
+    box-shadow: var(--awwbookmarklet-button-active-shadow, inset 1px 1px 0 #8e98a4, inset -1px -1px 0 #ffffff);
   }
 
   .title {
@@ -87,7 +90,7 @@ const WINDOW_STYLES = css`
 
   .region {
     display: block;
-    border-bottom: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-bottom: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
   }
 
   .region[hidden] {
@@ -96,13 +99,13 @@ const WINDOW_STYLES = css`
 
   .body {
     overflow: auto;
-    padding: var(--awwbookmarklet-space-3, 12px);
+    padding: var(--awwbookmarklet-window-body-padding, var(--awwbookmarklet-space-3, 12px));
     background: var(--awwbookmarklet-window-bg, #eef1f5);
     min-height: 0;
   }
 
   .status {
-    border-top: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-top: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
     border-bottom: 0;
   }
 

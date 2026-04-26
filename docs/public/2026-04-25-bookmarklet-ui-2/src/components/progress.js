@@ -6,8 +6,8 @@ const PROGRESS_STYLES = css`
   progress {
     width: 100%;
     height: 14px;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
-    border-radius: 0;
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: var(--awwbookmarklet-panel-bg, #f8fafc);
     accent-color: var(--awwbookmarklet-selection-bg, #1f5eae);
   }

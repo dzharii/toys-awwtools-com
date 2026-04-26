@@ -8,7 +8,7 @@ import { clampRect, getSpawnRect, getViewportRect, rectToStyle, resizeRectFromEd
 import { acquireDesktopRoot, emergencyTeardown, getDesktopRecord, releaseDesktopRoot } from "../core/runtime.js";
 import { sanitizeHtml } from "../core/sanitize.js";
 import { adoptStyles, BASE_COMPONENT_STYLES, css } from "../core/styles.js";
-import { ThemeService, defaultThemeService } from "../core/theme.js";
+import { ThemeService, applyThemePatch, copyPublicThemeContext, createTheme, defaultThemeService } from "../core/theme.js";
 import {
   buildSearchUrl,
   deriveHostname,
@@ -63,6 +63,9 @@ export {
   FRAMEWORK_VERSION,
   DEFAULT_GEOMETRY,
   ThemeService,
+  applyThemePatch,
+  copyPublicThemeContext,
+  createTheme,
   defaultThemeService,
   CommandRegistry,
   adoptStyles,
@@ -127,13 +130,14 @@ export function createWindow({ title = "AWW Tool", rect = null, closable = true,
  * Main bookmarklet convenience entry: build a window, acquire the shared desktop root,
  * and release the root when the window closes or is removed.
  */
-export function openBookmarkletWindow(builder, { ownerPrefix = "bookmarklet-tool", rect = null } = {}) {
+export function openBookmarkletWindow(builder, { ownerPrefix = "bookmarklet-tool", rect = null, theme = null } = {}) {
   registerAllComponents();
 
   const owner = nextOwner(ownerPrefix);
   const record = acquireDesktopRoot(owner);
   const win = typeof builder === "function" ? builder() : buildExampleToolWindow();
 
+  if (theme) applyThemePatch(win, theme);
   if (rect) win.setRect(rect);
   record.root.append(win);
 
@@ -158,8 +162,9 @@ export function openBookmarkletWindow(builder, { ownerPrefix = "bookmarklet-tool
  * Mounts an existing window. This is the preferred path for reusable apps that assemble
  * custom components before attaching them to the injected desktop.
  */
-export function mountWindow(win, { ownerPrefix = "bookmarklet-tool", rect = null } = {}) {
+export function mountWindow(win, { ownerPrefix = "bookmarklet-tool", rect = null, theme = null } = {}) {
   registerAllComponents();
+  if (theme) applyThemePatch(win, theme);
   const owner = nextOwner(ownerPrefix);
   const record = acquireDesktopRoot(owner);
   if (rect && typeof win.setRect === "function") win.setRect(rect);
@@ -187,6 +192,11 @@ export function bootstrapExampleTool() {
  * Pass an explicit target when theming an isolated root or preview container.
  */
 export function setTheme(themePatch, target = null) {
+  if (target) {
+    applyThemePatch(target, themePatch || {});
+    return { ...defaultThemeService.tokens, ...(themePatch || {}) };
+  }
+
   const tokens = defaultThemeService.setTheme(themePatch || {});
   const themeTarget = target || getDesktopRecord(FRAMEWORK_VERSION)?.root;
   if (themeTarget) defaultThemeService.applyTheme(themeTarget);
@@ -218,6 +228,9 @@ globalThis.awwtools.bookmarkletUi = {
   setTheme,
   themeService: defaultThemeService,
   ThemeService,
+  applyThemePatch,
+  copyPublicThemeContext,
+  createTheme,
   CommandRegistry,
   styles: {
     adoptStyles,

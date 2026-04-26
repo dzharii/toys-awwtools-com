@@ -31,8 +31,8 @@ const TOOLBAR_STYLES = css`
   :host([data-align="end"]) .toolbar { justify-content: flex-end; }
   :host([data-align="between"]) .toolbar { justify-content: space-between; }
 
-  :host([data-density="compact"]) { --_gap: 4px; }
-  :host([data-density="spacious"]) { --_gap: 12px; }
+  :host([data-density="compact"]) { --_gap: var(--awwbookmarklet-space-1, 4px); }
+  :host([data-density="spacious"]) { --_gap: var(--awwbookmarklet-space-3, 12px); }
 
   :host([busy]) .toolbar {
     cursor: progress;

@@ -7,11 +7,13 @@ const TEXTAREA_STYLES = css`
   textarea {
     width: 100%;
     min-height: 96px;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
-    border-radius: 0;
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: var(--awwbookmarklet-input-bg, #ffffff);
     color: var(--awwbookmarklet-input-fg, #111720);
-    padding: 8px;
+    box-shadow: var(--awwbookmarklet-control-inset-shadow, none);
+    padding-block: var(--awwbookmarklet-input-padding-y, 8px);
+    padding-inline: var(--awwbookmarklet-input-padding-x, 8px);
     font: inherit;
     resize: vertical;
   }

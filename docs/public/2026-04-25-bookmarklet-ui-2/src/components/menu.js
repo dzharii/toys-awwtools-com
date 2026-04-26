@@ -7,9 +7,10 @@ const MENU_STYLES = css`
     min-width: 200px;
     pointer-events: auto;
     background: var(--awwbookmarklet-menu-bg, #f8fbff);
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_surface-radius);
     box-shadow: var(--awwbookmarklet-shadow-depth, 0 10px 20px rgba(0, 0, 0, 0.18));
-    padding: 4px;
+    padding: var(--awwbookmarklet-menu-padding, 4px);
     z-index: 999999;
   }
 
@@ -17,7 +18,7 @@ const MENU_STYLES = css`
 
   #panel {
     display: grid;
-    gap: 2px;
+    gap: var(--awwbookmarklet-space-1, 4px);
     max-height: min(60vh, 420px);
     overflow: auto;
   }
@@ -25,7 +26,7 @@ const MENU_STYLES = css`
   ::slotted([data-separator]),
   ::slotted([role="separator"]) {
     display: block;
-    border-top: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-top: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
     margin: 4px 2px;
     padding: 0;
     min-height: 0;
@@ -34,18 +35,19 @@ const MENU_STYLES = css`
 
   ::slotted(button),
   ::slotted([role="menuitem"]) {
-    height: 29px;
-    border: 1px solid transparent;
+    height: var(--awwbookmarklet-menu-item-height, 29px);
+    border: var(--_control-border-width) solid transparent;
     background: transparent;
     color: var(--awwbookmarklet-menu-fg, #0e1621);
     text-align: left;
-    padding: 0 8px;
+    padding-block: 0;
+    padding-inline: var(--awwbookmarklet-menu-item-padding-x, 8px);
     font: inherit;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    border-radius: 0;
+    gap: var(--awwbookmarklet-menu-item-gap, 16px);
+    border-radius: var(--_control-radius);
   }
 
   ::slotted(button:hover),

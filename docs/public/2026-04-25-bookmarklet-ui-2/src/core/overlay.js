@@ -1,4 +1,5 @@
 import { GLOBAL_SYMBOLS, ROOT_Z_INDEX } from "./constants.js";
+import { copyPublicThemeContext } from "./theme.js";
 
 const OVERLAY_CLASS = "awwbookmarklet-overlay-layer";
 
@@ -24,6 +25,7 @@ export function portalElement(element) {
   const layer = getOverlayLayer();
   if (!layer || element.parentNode === layer) return null;
   const restore = { parent: element.parentNode, nextSibling: element.nextSibling };
+  copyPublicThemeContext(element, element);
   layer.append(element);
   return restore;
 }

@@ -26,15 +26,17 @@ Load the runtime as an ES module, build content with the exported tag names, and
     PUBLIC_TOKENS
   } from "./dist/bookmarklet/index.js";
 
-  setTheme({
-    [PUBLIC_TOKENS.selectionBg]: "#175a9c"
-  });
-
   const panel = document.createElement(TAGS.panel);
   panel.innerHTML = "<span slot=\"title\">Capture</span><p>Reusable tool content.</p>";
 
   const win = createWindow({ title: "Capture Tool", content: panel });
-  mountWindow(win, { ownerPrefix: "capture-tool" });
+  mountWindow(win, {
+    ownerPrefix: "capture-tool",
+    theme: {
+      [PUBLIC_TOKENS.selectionBg]: "#175a9c",
+      [PUBLIC_TOKENS.focusRing]: "#0f62fe"
+    }
+  });
 </script>
 ```
 
@@ -58,8 +60,9 @@ ui.mountWindow(win);
 1. Import from `./dist/bookmarklet/index.js`.
 2. Call `createWindow({ title, content })` to create an unmounted `awwbookmarklet-window`.
 3. Call `mountWindow(windowElement, { ownerPrefix })` to attach it to the overlay root.
-4. Listen for normal DOM events from your own controls and for framework events such as `awwbookmarklet-window-closed` when cleanup matters.
-5. Call `shutdownAll()` only when your host needs to remove every active framework root.
+4. Pass `theme` to `mountWindow()` when one tool needs local identity without repainting other windows.
+5. Listen for normal DOM events from your own controls and for framework events such as `awwbookmarklet-window-closed` when cleanup matters.
+6. Call `shutdownAll()` only when your host needs to remove every active framework root.
 
 Use `openBookmarkletWindow(builder)` when you want a one-call build-and-mount helper. Use `mountWindow()` when your app assembles content first.
 
@@ -67,7 +70,7 @@ Use `openBookmarkletWindow(builder)` when you want a one-call build-and-mount he
 
 - Floating desktop root and movable/resizable windows.
 - Menus, menubars, toolbars, panels, groups, cards, fields, status bars, alerts, dialogs, toasts, tabs, lists, listboxes, rich previews, browser panels, URL pickers, command palettes, shortcut help, and form controls.
-- Theme tokens exposed through `PUBLIC_TOKENS`, `setTheme()`, `ThemeService`, and `defaultThemeService`.
+- Theme tokens exposed through `PUBLIC_TOKENS`, `setTheme()`, `ThemeService`, `defaultThemeService`, `createTheme()`, `applyThemePatch()`, and `copyPublicThemeContext()`.
 - Shared Shadow DOM styling helpers exposed as `styles.css`, `styles.base`, and `styles.adoptStyles()`.
 - Command registry, geometry helpers, URL helpers, HTML sanitizing, clipboard helpers, and toast helpers.
 
@@ -110,7 +113,7 @@ globalThis.awwbookmarklet.defineComponent(
 
 ## Theming
 
-Pass public token keys to `setTheme()`. The service stores the merged theme and applies it to the active desktop root by default.
+Public CSS tokens are the main theme API. Themes are plain objects keyed by `PUBLIC_TOKENS` values. Use root-scoped themes for a suite-wide look:
 
 ```js
 import { PUBLIC_TOKENS, setTheme } from "./dist/bookmarklet/index.js";
@@ -121,6 +124,77 @@ setTheme({
   [PUBLIC_TOKENS.focusRing]: "#0f62fe"
 });
 ```
+
+Use window-scoped themes for independent bookmarklet tools sharing one desktop root:
+
+```js
+const readerTheme = {
+  [PUBLIC_TOKENS.selectionBg]: "#725c3a",
+  [PUBLIC_TOKENS.focusRing]: "#8a6d3b",
+  [PUBLIC_TOKENS.windowBg]: "#f4f2f0",
+  [PUBLIC_TOKENS.panelBg]: "#fbfaf8",
+  [PUBLIC_TOKENS.radiusControl]: "4px",
+  [PUBLIC_TOKENS.radiusSurface]: "6px",
+  [PUBLIC_TOKENS.radiusWindow]: "8px"
+};
+
+mountWindow(win, {
+  ownerPrefix: "reader-tool",
+  theme: readerTheme
+});
+```
+
+`setTheme(themePatch, targetElement)` is the lower-level target-scoped form. It applies variables to the provided element without changing the shared desktop root theme.
+
+### Theme recipes
+
+```js
+const accentTheme = {
+  [PUBLIC_TOKENS.selectionBg]: "#175a9c",
+  [PUBLIC_TOKENS.selectionFg]: "#ffffff",
+  [PUBLIC_TOKENS.focusRing]: "#0f62fe",
+  [PUBLIC_TOKENS.titlebarActiveBg]: "#d8e4f4"
+};
+
+const compactTheme = {
+  [PUBLIC_TOKENS.space1]: "3px",
+  [PUBLIC_TOKENS.space2]: "6px",
+  [PUBLIC_TOKENS.space3]: "8px",
+  [PUBLIC_TOKENS.controlHeight]: "26px",
+  [PUBLIC_TOKENS.titleHeight]: "28px",
+  [PUBLIC_TOKENS.controlPaddingX]: "8px",
+  [PUBLIC_TOKENS.buttonPaddingX]: "8px",
+  [PUBLIC_TOKENS.inputPaddingX]: "6px",
+  [PUBLIC_TOKENS.windowBodyPadding]: "8px",
+  [PUBLIC_TOKENS.panelPadding]: "6px",
+  [PUBLIC_TOKENS.cardPadding]: "6px",
+  [PUBLIC_TOKENS.menuItemHeight]: "26px"
+};
+
+const roundedTheme = {
+  [PUBLIC_TOKENS.radiusControl]: "4px",
+  [PUBLIC_TOKENS.radiusSurface]: "6px",
+  [PUBLIC_TOKENS.radiusWindow]: "8px",
+  [PUBLIC_TOKENS.buttonShadow]: "none"
+};
+
+const highContrastTheme = {
+  [PUBLIC_TOKENS.windowBg]: "#ffffff",
+  [PUBLIC_TOKENS.panelBg]: "#ffffff",
+  [PUBLIC_TOKENS.inputFg]: "#000000",
+  [PUBLIC_TOKENS.textMuted]: "#222222",
+  [PUBLIC_TOKENS.borderStrong]: "#000000",
+  [PUBLIC_TOKENS.borderSubtle]: "#333333",
+  [PUBLIC_TOKENS.selectionBg]: "#003b8e",
+  [PUBLIC_TOKENS.selectionFg]: "#ffffff",
+  [PUBLIC_TOKENS.focusRing]: "#ffbf00",
+  [PUBLIC_TOKENS.focusRingWidth]: "3px"
+};
+```
+
+Component attributes such as `variant`, `tone`, and `density` describe semantic modes. `::part` is available as an escape hatch for narrow local overrides, but normal theme work should use public tokens first.
+
+Developers who copy this framework into a `vendor/` folder own their copy and may edit source when a product needs new behavior. For routine identity, density, radius, or contrast changes, keep customization in theme objects so future framework updates remain easier to merge.
 
 ## Design system notes
 

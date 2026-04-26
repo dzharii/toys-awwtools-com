@@ -2,29 +2,30 @@ import { TAGS } from "../core/constants.js";
 import { adoptStyles, BASE_COMPONENT_STYLES, css } from "../core/styles.js";
 
 const TABS_STYLES = css`
-  :host { display: block; border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3); background: var(--awwbookmarklet-panel-bg, #f8fafc); }
+  :host { display: block; border: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3); border-radius: var(--_surface-radius); background: var(--awwbookmarklet-panel-bg, #f8fafc); }
 
   #tablist {
     display: flex;
-    gap: 2px;
+    gap: var(--awwbookmarklet-space-1, 4px);
     max-width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 4px 4px 0;
-    border-bottom: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    padding: var(--awwbookmarklet-space-1, 4px) var(--awwbookmarklet-space-1, 4px) 0;
+    border-bottom: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
     scrollbar-gutter: stable;
   }
 
   #tablist button {
     min-height: 28px;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
     border-bottom: 0;
     background: color-mix(in srgb, var(--awwbookmarklet-panel-bg, #f8fafc) 88%, #ced5df 12%);
     color: var(--awwbookmarklet-input-fg, #111720);
-    padding: 0 10px;
+    padding-block: var(--awwbookmarklet-control-padding-y, 0);
+    padding-inline: var(--awwbookmarklet-control-padding-x, 10px);
     font: inherit;
     font-weight: 400;
-    border-radius: 0;
+    border-radius: var(--_control-radius) var(--_control-radius) 0 0;
     white-space: nowrap;
   }
 
@@ -43,7 +44,7 @@ const TABS_STYLES = css`
   #tablist button[aria-selected="true"]:focus-visible {
     box-shadow: inset 0 3px 0 var(--awwbookmarklet-selection-bg, #1f5eae), var(--_ring);
   }
-  #panels { padding: var(--awwbookmarklet-space-2, 8px); }
+  #panels { padding: var(--awwbookmarklet-surface-padding, var(--awwbookmarklet-space-2, 8px)); }
 `;
 
 const TAB_PANEL_STYLES = css`

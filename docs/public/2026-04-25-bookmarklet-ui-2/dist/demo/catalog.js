@@ -97,7 +97,37 @@ var PUBLIC_TOKENS = {
   space2: "--awwbookmarklet-space-2",
   space3: "--awwbookmarklet-space-3",
   controlHeight: "--awwbookmarklet-size-control-h",
-  titleHeight: "--awwbookmarklet-size-title-h"
+  titleHeight: "--awwbookmarklet-size-title-h",
+  radiusControl: "--awwbookmarklet-radius-control",
+  radiusSurface: "--awwbookmarklet-radius-surface",
+  radiusWindow: "--awwbookmarklet-radius-window",
+  borderWidthControl: "--awwbookmarklet-border-width-control",
+  borderWidthSurface: "--awwbookmarklet-border-width-surface",
+  focusRingWidth: "--awwbookmarklet-focus-ring-width",
+  controlPaddingX: "--awwbookmarklet-control-padding-x",
+  controlPaddingY: "--awwbookmarklet-control-padding-y",
+  controlMinWidth: "--awwbookmarklet-control-min-width",
+  controlIconSize: "--awwbookmarklet-control-icon-size",
+  inputPaddingX: "--awwbookmarklet-input-padding-x",
+  inputPaddingY: "--awwbookmarklet-input-padding-y",
+  buttonPaddingX: "--awwbookmarklet-button-padding-x",
+  buttonPaddingY: "--awwbookmarklet-button-padding-y",
+  buttonMinWidth: "--awwbookmarklet-button-min-width",
+  buttonShadow: "--awwbookmarklet-button-shadow",
+  buttonActiveShadow: "--awwbookmarklet-button-active-shadow",
+  windowBodyPadding: "--awwbookmarklet-window-body-padding",
+  titlebarPaddingX: "--awwbookmarklet-titlebar-padding-x",
+  titlebarGap: "--awwbookmarklet-titlebar-gap",
+  surfacePadding: "--awwbookmarklet-surface-padding",
+  surfaceGap: "--awwbookmarklet-surface-gap",
+  panelPadding: "--awwbookmarklet-panel-padding",
+  cardPadding: "--awwbookmarklet-card-padding",
+  groupPadding: "--awwbookmarklet-group-padding",
+  menuPadding: "--awwbookmarklet-menu-padding",
+  menuItemHeight: "--awwbookmarklet-menu-item-height",
+  menuItemPaddingX: "--awwbookmarklet-menu-item-padding-x",
+  menuItemGap: "--awwbookmarklet-menu-item-gap",
+  controlInsetShadow: "--awwbookmarklet-control-inset-shadow"
 };
 var DEFAULT_GEOMETRY = {
   minWidth: 320,
@@ -202,7 +232,11 @@ var BASE_COMPONENT_STYLES = css`
     }
 
     :host {
-      --_ring: 0 0 0 2px var(--awwbookmarklet-focus-ring, #154fbc);
+      --_ring: 0 0 0 var(--awwbookmarklet-focus-ring-width, 2px) var(--awwbookmarklet-focus-ring, #154fbc);
+      --_control-radius: var(--awwbookmarklet-radius-control, 0);
+      --_surface-radius: var(--awwbookmarklet-radius-surface, 0);
+      --_control-border-width: var(--awwbookmarklet-border-width-control, 1px);
+      --_surface-border-width: var(--awwbookmarklet-border-width-surface, 1px);
     }
 
     ::selection {
@@ -337,10 +371,12 @@ var WINDOW_STYLES = css`
     display: block;
     pointer-events: auto;
     contain: layout style;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    --_titlebar-active-top-bg: color-mix(in srgb, #f7f9fb calc(var(--awwbookmarklet-frost-opacity, 1) * 100%), var(--awwbookmarklet-titlebar-active-bg, #dce2e9));
+    --_titlebar-inactive-top-bg: color-mix(in srgb, #eef2f6 calc(var(--awwbookmarklet-frost-opacity, 1) * 100%), var(--awwbookmarklet-titlebar-inactive-bg, #cfd5dd));
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
     background: var(--awwbookmarklet-window-bg, #eef1f5);
     box-shadow: var(--awwbookmarklet-shadow-depth, 0 12px 32px rgba(0, 0, 0, 0.18));
-    border-radius: 0;
+    border-radius: var(--awwbookmarklet-radius-window, 0);
     min-width: 0;
     min-height: 0;
     overflow: hidden;
@@ -364,25 +400,26 @@ var WINDOW_STYLES = css`
     display: grid;
     grid-template-columns: 28px 1fr auto;
     align-items: center;
-    gap: 6px;
-    padding: 0 6px;
-    background: linear-gradient(180deg, #f7f9fb, var(--awwbookmarklet-titlebar-active-bg, #dce2e9));
+    gap: var(--awwbookmarklet-titlebar-gap, 6px);
+    padding-block: 0;
+    padding-inline: var(--awwbookmarklet-titlebar-padding-x, 6px);
+    background: linear-gradient(180deg, var(--_titlebar-active-top-bg), var(--awwbookmarklet-titlebar-active-bg, #dce2e9));
     color: var(--awwbookmarklet-titlebar-fg, #121820);
-    border-bottom: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border-bottom: var(--_surface-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
     cursor: grab;
     user-select: none;
   }
 
   :host([data-active="false"]) .titlebar {
-    background: linear-gradient(180deg, #eef2f6, var(--awwbookmarklet-titlebar-inactive-bg, #cfd5dd));
+    background: linear-gradient(180deg, var(--_titlebar-inactive-top-bg), var(--awwbookmarklet-titlebar-inactive-bg, #cfd5dd));
   }
 
   .system-menu-button,
   .window-command-button {
-    border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
-    border-radius: 0;
-    background: #edf1f5;
-    box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #a8b0ba;
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-radius: var(--_control-radius);
+    background: var(--awwbookmarklet-button-bg, #edf1f5);
+    box-shadow: var(--awwbookmarklet-button-shadow, inset 1px 1px 0 #ffffff, inset -1px -1px 0 #a8b0ba);
     color: inherit;
     height: 22px;
     min-width: 22px;
@@ -400,7 +437,7 @@ var WINDOW_STYLES = css`
   .system-menu-button:active,
   .window-command-button:active {
     background: var(--awwbookmarklet-button-active-bg, #d8dee6);
-    box-shadow: inset 1px 1px 0 #8e98a4, inset -1px -1px 0 #ffffff;
+    box-shadow: var(--awwbookmarklet-button-active-shadow, inset 1px 1px 0 #8e98a4, inset -1px -1px 0 #ffffff);
   }
 
   .title {
@@ -417,7 +454,7 @@ var WINDOW_STYLES = css`
 
   .region {
     display: block;
-    border-bottom: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-bottom: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
   }
 
   .region[hidden] {
@@ -426,13 +463,13 @@ var WINDOW_STYLES = css`
 
   .body {
     overflow: auto;
-    padding: var(--awwbookmarklet-space-3, 12px);
+    padding: var(--awwbookmarklet-window-body-padding, var(--awwbookmarklet-space-3, 12px));
     background: var(--awwbookmarklet-window-bg, #eef1f5);
     min-height: 0;
   }
 
   .status {
-    border-top: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-top: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
     border-bottom: 0;
   }
 
@@ -785,29 +822,160 @@ class CommandRegistry {
   }
 }
 
+// src/themes/default-theme.js
+var DEFAULT_THEME = {
+  [PUBLIC_TOKENS.workspaceBg]: "rgba(0, 0, 0, 0)",
+  [PUBLIC_TOKENS.windowBg]: "#eef1f5",
+  [PUBLIC_TOKENS.panelBg]: "#f3f5f7",
+  [PUBLIC_TOKENS.titlebarActiveBg]: "#dce2e9",
+  [PUBLIC_TOKENS.titlebarInactiveBg]: "#cfd5dd",
+  [PUBLIC_TOKENS.titlebarFg]: "#121820",
+  [PUBLIC_TOKENS.borderStrong]: "#4f5966",
+  [PUBLIC_TOKENS.borderSubtle]: "#a8b0ba",
+  [PUBLIC_TOKENS.focusRing]: "#174f9c",
+  [PUBLIC_TOKENS.buttonBg]: "#edf1f5",
+  [PUBLIC_TOKENS.buttonFg]: "#111720",
+  [PUBLIC_TOKENS.buttonActiveBg]: "#d8dee6",
+  [PUBLIC_TOKENS.inputBg]: "#f8f9fa",
+  [PUBLIC_TOKENS.inputFg]: "#111720",
+  [PUBLIC_TOKENS.menuBg]: "#f3f5f7",
+  [PUBLIC_TOKENS.menuFg]: "#0e1621",
+  [PUBLIC_TOKENS.selectionBg]: "#1f5eae",
+  [PUBLIC_TOKENS.selectionFg]: "#f2f8ff",
+  [PUBLIC_TOKENS.statusbarBg]: "#e2e7ed",
+  [PUBLIC_TOKENS.appShellBg]: "#eef1f5",
+  [PUBLIC_TOKENS.surfaceRaisedBg]: "#fbfcfd",
+  [PUBLIC_TOKENS.surfaceInsetBg]: "#dfe4ea",
+  [PUBLIC_TOKENS.textMuted]: "#44505f",
+  [PUBLIC_TOKENS.textHelp]: "#5f6a78",
+  [PUBLIC_TOKENS.dividerColor]: "#c7cdd5",
+  [PUBLIC_TOKENS.infoBg]: "#e8f2ff",
+  [PUBLIC_TOKENS.infoFg]: "#18549e",
+  [PUBLIC_TOKENS.infoBorder]: "#8db4e8",
+  [PUBLIC_TOKENS.successBg]: "#e7f4eb",
+  [PUBLIC_TOKENS.successFg]: "#1e6a3a",
+  [PUBLIC_TOKENS.successBorder]: "#86ba91",
+  [PUBLIC_TOKENS.warningBg]: "#fff4d8",
+  [PUBLIC_TOKENS.warningFg]: "#76520c",
+  [PUBLIC_TOKENS.warningBorder]: "#d7ad4d",
+  [PUBLIC_TOKENS.dangerBg]: "#fff0ee",
+  [PUBLIC_TOKENS.dangerFg]: "#a12824",
+  [PUBLIC_TOKENS.dangerBorder]: "#da7b73",
+  [PUBLIC_TOKENS.overlayBackdrop]: "rgba(12, 18, 28, 0.38)",
+  [PUBLIC_TOKENS.overlayShadow]: "0 18px 44px rgba(0, 0, 0, 0.24)",
+  [PUBLIC_TOKENS.cardBg]: "#fbfcfe",
+  [PUBLIC_TOKENS.cardSelectedBg]: "#e8f1ff",
+  [PUBLIC_TOKENS.metricBg]: "#ffffff",
+  [PUBLIC_TOKENS.codeBg]: "#e8edf4",
+  [PUBLIC_TOKENS.codeFg]: "#172131",
+  [PUBLIC_TOKENS.shadowDepth]: "inset 1px 1px 0 #ffffff, inset -1px -1px 0 #a8b0ba",
+  [PUBLIC_TOKENS.frostOpacity]: "1",
+  [PUBLIC_TOKENS.space1]: "4px",
+  [PUBLIC_TOKENS.space2]: "8px",
+  [PUBLIC_TOKENS.space3]: "12px",
+  [PUBLIC_TOKENS.controlHeight]: "30px",
+  [PUBLIC_TOKENS.titleHeight]: "32px",
+  [PUBLIC_TOKENS.radiusControl]: "0",
+  [PUBLIC_TOKENS.radiusSurface]: "0",
+  [PUBLIC_TOKENS.radiusWindow]: "0",
+  [PUBLIC_TOKENS.borderWidthControl]: "1px",
+  [PUBLIC_TOKENS.borderWidthSurface]: "1px",
+  [PUBLIC_TOKENS.focusRingWidth]: "2px",
+  [PUBLIC_TOKENS.controlPaddingX]: "12px",
+  [PUBLIC_TOKENS.controlPaddingY]: "0",
+  [PUBLIC_TOKENS.controlMinWidth]: "72px",
+  [PUBLIC_TOKENS.controlIconSize]: "16px",
+  [PUBLIC_TOKENS.inputPaddingX]: "8px",
+  [PUBLIC_TOKENS.inputPaddingY]: "0",
+  [PUBLIC_TOKENS.buttonPaddingX]: "12px",
+  [PUBLIC_TOKENS.buttonPaddingY]: "0",
+  [PUBLIC_TOKENS.buttonMinWidth]: "72px",
+  [PUBLIC_TOKENS.buttonShadow]: "inset 1px 1px 0 #ffffff, inset -1px -1px 0 var(--awwbookmarklet-border-subtle, #9ba5b3)",
+  [PUBLIC_TOKENS.buttonActiveShadow]: "inset 1px 1px 0 rgba(0, 0, 0, 0.18)",
+  [PUBLIC_TOKENS.windowBodyPadding]: "12px",
+  [PUBLIC_TOKENS.titlebarPaddingX]: "6px",
+  [PUBLIC_TOKENS.titlebarGap]: "6px",
+  [PUBLIC_TOKENS.surfacePadding]: "8px",
+  [PUBLIC_TOKENS.surfaceGap]: "8px",
+  [PUBLIC_TOKENS.panelPadding]: "8px",
+  [PUBLIC_TOKENS.cardPadding]: "8px",
+  [PUBLIC_TOKENS.groupPadding]: "10px",
+  [PUBLIC_TOKENS.menuPadding]: "4px",
+  [PUBLIC_TOKENS.menuItemHeight]: "29px",
+  [PUBLIC_TOKENS.menuItemPaddingX]: "8px",
+  [PUBLIC_TOKENS.menuItemGap]: "16px",
+  [PUBLIC_TOKENS.controlInsetShadow]: "inset 1px 1px 0 #aab2bd, inset -1px -1px 0 #ffffff"
+};
+
+// src/core/theme.js
+function applyThemePatch(target, themePatch = {}) {
+  if (!target?.style)
+    return;
+  for (const [token, value] of Object.entries(themePatch || {})) {
+    if (value == null)
+      continue;
+    target.style.setProperty(token, String(value));
+  }
+}
+function copyPublicThemeContext(source, target, tokens = PUBLIC_TOKENS) {
+  if (!source || !target?.style || typeof getComputedStyle === "undefined")
+    return;
+  const computed = getComputedStyle(source);
+  for (const token of Object.values(tokens)) {
+    const value = computed.getPropertyValue(token);
+    if (value)
+      target.style.setProperty(token, value.trim());
+  }
+}
+function createTheme(baseTheme = DEFAULT_THEME, patch = {}) {
+  return { ...baseTheme || {}, ...patch || {} };
+}
+
+class ThemeService {
+  #theme;
+  constructor(theme = DEFAULT_THEME) {
+    this.#theme = { ...theme };
+  }
+  get tokens() {
+    return { ...this.#theme };
+  }
+  setTheme(themePatch) {
+    this.#theme = { ...this.#theme, ...themePatch };
+    return this.tokens;
+  }
+  applyTheme(target) {
+    applyThemePatch(target, this.#theme);
+  }
+  applyThemePatch(target, themePatch) {
+    applyThemePatch(target, themePatch);
+  }
+}
+var defaultThemeService = new ThemeService(DEFAULT_THEME);
+
 // src/components/menubar.js
 var MENUBAR_STYLES = css`
   :host {
     display: block;
     pointer-events: auto;
     background: color-mix(in srgb, var(--awwbookmarklet-panel-bg, #f8fafc) 85%, #d8dee7 15%);
-    padding: 2px;
+    padding: var(--awwbookmarklet-space-1, 4px);
   }
 
   #bar {
     display: flex;
-    gap: 2px;
+    gap: var(--awwbookmarklet-space-1, 4px);
     align-items: center;
     min-height: 28px;
   }
 
   ::slotted([data-menu]) {
     height: 24px;
-    border: 1px solid transparent;
+    border: var(--_control-border-width) solid transparent;
     background: transparent;
     font: inherit;
-    padding: 0 8px;
-    border-radius: 0;
+    padding-block: var(--awwbookmarklet-control-padding-y, 0);
+    padding-inline: var(--awwbookmarklet-menu-item-padding-x, 8px);
+    border-radius: var(--_control-radius);
     color: inherit;
   }
 
@@ -889,6 +1057,7 @@ class AwwMenubar extends HTMLElement {
     this.closeAllMenus();
     trigger.dataset.open = "true";
     const overlayRoot = this.closest("awwbookmarklet-window")?.closest("awwbookmarklet-desktop-root");
+    copyPublicThemeContext(trigger, menu);
     menu.portalTo(overlayRoot);
     menu.openAtViewportRect(trigger.getBoundingClientRect());
     this.#openMenuName = menuName;
@@ -982,9 +1151,10 @@ var MENU_STYLES = css`
     min-width: 200px;
     pointer-events: auto;
     background: var(--awwbookmarklet-menu-bg, #f8fbff);
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_surface-radius);
     box-shadow: var(--awwbookmarklet-shadow-depth, 0 10px 20px rgba(0, 0, 0, 0.18));
-    padding: 4px;
+    padding: var(--awwbookmarklet-menu-padding, 4px);
     z-index: 999999;
   }
 
@@ -992,7 +1162,7 @@ var MENU_STYLES = css`
 
   #panel {
     display: grid;
-    gap: 2px;
+    gap: var(--awwbookmarklet-space-1, 4px);
     max-height: min(60vh, 420px);
     overflow: auto;
   }
@@ -1000,7 +1170,7 @@ var MENU_STYLES = css`
   ::slotted([data-separator]),
   ::slotted([role="separator"]) {
     display: block;
-    border-top: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-top: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
     margin: 4px 2px;
     padding: 0;
     min-height: 0;
@@ -1009,18 +1179,19 @@ var MENU_STYLES = css`
 
   ::slotted(button),
   ::slotted([role="menuitem"]) {
-    height: 29px;
-    border: 1px solid transparent;
+    height: var(--awwbookmarklet-menu-item-height, 29px);
+    border: var(--_control-border-width) solid transparent;
     background: transparent;
     color: var(--awwbookmarklet-menu-fg, #0e1621);
     text-align: left;
-    padding: 0 8px;
+    padding-block: 0;
+    padding-inline: var(--awwbookmarklet-menu-item-padding-x, 8px);
     font: inherit;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    border-radius: 0;
+    gap: var(--awwbookmarklet-menu-item-gap, 16px);
+    border-radius: var(--_control-radius);
   }
 
   ::slotted(button:hover),
@@ -1222,13 +1393,14 @@ var BUTTON_STYLES = css`
 
   button {
     min-height: var(--awwbookmarklet-size-control-h, 30px);
-    min-width: 72px;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
-    border-radius: 0;
+    min-width: var(--awwbookmarklet-button-min-width, var(--awwbookmarklet-control-min-width, 72px));
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: linear-gradient(180deg, color-mix(in srgb, var(--awwbookmarklet-button-bg, #f1f4f8) 92%, #ffffff 8%), var(--awwbookmarklet-button-bg, #f1f4f8));
     color: var(--awwbookmarklet-button-fg, #111720);
-    box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 var(--awwbookmarklet-border-subtle, #9ba5b3);
-    padding: 0 12px;
+    box-shadow: var(--awwbookmarklet-button-shadow, inset 1px 1px 0 #ffffff, inset -1px -1px 0 var(--awwbookmarklet-border-subtle, #9ba5b3));
+    padding-block: var(--awwbookmarklet-button-padding-y, var(--awwbookmarklet-control-padding-y, 0));
+    padding-inline: var(--awwbookmarklet-button-padding-x, var(--awwbookmarklet-control-padding-x, 12px));
     font: inherit;
     line-height: 1;
   }
@@ -1278,7 +1450,7 @@ var BUTTON_STYLES = css`
 
   :host([pressed]) button {
     background: var(--awwbookmarklet-button-active-bg, #dbe3ee);
-    box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.18);
+    box-shadow: var(--awwbookmarklet-button-active-shadow, inset 1px 1px 0 rgba(0, 0, 0, 0.18));
   }
 `;
 
@@ -1333,10 +1505,11 @@ var ICON_BUTTON_STYLES = css`
   button {
     width: var(--awwbookmarklet-size-control-h, 30px);
     height: var(--awwbookmarklet-size-control-h, 30px);
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
-    border-radius: 0;
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: var(--awwbookmarklet-button-bg, #f1f4f8);
     color: var(--awwbookmarklet-button-fg, #111720);
+    box-shadow: var(--awwbookmarklet-button-shadow, none);
     display: grid;
     place-items: center;
     padding: 0;
@@ -1351,12 +1524,12 @@ var ICON_BUTTON_STYLES = css`
   :host([tone="success"]) button { border-color: var(--awwbookmarklet-success-border, #72b98b); color: var(--awwbookmarklet-success-fg, #195b34); }
   :host([pressed]) button {
     background: var(--awwbookmarklet-button-active-bg, #dbe3ee);
-    box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.18);
+    box-shadow: var(--awwbookmarklet-button-active-shadow, inset 1px 1px 0 rgba(0, 0, 0, 0.18));
   }
 
   ::slotted(svg) {
-    width: 16px;
-    height: 16px;
+    width: var(--awwbookmarklet-control-icon-size, 16px);
+    height: var(--awwbookmarklet-control-icon-size, 16px);
     stroke-width: 1.5;
     stroke: currentColor;
     fill: none;
@@ -1420,11 +1593,13 @@ var INPUT_STYLES = css`
   input {
     width: 100%;
     min-height: var(--awwbookmarklet-size-control-h, 30px);
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
-    border-radius: 0;
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: var(--awwbookmarklet-input-bg, #ffffff);
     color: var(--awwbookmarklet-input-fg, #111720);
-    padding: 0 8px;
+    box-shadow: var(--awwbookmarklet-control-inset-shadow, none);
+    padding-block: var(--awwbookmarklet-input-padding-y, var(--awwbookmarklet-control-padding-y, 0));
+    padding-inline: var(--awwbookmarklet-input-padding-x, 8px);
     font: inherit;
   }
 
@@ -1492,11 +1667,13 @@ var TEXTAREA_STYLES = css`
   textarea {
     width: 100%;
     min-height: 96px;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
-    border-radius: 0;
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: var(--awwbookmarklet-input-bg, #ffffff);
     color: var(--awwbookmarklet-input-fg, #111720);
-    padding: 8px;
+    box-shadow: var(--awwbookmarklet-control-inset-shadow, none);
+    padding-block: var(--awwbookmarklet-input-padding-y, 8px);
+    padding-inline: var(--awwbookmarklet-input-padding-x, 8px);
     font: inherit;
     resize: vertical;
   }
@@ -1565,7 +1742,7 @@ var CHECKBOX_STYLES = css`
   label {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--awwbookmarklet-space-2, 8px);
     cursor: pointer;
   }
 
@@ -1574,9 +1751,9 @@ var CHECKBOX_STYLES = css`
     width: 14px;
     height: 14px;
     margin: 0;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
     background: var(--awwbookmarklet-input-bg, #fff);
-    border-radius: 0;
+    border-radius: var(--_control-radius);
     position: relative;
   }
 
@@ -1648,7 +1825,7 @@ var RADIO_STYLES = css`
   label {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--awwbookmarklet-space-2, 8px);
     cursor: pointer;
   }
 
@@ -1657,7 +1834,7 @@ var RADIO_STYLES = css`
     width: 14px;
     height: 14px;
     margin: 0;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
     background: var(--awwbookmarklet-input-bg, #fff);
     border-radius: 999px;
     position: relative;
@@ -1749,11 +1926,13 @@ var SELECT_STYLES = css`
   select {
     width: 100%;
     min-height: var(--awwbookmarklet-size-control-h, 30px);
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
-    border-radius: 0;
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: var(--awwbookmarklet-input-bg, #fff);
     color: var(--awwbookmarklet-input-fg, #111720);
-    padding: 0 28px 0 8px;
+    box-shadow: var(--awwbookmarklet-control-inset-shadow, none);
+    padding-block: var(--awwbookmarklet-input-padding-y, var(--awwbookmarklet-control-padding-y, 0));
+    padding-inline: var(--awwbookmarklet-input-padding-x, 8px) calc(var(--awwbookmarklet-input-padding-x, 8px) + 20px);
     font: inherit;
     appearance: none;
   }
@@ -1921,8 +2100,8 @@ var PROGRESS_STYLES = css`
   progress {
     width: 100%;
     height: 14px;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
-    border-radius: 0;
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: var(--awwbookmarklet-panel-bg, #f8fafc);
     accent-color: var(--awwbookmarklet-selection-bg, #1f5eae);
   }
@@ -1975,29 +2154,30 @@ class AwwProgress extends HTMLElement {
 
 // src/components/tabs.js
 var TABS_STYLES = css`
-  :host { display: block; border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3); background: var(--awwbookmarklet-panel-bg, #f8fafc); }
+  :host { display: block; border: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3); border-radius: var(--_surface-radius); background: var(--awwbookmarklet-panel-bg, #f8fafc); }
 
   #tablist {
     display: flex;
-    gap: 2px;
+    gap: var(--awwbookmarklet-space-1, 4px);
     max-width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 4px 4px 0;
-    border-bottom: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    padding: var(--awwbookmarklet-space-1, 4px) var(--awwbookmarklet-space-1, 4px) 0;
+    border-bottom: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
     scrollbar-gutter: stable;
   }
 
   #tablist button {
     min-height: 28px;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
     border-bottom: 0;
     background: color-mix(in srgb, var(--awwbookmarklet-panel-bg, #f8fafc) 88%, #ced5df 12%);
     color: var(--awwbookmarklet-input-fg, #111720);
-    padding: 0 10px;
+    padding-block: var(--awwbookmarklet-control-padding-y, 0);
+    padding-inline: var(--awwbookmarklet-control-padding-x, 10px);
     font: inherit;
     font-weight: 400;
-    border-radius: 0;
+    border-radius: var(--_control-radius) var(--_control-radius) 0 0;
     white-space: nowrap;
   }
 
@@ -2016,7 +2196,7 @@ var TABS_STYLES = css`
   #tablist button[aria-selected="true"]:focus-visible {
     box-shadow: inset 0 3px 0 var(--awwbookmarklet-selection-bg, #1f5eae), var(--_ring);
   }
-  #panels { padding: var(--awwbookmarklet-space-2, 8px); }
+  #panels { padding: var(--awwbookmarklet-surface-padding, var(--awwbookmarklet-space-2, 8px)); }
 `;
 var TAB_PANEL_STYLES = css`
   :host { display: block; }
@@ -2149,18 +2329,21 @@ var LISTBOX_STYLES = css`
   :host { display: block; }
 
   #list {
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: var(--awwbookmarklet-input-bg, #fff);
     min-height: 120px;
     max-height: 260px;
     overflow: auto;
-    padding: 2px;
+    padding: var(--awwbookmarklet-space-1, 4px);
   }
 
   ::slotted([role="option"]) {
     display: block;
-    padding: 6px 8px;
-    border: 1px solid transparent;
+    padding-block: var(--awwbookmarklet-space-2, 6px);
+    padding-inline: var(--awwbookmarklet-input-padding-x, 8px);
+    border: var(--_control-border-width) solid transparent;
+    border-radius: var(--_control-radius);
     user-select: none;
   }
 
@@ -2286,20 +2469,21 @@ var GROUP_STYLES = css`
   :host { display: block; }
 
   .group {
-    border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-radius: var(--_surface-radius);
     background: color-mix(in srgb, var(--awwbookmarklet-panel-bg, #f8fafc) 86%, #ffffff 14%);
-    padding: 10px;
+    padding: var(--awwbookmarklet-group-padding, var(--awwbookmarklet-surface-padding, 10px));
   }
 
   .caption {
     font-weight: 600;
-    margin-bottom: 8px;
+    margin-bottom: var(--awwbookmarklet-space-2, 8px);
     color: color-mix(in srgb, var(--awwbookmarklet-input-fg, #111720) 90%, #ffffff 10%);
   }
 
   .content {
     display: grid;
-    gap: var(--awwbookmarklet-space-2, 8px);
+    gap: var(--awwbookmarklet-surface-gap, var(--awwbookmarklet-space-2, 8px));
   }
 `;
 
@@ -2329,14 +2513,15 @@ class AwwGroup extends HTMLElement {
 var PANEL_STYLES = css`
   :host {
     display: block;
-    border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-radius: var(--_surface-radius);
     background: var(--awwbookmarklet-panel-bg, #f8fafc);
-    padding: var(--awwbookmarklet-space-2, 8px);
+    padding: var(--awwbookmarklet-panel-padding, var(--awwbookmarklet-surface-padding, 8px));
   }
 
   section {
     display: grid;
-    gap: var(--awwbookmarklet-space-2, 8px);
+    gap: var(--awwbookmarklet-surface-gap, var(--awwbookmarklet-space-2, 8px));
     min-width: 0;
   }
 
@@ -2344,9 +2529,9 @@ var PANEL_STYLES = css`
     display: none;
     align-items: start;
     justify-content: space-between;
-    gap: var(--awwbookmarklet-space-2, 8px);
-    border-bottom: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
-    padding-bottom: 6px;
+    gap: var(--awwbookmarklet-surface-gap, var(--awwbookmarklet-space-2, 8px));
+    border-bottom: var(--_surface-border-width) solid var(--awwbookmarklet-divider-color, #c3cad4);
+    padding-bottom: var(--awwbookmarklet-space-2, 8px);
   }
 
   :host([data-has-header="true"]) .header {
@@ -2375,8 +2560,8 @@ var PANEL_STYLES = css`
 
   .footer {
     display: none;
-    border-top: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
-    padding-top: 6px;
+    border-top: var(--_surface-border-width) solid var(--awwbookmarklet-divider-color, #c3cad4);
+    padding-top: var(--awwbookmarklet-space-2, 8px);
   }
 
   :host([data-has-footer="true"]) .footer {
@@ -2470,17 +2655,17 @@ var APP_SHELL_STYLES = css`
     display: grid;
     grid-template-rows: auto auto minmax(0, 1fr) auto;
     min-height: 0;
-    gap: var(--awwbookmarklet-space-2, 8px);
-    padding: var(--awwbookmarklet-space-3, 12px);
+    gap: var(--awwbookmarklet-surface-gap, var(--awwbookmarklet-space-2, 8px));
+    padding: var(--awwbookmarklet-window-body-padding, var(--awwbookmarklet-space-3, 12px));
   }
 
   .header {
     display: flex;
     align-items: start;
     justify-content: space-between;
-    gap: var(--awwbookmarklet-space-3, 12px);
+    gap: var(--awwbookmarklet-surface-gap, var(--awwbookmarklet-space-3, 12px));
     min-width: 0;
-    border-bottom: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    border-bottom: var(--_surface-border-width) solid var(--awwbookmarklet-divider-color, #c3cad4);
     padding-bottom: var(--awwbookmarklet-space-2, 8px);
   }
 
@@ -2517,7 +2702,7 @@ var APP_SHELL_STYLES = css`
   }
 
   .footer {
-    border-top: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    border-top: var(--_surface-border-width) solid var(--awwbookmarklet-divider-color, #c3cad4);
     padding-top: var(--awwbookmarklet-space-2, 8px);
   }
 
@@ -2628,8 +2813,8 @@ var TOOLBAR_STYLES = css`
   :host([data-align="end"]) .toolbar { justify-content: flex-end; }
   :host([data-align="between"]) .toolbar { justify-content: space-between; }
 
-  :host([data-density="compact"]) { --_gap: 4px; }
-  :host([data-density="spacious"]) { --_gap: 12px; }
+  :host([data-density="compact"]) { --_gap: var(--awwbookmarklet-space-1, 4px); }
+  :host([data-density="spacious"]) { --_gap: var(--awwbookmarklet-space-3, 12px); }
 
   :host([busy]) .toolbar {
     cursor: progress;
@@ -2669,7 +2854,7 @@ class AwwToolbar extends HTMLElement {
 var FIELD_STYLES = css`
   :host {
     display: grid;
-    gap: 4px;
+    gap: var(--awwbookmarklet-space-1, 4px);
     min-width: 0;
   }
 
@@ -2679,20 +2864,20 @@ var FIELD_STYLES = css`
 
   .field {
     display: grid;
-    gap: 4px;
+    gap: var(--awwbookmarklet-space-1, 4px);
     min-width: 0;
   }
 
   :host([orientation="horizontal"]) .field {
     grid-template-columns: minmax(120px, 0.38fr) minmax(0, 1fr);
-    gap: 8px 12px;
+    gap: var(--awwbookmarklet-space-2, 8px) var(--awwbookmarklet-space-3, 12px);
     align-items: start;
   }
 
   :host([orientation="inline"]) .field {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--awwbookmarklet-space-2, 8px);
   }
 
   .label {
@@ -2707,7 +2892,7 @@ var FIELD_STYLES = css`
   .control-row {
     display: flex;
     align-items: stretch;
-    gap: 4px;
+    gap: var(--awwbookmarklet-space-1, 4px);
     min-width: 0;
   }
 
@@ -2717,7 +2902,7 @@ var FIELD_STYLES = css`
 
   .main {
     display: grid;
-    gap: 4px;
+    gap: var(--awwbookmarklet-space-1, 4px);
     min-width: 0;
   }
 
@@ -2821,7 +3006,7 @@ var STATUS_LINE_STYLES = css`
     display: flex;
     align-items: center;
     min-height: 22px;
-    gap: 6px;
+    gap: var(--awwbookmarklet-space-2, 6px);
     color: var(--awwbookmarklet-text-muted, #586272);
     line-height: 1.35;
   }
@@ -2834,7 +3019,8 @@ var STATUS_LINE_STYLES = css`
   .dot {
     width: 7px;
     height: 7px;
-    border: 1px solid currentColor;
+    border: var(--_control-border-width) solid currentColor;
+    border-radius: var(--_control-radius);
     background: currentColor;
     flex: 0 0 auto;
   }
@@ -2897,20 +3083,22 @@ var ALERT_STYLES = css`
     grid-template-columns: auto minmax(0, 1fr) auto;
     gap: var(--awwbookmarklet-space-2, 8px);
     align-items: start;
-    border: 1px solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    border: var(--_surface-border-width) solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    border-radius: var(--_surface-radius);
     background: var(--_bg, var(--awwbookmarklet-surface-raised-bg, #fff));
     color: var(--_fg, var(--awwbookmarklet-input-fg, #111720));
-    padding: var(--awwbookmarklet-space-2, 8px);
+    padding: var(--awwbookmarklet-surface-padding, var(--awwbookmarklet-space-2, 8px));
   }
 
   :host([compact]) .alert {
-    padding: 6px;
+    padding: var(--awwbookmarklet-space-2, 6px);
   }
 
   .icon {
     width: 14px;
     height: 14px;
-    border: 1px solid currentColor;
+    border: var(--_control-border-width) solid currentColor;
+    border-radius: var(--_control-radius);
     background: currentColor;
     margin-top: 2px;
   }
@@ -2934,7 +3122,8 @@ var ALERT_STYLES = css`
   }
 
   button {
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: transparent;
     color: inherit;
     font: inherit;
@@ -3015,6 +3204,7 @@ function portalElement(element) {
   if (!layer || element.parentNode === layer)
     return null;
   const restore = { parent: element.parentNode, nextSibling: element.nextSibling };
+  copyPublicThemeContext(element, element);
   layer.append(element);
   return restore;
 }
@@ -3053,7 +3243,8 @@ var DIALOG_STYLES = css`
     grid-template-rows: auto minmax(0, 1fr) auto;
     width: min(680px, calc(100vw - 32px));
     max-height: min(620px, calc(100vh - 32px));
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_surface-radius);
     background: var(--awwbookmarklet-panel-bg, #f8fafc);
     box-shadow: var(--awwbookmarklet-overlay-shadow, 0 18px 44px rgba(0,0,0,0.24));
     pointer-events: auto;
@@ -3064,17 +3255,17 @@ var DIALOG_STYLES = css`
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--awwbookmarklet-space-2, 8px);
-    padding: var(--awwbookmarklet-space-2, 8px);
+    gap: var(--awwbookmarklet-surface-gap, var(--awwbookmarklet-space-2, 8px));
+    padding: var(--awwbookmarklet-surface-padding, var(--awwbookmarklet-space-2, 8px));
     background: var(--awwbookmarklet-surface-raised-bg, #fff);
   }
 
   .header {
-    border-bottom: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    border-bottom: var(--_surface-border-width) solid var(--awwbookmarklet-divider-color, #c3cad4);
   }
 
   .footer {
-    border-top: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    border-top: var(--_surface-border-width) solid var(--awwbookmarklet-divider-color, #c3cad4);
   }
 
   .title {
@@ -3084,13 +3275,14 @@ var DIALOG_STYLES = css`
   .body {
     min-height: 0;
     overflow: auto;
-    padding: var(--awwbookmarklet-space-3, 12px);
+    padding: var(--awwbookmarklet-window-body-padding, var(--awwbookmarklet-space-3, 12px));
   }
 
   button {
     min-width: 28px;
     min-height: 26px;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: var(--awwbookmarklet-button-bg, #f1f4f8);
     color: var(--awwbookmarklet-button-fg, #111720);
     font: inherit;
@@ -3204,11 +3396,12 @@ var TOAST_STYLES = css`
     pointer-events: auto;
     min-width: 220px;
     max-width: min(420px, calc(100vw - 24px));
-    border: 1px solid var(--_border, var(--awwbookmarklet-border-strong, #232a33));
+    border: var(--_surface-border-width) solid var(--_border, var(--awwbookmarklet-border-strong, #232a33));
+    border-radius: var(--_surface-radius);
     background: var(--_bg, var(--awwbookmarklet-surface-raised-bg, #fff));
     color: var(--_fg, var(--awwbookmarklet-input-fg, #111720));
     box-shadow: var(--awwbookmarklet-overlay-shadow, 0 18px 44px rgba(0,0,0,0.24));
-    padding: var(--awwbookmarklet-space-2, 8px);
+    padding: var(--awwbookmarklet-surface-padding, var(--awwbookmarklet-space-2, 8px));
   }
 
   :host([data-tone="info"]) { --_bg: var(--awwbookmarklet-info-bg, #e7f0ff); --_fg: var(--awwbookmarklet-info-fg, #123d7a); --_border: var(--awwbookmarklet-info-border, #7aa6e8); }
@@ -3219,7 +3412,7 @@ var TOAST_STYLES = css`
   .toast {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--awwbookmarklet-surface-gap, 8px);
   }
 `;
 var activeToasts = new Map;
@@ -3300,16 +3493,17 @@ var EMPTY_STYLES = css`
   :host {
     display: block;
     min-height: 96px;
-    border: 1px dashed var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border: var(--_surface-border-width) dashed var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-radius: var(--_surface-radius);
     background: var(--awwbookmarklet-surface-inset-bg, #e7ebf1);
     color: var(--awwbookmarklet-text-muted, #586272);
-    padding: var(--awwbookmarklet-space-3, 12px);
+    padding: var(--awwbookmarklet-surface-padding, var(--awwbookmarklet-space-3, 12px));
   }
 
   .empty {
     display: grid;
     place-items: center;
-    gap: 6px;
+    gap: var(--awwbookmarklet-surface-gap, 6px);
     min-height: inherit;
     text-align: center;
   }
@@ -3366,7 +3560,7 @@ var STATE_STYLES = css`
     place-items: center;
     min-height: 96px;
     background: color-mix(in srgb, var(--awwbookmarklet-surface-raised-bg, #fff) 86%, transparent);
-    border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
     z-index: 2;
   }
 
@@ -3374,10 +3568,10 @@ var STATE_STYLES = css`
 
   .surface {
     display: grid;
-    gap: 8px;
+    gap: var(--awwbookmarklet-surface-gap, 8px);
     justify-items: center;
     max-width: min(420px, calc(100% - 24px));
-    padding: var(--awwbookmarklet-space-3, 12px);
+    padding: var(--awwbookmarklet-surface-padding, var(--awwbookmarklet-space-3, 12px));
     text-align: center;
     color: var(--_fg, var(--awwbookmarklet-input-fg, #111720));
   }
@@ -3385,7 +3579,8 @@ var STATE_STYLES = css`
   .indicator {
     width: 18px;
     height: 18px;
-    border: 2px solid currentColor;
+    border: var(--awwbookmarklet-focus-ring-width, 2px) solid currentColor;
+    border-radius: var(--_control-radius);
     background: transparent;
   }
 
@@ -3499,15 +3694,16 @@ var LIST_ITEM_STYLES = css`
   .item {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: var(--awwbookmarklet-space-2, 8px);
+    gap: var(--awwbookmarklet-surface-gap, var(--awwbookmarklet-space-2, 8px));
     align-items: start;
-    border: 1px solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    border: var(--_surface-border-width) solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    border-radius: var(--_surface-radius);
     background: var(--_bg, var(--awwbookmarklet-card-bg, #fbfcfe));
-    padding: var(--awwbookmarklet-space-2, 8px);
+    padding: var(--awwbookmarklet-card-padding, var(--awwbookmarklet-surface-padding, 8px));
     color: var(--_fg, var(--awwbookmarklet-input-fg, #111720));
   }
 
-  :host([compact]) .item { padding: 6px; }
+  :host([compact]) .item { padding: var(--awwbookmarklet-space-2, 6px); }
   :host([interactive]) .item,
   :host([selectable]) .item { cursor: pointer; }
   :host([selected]) .item { --_bg: var(--awwbookmarklet-card-selected-bg, #e8f1ff); --_border: var(--awwbookmarklet-selection-bg, #1f5eae); }
@@ -3629,17 +3825,18 @@ var CARD_STYLES = css`
 
   .card {
     display: grid;
-    gap: var(--awwbookmarklet-space-2, 8px);
-    border: 1px solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    gap: var(--awwbookmarklet-surface-gap, var(--awwbookmarklet-space-2, 8px));
+    border: var(--_surface-border-width) solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    border-radius: var(--_surface-radius);
     background: var(--_bg, var(--awwbookmarklet-card-bg, #fbfcfe));
-    padding: var(--awwbookmarklet-space-2, 8px);
+    padding: var(--awwbookmarklet-card-padding, var(--awwbookmarklet-surface-padding, 8px));
   }
 
   .header {
     display: flex;
     align-items: start;
     justify-content: space-between;
-    gap: var(--awwbookmarklet-space-2, 8px);
+    gap: var(--awwbookmarklet-surface-gap, var(--awwbookmarklet-space-2, 8px));
     min-width: 0;
   }
 
@@ -3652,7 +3849,7 @@ var CARD_STYLES = css`
   .title { font-weight: 700; overflow-wrap: anywhere; }
   .meta { color: var(--awwbookmarklet-text-muted, #586272); overflow-wrap: anywhere; }
   .body { min-width: 0; line-height: 1.4; }
-  .footer { border-top: 1px solid var(--awwbookmarklet-divider-color, #c3cad4); padding-top: 6px; }
+  .footer { border-top: var(--_surface-border-width) solid var(--awwbookmarklet-divider-color, #c3cad4); padding-top: var(--awwbookmarklet-space-2, 8px); }
 
   :host([selected]) .card { --_bg: var(--awwbookmarklet-card-selected-bg, #e8f1ff); --_border: var(--awwbookmarklet-selection-bg, #1f5eae); }
   :host([data-tone="info"]) { --_border: var(--awwbookmarklet-info-border, #7aa6e8); }
@@ -3807,7 +4004,8 @@ var RICH_PREVIEW_STYLES = css`
   :host {
     display: block;
     min-width: 0;
-    border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-radius: var(--_surface-radius);
     background: var(--awwbookmarklet-surface-raised-bg, #fff);
   }
 
@@ -3815,7 +4013,7 @@ var RICH_PREVIEW_STYLES = css`
     min-height: 96px;
     max-width: 100%;
     overflow: auto;
-    padding: var(--awwbookmarklet-space-3, 12px);
+    padding: var(--awwbookmarklet-surface-padding, var(--awwbookmarklet-space-3, 12px));
   }
 
   .empty {
@@ -3868,8 +4066,8 @@ var RICH_PREVIEW_STYLES = css`
 
   .content th,
   .content td {
-    border: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
-    padding: 4px 6px;
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-divider-color, #c3cad4);
+    padding: var(--awwbookmarklet-space-1, 4px) var(--awwbookmarklet-space-2, 6px);
     vertical-align: top;
   }
 
@@ -3882,7 +4080,7 @@ var RICH_PREVIEW_STYLES = css`
   .content pre {
     overflow: auto;
     max-width: 100%;
-    padding: 8px;
+    padding: var(--awwbookmarklet-surface-padding, 8px);
     background: var(--awwbookmarklet-code-bg, #e8edf4);
     color: var(--awwbookmarklet-code-fg, #172131);
   }
@@ -3890,7 +4088,7 @@ var RICH_PREVIEW_STYLES = css`
   .content code {
     background: var(--awwbookmarklet-code-bg, #e8edf4);
     color: var(--awwbookmarklet-code-fg, #172131);
-    padding: 0 3px;
+    padding: 0 var(--awwbookmarklet-space-1, 3px);
   }
 
   .content pre code {
@@ -3950,7 +4148,8 @@ var BROWSER_PANEL_STYLES = css`
     display: grid;
     min-height: 220px;
     min-width: 0;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_surface-radius);
     background: var(--awwbookmarklet-surface-inset-bg, #e7ebf1);
   }
 
@@ -3965,9 +4164,9 @@ var BROWSER_PANEL_STYLES = css`
   .chrome {
     display: flex;
     align-items: center;
-    gap: var(--awwbookmarklet-space-2, 8px);
-    padding: 6px;
-    border-bottom: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    gap: var(--awwbookmarklet-surface-gap, var(--awwbookmarklet-space-2, 8px));
+    padding: var(--awwbookmarklet-surface-padding, 6px);
+    border-bottom: var(--_surface-border-width) solid var(--awwbookmarklet-divider-color, #c3cad4);
     background: var(--awwbookmarklet-surface-raised-bg, #fff);
   }
 
@@ -3985,7 +4184,7 @@ var BROWSER_PANEL_STYLES = css`
     height: 100%;
     min-height: 180px;
     border: 0;
-    background: #fff;
+    background: var(--awwbookmarklet-surface-raised-bg, #fff);
   }
 
   .overlay {
@@ -4001,7 +4200,8 @@ var BROWSER_PANEL_STYLES = css`
 
   button {
     min-height: 26px;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: var(--awwbookmarklet-button-bg, #f1f4f8);
     color: var(--awwbookmarklet-button-fg, #111720);
     font: inherit;
@@ -4082,15 +4282,16 @@ class AwwBrowserPanel extends HTMLElement {
 var MANUAL_COPY_STYLES = css`
   :host {
     display: block;
-    border: 1px solid var(--awwbookmarklet-warning-border, #d9ad3b);
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-warning-border, #d9ad3b);
+    border-radius: var(--_surface-radius);
     background: var(--awwbookmarklet-warning-bg, #fff4d6);
     color: var(--awwbookmarklet-warning-fg, #6d4b00);
-    padding: var(--awwbookmarklet-space-2, 8px);
+    padding: var(--awwbookmarklet-surface-padding, var(--awwbookmarklet-space-2, 8px));
   }
 
   .wrap {
     display: grid;
-    gap: 6px;
+    gap: var(--awwbookmarklet-surface-gap, 6px);
   }
 
   .label {
@@ -4100,11 +4301,12 @@ var MANUAL_COPY_STYLES = css`
   textarea {
     min-height: 92px;
     width: 100%;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: var(--awwbookmarklet-input-bg, #fff);
     color: var(--awwbookmarklet-input-fg, #111720);
     font: inherit;
-    padding: 8px;
+    padding: var(--awwbookmarklet-input-padding-x, 8px);
   }
 `;
 
@@ -4162,10 +4364,12 @@ var COMMAND_PALETTE_STYLES = css`
   input {
     width: 100%;
     min-height: var(--awwbookmarklet-size-control-h, 30px);
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: var(--awwbookmarklet-input-bg, #fff);
     color: var(--awwbookmarklet-input-fg, #111720);
-    padding: 0 8px;
+    padding-block: var(--awwbookmarklet-input-padding-y, var(--awwbookmarklet-control-padding-y, 0));
+    padding-inline: var(--awwbookmarklet-input-padding-x, 8px);
     font: inherit;
   }
 
@@ -4176,7 +4380,7 @@ var COMMAND_PALETTE_STYLES = css`
 
   .list {
     display: grid;
-    gap: 4px;
+    gap: var(--awwbookmarklet-space-1, 4px);
     max-height: 280px;
     overflow: auto;
   }
@@ -4184,11 +4388,12 @@ var COMMAND_PALETTE_STYLES = css`
   .command {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: 8px;
+    gap: var(--awwbookmarklet-surface-gap, 8px);
     align-items: start;
-    border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-radius: var(--_surface-radius);
     background: var(--awwbookmarklet-card-bg, #fbfcfe);
-    padding: 7px 8px;
+    padding: var(--awwbookmarklet-card-padding, 8px);
     text-align: left;
     color: var(--awwbookmarklet-input-fg, #111720);
     font: inherit;
@@ -4222,7 +4427,8 @@ var COMMAND_PALETTE_STYLES = css`
   }
 
   .empty {
-    border: 1px dashed var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border: var(--_surface-border-width) dashed var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-radius: var(--_surface-radius);
     color: var(--awwbookmarklet-text-muted, #586272);
     padding: var(--awwbookmarklet-space-3, 12px);
     text-align: center;
@@ -4533,17 +4739,19 @@ var URL_PICKER_STYLES = css`
 
   .picker {
     display: grid;
-    gap: 4px;
+    gap: var(--awwbookmarklet-space-1, 4px);
     min-width: 0;
   }
 
   input {
     width: 100%;
     min-height: var(--awwbookmarklet-size-control-h, 30px);
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: var(--awwbookmarklet-input-bg, #fff);
     color: var(--awwbookmarklet-input-fg, #111720);
-    padding: 0 8px;
+    padding-block: var(--awwbookmarklet-input-padding-y, var(--awwbookmarklet-control-padding-y, 0));
+    padding-inline: var(--awwbookmarklet-input-padding-x, 8px);
     font: inherit;
   }
 
@@ -4556,7 +4764,8 @@ var URL_PICKER_STYLES = css`
     display: none;
     max-height: 240px;
     overflow: auto;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_surface-radius);
     background: var(--awwbookmarklet-menu-bg, #f8fbff);
   }
 
@@ -4569,10 +4778,10 @@ var URL_PICKER_STYLES = css`
     gap: 2px;
     min-width: 0;
     border: 0;
-    border-bottom: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    border-bottom: var(--_surface-border-width) solid var(--awwbookmarklet-divider-color, #c3cad4);
     background: transparent;
     color: var(--awwbookmarklet-menu-fg, #0e1621);
-    padding: 7px 8px;
+    padding: var(--awwbookmarklet-card-padding, 8px);
     text-align: left;
     font: inherit;
   }
@@ -4740,11 +4949,12 @@ var METRIC_CARD_STYLES = css`
 
   .metric {
     display: grid;
-    gap: 4px;
+    gap: var(--awwbookmarklet-space-1, 4px);
     min-width: 0;
-    border: 1px solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    border: var(--_surface-border-width) solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    border-radius: var(--_surface-radius);
     background: var(--awwbookmarklet-metric-bg, var(--awwbookmarklet-surface-raised-bg, #fff));
-    padding: var(--awwbookmarklet-space-2, 8px);
+    padding: var(--awwbookmarklet-card-padding, var(--awwbookmarklet-surface-padding, 8px));
   }
 
   .label,
@@ -4855,82 +5065,6 @@ function registerAllComponents() {
     [TAGS.metricCard, AwwMetricCard]
   ]);
 }
-
-// src/themes/default-theme.js
-var DEFAULT_THEME = {
-  [PUBLIC_TOKENS.workspaceBg]: "rgba(0, 0, 0, 0)",
-  [PUBLIC_TOKENS.windowBg]: "#eef1f5",
-  [PUBLIC_TOKENS.panelBg]: "#f3f5f7",
-  [PUBLIC_TOKENS.titlebarActiveBg]: "#dce2e9",
-  [PUBLIC_TOKENS.titlebarInactiveBg]: "#cfd5dd",
-  [PUBLIC_TOKENS.titlebarFg]: "#121820",
-  [PUBLIC_TOKENS.borderStrong]: "#4f5966",
-  [PUBLIC_TOKENS.borderSubtle]: "#a8b0ba",
-  [PUBLIC_TOKENS.focusRing]: "#174f9c",
-  [PUBLIC_TOKENS.buttonBg]: "#edf1f5",
-  [PUBLIC_TOKENS.buttonFg]: "#111720",
-  [PUBLIC_TOKENS.buttonActiveBg]: "#d8dee6",
-  [PUBLIC_TOKENS.inputBg]: "#f8f9fa",
-  [PUBLIC_TOKENS.inputFg]: "#111720",
-  [PUBLIC_TOKENS.menuBg]: "#f3f5f7",
-  [PUBLIC_TOKENS.menuFg]: "#0e1621",
-  [PUBLIC_TOKENS.selectionBg]: "#1f5eae",
-  [PUBLIC_TOKENS.selectionFg]: "#f2f8ff",
-  [PUBLIC_TOKENS.statusbarBg]: "#e2e7ed",
-  [PUBLIC_TOKENS.appShellBg]: "#eef1f5",
-  [PUBLIC_TOKENS.surfaceRaisedBg]: "#fbfcfd",
-  [PUBLIC_TOKENS.surfaceInsetBg]: "#dfe4ea",
-  [PUBLIC_TOKENS.textMuted]: "#44505f",
-  [PUBLIC_TOKENS.textHelp]: "#5f6a78",
-  [PUBLIC_TOKENS.dividerColor]: "#c7cdd5",
-  [PUBLIC_TOKENS.infoBg]: "#e8f2ff",
-  [PUBLIC_TOKENS.infoFg]: "#18549e",
-  [PUBLIC_TOKENS.infoBorder]: "#8db4e8",
-  [PUBLIC_TOKENS.successBg]: "#e7f4eb",
-  [PUBLIC_TOKENS.successFg]: "#1e6a3a",
-  [PUBLIC_TOKENS.successBorder]: "#86ba91",
-  [PUBLIC_TOKENS.warningBg]: "#fff4d8",
-  [PUBLIC_TOKENS.warningFg]: "#76520c",
-  [PUBLIC_TOKENS.warningBorder]: "#d7ad4d",
-  [PUBLIC_TOKENS.dangerBg]: "#fff0ee",
-  [PUBLIC_TOKENS.dangerFg]: "#a12824",
-  [PUBLIC_TOKENS.dangerBorder]: "#da7b73",
-  [PUBLIC_TOKENS.overlayBackdrop]: "rgba(12, 18, 28, 0.38)",
-  [PUBLIC_TOKENS.overlayShadow]: "0 18px 44px rgba(0, 0, 0, 0.24)",
-  [PUBLIC_TOKENS.cardBg]: "#fbfcfe",
-  [PUBLIC_TOKENS.cardSelectedBg]: "#e8f1ff",
-  [PUBLIC_TOKENS.metricBg]: "#ffffff",
-  [PUBLIC_TOKENS.codeBg]: "#e8edf4",
-  [PUBLIC_TOKENS.codeFg]: "#172131",
-  [PUBLIC_TOKENS.shadowDepth]: "inset 1px 1px 0 #ffffff, inset -1px -1px 0 #a8b0ba",
-  [PUBLIC_TOKENS.frostOpacity]: "1",
-  [PUBLIC_TOKENS.space1]: "4px",
-  [PUBLIC_TOKENS.space2]: "8px",
-  [PUBLIC_TOKENS.space3]: "12px",
-  [PUBLIC_TOKENS.controlHeight]: "30px",
-  [PUBLIC_TOKENS.titleHeight]: "32px"
-};
-
-// src/core/theme.js
-class ThemeService {
-  #theme;
-  constructor(theme = DEFAULT_THEME) {
-    this.#theme = { ...theme };
-  }
-  get tokens() {
-    return { ...this.#theme };
-  }
-  setTheme(themePatch) {
-    this.#theme = { ...this.#theme, ...themePatch };
-    return this.tokens;
-  }
-  applyTheme(target) {
-    for (const [token, value] of Object.entries(this.#theme)) {
-      target.style.setProperty(token, value);
-    }
-  }
-}
-var defaultThemeService = new ThemeService(DEFAULT_THEME);
 
 // src/core/window-manager.js
 class WindowManager {
@@ -5352,9 +5486,11 @@ function nextOwner(prefix) {
   serial += 1;
   return `${prefix}-${serial}`;
 }
-function mountWindow(win, prefix) {
+function mountWindow(win, prefix, theme = null) {
   const owner = nextOwner(prefix);
   const record = acquireDesktopRoot(owner);
+  if (theme)
+    applyThemePatch(win, theme);
   record.root.append(win);
   win.addEventListener("awwbookmarklet-window-closed", () => releaseDesktopRoot(owner), { once: true });
   return win;
@@ -5375,6 +5511,104 @@ function openBlank() {
   `;
   win.setRect({ x: 110, y: 80, width: 430, height: 270 });
   mountWindow(win, "blank");
+}
+var THEME_RECIPES = {
+  default: {},
+  accent: {
+    [PUBLIC_TOKENS.selectionBg]: "#2f6f4e",
+    [PUBLIC_TOKENS.selectionFg]: "#f4fff8",
+    [PUBLIC_TOKENS.focusRing]: "#1f7a4a",
+    [PUBLIC_TOKENS.titlebarActiveBg]: "#d8e6dc",
+    [PUBLIC_TOKENS.windowBg]: "#f1f5f2",
+    [PUBLIC_TOKENS.panelBg]: "#fbfdfb"
+  },
+  compact: {
+    [PUBLIC_TOKENS.space1]: "3px",
+    [PUBLIC_TOKENS.space2]: "6px",
+    [PUBLIC_TOKENS.space3]: "8px",
+    [PUBLIC_TOKENS.controlHeight]: "26px",
+    [PUBLIC_TOKENS.titleHeight]: "28px",
+    [PUBLIC_TOKENS.controlPaddingX]: "8px",
+    [PUBLIC_TOKENS.buttonPaddingX]: "8px",
+    [PUBLIC_TOKENS.inputPaddingX]: "6px",
+    [PUBLIC_TOKENS.windowBodyPadding]: "8px",
+    [PUBLIC_TOKENS.panelPadding]: "6px",
+    [PUBLIC_TOKENS.cardPadding]: "6px",
+    [PUBLIC_TOKENS.menuItemHeight]: "26px"
+  },
+  rounded: {
+    [PUBLIC_TOKENS.radiusControl]: "4px",
+    [PUBLIC_TOKENS.radiusSurface]: "6px",
+    [PUBLIC_TOKENS.radiusWindow]: "8px",
+    [PUBLIC_TOKENS.windowBg]: "#f4f2f0",
+    [PUBLIC_TOKENS.panelBg]: "#fbfaf8",
+    [PUBLIC_TOKENS.selectionBg]: "#725c3a",
+    [PUBLIC_TOKENS.focusRing]: "#8a6d3b",
+    [PUBLIC_TOKENS.buttonShadow]: "none"
+  },
+  highContrast: {
+    [PUBLIC_TOKENS.windowBg]: "#ffffff",
+    [PUBLIC_TOKENS.panelBg]: "#ffffff",
+    [PUBLIC_TOKENS.surfaceRaisedBg]: "#ffffff",
+    [PUBLIC_TOKENS.surfaceInsetBg]: "#eeeeee",
+    [PUBLIC_TOKENS.inputBg]: "#ffffff",
+    [PUBLIC_TOKENS.inputFg]: "#000000",
+    [PUBLIC_TOKENS.textMuted]: "#222222",
+    [PUBLIC_TOKENS.borderStrong]: "#000000",
+    [PUBLIC_TOKENS.borderSubtle]: "#333333",
+    [PUBLIC_TOKENS.dividerColor]: "#333333",
+    [PUBLIC_TOKENS.selectionBg]: "#003b8e",
+    [PUBLIC_TOKENS.selectionFg]: "#ffffff",
+    [PUBLIC_TOKENS.focusRing]: "#ffbf00",
+    [PUBLIC_TOKENS.focusRingWidth]: "3px"
+  }
+};
+function buildThemeDemoWindow(label) {
+  const win = document.createElement(TAGS.window);
+  win.setAttribute("title", `${label} Theme`);
+  win.innerHTML = `
+    <${TAGS.menubar} slot="menubar">
+      <button type="button" data-menu="theme">Theme</button>
+      <${TAGS.menu} name="theme">
+        <button type="button" data-command="theme.apply">Apply recipe</button>
+        <button type="button" data-command="theme.inspect">Inspect tokens</button>
+      </${TAGS.menu}>
+    </${TAGS.menubar}>
+    <${TAGS.toolbar} slot="toolbar" wrap>
+      <${TAGS.button} variant="primary">Primary</${TAGS.button}>
+      <${TAGS.button}>Default</${TAGS.button}>
+      <${TAGS.button} variant="ghost">Ghost</${TAGS.button}>
+      <${TAGS.iconButton} label="Refresh">${iconSvg("refresh")}</${TAGS.iconButton}>
+    </${TAGS.toolbar}>
+    <${TAGS.appShell}>
+      <span slot="title">${label} recipe</span>
+      <span slot="subtitle">A real window-scoped theme using framework tokens.</span>
+      <${TAGS.alert} tone="warning" title="Portal check">Open the Theme menu to verify the portaled menu keeps this window's theme.</${TAGS.alert}>
+      <${TAGS.panel}>
+        <span slot="title">Controls</span>
+        <${TAGS.field} label="Search"><${TAGS.input} value="tokenized controls"></${TAGS.input}></${TAGS.field}>
+        <${TAGS.field} label="Mode"><${TAGS.select}><option>Preview</option><option>Capture</option></${TAGS.select}></${TAGS.field}>
+        <${TAGS.tabs}>
+          <${TAGS.tabPanel} label="Cards" selected>
+            <${TAGS.card} selected>
+              <span slot="title">Selected card</span>
+              <span slot="meta">Radius, padding, borders, and focus are token-driven.</span>
+            </${TAGS.card}>
+          </${TAGS.tabPanel}>
+          <${TAGS.tabPanel} label="State">
+            <${TAGS.statusLine} tone="success">Theme applied before visible mount.</${TAGS.statusLine}>
+          </${TAGS.tabPanel}>
+        </${TAGS.tabs}>
+      </${TAGS.panel}>
+    </${TAGS.appShell}>
+    <${TAGS.statusbar} slot="statusbar"><span>${label}</span><span>window scoped</span><span>tokens</span></${TAGS.statusbar}>
+  `;
+  win.setRect({ x: 120 + serial * 18, y: 96 + serial * 18, width: 560, height: 460 });
+  return win;
+}
+function openThemeDemo(name) {
+  const label = name === "highContrast" ? "High Contrast" : name[0].toUpperCase() + name.slice(1);
+  mountWindow(buildThemeDemoWindow(label), `theme-${name}`, THEME_RECIPES[name]);
 }
 function button(label, options = {}) {
   const { variant = "secondary", icon = "", id = "", disabled = false, aria = "" } = options;
@@ -5829,6 +6063,58 @@ function commandSurfacesScreen() {
     </div>
   `;
 }
+function themeDemoScreen() {
+  return `
+    <div class="screen-heading"><strong>Theming</strong><span>Window-scoped recipes using public tokens for accent, density, radius, and contrast.</span></div>
+    <div class="screen-grid">
+      ${panel({
+    title: "Theme Recipes",
+    icon: "gear",
+    className: "span-12",
+    body: `
+          <div class="action-grid">
+            ${button("Open Default", { id: "theme-default" })}
+            ${button("Open Accent", { variant: "primary", id: "theme-accent" })}
+            ${button("Open Compact", { id: "theme-compact" })}
+            ${button("Open Rounded", { id: "theme-rounded" })}
+            ${button("Open High Contrast", { variant: "danger", id: "theme-highContrast" })}
+          </div>
+          <div class="inline-states">
+            ${stateCard("info", "info", "Root themes", "Use setTheme(theme) when every tool in a suite should share one look.")}
+            ${stateCard("success", "success", "Window themes", "Use mountWindow(win, { theme }) for independent tools on one desktop root.")}
+            ${stateCard("warning", "warning", "Escape hatch", "::part is available for rare local overrides after tokens solve the common case.")}
+          </div>
+        `
+  })}
+      ${panel({
+    title: "Recipe Tokens",
+    icon: "table",
+    className: "span-6",
+    body: `
+          <table class="state-table">
+            <thead><tr><th>Recipe</th><th>Primary tokens</th></tr></thead>
+            <tbody>
+              <tr><th>Accent</th><td><span class="matrix-cell matrix-cell--success"><strong>selectionBg, focusRing, windowBg</strong><small>Tool identity without changing layout.</small></span></td></tr>
+              <tr><th>Compact</th><td><span class="matrix-cell matrix-cell--info"><strong>space*, controlHeight, menuItemHeight</strong><small>Denser operation surfaces.</small></span></td></tr>
+              <tr><th>Rounded</th><td><span class="matrix-cell matrix-cell--neutral"><strong>radiusControl, radiusSurface, radiusWindow</strong><small>Softer shape while preserving structure.</small></span></td></tr>
+              <tr><th>High contrast</th><td><span class="matrix-cell matrix-cell--warning"><strong>border*, focusRingWidth, state colors</strong><small>Stronger visibility and keyboard focus.</small></span></td></tr>
+            </tbody>
+          </table>
+        `
+  })}
+      ${panel({
+    title: "Scoped Theme Behavior",
+    icon: "window",
+    className: "span-6",
+    body: miniWindow({
+      title: "Two tools / one root",
+      body: `<div class="shell-register"><span>root: shared</span><span>tool A: accent</span><span>tool B: compact</span><span>menus: copied context</span></div><p class="inline-note">Each themed window receives CSS variables on the window host before it is appended to the desktop root.</p>`,
+      footer: `<span>No root repaint</span><span>Portal context copied</span>`
+    })
+  })}
+    </div>
+  `;
+}
 function migrationProofScreen() {
   const cards = [
     ["Rich Text to Markdown", "Local editor chrome, preview tabs, markdown export, and manual copy fallback.", ["app shell", "preview", "manual copy"]],
@@ -5905,6 +6191,7 @@ function buildPage() {
     ["patterns", "App Patterns"],
     ["states", "Content States"],
     ["commands", "Command Surfaces"],
+    ["themes", "Theming"],
     ["migration", "Migration Proof"]
   ].map(([id, label], index) => `<button id="tab-${id}" role="tab" aria-controls="panel-${id}" aria-selected="${index === 0 ? "true" : "false"}" tabindex="${index === 0 ? "0" : "-1"}" data-tab="${id}">${label}</button>`).join("")}
       </div>
@@ -5914,6 +6201,7 @@ function buildPage() {
         <div id="panel-patterns" role="tabpanel" aria-labelledby="tab-patterns" data-panel="patterns" hidden>${appPatternsScreen()}</div>
         <div id="panel-states" role="tabpanel" aria-labelledby="tab-states" data-panel="states" hidden>${contentStatesScreen()}</div>
         <div id="panel-commands" role="tabpanel" aria-labelledby="tab-commands" data-panel="commands" hidden>${commandSurfacesScreen()}</div>
+        <div id="panel-themes" role="tabpanel" aria-labelledby="tab-themes" data-panel="themes" hidden>${themeDemoScreen()}</div>
         <div id="panel-migration" role="tabpanel" aria-labelledby="tab-migration" data-panel="migration" hidden>${migrationProofScreen()}</div>
       </section>
       <footer class="bottom-status"><span>Ready</span><span>RetroOS 3.11</span><span>CAPS</span><span>NUM</span><span>SCRL</span></footer>
@@ -5953,6 +6241,10 @@ function wireInteractions(root) {
       showToast({ key: "demo-toast", message: "Operation completed", tone: "success", timeout: 1800 });
     if (event.target.closest("#toast-warning"))
       showToast({ key: "demo-toast", message: "Manual fallback may be required", tone: "warning", timeout: 2200 });
+    for (const name of Object.keys(THEME_RECIPES)) {
+      if (event.target.closest(`#theme-${name}`))
+        openThemeDemo(name);
+    }
     if (event.target.closest("#open-demo-dialog"))
       root.querySelector("#demo-dialog")?.show();
     if (event.target.closest("#demo-dialog-close"))

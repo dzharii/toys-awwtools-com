@@ -4,18 +4,21 @@ const LISTBOX_STYLES = css`
   :host { display: block; }
 
   #list {
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: var(--awwbookmarklet-input-bg, #fff);
     min-height: 120px;
     max-height: 260px;
     overflow: auto;
-    padding: 2px;
+    padding: var(--awwbookmarklet-space-1, 4px);
   }
 
   ::slotted([role="option"]) {
     display: block;
-    padding: 6px 8px;
-    border: 1px solid transparent;
+    padding-block: var(--awwbookmarklet-space-2, 6px);
+    padding-inline: var(--awwbookmarklet-input-padding-x, 8px);
+    border: var(--_control-border-width) solid transparent;
+    border-radius: var(--_control-radius);
     user-select: none;
   }
 

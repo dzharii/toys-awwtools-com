@@ -9,15 +9,16 @@ const LIST_ITEM_STYLES = css`
   .item {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: var(--awwbookmarklet-space-2, 8px);
+    gap: var(--awwbookmarklet-surface-gap, var(--awwbookmarklet-space-2, 8px));
     align-items: start;
-    border: 1px solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    border: var(--_surface-border-width) solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    border-radius: var(--_surface-radius);
     background: var(--_bg, var(--awwbookmarklet-card-bg, #fbfcfe));
-    padding: var(--awwbookmarklet-space-2, 8px);
+    padding: var(--awwbookmarklet-card-padding, var(--awwbookmarklet-surface-padding, 8px));
     color: var(--_fg, var(--awwbookmarklet-input-fg, #111720));
   }
 
-  :host([compact]) .item { padding: 6px; }
+  :host([compact]) .item { padding: var(--awwbookmarklet-space-2, 6px); }
   :host([interactive]) .item,
   :host([selectable]) .item { cursor: pointer; }
   :host([selected]) .item { --_bg: var(--awwbookmarklet-card-selected-bg, #e8f1ff); --_border: var(--awwbookmarklet-selection-bg, #1f5eae); }

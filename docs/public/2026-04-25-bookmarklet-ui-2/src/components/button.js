@@ -5,13 +5,14 @@ const BUTTON_STYLES = css`
 
   button {
     min-height: var(--awwbookmarklet-size-control-h, 30px);
-    min-width: 72px;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
-    border-radius: 0;
+    min-width: var(--awwbookmarklet-button-min-width, var(--awwbookmarklet-control-min-width, 72px));
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: linear-gradient(180deg, color-mix(in srgb, var(--awwbookmarklet-button-bg, #f1f4f8) 92%, #ffffff 8%), var(--awwbookmarklet-button-bg, #f1f4f8));
     color: var(--awwbookmarklet-button-fg, #111720);
-    box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 var(--awwbookmarklet-border-subtle, #9ba5b3);
-    padding: 0 12px;
+    box-shadow: var(--awwbookmarklet-button-shadow, inset 1px 1px 0 #ffffff, inset -1px -1px 0 var(--awwbookmarklet-border-subtle, #9ba5b3));
+    padding-block: var(--awwbookmarklet-button-padding-y, var(--awwbookmarklet-control-padding-y, 0));
+    padding-inline: var(--awwbookmarklet-button-padding-x, var(--awwbookmarklet-control-padding-x, 12px));
     font: inherit;
     line-height: 1;
   }
@@ -61,7 +62,7 @@ const BUTTON_STYLES = css`
 
   :host([pressed]) button {
     background: var(--awwbookmarklet-button-active-bg, #dbe3ee);
-    box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.18);
+    box-shadow: var(--awwbookmarklet-button-active-shadow, inset 1px 1px 0 rgba(0, 0, 0, 0.18));
   }
 `;
 

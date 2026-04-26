@@ -9,11 +9,12 @@ const METRIC_CARD_STYLES = css`
 
   .metric {
     display: grid;
-    gap: 4px;
+    gap: var(--awwbookmarklet-space-1, 4px);
     min-width: 0;
-    border: 1px solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    border: var(--_surface-border-width) solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    border-radius: var(--_surface-radius);
     background: var(--awwbookmarklet-metric-bg, var(--awwbookmarklet-surface-raised-bg, #fff));
-    padding: var(--awwbookmarklet-space-2, 8px);
+    padding: var(--awwbookmarklet-card-padding, var(--awwbookmarklet-surface-padding, 8px));
   }
 
   .label,

@@ -16,10 +16,12 @@ const COMMAND_PALETTE_STYLES = css`
   input {
     width: 100%;
     min-height: var(--awwbookmarklet-size-control-h, 30px);
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: var(--awwbookmarklet-input-bg, #fff);
     color: var(--awwbookmarklet-input-fg, #111720);
-    padding: 0 8px;
+    padding-block: var(--awwbookmarklet-input-padding-y, var(--awwbookmarklet-control-padding-y, 0));
+    padding-inline: var(--awwbookmarklet-input-padding-x, 8px);
     font: inherit;
   }
 
@@ -30,7 +32,7 @@ const COMMAND_PALETTE_STYLES = css`
 
   .list {
     display: grid;
-    gap: 4px;
+    gap: var(--awwbookmarklet-space-1, 4px);
     max-height: 280px;
     overflow: auto;
   }
@@ -38,11 +40,12 @@ const COMMAND_PALETTE_STYLES = css`
   .command {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: 8px;
+    gap: var(--awwbookmarklet-surface-gap, 8px);
     align-items: start;
-    border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-radius: var(--_surface-radius);
     background: var(--awwbookmarklet-card-bg, #fbfcfe);
-    padding: 7px 8px;
+    padding: var(--awwbookmarklet-card-padding, 8px);
     text-align: left;
     color: var(--awwbookmarklet-input-fg, #111720);
     font: inherit;
@@ -76,7 +79,8 @@ const COMMAND_PALETTE_STYLES = css`
   }
 
   .empty {
-    border: 1px dashed var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border: var(--_surface-border-width) dashed var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-radius: var(--_surface-radius);
     color: var(--awwbookmarklet-text-muted, #586272);
     padding: var(--awwbookmarklet-space-3, 12px);
     text-align: center;

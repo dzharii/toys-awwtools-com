@@ -6,7 +6,8 @@ const BROWSER_PANEL_STYLES = css`
     display: grid;
     min-height: 220px;
     min-width: 0;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_surface-radius);
     background: var(--awwbookmarklet-surface-inset-bg, #e7ebf1);
   }
 
@@ -21,9 +22,9 @@ const BROWSER_PANEL_STYLES = css`
   .chrome {
     display: flex;
     align-items: center;
-    gap: var(--awwbookmarklet-space-2, 8px);
-    padding: 6px;
-    border-bottom: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    gap: var(--awwbookmarklet-surface-gap, var(--awwbookmarklet-space-2, 8px));
+    padding: var(--awwbookmarklet-surface-padding, 6px);
+    border-bottom: var(--_surface-border-width) solid var(--awwbookmarklet-divider-color, #c3cad4);
     background: var(--awwbookmarklet-surface-raised-bg, #fff);
   }
 
@@ -41,7 +42,7 @@ const BROWSER_PANEL_STYLES = css`
     height: 100%;
     min-height: 180px;
     border: 0;
-    background: #fff;
+    background: var(--awwbookmarklet-surface-raised-bg, #fff);
   }
 
   .overlay {
@@ -57,7 +58,8 @@ const BROWSER_PANEL_STYLES = css`
 
   button {
     min-height: 26px;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: var(--awwbookmarklet-button-bg, #f1f4f8);
     color: var(--awwbookmarklet-button-fg, #111720);
     font: inherit;

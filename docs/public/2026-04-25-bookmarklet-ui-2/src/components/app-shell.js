@@ -12,17 +12,17 @@ const APP_SHELL_STYLES = css`
     display: grid;
     grid-template-rows: auto auto minmax(0, 1fr) auto;
     min-height: 0;
-    gap: var(--awwbookmarklet-space-2, 8px);
-    padding: var(--awwbookmarklet-space-3, 12px);
+    gap: var(--awwbookmarklet-surface-gap, var(--awwbookmarklet-space-2, 8px));
+    padding: var(--awwbookmarklet-window-body-padding, var(--awwbookmarklet-space-3, 12px));
   }
 
   .header {
     display: flex;
     align-items: start;
     justify-content: space-between;
-    gap: var(--awwbookmarklet-space-3, 12px);
+    gap: var(--awwbookmarklet-surface-gap, var(--awwbookmarklet-space-3, 12px));
     min-width: 0;
-    border-bottom: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    border-bottom: var(--_surface-border-width) solid var(--awwbookmarklet-divider-color, #c3cad4);
     padding-bottom: var(--awwbookmarklet-space-2, 8px);
   }
 
@@ -59,7 +59,7 @@ const APP_SHELL_STYLES = css`
   }
 
   .footer {
-    border-top: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
+    border-top: var(--_surface-border-width) solid var(--awwbookmarklet-divider-color, #c3cad4);
     padding-top: var(--awwbookmarklet-space-2, 8px);
   }
 

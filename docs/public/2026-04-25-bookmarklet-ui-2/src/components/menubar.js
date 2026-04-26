@@ -1,28 +1,30 @@
 import { CommandRegistry } from "../core/commands.js";
 import { adoptStyles, BASE_COMPONENT_STYLES, css } from "../core/styles.js";
+import { copyPublicThemeContext } from "../core/theme.js";
 
 const MENUBAR_STYLES = css`
   :host {
     display: block;
     pointer-events: auto;
     background: color-mix(in srgb, var(--awwbookmarklet-panel-bg, #f8fafc) 85%, #d8dee7 15%);
-    padding: 2px;
+    padding: var(--awwbookmarklet-space-1, 4px);
   }
 
   #bar {
     display: flex;
-    gap: 2px;
+    gap: var(--awwbookmarklet-space-1, 4px);
     align-items: center;
     min-height: 28px;
   }
 
   ::slotted([data-menu]) {
     height: 24px;
-    border: 1px solid transparent;
+    border: var(--_control-border-width) solid transparent;
     background: transparent;
     font: inherit;
-    padding: 0 8px;
-    border-radius: 0;
+    padding-block: var(--awwbookmarklet-control-padding-y, 0);
+    padding-inline: var(--awwbookmarklet-menu-item-padding-x, 8px);
+    border-radius: var(--_control-radius);
     color: inherit;
   }
 
@@ -115,6 +117,7 @@ export class AwwMenubar extends HTMLElement {
 
     trigger.dataset.open = "true";
     const overlayRoot = this.closest("awwbookmarklet-window")?.closest("awwbookmarklet-desktop-root");
+    copyPublicThemeContext(trigger, menu);
     menu.portalTo(overlayRoot);
     menu.openAtViewportRect(trigger.getBoundingClientRect());
     this.#openMenuName = menuName;

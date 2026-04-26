@@ -88,7 +88,11 @@ export const BASE_COMPONENT_STYLES = css`
     }
 
     :host {
-      --_ring: 0 0 0 2px var(--awwbookmarklet-focus-ring, #154fbc);
+      --_ring: 0 0 0 var(--awwbookmarklet-focus-ring-width, 2px) var(--awwbookmarklet-focus-ring, #154fbc);
+      --_control-radius: var(--awwbookmarklet-radius-control, 0);
+      --_surface-radius: var(--awwbookmarklet-radius-surface, 0);
+      --_control-border-width: var(--awwbookmarklet-border-width-control, 1px);
+      --_surface-border-width: var(--awwbookmarklet-border-width-surface, 1px);
     }
 
     ::selection {

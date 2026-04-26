@@ -8,17 +8,18 @@ const CARD_STYLES = css`
 
   .card {
     display: grid;
-    gap: var(--awwbookmarklet-space-2, 8px);
-    border: 1px solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    gap: var(--awwbookmarklet-surface-gap, var(--awwbookmarklet-space-2, 8px));
+    border: var(--_surface-border-width) solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    border-radius: var(--_surface-radius);
     background: var(--_bg, var(--awwbookmarklet-card-bg, #fbfcfe));
-    padding: var(--awwbookmarklet-space-2, 8px);
+    padding: var(--awwbookmarklet-card-padding, var(--awwbookmarklet-surface-padding, 8px));
   }
 
   .header {
     display: flex;
     align-items: start;
     justify-content: space-between;
-    gap: var(--awwbookmarklet-space-2, 8px);
+    gap: var(--awwbookmarklet-surface-gap, var(--awwbookmarklet-space-2, 8px));
     min-width: 0;
   }
 
@@ -31,7 +32,7 @@ const CARD_STYLES = css`
   .title { font-weight: 700; overflow-wrap: anywhere; }
   .meta { color: var(--awwbookmarklet-text-muted, #586272); overflow-wrap: anywhere; }
   .body { min-width: 0; line-height: 1.4; }
-  .footer { border-top: 1px solid var(--awwbookmarklet-divider-color, #c3cad4); padding-top: 6px; }
+  .footer { border-top: var(--_surface-border-width) solid var(--awwbookmarklet-divider-color, #c3cad4); padding-top: var(--awwbookmarklet-space-2, 8px); }
 
   :host([selected]) .card { --_bg: var(--awwbookmarklet-card-selected-bg, #e8f1ff); --_border: var(--awwbookmarklet-selection-bg, #1f5eae); }
   :host([data-tone="info"]) { --_border: var(--awwbookmarklet-info-border, #7aa6e8); }

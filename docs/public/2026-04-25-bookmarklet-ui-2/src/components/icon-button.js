@@ -6,10 +6,11 @@ const ICON_BUTTON_STYLES = css`
   button {
     width: var(--awwbookmarklet-size-control-h, 30px);
     height: var(--awwbookmarklet-size-control-h, 30px);
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
-    border-radius: 0;
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: var(--awwbookmarklet-button-bg, #f1f4f8);
     color: var(--awwbookmarklet-button-fg, #111720);
+    box-shadow: var(--awwbookmarklet-button-shadow, none);
     display: grid;
     place-items: center;
     padding: 0;
@@ -24,12 +25,12 @@ const ICON_BUTTON_STYLES = css`
   :host([tone="success"]) button { border-color: var(--awwbookmarklet-success-border, #72b98b); color: var(--awwbookmarklet-success-fg, #195b34); }
   :host([pressed]) button {
     background: var(--awwbookmarklet-button-active-bg, #dbe3ee);
-    box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.18);
+    box-shadow: var(--awwbookmarklet-button-active-shadow, inset 1px 1px 0 rgba(0, 0, 0, 0.18));
   }
 
   ::slotted(svg) {
-    width: 16px;
-    height: 16px;
+    width: var(--awwbookmarklet-control-icon-size, 16px);
+    height: var(--awwbookmarklet-control-icon-size, 16px);
     stroke-width: 1.5;
     stroke: currentColor;
     fill: none;

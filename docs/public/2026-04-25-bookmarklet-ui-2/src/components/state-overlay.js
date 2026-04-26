@@ -9,7 +9,7 @@ const STATE_STYLES = css`
     place-items: center;
     min-height: 96px;
     background: color-mix(in srgb, var(--awwbookmarklet-surface-raised-bg, #fff) 86%, transparent);
-    border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
     z-index: 2;
   }
 
@@ -17,10 +17,10 @@ const STATE_STYLES = css`
 
   .surface {
     display: grid;
-    gap: 8px;
+    gap: var(--awwbookmarklet-surface-gap, 8px);
     justify-items: center;
     max-width: min(420px, calc(100% - 24px));
-    padding: var(--awwbookmarklet-space-3, 12px);
+    padding: var(--awwbookmarklet-surface-padding, var(--awwbookmarklet-space-3, 12px));
     text-align: center;
     color: var(--_fg, var(--awwbookmarklet-input-fg, #111720));
   }
@@ -28,7 +28,8 @@ const STATE_STYLES = css`
   .indicator {
     width: 18px;
     height: 18px;
-    border: 2px solid currentColor;
+    border: var(--awwbookmarklet-focus-ring-width, 2px) solid currentColor;
+    border-radius: var(--_control-radius);
     background: transparent;
   }
 

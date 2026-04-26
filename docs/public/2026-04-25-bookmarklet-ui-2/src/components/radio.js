@@ -7,7 +7,7 @@ const RADIO_STYLES = css`
   label {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--awwbookmarklet-space-2, 8px);
     cursor: pointer;
   }
 
@@ -16,7 +16,7 @@ const RADIO_STYLES = css`
     width: 14px;
     height: 14px;
     margin: 0;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
     background: var(--awwbookmarklet-input-bg, #fff);
     border-radius: 999px;
     position: relative;

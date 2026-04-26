@@ -4,20 +4,21 @@ const GROUP_STYLES = css`
   :host { display: block; }
 
   .group {
-    border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-radius: var(--_surface-radius);
     background: color-mix(in srgb, var(--awwbookmarklet-panel-bg, #f8fafc) 86%, #ffffff 14%);
-    padding: 10px;
+    padding: var(--awwbookmarklet-group-padding, var(--awwbookmarklet-surface-padding, 10px));
   }
 
   .caption {
     font-weight: 600;
-    margin-bottom: 8px;
+    margin-bottom: var(--awwbookmarklet-space-2, 8px);
     color: color-mix(in srgb, var(--awwbookmarklet-input-fg, #111720) 90%, #ffffff 10%);
   }
 
   .content {
     display: grid;
-    gap: var(--awwbookmarklet-space-2, 8px);
+    gap: var(--awwbookmarklet-surface-gap, var(--awwbookmarklet-space-2, 8px));
   }
 `;
 

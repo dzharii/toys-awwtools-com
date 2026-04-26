@@ -6,7 +6,7 @@ const STATUS_LINE_STYLES = css`
     display: flex;
     align-items: center;
     min-height: 22px;
-    gap: 6px;
+    gap: var(--awwbookmarklet-space-2, 6px);
     color: var(--awwbookmarklet-text-muted, #586272);
     line-height: 1.35;
   }
@@ -19,7 +19,8 @@ const STATUS_LINE_STYLES = css`
   .dot {
     width: 7px;
     height: 7px;
-    border: 1px solid currentColor;
+    border: var(--_control-border-width) solid currentColor;
+    border-radius: var(--_control-radius);
     background: currentColor;
     flex: 0 0 auto;
   }

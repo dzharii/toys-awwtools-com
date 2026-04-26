@@ -15,20 +15,22 @@ const ALERT_STYLES = css`
     grid-template-columns: auto minmax(0, 1fr) auto;
     gap: var(--awwbookmarklet-space-2, 8px);
     align-items: start;
-    border: 1px solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    border: var(--_surface-border-width) solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    border-radius: var(--_surface-radius);
     background: var(--_bg, var(--awwbookmarklet-surface-raised-bg, #fff));
     color: var(--_fg, var(--awwbookmarklet-input-fg, #111720));
-    padding: var(--awwbookmarklet-space-2, 8px);
+    padding: var(--awwbookmarklet-surface-padding, var(--awwbookmarklet-space-2, 8px));
   }
 
   :host([compact]) .alert {
-    padding: 6px;
+    padding: var(--awwbookmarklet-space-2, 6px);
   }
 
   .icon {
     width: 14px;
     height: 14px;
-    border: 1px solid currentColor;
+    border: var(--_control-border-width) solid currentColor;
+    border-radius: var(--_control-radius);
     background: currentColor;
     margin-top: 2px;
   }
@@ -52,7 +54,8 @@ const ALERT_STYLES = css`
   }
 
   button {
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: transparent;
     color: inherit;
     font: inherit;

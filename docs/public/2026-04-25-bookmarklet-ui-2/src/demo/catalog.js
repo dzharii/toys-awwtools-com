@@ -1,6 +1,7 @@
-import { TAGS } from "../core/constants.js";
+import { PUBLIC_TOKENS, TAGS } from "../core/constants.js";
 import { registerAllComponents } from "../components/register-all.js";
 import { acquireDesktopRoot, releaseDesktopRoot } from "../core/runtime.js";
+import { applyThemePatch } from "../core/theme.js";
 import { buildExampleToolWindow } from "./example-tool.js";
 import { showToast } from "../components/toast.js";
 import { iconSvg, ICON_NAMES } from "../icons/retro-icons.js";
@@ -17,9 +18,10 @@ function nextOwner(prefix) {
   return `${prefix}-${serial}`;
 }
 
-function mountWindow(win, prefix) {
+function mountWindow(win, prefix, theme = null) {
   const owner = nextOwner(prefix);
   const record = acquireDesktopRoot(owner);
+  if (theme) applyThemePatch(win, theme);
   record.root.append(win);
   win.addEventListener("awwbookmarklet-window-closed", () => releaseDesktopRoot(owner), { once: true });
   return win;
@@ -42,6 +44,107 @@ function openBlank() {
   `;
   win.setRect({ x: 110, y: 80, width: 430, height: 270 });
   mountWindow(win, "blank");
+}
+
+const THEME_RECIPES = {
+  default: {},
+  accent: {
+    [PUBLIC_TOKENS.selectionBg]: "#2f6f4e",
+    [PUBLIC_TOKENS.selectionFg]: "#f4fff8",
+    [PUBLIC_TOKENS.focusRing]: "#1f7a4a",
+    [PUBLIC_TOKENS.titlebarActiveBg]: "#d8e6dc",
+    [PUBLIC_TOKENS.windowBg]: "#f1f5f2",
+    [PUBLIC_TOKENS.panelBg]: "#fbfdfb"
+  },
+  compact: {
+    [PUBLIC_TOKENS.space1]: "3px",
+    [PUBLIC_TOKENS.space2]: "6px",
+    [PUBLIC_TOKENS.space3]: "8px",
+    [PUBLIC_TOKENS.controlHeight]: "26px",
+    [PUBLIC_TOKENS.titleHeight]: "28px",
+    [PUBLIC_TOKENS.controlPaddingX]: "8px",
+    [PUBLIC_TOKENS.buttonPaddingX]: "8px",
+    [PUBLIC_TOKENS.inputPaddingX]: "6px",
+    [PUBLIC_TOKENS.windowBodyPadding]: "8px",
+    [PUBLIC_TOKENS.panelPadding]: "6px",
+    [PUBLIC_TOKENS.cardPadding]: "6px",
+    [PUBLIC_TOKENS.menuItemHeight]: "26px"
+  },
+  rounded: {
+    [PUBLIC_TOKENS.radiusControl]: "4px",
+    [PUBLIC_TOKENS.radiusSurface]: "6px",
+    [PUBLIC_TOKENS.radiusWindow]: "8px",
+    [PUBLIC_TOKENS.windowBg]: "#f4f2f0",
+    [PUBLIC_TOKENS.panelBg]: "#fbfaf8",
+    [PUBLIC_TOKENS.selectionBg]: "#725c3a",
+    [PUBLIC_TOKENS.focusRing]: "#8a6d3b",
+    [PUBLIC_TOKENS.buttonShadow]: "none"
+  },
+  highContrast: {
+    [PUBLIC_TOKENS.windowBg]: "#ffffff",
+    [PUBLIC_TOKENS.panelBg]: "#ffffff",
+    [PUBLIC_TOKENS.surfaceRaisedBg]: "#ffffff",
+    [PUBLIC_TOKENS.surfaceInsetBg]: "#eeeeee",
+    [PUBLIC_TOKENS.inputBg]: "#ffffff",
+    [PUBLIC_TOKENS.inputFg]: "#000000",
+    [PUBLIC_TOKENS.textMuted]: "#222222",
+    [PUBLIC_TOKENS.borderStrong]: "#000000",
+    [PUBLIC_TOKENS.borderSubtle]: "#333333",
+    [PUBLIC_TOKENS.dividerColor]: "#333333",
+    [PUBLIC_TOKENS.selectionBg]: "#003b8e",
+    [PUBLIC_TOKENS.selectionFg]: "#ffffff",
+    [PUBLIC_TOKENS.focusRing]: "#ffbf00",
+    [PUBLIC_TOKENS.focusRingWidth]: "3px"
+  }
+};
+
+function buildThemeDemoWindow(label) {
+  const win = document.createElement(TAGS.window);
+  win.setAttribute("title", `${label} Theme`);
+  win.innerHTML = `
+    <${TAGS.menubar} slot="menubar">
+      <button type="button" data-menu="theme">Theme</button>
+      <${TAGS.menu} name="theme">
+        <button type="button" data-command="theme.apply">Apply recipe</button>
+        <button type="button" data-command="theme.inspect">Inspect tokens</button>
+      </${TAGS.menu}>
+    </${TAGS.menubar}>
+    <${TAGS.toolbar} slot="toolbar" wrap>
+      <${TAGS.button} variant="primary">Primary</${TAGS.button}>
+      <${TAGS.button}>Default</${TAGS.button}>
+      <${TAGS.button} variant="ghost">Ghost</${TAGS.button}>
+      <${TAGS.iconButton} label="Refresh">${iconSvg("refresh")}</${TAGS.iconButton}>
+    </${TAGS.toolbar}>
+    <${TAGS.appShell}>
+      <span slot="title">${label} recipe</span>
+      <span slot="subtitle">A real window-scoped theme using framework tokens.</span>
+      <${TAGS.alert} tone="warning" title="Portal check">Open the Theme menu to verify the portaled menu keeps this window's theme.</${TAGS.alert}>
+      <${TAGS.panel}>
+        <span slot="title">Controls</span>
+        <${TAGS.field} label="Search"><${TAGS.input} value="tokenized controls"></${TAGS.input}></${TAGS.field}>
+        <${TAGS.field} label="Mode"><${TAGS.select}><option>Preview</option><option>Capture</option></${TAGS.select}></${TAGS.field}>
+        <${TAGS.tabs}>
+          <${TAGS.tabPanel} label="Cards" selected>
+            <${TAGS.card} selected>
+              <span slot="title">Selected card</span>
+              <span slot="meta">Radius, padding, borders, and focus are token-driven.</span>
+            </${TAGS.card}>
+          </${TAGS.tabPanel}>
+          <${TAGS.tabPanel} label="State">
+            <${TAGS.statusLine} tone="success">Theme applied before visible mount.</${TAGS.statusLine}>
+          </${TAGS.tabPanel}>
+        </${TAGS.tabs}>
+      </${TAGS.panel}>
+    </${TAGS.appShell}>
+    <${TAGS.statusbar} slot="statusbar"><span>${label}</span><span>window scoped</span><span>tokens</span></${TAGS.statusbar}>
+  `;
+  win.setRect({ x: 120 + serial * 18, y: 96 + serial * 18, width: 560, height: 460 });
+  return win;
+}
+
+function openThemeDemo(name) {
+  const label = name === "highContrast" ? "High Contrast" : name[0].toUpperCase() + name.slice(1);
+  mountWindow(buildThemeDemoWindow(label), `theme-${name}`, THEME_RECIPES[name]);
 }
 
 function button(label, options = {}) {
@@ -513,6 +616,59 @@ function commandSurfacesScreen() {
   `;
 }
 
+function themeDemoScreen() {
+  return `
+    <div class="screen-heading"><strong>Theming</strong><span>Window-scoped recipes using public tokens for accent, density, radius, and contrast.</span></div>
+    <div class="screen-grid">
+      ${panel({
+        title: "Theme Recipes",
+        icon: "gear",
+        className: "span-12",
+        body: `
+          <div class="action-grid">
+            ${button("Open Default", { id: "theme-default" })}
+            ${button("Open Accent", { variant: "primary", id: "theme-accent" })}
+            ${button("Open Compact", { id: "theme-compact" })}
+            ${button("Open Rounded", { id: "theme-rounded" })}
+            ${button("Open High Contrast", { variant: "danger", id: "theme-highContrast" })}
+          </div>
+          <div class="inline-states">
+            ${stateCard("info", "info", "Root themes", "Use setTheme(theme) when every tool in a suite should share one look.")}
+            ${stateCard("success", "success", "Window themes", "Use mountWindow(win, { theme }) for independent tools on one desktop root.")}
+            ${stateCard("warning", "warning", "Escape hatch", "::part is available for rare local overrides after tokens solve the common case.")}
+          </div>
+        `
+      })}
+      ${panel({
+        title: "Recipe Tokens",
+        icon: "table",
+        className: "span-6",
+        body: `
+          <table class="state-table">
+            <thead><tr><th>Recipe</th><th>Primary tokens</th></tr></thead>
+            <tbody>
+              <tr><th>Accent</th><td><span class="matrix-cell matrix-cell--success"><strong>selectionBg, focusRing, windowBg</strong><small>Tool identity without changing layout.</small></span></td></tr>
+              <tr><th>Compact</th><td><span class="matrix-cell matrix-cell--info"><strong>space*, controlHeight, menuItemHeight</strong><small>Denser operation surfaces.</small></span></td></tr>
+              <tr><th>Rounded</th><td><span class="matrix-cell matrix-cell--neutral"><strong>radiusControl, radiusSurface, radiusWindow</strong><small>Softer shape while preserving structure.</small></span></td></tr>
+              <tr><th>High contrast</th><td><span class="matrix-cell matrix-cell--warning"><strong>border*, focusRingWidth, state colors</strong><small>Stronger visibility and keyboard focus.</small></span></td></tr>
+            </tbody>
+          </table>
+        `
+      })}
+      ${panel({
+        title: "Scoped Theme Behavior",
+        icon: "window",
+        className: "span-6",
+        body: miniWindow({
+          title: "Two tools / one root",
+          body: `<div class="shell-register"><span>root: shared</span><span>tool A: accent</span><span>tool B: compact</span><span>menus: copied context</span></div><p class="inline-note">Each themed window receives CSS variables on the window host before it is appended to the desktop root.</p>`,
+          footer: `<span>No root repaint</span><span>Portal context copied</span>`
+        })
+      })}
+    </div>
+  `;
+}
+
 function migrationProofScreen() {
   const cards = [
     ["Rich Text to Markdown", "Local editor chrome, preview tabs, markdown export, and manual copy fallback.", ["app shell", "preview", "manual copy"]],
@@ -591,6 +747,7 @@ function buildPage() {
           ["patterns", "App Patterns"],
           ["states", "Content States"],
           ["commands", "Command Surfaces"],
+          ["themes", "Theming"],
           ["migration", "Migration Proof"]
         ].map(([id, label], index) => `<button id="tab-${id}" role="tab" aria-controls="panel-${id}" aria-selected="${index === 0 ? "true" : "false"}" tabindex="${index === 0 ? "0" : "-1"}" data-tab="${id}">${label}</button>`).join("")}
       </div>
@@ -600,6 +757,7 @@ function buildPage() {
         <div id="panel-patterns" role="tabpanel" aria-labelledby="tab-patterns" data-panel="patterns" hidden>${appPatternsScreen()}</div>
         <div id="panel-states" role="tabpanel" aria-labelledby="tab-states" data-panel="states" hidden>${contentStatesScreen()}</div>
         <div id="panel-commands" role="tabpanel" aria-labelledby="tab-commands" data-panel="commands" hidden>${commandSurfacesScreen()}</div>
+        <div id="panel-themes" role="tabpanel" aria-labelledby="tab-themes" data-panel="themes" hidden>${themeDemoScreen()}</div>
         <div id="panel-migration" role="tabpanel" aria-labelledby="tab-migration" data-panel="migration" hidden>${migrationProofScreen()}</div>
       </section>
       <footer class="bottom-status"><span>Ready</span><span>RetroOS 3.11</span><span>CAPS</span><span>NUM</span><span>SCRL</span></footer>
@@ -637,6 +795,9 @@ function wireInteractions(root) {
     if (tab) selectTab(root, tab.dataset.tab, true);
     if (event.target.closest("#toast-success")) showToast({ key: "demo-toast", message: "Operation completed", tone: "success", timeout: 1800 });
     if (event.target.closest("#toast-warning")) showToast({ key: "demo-toast", message: "Manual fallback may be required", tone: "warning", timeout: 2200 });
+    for (const name of Object.keys(THEME_RECIPES)) {
+      if (event.target.closest(`#theme-${name}`)) openThemeDemo(name);
+    }
     if (event.target.closest("#open-demo-dialog")) root.querySelector("#demo-dialog")?.show();
     if (event.target.closest("#demo-dialog-close")) root.querySelector("#demo-dialog")?.close("demo");
   });

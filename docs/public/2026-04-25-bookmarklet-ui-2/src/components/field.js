@@ -4,7 +4,7 @@ import { adoptStyles, BASE_COMPONENT_STYLES, css } from "../core/styles.js";
 const FIELD_STYLES = css`
   :host {
     display: grid;
-    gap: 4px;
+    gap: var(--awwbookmarklet-space-1, 4px);
     min-width: 0;
   }
 
@@ -14,20 +14,20 @@ const FIELD_STYLES = css`
 
   .field {
     display: grid;
-    gap: 4px;
+    gap: var(--awwbookmarklet-space-1, 4px);
     min-width: 0;
   }
 
   :host([orientation="horizontal"]) .field {
     grid-template-columns: minmax(120px, 0.38fr) minmax(0, 1fr);
-    gap: 8px 12px;
+    gap: var(--awwbookmarklet-space-2, 8px) var(--awwbookmarklet-space-3, 12px);
     align-items: start;
   }
 
   :host([orientation="inline"]) .field {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--awwbookmarklet-space-2, 8px);
   }
 
   .label {
@@ -42,7 +42,7 @@ const FIELD_STYLES = css`
   .control-row {
     display: flex;
     align-items: stretch;
-    gap: 4px;
+    gap: var(--awwbookmarklet-space-1, 4px);
     min-width: 0;
   }
 
@@ -52,7 +52,7 @@ const FIELD_STYLES = css`
 
   .main {
     display: grid;
-    gap: 4px;
+    gap: var(--awwbookmarklet-space-1, 4px);
     min-width: 0;
   }
 

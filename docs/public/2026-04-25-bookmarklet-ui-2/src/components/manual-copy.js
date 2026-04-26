@@ -3,15 +3,16 @@ import { adoptStyles, BASE_COMPONENT_STYLES, css } from "../core/styles.js";
 const MANUAL_COPY_STYLES = css`
   :host {
     display: block;
-    border: 1px solid var(--awwbookmarklet-warning-border, #d9ad3b);
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-warning-border, #d9ad3b);
+    border-radius: var(--_surface-radius);
     background: var(--awwbookmarklet-warning-bg, #fff4d6);
     color: var(--awwbookmarklet-warning-fg, #6d4b00);
-    padding: var(--awwbookmarklet-space-2, 8px);
+    padding: var(--awwbookmarklet-surface-padding, var(--awwbookmarklet-space-2, 8px));
   }
 
   .wrap {
     display: grid;
-    gap: 6px;
+    gap: var(--awwbookmarklet-surface-gap, 6px);
   }
 
   .label {
@@ -21,11 +22,12 @@ const MANUAL_COPY_STYLES = css`
   textarea {
     min-height: 92px;
     width: 100%;
-    border: 1px solid var(--awwbookmarklet-border-strong, #232a33);
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    border-radius: var(--_control-radius);
     background: var(--awwbookmarklet-input-bg, #fff);
     color: var(--awwbookmarklet-input-fg, #111720);
     font: inherit;
-    padding: 8px;
+    padding: var(--awwbookmarklet-input-padding-x, 8px);
   }
 `;
 

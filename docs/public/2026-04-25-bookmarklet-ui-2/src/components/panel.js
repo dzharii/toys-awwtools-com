@@ -3,14 +3,15 @@ import { adoptStyles, BASE_COMPONENT_STYLES, css } from "../core/styles.js";
 const PANEL_STYLES = css`
   :host {
     display: block;
-    border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-radius: var(--_surface-radius);
     background: var(--awwbookmarklet-panel-bg, #f8fafc);
-    padding: var(--awwbookmarklet-space-2, 8px);
+    padding: var(--awwbookmarklet-panel-padding, var(--awwbookmarklet-surface-padding, 8px));
   }
 
   section {
     display: grid;
-    gap: var(--awwbookmarklet-space-2, 8px);
+    gap: var(--awwbookmarklet-surface-gap, var(--awwbookmarklet-space-2, 8px));
     min-width: 0;
   }
 
@@ -18,9 +19,9 @@ const PANEL_STYLES = css`
     display: none;
     align-items: start;
     justify-content: space-between;
-    gap: var(--awwbookmarklet-space-2, 8px);
-    border-bottom: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
-    padding-bottom: 6px;
+    gap: var(--awwbookmarklet-surface-gap, var(--awwbookmarklet-space-2, 8px));
+    border-bottom: var(--_surface-border-width) solid var(--awwbookmarklet-divider-color, #c3cad4);
+    padding-bottom: var(--awwbookmarklet-space-2, 8px);
   }
 
   :host([data-has-header="true"]) .header {
@@ -49,8 +50,8 @@ const PANEL_STYLES = css`
 
   .footer {
     display: none;
-    border-top: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
-    padding-top: 6px;
+    border-top: var(--_surface-border-width) solid var(--awwbookmarklet-divider-color, #c3cad4);
+    padding-top: var(--awwbookmarklet-space-2, 8px);
   }
 
   :host([data-has-footer="true"]) .footer {

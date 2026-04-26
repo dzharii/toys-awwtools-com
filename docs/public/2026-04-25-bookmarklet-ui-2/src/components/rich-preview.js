@@ -5,7 +5,8 @@ const RICH_PREVIEW_STYLES = css`
   :host {
     display: block;
     min-width: 0;
-    border: 1px solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-radius: var(--_surface-radius);
     background: var(--awwbookmarklet-surface-raised-bg, #fff);
   }
 
@@ -13,7 +14,7 @@ const RICH_PREVIEW_STYLES = css`
     min-height: 96px;
     max-width: 100%;
     overflow: auto;
-    padding: var(--awwbookmarklet-space-3, 12px);
+    padding: var(--awwbookmarklet-surface-padding, var(--awwbookmarklet-space-3, 12px));
   }
 
   .empty {
@@ -66,8 +67,8 @@ const RICH_PREVIEW_STYLES = css`
 
   .content th,
   .content td {
-    border: 1px solid var(--awwbookmarklet-divider-color, #c3cad4);
-    padding: 4px 6px;
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-divider-color, #c3cad4);
+    padding: var(--awwbookmarklet-space-1, 4px) var(--awwbookmarklet-space-2, 6px);
     vertical-align: top;
   }
 
@@ -80,7 +81,7 @@ const RICH_PREVIEW_STYLES = css`
   .content pre {
     overflow: auto;
     max-width: 100%;
-    padding: 8px;
+    padding: var(--awwbookmarklet-surface-padding, 8px);
     background: var(--awwbookmarklet-code-bg, #e8edf4);
     color: var(--awwbookmarklet-code-fg, #172131);
   }
@@ -88,7 +89,7 @@ const RICH_PREVIEW_STYLES = css`
   .content code {
     background: var(--awwbookmarklet-code-bg, #e8edf4);
     color: var(--awwbookmarklet-code-fg, #172131);
-    padding: 0 3px;
+    padding: 0 var(--awwbookmarklet-space-1, 3px);
   }
 
   .content pre code {
