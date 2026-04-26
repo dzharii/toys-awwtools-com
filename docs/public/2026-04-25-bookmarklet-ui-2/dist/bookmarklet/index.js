@@ -38,7 +38,12 @@ var TAGS = {
   commandPalette: "awwbookmarklet-command-palette",
   shortcutHelp: "awwbookmarklet-shortcut-help",
   urlPicker: "awwbookmarklet-url-picker",
-  metricCard: "awwbookmarklet-metric-card"
+  metricCard: "awwbookmarklet-metric-card",
+  segmentStrip: "awwbookmarklet-segment-strip",
+  contextBar: "awwbookmarklet-context-bar",
+  statusStrip: "awwbookmarklet-status-strip",
+  titlebar: "awwbookmarklet-titlebar",
+  contextPanel: "awwbookmarklet-context-panel"
 };
 var GLOBAL_SYMBOLS = {
   rootsByVersion: Symbol.for("awwtools.bookmarkletUi.overlayRootsByVersion"),
@@ -5022,6 +5027,807 @@ class AwwMetricCard extends HTMLElement {
   }
 }
 
+// src/core/clipboard.js
+function normalizePayload(payload = {}) {
+  return {
+    text: String(payload.text ?? ""),
+    html: payload.html == null ? "" : String(payload.html),
+    imageBlob: payload.imageBlob ?? null
+  };
+}
+async function copyToClipboard(payload = {}, environment = globalThis) {
+  const normalized = normalizePayload(payload);
+  if (!normalized.text && !normalized.html && !normalized.imageBlob) {
+    return { ok: false, status: "empty", reason: "No clipboard payload was provided.", fallbackText: "" };
+  }
+  const nav = environment.navigator;
+  const clipboard = nav?.clipboard;
+  const fallbackText = normalized.text || normalized.html;
+  if (!clipboard) {
+    return { ok: false, status: "fallback", reason: "Clipboard API is unavailable.", fallbackText };
+  }
+  try {
+    if (normalized.html && typeof clipboard.write === "function" && typeof environment.ClipboardItem === "function") {
+      const item = new environment.ClipboardItem({
+        "text/html": new Blob([normalized.html], { type: "text/html" }),
+        "text/plain": new Blob([normalized.text || normalized.html], { type: "text/plain" })
+      });
+      await clipboard.write([item]);
+      return { ok: true, status: "success", method: "write" };
+    }
+    if (normalized.imageBlob && typeof clipboard.write === "function" && typeof environment.ClipboardItem === "function") {
+      const item = new environment.ClipboardItem({ [normalized.imageBlob.type || "image/png"]: normalized.imageBlob });
+      await clipboard.write([item]);
+      return { ok: true, status: "success", method: "write" };
+    }
+    if (typeof clipboard.writeText === "function" && fallbackText) {
+      await clipboard.writeText(fallbackText);
+      return { ok: true, status: "success", method: "writeText" };
+    }
+    return { ok: false, status: "fallback", reason: "Clipboard API cannot write this payload.", fallbackText };
+  } catch (error) {
+    return {
+      ok: false,
+      status: "failed",
+      reason: error?.message || "Clipboard write failed.",
+      error,
+      fallbackText
+    };
+  }
+}
+
+// src/core/context-segments.js
+function splitUnescapedPipes(value) {
+  const parts = [];
+  let current = "";
+  let escaping = false;
+  for (const char of String(value ?? "")) {
+    if (escaping) {
+      current += char;
+      escaping = false;
+      continue;
+    }
+    if (char === "\\") {
+      escaping = true;
+      continue;
+    }
+    if (char === "|") {
+      parts.push(current);
+      current = "";
+      continue;
+    }
+    current += char;
+  }
+  if (escaping)
+    current += "\\";
+  parts.push(current);
+  return parts;
+}
+function parseContextSegments(value) {
+  return splitUnescapedPipes(value).map((part) => part.trim()).filter(Boolean).map((part, index) => ({
+    key: `segment-${index}`,
+    value: part,
+    kind: "text",
+    tone: "neutral",
+    priority: index
+  }));
+}
+function normalizeContextSegment(segment, index = 0) {
+  if (segment == null)
+    return null;
+  if (typeof segment !== "object") {
+    const value2 = String(segment).trim();
+    if (!value2)
+      return null;
+    return {
+      key: `segment-${index}`,
+      value: value2,
+      kind: "text",
+      tone: "neutral",
+      priority: index,
+      actions: []
+    };
+  }
+  const value = String(segment.value ?? segment.shortValue ?? segment.label ?? "").trim();
+  if (!value)
+    return null;
+  return {
+    key: String(segment.key || `segment-${index}`),
+    label: segment.label == null ? "" : String(segment.label),
+    value,
+    shortValue: segment.shortValue == null ? "" : String(segment.shortValue),
+    copyValue: segment.copyValue == null ? "" : String(segment.copyValue),
+    kind: segment.kind == null ? "text" : String(segment.kind),
+    tone: normalizeTone(segment.tone, "neutral"),
+    priority: Number.isFinite(Number(segment.priority)) ? Number(segment.priority) : index,
+    title: segment.title == null ? "" : String(segment.title),
+    source: segment.source == null ? "" : String(segment.source),
+    stale: Boolean(segment.stale),
+    changed: Boolean(segment.changed),
+    disabled: Boolean(segment.disabled),
+    copyable: Boolean(segment.copyable || segment.copyValue != null),
+    interactive: Boolean(segment.interactive || segment.actions?.length),
+    actions: Array.isArray(segment.actions) ? segment.actions.map((action) => ({
+      id: String(action.id ?? ""),
+      label: String(action.label ?? action.id ?? "")
+    })).filter((action) => action.id) : []
+  };
+}
+function normalizeContextSegments(value) {
+  if (typeof value === "string")
+    return parseContextSegments(value).map(normalizeContextSegment).filter(Boolean);
+  if (!Array.isArray(value))
+    return [];
+  return value.map(normalizeContextSegment).filter(Boolean);
+}
+function getSegmentCopyValue(segment) {
+  if (!segment)
+    return "";
+  return String(segment.copyValue || segment.value || "");
+}
+function segmentsEqual(prev, next) {
+  if (!prev || !next)
+    return false;
+  return prev.key === next.key && prev.value === next.value && prev.shortValue === next.shortValue && prev.copyValue === next.copyValue && prev.label === next.label && prev.kind === next.kind && prev.tone === next.tone && prev.disabled === next.disabled && prev.stale === next.stale && JSON.stringify(prev.actions || []) === JSON.stringify(next.actions || []);
+}
+
+// src/components/segment-strip.js
+var SEGMENT_STRIP_STYLES = css`
+  :host {
+    display: block;
+    min-width: 0;
+    color: var(--awwbookmarklet-input-fg, #111720);
+  }
+
+  .strip {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .segment {
+    min-width: 0;
+    max-width: 24ch;
+    border: var(--_control-border-width) solid transparent;
+    border-radius: var(--_control-radius);
+    color: var(--_fg, inherit);
+    padding-block: var(--awwbookmarklet-control-padding-y, 0);
+    padding-inline: var(--awwbookmarklet-space-1, 4px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .segment[data-interactive="true"] {
+    cursor: pointer;
+  }
+
+  .segment:focus-visible {
+    outline: none;
+    box-shadow: var(--_ring);
+  }
+
+  .segment[data-changed="true"] {
+    background: var(--awwbookmarklet-card-selected-bg, #e8f1ff);
+    border-color: var(--awwbookmarklet-selection-bg, #1f5eae);
+  }
+
+  .segment[data-stale="true"] {
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+  }
+
+  .segment[data-tone="info"] { --_fg: var(--awwbookmarklet-info-fg, #123d7a); }
+  .segment[data-tone="success"] { --_fg: var(--awwbookmarklet-success-fg, #195b34); }
+  .segment[data-tone="warning"] { --_fg: var(--awwbookmarklet-warning-fg, #6d4b00); }
+  .segment[data-tone="danger"] { --_fg: var(--awwbookmarklet-danger-fg, #8a1f17); font-weight: 700; }
+
+  .separator {
+    flex: 0 0 auto;
+    width: 1px;
+    height: 1.3em;
+    margin-inline: var(--awwbookmarklet-space-1, 4px);
+    background: var(--awwbookmarklet-border-subtle, #9ba5b3);
+    box-shadow: 1px 0 0 color-mix(in srgb, var(--awwbookmarklet-surface-raised-bg, #fff) 80%, transparent);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .segment[data-changed="true"] {
+      transition: background-color 160ms ease, border-color 160ms ease;
+    }
+  }
+`;
+function segmentLabel(segment) {
+  const copyValue = getSegmentCopyValue(segment);
+  if (segment.label && copyValue)
+    return `Copy ${segment.label}: ${copyValue}`;
+  if (copyValue)
+    return `Copy segment: ${copyValue}`;
+  return segment.label || segment.value;
+}
+function eventDetail(segment, source, originalEvent) {
+  return {
+    segment,
+    key: segment.key,
+    value: segment.value,
+    copyValue: getSegmentCopyValue(segment),
+    source,
+    anchor: source,
+    originalEvent
+  };
+}
+
+class AwwSegmentStrip extends HTMLElement {
+  static observedAttributes = ["value", "copy-behavior"];
+  #segments = [];
+  #previousByKey = new Map;
+  #changedTimers = new Map;
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, SEGMENT_STRIP_STYLES]);
+    shadow.innerHTML = `<div class="strip" part="strip" role="list"></div>`;
+    this.strip = shadow.querySelector(".strip");
+    this.strip.addEventListener("click", this.#onClick);
+    this.strip.addEventListener("dblclick", this.#onDoubleClick);
+    this.strip.addEventListener("keydown", this.#onKeyDown);
+    this.strip.addEventListener("contextmenu", this.#onContextMenu);
+  }
+  connectedCallback() {
+    this.#render();
+  }
+  disconnectedCallback() {
+    for (const timer of this.#changedTimers.values())
+      clearTimeout(timer);
+    this.#changedTimers.clear();
+  }
+  attributeChangedCallback() {
+    if (this.hasAttribute("value"))
+      this.#segments = normalizeContextSegments(this.getAttribute("value"));
+    this.#render();
+  }
+  get segments() {
+    return this.#segments.map((segment) => ({ ...segment, actions: [...segment.actions || []] }));
+  }
+  set segments(value) {
+    this.#segments = normalizeContextSegments(value);
+    this.removeAttribute("value");
+    this.#render();
+  }
+  #render() {
+    if (!this.strip)
+      return;
+    const nextByKey = new Map(this.#segments.map((segment) => [segment.key, segment]));
+    this.strip.textContent = "";
+    this.#segments.forEach((segment, index) => {
+      if (index > 0) {
+        const separator = document.createElement("span");
+        separator.className = "separator";
+        separator.setAttribute("part", "separator");
+        separator.setAttribute("aria-hidden", "true");
+        this.strip.append(separator);
+      }
+      const node = document.createElement("span");
+      node.className = "segment";
+      node.setAttribute("part", `segment segment-${segment.tone} segment-kind-${segment.kind}`);
+      node.setAttribute("role", "listitem");
+      node.dataset.key = segment.key;
+      node.dataset.kind = segment.kind;
+      node.dataset.tone = segment.tone;
+      node.dataset.stale = String(segment.stale);
+      node.dataset.interactive = String(this.#isInteractive(segment));
+      node.textContent = segment.shortValue || segment.value;
+      node.title = segment.title || (segment.label ? `${segment.label}: ${segment.value}` : segment.value);
+      if (this.#isInteractive(segment)) {
+        node.tabIndex = segment.disabled ? -1 : 0;
+        node.setAttribute("role", "button");
+        node.setAttribute("aria-label", segment.copyable ? segmentLabel(segment) : segment.label || segment.value);
+        node.setAttribute("aria-disabled", segment.disabled ? "true" : "false");
+      }
+      const previous = this.#previousByKey.get(segment.key);
+      if ((segment.changed || previous && !segmentsEqual(previous, segment)) && !segment.disabled) {
+        node.dataset.changed = "true";
+        clearTimeout(this.#changedTimers.get(segment.key));
+        const timer = setTimeout(() => {
+          node.dataset.changed = "false";
+          this.#changedTimers.delete(segment.key);
+        }, 1200);
+        this.#changedTimers.set(segment.key, timer);
+      }
+      this.strip.append(node);
+    });
+    this.#previousByKey = nextByKey;
+  }
+  #segmentFromNode(node) {
+    const key = node?.dataset?.key;
+    return this.#segments.find((segment) => segment.key === key) || null;
+  }
+  #isInteractive(segment) {
+    return !segment.disabled && (segment.copyable || segment.interactive || segment.actions.length > 0);
+  }
+  async#requestCopy(segment, anchor, originalEvent) {
+    if (!segment || segment.disabled || !segment.copyable)
+      return;
+    const detail = eventDetail(segment, anchor, originalEvent);
+    dispatchComponentEvent(this, "awwbookmarklet-segment-copy", detail);
+    if (this.getAttribute("copy-behavior") === "clipboard") {
+      const result = await copyToClipboard({ text: detail.copyValue });
+      dispatchComponentEvent(this, "awwbookmarklet-segment-copy-result", { ...detail, result });
+    }
+  }
+  #activate(segment, anchor, originalEvent) {
+    if (!segment || segment.disabled)
+      return;
+    dispatchComponentEvent(this, "awwbookmarklet-segment-activate", eventDetail(segment, anchor, originalEvent));
+  }
+  #onClick = (event) => {
+    const node = event.target.closest?.(".segment");
+    const segment = this.#segmentFromNode(node);
+    if (segment?.interactive || segment?.actions.length)
+      this.#activate(segment, node, event);
+  };
+  #onDoubleClick = (event) => {
+    const node = event.target.closest?.(".segment");
+    this.#requestCopy(this.#segmentFromNode(node), node, event);
+  };
+  #onKeyDown = (event) => {
+    const node = event.target.closest?.(".segment");
+    const segment = this.#segmentFromNode(node);
+    if (!segment)
+      return;
+    if (event.key === "Enter") {
+      event.preventDefault();
+      if (segment.copyable)
+        this.#requestCopy(segment, node, event);
+      else
+        this.#activate(segment, node, event);
+      return;
+    }
+    if (event.key === " ") {
+      event.preventDefault();
+      this.#activate(segment, node, event);
+    }
+  };
+  #onContextMenu = (event) => {
+    const node = event.target.closest?.(".segment");
+    const segment = this.#segmentFromNode(node);
+    if (!segment || segment.disabled)
+      return;
+    event.preventDefault();
+    dispatchComponentEvent(this, "awwbookmarklet-segment-menu-request", eventDetail(segment, node, event));
+  };
+}
+
+// src/components/context-bar.js
+var CONTEXT_BAR_STYLES = css`
+  :host {
+    display: block;
+    min-width: 0;
+  }
+
+  .bar {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--awwbookmarklet-surface-gap, var(--awwbookmarklet-space-2, 8px));
+    min-height: var(--awwbookmarklet-size-control-h, 30px);
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-radius: var(--_surface-radius);
+    background: var(--awwbookmarklet-surface-raised-bg, #fff);
+    padding-block: var(--awwbookmarklet-control-padding-y, 0);
+    padding-inline: var(--awwbookmarklet-surface-padding, 8px);
+    overflow: hidden;
+  }
+
+  :host([data-density="compact"]) .bar {
+    min-height: 24px;
+    padding-inline: var(--awwbookmarklet-space-2, 6px);
+  }
+
+  :host([data-density="spacious"]) .bar {
+    min-height: calc(var(--awwbookmarklet-size-control-h, 30px) + var(--awwbookmarklet-space-2, 8px));
+  }
+
+  :host([busy]) .bar {
+    cursor: progress;
+  }
+
+  .leading,
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: var(--awwbookmarklet-space-1, 4px);
+    min-width: 0;
+  }
+
+  .leading:empty,
+  .actions:empty {
+    display: none;
+  }
+
+  awwbookmarklet-segment-strip {
+    min-width: 0;
+  }
+
+  .progress {
+    position: absolute;
+    inset: auto 0 0;
+    height: 2px;
+    background: transparent;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    display: block;
+    width: var(--_progress, 0%);
+    height: 100%;
+    background: var(--awwbookmarklet-selection-bg, #1f5eae);
+  }
+
+  :host([busy]:not([progress])) .progress-fill {
+    width: 38%;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :host([busy]:not([progress])) .progress-fill {
+      animation: aww-context-busy 1.1s steps(14, end) infinite;
+    }
+  }
+
+  @keyframes aww-context-busy {
+    from { translate: -100% 0; }
+    to { translate: 260% 0; }
+  }
+`;
+
+class AwwContextBar extends HTMLElement {
+  static observedAttributes = ["value", "copy-behavior", "density", "busy", "progress", "max"];
+  #segments = [];
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, CONTEXT_BAR_STYLES]);
+    shadow.innerHTML = `
+      <section class="bar" part="bar">
+        <div class="leading" part="leading"><slot name="leading"></slot></div>
+        <${TAGS.segmentStrip} part="segments"></${TAGS.segmentStrip}>
+        <div class="actions" part="actions"><slot name="actions"></slot></div>
+        <div class="progress" part="progress"><span class="progress-fill" part="progress-fill"></span></div>
+      </section>
+    `;
+    this.strip = shadow.querySelector(TAGS.segmentStrip);
+  }
+  connectedCallback() {
+    this.#sync();
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  get segments() {
+    return this.#segments;
+  }
+  set segments(value) {
+    this.#segments = Array.isArray(value) ? value : [];
+    this.removeAttribute("value");
+    this.#sync();
+  }
+  get progress() {
+    return Number(this.getAttribute("progress") || "0");
+  }
+  set progress(value) {
+    this.setAttribute("progress", String(value ?? ""));
+  }
+  expand() {
+    dispatchComponentEvent(this, "awwbookmarklet-context-bar-expand", { source: this });
+  }
+  collapse() {
+    dispatchComponentEvent(this, "awwbookmarklet-context-bar-collapse", { source: this });
+  }
+  #sync() {
+    if (!this.strip)
+      return;
+    this.dataset.density = normalizeDensity(this.getAttribute("density"));
+    this.strip.setAttribute("copy-behavior", this.getAttribute("copy-behavior") || "event");
+    if (this.hasAttribute("value"))
+      this.strip.setAttribute("value", this.getAttribute("value") || "");
+    else
+      this.strip.segments = this.#segments;
+    const max = Number(this.getAttribute("max") || "100");
+    const value = Number(this.getAttribute("progress") || "0");
+    const pct = max > 0 ? Math.max(0, Math.min(100, value / max * 100)) : 0;
+    this.style.setProperty("--_progress", `${pct}%`);
+    this.setAttribute("aria-busy", this.hasAttribute("busy") ? "true" : "false");
+  }
+}
+
+// src/components/status-strip.js
+var STATUS_STRIP_STYLES = css`
+  :host {
+    display: block;
+    min-width: 0;
+    background: var(--awwbookmarklet-statusbar-bg, #e5e8ee);
+    border-top: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    color: var(--awwbookmarklet-text-muted, #586272);
+  }
+
+  .status {
+    min-height: 24px;
+    display: flex;
+    align-items: center;
+    padding-inline: var(--awwbookmarklet-space-2, 8px);
+  }
+
+  :host([data-density="compact"]) .status {
+    min-height: 20px;
+    font-size: 12px;
+  }
+
+  awwbookmarklet-segment-strip {
+    width: 100%;
+  }
+`;
+
+class AwwStatusStrip extends HTMLElement {
+  static observedAttributes = ["value", "copy-behavior", "density", "live"];
+  #segments = [];
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, STATUS_STRIP_STYLES]);
+    shadow.innerHTML = `<div class="status" part="status"><${TAGS.segmentStrip} part="segments"></${TAGS.segmentStrip}></div>`;
+    this.strip = shadow.querySelector(TAGS.segmentStrip);
+  }
+  connectedCallback() {
+    this.#sync();
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  get segments() {
+    return this.#segments;
+  }
+  set segments(value) {
+    this.#segments = Array.isArray(value) ? value : [];
+    this.removeAttribute("value");
+    this.#sync();
+  }
+  #sync() {
+    if (!this.strip)
+      return;
+    this.dataset.density = normalizeDensity(this.getAttribute("density"));
+    this.strip.setAttribute("copy-behavior", this.getAttribute("copy-behavior") || "event");
+    if (this.hasAttribute("value"))
+      this.strip.setAttribute("value", this.getAttribute("value") || "");
+    else
+      this.strip.segments = this.#segments;
+    const live = this.getAttribute("live") || "polite";
+    this.setAttribute("aria-live", ["off", "polite", "assertive"].includes(live) ? live : "polite");
+  }
+}
+
+// src/components/titlebar.js
+var TITLEBAR_STYLES = css`
+  :host {
+    display: block;
+    min-width: 0;
+    min-height: var(--awwbookmarklet-size-title-h, 32px);
+    background: linear-gradient(180deg, color-mix(in srgb, #f7f9fb calc(var(--awwbookmarklet-frost-opacity, 1) * 100%), var(--awwbookmarklet-titlebar-active-bg, #dce2e9)), var(--awwbookmarklet-titlebar-active-bg, #dce2e9));
+    color: var(--awwbookmarklet-titlebar-fg, #121820);
+    border-bottom: var(--_surface-border-width) solid var(--awwbookmarklet-border-strong, #232a33);
+    user-select: none;
+  }
+
+  :host([inactive]) {
+    background: linear-gradient(180deg, color-mix(in srgb, #eef2f6 calc(var(--awwbookmarklet-frost-opacity, 1) * 100%), var(--awwbookmarklet-titlebar-inactive-bg, #cfd5dd)), var(--awwbookmarklet-titlebar-inactive-bg, #cfd5dd));
+  }
+
+  .bar {
+    min-height: inherit;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--awwbookmarklet-titlebar-gap, 6px);
+    padding-inline: var(--awwbookmarklet-titlebar-padding-x, 6px);
+  }
+
+  .drag-region {
+    min-width: 0;
+    cursor: grab;
+  }
+
+  .system,
+  .commands {
+    display: flex;
+    align-items: center;
+    gap: var(--awwbookmarklet-space-1, 4px);
+  }
+
+  button {
+    min-width: 22px;
+    height: 22px;
+    border: var(--_control-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-radius: var(--_control-radius);
+    background: var(--awwbookmarklet-button-bg, #edf1f5);
+    color: inherit;
+    font: inherit;
+  }
+
+  button:focus-visible {
+    outline: none;
+    box-shadow: var(--_ring);
+  }
+`;
+
+class AwwTitlebar extends HTMLElement {
+  static observedAttributes = ["value", "title", "inactive"];
+  #segments = [];
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, TITLEBAR_STYLES]);
+    shadow.innerHTML = `
+      <div class="bar" part="bar">
+        <div class="system" part="system"><slot name="system"><button type="button" part="system-button" aria-label="System menu">◫</button></slot></div>
+        <div class="drag-region" part="drag-region">
+          <${TAGS.segmentStrip} part="segments"></${TAGS.segmentStrip}>
+        </div>
+        <div class="commands" part="commands"><slot name="commands"></slot></div>
+      </div>
+    `;
+    this.strip = shadow.querySelector(TAGS.segmentStrip);
+  }
+  connectedCallback() {
+    this.#sync();
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  get segments() {
+    return this.#segments;
+  }
+  set segments(value) {
+    this.#segments = Array.isArray(value) ? value : [];
+    this.removeAttribute("value");
+    this.#sync();
+  }
+  #sync() {
+    if (!this.strip)
+      return;
+    const value = this.getAttribute("value") || this.getAttribute("title") || "";
+    if (value)
+      this.strip.setAttribute("value", value);
+    else
+      this.strip.segments = this.#segments;
+  }
+}
+
+// src/components/context-panel.js
+var CONTEXT_PANEL_STYLES = css`
+  :host {
+    display: block;
+    min-width: 0;
+    border: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3);
+    border-radius: var(--_surface-radius);
+    background: var(--awwbookmarklet-panel-bg, #f8fafc);
+    padding: var(--awwbookmarklet-panel-padding, var(--awwbookmarklet-surface-padding, 8px));
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: var(--awwbookmarklet-surface-gap, 8px);
+  }
+
+  .item {
+    min-width: 0;
+    border: var(--_surface-border-width) solid var(--_border, var(--awwbookmarklet-border-subtle, #9ba5b3));
+    border-radius: var(--_surface-radius);
+    background: var(--awwbookmarklet-surface-raised-bg, #fff);
+    padding: var(--awwbookmarklet-card-padding, 8px);
+    color: var(--_fg, var(--awwbookmarklet-input-fg, #111720));
+  }
+
+  .label {
+    color: var(--awwbookmarklet-text-muted, #586272);
+    font-size: 12px;
+    line-height: 1.3;
+  }
+
+  .value {
+    overflow-wrap: anywhere;
+    font-weight: 650;
+  }
+
+  .item[data-copyable="true"] {
+    cursor: pointer;
+  }
+
+  .item[data-tone="info"] { --_fg: var(--awwbookmarklet-info-fg, #123d7a); --_border: var(--awwbookmarklet-info-border, #7aa6e8); }
+  .item[data-tone="success"] { --_fg: var(--awwbookmarklet-success-fg, #195b34); --_border: var(--awwbookmarklet-success-border, #72b98b); }
+  .item[data-tone="warning"] { --_fg: var(--awwbookmarklet-warning-fg, #6d4b00); --_border: var(--awwbookmarklet-warning-border, #d9ad3b); }
+  .item[data-tone="danger"] { --_fg: var(--awwbookmarklet-danger-fg, #8a1f17); --_border: var(--awwbookmarklet-danger-border, #d46a60); }
+`;
+
+class AwwContextPanel extends HTMLElement {
+  static observedAttributes = ["value"];
+  #segments = [];
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    adoptStyles(shadow, [BASE_COMPONENT_STYLES, CONTEXT_PANEL_STYLES]);
+    shadow.innerHTML = `<section class="grid" part="grid"></section>`;
+    this.grid = shadow.querySelector(".grid");
+    this.grid.addEventListener("dblclick", (event) => this.#copyFromEvent(event));
+    this.grid.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter")
+        return;
+      this.#copyFromEvent(event);
+    });
+  }
+  connectedCallback() {
+    this.#sync();
+  }
+  attributeChangedCallback() {
+    this.#sync();
+  }
+  get segments() {
+    return this.#segments;
+  }
+  set segments(value) {
+    this.#segments = normalizeContextSegments(value);
+    this.removeAttribute("value");
+    this.#render();
+  }
+  #sync() {
+    if (this.hasAttribute("value"))
+      this.#segments = normalizeContextSegments(this.getAttribute("value"));
+    this.#render();
+  }
+  #render() {
+    if (!this.grid)
+      return;
+    this.grid.textContent = "";
+    for (const segment of this.#segments) {
+      const item = document.createElement("article");
+      item.className = "item";
+      item.setAttribute("part", `item item-${segment.tone}`);
+      item.dataset.key = segment.key;
+      item.dataset.tone = segment.tone;
+      item.dataset.copyable = String(segment.copyable);
+      if (segment.copyable) {
+        item.tabIndex = 0;
+        item.setAttribute("role", "button");
+        item.setAttribute("aria-label", `Copy ${segment.label || segment.key}: ${getSegmentCopyValue(segment)}`);
+      }
+      item.innerHTML = `
+        <div class="label" part="label"></div>
+        <div class="value" part="value"></div>
+      `;
+      item.querySelector(".label").textContent = segment.label || segment.kind || segment.key;
+      item.querySelector(".value").textContent = segment.value;
+      this.grid.append(item);
+    }
+  }
+  #copyFromEvent(event) {
+    const item = event.target.closest?.(".item");
+    const segment = this.#segments.find((entry) => entry.key === item?.dataset?.key);
+    if (!segment?.copyable)
+      return;
+    event.preventDefault();
+    dispatchComponentEvent(this, "awwbookmarklet-segment-copy", {
+      segment,
+      key: segment.key,
+      value: segment.value,
+      copyValue: getSegmentCopyValue(segment),
+      source: this,
+      anchor: item,
+      originalEvent: event
+    });
+  }
+}
+
 // src/components/register-all.js
 function registerAllComponents() {
   defineMany([
@@ -5062,7 +5868,12 @@ function registerAllComponents() {
     [TAGS.commandPalette, AwwCommandPalette],
     [TAGS.shortcutHelp, AwwShortcutHelp],
     [TAGS.urlPicker, AwwUrlPicker],
-    [TAGS.metricCard, AwwMetricCard]
+    [TAGS.metricCard, AwwMetricCard],
+    [TAGS.segmentStrip, AwwSegmentStrip],
+    [TAGS.contextBar, AwwContextBar],
+    [TAGS.statusStrip, AwwStatusStrip],
+    [TAGS.titlebar, AwwTitlebar],
+    [TAGS.contextPanel, AwwContextPanel]
   ]);
 }
 
@@ -5237,55 +6048,6 @@ function buildExampleToolWindow({ title = "Page Extraction Tool" } = {}) {
     statusCount().textContent = `${event.target.value}% confidence`;
   });
   return win;
-}
-
-// src/core/clipboard.js
-function normalizePayload(payload = {}) {
-  return {
-    text: String(payload.text ?? ""),
-    html: payload.html == null ? "" : String(payload.html),
-    imageBlob: payload.imageBlob ?? null
-  };
-}
-async function copyToClipboard(payload = {}, environment = globalThis) {
-  const normalized = normalizePayload(payload);
-  if (!normalized.text && !normalized.html && !normalized.imageBlob) {
-    return { ok: false, status: "empty", reason: "No clipboard payload was provided.", fallbackText: "" };
-  }
-  const nav = environment.navigator;
-  const clipboard = nav?.clipboard;
-  const fallbackText = normalized.text || normalized.html;
-  if (!clipboard) {
-    return { ok: false, status: "fallback", reason: "Clipboard API is unavailable.", fallbackText };
-  }
-  try {
-    if (normalized.html && typeof clipboard.write === "function" && typeof environment.ClipboardItem === "function") {
-      const item = new environment.ClipboardItem({
-        "text/html": new Blob([normalized.html], { type: "text/html" }),
-        "text/plain": new Blob([normalized.text || normalized.html], { type: "text/plain" })
-      });
-      await clipboard.write([item]);
-      return { ok: true, status: "success", method: "write" };
-    }
-    if (normalized.imageBlob && typeof clipboard.write === "function" && typeof environment.ClipboardItem === "function") {
-      const item = new environment.ClipboardItem({ [normalized.imageBlob.type || "image/png"]: normalized.imageBlob });
-      await clipboard.write([item]);
-      return { ok: true, status: "success", method: "write" };
-    }
-    if (typeof clipboard.writeText === "function" && fallbackText) {
-      await clipboard.writeText(fallbackText);
-      return { ok: true, status: "success", method: "writeText" };
-    }
-    return { ok: false, status: "fallback", reason: "Clipboard API cannot write this payload.", fallbackText };
-  } catch (error) {
-    return {
-      ok: false,
-      status: "failed",
-      reason: error?.message || "Clipboard write failed.",
-      error,
-      fallbackText
-    };
-  }
 }
 
 // src/core/window-manager.js
@@ -5643,6 +6405,13 @@ globalThis.awwtools.bookmarkletUi = {
   copyPublicThemeContext,
   createTheme,
   CommandRegistry,
+  contextSegments: {
+    parse: parseContextSegments,
+    normalize: normalizeContextSegments,
+    normalizeOne: normalizeContextSegment,
+    equal: segmentsEqual,
+    copyValue: getSegmentCopyValue
+  },
   styles: {
     adoptStyles,
     base: BASE_COMPONENT_STYLES,
@@ -5664,19 +6433,24 @@ export {
   shutdownAll,
   showToast,
   setTheme,
+  segmentsEqual,
   sanitizeHtml,
   resolveNavigationInput,
   resizeRectFromEdges,
   releaseDesktopRoot,
   registerAllComponents,
   rectToStyle,
+  parseContextSegments,
   openBookmarkletWindow,
   normalizeSearchTemplate,
+  normalizeContextSegments,
+  normalizeContextSegment,
   mountWindow,
   isHttpUrl,
   iconSvg,
   getViewportRect,
   getSpawnRect,
+  getSegmentCopyValue,
   getDesktopRecord,
   deriveHostname,
   defineOnce,
@@ -5706,14 +6480,17 @@ export {
   AwwUrlPicker,
   AwwToolbar,
   AwwToast,
+  AwwTitlebar,
   AwwTextarea,
   AwwTabs,
   AwwTabPanel,
   AwwStatusbar,
+  AwwStatusStrip,
   AwwStatusLine,
   AwwStateOverlay,
   AwwShortcutHelp,
   AwwSelect,
+  AwwSegmentStrip,
   AwwRichPreview,
   AwwRange,
   AwwRadio,
@@ -5733,6 +6510,8 @@ export {
   AwwEmptyState,
   AwwDialog,
   AwwDesktopRoot,
+  AwwContextPanel,
+  AwwContextBar,
   AwwCommandPalette,
   AwwCheckbox,
   AwwCard,

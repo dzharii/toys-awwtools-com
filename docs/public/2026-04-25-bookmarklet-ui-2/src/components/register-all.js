@@ -37,6 +37,11 @@ import { AwwCommandPalette } from "./command-palette.js";
 import { AwwShortcutHelp } from "./shortcut-help.js";
 import { AwwUrlPicker } from "./url-picker.js";
 import { AwwMetricCard } from "./metric-card.js";
+import { AwwSegmentStrip } from "./segment-strip.js";
+import { AwwContextBar } from "./context-bar.js";
+import { AwwStatusStrip } from "./status-strip.js";
+import { AwwTitlebar } from "./titlebar.js";
+import { AwwContextPanel } from "./context-panel.js";
 
 export function registerAllComponents() {
   defineMany([
@@ -77,6 +82,11 @@ export function registerAllComponents() {
     [TAGS.commandPalette, AwwCommandPalette],
     [TAGS.shortcutHelp, AwwShortcutHelp],
     [TAGS.urlPicker, AwwUrlPicker],
-    [TAGS.metricCard, AwwMetricCard]
+    [TAGS.metricCard, AwwMetricCard],
+    [TAGS.segmentStrip, AwwSegmentStrip],
+    [TAGS.contextBar, AwwContextBar],
+    [TAGS.statusStrip, AwwStatusStrip],
+    [TAGS.titlebar, AwwTitlebar],
+    [TAGS.contextPanel, AwwContextPanel]
   ]);
 }

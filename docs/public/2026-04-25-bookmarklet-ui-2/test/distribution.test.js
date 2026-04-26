@@ -16,6 +16,13 @@ test("bookmarklet entry exposes reusable SDK surface", () => {
     "applyThemePatch",
     "copyPublicThemeContext",
     "createTheme",
+    "parseContextSegments",
+    "normalizeContextSegments",
+    "AwwSegmentStrip",
+    "AwwContextBar",
+    "AwwStatusStrip",
+    "AwwTitlebar",
+    "AwwContextPanel",
     "BASE_COMPONENT_STYLES",
     "CommandRegistry",
     "sanitizeHtml"
@@ -35,7 +42,8 @@ test("global API mirrors module extension points", () => {
     "themeService",
     "applyThemePatch",
     "copyPublicThemeContext",
-    "createTheme"
+    "createTheme",
+    "contextSegments"
   ]) {
     assert.match(entrySource, new RegExp(`\\b${key}\\b`));
   }
@@ -62,6 +70,8 @@ test("production build writes copyable dist documentation", () => {
   assert.match(buildSource, /roundedTheme/);
   assert.match(buildSource, /highContrastTheme/);
   assert.match(buildSource, /::part/);
+  assert.match(buildSource, /Context segments/);
+  assert.match(buildSource, /awwbookmarklet-context-bar/);
 });
 
 test("distribution build stays readable in every mode", () => {

@@ -40,6 +40,7 @@ The bookmarklet entry registers all bundled custom elements and exposes the same
 - `createWindow()` and `mountWindow()` for reusable floating tool windows.
 - `registerAllComponents()` and `defineComponent()` for bundled and custom `awwbookmarklet-*` elements.
 - `TAGS`, `PUBLIC_TOKENS`, `setTheme()`, `ThemeService`, `themeService`, `createTheme()`, `applyThemePatch()`, and `copyPublicThemeContext()` for stable component creation and theming.
+- `parseContextSegments()`, `normalizeContextSegments()`, `awwbookmarklet-segment-strip`, `awwbookmarklet-context-bar`, `awwbookmarklet-status-strip`, `awwbookmarklet-titlebar`, and `awwbookmarklet-context-panel` for structured context chrome.
 - `styles.css`, `styles.base`, and `styles.adoptStyles()` for custom Shadow DOM components that should share reset, focus, and selection behavior.
 - `CommandRegistry`, URL helpers, `sanitizeHtml()`, `copyToClipboard()`, and `showToast()` for common tool workflows.
 
@@ -133,6 +134,36 @@ const highContrastTheme = {
 ```
 
 Developers who copy this framework into a `vendor/` folder own their copy and may edit source when a product needs a new component or behavior. For normal visual identity, prefer tokens, scoped themes, semantic attributes, and narrow `::part` overrides before source edits.
+
+## Context Segments
+
+Context chrome components display structured data supplied by downstream tools. They do not scrape GitHub, Power BI, Jira, dashboards, iframes, or any other app. Application code extracts or computes values, then passes either pipe-delimited shorthand or structured segments.
+
+```html
+<awwbookmarklet-context-bar value="GitHub | PR #1824 | feature/context-bar | CI passing"></awwbookmarklet-context-bar>
+```
+
+```js
+const segments = [
+  { key: "app", value: "GitHub", kind: "app" },
+  { key: "pr", label: "PR", value: "#1824", copyValue: "1824", copyable: true },
+  { key: "branch", label: "Branch", value: "feature/context-bar", copyValue: "feature/context-bar", copyable: true },
+  { key: "ci", value: "CI passing", tone: "success", kind: "status" }
+];
+
+contextBar.segments = segments;
+contextPanel.segments = segments;
+```
+
+Available pieces:
+
+- `awwbookmarklet-segment-strip`: compact one-line renderer with separators, tones, truncation, keyed change highlighting, and segment events.
+- `awwbookmarklet-context-bar`: top context surface with leading/actions slots, busy state, and a quiet progress strip.
+- `awwbookmarklet-status-strip`: quieter segment readout for status/footer regions.
+- `awwbookmarklet-titlebar`: standalone titlebar surface that can render title segments while preserving a `drag-region` part for future window integration.
+- `awwbookmarklet-context-panel`: expanded label-value layout for the same segment data.
+
+Segment events are generic: `awwbookmarklet-segment-copy`, `awwbookmarklet-segment-activate`, and `awwbookmarklet-segment-menu-request`. Copy is event-first by default; use `copy-behavior="clipboard"` only when the component should call the framework clipboard helper directly.
 
 ## Public Tokens
 

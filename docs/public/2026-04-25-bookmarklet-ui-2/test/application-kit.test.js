@@ -26,6 +26,11 @@ test("application-kit tags are public", () => {
   assert.equal(TAGS.shortcutHelp, "awwbookmarklet-shortcut-help");
   assert.equal(TAGS.urlPicker, "awwbookmarklet-url-picker");
   assert.equal(TAGS.metricCard, "awwbookmarklet-metric-card");
+  assert.equal(TAGS.segmentStrip, "awwbookmarklet-segment-strip");
+  assert.equal(TAGS.contextBar, "awwbookmarklet-context-bar");
+  assert.equal(TAGS.statusStrip, "awwbookmarklet-status-strip");
+  assert.equal(TAGS.titlebar, "awwbookmarklet-titlebar");
+  assert.equal(TAGS.contextPanel, "awwbookmarklet-context-panel");
 });
 
 test("application-kit tokens have stable CSS variable names", () => {

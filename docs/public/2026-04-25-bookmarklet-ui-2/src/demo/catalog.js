@@ -426,6 +426,23 @@ function browserStatePanel() {
   });
 }
 
+function contextChromePanel() {
+  return panel({
+    title: "Segment Context Chrome",
+    icon: "panel",
+    meta: "context",
+    className: "span-8",
+    body: `
+      <div class="context-demo-stack">
+        <${TAGS.contextBar} data-context-demo="github" busy progress="68"></${TAGS.contextBar}>
+        <${TAGS.contextBar} value="Power BI | Finance | Sales Dashboard | Updated 09:42 | Live"></${TAGS.contextBar}>
+        <${TAGS.statusStrip} value="Review ready | 0 missing | Read-only | Saved 30s ago"></${TAGS.statusStrip}>
+        <${TAGS.contextPanel} data-context-demo="panel"></${TAGS.contextPanel}>
+      </div>
+    `
+  });
+}
+
 function overviewScreen() {
   return `
     <div class="screen-heading"><strong>Overview / Shell & Primitives</strong><span>Foundational shell, controls, fields, feedback, command preview, and browser state inventory.</span></div>
@@ -434,6 +451,7 @@ function overviewScreen() {
       ${controlsPanel()}
       ${fieldMatrixPanel()}
       ${feedbackMatrixPanel()}
+      ${contextChromePanel()}
       ${appShellExamplePanel()}
       ${browserStatePanel()}
     </div>
@@ -448,6 +466,7 @@ function primitivesScreen() {
       ${controlsPanel()}
       ${fieldMatrixPanel()}
       ${feedbackMatrixPanel()}
+      ${contextChromePanel()}
       ${panel({
         title: "Command Palette Preview",
         icon: "console",
@@ -786,6 +805,29 @@ function selectTab(root, id, focus = false) {
 }
 
 function wireInteractions(root) {
+  const githubSegments = [
+    { key: "app", value: "GitHub", kind: "app" },
+    { key: "pr", label: "PR", value: "#1824", copyValue: "1824", copyable: true, kind: "id" },
+    { key: "branch", label: "Branch", value: "feature/context-bar", copyValue: "feature/context-bar", copyable: true, kind: "branch" },
+    { key: "ci", value: "CI passing", tone: "success", kind: "status" },
+    { key: "reviews", value: "2 approvals", tone: "info", kind: "status" }
+  ];
+
+  root.querySelectorAll('[data-context-demo="github"]').forEach((node) => {
+    node.segments = githubSegments;
+  });
+  root.querySelectorAll('[data-context-demo="panel"]').forEach((node) => {
+    node.segments = [
+      { key: "customer", label: "Customer", value: "Acme Corporation", copyValue: "Acme Corporation", copyable: true },
+      { key: "tenant", label: "Tenant", value: "918273", copyValue: "918273", copyable: true },
+      { key: "environment", label: "Environment", value: "Production", tone: "warning" },
+      { key: "saved", label: "Saved", value: "11:42", tone: "success" }
+    ];
+  });
+  root.addEventListener("awwbookmarklet-segment-copy", (event) => {
+    showToast({ key: "segment-copy", message: `Copy requested: ${event.detail.copyValue}`, tone: "info", timeout: 1800 });
+  });
+
   root.querySelector("#hero-example")?.addEventListener("click", openExample);
   root.querySelector("#hero-blank")?.addEventListener("click", openBlank);
   root.querySelectorAll("#open-example").forEach((node) => node.addEventListener("click", openExample));

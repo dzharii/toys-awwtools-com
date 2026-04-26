@@ -38,7 +38,12 @@ export const TAGS = {
   commandPalette: "awwbookmarklet-command-palette",
   shortcutHelp: "awwbookmarklet-shortcut-help",
   urlPicker: "awwbookmarklet-url-picker",
-  metricCard: "awwbookmarklet-metric-card"
+  metricCard: "awwbookmarklet-metric-card",
+  segmentStrip: "awwbookmarklet-segment-strip",
+  contextBar: "awwbookmarklet-context-bar",
+  statusStrip: "awwbookmarklet-status-strip",
+  titlebar: "awwbookmarklet-titlebar",
+  contextPanel: "awwbookmarklet-context-panel"
 };
 
 export const GLOBAL_SYMBOLS = {

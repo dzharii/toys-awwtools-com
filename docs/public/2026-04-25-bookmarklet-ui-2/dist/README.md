@@ -70,6 +70,7 @@ Use `openBookmarkletWindow(builder)` when you want a one-call build-and-mount he
 
 - Floating desktop root and movable/resizable windows.
 - Menus, menubars, toolbars, panels, groups, cards, fields, status bars, alerts, dialogs, toasts, tabs, lists, listboxes, rich previews, browser panels, URL pickers, command palettes, shortcut help, and form controls.
+- Segment-based context chrome: segment strips, context bars, status strips, titlebar surfaces, and context panels.
 - Theme tokens exposed through `PUBLIC_TOKENS`, `setTheme()`, `ThemeService`, `defaultThemeService`, `createTheme()`, `applyThemePatch()`, and `copyPublicThemeContext()`.
 - Shared Shadow DOM styling helpers exposed as `styles.css`, `styles.base`, and `styles.adoptStyles()`.
 - Command registry, geometry helpers, URL helpers, HTML sanitizing, clipboard helpers, and toast helpers.
@@ -78,6 +79,7 @@ Use `openBookmarkletWindow(builder)` when you want a one-call build-and-mount he
 
 - Use `TAGS` to create bundled components without hard-coded tag strings.
 - Use `PUBLIC_TOKENS` and `setTheme()` for runtime theming.
+- Use `parseContextSegments()`, `normalizeContextSegments()`, `awwbookmarklet-context-bar`, and `awwbookmarklet-context-panel` for compact structured context supplied by downstream tools.
 - Use `defineComponent()` for custom `awwbookmarklet-*` web components.
 - Use `styles.css`, `styles.base`, and `styles.adoptStyles()` to share the base reset/focus/selection rules in custom Shadow DOM components.
 - Use `CommandRegistry`, URL helpers, `sanitizeHtml()`, and clipboard/toast helpers for common tool behavior.
@@ -195,6 +197,36 @@ const highContrastTheme = {
 Component attributes such as `variant`, `tone`, and `density` describe semantic modes. `::part` is available as an escape hatch for narrow local overrides, but normal theme work should use public tokens first.
 
 Developers who copy this framework into a `vendor/` folder own their copy and may edit source when a product needs new behavior. For routine identity, density, radius, or contrast changes, keep customization in theme objects so future framework updates remain easier to merge.
+
+## Context segments
+
+Context chrome components display structured data supplied by downstream tools. They do not scrape GitHub, Power BI, Jira, dashboards, iframes, or any other app. Application code extracts or computes values, then passes either pipe-delimited shorthand or structured segments.
+
+```html
+<awwbookmarklet-context-bar value="GitHub | PR #1824 | feature/context-bar | CI passing"></awwbookmarklet-context-bar>
+```
+
+```js
+const segments = [
+  { key: "app", value: "GitHub", kind: "app" },
+  { key: "pr", label: "PR", value: "#1824", copyValue: "1824", copyable: true },
+  { key: "branch", label: "Branch", value: "feature/context-bar", copyValue: "feature/context-bar", copyable: true },
+  { key: "ci", value: "CI passing", tone: "success", kind: "status" }
+];
+
+contextBar.segments = segments;
+contextPanel.segments = segments;
+```
+
+Available pieces:
+
+- `awwbookmarklet-segment-strip`: compact one-line renderer with separators, tones, truncation, keyed change highlighting, and segment events.
+- `awwbookmarklet-context-bar`: top context surface with leading/actions slots, busy state, and a quiet progress strip.
+- `awwbookmarklet-status-strip`: quieter segment readout for status/footer regions.
+- `awwbookmarklet-titlebar`: standalone titlebar surface that can render title segments while preserving a `drag-region` part for future window integration.
+- `awwbookmarklet-context-panel`: expanded label-value layout for the same segment data.
+
+Segment events are generic: `awwbookmarklet-segment-copy`, `awwbookmarklet-segment-activate`, and `awwbookmarklet-segment-menu-request`. Copy is event-first by default; use `copy-behavior="clipboard"` only when the component should call the framework clipboard helper directly.
 
 ## Design system notes
 

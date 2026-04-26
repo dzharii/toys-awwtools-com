@@ -2,6 +2,7 @@ import { registerAllComponents } from "../components/register-all.js";
 import { buildExampleToolWindow } from "../demo/example-tool.js";
 import { copyToClipboard } from "../core/clipboard.js";
 import { CommandRegistry } from "../core/commands.js";
+import { getSegmentCopyValue, normalizeContextSegment, normalizeContextSegments, parseContextSegments, segmentsEqual } from "../core/context-segments.js";
 import { TAGS, PUBLIC_TOKENS, FRAMEWORK_VERSION, DEFAULT_GEOMETRY } from "../core/constants.js";
 import { defineOnce } from "../core/define.js";
 import { clampRect, getSpawnRect, getViewportRect, rectToStyle, resizeRectFromEdges } from "../core/geometry.js";
@@ -55,6 +56,11 @@ export { AwwCommandPalette } from "../components/command-palette.js";
 export { AwwShortcutHelp } from "../components/shortcut-help.js";
 export { AwwUrlPicker } from "../components/url-picker.js";
 export { AwwMetricCard } from "../components/metric-card.js";
+export { AwwSegmentStrip } from "../components/segment-strip.js";
+export { AwwContextBar } from "../components/context-bar.js";
+export { AwwStatusStrip } from "../components/status-strip.js";
+export { AwwTitlebar } from "../components/titlebar.js";
+export { AwwContextPanel } from "../components/context-panel.js";
 export { iconSvg, ICON_NAMES } from "../icons/retro-icons.js";
 export { DEFAULT_THEME } from "../themes/default-theme.js";
 export {
@@ -68,6 +74,11 @@ export {
   createTheme,
   defaultThemeService,
   CommandRegistry,
+  parseContextSegments,
+  normalizeContextSegment,
+  normalizeContextSegments,
+  segmentsEqual,
+  getSegmentCopyValue,
   adoptStyles,
   BASE_COMPONENT_STYLES,
   css,
@@ -232,6 +243,13 @@ globalThis.awwtools.bookmarkletUi = {
   copyPublicThemeContext,
   createTheme,
   CommandRegistry,
+  contextSegments: {
+    parse: parseContextSegments,
+    normalize: normalizeContextSegments,
+    normalizeOne: normalizeContextSegment,
+    equal: segmentsEqual,
+    copyValue: getSegmentCopyValue
+  },
   styles: {
     adoptStyles,
     base: BASE_COMPONENT_STYLES,
