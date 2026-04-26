@@ -36,6 +36,21 @@ Paste into rich text is intercepted before the browser can insert arbitrary mark
 
 Slash commands are local block transforms, not a global command palette. Empty paragraph-like command text such as `/`, `/h`, `/quote`, `/source`, `/list`, `/table`, and `/code` opens a small menu. Selection uses an explicit transform map and preserves text where the conversion is safe.
 
+The 2026-04-26 UI correction pass tightened the main layout and interaction model:
+
+- The browser page is locked to one viewport-height app shell to avoid double page/editor scrollbars.
+- The command bar is grouped into page creation/undo, search/clear-search, and export/backup regions.
+- Page row move controls are demoted until hover/focus, and page title tooltips include the full title.
+- Block move/delete controls render in an attached top-right action tab instead of overlapping the editable text boundary.
+- Block deletion uses `DEL` rather than `x`.
+- Each eligible active block has a local `Turn into` menu so conversion does not require scrolling to the top toolbar.
+- A quiet bottom `+ Add paragraph` affordance creates and focuses a new paragraph at the end of the page.
+- List items are styled as document list rows instead of bordered form rows.
+
+Structural block operations have in-memory undo checkpoints. Delete, move, and local transform store the current ordered block list before the operation. The `Undo` command and Ctrl/Cmd+Z outside text-editing fields restore the previous block order/content and persist it through the existing `replaceBlocks` storage path. Native text undo inside `input`, `textarea`, and `contenteditable` is intentionally left to the browser.
+
+Durable 15-snapshot page history is deferred. It should be implemented as a schema migration with a `pageSnapshots` or `revisions` store, created before destructive structural actions and pruned to the latest 15 records per page. It should not snapshot every keystroke.
+
 ## Deliberate Simplifications
 
 Page and block ordering uses move up/down controls instead of drag-and-drop. This keeps the proof of concept reliable without adding dependencies.
@@ -46,4 +61,4 @@ Paste conversion keeps semantic structures and limited safe inline formatting. E
 
 Archive and import are not included in the first implementation. JSON backup is included so local evaluation data can be protected before future migrations.
 
-The contenteditable implementation intentionally does not include a full rich editor engine, collaborative editing, arbitrary typography, persisted source-details expansion state, page hierarchy, backlinks, tags, or drag-and-drop page trees.
+The contenteditable implementation intentionally does not include a full rich editor engine, collaborative editing, arbitrary typography, persisted source-details expansion state, durable page snapshots, page hierarchy, backlinks, tags, or drag-and-drop page trees.

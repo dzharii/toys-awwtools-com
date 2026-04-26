@@ -7459,6 +7459,7 @@ class TopicResearchApp {
       slash: null
     };
     this.searchRun = 0;
+    this.undoStack = [];
     this.storage.addEventListener("save-status", (event) => {
       this.state.status = event.detail;
       this.renderStatus();
@@ -7491,14 +7492,20 @@ class TopicResearchApp {
   renderShell() {
     this.root.innerHTML = `
       <awwbookmarklet-app-shell class="trn-shell">
-        <awwbookmarklet-titlebar slot="title" value="Topic Research Notepad">
-          <awwbookmarklet-button slot="commands" class="trn-button" data-action="export-md">Export MD</awwbookmarklet-button>
-          <awwbookmarklet-button slot="commands" class="trn-button" data-action="export-json">Backup JSON</awwbookmarklet-button>
-        </awwbookmarklet-titlebar>
+        <awwbookmarklet-titlebar slot="title" value="Topic Research Notepad"></awwbookmarklet-titlebar>
         <awwbookmarklet-toolbar slot="status" class="trn-commandbar" wrap density="compact">
-          <awwbookmarklet-button class="trn-button primary" variant="primary" data-action="new-page">New Page</awwbookmarklet-button>
-          <input class="trn-input" data-role="search" placeholder="Search local notes" />
-          <awwbookmarklet-button class="trn-button" data-action="clear-search">Clear</awwbookmarklet-button>
+          <div class="trn-commandbar-primary">
+            <awwbookmarklet-button class="trn-button primary" variant="primary" data-action="new-page">New Page</awwbookmarklet-button>
+            <awwbookmarklet-button class="trn-button" data-action="undo-structural" title="Undo last block move or delete">Undo</awwbookmarklet-button>
+          </div>
+          <div class="trn-commandbar-search" role="search" aria-label="Search local notes">
+            <input class="trn-input" type="search" data-role="search" placeholder="Search local notes" />
+            <awwbookmarklet-button class="trn-button" data-action="clear-search">Clear search</awwbookmarklet-button>
+          </div>
+          <div class="trn-commandbar-secondary">
+            <awwbookmarklet-button class="trn-button" data-action="export-md">Export MD</awwbookmarklet-button>
+            <awwbookmarklet-button class="trn-button" data-action="export-json">Backup JSON</awwbookmarklet-button>
+          </div>
         </awwbookmarklet-toolbar>
         <main slot="body" class="trn-main">
           <awwbookmarklet-split-pane class="trn-layout-split" direction="horizontal" value="${this.state.sidebarWidth}" min-start="180" min-end="420" aria-label="Resize page sidebar">
@@ -7539,9 +7546,11 @@ class TopicResearchApp {
     const list = this.root.querySelector('[data-role="page-list"]');
     list.innerHTML = sortByOrder(this.state.pages).map((page) => `
       <div class="trn-page-row ${page.id === this.state.selectedPageId ? "selected" : ""}" data-page-id="${escapeAttr(page.id)}">
-        <awwbookmarklet-button class="trn-page-button" data-action="select-page" title="Open page">${escapeHtml2(page.title)}</awwbookmarklet-button>
+        <awwbookmarklet-button class="trn-page-button" data-action="select-page" title="Open page: ${escapeAttr(page.title)}">${escapeHtml2(page.title)}</awwbookmarklet-button>
+        <div class="trn-page-actions" aria-label="Page actions">
         <awwbookmarklet-button class="trn-icon-button" data-action="page-up" title="Move page up" aria-label="Move page up">&#8593;</awwbookmarklet-button>
         <awwbookmarklet-button class="trn-icon-button" data-action="page-down" title="Move page down" aria-label="Move page down">&#8595;</awwbookmarklet-button>
+        </div>
       </div>
     `).join("");
   }
@@ -7563,6 +7572,7 @@ class TopicResearchApp {
       <div class="trn-blocks" data-role="blocks">
         ${blocks.map((block) => this.renderBlock(block)).join("")}
       </div>
+      <button class="trn-document-end-insert" data-action="add-paragraph-end" type="button">+ Add paragraph</button>
       <div class="trn-pastebin" data-role="pastebin" contenteditable="true" aria-hidden="true"></div>
       <div class="trn-slash-menu" data-role="slash-menu" hidden></div>
     `;
@@ -7574,11 +7584,23 @@ class TopicResearchApp {
           <span class="trn-block-type-label">${labelForType(block.type)}</span>
           <awwbookmarklet-button class="trn-icon-button" data-action="block-up" title="Move block up" aria-label="Move block up">&#8593;</awwbookmarklet-button>
           <awwbookmarklet-button class="trn-icon-button" data-action="block-down" title="Move block down" aria-label="Move block down">&#8595;</awwbookmarklet-button>
-          <awwbookmarklet-button class="trn-icon-button danger" tone="danger" data-action="delete-block" title="Delete block" aria-label="Delete block">&times;</awwbookmarklet-button>
+          ${this.renderTransformMenu(block)}
+          <awwbookmarklet-button class="trn-del-button" data-action="delete-block" title="Delete block" aria-label="Delete block">DEL</awwbookmarklet-button>
         </div>
         ${this.renderBlockBody(block)}
       </article>
     `;
+  }
+  renderTransformMenu(block) {
+    const targets = validTransformsFor(block.type);
+    if (!targets.length)
+      return "";
+    return `<details class="trn-transform-menu">
+      <summary title="Turn block into another type" aria-label="Turn block into another type">Turn into</summary>
+      <div class="trn-transform-options">
+        ${targets.map((type) => `<button type="button" data-action="transform-block" data-type="${escapeAttr(type)}"> ${escapeHtml2(labelForType(type))}</button>`).join("")}
+      </div>
+    </details>`;
   }
   renderBlockBody(block) {
     const c = block.content || {};
@@ -7591,8 +7613,8 @@ class TopicResearchApp {
           <input class="trn-input" data-field="sourceUrl" value="${escapeAttr(c.sourceUrl)}" placeholder="Source URL" />`;
       case BLOCK_TYPES.list:
         return `<div class="trn-list-items">
-          ${(c.items || []).map((item) => `<div class="trn-list-item" data-item-id="${escapeAttr(item.id)}"><input class="trn-input" data-list-item="${escapeAttr(item.id)}" value="${escapeAttr(item.text)}" /></div>`).join("")}
-          <awwbookmarklet-button class="trn-button" data-action="add-list-item">Add item</awwbookmarklet-button>
+          ${(c.items || []).map((item) => `<div class="trn-list-item" data-item-id="${escapeAttr(item.id)}"><input class="trn-list-input" data-list-item="${escapeAttr(item.id)}" value="${escapeAttr(item.text)}" aria-label="List item" /></div>`).join("")}
+          <awwbookmarklet-button class="trn-button trn-add-list-item" data-action="add-list-item">+ item</awwbookmarklet-button>
         </div>`;
       case BLOCK_TYPES.table:
         return `<div class="trn-table-wrap"><table class="trn-table">
@@ -7639,7 +7661,7 @@ class TopicResearchApp {
   renderStatus() {
     const status = this.root.querySelector('[data-role="status"]');
     if (status) {
-      status.textContent = `${this.state.status.state}: ${this.state.status.detail}`;
+      status.textContent = statusText(this.state.status);
       status.dataset.state = this.state.status.state;
     }
   }
@@ -7660,10 +7682,14 @@ class TopicResearchApp {
         await this.selectPage(button.closest("[data-page-id]").dataset.pageId);
       if (action === "add-block")
         await this.addBlock(button.dataset.type);
+      if (action === "add-paragraph-end")
+        await this.addParagraphAtEnd();
       if (action === "delete-block")
         await this.deleteBlock(button.closest("[data-block-id]").dataset.blockId);
       if (action === "block-up" || action === "block-down")
         await this.moveBlock(button.closest("[data-block-id]").dataset.blockId, action === "block-up" ? -1 : 1);
+      if (action === "transform-block")
+        await this.transformActiveBlock(button.closest("[data-block-id]").dataset.blockId, button.dataset.type);
       if (action === "page-up" || action === "page-down")
         await this.movePage(button.closest("[data-page-id]").dataset.pageId, action === "page-up" ? -1 : 1);
       if (action === "add-list-item")
@@ -7684,6 +7710,8 @@ class TopicResearchApp {
         this.clearSearch();
       if (action === "open-search-result")
         await this.openSearchResult(button.dataset.pageId, button.dataset.blockId);
+      if (action === "undo-structural")
+        await this.undoStructural();
     } catch (error) {
       logger7.error("UI action failed", { context: { action, error: normalizeError(error) } });
       this.showError(error);
@@ -7743,6 +7771,11 @@ class TopicResearchApp {
       editable.dataset.composing = composing ? "true" : "false";
   }
   async handleKeydown(event) {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z" && !isTextEditingTarget(event.target)) {
+      event.preventDefault();
+      await this.undoStructural();
+      return;
+    }
     const editable = event.target.closest("[data-rich-text]");
     if (!editable)
       return;
@@ -7864,6 +7897,11 @@ class TopicResearchApp {
     this.state.blocks.push(block);
     await this.storage.request("updateBlock", { block });
     this.renderEditor();
+    return block;
+  }
+  async addParagraphAtEnd() {
+    const block = await this.addBlock(BLOCK_TYPES.paragraph);
+    requestAnimationFrame(() => this.focusBlock(block?.id));
   }
   async splitParagraphBlock(editable) {
     const blockEl = editable.closest("[data-block-id]");
@@ -7885,7 +7923,11 @@ class TopicResearchApp {
     requestAnimationFrame(() => this.focusBlock(next.id));
   }
   async deleteBlock(blockId) {
-    this.state.blocks = this.state.blocks.filter((block) => block.id !== blockId);
+    const block = this.findBlock(blockId);
+    if (!block)
+      return;
+    this.pushBlockUndo(block.pageId, "deleteBlock");
+    this.state.blocks = this.state.blocks.filter((entry) => entry.id !== blockId);
     logger7.info("Deleting block", { context: { blockId } });
     await this.storage.request("deleteBlock", { blockId });
     this.renderEditor();
@@ -7897,12 +7939,25 @@ class TopicResearchApp {
     const swap = index + direction;
     if (swap < 0 || swap >= blocks.length)
       return;
+    this.pushBlockUndo(page.id, "moveBlock");
     [blocks[index], blocks[swap]] = [blocks[swap], blocks[index]];
     blocks.forEach((block, order) => block.sortOrder = (order + 1) * 1000);
     this.state.blocks = this.state.blocks.filter((block) => block.pageId !== page.id).concat(blocks);
     logger7.info("Moving block", { context: { blockId, pageId: page.id, direction } });
     await this.storage.request("reorderBlocks", { blocks });
     this.renderEditor();
+  }
+  async transformActiveBlock(blockId, type) {
+    const block = this.findBlock(blockId);
+    if (!block || block.type === type)
+      return;
+    this.pushBlockUndo(block.pageId, "transformBlock");
+    transformBlock(block, type);
+    block.updatedAt = nowIso();
+    logger7.info("Transforming block from local menu", { context: { blockId, type } });
+    await this.storage.request("updateBlock", { block });
+    this.renderEditor();
+    requestAnimationFrame(() => this.focusBlock(block.id));
   }
   async movePage(pageId, direction) {
     const pages = sortByOrder(this.state.pages);
@@ -7952,6 +8007,27 @@ class TopicResearchApp {
       block.content.rows.push({ id: createId2("row"), cells: Object.fromEntries(block.content.columns.map((col) => [col.id, ""])) });
     }
     this.queueBlockSave(block);
+    this.renderEditor();
+  }
+  pushBlockUndo(pageId, reason) {
+    const blocks = this.blocksForPage(pageId).map(cloneRecord);
+    this.undoStack.push({ type: "restoreBlocks", pageId, reason, blocks });
+    if (this.undoStack.length > 100)
+      this.undoStack.shift();
+    logger7.debug("Structural undo checkpoint created", { context: { pageId, reason, blockCount: blocks.length, depth: this.undoStack.length } });
+  }
+  async undoStructural() {
+    const entry = this.undoStack.pop();
+    if (!entry) {
+      logger7.debug("Structural undo requested with empty stack");
+      return;
+    }
+    if (entry.type !== "restoreBlocks")
+      return;
+    const restored = entry.blocks.map((block, index) => ({ ...cloneRecord(block), deletedAt: null, sortOrder: (index + 1) * 1000, updatedAt: nowIso() }));
+    this.state.blocks = this.state.blocks.filter((block) => block.pageId !== entry.pageId).concat(restored);
+    await this.storage.request("replaceBlocks", { pageId: entry.pageId, blocks: restored });
+    logger7.info("Structural undo restored page blocks", { context: { pageId: entry.pageId, reason: entry.reason, blockCount: restored.length } });
     this.renderEditor();
   }
   async search(query) {
@@ -8118,7 +8194,8 @@ class TopicResearchApp {
       pageCount: this.state.pages.length,
       blockCount: this.state.blocks.length,
       status: this.state.status,
-      lastError: this.state.error
+      lastError: this.state.error,
+      undoDepth: this.undoStack.length
     };
   }
   bindLifecycleFlush() {
@@ -8145,6 +8222,9 @@ function labelForType(type) {
     code: "Code",
     sourceLink: "Source"
   }[type] || type;
+}
+function validTransformsFor(type) {
+  return BLOCK_TRANSFORMS[type] || [];
 }
 function richTextEditable(block, variant, placeholder) {
   const content = normalizeRichTextContent(block.content || {});
@@ -8184,6 +8264,25 @@ function textToHtml(text) {
 function normalizeSidebarWidth(value) {
   const numeric = Number(value);
   return Number.isFinite(numeric) ? Math.min(520, Math.max(180, Math.round(numeric))) : 280;
+}
+function statusText(status) {
+  if (status?.state === "saved")
+    return "saved locally";
+  if (status?.state === "saving")
+    return "saving locally";
+  if (status?.state === "dirty")
+    return "unsaved changes";
+  if (status?.state === "failed")
+    return "save failed";
+  if (status?.state === "loading")
+    return "opening local storage";
+  return String(status?.detail || status?.state || "");
+}
+function cloneRecord(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+function isTextEditingTarget(target) {
+  return Boolean(target?.closest?.("input, textarea, [contenteditable='true']"));
 }
 function safeUrl(value) {
   try {
@@ -8234,5 +8333,5 @@ installDebugHook({
 });
 app.start();
 
-//# debugId=CDBCB70CB8FA761F64756E2164756E21
+//# debugId=85744795C593702764756E2164756E21
 //# sourceMappingURL=main.js.map
