@@ -22,6 +22,7 @@ export class TopicResearchApp {
       status: { state: "loading", detail: "Opening local storage" },
       error: "",
       focusedBlockId: "",
+      keyboardCreatedEmptyBlockId: "",
       sidebarWidth: 280,
       slash: null,
     };
@@ -116,7 +117,7 @@ export class TopicResearchApp {
     const list = this.root.querySelector('[data-role="page-list"]');
     list.innerHTML = sortByOrder(this.state.pages).map((page) => `
       <div class="trn-page-row ${page.id === this.state.selectedPageId ? "selected" : ""}" data-page-id="${escapeAttr(page.id)}">
-        <awwbookmarklet-button class="trn-page-button" data-action="select-page" title="Open page: ${escapeAttr(page.title)}">${escapeHtml(page.title)}</awwbookmarklet-button>
+        <awwbookmarklet-button class="trn-page-button" data-action="select-page" title="${escapeAttr(page.title)}" aria-label="Open page: ${escapeAttr(page.title)}">${escapeHtml(page.title)}</awwbookmarklet-button>
         <div class="trn-page-actions" aria-label="Page actions">
         <awwbookmarklet-button class="trn-icon-button" data-action="page-up" title="Move page up" aria-label="Move page up">&#8593;</awwbookmarklet-button>
         <awwbookmarklet-button class="trn-icon-button" data-action="page-down" title="Move page down" aria-label="Move page down">&#8595;</awwbookmarklet-button>
@@ -252,7 +253,7 @@ export class TopicResearchApp {
     const action = button.dataset.action;
     logger.debug("UI action received", { context: { action } });
     try {
-      if (action === "new-page") await this.createPage(prompt("Page title", "New research page") || "New research page");
+      if (action === "new-page") await this.createPage(this.uniqueNewPageTitle(), { focusTitle: true });
       if (action === "select-page") await this.selectPage(button.closest("[data-page-id]").dataset.pageId);
       if (action === "add-block") await this.addBlock(button.dataset.type);
       if (action === "add-paragraph-end") await this.addParagraphAtEnd();
@@ -298,6 +299,9 @@ export class TopicResearchApp {
     if (!block) return;
     this.applyBlockInput(block, target);
     block.updatedAt = nowIso();
+    if (target.matches("[data-rich-text]") && block.id === this.state.keyboardCreatedEmptyBlockId && block.content.text.trim()) {
+      this.state.keyboardCreatedEmptyBlockId = "";
+    }
     logger.debug("Block edit detected", { context: { blockId: block.id, pageId: block.pageId, type: block.type, field: target.dataset.field || target.dataset.listItem || target.dataset.tableCell || target.dataset.tableCol || target.dataset.richText } });
     this.queueBlockSave(block);
     if (target.matches("[data-rich-text]")) this.updateSlashMenu(target, block);
@@ -356,6 +360,10 @@ export class TopicResearchApp {
     if (event.key === "Enter" && !event.shiftKey && editable.dataset.richText === "paragraph") {
       event.preventDefault();
       await this.splitParagraphBlock(editable);
+      return;
+    }
+    if ((event.key === "ArrowDown" || event.key === "ArrowUp") && !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey) {
+      await this.handleRichTextArrowNavigation(event, editable);
     }
   }
 
@@ -425,7 +433,7 @@ export class TopicResearchApp {
     }
   }
 
-  async createPage(title) {
+  async createPage(title, options = {}) {
     const page = createPage({ title, sortOrder: (this.state.pages.length + 1) * 1000 });
     const block = createBlock({ pageId: page.id, type: BLOCK_TYPES.paragraph, content: { text: "" } });
     logger.info("Creating page", { context: { title, pageId: page.id, initialBlockId: block.id } });
@@ -434,7 +442,17 @@ export class TopicResearchApp {
     this.state.blocks.push(block);
     this.state.selectedPageId = page.id;
     this.render();
+    if (options.focusTitle) requestAnimationFrame(() => this.focusPageTitle({ select: true }));
     logger.info("Page created", { context: { pageId: page.id, blockCount: 1 } });
+  }
+
+  uniqueNewPageTitle() {
+    const base = "New research page";
+    const titles = new Set(this.state.pages.map((page) => page.title.trim()));
+    if (!titles.has(base)) return base;
+    let counter = 2;
+    while (titles.has(`${base} ${counter}`)) counter += 1;
+    return `${base} ${counter}`;
   }
 
   async selectPage(pageId) {
@@ -455,9 +473,11 @@ export class TopicResearchApp {
     return block;
   }
 
-  async addParagraphAtEnd() {
+  async addParagraphAtEnd(options = {}) {
     const block = await this.addBlock(BLOCK_TYPES.paragraph);
-    requestAnimationFrame(() => this.focusBlock(block?.id));
+    if (options.fromKeyboard) this.state.keyboardCreatedEmptyBlockId = block.id;
+    requestAnimationFrame(() => this.focusBlock(block?.id, "start"));
+    return block;
   }
 
   async splitParagraphBlock(editable) {
@@ -514,6 +534,41 @@ export class TopicResearchApp {
     await this.storage.request("updateBlock", { block });
     this.renderEditor();
     requestAnimationFrame(() => this.focusBlock(block.id));
+  }
+
+  async handleRichTextArrowNavigation(event, editable) {
+    const direction = event.key === "ArrowDown" ? 1 : -1;
+    const atBoundary = direction > 0 ? isCaretOnLastVisualLine(editable) : isCaretOnFirstVisualLine(editable);
+    if (!atBoundary) return;
+
+    const blockEl = editable.closest("[data-block-id]");
+    const blockId = blockEl?.dataset.blockId;
+    const page = this.selectedPage();
+    if (!blockId || !page) return;
+
+    const blocks = this.blocksForPage(page.id);
+    const index = blocks.findIndex((block) => block.id === blockId);
+    if (index < 0) return;
+
+    if (direction < 0) {
+      const previous = blocks[index - 1];
+      if (!previous) return;
+      event.preventDefault();
+      this.focusBlock(previous.id, "end");
+      return;
+    }
+
+    const next = blocks[index + 1];
+    if (next) {
+      event.preventDefault();
+      this.focusBlock(next.id, "start");
+      return;
+    }
+
+    const current = blocks[index];
+    if (!blockHasText(current) || current.id === this.state.keyboardCreatedEmptyBlockId) return;
+    event.preventDefault();
+    await this.addParagraphAtEnd({ fromKeyboard: true });
   }
 
   async movePage(pageId, direction) {
@@ -735,8 +790,18 @@ export class TopicResearchApp {
     }
   }
 
-  focusBlock(blockId) {
-    this.root.querySelector(`[data-block-id="${CSS.escape(blockId)}"] [data-rich-text], [data-block-id="${CSS.escape(blockId)}"] textarea, [data-block-id="${CSS.escape(blockId)}"] input`)?.focus();
+  focusPageTitle({ select = false } = {}) {
+    const input = this.root.querySelector('[data-role="page-title"]');
+    if (!input) return;
+    input.focus();
+    if (select) input.select();
+  }
+
+  focusBlock(blockId, position = "start") {
+    const target = this.root.querySelector(`[data-block-id="${CSS.escape(blockId)}"] [data-rich-text], [data-block-id="${CSS.escape(blockId)}"] textarea, [data-block-id="${CSS.escape(blockId)}"] input`);
+    if (!target) return;
+    target.focus();
+    setCaretPosition(target, position);
   }
 
   captureBodyguardPaste(html) {
@@ -853,6 +918,91 @@ function cloneRecord(value) {
 
 function isTextEditingTarget(target) {
   return Boolean(target?.closest?.("input, textarea, [contenteditable='true']"));
+}
+
+function blockHasText(block) {
+  if (!block) return false;
+  if (typeof block.content?.text === "string") return Boolean(block.content.text.trim());
+  if (Array.isArray(block.content?.items)) return block.content.items.some((item) => String(item.text || "").trim());
+  return Boolean(Object.values(block.content || {}).some((value) => typeof value === "string" && value.trim()));
+}
+
+function setCaretPosition(target, position) {
+  const atEnd = position === "end";
+  if (target.matches("input, textarea")) {
+    const valueLength = target.value.length;
+    const offset = atEnd ? valueLength : 0;
+    target.setSelectionRange?.(offset, offset);
+    return;
+  }
+  if (!target.matches("[contenteditable='true']")) return;
+  const selection = window.getSelection();
+  if (!selection) return;
+  const range = document.createRange();
+  range.selectNodeContents(target);
+  range.collapse(!atEnd);
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+
+function isCaretOnFirstVisualLine(editable) {
+  return isCaretOnVisualBoundary(editable, "first");
+}
+
+function isCaretOnLastVisualLine(editable) {
+  return isCaretOnVisualBoundary(editable, "last");
+}
+
+function isCaretOnVisualBoundary(editable, boundary) {
+  const selection = window.getSelection();
+  if (!selection?.rangeCount || !selection.isCollapsed) return false;
+  const activeRange = selection.getRangeAt(0);
+  if (!editable.contains(activeRange.startContainer)) return false;
+  if (!editable.textContent.trim()) return true;
+
+  const caretRect = caretRectForRange(activeRange);
+  if (!caretRect) return fallbackBoundaryByOffset(editable, activeRange, boundary);
+
+  const contentRange = document.createRange();
+  contentRange.selectNodeContents(editable);
+  const rects = [...contentRange.getClientRects()].filter((rect) => rect.height > 0);
+  contentRange.detach?.();
+  if (!rects.length) return fallbackBoundaryByOffset(editable, activeRange, boundary);
+
+  const firstTop = Math.min(...rects.map((rect) => rect.top));
+  const lastBottom = Math.max(...rects.map((rect) => rect.bottom));
+  const lineHeight = parseFloat(getComputedStyle(editable).lineHeight) || caretRect.height || 18;
+  const tolerance = Math.max(3, Math.min(10, lineHeight * 0.45));
+  return boundary === "first"
+    ? caretRect.top <= firstTop + tolerance
+    : caretRect.bottom >= lastBottom - tolerance;
+}
+
+function caretRectForRange(range) {
+  const direct = range.getClientRects?.()[0] || null;
+  if (direct && direct.height > 0) return direct;
+
+  const marker = document.createElement("span");
+  marker.textContent = "\u200b";
+  const selection = window.getSelection();
+  const restored = range.cloneRange();
+  range.insertNode(marker);
+  const rect = marker.getBoundingClientRect();
+  marker.remove();
+  selection?.removeAllRanges();
+  selection?.addRange(restored);
+  return rect.height || rect.width ? rect : null;
+}
+
+function fallbackBoundaryByOffset(editable, range, boundary) {
+  const probe = range.cloneRange();
+  probe.selectNodeContents(editable);
+  if (boundary === "first") {
+    probe.setEnd(range.startContainer, range.startOffset);
+    return !probe.toString();
+  }
+  probe.setStart(range.startContainer, range.startOffset);
+  return !probe.toString();
 }
 
 function safeUrl(value) {
