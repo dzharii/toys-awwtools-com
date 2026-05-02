@@ -1,4 +1,4 @@
-// src/core/constants.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/core/constants.js
 var FRAMEWORK_VERSION = "0.1.0";
 var TAGS = {
   desktopRoot: "awwbookmarklet-desktop-root",
@@ -145,7 +145,7 @@ var DEFAULT_GEOMETRY = {
   cascadeStep: 28
 };
 
-// src/core/define.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/core/define.js
 function defineOnce(tagName, ctor) {
   if (!customElements.get(tagName)) {
     customElements.define(tagName, ctor);
@@ -157,7 +157,7 @@ function defineMany(definitions) {
   }
 }
 
-// src/core/styles.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/core/styles.js
 var canAdoptSheets = typeof ShadowRoot !== "undefined" && "adoptedStyleSheets" in ShadowRoot.prototype && typeof CSSStyleSheet !== "undefined" && "replaceSync" in CSSStyleSheet.prototype;
 var sheetCache = new Map;
 var textCache = new Map;
@@ -251,7 +251,7 @@ var BASE_COMPONENT_STYLES = css`
   }
 `;
 
-// src/components/desktop-root.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/desktop-root.js
 var DESKTOP_ROOT_STYLES = css`
   :host {
     position: fixed;
@@ -289,7 +289,7 @@ class AwwDesktopRoot extends HTMLElement {
   }
 }
 
-// src/core/geometry.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/core/geometry.js
 function getViewportRect() {
   if (window.visualViewport) {
     return {
@@ -369,7 +369,7 @@ function rectToStyle(rect) {
   };
 }
 
-// src/components/window.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/window.js
 var WINDOW_STYLES = css`
   :host {
     position: fixed;
@@ -781,7 +781,7 @@ class AwwWindow extends HTMLElement {
   }
 }
 
-// src/core/commands.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/core/commands.js
 class CommandRegistry {
   #commands = new Map;
   register(command) {
@@ -827,7 +827,7 @@ class CommandRegistry {
   }
 }
 
-// src/themes/default-theme.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/themes/default-theme.js
 var DEFAULT_THEME = {
   [PUBLIC_TOKENS.workspaceBg]: "rgba(0, 0, 0, 0)",
   [PUBLIC_TOKENS.windowBg]: "#eef1f5",
@@ -912,7 +912,7 @@ var DEFAULT_THEME = {
   [PUBLIC_TOKENS.controlInsetShadow]: "inset 1px 1px 0 #aab2bd, inset -1px -1px 0 #ffffff"
 };
 
-// src/core/theme.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/core/theme.js
 function applyThemePatch(target, themePatch = {}) {
   if (!target?.style)
     return;
@@ -957,7 +957,7 @@ class ThemeService {
 }
 var defaultThemeService = new ThemeService(DEFAULT_THEME);
 
-// src/components/menubar.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/menubar.js
 var MENUBAR_STYLES = css`
   :host {
     display: block;
@@ -1148,7 +1148,7 @@ class AwwMenubar extends HTMLElement {
   }
 }
 
-// src/components/menu.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/menu.js
 var MENU_STYLES = css`
   :host {
     position: fixed;
@@ -1392,7 +1392,7 @@ class AwwMenu extends HTMLElement {
   }
 }
 
-// src/components/button.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/button.js
 var BUTTON_STYLES = css`
   :host { display: inline-block; }
 
@@ -1503,7 +1503,7 @@ class AwwButton extends HTMLElement {
   }
 }
 
-// src/components/icon-button.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/icon-button.js
 var ICON_BUTTON_STYLES = css`
   :host { display: inline-block; }
 
@@ -1588,10 +1588,10 @@ class AwwIconButton extends HTMLElement {
   }
 }
 
-// src/core/form-attributes.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/core/form-attributes.js
 var FORM_ARIA_ATTRIBUTES = ["aria-label", "aria-labelledby", "aria-describedby", "aria-invalid"];
 
-// src/components/input.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/input.js
 var INPUT_STYLES = css`
   :host { display: inline-block; min-width: 140px; }
 
@@ -1665,7 +1665,7 @@ class AwwInput extends HTMLElement {
   }
 }
 
-// src/components/textarea.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/textarea.js
 var TEXTAREA_STYLES = css`
   :host { display: inline-block; min-width: 220px; }
 
@@ -1740,7 +1740,7 @@ class AwwTextarea extends HTMLElement {
   }
 }
 
-// src/components/checkbox.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/checkbox.js
 var CHECKBOX_STYLES = css`
   :host { display: inline-block; }
 
@@ -1823,7 +1823,7 @@ class AwwCheckbox extends HTMLElement {
   }
 }
 
-// src/components/radio.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/radio.js
 var RADIO_STYLES = css`
   :host { display: inline-block; }
 
@@ -1922,7 +1922,7 @@ class AwwRadio extends HTMLElement {
   }
 }
 
-// src/components/select.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/select.js
 var SELECT_STYLES = css`
   :host { display: inline-block; min-width: 160px; }
 
@@ -2036,7 +2036,7 @@ class AwwSelect extends HTMLElement {
   }
 }
 
-// src/components/range.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/range.js
 var RANGE_STYLES = css`
   :host { display: inline-block; min-width: 160px; }
 
@@ -2098,7 +2098,7 @@ class AwwRange extends HTMLElement {
   }
 }
 
-// src/components/progress.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/progress.js
 var PROGRESS_STYLES = css`
   :host { display: inline-block; min-width: 160px; }
 
@@ -2157,7 +2157,7 @@ class AwwProgress extends HTMLElement {
   }
 }
 
-// src/components/tabs.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/tabs.js
 var TABS_STYLES = css`
   :host { display: block; border: var(--_surface-border-width) solid var(--awwbookmarklet-border-subtle, #9ba5b3); border-radius: var(--_surface-radius); background: var(--awwbookmarklet-panel-bg, #f8fafc); }
 
@@ -2329,7 +2329,7 @@ class AwwTabs extends HTMLElement {
   };
 }
 
-// src/components/listbox.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/listbox.js
 var LISTBOX_STYLES = css`
   :host { display: block; }
 
@@ -2469,7 +2469,7 @@ class AwwListbox extends HTMLElement {
   };
 }
 
-// src/components/group.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/group.js
 var GROUP_STYLES = css`
   :host { display: block; }
 
@@ -2514,7 +2514,7 @@ class AwwGroup extends HTMLElement {
   }
 }
 
-// src/components/panel.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/panel.js
 var PANEL_STYLES = css`
   :host {
     display: block;
@@ -2611,7 +2611,7 @@ class AwwPanel extends HTMLElement {
   }
 }
 
-// src/components/statusbar.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/statusbar.js
 var STATUS_STYLES = css`
   :host {
     display: block;
@@ -2647,7 +2647,7 @@ class AwwStatusbar extends HTMLElement {
   }
 }
 
-// src/components/app-shell.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/app-shell.js
 var APP_SHELL_STYLES = css`
   :host {
     display: block;
@@ -2744,7 +2744,7 @@ class AwwAppShell extends HTMLElement {
   }
 }
 
-// src/core/component-utils.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/core/component-utils.js
 var TONES = new Set(["neutral", "info", "success", "warning", "danger"]);
 var DENSITIES = new Set(["compact", "normal", "spacious"]);
 var ALIGNMENTS = new Set(["start", "center", "end", "between"]);
@@ -2787,7 +2787,7 @@ function dispatchComponentEvent(target, name, detail = {}, options = {}) {
   }));
 }
 
-// src/components/toolbar.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/toolbar.js
 var TOOLBAR_STYLES = css`
   :host {
     display: flex;
@@ -2855,7 +2855,7 @@ class AwwToolbar extends HTMLElement {
   }
 }
 
-// src/components/field.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/field.js
 var FIELD_STYLES = css`
   :host {
     display: grid;
@@ -3005,7 +3005,7 @@ class AwwField extends HTMLElement {
   }
 }
 
-// src/components/status-line.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/status-line.js
 var STATUS_LINE_STYLES = css`
   :host {
     display: flex;
@@ -3073,7 +3073,7 @@ class AwwStatusLine extends HTMLElement {
   }
 }
 
-// src/components/alert.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/alert.js
 var ALERT_STYLES = css`
   :host {
     display: block;
@@ -3184,7 +3184,7 @@ class AwwAlert extends HTMLElement {
   }
 }
 
-// src/core/overlay.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/core/overlay.js
 var OVERLAY_CLASS = "awwbookmarklet-overlay-layer";
 function getOverlayLayer() {
   if (typeof document === "undefined")
@@ -3220,7 +3220,7 @@ function restoreElement(element, restore) {
   restore.parent.insertBefore(element, next);
 }
 
-// src/components/dialog.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/dialog.js
 var DIALOG_STYLES = css`
   :host {
     position: fixed;
@@ -3394,7 +3394,7 @@ class AwwDialog extends HTMLElement {
   }
 }
 
-// src/components/toast.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/toast.js
 var TOAST_STYLES = css`
   :host {
     display: block;
@@ -3493,7 +3493,7 @@ function showToast({ message = "", tone = "info", timeout = 2800, key = "" } = {
   return toast;
 }
 
-// src/components/empty-state.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/empty-state.js
 var EMPTY_STYLES = css`
   :host {
     display: block;
@@ -3556,7 +3556,7 @@ class AwwEmptyState extends HTMLElement {
   }
 }
 
-// src/components/state-overlay.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/state-overlay.js
 var STATE_STYLES = css`
   :host {
     position: absolute;
@@ -3643,7 +3643,7 @@ class AwwStateOverlay extends HTMLElement {
   }
 }
 
-// src/components/list.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/list.js
 var LIST_STYLES = css`
   :host {
     display: block;
@@ -3690,7 +3690,7 @@ class AwwList extends HTMLElement {
   }
 }
 
-// src/components/list-item.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/list-item.js
 var LIST_ITEM_STYLES = css`
   :host {
     display: block;
@@ -3822,7 +3822,7 @@ class AwwListItem extends HTMLElement {
   }
 }
 
-// src/components/card.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/card.js
 var CARD_STYLES = css`
   :host {
     display: block;
@@ -3895,7 +3895,7 @@ class AwwCard extends HTMLElement {
   }
 }
 
-// src/core/sanitize.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/core/sanitize.js
 var ALLOWED_TAGS = new Set([
   "A",
   "ABBR",
@@ -4004,7 +4004,7 @@ function sanitizeHtml(html, options = {}) {
   return sanitizeWithoutDomParser(html);
 }
 
-// src/components/rich-preview.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/rich-preview.js
 var RICH_PREVIEW_STYLES = css`
   :host {
     display: block;
@@ -4147,7 +4147,7 @@ class AwwRichPreview extends HTMLElement {
   }
 }
 
-// src/components/browser-panel.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/browser-panel.js
 var BROWSER_PANEL_STYLES = css`
   :host {
     display: grid;
@@ -4283,7 +4283,7 @@ class AwwBrowserPanel extends HTMLElement {
   }
 }
 
-// src/components/manual-copy.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/manual-copy.js
 var MANUAL_COPY_STYLES = css`
   :host {
     display: block;
@@ -4353,7 +4353,7 @@ class AwwManualCopy extends HTMLElement {
   }
 }
 
-// src/components/command-palette.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/command-palette.js
 var COMMAND_PALETTE_STYLES = css`
   :host {
     display: block;
@@ -4556,7 +4556,7 @@ class AwwCommandPalette extends HTMLElement {
   }
 }
 
-// src/components/shortcut-help.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/shortcut-help.js
 var SHORTCUT_HELP_STYLES = css`
   :host {
     display: block;
@@ -4676,7 +4676,7 @@ class AwwShortcutHelp extends HTMLElement {
   }
 }
 
-// src/core/url.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/core/url.js
 var DEFAULT_SEARCH_TEMPLATE = "https://www.google.com/search?q={query}";
 var BLOCKED_PROTOCOLS = new Set(["javascript:", "data:", "file:", "chrome:", "about:"]);
 function isHttpUrl(value) {
@@ -4735,7 +4735,7 @@ function deriveHostname(value) {
   }
 }
 
-// src/components/url-picker.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/url-picker.js
 var URL_PICKER_STYLES = css`
   :host {
     display: block;
@@ -4945,7 +4945,7 @@ class AwwUrlPicker extends HTMLElement {
   }
 }
 
-// src/components/metric-card.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/metric-card.js
 var METRIC_CARD_STYLES = css`
   :host {
     display: block;
@@ -5027,7 +5027,7 @@ class AwwMetricCard extends HTMLElement {
   }
 }
 
-// src/core/clipboard.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/core/clipboard.js
 function normalizePayload(payload = {}) {
   return {
     text: String(payload.text ?? ""),
@@ -5076,7 +5076,7 @@ async function copyToClipboard(payload = {}, environment = globalThis) {
   }
 }
 
-// src/core/context-segments.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/core/context-segments.js
 function splitUnescapedPipes(value) {
   const parts = [];
   let current = "";
@@ -5171,7 +5171,7 @@ function segmentsEqual(prev, next) {
   return prev.key === next.key && prev.value === next.value && prev.shortValue === next.shortValue && prev.copyValue === next.copyValue && prev.label === next.label && prev.kind === next.kind && prev.tone === next.tone && prev.disabled === next.disabled && prev.stale === next.stale && JSON.stringify(prev.actions || []) === JSON.stringify(next.actions || []);
 }
 
-// src/components/segment-strip.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/segment-strip.js
 var SEGMENT_STRIP_STYLES = css`
   :host {
     display: block;
@@ -5399,7 +5399,7 @@ class AwwSegmentStrip extends HTMLElement {
   };
 }
 
-// src/components/context-bar.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/context-bar.js
 var CONTEXT_BAR_STYLES = css`
   :host {
     display: block;
@@ -5542,7 +5542,7 @@ class AwwContextBar extends HTMLElement {
   }
 }
 
-// src/components/status-strip.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/status-strip.js
 var STATUS_STRIP_STYLES = css`
   :host {
     display: block;
@@ -5607,7 +5607,7 @@ class AwwStatusStrip extends HTMLElement {
   }
 }
 
-// src/components/titlebar.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/titlebar.js
 var TITLEBAR_STYLES = css`
   :host {
     display: block;
@@ -5703,7 +5703,7 @@ class AwwTitlebar extends HTMLElement {
   }
 }
 
-// src/components/context-panel.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/context-panel.js
 var CONTEXT_PANEL_STYLES = css`
   :host {
     display: block;
@@ -5828,7 +5828,7 @@ class AwwContextPanel extends HTMLElement {
   }
 }
 
-// src/components/register-all.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/components/register-all.js
 function registerAllComponents() {
   defineMany([
     [TAGS.desktopRoot, AwwDesktopRoot],
@@ -5877,7 +5877,7 @@ function registerAllComponents() {
   ]);
 }
 
-// src/core/window-manager.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/core/window-manager.js
 class WindowManager {
   #windows = new Set;
   #activeWindow = null;
@@ -5949,7 +5949,7 @@ class WindowManager {
   }
 }
 
-// src/core/runtime.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/core/runtime.js
 function getGlobalMap() {
   if (!globalThis[GLOBAL_SYMBOLS.rootsByVersion]) {
     globalThis[GLOBAL_SYMBOLS.rootsByVersion] = new Map;
@@ -6024,7 +6024,7 @@ function emergencyTeardown(version = FRAMEWORK_VERSION) {
   }
 }
 
-// src/demo/example-tool.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/demo/example-tool.js
 function iconPlus() {
   return `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="square"/></svg>`;
 }
@@ -6197,7 +6197,7 @@ function buildExampleToolWindow({ title = "Page Extraction Tool" } = {}) {
   return win;
 }
 
-// src/icons/retro-icons.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/icons/retro-icons.js
 var BASE_ATTRS = `viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"`;
 var ICONS = {
   logo: `<rect x="3" y="3" width="18" height="18" fill="currentColor" stroke="none"/><path d="M7 16V8h3l2 8 2-8h3v8" stroke="#f6f8fb"/><path d="M7 12h3M14 12h3" stroke="#f6f8fb"/>`,
@@ -6288,7 +6288,7 @@ function escapeHtml(value) {
   })[char]);
 }
 
-// src/demo/catalog.js
+// ../../../../../../C:/Home/my-github/toys-awwtools-com/docs/public/2026-04-25-bookmarklet-ui-2/src/demo/catalog.js
 registerAllComponents();
 var CATALOG_OWNER = "catalog-page";
 acquireDesktopRoot(CATALOG_OWNER);
