@@ -70,11 +70,15 @@
 - [ ] Copy CSV works.
 - [ ] Copy TSV works.
 - [ ] Download CSV works.
+- [ ] Download HTML works.
 - [ ] CSV includes header row.
 - [ ] CSV respects current visible rows/filter/sort/visible columns.
 - [ ] CSV handles commas/quotes/newlines correctly.
 - [ ] Formula-like strings are protected in CSV output.
 - [ ] Null/missing export as empty fields.
+- [ ] Downloaded HTML includes only static table content and metadata (no app controls).
+- [ ] Downloaded HTML source has no `<script>` tags and no interactive controls.
+- [ ] Downloaded HTML reflects current visible rows/columns/sort and render-cap note when active.
 
 ## Examples and Performance
 

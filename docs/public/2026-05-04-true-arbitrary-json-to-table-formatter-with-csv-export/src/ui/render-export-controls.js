@@ -22,9 +22,12 @@ export function renderExportControls(viewModel, refs, handlers = {}) {
   downloadCsv.type = "button";
   downloadCsv.textContent = "Download CSV";
   downloadCsv.addEventListener("click", () => handlers.onDownloadCsv?.());
-  actions.append(copyCsv, copyTsv, downloadCsv);
+  const downloadHtml = document.createElement("button");
+  downloadHtml.type = "button";
+  downloadHtml.textContent = "Download HTML";
+  downloadHtml.addEventListener("click", () => handlers.onDownloadHtml?.());
+  actions.append(copyCsv, copyTsv, downloadCsv, downloadHtml);
   panel.append(actions);
 
   refs.exportControlsContainer.append(panel);
 }
-

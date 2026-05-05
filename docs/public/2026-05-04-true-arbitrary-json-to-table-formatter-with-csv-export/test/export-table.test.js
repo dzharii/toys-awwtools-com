@@ -1,5 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import { escapeCsvCell, serializeCsv, serializeTsv } from "../src/core/export-table.js";
+import {
+  buildExportTimestampStamp,
+  buildHtmlExportDocument,
+  buildHtmlExportFilename,
+  escapeCsvCell,
+  serializeCsv,
+  serializeTsv
+} from "../src/core/export-table.js";
 
 describe("export-table", () => {
   test("escapeCsvCell handles RFC quoting", () => {
@@ -41,5 +48,36 @@ describe("export-table", () => {
     expect(result.ok).toBe(true);
     expect(result.text).toContain("Health\tmessage");
   });
-});
 
+  test("builds deterministic HTML export timestamp and filename", () => {
+    const fixedDate = new Date(2026, 4, 5, 13, 14, 15);
+    const stamp = buildExportTimestampStamp(fixedDate);
+    expect(stamp).toBe("20260505-131415");
+    const filename = buildHtmlExportFilename(fixedDate);
+    expect(filename).toBe("json-table-inspector-export-20260505-131415.html");
+  });
+
+  test("buildHtmlExportDocument returns standalone html with escaped metadata", () => {
+    const html = buildHtmlExportDocument({
+      title: "JSON Table Inspector Export",
+      metadataLines: [
+        { label: "Filter", value: "failures" },
+        { label: "Search", value: "<script>alert(1)</script>" }
+      ],
+      tableHtml: "<table class=\"jti-table\"><thead><tr><th>id</th></tr></thead><tbody><tr><td>a</td></tr></tbody></table>",
+      wrapCells: true
+    });
+
+    expect(html.startsWith("<!doctype html>")).toBe(true);
+    expect(html).toContain("<html lang=\"en\">");
+    expect(html).toContain("<head>");
+    expect(html).toContain("<style>");
+    expect(html).toContain("<body>");
+    expect(html).toContain("<table class=\"jti-table\">");
+    expect(html).toContain("JSON Table Inspector Export");
+    expect(html).toContain("Filter");
+    expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
+    expect(html).not.toContain("<script>");
+    expect(html.match(/<style>/g)?.length).toBe(1);
+  });
+});

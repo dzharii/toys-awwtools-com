@@ -16,7 +16,14 @@ import { buildDiagnostics } from "../core/build-diagnostics.js";
 import { applyColumnVisibility, resetVisibleColumns, toggleColumnVisibility } from "../core/column-visibility.js";
 import { chooseBestRowSource, findRowSourceCandidates } from "../core/detect-row-source.js";
 import { buildDatasetHealthSummary, scoreRows } from "../core/detect-failures.js";
-import { createDownloadBlob, serializeCsv, serializeTsv } from "../core/export-table.js";
+import {
+  buildExportTimestampStamp,
+  buildHtmlExportDocument,
+  buildHtmlExportFilename,
+  createDownloadBlob,
+  serializeCsv,
+  serializeTsv
+} from "../core/export-table.js";
 import { extractRowsFromSource } from "../core/extract-rows.js";
 import { flattenRows } from "../core/flatten.js";
 import { chooseDefaultVisibleColumns, orderColumns } from "../core/order-columns.js";
@@ -26,6 +33,7 @@ import { profileColumns } from "../core/profile-columns.js";
 import { EXAMPLES } from "../examples/index.js";
 import { renderColumnControls } from "../ui/render-column-controls.js";
 import { renderDetectionState } from "../ui/render-detection.js";
+import { cloneAndSanitizeTableForHtmlExport } from "../ui/export-html.js";
 import { renderExportControls } from "../ui/render-export-controls.js";
 import { buildCopyableErrorText, renderInputState } from "../ui/render-input.js";
 import { renderHighlightControls } from "../ui/render-highlight-controls.js";
@@ -473,15 +481,103 @@ function onDownloadCsv() {
   const blob = createDownloadBlob(result.text, "text/csv;charset=utf-8");
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  const now = new Date();
-  const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}-${String(
-    now.getHours()
-  ).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}${String(now.getSeconds()).padStart(2, "0")}`;
+  const stamp = buildExportTimestampStamp(new Date());
   link.href = url;
   link.download = `json-table-inspector-export-${stamp}.csv`;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 0);
   updateState({ statusMessage: `Downloaded CSV: ${result.meta.rowCount} rows × ${result.meta.columnCount} columns.` });
+}
+
+function buildHtmlExportMetadata(state, viewModel, rowCount, columnCount) {
+  const rows = [];
+  const generatedAt = new Date();
+  const sortState = state.table?.sort || { columnKey: null, direction: "none" };
+  const sortLabel = sortState.columnKey && sortState.direction !== "none"
+    ? `${sortState.columnKey} ${sortState.direction}`
+    : "none";
+  const searchStatus = state.table?.searchQuery?.trim() ? "active" : "none";
+
+  rows.push({ label: "Source", value: "JSON Table Inspector" });
+  rows.push({ label: "Generated", value: generatedAt.toISOString() });
+  rows.push({ label: "Visible Rows", value: String(rowCount) });
+  rows.push({ label: "Visible Columns", value: String(columnCount) });
+  rows.push({ label: "Filter", value: state.table?.quickFilter || "all" });
+  rows.push({ label: "Search", value: searchStatus });
+  rows.push({ label: "Sort", value: sortLabel });
+  if (viewModel.meta?.renderLimited) {
+    rows.push({
+      label: "Render Cap",
+      value: `active (${viewModel.meta.visibleRows} rendered of ${viewModel.meta.totalMatchingRows} matching rows)`
+    });
+  } else {
+    rows.push({ label: "Render Cap", value: "none" });
+  }
+  return rows;
+}
+
+function onDownloadHtml() {
+  const liveTable = refs.tableContainer.querySelector("table.jti-table");
+  if (!liveTable) {
+    updateState({ statusMessage: "Could not download HTML. No table is available to export." });
+    logger.warn("Export", "HTML download failed", { code: "E_EXPORT_HTML_NO_TABLE" });
+    return;
+  }
+
+  const sanitizedTable = cloneAndSanitizeTableForHtmlExport(liveTable);
+  if (!sanitizedTable) {
+    updateState({ statusMessage: "Could not download HTML. No table is available to export." });
+    logger.warn("Export", "HTML download failed", { code: "E_EXPORT_HTML_SANITIZE_FAILED" });
+    return;
+  }
+
+  const rowCount = sanitizedTable.querySelectorAll("tbody tr").length;
+  const columnCount = sanitizedTable.querySelectorAll("thead th").length;
+  logger.info("Export", "HTML serialize attempt", {
+    rowCount,
+    columnCount,
+    renderedOnly: true
+  });
+
+  const state = getState();
+  const metadataLines = buildHtmlExportMetadata(state, currentViewModel, rowCount, columnCount);
+  const documentText = buildHtmlExportDocument({
+    title: "JSON Table Inspector Export",
+    metadataLines,
+    tableHtml: sanitizedTable.outerHTML,
+    wrapCells: Boolean(state.ui?.wrapCells)
+  });
+  logger.info("Export", "HTML serialize succeeded", {
+    rowCount,
+    columnCount,
+    charCount: documentText.length
+  });
+
+  const filename = buildHtmlExportFilename(new Date());
+  try {
+    logger.info("Export", "HTML download attempt", {
+      filename,
+      charCount: documentText.length
+    });
+    const blob = createDownloadBlob(documentText, "text/html;charset=utf-8");
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+    logger.info("Export", "HTML download succeeded", {
+      filename,
+      charCount: documentText.length
+    });
+    updateState({ statusMessage: `Downloaded HTML: ${rowCount} rows × ${columnCount} columns.` });
+  } catch (error) {
+    logger.warn("Export", "HTML download failed", {
+      code: "E_EXPORT_HTML_DOWNLOAD",
+      message: error?.message || "unknown"
+    });
+    updateState({ statusMessage: "Could not download HTML. Download failed." });
+  }
 }
 
 async function loadExample(exampleId) {
@@ -654,7 +750,8 @@ function render() {
   renderExportControls(currentViewModel, refs, {
     onCopyCsv,
     onCopyTsv,
-    onDownloadCsv
+    onDownloadCsv,
+    onDownloadHtml
   });
 
   refs.copyCsvButton.toggleAttribute("disabled", currentViewModel.meta.totalMatchingRows === 0);
