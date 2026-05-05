@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Article Like AI Wrote It</title>
+  <meta name="description" content="A browser bookmarklet that replays the main text of any article with an AI-style streaming effect, preserving the original content while making the page feel alive." />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Article Like AI Wrote It" />
+  <meta property="og:description" content="A browser bookmarklet that finds the main article on a page and replays it as live AI-style text, with a polished streaming effect and no external AI service." />
+  <meta property="og:image" content="logo.png" />
+  <meta property="og:image:alt" content="Illustration of an article transforming into a live AI-style reading interface for the Article Like AI Wrote It bookmarklet." />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Article Like AI Wrote It" />
+  <meta name="twitter:description" content="Replay the main text of an article as if it were streaming into view from an AI-style writing interface." />
+  <meta name="twitter:image" content="logo.png" />
+  <meta name="twitter:image:alt" content="Colorful product image showing an article becoming an AI-style live reading experience." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f4f4f6;
+      --surface:   #ffffff;
+      --border:    rgba(0,0,0,.10);
+      --fg:        #1a1a22;
+      --fg-muted:  #5a5a70;
+      --accent:    #6366f1;
+      --accent-dk: #4f46e5;
+      --radius:    14px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:       #0f0f14;
+        --surface:  #18181f;
+        --border:   rgba(255,255,255,.10);
+        --fg:       #e8e8f0;
+        --fg-muted: #8888a4;
+      }
+    }
+
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      padding: 40px 20px 80px;
+      line-height: 1.65;
+    }
+
+    .page {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    .header { margin-bottom: 40px; }
+    .header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      margin-bottom: 10px;
+    }
+    .header p {
+      color: var(--fg-muted);
+      font-size: 1.05rem;
+      max-width: 560px;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      margin-bottom: 22px;
+    }
+    .card h2 {
+      font-size: 1.0rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--fg-muted);
+      margin-bottom: 14px;
+    }
+
+    /* ── Bookmarklet slot ── */
+    .bm-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    #bookmarklet-link {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 12px 24px;
+      border-radius: 10px;
+      text-decoration: none;
+      box-shadow: 0 2px 12px rgba(99,102,241,.35);
+      cursor: grab;
+      user-select: none;
+      transition: background .15s, box-shadow .15s, transform .1s;
+    }
+    #bookmarklet-link:hover {
+      background: var(--accent-dk);
+      box-shadow: 0 4px 20px rgba(99,102,241,.45);
+    }
+    #bookmarklet-link:active { transform: scale(.97); cursor: grabbing; }
+
+    .drag-hint {
+      font-size: .88rem;
+      color: var(--fg-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .drag-hint svg { flex-shrink: 0; opacity: .6; }
+
+    /* ── URL copy row ── */
+    .copy-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .url-preview {
+      font-family: ui-monospace, "Cascadia Code", "Courier New", monospace;
+      font-size: .78rem;
+      color: var(--fg-muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 10px;
+      max-width: 300px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex-shrink: 1;
+    }
+    .copy-btn {
+      flex-shrink: 0;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 12px;
+      cursor: pointer;
+      font-size: .85rem;
+      color: var(--fg);
+      transition: background .12s;
+    }
+    .copy-btn:hover { background: rgba(128,128,128,.1); }
+    .copy-btn.copied { color: #16a34a; border-color: #16a34a; }
+
+    /* ── Instructions ── */
+    .steps { list-style: none; counter-reset: steps; display: flex; flex-direction: column; gap: 10px; }
+    .steps li {
+      counter-increment: steps;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      font-size: .95rem;
+    }
+    .steps li::before {
+      content: counter(steps);
+      min-width: 26px;
+      height: 26px;
+      background: rgba(99,102,241,.12);
+      color: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: .82rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    kbd {
+      display: inline-block;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: .82em;
+      font-family: ui-monospace, monospace;
+    }
+
+    /* ── Works best on ── */
+    .tag-list { display: flex; flex-wrap: wrap; gap: 7px; }
+    .tag {
+      background: rgba(99,102,241,.09);
+      color: var(--accent-dk);
+      border-radius: 99px;
+      padding: 3px 11px;
+      font-size: .84rem;
+      font-weight: 500;
+    }
+    @media (prefers-color-scheme: dark) {
+      .tag { color: #a5b4fc; background: rgba(99,102,241,.15); }
+    }
+
+    /* ── Privacy note ── */
+    .privacy {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-size: .9rem;
+      color: var(--fg-muted);
+    }
+    .privacy-icon { font-size: 1.3rem; flex-shrink: 0; }
+
+    /* ── Controls quick-ref ── */
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px;
+    }
+    .control-item {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .control-item strong { display: block; font-size: .88rem; margin-bottom: 2px; }
+    .control-item span { font-size: .8rem; color: var(--fg-muted); }
+
+    /* ── Compat note ── */
+    .compat { font-size: .88rem; color: var(--fg-muted); }
+
+    /* ── Error / loading states ── */
+    #bm-loading {
+      color: var(--fg-muted);
+      font-size: .9rem;
+      padding: 8px 0;
+    }
+    #bm-error {
+      color: #dc2626;
+      font-size: .88rem;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <header class="header">
+    <h1>🤖 AI Stream Article</h1>
+    <p>
+      A browser bookmarklet that transforms the main article on any page into
+      an AI-chat-style streaming experience — replaying the same text you were
+      already reading, one token at a time.
+    </p>
+  </header>
+
+  <!-- ── Installation ─────────────────────────────────────── -->
+  <section class="card">
+    <h2>Install</h2>
+    <div class="bm-slot">
+      <p id="bm-loading">Preparing bookmarklet…</p>
+      <p id="bm-error">Could not generate bookmarklet. Make sure JavaScript is enabled.</p>
+      <!-- Bookmarklet link injected here by JS -->
+      <div id="bookmarklet-target"></div>
+
+      <div class="drag-hint" id="drag-hint" style="display:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>
+        </svg>
+        Drag the button above into your bookmarks bar to install.
+      </div>
+
+      <div class="copy-row" id="copy-row" style="display:none">
+        <span class="url-preview" id="url-preview" title="Full bookmarklet URL"></span>
+        <button class="copy-btn" id="copy-btn">Copy URL</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── How to use ────────────────────────────────────────── -->
+  <section class="card">
+    <h2>How to Use</h2>
+    <ol class="steps">
+      <li>Drag the <strong>AI Stream Article</strong> button above into your browser bookmarks bar.</li>
+      <li>Navigate to any article, blog post, or documentation page.</li>
+      <li>Click <strong>AI Stream Article</strong> in your bookmarks bar.</li>
+      <li>Watch the article replay with AI-style streaming. Use the on-page controls to pause, skip, adjust speed, or restore.</li>
+      <li>Click the bookmarklet again (or press <strong>Restore</strong>) to return to the original page.</li>
+    </ol>
+  </section>
+
+  <!-- ── Manual install ─────────────────────────────────────── -->
+  <section class="card">
+    <h2>Manual Install (if drag-and-drop is blocked)</h2>
+    <ol class="steps">
+      <li>Click <strong>Copy URL</strong> above to copy the bookmarklet URL to your clipboard.</li>
+      <li>In your browser, open <strong>Bookmarks → Add Bookmark</strong> (or press <kbd>Ctrl+D</kbd> / <kbd>⌘D</kbd>).</li>
+      <li>Give it any name — for example <em>AI Stream Article</em>.</li>
+      <li>Paste the copied URL into the bookmark's URL / Address field, then save.</li>
+    </ol>
+  </section>
+
+  <!-- ── Controls reference ────────────────────────────────── -->
+  <section class="card">
+    <h2>On-Page Controls</h2>
+    <div class="control-grid">
+      <div class="control-item"><strong>Pause / Resume</strong><span>Freeze or continue streaming</span></div>
+      <div class="control-item"><strong>Skip</strong><span>Reveal all remaining text instantly</span></div>
+      <div class="control-item"><strong>Speed</strong><span>Cycle: Relaxed → Standard → Fast</span></div>
+      <div class="control-item"><strong>Replay</strong><span>Run the effect again (shown on completion)</span></div>
+      <div class="control-item"><strong>Restore</strong><span>Return the original page content</span></div>
+    </div>
+    <p style="margin-top:14px;font-size:.88rem;color:var(--fg-muted)">
+      A compact floating pill also appears in the bottom-right corner whenever
+      the article surface scrolls out of view.
+    </p>
+  </section>
+
+  <!-- ── Works best on ─────────────────────────────────────── -->
+  <section class="card">
+    <h2>Works Best On</h2>
+    <div class="tag-list">
+      <span class="tag">Blog posts</span>
+      <span class="tag">News articles</span>
+      <span class="tag">Essays</span>
+      <span class="tag">Documentation pages</span>
+      <span class="tag">Wikipedia articles</span>
+      <span class="tag">Long-form writing</span>
+      <span class="tag">Technical tutorials</span>
+    </div>
+    <p style="margin-top:14px;font-size:.88rem;color:var(--fg-muted)">
+      Pages that are primarily app dashboards, login screens, or canvas-rendered
+      content may show a "Could not identify a main article" message.
+    </p>
+  </section>
+
+  <!-- ── Privacy ───────────────────────────────────────────── -->
+  <section class="card">
+    <h2>Privacy &amp; Safety</h2>
+    <div class="privacy">
+      <span class="privacy-icon">🔒</span>
+      <div>
+        The bookmarklet runs <strong>entirely in your browser tab</strong>. It makes
+        no network requests, sends no data anywhere, and stores nothing beyond
+        temporary in-memory state while the effect is active. The original page
+        content is never modified permanently — clicking <strong>Restore</strong>
+        returns everything to its previous state.
+        This installation page also requires no external fonts, analytics, or
+        third-party scripts.
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Compatibility ─────────────────────────────────────── -->
+  <section class="card">
+    <h2>Compatibility</h2>
+    <p class="compat">
+      Targets current desktop versions of <strong>Chrome</strong>, <strong>Edge</strong>,
+      <strong>Firefox</strong>, and <strong>Safari</strong>. Some sites may block
+      bookmarklet execution via Content Security Policy headers — this is a
+      browser-level restriction and the bookmarklet cannot work around it.
+      Reduced-motion preferences are respected automatically.
+    </p>
+  </section>
+
+</div><!-- /.page -->
+
+<!-- Bundle is loaded relative to this file; dist/ is a sibling directory -->
+<script src="dist/bookmarklet.bundle.js"></script>
+<script>
+(function () {
+  var loadingEl  = document.getElementById('bm-loading');
+  var errorEl    = document.getElementById('bm-error');
+  var targetEl   = document.getElementById('bookmarklet-target');
+  var dragHint   = document.getElementById('drag-hint');
+  var copyRow    = document.getElementById('copy-row');
+  var urlPreview = document.getElementById('url-preview');
+  var copyBtn    = document.getElementById('copy-btn');
+
+  function init() {
+    if (typeof window.BookmarkletMain !== 'function') {
+      loadingEl.style.display = 'none';
+      errorEl.style.display   = 'block';
+      return;
+    }
+
+    var source = window.BookmarkletMain.toString();
+    var bookmarkletUrl = 'javascript:(' + source + ')()';
+
+    // Build the draggable anchor
+    var link = document.createElement('a');
+    link.id        = 'bookmarklet-link';
+    link.textContent = '🤖 AI Stream Article';
+    link.href      = bookmarkletUrl;
+    link.title     = 'Drag to bookmarks bar';
+    // Prevent navigation when clicked on this install page
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      alert('Drag this button to your bookmarks bar to install it.\n\nOr use the "Copy URL" button and create a bookmark manually.');
+    });
+    targetEl.appendChild(link);
+
+    // URL preview (truncated display, full value for copying)
+    var preview = bookmarkletUrl.slice(0, 80) + (bookmarkletUrl.length > 80 ? '…' : '');
+    urlPreview.textContent = preview;
+    urlPreview.title = bookmarkletUrl;
+
+    // Copy button
+    copyBtn.addEventListener('click', function () {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(bookmarkletUrl).then(function () {
+          copyBtn.textContent = '✓ Copied!';
+          copyBtn.classList.add('copied');
+          setTimeout(function () {
+            copyBtn.textContent = 'Copy URL';
+            copyBtn.classList.remove('copied');
+          }, 2200);
+        }).catch(function () {
+          fallbackCopy(bookmarkletUrl);
+        });
+      } else {
+        fallbackCopy(bookmarkletUrl);
+      }
+    });
+
+    // Show UI
+    loadingEl.style.display = 'none';
+    dragHint.style.display  = 'flex';
+    copyRow.style.display   = 'flex';
+  }
+
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      copyBtn.textContent = '✓ Copied!';
+      copyBtn.classList.add('copied');
+      setTimeout(function () {
+        copyBtn.textContent = 'Copy URL';
+        copyBtn.classList.remove('copied');
+      }, 2200);
+    } catch (e) {
+      copyBtn.textContent = 'Select manually ↑';
+    }
+    ta.remove();
+  }
+
+  // The bundle script is synchronous, so BookmarkletMain should be defined
+  // by the time this inline script runs. Guard anyway for robustness.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
