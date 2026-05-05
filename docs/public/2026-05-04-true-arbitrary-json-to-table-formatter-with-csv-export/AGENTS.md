@@ -2,6 +2,8 @@
 
 NEVER use git write commands. No git commit, not git push and others. you can use git readonly commands.
 
+Remember this, your task is to work autonomously until all the project is implemented, has been implemented from the beginning to end. So it's end to end. Everything that you can see, like, you know, one by one, every chunk should autonomously be implemented. Do not stop, do not request. So once kind of automatically, like, you know, compact your... So make sure to kind of automatically proceed and go in the peek like a next chunk, the next chunk, the next chunk, and work autonomously.
+
 ## Project
 
 We build **JSON Table Inspector**: a static RetroOS-style browser app that turns arbitrary JSON or JSONL into a readable, spreadsheet-like table.
