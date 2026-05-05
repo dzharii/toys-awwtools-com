@@ -23,7 +23,6 @@ import { chooseDefaultVisibleColumns, orderColumns } from "../core/order-columns
 import { buildPerformanceWarnings, formatTiming } from "../core/performance.js";
 import { parseInput } from "../core/parse-input.js";
 import { profileColumns } from "../core/profile-columns.js";
-import { filterRows } from "../core/table-filter.js";
 import { EXAMPLES } from "../examples/index.js";
 import { renderColumnControls } from "../ui/render-column-controls.js";
 import { renderDetectionState } from "../ui/render-detection.js";
@@ -33,7 +32,7 @@ import { renderHighlightControls } from "../ui/render-highlight-controls.js";
 import { renderRowDetails } from "../ui/render-row-details.js";
 import { renderShell } from "../ui/render-shell.js";
 import { renderStatus } from "../ui/render-status.js";
-import { renderTable } from "../ui/render-table.js";
+import { renderTable, updateSelectedRowClass } from "../ui/render-table.js";
 import { buildTableViewModel } from "../ui/table-view-model.js";
 import { nextSortState } from "../ui/table-interactions.js";
 
@@ -64,6 +63,43 @@ let currentViewModel = {
     renderLimited: false
   }
 };
+let lastRenderState = null;
+
+function hasArrayContentChanged(previous, next) {
+  if (previous === next) return false;
+  if (!Array.isArray(previous) || !Array.isArray(next)) return true;
+  if (previous.length !== next.length) return true;
+  for (let index = 0; index < previous.length; index += 1) {
+    if (previous[index] !== next[index]) return true;
+  }
+  return false;
+}
+
+function hasTableDataChange(previous, next) {
+  if (!previous) return true;
+  if (previous.parseResult !== next.parseResult) return true;
+  if (previous.scoredRows !== next.scoredRows) return true;
+  if (previous.flatRows !== next.flatRows) return true;
+  if (previous.columns !== next.columns) return true;
+  if (previous.highlightRules !== next.highlightRules) return true;
+  if (previous.highlightRulesEnabled !== next.highlightRulesEnabled) return true;
+  if (previous.healthSummary !== next.healthSummary) return true;
+  if (hasArrayContentChanged(previous.visibleColumnKeys, next.visibleColumnKeys)) return true;
+  if (previous.table?.sort !== next.table?.sort) return true;
+  if (previous.table?.searchQuery !== next.table?.searchQuery) return true;
+  if (previous.table?.quickFilter !== next.table?.quickFilter) return true;
+  if (previous.table?.renderLimit !== next.table?.renderLimit) return true;
+  if (previous.table?.renderCellLimit !== next.table?.renderCellLimit) return true;
+  return false;
+}
+
+function hasTableLayoutChange(previous, next) {
+  if (!previous) return true;
+  if (previous.ui?.wrapCells !== next.ui?.wrapCells) return true;
+  if (previous.ui?.density !== next.ui?.density) return true;
+  if (previous.table?.columnWidths !== next.table?.columnWidths) return true;
+  return false;
+}
 
 function toFrameworkDensity(value) {
   return value === "roomy" ? "spacious" : value;
@@ -476,6 +512,7 @@ async function loadExample(exampleId) {
 function render() {
   const started = performance.now();
   const state = getState();
+  const previousState = lastRenderState;
 
   if (refs.inputTextarea.value !== state.inputText) {
     refs.inputTextarea.value = state.inputText;
@@ -505,29 +542,46 @@ function render() {
   renderInputState(state, refs);
   renderDetectionState(state, refs);
 
-  currentViewModel = buildTableViewModel(state);
-  renderTable(currentViewModel, refs, state, {
-    onSort(columnKey) {
-      updateState({
-        table: {
-          ...getState().table,
-          sort: nextSortState(getState().table.sort, columnKey)
-        }
-      });
-    },
-    onSelectRow(rowIndex) {
-      updateState({
-        table: {
-          ...getState().table,
-          selectedRowIndex: rowIndex
-        },
-        ui: {
-          ...getState().ui,
-          rowDetailsOpen: true
-        }
-      });
-    }
-  });
+  const tableDataChanged = hasTableDataChange(previousState, state);
+  const tableLayoutChanged = hasTableLayoutChange(previousState, state);
+  const selectedRowChanged = previousState?.table?.selectedRowIndex !== state.table?.selectedRowIndex;
+
+  if (tableDataChanged) {
+    currentViewModel = buildTableViewModel(state);
+  }
+
+  if (tableDataChanged || tableLayoutChanged) {
+    renderTable(currentViewModel, refs, state, {
+      onSort(columnKey) {
+        updateState({
+          table: {
+            ...getState().table,
+            sort: nextSortState(getState().table.sort, columnKey)
+          }
+        });
+      },
+      onSkipRowSelection(rowIndex) {
+        logger.info("Table", "Row selection skipped during text selection", { rowIndex });
+      },
+      onSelectRow(rowIndex) {
+        const activeState = getState();
+        if (activeState.table?.selectedRowIndex === rowIndex && activeState.ui?.rowDetailsOpen) return;
+        logger.info("Table", "Row selected", { rowIndex });
+        updateState({
+          table: {
+            ...activeState.table,
+            selectedRowIndex: rowIndex
+          },
+          ui: {
+            ...activeState.ui,
+            rowDetailsOpen: true
+          }
+        });
+      }
+    });
+  } else if (selectedRowChanged) {
+    updateSelectedRowClass(refs.tableContainer, previousState?.table?.selectedRowIndex, state.table?.selectedRowIndex);
+  }
 
   renderHighlightControls(state, refs, {
     onAddRule(ruleInput) {
@@ -605,8 +659,11 @@ function render() {
 
   refs.copyCsvButton.toggleAttribute("disabled", currentViewModel.meta.totalMatchingRows === 0);
   refs.exportButton.toggleAttribute("disabled", currentViewModel.meta.totalMatchingRows === 0);
-  refs.tableStatus.textContent = state.statusMessage
-    || `Showing ${currentViewModel.meta.visibleRows} of ${currentViewModel.meta.totalRows} rows · ${currentViewModel.meta.visibleColumns} visible columns`;
+  const defaultStatus = `Showing ${currentViewModel.meta.visibleRows} of ${currentViewModel.meta.totalRows} rows · ${currentViewModel.meta.visibleColumns} visible columns`;
+  const unknownHealthNote = currentViewModel.meta.healthAllUnknown
+    ? " · Health hidden: no clear success/failure signals found."
+    : "";
+  refs.tableStatus.textContent = state.statusMessage || `${defaultStatus}${unknownHealthNote}`;
 
   refs.diagnosticsContainer.replaceChildren();
   if (state.diagnostics?.items?.length) {
@@ -651,6 +708,7 @@ function render() {
   const renderDuration = performance.now() - started;
   const timingsText = `${formatTiming(renderDuration)} render`;
   refs.performanceContainer.dataset.render = timingsText;
+  lastRenderState = state;
 }
 
 function bindVerticalResize() {

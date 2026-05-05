@@ -10,11 +10,21 @@ function getVisibleColumns(state) {
   return applyColumnVisibility(columns, visibleKeys);
 }
 
-function buildSystemColumns() {
-  return [
-    { key: "__rowNumber", label: "#", width: 56, system: true },
-    { key: "__health", label: "Health", width: 140, system: true }
-  ];
+function shouldShowHealthColumn(healthSummary) {
+  if (!healthSummary || !Number.isFinite(healthSummary.rowCount) || healthSummary.rowCount <= 0) return true;
+  const allUnknown = healthSummary.failureCount === 0
+    && healthSummary.warningCount === 0
+    && healthSummary.okCount === 0
+    && healthSummary.unknownCount === healthSummary.rowCount;
+  return !allUnknown;
+}
+
+function buildSystemColumns(showHealthColumn) {
+  const columns = [{ key: "__rowNumber", label: "#", width: 56, system: true }];
+  if (showHealthColumn) {
+    columns.push({ key: "__health", label: "Health", width: 140, system: true });
+  }
+  return columns;
 }
 
 export function buildTableViewModel(state) {
@@ -38,6 +48,7 @@ export function buildTableViewModel(state) {
   const allColumns = state.columns || [];
   const visibleColumns = getVisibleColumns(state);
   const scoredRows = (state.scoredRows && state.scoredRows.length > 0 ? state.scoredRows : state.flatRows) || [];
+  const showHealthColumn = shouldShowHealthColumn(state.healthSummary);
 
   const filteredRows = filterRows(scoredRows, visibleColumns, state.table);
   const sortedRows = sortRows(filteredRows, state.table?.sort);
@@ -74,7 +85,7 @@ export function buildTableViewModel(state) {
   });
 
   const tableColumns = [
-    ...buildSystemColumns(),
+    ...buildSystemColumns(showHealthColumn),
     ...visibleColumns.map((column) => ({
       key: column.key,
       label: column.label,
@@ -100,8 +111,9 @@ export function buildTableViewModel(state) {
       renderLimited: renderWindow.renderLimited,
       renderReason: renderWindow.reason,
       renderedRowCount: renderWindow.renderedRowCount,
-      totalMatchingRows: renderWindow.totalMatchingRows
+      totalMatchingRows: renderWindow.totalMatchingRows,
+      showHealthColumn,
+      healthAllUnknown: !showHealthColumn && (state.healthSummary?.rowCount ?? 0) > 0
     }
   };
 }
-

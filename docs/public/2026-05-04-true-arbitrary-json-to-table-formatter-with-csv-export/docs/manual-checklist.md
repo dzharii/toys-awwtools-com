@@ -45,6 +45,12 @@
 - [ ] Quick filters (`all/issues/failures/warnings/ok/unknown`) work.
 - [ ] Sort toggles through asc/desc/none.
 - [ ] Density and Wrap controls affect table display.
+- [ ] Drag-select text across data cells and release mouse inside table; selection remains.
+- [ ] Drag text selection does not trigger row details updates.
+- [ ] Single-click row still opens row details.
+- [ ] Double-click word selection in data cell remains visible.
+- [ ] Row number and Health cells are non-selectable table chrome.
+- [ ] If every row is unknown, Health column is hidden and status explains why.
 
 ## Highlight Rules
 
@@ -85,4 +91,3 @@
 - [ ] Table has aria label and sort headers use `aria-sort`.
 - [ ] No pasted JSON is injected via `innerHTML`.
 - [ ] Console logs avoid raw row/cell/user-input dumps.
-
