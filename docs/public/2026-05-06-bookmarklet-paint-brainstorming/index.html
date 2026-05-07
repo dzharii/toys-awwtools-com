@@ -1,0 +1,970 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quick Sketch Iteration Showcase</title>
+  <script src="iterations-manifest.js" onerror="window.__quickSketchManifestLoadFailed = true"></script>
+  <style>
+    :root {
+      --bg: #f3efe5;
+      --bg-2: #e8f0e2;
+      --ink: #18211f;
+      --muted: #66706c;
+      --line: rgba(24, 33, 31, 0.13);
+      --card: rgba(255, 252, 244, 0.92);
+      --card-solid: #fffdf7;
+      --accent: #0f766e;
+      --accent-2: #b45309;
+      --accent-soft: rgba(15, 118, 110, 0.12);
+      --danger: #b42318;
+      --shadow: 0 22px 70px rgba(47, 57, 49, 0.17), 0 2px 10px rgba(47, 57, 49, 0.06);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      color-scheme: light;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: Verdana, Geneva, sans-serif;
+      background:
+        radial-gradient(circle at 11% 7%, rgba(180, 83, 9, 0.14), transparent 28rem),
+        radial-gradient(circle at 84% 0%, rgba(15, 118, 110, 0.16), transparent 26rem),
+        linear-gradient(135deg, var(--bg), var(--bg-2));
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(24, 33, 31, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(24, 33, 31, 0.035) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.15));
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      width: min(1720px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 32px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: end;
+      margin-bottom: 18px;
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, rgba(255, 253, 247, 0.92), rgba(250, 246, 235, 0.72));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--accent-2);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 750;
+      letter-spacing: -0.035em;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 5vw, 68px);
+      line-height: 0.95;
+    }
+
+    .hero p {
+      max-width: 850px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.65;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .button {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.7) inset;
+    }
+
+    .button.primary {
+      border-color: rgba(15, 118, 110, 0.35);
+      background: #0f766e;
+      color: #ffffff;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(47, 57, 49, 0.12);
+    }
+
+    .button:active {
+      transform: translateY(0);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 390px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .sidebar,
+    .main-panel,
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      background: var(--card);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-head {
+      padding: 18px 18px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .sidebar-head h2,
+    .panel-title h2 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .search-row {
+      position: relative;
+      margin-top: 14px;
+    }
+
+    .search-row input {
+      width: 100%;
+      height: 42px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--ink);
+      outline: none;
+    }
+
+    .search-row input:focus {
+      border-color: rgba(15, 118, 110, 0.55);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+
+    .iteration-count {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .iteration-list {
+      padding: 10px;
+      overflow: auto;
+    }
+
+    .iteration-item {
+      width: 100%;
+      display: block;
+      margin: 0 0 8px;
+      padding: 13px;
+      border: 1px solid transparent;
+      border-radius: 18px;
+      background: transparent;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .iteration-item:hover {
+      background: rgba(255, 255, 255, 0.56);
+    }
+
+    .iteration-item.is-selected {
+      border-color: rgba(15, 118, 110, 0.35);
+      background: linear-gradient(135deg, rgba(15, 118, 110, 0.14), rgba(255, 255, 255, 0.7));
+      box-shadow: 0 10px 24px rgba(15, 118, 110, 0.08);
+    }
+
+    .iteration-topline {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .iteration-id {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .iteration-title {
+      margin: 6px 0 6px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 19px;
+      font-weight: 750;
+      letter-spacing: -0.025em;
+    }
+
+    .iteration-summary {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 9px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      padding: 0 8px;
+      border: 1px solid rgba(24, 33, 31, 0.1);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.58);
+      color: #47514d;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .badge.missing {
+      color: #9a3412;
+      background: rgba(251, 146, 60, 0.13);
+    }
+
+    .main-panel {
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-title p {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .panel-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .link-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 0 18px 18px;
+    }
+
+    .file-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 34px;
+      padding: 0 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.62);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .preview-section {
+      padding: 0 18px 18px;
+    }
+
+    .preview-frame-shell {
+      position: relative;
+      min-height: 560px;
+      overflow: hidden;
+      border: 1px solid rgba(24, 33, 31, 0.14);
+      border-radius: 22px;
+      background: #eef1ec;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.75);
+    }
+
+    .preview-frame-shell iframe {
+      width: 100%;
+      height: 640px;
+      display: block;
+      border: 0;
+      background: #f8faf7;
+    }
+
+    .state-pill {
+      position: absolute;
+      right: 14px;
+      top: 14px;
+      z-index: 2;
+      max-width: min(520px, calc(100% - 28px));
+      padding: 8px 11px;
+      border: 1px solid rgba(24, 33, 31, 0.12);
+      border-radius: 999px;
+      background: rgba(255, 253, 247, 0.9);
+      color: #47514d;
+      font-size: 12px;
+      font-weight: 800;
+      box-shadow: 0 8px 24px rgba(47, 57, 49, 0.12);
+      pointer-events: none;
+    }
+
+    .state-pill.error {
+      color: var(--danger);
+      border-color: rgba(180, 35, 24, 0.24);
+      background: rgba(255, 241, 239, 0.94);
+    }
+
+    .viewer-section {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+      padding: 0 18px 18px;
+    }
+
+    .viewer-card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(255, 253, 247, 0.8);
+    }
+
+    .viewer-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tab-button {
+      min-height: 34px;
+      padding: 0 12px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .tab-button.is-active {
+      border-color: rgba(15, 118, 110, 0.26);
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .viewer-status {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    pre.viewer-content {
+      min-height: 260px;
+      max-height: 520px;
+      margin: 0;
+      padding: 18px;
+      overflow: auto;
+      color: #24302c;
+      background: #fffdf7;
+      font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .empty-state {
+      padding: 28px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .error-box {
+      margin: 18px;
+      padding: 14px;
+      border: 1px solid rgba(180, 35, 24, 0.22);
+      border-radius: 16px;
+      background: rgba(255, 241, 239, 0.82);
+      color: var(--danger);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 1120px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+        max-height: none;
+      }
+
+      .iteration-list {
+        max-height: 420px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .app-shell {
+        width: min(100% - 18px, 1720px);
+        padding-top: 9px;
+      }
+
+      .hero,
+      .panel-head {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding: 20px;
+        border-radius: 22px;
+      }
+
+      .hero-actions,
+      .panel-actions {
+        justify-content: flex-start;
+      }
+
+      .preview-frame-shell {
+        min-height: 460px;
+      }
+
+      .preview-frame-shell iframe {
+        height: 520px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Local static review tool</p>
+        <h1>Quick Sketch Iteration Showcase</h1>
+        <p>Browse every saved Quick Sketch bookmarklet iteration, launch it in a clean isolated iframe, and review the delta, source, and full specification without modifying any iteration files.</p>
+      </div>
+      <div class="hero-actions">
+        <button id="latestButton" class="button primary" type="button">Open latest</button>
+        <button id="reloadPreviewButton" class="button" type="button">Reload preview</button>
+      </div>
+    </header>
+
+    <div id="globalError" class="error-box hidden"></div>
+
+    <main class="layout">
+      <aside class="sidebar" aria-label="Iterations">
+        <div class="sidebar-head">
+          <h2>Iterations</h2>
+          <div class="search-row">
+            <input id="searchInput" type="search" placeholder="Search id, title, or summary" aria-label="Search iterations">
+          </div>
+          <div id="iterationCount" class="iteration-count">Loading manifest...</div>
+        </div>
+        <div id="iterationList" class="iteration-list" role="list"></div>
+      </aside>
+
+      <section class="main-panel" aria-label="Selected iteration preview">
+        <div class="panel-head">
+          <div class="panel-title">
+            <h2 id="selectedTitle">No iteration selected</h2>
+            <p id="selectedSummary">The latest available iteration will load automatically.</p>
+          </div>
+          <div class="panel-actions">
+            <button id="reloadPreviewButton2" class="button" type="button">Reset iframe</button>
+          </div>
+        </div>
+
+        <nav id="linkRow" class="link-row" aria-label="Selected iteration files"></nav>
+
+        <section class="preview-section" aria-label="Bookmarklet preview">
+          <div id="previewShell" class="preview-frame-shell">
+            <div id="previewState" class="state-pill">Waiting for manifest...</div>
+          </div>
+        </section>
+
+        <section class="viewer-section" aria-label="Iteration file viewer">
+          <div class="viewer-card">
+            <div class="viewer-toolbar">
+              <div class="tabs" role="tablist" aria-label="Selected file viewers">
+                <button class="tab-button is-active" type="button" data-view="delta">Delta</button>
+                <button class="tab-button" type="button" data-view="source">JS source</button>
+                <button class="tab-button" type="button" data-view="spec">Spec</button>
+              </div>
+              <div id="viewerStatus" class="viewer-status">Select an iteration to load files.</div>
+            </div>
+            <pre id="viewerContent" class="viewer-content">No file loaded.</pre>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (function quickSketchShowcase() {
+      "use strict";
+
+      const els = {
+        globalError: document.getElementById("globalError"),
+        iterationList: document.getElementById("iterationList"),
+        iterationCount: document.getElementById("iterationCount"),
+        searchInput: document.getElementById("searchInput"),
+        latestButton: document.getElementById("latestButton"),
+        reloadPreviewButton: document.getElementById("reloadPreviewButton"),
+        reloadPreviewButton2: document.getElementById("reloadPreviewButton2"),
+        selectedTitle: document.getElementById("selectedTitle"),
+        selectedSummary: document.getElementById("selectedSummary"),
+        linkRow: document.getElementById("linkRow"),
+        previewShell: document.getElementById("previewShell"),
+        previewState: document.getElementById("previewState"),
+        viewerStatus: document.getElementById("viewerStatus"),
+        viewerContent: document.getElementById("viewerContent"),
+        tabs: Array.from(document.querySelectorAll(".tab-button"))
+      };
+
+      const localFileMessage = "Some browsers block local file reads from file://. Open this folder through a local static server to enable delta/source/spec preview.";
+      const state = {
+        iterations: [],
+        filtered: [],
+        selectedId: null,
+        activeView: "delta"
+      };
+
+      boot();
+
+      function boot() {
+        if (window.__quickSketchManifestLoadFailed || !Array.isArray(window.QUICK_SKETCH_ITERATIONS)) {
+          showGlobalError("Could not load iterations-manifest.js. Regenerate the manifest and keep it next to index.html.");
+          setPreviewState("Manifest unavailable", true);
+          return;
+        }
+
+        state.iterations = normalizeIterations(window.QUICK_SKETCH_ITERATIONS);
+
+        if (state.iterations.length === 0) {
+          showGlobalError("The manifest loaded, but it does not contain any iterations.");
+          setPreviewState("No iterations", true);
+          return;
+        }
+
+        els.searchInput.addEventListener("input", renderIterationList);
+        els.latestButton.addEventListener("click", selectLatest);
+        els.reloadPreviewButton.addEventListener("click", reloadSelectedPreview);
+        els.reloadPreviewButton2.addEventListener("click", reloadSelectedPreview);
+
+        for (const tab of els.tabs) {
+          tab.addEventListener("click", function handleTabClick() {
+            state.activeView = tab.dataset.view;
+            updateTabs();
+            loadActiveViewer();
+          });
+        }
+
+        renderIterationList();
+        selectLatest();
+      }
+
+      function normalizeIterations(iterations) {
+        return iterations
+          .filter(function hasRequiredFields(item) {
+            return item && item.id && item.bookmarkletFile;
+          })
+          .map(function normalize(item) {
+            return {
+              id: String(item.id),
+              title: item.title || `Iteration ${item.id}`,
+              bookmarkletFile: item.bookmarkletFile,
+              specFile: item.specFile || null,
+              deltaFile: item.deltaFile || null,
+              summary: item.summary || "No summary available."
+            };
+          })
+          .sort(function byNumericId(a, b) {
+            return Number(a.id) - Number(b.id);
+          });
+      }
+
+      function renderIterationList() {
+        const query = els.searchInput.value.trim().toLowerCase();
+
+        state.filtered = state.iterations.filter(function matchesQuery(iteration) {
+          const haystack = `${iteration.id} ${iteration.title} ${iteration.summary}`.toLowerCase();
+          return haystack.includes(query);
+        });
+
+        els.iterationCount.textContent = `${state.filtered.length} of ${state.iterations.length} iterations shown`;
+        els.iterationList.innerHTML = "";
+
+        if (state.filtered.length === 0) {
+          const empty = document.createElement("div");
+          empty.className = "empty-state";
+          empty.textContent = "No iterations match the current filter.";
+          els.iterationList.appendChild(empty);
+          return;
+        }
+
+        for (const iteration of state.filtered) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = `iteration-item${iteration.id === state.selectedId ? " is-selected" : ""}`;
+          button.setAttribute("role", "listitem");
+          button.addEventListener("click", function selectThisIteration() {
+            selectIteration(iteration.id);
+          });
+
+          button.innerHTML = `
+            <div class="iteration-topline">
+              <span class="iteration-id">#${escapeHtml(iteration.id)}</span>
+              <span class="badge">${iteration.id === latestIteration().id ? "Latest" : "Saved"}</span>
+            </div>
+            <div class="iteration-title">${escapeHtml(iteration.title)}</div>
+            <p class="iteration-summary">${escapeHtml(iteration.summary)}</p>
+            <div class="badges" aria-label="Available files">
+              <span class="badge">JS</span>
+              <span class="badge${iteration.specFile ? "" : " missing"}">Spec${iteration.specFile ? "" : " missing"}</span>
+              <span class="badge${iteration.deltaFile ? "" : " missing"}">Delta${iteration.deltaFile ? "" : " none"}</span>
+            </div>
+          `;
+
+          els.iterationList.appendChild(button);
+        }
+      }
+
+      function selectLatest() {
+        selectIteration(latestIteration().id);
+      }
+
+      function latestIteration() {
+        return state.iterations[state.iterations.length - 1];
+      }
+
+      function selectIteration(id) {
+        const iteration = state.iterations.find(function findById(item) {
+          return item.id === id;
+        });
+
+        if (!iteration) {
+          showGlobalError(`Iteration ${id} is not present in the manifest.`);
+          return;
+        }
+
+        state.selectedId = iteration.id;
+        hideGlobalError();
+        els.selectedTitle.textContent = `Iteration ${iteration.id}: ${iteration.title}`;
+        els.selectedSummary.textContent = iteration.summary;
+        renderIterationList();
+        renderFileLinks(iteration);
+        resetPreview(iteration);
+        updateTabs();
+        loadActiveViewer();
+      }
+
+      function selectedIteration() {
+        return state.iterations.find(function findSelected(item) {
+          return item.id === state.selectedId;
+        }) || null;
+      }
+
+      function renderFileLinks(iteration) {
+        const links = [
+          { label: "Open JS", file: iteration.bookmarkletFile },
+          { label: "Open spec", file: iteration.specFile },
+          { label: "Open delta", file: iteration.deltaFile }
+        ];
+
+        els.linkRow.innerHTML = "";
+
+        for (const link of links) {
+          if (!link.file) {
+            continue;
+          }
+
+          const anchor = document.createElement("a");
+          anchor.className = "file-link";
+          anchor.href = link.file;
+          anchor.target = "_blank";
+          anchor.rel = "noopener";
+          anchor.textContent = link.label;
+          els.linkRow.appendChild(anchor);
+        }
+      }
+
+      function reloadSelectedPreview() {
+        const iteration = selectedIteration();
+
+        if (iteration) {
+          resetPreview(iteration);
+        }
+      }
+
+      function resetPreview(iteration) {
+        const oldFrame = els.previewShell.querySelector("iframe");
+        if (oldFrame) {
+          oldFrame.remove();
+        }
+
+        setPreviewState(`Loading ${iteration.bookmarkletFile}...`, false);
+
+        const iframe = document.createElement("iframe");
+        iframe.title = `Quick Sketch preview for iteration ${iteration.id}`;
+        iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-downloads allow-modals");
+        els.previewShell.appendChild(iframe);
+
+        const doc = iframe.contentDocument;
+        if (!doc) {
+          setPreviewState("Could not create preview document.", true);
+          return;
+        }
+
+        doc.open();
+        doc.write(createPreviewDocument(iteration));
+        doc.close();
+
+        if (iframe.contentWindow) {
+          iframe.contentWindow.addEventListener("error", function handlePreviewRuntimeError(event) {
+            const detail = event && event.message ? event.message : "Unknown preview runtime error";
+            setPreviewState(`Preview error in iteration ${iteration.id}: ${detail}`, true);
+          });
+        }
+
+        const script = doc.createElement("script");
+        script.src = new URL(iteration.bookmarkletFile, window.location.href).href;
+        script.onload = function handlePreviewScriptLoaded() {
+          setPreviewState(`Running iteration ${iteration.id}`, false);
+        };
+        script.onerror = function handlePreviewScriptError() {
+          setPreviewState(`Failed to load ${iteration.bookmarkletFile}. Check that the file exists and can be opened by this browser.`, true);
+        };
+        doc.body.appendChild(script);
+      }
+
+      function createPreviewDocument(iteration) {
+        const title = `Bookmarklet preview ${iteration.id}`;
+        return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <base href="${escapeHtml(document.baseURI)}">
+  <title>${escapeHtml(title)}</title>
+  <style>
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      min-height: 960px;
+      background:
+        radial-gradient(circle at 18% 15%, rgba(15, 118, 110, 0.08), transparent 24rem),
+        linear-gradient(135deg, #f8faf7, #eef2ed);
+      color: #52605b;
+      font-family: Verdana, Geneva, sans-serif;
+    }
+    .preview-label {
+      position: fixed;
+      left: 18px;
+      top: 18px;
+      padding: 8px 11px;
+      border: 1px solid rgba(24, 33, 31, 0.12);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.78);
+      color: #52605b;
+      font-size: 12px;
+      font-weight: 800;
+      box-shadow: 0 8px 26px rgba(47, 57, 49, 0.08);
+    }
+    .blank-note {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: min(420px, calc(100% - 40px));
+      text-align: center;
+      color: rgba(82, 96, 91, 0.5);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="preview-label">Bookmarklet preview: iteration ${escapeHtml(iteration.id)}</div>
+  <div class="blank-note">Minimal blank document. The selected Quick Sketch bookmarklet runs inside this iframe.</div>
+</body>
+</html>`;
+      }
+
+      function setPreviewState(message, isError) {
+        els.previewState.textContent = message;
+        els.previewState.classList.toggle("error", Boolean(isError));
+      }
+
+      function updateTabs() {
+        for (const tab of els.tabs) {
+          tab.classList.toggle("is-active", tab.dataset.view === state.activeView);
+        }
+      }
+
+      async function loadActiveViewer() {
+        const iteration = selectedIteration();
+
+        if (!iteration) {
+          els.viewerContent.textContent = "No iteration selected.";
+          els.viewerStatus.textContent = "Idle";
+          return;
+        }
+
+        const view = state.activeView;
+        const file = view === "delta" ? iteration.deltaFile : view === "source" ? iteration.bookmarkletFile : iteration.specFile;
+
+        if (!file) {
+          const message = view === "delta"
+            ? `Iteration ${iteration.id} is the baseline or has no delta file. Use the spec/source links for full context.`
+            : `Iteration ${iteration.id} does not declare a ${view} file in the manifest.`;
+          els.viewerContent.textContent = message;
+          els.viewerStatus.textContent = "No file for this view";
+          return;
+        }
+
+        els.viewerStatus.textContent = `Loading ${file}...`;
+        els.viewerContent.textContent = "";
+
+        try {
+          const response = await fetch(file, { cache: "no-store" });
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const text = await response.text();
+          els.viewerContent.textContent = text;
+          els.viewerStatus.textContent = file;
+        } catch (error) {
+          els.viewerContent.textContent = `Could not load ${file}.\n\n${localFileMessage}\n\nDetails: ${error.message || error}`;
+          els.viewerStatus.textContent = "File preview unavailable";
+        }
+      }
+
+      function showGlobalError(message) {
+        els.globalError.textContent = message;
+        els.globalError.classList.remove("hidden");
+      }
+
+      function hideGlobalError() {
+        els.globalError.classList.add("hidden");
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+    })();
+  </script>
+</body>
+</html>
