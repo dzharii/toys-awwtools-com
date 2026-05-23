@@ -52,6 +52,7 @@
     lastValidCreatedMs: Date.parse(DEFAULT_CONFIG.createdAtUtc),
     lastRenderedScale: null,
     hashTimer: 0,
+    copyResetTimer: 0,
     lastCopyText: '',
     suppressHashChange: false
   };
@@ -61,6 +62,7 @@
     pageTitle: document.getElementById('pageTitle'),
     timelineSection: document.getElementById('timelineSection'),
     timelineStage: document.getElementById('timelineStage'),
+    meetingCard: document.querySelector('.meeting-card'),
     themeControl: document.getElementById('themeControl'),
     renderControl: document.getElementById('renderControl'),
     aSpriteControl: document.getElementById('aSpriteControl'),
@@ -152,8 +154,8 @@
     el.editButton.addEventListener('click', () => enterEditMode(true));
     el.saveButton.addEventListener('click', saveEditMode);
     el.cancelButton.addEventListener('click', cancelEditMode);
-    el.shareButton.addEventListener('click', () => copyLink());
-    el.copyEditLinkButton.addEventListener('click', () => copyLink());
+    el.shareButton.addEventListener('click', () => copyLink(el.shareButton));
+    el.copyEditLinkButton.addEventListener('click', () => copyLink(el.copyEditLinkButton));
 
     el.themeControl.addEventListener('change', () => {
       setTheme(el.themeControl.value);
@@ -327,10 +329,11 @@
   }
 
   function parseParticipant(rawValue, fallback) {
-    const at = rawValue.indexOf('@');
+    const decodedRaw = decode(rawValue);
+    const at = decodedRaw.indexOf('@');
     if (at === -1) return { ...fallback };
-    const name = decode(rawValue.slice(0, at)) || fallback.name;
-    const timeZone = decode(rawValue.slice(at + 1)).replace(/~/g, '/') || fallback.timeZone;
+    const name = decodedRaw.slice(0, at) || fallback.name;
+    const timeZone = decodedRaw.slice(at + 1).replace(/~/g, '/') || fallback.timeZone;
     return { name, timeZone };
   }
 
@@ -443,6 +446,13 @@
 
   function saveEditMode() {
     if (!state.isEditing || !state.draft) return;
+    const metaValidation = getMetaValidation();
+    if (metaValidation) {
+      state.draft.validation = { ...metaValidation, isValid: false };
+      showValidation(metaValidation.message, true);
+      render(false);
+      return;
+    }
     if (!state.draft.validation.isValid) {
       showValidation(state.draft.validation.message || 'Fix the invalid time before saving.', true);
       return;
@@ -484,13 +494,23 @@
     if (SPRITES[el.editASpriteInput.value]) config.participantA.spriteKey = el.editASpriteInput.value;
     if (SPRITES[el.editBSpriteInput.value]) config.participantB.spriteKey = el.editBSpriteInput.value;
 
+    const metaValidation = getMetaValidation();
+    if (metaValidation) {
+      state.draft.validation = { ...metaValidation, isValid: false };
+      render(false);
+      return;
+    }
+
     const oldATz = config.participantA.timeZone;
     const oldBTz = config.participantB.timeZone;
-    if (isValidTimeZone(el.aTzInput.value.trim())) config.participantA.timeZone = el.aTzInput.value.trim();
-    if (isValidTimeZone(el.bTzInput.value.trim())) config.participantB.timeZone = el.bTzInput.value.trim();
+    config.participantA.timeZone = el.aTzInput.value.trim();
+    config.participantB.timeZone = el.bTzInput.value.trim();
 
     if (oldATz !== config.participantA.timeZone || oldBTz !== config.participantB.timeZone) {
       syncDraftTimeFields(Date.parse(config.startsAtUtc), null);
+    }
+    if (isMetaValidationSource(state.draft.validation.source)) {
+      state.draft.validation = { source: null, message: '', isValid: true };
     }
     scheduleHashUpdate(config, 'edit');
     render();
@@ -500,6 +520,12 @@
     if (!state.isEditing || !state.draft) return;
     state.draft.activeTimeSource = source;
     captureTimeFieldValues();
+    const metaValidation = getMetaValidation();
+    if (metaValidation) {
+      state.draft.validation = { ...metaValidation, isValid: false };
+      render(false);
+      return;
+    }
     const result = parseSourceTime(source);
     const timeRow = document.querySelector(`.time-row[data-source="${source}"]`);
     if (!result.valid) {
@@ -517,6 +543,27 @@
     syncDraftTimeFields(result.ms, source);
     scheduleHashUpdate(state.draft.config, 'edit');
     render(false);
+  }
+
+  function getMetaValidation() {
+    if (!state.isEditing || !state.draft) return null;
+    const duration = Number(el.durationInput.value);
+    if (!Number.isFinite(duration) || duration < 5) {
+      return { source: 'duration', message: 'Duration must be at least 5 minutes.' };
+    }
+    const aZone = el.aTzInput.value.trim();
+    if (!isValidTimeZone(aZone)) {
+      return { source: 'participantAZone', message: 'Participant A needs a valid IANA time zone, for example America/Los_Angeles.' };
+    }
+    const bZone = el.bTzInput.value.trim();
+    if (!isValidTimeZone(bZone)) {
+      return { source: 'participantBZone', message: 'Participant B needs a valid IANA time zone, for example Europe/Berlin.' };
+    }
+    return null;
+  }
+
+  function isMetaValidationSource(source) {
+    return ['duration', 'participantAZone', 'participantBZone'].includes(source);
   }
 
   function captureTimeFieldValues() {
@@ -684,7 +731,9 @@
     const positions = getParticipantPositions(journey.progressRatio);
     const effectiveTheme = config.theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : config.theme;
 
-    el.appShell.dataset.theme = effectiveTheme === 'auto' ? 'light' : effectiveTheme;
+    const resolvedTheme = effectiveTheme === 'auto' ? 'light' : effectiveTheme;
+    el.appShell.dataset.theme = resolvedTheme;
+    document.body.dataset.theme = resolvedTheme;
     el.timelineStage.style.setProperty('--participant-a-x', `${positions.aX}%`);
     el.timelineStage.style.setProperty('--participant-b-x', `${positions.bX}%`);
     el.timelineStage.style.setProperty('--hand-extension', positions.handExtension.toFixed(3));
@@ -704,8 +753,25 @@
     renderText(config, ms, now, scale);
     renderTicks(createdMs, ms);
     renderCharacters(config, journey.progressRatio);
+    positionCountdown();
     renderEditPanel(config, ms, syncInputs);
     updateAccessibility(config, ms, remainingMs);
+  }
+
+  function positionCountdown() {
+    const baseMinHeight = window.matchMedia('(max-width: 760px)').matches ? 540 : 590;
+    el.timelineStage.style.minHeight = `${baseMinHeight}px`;
+    el.timelineSection.style.minHeight = `${baseMinHeight}px`;
+
+    const cardRect = el.meetingCard.getBoundingClientRect();
+    const stageRect = el.timelineStage.getBoundingClientRect();
+    const fallbackTop = window.matchMedia('(max-width: 760px)').matches ? 300 : 330;
+    const top = Math.max(fallbackTop, Math.ceil(cardRect.bottom - stageRect.top + 14));
+    el.countdownText.style.top = `${top}px`;
+
+    const requiredMinHeight = Math.max(baseMinHeight, top + 190);
+    el.timelineStage.style.minHeight = `${requiredMinHeight}px`;
+    el.timelineSection.style.minHeight = `${requiredMinHeight}px`;
   }
 
   function renderText(config, ms, now, scale) {
@@ -717,7 +783,7 @@
     const utcDisplay = formatUtcDisplay(ms);
     const countdown = getCountdownText(ms - now);
 
-    el.pageTitle.textContent = 'Proposal 01 - Minimal Balance';
+    el.pageTitle.textContent = config.title || 'Meeting Timeline';
     el.meetingTitle.textContent = config.title;
     el.participantAName.textContent = config.participantA.name;
     el.participantBName.textContent = config.participantB.name;
@@ -788,7 +854,7 @@
   function getParticipantPositions(progressRatio) {
     const remainingRatio = 1 - clamp(progressRatio, 0, 1);
     const eased = easeOutCubic(progressRatio);
-    const maxOffsetPercent = 36;
+    const maxOffsetPercent = window.matchMedia('(max-width: 760px)').matches ? 28 : 36;
     return {
       remainingRatio,
       progressRatio,
@@ -891,11 +957,11 @@
 
     if (syncInputs) syncDraftTimeFields(ms, state.draft.activeTimeSource);
     setInputValueIfNotFocused(el.titleInput, config.title);
-    setInputValueIfNotFocused(el.durationInput, config.durationMinutes);
+    if (state.draft.validation.source !== 'duration') setInputValueIfNotFocused(el.durationInput, config.durationMinutes);
     setInputValueIfNotFocused(el.aNameInput, config.participantA.name);
     setInputValueIfNotFocused(el.bNameInput, config.participantB.name);
-    setInputValueIfNotFocused(el.aTzInput, config.participantA.timeZone);
-    setInputValueIfNotFocused(el.bTzInput, config.participantB.timeZone);
+    if (state.draft.validation.source !== 'participantAZone') setInputValueIfNotFocused(el.aTzInput, config.participantA.timeZone);
+    if (state.draft.validation.source !== 'participantBZone') setInputValueIfNotFocused(el.bTzInput, config.participantB.timeZone);
     el.editThemeInput.value = config.theme;
     el.editRenderInput.value = config.renderMode;
     el.editASpriteInput.value = config.participantA.spriteKey || DEFAULT_CONFIG.participantA.spriteKey;
@@ -916,11 +982,18 @@
       row.classList.toggle('active', isActive);
       row.classList.toggle('invalid', isInvalid);
     });
+    setFieldInvalid(el.durationInput, state.draft.validation.source === 'duration');
+    setFieldInvalid(el.aTzInput, state.draft.validation.source === 'participantAZone');
+    setFieldInvalid(el.bTzInput, state.draft.validation.source === 'participantBZone');
     showValidation(state.draft.validation.message, !state.draft.validation.isValid);
   }
 
   function setInputValueIfNotFocused(input, value) {
     if (document.activeElement !== input) input.value = value;
+  }
+
+  function setFieldInvalid(input, isInvalid) {
+    input.setAttribute('aria-invalid', String(Boolean(isInvalid)));
   }
 
   function showValidation(message, isError) {
@@ -938,7 +1011,7 @@
     );
   }
 
-  function copyLink() {
+  function copyLink(sourceButton) {
     const active = getActiveConfig();
     replaceHash(active, state.isEditing ? 'edit' : 'view');
     const url = window.location.href;
@@ -949,7 +1022,20 @@
       fallbackCopy(url);
     }
     document.body.classList.add('copied');
+    showCopiedFeedback(sourceButton);
     window.setTimeout(() => document.body.classList.remove('copied'), 900);
+  }
+
+  function showCopiedFeedback(button) {
+    if (!button) return;
+    window.clearTimeout(state.copyResetTimer);
+    if (!button.dataset.defaultText) button.dataset.defaultText = button.textContent;
+    button.textContent = 'Copied';
+    button.setAttribute('aria-label', 'Link copied');
+    state.copyResetTimer = window.setTimeout(() => {
+      button.textContent = button.dataset.defaultText || 'Copy Link';
+      button.removeAttribute('aria-label');
+    }, 1200);
   }
 
   function fallbackCopy(text) {
