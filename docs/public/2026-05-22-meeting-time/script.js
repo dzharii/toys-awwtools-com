@@ -30,13 +30,48 @@
     'male-premium-command': { label: 'Male Premium Command', gender: 'male', facing: 'left', atlas: 'assets/sprites/atlases/male-premium-command.png' }
   };
 
+  const PARTICIPANT_PALETTES = {
+    ocean: {
+      label: 'Ocean',
+      light: { bg: '#e8f1ff', border: '#95b8f6', text: '#163a6b' },
+      dark: { bg: '#19304f', border: '#4f7fc8', text: '#d8e8ff' }
+    },
+    amber: {
+      label: 'Amber',
+      light: { bg: '#fff1d6', border: '#e6b450', text: '#6f4700' },
+      dark: { bg: '#4a3416', border: '#c28a20', text: '#ffe2a3' }
+    },
+    teal: {
+      label: 'Teal',
+      light: { bg: '#dff6f1', border: '#78c8bb', text: '#124f49' },
+      dark: { bg: '#123c3b', border: '#3ba99b', text: '#c7f4ed' }
+    },
+    plum: {
+      label: 'Plum',
+      light: { bg: '#f1e8ff', border: '#b69bed', text: '#4b2676' },
+      dark: { bg: '#34214f', border: '#8262c2', text: '#eadfff' }
+    },
+    rose: {
+      label: 'Rose',
+      light: { bg: '#ffe8ef', border: '#ee9aae', text: '#7a1d36' },
+      dark: { bg: '#4c1d2b', border: '#d65f7a', text: '#ffd7e1' }
+    },
+    green: {
+      label: 'Green',
+      light: { bg: '#e5f6df', border: '#91c982', text: '#26551d' },
+      dark: { bg: '#203c20', border: '#66a65f', text: '#daf4d3' }
+    }
+  };
+
+  const DEFAULT_PALETTE_PAIR = makeDefaultPalettePair();
+
   const DEFAULT_CONFIG = {
     title: 'Design Sync',
     startsAtUtc: makeDefaultFutureIso(),
     createdAtUtc: makeCurrentIso(),
     durationMinutes: 60,
-    participantA: { name: 'Alice', timeZone: 'America/Los_Angeles', spriteKey: 'female-minimal-soft' },
-    participantB: { name: 'Bruno', timeZone: 'Europe/Berlin', spriteKey: 'male-dark-precision' },
+    participantA: { name: 'Alice', timeZone: 'America/Los_Angeles', spriteKey: 'female-minimal-soft', paletteKey: DEFAULT_PALETTE_PAIR.a },
+    participantB: { name: 'Bruno', timeZone: 'Europe/Berlin', spriteKey: 'male-dark-precision', paletteKey: DEFAULT_PALETTE_PAIR.b },
     theme: 'light',
     animationEnabled: true,
     renderMode: 'sprite'
@@ -67,6 +102,8 @@
     renderControl: document.getElementById('renderControl'),
     aSpriteControl: document.getElementById('aSpriteControl'),
     bSpriteControl: document.getElementById('bSpriteControl'),
+    aPaletteControl: document.getElementById('aPaletteControl'),
+    bPaletteControl: document.getElementById('bPaletteControl'),
     animationToggle: document.getElementById('animationToggle'),
     animationStatus: document.getElementById('animationStatus'),
     scaleText: document.getElementById('scaleText'),
@@ -93,6 +130,8 @@
     timelineTicks: document.getElementById('timelineTicks'),
     characterA: document.getElementById('characterA'),
     characterB: document.getElementById('characterB'),
+    characterALabel: document.getElementById('characterALabel'),
+    characterBLabel: document.getElementById('characterBLabel'),
     spriteFrameA: document.getElementById('spriteFrameA'),
     spriteFrameB: document.getElementById('spriteFrameB'),
     summaryUntil: document.getElementById('summaryUntil'),
@@ -111,6 +150,8 @@
     editRenderInput: document.getElementById('editRenderInput'),
     editASpriteInput: document.getElementById('editASpriteInput'),
     editBSpriteInput: document.getElementById('editBSpriteInput'),
+    editAPaletteInput: document.getElementById('editAPaletteInput'),
+    editBPaletteInput: document.getElementById('editBPaletteInput'),
     aNameInput: document.getElementById('aNameInput'),
     bNameInput: document.getElementById('bNameInput'),
     aTzInput: document.getElementById('aTzInput'),
@@ -130,13 +171,14 @@
 
   function init() {
     populateSpriteSelects();
+    populatePaletteSelects();
     populateTimeZoneList();
     const parsed = parseHash(window.location.hash);
     if (parsed.config) {
       state.config = mergeConfig(DEFAULT_CONFIG, parsed.config);
       state.lastValidMeetingMs = Date.parse(state.config.startsAtUtc);
       state.lastValidCreatedMs = Date.parse(state.config.createdAtUtc);
-      if (!parsed.hadCreatedAt) replaceHash(state.config, parsed.mode || 'view');
+      if (!parsed.hadCreatedAt || !parsed.hadPalettes) replaceHash(state.config, parsed.mode || 'view');
       if (parsed.mode === 'edit') {
         enterEditMode(false);
       }
@@ -185,6 +227,20 @@
       render();
     });
 
+    el.aPaletteControl.addEventListener('change', () => {
+      const active = getActiveConfig();
+      active.participantA.paletteKey = el.aPaletteControl.value;
+      scheduleHashUpdate(active, state.isEditing ? 'edit' : 'view');
+      render();
+    });
+
+    el.bPaletteControl.addEventListener('change', () => {
+      const active = getActiveConfig();
+      active.participantB.paletteKey = el.bPaletteControl.value;
+      scheduleHashUpdate(active, state.isEditing ? 'edit' : 'view');
+      render();
+    });
+
     el.animationToggle.addEventListener('click', () => {
       const active = getActiveConfig();
       active.animationEnabled = !active.animationEnabled;
@@ -192,9 +248,9 @@
       render();
     });
 
-    [el.titleInput, el.durationInput, el.aNameInput, el.bNameInput, el.aTzInput, el.bTzInput, el.editThemeInput, el.editRenderInput, el.editASpriteInput, el.editBSpriteInput]
+    [el.titleInput, el.durationInput, el.aNameInput, el.bNameInput, el.aTzInput, el.bTzInput, el.editThemeInput, el.editRenderInput, el.editASpriteInput, el.editBSpriteInput, el.editAPaletteInput, el.editBPaletteInput]
       .forEach(input => input.addEventListener('input', handleMetaInput));
-    [el.editThemeInput, el.editRenderInput, el.editASpriteInput, el.editBSpriteInput, el.aTzInput, el.bTzInput]
+    [el.editThemeInput, el.editRenderInput, el.editASpriteInput, el.editBSpriteInput, el.editAPaletteInput, el.editBPaletteInput, el.aTzInput, el.bTzInput]
       .forEach(input => input.addEventListener('change', handleMetaInput));
 
     [el.utcDateInput, el.utcTimeInput].forEach(input => input.addEventListener('input', () => handleTimeInput('UTC')));
@@ -208,7 +264,7 @@
       state.config = mergeConfig(DEFAULT_CONFIG, parsed.config);
       state.lastValidMeetingMs = Date.parse(state.config.startsAtUtc);
       state.lastValidCreatedMs = Date.parse(state.config.createdAtUtc);
-      if (!parsed.hadCreatedAt) replaceHash(state.config, parsed.mode || 'view');
+      if (!parsed.hadCreatedAt || !parsed.hadPalettes) replaceHash(state.config, parsed.mode || 'view');
       if (parsed.mode === 'edit') enterEditMode(false);
       else {
         state.isEditing = false;
@@ -223,6 +279,15 @@
       .map(([key, sprite]) => `<option value="${key}">${sprite.label}</option>`)
       .join('');
     [el.aSpriteControl, el.bSpriteControl, el.editASpriteInput, el.editBSpriteInput].forEach(select => {
+      if (select) select.innerHTML = options;
+    });
+  }
+
+  function populatePaletteSelects() {
+    const options = Object.entries(PARTICIPANT_PALETTES)
+      .map(([key, palette]) => `<option value="${key}">${palette.label}</option>`)
+      .join('');
+    [el.aPaletteControl, el.bPaletteControl, el.editAPaletteInput, el.editBPaletteInput].forEach(select => {
       if (select) select.innerHTML = options;
     });
   }
@@ -248,14 +313,20 @@
     return new Date().toISOString();
   }
 
+  function makeDefaultPalettePair() {
+    const keys = Object.keys(PARTICIPANT_PALETTES);
+    const start = Math.floor(Date.now() / MS.minute) % keys.length;
+    return { a: keys[start], b: keys[(start + 2) % keys.length] };
+  }
+
   function cloneConfig(config) {
     return {
       title: config.title,
       startsAtUtc: config.startsAtUtc,
       createdAtUtc: config.createdAtUtc || makeCurrentIso(),
       durationMinutes: Number(config.durationMinutes) || 60,
-      participantA: { ...config.participantA },
-      participantB: { ...config.participantB },
+      participantA: { ...config.participantA, paletteKey: config.participantA.paletteKey || DEFAULT_PALETTE_PAIR.a },
+      participantB: { ...config.participantB, paletteKey: config.participantB.paletteKey || DEFAULT_PALETTE_PAIR.b },
       theme: config.theme || 'light',
       animationEnabled: config.animationEnabled !== false,
       renderMode: config.renderMode || 'sprite'
@@ -272,6 +343,8 @@
     if (incoming.participantB) merged.participantB = { ...merged.participantB, ...incoming.participantB };
     if (!SPRITES[merged.participantA.spriteKey]) merged.participantA.spriteKey = DEFAULT_CONFIG.participantA.spriteKey;
     if (!SPRITES[merged.participantB.spriteKey]) merged.participantB.spriteKey = DEFAULT_CONFIG.participantB.spriteKey;
+    if (!PARTICIPANT_PALETTES[merged.participantA.paletteKey]) merged.participantA.paletteKey = DEFAULT_CONFIG.participantA.paletteKey;
+    if (!PARTICIPANT_PALETTES[merged.participantB.paletteKey]) merged.participantB.paletteKey = DEFAULT_CONFIG.participantB.paletteKey;
     if (['light', 'dark', 'neutral', 'auto'].includes(incoming.theme)) merged.theme = incoming.theme;
     if (typeof incoming.animationEnabled === 'boolean') merged.animationEnabled = incoming.animationEnabled;
     if (['svg', 'sprite'].includes(incoming.renderMode)) merged.renderMode = incoming.renderMode;
@@ -297,7 +370,7 @@
   }
 
   function parseHash(hash) {
-    if (!hash || hash.length < 2) return { config: null, mode: 'view', hadCreatedAt: false };
+    if (!hash || hash.length < 2) return { config: null, mode: 'view', hadCreatedAt: false, hadPalettes: false };
     const raw = hash.replace(/^#/, '');
     const pairs = raw.split('&').filter(Boolean).map(part => {
       const at = part.indexOf('=');
@@ -324,8 +397,10 @@
     if (map.render && ['svg', 'sprite'].includes(decode(map.render))) config.renderMode = decode(map.render);
     if (map.spriteA && config.participantA && SPRITES[decode(map.spriteA)]) config.participantA.spriteKey = decode(map.spriteA);
     if (map.spriteB && config.participantB && SPRITES[decode(map.spriteB)]) config.participantB.spriteKey = decode(map.spriteB);
+    if (map.colorA && config.participantA && PARTICIPANT_PALETTES[decode(map.colorA)]) config.participantA.paletteKey = decode(map.colorA);
+    if (map.colorB && config.participantB && PARTICIPANT_PALETTES[decode(map.colorB)]) config.participantB.paletteKey = decode(map.colorB);
     const mode = map.mode && decode(map.mode) === 'edit' ? 'edit' : 'view';
-    return { config, mode, hadCreatedAt: Number.isFinite(createdAtMs) };
+    return { config, mode, hadCreatedAt: Number.isFinite(createdAtMs), hadPalettes: Boolean(map.colorA && map.colorB) };
   }
 
   function parseParticipant(rawValue, fallback) {
@@ -354,7 +429,9 @@
       ['mode', mode || 'view'],
       ['render', config.renderMode || 'sprite'],
       ['spriteA', config.participantA.spriteKey || DEFAULT_CONFIG.participantA.spriteKey],
-      ['spriteB', config.participantB.spriteKey || DEFAULT_CONFIG.participantB.spriteKey]
+      ['spriteB', config.participantB.spriteKey || DEFAULT_CONFIG.participantB.spriteKey],
+      ['colorA', config.participantA.paletteKey || DEFAULT_CONFIG.participantA.paletteKey],
+      ['colorB', config.participantB.paletteKey || DEFAULT_CONFIG.participantB.paletteKey]
     ];
     return '#' + parts.map(([key, value]) => `${encode(key)}=${key === 'a' || key === 'b' ? value : encode(value)}`).join('&');
   }
@@ -493,6 +570,8 @@
     config.renderMode = el.editRenderInput.value;
     if (SPRITES[el.editASpriteInput.value]) config.participantA.spriteKey = el.editASpriteInput.value;
     if (SPRITES[el.editBSpriteInput.value]) config.participantB.spriteKey = el.editBSpriteInput.value;
+    if (PARTICIPANT_PALETTES[el.editAPaletteInput.value]) config.participantA.paletteKey = el.editAPaletteInput.value;
+    if (PARTICIPANT_PALETTES[el.editBPaletteInput.value]) config.participantB.paletteKey = el.editBPaletteInput.value;
 
     const metaValidation = getMetaValidation();
     if (metaValidation) {
@@ -734,6 +813,7 @@
     const resolvedTheme = effectiveTheme === 'auto' ? 'light' : effectiveTheme;
     el.appShell.dataset.theme = resolvedTheme;
     document.body.dataset.theme = resolvedTheme;
+    applyParticipantPaletteVars(config, resolvedTheme);
     el.timelineStage.style.setProperty('--participant-a-x', `${positions.aX}%`);
     el.timelineStage.style.setProperty('--participant-b-x', `${positions.bX}%`);
     el.timelineStage.style.setProperty('--hand-extension', positions.handExtension.toFixed(3));
@@ -746,6 +826,8 @@
     el.renderControl.value = config.renderMode;
     el.aSpriteControl.value = config.participantA.spriteKey || DEFAULT_CONFIG.participantA.spriteKey;
     el.bSpriteControl.value = config.participantB.spriteKey || DEFAULT_CONFIG.participantB.spriteKey;
+    el.aPaletteControl.value = config.participantA.paletteKey || DEFAULT_CONFIG.participantA.paletteKey;
+    el.bPaletteControl.value = config.participantB.paletteKey || DEFAULT_CONFIG.participantB.paletteKey;
     el.animationToggle.setAttribute('aria-pressed', String(config.animationEnabled));
     el.animationStatus.textContent = config.animationEnabled ? 'Running' : 'Paused';
     el.scaleText.textContent = `Journey ${formatDurationToken(journey.journeyMs)}`;
@@ -756,6 +838,24 @@
     positionCountdown();
     renderEditPanel(config, ms, syncInputs);
     updateAccessibility(config, ms, remainingMs);
+  }
+
+  function applyParticipantPaletteVars(config, theme) {
+    const a = getPaletteTone(config.participantA.paletteKey, theme);
+    const b = getPaletteTone(config.participantB.paletteKey, theme);
+    setParticipantVars('a', a);
+    setParticipantVars('b', b);
+  }
+
+  function setParticipantVars(slot, tone) {
+    el.timelineStage.style.setProperty(`--participant-${slot}-bg`, tone.bg);
+    el.timelineStage.style.setProperty(`--participant-${slot}-border`, tone.border);
+    el.timelineStage.style.setProperty(`--participant-${slot}-text`, tone.text);
+  }
+
+  function getPaletteTone(key, theme) {
+    const palette = PARTICIPANT_PALETTES[key] || PARTICIPANT_PALETTES[DEFAULT_CONFIG.participantA.paletteKey];
+    return palette[theme === 'dark' ? 'dark' : 'light'];
   }
 
   function positionCountdown() {
@@ -791,6 +891,8 @@
     el.participantBZone.textContent = config.participantB.timeZone;
     el.aTimeLabel.textContent = config.participantA.name;
     el.bTimeLabel.textContent = config.participantB.name;
+    el.characterALabel.textContent = config.participantA.name;
+    el.characterBLabel.textContent = config.participantB.name;
     el.participantATime.textContent = aDisplay.time;
     el.participantBTime.textContent = bDisplay.time;
     el.participantADate.textContent = aDisplay.date;
@@ -854,7 +956,7 @@
   function getParticipantPositions(progressRatio) {
     const remainingRatio = 1 - clamp(progressRatio, 0, 1);
     const eased = easeOutCubic(progressRatio);
-    const maxOffsetPercent = window.matchMedia('(max-width: 760px)').matches ? 28 : 36;
+    const maxOffsetPercent = window.matchMedia('(max-width: 760px)').matches ? 18 : 36;
     return {
       remainingRatio,
       progressRatio,
@@ -966,6 +1068,8 @@
     el.editRenderInput.value = config.renderMode;
     el.editASpriteInput.value = config.participantA.spriteKey || DEFAULT_CONFIG.participantA.spriteKey;
     el.editBSpriteInput.value = config.participantB.spriteKey || DEFAULT_CONFIG.participantB.spriteKey;
+    el.editAPaletteInput.value = config.participantA.paletteKey || DEFAULT_CONFIG.participantA.paletteKey;
+    el.editBPaletteInput.value = config.participantB.paletteKey || DEFAULT_CONFIG.participantB.paletteKey;
     el.aEditLegend.textContent = config.participantA.name;
     el.bEditLegend.textContent = config.participantB.name;
 
