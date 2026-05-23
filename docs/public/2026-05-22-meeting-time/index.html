@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MeetTime - Animated Meeting Timeline</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%234f5fe7'/%3E%3Cpath d='M18 34h17M32 18v28M32 46c8 0 14-6 14-14' stroke='white' stroke-width='6' stroke-linecap='round' fill='none'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app-shell" data-theme="light">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="MeetTime home"><span class="brand-mark" aria-hidden="true">⌁</span><span>MeetTime</span></a>
+      <div class="title-block">
+        <p class="eyebrow">Animated shareable meeting timeline</p>
+        <h1 id="pageTitle">Meeting Timeline</h1>
+      </div>
+      <div class="top-controls" aria-label="Timeline controls">
+        <label class="control-chip">Theme
+          <select id="themeControl" aria-label="Theme">
+            <option value="light">Light</option>
+            <option value="neutral">Neutral</option>
+            <option value="dark">Dark</option>
+            <option value="auto">Auto</option>
+          </select>
+        </label>
+        <label class="control-chip">Render
+          <select id="renderControl" aria-label="Render mode">
+            <option value="sprite">Sprite</option>
+            <option value="svg">SVG</option>
+          </select>
+        </label>
+        <span class="control-chip">Scale <strong id="scaleText">Auto</strong></span>
+        <button class="control-chip status-chip" id="animationToggle" type="button" aria-pressed="true">Animation <span class="status-dot" aria-hidden="true"></span> <span id="animationStatus">Running</span></button>
+        <button class="secondary-button" id="editButton" type="button">Edit</button>
+        <button class="primary-button" id="shareButton" type="button">Copy Link</button>
+      </div>
+    </header>
+
+    <section class="character-panel" aria-label="Character selection">
+      <label>Participant A sprite
+        <select id="aSpriteControl" aria-label="Participant A sprite"></select>
+      </label>
+      <label>Participant B sprite
+        <select id="bSpriteControl" aria-label="Participant B sprite"></select>
+      </label>
+      <p id="spriteStatus">Using sliced 32-frame sprite atlases from the local asset pipeline.</p>
+    </section>
+
+    <section class="timeline-card" aria-labelledby="meetingTitle" id="timelineSection">
+      <div class="timeline-stage" id="timelineStage" aria-live="polite">
+        <div class="soft-orb orb-left" aria-hidden="true"></div>
+        <div class="soft-orb orb-right" aria-hidden="true"></div>
+
+        <article class="participant-card left-card" aria-label="Participant A">
+          <h2 id="participantAName">Alice</h2>
+          <p id="participantAZone">America/Los_Angeles</p>
+          <div class="local-time-card"><strong id="participantATime">--:--</strong><span id="participantADate">--</span></div>
+        </article>
+
+        <article class="participant-card right-card" aria-label="Participant B">
+          <h2 id="participantBName">Bruno</h2>
+          <p id="participantBZone">Europe/Berlin</p>
+          <div class="local-time-card"><strong id="participantBTime">--:--</strong><span id="participantBDate">--</span></div>
+        </article>
+
+        <article class="meeting-card" aria-labelledby="meetingTitle">
+          <div class="meeting-icon" aria-hidden="true">▣</div>
+          <h2 id="meetingTitle">Design Sync</h2>
+          <div class="time-grid" aria-label="Meeting time in three time zones">
+            <div><span>UTC</span><strong id="utcTime">--:--</strong><small id="utcDate">--</small></div>
+            <div><span id="aTimeLabel">Alice</span><strong id="aTimeCompact">--:--</strong><small id="aDateCompact">--</small></div>
+            <div><span id="bTimeLabel">Bruno</span><strong id="bTimeCompact">--:--</strong><small id="bDateCompact">--</small></div>
+          </div>
+        </article>
+
+        <div class="countdown-pill" id="countdownText" aria-live="polite">Meeting in --</div>
+        <div class="center-line" aria-hidden="true"></div>
+        <div class="center-marker" aria-hidden="true"><span></span></div>
+
+        <div class="character character-a" id="characterA" aria-hidden="true">
+          <div class="sprite-frame" id="spriteFrameA"></div>
+          <div class="css-character">
+            <div class="head"><span></span></div><div class="hair hair-a"></div><div class="torso"></div><div class="arm far"></div><div class="arm near"></div><div class="leg leg-a"></div><div class="leg leg-b"></div><div class="shadow"></div>
+          </div>
+        </div>
+
+        <div class="character character-b" id="characterB" aria-hidden="true">
+          <div class="sprite-frame" id="spriteFrameB"></div>
+          <div class="css-character">
+            <div class="head"><span></span></div><div class="hair hair-b"></div><div class="torso"></div><div class="arm far"></div><div class="arm near"></div><div class="leg leg-a"></div><div class="leg leg-b"></div><div class="shadow"></div>
+          </div>
+        </div>
+
+        <div class="timeline-axis" aria-hidden="true"><div class="axis-line"></div><div class="axis-dot start"></div><div class="axis-dot end"></div><div class="ticks" id="timelineTicks"></div></div>
+      </div>
+    </section>
+
+    <section class="summary-strip" aria-label="Meeting summary">
+      <article><span class="summary-icon" aria-hidden="true">◷</span><div><p>Time until meeting</p><strong id="summaryUntil">--</strong><small id="summaryAsOf">As of --</small></div></article>
+      <article><span class="summary-icon" aria-hidden="true">◎</span><div><p>Meeting duration</p><strong id="summaryDuration">60m</strong><small id="summaryDurationText">1 hour</small></div></article>
+      <article><span class="summary-icon" aria-hidden="true">♙</span><div><p>Participants</p><strong>2</strong><small id="summaryParticipants">Alice, Bruno</small></div></article>
+      <article><span class="summary-icon" aria-hidden="true">↻</span><div><p>Updated</p><strong id="summaryUpdated">Just now</strong><small>Auto-updating</small></div></article>
+    </section>
+
+    <section class="edit-panel" id="editPanel" aria-labelledby="editPanelTitle" hidden>
+      <div class="edit-header">
+        <div><p class="eyebrow">Live editable plan</p><h2 id="editPanelTitle">Edit meeting timeline</h2></div>
+        <div class="edit-actions"><button class="primary-button" id="saveButton" type="button">Save</button><button class="secondary-button" id="cancelButton" type="button">Cancel</button><button class="secondary-button" id="copyEditLinkButton" type="button">Copy Link</button></div>
+      </div>
+
+      <form class="edit-grid" id="editForm">
+        <label>Meeting title <input id="titleInput" type="text" autocomplete="off"></label>
+        <label>Duration minutes <input id="durationInput" type="number" min="5" step="5"></label>
+        <label>Theme <select id="editThemeInput"><option value="light">Light</option><option value="neutral">Neutral</option><option value="dark">Dark</option><option value="auto">Auto</option></select></label>
+        <label>Render mode <select id="editRenderInput"><option value="sprite">Sprite atlas</option><option value="svg">SVG fallback</option></select></label>
+        <label>Participant A name <input id="aNameInput" type="text" autocomplete="off"></label>
+        <label>Participant A time zone <input id="aTzInput" type="text" list="timezoneList" autocomplete="off"></label>
+        <label>Participant A sprite <select id="editASpriteInput"></select></label>
+        <label>Participant B name <input id="bNameInput" type="text" autocomplete="off"></label>
+        <label>Participant B time zone <input id="bTzInput" type="text" list="timezoneList" autocomplete="off"></label>
+        <label>Participant B sprite <select id="editBSpriteInput"></select></label>
+
+        <fieldset class="time-row" data-source="UTC"><legend>UTC meeting time</legend><label>Date <input id="utcDateInput" type="date" aria-label="Edit meeting UTC date"></label><label>Time <input id="utcTimeInput" type="time" step="60" aria-label="Edit meeting UTC time"></label></fieldset>
+        <fieldset class="time-row" data-source="participantA"><legend><span id="aEditLegend">Alice</span> local time</legend><label>Date <input id="aDateInput" type="date" aria-label="Edit meeting time in Participant A local date"></label><label>Time <input id="aTimeInput" type="time" step="60" aria-label="Edit meeting time in Participant A local time"></label></fieldset>
+        <fieldset class="time-row" data-source="participantB"><legend><span id="bEditLegend">Bruno</span> local time</legend><label>Date <input id="bDateInput" type="date" aria-label="Edit meeting time in Participant B local date"></label><label>Time <input id="bTimeInput" type="time" step="60" aria-label="Edit meeting time in Participant B local time"></label></fieldset>
+      </form>
+      <p class="validation-message" id="validationMessage" aria-live="polite"></p>
+    </section>
+
+    <datalist id="timezoneList"><option value="UTC"></option><option value="America/Los_Angeles"></option><option value="America/New_York"></option><option value="Europe/Berlin"></option><option value="Europe/London"></option><option value="Asia/Tokyo"></option></datalist>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
