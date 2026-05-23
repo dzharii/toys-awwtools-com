@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Meeting Timeline</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="app" id="app" data-theme="light">
+      <section class="panel">
+        <header class="topbar">
+          <div class="meeting-heading">
+            <h1 id="meeting-title">Meeting</h1>
+            <p id="countdown-text" class="countdown">Meeting in --</p>
+          </div>
+          <div class="controls">
+            <button id="edit-toggle" type="button">Edit</button>
+            <button id="copy-link-view" type="button">Copy Link</button>
+          </div>
+        </header>
+
+        <section class="timeline-area" aria-labelledby="meeting-title">
+          <div class="timeline-track-wrap">
+            <div class="timeline-track" id="timeline-track">
+              <div class="ticks" id="ticks" aria-hidden="true"></div>
+              <div class="center-marker" id="center-marker">
+                <div class="marker-dot" aria-hidden="true"></div>
+                <div class="marker-card">
+                  <p class="marker-label">Meeting time</p>
+                  <p id="primary-time" class="marker-primary"></p>
+                  <p id="time-utc" class="marker-row"></p>
+                  <p id="time-a" class="marker-row"></p>
+                  <p id="time-b" class="marker-row"></p>
+                </div>
+              </div>
+
+              <div
+                id="participant-a"
+                class="participant left"
+                role="img"
+                aria-label="Participant A"
+              >
+                <div class="sprite-layer" aria-hidden="true"></div>
+                <div class="avatar" aria-hidden="true"></div>
+                <div class="body" aria-hidden="true">
+                  <div class="arm far"></div>
+                  <div class="arm near"></div>
+                </div>
+                <p class="name" id="name-a">A</p>
+              </div>
+
+              <div
+                id="participant-b"
+                class="participant right"
+                role="img"
+                aria-label="Participant B"
+              >
+                <div class="sprite-layer" aria-hidden="true"></div>
+                <div class="avatar" aria-hidden="true"></div>
+                <div class="body" aria-hidden="true">
+                  <div class="arm far"></div>
+                  <div class="arm near"></div>
+                </div>
+                <p class="name" id="name-b">B</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="edit-panel" class="edit-panel" hidden>
+          <div class="edit-row title-row">
+            <label for="field-title">Title</label>
+            <input id="field-title" name="title" type="text" autocomplete="off" />
+            <label for="field-duration">Duration</label>
+            <input
+              id="field-duration"
+              name="duration"
+              type="number"
+              min="1"
+              max="10080"
+              step="1"
+              inputmode="numeric"
+            />
+          </div>
+
+          <div class="edit-grid">
+            <div class="time-row" data-source="UTC">
+              <div class="time-label">UTC</div>
+              <label class="sr-only" for="utc-date"
+                >Edit meeting date in UTC</label
+              >
+              <input id="utc-date" name="utcDate" type="date" />
+              <label class="sr-only" for="utc-time"
+                >Edit meeting time in UTC</label
+              >
+              <input id="utc-time" name="utcTime" type="time" step="60" />
+              <div class="tz-display">UTC</div>
+              <p class="field-error" id="utc-error" aria-live="polite"></p>
+            </div>
+
+            <div class="time-row" data-source="participantA">
+              <div class="time-label" id="label-a">Participant A</div>
+              <label class="sr-only" for="a-date"
+                >Edit meeting date in participant A local time</label
+              >
+              <input id="a-date" name="aDate" type="date" />
+              <label class="sr-only" for="a-time"
+                >Edit meeting time in participant A local time</label
+              >
+              <input id="a-time" name="aTime" type="time" step="60" />
+              <input
+                id="a-timezone"
+                name="aTimeZone"
+                class="timezone-input"
+                list="timezone-list"
+                autocomplete="off"
+              />
+              <p class="tz-offset" id="a-tz-offset"></p>
+              <p class="field-error" id="a-error" aria-live="polite"></p>
+              <div id="a-ambiguous" class="ambiguous" hidden></div>
+            </div>
+
+            <div class="time-row" data-source="participantB">
+              <div class="time-label" id="label-b">Participant B</div>
+              <label class="sr-only" for="b-date"
+                >Edit meeting date in participant B local time</label
+              >
+              <input id="b-date" name="bDate" type="date" />
+              <label class="sr-only" for="b-time"
+                >Edit meeting time in participant B local time</label
+              >
+              <input id="b-time" name="bTime" type="time" step="60" />
+              <input
+                id="b-timezone"
+                name="bTimeZone"
+                class="timezone-input"
+                list="timezone-list"
+                autocomplete="off"
+              />
+              <p class="tz-offset" id="b-tz-offset"></p>
+              <p class="field-error" id="b-error" aria-live="polite"></p>
+              <div id="b-ambiguous" class="ambiguous" hidden></div>
+            </div>
+          </div>
+
+          <div class="edit-row participant-row">
+            <label for="field-name-a">Participant A</label>
+            <input id="field-name-a" name="nameA" type="text" autocomplete="off" />
+            <label for="field-name-b">Participant B</label>
+            <input id="field-name-b" name="nameB" type="text" autocomplete="off" />
+          </div>
+
+          <div class="edit-row options-row">
+            <label for="field-theme">Theme</label>
+            <select id="field-theme" name="theme">
+              <option value="auto">auto</option>
+              <option value="light">light</option>
+              <option value="neutral">neutral</option>
+              <option value="dark">dark</option>
+            </select>
+            <label for="field-render-mode">Render mode</label>
+            <select id="field-render-mode" name="renderMode">
+              <option value="svg">svg</option>
+              <option value="sprite">sprite</option>
+            </select>
+          </div>
+
+          <div class="edit-actions">
+            <button id="save-btn" type="button">Save</button>
+            <button id="cancel-btn" type="button">Cancel</button>
+            <button id="copy-link-edit" type="button">Copy Link</button>
+          </div>
+        </section>
+
+        <p id="status-line" class="status-line" aria-live="polite"></p>
+      </section>
+
+      <p id="a11y-summary" class="sr-only" aria-live="polite"></p>
+    </main>
+
+    <datalist id="timezone-list"></datalist>
+    <script src="./script.js" defer></script>
+  </body>
+</html>
