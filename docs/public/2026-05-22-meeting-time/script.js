@@ -118,14 +118,19 @@
     participantBTime: document.getElementById('participantBTime'),
     participantADate: document.getElementById('participantADate'),
     participantBDate: document.getElementById('participantBDate'),
+    participantADay: document.getElementById('participantADay'),
+    participantBDay: document.getElementById('participantBDay'),
     utcTime: document.getElementById('utcTime'),
     utcDate: document.getElementById('utcDate'),
+    utcDay: document.getElementById('utcDay'),
     aTimeLabel: document.getElementById('aTimeLabel'),
     bTimeLabel: document.getElementById('bTimeLabel'),
     aTimeCompact: document.getElementById('aTimeCompact'),
     bTimeCompact: document.getElementById('bTimeCompact'),
     aDateCompact: document.getElementById('aDateCompact'),
     bDateCompact: document.getElementById('bDateCompact'),
+    aDayCompact: document.getElementById('aDayCompact'),
+    bDayCompact: document.getElementById('bDayCompact'),
     countdownText: document.getElementById('countdownText'),
     timelineTicks: document.getElementById('timelineTicks'),
     characterA: document.getElementById('characterA'),
@@ -897,12 +902,17 @@
     el.participantBTime.textContent = bDisplay.time;
     el.participantADate.textContent = aDisplay.date;
     el.participantBDate.textContent = bDisplay.date;
+    el.participantADay.textContent = aDisplay.day;
+    el.participantBDay.textContent = bDisplay.day;
     el.utcTime.textContent = `${pad(utc.hour)}:${pad(utc.minute)}`;
     el.utcDate.textContent = utcDisplay.date;
+    el.utcDay.textContent = utcDisplay.day;
     el.aTimeCompact.textContent = `${pad(aParts.hour)}:${pad(aParts.minute)}`;
     el.bTimeCompact.textContent = `${pad(bParts.hour)}:${pad(bParts.minute)}`;
     el.aDateCompact.textContent = aDisplay.date;
     el.bDateCompact.textContent = bDisplay.date;
+    el.aDayCompact.textContent = aDisplay.day;
+    el.bDayCompact.textContent = bDisplay.day;
     el.countdownText.textContent = countdown.full;
     el.summaryUntil.textContent = countdown.short;
     el.summaryAsOf.textContent = `As of ${formatUtcClock(now)} UTC`;
@@ -918,7 +928,8 @@
     const date = new Date(ms);
     return {
       time: new Intl.DateTimeFormat('en-US', { timeZone, hour: 'numeric', minute: '2-digit' }).format(date),
-      date: new Intl.DateTimeFormat('en-US', { timeZone, month: 'short', day: 'numeric', year: 'numeric' }).format(date)
+      date: new Intl.DateTimeFormat('en-US', { timeZone, month: 'short', day: 'numeric', year: 'numeric' }).format(date),
+      day: new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'long' }).format(date)
     };
   }
 
@@ -926,7 +937,8 @@
     const date = new Date(ms);
     return {
       time: `${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`,
-      date: new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' }).format(date)
+      date: new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' }).format(date),
+      day: new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'long' }).format(date)
     };
   }
 
