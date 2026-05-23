@@ -46,17 +46,21 @@ for (const sheet of sheets) {
   for (let index = 0; index < frameCount; index += 1) {
     const col = index % columns;
     const row = Math.floor(index / columns);
-    const rowCropY = row === 3 && sheet.gender === 'male' ? Math.max(grid.cropY, 34) : grid.cropY;
+    // The generated male sheets often crop the bottom row at the source image edge.
+    // Reuse the full-body reaching row for frames 25-32 so production sprites keep feet.
+    const sourceRow = sheet.gender === 'male' && row === 3 ? 2 : row;
+    const rowCropY = sheet.gender === 'male' && row === 3 ? 34 : grid.cropY;
     const rowCropH = grid.cropH - (rowCropY - grid.cropY);
+    const topErase = 'rectangle 0,0 70,45';
     const x = grid.x + col * grid.cellW + grid.cropX;
-    const y = grid.y + row * grid.cellH + rowCropY;
+    const y = grid.y + sourceRow * grid.cellH + rowCropY;
     const out = join(sheetFrameDir, `${String(index + 1).padStart(2, '0')}.png`);
     execFileSync('magick', [
       source,
       '-crop', `${grid.cropW}x${rowCropH}+${Math.round(x)}+${Math.round(y)}`,
       '+repage',
       '-fill', 'white',
-      '-draw', 'rectangle 0,0 70,45',
+      '-draw', topErase,
       '-draw', `rectangle 0,${rowCropH - 6} ${grid.cropW},${rowCropH}`,
       '-alpha', 'set',
       '-fuzz', '7%',

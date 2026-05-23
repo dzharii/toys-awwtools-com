@@ -33,6 +33,7 @@
   const DEFAULT_CONFIG = {
     title: 'Design Sync',
     startsAtUtc: makeDefaultFutureIso(),
+    createdAtUtc: makeCurrentIso(),
     durationMinutes: 60,
     participantA: { name: 'Alice', timeZone: 'America/Los_Angeles', spriteKey: 'female-minimal-soft' },
     participantB: { name: 'Bruno', timeZone: 'Europe/Berlin', spriteKey: 'male-dark-precision' },
@@ -48,6 +49,7 @@
     baselineConfig: null,
     baselineHash: '',
     lastValidMeetingMs: Date.parse(DEFAULT_CONFIG.startsAtUtc),
+    lastValidCreatedMs: Date.parse(DEFAULT_CONFIG.createdAtUtc),
     lastRenderedScale: null,
     hashTimer: 0,
     lastCopyText: '',
@@ -126,14 +128,18 @@
 
   function init() {
     populateSpriteSelects();
+    populateTimeZoneList();
     const parsed = parseHash(window.location.hash);
     if (parsed.config) {
       state.config = mergeConfig(DEFAULT_CONFIG, parsed.config);
       state.lastValidMeetingMs = Date.parse(state.config.startsAtUtc);
+      state.lastValidCreatedMs = Date.parse(state.config.createdAtUtc);
+      if (!parsed.hadCreatedAt) replaceHash(state.config, parsed.mode || 'view');
       if (parsed.mode === 'edit') {
         enterEditMode(false);
       }
     } else {
+      ensureCreatedAt(state.config);
       replaceHash(state.config, 'view');
     }
 
@@ -199,6 +205,8 @@
       if (!parsed.config) return;
       state.config = mergeConfig(DEFAULT_CONFIG, parsed.config);
       state.lastValidMeetingMs = Date.parse(state.config.startsAtUtc);
+      state.lastValidCreatedMs = Date.parse(state.config.createdAtUtc);
+      if (!parsed.hadCreatedAt) replaceHash(state.config, parsed.mode || 'view');
       if (parsed.mode === 'edit') enterEditMode(false);
       else {
         state.isEditing = false;
@@ -217,16 +225,32 @@
     });
   }
 
+  function populateTimeZoneList() {
+    const list = document.getElementById('timezoneList');
+    if (!list) return;
+    const zones = typeof Intl.supportedValuesOf === 'function'
+      ? ['UTC', ...Intl.supportedValuesOf('timeZone')]
+      : KNOWN_TIME_ZONES;
+    list.innerHTML = [...new Set(zones)]
+      .map(zone => `<option value="${zone}"></option>`)
+      .join('');
+  }
+
   function makeDefaultFutureIso() {
     const now = Date.now();
     const rounded = Math.ceil((now + 2 * MS.hour) / (15 * MS.minute)) * 15 * MS.minute;
     return new Date(rounded).toISOString();
   }
 
+  function makeCurrentIso() {
+    return new Date().toISOString();
+  }
+
   function cloneConfig(config) {
     return {
       title: config.title,
       startsAtUtc: config.startsAtUtc,
+      createdAtUtc: config.createdAtUtc || makeCurrentIso(),
       durationMinutes: Number(config.durationMinutes) || 60,
       participantA: { ...config.participantA },
       participantB: { ...config.participantB },
@@ -241,6 +265,7 @@
     if (incoming.title) merged.title = incoming.title;
     if (Number.isFinite(incoming.durationMinutes) && incoming.durationMinutes > 0) merged.durationMinutes = incoming.durationMinutes;
     if (Number.isFinite(Date.parse(incoming.startsAtUtc))) merged.startsAtUtc = new Date(Date.parse(incoming.startsAtUtc)).toISOString();
+    if (Number.isFinite(Date.parse(incoming.createdAtUtc))) merged.createdAtUtc = new Date(Date.parse(incoming.createdAtUtc)).toISOString();
     if (incoming.participantA) merged.participantA = { ...merged.participantA, ...incoming.participantA };
     if (incoming.participantB) merged.participantB = { ...merged.participantB, ...incoming.participantB };
     if (!SPRITES[merged.participantA.spriteKey]) merged.participantA.spriteKey = DEFAULT_CONFIG.participantA.spriteKey;
@@ -248,11 +273,29 @@
     if (['light', 'dark', 'neutral', 'auto'].includes(incoming.theme)) merged.theme = incoming.theme;
     if (typeof incoming.animationEnabled === 'boolean') merged.animationEnabled = incoming.animationEnabled;
     if (['svg', 'sprite'].includes(incoming.renderMode)) merged.renderMode = incoming.renderMode;
+    ensureCreatedAt(merged);
     return merged;
   }
 
+  function ensureCreatedAt(config) {
+    let meetingMs = Date.parse(config.startsAtUtc);
+    let createdMs = Date.parse(config.createdAtUtc);
+    if (!Number.isFinite(meetingMs)) {
+      meetingMs = Date.parse(DEFAULT_CONFIG.startsAtUtc);
+      config.startsAtUtc = new Date(meetingMs).toISOString();
+    }
+    if (!Number.isFinite(createdMs)) createdMs = Date.now();
+    if (meetingMs <= createdMs) {
+      const now = Date.now();
+      createdMs = meetingMs > now ? now : meetingMs - MS.hour;
+    }
+    config.createdAtUtc = new Date(createdMs).toISOString();
+    state.lastValidCreatedMs = createdMs;
+    return createdMs;
+  }
+
   function parseHash(hash) {
-    if (!hash || hash.length < 2) return { config: null, mode: 'view' };
+    if (!hash || hash.length < 2) return { config: null, mode: 'view', hadCreatedAt: false };
     const raw = hash.replace(/^#/, '');
     const pairs = raw.split('&').filter(Boolean).map(part => {
       const at = part.indexOf('=');
@@ -261,10 +304,13 @@
     });
     const map = Object.fromEntries(pairs);
     const startsAtRaw = map.at ? decode(map.at) : '';
+    const createdAtRaw = map.ct ? decode(map.ct) : '';
     const startsAtMs = Date.parse(startsAtRaw);
+    const createdAtMs = Date.parse(createdAtRaw);
     const config = {};
     if (map.t) config.title = decode(map.t);
     if (Number.isFinite(startsAtMs)) config.startsAtUtc = new Date(startsAtMs).toISOString();
+    if (Number.isFinite(createdAtMs)) config.createdAtUtc = new Date(createdAtMs).toISOString();
     if (map.dur) {
       const dur = Number(decode(map.dur));
       if (Number.isFinite(dur) && dur > 0) config.durationMinutes = dur;
@@ -277,7 +323,7 @@
     if (map.spriteA && config.participantA && SPRITES[decode(map.spriteA)]) config.participantA.spriteKey = decode(map.spriteA);
     if (map.spriteB && config.participantB && SPRITES[decode(map.spriteB)]) config.participantB.spriteKey = decode(map.spriteB);
     const mode = map.mode && decode(map.mode) === 'edit' ? 'edit' : 'view';
-    return { config, mode };
+    return { config, mode, hadCreatedAt: Number.isFinite(createdAtMs) };
   }
 
   function parseParticipant(rawValue, fallback) {
@@ -289,11 +335,14 @@
   }
 
   function serializeHash(config, mode) {
+    ensureCreatedAt(config);
     const at = new Date(Date.parse(config.startsAtUtc)).toISOString().replace(/:00\.000Z$/, 'Z');
+    const ct = new Date(Date.parse(config.createdAtUtc)).toISOString().replace(/:00\.000Z$/, 'Z');
     const parts = [
       ['v', '1'],
       ['t', config.title || DEFAULT_CONFIG.title],
       ['at', at],
+      ['ct', ct],
       ['dur', String(config.durationMinutes || DEFAULT_CONFIG.durationMinutes)],
       ['a', encodeParticipant(config.participantA)],
       ['b', encodeParticipant(config.participantB)],
@@ -370,6 +419,16 @@
     state.isEditing = true;
     if (updateHash) replaceHash(state.draft.config, 'edit');
     render();
+    window.requestAnimationFrame(() => {
+      el.editPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.setTimeout(() => {
+        try {
+          el.titleInput.focus({ preventScroll: true });
+        } catch {
+          el.titleInput.focus();
+        }
+      }, 180);
+    });
   }
 
   function createDraft(config) {
@@ -389,6 +448,7 @@
       return;
     }
     state.config = cloneConfig(state.draft.config);
+    ensureCreatedAt(state.config);
     state.isEditing = false;
     state.draft = null;
     state.baselineConfig = null;
@@ -399,7 +459,9 @@
   function cancelEditMode() {
     if (!state.isEditing) return;
     state.config = cloneConfig(state.baselineConfig || DEFAULT_CONFIG);
+    ensureCreatedAt(state.config);
     state.lastValidMeetingMs = Date.parse(state.config.startsAtUtc);
+    state.lastValidCreatedMs = Date.parse(state.config.createdAtUtc);
     state.isEditing = false;
     state.draft = null;
     state.baselineConfig = null;
@@ -449,7 +511,9 @@
 
     state.draft.validation = { source: null, message: '', isValid: true };
     state.draft.config.startsAtUtc = new Date(result.ms).toISOString();
+    ensureCreatedAt(state.draft.config);
     state.lastValidMeetingMs = result.ms;
+    state.lastValidCreatedMs = Date.parse(state.draft.config.createdAtUtc);
     syncDraftTimeFields(result.ms, source);
     scheduleHashUpdate(state.draft.config, 'edit');
     render(false);
@@ -610,19 +674,23 @@
 
   function render(syncInputs = true) {
     const config = getActiveConfig();
+    ensureCreatedAt(config);
     const ms = Number.isFinite(Date.parse(config.startsAtUtc)) ? Date.parse(config.startsAtUtc) : state.lastValidMeetingMs;
+    const createdMs = Number.isFinite(Date.parse(config.createdAtUtc)) ? Date.parse(config.createdAtUtc) : state.lastValidCreatedMs;
     const now = Date.now();
     const remainingMs = ms - now;
     const scale = chooseScale(remainingMs);
-    const timeline = getTimelineProgress(remainingMs, scale.windowMs);
+    const journey = getJourneyProgress(now, createdMs, ms);
+    const positions = getParticipantPositions(journey.progressRatio);
     const effectiveTheme = config.theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : config.theme;
 
     el.appShell.dataset.theme = effectiveTheme === 'auto' ? 'light' : effectiveTheme;
-    el.timelineStage.style.setProperty('--participant-a-x', `${timeline.aX}%`);
-    el.timelineStage.style.setProperty('--participant-b-x', `${timeline.bX}%`);
-    el.timelineStage.style.setProperty('--hand-extension', timeline.handExtension.toFixed(3));
-    el.timelineStage.style.setProperty('--hand-extension-px', `${Math.round(timeline.handExtension * 64)}px`);
-    el.timelineStage.style.setProperty('--progress', timeline.progressRatio.toFixed(3));
+    el.timelineStage.style.setProperty('--participant-a-x', `${positions.aX}%`);
+    el.timelineStage.style.setProperty('--participant-b-x', `${positions.bX}%`);
+    el.timelineStage.style.setProperty('--hand-extension', positions.handExtension.toFixed(3));
+    el.timelineStage.style.setProperty('--hand-extension-px', `${Math.round(positions.handExtension * 64)}px`);
+    el.timelineStage.style.setProperty('--progress', journey.progressRatio.toFixed(3));
+    el.timelineStage.style.setProperty('--remaining', journey.remainingRatio.toFixed(3));
 
     document.body.classList.toggle('animation-paused', !config.animationEnabled);
     el.themeControl.value = config.theme;
@@ -631,11 +699,11 @@
     el.bSpriteControl.value = config.participantB.spriteKey || DEFAULT_CONFIG.participantB.spriteKey;
     el.animationToggle.setAttribute('aria-pressed', String(config.animationEnabled));
     el.animationStatus.textContent = config.animationEnabled ? 'Running' : 'Paused';
-    el.scaleText.textContent = scale.label;
+    el.scaleText.textContent = `Journey ${formatDurationToken(journey.journeyMs)}`;
 
     renderText(config, ms, now, scale);
-    renderTicks(scale.windowMs, ms, config);
-    renderCharacters(config, timeline.progressRatio);
+    renderTicks(createdMs, ms);
+    renderCharacters(config, journey.progressRatio);
     renderEditPanel(config, ms, syncInputs);
     updateAccessibility(config, ms, remainingMs);
   }
@@ -674,7 +742,7 @@
     el.summaryDurationText.textContent = durationText(config.durationMinutes);
     el.summaryParticipants.textContent = `${config.participantA.name}, ${config.participantB.name}`;
     el.summaryUpdated.textContent = 'Just now';
-    el.scaleText.textContent = scale.label;
+    el.scaleText.textContent = el.scaleText.textContent || scale.label;
   }
 
   function formatDisplayTime(ms, timeZone) {
@@ -709,16 +777,24 @@
     return { windowMs: MS.minute, label: '60 seconds' };
   }
 
-  function getTimelineProgress(remainingMs, displayWindowMs) {
-    const remainingRatio = clamp(remainingMs / displayWindowMs, 0, 1);
-    const progressRatio = 1 - remainingRatio;
+  function getJourneyProgress(nowMs, createdAtMs, meetingAtMs) {
+    const journeyMs = Math.max(meetingAtMs - createdAtMs, MS.minute);
+    const elapsedMs = nowMs - createdAtMs;
+    const progressRatio = clamp(elapsedMs / journeyMs, 0, 1);
+    const remainingRatio = 1 - progressRatio;
+    return { journeyMs, elapsedMs, progressRatio, remainingRatio };
+  }
+
+  function getParticipantPositions(progressRatio) {
+    const remainingRatio = 1 - clamp(progressRatio, 0, 1);
     const eased = easeOutCubic(progressRatio);
+    const maxOffsetPercent = 36;
     return {
       remainingRatio,
       progressRatio,
       handExtension: eased,
-      aX: 23 + eased * 11,
-      bX: 77 - eased * 11
+      aX: 50 - remainingRatio * maxOffsetPercent,
+      bX: 50 + remainingRatio * maxOffsetPercent
     };
   }
 
@@ -730,8 +806,8 @@
     return Math.min(max, Math.max(min, value));
   }
 
-  function renderTicks(windowMs, meetingMs, config) {
-    const labels = getTickLabels(windowMs, meetingMs, config);
+  function renderTicks(createdMs, meetingMs) {
+    const labels = getTickLabels(createdMs, meetingMs);
     const positions = [0, 25, 50, 75, 100];
     el.timelineTicks.innerHTML = labels.map((label, index) => {
       const center = index === 2 ? ' center' : '';
@@ -760,9 +836,10 @@
     frameEl.classList.toggle('flipped', sprite.facing !== desiredFacing);
   }
 
-  function getTickLabels(windowMs, meetingMs) {
-    const half = windowMs / 2;
-    const full = windowMs;
+  function getTickLabels(createdMs, meetingMs) {
+    const journeyMs = Math.max(meetingMs - createdMs, MS.minute);
+    const half = journeyMs / 2;
+    const full = journeyMs;
     const center = formatMeetingTick(meetingMs);
     return [`-${formatDurationToken(full)}`, `-${formatDurationToken(half)}`, center, `+${formatDurationToken(half)}`, `+${formatDurationToken(full)}`];
   }
@@ -813,12 +890,12 @@
     if (!state.isEditing || !state.draft) return;
 
     if (syncInputs) syncDraftTimeFields(ms, state.draft.activeTimeSource);
-    el.titleInput.value = config.title;
-    el.durationInput.value = config.durationMinutes;
-    el.aNameInput.value = config.participantA.name;
-    el.bNameInput.value = config.participantB.name;
-    el.aTzInput.value = config.participantA.timeZone;
-    el.bTzInput.value = config.participantB.timeZone;
+    setInputValueIfNotFocused(el.titleInput, config.title);
+    setInputValueIfNotFocused(el.durationInput, config.durationMinutes);
+    setInputValueIfNotFocused(el.aNameInput, config.participantA.name);
+    setInputValueIfNotFocused(el.bNameInput, config.participantB.name);
+    setInputValueIfNotFocused(el.aTzInput, config.participantA.timeZone);
+    setInputValueIfNotFocused(el.bTzInput, config.participantB.timeZone);
     el.editThemeInput.value = config.theme;
     el.editRenderInput.value = config.renderMode;
     el.editASpriteInput.value = config.participantA.spriteKey || DEFAULT_CONFIG.participantA.spriteKey;
@@ -890,14 +967,7 @@
   function startRenderLoop() {
     window.setInterval(() => {
       const config = getActiveConfig();
-      const remainingMs = Date.parse(config.startsAtUtc) - Date.now();
-      if (!config.animationEnabled && !state.isEditing) {
-        render(false);
-        return;
-      }
-      if (remainingMs <= MS.minute || state.isEditing) render(false);
-      else if (remainingMs <= 10 * MS.minute) render(false);
-      else if (remainingMs <= MS.hour) render(false);
+      if (config.animationEnabled || state.isEditing) render(false);
     }, 1000);
   }
 })();
