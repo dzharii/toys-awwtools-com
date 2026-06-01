@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page 10 - Hostile Extraction Resistant UI</title>
+<style>
+  :root {
+    --page-bg: #14161c;
+    --page-ink: #e8e6e1;
+    --card-bg: #ffffff;
+    --ink: #1d2128;
+    --muted: #5d6470;
+    --line: #d7dae1;
+    --soft: #eef0f4;
+    --panel: #ffffff;
+    --panel-alt: #f6f8fb;
+    --accent: #c5304a;
+    --accent-soft: #fdeef0;
+    --ok: #1f7a4d;
+    --ok-soft: #e8f6ee;
+    --warning: #9a5b00;
+    --warning-soft: #fcf3df;
+    --danger: #b5302b;
+    --danger-soft: #fceceb;
+    --info: #1c52c4;
+    --info-soft: #e9f0fe;
+    --neutral-soft: #eef0f4;
+    --link: #1c52c4;
+    --focus: #2563eb;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--page-bg);
+    color: var(--ink);
+    line-height: 1.45;
+  }
+
+  main {
+    width: min(1240px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 32px 0 72px;
+  }
+
+  a { color: var(--link); text-underline-offset: 2px; }
+
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible,
+  a:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  .page-hero {
+    margin-bottom: 30px;
+    padding: 30px;
+    background: linear-gradient(135deg, #1c1f29, #23161b);
+    border: 1px solid #353a47;
+    border-left: 6px solid var(--accent);
+    border-radius: 16px;
+    color: var(--page-ink);
+  }
+  .page-hero h1 { margin: 0 0 10px; font-size: 1.7rem; }
+  .page-hero p { margin: 8px 0 0; color: #b9bcc6; max-width: 940px; }
+  .page-hero .hero-tag {
+    display: inline-block; margin-bottom: 12px; padding: 4px 12px;
+    border: 1px solid var(--accent); border-radius: 999px;
+    color: #f0b5be; font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase;
+  }
+
+  .example-card {
+    margin: 24px 0;
+    padding: 24px;
+    background: var(--card-bg);
+    border: 1px solid #2a2e3a;
+    border-radius: 16px;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35);
+  }
+
+  .example-kicker {
+    margin: 0 0 4px;
+    color: var(--accent);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+  }
+  .example-header h2 { margin: 0; font-size: 1.32rem; }
+  .example-description { max-width: 980px; color: var(--muted); }
+
+  .example-surface {
+    margin-top: 18px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  .panel, .nested-panel, .summary-panel, .detail-panel, .callout-panel, .hostile-card {
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel);
+  }
+  .summary-panel, .callout-panel { background: var(--panel-alt); }
+  .nested-panel { background: var(--panel-alt); margin-top: 10px; }
+  .panel-title, .surface-title {
+    margin: 0 0 10px; font-size: 0.78rem; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--muted); font-weight: 700;
+  }
+
+  .layout-grid-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .layout-grid-three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .split-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 14px; align-items: start; }
+  .wide-scroll { width: 100%; overflow-x: auto; padding-bottom: 4px; }
+
+  .header-strip {
+    display: flex; flex-wrap: wrap; gap: 10px 26px;
+    padding: 12px 14px; margin-bottom: 14px;
+    background: var(--panel-alt); border: 1px solid var(--line); border-radius: 10px;
+  }
+  .hs-item { display: flex; flex-direction: column; }
+  .hs-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+  .hs-value { font-weight: 700; }
+
+  .field-row {
+    display: flex; justify-content: space-between; gap: 16px;
+    padding: 7px 0; border-bottom: 1px solid var(--soft);
+  }
+  .field-row:last-child { border-bottom: 0; }
+  .field-label { color: var(--muted); font-weight: 650; }
+  .field-value { text-align: right; font-weight: 650; }
+  .field-block { padding: 7px 0; border-bottom: 1px solid var(--soft); }
+  .field-block:last-child { border-bottom: 0; }
+  .field-block .field-label { display: block; margin-bottom: 3px; }
+
+  .badge, .tag, .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px;
+    background: #fff; font-size: 0.8rem; font-weight: 650; white-space: nowrap;
+  }
+  .badge.ok { color: var(--ok); background: var(--ok-soft); border-color: #bfe4cf; }
+  .badge.warning { color: var(--warning); background: var(--warning-soft); border-color: #ecd9a8; }
+  .badge.danger { color: var(--danger); background: var(--danger-soft); border-color: #f1c7c4; }
+  .badge.info { color: var(--info); background: var(--info-soft); border-color: #c4d6f7; }
+  .badge.accent { color: var(--accent); background: var(--accent-soft); border-color: #f1c4cc; }
+  .badge.neutral { color: var(--muted); background: var(--neutral-soft); }
+
+  .chip-row, .badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+
+  .btn, .plain-button {
+    min-height: 34px; padding: 7px 12px; border: 1px solid #b7bcc7;
+    border-radius: 8px; background: #fff; font: inherit; cursor: pointer; color: var(--ink);
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn.secondary { background: var(--panel-alt); }
+  .btn:hover { filter: brightness(0.98); }
+
+  .mono { font-family: var(--mono); }
+  .section-block { margin-top: 12px; }
+  .help-text { color: var(--muted); font-size: 0.85rem; margin: 4px 0 0; }
+
+  /* Hostile pattern utilities */
+  .no-select { user-select: none; -webkit-user-select: none; }
+  .copy-disabled { user-select: none; -webkit-user-select: none; cursor: not-allowed; }
+  .fragmented-value span { display: inline; }
+  .deep-fragment span span span { display: inline; }
+
+  .ellipsized { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: bottom; }
+
+  .collapsed-box {
+    max-height: 92px; overflow: hidden; position: relative;
+    border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: #fff;
+  }
+  .collapsed-box::after {
+    content: "More content hidden below"; position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 20px 12px 8px; background: linear-gradient(transparent, #fff 60%);
+    color: var(--muted); font-size: 0.82rem; text-align: right;
+  }
+
+  .pseudo-field {
+    display: flex; justify-content: space-between; gap: 16px;
+    padding: 7px 0; border-bottom: 1px solid var(--soft);
+  }
+  .pseudo-field:last-child { border-bottom: 0; }
+  .pseudo-field[data-label]::before { content: attr(data-label); color: var(--muted); font-weight: 650; }
+  .pseudo-value[data-value]::after { content: attr(data-value); font-weight: 750; }
+
+  .fake-canvas {
+    position: relative; min-height: 270px;
+    border: 1px solid var(--line); border-radius: 12px;
+    background:
+      linear-gradient(#fff, #fff) padding-box,
+      repeating-linear-gradient(to bottom, transparent 0 39px, var(--soft) 39px 40px);
+    overflow: hidden; font-variant-numeric: tabular-nums;
+  }
+  .fake-row {
+    position: absolute; left: 12px; right: 12px; height: 30px;
+    display: grid; grid-template-columns: 120px 1fr 110px 110px; gap: 10px;
+    align-items: center; font-size: 0.9rem;
+  }
+  .fake-row.header { font-weight: 800; color: var(--muted); }
+
+  .pos-canvas { position: relative; min-height: 230px; border: 1px solid var(--line); border-radius: 12px; background: #fbfcfe; overflow: hidden; }
+  .pos-pin { position: absolute; transform: translate(-50%, -100%); }
+  .pin-dot { width: 16px; height: 16px; border-radius: 50% 50% 50% 0; background: var(--accent); transform: rotate(-45deg); border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+
+  .dom-visual-mismatch { display: flex; gap: 10px; flex-wrap: wrap; }
+  .visual-order-1 { order: 1; }
+  .visual-order-2 { order: 2; }
+  .visual-order-3 { order: 3; }
+  .visual-order-4 { order: 4; }
+
+  .decoy { color: #a7adb8; text-decoration: line-through; }
+  .real-value { font-weight: 800; }
+
+  .admin-table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: 0.92rem; }
+  .admin-table th, .admin-table td { padding: 9px 10px; border-bottom: 1px solid var(--soft); text-align: left; vertical-align: top; }
+  .admin-table th { color: var(--muted); background: var(--panel-alt); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { padding: 9px 10px; border-bottom: 1px solid var(--soft); text-align: left; vertical-align: top; }
+  th { color: var(--muted); background: var(--panel-alt); }
+  caption { text-align: left; font-weight: 700; padding: 6px 0; }
+
+  .watermark-layer { position: relative; }
+  .watermark-layer::before {
+    content: "DEMO COPY - NOT FOR PRODUCTION"; position: absolute; inset: 16px;
+    display: grid; place-items: center; transform: rotate(-18deg);
+    color: rgba(197, 48, 74, 0.12); font-size: 1.9rem; font-weight: 900;
+    pointer-events: none; user-select: none; z-index: 2;
+  }
+
+  .selected-panel { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft) inset; }
+
+  .tooltip-host { position: relative; border-bottom: 1px dotted var(--muted); cursor: help; }
+  .tooltip-host .tip {
+    position: absolute; left: 0; top: 130%; z-index: 5; min-width: 200px;
+    padding: 8px 10px; background: #1d2128; color: #fff; border-radius: 8px;
+    font-size: 0.82rem; opacity: 0; visibility: hidden; transition: opacity .12s;
+  }
+  .tooltip-host:hover .tip, .tooltip-host:focus-within .tip { opacity: 1; visibility: visible; }
+
+  .vlist-viewport { max-height: 200px; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; }
+  .vlist-row { display: grid; grid-template-columns: 56px 1fr 120px 110px; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--soft); align-items: center; font-size: 0.9rem; }
+  .vlist-row:last-child { border-bottom: 0; }
+
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .cal-cell { border: 1px solid var(--line); border-radius: 8px; padding: 8px; min-height: 62px; background: #fff; }
+  .cal-cell.head { text-align: center; font-weight: 700; color: var(--muted); min-height: auto; padding: 6px; background: var(--panel-alt); }
+  .cal-cell.unavailable { background: var(--soft); color: var(--muted); }
+  .cal-cell.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft) inset; }
+  .cal-num { font-weight: 700; }
+  .cal-avail { font-size: 0.74rem; color: var(--muted); }
+
+  .deep-wrap { display: contents; }
+
+  @media (max-width: 980px) {
+    .layout-grid-two, .layout-grid-three, .split-layout { grid-template-columns: 1fr; }
+    .field-row, .pseudo-field { display: block; }
+    .field-value { display: block; margin-top: 2px; text-align: left; }
+    .fake-row { grid-template-columns: 1fr; height: auto; position: static; padding: 8px; border-bottom: 1px solid var(--soft); }
+    .example-card { padding: 18px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="page-hero">
+    <span class="hero-tag">Extraction Test Fixture</span>
+    <h1>Page 10 - Hostile Extraction Resistant UI</h1>
+    <p>This page contains realistic local test fixtures for extraction-resistant UI patterns such as unselectable text, CSS-generated labels and values, values split across DOM nodes, fake rendered rows, virtualized-looking lists, masked values, copy-disabled regions, collapsed overflow, DOM order mismatch, watermark overlays, and decoy content. Everything is fictional, deterministic, and safe to inspect. No anti-automation, fingerprinting, or network calls are used.</p>
+  </header>
+
+    <section class="example-card" id="example-01">
+      <header class="example-header"><p class="example-kicker">Example 01</p><h2>Unselectable Banking Receipt With Selectable Fallback</h2></header>
+      <p class="example-description">This example imitates a banking receipt where visible receipt text is intentionally unselectable. It tests whether extraction can capture field-value data from visible content and fallback content without relying only on manual text selection.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Confirmation number</span><span class="hs-value mono">TRN-8841-6029</span></div>
+          <div class="hs-item"><span class="hs-label">Status</span><span class="hs-value"><span class="badge info">Scheduled</span></span></div>
+          <div class="hs-item"><span class="hs-label">Created</span><span class="hs-value">May 31, 2026, 10:42 AM PT</span></div>
+        </div>
+        <div class="split-layout">
+          <section class="panel no-select" id="ex01-receipt" aria-labelledby="ex01-receipt-title">
+            <h3 id="ex01-receipt-title" style="margin-top:0;">Transfer scheduled</h3>
+            <div class="field-row"><span class="field-label">From account</span><span class="field-value">Operating Checking ending in 1842</span></div>
+            <div class="field-row"><span class="field-label">To account</span><span class="field-value">Tax Savings ending in 3398</span></div>
+            <div class="field-row"><span class="field-label">Transfer amount</span><span class="field-value">$2,500.00</span></div>
+            <div class="field-row"><span class="field-label">Transfer date</span><span class="field-value">June 3, 2026</span></div>
+            <div class="field-row"><span class="field-label">Frequency</span><span class="field-value">One-time</span></div>
+            <div class="field-row"><span class="field-label">Fee</span><span class="field-value">$0.00</span></div>
+            <div class="field-row"><span class="field-label">Memo</span><span class="field-value">Quarterly estimated tax reserve</span></div>
+            <div class="field-row"><span class="field-label">Submitted by</span><span class="field-value">Renee Coleman</span></div>
+            <div class="field-row"><span class="field-label">Authorization method</span><span class="field-value">Authenticator app</span></div>
+            <p class="help-text">You can cancel this transfer until June 2, 2026 at 11:59 PM PT.</p>
+          </section>
+          <aside class="callout-panel" aria-label="Receipt data fallback">
+            <p class="panel-title">Receipt data fallback</p>
+            <p><strong>Confirmation number:</strong> TRN-8841-6029</p>
+            <p><strong>Transfer amount:</strong> $2,500.00</p>
+            <p><strong>Transfer date:</strong> June 3, 2026</p>
+            <p><strong>Fallback status:</strong> Selectable text</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-02">
+      <header class="example-header"><p class="example-kicker">Example 02</p><h2>CSS-Generated Labels In A Billing Summary</h2></header>
+      <p class="example-description">This example imitates a billing summary where field labels are generated with CSS pseudo-elements. It tests extraction of visible labels that are not normal DOM text nodes.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Account</span><span class="hs-value">Atlas Product Studio</span></div>
+          <div class="hs-item"><span class="hs-label">Billing period</span><span class="hs-value">May 2026</span></div>
+          <div class="hs-item"><span class="hs-label">Billing status</span><span class="hs-value"><span class="badge ok">Active</span></span></div>
+        </div>
+        <div class="split-layout">
+          <div class="panel">
+            <div class="pseudo-field" data-label="Current plan"><span class="field-value">Business annual</span></div>
+            <div class="pseudo-field" data-label="Renewal date"><span class="field-value">January 18, 2027</span></div>
+            <div class="pseudo-field" data-label="Seats purchased"><span class="field-value">24</span></div>
+            <div class="pseudo-field" data-label="Seats used"><span class="field-value">19</span></div>
+            <div class="pseudo-field" data-label="Payment method"><span class="field-value">Visa ending in 4242</span></div>
+            <div class="pseudo-field" data-label="Latest invoice"><span class="field-value mono">INV-2026-00118</span></div>
+          </div>
+          <aside class="summary-panel">
+            <p class="panel-title">Pattern</p>
+            <div class="field-block"><span class="field-label">Generated label pattern</span>Labels are produced by CSS from data-label attributes</div>
+            <div class="field-block"><span class="field-label">Extraction target</span>Visible labels plus values</div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-03">
+      <header class="example-header"><p class="example-kicker">Example 03</p><h2>CSS-Generated Values In A Shipment Tracker</h2></header>
+      <p class="example-description">This example imitates a shipment tracker where some visible values are generated by CSS pseudo-elements. It tests extraction of rendered values that may not appear as ordinary text content.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Shipment</span><span class="hs-value mono">SHP-2026-77120</span></div>
+          <div class="hs-item"><span class="hs-label">Carrier</span><span class="hs-value">Example Parcel</span></div>
+          <div class="hs-item"><span class="hs-label">Tracker status</span><span class="hs-value"><span class="badge info">In transit</span></span></div>
+        </div>
+        <div class="split-layout">
+          <div class="panel">
+            <div class="field-row"><span class="field-label">Tracking number</span><span class="field-value pseudo-value mono" data-value="1Z999AA10123456784"></span></div>
+            <div class="field-row"><span class="field-label">Estimated delivery</span><span class="field-value pseudo-value" data-value="June 4, 2026 by 8:00 PM"></span></div>
+            <div class="field-row"><span class="field-label">Current location</span><span class="field-value pseudo-value" data-value="Sacramento, CA"></span></div>
+            <div class="field-row"><span class="field-label">Service</span><span class="field-value pseudo-value" data-value="Ground residential"></span></div>
+            <div class="field-row"><span class="field-label">Reference</span><span class="field-value pseudo-value mono" data-value="ORD-2026-104922"></span></div>
+            <p class="help-text">The shipment tracker intentionally renders core field values through CSS-generated content.</p>
+          </div>
+          <aside class="summary-panel">
+            <p class="panel-title">Timeline</p>
+            <div class="field-block"><span class="field-label">Label created</span>Reno, NV &middot; May 31, 2026, 9:18 AM</div>
+            <div class="field-block"><span class="field-label">Origin scan</span>Reno, NV &middot; May 31, 2026, 7:42 PM</div>
+            <div class="field-block"><span class="field-label">Arrived at facility</span>Sacramento, CA &middot; June 1, 2026, 2:55 PM</div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-04">
+      <header class="example-header"><p class="example-kicker">Example 04</p><h2>Value Split Across Multiple DOM Nodes</h2></header>
+      <p class="example-description">This example imitates a payment confirmation where values are split across multiple text nodes and spans. It tests whether extraction can reconstruct visible values without adding unwanted spaces or dropping fragments.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Payment confirmation</span><span class="hs-value">Posted</span></div>
+          <div class="hs-item"><span class="hs-label">Status</span><span class="hs-value"><span class="badge ok">Posted</span></span></div>
+        </div>
+        <div class="panel">
+          <div class="field-row"><span class="field-label">Payment ID</span><span class="field-value fragmented-value mono"><span>PMT</span><span>-</span><span>77</span><span>120</span></span></div>
+          <div class="field-row"><span class="field-label">Invoice</span><span class="field-value fragmented-value mono"><span>INV</span><span>-</span><span>2026</span><span>-</span><span>008</span><span>41</span></span></div>
+          <div class="field-row"><span class="field-label">Amount</span><span class="field-value fragmented-value"><span>$</span><span>300</span><span>.</span><span>00</span></span></div>
+          <div class="field-row"><span class="field-label">Payment method</span><span class="field-value fragmented-value"><span>ACH</span><span>&nbsp;</span><span>ending</span><span>&nbsp;</span><span>in</span><span>&nbsp;</span><span>1842</span></span></div>
+          <div class="field-row"><span class="field-label">Posted date</span><span class="field-value fragmented-value"><span>May</span> <span>21</span><span>,</span> <span>2026</span></span></div>
+        </div>
+        <div class="panel section-block">
+          <p class="panel-title">Line items</p>
+          <div class="field-row"><span class="field-label">Applied invoice</span><span class="field-value mono">INV-2026-00841</span></div>
+          <div class="field-row"><span class="field-label">Remaining balance</span><span class="field-value">$436.14</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-05">
+      <header class="example-header"><p class="example-kicker">Example 05</p><h2>Deeply Nested Span Invoice Row</h2></header>
+      <p class="example-description">This example imitates an enterprise invoice table where framework wrappers deeply nest every visible value. It tests extraction of row-level data from deeply nested spans while preserving table context.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Invoice</span><span class="hs-value mono">INV-2026-00841</span></div>
+          <div class="hs-item"><span class="hs-label">Customer</span><span class="hs-value">Cedar &amp; Pine Design LLC</span></div>
+          <div class="hs-item"><span class="hs-label">Status</span><span class="hs-value"><span class="badge warning">Partially paid</span></span></div>
+        </div>
+        <div class="wide-scroll">
+          <table>
+            <thead><tr><th>SKU</th><th>Description</th><th>Quantity</th><th>Unit price</th><th>Amount</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">SEAT-BUS-24</td><td>Business platform seats</td><td>24</td><td>$18.00</td><td>$432.00</td><td><span class="badge ok">Matched</span></td></tr>
+              <tr>
+                <td class="mono"><span class="deep-fragment"><span><span><span>ADD</span><span>-</span><span>AUDIT</span><span>-</span><span>01</span></span></span></span></td>
+                <td><span class="deep-fragment"><span><span><span>Audit</span> <span>log</span> <span>retention</span> <span>add-on</span></span></span></span></td>
+                <td><span class="deep-fragment"><span><span><span>1</span></span></span></span></td>
+                <td><span class="deep-fragment"><span><span><span>$96.00</span></span></span></span></td>
+                <td><span class="deep-fragment"><span><span><span>$96.00</span></span></span></span></td>
+                <td><span class="badge ok">Matched</span></td>
+              </tr>
+              <tr>
+                <td class="mono"><span class="deep-fragment"><span><span><span>ADD</span><span>-</span><span>SUPPORT</span><span>-</span><span>PR</span></span></span></span></td>
+                <td><span class="deep-fragment"><span><span><span>Priority</span> <span>support</span> <span>package</span></span></span></span></td>
+                <td><span class="deep-fragment"><span><span><span>1</span></span></span></span></td>
+                <td><span class="deep-fragment"><span><span><span>$150.00</span></span></span></span></td>
+                <td><span class="deep-fragment"><span><span><span>$135.00</span></span></span></span></td>
+                <td><span class="badge warning">Review</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-06">
+      <header class="example-header"><p class="example-kicker">Example 06</p><h2>Canvas-Like Ledger With Accessible Fallback</h2></header>
+      <p class="example-description">This example imitates a finance ledger rendered like a canvas or custom drawing surface. It tests extraction from visually positioned rows and an accessible fallback table.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Account</span><span class="hs-value">Operating Checking ending in 1842</span></div>
+          <div class="hs-item"><span class="hs-label">Statement period</span><span class="hs-value">May 2026</span></div>
+          <div class="hs-item"><span class="hs-label">Current balance</span><span class="hs-value">$48,920.18</span></div>
+        </div>
+        <div class="fake-canvas" role="img" aria-label="Ledger rendered as positioned rows; accessible table follows">
+          <div class="fake-row header" style="top:8px;"><span>Date</span><span>Description</span><span>Amount</span><span>Balance</span></div>
+          <div class="fake-row" style="top:48px;"><span>May 31</span><span>ACH transfer to Tax Savings</span><span>-$2,500.00</span><span>$48,920.18</span></div>
+          <div class="fake-row" style="top:88px;"><span>May 30</span><span>Northstar Cloud Services</span><span>-$300.00</span><span>$51,420.18</span></div>
+          <div class="fake-row" style="top:128px;"><span>May 29</span><span>Client payment - Harbor Cafe</span><span>+$4,800.00</span><span>$51,720.18</span></div>
+          <div class="fake-row" style="top:168px;"><span>May 28</span><span>Payroll batch</span><span>-$12,884.42</span><span>$46,920.18</span></div>
+        </div>
+        <div class="panel section-block" style="font-size:0.85rem;">
+          <table aria-label="Ledger data fallback">
+            <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Balance</th></tr></thead>
+            <tbody>
+              <tr><td>May 31</td><td>ACH transfer to Tax Savings</td><td>-$2,500.00</td><td>$48,920.18</td></tr>
+              <tr><td>May 30</td><td>Northstar Cloud Services</td><td>-$300.00</td><td>$51,420.18</td></tr>
+              <tr><td>May 29</td><td>Client payment - Harbor Cafe</td><td>+$4,800.00</td><td>$51,720.18</td></tr>
+              <tr><td>May 28</td><td>Payroll batch</td><td>-$12,884.42</td><td>$46,920.18</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-07">
+      <header class="example-header"><p class="example-kicker">Example 07</p><h2>SVG-Based Boarding Pass Text</h2></header>
+      <p class="example-description">This example imitates a boarding pass or ticket where important values are rendered as SVG text. It tests extraction of visible SVG text, fallback values, and ticket field context.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Boarding pass</span><span class="hs-value">Design Summit 2026</span></div>
+        </div>
+        <div class="split-layout">
+          <div class="panel" style="background:#10243a;border-color:#10243a;">
+            <svg viewBox="0 0 520 240" width="100%" role="img" aria-label="Boarding pass for Lina Romero, flight AVX 218, SFO to JFK, seat 14A">
+              <rect x="0" y="0" width="520" height="240" rx="14" fill="#0f2034"/>
+              <text x="24" y="38" fill="#9fd0ff" font-size="13" font-family="monospace">BOARDING PASS</text>
+              <text x="24" y="74" fill="#fff" font-size="22" font-weight="700">Lina Romero</text>
+              <text x="24" y="108" fill="#cbd6e6" font-size="13">Flight</text>
+              <text x="24" y="128" fill="#fff" font-size="18" font-weight="700">AVX 218</text>
+              <text x="160" y="108" fill="#cbd6e6" font-size="13">From</text>
+              <text x="160" y="128" fill="#fff" font-size="18" font-weight="700">SFO</text>
+              <text x="250" y="108" fill="#cbd6e6" font-size="13">To</text>
+              <text x="250" y="128" fill="#fff" font-size="18" font-weight="700">JFK</text>
+              <text x="340" y="108" fill="#cbd6e6" font-size="13">Seat</text>
+              <text x="340" y="128" fill="#fff" font-size="18" font-weight="700">14A</text>
+              <text x="24" y="166" fill="#cbd6e6" font-size="13">Date</text>
+              <text x="24" y="186" fill="#fff" font-size="16">September 2, 2026</text>
+              <text x="250" y="166" fill="#cbd6e6" font-size="13">Departure</text>
+              <text x="250" y="186" fill="#fff" font-size="16">8:05 AM</text>
+              <text x="380" y="166" fill="#cbd6e6" font-size="13">Group</text>
+              <text x="380" y="186" fill="#fff" font-size="16">B</text>
+              <text x="24" y="218" fill="#cbd6e6" font-size="13">Confirmation</text>
+              <text x="120" y="218" fill="#9fd0ff" font-size="15" font-family="monospace">AV-9K2LD</text>
+            </svg>
+          </div>
+          <aside class="summary-panel" aria-label="Ticket data fallback">
+            <p class="panel-title">Fallback details</p>
+            <div class="field-row"><span class="field-label">Passenger</span><span class="field-value">Lina Romero</span></div>
+            <div class="field-row"><span class="field-label">Flight</span><span class="field-value">AVX 218</span></div>
+            <div class="field-row"><span class="field-label">Route</span><span class="field-value">SFO to JFK</span></div>
+            <div class="field-row"><span class="field-label">Seat</span><span class="field-value">14A</span></div>
+            <div class="field-row"><span class="field-label">Confirmation</span><span class="field-value mono">AV-9K2LD</span></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-08">
+      <header class="example-header"><p class="example-kicker">Example 08</p><h2>Virtualized Ticket Queue Viewport</h2></header>
+      <p class="example-description">This example imitates a virtualized ticket queue where only visible rows are present in the DOM. It tests extraction of visible rows, viewport state, row count summary, and dynamic row replacement.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Queue</span><span class="hs-value">Billing Support</span></div>
+          <div class="hs-item"><span class="hs-label">Total matching tickets</span><span class="hs-value">142</span></div>
+          <div class="hs-item"><span class="hs-label">Visible range</span><span class="hs-value">Rows 41-45</span></div>
+          <div class="hs-item"><span class="hs-label">Sort order</span><span class="hs-value">SLA deadline</span></div>
+          <div class="hs-item"><span class="hs-label">Viewport status</span><span class="hs-value"><span class="badge accent">Virtualized view</span></span></div>
+        </div>
+        <div class="vlist-viewport" id="ex08-vp" data-current="0">
+          <div data-vpage>
+            <div class="vlist-row"><span class="mono">41</span><div><strong>TCK-2026-54102</strong> &middot; Theo Grant<br><span class="help-text">Invoice PDF missing line item details</span></div><span><span class="badge warning">High</span></span><span class="help-text">Due today, 5:00 PM</span></div>
+            <div class="vlist-row"><span class="mono">42</span><div><strong>TCK-2026-54188</strong> &middot; Renee Coleman<br><span class="help-text">Monthly billing export missing discount rows</span></div><span><span class="badge neutral">Medium</span></span><span class="help-text">Due June 1, 2026, 2:00 PM</span></div>
+            <div class="vlist-row"><span class="mono">43</span><div><strong>TCK-2026-54217</strong> &middot; Maya Chen<br><span class="help-text">Export filter does not preserve date range</span></div><span><span class="badge warning">High</span></span><span class="help-text">Due today, 6:30 PM</span></div>
+            <div class="vlist-row"><span class="mono">44</span><div><strong>TCK-2026-54240</strong> &middot; Priya Shah<br><span class="help-text">Invoice recipient list not updating</span></div><span><span class="badge warning">High</span></span><span class="help-text">Due tomorrow, 9:00 AM</span></div>
+            <div class="vlist-row"><span class="mono">45</span><div><strong>TCK-2026-54251</strong> &middot; Owen Brooks<br><span class="help-text">Billing CSV includes duplicate rows</span></div><span><span class="badge danger">Urgent</span></span><span class="help-text">Due today, 4:00 PM</span></div>
+          </div>
+          <div data-vpage hidden>
+            <div class="vlist-row"><span class="mono">46</span><div><strong>TCK-2026-54266</strong> &middot; Grace Miller<br><span class="help-text">Saved export sends duplicate CSV attachment</span></div><span><span class="badge neutral">Medium</span></span><span class="help-text">Due June 2, 2026</span></div>
+            <div class="vlist-row"><span class="mono">47</span><div><strong>TCK-2026-54272</strong> &middot; Avery Quinn<br><span class="help-text">Archived audit log export unavailable</span></div><span><span class="badge neutral">Low</span></span><span class="help-text">Due June 3, 2026</span></div>
+            <div class="vlist-row"><span class="mono">48</span><div><strong>TCK-2026-54281</strong> &middot; Noah Kim<br><span class="help-text">Billing statement has missing tax line</span></div><span><span class="badge neutral">Medium</span></span><span class="help-text">Due June 3, 2026</span></div>
+            <div class="vlist-row"><span class="mono">49</span><div><strong>TCK-2026-54290</strong> &middot; Lina Romero<br><span class="help-text">Invoice CSV encoding issue</span></div><span><span class="badge warning">High</span></span><span class="help-text">Due today, 7:00 PM</span></div>
+            <div class="vlist-row"><span class="mono">50</span><div><strong>TCK-2026-54298</strong> &middot; Anika Sharma<br><span class="help-text">Cannot download receipt bundle</span></div><span><span class="badge neutral">Medium</span></span><span class="help-text">Due June 2, 2026</span></div>
+          </div>
+        </div>
+        <p class="section-block"><button class="btn secondary" type="button" data-swap-viewport="#ex08-vp">Show rows 46-50 (page <span data-page-label>1</span>)</button></p>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-09">
+      <header class="example-header"><p class="example-kicker">Example 09</p><h2>Index And Name Split Across Live Lists</h2></header>
+      <p class="example-description">This example imitates a search UI where result indexes and result bodies are rendered in separate synchronized lists. It tests extraction of row number to record mapping based on visual alignment.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Search query</span><span class="hs-value">frontend engineer</span></div>
+          <div class="hs-item"><span class="hs-label">Result count</span><span class="hs-value">5 jobs</span></div>
+          <div class="hs-item"><span class="hs-label">Sort order</span><span class="hs-value">Best match</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:48px 1fr;gap:10px;align-items:start;">
+          <ol style="list-style:none;margin:0;padding:0;" aria-label="Result indexes">
+            <li style="height:96px;display:flex;align-items:center;justify-content:center;font-weight:800;border-bottom:1px solid var(--soft);">1</li>
+            <li style="height:96px;display:flex;align-items:center;justify-content:center;font-weight:800;border-bottom:1px solid var(--soft);">2</li>
+            <li style="height:96px;display:flex;align-items:center;justify-content:center;font-weight:800;border-bottom:1px solid var(--soft);">3</li>
+            <li style="height:96px;display:flex;align-items:center;justify-content:center;font-weight:800;border-bottom:1px solid var(--soft);">4</li>
+            <li style="height:96px;display:flex;align-items:center;justify-content:center;font-weight:800;border-bottom:1px solid var(--soft);">5</li>
+          </ol>
+          <ol style="list-style:none;margin:0;padding:0;" aria-label="Result bodies">
+            <li style="height:96px;border-bottom:1px solid var(--soft);padding:8px 0;"><strong>Senior Frontend Engineer</strong><br>Northstar Cloud &middot; Remote - United States<br><span class="help-text">$165,000-$205,000</span></li>
+            <li style="height:96px;border-bottom:1px solid var(--soft);padding:8px 0;"><strong>Frontend Platform Engineer</strong><br>Atlas Product Studio &middot; Denver, CO or remote<br><span class="help-text">$150,000-$190,000</span></li>
+            <li style="height:96px;border-bottom:1px solid var(--soft);padding:8px 0;"><strong>Staff UI Engineer</strong><br>Civic Data Lab &middot; Oakland, CA<br><span class="help-text">$178,000-$218,000</span></li>
+            <li style="height:96px;border-bottom:1px solid var(--soft);padding:8px 0;"><strong>Senior JavaScript Engineer, Browser Extension</strong><br>Widget Lab Demo &middot; Remote - Canada or United States<br><span class="help-text">$155,000-$196,000</span></li>
+            <li style="height:96px;border-bottom:1px solid var(--soft);padding:8px 0;"><strong>Frontend Engineer, Search Experience</strong><br>QueryWorks &middot; Remote - United States<br><span class="help-text">$148,000-$172,000</span></li>
+          </ol>
+        </div>
+        <aside class="summary-panel section-block">
+          <div class="field-row"><span class="field-label">Selected index</span><span class="field-value">1</span></div>
+          <div class="field-row"><span class="field-label">Selected job</span><span class="field-value">Senior Frontend Engineer</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-10">
+      <header class="example-header"><p class="example-kicker">Example 10</p><h2>Collapsed Overflow Policy Card</h2></header>
+      <p class="example-description">This example imitates a policy or terms panel where most text is clipped by collapsed overflow. It tests extraction of only visible content by default and full content after expansion.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Policy</span><span class="hs-value">Hotel cancellation policy</span></div>
+          <div class="hs-item"><span class="hs-label">Reservation</span><span class="hs-value mono">HVS-2026-88217</span></div>
+          <div class="hs-item"><span class="hs-label">Status</span><span class="hs-value"><span class="badge info">Applies to booking</span></span></div>
+        </div>
+        <div class="split-layout">
+          <div>
+            <div class="collapsed-box" id="ex10-policy">
+              <p>Free cancellation until August 10, 2026 at 6:00 PM hotel local time.</p>
+              <p>After that time, the first night and taxes are non-refundable.</p>
+              <p>No-show reservations are charged the full stay amount.</p>
+              <p>Changes to guest name are allowed until check-in.</p>
+              <p>Parking add-ons may be cancelled separately until August 13, 2026.</p>
+              <p>Refunds may take 5-10 business days to appear on the original payment method.</p>
+            </div>
+            <p class="section-block"><button class="btn secondary" type="button" data-expand-target="#ex10-policy" aria-expanded="false">Show full policy</button></p>
+          </div>
+          <aside class="summary-panel">
+            <div class="field-block"><span class="field-label">Visible policy state</span>Collapsed</div>
+            <div class="field-block"><span class="field-label">Cancellation deadline</span>August 10, 2026, 6:00 PM</div>
+            <div class="field-block"><span class="field-label">Non-refundable amount</span>First night and taxes</div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-11">
+      <header class="example-header"><p class="example-kicker">Example 11</p><h2>Copy-Disabled Insurance Claim Packet</h2></header>
+      <p class="example-description">This example imitates a claim portal where the main claim packet disables text selection. It tests extraction from copy-resistant regions and optional selection toggling.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Claim number</span><span class="hs-value mono">CLM-2026-55109</span></div>
+          <div class="hs-item"><span class="hs-label">Claim type</span><span class="hs-value">Renters property loss</span></div>
+          <div class="hs-item"><span class="hs-label">Claim status</span><span class="hs-value"><span class="badge warning">Adjuster review</span></span></div>
+          <div class="hs-item"><span class="hs-label">Assigned adjuster</span><span class="hs-value">Owen Brooks</span></div>
+        </div>
+        <div class="copy-disabled" id="ex11-packet">
+          <div class="layout-grid-three">
+            <div class="panel"><p class="panel-title">Claimant</p>
+              <div class="field-row"><span class="field-label">Name</span><span class="field-value">Jordan Parker</span></div>
+              <div class="field-row"><span class="field-label">Policy</span><span class="field-value mono">REN-2026-44720</span></div>
+              <div class="field-row"><span class="field-label">Contact</span><span class="field-value">jordan.parker@example.test</span></div>
+            </div>
+            <div class="panel"><p class="panel-title">Incident</p>
+              <div class="field-row"><span class="field-label">Incident date</span><span class="field-value">May 22, 2026</span></div>
+              <div class="field-row"><span class="field-label">Cause</span><span class="field-value">Water leak from upstairs unit</span></div>
+              <div class="field-row"><span class="field-label">Location</span><span class="field-value">72 Hillcrest Road, San Mateo, CA</span></div>
+            </div>
+            <div class="panel"><p class="panel-title">Damage</p>
+              <div class="field-row"><span class="field-label">Estimated loss</span><span class="field-value">$4,820.00</span></div>
+              <div class="field-row"><span class="field-label">Deductible</span><span class="field-value">$500.00</span></div>
+              <div class="field-row"><span class="field-label">Preliminary payout</span><span class="field-value">$4,000.00</span></div>
+              <div class="field-row"><span class="field-label">Payment status</span><span class="field-value">Not issued</span></div>
+            </div>
+          </div>
+          <div class="panel section-block"><p class="panel-title">Documents</p>
+            <div class="field-row"><span class="field-label">Photos of damage</span><span class="field-value"><span class="badge ok">Received</span></span></div>
+            <div class="field-row"><span class="field-label">Repair estimate</span><span class="field-value"><span class="badge ok">Received</span></span></div>
+            <div class="field-row"><span class="field-label">Proof of ownership</span><span class="field-value"><span class="badge danger">Missing</span></span></div>
+          </div>
+        </div>
+        <p class="section-block"><button class="btn secondary" type="button" data-copy-guard-toggle="#ex11-packet">Enable selection for this region</button></p>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-12">
+      <header class="example-header"><p class="example-kicker">Example 12</p><h2>Masked Bank Account Values With Reveal</h2></header>
+      <p class="example-description">This example imitates a banking settings page with masked account values. It tests extraction of masked visible values, reveal behavior, and avoiding invention of hidden full values before reveal.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Payment profile</span><span class="hs-value">Operating account</span></div>
+          <div class="hs-item"><span class="hs-label">Profile status</span><span class="hs-value"><span class="badge ok">Verified</span></span></div>
+          <div class="hs-item"><span class="hs-label">Owner</span><span class="hs-value">Renee Coleman</span></div>
+        </div>
+        <div class="panel">
+          <div class="field-row"><span class="field-label">Bank</span><span class="field-value">Example National Bank</span></div>
+          <div class="field-row"><span class="field-label">Routing number</span><span class="field-value mono">***084</span></div>
+          <div class="field-row"><span class="field-label">Account number</span><span class="field-value mono">********1842</span></div>
+          <div class="field-row"><span class="field-label">Account type</span><span class="field-value">Checking</span></div>
+          <div class="field-row"><span class="field-label">Verification method</span><span class="field-value">Micro-deposit</span></div>
+          <div class="field-row"><span class="field-label">Last verified</span><span class="field-value">May 18, 2026</span></div>
+        </div>
+        <p class="section-block"><button class="btn secondary" type="button" data-reveal-target="#ex12-reveal">Reveal demo account details</button></p>
+        <div class="callout-panel" id="ex12-reveal" hidden>
+          <div class="field-row"><span class="field-label">Routing number</span><span class="field-value mono">110000084</span></div>
+          <div class="field-row"><span class="field-label">Account number</span><span class="field-value mono">000771841842</span></div>
+          <div class="field-row"><span class="field-label">Reveal status</span><span class="field-value">Demo full values visible</span></div>
+          <p class="help-text">These are fictional demo values for extraction testing.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-13">
+      <header class="example-header"><p class="example-kicker">Example 13</p><h2>DOM Order Different From Visual Order</h2></header>
+      <p class="example-description">This example imitates a dashboard where CSS order differs from DOM order. It tests whether extraction can preserve visual order when needed and still identify each card's content accurately.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Dashboard</span><span class="hs-value">Service health summary</span></div>
+          <div class="hs-item"><span class="hs-label">Environment</span><span class="hs-value">Production</span></div>
+          <div class="hs-item"><span class="hs-label">Status</span><span class="hs-value"><span class="badge danger">Needs attention</span></span></div>
+        </div>
+        <div class="dom-visual-mismatch">
+          <div class="panel visual-order-3" style="flex:1;min-width:200px;">
+            <p class="panel-title">Healthy</p>
+            <div class="field-row"><span class="field-label">Service count</span><span class="field-value">18</span></div>
+            <div class="field-row"><span class="field-label">Primary service</span><span class="field-value">Auth Gateway</span></div>
+            <div class="field-row"><span class="field-label">Current incident</span><span class="field-value">None</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Healthy</span></span></div>
+          </div>
+          <div class="panel visual-order-1" style="flex:1;min-width:200px;">
+            <p class="panel-title">Critical</p>
+            <div class="field-row"><span class="field-label">Service count</span><span class="field-value">1</span></div>
+            <div class="field-row"><span class="field-label">Primary service</span><span class="field-value">Extraction API</span></div>
+            <div class="field-row"><span class="field-label">Current incident</span><span class="field-value mono">INC-2026-1184</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge danger">Critical</span></span></div>
+          </div>
+          <div class="panel visual-order-2" style="flex:1;min-width:200px;">
+            <p class="panel-title">Warning</p>
+            <div class="field-row"><span class="field-label">Service count</span><span class="field-value">2</span></div>
+            <div class="field-row"><span class="field-label">Primary service</span><span class="field-value">Job Queue</span></div>
+            <div class="field-row"><span class="field-label">Current incident</span><span class="field-value mono">INC-2026-1189</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">Warning</span></span></div>
+          </div>
+        </div>
+        <p class="help-text">Visual priority order is Critical, Warning, Healthy.</p>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-14">
+      <header class="example-header"><p class="example-kicker">Example 14</p><h2>Duplicate Decoy Values In Product Pricing</h2></header>
+      <p class="example-description">This example imitates product pricing where old prices, comparison prices, decoy values, and current values appear together. It tests extraction of current price versus struck-through or contextual price values.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Product</span><span class="hs-value">Merino Travel Hoodie</span></div>
+          <div class="hs-item"><span class="hs-label">Brand</span><span class="hs-value">TrailKnit</span></div>
+          <div class="hs-item"><span class="hs-label">Product status</span><span class="hs-value"><span class="badge ok">In stock</span></span></div>
+        </div>
+        <div class="split-layout">
+          <div class="panel">
+            <div class="field-row"><span class="field-label">List price</span><span class="field-value decoy">$168.00</span></div>
+            <div class="field-row"><span class="field-label">Current price</span><span class="field-value real-value" style="font-size:1.2rem;">$128.00</span></div>
+            <div class="field-row"><span class="field-label">Member price after sign-in</span><span class="field-value" style="color:var(--muted);">$119.00</span></div>
+            <div class="field-row"><span class="field-label">Effective price in 3-item bundle</span><span class="field-value" style="color:var(--muted);">$112.00</span></div>
+            <div class="field-row"><span class="field-label">Promotion</span><span class="field-value">Free shipping</span></div>
+            <div class="field-row"><span class="field-label">Tax estimate</span><span class="field-value">$11.04</span></div>
+            <div class="field-row"><span class="field-label">Cart total if added now</span><span class="field-value">$139.04</span></div>
+          </div>
+          <aside class="summary-panel">
+            <p class="panel-title">Recommended add-on</p>
+            <div class="field-row"><span class="field-label">Item</span><span class="field-value">Canvas Organizer Pouch</span></div>
+            <div class="field-row"><span class="field-label">Add-on price</span><span class="field-value">$32.00</span></div>
+            <div class="field-block"><span class="field-label">Bundle discount</span>Save $6 when bought together</div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-15">
+      <header class="example-header"><p class="example-kicker">Example 15</p><h2>Hidden Backing Inputs Behind Pretty Cards</h2></header>
+      <p class="example-description">This example imitates a plan selector where beautiful cards are backed by hidden form values. It tests extraction of visible labels, selected state, hidden submitted values, and avoiding replacement of user-facing values with internal IDs unless requested.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Workspace</span><span class="hs-value">Atlas Product Studio</span></div>
+          <div class="hs-item"><span class="hs-label">Billing setup</span><span class="hs-value">Choose annual plan</span></div>
+          <div class="hs-item"><span class="hs-label">Setup status</span><span class="hs-value"><span class="badge info">Plan selected</span></span></div>
+        </div>
+        <div class="layout-grid-three">
+          <div class="panel" data-select-card="ex15-plan" aria-selected="false" tabindex="0">
+            <p class="panel-title">Starter annual</p>
+            <p style="font-size:1.2rem;font-weight:800;margin:0;">$1,188/year</p>
+            <p class="help-text">Up to 5 seats</p>
+            <input type="hidden" name="plan_id" value="plan_starter_annual">
+            <input type="hidden" name="price_cents" value="118800">
+          </div>
+          <div class="panel selected-panel" data-select-card="ex15-plan" aria-selected="true" tabindex="0">
+            <p class="panel-title">Business annual <span class="badge accent">Selected</span></p>
+            <p style="font-size:1.2rem;font-weight:800;margin:0;">$5,760/year</p>
+            <p class="help-text">24 seats included</p>
+            <input type="hidden" name="plan_id" value="plan_business_annual">
+            <input type="hidden" name="price_cents" value="576000">
+            <input type="hidden" name="billing_interval" value="annual">
+          </div>
+          <div class="panel" data-select-card="ex15-plan" aria-selected="false" tabindex="0">
+            <p class="panel-title">Enterprise annual</p>
+            <p style="font-size:1.2rem;font-weight:800;margin:0;">Custom quote</p>
+            <p class="help-text">Unlimited seats</p>
+            <input type="hidden" name="plan_id" value="plan_enterprise_annual">
+            <input type="hidden" name="requires_sales" value="true">
+          </div>
+        </div>
+        <aside class="summary-panel section-block">
+          <div class="field-row"><span class="field-label">Selected visible plan</span><span class="field-value">Business annual</span></div>
+          <div class="field-row"><span class="field-label">Submitted plan ID</span><span class="field-value mono">plan_business_annual</span></div>
+          <div class="field-row"><span class="field-label">Submitted price cents</span><span class="field-value mono">576000</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-16">
+      <header class="example-header"><p class="example-kicker">Example 16</p><h2>Ellipsized Values With Full Accessible Names</h2></header>
+      <p class="example-description">This example imitates an admin list with narrow columns that truncate long values. It tests extraction of visible truncated text, full accessible names, and row context.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Table</span><span class="hs-value">API webhook endpoints</span></div>
+          <div class="hs-item"><span class="hs-label">Workspace</span><span class="hs-value">Northwind Analytics</span></div>
+          <div class="hs-item"><span class="hs-label">Status</span><span class="hs-value"><span class="badge neutral">3 endpoints</span></span></div>
+        </div>
+        <div class="split-layout">
+          <div class="wide-scroll">
+            <table>
+              <thead><tr><th>Endpoint name</th><th>URL</th><th>Owner</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>Billing Export Worker</td><td><span class="ellipsized mono" title="https://example.test/webhooks/billing-export-worker" aria-label="https://example.test/webhooks/billing-export-worker">https://example.test/webhooks/billing-expo...</span></td><td>Renee Coleman</td><td><span class="badge ok">Healthy</span></td></tr>
+                <tr><td>CRM Data Import</td><td><span class="ellipsized mono" title="https://example.test/webhooks/crm-data-import" aria-label="https://example.test/webhooks/crm-data-import">https://example.test/webhooks/crm-data-impo...</span></td><td>Nina Patel</td><td><span class="badge warning">Near limit</span></td></tr>
+                <tr><td>Analytics Scheduler</td><td><span class="ellipsized mono" title="https://example.test/webhooks/analytics-scheduler" aria-label="https://example.test/webhooks/analytics-scheduler">https://example.test/webhooks/analytics-sch...</span></td><td>Grace Miller</td><td><span class="badge ok">Healthy</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <aside class="summary-panel">
+            <div class="field-row"><span class="field-label">Selected endpoint</span><span class="field-value">Billing Export Worker</span></div>
+            <div class="field-row"><span class="field-label">Visible URL state</span><span class="field-value">Ellipsized</span></div>
+            <div class="field-block"><span class="field-label">Full URL available</span>Yes, title and aria-label</div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-17">
+      <header class="example-header"><p class="example-kicker">Example 17</p><h2>Watermarked Document Preview</h2></header>
+      <p class="example-description">This example imitates a document preview with a watermark overlay. It tests extraction of document fields while avoiding decorative overlay text that is visible but not part of the document data.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Preview</span><span class="hs-value">Invoice PDF converted preview</span></div>
+          <div class="hs-item"><span class="hs-label">Document</span><span class="hs-value mono">INV-2026-00841</span></div>
+          <div class="hs-item"><span class="hs-label">Preview status</span><span class="hs-value"><span class="badge accent">Demo copy</span></span></div>
+        </div>
+        <div class="panel watermark-layer">
+          <div class="layout-grid-two">
+            <div>
+              <div class="field-row"><span class="field-label">Invoice number</span><span class="field-value mono">INV-2026-00841</span></div>
+              <div class="field-row"><span class="field-label">Issue date</span><span class="field-value">May 18, 2026</span></div>
+              <div class="field-row"><span class="field-label">Due date</span><span class="field-value">June 17, 2026</span></div>
+              <div class="field-row"><span class="field-label">Bill to</span><span class="field-value">Cedar &amp; Pine Design LLC</span></div>
+            </div>
+            <div>
+              <div class="field-row"><span class="field-label">Subtotal</span><span class="field-value">$678.00</span></div>
+              <div class="field-row"><span class="field-label">Tax</span><span class="field-value">$58.14</span></div>
+              <div class="field-row"><span class="field-label">Payments applied</span><span class="field-value">-$300.00</span></div>
+              <div class="field-row"><span class="field-label">Balance due</span><span class="field-value real-value">$436.14</span></div>
+            </div>
+          </div>
+          <div class="section-block" style="border-top:1px solid var(--soft);padding-top:8px;">
+            <div class="field-row"><span class="field-label">Payment terms</span><span class="field-value">Net 30</span></div>
+            <div class="field-row"><span class="field-label">Billing contact</span><span class="field-value">billing@northstar.example.test</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-18">
+      <header class="example-header"><p class="example-kicker">Example 18</p><h2>Tooltip-Only Critical Values</h2></header>
+      <p class="example-description">This example imitates an inventory table where detailed stock reasons appear only in tooltip-style popovers. It tests extraction of visible tooltip content and relationship to the correct row.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Warehouse</span><span class="hs-value">Reno DC</span></div>
+          <div class="hs-item"><span class="hs-label">Inventory status</span><span class="hs-value"><span class="badge warning">2 alerts</span></span></div>
+        </div>
+        <div class="wide-scroll">
+          <table>
+            <thead><tr><th>SKU</th><th>Item</th><th>Available</th><th>Status</th><th>Details</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="mono">BAG-TRV-22</td><td>Canvas Travel Backpack 22L</td><td>18</td>
+                <td><span class="badge warning" id="ex18-s1" aria-describedby="ex18-t1">Low stock</span></td>
+                <td><div role="tooltip" id="ex18-t1" class="callout-panel" style="font-size:0.82rem;"><strong>Reason:</strong> Reserved quantity increased after corporate order ORD-2026-104922.<br><strong>Reorder recommendation:</strong> Create purchase order for 100 units.</div></td>
+              </tr>
+              <tr>
+                <td class="mono">BAG-COM-28</td><td>TrailPack Commuter 28L</td><td>9</td>
+                <td><span class="badge danger" id="ex18-s2" aria-describedby="ex18-t2">Critical</span></td>
+                <td><div role="tooltip" id="ex18-t2" class="callout-panel" style="font-size:0.82rem;"><strong>Reason:</strong> Back-to-school promotion consumed forecasted stock.<br><strong>Reorder recommendation:</strong> Expedite inbound shipment PO-2026-7718.</div></td>
+              </tr>
+              <tr>
+                <td class="mono">BAG-FLT-18</td><td>Packwell City Flight Bag</td><td>112</td>
+                <td><span class="badge ok">Healthy</span></td><td><span class="help-text">No alert</span></td>
+              </tr>
+              <tr>
+                <td class="mono">BAG-SLM-16</td><td>NexaSlim Tech Backpack</td><td>0</td>
+                <td><span class="badge danger" id="ex18-s4" aria-describedby="ex18-t4">Backordered</span></td>
+                <td><div role="tooltip" id="ex18-t4" class="callout-panel" style="font-size:0.82rem;"><strong>Reason:</strong> Supplier delay moved inbound arrival to June 15.<br><strong>Reorder recommendation:</strong> Notify customers before purchase.</div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-19">
+      <header class="example-header"><p class="example-kicker">Example 19</p><h2>Fake Table Built From Positioned Divs</h2></header>
+      <p class="example-description">This example imitates a high-performance grid rendered from positioned divs instead of table elements. It tests extraction of row and column context without native table semantics.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Grid</span><span class="hs-value">License activation records</span></div>
+          <div class="hs-item"><span class="hs-label">Rows</span><span class="hs-value">5</span></div>
+          <div class="hs-item"><span class="hs-label">Column model</span><span class="hs-value">Positioned divs</span></div>
+        </div>
+        <div role="grid" aria-label="License activation records" style="border:1px solid var(--line);border-radius:10px;overflow:hidden;">
+          <div role="row" style="display:grid;grid-template-columns:1.4fr 1.6fr 70px 1fr 1fr;gap:10px;padding:9px 12px;background:var(--panel-alt);font-weight:700;color:var(--muted);">
+            <div role="columnheader">License</div><div role="columnheader">Organization</div><div role="columnheader">Seats</div><div role="columnheader">Status</div><div role="columnheader">Last check-in</div>
+          </div>
+          <div role="row" style="display:grid;grid-template-columns:1.4fr 1.6fr 70px 1fr 1fr;gap:10px;padding:9px 12px;border-top:1px solid var(--soft);"><div role="gridcell" class="mono">LIC-2026-882014</div><div role="gridcell">Northstar Research Lab</div><div role="gridcell">12</div><div role="gridcell"><span class="badge ok">Active</span></div><div role="gridcell">May 31, 2026</div></div>
+          <div role="row" style="display:grid;grid-template-columns:1.4fr 1.6fr 70px 1fr 1fr;gap:10px;padding:9px 12px;border-top:1px solid var(--soft);"><div role="gridcell" class="mono">LIC-2026-882115</div><div role="gridcell">Atlas Product Studio</div><div role="gridcell">24</div><div role="gridcell"><span class="badge ok">Active</span></div><div role="gridcell">May 31, 2026</div></div>
+          <div role="row" style="display:grid;grid-template-columns:1.4fr 1.6fr 70px 1fr 1fr;gap:10px;padding:9px 12px;border-top:1px solid var(--soft);"><div role="gridcell" class="mono">LIC-2026-882220</div><div role="gridcell">City Museum of Design</div><div role="gridcell">8</div><div role="gridcell"><span class="badge warning">Expiring soon</span></div><div role="gridcell">May 30, 2026</div></div>
+          <div role="row" style="display:grid;grid-template-columns:1.4fr 1.6fr 70px 1fr 1fr;gap:10px;padding:9px 12px;border-top:1px solid var(--soft);"><div role="gridcell" class="mono">LIC-2026-882314</div><div role="gridcell">Civic Data Lab</div><div role="gridcell">18</div><div role="gridcell"><span class="badge ok">Active</span></div><div role="gridcell">May 29, 2026</div></div>
+          <div role="row" style="display:grid;grid-template-columns:1.4fr 1.6fr 70px 1fr 1fr;gap:10px;padding:9px 12px;border-top:1px solid var(--soft);"><div role="gridcell" class="mono">LIC-2026-882411</div><div role="gridcell">Harbor Clinic Network</div><div role="gridcell">36</div><div role="gridcell"><span class="badge warning">Needs review</span></div><div role="gridcell">May 28, 2026</div></div>
+        </div>
+        <p class="help-text">This grid intentionally does not use table elements.</p>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-20">
+      <header class="example-header"><p class="example-kicker">Example 20</p><h2>Shadow-Like Deep Wrapper Settings Panel</h2></header>
+      <p class="example-description">This example imitates a component-heavy settings panel with deep wrapper layers. It tests extraction of field labels and values through framework-style nesting and generic class names.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Component</span><span class="hs-value">Billing export settings</span></div>
+          <div class="hs-item"><span class="hs-label">Workspace</span><span class="hs-value">Northwind Analytics</span></div>
+          <div class="hs-item"><span class="hs-label">Status</span><span class="hs-value"><span class="badge ok">Configured</span></span></div>
+        </div>
+        <div class="panel">
+          <div class="component-shell"><div class="slot"><div class="inner"><div class="render-node"><div class="text-fragment field-row"><span class="field-label">Export schedule</span><span class="field-value">Monthly on the 1st at 6:00 AM</span></div></div></div></div></div>
+          <div class="component-shell"><div class="slot"><div class="inner"><div class="render-node"><div class="text-fragment field-row"><span class="field-label">Export format</span><span class="field-value">CSV</span></div></div></div></div></div>
+          <div class="component-shell"><div class="slot"><div class="inner"><div class="render-node"><div class="text-fragment field-row"><span class="field-label">Recipients</span><span class="field-value">billing@example.test, finance@example.test</span></div></div></div></div></div>
+          <div class="component-shell"><div class="slot"><div class="inner"><div class="render-node"><div class="text-fragment field-row"><span class="field-label">Include tax columns</span><span class="field-value">Yes</span></div></div></div></div></div>
+          <div class="component-shell"><div class="slot"><div class="inner"><div class="render-node"><div class="text-fragment field-row"><span class="field-label">Include discount columns</span><span class="field-value">Yes</span></div></div></div></div></div>
+          <div class="component-shell"><div class="slot"><div class="inner"><div class="render-node"><div class="text-fragment field-row"><span class="field-label">Include payment references</span><span class="field-value">Yes</span></div></div></div></div></div>
+          <div class="component-shell"><div class="slot"><div class="inner"><div class="render-node"><div class="text-fragment field-row"><span class="field-label">Last successful export</span><span class="field-value">May 31, 2026, 6:00 AM</span></div></div></div></div></div>
+          <div class="component-shell"><div class="slot"><div class="inner"><div class="render-node"><div class="text-fragment field-row"><span class="field-label">Next scheduled export</span><span class="field-value">June 1, 2026, 6:00 AM</span></div></div></div></div></div>
+        </div>
+        <div class="callout-panel section-block">
+          <div class="component-shell"><div class="slot"><div class="inner"><div class="render-node text-fragment">
+            <div class="field-block"><span class="field-label">Warning</span>Payment reference column is required by the finance import template.</div>
+            <div class="field-row"><span class="field-label">Severity</span><span class="field-value"><span class="badge warning">Medium</span></span></div>
+          </div></div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-21">
+      <header class="example-header"><p class="example-kicker">Example 21</p><h2>Map Pin List With Visual-Only Coordinates</h2></header>
+      <p class="example-description">This example imitates a map search page where pins are visually positioned and result cards are separate. It tests extraction of pin-to-card relationships, visual coordinates, labels, and listing data.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Search area</span><span class="hs-value">Monterey waterfront</span></div>
+          <div class="hs-item"><span class="hs-label">Result count</span><span class="hs-value">4 stays</span></div>
+          <div class="hs-item"><span class="hs-label">Map status</span><span class="hs-value"><span class="badge neutral">Static demo map</span></span></div>
+        </div>
+        <div class="split-layout">
+          <div class="pos-canvas" role="img" aria-label="Map with four positioned price pins A through D">
+            <div class="pos-pin" style="top:30%;left:42%;"><div class="pin-dot"></div><span class="badge accent">A $249</span></div>
+            <div class="pos-pin" style="top:52%;left:60%;"><div class="pin-dot"></div><span class="badge accent">B $218</span></div>
+            <div class="pos-pin" style="top:44%;left:26%;"><div class="pin-dot"></div><span class="badge accent">C $196</span></div>
+            <div class="pos-pin" style="top:68%;left:48%;"><div class="pin-dot"></div><span class="badge accent">D $319</span></div>
+          </div>
+          <div>
+            <div class="panel section-block"><p class="panel-title">Pin A</p><div class="field-row"><span class="field-label">Hotel</span><span class="field-value">Harbor View Suites</span></div><div class="field-row"><span class="field-label">Location</span><span class="field-value">Monterey waterfront</span></div><div class="field-row"><span class="field-label">Nightly rate</span><span class="field-value">$249</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value">Breakfast included</span></div></div>
+            <div class="panel section-block"><p class="panel-title">Pin B</p><div class="field-row"><span class="field-label">Hotel</span><span class="field-value">Cypress Garden Inn</span></div><div class="field-row"><span class="field-label">Location</span><span class="field-value">Downtown Monterey</span></div><div class="field-row"><span class="field-label">Nightly rate</span><span class="field-value">$218</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value">Free cancellation</span></div></div>
+            <div class="panel section-block"><p class="panel-title">Pin C</p><div class="field-row"><span class="field-label">Hotel</span><span class="field-value">Bayfront Lodge</span></div><div class="field-row"><span class="field-label">Location</span><span class="field-value">Cannery Row</span></div><div class="field-row"><span class="field-label">Nightly rate</span><span class="field-value">$196</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value">Parking available</span></div></div>
+            <div class="panel section-block"><p class="panel-title">Pin D</p><div class="field-row"><span class="field-label">Hotel</span><span class="field-value">Pine Coast Hotel</span></div><div class="field-row"><span class="field-label">Location</span><span class="field-value">Pacific Grove</span></div><div class="field-row"><span class="field-label">Nightly rate</span><span class="field-value">$319</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value">Family suite</span></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-22">
+      <header class="example-header"><p class="example-kicker">Example 22</p><h2>Calendar Cells With Split Date And Availability</h2></header>
+      <p class="example-description">This example imitates an appointment calendar where date numbers and availability text are split across nested DOM fragments. It tests extraction of date, availability, selected state, disabled state, and time slot context.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Provider</span><span class="hs-value">Dr. Helen Park, MD</span></div>
+          <div class="hs-item"><span class="hs-label">Service</span><span class="hs-value">Orthopedics follow-up</span></div>
+          <div class="hs-item"><span class="hs-label">Month</span><span class="hs-value">June 2026</span></div>
+          <div class="hs-item"><span class="hs-label">Selected date</span><span class="hs-value">June 11, 2026</span></div>
+        </div>
+        <div class="split-layout">
+          <div class="calendar-grid" role="grid" aria-label="June 2026 availability">
+            <div class="cal-cell"><span class="cal-num"><span>Jun</span><span> </span><span>8</span></span><br><span class="cal-avail"><span>3</span><span> appointments</span></span></div>
+            <div class="cal-cell unavailable" aria-disabled="true"><span class="cal-num"><span>Jun</span><span> </span><span>9</span></span><br><span class="cal-avail">No appointments</span></div>
+            <div class="cal-cell"><span class="cal-num"><span>Jun</span><span> </span><span>10</span></span><br><span class="cal-avail">1 appointment</span></div>
+            <div class="cal-cell selected" aria-selected="true"><span class="cal-num"><span>Jun</span><span> </span><span>11</span></span><br><span class="cal-avail"><span>2</span><span> appointments</span></span></div>
+            <div class="cal-cell"><span class="cal-num"><span>Jun</span><span> </span><span>12</span></span><br><span class="cal-avail">4 appointments</span></div>
+            <div class="cal-cell unavailable" aria-disabled="true"><span class="cal-num"><span>Jun</span><span> </span><span>13</span></span><br><span class="cal-avail">No appointments</span></div>
+            <div class="cal-cell unavailable" aria-disabled="true"><span class="cal-num"><span>Jun</span><span> </span><span>14</span></span><br><span class="cal-avail">No appointments</span></div>
+          </div>
+          <aside class="summary-panel">
+            <p class="panel-title">Selected time slot</p>
+            <div class="field-row"><span class="field-label">Date</span><span class="field-value">June 11, 2026</span></div>
+            <div class="field-row"><span class="field-label">Selected time</span><span class="field-value">2:30 PM</span></div>
+            <div class="field-block"><span class="field-label">Other available times</span>3:15 PM, 4:00 PM</div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-23">
+      <header class="example-header"><p class="example-kicker">Example 23</p><h2>Multi-Column Receipt With Interleaved DOM</h2></header>
+      <p class="example-description">This example imitates a receipt with two visual columns where DOM order alternates between billing and fulfillment fields. It tests extraction of visual column grouping despite interleaved DOM nodes.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Order</span><span class="hs-value mono">ORD-2026-104922</span></div>
+          <div class="hs-item"><span class="hs-label">Customer</span><span class="hs-value">Jordan Ellis</span></div>
+          <div class="hs-item"><span class="hs-label">Status</span><span class="hs-value"><span class="badge info">Processing</span></span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 18px;">
+          <h4 style="grid-column:1;margin:0 0 6px;">Billing</h4>
+          <h4 style="grid-column:2;margin:0 0 6px;">Fulfillment</h4>
+          <div class="field-row" style="grid-column:1;"><span class="field-label">Payment method</span><span class="field-value">Visa ending in 4242</span></div>
+          <div class="field-row" style="grid-column:2;"><span class="field-label">Shipping method</span><span class="field-value">Standard ground</span></div>
+          <div class="field-block" style="grid-column:1;"><span class="field-label">Billing address</span>88 Valencia Street, Suite 402, San Francisco, CA 94103</div>
+          <div class="field-block" style="grid-column:2;"><span class="field-label">Shipping address</span>120 King Street, Dock B, San Francisco, CA 94107</div>
+          <div class="field-row" style="grid-column:1;"><span class="field-label">Invoice status</span><span class="field-value">Paid</span></div>
+          <div class="field-row" style="grid-column:2;"><span class="field-label">Fulfillment status</span><span class="field-value">Processing</span></div>
+          <div class="field-row" style="grid-column:1;"><span class="field-label">Billing contact</span><span class="field-value">jordan.ellis@example.test</span></div>
+          <div class="field-row" style="grid-column:2;"><span class="field-label">Tracking status</span><span class="field-value">Label pending</span></div>
+        </div>
+        <div class="summary-panel section-block">
+          <p class="panel-title">Order total</p>
+          <div class="field-row"><span class="field-label">Merchandise subtotal</span><span class="field-value">$153.00</span></div>
+          <div class="field-row"><span class="field-label">Discount</span><span class="field-value">-$15.30</span></div>
+          <div class="field-row"><span class="field-label">Shipping</span><span class="field-value">$8.95</span></div>
+          <div class="field-row"><span class="field-label">Tax</span><span class="field-value">$12.42</span></div>
+          <div class="field-row"><span class="field-label">Order total</span><span class="field-value real-value">$159.07</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-24">
+      <header class="example-header"><p class="example-kicker">Example 24</p><h2>Custom Dropdown With Detached Option Text</h2></header>
+      <p class="example-description">This example imitates a compact enterprise dropdown where the trigger shows only a code and the full option label appears in a detached menu. It tests extraction of trigger value, selected full option text, option list, and hidden submitted value.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Report configuration</span><span class="hs-value">Invoice export template</span></div>
+          <div class="hs-item"><span class="hs-label">Template status</span><span class="hs-value"><span class="badge neutral">Draft</span></span></div>
+        </div>
+        <div class="split-layout">
+          <div>
+            <div class="form-field panel">
+              <label id="ex24-lbl" style="font-weight:700;">Export template</label>
+              <div style="margin-top:6px;">
+                <button type="button" class="btn secondary" aria-labelledby="ex24-lbl" aria-label="Export template, Billing line item CSV" aria-haspopup="listbox" style="min-width:200px;text-align:left;"><span class="mono">BILL-LINE-CSV</span> &#9662;</button>
+                <input type="hidden" name="export_template_id" value="tmpl_billing_line_item_csv">
+              </div>
+            </div>
+            <ul role="listbox" aria-label="Export template options" style="list-style:none;margin:12px 0 0;padding:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;">
+              <li role="option" aria-selected="true" class="panel selected-panel" style="border-radius:0;border-left:0;border-right:0;border-top:0;"><strong class="mono">BILL-LINE-CSV</strong> &middot; Billing line item CSV<br><span class="help-text">Includes invoice number, SKU, tax, discount, and payment reference columns.</span></li>
+              <li role="option" class="panel" style="border-radius:0;border-left:0;border-right:0;border-top:0;"><strong class="mono">BILL-SUM-CSV</strong> &middot; Billing summary CSV<br><span class="help-text">Includes invoice totals, payments applied, and balance due.</span></li>
+              <li role="option" class="panel" style="border-radius:0;border-left:0;border-right:0;border-top:0;"><strong class="mono">TAX-JUR-CSV</strong> &middot; Tax jurisdiction CSV<br><span class="help-text">Includes tax jurisdiction, tax rate, and taxable amount.</span></li>
+              <li role="option" class="panel" style="border-radius:0;border-left:0;border-right:0;border-bottom:0;"><strong class="mono">PAY-REF-CSV</strong> &middot; Payment reference CSV<br><span class="help-text">Includes payment ID, method, applied invoice, and posting date.</span></li>
+            </ul>
+          </div>
+          <aside class="summary-panel">
+            <div class="field-row"><span class="field-label">Selected visible code</span><span class="field-value mono">BILL-LINE-CSV</span></div>
+            <div class="field-row"><span class="field-label">Selected full name</span><span class="field-value">Billing line item CSV</span></div>
+            <div class="field-block"><span class="field-label">Submitted template ID</span><span class="mono">tmpl_billing_line_item_csv</span></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-25">
+      <header class="example-header"><p class="example-kicker">Example 25</p><h2>Mixed Hostile Anti-Pattern Stress Gallery</h2></header>
+      <p class="example-description">This example combines multiple extraction-resistant patterns in a realistic admin review gallery. It tests whether extraction can handle fragmented values, generated labels, visual-only grouping, decoy text, masked values, ellipsis, and hidden backing values at the same time.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Review set</span><span class="hs-value">High friction extraction cases</span></div>
+          <div class="hs-item"><span class="hs-label">Owner</span><span class="hs-value">Product Systems</span></div>
+          <div class="hs-item"><span class="hs-label">Status</span><span class="hs-value"><span class="badge accent">Stress test</span></span></div>
+          <div class="hs-item"><span class="hs-label">Records</span><span class="hs-value">6</span></div>
+        </div>
+        <div class="split-layout">
+          <div class="layout-grid-two">
+            <div class="hostile-card">
+              <p class="panel-title">Generated label plus split value</p>
+              <div class="pseudo-field" data-label="Case number"><span class="field-value fragmented-value mono"><span>TCK</span><span>-</span><span>2026</span><span>-</span><span>541</span><span>02</span></span></div>
+              <div class="field-row"><span class="field-label">Subject</span><span class="field-value">Invoice PDF missing line item details</span></div>
+              <div class="field-row"><span class="field-label">Priority</span><span class="field-value"><span class="badge warning">High</span></span></div>
+            </div>
+            <div class="hostile-card">
+              <p class="panel-title">Masked value plus hidden backing input</p>
+              <div class="field-row"><span class="field-label">API key</span><span class="field-value mono">key_live_****_9K2Q</span></div>
+              <input type="hidden" name="api_key_id" value="key_884120_internal">
+              <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Rafael Ortiz</span></div>
+              <div class="field-row"><span class="field-label">Rotation due</span><span class="field-value">July 1, 2026</span></div>
+            </div>
+            <div class="hostile-card">
+              <p class="panel-title">Decoy price plus real price</p>
+              <div class="field-row"><span class="field-label">List price</span><span class="field-value decoy">$168.00</span></div>
+              <div class="field-row"><span class="field-label">Current price</span><span class="field-value real-value">$128.00</span></div>
+              <div class="field-row"><span class="field-label">Product</span><span class="field-value">Merino Travel Hoodie</span></div>
+              <div class="field-row"><span class="field-label">Promotion</span><span class="field-value">Free shipping</span></div>
+            </div>
+            <div class="hostile-card">
+              <p class="panel-title">Ellipsized URL</p>
+              <div class="field-row"><span class="field-label">URL</span><span class="field-value ellipsized mono" title="https://example.test/webhooks/billing-export-worker" aria-label="https://example.test/webhooks/billing-export-worker">https://example.test/webhooks/billing-expo...</span></div>
+              <div class="field-row"><span class="field-label">Endpoint</span><span class="field-value">Billing Export Worker</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Healthy</span></span></div>
+            </div>
+            <div class="hostile-card">
+              <p class="panel-title">DOM order mismatch</p>
+              <div class="dom-visual-mismatch">
+                <span class="badge ok visual-order-3">Healthy</span>
+                <span class="badge danger visual-order-1">Critical</span>
+                <span class="badge warning visual-order-2">Warning</span>
+              </div>
+              <div class="field-row section-block"><span class="field-label">Service</span><span class="field-value">Extraction API</span></div>
+              <div class="field-row"><span class="field-label">Incident</span><span class="field-value mono">INC-2026-1184</span></div>
+            </div>
+            <div class="hostile-card">
+              <p class="panel-title">Tooltip-attached reason</p>
+              <div class="field-row"><span class="field-label">SKU</span><span class="field-value mono">BAG-TRV-22</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning" aria-describedby="ex25-tip">Low stock</span></span></div>
+              <div role="tooltip" id="ex25-tip" class="callout-panel" style="font-size:0.82rem;margin-top:8px;"><strong>Reason:</strong> Reserved quantity increased after corporate order ORD-2026-104922.</div>
+            </div>
+          </div>
+          <aside class="summary-panel">
+            <div class="field-block"><span class="field-label">Hardest pattern</span>Combined generated labels and split values</div>
+            <div class="field-block"><span class="field-label">Recommended extraction strategy</span>Use visible layout, semantic relationships, and fallback values together</div>
+            <div class="field-block"><span class="field-label">Safety note</span>All values are fictional and local to this test page.</div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+</main>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("[data-select-card]").forEach(function (card) {
+      card.addEventListener("click", function (event) {
+        if (event.target.closest("a, button, input, select, textarea")) return;
+        var group = card.dataset.selectCard;
+        if (!group) return;
+        document.querySelectorAll('[data-select-card="' + group + '"]').forEach(function (item) {
+          item.classList.remove("selected-panel");
+          item.setAttribute("aria-selected", "false");
+        });
+        card.classList.add("selected-panel");
+        card.setAttribute("aria-selected", "true");
+      });
+    });
+
+    document.querySelectorAll("[data-toggle-target]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var target = document.querySelector(button.dataset.toggleTarget);
+        if (!target) return;
+        target.hidden = !target.hidden;
+        button.setAttribute("aria-expanded", String(!target.hidden));
+      });
+    });
+
+    document.querySelectorAll("[data-reveal-target]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var target = document.querySelector(button.dataset.revealTarget);
+        if (!target) return;
+        target.hidden = false;
+        button.hidden = true;
+      });
+    });
+
+    document.querySelectorAll("[data-expand-target]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var target = document.querySelector(button.dataset.expandTarget);
+        if (!target) return;
+        target.classList.remove("collapsed-box");
+        button.setAttribute("aria-expanded", "true");
+        button.hidden = true;
+      });
+    });
+
+    document.querySelectorAll("[data-copy-guard-toggle]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var target = document.querySelector(button.dataset.copyGuardToggle);
+        if (!target) return;
+        target.classList.toggle("copy-disabled");
+        var disabled = target.classList.contains("copy-disabled");
+        button.textContent = disabled ? "Enable selection for this region" : "Disable selection for this region";
+      });
+    });
+
+    document.querySelectorAll("[data-swap-viewport]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var wrap = document.querySelector(button.dataset.swapViewport);
+        if (!wrap) return;
+        var pages = wrap.querySelectorAll("[data-vpage]");
+        var current = wrap.getAttribute("data-current") || "0";
+        var next = (parseInt(current, 10) + 1) % pages.length;
+        pages.forEach(function (p, i) { p.hidden = (i !== next); });
+        wrap.setAttribute("data-current", String(next));
+        var label = button.querySelector("[data-page-label]");
+        if (label) label.textContent = String(next + 1);
+      });
+    });
+  });
+</script>
+</body>
+</html>

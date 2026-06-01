@@ -1,0 +1,4565 @@
+---
+
+A00 Change Request Specification - Page 6 Search Results And Dynamic Sidebars
+
+---
+
+Create one standalone HTML demo page named `page-06-search-results-and-dynamic-sidebars.html`.
+
+The page must be a self-contained HTML file. Put all HTML, CSS, and JavaScript inside this one file. Do not use React. Do not use TypeScript. Do not use a build step. Do not load external CSS, external JavaScript, external fonts, external images, or external data. The page must work by opening the `.html` file directly in a browser.
+
+This page is a testing surface for a content extraction tool. The page must focus on search results and dynamic sidebars: search result pages, filter panels, faceted sidebars, map result lists, detail preview panes, split-pane search layouts, selected result drawers, dynamic summaries, result cards, compact result rows, search snippets, highlighted matches, active filters, saved searches, result metadata, and sidebars that change when a result is selected.
+
+The page must contain 22 separate examples. Each example must have a visible heading, a visible explanatory paragraph, and the actual search result or sidebar UI. Each example must be visually separated from the next example. Each example must be realistic enough to test extraction of result lists, active filters, query text, result titles, result links, snippets, badges, scores, prices, locations, timestamps, selected result details, and related sidebar metadata.
+
+Do not make the examples tiny toy search boxes. A complex example is preferred because it can also be used for simple extraction testing. Every example must test a different extraction caveat.
+
+---
+
+B00 Page-Level Purpose
+
+---
+
+The purpose of this page is to test whether an extraction tool can identify, select, and format structured information from realistic search results and dynamic sidebar layouts.
+
+The extraction tool should be able to handle repeated result records, selected result details, active filter chips, faceted filters, search query text, result counts, sorting controls, result snippets, highlighted matches, sponsored-style demo rows, map pins, preview panels, email-style preview panes, job detail sidebars, CRM lead panels, helpdesk queues, documentation search, product filters, travel filters, and cases where a main result list and a sidebar both contain related but different information.
+
+This page should intentionally include both clean semantic markup and messy real-world markup. Some examples should use forms, lists, articles, headings, tables, and clear anchor tags. Other examples should use nested divs, spans, badges, action buttons, repeated cards, sticky sidebars, selected states, and visually paired data that is not adjacent in the DOM.
+
+The page should not depend on external services. It should not fetch real search results. It should not use real job boards, real marketplaces, real travel providers, real map providers, real email services, real CRMs, or real user data. All data must be fictional and hardcoded.
+
+---
+
+C00 Required Page Structure
+
+---
+
+The page must start with a top-level header.
+
+Use this visible title:
+
+`Page 6 - Search Results And Dynamic Sidebars`
+
+Under the title, include a short introduction paragraph explaining that the page contains realistic search result and dynamic sidebar examples for testing extraction of repeated results, active filters, result metadata, detail panes, preview panels, sidebars, snippets, sorting state, selected records, and map-style result lists.
+
+After the introduction, render 22 example sections.
+
+Each example section must follow this pattern:
+
+```html id="s9u38z"
+<section class="example-card" id="example-01">
+  <header class="example-header">
+    <p class="example-kicker">Example 01</p>
+    <h2>Job Search Results With Detail Sidebar</h2>
+  </header>
+
+  <p class="example-description">
+    This example imitates...
+  </p>
+
+  <div class="example-surface">
+    <!-- Actual search results or dynamic sidebar UI goes here. -->
+  </div>
+</section>
+```
+
+The exact class names may vary, but the structure must remain clear. Each section must have a unique `id`, from `example-01` through `example-22`.
+
+Each example heading must be visible. Each description must be visible. The actual search result surface must appear below the description.
+
+Do not include large expected extraction output blocks under every example. The page should primarily be the application-under-test surface, not a documentation page. The visible descriptions should explain the purpose and caveat of each example.
+
+---
+
+D00 Visual Design Requirements
+
+---
+
+Use inline CSS in a `<style>` tag.
+
+The page should look like a clean internal testing notebook with realistic search and sidebar interfaces inside it. Use a light background, readable font stack, generous spacing, and card-style example sections. Inside each example, the UI may look like a different product. That variation is desirable.
+
+Use different visual styles inside examples when useful. For example, one example can look like a job search page, another like a real estate map search, another like an email search preview pane, another like a documentation search page, another like a support ticket queue, another like a product filter sidebar, another like a CRM search panel, and another like a package registry result list.
+
+The page should support narrow and wide screens. Use simple responsive CSS. Avoid fixed widths that break on laptop screens.
+
+Suggested CSS structure:
+
+```html id="4txub7"
+<style>
+  :root {
+    --page-bg: #f5f2ea;
+    --card-bg: #fffdf8;
+    --ink: #25221d;
+    --muted: #6f675c;
+    --line: #d8cfc0;
+    --soft: #eee6d8;
+    --panel: #ffffff;
+    --accent: #315f8c;
+    --accent-soft: #e7f0ff;
+    --ok: #276749;
+    --warning: #8a5a00;
+    --danger: #9b332c;
+    --link: #174ea6;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--page-bg);
+    color: var(--ink);
+    line-height: 1.45;
+  }
+
+  main {
+    width: min(1180px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 32px 0 64px;
+  }
+
+  a {
+    color: var(--link);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+
+  .page-hero {
+    margin-bottom: 28px;
+    padding: 28px;
+    background: #fffaf0;
+    border: 2px solid var(--line);
+    border-radius: 18px;
+  }
+
+  .example-card {
+    margin: 28px 0;
+    padding: 24px;
+    background: var(--card-bg);
+    border: 2px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.08);
+  }
+
+  .example-kicker {
+    margin: 0 0 4px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .example-header h2 {
+    margin: 0;
+    font-size: 1.35rem;
+  }
+
+  .example-description {
+    max-width: 900px;
+    color: var(--muted);
+  }
+
+  .example-surface {
+    margin-top: 18px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: white;
+  }
+
+  .search-shell {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr) 300px;
+    gap: 14px;
+    align-items: start;
+  }
+
+  .search-shell-two {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 14px;
+    align-items: start;
+  }
+
+  .filter-panel,
+  .results-panel,
+  .detail-panel,
+  .preview-panel,
+  .side-panel {
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  .filter-panel,
+  .detail-panel,
+  .preview-panel,
+  .side-panel {
+    background: #faf7f0;
+  }
+
+  .search-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .search-bar input,
+  .search-bar select {
+    min-height: 38px;
+    padding: 8px 10px;
+    border: 1px solid #b7afa3;
+    border-radius: 8px;
+    font: inherit;
+    background: #fff;
+  }
+
+  .search-bar input {
+    flex: 1 1 260px;
+  }
+
+  .result-list {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .result-card,
+  .result-row,
+  .sidebar-card {
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+  }
+
+  .result-card.is-selected,
+  .result-row.is-selected {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .result-title {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.3;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+
+  .snippet {
+    margin: 8px 0 0;
+    color: #3d3832;
+  }
+
+  mark {
+    padding: 0 2px;
+    border-radius: 3px;
+    background: #fff2a8;
+  }
+
+  .badge,
+  .tag,
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: #fff;
+    font-size: 0.84rem;
+    font-weight: 650;
+  }
+
+  .badge.ok {
+    color: var(--ok);
+    background: #edf8f1;
+  }
+
+  .badge.warning {
+    color: var(--warning);
+    background: #fff7df;
+  }
+
+  .badge.danger {
+    color: var(--danger);
+    background: #fff0ef;
+  }
+
+  .chip-row,
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0;
+  }
+
+  .facet-group {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--soft);
+  }
+
+  .facet-group:last-child {
+    border-bottom: 0;
+  }
+
+  .facet-group h4 {
+    margin: 0 0 8px;
+    font-size: 0.95rem;
+  }
+
+  .facet-option {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 4px 0;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  .field-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--soft);
+  }
+
+  .field-row:last-child {
+    border-bottom: 0;
+  }
+
+  .field-label {
+    color: var(--muted);
+    font-weight: 650;
+  }
+
+  .field-value {
+    text-align: right;
+    font-weight: 650;
+  }
+
+  .map-placeholder {
+    display: grid;
+    place-items: center;
+    min-height: 180px;
+    border: 1px dashed #b7afa3;
+    border-radius: 12px;
+    background: #faf7f0;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .compact-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .compact-table th,
+  .compact-table td {
+    padding: 8px;
+    border-bottom: 1px solid var(--soft);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .compact-table th {
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+
+  @media (max-width: 980px) {
+    .search-shell,
+    .search-shell-two {
+      grid-template-columns: 1fr;
+    }
+
+    .field-row {
+      display: block;
+    }
+
+    .field-value {
+      display: block;
+      margin-top: 2px;
+      text-align: left;
+    }
+
+    .example-card {
+      padding: 18px;
+    }
+  }
+</style>
+```
+
+The coding agent may adjust the CSS, but it must keep the page readable, scrollable, and visually divided into 22 separate examples.
+
+---
+
+E00 JavaScript Requirements
+
+---
+
+Use inline JavaScript in a `<script>` tag.
+
+This page should include small interaction where it helps search result and sidebar examples feel realistic. The JavaScript must be simple and local to the page. Do not use a framework. Do not generate all examples dynamically. Static HTML must remain visible and inspectable.
+
+Allowed JavaScript behavior includes selecting a result and updating a detail sidebar, toggling filter chips, expanding result details, switching a preview pane tab, showing a saved search panel, filtering a small local list, opening a result action menu, and changing selected state on map pins or result rows.
+
+The important result data must exist in the DOM at page load. If a sidebar changes dynamically, the page should still contain enough visible default sidebar content at load to test extraction without interaction.
+
+Required generic behavior:
+
+Clicking a result with `data-select-result` should mark that result as selected inside its example.
+
+Clicking a result with a `data-detail-target` may show a matching detail panel and hide sibling detail panels.
+
+Clicking a button with `data-toggle-target` should show or hide a matching panel.
+
+Typing in a local filter input with `data-local-filter` should hide nonmatching local result cards.
+
+Clicking a filter chip may toggle `aria-pressed` and a selected class, but it does not need to recalculate all result counts.
+
+Suggested JavaScript structure:
+
+```html id="j74ott"
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("[data-select-result]").forEach(function (result) {
+      result.addEventListener("click", function (event) {
+        if (event.target.closest("a, button, input, select, textarea")) return;
+
+        const group = result.dataset.selectResult;
+        if (!group) return;
+
+        document.querySelectorAll('[data-select-result="' + group + '"]').forEach(function (item) {
+          item.classList.remove("is-selected");
+          item.setAttribute("aria-selected", "false");
+        });
+
+        result.classList.add("is-selected");
+        result.setAttribute("aria-selected", "true");
+
+        const detailTarget = result.dataset.detailTarget;
+        if (detailTarget) {
+          document.querySelectorAll('[data-detail-panel="' + group + '"]').forEach(function (panel) {
+            panel.hidden = true;
+          });
+
+          const panel = document.querySelector(detailTarget);
+          if (panel) panel.hidden = false;
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-toggle-target]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const target = document.querySelector(button.dataset.toggleTarget);
+        if (!target) return;
+
+        target.hidden = !target.hidden;
+        button.setAttribute("aria-expanded", String(!target.hidden));
+      });
+    });
+
+    document.querySelectorAll("[data-local-filter]").forEach(function (input) {
+      input.addEventListener("input", function () {
+        const selector = input.dataset.localFilter;
+        const query = input.value.trim().toLowerCase();
+
+        document.querySelectorAll(selector).forEach(function (item) {
+          const text = item.textContent.toLowerCase();
+          item.hidden = query.length > 0 && !text.includes(query);
+        });
+      });
+    });
+
+    document.querySelectorAll("[data-toggle-chip]").forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        const isPressed = chip.getAttribute("aria-pressed") === "true";
+        chip.setAttribute("aria-pressed", String(!isPressed));
+        chip.classList.toggle("is-selected", !isPressed);
+      });
+    });
+  });
+</script>
+```
+
+The coding agent may extend this code for specific examples, but the final file must remain simple and portable.
+
+---
+
+F00 Extraction Behavior To Support
+
+---
+
+The page must make these extraction tasks possible:
+
+Extract the current search query, result count, sort order, and active filters.
+
+Extract repeated search result records as separate items.
+
+Extract each result title, primary link, snippet, source, status, timestamp, score, rating, count, price, location, and tags where present.
+
+Extract selected result detail sidebar values separately from the result list.
+
+Extract active filter chips and facet counts from sidebars.
+
+Extract disabled or unavailable filters as unavailable values.
+
+Extract highlighted search terms inside snippets without losing the surrounding text.
+
+Extract map-style result list entries with pin labels and selected property or place details.
+
+Extract job search result cards with company, salary, location, work mode, recruiter, and application status.
+
+Extract email-style search results with sender, recipients, subject, snippet, labels, timestamp, and selected preview pane.
+
+Extract documentation search results with version, product area, heading path, snippet, and page link.
+
+Extract product search results with price, rating, inventory status, delivery estimate, color or size filters, and selected comparison sidebar.
+
+Extract CRM lead result cards with company, contact, stage, score, next task, and selected lead detail sidebar.
+
+Extract ticket queue search cards with SLA, status, priority, channel, assignee, and last message.
+
+Extract result rows where title and metadata are visually separated across columns.
+
+Extract nested sidebar data such as related records, saved search settings, map pins, selected filters, or recommended refinements.
+
+Extract action menu labels without confusing them with primary content.
+
+Extract sidebars that contain selected item details that duplicate some result card fields and add new fields.
+
+Extract result data where the primary link is not the only link in the card.
+
+Extract content from compact split-pane layouts where the user selects a result on the left and detail appears on the right.
+
+---
+
+G00 Data And Naming Rules
+
+---
+
+Use realistic but fictional data. Do not use real personal information.
+
+Use fictional companies, fictional products, fictional addresses, fictional sources, fictional application names, fictional documents, and example-domain email addresses. Use `href="#"` or `href="/demo/..."` for links. Do not link to real third-party pages.
+
+Use consistent example-specific IDs. Prefix IDs with the example number, such as `ex01-job-01`, `ex04-property-02`, or `ex18-preview-panel`.
+
+Use plausible values. Avoid placeholder-only examples. Every example should contain enough populated search result or sidebar data to be useful for extraction testing.
+
+Each repeated result item should have at least four extractable fields. Most result items should have six or more fields.
+
+Use a mixture of semantic and non-semantic markup. Use forms, lists, articles, headings, tables, time elements, labels, and anchors where appropriate. Also include nested divs and spans where it imitates real-world search layouts.
+
+Do not use external images or map tiles. Use text-based media placeholders, map placeholders, pin labels, and CSS boxes instead of image files.
+
+Do not make all examples use the same layout. Some examples should have a left filter sidebar. Some should have a right detail sidebar. Some should have a two-pane search preview. Some should have a map placeholder plus result list. Some should use dense rows. Some should use grid cards.
+
+---
+
+H00 Required Examples Overview
+
+---
+
+The page must contain exactly these 22 examples:
+
+Example 01: Job Search Results With Detail Sidebar.
+
+Example 02: Real Estate Map Search With Listing Sidebar.
+
+Example 03: Flight Search Results With Fare Details Sidebar.
+
+Example 04: Help Center Search Results With Facets.
+
+Example 05: Documentation Search With Version Sidebar.
+
+Example 06: Email Search Results With Preview Pane.
+
+Example 07: CRM Lead Search With Account Detail Sidebar.
+
+Example 08: Support Ticket Search Queue.
+
+Example 09: Product Search Results With Filter Sidebar.
+
+Example 10: Hotel Search Results With Sticky Summary Sidebar.
+
+Example 11: Restaurant Map Search Results.
+
+Example 12: Healthcare Provider Search Results.
+
+Example 13: University Course Search Results.
+
+Example 14: Legal Document Search Results.
+
+Example 15: File Library Search Results With Metadata Sidebar.
+
+Example 16: Analytics Report Search Results.
+
+Example 17: Package Registry Search Results.
+
+Example 18: Recruiting Candidate Search Results.
+
+Example 19: Event Venue Search Results.
+
+Example 20: Admin User Search With Permission Sidebar.
+
+Example 21: Audit Log Search Results With Event Detail Panel.
+
+Example 22: Saved Search And Alert Builder Results.
+
+Each example below is mandatory.
+
+---
+
+I00 Example 01 - Job Search Results With Detail Sidebar
+
+---
+
+Create a job search results interface with a left filter panel, center result list, and right selected job detail sidebar. It should resemble a job search site but must not use real job board branding.
+
+Visible heading:
+
+`Job Search Results With Detail Sidebar`
+
+Visible description:
+
+`This example imitates a job search page with filters, repeated job result cards, and a selected job detail sidebar. It tests extraction of query, active filters, job cards, selected job details, salary metadata, work mode, application status, and primary application links.`
+
+Search header fields:
+
+`Search query`: input value `frontend engineer`.
+
+`Location query`: input value `Remote - United States`.
+
+`Result count`: `184 jobs found`.
+
+`Sort order`: select selected `Most relevant`.
+
+Active filter chips:
+
+`Senior level`.
+
+`Remote`.
+
+`Salary $150k+`.
+
+`Full-time`.
+
+Left filter panel must include these facet groups:
+
+`Date posted`: `Past 24 hours (18)`, `Past week (74)`, `Past month (184)`.
+
+`Experience level`: `Mid-level (61)`, `Senior (92)` selected, `Staff (31)`.
+
+`Work mode`: `Remote (108)` selected, `Hybrid (49)`, `On-site (27)`.
+
+`Salary`: `$120k+ (141)`, `$150k+ (83)` selected, `$180k+ (29)`.
+
+Result cards must include five jobs.
+
+Job 1 selected by default:
+
+`Job title`: `Senior Frontend Engineer`.
+
+`Primary link`: `/demo/jobs/northstar-senior-frontend`.
+
+`Company`: `Northstar Cloud`.
+
+`Location`: `Remote - United States`.
+
+`Salary`: `$165,000-$205,000`.
+
+`Work mode`: `Remote`.
+
+`Employment type`: `Full-time`.
+
+`Posted`: `2 hours ago`.
+
+`Badges`: `Actively hiring`, `Visa transfer considered`.
+
+`Snippet`: `Build accessible workflows for billing, account settings, and admin dashboards using modern JavaScript.`
+
+`Application status`: `Not applied`.
+
+Job 2:
+
+`Job title`: `Frontend Platform Engineer`.
+
+`Primary link`: `/demo/jobs/atlas-frontend-platform`.
+
+`Company`: `Atlas Product Studio`.
+
+`Location`: `Denver, CO or remote`.
+
+`Salary`: `$150,000-$190,000`.
+
+`Work mode`: `Hybrid or remote`.
+
+`Employment type`: `Full-time`.
+
+`Posted`: `1 day ago`.
+
+`Badges`: `Design systems`, `Internal tools`.
+
+`Snippet`: `Own shared components, form primitives, and extraction-friendly UI infrastructure.`
+
+`Application status`: `Saved`.
+
+Job 3:
+
+`Job title`: `Staff UI Engineer`.
+
+`Primary link`: `/demo/jobs/civic-staff-ui`.
+
+`Company`: `Civic Data Lab`.
+
+`Location`: `Oakland, CA`.
+
+`Salary`: `$178,000-$218,000`.
+
+`Work mode`: `Hybrid`.
+
+`Employment type`: `Full-time`.
+
+`Posted`: `2 days ago`.
+
+`Badges`: `Public interest tech`, `Accessibility`.
+
+`Snippet`: `Lead interface architecture for public data products used by city agencies.`
+
+`Application status`: `Viewed`.
+
+Job 4:
+
+`Job title`: `Senior JavaScript Engineer, Browser Extension`.
+
+`Primary link`: `/demo/jobs/browser-extension-engineer`.
+
+`Company`: `Widget Lab Demo`.
+
+`Location`: `Remote - Canada or United States`.
+
+`Salary`: `$155,000-$196,000`.
+
+`Work mode`: `Remote`.
+
+`Employment type`: `Full-time`.
+
+`Posted`: `3 days ago`.
+
+`Badges`: `Browser APIs`, `Automation`.
+
+`Snippet`: `Work on content scripts, DOM extraction, permission prompts, and cross-browser testing.`
+
+`Application status`: `Not applied`.
+
+Job 5:
+
+`Job title`: `Frontend Engineer, Search Experience`.
+
+`Primary link`: `/demo/jobs/search-experience-frontend`.
+
+`Company`: `QueryWorks`.
+
+`Location`: `Remote - United States`.
+
+`Salary`: `$148,000-$172,000`.
+
+`Work mode`: `Remote`.
+
+`Employment type`: `Full-time`.
+
+`Posted`: `5 days ago`.
+
+`Badges`: `Search UI`, `Faceted filters`.
+
+`Snippet`: `Improve large result pages, ranking explanations, saved searches, and filter sidebars.`
+
+`Application status`: `Not applied`.
+
+Selected detail sidebar for Job 1 must include:
+
+`Selected job`: `Senior Frontend Engineer`.
+
+`Company`: `Northstar Cloud`.
+
+`Recruiter`: `Nina Patel`.
+
+`Recruiter email`: `nina.patel@example.test`.
+
+`Compensation`: `$165,000-$205,000 base plus equity`.
+
+`Interview process`: `Recruiter screen, technical interview, product review, final panel`.
+
+`Required skills`: `JavaScript`, `TypeScript`, `Accessibility`, `Design systems`.
+
+`Application deadline`: `June 21, 2026`.
+
+`Apply link`: `/demo/jobs/northstar-senior-frontend/apply`.
+
+Extraction caveat: the extraction tool should preserve each job result as a separate record and should also extract the selected detail sidebar as the selected job detail. It should not merge filter facet counts into the job cards.
+
+Implementation guidance:
+
+```html id="lb2m7s"
+<div class="search-shell" aria-label="Job search results demo">
+  <aside class="filter-panel" aria-label="Job filters">
+    <h3>Filters</h3>
+    <div class="facet-group">
+      <h4>Work mode</h4>
+      <label class="facet-option"><span><input type="checkbox" checked> Remote</span><span>108</span></label>
+    </div>
+  </aside>
+
+  <section class="results-panel" aria-label="Job results">
+    <div class="search-bar">
+      <input aria-label="Search query" value="frontend engineer">
+      <input aria-label="Location query" value="Remote - United States">
+    </div>
+    <article class="result-card is-selected" data-select-result="ex01-jobs" data-detail-target="#ex01-job-detail-01" aria-selected="true">
+      <h3 class="result-title">
+        <a href="/demo/jobs/northstar-senior-frontend">Senior Frontend Engineer</a>
+      </h3>
+      <div class="meta-row">
+        <span>Northstar Cloud</span>
+        <span>Remote - United States</span>
+        <span>$165,000-$205,000</span>
+      </div>
+    </article>
+  </section>
+
+  <aside class="detail-panel" data-detail-panel="ex01-jobs" id="ex01-job-detail-01">
+    <h3>Senior Frontend Engineer</h3>
+    <div class="field-row"><span class="field-label">Recruiter</span><span class="field-value">Nina Patel</span></div>
+  </aside>
+</div>
+```
+
+---
+
+J00 Example 02 - Real Estate Map Search With Listing Sidebar
+
+---
+
+Create a real estate search interface with a map placeholder, a result list, selected property detail sidebar, and filter chips. Do not use real map tiles or external images.
+
+Visible heading:
+
+`Real Estate Map Search With Listing Sidebar`
+
+Visible description:
+
+`This example imitates a real estate map search page. It tests extraction of property results, active filters, map pin labels, selected listing details, open house metadata, price, address, beds, baths, square feet, and listing status.`
+
+Search header fields:
+
+`Search area`: `San Mateo County`.
+
+`Result count`: `42 homes`.
+
+`Sort order`: `Newest`.
+
+Active filters:
+
+`Condo or townhouse`.
+
+`2+ beds`.
+
+`Under $1.2M`.
+
+`Open house this weekend`.
+
+Map placeholder must show these visible pins:
+
+`A $689k`.
+
+`B $945k`.
+
+`C $1.12M`.
+
+`D $1.48M`.
+
+`E $875k`.
+
+Result list must include five property cards.
+
+Property A selected by default:
+
+`Pin`: `A`.
+
+`Address`: `410 Oak Grove Avenue Unit 6`.
+
+`Primary link`: `/demo/properties/410-oak-grove-6`.
+
+`City`: `Oakland, CA`.
+
+`Price`: `$689,000`.
+
+`Beds`: `2`.
+
+`Baths`: `1`.
+
+`Square feet`: `890 sq ft`.
+
+`Property type`: `Condo`.
+
+`Status`: `Open house`.
+
+`Open house`: `Sat 1-4 PM`.
+
+`Agent`: `Maya Chen`.
+
+Property B:
+
+`Pin`: `B`.
+
+`Address`: `120 King Street Unit B`.
+
+`Primary link`: `/demo/properties/120-king-b`.
+
+`City`: `San Francisco, CA`.
+
+`Price`: `$945,000`.
+
+`Beds`: `2`.
+
+`Baths`: `2`.
+
+`Square feet`: `1,180 sq ft`.
+
+`Property type`: `Townhome`.
+
+`Status`: `Active`.
+
+`Open house`: `Sun 2-4 PM`.
+
+`Agent`: `Rafael Ortiz`.
+
+Property C:
+
+`Pin`: `C`.
+
+`Address`: `88 Valencia Street Suite 402`.
+
+`Primary link`: `/demo/properties/88-valencia-402`.
+
+`City`: `San Francisco, CA`.
+
+`Price`: `$1,120,000`.
+
+`Beds`: `1`.
+
+`Baths`: `1.5`.
+
+`Square feet`: `1,040 sq ft`.
+
+`Property type`: `Loft`.
+
+`Status`: `New listing`.
+
+`Open house`: `Sun 2-5 PM`.
+
+`Agent`: `Rafael Ortiz`.
+
+Property D:
+
+`Pin`: `D`.
+
+`Address`: `72 Hillcrest Road`.
+
+`Primary link`: `/demo/properties/72-hillcrest`.
+
+`City`: `San Mateo, CA`.
+
+`Price`: `$1,485,000`.
+
+`Beds`: `3`.
+
+`Baths`: `2`.
+
+`Square feet`: `1,620 sq ft`.
+
+`Property type`: `Single-family home`.
+
+`Status`: `Price reduced`.
+
+`Open house`: `By appointment`.
+
+`Agent`: `Lina Romero`.
+
+Property E:
+
+`Pin`: `E`.
+
+`Address`: `14 Bayview Terrace Unit 3`.
+
+`Primary link`: `/demo/properties/14-bayview-3`.
+
+`City`: `Daly City, CA`.
+
+`Price`: `$875,000`.
+
+`Beds`: `2`.
+
+`Baths`: `2`.
+
+`Square feet`: `1,010 sq ft`.
+
+`Property type`: `Condo`.
+
+`Status`: `Active`.
+
+`Open house`: `Sat 11 AM-1 PM`.
+
+`Agent`: `Owen Brooks`.
+
+Selected detail sidebar for Property A must include:
+
+`Selected listing`: `410 Oak Grove Avenue Unit 6`.
+
+`Listing ID`: `PROP-410OG-6`.
+
+`HOA dues`: `$428/month`.
+
+`Days on market`: `8`.
+
+`Price per sq ft`: `$774`.
+
+`Tour availability`: `Saturday 1-4 PM and Sunday 11 AM-1 PM`.
+
+`Listing agent phone`: `415-555-0144`.
+
+Extraction caveat: the extraction tool should preserve the relationship between map pins and result cards. It should not treat the map placeholder text as unrelated content.
+
+Implementation guidance: use a `.map-placeholder` with pin-like buttons or spans. Keep all result data visible in text.
+
+---
+
+K00 Example 03 - Flight Search Results With Fare Details Sidebar
+
+---
+
+Create a flight search results interface with filters, flight result cards, fare class options, and a selected fare detail sidebar.
+
+Visible heading:
+
+`Flight Search Results With Fare Details Sidebar`
+
+Visible description:
+
+`This example imitates a flight search page with result cards and a fare details sidebar. It tests extraction of origin, destination, dates, flight segments, duration, stops, prices, fare class, baggage rules, and selected flight details.`
+
+Search header fields:
+
+`From`: `SFO`.
+
+`To`: `JFK`.
+
+`Depart date`: `September 2, 2026`.
+
+`Passengers`: `1 adult`.
+
+`Result count`: `36 flights`.
+
+Active filters:
+
+`Nonstop`.
+
+`Morning departure`.
+
+`Carry-on included`.
+
+`Under $400`.
+
+Filter panel must include:
+
+`Stops`: `Nonstop (12)` selected, `1 stop (24)`.
+
+`Departure time`: `Morning (14)` selected, `Afternoon (11)`, `Evening (11)`.
+
+`Airlines`: `AeroVista (8)`, `North Coast Air (11)`, `MetroJet (17)`.
+
+Flight result cards must include four flights.
+
+Flight 1 selected by default:
+
+`Flight`: `AVX 218`.
+
+`Primary link`: `/demo/flights/avx-218-sfo-jfk`.
+
+`Airline`: `AeroVista`.
+
+`Departure`: `8:05 AM SFO`.
+
+`Arrival`: `4:42 PM JFK`.
+
+`Duration`: `5h 37m`.
+
+`Stops`: `Nonstop`.
+
+`Aircraft`: `A321neo`.
+
+`Lowest fare`: `$268`.
+
+`Fare class shown`: `Standard`.
+
+`Badges`: `Carry-on included`, `Seat selection included`.
+
+Flight 2:
+
+`Flight`: `NCA 884`.
+
+`Primary link`: `/demo/flights/nca-884-sfo-jfk`.
+
+`Airline`: `North Coast Air`.
+
+`Departure`: `9:30 AM SFO`.
+
+`Arrival`: `6:09 PM JFK`.
+
+`Duration`: `5h 39m`.
+
+`Stops`: `Nonstop`.
+
+`Aircraft`: `737-8`.
+
+`Lowest fare`: `$294`.
+
+`Fare class shown`: `Main`.
+
+`Badges`: `Free changes`, `Wi-Fi`.
+
+Flight 3:
+
+`Flight`: `MJ 1620`.
+
+`Primary link`: `/demo/flights/mj-1620-sfo-jfk`.
+
+`Airline`: `MetroJet`.
+
+`Departure`: `10:45 AM SFO`.
+
+`Arrival`: `7:18 PM JFK`.
+
+`Duration`: `5h 33m`.
+
+`Stops`: `Nonstop`.
+
+`Aircraft`: `A320`.
+
+`Lowest fare`: `$249`.
+
+`Fare class shown`: `Basic`.
+
+`Badges`: `Personal item only`.
+
+Flight 4:
+
+`Flight`: `AVX 420`.
+
+`Primary link`: `/demo/flights/avx-420-sfo-jfk`.
+
+`Airline`: `AeroVista`.
+
+`Departure`: `11:55 AM SFO`.
+
+`Arrival`: `8:35 PM JFK`.
+
+`Duration`: `5h 40m`.
+
+`Stops`: `Nonstop`.
+
+`Aircraft`: `A321`.
+
+`Lowest fare`: `$318`.
+
+`Fare class shown`: `Flex`.
+
+`Badges`: `Refundable credit`, `Priority boarding`.
+
+Selected detail sidebar for Flight 1 must include:
+
+`Selected flight`: `AVX 218`.
+
+`Selected fare`: `Standard`.
+
+`Fare price`: `$268`.
+
+`Taxes and fees`: `$41.62`.
+
+`Total`: `$309.62`.
+
+`Carry-on`: `Included`.
+
+`Checked bag`: `$35 first bag`.
+
+`Seat selection`: `Included`.
+
+`Changes`: `Allowed with fee`.
+
+`Cancellation`: `Travel credit only`.
+
+Extraction caveat: the extraction tool should extract the flight card as the result record and the sidebar as selected fare details. It should not merge all available fare rules from the sidebar into every flight.
+
+Implementation guidance: use result cards in the center and fare detail cards in the right sidebar. Use badges for fare rules.
+
+---
+
+L00 Example 04 - Help Center Search Results With Facets
+
+---
+
+Create a help center search results page with a query box, active category filters, article result cards, and a refinement sidebar.
+
+Visible heading:
+
+`Help Center Search Results With Facets`
+
+Visible description:
+
+`This example imitates a help center search page. It tests extraction of article results, snippets with highlighted terms, category facets, active filters, helpful scores, updated dates, and related-topic sidebar suggestions.`
+
+Search header fields:
+
+`Search query`: input value `export invoice line items`.
+
+`Result count`: `18 articles`.
+
+`Sort order`: `Best match`.
+
+Active filters:
+
+`Billing`.
+
+`CSV exports`.
+
+Facet sidebar groups:
+
+`Category`: `Billing (9)` selected, `Exports (5)`, `Troubleshooting (4)`.
+
+`Content type`: `Article (12)`, `Guide (4)`, `Video (2)`.
+
+`Updated`: `Last 30 days (7)`, `Last 90 days (14)`.
+
+Article results must include five cards.
+
+Article 1 selected by default:
+
+`Title`: `How to export invoice line items`.
+
+`Primary link`: `/demo/help/export-invoice-line-items`.
+
+`Category`: `Billing`.
+
+`Content type`: `Article`.
+
+`Updated`: `Updated May 29, 2026`.
+
+`Helpful score`: `94 percent helpful`.
+
+`Snippet`: `Download invoice details as CSV and include <mark>line items</mark>, tax, discount, and payment columns.`
+
+`Tags`: `invoices`, `csv`, `billing`.
+
+Article 2:
+
+`Title`: `Include tax columns in invoice exports`.
+
+`Primary link`: `/demo/help/include-tax-columns`.
+
+`Category`: `Exports`.
+
+`Content type`: `Guide`.
+
+`Updated`: `Updated May 26, 2026`.
+
+`Helpful score`: `88 percent helpful`.
+
+`Snippet`: `Choose the detailed export template to include jurisdiction, tax rate, and taxable <mark>line item</mark> amount.`
+
+`Tags`: `tax`, `exports`, `templates`.
+
+Article 3:
+
+`Title`: `Why invoice exports may omit discounts`.
+
+`Primary link`: `/demo/help/invoice-export-discounts`.
+
+`Category`: `Troubleshooting`.
+
+`Content type`: `Article`.
+
+`Updated`: `Updated May 20, 2026`.
+
+`Helpful score`: `81 percent helpful`.
+
+`Snippet`: `Some account-level discounts appear in summary rows instead of individual invoice <mark>line items</mark>.`
+
+`Tags`: `discounts`, `billing`, `csv`.
+
+Article 4:
+
+`Title`: `Schedule a monthly billing export`.
+
+`Primary link`: `/demo/help/schedule-monthly-billing-export`.
+
+`Category`: `Exports`.
+
+`Content type`: `Guide`.
+
+`Updated`: `Updated May 15, 2026`.
+
+`Helpful score`: `90 percent helpful`.
+
+`Snippet`: `Create a saved export that emails invoice and payment data to your finance team each month.`
+
+`Tags`: `scheduled exports`, `finance`, `automation`.
+
+Article 5:
+
+`Title`: `Understand invoice CSV column names`.
+
+`Primary link`: `/demo/help/invoice-csv-column-names`.
+
+`Category`: `Billing`.
+
+`Content type`: `Article`.
+
+`Updated`: `Updated April 30, 2026`.
+
+`Helpful score`: `86 percent helpful`.
+
+`Snippet`: `Map invoice number, SKU, description, tax, discount, and payment reference columns to your accounting system.`
+
+`Tags`: `csv`, `columns`, `accounting`.
+
+Selected result sidebar must include:
+
+`Selected article`: `How to export invoice line items`.
+
+`Owner`: `Billing Support`.
+
+`Reading time`: `4 min`.
+
+`Applies to plans`: `Business`, `Enterprise`.
+
+`Related articles`: `Understand invoice CSV column names`, `Schedule a monthly billing export`.
+
+`Last reviewed by`: `Renee Coleman`.
+
+Extraction caveat: the extraction tool should preserve highlighted snippet text as part of the snippet. It should not output the word `line items` twice because it appears inside a `<mark>`.
+
+Implementation guidance: use `<mark>` for highlighted query terms. Use facet checkboxes and active chips.
+
+---
+
+M00 Example 05 - Documentation Search With Version Sidebar
+
+---
+
+Create a documentation search page with product version filters, heading paths, code-related snippets, and a selected result details sidebar.
+
+Visible heading:
+
+`Documentation Search With Version Sidebar`
+
+Visible description:
+
+`This example imitates a developer documentation search page. It tests extraction of docs search results, version filters, product areas, heading paths, snippets, code terms, selected result details, and deprecated-version badges.`
+
+Search header fields:
+
+`Search query`: input value `aria combobox active descendant`.
+
+`Product`: select selected `Extractor SDK`.
+
+`Version`: select selected `v0.9`.
+
+`Result count`: `23 docs results`.
+
+Active filters:
+
+`Extractor SDK`.
+
+`v0.9`.
+
+`Accessibility APIs`.
+
+Version sidebar:
+
+`v1.0 beta (8)`.
+
+`v0.9 (23)` selected.
+
+`v0.8 (17)`.
+
+`v0.7 deprecated (11)` disabled or marked deprecated.
+
+Product area facets:
+
+`Accessibility APIs (9)` selected.
+
+`Selection engine (7)`.
+
+`Output formatting (4)`.
+
+`Browser extension (3)`.
+
+Documentation results must include five cards.
+
+Result 1 selected by default:
+
+`Title`: `Combobox extraction signals`.
+
+`Primary link`: `/demo/docs/v0.9/accessibility/combobox-extraction-signals`.
+
+`Heading path`: `Extractor SDK / Accessibility APIs / Comboboxes`.
+
+`Version`: `v0.9`.
+
+`Updated`: `May 22, 2026`.
+
+`Snippet`: `Use aria-controls, aria-expanded, aria-activedescendant, and selected option text to connect a trigger with its popup listbox.`
+
+`Badges`: `Recommended`.
+
+Result 2:
+
+`Title`: `Handling portaled listbox menus`.
+
+`Primary link`: `/demo/docs/v0.9/selection/portaled-listbox-menus`.
+
+`Heading path`: `Extractor SDK / Selection engine / Portals`.
+
+`Version`: `v0.9`.
+
+`Updated`: `May 18, 2026`.
+
+`Snippet`: `When popup content is rendered outside the form subtree, preserve the trigger node, visible label, and active option relationship.`
+
+`Badges`: `Advanced`.
+
+Result 3:
+
+`Title`: `Output schema for selected dropdowns`.
+
+`Primary link`: `/demo/docs/v0.9/output/dropdown-schema`.
+
+`Heading path`: `Extractor SDK / Output formatting / Controls`.
+
+`Version`: `v0.9`.
+
+`Updated`: `May 9, 2026`.
+
+`Snippet`: `Dropdown output includes visibleValue, submittedValue, optionCount, selectedIndex, and disabledOptionLabels when available.`
+
+`Badges`: `Schema`.
+
+Result 4:
+
+`Title`: `ARIA attribute reference`.
+
+`Primary link`: `/demo/docs/v0.8/accessibility/aria-attribute-reference`.
+
+`Heading path`: `Extractor SDK / Accessibility APIs / Reference`.
+
+`Version`: `v0.8`.
+
+`Updated`: `April 14, 2026`.
+
+`Snippet`: `Reference page for aria-labelledby, aria-describedby, aria-activedescendant, role=listbox, and role=option.`
+
+`Badges`: `Older version`.
+
+Result 5:
+
+`Title`: `Browser extension content script limits`.
+
+`Primary link`: `/demo/docs/v0.9/extension/content-script-limits`.
+
+`Heading path`: `Extractor SDK / Browser extension / Runtime`.
+
+`Version`: `v0.9`.
+
+`Updated`: `April 2, 2026`.
+
+`Snippet`: `Content scripts cannot directly access every page context object, so extraction must rely on DOM-visible and accessible state.`
+
+`Badges`: `Runtime`.
+
+Selected result sidebar must include:
+
+`Selected page`: `Combobox extraction signals`.
+
+`Doc ID`: `doc_exsdk_009_combobox_signals`.
+
+`Owner`: `Accessibility Systems Team`.
+
+`Status`: `Current`.
+
+`Available versions`: `v1.0 beta`, `v0.9`, `v0.8`.
+
+`Estimated reading time`: `7 min`.
+
+`Related symbols`: `aria-activedescendant`, `role=listbox`, `role=option`.
+
+Extraction caveat: the extraction tool should keep version metadata separate from the title. It should not treat deprecated version filters as selected.
+
+Implementation guidance: make the version sidebar visible on the left and result details visible on the right.
+
+---
+
+N00 Example 06 - Email Search Results With Preview Pane
+
+---
+
+Create an email search results interface with compact thread rows and a preview pane for the selected email thread. This is not connected to real email.
+
+Visible heading:
+
+`Email Search Results With Preview Pane`
+
+Visible description:
+
+`This example imitates an email search page with a preview pane. It tests extraction of sender, subject, snippet, labels, timestamp, unread state, attachment state, search query, and selected preview body.`
+
+Search header fields:
+
+`Search query`: input value `invoice approval`.
+
+`Mailbox`: `All mail`.
+
+`Result count`: `9 conversations`.
+
+`Sort order`: `Newest`.
+
+Active filter chips:
+
+`Has attachment`.
+
+`From finance team`.
+
+`Last 30 days`.
+
+Email result rows must include six threads.
+
+Thread 1 selected by default:
+
+`Unread`: `Yes`.
+
+`Sender`: `Renee Coleman`.
+
+`Recipients preview`: `to Finance Team`.
+
+`Subject`: `Invoice approval needed for INV-2026-00841`.
+
+`Thread link`: `/demo/mail/threads/invoice-approval-00841`.
+
+`Snippet`: `Please review the remaining balance and confirm whether the support package should stay on the renewal.`
+
+`Timestamp`: `11:22 AM`.
+
+`Labels`: `Finance`, `Needs approval`.
+
+`Attachment`: `No`.
+
+Thread 2:
+
+`Unread`: `No`.
+
+`Sender`: `Northstar Cloud Billing`.
+
+`Recipients preview`: `to Renee Coleman`.
+
+`Subject`: `Invoice INV-2026-00841 partially paid`.
+
+`Thread link`: `/demo/mail/threads/invoice-00841-partial-payment`.
+
+`Snippet`: `A payment of $300.00 has been applied. The remaining balance is $436.14.`
+
+`Timestamp`: `Yesterday`.
+
+`Labels`: `Billing`, `Invoice`.
+
+`Attachment`: `Yes`.
+
+Thread 3:
+
+`Unread`: `No`.
+
+`Sender`: `Atlas Product Studio`.
+
+`Recipients preview`: `to Billing`.
+
+`Subject`: `Re: Annual subscription invoice approval`.
+
+`Thread link`: `/demo/mail/threads/annual-subscription-approval`.
+
+`Snippet`: `The seat count is correct and the audit log add-on should remain enabled.`
+
+`Timestamp`: `May 28`.
+
+`Labels`: `Vendor`, `Approved`.
+
+`Attachment`: `No`.
+
+Thread 4:
+
+`Unread`: `Yes`.
+
+`Sender`: `Theo Grant`.
+
+`Recipients preview`: `to Finance Team`.
+
+`Subject`: `Question about invoice CSV export`.
+
+`Thread link`: `/demo/mail/threads/invoice-csv-export-question`.
+
+`Snippet`: `Can the export include SKU, tax jurisdiction, discount, and payment reference columns?`
+
+`Timestamp`: `May 27`.
+
+`Labels`: `Exports`, `Finance`.
+
+`Attachment`: `No`.
+
+Thread 5:
+
+`Unread`: `No`.
+
+`Sender`: `Payment Operations`.
+
+`Recipients preview`: `to Renee Coleman`.
+
+`Subject`: `ACH transfer confirmation for vendor reserve`.
+
+`Thread link`: `/demo/mail/threads/ach-transfer-vendor-reserve`.
+
+`Snippet`: `Transfer TRN-8841-6029 is scheduled for June 3, 2026.`
+
+`Timestamp`: `May 25`.
+
+`Labels`: `Banking`, `Confirmation`.
+
+`Attachment`: `Yes`.
+
+Thread 6:
+
+`Unread`: `No`.
+
+`Sender`: `Cedar Pine Studio`.
+
+`Recipients preview`: `to Billing Support`.
+
+`Subject`: `Invoice line item correction request`.
+
+`Thread link`: `/demo/mail/threads/line-item-correction-request`.
+
+`Snippet`: `The priority support package should be listed under the operations budget code.`
+
+`Timestamp`: `May 22`.
+
+`Labels`: `Support`, `Billing`.
+
+`Attachment`: `No`.
+
+Selected preview pane for Thread 1 must include:
+
+`Preview subject`: `Invoice approval needed for INV-2026-00841`.
+
+`From`: `Renee Coleman <renee.coleman@example.test>`.
+
+`To`: `Finance Team`.
+
+`Date`: `May 31, 2026, 11:22 AM`.
+
+`Body`: `Please review the remaining balance and confirm whether the support package should stay on the renewal. The vendor needs approval before the June 17 due date.`
+
+`Detected invoice`: `INV-2026-00841`.
+
+`Detected balance`: `$436.14`.
+
+Extraction caveat: the extraction tool should extract the selected preview body separately from the thread row. It should not duplicate the thread snippet as if it were the full message body.
+
+Implementation guidance: use compact rows on the left and a preview panel on the right. Make unread rows visually distinct.
+
+---
+
+O00 Example 07 - CRM Lead Search With Account Detail Sidebar
+
+---
+
+Create a CRM lead search interface with result cards and a selected account detail sidebar. It should include lead score, sales stage, contact, company, next task, and account metadata.
+
+Visible heading:
+
+`CRM Lead Search With Account Detail Sidebar`
+
+Visible description:
+
+`This example imitates a CRM lead search page. It tests extraction of lead cards, company names, contacts, lead scores, stages, next actions, account metadata, owner, pipeline value, and selected detail sidebar data.`
+
+Search header fields:
+
+`Search query`: input value `healthcare operations`.
+
+`Pipeline`: select selected `Enterprise sales`.
+
+`Result count`: `27 leads`.
+
+`Sort order`: `Highest score`.
+
+Active filters:
+
+`Healthcare`.
+
+`Score 80+`.
+
+`Open opportunity`.
+
+Lead cards must include five results.
+
+Lead 1 selected by default:
+
+`Company`: `Westbridge Health`.
+
+`Primary link`: `/demo/crm/accounts/westbridge-health`.
+
+`Contact`: `Alex Rivera`.
+
+`Contact title`: `Care Coordination Director`.
+
+`Email`: `alex.rivera@example.test`.
+
+`Lead score`: `92`.
+
+`Stage`: `Evaluation`.
+
+`Pipeline value`: `$84,000`.
+
+`Next task`: `Send security questionnaire follow-up`.
+
+`Last activity`: `Demo call yesterday`.
+
+`Owner`: `Nina Patel`.
+
+Lead 2:
+
+`Company`: `Harbor Clinic Network`.
+
+`Primary link`: `/demo/crm/accounts/harbor-clinic-network`.
+
+`Contact`: `Dr. Helen Park`.
+
+`Contact title`: `Operations Lead`.
+
+`Email`: `helen.park@example.test`.
+
+`Lead score`: `88`.
+
+`Stage`: `Proposal`.
+
+`Pipeline value`: `$126,000`.
+
+`Next task`: `Review pricing with procurement`.
+
+`Last activity`: `Email opened 2 hours ago`.
+
+`Owner`: `Rafael Ortiz`.
+
+Lead 3:
+
+`Company`: `Cedar Valley Care Group`.
+
+`Primary link`: `/demo/crm/accounts/cedar-valley-care`.
+
+`Contact`: `Maya Chen`.
+
+`Contact title`: `Product Manager`.
+
+`Email`: `maya.chen@example.test`.
+
+`Lead score`: `84`.
+
+`Stage`: `Discovery`.
+
+`Pipeline value`: `$58,000`.
+
+`Next task`: `Schedule workflow mapping session`.
+
+`Last activity`: `Form submitted 3 days ago`.
+
+`Owner`: `Lina Romero`.
+
+Lead 4:
+
+`Company`: `Northstar Research Lab`.
+
+`Primary link`: `/demo/crm/accounts/northstar-research-lab`.
+
+`Contact`: `Priya Shah`.
+
+`Contact title`: `Lab Operations Manager`.
+
+`Email`: `priya.shah@example.test`.
+
+`Lead score`: `81`.
+
+`Stage`: `Qualification`.
+
+`Pipeline value`: `$42,000`.
+
+`Next task`: `Confirm data retention requirements`.
+
+`Last activity`: `Downloaded whitepaper`.
+
+`Owner`: `Owen Brooks`.
+
+Lead 5:
+
+`Company`: `Riverbend Therapy Partners`.
+
+`Primary link`: `/demo/crm/accounts/riverbend-therapy`.
+
+`Contact`: `Jamie Lee`.
+
+`Contact title`: `Clinical Systems Lead`.
+
+`Email`: `jamie.lee@example.test`.
+
+`Lead score`: `79`.
+
+`Stage`: `Nurture`.
+
+`Pipeline value`: `$31,000`.
+
+`Next task`: `Send integration overview`.
+
+`Last activity`: `Newsletter click last week`.
+
+`Owner`: `Nina Patel`.
+
+Selected sidebar for Lead 1 must include:
+
+`Selected account`: `Westbridge Health`.
+
+`Account ID`: `ACC-88420`.
+
+`Industry`: `Healthcare`.
+
+`Employees`: `1,200`.
+
+`Region`: `West`.
+
+`Current system`: `Legacy care coordination portal`.
+
+`Pain points`: `manual intake`, `status tracking`, `report exports`.
+
+`Open opportunity`: `OPP-2026-7712`.
+
+`Close target`: `August 31, 2026`.
+
+Extraction caveat: the extraction tool should distinguish lead card data from account sidebar data. It should not merge all pipeline values into one summary.
+
+Implementation guidance: use a split layout with result cards and a rich account detail sidebar.
+
+---
+
+P00 Example 08 - Support Ticket Search Queue
+
+---
+
+Create a support ticket search queue with filters, repeated ticket cards, and a selected ticket preview sidebar.
+
+Visible heading:
+
+`Support Ticket Search Queue`
+
+Visible description:
+
+`This example imitates a support ticket search queue. It tests extraction of ticket cards, status, priority, customer, account, SLA, channel, assignee, last message snippet, active filters, and selected ticket preview.`
+
+Search header fields:
+
+`Search query`: input value `invoice export`.
+
+`Queue`: select selected `Billing Support`.
+
+`Result count`: `14 tickets`.
+
+`Sort order`: `SLA deadline`.
+
+Active filters:
+
+`Open`.
+
+`Billing`.
+
+`Has customer reply`.
+
+`SLA due soon`.
+
+Ticket cards must include six tickets.
+
+Ticket 1 selected by default:
+
+`Case number`: `TCK-2026-54102`.
+
+`Primary link`: `/demo/support/tickets/TCK-2026-54102`.
+
+`Customer`: `Theo Grant`.
+
+`Account`: `Independent documentary project`.
+
+`Subject`: `Invoice PDF missing line item details`.
+
+`Status`: `Open`.
+
+`Priority`: `High`.
+
+`Channel`: `Chat`.
+
+`Assignee`: `Rafael`.
+
+`SLA`: `Due today, 5:00 PM`.
+
+`Last message`: `Can you send a version that includes SKU and tax columns?`.
+
+`Unread`: `Yes`.
+
+Ticket 2:
+
+`Case number`: `TCK-2026-54159`.
+
+`Primary link`: `/demo/support/tickets/TCK-2026-54159`.
+
+`Customer`: `Avery Quinn`.
+
+`Account`: `Cedar Pine Studio`.
+
+`Subject`: `Question about archived audit logs`.
+
+`Status`: `Solved`.
+
+`Priority`: `Low`.
+
+`Channel`: `Email`.
+
+`Assignee`: `Maya`.
+
+`SLA`: `Met`.
+
+`Last message`: `Thanks, that answered my question.`
+
+`Unread`: `No`.
+
+Ticket 3:
+
+`Case number`: `TCK-2026-54188`.
+
+`Primary link`: `/demo/support/tickets/TCK-2026-54188`.
+
+`Customer`: `Renee Coleman`.
+
+`Account`: `Cedar & Pine Design LLC`.
+
+`Subject`: `Monthly billing export missing discount rows`.
+
+`Status`: `Waiting on support`.
+
+`Priority`: `Medium`.
+
+`Channel`: `Portal`.
+
+`Assignee`: `Leah`.
+
+`SLA`: `Due June 1, 2026, 2:00 PM`.
+
+`Last message`: `The exported file includes tax rows but not account-level discount rows.`
+
+`Unread`: `Yes`.
+
+Ticket 4:
+
+`Case number`: `TCK-2026-54204`.
+
+`Primary link`: `/demo/support/tickets/TCK-2026-54204`.
+
+`Customer`: `Grace Miller`.
+
+`Account`: `Atlas Product Studio`.
+
+`Subject`: `Saved export sends duplicate CSV attachment`.
+
+`Status`: `In progress`.
+
+`Priority`: `Medium`.
+
+`Channel`: `Email`.
+
+`Assignee`: `Nina`.
+
+`SLA`: `Due June 2, 2026, 9:00 AM`.
+
+`Last message`: `The scheduled email contains two copies of the same CSV.`
+
+`Unread`: `No`.
+
+Ticket 5:
+
+`Case number`: `TCK-2026-54217`.
+
+`Primary link`: `/demo/support/tickets/TCK-2026-54217`.
+
+`Customer`: `Maya Chen`.
+
+`Account`: `Northstar Cloud`.
+
+`Subject`: `Export filter does not preserve date range`.
+
+`Status`: `Open`.
+
+`Priority`: `High`.
+
+`Channel`: `Email`.
+
+`Assignee`: `Unassigned`.
+
+`SLA`: `Due today, 6:30 PM`.
+
+`Last message`: `When I reopen the saved export, the date range resets to this month.`
+
+`Unread`: `Yes`.
+
+Ticket 6:
+
+`Case number`: `TCK-2026-54231`.
+
+`Primary link`: `/demo/support/tickets/TCK-2026-54231`.
+
+`Customer`: `Owen Brooks`.
+
+`Account`: `City Museum of Design`.
+
+`Subject`: `Need CSV for event registration receipt details`.
+
+`Status`: `Waiting on customer`.
+
+`Priority`: `Low`.
+
+`Channel`: `Chat`.
+
+`Assignee`: `Rafael`.
+
+`SLA`: `Due June 3, 2026, 10:00 AM`.
+
+`Last message`: `Can you confirm which event ID should be exported?`.
+
+`Unread`: `No`.
+
+Selected preview for Ticket 1 must include:
+
+`Selected ticket`: `TCK-2026-54102`.
+
+`Customer email`: `theo.grant@example.test`.
+
+`Detected topic`: `Invoice export`.
+
+`Related article`: `How to export invoice line items`.
+
+`Suggested macro`: `Invoice line item export explanation`.
+
+`Latest internal note`: `Customer needs CSV-compatible details, not only PDF summary.`
+
+Extraction caveat: the extraction tool should preserve each ticket's SLA independently and capture the selected preview as a separate ticket detail.
+
+Implementation guidance: make priority and status badges visible. Use right preview pane.
+
+---
+
+Q00 Example 09 - Product Search Results With Filter Sidebar
+
+---
+
+Create an ecommerce product search result page with filters, sort order, product cards, comparison sidebar, and delivery estimates.
+
+Visible heading:
+
+`Product Search Results With Filter Sidebar`
+
+Visible description:
+
+`This example imitates an ecommerce product search page. It tests extraction of search query, filters, product cards, prices, ratings, review counts, inventory, delivery estimates, selected comparison details, and promotion badges.`
+
+Search header fields:
+
+`Search query`: input value `travel backpack`.
+
+`Result count`: `63 products`.
+
+`Sort order`: `Customer rating`.
+
+Active filters:
+
+`Carry-on size`.
+
+`Under $150`.
+
+`In stock`.
+
+`Laptop sleeve`.
+
+Filter sidebar groups:
+
+`Price`: `Under $50 (8)`, `$50-$100 (24)`, `$100-$150 (21)` selected, `$150+ (10)`.
+
+`Features`: `Laptop sleeve (38)` selected, `Water resistant (29)`, `Expandable (12)`, `Hidden pocket (17)`.
+
+`Availability`: `In stock (46)` selected, `Backordered (9)`, `Store pickup (18)`.
+
+`Brand`: `TrailKnit (7)`, `Fieldmark (11)`, `Packwell (14)`.
+
+Product cards must include five products.
+
+Product 1 selected by default:
+
+`Product name`: `Canvas Travel Backpack 22L`.
+
+`Primary link`: `/demo/products/canvas-travel-backpack-22`.
+
+`Brand`: `Fieldmark`.
+
+`Price`: `$89`.
+
+`Rating`: `4.7`.
+
+`Review count`: `318 reviews`.
+
+`Inventory`: `In stock`.
+
+`Delivery`: `Arrives June 5`.
+
+`Badges`: `Carry-on size`, `Laptop sleeve`.
+
+`Promotion`: `Free shipping`.
+
+Product 2:
+
+`Product name`: `TrailPack Commuter 28L`.
+
+`Primary link`: `/demo/products/trailpack-commuter-28`.
+
+`Brand`: `TrailKnit`.
+
+`Price`: `$128`.
+
+`Rating`: `4.6`.
+
+`Review count`: `904 reviews`.
+
+`Inventory`: `Low stock`.
+
+`Delivery`: `Arrives June 7`.
+
+`Badges`: `Water resistant`, `Expandable`.
+
+`Promotion`: `15 percent off`.
+
+Product 3:
+
+`Product name`: `Packwell City Flight Bag`.
+
+`Primary link`: `/demo/products/packwell-city-flight`.
+
+`Brand`: `Packwell`.
+
+`Price`: `$112`.
+
+`Rating`: `4.4`.
+
+`Review count`: `221 reviews`.
+
+`Inventory`: `In stock`.
+
+`Delivery`: `Arrives June 4`.
+
+`Badges`: `Laptop sleeve`, `Under seat fit`.
+
+`Promotion`: `Bundle eligible`.
+
+Product 4:
+
+`Product name`: `Fieldmark Weekender Backpack`.
+
+`Primary link`: `/demo/products/fieldmark-weekender-backpack`.
+
+`Brand`: `Fieldmark`.
+
+`Price`: `$146`.
+
+`Rating`: `4.8`.
+
+`Review count`: `147 reviews`.
+
+`Inventory`: `In stock`.
+
+`Delivery`: `Arrives June 9`.
+
+`Badges`: `Expandable`, `Carry-on size`.
+
+`Promotion`: `New color`.
+
+Product 5:
+
+`Product name`: `NexaSlim Tech Backpack`.
+
+`Primary link`: `/demo/products/nexaslim-tech-backpack`.
+
+`Brand`: `Nexa`.
+
+`Price`: `$99`.
+
+`Rating`: `4.3`.
+
+`Review count`: `78 reviews`.
+
+`Inventory`: `Backordered`.
+
+`Delivery`: `Ships in 2 weeks`.
+
+`Badges`: `Laptop sleeve`, `Slim profile`.
+
+`Promotion`: `Backorder price`.
+
+Comparison sidebar for Product 1 must include:
+
+`Selected product`: `Canvas Travel Backpack 22L`.
+
+`Dimensions`: `18 x 11 x 7 in`.
+
+`Weight`: `1.8 lb`.
+
+`Laptop compartment`: `Up to 14 in`.
+
+`Material`: `Waxed canvas`.
+
+`Return window`: `30 days`.
+
+`Compared against`: `TrailPack Commuter 28L`, `Packwell City Flight Bag`.
+
+Extraction caveat: the extraction tool should extract filters separately from product card data. It should not mistake filter facet labels for product badges.
+
+Implementation guidance: use product cards in the center and comparison details in the right sidebar.
+
+---
+
+R00 Example 10 - Hotel Search Results With Sticky Summary Sidebar
+
+---
+
+Create a hotel search results interface with filters, hotel cards, selected hotel details, and a sticky-style trip summary sidebar.
+
+Visible heading:
+
+`Hotel Search Results With Sticky Summary Sidebar`
+
+Visible description:
+
+`This example imitates a hotel search results page. It tests extraction of hotel cards, stay details, active filters, room rate metadata, review scores, amenities, taxes, fees, and selected hotel summary details.`
+
+Search header fields:
+
+`Destination`: `Monterey, CA`.
+
+`Check-in`: `August 14, 2026`.
+
+`Check-out`: `August 18, 2026`.
+
+`Guests`: `2 adults, 1 child`.
+
+`Rooms`: `1`.
+
+`Result count`: `31 stays`.
+
+Active filters:
+
+`Breakfast included`.
+
+`Free cancellation`.
+
+`Parking available`.
+
+`Guest rating 8+`.
+
+Filter sidebar groups:
+
+`Budget`: `$150-$250/night (14)`, `$250-$350/night (11)`, `$350+ (6)`.
+
+`Amenities`: `Breakfast included (19)` selected, `Parking available (22)` selected, `Pool (9)`, `Pet friendly (7)`.
+
+`Cancellation`: `Free cancellation (18)` selected, `Non-refundable (13)`.
+
+Hotel cards must include four hotels.
+
+Hotel 1 selected by default:
+
+`Hotel name`: `Harbor View Suites`.
+
+`Primary link`: `/demo/hotels/harbor-view-suites`.
+
+`Location`: `Monterey waterfront`.
+
+`Review score`: `8.9 Excellent`.
+
+`Room type`: `King Studio With Harbor View`.
+
+`Nightly rate`: `$249`.
+
+`Total before taxes`: `$996`.
+
+`Cancellation`: `Free cancellation until August 10`.
+
+`Badges`: `Breakfast included`, `Parking available`.
+
+`Distance`: `0.4 mi from center`.
+
+Hotel 2:
+
+`Hotel name`: `Cypress Garden Inn`.
+
+`Primary link`: `/demo/hotels/cypress-garden-inn`.
+
+`Location`: `Downtown Monterey`.
+
+`Review score`: `8.4 Very good`.
+
+`Room type`: `Two queen room`.
+
+`Nightly rate`: `$218`.
+
+`Total before taxes`: `$872`.
+
+`Cancellation`: `Free cancellation until August 9`.
+
+`Badges`: `Breakfast included`.
+
+`Distance`: `0.7 mi from center`.
+
+Hotel 3:
+
+`Hotel name`: `Bayfront Lodge`.
+
+`Primary link`: `/demo/hotels/bayfront-lodge`.
+
+`Location`: `Cannery Row`.
+
+`Review score`: `8.1 Very good`.
+
+`Room type`: `Queen room`.
+
+`Nightly rate`: `$196`.
+
+`Total before taxes`: `$784`.
+
+`Cancellation`: `Non-refundable`.
+
+`Badges`: `Parking available`.
+
+`Distance`: `1.1 mi from center`.
+
+Hotel 4:
+
+`Hotel name`: `Pine Coast Hotel`.
+
+`Primary link`: `/demo/hotels/pine-coast-hotel`.
+
+`Location`: `Pacific Grove`.
+
+`Review score`: `9.1 Wonderful`.
+
+`Room type`: `Family suite`.
+
+`Nightly rate`: `$319`.
+
+`Total before taxes`: `$1,276`.
+
+`Cancellation`: `Free cancellation until August 8`.
+
+`Badges`: `Breakfast included`, `Pool`.
+
+`Distance`: `2.4 mi from center`.
+
+Sticky summary sidebar for Hotel 1 must include:
+
+`Selected stay`: `Harbor View Suites`.
+
+`Stay length`: `4 nights`.
+
+`Room`: `King Studio With Harbor View`.
+
+`Base price`: `$996.00`.
+
+`Taxes`: `$142.48`.
+
+`Resort fee`: `$68.00`.
+
+`Estimated total`: `$1,206.48`.
+
+`Pay now`: `$0.00`.
+
+`Pay at property`: `$1,206.48`.
+
+Extraction caveat: the extraction tool should preserve hotel result cards separately from the selected booking summary. It should not merge all hotel prices into the sticky summary.
+
+Implementation guidance: use a two-column layout with filters and results, plus a sticky-looking but normal right sidebar.
+
+---
+
+S00 Example 11 - Restaurant Map Search Results
+
+---
+
+Create a restaurant search interface with a map placeholder, filters, result cards, and selected restaurant detail panel.
+
+Visible heading:
+
+`Restaurant Map Search Results`
+
+Visible description:
+
+`This example imitates a restaurant discovery map search. It tests extraction of restaurant names, cuisines, ratings, price levels, availability times, map pins, selected restaurant details, and active filters.`
+
+Search header fields:
+
+`Search query`: `dinner near waterfront`.
+
+`Location`: `Monterey, CA`.
+
+`Result count`: `28 restaurants`.
+
+`Date`: `June 20, 2026`.
+
+`Party size`: `4`.
+
+Active filters:
+
+`Open tonight`.
+
+`Patio available`.
+
+`Seafood`.
+
+`4.5+ rating`.
+
+Map pins:
+
+`A Cypress & Fig`.
+
+`B Harbor Noodle Bar`.
+
+`C Salt & Ember`.
+
+`D Pier 12 Kitchen`.
+
+Restaurant cards must include four results.
+
+Restaurant A selected by default:
+
+`Pin`: `A`.
+
+`Restaurant`: `Cypress & Fig`.
+
+`Primary link`: `/demo/restaurants/cypress-fig`.
+
+`Cuisine`: `Californian seafood`.
+
+`Rating`: `4.7`.
+
+`Review count`: `842 reviews`.
+
+`Price level`: `$$$`.
+
+`Distance`: `0.3 mi`.
+
+`Available times`: `6:00 PM`, `7:15 PM`, `7:45 PM`.
+
+`Badges`: `Patio`, `Wine list`.
+
+Restaurant B:
+
+`Pin`: `B`.
+
+`Restaurant`: `Harbor Noodle Bar`.
+
+`Primary link`: `/demo/restaurants/harbor-noodle-bar`.
+
+`Cuisine`: `Japanese`.
+
+`Rating`: `4.6`.
+
+`Review count`: `391 reviews`.
+
+`Price level`: `$$`.
+
+`Distance`: `0.5 mi`.
+
+`Available times`: `5:45 PM`, `8:15 PM`.
+
+`Badges`: `Casual`, `Counter seating`.
+
+Restaurant C:
+
+`Pin`: `C`.
+
+`Restaurant`: `Salt & Ember`.
+
+`Primary link`: `/demo/restaurants/salt-ember`.
+
+`Cuisine`: `Wood-fired grill`.
+
+`Rating`: `4.8`.
+
+`Review count`: `1,104 reviews`.
+
+`Price level`: `$$$$`.
+
+`Distance`: `0.8 mi`.
+
+`Available times`: `8:30 PM`.
+
+`Badges`: `Chef's counter`.
+
+Restaurant D:
+
+`Pin`: `D`.
+
+`Restaurant`: `Pier 12 Kitchen`.
+
+`Primary link`: `/demo/restaurants/pier-12-kitchen`.
+
+`Cuisine`: `Seafood`.
+
+`Rating`: `4.4`.
+
+`Review count`: `276 reviews`.
+
+`Price level`: `$$`.
+
+`Distance`: `1.0 mi`.
+
+`Available times`: `6:30 PM`, `7:00 PM`.
+
+`Badges`: `Family friendly`, `Water view`.
+
+Selected detail panel for Restaurant A:
+
+`Selected restaurant`: `Cypress & Fig`.
+
+`Address`: `41 Marina Drive, Monterey, CA`.
+
+`Selected time`: `7:15 PM`.
+
+`Table type`: `Patio`.
+
+`Cancellation policy`: `Cancel at least 2 hours before reservation time`.
+
+`Special note`: `Shellfish allergy can be accommodated with advance notice`.
+
+Extraction caveat: the extraction tool should extract available times as repeated values attached to each restaurant. It should not confuse the selected time in the sidebar with every available time.
+
+Implementation guidance: use map placeholder plus result list and detail panel.
+
+---
+
+T00 Example 12 - Healthcare Provider Search Results
+
+---
+
+Create a healthcare provider search interface with filters, provider cards, appointment availability, insurance information, and selected provider sidebar.
+
+Visible heading:
+
+`Healthcare Provider Search Results`
+
+Visible description:
+
+`This example imitates a healthcare provider search page. It tests extraction of provider names, credentials, specialties, locations, insurance acceptance, appointment availability, languages, ratings, and selected provider details.`
+
+Search header fields:
+
+`Search query`: `orthopedics knee pain`.
+
+`Location`: `San Francisco, CA`.
+
+`Insurance`: `Northstar PPO`.
+
+`Result count`: `16 providers`.
+
+Active filters:
+
+`Accepting new patients`.
+
+`In-network`.
+
+`Next 14 days`.
+
+`In-person`.
+
+Filter panel groups:
+
+`Visit type`: `In-person (12)` selected, `Video visit (7)`.
+
+`Availability`: `This week (4)`, `Next 14 days (11)` selected.
+
+`Languages`: `English (16)`, `Spanish (5)`, `Mandarin (3)`.
+
+Provider cards must include four results.
+
+Provider 1 selected by default:
+
+`Provider`: `Dr. Helen Park, MD`.
+
+`Primary link`: `/demo/providers/helen-park-md`.
+
+`Specialty`: `Orthopedics`.
+
+`Location`: `Downtown Clinic`.
+
+`Address`: `450 Market Street, San Francisco, CA`.
+
+`Insurance`: `In-network with Northstar PPO`.
+
+`Rating`: `4.8`.
+
+`Review count`: `126 reviews`.
+
+`Next available`: `June 11, 2026, 2:30 PM`.
+
+`Languages`: `English`, `Korean`.
+
+`Badges`: `Accepting new patients`, `Knee specialist`.
+
+Provider 2:
+
+`Provider`: `Dr. Omar Nasser, DO`.
+
+`Primary link`: `/demo/providers/omar-nasser-do`.
+
+`Specialty`: `Sports medicine`.
+
+`Location`: `Westside Clinic`.
+
+`Address`: `1200 Irving Street, San Francisco, CA`.
+
+`Insurance`: `In-network with Northstar PPO`.
+
+`Rating`: `4.6`.
+
+`Review count`: `84 reviews`.
+
+`Next available`: `June 17, 2026, 10:00 AM`.
+
+`Languages`: `English`, `Arabic`.
+
+`Badges`: `Sports injuries`.
+
+Provider 3:
+
+`Provider`: `Jamie Lee, PT`.
+
+`Primary link`: `/demo/providers/jamie-lee-pt`.
+
+`Specialty`: `Physical therapy`.
+
+`Location`: `Downtown Clinic`.
+
+`Address`: `450 Market Street, San Francisco, CA`.
+
+`Insurance`: `Referral required`.
+
+`Rating`: `4.9`.
+
+`Review count`: `203 reviews`.
+
+`Next available`: `June 10, 2026, 8:30 AM`.
+
+`Languages`: `English`.
+
+`Badges`: `Post-surgery rehab`.
+
+Provider 4:
+
+`Provider`: `Dr. Maya Singh, MD`.
+
+`Primary link`: `/demo/providers/maya-singh-md`.
+
+`Specialty`: `Orthopedics`.
+
+`Location`: `Telehealth`.
+
+`Address`: `Video visit`.
+
+`Insurance`: `In-network with Northstar PPO`.
+
+`Rating`: `4.5`.
+
+`Review count`: `65 reviews`.
+
+`Next available`: `June 13, 2026, 4:00 PM`.
+
+`Languages`: `English`, `Spanish`.
+
+`Badges`: `Video visit`.
+
+Selected provider sidebar must include:
+
+`Selected provider`: `Dr. Helen Park, MD`.
+
+`NPI-like demo ID`: `DEMO-NPI-204884`.
+
+`Education`: `North Coast Medical School`.
+
+`Clinical interests`: `knee pain`, `sports injuries`, `arthritis`.
+
+`Appointment types`: `New patient consult`, `Follow-up`, `Procedure review`.
+
+`Preparation note`: `Bring imaging results if available`.
+
+Extraction caveat: the extraction tool should preserve provider credentials and insurance status separately. It should not confuse specialty, appointment type, and badges.
+
+Implementation guidance: use provider cards with a right sidebar. Use fictional `DEMO-NPI` rather than real NPI values.
+
+---
+
+U00 Example 13 - University Course Search Results
+
+---
+
+Create a university course search page with filters, course result rows, enrollment status, and selected course detail sidebar.
+
+Visible heading:
+
+`University Course Search Results`
+
+Visible description:
+
+`This example imitates a university course search and registration page. It tests extraction of course codes, titles, sections, instructors, meeting times, credits, seats available, enrollment status, active filters, and selected course details.`
+
+Search header fields:
+
+`Search query`: `human centered software`.
+
+`Term`: `Fall 2026`.
+
+`Result count`: `12 sections`.
+
+`Sort order`: `Open seats first`.
+
+Active filters:
+
+`Computer Science`.
+
+`Open sections`.
+
+`3+ credits`.
+
+`In person`.
+
+Filter panel groups:
+
+`Department`: `Computer Science (8)` selected, `Design (2)`, `Information Studies (2)`.
+
+`Meeting days`: `Mon/Wed (5)`, `Tue/Thu (4)`, `Friday (3)`.
+
+`Availability`: `Open (7)` selected, `Waitlist (3)`, `Closed (2)`.
+
+Course result rows must include five courses.
+
+Course 1 selected by default:
+
+`Course code`: `CS 340`.
+
+`Primary link`: `/demo/courses/fall-2026/cs-340-a`.
+
+`Title`: `Human-Centered Software Design`.
+
+`Section`: `A`.
+
+`Instructor`: `Dr. Hannah Cho`.
+
+`Credits`: `4`.
+
+`Meeting time`: `Mon/Wed 10:00-11:50 AM`.
+
+`Location`: `Engineering Hall 204`.
+
+`Seats`: `6 of 32 available`.
+
+`Status`: `Open`.
+
+`Badges`: `Project-based`, `Writing intensive`.
+
+Course 2:
+
+`Course code`: `CS 341`.
+
+`Primary link`: `/demo/courses/fall-2026/cs-341-b`.
+
+`Title`: `Interface Prototyping Lab`.
+
+`Section`: `B`.
+
+`Instructor`: `Lina Romero`.
+
+`Credits`: `3`.
+
+`Meeting time`: `Tue/Thu 2:00-3:20 PM`.
+
+`Location`: `Design Studio 3`.
+
+`Seats`: `Waitlist 4`.
+
+`Status`: `Waitlist`.
+
+`Badges`: `Studio`.
+
+Course 3:
+
+`Course code`: `CS 375`.
+
+`Primary link`: `/demo/courses/fall-2026/cs-375-a`.
+
+`Title`: `Browser Automation Systems`.
+
+`Section`: `A`.
+
+`Instructor`: `Rafael Ortiz`.
+
+`Credits`: `3`.
+
+`Meeting time`: `Friday 9:00-11:45 AM`.
+
+`Location`: `Engineering Hall 108`.
+
+`Seats`: `2 of 24 available`.
+
+`Status`: `Open`.
+
+`Badges`: `Lab required`.
+
+Course 4:
+
+`Course code`: `INFO 280`.
+
+`Primary link`: `/demo/courses/fall-2026/info-280-c`.
+
+`Title`: `Information Extraction From Web Interfaces`.
+
+`Section`: `C`.
+
+`Instructor`: `Maya Chen`.
+
+`Credits`: `3`.
+
+`Meeting time`: `Tue/Thu 11:00 AM-12:20 PM`.
+
+`Location`: `Online synchronous`.
+
+`Seats`: `Closed`.
+
+`Status`: `Closed`.
+
+`Badges`: `Online`.
+
+Course 5:
+
+`Course code`: `DES 215`.
+
+`Primary link`: `/demo/courses/fall-2026/des-215-a`.
+
+`Title`: `Designing Forms And Flows`.
+
+`Section`: `A`.
+
+`Instructor`: `Owen Brooks`.
+
+`Credits`: `3`.
+
+`Meeting time`: `Mon/Wed 1:00-2:20 PM`.
+
+`Location`: `Design Hall 110`.
+
+`Seats`: `12 of 28 available`.
+
+`Status`: `Open`.
+
+`Badges`: `Portfolio`.
+
+Selected sidebar for Course 1 must include:
+
+`Selected course`: `CS 340 - Human-Centered Software Design`.
+
+`Prerequisites`: `CS 210 and junior standing`.
+
+`Registration restriction`: `Computer Science majors until July 1`.
+
+`Final exam`: `December 14, 2026, 8:00 AM`.
+
+`Materials`: `No textbook required`.
+
+`Registration action`: `Add to draft schedule`.
+
+Extraction caveat: the extraction tool should preserve each course row with course code, title, section, and status. It should not confuse active filters with course badges.
+
+Implementation guidance: use compact table-like result rows and a detail sidebar.
+
+---
+
+V00 Example 14 - Legal Document Search Results
+
+---
+
+Create a legal document search interface with filters, result snippets, document metadata, and selected document sidebar. Use fictional documents only.
+
+Visible heading:
+
+`Legal Document Search Results`
+
+Visible description:
+
+`This example imitates a legal document search page. It tests extraction of document titles, matter names, document types, dates, custodians, snippets with highlights, privilege status, tags, and selected document metadata.`
+
+Search header fields:
+
+`Search query`: `termination clause renewal notice`.
+
+`Matter`: `Demo Matter - Vendor Agreement Review`.
+
+`Result count`: `128 documents`.
+
+`Sort order`: `Relevance`.
+
+Active filters:
+
+`Contracts`.
+
+`Privileged excluded`.
+
+`Date 2024-2026`.
+
+`Contains renewal`.
+
+Filter panel groups:
+
+`Document type`: `Contract (42)` selected, `Email (51)`, `Memo (18)`, `Attachment (17)`.
+
+`Custodian`: `Renee Coleman (28)`, `Owen Brooks (17)`, `Legal Team Shared (44)`.
+
+`Privilege`: `Not privileged (91)` selected, `Potentially privileged (37)` disabled or excluded.
+
+Document results must include five records.
+
+Document 1 selected by default:
+
+`Document title`: `Master Services Agreement - Northstar Cloud`.
+
+`Primary link`: `/demo/legal/docs/doc-8841`.
+
+`Document ID`: `DOC-8841`.
+
+`Type`: `Contract`.
+
+`Date`: `January 18, 2026`.
+
+`Matter`: `Vendor Agreement Review`.
+
+`Custodian`: `Legal Team Shared`.
+
+`Snippet`: `Either party may terminate for convenience with 60 days written <mark>notice</mark> before the automatic <mark>renewal</mark> date.`
+
+`Tags`: `renewal`, `termination`, `vendor`.
+
+`Privilege status`: `Not privileged`.
+
+Document 2:
+
+`Document title`: `Renewal Notice Draft - Atlas Product Studio`.
+
+`Primary link`: `/demo/legal/docs/doc-8817`.
+
+`Document ID`: `DOC-8817`.
+
+`Type`: `Memo`.
+
+`Date`: `December 4, 2025`.
+
+`Matter`: `Vendor Agreement Review`.
+
+`Custodian`: `Renee Coleman`.
+
+`Snippet`: `Draft language for sending a non-renewal <mark>notice</mark> before the subscription term closes.`
+
+`Tags`: `renewal`, `notice`, `draft`.
+
+`Privilege status`: `Potentially privileged`.
+
+Document 3:
+
+`Document title`: `Support Package Addendum`.
+
+`Primary link`: `/demo/legal/docs/doc-8774`.
+
+`Document ID`: `DOC-8774`.
+
+`Type`: `Contract`.
+
+`Date`: `March 12, 2025`.
+
+`Matter`: `Vendor Agreement Review`.
+
+`Custodian`: `Legal Team Shared`.
+
+`Snippet`: `The addendum follows the same <mark>termination</mark> process as the master agreement unless otherwise stated.`
+
+`Tags`: `support`, `addendum`.
+
+`Privilege status`: `Not privileged`.
+
+Document 4:
+
+`Document title`: `Vendor Renewal Calendar Export`.
+
+`Primary link`: `/demo/legal/docs/doc-8720`.
+
+`Document ID`: `DOC-8720`.
+
+`Type`: `Spreadsheet`.
+
+`Date`: `November 9, 2024`.
+
+`Matter`: `Vendor Agreement Review`.
+
+`Custodian`: `Owen Brooks`.
+
+`Snippet`: `Spreadsheet listing renewal deadline, notice owner, vendor contact, and contract value.`
+
+`Tags`: `calendar`, `renewal`, `operations`.
+
+`Privilege status`: `Not privileged`.
+
+Document 5:
+
+`Document title`: `Termination Clause Comparison Notes`.
+
+`Primary link`: `/demo/legal/docs/doc-8688`.
+
+`Document ID`: `DOC-8688`.
+
+`Type`: `Memo`.
+
+`Date`: `August 22, 2024`.
+
+`Matter`: `Vendor Agreement Review`.
+
+`Custodian`: `Renee Coleman`.
+
+`Snippet`: `Comparison of convenience termination, cause termination, cure periods, and renewal notice requirements.`
+
+`Tags`: `termination`, `comparison`.
+
+`Privilege status`: `Not privileged`.
+
+Selected document sidebar for Document 1 must include:
+
+`Selected document`: `Master Services Agreement - Northstar Cloud`.
+
+`File name`: `msa_northstar_cloud_2026.pdf`.
+
+`Page count`: `42`.
+
+`Relevant page`: `Page 18`.
+
+`Contract value`: `$84,000 annually`.
+
+`Renewal date`: `January 18, 2027`.
+
+`Notice deadline`: `November 19, 2026`.
+
+`Review status`: `Needs business owner review`.
+
+Extraction caveat: the extraction tool should capture snippets with highlighted search terms while preserving document metadata. It should not expose or invent any privileged content beyond the fictional visible text.
+
+Implementation guidance: use a professional document review layout with filter sidebar and document metadata panel.
+
+---
+
+W00 Example 15 - File Library Search Results With Metadata Sidebar
+
+---
+
+Create a file library search interface with file cards, file type filters, modified dates, owners, locations, and selected file metadata sidebar.
+
+Visible heading:
+
+`File Library Search Results With Metadata Sidebar`
+
+Visible description:
+
+`This example imitates an internal file library search page. It tests extraction of file names, file types, owners, modified dates, folder paths, snippets, tags, selected file metadata, and action links from a split search layout.`
+
+Search header fields:
+
+`Search query`: `demo page specification`.
+
+`Scope`: `All project files`.
+
+`Result count`: `31 files`.
+
+`Sort order`: `Recently modified`.
+
+Active filters:
+
+`Documents`.
+
+`Modified this month`.
+
+`Owner: Product Systems`.
+
+Filter panel groups:
+
+`File type`: `Documents (18)` selected, `Spreadsheets (6)`, `Slides (4)`, `HTML files (3)`.
+
+`Owner`: `Product Systems (12)` selected, `Research (8)`, `Engineering (11)`.
+
+`Modified`: `Today (3)`, `This week (14)`, `This month (31)` selected.
+
+File results must include six files.
+
+File 1 selected by default:
+
+`File name`: `Page 5 - Feed Posts And Card Extraction Spec`.
+
+`Primary link`: `/demo/files/page-05-feed-posts-card-extraction-spec`.
+
+`File type`: `Document`.
+
+`Owner`: `Product Systems`.
+
+`Modified`: `May 31, 2026, 10:18 AM`.
+
+`Folder path`: `/Demo Pages/Specifications`.
+
+`Snippet`: `The page must focus on feed, post, and card extraction: news feeds, link aggregators, social posts...`
+
+`Tags`: `specification`, `cards`, `feeds`.
+
+File 2:
+
+`File name`: `Page 4 - Read Only Records Spec`.
+
+`Primary link`: `/demo/files/page-04-read-only-records-spec`.
+
+`File type`: `Document`.
+
+`Owner`: `Product Systems`.
+
+`Modified`: `May 30, 2026, 4:12 PM`.
+
+`Folder path`: `/Demo Pages/Specifications`.
+
+`Snippet`: `The page must focus on read-only records and confirmation pages: order confirmations, invoices, receipts...`
+
+`Tags`: `specification`, `records`.
+
+File 3:
+
+`File name`: `Extraction Test Matrix`.
+
+`Primary link`: `/demo/files/extraction-test-matrix`.
+
+`File type`: `Spreadsheet`.
+
+`Owner`: `Engineering`.
+
+`Modified`: `May 29, 2026, 2:44 PM`.
+
+`Folder path`: `/QA/Test Plans`.
+
+`Snippet`: `Tracks coverage across native forms, custom dropdowns, booking flows, records, and card extraction.`
+
+`Tags`: `qa`, `matrix`, `coverage`.
+
+File 4:
+
+`File name`: `Dropdown Picker Fixture Notes`.
+
+`Primary link`: `/demo/files/dropdown-picker-fixture-notes`.
+
+`File type`: `Document`.
+
+`Owner`: `Research`.
+
+`Modified`: `May 27, 2026, 8:05 AM`.
+
+`Folder path`: `/Research/Patterns`.
+
+`Snippet`: `Custom time picker menus frequently separate trigger labels from menu item values using overlay containers.`
+
+`Tags`: `dropdowns`, `research`.
+
+File 5:
+
+`File name`: `Demo Page Visual References`.
+
+`Primary link`: `/demo/files/demo-page-visual-references`.
+
+`File type`: `Slides`.
+
+`Owner`: `Product Systems`.
+
+`Modified`: `May 24, 2026, 1:19 PM`.
+
+`Folder path`: `/Demo Pages/Design`.
+
+`Snippet`: `Visual references for Storybook-style HTML test pages, including cards, feeds, forms, and panels.`
+
+`Tags`: `design`, `references`.
+
+File 6:
+
+`File name`: `Portable HTML Fixture Checklist`.
+
+`Primary link`: `/demo/files/portable-html-fixture-checklist`.
+
+`File type`: `Document`.
+
+`Owner`: `Engineering`.
+
+`Modified`: `May 22, 2026, 11:38 AM`.
+
+`Folder path`: `/Engineering/Checklists`.
+
+`Snippet`: `Every fixture must be standalone, use inline CSS, avoid external assets, and expose realistic visible values.`
+
+`Tags`: `html`, `fixture`, `checklist`.
+
+Selected metadata sidebar for File 1 must include:
+
+`Selected file`: `Page 5 - Feed Posts And Card Extraction Spec`.
+
+`File ID`: `file_demo_0525`.
+
+`Created`: `May 31, 2026, 9:44 AM`.
+
+`Modified by`: `Rockstar Developer`.
+
+`Word count`: `8,920`.
+
+`Shared with`: `Engineering`, `Product Systems`.
+
+`Available actions`: `Open`, `Copy link`, `View history`.
+
+Extraction caveat: the extraction tool should preserve file result records and sidebar metadata separately. It should not treat folder paths as URLs unless they are explicit links.
+
+Implementation guidance: use file-type badges and a metadata sidebar.
+
+---
+
+X00 Example 16 - Analytics Report Search Results
+
+---
+
+Create an analytics report search page with saved reports, dashboards, owners, metrics, schedules, and selected report details.
+
+Visible heading:
+
+`Analytics Report Search Results`
+
+Visible description:
+
+`This example imitates an analytics workspace search page. It tests extraction of report titles, dashboard names, owners, metric names, refresh schedules, last run times, tags, and selected report metadata.`
+
+Search header fields:
+
+`Search query`: `monthly billing export`.
+
+`Workspace`: `Atlas Product Studio`.
+
+`Result count`: `19 reports`.
+
+`Sort order`: `Recently viewed`.
+
+Active filters:
+
+`Scheduled`.
+
+`Billing metrics`.
+
+`CSV export enabled`.
+
+Report results must include five records.
+
+Report 1 selected by default:
+
+`Report title`: `Monthly Billing Export Summary`.
+
+`Primary link`: `/demo/analytics/reports/monthly-billing-export-summary`.
+
+`Report type`: `Scheduled report`.
+
+`Owner`: `Renee Coleman`.
+
+`Dashboard`: `Finance Operations`.
+
+`Last run`: `May 31, 2026, 6:00 AM`.
+
+`Schedule`: `Monthly on the 1st`.
+
+`Output`: `CSV and email`.
+
+`Metrics`: `invoice total`, `payments applied`, `balance due`.
+
+`Tags`: `billing`, `exports`, `finance`.
+
+Report 2:
+
+`Report title`: `Invoice Line Item Detail`.
+
+`Primary link`: `/demo/analytics/reports/invoice-line-item-detail`.
+
+`Report type`: `Table report`.
+
+`Owner`: `Theo Grant`.
+
+`Dashboard`: `Billing Diagnostics`.
+
+`Last run`: `May 30, 2026, 4:15 PM`.
+
+`Schedule`: `Manual`.
+
+`Output`: `CSV`.
+
+`Metrics`: `SKU`, `tax amount`, `discount amount`.
+
+`Tags`: `line items`, `csv`.
+
+Report 3:
+
+`Report title`: `Subscription Seat Usage Trend`.
+
+`Primary link`: `/demo/analytics/reports/subscription-seat-usage-trend`.
+
+`Report type`: `Chart report`.
+
+`Owner`: `Grace Miller`.
+
+`Dashboard`: `Customer Success`.
+
+`Last run`: `May 29, 2026, 8:00 AM`.
+
+`Schedule`: `Weekly on Monday`.
+
+`Output`: `Dashboard only`.
+
+`Metrics`: `seats purchased`, `seats used`, `available seats`.
+
+`Tags`: `subscriptions`, `usage`.
+
+Report 4:
+
+`Report title`: `Failed Payment Recovery`.
+
+`Primary link`: `/demo/analytics/reports/failed-payment-recovery`.
+
+`Report type`: `Dashboard`.
+
+`Owner`: `Nina Patel`.
+
+`Dashboard`: `Billing Operations`.
+
+`Last run`: `May 28, 2026, 7:30 AM`.
+
+`Schedule`: `Daily`.
+
+`Output`: `Dashboard and email`.
+
+`Metrics`: `failed payments`, `recovered amount`, `retry count`.
+
+`Tags`: `payments`, `recovery`.
+
+Report 5:
+
+`Report title`: `Export Job Health`.
+
+`Primary link`: `/demo/analytics/reports/export-job-health`.
+
+`Report type`: `Operational report`.
+
+`Owner`: `Rafael Ortiz`.
+
+`Dashboard`: `Platform Reliability`.
+
+`Last run`: `May 31, 2026, 10:00 AM`.
+
+`Schedule`: `Hourly`.
+
+`Output`: `Dashboard`.
+
+`Metrics`: `export duration`, `failure count`, `queue time`.
+
+`Tags`: `exports`, `reliability`.
+
+Selected sidebar for Report 1 must include:
+
+`Selected report`: `Monthly Billing Export Summary`.
+
+`Report ID`: `rpt_2026_7712`.
+
+`Next scheduled run`: `June 1, 2026, 6:00 AM`.
+
+`Recipients`: `billing@example.test`, `finance@example.test`.
+
+`Export format`: `CSV`.
+
+`Rows last run`: `2,184`.
+
+`Last run status`: `Succeeded`.
+
+Extraction caveat: the extraction tool should extract metric lists and schedule data without merging them into the snippet. It should preserve recipients as repeated values.
+
+Implementation guidance: use report cards with metric tags and a selected report detail panel.
+
+---
+
+Y00 Example 17 - Package Registry Search Results
+
+---
+
+Create a package registry search page with package cards, version metadata, install commands, maintainers, download counts, and selected package sidebar.
+
+Visible heading:
+
+`Package Registry Search Results`
+
+Visible description:
+
+`This example imitates a software package registry search page. It tests extraction of package names, links, descriptions, versions, maintainers, download counts, license, install command, tags, and selected package details.`
+
+Search header fields:
+
+`Search query`: `dropdown extraction`.
+
+`Registry`: `Demo JavaScript Packages`.
+
+`Result count`: `12 packages`.
+
+`Sort order`: `Relevance`.
+
+Active filters:
+
+`TypeScript types`.
+
+`Recently updated`.
+
+`MIT license`.
+
+Package results must include five records.
+
+Package 1 selected by default:
+
+`Package name`: `@demo/extract-dropdown`.
+
+`Primary link`: `/demo/packages/extract-dropdown`.
+
+`Description`: `Utilities for reading visible and submitted values from custom dropdown widgets.`
+
+`Version`: `0.9.4`.
+
+`Updated`: `May 28, 2026`.
+
+`Weekly downloads`: `18,420`.
+
+`License`: `MIT`.
+
+`Maintainers`: `mira_dev`, `semanticist`.
+
+`Install command`: `npm install @demo/extract-dropdown`.
+
+`Tags`: `dropdown`, `aria`, `forms`.
+
+Package 2:
+
+`Package name`: `@demo/card-parser`.
+
+`Primary link`: `/demo/packages/card-parser`.
+
+`Description`: `Helpers for turning repeated card lists into structured records.`
+
+`Version`: `1.2.1`.
+
+`Updated`: `May 24, 2026`.
+
+`Weekly downloads`: `42,118`.
+
+`License`: `MIT`.
+
+`Maintainers`: `pixelroot`, `layout_sleuth`.
+
+`Install command`: `npm install @demo/card-parser`.
+
+`Tags`: `cards`, `extraction`, `lists`.
+
+Package 3:
+
+`Package name`: `@demo/sidebar-state`.
+
+`Primary link`: `/demo/packages/sidebar-state`.
+
+`Description`: `Small state manager for selected result sidebars and split-pane search views.`
+
+`Version`: `0.6.8`.
+
+`Updated`: `May 20, 2026`.
+
+`Weekly downloads`: `9,812`.
+
+`License`: `Apache-2.0`.
+
+`Maintainers`: `testwright`.
+
+`Install command`: `npm install @demo/sidebar-state`.
+
+`Tags`: `sidebar`, `search`, `state`.
+
+Package 4:
+
+`Package name`: `@demo/facet-filter`.
+
+`Primary link`: `/demo/packages/facet-filter`.
+
+`Description`: `Accessible faceted filter primitives for static search fixtures.`
+
+`Version`: `2.0.0`.
+
+`Updated`: `May 18, 2026`.
+
+`Weekly downloads`: `31,004`.
+
+`License`: `MIT`.
+
+`Maintainers`: `dom_mapper`.
+
+`Install command`: `npm install @demo/facet-filter`.
+
+`Tags`: `filters`, `facets`, `search`.
+
+Package 5:
+
+`Package name`: `@demo/highlight-snippet`.
+
+`Primary link`: `/demo/packages/highlight-snippet`.
+
+`Description`: `Render search snippets with safe highlighted terms and preserved context.`
+
+`Version`: `0.4.5`.
+
+`Updated`: `April 30, 2026`.
+
+`Weekly downloads`: `7,441`.
+
+`License`: `BSD-3-Clause`.
+
+`Maintainers`: `glyphwatch`.
+
+`Install command`: `npm install @demo/highlight-snippet`.
+
+`Tags`: `snippets`, `highlighting`.
+
+Selected package sidebar for Package 1 must include:
+
+`Selected package`: `@demo/extract-dropdown`.
+
+`Bundle size`: `6.8 kB`.
+
+`TypeScript types`: `Included`.
+
+`Repository`: `/demo/repos/extract-dropdown`.
+
+`Open issues`: `14`.
+
+`Last publish`: `May 28, 2026`.
+
+`Security status`: `No known advisories`.
+
+Extraction caveat: the extraction tool should preserve install commands exactly as code-like text and should not confuse tags with package names.
+
+Implementation guidance: use package result cards with monospace package names and install command blocks.
+
+---
+
+Z00 Example 18 - Recruiting Candidate Search Results
+
+---
+
+Create a recruiting candidate search interface with candidate result cards, filters, scores, stages, skills, and selected candidate detail sidebar.
+
+Visible heading:
+
+`Recruiting Candidate Search Results`
+
+Visible description:
+
+`This example imitates an applicant tracking search page. It tests extraction of candidate cards, roles, stages, skills, scores, locations, availability, last activity, and selected candidate detail sidebar data.`
+
+Search header fields:
+
+`Search query`: `QA automation Playwright accessibility`.
+
+`Role`: `QA Automation Engineer`.
+
+`Result count`: `38 candidates`.
+
+`Sort order`: `Best match`.
+
+Active filters:
+
+`Playwright`.
+
+`Accessibility testing`.
+
+`Available in 30 days`.
+
+`Senior`.
+
+Candidate cards must include five results.
+
+Candidate 1 selected by default:
+
+`Candidate`: `Avery Quinn`.
+
+`Primary link`: `/demo/recruiting/candidates/avery-quinn`.
+
+`Current title`: `Senior QA Engineer`.
+
+`Location`: `Remote - United States`.
+
+`Stage`: `Technical screen`.
+
+`Match score`: `94`.
+
+`Availability`: `2 weeks`.
+
+`Skills`: `Playwright`, `Accessibility testing`, `TypeScript`, `CI`.
+
+`Last activity`: `Completed take-home exercise`.
+
+`Owner`: `Grace Miller`.
+
+Candidate 2:
+
+`Candidate`: `Diego Marin`.
+
+`Primary link`: `/demo/recruiting/candidates/diego-marin`.
+
+`Current title`: `Automation Lead`.
+
+`Location`: `Austin, TX`.
+
+`Stage`: `Recruiter screen`.
+
+`Match score`: `89`.
+
+`Availability`: `30 days`.
+
+`Skills`: `Selenium`, `Playwright`, `API testing`, `Mentoring`.
+
+`Last activity`: `Recruiter call scheduled`.
+
+`Owner`: `Nina Patel`.
+
+Candidate 3:
+
+`Candidate`: `Mei Tanaka`.
+
+`Primary link`: `/demo/recruiting/candidates/mei-tanaka`.
+
+`Current title`: `Frontend Test Engineer`.
+
+`Location`: `San Mateo, CA`.
+
+`Stage`: `New applicant`.
+
+`Match score`: `86`.
+
+`Availability`: `Immediate`.
+
+`Skills`: `JavaScript`, `Accessibility`, `Component testing`.
+
+`Last activity`: `Applied yesterday`.
+
+`Owner`: `Unassigned`.
+
+Candidate 4:
+
+`Candidate`: `Noah Kim`.
+
+`Primary link`: `/demo/recruiting/candidates/noah-kim`.
+
+`Current title`: `Quality Engineer`.
+
+`Location`: `Oakland, CA`.
+
+`Stage`: `Hiring manager review`.
+
+`Match score`: `82`.
+
+`Availability`: `45 days`.
+
+`Skills`: `Playwright`, `Regression testing`, `Test plans`.
+
+`Last activity`: `Portfolio reviewed`.
+
+`Owner`: `Grace Miller`.
+
+Candidate 5:
+
+`Candidate`: `Priya Shah`.
+
+`Primary link`: `/demo/recruiting/candidates/priya-shah`.
+
+`Current title`: `Release Test Manager`.
+
+`Location`: `San Francisco, CA`.
+
+`Stage`: `Panel interview`.
+
+`Match score`: `80`.
+
+`Availability`: `60 days`.
+
+`Skills`: `QA strategy`, `Accessibility audit`, `Team leadership`.
+
+`Last activity`: `Panel interview pending`.
+
+`Owner`: `Rafael Ortiz`.
+
+Selected candidate sidebar for Candidate 1 must include:
+
+`Selected candidate`: `Avery Quinn`.
+
+`Candidate ID`: `CAND-77184`.
+
+`Email`: `avery.quinn@example.test`.
+
+`Desired salary`: `$138,000-$156,000`.
+
+`Work authorization`: `Authorized for US employment`.
+
+`Interview feedback`: `Strong test architecture skills and clear accessibility examples`.
+
+`Next step`: `Schedule final interview`.
+
+Extraction caveat: the extraction tool should keep candidate skills attached to each candidate. It should not merge all skills into one global keyword list.
+
+Implementation guidance: use skill chips on each candidate card and a selected detail sidebar.
+
+---
+
+AA00 Example 19 - Event Venue Search Results
+
+---
+
+Create an event venue search page with venue cards, availability filters, capacity, price, amenities, and selected venue sidebar.
+
+Visible heading:
+
+`Event Venue Search Results`
+
+Visible description:
+
+`This example imitates a venue search page for planning an event. It tests extraction of venue names, locations, capacity, available dates, price estimates, amenities, contact links, active filters, and selected venue details.`
+
+Search header fields:
+
+`Search query`: `workshop venue`.
+
+`City`: `San Francisco, CA`.
+
+`Event date`: `July 16, 2026`.
+
+`Guest count`: `80`.
+
+`Result count`: `22 venues`.
+
+Active filters:
+
+`Capacity 50-100`.
+
+`Projector`.
+
+`Catering allowed`.
+
+`Available July 16`.
+
+Venue cards must include five results.
+
+Venue 1 selected by default:
+
+`Venue`: `Harbor Hall Workshop Room`.
+
+`Primary link`: `/demo/venues/harbor-hall-workshop-room`.
+
+`Location`: `Embarcadero`.
+
+`Capacity`: `90 seated`.
+
+`Price estimate`: `$1,850 day rate`.
+
+`Availability`: `Available July 16`.
+
+`Amenities`: `Projector`, `Whiteboards`, `Catering allowed`.
+
+`Contact`: `events@harborhall.example.test`.
+
+`Rating`: `4.7`.
+
+Venue 2:
+
+`Venue`: `North Market Coworking - Room B`.
+
+`Primary link`: `/demo/venues/north-market-room-b`.
+
+`Location`: `SoMa`.
+
+`Capacity`: `60 seated`.
+
+`Price estimate`: `$980 day rate`.
+
+`Availability`: `Available July 16`.
+
+`Amenities`: `Video conferencing`, `Whiteboard`.
+
+`Contact`: `rooms@northmarket.example.test`.
+
+`Rating`: `4.5`.
+
+Venue 3:
+
+`Venue`: `City Museum Lab`.
+
+`Primary link`: `/demo/venues/city-museum-lab`.
+
+`Location`: `Civic Center`.
+
+`Capacity`: `75 seated`.
+
+`Price estimate`: `$1,400 day rate`.
+
+`Availability`: `Hold available`.
+
+`Amenities`: `Projector`, `Catering allowed`, `Transit nearby`.
+
+`Contact`: `events@citymuseum.example.test`.
+
+`Rating`: `4.8`.
+
+Venue 4:
+
+`Venue`: `Civic Data Lab Atrium`.
+
+`Primary link`: `/demo/venues/civic-data-lab-atrium`.
+
+`Location`: `Oakland`.
+
+`Capacity`: `100 standing, 70 seated`.
+
+`Price estimate`: `$1,250 day rate`.
+
+`Availability`: `Waitlist`.
+
+`Amenities`: `Projector`, `Catering allowed`, `Hybrid setup`.
+
+`Contact`: `space@civicdata.example.test`.
+
+`Rating`: `4.6`.
+
+Venue 5:
+
+`Venue`: `Pine Coast Hotel Meeting Suite`.
+
+`Primary link`: `/demo/venues/pine-coast-meeting-suite`.
+
+`Location`: `Pacific Grove`.
+
+`Capacity`: `85 seated`.
+
+`Price estimate`: `$2,100 day rate`.
+
+`Availability`: `Available July 16`.
+
+`Amenities`: `Projector`, `Catering package`, `Parking`.
+
+`Contact`: `meetings@pinecoast.example.test`.
+
+`Rating`: `4.4`.
+
+Selected venue sidebar for Venue 1 must include:
+
+`Selected venue`: `Harbor Hall Workshop Room`.
+
+`Room size`: `1,420 sq ft`.
+
+`Setup options`: `Classroom`, `U-shape`, `Theater`.
+
+`Deposit required`: `$500`.
+
+`Cancellation policy`: `50 percent refund until 14 days before event`.
+
+`Quote status`: `Ready to request`.
+
+Extraction caveat: the extraction tool should preserve amenity lists and availability status per venue. It should not treat waitlist venues as selected.
+
+Implementation guidance: use venue cards with amenity chips and a right-side quote details panel.
+
+---
+
+AB00 Example 20 - Admin User Search With Permission Sidebar
+
+---
+
+Create an admin user search page with user rows, filters, role badges, access status, last login, and selected permission sidebar.
+
+Visible heading:
+
+`Admin User Search With Permission Sidebar`
+
+Visible description:
+
+`This example imitates an admin user search page. It tests extraction of user records, roles, teams, access status, last login, MFA state, active filters, and selected user permission details.`
+
+Search header fields:
+
+`Search query`: `billing manager`.
+
+`Workspace`: `Northwind Analytics`.
+
+`Result count`: `11 users`.
+
+`Sort order`: `Last active`.
+
+Active filters:
+
+`Billing manager`.
+
+`MFA enabled`.
+
+`Active users`.
+
+User rows must include six users.
+
+User 1 selected by default:
+
+`User`: `Anika Sharma`.
+
+`Primary link`: `/demo/admin/users/anika-sharma`.
+
+`Email`: `anika.sharma@example.test`.
+
+`Role`: `Billing manager`.
+
+`Team`: `Finance`.
+
+`Status`: `Active`.
+
+`MFA`: `Enabled`.
+
+`Last login`: `May 31, 2026, 11:18 AM`.
+
+`Seats`: `Paid seat`.
+
+User 2:
+
+`User`: `Maya Chen`.
+
+`Primary link`: `/demo/admin/users/maya-chen`.
+
+`Email`: `maya.chen@example.test`.
+
+`Role`: `Billing manager`.
+
+`Team`: `Product`.
+
+`Status`: `Active`.
+
+`MFA`: `Enabled`.
+
+`Last login`: `May 31, 2026, 9:40 AM`.
+
+`Seats`: `Paid seat`.
+
+User 3:
+
+`User`: `Renee Coleman`.
+
+`Primary link`: `/demo/admin/users/renee-coleman`.
+
+`Email`: `renee.coleman@example.test`.
+
+`Role`: `Workspace admin`.
+
+`Team`: `Finance`.
+
+`Status`: `Active`.
+
+`MFA`: `Enabled`.
+
+`Last login`: `May 30, 2026, 5:12 PM`.
+
+`Seats`: `Paid seat`.
+
+User 4:
+
+`User`: `Theo Grant`.
+
+`Primary link`: `/demo/admin/users/theo-grant`.
+
+`Email`: `theo.grant@example.test`.
+
+`Role`: `Viewer`.
+
+`Team`: `Research`.
+
+`Status`: `Active`.
+
+`MFA`: `Enabled`.
+
+`Last login`: `May 29, 2026, 3:04 PM`.
+
+`Seats`: `Free viewer`.
+
+User 5:
+
+`User`: `Lina Romero`.
+
+`Primary link`: `/demo/admin/users/lina-romero`.
+
+`Email`: `lina.romero@example.test`.
+
+`Role`: `Editor`.
+
+`Team`: `Design`.
+
+`Status`: `Invited`.
+
+`MFA`: `Not set up`.
+
+`Last login`: `Never`.
+
+`Seats`: `Pending`.
+
+User 6:
+
+`User`: `Owen Brooks`.
+
+`Primary link`: `/demo/admin/users/owen-brooks`.
+
+`Email`: `owen.brooks@example.test`.
+
+`Role`: `Billing manager`.
+
+`Team`: `Operations`.
+
+`Status`: `Suspended`.
+
+`MFA`: `Enabled`.
+
+`Last login`: `May 10, 2026, 1:20 PM`.
+
+`Seats`: `Paid seat`.
+
+Selected permission sidebar for User 1 must include:
+
+`Selected user`: `Anika Sharma`.
+
+`User ID`: `usr_204884`.
+
+`Granted permissions`: `View invoices`, `Update payment method`, `Manage seats`, `Download receipts`.
+
+`Restricted permissions`: `Manage SSO`, `Delete workspace`, `Transfer ownership`.
+
+`Role changed by`: `Renee Coleman`.
+
+`Role changed at`: `May 28, 2026, 4:42 PM`.
+
+Extraction caveat: the extraction tool should preserve granted and restricted permissions as separate lists. It should not treat suspended users as active even if they match the role filter.
+
+Implementation guidance: use compact table-like rows and a permission sidebar.
+
+---
+
+AC00 Example 21 - Audit Log Search Results With Event Detail Panel
+
+---
+
+Create an audit log search interface with dense event rows, filters, and a selected event detail panel.
+
+Visible heading:
+
+`Audit Log Search Results With Event Detail Panel`
+
+Visible description:
+
+`This example imitates a security audit log search page. It tests extraction of event rows, timestamps, actors, event types, outcomes, IP addresses, risk labels, active filters, and selected event detail attributes.`
+
+Search header fields:
+
+`Search query`: `role changed`.
+
+`Date range`: `Last 7 days`.
+
+`Result count`: `47 events`.
+
+`Sort order`: `Newest first`.
+
+Active filters:
+
+`User management`.
+
+`Success`.
+
+`Medium severity`.
+
+Filter panel groups:
+
+`Event type`: `User role changed (11)` selected, `User invited (14)`, `User suspended (6)`, `MFA reset (16)`.
+
+`Outcome`: `Success (42)` selected, `Failure (5)`.
+
+`Severity`: `Low (28)`, `Medium (17)` selected, `High (2)`.
+
+Audit event rows must include six events.
+
+Event 1 selected by default:
+
+`Event ID`: `evt_2026_05_31_884120`.
+
+`Primary link`: `/demo/security/events/evt_2026_05_31_884120`.
+
+`Timestamp`: `May 31, 2026, 11:18:44 AM PT`.
+
+`Actor`: `Anika Sharma`.
+
+`Actor email`: `anika.sharma@example.test`.
+
+`Event type`: `User role changed`.
+
+`Target`: `Maya Chen`.
+
+`Outcome`: `Success`.
+
+`Severity`: `Medium`.
+
+`IP address`: `203.0.113.42`.
+
+`Risk labels`: `Known device`, `MFA satisfied`.
+
+Event 2:
+
+`Event ID`: `evt_2026_05_31_882009`.
+
+`Primary link`: `/demo/security/events/evt_2026_05_31_882009`.
+
+`Timestamp`: `May 31, 2026, 10:02:11 AM PT`.
+
+`Actor`: `Renee Coleman`.
+
+`Actor email`: `renee.coleman@example.test`.
+
+`Event type`: `User invited`.
+
+`Target`: `Lina Romero`.
+
+`Outcome`: `Success`.
+
+`Severity`: `Low`.
+
+`IP address`: `203.0.113.18`.
+
+`Risk labels`: `Known location`.
+
+Event 3:
+
+`Event ID`: `evt_2026_05_30_771840`.
+
+`Primary link`: `/demo/security/events/evt_2026_05_30_771840`.
+
+`Timestamp`: `May 30, 2026, 5:44:03 PM PT`.
+
+`Actor`: `System`.
+
+`Actor email`: `system@example.test`.
+
+`Event type`: `MFA reset`.
+
+`Target`: `Theo Grant`.
+
+`Outcome`: `Success`.
+
+`Severity`: `Medium`.
+
+`IP address`: `Internal`.
+
+`Risk labels`: `Admin approved`.
+
+Event 4:
+
+`Event ID`: `evt_2026_05_30_771102`.
+
+`Primary link`: `/demo/security/events/evt_2026_05_30_771102`.
+
+`Timestamp`: `May 30, 2026, 3:22:17 PM PT`.
+
+`Actor`: `Owen Brooks`.
+
+`Actor email`: `owen.brooks@example.test`.
+
+`Event type`: `User suspended`.
+
+`Target`: `Former contractor account`.
+
+`Outcome`: `Success`.
+
+`Severity`: `Medium`.
+
+`IP address`: `203.0.113.77`.
+
+`Risk labels`: `Policy cleanup`.
+
+Event 5:
+
+`Event ID`: `evt_2026_05_29_661204`.
+
+`Primary link`: `/demo/security/events/evt_2026_05_29_661204`.
+
+`Timestamp`: `May 29, 2026, 9:10:58 AM PT`.
+
+`Actor`: `Nina Patel`.
+
+`Actor email`: `nina.patel@example.test`.
+
+`Event type`: `User role changed`.
+
+`Target`: `Grace Miller`.
+
+`Outcome`: `Failure`.
+
+`Severity`: `High`.
+
+`IP address`: `198.51.100.25`.
+
+`Risk labels`: `Permission denied`, `Unexpected role`.
+
+Event 6:
+
+`Event ID`: `evt_2026_05_29_660118`.
+
+`Primary link`: `/demo/security/events/evt_2026_05_29_660118`.
+
+`Timestamp`: `May 29, 2026, 8:05:32 AM PT`.
+
+`Actor`: `Maya Chen`.
+
+`Actor email`: `maya.chen@example.test`.
+
+`Event type`: `User role changed`.
+
+`Target`: `Billing service account`.
+
+`Outcome`: `Success`.
+
+`Severity`: `Medium`.
+
+`IP address`: `203.0.113.42`.
+
+`Risk labels`: `Service account`, `MFA satisfied`.
+
+Selected event detail panel for Event 1 must include:
+
+`Selected event`: `evt_2026_05_31_884120`.
+
+`Previous role`: `Viewer`.
+
+`New role`: `Billing manager`.
+
+`Request ID`: `req_771209ab`.
+
+`Session ID`: `sess_44018ff`.
+
+`User agent`: `Chrome on macOS`.
+
+`Policy version`: `2026.05`.
+
+`Raw source`: `admin_console`.
+
+Extraction caveat: the extraction tool should preserve dense event rows and selected detail attributes. It should not merge actor and target identities.
+
+Implementation guidance: use a compact table for event rows and a right detail panel with raw attributes.
+
+---
+
+AD00 Example 22 - Saved Search And Alert Builder Results
+
+---
+
+Create a saved search and alert builder interface. It should include a live result list, selected filters, alert schedule sidebar, and preview of matching records.
+
+Visible heading:
+
+`Saved Search And Alert Builder Results`
+
+Visible description:
+
+`This example imitates a saved search builder with dynamic preview results and an alert settings sidebar. It tests extraction of query, selected filters, preview records, alert frequency, recipients, delivery channel, and matching-count summary.`
+
+Search builder fields:
+
+`Saved search name`: `High priority billing tickets`.
+
+`Search query`: `billing OR invoice`.
+
+`Scope`: `Support tickets`.
+
+`Matching records`: `18 tickets`.
+
+`Sort order`: `Priority then SLA`.
+
+Active filter chips:
+
+`Priority: High or Urgent`.
+
+`Status: Open or Waiting on support`.
+
+`Queue: Billing Support`.
+
+`SLA: Due within 24 hours`.
+
+Preview result cards must include five matching records.
+
+Preview 1:
+
+`Case number`: `TCK-2026-54102`.
+
+`Primary link`: `/demo/support/tickets/TCK-2026-54102`.
+
+`Subject`: `Invoice PDF missing line item details`.
+
+`Customer`: `Theo Grant`.
+
+`Priority`: `High`.
+
+`Status`: `Open`.
+
+`SLA`: `Due today, 5:00 PM`.
+
+`Matched terms`: `invoice`, `line item`.
+
+Preview 2:
+
+`Case number`: `TCK-2026-54188`.
+
+`Primary link`: `/demo/support/tickets/TCK-2026-54188`.
+
+`Subject`: `Monthly billing export missing discount rows`.
+
+`Customer`: `Renee Coleman`.
+
+`Priority`: `Medium`.
+
+`Status`: `Waiting on support`.
+
+`SLA`: `Due June 1, 2026, 2:00 PM`.
+
+`Matched terms`: `billing`, `export`.
+
+Preview 3:
+
+`Case number`: `TCK-2026-54217`.
+
+`Primary link`: `/demo/support/tickets/TCK-2026-54217`.
+
+`Subject`: `Export filter does not preserve date range`.
+
+`Customer`: `Maya Chen`.
+
+`Priority`: `High`.
+
+`Status`: `Open`.
+
+`SLA`: `Due today, 6:30 PM`.
+
+`Matched terms`: `export`.
+
+Preview 4:
+
+`Case number`: `TCK-2026-54240`.
+
+`Primary link`: `/demo/support/tickets/TCK-2026-54240`.
+
+`Subject`: `Invoice recipient list not updating`.
+
+`Customer`: `Priya Shah`.
+
+`Priority`: `High`.
+
+`Status`: `Open`.
+
+`SLA`: `Due tomorrow, 9:00 AM`.
+
+`Matched terms`: `invoice`.
+
+Preview 5:
+
+`Case number`: `TCK-2026-54251`.
+
+`Primary link`: `/demo/support/tickets/TCK-2026-54251`.
+
+`Subject`: `Billing CSV includes duplicate rows`.
+
+`Customer`: `Owen Brooks`.
+
+`Priority`: `Urgent`.
+
+`Status`: `Open`.
+
+`SLA`: `Due today, 4:00 PM`.
+
+`Matched terms`: `billing`, `CSV`.
+
+Alert settings sidebar must include:
+
+`Alert status`: `Enabled`.
+
+`Frequency`: `Every weekday at 9:00 AM`.
+
+`Delivery channel`: `Email digest`.
+
+`Recipients`: `billing@example.test`, `support-leads@example.test`.
+
+`Include CSV attachment`: `Yes`.
+
+`Created by`: `Rafael Ortiz`.
+
+`Last run`: `May 31, 2026, 9:00 AM`.
+
+`Next run`: `June 1, 2026, 9:00 AM`.
+
+Extraction caveat: the extraction tool should extract the search definition separately from preview result records and alert settings. It should not treat alert recipients as result customers.
+
+Implementation guidance: create a three-part layout: builder summary, preview results, and alert settings sidebar.
+
+---
+
+AE00 Required Final HTML Skeleton
+
+---
+
+The coding agent should produce a complete HTML document using this general skeleton:
+
+```html id="zix4ri"
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page 6 - Search Results And Dynamic Sidebars</title>
+  <style>
+    /* Inline CSS only. */
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-hero">
+      <p class="page-kicker">Content Extraction Demo Page</p>
+      <h1>Page 6 - Search Results And Dynamic Sidebars</h1>
+      <p>
+        This standalone page contains realistic search result and dynamic sidebar examples for testing extraction of repeated results, active filters, result metadata, snippets, selected detail panes, preview panels, sidebars, sorting state, map-style pins, and saved search settings.
+      </p>
+    </header>
+
+    <section class="example-card" id="example-01">
+      <!-- Example 01 content. -->
+    </section>
+
+    <!-- Continue through example-22. -->
+  </main>
+
+  <script>
+    /* Minimal inline JavaScript only. */
+  </script>
+</body>
+</html>
+```
+
+The generated file must include all 22 examples in the same file.
+
+The page must not require a server.
+
+The page must not fetch data.
+
+The page must not include broken links to external assets.
+
+The page must not use placeholder text instead of the specified values.
+
+The page must not use external images, external map tiles, or external search APIs. Use text placeholders and CSS boxes instead.
+
+The page must not use real job boards, real CRMs, real travel providers, real map providers, real email services, real analytics products, real applicant tracking systems, or real user data.
+
+---
+
+AF00 Quality Bar
+
+---
+
+The final page should be useful as a long-term manual testing page for a content extraction tool.
+
+Each example must be visibly distinct enough that a tester can scroll to it, select a result list, select a sidebar, or select the whole search interface and understand what extraction behavior is being tested.
+
+Each example must contain realistic populated values.
+
+Each example must include the specified heading, description, search query, result count, filters, result records, selected states, sidebar details, links, metadata, snippets, badges, and extraction caveat.
+
+Every search result example must expose enough visible content for extraction testing. Do not hide the most important values only in JavaScript variables, hidden inputs, comments, or inaccessible attributes.
+
+Use primary links carefully. A result may contain multiple links, but the primary result link must be identifiable by placement, class, or visible text.
+
+Use repeated records where specified. Preserve result boundaries in the markup.
+
+Use filter chips, facet counts, result badges, status labels, snippets, and selected sidebars as separate visible elements. These are important extraction targets.
+
+Do not make all examples visually identical. The point of this page is to test many real-world variations of search result and dynamic sidebar extraction.
+
+Do not collapse all metadata into one paragraph if the example calls for structured metadata.
+
+Do not convert all examples into ordinary forms or static tables. This page must focus on search results, faceted filters, result lists, preview panes, map-like lists, dynamic sidebars, and saved search layouts.
+
+The implementation should favor clarity and realistic structure over cleverness.
+
+The coding agent may improve layout, spacing, CSS details, and basic interaction behavior, but it must not remove examples, reduce the number of examples, replace search examples with generic forms, or simplify the scenarios into toy examples.
+
+The final output must be one portable HTML file.

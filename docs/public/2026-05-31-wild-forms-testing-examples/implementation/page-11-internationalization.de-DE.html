@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="de-DE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seite 11 - Internationalisierung (Deutsch, Deutschland)</title>
+<style>
+  :root {
+    --bg: #e8edf2;
+    --card: #f9fbfc;
+    --ink: #17212b;
+    --muted: #516171;
+    --line: #aebbc7;
+    --soft: #d9e1e8;
+    --panel: #ffffff;
+    --panel-alt: #eef3f7;
+    --accent: #0f5f78;
+    --accent-soft: #d9edf3;
+    --ok: #1f6f48;
+    --ok-soft: #e1f0e7;
+    --warn: #8a5a00;
+    --warn-soft: #f3ead4;
+    --danger: #a33a32;
+    --danger-soft: #f1dfdc;
+    --info: #0f5f78;
+    --radius: 6px;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: linear-gradient(90deg, rgba(15,95,120,.06) 1px, transparent 1px), linear-gradient(0deg, rgba(15,95,120,.05) 1px, transparent 1px), var(--bg); background-size: 24px 24px; color: var(--ink); line-height: 1.42; }
+  main { width: min(1220px, calc(100% - 28px)); margin: 0 auto; padding: 20px 0 64px; }
+  a { color: var(--accent); }
+  h1, h2, h3, h4 { line-height: 1.2; }
+  button, input, select, textarea { font: inherit; }
+  :focus-visible { outline: 3px solid #2f8da6; outline-offset: 2px; }
+  .page-hero { background: linear-gradient(135deg, #1a2833, #345162 58%, #0f5f78); color: #f4fbfe; border-radius: var(--radius); padding: 24px 28px; margin-bottom: 18px; border: 1px solid #7d94a3; box-shadow: inset 0 -4px 0 rgba(255,255,255,.08); }
+  .page-hero h1 { margin: 4px 0 8px; font-size: 1.55rem; letter-spacing: .01em; }
+  .page-kicker { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.72rem; opacity: 0.86; margin: 0; }
+  .page-hero p { margin: 0; max-width: 920px; color: #d5e4ec; }
+  .example-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin: 16px 0; box-shadow: 0 1px 0 #fff inset, 0 8px 18px rgba(28,45,60,0.08); }
+  .example-kicker { margin: 0 0 3px; color: var(--accent); font-weight: 800; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.1em; }
+  .example-header h2 { margin: 0; font-size: 1.18rem; }
+  .example-description { color: var(--muted); max-width: 960px; }
+  .test-intent { background: var(--accent-soft); border-left: 5px solid var(--accent); border-radius: var(--radius); padding: 9px 12px; color: #173948; font-size: 0.88rem; max-width: 960px; }
+  .example-surface { margin-top: 12px; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius); background: #fbfdfe; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .panel, .summary-panel, .detail-panel { padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+  .summary-panel, .detail-panel { background: var(--panel-alt); }
+  .panel-title { margin: 0 0 8px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 800; }
+  .layout-grid-two { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+  .layout-grid-three { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
+  .split-layout { display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: 10px; align-items: start; }
+  .wide-scroll { overflow-x: auto; }
+  .field-row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--soft); }
+  .field-row:last-child { border-bottom: 0; }
+  .field-label { color: var(--muted); font-weight: 700; }
+  .field-value { text-align: right; font-weight: 700; }
+  .field-block { padding: 6px 0; border-bottom: 1px solid var(--soft); }
+  .field-block:last-child { border-bottom: 0; }
+  .field-block .field-label { display: block; margin-bottom: 3px; }
+  .form-field { margin-bottom: 10px; }
+  .form-field label { display: block; font-weight: 700; margin-bottom: 3px; }
+  .req::after { content: " · Pflichtfeld"; color: var(--danger); font-size: .82em; }
+  input[type=text], input[type=email], input[type=tel], input[type=number], input[type=date], input[type=search], select, textarea { width: 100%; min-height: 38px; padding: 7px 9px; border: 1px solid #9eacb8; border-radius: 4px; background: #fff; }
+  textarea { min-height: 78px; }
+  .help-text { color: var(--muted); font-size: 0.82rem; margin: 3px 0 0; }
+  .error-text { color: var(--danger); font-size: 0.83rem; margin: 3px 0 0; font-weight: 700; }
+  [aria-invalid=true] { border-color: var(--danger); background: var(--danger-soft); }
+  .error-summary { border: 2px solid var(--danger); background: var(--danger-soft); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px; }
+  .error-summary h3 { margin: 0 0 6px; color: var(--danger); font-size: 0.98rem; }
+  .error-summary a { color: var(--danger); font-weight: 700; }
+  .badge, .chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; border: 1px solid var(--line); background: #fff; }
+  .badge.ok { color: var(--ok); background: var(--ok-soft); border-color: #b9d9c5; }
+  .badge.warn { color: var(--warn); background: var(--warn-soft); border-color: #dccb9f; }
+  .badge.danger { color: var(--danger); background: var(--danger-soft); border-color: #dfbcb7; }
+  .badge.info { color: var(--info); background: var(--accent-soft); border-color: #b5d2da; }
+  .badge.neutral { color: var(--muted); background: var(--soft); }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 7px 0; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 7px 14px; border-radius: 4px; border: 1px solid #9eacb8; background: #fff; cursor: pointer; font-weight: 700; color: var(--ink); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.ghost { background: transparent; }
+  .stepper { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .step { flex: 1; min-width: 136px; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel-alt); }
+  .step[aria-current=step] { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 -3px 0 var(--accent); }
+  .step .s-num { font-weight: 900; color: var(--accent); }
+  .step .s-label { display: block; font-size: 0.84rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 560px; }
+  th, td { padding: 8px 9px; border: 1px solid var(--soft); text-align: left; vertical-align: top; }
+  th { background: var(--panel-alt); color: var(--muted); }
+  caption { text-align: left; font-weight: 800; padding: 5px 0; }
+  .mono { font-family: var(--mono); }
+  .token-field { display: flex; flex-wrap: wrap; gap: 6px; padding: 7px; border: 1px solid #9eacb8; border-radius: 4px; }
+  .token { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-soft); border: 1px solid #b5d2da; border-radius: 4px; padding: 3px 6px 3px 8px; font-size: 0.84rem; }
+  .token button { border: 0; background: transparent; cursor: pointer; font-size: 1rem; line-height: 1; color: var(--info); }
+  .listbox { list-style: none; margin: 8px 0 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .listbox li { padding: 8px 11px; border-bottom: 1px solid var(--soft); cursor: pointer; }
+  .listbox li:last-child { border-bottom: 0; }
+  .listbox li[aria-selected=true] { background: var(--accent-soft); }
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal .h { text-align: center; font-weight: 800; color: var(--muted); padding: 4px 0; font-size: 0.8rem; }
+  .cal button { min-height: 52px; border: 1px solid var(--line); border-radius: 4px; background: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .cal button[aria-selected=true] { border-color: var(--accent); background: var(--accent-soft); }
+  .cal button[disabled] { background: var(--soft); color: #8995a0; cursor: not-allowed; }
+  .cal .av { font-size: 0.66rem; color: var(--muted); }
+  .tablist { display: flex; gap: 3px; border-bottom: 2px solid var(--line); margin-bottom: 10px; flex-wrap: wrap; }
+  .tab { border: 1px solid transparent; background: transparent; padding: 8px 12px; cursor: pointer; font-weight: 700; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -2px; }
+  .tab[aria-selected=true] { color: var(--accent); border-color: var(--line); border-bottom-color: var(--accent); background:#fff; }
+  .acc { border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 7px; overflow: hidden; }
+  .acc-trigger { width: 100%; text-align: left; background: var(--panel-alt); border: 0; padding: 10px 12px; cursor: pointer; font-weight: 700; display: flex; justify-content: space-between; gap: 10px; }
+  .acc-body { padding: 10px 12px; }
+  .ellipsized { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: bottom; }
+  .kpi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px; }
+  .kpi .card { border: 1px solid var(--line); border-radius: var(--radius); padding: 10px; background: var(--panel-alt); }
+  .kpi .k-val { font-size: 1.25rem; font-weight: 900; }
+  .kpi .k-lab { color: var(--muted); font-size: 0.82rem; }
+  .bar { min-height: 12px; border-radius: 4px; background: var(--accent); }
+  .bartrack { background: var(--soft); border-radius: 4px; overflow: hidden; }
+  .result-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; margin-bottom: 8px; cursor: pointer; }
+  .result-card[aria-selected=true] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft) inset; }
+  fieldset { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; margin: 0 0 12px; }
+  legend { font-weight: 800; padding: 0 6px; }
+  @media (max-width: 920px) { .layout-grid-two, .layout-grid-three, .split-layout, .kpi { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <header class="page-hero">
+    <p class="page-kicker">Demo für Inhaltsextraktion &amp; Internationalisierung</p>
+    <h1>Seite 11 - Internationalisierung (Deutschland)</h1>
+    <p>Diese Seite enthält 20 realistische lokalisierte UI-Beispiele zum Testen von Formularen, Validierung, Layout, Barrierefreiheit, Gebietsschemaformatierung, Interaktion und Extraktionsverhalten. Alle Daten sind fiktiv. Währung wird in Euro angezeigt, Datumswerte folgen deutschen Konventionen, und Telefonnummern nutzen deutsches Format.</p>
+  </header>
+
+  <section class="example-card" id="example-01">
+    <header class="example-header"><p class="example-kicker">Beispiel 01</p><h2>Mehrstufiger Checkout und lokaler Adressablauf</h2></header>
+    <p class="example-description">Ein vierstufiger Checkout mit deutscher Lieferadresse, Versandoptionen, einem bedingten geschäftlichen Rechnungsbereich und einer Bestellübersicht in Euro.</p>
+    <p class="test-intent">Testet deutsches Adressformat, lokalisierte Validierung, Schrittbeschriftungen, Versandoptionen, Zahlungsübersicht und Texterweiterung.</p>
+    <div class="example-surface">
+      <div class="stepper" role="list" aria-label="Checkout-Schritte">
+        <div class="step" role="listitem"><span class="s-num">1</span><span class="s-label">Warenkorb</span></div>
+        <div class="step" role="listitem" aria-current="step"><span class="s-num">2</span><span class="s-label">Lieferung</span></div>
+        <div class="step" role="listitem"><span class="s-num">3</span><span class="s-label">Zahlung</span></div>
+        <div class="step" role="listitem" id="ex01-review-step"><span class="s-num">4</span><span class="s-label">Prüfung</span></div>
+      </div>
+      <div class="split-layout">
+        <form>
+          <div class="header-strip field-row"><span class="field-label">Bestellnummer</span><span class="field-value mono">ORD-2026-104922</span></div>
+          <div class="form-field"><label class="req" for="ex01-name">Vollständiger Name</label><input id="ex01-name" type="text" value="Lukas Müller"></div>
+          <div class="form-field"><label class="req" for="ex01-street">Straße und Hausnummer</label><input id="ex01-street" type="text" value="Friedrichstraße 88"></div>
+          <div class="form-field"><label for="ex01-apt">Adresszusatz, Etage oder Anlieferstelle</label><input id="ex01-apt" type="text" value="Aufgang B, 4. OG"></div>
+          <div class="layout-grid-three">
+            <div class="form-field"><label class="req" for="ex01-city">Ort</label><input id="ex01-city" type="text" value="Berlin"></div>
+            <div class="form-field"><label class="req" for="ex01-state">Bundesland</label>
+              <select id="ex01-state"><option selected>Berlin</option><option>Bayern</option><option>Hamburg</option><option>Nordrhein-Westfalen</option></select></div>
+            <div class="form-field"><label class="req" for="ex01-zip">PLZ</label><input id="ex01-zip" type="text" inputmode="numeric" value="10117"></div>
+          </div>
+          <div class="form-field"><label class="req" for="ex01-phone">Telefonnummer</label><input id="ex01-phone" type="tel" value="+49 30 1234567"><p class="help-text">Format: +49 30 1234567</p></div>
+          <div class="form-field"><label for="ex01-method">Versandart</label>
+            <select id="ex01-method"><option selected>Standardversand (2-4 Werktage)</option><option>Expressversand (2 Werktage)</option><option>Über Nacht</option></select></div>
+          <div class="form-field"><label for="ex01-instr">Lieferhinweise</label><textarea id="ex01-instr" data-counter="ex01-count" data-max="120">Bitte beim Empfang abgeben.</textarea><p class="help-text"><span id="ex01-count">22</span>/120 Zeichen <span id="ex01-instr-err" class="error-text" hidden>Die Lieferhinweise sind zu lang.</span></p></div>
+          <fieldset>
+            <legend>Rechnungsart</legend>
+            <label><input type="radio" name="ex01-bill" checked> Privat</label>
+            <label style="margin-left:14px;"><input type="radio" name="ex01-bill" data-toggle-target="#ex01-business"> Geschäftlich</label>
+            <div id="ex01-business" hidden style="margin-top:10px;">
+              <div class="form-field"><label for="ex01-company">Firmenname</label><input id="ex01-company" type="text" placeholder="Atlas Produktstudio GmbH"></div>
+              <div class="form-field"><label for="ex01-taxid">USt-IdNr. (Demo)</label><input id="ex01-taxid" type="text" placeholder="DE123456789"></div>
+            </div>
+          </fieldset>
+          <p><button class="btn primary" type="button" data-status="ex01-status" data-status-msg="Prüfschritt ausgewählt.">Weiter zur Prüfung</button> <span id="ex01-status" class="help-text" role="status"></span></p>
+        </form>
+        <aside class="summary-panel" aria-label="Bestellübersicht">
+          <p class="panel-title">Bestellübersicht</p>
+          <div class="field-row"><span class="field-label">Artikel</span><span class="field-value">3</span></div>
+          <div class="field-row"><span class="field-label">Zwischensumme Waren</span><span class="field-value">153,00 €</span></div>
+          <div class="field-row"><span class="field-label">Versandkosten</span><span class="field-value">8,95 €</span></div>
+          <div class="field-row"><span class="field-label">MwSt.</span><span class="field-value">30,78 €</span></div>
+          <div class="field-row"><span class="field-label">Rabatt</span><span class="field-value">-15,30 €</span></div>
+          <div class="field-row"><span class="field-label">Bestellsumme</span><span class="field-value">177,43 €</span></div>
+          <div class="field-row"><span class="field-label">Voraussichtliche Lieferung</span><span class="field-value">8. Juni 2026</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-02">
+    <header class="example-header"><p class="example-kicker">Beispiel 02</p><h2>Kontaktprofil mit Namens- und Telefonfeldern</h2></header>
+    <p class="example-description">Ein Kontaktformular für ein Konto mit Vor- und Nachnamen, bevorzugtem Anzeigenamen, E-Mail, Mobiltelefon und Zeitzone, gespiegelt in einer Live-Profilübersicht.</p>
+    <p class="test-intent">Testet Namensreihenfolge, Telefonformatierung, Platzhalter, Hilfetexte, Zeichenzähler für den Anzeigenamen und Validierung.</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <form>
+          <div class="layout-grid-two">
+            <div class="form-field"><label class="req" for="ex02-given">Vorname</label><input id="ex02-given" type="text" value="Anna"></div>
+            <div class="form-field"><label class="req" for="ex02-family">Nachname</label><input id="ex02-family" type="text" value="Schmidt"></div>
+          </div>
+          <div class="form-field"><label for="ex02-pref">Anzeigename</label><input id="ex02-pref" type="text" value="Anna" data-counter="ex02-count" data-max="40"><p class="help-text">Für Teammitglieder sichtbar. <span id="ex02-count">4</span>/40</p></div>
+          <div class="form-field"><label class="req" for="ex02-email">E-Mail</label><input id="ex02-email" type="email" value="maya.chen@example.test"><p class="help-text">Hierhin senden wir Belege und Sicherheitsmeldungen.</p></div>
+          <div class="form-field"><label class="req" for="ex02-phone">Mobiltelefon</label><input id="ex02-phone" type="tel" value="+49 89 7654321"><p class="help-text">Format: +49 89 7654321</p></div>
+          <div class="form-field"><label for="ex02-tz">Zeitzone</label>
+            <select id="ex02-tz"><option selected>Mitteleuropäische Zeit (Deutschland)</option><option>Westeuropäische Zeit</option><option>Osteuropäische Zeit</option><option>Koordinierte Weltzeit</option></select></div>
+        </form>
+        <aside class="summary-panel" aria-label="Profilübersicht">
+          <p class="panel-title">Profilübersicht</p>
+          <div class="field-row"><span class="field-label">Name</span><span class="field-value">Anna Schmidt</span></div>
+          <div class="field-row"><span class="field-label">Anzeigename</span><span class="field-value">Anna</span></div>
+          <div class="field-row"><span class="field-label">E-Mail</span><span class="field-value">maya.chen@example.test</span></div>
+          <div class="field-row"><span class="field-label">Mobil</span><span class="field-value">+49 89 7654321</span></div>
+          <div class="field-row"><span class="field-label">Zeitzone</span><span class="field-value">MEZ</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-03">
+    <header class="example-header"><p class="example-kicker">Beispiel 03</p><h2>Buchungsablauf mit abhängigen Auswahllisten</h2></header>
+    <p class="example-description">Eine Terminbuchung für Liefer- und Servicedienstleistungen, bei der die Standortliste von der gewählten Leistung und die Zeitliste vom Standort abhängt, mit Live-Verfügbarkeit und Zusammenfassung.</p>
+    <p class="test-intent">Testet abhängige Dropdowns, deutsches Datum und 24-Stunden-Zeit, benutzerdefinierte Auswahllisten, Verfügbarkeitsmeldungen und dynamische Kapazitätsvalidierung.</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <form>
+          <div class="form-field"><label for="ex03-service">Leistungskategorie</label>
+            <select id="ex03-service"><option value="install" selected>Geräteinstallation</option><option value="repair">Vor-Ort-Reparatur</option><option value="pickup">Abholung von Spenden</option></select></div>
+          <div class="form-field"><label for="ex03-loc">Servicestandort</label><select id="ex03-loc"></select></div>
+          <div class="form-field"><label for="ex03-date">Datum</label><input id="ex03-date" type="date" value="2026-06-11"></div>
+          <div class="form-field"><label for="ex03-time">Zeitfenster</label><select id="ex03-time"></select></div>
+          <div class="form-field"><label for="ex03-party">Benötigte Teamgröße</label><input id="ex03-party" type="number" min="1" max="4" value="2"><p id="ex03-warn" class="error-text" hidden>Dieser Standort unterstützt maximal 4 Personen im Team.</p></div>
+          <div class="form-field"><label for="ex03-req">Besondere Wünsche</label><textarea id="ex03-req">Türcode ist 4821.</textarea></div>
+          <p id="ex03-avail" class="badge ok" role="status">12 Termine verfügbar</p>
+        </form>
+        <aside class="summary-panel" aria-label="Buchungsübersicht">
+          <p class="panel-title">Buchungsübersicht</p>
+          <div class="field-row"><span class="field-label">Leistung</span><span class="field-value" id="ex03-s-service">Geräteinstallation</span></div>
+          <div class="field-row"><span class="field-label">Standort</span><span class="field-value" id="ex03-s-loc">-</span></div>
+          <div class="field-row"><span class="field-label">Datum</span><span class="field-value">11. Juni 2026</span></div>
+          <div class="field-row"><span class="field-label">Uhrzeit</span><span class="field-value" id="ex03-s-time">-</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-04">
+    <header class="example-header"><p class="example-kicker">Beispiel 04</p><h2>Validierungsintensives Formular mit Fehlerübersicht</h2></header>
+    <p class="example-description">Ein Kontoantrag mit barrierefreier Fehlerübersicht, die auf vier ungültige Felder verweist, dazu Inline-Fehler und Pflichtfeldmarkierungen.</p>
+    <p class="test-intent">Testet Fehlermeldungen, Pflichtfeldmarkierungen, aria-invalid, aria-describedby, Links in der Fehlerübersicht und übersetzte Validierungstexte.</p>
+    <div class="example-surface">
+      <div class="error-summary" role="alert" aria-labelledby="ex04-err-h">
+        <h3 id="ex04-err-h">Dieses Formular enthält 4 Probleme</h3>
+        <ul>
+          <li><a href="#ex04-org">Geben Sie den Namen Ihrer Organisation ein</a></li>
+          <li><a href="#ex04-phone">Geben Sie eine gültige Telefonnummer ein</a></li>
+          <li><a href="#ex04-zip">Geben Sie eine gültige fünfstellige PLZ ein</a></li>
+          <li><a href="#ex04-consent">Sie müssen die Bedingungen akzeptieren, um fortzufahren</a></li>
+        </ul>
+      </div>
+      <form>
+        <fieldset><legend>Antragsteller</legend>
+          <div class="form-field"><label class="req" for="ex04-name">Vollständiger Name</label><input id="ex04-name" type="text" value="Felix Wagner"></div>
+          <div class="form-field"><label class="req" for="ex04-org">Organisation</label><input id="ex04-org" type="text" aria-invalid="true" aria-describedby="ex04-org-e"><p id="ex04-org-e" class="error-text">Geben Sie den Namen Ihrer Organisation ein.</p></div>
+        </fieldset>
+        <fieldset><legend>Kontakt</legend>
+          <div class="form-field"><label class="req" for="ex04-phone">Telefonnummer</label><input id="ex04-phone" type="tel" value="030-12" aria-invalid="true" aria-describedby="ex04-phone-e"><p id="ex04-phone-e" class="error-text">Geben Sie eine gültige deutsche Telefonnummer ein, z. B. +49 30 1234567.</p></div>
+          <div class="form-field"><label class="req" for="ex04-zip">PLZ</label><input id="ex04-zip" type="text" value="1011" aria-invalid="true" aria-describedby="ex04-zip-e"><p id="ex04-zip-e" class="error-text">Die PLZ muss genau 5 Ziffern enthalten.</p></div>
+          <div class="form-field"><label for="ex04-date">Startdatum</label><input id="ex04-date" type="date" value="2026-12-31" aria-describedby="ex04-date-e"><p id="ex04-date-e" class="help-text">Wählen Sie ein Datum innerhalb der nächsten 90 Tage.</p></div>
+        </fieldset>
+        <fieldset><legend>Vereinbarung</legend>
+          <label><input id="ex04-consent" type="checkbox" aria-invalid="true" aria-describedby="ex04-consent-e"> Ich akzeptiere die Nutzungsbedingungen und die Datenschutzerklärung.</label>
+          <p id="ex04-consent-e" class="error-text">Sie müssen die Bedingungen akzeptieren, um fortzufahren.</p>
+        </fieldset>
+      </form>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-05">
+    <header class="example-header"><p class="example-kicker">Beispiel 05</p><h2>Benutzerdefinierte Combobox mit Suchvorschlägen</h2></header>
+    <p class="example-description">Eine Combobox für Zielorte mit abgesetzter Listbox lokalisierter Vorschläge, jeweils mit Zusatztext und Flughafencode sowie verborgenem Übermittlungswert.</p>
+    <p class="test-intent">Testet Suchzeichenfolgen, ausgewählten Optionstext, ARIA-Beziehungen der Combobox, ausgelagertes Listbox-DOM und verborgene Übermittlungswerte.</p>
+    <div class="example-surface">
+      <div class="form-field" style="max-width:420px;">
+        <label id="ex05-lbl" for="ex05-input">Zielort</label>
+        <input id="ex05-input" role="combobox" aria-expanded="true" aria-controls="ex05-list" aria-activedescendant="ex05-opt1" aria-labelledby="ex05-lbl" value="Berlin">
+        <input type="hidden" name="destination_code" value="BER">
+      </div>
+      <ul class="listbox" id="ex05-list" role="listbox" aria-label="Stadtvorschläge">
+        <li id="ex05-opt1" role="option" aria-selected="true"><strong>Berlin</strong> &middot; Deutschland <span class="badge neutral mono">BER</span><br><span class="help-text">Internationaler Flughafen, ca. 28 km vom Zentrum</span></li>
+        <li id="ex05-opt2" role="option" aria-selected="false"><strong>München</strong> &middot; Deutschland <span class="badge neutral mono">MUC</span><br><span class="help-text">Bayerischer Drehpunkt mit vielen Direktverbindungen</span></li>
+        <li id="ex05-opt3" role="option" aria-selected="false"><strong>Hamburg</strong> &middot; Deutschland <span class="badge neutral mono">HAM</span><br><span class="help-text">Norddeutscher Knotenpunkt mit Regionalverbindungen</span></li>
+        <li id="ex05-opt4" role="option" aria-selected="false"><strong>Köln</strong> &middot; Deutschland <span class="badge neutral mono">CGN</span><br><span class="help-text">Rheinischer Flughafen mit Kurzstrecken</span></li>
+        <li id="ex05-opt5" role="option" aria-selected="false"><strong>Frankfurt</strong> &middot; Deutschland <span class="badge neutral mono">FRA</span><br><span class="help-text">Finanzmetropole mit internationalem Drehkreuz</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-06">
+    <header class="example-header"><p class="example-kicker">Beispiel 06</p><h2>Terminkalender und Zeitfensterauswahl</h2></header>
+    <p class="example-description">Ein Terminkalender für Juni 2026 mit deutscher Wochenreihenfolge, ausgewähltem Datum, nicht verfügbaren Tagen und 24-Stunden-Zeitfenstern.</p>
+    <p class="test-intent">Testet Wochentagsnamen, deutsches Datumsformat, ausgewählte und deaktivierte Datumzustände, barrierefreie Datumsbeschriftungen und 24-Stunden-Zeiten.</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <div>
+          <div class="field-row"><span class="field-label">Behandlerin</span><span class="field-value">Dr. Sophie Becker</span></div>
+          <div class="field-row" style="margin-bottom:8px;"><span class="field-label">Monat</span><span class="field-value">Juni 2026</span></div>
+          <div class="cal" role="grid" aria-label="Verfügbarkeit im Juni 2026">
+            <div class="h">Mo</div><div class="h">Di</div><div class="h">Mi</div><div class="h">Do</div><div class="h">Fr</div><div class="h">Sa</div><div class="h">So</div>
+            <button aria-label="8. Juni 2026, 3 Termine verfügbar">8<span class="av">3 frei</span></button>
+            <button disabled aria-label="9. Juni 2026, keine Termine">9<span class="av">Ausgebucht</span></button>
+            <button aria-label="10. Juni 2026, 1 Termin verfügbar">10<span class="av">1 frei</span></button>
+            <button aria-selected="true" aria-label="11. Juni 2026, ausgewählt, 2 Termine verfügbar">11<span class="av">2 frei</span></button>
+            <button aria-label="12. Juni 2026, 4 Termine verfügbar">12<span class="av">4 frei</span></button>
+            <button disabled aria-label="13. Juni 2026, keine Termine">13<span class="av">Ausgebucht</span></button>
+            <button disabled aria-label="14. Juni 2026, keine Termine">14<span class="av">Ausgebucht</span></button>
+          </div>
+        </div>
+        <aside class="summary-panel" aria-label="Zeitfenster">
+          <p class="panel-title">11. Juni 2026</p>
+          <div class="chip-row">
+            <button class="chip" aria-pressed="true">14:30</button>
+            <button class="chip">15:15</button>
+            <button class="chip">16:00</button>
+            <button class="chip" disabled aria-label="17:00, ausgebucht">17:00</button>
+          </div>
+          <div class="field-row"><span class="field-label">Ausgewählte Uhrzeit</span><span class="field-value">14:30</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-07">
+    <header class="example-header"><p class="example-kicker">Beispiel 07</p><h2>Schreibgeschützte Bestellbestätigung</h2></header>
+    <p class="example-description">Eine schreibgeschützte Bestellbestätigung mit Statuskennzeichnung, verschachtelten Positionen, maskierter Kartenendung und Stornierungshinweis.</p>
+    <p class="test-intent">Testet schreibgeschützte Datensätze, Bestätigungsnummern, Euro-Währung, deutsche Datumswerte, Statuskennzeichnungen, verschachtelte Positionen und maskierte Werte.</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <div class="panel">
+          <div class="field-row"><span class="field-label">Bestätigungsnummer</span><span class="field-value mono">CNF-2026-77120</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Bestätigt</span></span></div>
+          <div class="field-row"><span class="field-label">Aufgegeben</span><span class="field-value">31.05.2026, 10:42 Uhr MEZ</span></div>
+          <div class="field-row"><span class="field-label">Kunde</span><span class="field-value">Lena Fischer</span></div>
+          <div class="field-row"><span class="field-label">Lieferadresse</span><span class="field-value">Unter den Linden 42, 10117 Berlin</span></div>
+          <div class="field-row"><span class="field-label">Zahlung</span><span class="field-value mono">Visa endet auf 4242</span></div>
+          <p class="panel-title" style="margin-top:14px;">Positionen</p>
+          <div class="field-row"><span class="field-label">Merino-Reisehoodie x1</span><span class="field-value">128,00 €</span></div>
+          <div class="field-row"><span class="field-label">Canvas-Organizer-Tasche x1</span><span class="field-value">32,00 €</span></div>
+          <div class="field-row"><span class="field-label">Zwischensumme</span><span class="field-value">160,00 €</span></div>
+          <div class="field-row"><span class="field-label">MwSt.</span><span class="field-value">30,40 €</span></div>
+          <div class="field-row"><span class="field-label">Gesamtbetrag</span><span class="field-value">190,40 €</span></div>
+        </div>
+        <aside class="detail-panel">
+          <p class="help-text">Kostenfreie Stornierung bis 02.06.2026, 23:59 Uhr MEZ. Danach nur noch Guthaben.</p>
+          <p><button class="btn">Beleg herunterladen</button></p>
+          <p><button class="btn ghost">Referenz kopieren</button></p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-08">
+    <header class="example-header"><p class="example-kicker">Beispiel 08</p><h2>Konfiguration für Abrechnungs- und Steuerexport</h2></header>
+    <p class="example-description">Ein Formular für den Abrechnungsexport mit Datumsbereich, MwSt.-Modus, CSV-Format und Codierung, Empfänger-E-Mail, Kontrollkästchen für Spalten und automatischer Ausführung.</p>
+    <p class="test-intent">Testet Steuerfelder, Kontrollkästchen, Auswahl von Exportfeldern, Datumsbereiche, deutsche Steuerbezeichnungen sowie Zahlen- und Währungsformatierung.</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <form>
+          <div class="form-field"><label for="ex08-name">Exportname</label><input id="ex08-name" type="text" value="MwSt.-Export Mai 2026"></div>
+          <div class="layout-grid-two">
+            <div class="form-field"><label for="ex08-from">Von</label><input id="ex08-from" type="date" value="2026-05-01"></div>
+            <div class="form-field"><label for="ex08-to">Bis</label><input id="ex08-to" type="date" value="2026-05-31"></div>
+          </div>
+          <div class="layout-grid-two">
+            <div class="form-field"><label for="ex08-tax">MwSt.-Modus</label><select id="ex08-tax"><option selected>Positionen inkl. MwSt.</option><option>MwSt. als eigene Zeile</option></select></div>
+            <div class="form-field"><label for="ex08-format">Format</label><select id="ex08-format"><option selected>CSV (UTF-8)</option><option>CSV (UTF-8 mit BOM)</option><option>XLSX</option></select></div>
+          </div>
+          <div class="form-field"><label for="ex08-email">Empfänger-E-Mail</label><input id="ex08-email" type="email" value="billing@example.test"></div>
+          <fieldset><legend>Enthaltene Spalten</legend>
+            <label><input type="checkbox" checked> Rechnungsnummer</label><br>
+            <label><input type="checkbox" checked> MwSt.</label><br>
+            <label><input type="checkbox" checked> Zahlungsreferenz</label><br>
+            <label><input type="checkbox"> Kundenname</label><br>
+            <label><input type="checkbox"> Rabattbetrag</label><br>
+            <label><input type="checkbox"> Währung</label>
+          </fieldset>
+          <label><input type="checkbox" checked> Diesen Export monatlich automatisch ausführen</label>
+        </form>
+        <aside class="summary-panel" aria-label="Exportvorschau">
+          <p class="panel-title">Vorschau</p>
+          <div class="field-row"><span class="field-label">Zeitraum</span><span class="field-value">01.05.2026 - 31.05.2026</span></div>
+          <div class="field-row"><span class="field-label">Format</span><span class="field-value">CSV (UTF-8)</span></div>
+          <div class="field-row"><span class="field-label">Spalten</span><span class="field-value">3 ausgewählt</span></div>
+          <div class="field-row"><span class="field-label">Zeitplan</span><span class="field-value">Monatlich</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-09">
+    <header class="example-header"><p class="example-kicker">Beispiel 09</p><h2>Administrator-Berechtigungsmatrix</h2></header>
+    <p class="example-description">Eine Berechtigungsmatrix mit vier Rollenspalten, gruppierten Berechtigungszeilen, aktivierten/deaktivierten/gesperrten Zuständen und Detailbereich für die ausgewählte Berechtigung.</p>
+    <p class="test-intent">Testet Tabellenüberschriften, Rollennamen, Berechtigungsnamen, aktivierte und gesperrte Zustände, Gruppenbeschriftungen und barrierefreie Labels.</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <div class="wide-scroll">
+          <table>
+            <thead><tr><th>Berechtigung</th><th>Administrator</th><th>Abrechnungsmanager</th><th>Redakteur</th><th>Betrachter</th></tr></thead>
+            <tbody>
+              <tr><th scope="rowgroup" colspan="5" style="background:var(--accent-soft);">Abrechnung</th></tr>
+              <tr><th scope="row">Rechnungen anzeigen</th><td><input type="checkbox" checked aria-label="Rechnungen anzeigen, Administrator"></td><td><input type="checkbox" checked aria-label="Rechnungen anzeigen, Abrechnungsmanager"></td><td><input type="checkbox" aria-label="Rechnungen anzeigen, Redakteur"></td><td><input type="checkbox" aria-label="Rechnungen anzeigen, Betrachter"></td></tr>
+              <tr><th scope="row">Zahlungsart ändern</th><td><input type="checkbox" checked aria-label="Zahlungsart ändern, Administrator"></td><td><input type="checkbox" checked aria-label="Zahlungsart ändern, Abrechnungsmanager"></td><td><input type="checkbox" aria-label="Zahlungsart ändern, Redakteur"></td><td><input type="checkbox" disabled aria-label="Zahlungsart ändern, Betrachter, deaktiviert"></td></tr>
+              <tr><th scope="rowgroup" colspan="5" style="background:var(--accent-soft);">Benutzerverwaltung</th></tr>
+              <tr><th scope="row">Benutzer einladen</th><td><input type="checkbox" checked aria-label="Benutzer einladen, Administrator"></td><td><input type="checkbox" aria-label="Benutzer einladen, Abrechnungsmanager"></td><td><input type="checkbox" aria-label="Benutzer einladen, Redakteur"></td><td><input type="checkbox" aria-label="Benutzer einladen, Betrachter"></td></tr>
+              <tr><th scope="row">Benutzer entfernen</th><td><input type="checkbox" checked aria-label="Benutzer entfernen, Administrator"></td><td><input type="checkbox" aria-label="Benutzer entfernen, Abrechnungsmanager"></td><td><input type="checkbox" aria-label="Benutzer entfernen, Redakteur"></td><td><input type="checkbox" disabled aria-label="Benutzer entfernen, Betrachter, deaktiviert"></td></tr>
+              <tr><th scope="rowgroup" colspan="5" style="background:var(--accent-soft);">Sicherheit</th></tr>
+              <tr><th scope="row">SSO verwalten</th><td><input type="checkbox" checked aria-label="SSO verwalten, Administrator"></td><td><input type="checkbox" aria-label="SSO verwalten, Abrechnungsmanager"></td><td><input type="checkbox" aria-label="SSO verwalten, Redakteur"></td><td><input type="checkbox" disabled aria-label="SSO verwalten, Betrachter, deaktiviert"></td></tr>
+              <tr><th scope="row">Auditprotokoll anzeigen</th><td><input type="checkbox" checked aria-label="Auditprotokoll anzeigen, Administrator"></td><td><input type="checkbox" checked aria-label="Auditprotokoll anzeigen, Abrechnungsmanager"></td><td><input type="checkbox" checked aria-label="Auditprotokoll anzeigen, Redakteur"></td><td><input type="checkbox" aria-label="Auditprotokoll anzeigen, Betrachter"></td></tr>
+              <tr><th scope="rowgroup" colspan="5" style="background:var(--accent-soft);">Berichte</th></tr>
+              <tr><th scope="row">Berichte exportieren</th><td><input type="checkbox" checked aria-label="Berichte exportieren, Administrator"></td><td><input type="checkbox" checked aria-label="Berichte exportieren, Abrechnungsmanager"></td><td><input type="checkbox" aria-label="Berichte exportieren, Redakteur"></td><td><input type="checkbox" aria-label="Berichte exportieren, Betrachter"></td></tr>
+              <tr><th scope="row">Berichte planen</th><td><input type="checkbox" checked aria-label="Berichte planen, Administrator"></td><td><input type="checkbox" aria-label="Berichte planen, Abrechnungsmanager"></td><td><input type="checkbox" aria-label="Berichte planen, Redakteur"></td><td><input type="checkbox" disabled aria-label="Berichte planen, Betrachter, deaktiviert"></td></tr>
+              <tr><th scope="row">Berichte löschen</th><td><input type="checkbox" checked aria-label="Berichte löschen, Administrator"></td><td><input type="checkbox" aria-label="Berichte löschen, Abrechnungsmanager"></td><td><input type="checkbox" aria-label="Berichte löschen, Redakteur"></td><td><input type="checkbox" disabled aria-label="Berichte löschen, Betrachter, deaktiviert"></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <aside class="detail-panel">
+          <p class="panel-title">Ausgewählte Berechtigung</p>
+          <div class="field-row"><span class="field-label">Berechtigung</span><span class="field-value">Zahlungsart ändern</span></div>
+          <div class="field-row"><span class="field-label">Gruppe</span><span class="field-value">Abrechnung</span></div>
+          <div class="field-block"><span class="field-label">Beschreibung</span>Erlaubt das Ändern der Standardzahlungsart für Verlängerungen und Rechnungen.</div>
+          <div class="field-row"><span class="field-label">Risikostufe</span><span class="field-value"><span class="badge danger">Hoch</span></span></div>
+          <div class="field-block"><span class="field-label">Empfohlene Rollen</span>Administrator, Abrechnungsmanager</div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-10">
+    <header class="example-header"><p class="example-kicker">Beispiel 10</p><h2>Suchergebnisse mit Filtern und Detailseitenleiste</h2></header>
+    <p class="example-description">Eine Stellensuche mit aktiven Filterchips, Filterseitenleiste, fünf Ergebnis-Karten und Detailseitenleiste für das ausgewählte Ergebnis.</p>
+    <p class="test-intent">Testet Suchabfrage, Filter, Sortiersteuerung, Ergebnis-Karten, wiederholte Labels, ausgewählten Datensatzstatus und Kontext der Seitenleiste.</p>
+    <div class="example-surface">
+      <div class="header-strip field-row"><span class="field-label">Abfrage</span><span class="field-value">Frontend-Entwickler &middot; 24 Ergebnisse &middot; Sortiert nach: Beste Übereinstimmung</span></div>
+      <div class="chip-row"><span class="chip">Remote</span><span class="chip">Vollzeit</span><span class="chip">Diese Woche veröffentlicht</span></div>
+      <div class="layout-grid-three" style="grid-template-columns:200px 1fr 280px;">
+        <aside class="panel" aria-label="Filter">
+          <p class="panel-title">Filter</p>
+          <p><strong>Standort</strong><br><label><input type="checkbox" checked> Remote (18)</label><br><label><input type="checkbox"> Berlin (4)</label></p>
+          <p><strong>Art</strong><br><label><input type="checkbox" checked> Vollzeit (20)</label><br><label><input type="checkbox"> Freiberuflich (4)</label></p>
+          <p><strong>Stufe</strong><br><label><input type="checkbox"> Senior (12)</label><br><label><input type="checkbox"> Principal (6)</label></p>
+        </aside>
+        <div>
+          <div class="result-card" data-result="ex10" aria-selected="true"><strong>Senior Frontend-Entwickler</strong> <span class="badge ok">Offen</span><br>Nordstern Cloud GmbH &middot; Remote - DE &middot; Veröffentlicht am 30.05.2026<br><span class="help-text">85.000 €-105.000 € &middot; React, TypeScript</span><br><a href="/demo/jobs/1842">Stelle ansehen</a></div>
+          <div class="result-card" data-result="ex10" aria-selected="false"><strong>Frontend-Plattformentwickler</strong> <span class="badge ok">Offen</span><br>Atlas Produktstudio GmbH &middot; München oder remote &middot; Veröffentlicht am 29.05.2026<br><span class="help-text">78.000 €-98.000 € &middot; Designsysteme</span></div>
+          <div class="result-card" data-result="ex10" aria-selected="false"><strong>Principal UI-Entwickler</strong> <span class="badge warn">Bald geschlossen</span><br>Civic Data Lab &middot; Köln &middot; Veröffentlicht am 22.05.2026<br><span class="help-text">92.000 €-112.000 € &middot; Barrierefreiheit</span></div>
+          <div class="result-card" data-result="ex10" aria-selected="false"><strong>Frontend-Entwickler Suche</strong> <span class="badge ok">Offen</span><br>QueryWorks &middot; Remote - DE &middot; Veröffentlicht am 27.05.2026<br><span class="help-text">74.000 €-88.000 € &middot; Such-UX</span></div>
+          <div class="result-card" data-result="ex10" aria-selected="false"><strong>Senior JavaScript-Entwickler</strong> <span class="badge ok">Offen</span><br>Widget Lab Demo &middot; Remote - DE/AT &middot; Veröffentlicht am 26.05.2026<br><span class="help-text">80.000 €-101.000 € &middot; Browser-Erweiterungen</span></div>
+        </div>
+        <aside class="detail-panel">
+          <p class="panel-title">Ausgewählte Stelle</p>
+          <div class="field-row"><span class="field-label">Titel</span><span class="field-value">Senior Frontend-Entwickler</span></div>
+          <div class="field-row"><span class="field-label">Unternehmen</span><span class="field-value">Nordstern Cloud GmbH</span></div>
+          <div class="field-row"><span class="field-label">Standort</span><span class="field-value">Remote - DE</span></div>
+          <div class="field-row"><span class="field-label">Gehalt</span><span class="field-value">85.000 €-105.000 €</span></div>
+          <div class="field-row"><span class="field-label">Veröffentlicht</span><span class="field-value">30.05.2026</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Offen</span></span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-11">
+    <header class="example-header"><p class="example-kicker">Beispiel 11</p><h2>Service-Vergleichskarten</h2></header>
+    <p class="example-description">Drei Abonnementtarife werden nebeneinander mit wiederholten Preis-/Status-/Hinweislabels, empfohlener Option und gemeinsamem Kriterienbereich verglichen.</p>
+    <p class="test-intent">Testet wiederholte Labels über Vergleichsspalten, Euro-Währung, Statusmarken und visuelle Gruppierung.</p>
+    <div class="example-surface">
+      <div class="layout-grid-three">
+        <div class="panel"><p class="panel-title">Einstieg</p>
+          <div class="field-row"><span class="field-label">Preis</span><span class="field-value">1.188 €/Jahr</span></div>
+          <div class="field-row"><span class="field-label">Plätze</span><span class="field-value">Bis zu 5</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Verfügbar</span></span></div>
+          <div class="field-block"><span class="field-label">Hinweise</span>E-Mail-Support, einfache Exporte.</div>
+        </div>
+        <div class="panel" style="border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft) inset;"><p class="panel-title">Geschäftlich <span class="badge info">Empfohlen</span></p>
+          <div class="field-row"><span class="field-label">Preis</span><span class="field-value">5.760 €/Jahr</span></div>
+          <div class="field-row"><span class="field-label">Plätze</span><span class="field-value">24 enthalten</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Verfügbar</span></span></div>
+          <div class="field-block"><span class="field-label">Hinweise</span>Priorisierter Support, SSO, Auditprotokoll.</div>
+        </div>
+        <div class="panel"><p class="panel-title">Unternehmen</p>
+          <div class="field-row"><span class="field-label">Preis</span><span class="field-value">Individuelles Angebot</span></div>
+          <div class="field-row"><span class="field-label">Plätze</span><span class="field-value">Unbegrenzt</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warn">Vertrieb kontaktieren</span></span></div>
+          <div class="field-block"><span class="field-label">Hinweise</span>Eigene Betreuung, individuelles SLA.</div>
+        </div>
+      </div>
+      <div class="summary-panel" style="margin-top:12px;"><p class="panel-title">Gemeinsame Kriterien</p><div class="field-row"><span class="field-label">Abrechnung</span><span class="field-value">Jährlich, EUR</span></div><div class="field-row"><span class="field-label">Empfohlen</span><span class="field-value">Geschäftlich</span></div></div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-12">
+    <header class="example-header"><p class="example-kicker">Beispiel 12</p><h2>Aufnahmeformular für die Praxis</h2></header>
+    <p class="example-description">Ein Aufnahmeformular für eine Praxis mit gruppierten Feldsets für Patienteninformationen, Kontakt, Besuchsdetails und Einwilligung, einschließlich bedingtem Nachsorgefeld.</p>
+    <p class="test-intent">Testet lange Labels, Layout für sensible Formulare, fiktive Kennungen, bedingte Fragen, Einwilligung, Validierung und gruppierte Feldsets.</p>
+    <div class="example-surface">
+      <form>
+        <fieldset><legend>Patienteninformationen</legend>
+          <div class="layout-grid-two">
+            <div class="form-field"><label class="req" for="ex12-name">Vollständiger Name der Patientin</label><input id="ex12-name" type="text" value="Jonas Weber"></div>
+            <div class="form-field"><label for="ex12-dob">Geburtsdatum</label><input id="ex12-dob" type="date" value="1990-04-12"></div>
+          </div>
+          <div class="form-field"><label for="ex12-mrn">Patientennummer (Demo)</label><input id="ex12-mrn" type="text" value="MRN-DEMO-55109" readonly></div>
+        </fieldset>
+        <fieldset><legend>Besuchsdetails</legend>
+          <div class="form-field"><label for="ex12-reason">Besuchsgrund</label><select id="ex12-reason"><option selected>Kontrolle</option><option>Neues Symptom</option><option>Vorsorgeuntersuchung</option></select></div>
+          <label><input type="checkbox" data-toggle-target="#ex12-followup"> Dies ist eine Kontrolle zu einem früheren Besuch</label>
+          <div id="ex12-followup" hidden class="form-field" style="margin-top:8px;"><label for="ex12-prev">Datum des vorherigen Besuchs</label><input id="ex12-prev" type="date"></div>
+          <p class="help-text">Bitte beschreiben Sie neue Symptome, Medikamente oder Allergien. Diese Informationen werden nur mit Ihrem Behandlungsteam geteilt und gemäß der Datenschutzrichtlinie der Praxis gespeichert.</p>
+        </fieldset>
+        <fieldset><legend>Einwilligung</legend>
+          <label><input type="checkbox" checked> Ich willige in die Behandlung und in die Weitergabe meiner Unterlagen an meine Krankenversicherung zur Abrechnung ein.</label>
+        </fieldset>
+      </form>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-13">
+    <header class="example-header"><p class="example-kicker">Beispiel 13</p><h2>Dateiupload und Dokumentenprüfung</h2></header>
+    <p class="example-description">Ein Dokumenten-Uploadbereich mit akzeptierten Dateitypen und vier Dokumentzeilen mit Status, Prüfnotizen und Aktionen je Zeile, einschließlich fehlender und abgelehnter Dokumente.</p>
+    <p class="test-intent">Testet Upload-Labels, Dokumentstatus, Dateinamen, Validierung, akzeptierte Dateitypen und Prüfnotizen.</p>
+    <div class="example-surface">
+      <div class="form-field"><label for="ex13-cat">Dokumentenkategorie</label><select id="ex13-cat"><option selected>Identitätsnachweis</option><option>Adressnachweis</option><option>Einkommensnachweis</option></select></div>
+      <p class="help-text">Akzeptierte Dateitypen: PDF, JPG, PNG. Maximal 10 MB pro Datei.</p>
+      <div class="wide-scroll"><table>
+        <thead><tr><th>Dokument</th><th>Datei</th><th>Größe</th><th>Hochgeladen</th><th>Status</th><th>Prüfnotiz</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>Personalausweis</td><td class="mono">license-front.pdf</td><td>1.2 MB</td><td>28.05.2026</td><td><span class="badge ok">Genehmigt</span></td><td>Klar und lesbar.</td><td><button class="btn ghost">Ansehen</button></td></tr>
+          <tr><td>Meldebescheinigung</td><td class="mono">pg-e-bill.pdf</td><td>0.8 MB</td><td>29.05.2026</td><td><span class="badge danger">Korrektur erforderlich</span></td><td>Datum ist älter als 90 Tage.</td><td><button class="btn ghost">Ersetzen</button></td></tr>
+          <tr><td>Gehaltsnachweis</td><td class="mono">paystub-may.png</td><td>2.1 MB</td><td>30.05.2026</td><td><span class="badge warn">In Prüfung</span></td><td>Prüfung ausstehend.</td><td><button class="btn ghost">Ansehen</button></td></tr>
+          <tr><td>Kontoauszug</td><td class="mono">-</td><td>-</td><td>-</td><td><span class="badge neutral">Fehlt</span></td><td>Noch nicht hochgeladen.</td><td><button class="btn">Hochladen</button></td></tr>
+        </tbody>
+      </table></div>
+      <p class="summary-panel" style="margin-top:12px;">Abschluss: 1 von 4 genehmigt, 1 Korrektur erforderlich, 1 in Prüfung, 1 fehlt.</p>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-14">
+    <header class="example-header"><p class="example-kicker">Beispiel 14</p><h2>Einwilligung und Kommunikationseinstellungen</h2></header>
+    <p class="example-description">Kommunikationseinstellungen mit Kanalschaltern, Radioauswahl für Zusammenfassungsfrequenz, bevorzugter Sprache, langer rechtlicher Einwilligung und einem deaktivierten Kanal.</p>
+    <p class="test-intent">Testet Einwilligungsformulierung, Opt-in-Konventionen, Kanalbeschriftungen, Ausdehnung rechtlicher Texte, Schalterzustand und barrierefreie Labels.</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <form>
+          <fieldset><legend>Kanäle</legend>
+            <div class="field-row"><span class="field-label">E-Mail-Benachrichtigungen</span><span><input type="checkbox" role="switch" checked aria-label="E-Mail-Benachrichtigungen, ein"></span></div>
+            <div class="field-row"><span class="field-label">SMS-Nachrichten</span><span><input type="checkbox" role="switch" aria-label="SMS-Nachrichten, aus"></span></div>
+            <div class="field-row"><span class="field-label">Push-Benachrichtigungen <span class="help-text">(App installieren zum Aktivieren)</span></span><span><input type="checkbox" role="switch" disabled aria-label="Push-Benachrichtigungen, deaktiviert"></span></div>
+          </fieldset>
+          <fieldset><legend>Zusammenfassungsfrequenz</legend>
+            <label><input type="radio" name="ex14-dig" checked> Täglich</label>
+            <label style="margin-left:12px;"><input type="radio" name="ex14-dig"> Wöchentlich</label>
+            <label style="margin-left:12px;"><input type="radio" name="ex14-dig"> Aus</label>
+          </fieldset>
+          <div class="form-field"><label for="ex14-lang">Bevorzugte Sprache</label><select id="ex14-lang"><option selected>Deutsch (Deutschland)</option><option>Englisch</option><option>Französisch</option></select></div>
+          <label><input type="checkbox" checked> Ich stimme zu, transaktionale Nachrichten zu meinen Bestellungen, zur Sicherheit und zu meinem Konto zu erhalten. Mir ist bekannt, dass ich Marketingeinwilligungen jederzeit in den Kontoeinstellungen widerrufen kann und dass der Widerruf wesentliche Servicenachrichten nicht betrifft.</label>
+        </form>
+        <aside class="summary-panel" aria-label="Vorschau der Einstellungen">
+          <p class="panel-title">Aktuelle Einstellungen</p>
+          <div class="field-row"><span class="field-label">E-Mail</span><span class="field-value">Ein</span></div>
+          <div class="field-row"><span class="field-label">SMS</span><span class="field-value">Aus</span></div>
+          <div class="field-row"><span class="field-label">Push</span><span class="field-value">Nicht verfügbar</span></div>
+          <div class="field-row"><span class="field-label">Zusammenfassung</span><span class="field-value">Täglich</span></div>
+          <div class="field-row"><span class="field-label">Sprache</span><span class="field-value">Deutsch (Deutschland)</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-15">
+    <header class="example-header"><p class="example-kicker">Beispiel 15</p><h2>Währung, Menge, MwSt. und Gesamtbetrag</h2></header>
+    <p class="example-description">Ein Preisrechner, bei dem Änderungen an Menge oder Rabatt Zwischensumme, MwSt. und Gesamtbetrag mit deutscher Währungsformatierung neu berechnen.</p>
+    <p class="test-intent">Testet gebietsschemabewusste Währung, Dezimal- und Tausendertrennzeichen, Steuerterminologie, numerische Eingaben, Summen und Validierung.</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <form>
+          <div class="form-field"><label for="ex15-item">Artikel</label><input id="ex15-item" type="text" value="Merino-Reisehoodie"></div>
+          <div class="layout-grid-two">
+            <div class="form-field"><label for="ex15-qty">Menge</label><input id="ex15-qty" type="number" min="1" value="3" data-calc><p id="ex15-qty-e" class="error-text" hidden>Die Menge muss mindestens 1 betragen.</p></div>
+            <div class="form-field"><label for="ex15-price">Einzelpreis (EUR)</label><input id="ex15-price" type="number" step="0.01" value="119.00" data-calc></div>
+          </div>
+          <div class="layout-grid-two">
+            <div class="form-field"><label for="ex15-disc">Rabatt (%)</label><input id="ex15-disc" type="number" min="0" max="100" value="10" data-calc></div>
+            <div class="form-field"><label for="ex15-tax">MwSt.-Satz (%)</label><input id="ex15-tax" type="number" step="0.01" value="19" data-calc></div>
+          </div>
+        </form>
+        <aside class="summary-panel" aria-label="Summen">
+          <p class="panel-title">Summen</p>
+          <div class="field-row"><span class="field-label">Zwischensumme</span><span class="field-value" id="ex15-subtotal">357,00 €</span></div>
+          <div class="field-row"><span class="field-label">Rabatt</span><span class="field-value" id="ex15-discamt">-35,70 €</span></div>
+          <div class="field-row"><span class="field-label">MwSt.</span><span class="field-value" id="ex15-taxamt">61,05 €</span></div>
+          <div class="field-row"><span class="field-label">Gesamtbetrag</span><span class="field-value" id="ex15-total">382,35 €</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-16">
+    <header class="example-header"><p class="example-kicker">Beispiel 16</p><h2>Lokalisiertes Administrations-Dashboard</h2></header>
+    <p class="example-description">Ein Administrations-Dashboard mit KPI-Karten, Werkzeugleiste, Rechnungstabelle mit deutschen Datumswerten und Eurobeträgen sowie Detailbereich für die ausgewählte Zeile.</p>
+    <p class="test-intent">Testet Tabellenüberschriften, dichte Daten, Statusbeschriftungen, deutsche Datumswerte und Zahlen, Währung, Sortiersteuerung und Details der ausgewählten Zeile.</p>
+    <div class="example-surface">
+      <div class="kpi">
+        <div class="card"><div class="k-val">84.920 €</div><div class="k-lab">Offener Saldo</div></div>
+        <div class="card"><div class="k-val">142</div><div class="k-lab">Offene Rechnungen</div></div>
+        <div class="card"><div class="k-val">3,2 %</div><div class="k-lab">Überfälligkeitsquote</div></div>
+        <div class="card"><div class="k-val">12.884 €</div><div class="k-lab">Heute eingezogen</div></div>
+      </div>
+      <div class="chip-row"><input type="search" placeholder="Rechnungen suchen" style="max-width:200px;"> <select style="max-width:160px;"><option>Alle Status</option><option>Überfällig</option></select> <select style="max-width:160px;"><option>Mai 2026</option></select></div>
+      <div class="split-layout">
+        <div class="wide-scroll"><table>
+          <thead><tr><th>Rechnung</th><th>Kunde</th><th>Zuständig</th><th>Fällig</th><th>Betrag</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr data-result="ex16" aria-selected="true"><td class="mono">INV-2026-00841</td><td>Cedar &amp; Pine Design GmbH</td><td>Lena Fischer</td><td>17.06.2026</td><td>436,14 €</td><td><span class="badge warn">Fällig</span></td></tr>
+            <tr data-result="ex16"><td class="mono">INV-2026-00842</td><td>Hafencafé</td><td>Felix Wagner</td><td>10.06.2026</td><td>1.204,00 €</td><td><span class="badge danger">Überfällig</span></td></tr>
+            <tr data-result="ex16"><td class="mono">INV-2026-00843</td><td>Nordstern Cloud GmbH</td><td>Anna Schmidt</td><td>22.06.2026</td><td>5.760,00 €</td><td><span class="badge ok">Bezahlt</span></td></tr>
+            <tr data-result="ex16"><td class="mono">INV-2026-00844</td><td>Civic Data Lab</td><td>Jonas Weber</td><td>19.06.2026</td><td>880,50 €</td><td><span class="badge warn">Fällig</span></td></tr>
+            <tr data-result="ex16"><td class="mono">INV-2026-00845</td><td>QueryWorks</td><td>Lena Fischer</td><td>05.06.2026</td><td>2.310,75 €</td><td><span class="badge danger">Überfällig</span></td></tr>
+            <tr data-result="ex16"><td class="mono">INV-2026-00846</td><td>Atlas Produktstudio GmbH</td><td>Felix Wagner</td><td>28.06.2026</td><td>118,80 €</td><td><span class="badge ok">Bezahlt</span></td></tr>
+          </tbody>
+        </table></div>
+        <aside class="detail-panel">
+          <p class="panel-title">Ausgewählte Rechnung</p>
+          <div class="field-row"><span class="field-label">Rechnung</span><span class="field-value mono">INV-2026-00841</span></div>
+          <div class="field-row"><span class="field-label">Kunde</span><span class="field-value">Cedar &amp; Pine Design GmbH</span></div>
+          <div class="field-row"><span class="field-label">Betrag</span><span class="field-value">436,14 €</span></div>
+          <div class="field-row"><span class="field-label">Fällig</span><span class="field-value">17. Juni 2026</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warn">Fällig</span></span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-17">
+    <header class="example-header"><p class="example-kicker">Beispiel 17</p><h2>Barrierefreie Tabs und Akkordeon-Einstellungen</h2></header>
+    <p class="example-description">Ein Einstellungsbereich mit drei Tabs, die jeweils standardmäßig geöffnete oder geschlossene Akkordeonabschnitte enthalten.</p>
+    <p class="test-intent">Testet Tab-Beschriftungen, aktiven Tab-Zustand, Akkordeon-Erweiterung, wiederholte Labels, verborgene Inhalte und Barrierefreiheitszustand.</p>
+    <div class="example-surface">
+      <div class="tablist" role="tablist" aria-label="Einstellungen">
+        <button class="tab" role="tab" aria-selected="true" data-tab-group="ex17" data-tab-target="#ex17-p1" id="ex17-t1">Abrechnung</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab-group="ex17" data-tab-target="#ex17-p2" id="ex17-t2">Sicherheit</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab-group="ex17" data-tab-target="#ex17-p3" id="ex17-t3">Benachrichtigungen</button>
+      </div>
+      <div role="tabpanel" id="ex17-p1" data-tab-panel="ex17" aria-labelledby="ex17-t1">
+        <div class="acc"><button class="acc-trigger" aria-expanded="true" data-acc>Zahlungsart <span>-</span></button><div class="acc-body"><div class="field-row"><span class="field-label">Karte</span><span class="field-value mono">Visa endet auf 4242</span></div><div class="field-row"><span class="field-label">Nächste Abbuchung</span><span class="field-value">1. Juli 2026</span></div></div></div>
+        <div class="acc"><button class="acc-trigger" aria-expanded="false" data-acc>Rechnungsadresse <span>+</span></button><div class="acc-body" hidden><div class="field-row"><span class="field-label">Adresse</span><span class="field-value">Friedrichstraße 88, 10117 Berlin</span></div></div></div>
+      </div>
+      <div role="tabpanel" id="ex17-p2" data-tab-panel="ex17" aria-labelledby="ex17-t2" hidden>
+        <div class="acc"><button class="acc-trigger" aria-expanded="true" data-acc>Zwei-Faktor-Authentifizierung <span>-</span></button><div class="acc-body"><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Aktiviert</span></span></div></div></div>
+        <div class="acc"><button class="acc-trigger" aria-expanded="false" data-acc>Aktive Sitzungen <span>+</span></button><div class="acc-body" hidden><div class="field-row"><span class="field-label">Sitzungen</span><span class="field-value">2 Geräte</span></div></div></div>
+      </div>
+      <div role="tabpanel" id="ex17-p3" data-tab-panel="ex17" aria-labelledby="ex17-t3" hidden>
+        <div class="acc"><button class="acc-trigger" aria-expanded="true" data-acc>E-Mail-Zusammenfassungen <span>-</span></button><div class="acc-body"><div class="field-row"><span class="field-label">Häufigkeit</span><span class="field-value">Täglich</span></div></div></div>
+        <div class="acc"><button class="acc-trigger" aria-expanded="false" data-acc>Mobile Hinweise <span>+</span></button><div class="acc-body" hidden><div class="field-row"><span class="field-label">Status</span><span class="field-value">Aus</span></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-18">
+    <header class="example-header"><p class="example-kicker">Beispiel 18</p><h2>Tokenisierte Mehrfachauswahl und Empfänger</h2></header>
+    <p class="example-description">Ein Empfängerfeld mit entfernbaren Tokens und verborgenen Werten sowie eine Exportfeldgruppe mit Listbox verfügbarer Optionen.</p>
+    <p class="test-intent">Testet ausgewählte Tokens, Entfernen-Schaltflächen, verborgene Werte, Listbox-Optionen und Kontaktlabels.</p>
+    <div class="example-surface">
+      <div class="layout-grid-two">
+        <div class="panel"><label id="ex18-rec">Empfänger</label>
+          <div class="token-field" role="group" aria-labelledby="ex18-rec">
+            <span class="token">billing@example.test<button type="button" aria-label="billing@example.test entfernen" data-remove-token>&times;</button><input type="hidden" name="rcpt[]" value="billing@example.test"></span>
+            <span class="token">finance@example.test<button type="button" aria-label="finance@example.test entfernen" data-remove-token>&times;</button><input type="hidden" name="rcpt[]" value="finance@example.test"></span>
+            <span class="token">renee.coleman@example.test<button type="button" aria-label="renee.coleman@example.test entfernen" data-remove-token>&times;</button><input type="hidden" name="rcpt[]" value="renee.coleman@example.test"></span>
+            <input aria-label="Empfänger suchen" placeholder="Empfänger hinzufügen" style="border:0;flex:1;min-width:120px;">
+          </div>
+        </div>
+        <div class="panel"><label id="ex18-fld">Exportfelder</label>
+          <ul class="listbox" role="listbox" aria-label="Verfügbare Exportfelder" aria-multiselectable="true">
+            <li role="option" aria-selected="true">Rechnungsnummer</li>
+            <li role="option" aria-selected="true">MwSt.</li>
+            <li role="option" aria-selected="false">Rabattbetrag</li>
+            <li role="option" aria-selected="false">Zahlungsreferenz</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-19">
+    <header class="example-header"><p class="example-kicker">Beispiel 19</p><h2>Maskierte, geteilte und gekürzte Werte</h2></header>
+    <p class="example-description">Ein API-Webhook-Einstellungsdatensatz mit maskiertem Schlüssel samt Anzeige, geteilter Referenznummer, gekürzter URL mit vollständigem Titel und verborgenem Hintergrundwert.</p>
+    <p class="test-intent">Testet maskierte sichtbare Werte, geteilte DOM-Werte, gekürzten Text, Anzeigeverhalten und Feldlabels.</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <div class="panel">
+          <div class="field-row"><span class="field-label">Endpunkt</span><span class="field-value">Abrechnungsexport-Dienst</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Fehlerfrei</span></span></div>
+          <div class="field-row"><span class="field-label">API-Schlüssel</span><span class="field-value mono">key_live_****_9K2Q</span><input type="hidden" name="api_key_id" value="key_884120_internal"></div>
+          <div class="field-row"><span class="field-label">Referenz</span><span class="field-value mono"><span>WHK</span><span>-</span><span>2026</span><span>-</span><span>008</span><span>41</span></span></div>
+          <div class="field-row"><span class="field-label">Callback-URL</span><span class="field-value ellipsized mono" title="https://example.test/webhooks/billing-export-worker">https://example.test/webhooks/billing-expo...</span></div>
+          <p><button class="btn" type="button" data-reveal-target="#ex19-reveal">Demoschlüssel anzeigen</button></p>
+          <div id="ex19-reveal" hidden class="summary-panel"><div class="field-row"><span class="field-label">Demoschlüssel</span><span class="field-value mono">key_live_8K41Q_9K2Q</span></div></div>
+        </div>
+        <aside class="detail-panel"><p class="panel-title">Zusammenfassung</p><div class="field-row"><span class="field-label">Endpunkt</span><span class="field-value">Abrechnungsexport-Dienst</span></div><div class="field-row"><span class="field-label">Maskierter Schlüssel</span><span class="field-value mono">key_live_****_9K2Q</span></div></aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-20">
+    <header class="example-header"><p class="example-kicker">Beispiel 20</p><h2>Dashboard mit Textäquivalenten für Datenvisualisierung</h2></header>
+    <p class="example-description">Drei reine CSS-Diagrammkarten, jeweils mit sichtbarem Textäquivalent, kleiner Datentabelle, Trendzusammenfassung und Statuskennzeichnung.</p>
+    <p class="test-intent">Testet Diagrammtitel, Textalternativen, Datentabellen, Prozentformatierung, Trendsprache und Pluralformen.</p>
+    <div class="example-surface">
+      <div class="header-strip field-row"><span class="field-label">Dashboard</span><span class="field-value">Trends der Extraktionsqualität &middot; Mai 2026 &middot; Zuständig: Produktsysteme &middot; <span class="badge ok">Veröffentlicht</span></span></div>
+      <div class="layout-grid-three">
+        <figure class="panel" style="margin:0;" aria-describedby="ex20-d1">
+          <h4>Rate doppelter Labels</h4>
+          <div class="bartrack"><div class="bar" style="width:68%;"></div></div>
+          <figcaption class="help-text" id="ex20-d1">Die Rate doppelter Labels sank im Mai 2026 von 4,1 % auf 2,8 %.</figcaption>
+          <div class="field-row"><span class="field-label">Woche 1</span><span class="field-value">4,1 %</span></div>
+          <div class="field-row"><span class="field-label">Woche 4</span><span class="field-value">2,8 %</span></div>
+          <p><span class="badge ok">Verbessert sich</span></p>
+        </figure>
+        <figure class="panel" style="margin:0;" aria-describedby="ex20-d2">
+          <h4>Genauigkeit des Zeilenkontexts</h4>
+          <div class="bartrack"><div class="bar" style="width:93%;background:var(--ok);"></div></div>
+          <figcaption class="help-text" id="ex20-d2">Die Genauigkeit des Zeilenkontexts stieg von 91 % auf 93 %, liegt aber weiterhin unter dem Ziel von 94 %. Es fehlt 1 Prozentpunkt.</figcaption>
+          <div class="field-row"><span class="field-label">Woche 1</span><span class="field-value">91 %</span></div>
+          <div class="field-row"><span class="field-label">Woche 4</span><span class="field-value">93 %</span></div>
+          <p><span class="badge warn">Unter Zielwert</span></p>
+        </figure>
+        <figure class="panel" style="margin:0;" aria-describedby="ex20-d3">
+          <h4>Genauigkeit der Combobox-Werte</h4>
+          <div class="bartrack"><div class="bar" style="width:96%;background:var(--ok);"></div></div>
+          <figcaption class="help-text" id="ex20-d3">Die Genauigkeit der Combobox-Werte blieb den ganzen Monat stabil bei 96 % oder höher.</figcaption>
+          <div class="field-row"><span class="field-label">Woche 1</span><span class="field-value">96 %</span></div>
+          <div class="field-row"><span class="field-label">Woche 4</span><span class="field-value">96 %</span></div>
+          <p><span class="badge ok">Stabil</span></p>
+        </figure>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var pageLocale = document.documentElement.lang || "de-DE";
+  var localeConfig = { locale: pageLocale, currency: "EUR", direction: document.documentElement.dir || "ltr" };
+
+  function formatCurrency(value) {
+    try { return new Intl.NumberFormat(localeConfig.locale, { style: "currency", currency: localeConfig.currency }).format(value); }
+    catch (e) { return value.toFixed(2).replace(".", ",") + " €"; }
+  }
+  function countGraphemes(value) {
+    if (typeof Intl !== "undefined" && Intl.Segmenter) {
+      return Array.from(new Intl.Segmenter(localeConfig.locale, { granularity: "grapheme" }).segment(value)).length;
+    }
+    return Array.from(value).length;
+  }
+
+  // Generic toggle
+  document.querySelectorAll("[data-toggle-target]").forEach(function (el) {
+    el.addEventListener(el.tagName === "INPUT" ? "change" : "click", function () {
+      var t = document.querySelector(el.dataset.toggleTarget);
+      if (!t) return;
+      if (el.type === "checkbox" || el.type === "radio") { t.hidden = !el.checked; }
+      else { t.hidden = !t.hidden; el.setAttribute("aria-expanded", String(!t.hidden)); }
+    });
+  });
+
+  // Status messages
+  document.querySelectorAll("[data-status]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var s = document.getElementById(btn.dataset.status);
+      if (s) s.textContent = btn.dataset.statusMsg;
+      document.querySelectorAll('#example-01 .step').forEach(function (st) { st.removeAttribute("aria-current"); });
+      var rev = document.getElementById("ex01-review-step"); if (rev) rev.setAttribute("aria-current", "step");
+    });
+  });
+
+  // Character counters
+  document.querySelectorAll("[data-counter]").forEach(function (el) {
+    var out = document.getElementById(el.dataset.counter);
+    var max = parseInt(el.dataset.max, 10);
+    var errId = el.id + "-err";
+    el.addEventListener("input", function () {
+      var n = countGraphemes(el.value);
+      if (out) out.textContent = n;
+      var err = document.getElementById(errId);
+      if (err) err.hidden = n <= max;
+    });
+  });
+
+  // Tabs
+  document.querySelectorAll("[data-tab-target]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var g = btn.dataset.tabGroup;
+      document.querySelectorAll('[data-tab-group="' + g + '"]').forEach(function (t) { t.setAttribute("aria-selected", "false"); });
+      document.querySelectorAll('[data-tab-panel="' + g + '"]').forEach(function (p) { p.hidden = true; });
+      btn.setAttribute("aria-selected", "true");
+      var panel = document.querySelector(btn.dataset.tabTarget);
+      if (panel) panel.hidden = false;
+    });
+  });
+
+  // Accordions
+  document.querySelectorAll("[data-acc]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var body = btn.nextElementSibling;
+      var open = btn.getAttribute("aria-expanded") === "true";
+      btn.setAttribute("aria-expanded", String(!open));
+      if (body) body.hidden = open;
+      var sign = btn.querySelector("span"); if (sign) sign.textContent = open ? "+" : "-";
+    });
+  });
+
+  // Reveal
+  document.querySelectorAll("[data-reveal-target]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var t = document.querySelector(btn.dataset.revealTarget);
+      if (t) { t.hidden = false; btn.hidden = true; }
+    });
+  });
+
+  // Token remove
+  document.querySelectorAll("[data-remove-token]").forEach(function (btn) {
+    btn.addEventListener("click", function () { var tok = btn.closest(".token"); if (tok) tok.remove(); });
+  });
+
+  // Result selection
+  document.querySelectorAll("[data-result]").forEach(function (el) {
+    el.addEventListener("click", function () {
+      var g = el.dataset.result;
+      document.querySelectorAll('[data-result="' + g + '"]').forEach(function (r) { r.setAttribute("aria-selected", "false"); });
+      el.setAttribute("aria-selected", "true");
+    });
+  });
+
+  // Example 03 dependent dropdowns
+  var hubs = {
+    install: ["Servicezentrum Berlin-Mitte", "Servicestützpunkt München-Nord"],
+    repair: ["Technikzentrum Hamburg-Hafen", "Reparaturstützpunkt Köln-West"],
+    pickup: ["Spendenzentrum Frankfurt-Ost"]
+  };
+  var times = ["08:00-10:00 Uhr", "10:00-12:00 Uhr", "13:00-15:00 Uhr", "15:00-17:00 Uhr"];
+  var svc = document.getElementById("ex03-service"), loc = document.getElementById("ex03-loc"), tsel = document.getElementById("ex03-time");
+  var sLoc = document.getElementById("ex03-s-loc"), sTime = document.getElementById("ex03-s-time"), sSvc = document.getElementById("ex03-s-service");
+  function fillLoc() {
+    loc.innerHTML = ""; (hubs[svc.value] || []).forEach(function (h) { var o = document.createElement("option"); o.textContent = h; loc.appendChild(o); });
+    if (sSvc) sSvc.textContent = svc.options[svc.selectedIndex].textContent;
+    fillTime();
+  }
+  function fillTime() {
+    tsel.innerHTML = ""; times.forEach(function (t) { var o = document.createElement("option"); o.textContent = t; tsel.appendChild(o); });
+    if (sLoc) sLoc.textContent = loc.value || "-";
+    if (sTime) sTime.textContent = tsel.value || "-";
+  }
+  if (svc) {
+    svc.addEventListener("change", fillLoc);
+    loc.addEventListener("change", fillTime);
+    tsel.addEventListener("change", function () { if (sTime) sTime.textContent = tsel.value; });
+    var party = document.getElementById("ex03-party"), warn = document.getElementById("ex03-warn");
+    party.addEventListener("input", function () { warn.hidden = parseInt(party.value, 10) <= 4; });
+    fillLoc();
+  }
+
+  // Example 15 totals
+  function recalc() {
+    var qty = parseFloat(document.getElementById("ex15-qty").value) || 0;
+    var price = parseFloat(document.getElementById("ex15-price").value) || 0;
+    var disc = parseFloat(document.getElementById("ex15-disc").value) || 0;
+    var tax = parseFloat(document.getElementById("ex15-tax").value) || 0;
+    document.getElementById("ex15-qty-e").hidden = qty >= 1;
+    var subtotal = qty * price;
+    var discAmt = subtotal * (disc / 100);
+    var taxable = subtotal - discAmt;
+    var taxAmt = taxable * (tax / 100);
+    var total = taxable + taxAmt;
+    document.getElementById("ex15-subtotal").textContent = formatCurrency(subtotal);
+    document.getElementById("ex15-discamt").textContent = "-" + formatCurrency(discAmt);
+    document.getElementById("ex15-taxamt").textContent = formatCurrency(taxAmt);
+    document.getElementById("ex15-total").textContent = formatCurrency(total);
+  }
+  document.querySelectorAll("[data-calc]").forEach(function (el) { el.addEventListener("input", recalc); });
+  if (document.getElementById("ex15-qty")) recalc();
+
+  // Combobox option click
+  document.querySelectorAll('#ex05-list [role=option]').forEach(function (opt) {
+    opt.addEventListener("click", function () {
+      document.querySelectorAll('#ex05-list [role=option]').forEach(function (o) { o.setAttribute("aria-selected", "false"); });
+      opt.setAttribute("aria-selected", "true");
+      var input = document.getElementById("ex05-input");
+      input.value = opt.querySelector("strong").textContent;
+      input.setAttribute("aria-activedescendant", opt.id);
+    });
+  });
+});
+</script>
+</body>
+</html>

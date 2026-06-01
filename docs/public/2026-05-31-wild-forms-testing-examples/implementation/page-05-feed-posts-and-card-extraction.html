@@ -1,0 +1,1593 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page 5 - Feed, Posts, And Card Extraction</title>
+  <style>
+    :root {
+      --page-bg: #f5f2ea;
+      --card-bg: #fffdf8;
+      --ink: #25221d;
+      --muted: #6f675c;
+      --line: #d8cfc0;
+      --soft: #eee6d8;
+      --panel: #ffffff;
+      --accent: #315f8c;
+      --accent-soft: #e7f0ff;
+      --ok: #276749;
+      --ok-soft: #def0e2;
+      --warning: #8a5a00;
+      --warn-soft: #f6e9cc;
+      --danger: #9b332c;
+      --danger-soft: #f6dcd8;
+      --info-soft: #e2e9f2;
+      --link: #174ea6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--page-bg);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    main { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 80px; }
+    a { color: var(--link); }
+
+    .page-hero { background: var(--card-bg); border: 1px solid var(--line); border-radius: 10px; padding: 26px 28px; margin-bottom: 26px; }
+    .page-kicker { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.72rem; color: var(--accent); margin: 0 0 6px; font-weight: 700; }
+    .page-hero h1 { margin: 0 0 10px; font-size: 1.7rem; }
+    .page-hero p { margin: 0; color: var(--muted); max-width: 80ch; }
+
+    .example-card { background: var(--card-bg); border: 1px solid var(--line); border-radius: 10px; padding: 22px 24px; margin-bottom: 26px; }
+    .example-header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--soft); padding-bottom: 12px; margin-bottom: 6px; }
+    .example-kicker { margin: 0; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #fff; background: var(--accent); padding: 3px 9px; border-radius: 10px; }
+    .example-header h2 { margin: 0; font-size: 1.18rem; }
+    .example-description { color: var(--muted); font-size: 0.92rem; margin: 10px 0 18px; max-width: 90ch; }
+    .example-surface { }
+
+    /* Badges and pills (shared) */
+    .badge { display: inline-block; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: var(--soft); color: var(--ink); border: 1px solid var(--line); }
+    .badge.ok { background: var(--ok-soft); color: var(--ok); border-color: #b6dcc0; }
+    .badge.warn { background: var(--warn-soft); color: var(--warning); border-color: #e6cd97; }
+    .badge.danger { background: var(--danger-soft); color: var(--danger); border-color: #e3b3ad; }
+    .badge.info { background: var(--info-soft); color: var(--accent); border-color: #bcccdf; }
+    .badge.accent { background: var(--accent-soft); color: var(--accent); border-color: #bcccdf; }
+    .tag { display: inline-block; font-size: 0.74rem; color: var(--accent); background: var(--accent-soft); border: 1px solid #cdddef; border-radius: 12px; padding: 2px 9px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .ph { background: repeating-linear-gradient(45deg, #efe7d8, #efe7d8 8px, #e7ddca 8px, #e7ddca 16px); border: 1px dashed var(--line); border-radius: 6px; color: var(--muted); font-size: 0.74rem; display: flex; align-items: center; justify-content: center; text-align: center; padding: 6px; }
+
+    /* Ex01 link aggregator */
+    ol.link-feed { list-style: none; margin: 0; padding: 0; counter-reset: none; }
+    .compact-row { display: grid; grid-template-columns: 38px 1fr; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--soft); }
+    .compact-row .rank { font-size: 1.1rem; font-weight: 700; color: var(--muted); text-align: right; }
+    .feed-item-title { margin: 0; font-size: 1rem; font-weight: 600; }
+    .feed-item-title .primary-link { color: var(--ink); text-decoration: none; }
+    .feed-item-title .primary-link:hover { text-decoration: underline; }
+    .source-domain { color: var(--muted); font-size: 0.8rem; font-weight: 400; margin-left: 6px; }
+    .meta-row { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.8rem; color: var(--muted); margin-top: 3px; }
+    .meta-row a { color: var(--muted); }
+
+    /* Ex02 social posts */
+    .post { border: 1px solid var(--line); border-radius: 9px; padding: 14px 16px; margin-bottom: 14px; background: var(--panel); }
+    .post-head { display: flex; gap: 11px; align-items: center; }
+    .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex: none; }
+    .post-author { font-weight: 700; }
+    .post-handle, .post-time { color: var(--muted); font-size: 0.82rem; }
+    .post-body { margin: 10px 0; }
+    .media-placeholder { margin: 10px 0; min-height: 64px; }
+    .stats-row { display: flex; gap: 18px; font-size: 0.82rem; color: var(--muted); border-top: 1px solid var(--soft); padding-top: 9px; }
+
+    /* Ex03 job feed */
+    .job-post { border: 1px solid var(--line); border-radius: 9px; margin-bottom: 14px; overflow: hidden; }
+    .job-post-head { display: flex; gap: 11px; align-items: center; padding: 12px 16px; background: var(--soft); }
+    .recruiter-role { color: var(--muted); font-size: 0.82rem; }
+    .job-detail { padding: 14px 16px; }
+    .job-title { margin: 0 0 4px; font-size: 1.05rem; }
+    .job-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 18px; font-size: 0.86rem; margin: 8px 0; }
+    .job-grid .k { color: var(--muted); }
+    .engage { font-size: 0.82rem; color: var(--muted); margin-top: 8px; }
+
+    /* Card grids (shared) */
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+    .card-grid-two { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+    .mini-card { border: 1px solid var(--line); border-radius: 9px; background: var(--panel); padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+    .mini-card .thumb { height: 84px; }
+    .mini-card .body { padding: 11px 13px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
+    .mini-card h3 { margin: 0; font-size: 0.98rem; }
+    .mini-card h3 a { color: var(--ink); text-decoration: none; }
+    .mini-card h3 a:hover { text-decoration: underline; }
+    .price { font-weight: 700; font-size: 1.05rem; color: var(--ink); }
+    .kvline { font-size: 0.82rem; color: var(--muted); }
+    .kvline b { color: var(--ink); font-weight: 600; }
+    .save-btn { align-self: flex-start; margin-top: 4px; font-size: 0.76rem; padding: 3px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--card-bg); cursor: pointer; }
+    .save-btn[aria-pressed="true"] { background: var(--accent-soft); border-color: #bcccdf; color: var(--accent); font-weight: 600; }
+
+    /* Ex06 forum */
+    .qa-question { border: 1px solid var(--accent); border-radius: 9px; padding: 14px 16px; margin-bottom: 14px; background: var(--accent-soft); }
+    .qa-answer { border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 6px; padding: 12px 16px; margin-bottom: 12px; background: var(--panel); }
+    .qa-answer.accepted { border-left-color: var(--ok); }
+    .vote-box { font-size: 0.8rem; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; }
+    .comment-card { border-top: 1px dashed var(--line); font-size: 0.84rem; padding: 7px 0 0; margin-top: 9px; color: var(--muted); }
+
+    /* Ex07 issue rows */
+    .issue-row { display: flex; gap: 12px; align-items: flex-start; padding: 11px 0; border-bottom: 1px solid var(--soft); }
+    .issue-status-dot { width: 12px; height: 12px; border-radius: 50%; margin-top: 5px; flex: none; }
+    .issue-status-dot.open { background: var(--ok); }
+    .issue-status-dot.closed { background: var(--danger); }
+    .issue-title { margin: 0; font-size: 0.98rem; font-weight: 600; }
+    .issue-title a { color: var(--ink); text-decoration: none; }
+    .issue-title a:hover { text-decoration: underline; }
+    .issue-num { color: var(--muted); font-weight: 400; }
+    .label-chip { font-size: 0.7rem; padding: 1px 7px; border-radius: 8px; background: var(--soft); border: 1px solid var(--line); }
+
+    /* Ex08 PR cards */
+    .pr-card { border: 1px solid var(--line); border-radius: 9px; padding: 13px 16px; margin-bottom: 12px; background: var(--panel); }
+    .branch-line { font-family: ui-monospace, Consolas, monospace; font-size: 0.8rem; color: var(--muted); background: var(--soft); display: inline-block; padding: 2px 8px; border-radius: 5px; margin-top: 6px; }
+    .pr-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+
+    /* Ex09 reviews */
+    .review-card { border: 1px solid var(--line); border-radius: 9px; padding: 13px 16px; margin-bottom: 12px; background: var(--panel); }
+    .merchant-reply { margin-top: 10px; margin-left: 16px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 6px 6px 0; padding: 9px 12px; font-size: 0.88rem; }
+
+    /* Ex10 news */
+    .news-card { display: grid; grid-template-columns: 110px 1fr; gap: 14px; border: 1px solid var(--line); border-radius: 9px; padding: 12px; margin-bottom: 12px; background: var(--panel); }
+    .news-card .thumb { min-height: 80px; }
+    .news-card h3 { margin: 0 0 4px; font-size: 1.02rem; }
+    .news-card h3 a { color: var(--ink); text-decoration: none; }
+
+    /* Ex11 video */
+    .video-card { display: grid; grid-template-columns: 180px 1fr; gap: 14px; border: 1px solid var(--line); border-radius: 9px; padding: 12px; margin-bottom: 12px; background: var(--panel); }
+    .video-card .thumb { min-height: 100px; position: relative; }
+    .duration-badge { position: absolute; right: 6px; bottom: 6px; background: rgba(20,20,20,0.82); color: #fff; font-size: 0.74rem; padding: 1px 6px; border-radius: 4px; }
+    .video-card h3 { margin: 0 0 4px; font-size: 1.02rem; }
+    .video-card h3 a { color: var(--ink); text-decoration: none; }
+
+    /* Ex17 activity */
+    .activity-item { display: grid; grid-template-columns: 40px 1fr; gap: 11px; padding: 11px 0; border-bottom: 1px solid var(--soft); }
+    .activity-body { font-size: 0.9rem; }
+    .activity-body .actor { font-weight: 700; }
+    .activity-body .verb { color: var(--muted); }
+    .activity-body .target { font-weight: 600; }
+    .activity-meta { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+
+    /* Ex18 notifications / Ex19 email */
+    .notif { display: grid; grid-template-columns: 8px 1fr; gap: 12px; border: 1px solid var(--line); border-radius: 8px; padding: 11px 14px; margin-bottom: 10px; background: var(--panel); }
+    .notif.unread { background: #fbf7ee; border-color: #d8cfc0; }
+    .notif-bar { border-radius: 4px; }
+    .notif-bar.warn { background: var(--warning); }
+    .notif-bar.info { background: var(--accent); }
+    .notif-bar.success { background: var(--ok); }
+    .notif-bar.urgent { background: var(--danger); }
+    .notif h3 { margin: 0 0 2px; font-size: 0.98rem; }
+
+    .mail-row { display: grid; grid-template-columns: 170px 1fr 90px; gap: 12px; align-items: baseline; padding: 10px 12px; border-bottom: 1px solid var(--soft); }
+    .mail-row.unread { background: #fbf7ee; }
+    .mail-row.unread .mail-subject { font-weight: 700; }
+    .mail-sender { font-size: 0.9rem; }
+    .mail-subject { font-size: 0.92rem; }
+    .mail-snippet { color: var(--muted); font-size: 0.84rem; }
+    .mail-time { text-align: right; font-size: 0.8rem; color: var(--muted); }
+    .clip::before { content: "\1F4CE"; margin-right: 4px; }
+
+    /* Ex22 mixed feed */
+    .feed-item { border: 1px solid var(--line); border-radius: 9px; padding: 13px 16px; margin-bottom: 12px; background: var(--panel); }
+    .feed-item.pinned { border-left: 4px solid var(--warning); }
+    .feed-item.promoted { border-left: 4px solid var(--accent); background: var(--accent-soft); }
+    .feed-item.archived { opacity: 0.85; background: var(--soft); }
+    .action-menu { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; border-top: 1px solid var(--soft); padding-top: 9px; }
+    .action-menu .act { font-size: 0.78rem; color: var(--accent); cursor: pointer; background: none; border: none; padding: 0; }
+    .type-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; }
+
+    .group-h { margin: 16px 0 8px; font-size: 0.92rem; }
+
+    @media (max-width: 620px) {
+      .news-card, .video-card { grid-template-columns: 1fr; }
+      .mail-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-hero">
+      <p class="page-kicker">Content Extraction Demo Page</p>
+      <h1>Page 5 - Feed, Posts, And Card Extraction</h1>
+      <p>
+        This standalone page contains realistic feed, post, and card examples for testing extraction of
+        repeated records, item boundaries, titles, links, authors, timestamps, scores, tags, badges,
+        counts, snippets, statuses, prices, nested comments, and action metadata.
+      </p>
+    </header>
+
+    <section class="example-card" id="example-01">
+      <header class="example-header">
+        <p class="example-kicker">Example 01</p>
+        <h2>Link Aggregator Front Page Feed</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a ranked link aggregator feed. It tests extraction of repeated story
+        records with rank, title, primary link, source domain, points, author, age, comments count, and
+        secondary action links.
+      </p>
+      <div class="example-surface">
+        <ol class="link-feed" aria-label="Ranked technical stories">
+          <li class="compact-row" id="ex01-story-01">
+            <div class="rank">1</div>
+            <div>
+              <h3 class="feed-item-title"><a class="primary-link" href="/demo/articles/sqlite-tiny-devices">SQLite On Tiny Devices: Notes From A Field Deployment</a><span class="source-domain">(fieldnotes.example.test)</span></h3>
+              <div class="meta-row"><span>428 points</span><span>by <a href="/demo/users/mira_dev">mira_dev</a></span><time datetime="2026-05-31T10:00:00">2 hours ago</time><a href="/demo/comments/sqlite-tiny-devices">117 comments</a><a href="#">save</a></div>
+            </div>
+          </li>
+          <li class="compact-row" id="ex01-story-02">
+            <div class="rank">2</div>
+            <div>
+              <h3 class="feed-item-title"><a class="primary-link" href="/demo/articles/layout-thrashing-guide">A Visual Guide To Browser Layout Thrashing</a><span class="source-domain">(renderlab.example.test)</span></h3>
+              <div class="meta-row"><span>311 points</span><span>by <a href="/demo/users/caspian">caspian</a></span><time datetime="2026-05-31T09:00:00">3 hours ago</time><a href="/demo/comments/layout-thrashing-guide">64 comments</a><a href="#">hide</a></div>
+            </div>
+          </li>
+          <li class="compact-row" id="ex01-story-03">
+            <div class="rank">3</div>
+            <div>
+              <h3 class="feed-item-title"><a class="primary-link" href="/demo/projects/css-specificity-debugger">Show Project: A Debugger For CSS Specificity</a><span class="source-domain">(toolshed.example.test)</span></h3>
+              <div class="meta-row"><span>287 points</span><span>by <a href="/demo/users/pixelroot">pixelroot</a></span><time datetime="2026-05-31T08:00:00">4 hours ago</time><a href="/demo/comments/css-specificity-debugger">91 comments</a><a href="#">discuss</a></div>
+            </div>
+          </li>
+          <li class="compact-row" id="ex01-story-04">
+            <div class="rank">4</div>
+            <div>
+              <h3 class="feed-item-title"><a class="primary-link" href="/demo/articles/search-index-compression">How We Cut A Search Index From 90 GB To 14 GB</a><span class="source-domain">(infraweekly.example.test)</span></h3>
+              <div class="meta-row"><span>255 points</span><span>by <a href="/demo/users/noah_k">noah_k</a></span><time datetime="2026-05-31T07:00:00">5 hours ago</time><a href="/demo/comments/search-index-compression">38 comments</a><a href="#">save</a></div>
+            </div>
+          </li>
+          <li class="compact-row" id="ex01-story-05">
+            <div class="rank">5</div>
+            <div>
+              <h3 class="feed-item-title"><a class="primary-link" href="/demo/articles/checkbox-permissions">The Hidden Cost Of Checkbox-Driven Permissions</a><span class="source-domain">(productsystems.example.test)</span></h3>
+              <div class="meta-row"><span>241 points</span><span>by <a href="/demo/users/aclark">aclark</a></span><time datetime="2026-05-31T07:00:00">5 hours ago</time><a href="/demo/comments/checkbox-permissions">72 comments</a><a href="#">hide</a></div>
+            </div>
+          </li>
+          <li class="compact-row" id="ex01-story-06">
+            <div class="rank">6</div>
+            <div>
+              <h3 class="feed-item-title"><a class="primary-link" href="/demo/articles/plain-html-templates">Why Our Static Site Generator Uses Plain HTML Templates</a><span class="source-domain">(buildnotes.example.test)</span></h3>
+              <div class="meta-row"><span>198 points</span><span>by <a href="/demo/users/templatefox">templatefox</a></span><time datetime="2026-05-31T06:00:00">6 hours ago</time><a href="/demo/comments/plain-html-templates">26 comments</a><a href="#">save</a></div>
+            </div>
+          </li>
+          <li class="compact-row" id="ex01-story-07">
+            <div class="rank">7</div>
+            <div>
+              <h3 class="feed-item-title"><a class="primary-link" href="/demo/discussions/local-first-sync">Ask: What Are You Using For Local-First Sync?</a><span class="source-domain">(discussion)</span></h3>
+              <div class="meta-row"><span>184 points</span><span>by <a href="/demo/users/syncdreamer">syncdreamer</a></span><time datetime="2026-05-31T05:00:00">7 hours ago</time><a href="/demo/comments/local-first-sync">143 comments</a><a href="#">reply</a></div>
+            </div>
+          </li>
+          <li class="compact-row" id="ex01-story-08">
+            <div class="rank">8</div>
+            <div>
+              <h3 class="feed-item-title"><a class="primary-link" href="/demo/articles/unicode-form-inputs">A Tour Of Unicode Edge Cases In Form Inputs</a><span class="source-domain">(textsystems.example.test)</span></h3>
+              <div class="meta-row"><span>162 points</span><span>by <a href="/demo/users/glyphwatch">glyphwatch</a></span><time datetime="2026-05-31T04:00:00">8 hours ago</time><a href="/demo/comments/unicode-form-inputs">44 comments</a><a href="#">save</a></div>
+            </div>
+          </li>
+          <li class="compact-row" id="ex01-story-09">
+            <div class="rank">9</div>
+            <div>
+              <h3 class="feed-item-title"><a class="primary-link" href="/demo/projects/minimal-job-queue">Launch: Minimal Job Queue Written In 700 Lines</a><span class="source-domain">(queuekit.example.test)</span></h3>
+              <div class="meta-row"><span>151 points</span><span>by <a href="/demo/users/workerbee">workerbee</a></span><time datetime="2026-05-31T03:00:00">9 hours ago</time><a href="/demo/comments/minimal-job-queue">31 comments</a><a href="#">discuss</a></div>
+            </div>
+          </li>
+          <li class="compact-row" id="ex01-story-10">
+            <div class="rank">10</div>
+            <div>
+              <h3 class="feed-item-title"><a class="primary-link" href="/demo/articles/form-latency-study">Researchers Measure Latency In Everyday Web Forms</a><span class="source-domain">(uxmetrics.example.test)</span></h3>
+              <div class="meta-row"><span>139 points</span><span>by <a href="/demo/users/latencylab">latencylab</a></span><time datetime="2026-05-31T02:00:00">10 hours ago</time><a href="/demo/comments/form-latency-study">19 comments</a><a href="#">save</a></div>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-02">
+      <header class="example-header">
+        <p class="example-kicker">Example 02</p>
+        <h2>Social Timeline With Rich Posts</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a social timeline with rich posts. It tests extraction of post author,
+        handle, timestamp, body text, tags, media labels, reaction counts, comment counts, share counts,
+        and edited or pinned metadata.
+      </p>
+      <div class="example-surface">
+        <article class="post">
+          <div class="post-head">
+            <div class="avatar">MC</div>
+            <div>
+              <div class="post-author">Maya Chen <span class="badge accent">Pinned</span></div>
+              <div class="post-handle">@maya-builds &middot; <span class="post-time">May 31, 2026, 8:18 AM</span></div>
+            </div>
+          </div>
+          <p class="post-body">Spent the weekend rewriting our onboarding checklist into smaller steps. The biggest improvement came from showing the user what will happen after each permission request.</p>
+          <div class="tags"><span class="tag">product design</span><span class="tag">onboarding</span><span class="tag">permissions</span></div>
+          <div class="media-placeholder ph">Screenshot placeholder: onboarding checklist card</div>
+          <div class="stats-row"><span>184 reactions</span><span>26 comments</span><span>14 shares</span></div>
+        </article>
+        <article class="post">
+          <div class="post-head">
+            <div class="avatar">RO</div>
+            <div>
+              <div class="post-author">Rafael Ortiz <span class="badge info">Thread</span></div>
+              <div class="post-handle">@rafi_data &middot; <span class="post-time">May 31, 2026, 9:04 AM</span> &middot; <em>Edited 9:22 AM</em></div>
+            </div>
+          </div>
+          <p class="post-body">Three patterns I keep seeing in internal dashboards: totals without units, filters that do not show active state, and exported CSV files without context columns.</p>
+          <div class="tags"><span class="tag">analytics</span><span class="tag">dashboards</span><span class="tag">data quality</span></div>
+          <div class="media-placeholder ph">Chart placeholder: dashboard filter audit</div>
+          <div class="stats-row"><span>96 reactions</span><span>11 comments</span><span>8 shares</span></div>
+        </article>
+        <article class="post">
+          <div class="post-head">
+            <div class="avatar">LR</div>
+            <div>
+              <div class="post-author">Lina Romero <span class="badge warn">Question</span></div>
+              <div class="post-handle">@lina_interfaces &middot; <span class="post-time">May 31, 2026, 10:31 AM</span></div>
+            </div>
+          </div>
+          <p class="post-body">For teams working with messy public datasets, do you show missing values as blank cells, labels, warnings, or something else? Looking for examples that are clear without being noisy.</p>
+          <div class="tags"><span class="tag">public data</span><span class="tag">ux writing</span><span class="tag">research</span></div>
+          <div class="stats-row"><span>211 reactions</span><span>54 comments</span><span>22 shares</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-03">
+      <header class="example-header">
+        <p class="example-kicker">Example 03</p>
+        <h2>Professional Network Job Post Feed</h2>
+      </header>
+      <p class="example-description">
+        This example imitates job cards embedded in a professional content feed. It tests extraction of
+        job title, company, location, salary range, work mode, posted date, recruiter, badges,
+        application link, and post engagement metadata.
+      </p>
+      <div class="example-surface">
+        <article class="job-post">
+          <div class="job-post-head">
+            <div class="avatar">NP</div>
+            <div><div class="post-author">Nina Patel</div><div class="recruiter-role">Recruiting Lead at Northstar Cloud &middot; 1 hour ago</div></div>
+          </div>
+          <div class="job-detail">
+            <h3 class="job-title">Senior Frontend Engineer</h3>
+            <div class="job-grid">
+              <div><span class="k">Company:</span> Northstar Cloud</div>
+              <div><span class="k">Location:</span> Remote - United States</div>
+              <div><span class="k">Work mode:</span> Remote</div>
+              <div><span class="k">Salary:</span> $165,000-$205,000</div>
+              <div><span class="k">Employment type:</span> Full-time</div>
+            </div>
+            <div class="tags"><span class="badge ok">Actively hiring</span><span class="badge">Visa transfer considered</span></div>
+            <p style="margin:10px 0 0"><a href="/demo/jobs/northstar-frontend">Apply on company site</a></p>
+            <div class="engage">48 reactions &middot; 7 comments</div>
+          </div>
+        </article>
+        <article class="job-post">
+          <div class="job-post-head">
+            <div class="avatar">OB</div>
+            <div><div class="post-author">Owen Brooks</div><div class="recruiter-role">Founder at Civic Data Lab &middot; 3 hours ago</div></div>
+          </div>
+          <div class="job-detail">
+            <h3 class="job-title">Product Designer, Civic Tools</h3>
+            <div class="job-grid">
+              <div><span class="k">Company:</span> Civic Data Lab</div>
+              <div><span class="k">Location:</span> Oakland, CA</div>
+              <div><span class="k">Work mode:</span> Hybrid</div>
+              <div><span class="k">Salary:</span> $128,000-$156,000</div>
+              <div><span class="k">Employment type:</span> Full-time</div>
+            </div>
+            <div class="tags"><span class="badge info">Public interest tech</span><span class="badge">Portfolio requested</span></div>
+            <p style="margin:10px 0 0"><a href="/demo/jobs/civic-product-designer">View role</a></p>
+            <div class="engage">92 reactions &middot; 18 comments</div>
+          </div>
+        </article>
+        <article class="job-post">
+          <div class="job-post-head">
+            <div class="avatar">GM</div>
+            <div><div class="post-author">Grace Miller</div><div class="recruiter-role">Engineering Manager at Atlas Product Studio &middot; yesterday</div></div>
+          </div>
+          <div class="job-detail">
+            <h3 class="job-title">QA Automation Engineer</h3>
+            <div class="job-grid">
+              <div><span class="k">Company:</span> Atlas Product Studio</div>
+              <div><span class="k">Location:</span> Denver, CO</div>
+              <div><span class="k">Work mode:</span> On-site</div>
+              <div><span class="k">Salary:</span> $105,000-$132,000</div>
+              <div><span class="k">Employment type:</span> Full-time</div>
+            </div>
+            <div class="tags"><span class="badge">Selenium</span><span class="badge">Playwright</span><span class="badge">Accessibility testing</span></div>
+            <p style="margin:10px 0 0"><a href="/demo/jobs/atlas-qa-automation">Apply now</a></p>
+            <div class="engage">31 reactions &middot; 4 comments</div>
+          </div>
+        </article>
+        <article class="job-post">
+          <div class="job-post-head">
+            <div class="avatar">TG</div>
+            <div><div class="post-author">Theo Grant</div><div class="recruiter-role">Hiring for contract data projects &middot; 2 days ago</div></div>
+          </div>
+          <div class="job-detail">
+            <h3 class="job-title">Contract Data Cleanup Specialist</h3>
+            <div class="job-grid">
+              <div><span class="k">Company:</span> Harbor Research Group</div>
+              <div><span class="k">Location:</span> Remote - Canada</div>
+              <div><span class="k">Work mode:</span> Remote</div>
+              <div><span class="k">Salary:</span> $70-$95/hour</div>
+              <div><span class="k">Employment type:</span> Contract</div>
+            </div>
+            <div class="tags"><span class="badge warn">3 month contract</span><span class="badge">Immediate start</span></div>
+            <p style="margin:10px 0 0"><a href="/demo/jobs/harbor-data-cleanup">Send profile</a></p>
+            <div class="engage">27 reactions &middot; 3 comments</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-04">
+      <header class="example-header">
+        <p class="example-kicker">Example 04</p>
+        <h2>Marketplace Listing Grid</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a local marketplace listing grid. It tests extraction of repeated product
+        cards with title, price, location, seller, condition, fulfillment method, saved state, and
+        primary listing links.
+      </p>
+      <div class="example-surface">
+        <div class="card-grid">
+          <article class="mini-card">
+            <div class="thumb ph">Photo placeholder</div>
+            <div class="body">
+              <span class="badge warn">Price reduced</span>
+              <h3><a href="/demo/marketplace/walnut-writing-desk">Walnut writing desk with drawer</a></h3>
+              <div class="price">$240</div>
+              <div class="kvline"><b>San Mateo, CA</b> &middot; Seller Noah K.</div>
+              <div class="kvline">Condition: Good &middot; Local pickup</div>
+              <div class="kvline">Posted 2 hours ago</div>
+              <button class="save-btn" type="button" data-save aria-pressed="false">Save</button>
+            </div>
+          </article>
+          <article class="mini-card">
+            <div class="thumb ph">Photo placeholder</div>
+            <div class="body">
+              <span class="badge info">Popular</span>
+              <h3><a href="/demo/marketplace/four-dining-chairs">Set of four dining chairs</a></h3>
+              <div class="price">$180</div>
+              <div class="kvline"><b>Oakland, CA</b> &middot; Seller Mina R.</div>
+              <div class="kvline">Condition: Very good &middot; Local pickup</div>
+              <div class="kvline">Posted 5 hours ago</div>
+              <button class="save-btn" type="button" data-save aria-pressed="true">Saved</button>
+            </div>
+          </article>
+          <article class="mini-card">
+            <div class="thumb ph">Photo placeholder</div>
+            <div class="body">
+              <span class="badge accent">Ships</span>
+              <h3><a href="/demo/marketplace/portable-projector-case">Portable projector with case</a></h3>
+              <div class="price">$320</div>
+              <div class="kvline"><b>San Francisco, CA</b> &middot; Seller Rafael O.</div>
+              <div class="kvline">Condition: Like new &middot; Shipping available</div>
+              <div class="kvline">Posted yesterday</div>
+              <button class="save-btn" type="button" data-save aria-pressed="false">Save</button>
+            </div>
+          </article>
+          <article class="mini-card">
+            <div class="thumb ph">Photo placeholder</div>
+            <div class="body">
+              <span class="badge ok">Pickup today</span>
+              <h3><a href="/demo/marketplace/child-balance-bike">Children's balance bike</a></h3>
+              <div class="price">$45</div>
+              <div class="kvline"><b>Berkeley, CA</b> &middot; Seller Lina R.</div>
+              <div class="kvline">Condition: Used &middot; Porch pickup</div>
+              <div class="kvline">Posted yesterday</div>
+              <button class="save-btn" type="button" data-save aria-pressed="true">Saved</button>
+            </div>
+          </article>
+          <article class="mini-card">
+            <div class="thumb ph">Photo placeholder</div>
+            <div class="body">
+              <span class="badge">Negotiable</span>
+              <h3><a href="/demo/marketplace/standing-desk-converter">Standing desk converter</a></h3>
+              <div class="price">$95</div>
+              <div class="kvline"><b>Daly City, CA</b> &middot; Seller Grace M.</div>
+              <div class="kvline">Condition: Good &middot; Local pickup</div>
+              <div class="kvline">Posted 3 days ago</div>
+              <button class="save-btn" type="button" data-save aria-pressed="false">Save</button>
+            </div>
+          </article>
+          <article class="mini-card">
+            <div class="thumb ph">Photo placeholder</div>
+            <div class="body">
+              <span class="badge ok">New listing</span>
+              <h3><a href="/demo/marketplace/ceramic-planter-trio">Ceramic planter trio</a></h3>
+              <div class="price">$38</div>
+              <div class="kvline"><b>Alameda, CA</b> &middot; Seller Priya S.</div>
+              <div class="kvline">Condition: New &middot; Shipping available</div>
+              <div class="kvline">Posted 4 days ago</div>
+              <button class="save-btn" type="button" data-save aria-pressed="false">Save</button>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-05">
+      <header class="example-header">
+        <p class="example-kicker">Example 05</p>
+        <h2>Product Recommendation Card Grid</h2>
+      </header>
+      <p class="example-description">
+        This example imitates an ecommerce recommendation shelf. It tests extraction of product names,
+        brands, prices, ratings, review counts, stock status, promotions, options, and product links
+        from repeated cards.
+      </p>
+      <div class="example-surface">
+        <div class="card-grid">
+          <article class="mini-card">
+            <div class="thumb ph">Product image placeholder</div>
+            <div class="body">
+              <div class="kvline">TrailKnit</div>
+              <h3><a href="/demo/products/merino-travel-hoodie">Merino Travel Hoodie</a></h3>
+              <div class="price">$128</div>
+              <div class="kvline">Rating 4.7 out of 5 &middot; 318 reviews</div>
+              <div class="kvline"><b>In stock</b></div>
+              <span class="badge ok">Free shipping</span>
+              <div class="kvline">Colors: Forest, Charcoal, Clay</div>
+            </div>
+          </article>
+          <article class="mini-card">
+            <div class="thumb ph">Product image placeholder</div>
+            <div class="body">
+              <div class="kvline">Nexa</div>
+              <h3><a href="/demo/products/compact-gan-charger">Compact GaN Charger 65W</a></h3>
+              <div class="price">$49</div>
+              <div class="kvline">Rating 4.5 out of 5 &middot; 904 reviews</div>
+              <div class="kvline"><b>Low stock</b></div>
+              <span class="badge warn">15 percent off</span>
+              <div class="kvline">Colors: White, Black</div>
+            </div>
+          </article>
+          <article class="mini-card">
+            <div class="thumb ph">Product image placeholder</div>
+            <div class="body">
+              <div class="kvline">Fieldmark</div>
+              <h3><a href="/demo/products/canvas-organizer-pouch">Canvas Organizer Pouch</a></h3>
+              <div class="price">$32</div>
+              <div class="kvline">Rating 4.8 out of 5 &middot; 122 reviews</div>
+              <div class="kvline"><b>In stock</b></div>
+              <span class="badge info">Bundle eligible</span>
+              <div class="kvline">Colors: Tan, Olive, Navy</div>
+            </div>
+          </article>
+          <article class="mini-card">
+            <div class="thumb ph">Product image placeholder</div>
+            <div class="body">
+              <div class="kvline">ClearSip</div>
+              <h3><a href="/demo/products/insulated-bottle-20">Insulated Bottle 20 oz</a></h3>
+              <div class="price">$24</div>
+              <div class="kvline">Rating 4.4 out of 5 &middot; 1,248 reviews</div>
+              <div class="kvline"><b>In stock</b></div>
+              <span class="badge accent">Buy 2 save $6</span>
+              <div class="kvline">Colors: Slate, Mint, Steel</div>
+            </div>
+          </article>
+          <article class="mini-card">
+            <div class="thumb ph">Product image placeholder</div>
+            <div class="body">
+              <div class="kvline">Deskwise</div>
+              <h3><a href="/demo/products/foldable-laptop-stand">Foldable Laptop Stand</a></h3>
+              <div class="price">$58</div>
+              <div class="kvline">Rating 4.6 out of 5 &middot; 487 reviews</div>
+              <div class="kvline"><b>Backordered</b></div>
+              <span class="badge danger">Ships in 2 weeks</span>
+              <div class="kvline">Colors: Silver, Graphite</div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-06">
+      <header class="example-header">
+        <p class="example-kicker">Example 06</p>
+        <h2>Forum Question And Answer Thread</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a technical forum question page. It tests extraction of the question title,
+        author, score, tags, accepted answer, answer authors, answer scores, nested comments, and
+        timestamps while preserving hierarchy.
+      </p>
+      <div class="example-surface">
+        <article class="qa-question">
+          <h3 class="feed-item-title"><a class="primary-link" href="/demo/forum/custom-dropdown-rendered-outside-form">How should I extract values from a custom dropdown rendered outside the form?</a></h3>
+          <div class="vote-box"><span>Score 37</span><span>2,184 views</span><span>3 answers</span><span>asked May 30, 2026, 4:18 PM by dom_mapper</span></div>
+          <p>I am building a browser tool that needs to capture the visible selected value from custom dropdowns. Some menus are rendered in a portal near the end of the body, while the label is inside the original form. What signals should I use to preserve the relationship?</p>
+          <div class="tags"><span class="tag">html</span><span class="tag">aria</span><span class="tag">forms</span><span class="tag">browser-automation</span></div>
+        </article>
+
+        <h4 class="group-h">3 Answers</h4>
+        <article class="qa-answer accepted">
+          <div class="vote-box"><span class="badge ok">Accepted</span><span>Score 52</span><span>answered May 30, 2026, 5:02 PM by layout_sleuth</span></div>
+          <p>Start with the accessible name and active descendant relationship. Then look for hidden backing inputs, aria-controls, aria-labelledby, and nearby form context. If the menu is portaled, preserve both the trigger location and the menu item state.</p>
+          <div class="comment-card"><strong>pixelroot</strong> &middot; yesterday: The hidden input point is the part most people miss.</div>
+          <div class="comment-card"><strong>dom_mapper</strong> &middot; yesterday: Thanks, this helped me connect the trigger and option list.</div>
+        </article>
+        <article class="qa-answer">
+          <div class="vote-box"><span>Score 18</span><span>answered May 31, 2026, 8:44 AM by testwright</span></div>
+          <p>In practice I also inspect visible text order. ARIA is ideal, but many production widgets have incomplete relationships.</p>
+        </article>
+        <article class="qa-answer">
+          <div class="vote-box"><span>Score 9</span><span>answered May 31, 2026, 10:12 AM by semanticist</span></div>
+          <p>If the dropdown is searchable, capture the current selected chip separately from the option list. The filtered list may not contain the selected value at the moment of extraction.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-07">
+      <header class="example-header">
+        <p class="example-kicker">Example 07</p>
+        <h2>Repository Issue List</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a repository issue tracker list. It tests extraction of issue numbers,
+        titles, statuses, labels, authors, assignees, comments, milestones, updated timestamps, and
+        primary issue links from repeated compact records.
+      </p>
+      <div class="example-surface">
+        <div class="issue-row">
+          <span class="issue-status-dot open" title="Open"></span>
+          <div>
+            <h3 class="issue-title"><a href="/demo/repos/extractor/issues/1842">Dropdown menu options are missed when menu is portaled</a> <span class="issue-num">#1842</span></h3>
+            <div class="tags"><span class="label-chip">bug</span><span class="label-chip">dropdown</span><span class="label-chip">portal</span></div>
+            <div class="meta-row"><span class="badge ok">Open</span><span>by mira_dev</span><span>assignee rafael</span><span>12 comments</span><span>milestone v0.9</span><span>updated 18 minutes ago</span></div>
+          </div>
+        </div>
+        <div class="issue-row">
+          <span class="issue-status-dot open" title="Open"></span>
+          <div>
+            <h3 class="issue-title"><a href="/demo/repos/extractor/issues/1837">Preserve table row context when extracting checkbox values</a> <span class="issue-num">#1837</span></h3>
+            <div class="tags"><span class="label-chip">enhancement</span><span class="label-chip">tables</span></div>
+            <div class="meta-row"><span class="badge ok">Open</span><span>by testwright</span><span>assignee maya</span><span>5 comments</span><span>milestone v0.9</span><span>updated 2 hours ago</span></div>
+          </div>
+        </div>
+        <div class="issue-row">
+          <span class="issue-status-dot closed" title="Closed"></span>
+          <div>
+            <h3 class="issue-title"><a href="/demo/repos/extractor/issues/1829">Readonly inputs should be extracted from selected forms</a> <span class="issue-num">#1829</span></h3>
+            <div class="tags"><span class="label-chip">forms</span><span class="label-chip">fixed</span></div>
+            <div class="meta-row"><span class="badge danger">Closed</span><span>by dom_mapper</span><span>assignee lina</span><span>8 comments</span><span>milestone v0.8</span><span>updated yesterday</span></div>
+          </div>
+        </div>
+        <div class="issue-row">
+          <span class="issue-status-dot open" title="Open"></span>
+          <div>
+            <h3 class="issue-title"><a href="/demo/repos/extractor/issues/1824">Detect selected chips in multi-select controls</a> <span class="issue-num">#1824</span></h3>
+            <div class="tags"><span class="label-chip">chips</span><span class="label-chip">multi-select</span><span class="label-chip">research</span></div>
+            <div class="meta-row"><span class="badge ok">Open</span><span>by pixelroot</span><span>assignee unassigned</span><span>21 comments</span><span>milestone v1.0</span><span>updated yesterday</span></div>
+          </div>
+        </div>
+        <div class="issue-row">
+          <span class="issue-status-dot open" title="Open"></span>
+          <div>
+            <h3 class="issue-title"><a href="/demo/repos/extractor/issues/1819">Extraction output duplicates action menu labels</a> <span class="issue-num">#1819</span></h3>
+            <div class="tags"><span class="label-chip">cleanup</span><span class="label-chip">cards</span></div>
+            <div class="meta-row"><span class="badge ok">Open</span><span>by queuekit</span><span>assignee rafael</span><span>3 comments</span><span>milestone v0.9</span><span>updated 2 days ago</span></div>
+          </div>
+        </div>
+        <div class="issue-row">
+          <span class="issue-status-dot closed" title="Closed"></span>
+          <div>
+            <h3 class="issue-title"><a href="/demo/repos/extractor/issues/1811">Support nested comments in selected forum threads</a> <span class="issue-num">#1811</span></h3>
+            <div class="tags"><span class="label-chip">comments</span><span class="label-chip">hierarchy</span><span class="label-chip">fixed</span></div>
+            <div class="meta-row"><span class="badge danger">Closed</span><span>by semanticist</span><span>assignee maya</span><span>14 comments</span><span>milestone v0.8</span><span>updated 4 days ago</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-08">
+      <header class="example-header">
+        <p class="example-kicker">Example 08</p>
+        <h2>Pull Request Review Feed</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a pull request review feed. It tests extraction of pull request title,
+        number, branch names, review status, checks, changed files, reviewers, comments, and merge state
+        from card-like records.
+      </p>
+      <div class="example-surface">
+        <article class="pr-card">
+          <h3 class="feed-item-title"><a class="primary-link" href="/demo/repos/extractor/pulls/421">Add extraction hints for card action menus</a> <span class="issue-num">#421</span></h3>
+          <div class="branch-line">maya/card-action-hints &rarr; main</div>
+          <div class="pr-meta"><span class="badge warn">Changes requested</span><span class="badge">7 passed, 1 failed</span><span class="badge danger">Merge: Blocked</span></div>
+          <div class="meta-row"><span>by maya</span><span>12 changed files</span><span>19 comments</span><span>reviewers rafael, lina</span><span>updated 24 minutes ago</span></div>
+        </article>
+        <article class="pr-card">
+          <h3 class="feed-item-title"><a class="primary-link" href="/demo/repos/extractor/pulls/419">Improve timeline event grouping</a> <span class="issue-num">#419</span></h3>
+          <div class="branch-line">lina/timeline-grouping &rarr; main</div>
+          <div class="pr-meta"><span class="badge ok">Approved</span><span class="badge">8 passed</span><span class="badge ok">Merge: Ready to merge</span></div>
+          <div class="meta-row"><span>by lina</span><span>5 changed files</span><span>6 comments</span><span>reviewers maya, theo</span><span>updated 2 hours ago</span></div>
+        </article>
+        <article class="pr-card">
+          <h3 class="feed-item-title"><a class="primary-link" href="/demo/repos/extractor/pulls/417">Add fixture page for read-only confirmation records</a> <span class="issue-num">#417</span></h3>
+          <div class="branch-line">fixtures/read-only-records &rarr; main</div>
+          <div class="pr-meta"><span class="badge info">Review required</span><span class="badge">6 passed, 2 pending</span><span class="badge warn">Merge: Pending review</span></div>
+          <div class="meta-row"><span>by theo</span><span>23 changed files</span><span>11 comments</span><span>reviewers rafael</span><span>updated yesterday</span></div>
+        </article>
+        <article class="pr-card">
+          <h3 class="feed-item-title"><a class="primary-link" href="/demo/repos/extractor/pulls/414">Fix duplicated hidden input output</a> <span class="issue-num">#414</span></h3>
+          <div class="branch-line">fix/hidden-input-duplication &rarr; release-0.8</div>
+          <div class="pr-meta"><span class="badge accent">Merged</span><span class="badge">8 passed</span><span class="badge accent">Merge: Merged</span></div>
+          <div class="meta-row"><span>by rafael</span><span>3 changed files</span><span>4 comments</span><span>reviewers maya</span><span>updated 3 days ago</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-09">
+      <header class="example-header">
+        <p class="example-kicker">Example 09</p>
+        <h2>Customer Review Cards With Merchant Replies</h2>
+      </header>
+      <p class="example-description">
+        This example imitates product review cards. It tests extraction of reviewer, rating, date,
+        verified badge, product variant, review title, review body, helpful count, and nested merchant
+        replies.
+      </p>
+      <div class="example-surface">
+        <article class="review-card">
+          <div class="meta-row"><strong>Avery Q.</strong><span>Rating: 5 out of 5</span><span>May 28, 2026</span><span class="badge ok">Verified purchase</span></div>
+          <div class="kvline">Merino Travel Hoodie &middot; Forest / M</div>
+          <h3 style="margin:6px 0 4px">Good weight for changing weather</h3>
+          <p style="margin:0">Warm enough for cool mornings but not bulky in a backpack. The zipper pocket is deeper than expected.</p>
+          <div class="kvline" style="margin-top:6px">42 people found this helpful</div>
+        </article>
+        <article class="review-card">
+          <div class="meta-row"><strong>Diego M.</strong><span>Rating: 4 out of 5</span><span>May 22, 2026</span><span class="badge ok">Verified purchase</span></div>
+          <div class="kvline">Compact GaN Charger 65W &middot; Black</div>
+          <h3 style="margin:6px 0 4px">Small and reliable</h3>
+          <p style="margin:0">Charges my laptop and phone without getting too hot. The prongs are a little stiff when folding.</p>
+          <div class="kvline" style="margin-top:6px">18 people found this helpful</div>
+          <div class="merchant-reply"><strong>Merchant reply:</strong> Thanks for the feedback. The folding prong tension should loosen slightly after several uses.</div>
+        </article>
+        <article class="review-card">
+          <div class="meta-row"><strong>Grace M.</strong><span>Rating: 3 out of 5</span><span>May 19, 2026</span><span class="badge">Not verified</span></div>
+          <div class="kvline">Foldable Laptop Stand &middot; Graphite</div>
+          <h3 style="margin:6px 0 4px">Solid but heavier than expected</h3>
+          <p style="margin:0">It feels sturdy on a desk, but I would not choose it for daily travel.</p>
+          <div class="kvline" style="margin-top:6px">7 people found this helpful</div>
+          <div class="merchant-reply"><strong>Merchant reply:</strong> We are working on a lighter travel model for later this year.</div>
+        </article>
+        <article class="review-card">
+          <div class="meta-row"><strong>Priya S.</strong><span>Rating: 5 out of 5</span><span>May 15, 2026</span><span class="badge ok">Verified purchase</span></div>
+          <div class="kvline">Canvas Organizer Pouch &middot; Olive</div>
+          <h3 style="margin:6px 0 4px">Exactly the right size</h3>
+          <p style="margin:0">Fits charger, earbuds, cable, pen, and a small notebook. The inner pocket keeps small items from falling out.</p>
+          <div class="kvline" style="margin-top:6px">26 people found this helpful</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-10">
+      <header class="example-header">
+        <p class="example-kicker">Example 10</p>
+        <h2>News Digest Feed</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a personalized news digest. It tests extraction of article title, source,
+        section, author, published time, summary, topic tags, read time, and primary story link from
+        repeated news cards.
+      </p>
+      <div class="example-surface">
+        <article class="news-card">
+          <div class="thumb ph">Thumbnail</div>
+          <div>
+            <h3><a href="/demo/news/cooler-pavement-materials">Cities Test Cooler Pavement Materials During Early Summer Heat</a></h3>
+            <div class="meta-row"><span>Civic Science Review</span><span>Urban planning</span><span>by M. Elian</span><time>May 31, 2026, 7:30 AM</time><span>6 min read</span></div>
+            <p style="margin:6px 0 0">Pilot programs compare reflective coatings, tree cover, and porous pavement on neighborhood streets.</p>
+            <div class="tags"><span class="tag">climate adaptation</span><span class="tag">cities</span><span class="tag">infrastructure</span></div>
+          </div>
+        </article>
+        <article class="news-card">
+          <div class="thumb ph">Thumbnail</div>
+          <div>
+            <h3><a href="/demo/news/library-device-lending">Libraries Expand Device Lending Programs For Remote Workers</a></h3>
+            <div class="meta-row"><span>Public Access Weekly</span><span>Technology access</span><span>by R. Singh</span><time>May 31, 2026, 8:10 AM</time><span>4 min read</span></div>
+            <p style="margin:6px 0 0">Several library systems now lend webcams, hotspots, microphones, and portable monitors alongside laptops.</p>
+            <div class="tags"><span class="tag">libraries</span><span class="tag">remote work</span><span class="tag">digital equity</span></div>
+          </div>
+        </article>
+        <article class="news-card">
+          <div class="thumb ph">Thumbnail</div>
+          <div>
+            <h3><a href="/demo/news/form-abandonment-study">Researchers Map Common Sources Of Form Abandonment</a></h3>
+            <div class="meta-row"><span>Interface Journal</span><span>Design research</span><span>by L. Romero</span><time>May 31, 2026, 9:15 AM</time><span>8 min read</span></div>
+            <p style="margin:6px 0 0">A multi-site study identifies confusion around optional fields, hidden fees, and repeated account prompts.</p>
+            <div class="tags"><span class="tag">forms</span><span class="tag">research</span><span class="tag">user experience</span></div>
+          </div>
+        </article>
+        <article class="news-card">
+          <div class="thumb ph">Thumbnail</div>
+          <div>
+            <h3><a href="/demo/news/shared-repair-networks">Small Manufacturers Turn To Shared Repair Networks</a></h3>
+            <div class="meta-row"><span>Local Industry Report</span><span>Business</span><span>by C. Patel</span><time>May 31, 2026, 10:00 AM</time><span>5 min read</span></div>
+            <p style="margin:6px 0 0">Regional shops are pooling technicians and parts inventory to reduce equipment downtime.</p>
+            <div class="tags"><span class="tag">small business</span><span class="tag">operations</span><span class="tag">repair</span></div>
+          </div>
+        </article>
+        <article class="news-card">
+          <div class="thumb ph">Thumbnail</div>
+          <div>
+            <h3><a href="/demo/news/financial-aid-timelines">Universities Publish Plain-Language Financial Aid Timelines</a></h3>
+            <div class="meta-row"><span>Campus Systems Monitor</span><span>Education</span><span>by N. Brooks</span><time>May 31, 2026, 10:45 AM</time><span>3 min read</span></div>
+            <p style="margin:6px 0 0">New student portals explain document review, award packaging, and payment deadlines in step-by-step language.</p>
+            <div class="tags"><span class="tag">education</span><span class="tag">student services</span><span class="tag">accessibility</span></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-11">
+      <header class="example-header">
+        <p class="example-kicker">Example 11</p>
+        <h2>Video Platform Subscription Feed</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a video subscription feed. It tests extraction of video title, channel,
+        duration, views, upload time, badges, playlist metadata, and primary video link from cards where
+        thumbnail text is not the title.
+      </p>
+      <div class="example-surface">
+        <article class="video-card">
+          <div class="thumb ph">Video thumbnail placeholder: layout shift demo<span class="duration-badge">18:42</span></div>
+          <div>
+            <h3><a href="/demo/videos/debug-layout-shift-forms">Debugging Layout Shift In Complex Forms</a></h3>
+            <div class="meta-row"><span>Browser Workshop</span><span>42K views</span><span>3 hours ago</span><span class="badge ok">New</span></div>
+            <div class="kvline">Series: Frontend Diagnostics</div>
+          </div>
+        </article>
+        <article class="video-card">
+          <div class="thumb ph">Video thumbnail placeholder: waterfall chart<span class="duration-badge">24:10</span></div>
+          <div>
+            <h3><a href="/demo/videos/read-network-waterfalls">How To Read Network Waterfalls Without Guessing</a></h3>
+            <div class="meta-row"><span>Performance Lab</span><span>87K views</span><span>yesterday</span><span class="badge info">Popular</span></div>
+            <div class="kvline">Series: Browser Performance Basics</div>
+          </div>
+        </article>
+        <article class="video-card">
+          <div class="thumb ph">Video thumbnail placeholder: empty state examples<span class="duration-badge">12:08</span></div>
+          <div>
+            <h3><a href="/demo/videos/designing-empty-states">Designing Better Empty States</a></h3>
+            <div class="meta-row"><span>Product Patterns</span><span>16K views</span><span>2 days ago</span><span class="badge accent">Recommended</span></div>
+            <div class="kvline">Series: UX Writing Clinic</div>
+          </div>
+        </article>
+        <article class="video-card">
+          <div class="thumb ph">Video thumbnail placeholder: accessibility tree<span class="duration-badge">21:36</span></div>
+          <div>
+            <h3><a href="/demo/videos/accessibility-tree-html">Accessibility Tree Explained With Simple HTML</a></h3>
+            <div class="meta-row"><span>Markup Minutes</span><span>51K views</span><span>4 days ago</span><span class="badge">Captioned</span></div>
+            <div class="kvline">Series: Semantic HTML Deep Dive</div>
+          </div>
+        </article>
+        <article class="video-card">
+          <div class="thumb ph">Video thumbnail placeholder: mobile table<span class="duration-badge">15:55</span></div>
+          <div>
+            <h3><a href="/demo/videos/data-tables-small-screens">Why Data Tables Break On Small Screens</a></h3>
+            <div class="meta-row"><span>Interface Journal</span><span>28K views</span><span>1 week ago</span><span class="badge">Saved</span></div>
+            <div class="kvline">Series: Responsive UI Problems</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-12">
+      <header class="example-header">
+        <p class="example-kicker">Example 12</p>
+        <h2>Event Discovery Cards</h2>
+      </header>
+      <p class="example-description">
+        This example imitates an event discovery feed. It tests extraction of event title, organizer,
+        date, time, venue, location, price, format, tags, attendee count, and event links from repeated
+        cards.
+      </p>
+      <div class="example-surface">
+        <div class="card-grid-two">
+          <article class="mini-card"><div class="body">
+            <div class="meta-row"><span class="badge accent">June 18, 2026</span><span class="badge ok">Free</span></div>
+            <h3><a href="/demo/events/browser-automation-meetup">Practical Browser Automation Meetup</a></h3>
+            <div class="kvline">Organizer: Bay Area Testing Guild</div>
+            <div class="kvline">6:30 PM &middot; North Market Coworking &middot; San Francisco, CA</div>
+            <div class="kvline">Format: In person &middot; 84 attending</div>
+            <div class="tags"><span class="tag">testing</span><span class="tag">browser automation</span><span class="tag">JavaScript</span></div>
+          </div></article>
+          <article class="mini-card"><div class="body">
+            <div class="meta-row"><span class="badge accent">June 23, 2026</span><span class="badge">$12</span></div>
+            <h3><a href="/demo/events/design-systems-docs">Design Systems Documentation Night</a></h3>
+            <div class="kvline">Organizer: Interface Writers Collective</div>
+            <div class="kvline">5:30 PM &middot; Civic Data Lab &middot; Oakland, CA</div>
+            <div class="kvline">Format: Hybrid &middot; 42 attending</div>
+            <div class="tags"><span class="tag">documentation</span><span class="tag">design systems</span><span class="tag">content</span></div>
+          </div></article>
+          <article class="mini-card"><div class="body">
+            <div class="meta-row"><span class="badge accent">July 2, 2026</span><span class="badge ok">Free</span></div>
+            <h3><a href="/demo/events/local-first-sync-study">Local-First Sync Study Group</a></h3>
+            <div class="kvline">Organizer: Offline Web Club</div>
+            <div class="kvline">7:00 PM &middot; Online &middot; Remote</div>
+            <div class="kvline">Format: Online &middot; 127 attending</div>
+            <div class="tags"><span class="tag">sync</span><span class="tag">databases</span><span class="tag">offline-first</span></div>
+          </div></article>
+          <article class="mini-card"><div class="body">
+            <div class="meta-row"><span class="badge accent">July 10, 2026</span><span class="badge">$35</span></div>
+            <h3><a href="/demo/events/public-data-viz-clinic">Public Data Visualization Clinic</a></h3>
+            <div class="kvline">Organizer: Civic Science Review</div>
+            <div class="kvline">10:00 AM &middot; City Museum Lab &middot; San Mateo, CA</div>
+            <div class="kvline">Format: Workshop &middot; 29 attending</div>
+            <div class="tags"><span class="tag">data visualization</span><span class="tag">public data</span><span class="tag">accessibility</span></div>
+          </div></article>
+          <article class="mini-card"><div class="body">
+            <div class="meta-row"><span class="badge accent">July 16, 2026</span><span class="badge">$49</span></div>
+            <h3><a href="/demo/events/incident-review-workshop">Small Team Incident Review Workshop</a></h3>
+            <div class="kvline">Organizer: Ops Learning Circle</div>
+            <div class="kvline">1:00 PM &middot; Harbor Hall &middot; Monterey, CA</div>
+            <div class="kvline">Format: In person &middot; 18 attending</div>
+            <div class="tags"><span class="tag">operations</span><span class="tag">retrospectives</span><span class="tag">reliability</span></div>
+          </div></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-13">
+      <header class="example-header">
+        <p class="example-kicker">Example 13</p>
+        <h2>Real Estate Property Cards</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a real estate listing feed. It tests extraction of property address, price,
+        beds, baths, square feet, property type, status, open house times, agent, and listing links from
+        repeated cards.
+      </p>
+      <div class="example-surface">
+        <div class="card-grid-two">
+          <article class="mini-card">
+            <div class="thumb ph">Property photo placeholder</div>
+            <div class="body">
+              <span class="badge warn">Open house</span>
+              <h3><a href="/demo/properties/410-oak-grove-6">410 Oak Grove Avenue Unit 6</a></h3>
+              <div class="kvline">Oakland, CA</div>
+              <div class="price">$689,000</div>
+              <div class="kvline"><b>2</b> beds &middot; <b>1</b> bath &middot; 890 sq ft &middot; Condo</div>
+              <div class="kvline">Open house: Sat 1-4 PM &middot; Agent Maya Chen</div>
+            </div>
+          </article>
+          <article class="mini-card">
+            <div class="thumb ph">Property photo placeholder</div>
+            <div class="body">
+              <span class="badge ok">New listing</span>
+              <h3><a href="/demo/properties/88-valencia-402">88 Valencia Street Suite 402</a></h3>
+              <div class="kvline">San Francisco, CA</div>
+              <div class="price">$1,120,000</div>
+              <div class="kvline"><b>1</b> bed &middot; <b>1.5</b> baths &middot; 1,040 sq ft &middot; Loft</div>
+              <div class="kvline">Open house: Sun 2-5 PM &middot; Agent Rafael Ortiz</div>
+            </div>
+          </article>
+          <article class="mini-card">
+            <div class="thumb ph">Property photo placeholder</div>
+            <div class="body">
+              <span class="badge danger">Price reduced</span>
+              <h3><a href="/demo/properties/72-hillcrest">72 Hillcrest Road</a></h3>
+              <div class="kvline">San Mateo, CA</div>
+              <div class="price">$1,485,000</div>
+              <div class="kvline"><b>3</b> beds &middot; <b>2</b> baths &middot; 1,620 sq ft &middot; Single-family home</div>
+              <div class="kvline">Open house: By appointment &middot; Agent Lina Romero</div>
+            </div>
+          </article>
+          <article class="mini-card">
+            <div class="thumb ph">Property photo placeholder</div>
+            <div class="body">
+              <span class="badge info">Pending</span>
+              <h3><a href="/demo/properties/120-king-b">120 King Street Unit B</a></h3>
+              <div class="kvline">San Francisco, CA</div>
+              <div class="price">$945,000</div>
+              <div class="kvline"><b>2</b> beds &middot; <b>2</b> baths &middot; 1,180 sq ft &middot; Townhome</div>
+              <div class="kvline">Open house: None &middot; Agent Owen Brooks</div>
+            </div>
+          </article>
+          <article class="mini-card">
+            <div class="thumb ph">Property photo placeholder</div>
+            <div class="body">
+              <span class="badge ok">Active</span>
+              <h3><a href="/demo/properties/201-pier-lane">201 Pier Lane</a></h3>
+              <div class="kvline">Monterey, CA</div>
+              <div class="price">$1,980,000</div>
+              <div class="kvline"><b>4</b> beds &middot; <b>3</b> baths &middot; 2,440 sq ft &middot; Waterfront home</div>
+              <div class="kvline">Open house: Sat 11 AM-2 PM &middot; Agent Priya Shah</div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-14">
+      <header class="example-header">
+        <p class="example-kicker">Example 14</p>
+        <h2>Travel Deal Cards</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a travel deal feed. It tests extraction of destination, origin, travel
+        dates, price, provider, deal type, restrictions, badges, and links from promotional-style cards.
+      </p>
+      <div class="example-surface">
+        <div class="card-grid-two">
+          <article class="mini-card"><div class="body">
+            <span class="badge danger">48 hours left</span>
+            <h3><a href="/demo/travel-deals/sfo-tokyo-spring">San Francisco to Tokyo spring fare</a></h3>
+            <div class="price">$612 round trip</div>
+            <div class="kvline">SFO &rarr; Tokyo &middot; March 3-18, 2027</div>
+            <div class="kvline">Provider: AeroVista &middot; Flight</div>
+            <div class="kvline">Restrictions: Basic economy, limited changes</div>
+          </div></article>
+          <article class="mini-card"><div class="body">
+            <span class="badge ok">Breakfast included</span>
+            <h3><a href="/demo/travel-deals/monterey-weekend-package">Monterey coast weekend hotel package</a></h3>
+            <div class="price">$429 for 2 nights</div>
+            <div class="kvline">Drive-in &rarr; Monterey, CA &middot; August weekends</div>
+            <div class="kvline">Provider: Harbor View Suites &middot; Hotel package</div>
+            <div class="kvline">Restrictions: Non-refundable after booking</div>
+          </div></article>
+          <article class="mini-card"><div class="body">
+            <span class="badge accent">Saver fare</span>
+            <h3><a href="/demo/travel-deals/sea-pdx-rail-saver">Seattle to Portland rail saver</a></h3>
+            <div class="price">$34 one way</div>
+            <div class="kvline">Seattle &rarr; Portland &middot; July 8-31, 2026</div>
+            <div class="kvline">Provider: Coastal Runner &middot; Train</div>
+            <div class="kvline">Restrictions: Off-peak departures only</div>
+          </div></article>
+          <article class="mini-card"><div class="body">
+            <span class="badge warn">Low availability</span>
+            <h3><a href="/demo/travel-deals/redwood-cabin-midweek">Redwood cabin midweek stay</a></h3>
+            <div class="price">$229 per night</div>
+            <div class="kvline">Northern California &rarr; Redwood Creek &middot; September 10-15, 2026</div>
+            <div class="kvline">Provider: Creekside Stays &middot; Vacation rental</div>
+            <div class="kvline">Restrictions: 3 night minimum</div>
+          </div></article>
+          <article class="mini-card"><div class="body">
+            <span class="badge info">Prepay and save</span>
+            <h3><a href="/demo/travel-deals/airport-parking-discount">Airport parking early booking discount</a></h3>
+            <div class="price">$132 prepaid</div>
+            <div class="kvline">SEA &rarr; Terminal Garage P2 &middot; July 12-16, 2026</div>
+            <div class="kvline">Provider: Example Airport Parking &middot; Parking</div>
+            <div class="kvline">Restrictions: One entry and one exit</div>
+          </div></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-15">
+      <header class="example-header">
+        <p class="example-kicker">Example 15</p>
+        <h2>Knowledge Base Article Cards</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a help center article feed. It tests extraction of article title, category,
+        excerpt, updated date, owner, helpful score, tags, and links from repeated knowledge cards.
+      </p>
+      <div class="example-surface">
+        <article class="review-card">
+          <div class="meta-row"><span class="badge accent">Billing</span><span>Updated May 29, 2026</span><span>Owner: Billing Support</span><span class="badge ok">94 percent helpful</span></div>
+          <h3 style="margin:6px 0 4px"><a href="/demo/help/export-invoice-line-items">How to export invoice line items</a></h3>
+          <p style="margin:0">Download invoice details as CSV and include tax, discount, and payment columns.</p>
+          <div class="tags"><span class="tag">invoices</span><span class="tag">csv</span><span class="tag">billing</span></div>
+        </article>
+        <article class="review-card">
+          <div class="meta-row"><span class="badge accent">Security</span><span>Updated May 22, 2026</span><span>Owner: Security Team</span><span class="badge ok">88 percent helpful</span></div>
+          <h3 style="margin:6px 0 4px"><a href="/demo/help/setup-saml-sso">Set up SAML single sign-on</a></h3>
+          <p style="margin:0">Configure identity provider metadata, claim mappings, and test login before enforcement.</p>
+          <div class="tags"><span class="tag">saml</span><span class="tag">sso</span><span class="tag">security</span></div>
+        </article>
+        <article class="review-card">
+          <div class="meta-row"><span class="badge accent">Administration</span><span>Updated May 18, 2026</span><span>Owner: Admin Experience</span><span class="badge ok">91 percent helpful</span></div>
+          <h3 style="margin:6px 0 4px"><a href="/demo/help/workspace-role-permissions">Understand workspace role permissions</a></h3>
+          <p style="margin:0">Compare viewer, editor, billing manager, admin, and owner capabilities.</p>
+          <div class="tags"><span class="tag">roles</span><span class="tag">permissions</span><span class="tag">users</span></div>
+        </article>
+        <article class="review-card">
+          <div class="meta-row"><span class="badge accent">Browser Extension</span><span>Updated May 11, 2026</span><span>Owner: Extension Team</span><span class="badge ok">83 percent helpful</span></div>
+          <h3 style="margin:6px 0 4px"><a href="/demo/help/missing-extension-data">Troubleshoot missing browser extension data</a></h3>
+          <p style="margin:0">Check site permissions, extension status, and page reload requirements.</p>
+          <div class="tags"><span class="tag">browser</span><span class="tag">extension</span><span class="tag">permissions</span></div>
+        </article>
+        <article class="review-card">
+          <div class="meta-row"><span class="badge accent">Extraction</span><span>Updated May 9, 2026</span><span>Owner: Product Education</span><span class="badge ok">96 percent helpful</span></div>
+          <h3 style="margin:6px 0 4px"><a href="/demo/help/saved-extraction-template">Create a saved extraction template</a></h3>
+          <p style="margin:0">Define reusable fields, review example output, and apply the template to similar pages.</p>
+          <div class="tags"><span class="tag">templates</span><span class="tag">extraction</span><span class="tag">automation</span></div>
+        </article>
+        <article class="review-card">
+          <div class="meta-row"><span class="badge accent">Troubleshooting</span><span>Updated May 1, 2026</span><span>Owner: Support Engineering</span><span class="badge warn">79 percent helpful</span></div>
+          <h3 style="margin:6px 0 4px"><a href="/demo/help/duplicate-action-menu-labels">Resolve duplicate action menu labels</a></h3>
+          <p style="margin:0">Adjust extraction scope when card action menus are included in selected content.</p>
+          <div class="tags"><span class="tag">cards</span><span class="tag">actions</span><span class="tag">cleanup</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-16">
+      <header class="example-header">
+        <p class="example-kicker">Example 16</p>
+        <h2>Support Ticket Queue Cards</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a support agent ticket queue. It tests extraction of repeated ticket cards
+        with case number, customer, subject, status, priority, channel, assignee, SLA deadline, last
+        message snippet, and unread state.
+      </p>
+      <div class="example-surface">
+        <article class="pr-card">
+          <h3 class="feed-item-title"><a class="primary-link" href="/demo/support/tickets/TCK-2026-54091">Refund status request</a> <span class="issue-num">TCK-2026-54091</span></h3>
+          <div class="pr-meta"><span class="badge warn">Waiting on customer</span><span class="badge">Priority: Medium</span><span class="badge info">Email</span></div>
+          <div class="meta-row"><span>Lina Romero &middot; Civic Data Lab</span><span>assignee Maya</span><span>SLA: Due June 1, 2026, 3:14 PM</span></div>
+          <p style="margin:8px 0 0" class="mail-snippet">Last message: Thanks for the timeline. I will check with our finance team and reply today.</p>
+        </article>
+        <article class="pr-card">
+          <h3 class="feed-item-title"><a class="primary-link" href="/demo/support/tickets/TCK-2026-54102">Invoice PDF missing line item details</a> <span class="issue-num">TCK-2026-54102</span> <span class="badge danger">Unread</span></h3>
+          <div class="pr-meta"><span class="badge ok">Open</span><span class="badge danger">Priority: High</span><span class="badge info">Chat</span></div>
+          <div class="meta-row"><span>Theo Grant &middot; Independent documentary project</span><span>assignee Rafael</span><span>SLA: Due today, 5:00 PM</span></div>
+          <p style="margin:8px 0 0" class="mail-snippet">Last message: Can you send a version that includes SKU and tax columns?</p>
+        </article>
+        <article class="pr-card">
+          <h3 class="feed-item-title"><a class="primary-link" href="/demo/support/tickets/TCK-2026-54118">Need help enabling SAML for test workspace</a> <span class="issue-num">TCK-2026-54118</span> <span class="badge danger">Unread</span></h3>
+          <div class="pr-meta"><span class="badge info">In progress</span><span class="badge">Priority: Medium</span><span class="badge info">Email</span></div>
+          <div class="meta-row"><span>Grace Miller &middot; Atlas Product Studio</span><span>assignee Nina</span><span>SLA: Due June 2, 2026, 10:00 AM</span></div>
+          <p style="margin:8px 0 0" class="mail-snippet">Last message: The identity provider metadata is attached.</p>
+        </article>
+        <article class="pr-card">
+          <h3 class="feed-item-title"><a class="primary-link" href="/demo/support/tickets/TCK-2026-54129">License activation warning on lab workstation</a> <span class="issue-num">TCK-2026-54129</span></h3>
+          <div class="pr-meta"><span class="badge ok">Open</span><span class="badge">Priority: Low</span><span class="badge info">Portal</span></div>
+          <div class="meta-row"><span>Priya Shah &middot; Northstar Research Lab</span><span>assignee Unassigned</span><span>SLA: Due June 3, 2026, 9:00 AM</span></div>
+          <p style="margin:8px 0 0" class="mail-snippet">Last message: The warning appears only on LAB-WKS-07 after restart.</p>
+        </article>
+        <article class="pr-card">
+          <h3 class="feed-item-title"><a class="primary-link" href="/demo/support/tickets/TCK-2026-54144">Bulk event registration import failed</a> <span class="issue-num">TCK-2026-54144</span> <span class="badge danger">Unread</span></h3>
+          <div class="pr-meta"><span class="badge danger">Escalated</span><span class="badge danger">Priority: Urgent</span><span class="badge info">Phone</span></div>
+          <div class="meta-row"><span>Owen Brooks &middot; City Museum of Design</span><span>assignee Leah</span><span>SLA: Overdue by 34 minutes</span></div>
+          <p style="margin:8px 0 0" class="mail-snippet">Last message: The attendee CSV has 214 rows and fails at row 89.</p>
+        </article>
+        <article class="pr-card">
+          <h3 class="feed-item-title"><a class="primary-link" href="/demo/support/tickets/TCK-2026-54159">Question about archived audit logs</a> <span class="issue-num">TCK-2026-54159</span></h3>
+          <div class="pr-meta"><span class="badge accent">Solved</span><span class="badge">Priority: Low</span><span class="badge info">Email</span></div>
+          <div class="meta-row"><span>Avery Quinn &middot; Cedar Pine Studio</span><span>assignee Maya</span><span>SLA: Met</span></div>
+          <p style="margin:8px 0 0" class="mail-snippet">Last message: Thanks, that answered my question.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-17">
+      <header class="example-header">
+        <p class="example-kicker">Example 17</p>
+        <h2>Team Activity Feed</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a team activity timeline. It tests extraction of actor, verb, target
+        object, project, timestamp, details, and related links from chronological feed items.
+      </p>
+      <div class="example-surface">
+        <div class="activity-item">
+          <div class="avatar">MC</div>
+          <div class="activity-body">
+            <span class="actor">Maya Chen</span> <span class="verb">commented on</span> <span class="target">Issue #1842</span> in <span class="target">Extractor Core</span>
+            <div class="activity-meta">May 31, 2026, 11:42 AM &middot; <a href="/demo/repos/extractor/issues/1842">view</a></div>
+            <div>Added reproduction steps for portaled dropdown menus.</div>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="avatar">RO</div>
+          <div class="activity-body">
+            <span class="actor">Rafael Ortiz</span> <span class="verb">merged</span> <span class="target">Pull request #414</span> in <span class="target">Extractor Core</span>
+            <div class="activity-meta">May 31, 2026, 10:58 AM &middot; <a href="/demo/repos/extractor/pulls/414">view</a></div>
+            <div>Fixed duplicated hidden input output in selected forms.</div>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="avatar">LR</div>
+          <div class="activity-body">
+            <span class="actor">Lina Romero</span> <span class="verb">created</span> <span class="target">Research note</span> in <span class="target">Content Selection Study</span>
+            <div class="activity-meta">May 31, 2026, 10:12 AM &middot; <a href="/demo/notes/ecommerce-confirmation-patterns">view</a></div>
+            <div>Documented patterns from 18 ecommerce confirmation pages.</div>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="avatar">TG</div>
+          <div class="activity-body">
+            <span class="actor">Theo Grant</span> <span class="verb">uploaded</span> <span class="target">Fixture file</span> in <span class="target">Demo Pages</span>
+            <div class="activity-meta">May 31, 2026, 9:44 AM &middot; <a href="/demo/files/dense-card-layout-notes">view</a></div>
+            <div>Added screenshot notes for dense card layouts.</div>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="avatar">NP</div>
+          <div class="activity-body">
+            <span class="actor">Nina Patel</span> <span class="verb">assigned</span> <span class="target">Ticket TCK-2026-54118</span> in <span class="target">Support Queue</span>
+            <div class="activity-meta">May 31, 2026, 9:17 AM &middot; <a href="/demo/support/tickets/TCK-2026-54118">view</a></div>
+            <div>Assigned SAML setup question to herself.</div>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="avatar">GM</div>
+          <div class="activity-body">
+            <span class="actor">Grace Miller</span> <span class="verb">changed status of</span> <span class="target">Job card QA-204</span> in <span class="target">Hiring Pipeline</span>
+            <div class="activity-meta">May 31, 2026, 8:53 AM &middot; <a href="/demo/hiring/cards/QA-204">view</a></div>
+            <div>Moved candidate review card from Screening to Interview.</div>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="avatar">OB</div>
+          <div class="activity-body">
+            <span class="actor">Owen Brooks</span> <span class="verb">published</span> <span class="target">Help article</span> in <span class="target">Knowledge Base</span>
+            <div class="activity-meta">May 31, 2026, 8:11 AM &middot; <a href="/demo/help/export-invoice-line-items">view</a></div>
+            <div>Published article about exporting invoice line items.</div>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="avatar">PS</div>
+          <div class="activity-body">
+            <span class="actor">Priya Shah</span> <span class="verb">renewed</span> <span class="target">License LIC-2026-882014</span> in <span class="target">DataGrid Studio Pro</span>
+            <div class="activity-meta">May 30, 2026, 4:20 PM &middot; <a href="/demo/licenses/LIC-2026-882014">view</a></div>
+            <div>Renewed priority support and maintenance for 12 seats.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-18">
+      <header class="example-header">
+        <p class="example-kicker">Example 18</p>
+        <h2>Notification Center Feed</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a notification center. It tests extraction of notification title, message,
+        source, severity, unread state, timestamp, action label, and deep link from compact cards.
+      </p>
+      <div class="example-surface">
+        <div class="notif unread">
+          <div class="notif-bar warn"></div>
+          <div>
+            <div class="meta-row"><span class="badge warn">Warning</span><span>Billing</span><span class="badge danger">Unread</span><span>12 minutes ago</span></div>
+            <h3>Invoice payment failed</h3>
+            <p style="margin:0">The payment for invoice INV-2026-00841 could not be completed with Visa ending in 4242.</p>
+            <p style="margin:6px 0 0"><a href="/demo/billing/payment-method">Update payment method</a></p>
+          </div>
+        </div>
+        <div class="notif unread">
+          <div class="notif-bar info"></div>
+          <div>
+            <div class="meta-row"><span class="badge info">Info</span><span>Security</span><span class="badge danger">Unread</span><span>38 minutes ago</span></div>
+            <h3>New sign-in from known device</h3>
+            <p style="margin:0">Anika Sharma signed in from Chrome on macOS in San Francisco, CA.</p>
+            <p style="margin:6px 0 0"><a href="/demo/security/events/evt_2026_05_31_884120">View audit event</a></p>
+          </div>
+        </div>
+        <div class="notif">
+          <div class="notif-bar success"></div>
+          <div>
+            <div class="meta-row"><span class="badge ok">Success</span><span>Exports</span><span>1 hour ago</span></div>
+            <h3>CSV export ready</h3>
+            <p style="margin:0">Your invoice line item export for May 2026 is ready to download.</p>
+            <p style="margin:6px 0 0"><a href="/demo/exports/invoice-lines-may-2026">Download CSV</a></p>
+          </div>
+        </div>
+        <div class="notif unread">
+          <div class="notif-bar urgent"></div>
+          <div>
+            <div class="meta-row"><span class="badge danger">Urgent</span><span>Support</span><span class="badge danger">Unread</span><span>34 minutes ago</span></div>
+            <h3>Ticket SLA overdue</h3>
+            <p style="margin:0">Ticket TCK-2026-54144 is overdue by 34 minutes.</p>
+            <p style="margin:6px 0 0"><a href="/demo/support/tickets/TCK-2026-54144">Open ticket</a></p>
+          </div>
+        </div>
+        <div class="notif">
+          <div class="notif-bar info"></div>
+          <div>
+            <div class="meta-row"><span class="badge info">Info</span><span>Projects</span><span>2 hours ago</span></div>
+            <h3>Pull request approved</h3>
+            <p style="margin:0">Lina approved PR #419: Improve timeline event grouping.</p>
+            <p style="margin:6px 0 0"><a href="/demo/repos/extractor/pulls/419">View pull request</a></p>
+          </div>
+        </div>
+        <div class="notif">
+          <div class="notif-bar info"></div>
+          <div>
+            <div class="meta-row"><span class="badge info">Info</span><span>Knowledge Base</span><span>yesterday</span></div>
+            <h3>Article helpful score changed</h3>
+            <p style="margin:0">Create a saved extraction template reached 96 percent helpful.</p>
+            <p style="margin:6px 0 0"><a href="/demo/help/saved-extraction-template">Open article</a></p>
+          </div>
+        </div>
+        <div class="notif">
+          <div class="notif-bar success"></div>
+          <div>
+            <div class="meta-row"><span class="badge ok">Success</span><span>Licenses</span><span>yesterday</span></div>
+            <h3>License activated</h3>
+            <p style="margin:0">DataGrid Studio Pro license LIC-2026-882014 is active for 12 seats.</p>
+            <p style="margin:6px 0 0"><a href="/demo/licenses/LIC-2026-882014">View license</a></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-19">
+      <header class="example-header">
+        <p class="example-kicker">Example 19</p>
+        <h2>Compact Email Thread Cards</h2>
+      </header>
+      <p class="example-description">
+        This example imitates an inbox thread list. It tests extraction of sender, subject, snippet,
+        timestamp, labels, attachment state, unread state, and thread links from compact repeated cards.
+      </p>
+      <div class="example-surface">
+        <div class="mail-row unread">
+          <div class="mail-sender"><strong>Renee Coleman</strong><div class="kvline">to Finance Team</div></div>
+          <div>
+            <div class="mail-subject"><a href="/demo/mail/threads/invoice-approval-00841">Invoice approval needed for INV-2026-00841</a></div>
+            <div class="mail-snippet">Please review the remaining balance and confirm whether the support package should stay on the renewal.</div>
+            <div class="tags"><span class="label-chip">Finance</span><span class="label-chip">Needs approval</span></div>
+          </div>
+          <div class="mail-time">11:22 AM</div>
+        </div>
+        <div class="mail-row">
+          <div class="mail-sender"><strong>Harbor View Suites</strong><div class="kvline">to Priya Shah</div></div>
+          <div>
+            <div class="mail-subject"><a href="/demo/mail/threads/hotel-confirmation"><span class="clip"></span>Reservation HVS-2026-88217 confirmed</a></div>
+            <div class="mail-snippet">Your stay from August 14 through August 18 is confirmed. Breakfast is included with your rate plan.</div>
+            <div class="tags"><span class="label-chip">Travel</span><span class="label-chip">Receipt</span></div>
+          </div>
+          <div class="mail-time">10:48 AM</div>
+        </div>
+        <div class="mail-row unread">
+          <div class="mail-sender"><strong>Support Queue</strong><div class="kvline">to Billing Support</div></div>
+          <div>
+            <div class="mail-subject"><a href="/demo/mail/threads/urgent-ticket-54144">Urgent ticket TCK-2026-54144 overdue</a></div>
+            <div class="mail-snippet">The bulk event registration import failed and the customer is waiting on an update.</div>
+            <div class="tags"><span class="label-chip">Support</span><span class="label-chip">Urgent</span></div>
+          </div>
+          <div class="mail-time">10:14 AM</div>
+        </div>
+        <div class="mail-row">
+          <div class="mail-sender"><strong>City Museum of Design</strong><div class="kvline">to Grace Miller</div></div>
+          <div>
+            <div class="mail-subject"><a href="/demo/mail/threads/membership-renewal"><span class="clip"></span>Membership renewal receipt MEM-2026-11902</a></div>
+            <div class="mail-snippet">Your Family Plus membership has been renewed through May 31, 2027.</div>
+            <div class="tags"><span class="label-chip">Membership</span><span class="label-chip">Receipt</span></div>
+          </div>
+          <div class="mail-time">Yesterday</div>
+        </div>
+        <div class="mail-row">
+          <div class="mail-sender"><strong>Northstar Research Lab</strong><div class="kvline">to Priya Shah</div></div>
+          <div>
+            <div class="mail-subject"><a href="/demo/mail/threads/license-activation">License activation details for DataGrid Studio Pro</a></div>
+            <div class="mail-snippet">The license is active for 12 seats and priority support has been renewed.</div>
+            <div class="tags"><span class="label-chip">Licenses</span><span class="label-chip">Admin</span></div>
+          </div>
+          <div class="mail-time">Yesterday</div>
+        </div>
+        <div class="mail-row">
+          <div class="mail-sender"><strong>Dr. Hannah Cho</strong><div class="kvline">to Victor Lane</div></div>
+          <div>
+            <div class="mail-subject"><a href="/demo/mail/threads/lab-follow-up">Lab result follow-up</a></div>
+            <div class="mail-snippet">LDL remains mildly elevated. Continue current medication and discuss diet changes at the next visit.</div>
+            <div class="tags"><span class="label-chip">Health</span><span class="label-chip">Follow-up</span></div>
+          </div>
+          <div class="mail-time">May 29</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-20">
+      <header class="example-header">
+        <p class="example-kicker">Example 20</p>
+        <h2>Learning Course Catalog Cards</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a learning platform course catalog. It tests extraction of course titles,
+        providers, levels, durations, ratings, enrollment counts, prices, certificate metadata, tags, and
+        course links from repeated cards.
+      </p>
+      <div class="example-surface">
+        <div class="card-grid-two">
+          <article class="mini-card"><div class="body">
+            <div class="meta-row"><span class="badge accent">Intermediate</span><span class="price" style="font-size:1rem">$89</span></div>
+            <h3><a href="/demo/courses/browser-automation-testing">Browser Automation For Practical Testing</a></h3>
+            <div class="kvline">Testing Guild Academy</div>
+            <div class="kvline">6 hours &middot; 8 modules &middot; Rating 4.8</div>
+            <div class="kvline">12,480 learners &middot; <b>Certificate included</b></div>
+            <div class="tags"><span class="tag">automation</span><span class="tag">testing</span><span class="tag">browser</span></div>
+          </div></article>
+          <article class="mini-card"><div class="body">
+            <div class="meta-row"><span class="badge accent">Beginner</span><span class="price" style="font-size:1rem">$49</span></div>
+            <h3><a href="/demo/courses/readable-data-tables">Readable Data Tables For Product Teams</a></h3>
+            <div class="kvline">Interface Journal School</div>
+            <div class="kvline">4 hours &middot; 5 modules &middot; Rating 4.6</div>
+            <div class="kvline">4,920 learners &middot; <b>Certificate included</b></div>
+            <div class="tags"><span class="tag">tables</span><span class="tag">data design</span><span class="tag">ux</span></div>
+          </div></article>
+          <article class="mini-card"><div class="body">
+            <div class="meta-row"><span class="badge accent">Intermediate</span><span class="price" style="font-size:1rem">$109</span></div>
+            <h3><a href="/demo/courses/accessibility-testing-html">Accessibility Testing With Plain HTML</a></h3>
+            <div class="kvline">Markup Minutes</div>
+            <div class="kvline">7 hours &middot; 10 modules &middot; Rating 4.9</div>
+            <div class="kvline">18,112 learners &middot; <b>Certificate included</b></div>
+            <div class="tags"><span class="tag">accessibility</span><span class="tag">html</span><span class="tag">qa</span></div>
+          </div></article>
+          <article class="mini-card"><div class="body">
+            <div class="meta-row"><span class="badge accent">Beginner</span><span class="badge ok">Free</span></div>
+            <h3><a href="/demo/courses/error-message-writing">Writing Better Error Messages</a></h3>
+            <div class="kvline">Product Writing Lab</div>
+            <div class="kvline">2.5 hours &middot; 4 modules &middot; Rating 4.5</div>
+            <div class="kvline">3,604 learners &middot; <b>No certificate</b></div>
+            <div class="tags"><span class="tag">ux writing</span><span class="tag">forms</span><span class="tag">content</span></div>
+          </div></article>
+          <article class="mini-card"><div class="body">
+            <div class="meta-row"><span class="badge accent">Advanced</span><span class="price" style="font-size:1rem">$149</span></div>
+            <h3><a href="/demo/courses/reliable-admin-workflows">Designing Reliable Admin Workflows</a></h3>
+            <div class="kvline">Ops Learning Circle</div>
+            <div class="kvline">9 hours &middot; 12 modules &middot; Rating 4.7</div>
+            <div class="kvline">6,331 learners &middot; <b>Certificate included</b></div>
+            <div class="tags"><span class="tag">admin</span><span class="tag">workflow</span><span class="tag">operations</span></div>
+          </div></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-21">
+      <header class="example-header">
+        <p class="example-kicker">Example 21</p>
+        <h2>Community Classified Post Cards</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a neighborhood classified board. It tests extraction of post title,
+        category, neighborhood, poster, posted time, description, contact preference, status, tags, and
+        primary post link from informal card content.
+      </p>
+      <div class="example-surface">
+        <div class="card-grid-two">
+          <article class="mini-card"><div class="body">
+            <div class="meta-row"><span class="badge info">Services wanted</span><span class="badge ok">Open</span></div>
+            <h3><a href="/demo/classifieds/weekend-dog-walker">Looking for weekend dog walker</a></h3>
+            <div class="kvline">Noe Valley &middot; Hannah M. &middot; 2 hours ago</div>
+            <p style="margin:4px 0 0">Need a regular Saturday morning walker for a small senior dog. Calm pace preferred.</p>
+            <div class="kvline">Contact: Message through board</div>
+            <div class="tags"><span class="tag">pets</span><span class="tag">weekend</span><span class="tag">paid</span></div>
+          </div></article>
+          <article class="mini-card"><div class="body">
+            <div class="meta-row"><span class="badge info">Free</span><span class="badge ok">Available</span></div>
+            <h3><a href="/demo/classifieds/free-moving-boxes">Free moving boxes after Friday</a></h3>
+            <div class="kvline">Mission Bay &middot; Priya S. &middot; 4 hours ago</div>
+            <p style="margin:4px 0 0">About 25 clean boxes, mostly medium size. Pickup from loading dock.</p>
+            <div class="kvline">Contact: Text after 5 PM</div>
+            <div class="tags"><span class="tag">moving</span><span class="tag">free</span><span class="tag">pickup</span></div>
+          </div></article>
+          <article class="mini-card"><div class="body">
+            <div class="meta-row"><span class="badge info">Borrow</span><span class="badge ok">Open</span></div>
+            <h3><a href="/demo/classifieds/borrow-ladder">Borrow ladder for one afternoon</a></h3>
+            <div class="kvline">Oakland Temescal &middot; Owen B. &middot; yesterday</div>
+            <p style="margin:4px 0 0">Looking to borrow an 8 foot ladder to replace a hallway light fixture.</p>
+            <div class="kvline">Contact: Email</div>
+            <div class="tags"><span class="tag">tools</span><span class="tag">neighbor help</span></div>
+          </div></article>
+          <article class="mini-card"><div class="body">
+            <div class="meta-row"><span class="badge info">Housing</span><span class="badge ok">Open</span></div>
+            <h3><a href="/demo/classifieds/roommate-august-lease">Roommate wanted for August lease</a></h3>
+            <div class="kvline">San Mateo &middot; Noah K. &middot; yesterday</div>
+            <p style="margin:4px 0 0">One bedroom available in a two bedroom apartment near Caltrain. Cat already lives here.</p>
+            <div class="kvline">Contact: Message through board</div>
+            <div class="tags"><span class="tag">housing</span><span class="tag">roommate</span><span class="tag">cat friendly</span></div>
+          </div></article>
+          <article class="mini-card"><div class="body">
+            <div class="meta-row"><span class="badge info">Volunteer</span><span class="badge ok">Open</span></div>
+            <h3><a href="/demo/classifieds/garden-workday-volunteers">Community garden workday volunteers</a></h3>
+            <div class="kvline">Alameda &middot; Grace M. &middot; 2 days ago</div>
+            <p style="margin:4px 0 0">Looking for help moving soil and planting herbs Saturday morning.</p>
+            <div class="kvline">Contact: Sign up form</div>
+            <div class="tags"><span class="tag">garden</span><span class="tag">volunteer</span><span class="tag">Saturday</span></div>
+          </div></article>
+          <article class="mini-card"><div class="body">
+            <div class="meta-row"><span class="badge info">For sale</span><span class="badge warn">Pending pickup</span></div>
+            <h3><a href="/demo/classifieds/kids-art-table">Used kids art table</a></h3>
+            <div class="kvline">Berkeley &middot; Lina R. &middot; 3 days ago</div>
+            <p style="margin:4px 0 0">Small art table with two stools. Paint marks but sturdy.</p>
+            <div class="kvline">Contact: Message through board</div>
+            <div class="tags"><span class="tag">kids</span><span class="tag">furniture</span><span class="tag">pickup</span></div>
+          </div></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-22">
+      <header class="example-header">
+        <p class="example-kicker">Example 22</p>
+        <h2>Mixed Sponsored, Pinned, And Archived Feed</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a mixed feed where ordinary posts appear alongside pinned, promoted-style,
+        and archived items. It tests extraction of item type, title, source, badges, timestamps, primary
+        links, action menu labels, and archived state without confusing promotional metadata with normal
+        content.
+      </p>
+      <div class="example-surface">
+        <article class="feed-item pinned">
+          <div class="type-label">Pinned post</div>
+          <h3 class="feed-item-title"><a class="primary-link" href="/demo/feed/extraction-testing-notes">Read this first: extraction testing notes for card feeds</a></h3>
+          <div class="meta-row"><span>Demo Maintainer</span><span>Pinned this week</span></div>
+          <p style="margin:8px 0 0">Use this feed to test repeated card boundaries, primary links, and action menu cleanup.</p>
+          <div class="tags"><span class="badge accent">Pinned</span><span class="badge">Maintainer</span></div>
+          <div class="action-menu"><button class="act" type="button">Open</button><button class="act" type="button">Copy link</button><button class="act" type="button">Dismiss</button></div>
+        </article>
+        <article class="feed-item">
+          <div class="type-label">Normal post</div>
+          <h3 class="feed-item-title"><a class="primary-link" href="/demo/feed/card-action-menu-false-metadata">Card action menus are often extracted as false metadata</a></h3>
+          <div class="meta-row"><span>Maya Chen</span><span>2 hours ago</span></div>
+          <p style="margin:8px 0 0">A repeated issue in card extraction is treating Save, Share, Hide, and Report as item fields instead of actions.</p>
+          <div class="tags"><span class="badge info">Discussion</span></div>
+          <div class="action-menu"><button class="act" type="button">Save</button><button class="act" type="button">Share</button><button class="act" type="button">Hide</button><button class="act" type="button">Report</button></div>
+        </article>
+        <article class="feed-item promoted">
+          <div class="type-label">Promoted demo card</div>
+          <h3 class="feed-item-title"><a class="primary-link" href="/demo/promotions/widget-lab">Demo promotion: Try the fictional Widget Lab</a></h3>
+          <div class="meta-row"><span>Widget Lab Demo</span><span>Promoted</span></div>
+          <p style="margin:8px 0 0">This is a fictional promoted card for extraction testing. It is not a real advertisement.</p>
+          <div class="tags"><span class="badge accent">Promoted demo</span><span class="badge">Fictional</span></div>
+          <div class="action-menu"><button class="act" type="button">Learn more</button><button class="act" type="button">Hide promotion</button><button class="act" type="button">Why am I seeing this?</button></div>
+        </article>
+        <article class="feed-item">
+          <div class="type-label">Normal post</div>
+          <h3 class="feed-item-title"><a class="primary-link" href="/demo/feed/duplicated-title-card">What should a selected card return when the title appears twice?</a></h3>
+          <div class="meta-row"><span>Rafael Ortiz</span><span>4 hours ago</span></div>
+          <p style="margin:8px 0 0">Some cards repeat the title in visible text, accessible labels, and preview snippets. Extraction should avoid duplicated output.</p>
+          <div class="tags"><span class="badge warn">Question</span></div>
+          <div class="action-menu"><button class="act" type="button">Save</button><button class="act" type="button">Reply</button><button class="act" type="button">Copy link</button></div>
+        </article>
+        <article class="feed-item archived">
+          <div class="type-label">Archived post</div>
+          <h3 class="feed-item-title"><a class="primary-link" href="/demo/feed/legacy-table-cards">Old extraction fixture: legacy table cards</a></h3>
+          <div class="meta-row"><span>Theo Grant</span><span>Archived on May 1, 2026</span></div>
+          <p style="margin:8px 0 0">This fixture is kept for historical regression testing but should not be treated as current guidance.</p>
+          <div class="tags"><span class="badge">Archived</span><span class="badge">Regression</span></div>
+          <div class="action-menu"><button class="act" type="button">Restore</button><button class="act" type="button">Copy link</button></div>
+        </article>
+        <article class="feed-item promoted">
+          <div class="type-label">Promoted demo card</div>
+          <h3 class="feed-item-title"><a class="primary-link" href="/demo/promotions/structured-cards-handbook">Demo promotion: Structured Cards Handbook</a></h3>
+          <div class="meta-row"><span>Fictional Learning Store</span><span>Promoted</span></div>
+          <p style="margin:8px 0 0">A fictional handbook card used to test promotional labels, source names, and action links.</p>
+          <div class="tags"><span class="badge accent">Promoted demo</span><span class="badge">Fictional</span></div>
+          <div class="action-menu"><button class="act" type="button">View handbook</button><button class="act" type="button">Hide promotion</button></div>
+        </article>
+        <article class="feed-item">
+          <div class="type-label">Normal post</div>
+          <h3 class="feed-item-title"><a class="primary-link" href="/demo/feed/nested-replies-parent-context">Nested replies need parent context</a></h3>
+          <div class="meta-row"><span>Lina Romero</span><span>Yesterday</span></div>
+          <p style="margin:8px 0 0">When extracting a selected comment thread, reply depth is often more important than visual indentation alone.</p>
+          <div class="tags"><span class="badge info">Commentary</span></div>
+          <div class="action-menu"><button class="act" type="button">Save</button><button class="act" type="button">Share</button><button class="act" type="button">Open thread</button></div>
+        </article>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Minimal inline behavior: toggle save buttons without changing extracted text.
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-save]');
+      if (!btn) return;
+      var pressed = btn.getAttribute('aria-pressed') === 'true';
+      btn.setAttribute('aria-pressed', pressed ? 'false' : 'true');
+      btn.textContent = pressed ? 'Save' : 'Saved';
+    });
+  </script>
+</body>
+</html>

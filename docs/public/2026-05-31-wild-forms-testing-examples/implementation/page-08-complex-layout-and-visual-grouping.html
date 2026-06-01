@@ -1,0 +1,1725 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page 8 - Complex Layout And Visual Grouping</title>
+  <style>
+    :root {
+      --page-bg: #eef1f5;
+      --card-bg: #ffffff;
+      --ink: #1d2733;
+      --muted: #5d6b7a;
+      --line: #d4dbe4;
+      --soft: #eaeef3;
+      --panel: #f8fafc;
+      --panel-alt: #f1f5f9;
+      --accent: #0f766e;
+      --accent-2: #1e4e8c;
+      --accent-soft: #d9f2ee;
+      --ok: #15803d;
+      --ok-soft: #dcfce7;
+      --warning: #a15c00;
+      --warn-soft: #fcefd6;
+      --danger: #b3261e;
+      --danger-soft: #fbe0de;
+      --info-soft: #dde8fb;
+      --link: #1e4e8c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--page-bg);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    main { width: min(1240px, calc(100% - 32px)); margin: 0 auto; padding: 30px 0 90px; }
+
+    .page-hero {
+      background: linear-gradient(180deg, #ffffff, #f3f7fb);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 26px 30px;
+      margin-bottom: 28px;
+      box-shadow: 0 1px 0 rgba(15,23,42,.03);
+    }
+    .page-kicker { text-transform: uppercase; letter-spacing: .18em; font-size: 12px; color: var(--accent); margin: 0 0 8px; font-weight: 700; }
+    .page-hero h1 { margin: 0 0 10px; font-size: 27px; letter-spacing: -.01em; }
+    .page-hero p { margin: 0; color: var(--muted); max-width: 92ch; }
+
+    .example-card {
+      background: var(--card-bg);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 30px;
+      box-shadow: 0 1px 0 rgba(15,23,42,.03);
+    }
+    .example-header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    .example-kicker { text-transform: uppercase; letter-spacing: .12em; font-size: 11px; color: #fff; background: var(--accent); padding: 3px 10px; border-radius: 999px; margin: 0; font-weight: 700; }
+    .example-header h2 { margin: 0; font-size: 20px; }
+    .example-description { color: var(--muted); margin: 10px 0 20px; max-width: 96ch; }
+
+    /* summary strip */
+    .summary-strip {
+      display: flex; flex-wrap: wrap; gap: 6px 28px; align-items: center;
+      background: var(--panel-alt); border: 1px solid var(--line); border-radius: 10px;
+      padding: 14px 18px; margin-bottom: 18px;
+    }
+    .summary-strip .si { display: flex; flex-direction: column; gap: 2px; }
+    .summary-strip .si-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+    .summary-strip .si-value { font-weight: 600; font-size: 14px; }
+
+    /* panels and groups */
+    .panel {
+      background: var(--panel); border: 1px solid var(--line); border-radius: 11px; padding: 16px;
+    }
+    .panel.bordered-accent { border-left: 4px solid var(--accent); }
+    .panel-title { margin: 0 0 12px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-2); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .panel-title .pt-tag { font-size: 11px; color: var(--muted); text-transform: none; letter-spacing: 0; }
+
+    .field-row { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px dashed var(--line); font-size: 14px; }
+    .field-row:last-child { border-bottom: 0; }
+    .field-label { color: var(--muted); }
+    .field-value { text-align: right; font-weight: 500; }
+    .field-block { padding: 7px 0; border-bottom: 1px dashed var(--line); font-size: 14px; }
+    .field-block:last-child { border-bottom: 0; }
+    .field-block .field-label { display: block; margin-bottom: 3px; }
+
+    /* layout helpers */
+    .layout-grid-three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .layout-grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .split-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; align-items: start; }
+    .nested-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 860px) {
+      .layout-grid-three, .layout-grid-two, .split-layout, .nested-grid { grid-template-columns: 1fr; }
+    }
+
+    .section-block { margin-top: 18px; }
+    .section-divider { margin: 20px 0; border: 0; border-top: 1px solid var(--line); }
+
+    /* nested cards / visual cards */
+    .visual-card { background: var(--card-bg); border: 1px solid var(--line); border-radius: 10px; padding: 13px; }
+    .visual-card + .visual-card { margin-top: 12px; }
+    .visual-card h4 { margin: 0 0 9px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+
+    /* lane board (kanban / itinerary / timeline) */
+    .wide-scroll { overflow-x: auto; padding-bottom: 6px; }
+    .lane-board { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(280px, 1fr); gap: 16px; min-width: 720px; }
+    .lane { background: var(--panel-alt); border: 1px solid var(--line); border-radius: 11px; padding: 12px; }
+    .lane-head { font-weight: 700; font-size: 13px; margin: 0 0 12px; padding-bottom: 8px; border-bottom: 2px solid var(--line); display: flex; justify-content: space-between; gap: 8px; }
+    .lane-head .lane-count { color: var(--muted); font-weight: 500; }
+
+    /* detail / decision sidebar */
+    .detail-panel { background: var(--panel-alt); border: 1px solid var(--line); border-radius: 11px; padding: 16px; }
+    .detail-panel.selected { border: 2px solid var(--accent); background: var(--accent-soft); }
+    .detail-panel h3 { margin: 0 0 12px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-2); }
+    .detail-panel .sel-name { font-weight: 700; margin: 0 0 12px; font-size: 16px; }
+
+    /* badges */
+    .badge { display: inline-block; font-size: 12px; padding: 2px 9px; border-radius: 999px; background: var(--soft); color: var(--ink); white-space: nowrap; font-weight: 600; }
+    .badge.ok { background: var(--ok-soft); color: var(--ok); }
+    .badge.warning { background: var(--warn-soft); color: var(--warning); }
+    .badge.danger { background: var(--danger-soft); color: var(--danger); }
+    .badge.info { background: var(--info-soft); color: var(--accent-2); }
+    .badge.accent { background: var(--accent-soft); color: var(--accent); }
+    .badge.neutral { background: #e6ebf1; color: var(--muted); }
+
+    /* chips */
+    .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 10px; border-radius: 7px; background: var(--soft); border: 1px solid var(--line); }
+    .chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+    .chip .dot.ok { background: var(--ok); }
+    .chip .dot.danger { background: var(--danger); }
+    .chip .dot.warning { background: var(--warning); }
+
+    /* tiles (dashboard) */
+    .tile-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+    .tile { background: var(--panel); border: 1px solid var(--line); border-radius: 11px; padding: 15px; }
+    .tile .tile-label { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+    .tile .tile-value { font-size: 26px; font-weight: 700; margin: 6px 0 3px; }
+    .tile .tile-note { font-size: 12.5px; color: var(--muted); }
+    .tile.up .tile-value { color: var(--ok); }
+    .tile.down .tile-value { color: var(--danger); }
+
+    /* comparison board */
+    .compare-wrap { overflow-x: auto; }
+    .compare-grid { display: grid; gap: 0; border: 1px solid var(--line); border-radius: 11px; overflow: hidden; min-width: 680px; }
+    .compare-grid .crow { display: grid; border-bottom: 1px solid var(--line); }
+    .compare-grid .crow:last-child { border-bottom: 0; }
+    .compare-grid .ccell { padding: 11px 14px; border-right: 1px solid var(--line); font-size: 13.5px; }
+    .compare-grid .ccell:last-child { border-right: 0; }
+    .compare-grid .crow.head .ccell { background: var(--panel-alt); font-weight: 700; }
+    .compare-grid .crow.head .ccell.featured { background: var(--accent-soft); color: var(--accent); }
+    .compare-grid .rlabel { background: var(--panel); font-weight: 600; color: var(--muted); }
+    .compare-grid .ccell.featured-col { background: #f4fbfa; }
+
+    /* timeline lane */
+    .timeline { position: relative; padding-left: 26px; }
+    .timeline::before { content: ""; position: absolute; left: 8px; top: 4px; bottom: 4px; width: 2px; background: var(--line); }
+    .timeline .tl-item { position: relative; padding: 0 0 16px; }
+    .timeline .tl-item:last-child { padding-bottom: 0; }
+    .timeline .tl-item::before { content: ""; position: absolute; left: -22px; top: 5px; width: 11px; height: 11px; border-radius: 50%; background: var(--accent); border: 2px solid var(--card-bg); }
+    .timeline .tl-time { font-size: 12px; color: var(--muted); font-weight: 600; }
+    .timeline .tl-title { font-weight: 600; }
+
+    /* accordion */
+    details.acc { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 10px; background: var(--panel); }
+    details.acc > summary { cursor: pointer; padding: 12px 16px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    details.acc > summary::-webkit-details-marker { display: none; }
+    details.acc[open] > summary { border-bottom: 1px solid var(--line); }
+    details.acc .acc-body { padding: 14px 16px; }
+    details.acc .acc-sub { padding-left: 14px; }
+
+    .mono { font-family: "Cascadia Code", Consolas, monospace; font-size: 13px; }
+    .mini-head { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; font-weight: 700; }
+    .note-box { background: var(--panel-alt); border: 1px solid var(--line); border-left: 4px solid var(--accent-2); border-radius: 8px; padding: 12px 14px; font-size: 14px; }
+    .seg-tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 2px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); }
+
+    .is-selected-card { border: 2px solid var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-hero">
+      <p class="page-kicker">Content Extraction Demo Page</p>
+      <h1>Page 8 - Complex Layout And Visual Grouping</h1>
+      <p>
+        This standalone page contains realistic complex layout examples for testing extraction of visual groups, nested records, section boundaries, repeated labels, multi-column context, selected panels, comparison layouts, timelines, sidebars, and grouped summaries. Each example deliberately groups information by borders, columns, spacing, and headings rather than DOM order alone.
+      </p>
+    </header>
+
+    <section class="example-card" id="example-01">
+      <header class="example-header"><p class="example-kicker">Example 01</p><h2>Patient Intake Summary With Repeated Labels</h2></header>
+      <p class="example-description">This example imitates a patient intake summary screen with repeated labels across visually separate panels. It tests extraction of fields where labels such as Status, Date, and Notes only make sense when attached to their surrounding visual group.</p>
+
+      <div class="summary-strip">
+        <div class="si"><span class="si-label">Intake record</span><span class="si-value mono">INTAKE-2026-7712</span></div>
+        <div class="si"><span class="si-label">Overall status</span><span class="si-value"><span class="badge ok">Ready for review</span></span></div>
+        <div class="si"><span class="si-label">Last updated</span><span class="si-value">May 31, 2026, 9:42 AM</span></div>
+        <div class="si"><span class="si-label">Clinic</span><span class="si-value">Downtown Clinic</span></div>
+      </div>
+
+      <div class="layout-grid-three">
+        <section class="panel bordered-accent" aria-labelledby="ex01-p1">
+          <h3 class="panel-title" id="ex01-p1">Patient</h3>
+          <div class="field-row"><span class="field-label">Name</span><span class="field-value">Riley Stone</span></div>
+          <div class="field-row"><span class="field-label">Date</span><span class="field-value">March 19, 1984</span></div>
+          <div class="field-row"><span class="field-label">Patient ID</span><span class="field-value mono">PT-771420</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge accent">Established patient</span></span></div>
+          <div class="field-row"><span class="field-label">Preferred language</span><span class="field-value">English</span></div>
+          <div class="field-block"><span class="field-label">Notes</span>Prefers SMS reminders and afternoon appointments.</div>
+        </section>
+        <section class="panel bordered-accent" aria-labelledby="ex01-p2">
+          <h3 class="panel-title" id="ex01-p2">Appointment</h3>
+          <div class="field-row"><span class="field-label">Provider</span><span class="field-value">Dr. Helen Park, MD</span></div>
+          <div class="field-row"><span class="field-label">Date</span><span class="field-value">June 11, 2026</span></div>
+          <div class="field-row"><span class="field-label">Time</span><span class="field-value">2:30 PM</span></div>
+          <div class="field-row"><span class="field-label">Visit type</span><span class="field-value">Orthopedics follow-up</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">Scheduled</span></span></div>
+          <div class="field-row"><span class="field-label">Location</span><span class="field-value">Downtown Clinic, Room pending</span></div>
+          <div class="field-block"><span class="field-label">Notes</span>Follow-up for knee pain. Bring imaging results if available.</div>
+        </section>
+        <section class="panel bordered-accent" aria-labelledby="ex01-p3">
+          <h3 class="panel-title" id="ex01-p3">Insurance And Payment</h3>
+          <div class="field-row"><span class="field-label">Plan</span><span class="field-value">Northstar PPO</span></div>
+          <div class="field-row"><span class="field-label">Member ID</span><span class="field-value mono">NSP-44910218</span></div>
+          <div class="field-row"><span class="field-label">Date</span><span class="field-value">Eligibility checked May 31, 2026</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Verified</span></span></div>
+          <div class="field-row"><span class="field-label">Copay</span><span class="field-value">$35.00</span></div>
+          <div class="field-row"><span class="field-label">Balance</span><span class="field-value">$0.00</span></div>
+          <div class="field-block"><span class="field-label">Notes</span>Referral not required for follow-up visit.</div>
+        </section>
+      </div>
+
+      <div class="panel section-block">
+        <h3 class="panel-title">Outstanding Items</h3>
+        <div class="layout-grid-two">
+          <div class="visual-card">
+            <div class="field-row"><span class="field-label">Item</span><span class="field-value">Medication list confirmation</span></div>
+            <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Patient</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">Pending</span></span></div>
+            <div class="field-row"><span class="field-label">Due</span><span class="field-value">Before check-in</span></div>
+          </div>
+          <div class="visual-card">
+            <div class="field-row"><span class="field-label">Item</span><span class="field-value">Imaging upload</span></div>
+            <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Clinic</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Received</span></span></div>
+            <div class="field-row"><span class="field-label">Due</span><span class="field-value">Complete</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-02">
+      <header class="example-header"><p class="example-kicker">Example 02</p><h2>Travel Itinerary Day Board</h2></header>
+      <p class="example-description">This example imitates a travel itinerary board grouped by day. It tests extraction of nested records where each day column contains multiple segment cards, and repeated labels such as Time, Location, Confirmation, and Notes must remain attached to the correct day and segment.</p>
+
+      <div class="summary-strip">
+        <div class="si"><span class="si-label">Trip</span><span class="si-value">Design Summit 2026</span></div>
+        <div class="si"><span class="si-label">Traveler</span><span class="si-value">Lina Romero</span></div>
+        <div class="si"><span class="si-label">Itinerary number</span><span class="si-value mono">ITN-2026-44718</span></div>
+        <div class="si"><span class="si-label">Status</span><span class="si-value"><span class="badge ok">Confirmed</span></span></div>
+      </div>
+
+      <div class="wide-scroll">
+        <div class="lane-board">
+          <div class="lane">
+            <p class="lane-head">Wednesday, September 2, 2026 <span class="lane-count">3 segments</span></p>
+            <div class="visual-card">
+              <h4><span class="seg-tag">Flight</span> AVX 218</h4>
+              <div class="field-row"><span class="field-label">Time</span><span class="field-value">8:05 AM-4:42 PM</span></div>
+              <div class="field-row"><span class="field-label">From</span><span class="field-value">SFO</span></div>
+              <div class="field-row"><span class="field-label">To</span><span class="field-value">JFK</span></div>
+              <div class="field-row"><span class="field-label">Carrier</span><span class="field-value">AeroVista</span></div>
+              <div class="field-row"><span class="field-label">Confirmation</span><span class="field-value mono">AV-9K2LD</span></div>
+              <div class="field-row"><span class="field-label">Seat</span><span class="field-value">14A</span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Carry-on included.</div>
+            </div>
+            <div class="visual-card">
+              <h4><span class="seg-tag">Car service</span> MetroCar</h4>
+              <div class="field-row"><span class="field-label">Time</span><span class="field-value">5:20 PM</span></div>
+              <div class="field-row"><span class="field-label">Location</span><span class="field-value">JFK Terminal 4</span></div>
+              <div class="field-row"><span class="field-label">Confirmation</span><span class="field-value mono">CAR-90418</span></div>
+              <div class="field-row"><span class="field-label">Drop-off</span><span class="field-value">Harbor East Hotel</span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Driver meets at arrivals level.</div>
+            </div>
+            <div class="visual-card">
+              <h4><span class="seg-tag">Hotel</span> Harbor East Hotel</h4>
+              <div class="field-row"><span class="field-label">Time</span><span class="field-value">Check-in after 3:00 PM</span></div>
+              <div class="field-row"><span class="field-label">Location</span><span class="field-value">Harbor East Hotel</span></div>
+              <div class="field-row"><span class="field-label">Confirmation</span><span class="field-value mono">HTL-77120</span></div>
+              <div class="field-row"><span class="field-label">Room</span><span class="field-value">King room</span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Late arrival noted.</div>
+            </div>
+          </div>
+          <div class="lane">
+            <p class="lane-head">Thursday, September 3, 2026 <span class="lane-count">2 segments</span></p>
+            <div class="visual-card">
+              <h4><span class="seg-tag">Conference</span> Pier 12</h4>
+              <div class="field-row"><span class="field-label">Time</span><span class="field-value">9:00 AM-5:00 PM</span></div>
+              <div class="field-row"><span class="field-label">Location</span><span class="field-value">Pier 12 Conference Center</span></div>
+              <div class="field-block"><span class="field-label">Session</span>Designing Interfaces For Messy Public Data</div>
+              <div class="field-row"><span class="field-label">Confirmation</span><span class="field-value mono">CONF-2026-88420</span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Badge pickup starts at 8:00 AM.</div>
+            </div>
+            <div class="visual-card">
+              <h4><span class="seg-tag">Dinner</span> Cypress &amp; Fig</h4>
+              <div class="field-row"><span class="field-label">Time</span><span class="field-value">7:15 PM</span></div>
+              <div class="field-row"><span class="field-label">Location</span><span class="field-value">Cypress &amp; Fig</span></div>
+              <div class="field-row"><span class="field-label">Party</span><span class="field-value">4 guests</span></div>
+              <div class="field-row"><span class="field-label">Confirmation</span><span class="field-value mono">DIN-7715</span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Patio table requested.</div>
+            </div>
+          </div>
+          <div class="lane">
+            <p class="lane-head">Friday, September 4, 2026 <span class="lane-count">2 segments</span></p>
+            <div class="visual-card">
+              <h4><span class="seg-tag">Workshop</span> City Museum Lab</h4>
+              <div class="field-row"><span class="field-label">Time</span><span class="field-value">10:00 AM-12:30 PM</span></div>
+              <div class="field-row"><span class="field-label">Location</span><span class="field-value">City Museum Lab</span></div>
+              <div class="field-block"><span class="field-label">Topic</span>Public Data Visualization Clinic</div>
+              <div class="field-row"><span class="field-label">Confirmation</span><span class="field-value mono">WRK-4418</span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Bring laptop.</div>
+            </div>
+            <div class="visual-card">
+              <h4><span class="seg-tag">Flight</span> AVX 411</h4>
+              <div class="field-row"><span class="field-label">Time</span><span class="field-value">6:40 PM-10:12 PM</span></div>
+              <div class="field-row"><span class="field-label">From</span><span class="field-value">JFK</span></div>
+              <div class="field-row"><span class="field-label">To</span><span class="field-value">SFO</span></div>
+              <div class="field-row"><span class="field-label">Carrier</span><span class="field-value">AeroVista</span></div>
+              <div class="field-row"><span class="field-label">Confirmation</span><span class="field-value mono">AV-9K2LD</span></div>
+              <div class="field-row"><span class="field-label">Seat</span><span class="field-value">16C</span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Same airline confirmation as outbound.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-03">
+      <header class="example-header"><p class="example-kicker">Example 03</p><h2>Loan Application Underwriting Workspace</h2></header>
+      <p class="example-description">This example imitates a loan underwriting workspace with several visually grouped panels. It tests extraction of borrower, property, income, credit, risk, and decision data where repeated labels must be disambiguated by panel context.</p>
+
+      <div class="summary-strip">
+        <div class="si"><span class="si-label">Application</span><span class="si-value mono">LN-APP-2026-8841</span></div>
+        <div class="si"><span class="si-label">Product</span><span class="si-value">Fixed-rate personal loan</span></div>
+        <div class="si"><span class="si-label">Review status</span><span class="si-value"><span class="badge warning">Conditional approval</span></span></div>
+        <div class="si"><span class="si-label">Assigned underwriter</span><span class="si-value">Grace Miller</span></div>
+        <div class="si"><span class="si-label">Submitted</span><span class="si-value">May 29, 2026</span></div>
+      </div>
+
+      <div class="split-layout">
+        <div>
+          <div class="nested-grid">
+            <section class="panel" aria-label="Borrower">
+              <h3 class="panel-title">Borrower</h3>
+              <div class="field-row"><span class="field-label">Name</span><span class="field-value">Diego Marin</span></div>
+              <div class="field-row"><span class="field-label">Applicant type</span><span class="field-value">Primary borrower</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Identity verified</span></span></div>
+              <div class="field-row"><span class="field-label">Email</span><span class="field-value">diego.marin@example.test</span></div>
+              <div class="field-row"><span class="field-label">Phone</span><span class="field-value">415-555-0118</span></div>
+              <div class="field-row"><span class="field-label">Verified</span><span class="field-value">Yes, May 30, 2026</span></div>
+            </section>
+            <section class="panel" aria-label="Collateral">
+              <h3 class="panel-title">Property Or Collateral</h3>
+              <div class="field-row"><span class="field-label">Collateral type</span><span class="field-value">None</span></div>
+              <div class="field-row"><span class="field-label">Purpose</span><span class="field-value">Debt consolidation</span></div>
+              <div class="field-row"><span class="field-label">Requested amount</span><span class="field-value">$18,500.00</span></div>
+              <div class="field-row"><span class="field-label">Approved amount</span><span class="field-value">$18,500.00</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge neutral">No collateral required</span></span></div>
+              <div class="field-row"><span class="field-label">Verified</span><span class="field-value">Not applicable</span></div>
+            </section>
+            <section class="panel" aria-label="Income">
+              <h3 class="panel-title">Income</h3>
+              <div class="field-row"><span class="field-label">Employment</span><span class="field-value">Full-time</span></div>
+              <div class="field-row"><span class="field-label">Employer</span><span class="field-value">Harbor Systems Group</span></div>
+              <div class="field-row"><span class="field-label">Monthly income</span><span class="field-value">$8,420.00</span></div>
+              <div class="field-row"><span class="field-label">Verified</span><span class="field-value">Yes, payroll records</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Meets threshold</span></span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Stable income for 36 months.</div>
+            </section>
+            <section class="panel" aria-label="Credit">
+              <h3 class="panel-title">Credit</h3>
+              <div class="field-row"><span class="field-label">Credit score</span><span class="field-value">742</span></div>
+              <div class="field-row"><span class="field-label">Debt-to-income</span><span class="field-value">28 percent</span></div>
+              <div class="field-row"><span class="field-label">Open delinquencies</span><span class="field-value">0</span></div>
+              <div class="field-row"><span class="field-label">Verified</span><span class="field-value">Yes, soft pull</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Approved</span></span></div>
+              <div class="field-block"><span class="field-label">Notes</span>No recent derogatory marks.</div>
+            </section>
+            <section class="panel" aria-label="Risk" style="grid-column:1 / -1;">
+              <h3 class="panel-title">Risk</h3>
+              <div class="card-grid">
+                <div class="field-row"><span class="field-label">Risk grade</span><span class="field-value">B</span></div>
+                <div class="field-row"><span class="field-label">Rate</span><span class="field-value">7.25 percent</span></div>
+                <div class="field-row"><span class="field-label">Term</span><span class="field-value">48 months</span></div>
+                <div class="field-row"><span class="field-label">Monthly payment</span><span class="field-value">$447.82</span></div>
+                <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Acceptable</span></span></div>
+              </div>
+              <div class="field-block"><span class="field-label">Notes</span>Rate includes autopay discount.</div>
+            </section>
+          </div>
+        </div>
+        <aside class="detail-panel selected" aria-label="Decision">
+          <h3>Decision</h3>
+          <p class="sel-name">Conditional approval</p>
+          <div class="field-block"><span class="field-label">Conditions</span><div class="chip-row"><span class="chip">Confirm final payoff letters</span><span class="chip">Accept autopay disclosure</span></div></div>
+          <div class="field-row"><span class="field-label">Expiration</span><span class="field-value">June 14, 2026</span></div>
+          <div class="field-row"><span class="field-label">Decision owner</span><span class="field-value">Grace Miller</span></div>
+          <div class="field-block"><span class="field-label">Next action</span>Send conditional approval packet</div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-04">
+      <header class="example-header"><p class="example-kicker">Example 04</p><h2>Insurance Claim Visual Packet</h2></header>
+      <p class="example-description">This example imitates an insurance claim packet made of many visually grouped cards. It tests extraction of claim data where policy details, incident details, payment details, and document details are adjacent but represent separate nested groups.</p>
+
+      <div class="summary-strip">
+        <div class="si"><span class="si-label">Claim number</span><span class="si-value mono">CLM-2026-55109</span></div>
+        <div class="si"><span class="si-label">Claim type</span><span class="si-value">Renters property loss</span></div>
+        <div class="si"><span class="si-label">Claim status</span><span class="si-value"><span class="badge warning">Adjuster review</span></span></div>
+        <div class="si"><span class="si-label">Opened</span><span class="si-value">May 24, 2026</span></div>
+        <div class="si"><span class="si-label">Assigned adjuster</span><span class="si-value">Owen Brooks</span></div>
+      </div>
+
+      <div class="layout-grid-three">
+        <section class="panel" aria-label="Claimant">
+          <h3 class="panel-title">Claimant</h3>
+          <div class="field-row"><span class="field-label">Name</span><span class="field-value">Jordan Parker</span></div>
+          <div class="field-row"><span class="field-label">Email</span><span class="field-value">jordan.parker@example.test</span></div>
+          <div class="field-row"><span class="field-label">Phone</span><span class="field-value">650-555-0134</span></div>
+          <div class="field-row"><span class="field-label">Preferred contact</span><span class="field-value">Email</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Contacted</span></span></div>
+        </section>
+        <section class="panel" aria-label="Policy">
+          <h3 class="panel-title">Policy</h3>
+          <div class="field-row"><span class="field-label">Policy number</span><span class="field-value mono">REN-2026-44720</span></div>
+          <div class="field-row"><span class="field-label">Policy status</span><span class="field-value"><span class="badge ok">Active</span></span></div>
+          <div class="field-row"><span class="field-label">Effective date</span><span class="field-value">February 1, 2026</span></div>
+          <div class="field-row"><span class="field-label">Deductible</span><span class="field-value">$500</span></div>
+          <div class="field-row"><span class="field-label">Coverage limit</span><span class="field-value">$35,000</span></div>
+        </section>
+        <section class="panel" aria-label="Incident">
+          <h3 class="panel-title">Incident</h3>
+          <div class="field-row"><span class="field-label">Date</span><span class="field-value">May 22, 2026</span></div>
+          <div class="field-block"><span class="field-label">Location</span>72 Hillcrest Road, San Mateo, CA</div>
+          <div class="field-block"><span class="field-label">Cause</span>Water leak from upstairs unit</div>
+          <div class="field-row"><span class="field-label">Reported by</span><span class="field-value">Policyholder</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Documentation received</span></span></div>
+        </section>
+        <section class="panel" aria-label="Damage assessment">
+          <h3 class="panel-title">Damage Assessment</h3>
+          <div class="field-row"><span class="field-label">Estimated loss</span><span class="field-value">$4,820.00</span></div>
+          <div class="field-row"><span class="field-label">Deductible applied</span><span class="field-value">$500.00</span></div>
+          <div class="field-row"><span class="field-label">Recoverable depreciation</span><span class="field-value">$320.00</span></div>
+          <div class="field-row"><span class="field-label">Preliminary payout</span><span class="field-value">$4,000.00</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">Pending approval</span></span></div>
+        </section>
+        <section class="panel" aria-label="Payment">
+          <h3 class="panel-title">Payment</h3>
+          <div class="field-row"><span class="field-label">Payment method</span><span class="field-value">ACH ending in 1842</span></div>
+          <div class="field-row"><span class="field-label">Payment status</span><span class="field-value"><span class="badge neutral">Not issued</span></span></div>
+          <div class="field-row"><span class="field-label">Scheduled date</span><span class="field-value">Pending</span></div>
+          <div class="field-row"><span class="field-label">Amount</span><span class="field-value">$4,000.00</span></div>
+          <div class="field-block"><span class="field-label">Notes</span>Requires supervisor approval.</div>
+        </section>
+        <section class="panel" aria-label="Documents">
+          <h3 class="panel-title">Documents</h3>
+          <div class="chip-row">
+            <span class="chip"><span class="dot ok"></span>Photos of damage - Received</span>
+            <span class="chip"><span class="dot ok"></span>Repair estimate - Received</span>
+            <span class="chip"><span class="dot danger"></span>Proof of ownership - Missing</span>
+            <span class="chip"><span class="dot ok"></span>Landlord statement - Received</span>
+          </div>
+        </section>
+      </div>
+
+      <div class="note-box section-block">
+        <p class="mini-head">Adjuster Notes</p>
+        <p style="margin:0 0 8px;"><strong>Latest note:</strong> Repair estimate received. Waiting for proof of ownership before payout approval.</p>
+        <p style="margin:0;"><strong>Next review:</strong> June 3, 2026</p>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-05">
+      <header class="example-header"><p class="example-kicker">Example 05</p><h2>Checkout Review With Nested Summary Panels</h2></header>
+      <p class="example-description">This example imitates a final checkout review screen. It tests extraction of nested summary groups where visually separated panels each contain labels such as Address, Status, Method, and Total.</p>
+
+      <div class="summary-strip">
+        <div class="si"><span class="si-label">Checkout step</span><span class="si-value">Review and place order</span></div>
+        <div class="si"><span class="si-label">Cart ID</span><span class="si-value mono">CART-2026-44018</span></div>
+        <div class="si"><span class="si-label">Customer</span><span class="si-value">Jordan Ellis</span></div>
+        <div class="si"><span class="si-label">Status</span><span class="si-value"><span class="badge ok">Ready to submit</span></span></div>
+      </div>
+
+      <div class="split-layout">
+        <div>
+          <div class="nested-grid">
+            <section class="panel" aria-label="Shipping address">
+              <h3 class="panel-title">Shipping Address</h3>
+              <div class="field-block"><span class="field-label">Address</span>120 King Street, Dock B, San Francisco, CA 94107</div>
+              <div class="field-row"><span class="field-label">Recipient</span><span class="field-value">Jordan Ellis</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Validated</span></span></div>
+              <div class="field-block"><span class="field-label">Delivery instructions</span>Use freight entrance on King Street.</div>
+            </section>
+            <section class="panel" aria-label="Billing address">
+              <h3 class="panel-title">Billing Address</h3>
+              <div class="field-block"><span class="field-label">Address</span>88 Valencia Street, Suite 402, San Francisco, CA 94103</div>
+              <div class="field-row"><span class="field-label">Billing contact</span><span class="field-value">Jordan Ellis</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Matches payment profile</span></span></div>
+              <div class="field-row"><span class="field-label">Tax region</span><span class="field-value">San Francisco, CA</span></div>
+            </section>
+            <section class="panel" aria-label="Delivery method">
+              <h3 class="panel-title">Delivery Method</h3>
+              <div class="field-row"><span class="field-label">Method</span><span class="field-value">Standard ground</span></div>
+              <div class="field-row"><span class="field-label">Carrier</span><span class="field-value">Example Parcel</span></div>
+              <div class="field-row"><span class="field-label">Delivery estimate</span><span class="field-value">June 6-9, 2026</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge accent">Available</span></span></div>
+              <div class="field-row"><span class="field-label">Total</span><span class="field-value">$8.95</span></div>
+            </section>
+            <section class="panel" aria-label="Payment">
+              <h3 class="panel-title">Payment</h3>
+              <div class="field-row"><span class="field-label">Method</span><span class="field-value">Visa ending in 4242</span></div>
+              <div class="field-row"><span class="field-label">Authorization status</span><span class="field-value"><span class="badge ok">Authorized</span></span></div>
+              <div class="field-row"><span class="field-label">Billing name</span><span class="field-value">Jordan Ellis</span></div>
+              <div class="field-row"><span class="field-label">Total authorized</span><span class="field-value">$159.07</span></div>
+            </section>
+          </div>
+          <section class="panel section-block" aria-label="Items">
+            <h3 class="panel-title">Items</h3>
+            <div class="visual-card">
+              <div class="card-grid">
+                <div class="field-row"><span class="field-label">SKU</span><span class="field-value mono">BAG-TRV-22</span></div>
+                <div class="field-row"><span class="field-label">Item</span><span class="field-value">Canvas travel backpack</span></div>
+                <div class="field-row"><span class="field-label">Quantity</span><span class="field-value">1</span></div>
+                <div class="field-row"><span class="field-label">Total</span><span class="field-value">$89.00</span></div>
+              </div>
+            </div>
+            <div class="visual-card">
+              <div class="card-grid">
+                <div class="field-row"><span class="field-label">SKU</span><span class="field-value mono">BOT-STL-20</span></div>
+                <div class="field-row"><span class="field-label">Item</span><span class="field-value">Insulated steel bottle</span></div>
+                <div class="field-row"><span class="field-label">Quantity</span><span class="field-value">2</span></div>
+                <div class="field-row"><span class="field-label">Total</span><span class="field-value">$48.00</span></div>
+              </div>
+            </div>
+            <div class="visual-card">
+              <div class="card-grid">
+                <div class="field-row"><span class="field-label">SKU</span><span class="field-value mono">TAG-LTH-02</span></div>
+                <div class="field-row"><span class="field-label">Item</span><span class="field-value">Leather luggage tag</span></div>
+                <div class="field-row"><span class="field-label">Quantity</span><span class="field-value">1</span></div>
+                <div class="field-row"><span class="field-label">Total</span><span class="field-value">$16.00</span></div>
+              </div>
+            </div>
+          </section>
+        </div>
+        <aside class="detail-panel" aria-label="Order summary">
+          <h3>Order Summary</h3>
+          <div class="field-row"><span class="field-label">Merchandise total</span><span class="field-value">$153.00</span></div>
+          <div class="field-row"><span class="field-label">Discount</span><span class="field-value">-$15.30</span></div>
+          <div class="field-row"><span class="field-label">Shipping total</span><span class="field-value">$8.95</span></div>
+          <div class="field-row"><span class="field-label">Tax total</span><span class="field-value">$12.42</span></div>
+          <div class="field-row"><span class="field-label">Order total</span><span class="field-value"><strong>$159.07</strong></span></div>
+          <div class="field-row"><span class="field-label">Order status</span><span class="field-value"><span class="badge neutral">Not placed</span></span></div>
+          <div class="field-block"><span class="field-label">Primary action</span>Place order</div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-06">
+      <header class="example-header"><p class="example-kicker">Example 06</p><h2>Executive Metrics Dashboard With Drilldown Panel</h2></header>
+      <p class="example-description">This example imitates an executive metrics dashboard. It tests extraction of KPI cards grouped by business area, metric labels, values, trends, status chips, and a selected drilldown panel that provides additional context.</p>
+
+      <div class="summary-strip">
+        <div class="si"><span class="si-label">Dashboard</span><span class="si-value">Product Systems Weekly Review</span></div>
+        <div class="si"><span class="si-label">Period</span><span class="si-value">Week ending May 31, 2026</span></div>
+        <div class="si"><span class="si-label">Owner</span><span class="si-value">Maya Chen</span></div>
+        <div class="si"><span class="si-label">Status</span><span class="si-value"><span class="badge neutral">Draft</span></span></div>
+      </div>
+
+      <div class="tile-row">
+        <div class="tile up"><div class="tile-label">Activation - New activated workspaces</div><div class="tile-value">438</div><div class="tile-note">+8 percent week over week</div><div style="margin-top:8px;"><span class="badge ok">On track</span></div></div>
+        <div class="tile down"><div class="tile-label">Activation - Demo completion rate</div><div class="tile-value">69 percent</div><div class="tile-note">-3 percent week over week</div><div style="margin-top:8px;"><span class="badge warning">Watch</span></div></div>
+        <div class="tile down"><div class="tile-label">Reliability - Extraction p95 latency</div><div class="tile-value">2.1 s</div><div class="tile-note">+0.3 s week over week</div><div style="margin-top:8px;"><span class="badge danger">At risk</span></div></div>
+        <div class="tile up"><div class="tile-label">Quality - Duplicate action label rate</div><div class="tile-value">2.8 percent</div><div class="tile-note">-0.6 percent week over week</div><div style="margin-top:8px;"><span class="badge ok">On track</span></div></div>
+      </div>
+
+      <div class="layout-grid-three section-block">
+        <section class="panel bordered-accent"><h3 class="panel-title">Activation Drivers</h3>
+          <div class="field-row"><span class="field-label">Top driver</span><span class="field-value">Template gallery visits</span></div>
+          <div class="field-row"><span class="field-label">Supporting metric</span><span class="field-value">1,310 templates created</span></div>
+          <div class="field-block"><span class="field-label">Risk</span>Long demo setup forms reduce completion</div>
+        </section>
+        <section class="panel bordered-accent"><h3 class="panel-title">Reliability Drivers</h3>
+          <div class="field-row"><span class="field-label">Top issue</span><span class="field-value">Large page extraction worker memory</span></div>
+          <div class="field-row"><span class="field-label">Affected segment</span><span class="field-value">Pages over 5 MB</span></div>
+          <div class="field-block"><span class="field-label">Risk</span>Higher timeout rate</div>
+        </section>
+        <section class="panel bordered-accent"><h3 class="panel-title">Quality Drivers</h3>
+          <div class="field-row"><span class="field-label">Top improvement</span><span class="field-value">Card action cleanup rollout</span></div>
+          <div class="field-row"><span class="field-label">Affected segment</span><span class="field-value">Feed and card pages</span></div>
+          <div class="field-block"><span class="field-label">Risk</span>Regression on nested comment cards</div>
+        </section>
+      </div>
+
+      <aside class="detail-panel selected section-block" aria-label="Drilldown">
+        <h3>Selected Metric Drilldown</h3>
+        <p class="sel-name">Extraction p95 latency</p>
+        <div class="card-grid">
+          <div class="field-row"><span class="field-label">Current value</span><span class="field-value">2.1 s</span></div>
+          <div class="field-row"><span class="field-label">Target</span><span class="field-value">1.8 s</span></div>
+          <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Rafael Ortiz</span></div>
+        </div>
+        <div class="field-block"><span class="field-label">Primary cause</span>Worker memory pressure on large HTML pages</div>
+        <div class="field-block"><span class="field-label">Next action</span>Increase worker memory and split long extraction jobs</div>
+      </aside>
+    </section>
+
+    <section class="example-card" id="example-07">
+      <header class="example-header"><p class="example-kicker">Example 07</p><h2>Kanban Board With Nested Task Cards</h2></header>
+      <p class="example-description">This example imitates a project kanban board. It tests extraction of tasks grouped by lane, with nested card metadata, repeated labels, status badges, blockers, due dates, and selected task details.</p>
+
+      <div class="summary-strip">
+        <div class="si"><span class="si-label">Board</span><span class="si-value">Extraction Fixture Program</span></div>
+        <div class="si"><span class="si-label">Project</span><span class="si-value">Demo Pages</span></div>
+        <div class="si"><span class="si-label">Sprint</span><span class="si-value">Sprint 12</span></div>
+        <div class="si"><span class="si-label">Status</span><span class="si-value"><span class="badge info">In progress</span></span></div>
+      </div>
+
+      <div class="wide-scroll">
+        <div class="lane-board" data-select-card="kanban">
+          <div class="lane">
+            <p class="lane-head">Backlog <span class="lane-count">2</span></p>
+            <div class="visual-card" data-card>
+              <h4>TASK-801</h4>
+              <div class="field-block"><span class="field-label">Task</span>Add utility outage grouping example</div>
+              <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Owen Brooks</span></div>
+              <div class="field-row"><span class="field-label">Due</span><span class="field-value">June 5, 2026</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge accent">Ready</span></span></div>
+              <div class="field-row"><span class="field-label">Blocked by</span><span class="field-value">None</span></div>
+              <div class="chip-row" style="margin-top:8px;"><span class="chip">layout</span><span class="chip">regions</span></div>
+            </div>
+            <div class="visual-card" data-card>
+              <h4>TASK-802</h4>
+              <div class="field-block"><span class="field-label">Task</span>Design accordion settings fixture</div>
+              <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Lina Romero</span></div>
+              <div class="field-row"><span class="field-label">Due</span><span class="field-value">June 6, 2026</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge accent">Ready</span></span></div>
+              <div class="field-row"><span class="field-label">Blocked by</span><span class="field-value">None</span></div>
+              <div class="chip-row" style="margin-top:8px;"><span class="chip">accordion</span><span class="chip">admin</span></div>
+            </div>
+          </div>
+          <div class="lane">
+            <p class="lane-head">In Progress <span class="lane-count">2</span></p>
+            <div class="visual-card is-selected-card" data-card>
+              <h4>TASK-812</h4>
+              <div class="field-block"><span class="field-label">Task</span>Build complex visual grouping page</div>
+              <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Maya Chen</span></div>
+              <div class="field-row"><span class="field-label">Due</span><span class="field-value">June 3, 2026</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge info">In progress</span></span></div>
+              <div class="field-row"><span class="field-label">Blocked by</span><span class="field-value">Review examples list</span></div>
+              <div class="chip-row" style="margin-top:8px;"><span class="chip">specification</span><span class="chip">fixtures</span></div>
+            </div>
+            <div class="visual-card" data-card>
+              <h4>TASK-814</h4>
+              <div class="field-block"><span class="field-label">Task</span>Review dashboard grouping caveats</div>
+              <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Rafael Ortiz</span></div>
+              <div class="field-row"><span class="field-label">Due</span><span class="field-value">June 4, 2026</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge info">In progress</span></span></div>
+              <div class="field-row"><span class="field-label">Blocked by</span><span class="field-value">None</span></div>
+              <div class="chip-row" style="margin-top:8px;"><span class="chip">dashboard</span><span class="chip">metrics</span></div>
+            </div>
+          </div>
+          <div class="lane">
+            <p class="lane-head">Review <span class="lane-count">1</span></p>
+            <div class="visual-card" data-card>
+              <h4>TASK-790</h4>
+              <div class="field-block"><span class="field-label">Task</span>Validate page 7 table examples</div>
+              <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Theo Grant</span></div>
+              <div class="field-row"><span class="field-label">Due</span><span class="field-value">June 2, 2026</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">Review</span></span></div>
+              <div class="field-row"><span class="field-label">Blocked by</span><span class="field-value">QA pass</span></div>
+              <div class="chip-row" style="margin-top:8px;"><span class="chip">tables</span><span class="chip">admin</span></div>
+            </div>
+          </div>
+          <div class="lane">
+            <p class="lane-head">Done <span class="lane-count">1</span></p>
+            <div class="visual-card" data-card>
+              <h4>TASK-744</h4>
+              <div class="field-block"><span class="field-label">Task</span>Finalize read-only record examples</div>
+              <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Owen Brooks</span></div>
+              <div class="field-row"><span class="field-label">Due</span><span class="field-value">May 30, 2026</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Done</span></span></div>
+              <div class="field-row"><span class="field-label">Blocked by</span><span class="field-value">None</span></div>
+              <div class="chip-row" style="margin-top:8px;"><span class="chip">records</span><span class="chip">confirmations</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="detail-panel selected section-block" aria-label="Selected task">
+        <h3>Selected Task</h3>
+        <p class="sel-name">Build complex visual grouping page</p>
+        <div class="field-block"><span class="field-label">Acceptance criteria</span><div class="chip-row"><span class="chip">22 examples</span><span class="chip">repeated labels</span><span class="chip">nested visual groups</span><span class="chip">standalone HTML</span></div></div>
+        <div class="field-row"><span class="field-label">Reviewer</span><span class="field-value">Rafael Ortiz</span></div>
+        <div class="field-block"><span class="field-label">Latest note</span>Need examples where visual group matters more than DOM order.</div>
+      </aside>
+    </section>
+
+    <section class="example-card" id="example-08">
+      <header class="example-header"><p class="example-kicker">Example 08</p><h2>Team Directory Org Layout</h2></header>
+      <p class="example-description">This example imitates a team directory organized by visual hierarchy. It tests extraction of teams, managers, direct reports, roles, locations, statuses, and contact values while preserving reporting relationships.</p>
+
+      <div class="summary-strip">
+        <div class="si"><span class="si-label">Organization</span><span class="si-value">Product Systems</span></div>
+        <div class="si"><span class="si-label">Directory snapshot</span><span class="si-value">May 31, 2026</span></div>
+        <div class="si"><span class="si-label">Total people shown</span><span class="si-value">9</span></div>
+        <div class="si"><span class="si-label">Status</span><span class="si-value"><span class="badge ok">Current</span></span></div>
+      </div>
+
+      <div class="layout-grid-three">
+        <section class="panel bordered-accent" aria-label="Product Experience team">
+          <h3 class="panel-title">Product Experience</h3>
+          <div class="visual-card" style="border-left:3px solid var(--accent-2);">
+            <p class="mini-head">Manager</p>
+            <div class="field-row"><span class="field-label">Name</span><span class="field-value">Maya Chen</span></div>
+            <div class="field-row"><span class="field-label">Role</span><span class="field-value">Product Lead</span></div>
+            <div class="field-row"><span class="field-label">Email</span><span class="field-value">maya.chen@example.test</span></div>
+            <div class="field-row"><span class="field-label">Location</span><span class="field-value">San Francisco, CA</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Available</span></span></div>
+          </div>
+          <div class="visual-card"><p class="mini-head">Direct report</p>
+            <div class="field-row"><span class="field-label">Name</span><span class="field-value">Lina Romero</span></div>
+            <div class="field-row"><span class="field-label">Role</span><span class="field-value">UX Research Lead</span></div>
+            <div class="field-row"><span class="field-label">Email</span><span class="field-value">lina.romero@example.test</span></div>
+            <div class="field-row"><span class="field-label">Location</span><span class="field-value">Oakland, CA</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">In workshop</span></span></div>
+          </div>
+          <div class="visual-card"><p class="mini-head">Direct report</p>
+            <div class="field-row"><span class="field-label">Name</span><span class="field-value">Owen Brooks</span></div>
+            <div class="field-row"><span class="field-label">Role</span><span class="field-value">Customer Education Lead</span></div>
+            <div class="field-row"><span class="field-label">Email</span><span class="field-value">owen.brooks@example.test</span></div>
+            <div class="field-row"><span class="field-label">Location</span><span class="field-value">Monterey, CA</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Available</span></span></div>
+          </div>
+        </section>
+        <section class="panel bordered-accent" aria-label="Platform Engineering team">
+          <h3 class="panel-title">Platform Engineering</h3>
+          <div class="visual-card" style="border-left:3px solid var(--accent-2);">
+            <p class="mini-head">Manager</p>
+            <div class="field-row"><span class="field-label">Name</span><span class="field-value">Rafael Ortiz</span></div>
+            <div class="field-row"><span class="field-label">Role</span><span class="field-value">Engineering Manager</span></div>
+            <div class="field-row"><span class="field-label">Email</span><span class="field-value">rafael.ortiz@example.test</span></div>
+            <div class="field-row"><span class="field-label">Location</span><span class="field-value">Denver, CO</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Available</span></span></div>
+          </div>
+          <div class="visual-card"><p class="mini-head">Direct report</p>
+            <div class="field-row"><span class="field-label">Name</span><span class="field-value">Theo Grant</span></div>
+            <div class="field-row"><span class="field-label">Role</span><span class="field-value">Frontend Engineer</span></div>
+            <div class="field-row"><span class="field-label">Email</span><span class="field-value">theo.grant@example.test</span></div>
+            <div class="field-row"><span class="field-label">Location</span><span class="field-value">Remote</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge neutral">Focus time</span></span></div>
+          </div>
+          <div class="visual-card"><p class="mini-head">Direct report</p>
+            <div class="field-row"><span class="field-label">Name</span><span class="field-value">Priya Shah</span></div>
+            <div class="field-row"><span class="field-label">Role</span><span class="field-value">Release Engineer</span></div>
+            <div class="field-row"><span class="field-label">Email</span><span class="field-value">priya.shah@example.test</span></div>
+            <div class="field-row"><span class="field-label">Location</span><span class="field-value">San Francisco, CA</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Available</span></span></div>
+          </div>
+        </section>
+        <section class="panel bordered-accent" aria-label="Operations And Finance team">
+          <h3 class="panel-title">Operations And Finance</h3>
+          <div class="visual-card" style="border-left:3px solid var(--accent-2);">
+            <p class="mini-head">Manager</p>
+            <div class="field-row"><span class="field-label">Name</span><span class="field-value">Grace Miller</span></div>
+            <div class="field-row"><span class="field-label">Role</span><span class="field-value">Operations Director</span></div>
+            <div class="field-row"><span class="field-label">Email</span><span class="field-value">grace.miller@example.test</span></div>
+            <div class="field-row"><span class="field-label">Location</span><span class="field-value">Austin, TX</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">Traveling</span></span></div>
+          </div>
+          <div class="visual-card"><p class="mini-head">Direct report</p>
+            <div class="field-row"><span class="field-label">Name</span><span class="field-value">Renee Coleman</span></div>
+            <div class="field-row"><span class="field-label">Role</span><span class="field-value">Finance Operations</span></div>
+            <div class="field-row"><span class="field-label">Email</span><span class="field-value">renee.coleman@example.test</span></div>
+            <div class="field-row"><span class="field-label">Location</span><span class="field-value">Oakland, CA</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Available</span></span></div>
+          </div>
+          <div class="visual-card"><p class="mini-head">Direct report</p>
+            <div class="field-row"><span class="field-label">Name</span><span class="field-value">Anika Sharma</span></div>
+            <div class="field-row"><span class="field-label">Role</span><span class="field-value">Admin Systems</span></div>
+            <div class="field-row"><span class="field-label">Email</span><span class="field-value">anika.sharma@example.test</span></div>
+            <div class="field-row"><span class="field-label">Location</span><span class="field-value">San Mateo, CA</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Available</span></span></div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-09">
+      <header class="example-header"><p class="example-kicker">Example 09</p><h2>Real Estate Comparison Board</h2></header>
+      <p class="example-description">This example imitates a property comparison board. It tests extraction of side-by-side comparison columns where the same labels appear under different properties and must remain attached to the correct property.</p>
+
+      <div class="summary-strip">
+        <div class="si"><span class="si-label">Comparison name</span><span class="si-value">Weekend Open House Shortlist</span></div>
+        <div class="si"><span class="si-label">Buyer</span><span class="si-value">Noah Kim</span></div>
+        <div class="si"><span class="si-label">Criteria</span><span class="si-value">2+ bedrooms, transit access, under $1.2M</span></div>
+        <div class="si"><span class="si-label">Status</span><span class="si-value"><span class="badge accent">Shortlist</span></span></div>
+      </div>
+
+      <div class="split-layout">
+        <div>
+          <aside class="panel" aria-label="Comparison criteria" style="margin-bottom:16px;">
+            <h3 class="panel-title">Comparison Criteria</h3>
+            <div class="field-row"><span class="field-label">Budget maximum</span><span class="field-value">$1,200,000</span></div>
+            <div class="field-row"><span class="field-label">Required beds</span><span class="field-value">2</span></div>
+            <div class="field-row"><span class="field-label">Required commute</span><span class="field-value">Under 45 minutes</span></div>
+            <div class="field-block"><span class="field-label">Preferred features</span><div class="chip-row"><span class="chip">Parking</span><span class="chip">Natural light</span><span class="chip">In-unit laundry</span></div></div>
+          </aside>
+          <div class="wide-scroll">
+            <div class="lane-board" data-select-card="re" style="min-width:760px;">
+              <div class="visual-card is-selected-card" data-card>
+                <h4>410 Oak Grove Avenue Unit 6 <span class="badge accent">Open house</span></h4>
+                <div class="field-row"><span class="field-label">City</span><span class="field-value">Oakland, CA</span></div>
+                <div class="field-row"><span class="field-label">Price</span><span class="field-value">$689,000</span></div>
+                <div class="field-row"><span class="field-label">Beds</span><span class="field-value">2</span></div>
+                <div class="field-row"><span class="field-label">Baths</span><span class="field-value">1</span></div>
+                <div class="field-row"><span class="field-label">Square feet</span><span class="field-value">890 sq ft</span></div>
+                <div class="field-row"><span class="field-label">HOA</span><span class="field-value">$428/month</span></div>
+                <div class="field-row"><span class="field-label">Commute</span><span class="field-value">38 minutes</span></div>
+                <div class="field-row"><span class="field-label">Open house</span><span class="field-value">Sat 1-4 PM</span></div>
+                <div class="field-row"><span class="field-label">Fit score</span><span class="field-value">86</span></div>
+                <div class="field-block"><span class="field-label">Notes</span>Best price, smaller kitchen.</div>
+              </div>
+              <div class="visual-card" data-card>
+                <h4>88 Valencia Street Suite 402 <span class="badge info">New listing</span></h4>
+                <div class="field-row"><span class="field-label">City</span><span class="field-value">San Francisco, CA</span></div>
+                <div class="field-row"><span class="field-label">Price</span><span class="field-value">$1,120,000</span></div>
+                <div class="field-row"><span class="field-label">Beds</span><span class="field-value">1</span></div>
+                <div class="field-row"><span class="field-label">Baths</span><span class="field-value">1.5</span></div>
+                <div class="field-row"><span class="field-label">Square feet</span><span class="field-value">1,040 sq ft</span></div>
+                <div class="field-row"><span class="field-label">HOA</span><span class="field-value">$612/month</span></div>
+                <div class="field-row"><span class="field-label">Commute</span><span class="field-value">22 minutes</span></div>
+                <div class="field-row"><span class="field-label">Open house</span><span class="field-value">Sun 2-5 PM</span></div>
+                <div class="field-row"><span class="field-label">Fit score</span><span class="field-value">74</span></div>
+                <div class="field-block"><span class="field-label">Notes</span>Great commute, only one bedroom.</div>
+              </div>
+              <div class="visual-card" data-card>
+                <h4>120 King Street Unit B <span class="badge ok">Active</span></h4>
+                <div class="field-row"><span class="field-label">City</span><span class="field-value">San Francisco, CA</span></div>
+                <div class="field-row"><span class="field-label">Price</span><span class="field-value">$945,000</span></div>
+                <div class="field-row"><span class="field-label">Beds</span><span class="field-value">2</span></div>
+                <div class="field-row"><span class="field-label">Baths</span><span class="field-value">2</span></div>
+                <div class="field-row"><span class="field-label">Square feet</span><span class="field-value">1,180 sq ft</span></div>
+                <div class="field-row"><span class="field-label">HOA</span><span class="field-value">$520/month</span></div>
+                <div class="field-row"><span class="field-label">Commute</span><span class="field-value">26 minutes</span></div>
+                <div class="field-row"><span class="field-label">Open house</span><span class="field-value">Sun 11 AM-1 PM</span></div>
+                <div class="field-row"><span class="field-label">Fit score</span><span class="field-value">91</span></div>
+                <div class="field-block"><span class="field-label">Notes</span>Best overall fit, near freight corridor.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <aside class="detail-panel selected" aria-label="Selected property">
+          <h3>Selected Property</h3>
+          <p class="sel-name">410 Oak Grove Avenue Unit 6</p>
+          <div class="field-row"><span class="field-label">Listing ID</span><span class="field-value mono">PROP-410OG-6</span></div>
+          <div class="field-row"><span class="field-label">Agent</span><span class="field-value">Maya Chen</span></div>
+          <div class="field-row"><span class="field-label">Price per sq ft</span><span class="field-value">$774</span></div>
+          <div class="field-block"><span class="field-label">Tradeoff</span>Lower price but smaller layout</div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-10">
+      <header class="example-header"><p class="example-kicker">Example 10</p><h2>Composite Invoice And Receipt Layout</h2></header>
+      <p class="example-description">This example imitates a billing page that shows an invoice, payment receipt, credit memo, and balance summary together. It tests extraction of visually grouped financial documents with repeated labels such as Number, Date, Amount, Status, and Notes.</p>
+
+      <div class="summary-strip">
+        <div class="si"><span class="si-label">Account</span><span class="si-value">Cedar &amp; Pine Design LLC</span></div>
+        <div class="si"><span class="si-label">Billing period</span><span class="si-value">May 2026</span></div>
+        <div class="si"><span class="si-label">Account status</span><span class="si-value"><span class="badge warning">Partially paid</span></span></div>
+        <div class="si"><span class="si-label">Billing contact</span><span class="si-value">Renee Coleman</span></div>
+      </div>
+
+      <div class="layout-grid-two">
+        <section class="panel bordered-accent" aria-label="Invoice">
+          <h3 class="panel-title">Invoice</h3>
+          <div class="field-row"><span class="field-label">Number</span><span class="field-value mono">INV-2026-00841</span></div>
+          <div class="field-row"><span class="field-label">Date</span><span class="field-value">May 18, 2026</span></div>
+          <div class="field-row"><span class="field-label">Due date</span><span class="field-value">June 17, 2026</span></div>
+          <div class="field-row"><span class="field-label">Amount</span><span class="field-value">$736.14</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">Partially paid</span></span></div>
+          <div class="field-block"><span class="field-label">Notes</span>Includes business platform seats, audit retention, and priority support.</div>
+          <div class="visual-card" style="margin-top:12px;">
+            <p class="mini-head">Invoice line items</p>
+            <div class="field-row"><span class="field-label">Business platform seats</span><span class="field-value">$432.00</span></div>
+            <div class="field-row"><span class="field-label">Audit log retention add-on</span><span class="field-value">$96.00</span></div>
+            <div class="field-row"><span class="field-label">Priority support package</span><span class="field-value">$150.00</span></div>
+            <div class="field-row"><span class="field-label">Tax</span><span class="field-value">$58.14</span></div>
+          </div>
+        </section>
+        <section class="panel bordered-accent" aria-label="Payment receipt">
+          <h3 class="panel-title">Payment Receipt</h3>
+          <div class="field-row"><span class="field-label">Number</span><span class="field-value mono">PMT-77120</span></div>
+          <div class="field-row"><span class="field-label">Date</span><span class="field-value">May 21, 2026</span></div>
+          <div class="field-row"><span class="field-label">Method</span><span class="field-value">ACH ending in 1842</span></div>
+          <div class="field-row"><span class="field-label">Amount</span><span class="field-value">$300.00</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Posted</span></span></div>
+          <div class="field-block"><span class="field-label">Notes</span>Applied to invoice INV-2026-00841.</div>
+        </section>
+        <section class="panel bordered-accent" aria-label="Credit memo">
+          <h3 class="panel-title">Credit Memo</h3>
+          <div class="field-row"><span class="field-label">Number</span><span class="field-value mono">CM-2026-0042</span></div>
+          <div class="field-row"><span class="field-label">Date</span><span class="field-value">May 24, 2026</span></div>
+          <div class="field-row"><span class="field-label">Reason</span><span class="field-value">Seat proration</span></div>
+          <div class="field-row"><span class="field-label">Amount</span><span class="field-value">-$42.00</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge accent">Applied</span></span></div>
+          <div class="field-block"><span class="field-label">Notes</span>Proration credit for removed seats.</div>
+        </section>
+        <section class="panel bordered-accent" aria-label="Balance summary">
+          <h3 class="panel-title">Balance Summary</h3>
+          <div class="field-row"><span class="field-label">Original invoice</span><span class="field-value">$736.14</span></div>
+          <div class="field-row"><span class="field-label">Payment applied</span><span class="field-value">-$300.00</span></div>
+          <div class="field-row"><span class="field-label">Credit applied</span><span class="field-value">-$42.00</span></div>
+          <div class="field-row"><span class="field-label">Remaining balance</span><span class="field-value"><strong>$394.14</strong></span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">Due</span></span></div>
+          <div class="field-block"><span class="field-label">Notes</span>Balance due by June 17, 2026.</div>
+        </section>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-11">
+      <header class="example-header"><p class="example-kicker">Example 11</p><h2>Event Run-Of-Show Visual Schedule</h2></header>
+      <p class="example-description">This example imitates an event operations run-of-show board. It tests extraction of grouped schedule blocks where time, room, owner, status, and notes repeat across visual lanes.</p>
+
+      <div class="summary-strip">
+        <div class="si"><span class="si-label">Event</span><span class="si-value">Open Interfaces Summit</span></div>
+        <div class="si"><span class="si-label">Date</span><span class="si-value">October 12, 2026</span></div>
+        <div class="si"><span class="si-label">Venue</span><span class="si-value">Harbor Hall</span></div>
+        <div class="si"><span class="si-label">Run status</span><span class="si-value"><span class="badge info">Final draft</span></span></div>
+      </div>
+
+      <div class="wide-scroll">
+        <div class="lane-board">
+          <div class="lane">
+            <p class="lane-head">Main Stage <span class="lane-count">2 blocks</span></p>
+            <div class="visual-card">
+              <div class="field-row"><span class="field-label">Time</span><span class="field-value">9:00-9:20 AM</span></div>
+              <div class="field-block"><span class="field-label">Item</span>Welcome and opening remarks</div>
+              <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Lina Romero</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Confirmed</span></span></div>
+              <div class="field-block"><span class="field-label">Notes</span>House lights down at 8:58 AM.</div>
+            </div>
+            <div class="visual-card">
+              <div class="field-row"><span class="field-label">Time</span><span class="field-value">9:30-10:15 AM</span></div>
+              <div class="field-block"><span class="field-label">Item</span>Keynote: Interfaces For Messy Public Data</div>
+              <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Owen Brooks</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Confirmed</span></span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Slides loaded on stage laptop.</div>
+            </div>
+          </div>
+          <div class="lane">
+            <p class="lane-head">Workshop Room A <span class="lane-count">2 blocks</span></p>
+            <div class="visual-card">
+              <div class="field-row"><span class="field-label">Time</span><span class="field-value">10:30 AM-12:00 PM</span></div>
+              <div class="field-block"><span class="field-label">Item</span>Accessibility Testing Lab</div>
+              <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Maya Chen</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">Needs materials</span></span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Print keyboard shortcut cards.</div>
+            </div>
+            <div class="visual-card">
+              <div class="field-row"><span class="field-label">Time</span><span class="field-value">1:30-3:00 PM</span></div>
+              <div class="field-block"><span class="field-label">Item</span>Practical Browser Automation</div>
+              <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Rafael Ortiz</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Confirmed</span></span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Requires stable Wi-Fi.</div>
+            </div>
+          </div>
+          <div class="lane">
+            <p class="lane-head">Registration Desk <span class="lane-count">2 blocks</span></p>
+            <div class="visual-card">
+              <div class="field-row"><span class="field-label">Time</span><span class="field-value">8:00-10:00 AM</span></div>
+              <div class="field-block"><span class="field-label">Item</span>Badge pickup</div>
+              <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Grace Miller</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge accent">Staffed</span></span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Two lines: speakers and attendees.</div>
+            </div>
+            <div class="visual-card">
+              <div class="field-row"><span class="field-label">Time</span><span class="field-value">12:00-1:00 PM</span></div>
+              <div class="field-block"><span class="field-label">Item</span>Lunch ticket support</div>
+              <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Priya Shah</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge accent">Staffed</span></span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Keep replacement tickets in drawer B.</div>
+            </div>
+          </div>
+          <div class="lane">
+            <p class="lane-head">Operations <span class="lane-count">2 blocks</span></p>
+            <div class="visual-card">
+              <div class="field-row"><span class="field-label">Time</span><span class="field-value">7:30-8:30 AM</span></div>
+              <div class="field-block"><span class="field-label">Item</span>AV check</div>
+              <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Theo Grant</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge info">In progress</span></span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Check microphones in all rooms.</div>
+            </div>
+            <div class="visual-card">
+              <div class="field-row"><span class="field-label">Time</span><span class="field-value">3:15-3:45 PM</span></div>
+              <div class="field-block"><span class="field-label">Item</span>Sponsor table reset</div>
+              <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Anika Sharma</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge neutral">Scheduled</span></span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Remove morning signage.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-12">
+      <header class="example-header"><p class="example-kicker">Example 12</p><h2>Project Brief Workspace</h2></header>
+      <p class="example-description">This example imitates a project brief workspace. It tests extraction of related but separate visual groups such as goals, team, decisions, risks, milestones, and open questions.</p>
+
+      <div class="summary-strip">
+        <div class="si"><span class="si-label">Project</span><span class="si-value">Customer Portal Redesign</span></div>
+        <div class="si"><span class="si-label">Project ID</span><span class="si-value mono">PRJ-2026-2048</span></div>
+        <div class="si"><span class="si-label">Owner</span><span class="si-value">Maya Chen</span></div>
+        <div class="si"><span class="si-label">Status</span><span class="si-value"><span class="badge danger">At risk</span></span></div>
+        <div class="si"><span class="si-label">Last updated</span><span class="si-value">May 31, 2026</span></div>
+      </div>
+
+      <div class="layout-grid-two">
+        <section class="panel" style="grid-column:1 / -1;" aria-label="Overview">
+          <h3 class="panel-title">Overview</h3>
+          <div class="field-block"><span class="field-label">Problem</span>Customers cannot easily manage invoices, payment methods, and seats from one place.</div>
+          <div class="field-block"><span class="field-label">Target outcome</span>Reduce billing support tickets by 20 percent.</div>
+          <div class="field-block"><span class="field-label">Audience</span>Workspace admins and billing managers.</div>
+        </section>
+        <section class="panel" aria-label="Goals">
+          <h3 class="panel-title">Goals</h3>
+          <div class="chip-row"><span class="chip">Simplify billing navigation</span><span class="chip">Expose payment status clearly</span><span class="chip">Improve seat management transparency</span><span class="chip">Reduce duplicate support contacts</span></div>
+        </section>
+        <section class="panel" aria-label="Team">
+          <h3 class="panel-title">Team</h3>
+          <div class="field-row"><span class="field-label">Product</span><span class="field-value">Maya Chen</span></div>
+          <div class="field-row"><span class="field-label">Engineering</span><span class="field-value">Rafael Ortiz</span></div>
+          <div class="field-row"><span class="field-label">Design</span><span class="field-value">Lina Romero</span></div>
+          <div class="field-row"><span class="field-label">Research</span><span class="field-value">Owen Brooks</span></div>
+          <div class="field-row"><span class="field-label">Operations</span><span class="field-value">Grace Miller</span></div>
+        </section>
+        <section class="panel" aria-label="Milestones">
+          <h3 class="panel-title">Milestones</h3>
+          <div class="visual-card"><div class="field-row"><span class="field-label">Prototype review</span><span class="field-value">June 6, 2026</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge neutral">Scheduled</span></span></div></div>
+          <div class="visual-card"><div class="field-row"><span class="field-label">Beta release</span><span class="field-value">June 21, 2026</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge danger">At risk</span></span></div></div>
+          <div class="visual-card"><div class="field-row"><span class="field-label">General availability</span><span class="field-value">August 15, 2026</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge neutral">Planned</span></span></div></div>
+        </section>
+        <section class="panel" aria-label="Decisions">
+          <h3 class="panel-title">Decisions</h3>
+          <div class="visual-card"><div class="field-block"><span class="field-label">Decision</span>Use single billing summary page</div><div class="field-row"><span class="field-label">Owner</span><span class="field-value">Maya Chen</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Accepted</span></span></div></div>
+          <div class="visual-card"><div class="field-block"><span class="field-label">Decision</span>Show payment failures in sidebar</div><div class="field-row"><span class="field-label">Owner</span><span class="field-value">Rafael Ortiz</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">Pending</span></span></div></div>
+        </section>
+        <section class="panel" aria-label="Risks">
+          <h3 class="panel-title">Risks</h3>
+          <div class="visual-card"><div class="field-block"><span class="field-label">Risk</span>Accessibility review delay</div><div class="field-row"><span class="field-label">Owner</span><span class="field-value">Lina Romero</span></div><div class="field-row"><span class="field-label">Severity</span><span class="field-value"><span class="badge danger">High</span></span></div></div>
+          <div class="visual-card"><div class="field-block"><span class="field-label">Risk</span>Legacy payment method API</div><div class="field-row"><span class="field-label">Owner</span><span class="field-value">Rafael Ortiz</span></div><div class="field-row"><span class="field-label">Severity</span><span class="field-value"><span class="badge warning">Medium</span></span></div></div>
+        </section>
+        <section class="panel" aria-label="Open questions">
+          <h3 class="panel-title">Open Questions</h3>
+          <div class="visual-card"><div class="field-block"><span class="field-label">Question</span>Should billing managers edit SSO invoices?</div><div class="field-row"><span class="field-label">Owner</span><span class="field-value">Grace Miller</span></div><div class="field-row"><span class="field-label">Due</span><span class="field-value">June 4, 2026</span></div></div>
+          <div class="visual-card"><div class="field-block"><span class="field-label">Question</span>Can seat overage warnings be shown before checkout?</div><div class="field-row"><span class="field-label">Owner</span><span class="field-value">Maya Chen</span></div><div class="field-row"><span class="field-label">Due</span><span class="field-value">June 7, 2026</span></div></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-13">
+      <header class="example-header"><p class="example-kicker">Example 13</p><h2>Vehicle Rental Quote Comparison Layout</h2></header>
+      <p class="example-description">This example imitates a vehicle rental comparison page. It tests extraction of quote columns with repeated labels such as Vehicle, Price, Pickup, Return, Fees, Insurance, and Status while preserving provider context.</p>
+
+      <div class="split-layout">
+        <div class="wide-scroll">
+          <div class="lane-board" data-select-card="car" style="min-width:760px;">
+            <div class="visual-card is-selected-card" data-card>
+              <h4>MetroCar <span class="badge ok">Best value</span></h4>
+              <div class="field-row"><span class="field-label">Vehicle</span><span class="field-value">Compact SUV</span></div>
+              <div class="field-row"><span class="field-label">Example model</span><span class="field-value">Mazda CX-30 or similar</span></div>
+              <div class="field-row"><span class="field-label">Base price</span><span class="field-value">$340.00</span></div>
+              <div class="field-row"><span class="field-label">One-way fee</span><span class="field-value">$95.00</span></div>
+              <div class="field-row"><span class="field-label">Insurance</span><span class="field-value">Collision damage waiver included</span></div>
+              <div class="field-row"><span class="field-label">Taxes and fees</span><span class="field-value">$88.40</span></div>
+              <div class="field-row"><span class="field-label">Total</span><span class="field-value"><strong>$523.40</strong></span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Unlimited mileage.</div>
+            </div>
+            <div class="visual-card" data-card>
+              <h4>North Coast Rentals <span class="badge info">Flexible cancellation</span></h4>
+              <div class="field-row"><span class="field-label">Vehicle</span><span class="field-value">Midsize SUV</span></div>
+              <div class="field-row"><span class="field-label">Example model</span><span class="field-value">Toyota RAV4 or similar</span></div>
+              <div class="field-row"><span class="field-label">Base price</span><span class="field-value">$405.00</span></div>
+              <div class="field-row"><span class="field-label">One-way fee</span><span class="field-value">$120.00</span></div>
+              <div class="field-row"><span class="field-label">Insurance</span><span class="field-value">Optional, $24/day</span></div>
+              <div class="field-row"><span class="field-label">Taxes and fees</span><span class="field-value">$106.18</span></div>
+              <div class="field-row"><span class="field-label">Total</span><span class="field-value"><strong>$631.18</strong></span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Free cancellation until 24 hours before pickup.</div>
+            </div>
+            <div class="visual-card" data-card>
+              <h4>Summit Drive <span class="badge warning">Limited availability</span></h4>
+              <div class="field-row"><span class="field-label">Vehicle</span><span class="field-value">Full-size sedan</span></div>
+              <div class="field-row"><span class="field-label">Example model</span><span class="field-value">Toyota Camry or similar</span></div>
+              <div class="field-row"><span class="field-label">Base price</span><span class="field-value">$365.00</span></div>
+              <div class="field-row"><span class="field-label">One-way fee</span><span class="field-value">$140.00</span></div>
+              <div class="field-row"><span class="field-label">Insurance</span><span class="field-value">Optional, $19/day</span></div>
+              <div class="field-row"><span class="field-label">Taxes and fees</span><span class="field-value">$101.20</span></div>
+              <div class="field-row"><span class="field-label">Total</span><span class="field-value"><strong>$606.20</strong></span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Only 2 vehicles left at pickup branch.</div>
+            </div>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Trip summary">
+          <h3>Trip Summary</h3>
+          <div class="field-row"><span class="field-label">Pickup location</span><span class="field-value">Seattle Airport - SEA Terminal 1</span></div>
+          <div class="field-row"><span class="field-label">Return location</span><span class="field-value">Portland Airport - PDX Garage</span></div>
+          <div class="field-row"><span class="field-label">Pickup</span><span class="field-value">August 4, 2026, 10:30 AM</span></div>
+          <div class="field-row"><span class="field-label">Return</span><span class="field-value">August 9, 2026, 4:00 PM</span></div>
+          <div class="field-row"><span class="field-label">Driver age</span><span class="field-value">34</span></div>
+          <div class="field-row"><span class="field-label">Trip type</span><span class="field-value">One-way rental</span></div>
+          <div class="section-divider"></div>
+          <p class="mini-head">Selected quote</p>
+          <div class="field-row"><span class="field-label">Selected provider</span><span class="field-value">MetroCar</span></div>
+          <div class="field-row"><span class="field-label">Quote ID</span><span class="field-value mono">CAR-Q-2026-8841</span></div>
+          <div class="field-row"><span class="field-label">Deposit hold</span><span class="field-value">$300.00</span></div>
+          <div class="field-row"><span class="field-label">Fuel policy</span><span class="field-value">Return full</span></div>
+          <div class="field-row"><span class="field-label">Mileage</span><span class="field-value">Unlimited</span></div>
+          <div class="field-row"><span class="field-label">Cancellation</span><span class="field-value">Free until August 2, 2026</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-14">
+      <header class="example-header"><p class="example-kicker">Example 14</p><h2>Student Degree Audit Visual Planner</h2></header>
+      <p class="example-description">This example imitates a degree audit planner. It tests extraction of requirement groups, course cards, completion states, credits, warnings, and summary totals from visual grouped panels.</p>
+
+      <div class="summary-strip">
+        <div class="si"><span class="si-label">Student</span><span class="si-value">Mei Tanaka</span></div>
+        <div class="si"><span class="si-label">Student ID</span><span class="si-value mono">S-884209</span></div>
+        <div class="si"><span class="si-label">Program</span><span class="si-value">Computer Science BS</span></div>
+        <div class="si"><span class="si-label">Catalog year</span><span class="si-value">2024-2025</span></div>
+        <div class="si"><span class="si-label">Audit status</span><span class="si-value"><span class="badge ok">On track</span></span></div>
+      </div>
+
+      <div class="tile-row">
+        <div class="tile"><div class="tile-label">Credits completed</div><div class="tile-value">84</div></div>
+        <div class="tile"><div class="tile-label">Credits in progress</div><div class="tile-value">10</div></div>
+        <div class="tile"><div class="tile-label">Credits remaining</div><div class="tile-value">26</div></div>
+        <div class="tile"><div class="tile-label">Estimated graduation</div><div class="tile-value">Spring 2027</div></div>
+      </div>
+
+      <div class="layout-grid-three section-block">
+        <section class="panel bordered-accent" aria-label="Core Computer Science">
+          <h3 class="panel-title">Core Computer Science</h3>
+          <div class="visual-card"><div class="field-row"><span class="field-label">CS 210</span><span class="field-value">Data Structures</span></div><div class="field-row"><span class="field-label">Credits</span><span class="field-value">4</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Completed</span></span></div><div class="field-row"><span class="field-label">Term</span><span class="field-value">Fall 2025</span></div></div>
+          <div class="visual-card"><div class="field-row"><span class="field-label">CS 340</span><span class="field-value">Human-Centered Software Design</span></div><div class="field-row"><span class="field-label">Credits</span><span class="field-value">4</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge info">In progress</span></span></div><div class="field-row"><span class="field-label">Term</span><span class="field-value">Fall 2026</span></div></div>
+          <div class="visual-card"><div class="field-row"><span class="field-label">CS 375</span><span class="field-value">Browser Automation Systems</span></div><div class="field-row"><span class="field-label">Credits</span><span class="field-value">3</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge neutral">Planned</span></span></div><div class="field-row"><span class="field-label">Term</span><span class="field-value">Spring 2027</span></div></div>
+        </section>
+        <section class="panel bordered-accent" aria-label="Mathematics">
+          <h3 class="panel-title">Mathematics</h3>
+          <div class="visual-card"><div class="field-row"><span class="field-label">MATH 221</span><span class="field-value">Linear Algebra</span></div><div class="field-row"><span class="field-label">Credits</span><span class="field-value">3</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge info">In progress</span></span></div><div class="field-row"><span class="field-label">Term</span><span class="field-value">Fall 2026</span></div></div>
+          <div class="visual-card"><div class="field-row"><span class="field-label">STAT 240</span><span class="field-value">Applied Statistics</span></div><div class="field-row"><span class="field-label">Credits</span><span class="field-value">4</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Completed</span></span></div><div class="field-row"><span class="field-label">Term</span><span class="field-value">Spring 2026</span></div></div>
+        </section>
+        <section class="panel bordered-accent" aria-label="Writing And Society">
+          <h3 class="panel-title">Writing And Society</h3>
+          <div class="visual-card"><div class="field-row"><span class="field-label">HIST 180</span><span class="field-value">Technology And Society</span></div><div class="field-row"><span class="field-label">Credits</span><span class="field-value">3</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge info">In progress</span></span></div><div class="field-row"><span class="field-label">Term</span><span class="field-value">Fall 2026</span></div></div>
+          <div class="visual-card"><div class="field-row"><span class="field-label">WRIT 210</span><span class="field-value">Technical Communication</span></div><div class="field-row"><span class="field-label">Credits</span><span class="field-value">3</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Completed</span></span></div><div class="field-row"><span class="field-label">Term</span><span class="field-value">Spring 2025</span></div></div>
+        </section>
+      </div>
+
+      <aside class="note-box section-block" aria-label="Audit warning">
+        <p class="mini-head">Warning</p>
+        <div class="field-block"><span class="field-label">Warning</span>Upper division elective requirement still needs 6 credits.</div>
+        <div class="field-row"><span class="field-label">Advisor</span><span class="field-value">Dr. Hannah Cho</span></div>
+        <div class="field-row"><span class="field-label">Next review</span><span class="field-value">June 16, 2026</span></div>
+      </aside>
+    </section>
+
+    <section class="example-card" id="example-15">
+      <header class="example-header"><p class="example-kicker">Example 15</p><h2>Support Case Triage Workspace</h2></header>
+      <p class="example-description">This example imitates a support agent triage workspace. It tests extraction of visually grouped customer, ticket, SLA, related-case, suggested-action, and internal-note panels.</p>
+
+      <div class="summary-strip">
+        <div class="si"><span class="si-label">Ticket</span><span class="si-value mono">TCK-2026-54102</span></div>
+        <div class="si"><span class="si-label">Subject</span><span class="si-value">Invoice PDF missing line item details</span></div>
+        <div class="si"><span class="si-label">Status</span><span class="si-value"><span class="badge info">Open</span></span></div>
+        <div class="si"><span class="si-label">Priority</span><span class="si-value"><span class="badge danger">High</span></span></div>
+        <div class="si"><span class="si-label">Assigned to</span><span class="si-value">Rafael Ortiz</span></div>
+      </div>
+
+      <div class="layout-grid-three">
+        <section class="panel" aria-label="Customer">
+          <h3 class="panel-title">Customer</h3>
+          <div class="field-row"><span class="field-label">Customer</span><span class="field-value">Theo Grant</span></div>
+          <div class="field-row"><span class="field-label">Email</span><span class="field-value">theo.grant@example.test</span></div>
+          <div class="field-row"><span class="field-label">Account</span><span class="field-value">Independent documentary project</span></div>
+          <div class="field-row"><span class="field-label">Plan</span><span class="field-value">Business</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Active</span></span></div>
+        </section>
+        <section class="panel" aria-label="Ticket">
+          <h3 class="panel-title">Ticket</h3>
+          <div class="field-row"><span class="field-label">Channel</span><span class="field-value">Chat</span></div>
+          <div class="field-row"><span class="field-label">Created</span><span class="field-value">May 31, 2026, 10:14 AM</span></div>
+          <div class="field-block"><span class="field-label">Last message</span>Can you send a version that includes SKU and tax columns?</div>
+          <div class="field-row"><span class="field-label">Detected topic</span><span class="field-value">Invoice export</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">Needs reply</span></span></div>
+        </section>
+        <section class="panel" aria-label="SLA">
+          <h3 class="panel-title">SLA</h3>
+          <div class="field-row"><span class="field-label">SLA target</span><span class="field-value">May 31, 2026, 5:00 PM</span></div>
+          <div class="field-row"><span class="field-label">Time remaining</span><span class="field-value">4h 46m</span></div>
+          <div class="field-row"><span class="field-label">SLA status</span><span class="field-value"><span class="badge warning">Due soon</span></span></div>
+          <div class="field-row"><span class="field-label">Escalation owner</span><span class="field-value">Leah Kim</span></div>
+        </section>
+        <section class="panel" aria-label="Suggested macros">
+          <h3 class="panel-title">Suggested Macros</h3>
+          <div class="visual-card"><div class="field-block"><span class="field-label">Macro</span>Invoice line item export explanation</div><div class="field-row"><span class="field-label">Confidence</span><span class="field-value">92 percent</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Recommended</span></span></div></div>
+          <div class="visual-card"><div class="field-block"><span class="field-label">Macro</span>CSV export setup steps</div><div class="field-row"><span class="field-label">Confidence</span><span class="field-value">78 percent</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge neutral">Optional</span></span></div></div>
+        </section>
+        <section class="panel" aria-label="Related cases">
+          <h3 class="panel-title">Related Cases</h3>
+          <div class="visual-card"><div class="field-row"><span class="field-label">Case</span><span class="field-value mono">TCK-2026-54188</span></div><div class="field-block"><span class="field-label">Subject</span>Monthly billing export missing discount rows</div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">Waiting on support</span></span></div></div>
+          <div class="visual-card"><div class="field-row"><span class="field-label">Case</span><span class="field-value mono">TCK-2026-54217</span></div><div class="field-block"><span class="field-label">Subject</span>Export filter does not preserve date range</div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge info">Open</span></span></div></div>
+        </section>
+        <section class="panel" aria-label="Internal notes">
+          <h3 class="panel-title">Internal Notes</h3>
+          <div class="field-block"><span class="field-label">Latest note</span>Customer needs CSV-compatible details, not only PDF summary.</div>
+          <div class="field-block"><span class="field-label">Next action</span>Send export article and offer CSV template.</div>
+        </section>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-16">
+      <header class="example-header"><p class="example-kicker">Example 16</p><h2>Medical Lab Results Visual Grouping</h2></header>
+      <p class="example-description">This example imitates a patient portal lab result view grouped by test category. It tests extraction of specimen metadata, grouped lab result values, units, reference ranges, flags, provider notes, and disclaimers.</p>
+
+      <div class="summary-strip">
+        <div class="si"><span class="si-label">Patient</span><span class="si-value">Victor Lane</span></div>
+        <div class="si"><span class="si-label">Lab order</span><span class="si-value mono">LAB-2026-11984</span></div>
+        <div class="si"><span class="si-label">Collected</span><span class="si-value">May 28, 2026, 8:42 AM</span></div>
+        <div class="si"><span class="si-label">Reported</span><span class="si-value">May 29, 2026, 2:15 PM</span></div>
+        <div class="si"><span class="si-label">Status</span><span class="si-value"><span class="badge ok">Final</span></span></div>
+      </div>
+
+      <section class="panel" aria-label="Specimen" style="margin-bottom:16px;">
+        <h3 class="panel-title">Specimen</h3>
+        <div class="card-grid">
+          <div class="field-row"><span class="field-label">Specimen</span><span class="field-value">Blood</span></div>
+          <div class="field-row"><span class="field-label">Collection site</span><span class="field-value">Downtown Clinic</span></div>
+          <div class="field-row"><span class="field-label">Ordering provider</span><span class="field-value">Dr. Hannah Cho</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge accent">Processed</span></span></div>
+        </div>
+      </section>
+
+      <div class="layout-grid-two">
+        <section class="panel bordered-accent" aria-label="Lipid Panel">
+          <h3 class="panel-title">Lipid Panel</h3>
+          <table>
+            <thead><tr><th>Test</th><th>Result</th><th>Unit</th><th>Reference</th><th>Flag</th></tr></thead>
+            <tbody>
+              <tr><td>Total cholesterol</td><td>182</td><td>mg/dL</td><td>&lt; 200</td><td><span class="badge ok">Normal</span></td></tr>
+              <tr><td>HDL cholesterol</td><td>48</td><td>mg/dL</td><td>&gt;= 40</td><td><span class="badge ok">Normal</span></td></tr>
+              <tr><td>LDL cholesterol</td><td>112</td><td>mg/dL</td><td>&lt; 100</td><td><span class="badge danger">High</span></td></tr>
+              <tr><td>Triglycerides</td><td>136</td><td>mg/dL</td><td>&lt; 150</td><td><span class="badge ok">Normal</span></td></tr>
+            </tbody>
+          </table>
+        </section>
+        <section class="panel bordered-accent" aria-label="Metabolic Markers">
+          <h3 class="panel-title">Metabolic Markers</h3>
+          <table>
+            <thead><tr><th>Test</th><th>Result</th><th>Unit</th><th>Reference</th><th>Flag</th></tr></thead>
+            <tbody>
+              <tr><td>Glucose</td><td>94</td><td>mg/dL</td><td>70-99</td><td><span class="badge ok">Normal</span></td></tr>
+              <tr><td>Creatinine</td><td>0.9</td><td>mg/dL</td><td>0.6-1.3</td><td><span class="badge ok">Normal</span></td></tr>
+              <tr><td>Sodium</td><td>139</td><td>mmol/L</td><td>135-145</td><td><span class="badge ok">Normal</span></td></tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+
+      <section class="panel section-block" aria-label="Provider note">
+        <h3 class="panel-title">Provider Note</h3>
+        <div class="field-block"><span class="field-label">Note</span>LDL remains mildly elevated. Continue current medication and discuss diet changes at the next follow-up visit.</div>
+        <div class="field-row"><span class="field-label">Provider</span><span class="field-value">Dr. Hannah Cho</span></div>
+      </section>
+      <aside class="note-box section-block" aria-label="Disclaimer">
+        <div class="field-block"><span class="field-label">Disclaimer</span>This fictional demo record is not medical advice.</div>
+      </aside>
+    </section>
+
+    <section class="example-card" id="example-17">
+      <header class="example-header"><p class="example-kicker">Example 17</p><h2>Utility Outage Region Dashboard</h2></header>
+      <p class="example-description">This example imitates a utility outage operations dashboard. It tests extraction of regional grouping, outage records, affected customers, crew assignments, cause, estimated restoration, and status values.</p>
+
+      <div class="summary-strip">
+        <div class="si"><span class="si-label">Utility</span><span class="si-value">Bay Electric Demo</span></div>
+        <div class="si"><span class="si-label">Outage date</span><span class="si-value">May 31, 2026</span></div>
+        <div class="si"><span class="si-label">System status</span><span class="si-value"><span class="badge danger">Active outages</span></span></div>
+        <div class="si"><span class="si-label">Last refreshed</span><span class="si-value">11:45 AM</span></div>
+      </div>
+
+      <div class="tile-row">
+        <div class="tile"><div class="tile-label">Active outages</div><div class="tile-value">5</div></div>
+        <div class="tile"><div class="tile-label">Customers affected</div><div class="tile-value">1,842</div></div>
+        <div class="tile"><div class="tile-label">Crews assigned</div><div class="tile-value">8</div></div>
+        <div class="tile"><div class="tile-label">Estimated full restoration</div><div class="tile-value">8:30 PM</div></div>
+      </div>
+
+      <div class="layout-grid-three section-block">
+        <section class="panel bordered-accent" aria-label="North Bay region">
+          <h3 class="panel-title">North Bay</h3>
+          <div class="visual-card"><div class="field-row"><span class="field-label">Outage ID</span><span class="field-value mono">OUT-2026-4401</span></div><div class="field-row"><span class="field-label">Area</span><span class="field-value">San Rafael Hills</span></div><div class="field-row"><span class="field-label">Customers affected</span><span class="field-value">420</span></div><div class="field-row"><span class="field-label">Cause</span><span class="field-value">Vegetation contact</span></div><div class="field-row"><span class="field-label">Crew</span><span class="field-value">Crew N-3</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge info">Crew on site</span></span></div><div class="field-row"><span class="field-label">Estimated restoration</span><span class="field-value">3:30 PM</span></div></div>
+          <div class="visual-card"><div class="field-row"><span class="field-label">Outage ID</span><span class="field-value mono">OUT-2026-4408</span></div><div class="field-row"><span class="field-label">Area</span><span class="field-value">Mill Valley West</span></div><div class="field-row"><span class="field-label">Customers affected</span><span class="field-value">188</span></div><div class="field-row"><span class="field-label">Cause</span><span class="field-value">Equipment failure</span></div><div class="field-row"><span class="field-label">Crew</span><span class="field-value">Crew N-1</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">Assessing</span></span></div><div class="field-row"><span class="field-label">Estimated restoration</span><span class="field-value">5:00 PM</span></div></div>
+        </section>
+        <section class="panel bordered-accent" aria-label="Peninsula region">
+          <h3 class="panel-title">Peninsula</h3>
+          <div class="visual-card"><div class="field-row"><span class="field-label">Outage ID</span><span class="field-value mono">OUT-2026-4412</span></div><div class="field-row"><span class="field-label">Area</span><span class="field-value">San Mateo Highlands</span></div><div class="field-row"><span class="field-label">Customers affected</span><span class="field-value">612</span></div><div class="field-row"><span class="field-label">Cause</span><span class="field-value">Vehicle accident</span></div><div class="field-row"><span class="field-label">Crew</span><span class="field-value">Crew P-4</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge info">Repair in progress</span></span></div><div class="field-row"><span class="field-label">Estimated restoration</span><span class="field-value">4:15 PM</span></div></div>
+        </section>
+        <section class="panel bordered-accent" aria-label="East Bay region">
+          <h3 class="panel-title">East Bay</h3>
+          <div class="visual-card"><div class="field-row"><span class="field-label">Outage ID</span><span class="field-value mono">OUT-2026-4419</span></div><div class="field-row"><span class="field-label">Area</span><span class="field-value">Oakland Temescal</span></div><div class="field-row"><span class="field-label">Customers affected</span><span class="field-value">314</span></div><div class="field-row"><span class="field-label">Cause</span><span class="field-value">Underground cable issue</span></div><div class="field-row"><span class="field-label">Crew</span><span class="field-value">Crew E-2</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge danger">Waiting for parts</span></span></div><div class="field-row"><span class="field-label">Estimated restoration</span><span class="field-value">8:30 PM</span></div></div>
+          <div class="visual-card"><div class="field-row"><span class="field-label">Outage ID</span><span class="field-value mono">OUT-2026-4424</span></div><div class="field-row"><span class="field-label">Area</span><span class="field-value">Alameda West</span></div><div class="field-row"><span class="field-label">Customers affected</span><span class="field-value">308</span></div><div class="field-row"><span class="field-label">Cause</span><span class="field-value">Transformer fault</span></div><div class="field-row"><span class="field-label">Crew</span><span class="field-value">Crew E-5</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge accent">Crew dispatched</span></span></div><div class="field-row"><span class="field-label">Estimated restoration</span><span class="field-value">6:45 PM</span></div></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-18">
+      <header class="example-header"><p class="example-kicker">Example 18</p><h2>Product Configurator Summary Layout</h2></header>
+      <p class="example-description">This example imitates a product configurator review page. It tests extraction of selected options grouped by category, repeated labels such as Option, Price, Status, and Notes, plus a final configuration summary.</p>
+
+      <div class="summary-strip">
+        <div class="si"><span class="si-label">Product</span><span class="si-value">DataGrid Studio Pro Deployment Package</span></div>
+        <div class="si"><span class="si-label">Configuration ID</span><span class="si-value mono">CFG-2026-88420</span></div>
+        <div class="si"><span class="si-label">Status</span><span class="si-value"><span class="badge ok">Ready for quote</span></span></div>
+        <div class="si"><span class="si-label">Configured by</span><span class="si-value">Priya Shah</span></div>
+      </div>
+
+      <div class="split-layout">
+        <div>
+          <div class="layout-grid-two">
+            <section class="panel bordered-accent" aria-label="License option group">
+              <h3 class="panel-title">License</h3>
+              <div class="field-row"><span class="field-label">Option</span><span class="field-value">Team edition</span></div>
+              <div class="field-row"><span class="field-label">Seats</span><span class="field-value">12</span></div>
+              <div class="field-row"><span class="field-label">Price</span><span class="field-value">$5,760/year</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Selected</span></span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Includes shared workspaces and admin controls.</div>
+            </section>
+            <section class="panel bordered-accent" aria-label="Support option group">
+              <h3 class="panel-title">Support</h3>
+              <div class="field-row"><span class="field-label">Option</span><span class="field-value">Priority support</span></div>
+              <div class="field-row"><span class="field-label">Response time</span><span class="field-value">4 business hours</span></div>
+              <div class="field-row"><span class="field-label">Price</span><span class="field-value">$1,200/year</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Selected</span></span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Required for production deployment.</div>
+            </section>
+            <section class="panel bordered-accent" aria-label="Data retention option group">
+              <h3 class="panel-title">Data Retention</h3>
+              <div class="field-row"><span class="field-label">Option</span><span class="field-value">Audit log retention - 2 years</span></div>
+              <div class="field-row"><span class="field-label">Storage</span><span class="field-value">Included</span></div>
+              <div class="field-row"><span class="field-label">Price</span><span class="field-value">$960/year</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Selected</span></span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Meets compliance requirement.</div>
+            </section>
+            <section class="panel bordered-accent" aria-label="Integrations option group">
+              <h3 class="panel-title">Integrations</h3>
+              <div class="visual-card"><div class="field-row"><span class="field-label">Integration</span><span class="field-value">SAML SSO</span></div><div class="field-row"><span class="field-label">Price</span><span class="field-value">$0</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge accent">Included</span></span></div><div class="field-block"><span class="field-label">Notes</span>Requires identity provider metadata</div></div>
+              <div class="visual-card"><div class="field-row"><span class="field-label">Integration</span><span class="field-value">SCIM provisioning</span></div><div class="field-row"><span class="field-label">Price</span><span class="field-value">$480/year</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Selected</span></span></div><div class="field-block"><span class="field-label">Notes</span>Requires admin token</div></div>
+              <div class="visual-card"><div class="field-row"><span class="field-label">Integration</span><span class="field-value">Webhook export</span></div><div class="field-row"><span class="field-label">Price</span><span class="field-value">$0</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge neutral">Available</span></span></div><div class="field-block"><span class="field-label">Notes</span>Not selected</div></div>
+            </section>
+          </div>
+          <aside class="note-box section-block" aria-label="Compatibility warning">
+            <p class="mini-head">Compatibility Warning</p>
+            <div class="field-block"><span class="field-label">Warning</span>SCIM provisioning requires SAML SSO to be configured first.</div>
+            <div class="field-row"><span class="field-label">Severity</span><span class="field-value"><span class="badge warning">Medium</span></span></div>
+            <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Admin Systems</span></div>
+          </aside>
+        </div>
+        <aside class="detail-panel" aria-label="Pricing summary">
+          <h3>Pricing Summary</h3>
+          <div class="field-row"><span class="field-label">License subtotal</span><span class="field-value">$5,760</span></div>
+          <div class="field-row"><span class="field-label">Support subtotal</span><span class="field-value">$1,200</span></div>
+          <div class="field-row"><span class="field-label">Retention subtotal</span><span class="field-value">$960</span></div>
+          <div class="field-row"><span class="field-label">Integration subtotal</span><span class="field-value">$480</span></div>
+          <div class="field-row"><span class="field-label">Annual total</span><span class="field-value"><strong>$8,400</strong></span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-19">
+      <header class="example-header"><p class="example-kicker">Example 19</p><h2>Procurement Quote Comparison Matrix</h2></header>
+      <p class="example-description">This example imitates a procurement vendor comparison matrix. It tests extraction of vendor columns, requirement rows, compliance values, pricing values, recommendation status, and selected vendor details.</p>
+
+      <div class="summary-strip">
+        <div class="si"><span class="si-label">Procurement request</span><span class="si-value mono">REQ-2026-7712</span></div>
+        <div class="si"><span class="si-label">Category</span><span class="si-value">Billing platform renewal</span></div>
+        <div class="si"><span class="si-label">Evaluator</span><span class="si-value">Renee Coleman</span></div>
+        <div class="si"><span class="si-label">Status</span><span class="si-value"><span class="badge info">Vendor comparison</span></span></div>
+      </div>
+
+      <div class="split-layout">
+        <div>
+          <aside class="panel" aria-label="Requirements" style="margin-bottom:16px;">
+            <h3 class="panel-title">Requirements</h3>
+            <div class="card-grid">
+              <div class="field-row"><span class="field-label">Required term</span><span class="field-value">12 months</span></div>
+              <div class="field-row"><span class="field-label">Required support</span><span class="field-value">Priority support</span></div>
+              <div class="field-row"><span class="field-label">Required compliance</span><span class="field-value">SOC 2 report</span></div>
+              <div class="field-row"><span class="field-label">Budget</span><span class="field-value">$90,000</span></div>
+            </div>
+          </aside>
+          <div class="wide-scroll">
+            <div class="lane-board" data-select-card="vendor" style="min-width:760px;">
+              <div class="visual-card is-selected-card" data-card>
+                <h4>Northstar Cloud Services <span class="badge ok">Recommended</span></h4>
+                <div class="field-row"><span class="field-label">Quote ID</span><span class="field-value mono">Q-NS-2026-118</span></div>
+                <div class="field-row"><span class="field-label">Annual price</span><span class="field-value">$84,000</span></div>
+                <div class="field-row"><span class="field-label">Support</span><span class="field-value">Priority support included</span></div>
+                <div class="field-row"><span class="field-label">SOC 2</span><span class="field-value">Available</span></div>
+                <div class="field-row"><span class="field-label">Data retention</span><span class="field-value">2 years</span></div>
+                <div class="field-row"><span class="field-label">Implementation</span><span class="field-value">4 weeks</span></div>
+                <div class="field-block"><span class="field-label">Notes</span>Best match for current requirements.</div>
+              </div>
+              <div class="visual-card" data-card>
+                <h4>Atlas Systems <span class="badge warning">Over budget</span></h4>
+                <div class="field-row"><span class="field-label">Quote ID</span><span class="field-value mono">Q-AS-2026-221</span></div>
+                <div class="field-row"><span class="field-label">Annual price</span><span class="field-value">$92,400</span></div>
+                <div class="field-row"><span class="field-label">Support</span><span class="field-value">Priority support add-on</span></div>
+                <div class="field-row"><span class="field-label">SOC 2</span><span class="field-value">Available</span></div>
+                <div class="field-row"><span class="field-label">Data retention</span><span class="field-value">1 year</span></div>
+                <div class="field-row"><span class="field-label">Implementation</span><span class="field-value">6 weeks</span></div>
+                <div class="field-block"><span class="field-label">Notes</span>Strong platform but higher cost.</div>
+              </div>
+              <div class="visual-card" data-card>
+                <h4>CedarStack <span class="badge danger">Does not meet requirements</span></h4>
+                <div class="field-row"><span class="field-label">Quote ID</span><span class="field-value mono">Q-CS-2026-087</span></div>
+                <div class="field-row"><span class="field-label">Annual price</span><span class="field-value">$76,800</span></div>
+                <div class="field-row"><span class="field-label">Support</span><span class="field-value">Standard support</span></div>
+                <div class="field-row"><span class="field-label">SOC 2</span><span class="field-value">Pending</span></div>
+                <div class="field-row"><span class="field-label">Data retention</span><span class="field-value">90 days</span></div>
+                <div class="field-row"><span class="field-label">Implementation</span><span class="field-value">3 weeks</span></div>
+                <div class="field-block"><span class="field-label">Notes</span>Data retention and compliance gaps.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <aside class="detail-panel selected" aria-label="Recommendation">
+          <h3>Recommendation</h3>
+          <p class="sel-name">Northstar Cloud Services</p>
+          <div class="field-row"><span class="field-label">Recommendation</span><span class="field-value">Approve renewal</span></div>
+          <div class="field-block"><span class="field-label">Primary reason</span>Meets compliance and support requirements within budget</div>
+          <div class="field-block"><span class="field-label">Approval chain</span><div class="chip-row"><span class="chip">Finance manager</span><span class="chip">Legal</span><span class="chip">CFO</span></div></div>
+          <div class="field-block"><span class="field-label">Next action</span>Send for legal review</div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-20">
+      <header class="example-header"><p class="example-kicker">Example 20</p><h2>Legal Contract Clause Review Workspace</h2></header>
+      <p class="example-description">This example imitates a legal contract review workspace. It tests extraction of document metadata, clause groups, clause status, reviewer comments, risk levels, approval state, and repeated labels across legal sections.</p>
+
+      <div class="summary-strip">
+        <div class="si"><span class="si-label">Document</span><span class="si-value">Master Services Agreement - Northstar Cloud</span></div>
+        <div class="si"><span class="si-label">Document ID</span><span class="si-value mono">DOC-8841</span></div>
+        <div class="si"><span class="si-label">Matter</span><span class="si-value">Vendor Agreement Review</span></div>
+        <div class="si"><span class="si-label">Review status</span><span class="si-value"><span class="badge warning">Needs business owner review</span></span></div>
+        <div class="si"><span class="si-label">Reviewer</span><span class="si-value">Renee Coleman</span></div>
+      </div>
+
+      <div class="split-layout">
+        <div>
+          <section class="panel" aria-label="Document metadata" style="margin-bottom:16px;">
+            <h3 class="panel-title">Document Metadata</h3>
+            <div class="card-grid">
+              <div class="field-row"><span class="field-label">Effective date</span><span class="field-value">January 18, 2026</span></div>
+              <div class="field-row"><span class="field-label">Renewal date</span><span class="field-value">January 18, 2027</span></div>
+              <div class="field-row"><span class="field-label">Notice deadline</span><span class="field-value">November 19, 2026</span></div>
+              <div class="field-row"><span class="field-label">Contract value</span><span class="field-value">$84,000 annually</span></div>
+            </div>
+          </section>
+          <section class="panel bordered-accent" aria-label="Termination clauses">
+            <h3 class="panel-title">Termination</h3>
+            <div class="visual-card">
+              <div class="field-row"><span class="field-label">Clause</span><span class="field-value">Termination for convenience</span></div>
+              <div class="field-row"><span class="field-label">Section</span><span class="field-value">12.2</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">Review</span></span></div>
+              <div class="field-row"><span class="field-label">Risk</span><span class="field-value"><span class="badge warning">Medium</span></span></div>
+              <div class="field-block"><span class="field-label">Text summary</span>Either party may terminate with 60 days written notice before renewal.</div>
+              <div class="field-block"><span class="field-label">Comment</span>Confirm business owner accepts 60-day notice period.</div>
+            </div>
+            <div class="visual-card">
+              <div class="field-row"><span class="field-label">Clause</span><span class="field-value">Termination for cause</span></div>
+              <div class="field-row"><span class="field-label">Section</span><span class="field-value">12.3</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Accepted</span></span></div>
+              <div class="field-row"><span class="field-label">Risk</span><span class="field-value"><span class="badge ok">Low</span></span></div>
+              <div class="field-block"><span class="field-label">Text summary</span>Termination allowed after uncured material breach.</div>
+              <div class="field-block"><span class="field-label">Comment</span>Standard language.</div>
+            </div>
+          </section>
+          <section class="panel bordered-accent section-block" aria-label="Data Protection clauses">
+            <h3 class="panel-title">Data Protection</h3>
+            <div class="visual-card">
+              <div class="field-row"><span class="field-label">Clause</span><span class="field-value">Data retention</span></div>
+              <div class="field-row"><span class="field-label">Section</span><span class="field-value">8.4</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">Review</span></span></div>
+              <div class="field-row"><span class="field-label">Risk</span><span class="field-value"><span class="badge danger">High</span></span></div>
+              <div class="field-block"><span class="field-label">Text summary</span>Vendor retains audit logs for 2 years.</div>
+              <div class="field-block"><span class="field-label">Comment</span>Confirm retention meets compliance requirement.</div>
+            </div>
+            <div class="visual-card">
+              <div class="field-row"><span class="field-label">Clause</span><span class="field-value">Subprocessors</span></div>
+              <div class="field-row"><span class="field-label">Section</span><span class="field-value">8.7</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Accepted</span></span></div>
+              <div class="field-row"><span class="field-label">Risk</span><span class="field-value"><span class="badge warning">Medium</span></span></div>
+              <div class="field-block"><span class="field-label">Text summary</span>Vendor must provide notice for new subprocessors.</div>
+              <div class="field-block"><span class="field-label">Comment</span>Notice period acceptable.</div>
+            </div>
+          </section>
+        </div>
+        <aside class="detail-panel" aria-label="Approval">
+          <h3>Approval</h3>
+          <div class="field-row"><span class="field-label">Business owner</span><span class="field-value">Grace Miller</span></div>
+          <div class="field-row"><span class="field-label">Legal owner</span><span class="field-value">Renee Coleman</span></div>
+          <div class="field-row"><span class="field-label">Approval status</span><span class="field-value"><span class="badge warning">Pending</span></span></div>
+          <div class="field-block"><span class="field-label">Next action</span>Business owner review by June 7, 2026</div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-21">
+      <header class="example-header"><p class="example-kicker">Example 21</p><h2>Logistics Shipment Route Board</h2></header>
+      <p class="example-description">This example imitates a logistics route board. It tests extraction of route-level fields, stop-level fields, package-level fields, carrier details, exception notes, and repeated labels such as Status, ETA, Location, and Notes.</p>
+
+      <div class="summary-strip">
+        <div class="si"><span class="si-label">Route</span><span class="si-value mono">RTE-2026-5518</span></div>
+        <div class="si"><span class="si-label">Shipment</span><span class="si-value mono">SHP-2026-77120</span></div>
+        <div class="si"><span class="si-label">Carrier</span><span class="si-value">Example Parcel Freight</span></div>
+        <div class="si"><span class="si-label">Overall status</span><span class="si-value"><span class="badge info">In transit</span></span></div>
+        <div class="si"><span class="si-label">Reference</span><span class="si-value mono">ORD-2026-104922</span></div>
+      </div>
+
+      <section class="panel" aria-label="Route summary" style="margin-bottom:16px;">
+        <h3 class="panel-title">Route Summary</h3>
+        <div class="card-grid">
+          <div class="field-row"><span class="field-label">Origin</span><span class="field-value">Reno DC</span></div>
+          <div class="field-row"><span class="field-label">Destination</span><span class="field-value">San Francisco Dock B</span></div>
+          <div class="field-row"><span class="field-label">Departure</span><span class="field-value">May 31, 2026, 7:42 PM</span></div>
+          <div class="field-row"><span class="field-label">ETA</span><span class="field-value">June 4, 2026, 8:00 PM</span></div>
+          <div class="field-row"><span class="field-label">Service</span><span class="field-value">Ground residential</span></div>
+        </div>
+      </section>
+
+      <div class="wide-scroll">
+        <div class="lane-board" data-select-card="stops" style="min-width:920px;">
+          <div class="visual-card" data-card>
+            <p class="mini-head">Stop 1</p>
+            <div class="field-row"><span class="field-label">Stop</span><span class="field-value">Origin scan</span></div>
+            <div class="field-row"><span class="field-label">Location</span><span class="field-value">Reno, NV</span></div>
+            <div class="field-row"><span class="field-label">Time</span><span class="field-value">May 31, 2026, 7:42 PM</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Complete</span></span></div>
+            <div class="field-row"><span class="field-label">ETA</span><span class="field-value">Complete</span></div>
+            <div class="field-block"><span class="field-label">Notes</span>Package received by carrier.</div>
+          </div>
+          <div class="visual-card" data-card>
+            <p class="mini-head">Stop 2</p>
+            <div class="field-row"><span class="field-label">Stop</span><span class="field-value">Regional facility</span></div>
+            <div class="field-row"><span class="field-label">Location</span><span class="field-value">Sacramento, CA</span></div>
+            <div class="field-row"><span class="field-label">Time</span><span class="field-value">June 1, 2026, 2:55 PM</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Complete</span></span></div>
+            <div class="field-row"><span class="field-label">ETA</span><span class="field-value">Complete</span></div>
+            <div class="field-block"><span class="field-label">Notes</span>Package arrived at sorting facility.</div>
+          </div>
+          <div class="visual-card is-selected-card" data-card>
+            <p class="mini-head">Stop 3</p>
+            <div class="field-row"><span class="field-label">Stop</span><span class="field-value">Destination facility</span></div>
+            <div class="field-row"><span class="field-label">Location</span><span class="field-value">San Francisco, CA</span></div>
+            <div class="field-row"><span class="field-label">Time</span><span class="field-value">Pending</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge info">In transit</span></span></div>
+            <div class="field-row"><span class="field-label">ETA</span><span class="field-value">June 4, 2026, 5:00 AM</span></div>
+            <div class="field-block"><span class="field-label">Notes</span>Linehaul trailer departed Sacramento.</div>
+          </div>
+          <div class="visual-card" data-card>
+            <p class="mini-head">Stop 4</p>
+            <div class="field-row"><span class="field-label">Stop</span><span class="field-value">Final delivery</span></div>
+            <div class="field-row"><span class="field-label">Location</span><span class="field-value">120 King Street Dock B</span></div>
+            <div class="field-row"><span class="field-label">Time</span><span class="field-value">Pending</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge neutral">Scheduled</span></span></div>
+            <div class="field-row"><span class="field-label">ETA</span><span class="field-value">June 4, 2026, by 8:00 PM</span></div>
+            <div class="field-block"><span class="field-label">Notes</span>Freight entrance required.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="layout-grid-two section-block">
+        <section class="panel" aria-label="Packages">
+          <h3 class="panel-title">Packages</h3>
+          <div class="visual-card"><div class="field-row"><span class="field-label">Package ID</span><span class="field-value mono">PKG-001</span></div><div class="field-row"><span class="field-label">Weight</span><span class="field-value">7.4 lb</span></div><div class="field-row"><span class="field-label">Contents</span><span class="field-value">Canvas backpack and bottle</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge info">In transit</span></span></div></div>
+          <div class="visual-card"><div class="field-row"><span class="field-label">Package ID</span><span class="field-value mono">PKG-002</span></div><div class="field-row"><span class="field-label">Weight</span><span class="field-value">1.1 lb</span></div><div class="field-row"><span class="field-label">Contents</span><span class="field-value">Leather luggage tag</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge info">In transit</span></span></div></div>
+        </section>
+        <aside class="note-box" aria-label="Exceptions">
+          <p class="mini-head">Exceptions</p>
+          <div class="field-row"><span class="field-label">Exception</span><span class="field-value">None active</span></div>
+          <div class="field-block"><span class="field-label">Last exception</span>Address note added by shipper</div>
+          <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Logistics desk</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-22">
+      <header class="example-header"><p class="example-kicker">Example 22</p><h2>Nested Admin Settings Accordion Layout</h2></header>
+      <p class="example-description">This example imitates an admin settings page with nested accordion sections. It tests extraction of active settings, section grouping, nested option values, repeated labels, expanded and collapsed panel behavior, and settings summaries.</p>
+
+      <div class="summary-strip">
+        <div class="si"><span class="si-label">Workspace</span><span class="si-value">Northwind Analytics</span></div>
+        <div class="si"><span class="si-label">Settings page</span><span class="si-value">Admin configuration</span></div>
+        <div class="si"><span class="si-label">Plan</span><span class="si-value">Business annual</span></div>
+        <div class="si"><span class="si-label">Status</span><span class="si-value"><span class="badge warning">Changes unsaved</span></span></div>
+        <div class="si"><span class="si-label">Last saved</span><span class="si-value">May 30, 2026, 4:12 PM</span></div>
+      </div>
+
+      <details class="acc" open>
+        <summary>Billing Settings <span class="badge ok">Configured</span></summary>
+        <div class="acc-body">
+          <div class="card-grid">
+            <div class="field-block"><span class="field-label">Invoice recipients</span>billing@example.test, finance@example.test</div>
+            <div class="field-row"><span class="field-label">Payment method</span><span class="field-value">Visa ending in 4242</span></div>
+            <div class="field-row"><span class="field-label">Purchase order required</span><span class="field-value">Yes</span></div>
+            <div class="field-row"><span class="field-label">Renewal date</span><span class="field-value">January 18, 2027</span></div>
+          </div>
+          <div class="acc-sub">
+            <p class="mini-head">Approval Rules</p>
+            <div class="field-row"><span class="field-label">Approval threshold</span><span class="field-value">$5,000</span></div>
+            <div class="field-row"><span class="field-label">Approver</span><span class="field-value">Renee Coleman</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Active</span></span></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="acc" open>
+        <summary>Security Settings <span class="badge ok">Enforced</span></summary>
+        <div class="acc-body">
+          <div class="card-grid">
+            <div class="field-row"><span class="field-label">SAML SSO</span><span class="field-value">Enabled</span></div>
+            <div class="field-row"><span class="field-label">SCIM provisioning</span><span class="field-value">Enabled</span></div>
+            <div class="field-row"><span class="field-label">MFA requirement</span><span class="field-value">Required for all admins</span></div>
+            <div class="field-row"><span class="field-label">Session length</span><span class="field-value">12 hours</span></div>
+          </div>
+          <div class="acc-sub">
+            <p class="mini-head">Allowed Domains</p>
+            <div class="field-row"><span class="field-label">Domain 1</span><span class="field-value">example.test</span></div>
+            <div class="field-row"><span class="field-label">Domain 2</span><span class="field-value">northwind.example.test</span></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="acc">
+        <summary>Notification Settings <span class="badge warning">Partially configured</span> <span class="seg-tag">Email digests enabled, Slack alerts not configured.</span></summary>
+        <div class="acc-body">
+          <div class="card-grid">
+            <div class="field-row"><span class="field-label">Digest frequency</span><span class="field-value">Daily</span></div>
+            <div class="field-row"><span class="field-label">Recipients</span><span class="field-value">ops@example.test</span></div>
+            <div class="field-row"><span class="field-label">Slack channel</span><span class="field-value">Not configured</span></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="acc" open>
+        <summary>Integrations <span class="badge ok">Healthy</span></summary>
+        <div class="acc-body">
+          <div class="card-grid">
+            <div class="field-block"><span class="field-label">Webhook endpoint</span>https://example.test/webhooks/northwind</div>
+            <div class="field-row"><span class="field-label">Last delivery</span><span class="field-value">May 31, 2026, 11:40 AM</span></div>
+            <div class="field-row"><span class="field-label">Failure count</span><span class="field-value">0</span></div>
+          </div>
+          <div class="acc-sub">
+            <div class="visual-card"><div class="field-row"><span class="field-label">Integration</span><span class="field-value">SAML SSO</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Connected</span></span></div><div class="field-row"><span class="field-label">Owner</span><span class="field-value">Anika Sharma</span></div></div>
+            <div class="visual-card"><div class="field-row"><span class="field-label">Integration</span><span class="field-value">SCIM</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Connected</span></span></div><div class="field-row"><span class="field-label">Owner</span><span class="field-value">Rafael Ortiz</span></div></div>
+            <div class="visual-card"><div class="field-row"><span class="field-label">Integration</span><span class="field-value">Billing export</span></div><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">Needs attention</span></span></div><div class="field-row"><span class="field-label">Owner</span><span class="field-value">Renee Coleman</span></div></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="acc" open>
+        <summary>Data Retention <span class="badge ok">Compliant</span></summary>
+        <div class="acc-body">
+          <div class="card-grid">
+            <div class="field-row"><span class="field-label">Audit log retention</span><span class="field-value">2 years</span></div>
+            <div class="field-row"><span class="field-label">Export retention</span><span class="field-value">90 days</span></div>
+            <div class="field-row"><span class="field-label">Deleted workspace retention</span><span class="field-value">30 days</span></div>
+            <div class="field-row"><span class="field-label">Legal hold</span><span class="field-value">Disabled</span></div>
+          </div>
+          <div class="acc-sub">
+            <p class="mini-head">Warning</p>
+            <div class="field-block"><span class="field-label">Warning</span>Billing export retention is shorter than audit log retention.</div>
+            <div class="field-row"><span class="field-label">Severity</span><span class="field-value"><span class="badge warning">Medium</span></span></div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+  </main>
+
+  <script>
+    // Generic, defensive selection helper only. No data is fabricated here:
+    // every value the page displays is present in the visible HTML above.
+    document.querySelectorAll('[data-select-card]').forEach(function (group) {
+      var groupName = group.getAttribute('data-select-card');
+      group.querySelectorAll('[data-card]').forEach(function (card) {
+        card.addEventListener('click', function (e) {
+          if (e.target.closest('a, button, input, select, summary')) return;
+          group.querySelectorAll('[data-card]').forEach(function (c) {
+            c.classList.remove('is-selected-card');
+          });
+          card.classList.add('is-selected-card');
+        });
+      });
+    });
+  </script>
+</body>
+</html>

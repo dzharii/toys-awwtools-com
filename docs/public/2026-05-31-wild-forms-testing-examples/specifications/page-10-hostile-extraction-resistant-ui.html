@@ -1,0 +1,2941 @@
+---
+
+A00 Change Request Specification - Page 10 Hostile Extraction Resistant UI
+
+---
+
+Create one standalone HTML demo page named `page-10-hostile-extraction-resistant-ui.html`.
+
+The page must be a self-contained HTML file. Put all HTML, CSS, and JavaScript inside this one file. Do not use React. Do not use TypeScript. Do not use a build step. Do not load external CSS, external JavaScript, external fonts, external images, external canvas libraries, external grid libraries, external anti-scraping libraries, external data, or external APIs. The page must work by opening the `.html` file directly in a browser.
+
+This page is a testing surface for a content extraction tool. The page must focus on hostile extraction resistant UI patterns: unselectable text, values split across multiple DOM nodes, CSS-generated labels, CSS-generated values, canvas-like fake rows, SVG-like text, deeply nested spans, text fragmented by wrappers, index-numbered live lists, virtualized-looking lists, collapsed overflow, copy-disabled regions, masked values, hidden mirror values, visual-only labels, layout-dependent pairings, duplicate decoy values, accessible text that differs from visible text, reordered DOM versus visual order, fake tables built from divs, tooltips with critical values, values distributed across attributes and text, and anti-copy surfaces that still remain local, fictional, and safe for testing.
+
+The page must contain exactly 25 separate examples. Each example must have a visible heading, a visible explanatory paragraph, and the actual hostile or extraction-resistant UI. Each example must be visually separated from the next example. Each example must be realistic enough to test extraction of labels, values, row boundaries, selected states, masked values, split values, generated text, visually rendered rows, copy-resistant surfaces, hidden backing data, overflow-hidden content, live-list indexes, dynamic row reuse, and DOM order mismatches.
+
+Do not implement malicious anti-scraping behavior. Do not block browser developer tools. Do not trap keyboard focus. Do not disable browser context menus globally. Do not use obfuscated JavaScript. Do not attempt to detect automation. Do not fingerprint the user. Do not use network calls. This page is a local fixture for legitimate testing, not a bypass or evasion tool.
+
+The page should intentionally include difficult UI patterns, but it must remain inspectable, safe, deterministic, and understandable. The page should help test extraction from user-controlled pages where normal copy, selection, or DOM traversal is insufficient or misleading.
+
+---
+
+B00 Page-Level Purpose
+
+---
+
+The purpose of this page is to test whether an extraction tool can recover structured information from user interfaces that are hard to select, hard to copy, or hard to parse with simple DOM text extraction.
+
+The extraction tool should be able to handle visible text that is not selectable, text split across many DOM nodes, values assembled from fragments, labels produced by CSS pseudo-elements, rows drawn with positioned spans, canvas-like surfaces with accessible fallback text, SVG-like text, clipped text with full value elsewhere in the DOM, masked values with partial reveal, virtualized-looking lists, live lists with row indexes that change visually, copy-disabled containers, tables with DOM order different from visual order, shadow-like nested wrappers, duplicated decoy values, hidden backing inputs, ARIA labels that conflict with visible labels, and adjacent panels that visually pair labels and values even when the DOM structure is hostile.
+
+The page should not be a pure adversarial demo with random tricks. Each example should resemble a real-world situation: banking pages, ticket queues, travel booking pages, insurance claim pages, admin dashboards, job boards, marketplace lists, invoices, shipment tracking, calendar grids, maps, analytics panels, and enterprise settings pages.
+
+The coding agent must make the examples difficult in different ways. Do not repeat the same trick 25 times. Each example should have a distinct extraction caveat and a realistic visual surface.
+
+---
+
+C00 Required Page Structure
+
+---
+
+The page must start with a top-level header.
+
+Use this visible title:
+
+`Page 10 - Hostile Extraction Resistant UI`
+
+Under the title, include a short introduction paragraph explaining that the page contains realistic local test fixtures for extraction-resistant UI patterns such as unselectable text, generated labels, split values, fake rendered rows, virtualized lists, masked values, copy-disabled regions, collapsed overflow, DOM order mismatch, and decoy content.
+
+After the introduction, render 25 example sections.
+
+Each example section must follow this pattern:
+
+```html
+<section class="example-card" id="example-01">
+  <header class="example-header">
+    <p class="example-kicker">Example 01</p>
+    <h2>Unselectable Banking Receipt With Selectable Fallback</h2>
+  </header>
+
+  <p class="example-description">
+    This example imitates...
+  </p>
+
+  <div class="example-surface">
+    <!-- Actual hostile extraction resistant UI goes here. -->
+  </div>
+</section>
+```
+
+The exact class names may vary, but the structure must remain clear. Each section must have a unique `id`, from `example-01` through `example-25`.
+
+Each example heading must be visible. Each description must be visible. The actual hostile UI surface must appear below the description.
+
+Do not include large expected extraction output blocks under every example. The page should primarily be the application-under-test surface, not a documentation page. The visible descriptions should explain the purpose and caveat of each example.
+
+---
+
+D00 Visual Design Requirements
+
+---
+
+Use inline CSS in a `<style>` tag.
+
+The page should look like a clean internal testing notebook with realistic difficult UI examples inside it. Use a light background, readable font stack, generous spacing, and card-style example sections. Inside each example, the UI may look like a different website or application. That variation is required.
+
+Use visual variety. Some examples should look like admin dashboards. Some should look like banking or checkout receipts. Some should look like app-like widgets. Some should look like old enterprise tables. Some should look like dense mobile cards. Some should look like map or canvas surfaces. Some should look like documents converted to HTML. Some should look like modern SaaS settings screens.
+
+Include CSS classes that intentionally make extraction difficult, but keep the page safe:
+
+`user-select: none` for unselectable regions.
+
+`pointer-events: none` only for decorative overlays, not for core controls that need interaction.
+
+`overflow: hidden` for clipped values.
+
+`text-overflow: ellipsis` for truncated values.
+
+`display: contents` for confusing wrapper structure.
+
+`position: absolute` for canvas-like or coordinate-based rows.
+
+`order` in flex or grid to create DOM order versus visual order mismatch.
+
+CSS `::before` and `::after` pseudo-elements for generated labels or values.
+
+Deeply nested spans for fragmented values.
+
+`aria-label`, `aria-describedby`, and hidden backing text where relevant.
+
+Do not make the whole page unselectable. The difficult pattern should be local to the example.
+
+Suggested CSS structure:
+
+```html
+<style>
+  :root {
+    --page-bg: #f5f2ea;
+    --card-bg: #fffdf8;
+    --ink: #25221d;
+    --muted: #6f675c;
+    --line: #d8cfc0;
+    --soft: #eee6d8;
+    --panel: #ffffff;
+    --panel-alt: #faf7f0;
+    --accent: #315f8c;
+    --accent-soft: #e7f0ff;
+    --ok: #276749;
+    --warning: #8a5a00;
+    --danger: #9b332c;
+    --link: #174ea6;
+    --focus: #1a73e8;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--page-bg);
+    color: var(--ink);
+    line-height: 1.45;
+  }
+
+  main {
+    width: min(1240px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 32px 0 64px;
+  }
+
+  a {
+    color: var(--link);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible,
+  a:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  .page-hero {
+    margin-bottom: 28px;
+    padding: 28px;
+    background: #fffaf0;
+    border: 2px solid var(--line);
+    border-radius: 18px;
+  }
+
+  .example-card {
+    margin: 28px 0;
+    padding: 24px;
+    background: var(--card-bg);
+    border: 2px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.08);
+  }
+
+  .example-kicker {
+    margin: 0 0 4px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .example-header h2 {
+    margin: 0;
+    font-size: 1.35rem;
+  }
+
+  .example-description {
+    max-width: 960px;
+    color: var(--muted);
+  }
+
+  .example-surface {
+    margin-top: 18px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: white;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .panel,
+  .nested-panel,
+  .summary-panel,
+  .detail-panel,
+  .callout-panel,
+  .hostile-card {
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel);
+  }
+
+  .summary-panel,
+  .callout-panel {
+    background: var(--panel-alt);
+  }
+
+  .layout-grid-two {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .layout-grid-three {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .split-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 14px;
+    align-items: start;
+  }
+
+  .wide-scroll {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .field-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--soft);
+  }
+
+  .field-row:last-child {
+    border-bottom: 0;
+  }
+
+  .field-label {
+    color: var(--muted);
+    font-weight: 650;
+  }
+
+  .field-value {
+    text-align: right;
+    font-weight: 650;
+  }
+
+  .badge,
+  .tag,
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: #fff;
+    font-size: 0.82rem;
+    font-weight: 650;
+    white-space: nowrap;
+  }
+
+  .badge.ok {
+    color: var(--ok);
+    background: #edf8f1;
+  }
+
+  .badge.warning {
+    color: var(--warning);
+    background: #fff7df;
+  }
+
+  .badge.danger {
+    color: var(--danger);
+    background: #fff0ef;
+  }
+
+  .chip-row,
+  .badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0;
+  }
+
+  .no-select {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .copy-disabled {
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: not-allowed;
+  }
+
+  .fragmented-value span {
+    display: inline;
+  }
+
+  .deep-fragment span span span {
+    display: inline;
+  }
+
+  .ellipsized {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .collapsed-box {
+    max-height: 86px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px;
+    background: #fff;
+  }
+
+  .collapsed-box::after {
+    content: "More content hidden below";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 18px 12px 8px;
+    background: linear-gradient(transparent, #fff 55%);
+    color: var(--muted);
+    font-size: 0.84rem;
+    text-align: right;
+  }
+
+  .pseudo-field {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--soft);
+  }
+
+  .pseudo-field[data-label]::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-weight: 650;
+  }
+
+  .pseudo-value[data-value]::after {
+    content: attr(data-value);
+    font-weight: 750;
+  }
+
+  .fake-canvas {
+    position: relative;
+    min-height: 260px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background:
+      linear-gradient(#fff, #fff) padding-box,
+      repeating-linear-gradient(to bottom, transparent 0 39px, var(--soft) 39px 40px);
+    overflow: hidden;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .fake-row {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    height: 30px;
+    display: grid;
+    grid-template-columns: 110px 1fr 110px 110px;
+    gap: 10px;
+    align-items: center;
+    font-size: 0.9rem;
+  }
+
+  .fake-row.header {
+    font-weight: 800;
+    color: var(--muted);
+  }
+
+  .dom-visual-mismatch {
+    display: flex;
+    gap: 10px;
+  }
+
+  .visual-order-1 { order: 1; }
+  .visual-order-2 { order: 2; }
+  .visual-order-3 { order: 3; }
+
+  .decoy {
+    color: #aaa;
+    text-decoration: line-through;
+  }
+
+  .real-value {
+    font-weight: 800;
+  }
+
+  .admin-table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--soft);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .admin-table th {
+    color: var(--muted);
+    background: var(--panel-alt);
+  }
+
+  .plain-button {
+    min-height: 34px;
+    padding: 7px 10px;
+    border: 1px solid #b7afa3;
+    border-radius: 8px;
+    background: #fff;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .watermark-layer {
+    position: relative;
+  }
+
+  .watermark-layer::before {
+    content: "DEMO COPY - NOT FOR PRODUCTION";
+    position: absolute;
+    inset: 20px;
+    display: grid;
+    place-items: center;
+    transform: rotate(-18deg);
+    color: rgba(155, 51, 44, 0.12);
+    font-size: 2rem;
+    font-weight: 900;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  @media (max-width: 980px) {
+    .layout-grid-two,
+    .layout-grid-three,
+    .split-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .field-row,
+    .pseudo-field {
+      display: block;
+    }
+
+    .field-value {
+      display: block;
+      margin-top: 2px;
+      text-align: left;
+    }
+
+    .fake-row {
+      grid-template-columns: 1fr;
+      height: auto;
+      position: static;
+      padding: 8px;
+      border-bottom: 1px solid var(--soft);
+    }
+
+    .example-card {
+      padding: 18px;
+    }
+  }
+</style>
+```
+
+The coding agent may adjust the CSS, but it must keep the page readable, scrollable, visually divided into 25 separate examples, and safe to run locally.
+
+---
+
+E00 JavaScript Requirements
+
+---
+
+Use inline JavaScript in a `<script>` tag.
+
+This page should include small interactions where they help hostile extraction examples behave like real interfaces. The JavaScript must be simple, local, deterministic, and safe. Do not use a framework. Do not generate all examples dynamically. Static HTML must remain visible and inspectable.
+
+Allowed JavaScript behavior includes selecting a row, showing a masked value reveal, expanding clipped overflow, updating a live list index, switching a fake virtualized viewport, toggling copy-disabled state inside one example, showing hidden mirror data, and switching between visual and raw views.
+
+Do not implement bot detection. Do not use timing traps. Do not disable developer tools. Do not block all context menus. Do not fingerprint the environment. Do not use mutation loops that constantly rewrite the DOM. Do not intentionally slow the browser.
+
+The important data must exist in the DOM at page load, except where the example explicitly tests dynamic reveal or dynamic list replacement. Even then, default visible data must be useful.
+
+Required generic behavior:
+
+Clicking an element with `data-select-card` should mark that card as selected inside its group.
+
+Clicking a button with `data-toggle-target` should show or hide a matching detail area.
+
+Clicking a button with `data-reveal-target` should reveal a masked or hidden visible value.
+
+Clicking a button with `data-expand-target` should remove a collapsed class from a clipped region.
+
+Clicking a button with `data-swap-viewport` may swap visible rows in a local virtualized-list example.
+
+Clicking a button with `data-copy-guard-toggle` may toggle a local `copy-disabled` class for that example only.
+
+Suggested JavaScript structure:
+
+```html
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("[data-select-card]").forEach(function (card) {
+      card.addEventListener("click", function (event) {
+        if (event.target.closest("a, button, input, select, textarea")) return;
+
+        const group = card.dataset.selectCard;
+        if (!group) return;
+
+        document.querySelectorAll('[data-select-card="' + group + '"]').forEach(function (item) {
+          item.classList.remove("selected-panel");
+          item.setAttribute("aria-selected", "false");
+        });
+
+        card.classList.add("selected-panel");
+        card.setAttribute("aria-selected", "true");
+      });
+    });
+
+    document.querySelectorAll("[data-toggle-target]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const target = document.querySelector(button.dataset.toggleTarget);
+        if (!target) return;
+
+        target.hidden = !target.hidden;
+        button.setAttribute("aria-expanded", String(!target.hidden));
+      });
+    });
+
+    document.querySelectorAll("[data-reveal-target]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const target = document.querySelector(button.dataset.revealTarget);
+        if (!target) return;
+
+        target.hidden = false;
+        button.hidden = true;
+      });
+    });
+
+    document.querySelectorAll("[data-expand-target]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const target = document.querySelector(button.dataset.expandTarget);
+        if (!target) return;
+
+        target.classList.remove("collapsed-box");
+        button.setAttribute("aria-expanded", "true");
+      });
+    });
+
+    document.querySelectorAll("[data-copy-guard-toggle]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const target = document.querySelector(button.dataset.copyGuardToggle);
+        if (!target) return;
+
+        target.classList.toggle("copy-disabled");
+        const disabled = target.classList.contains("copy-disabled");
+        button.textContent = disabled ? "Enable selection for this region" : "Disable selection for this region";
+      });
+    });
+  });
+</script>
+```
+
+The coding agent may extend this code for specific examples, but the final file must remain simple and portable.
+
+---
+
+F00 Hostile Pattern Rules
+
+---
+
+The page must include hostile extraction patterns, but it must not become hostile to the tester. The tester should still be able to understand each example visually and inspect the HTML.
+
+Use these patterns across the 25 examples:
+
+Unselectable visible text using local `user-select: none`.
+
+CSS pseudo-element labels using `::before`.
+
+CSS pseudo-element values using `::after`.
+
+Values split across many text nodes.
+
+Values split across nested spans, comments avoided.
+
+Values split visually by whitespace and wrappers.
+
+DOM order that differs from visual order.
+
+Visible values with hidden backing values.
+
+Masked values with partial reveal.
+
+Clipped values with `overflow: hidden`.
+
+Ellipsized values with full value in a title or accessible description.
+
+Fake rendered rows using absolutely positioned spans.
+
+Canvas-like panels with accessible fallback rows.
+
+SVG-like text using inline SVG.
+
+Copy-disabled local regions.
+
+Duplicate decoy values that should be ignored or qualified.
+
+Watermarks or overlay text that should not be confused with data.
+
+Dynamic virtualized-looking lists where only visible rows are in the DOM.
+
+Index plus names mapped to a separate live list.
+
+Row IDs separated from row values.
+
+Labels visually generated from data attributes.
+
+Values visually generated from data attributes.
+
+Hidden mirror data that duplicates visible text.
+
+Accessible names that conflict with visible labels.
+
+Nested shadow-like wrappers that obscure simple text grouping.
+
+Do not use real anti-scraping methods. Do not use actual CAPTCHA, automation detection, encryption, remote rendering, or security bypass content. Use safe local simulations only.
+
+---
+
+G00 Extraction Behavior To Support
+
+---
+
+The page must make these extraction tasks possible:
+
+Extract field-value pairs when labels are generated by CSS.
+
+Extract field-value pairs when values are generated by CSS.
+
+Extract values split across many text nodes.
+
+Extract values split across nested spans.
+
+Extract masked values exactly as visible.
+
+Extract revealed values only after user interaction reveals them.
+
+Extract full values from visible expanded content, not from comments or JavaScript-only data.
+
+Extract clipped visible text with awareness that only part of the text is visible.
+
+Extract row records from canvas-like or coordinate-based layouts when fallback text exists.
+
+Extract SVG text values from inline SVG.
+
+Extract selected records when row IDs and row values are separated.
+
+Extract rows where DOM order does not match visual order.
+
+Extract live list items where row numbers and row names are in separate containers.
+
+Extract fake tables built from divs and spans.
+
+Extract copy-disabled content without relying on user selection.
+
+Extract visible data while ignoring watermark and overlay text.
+
+Extract action labels without mixing them into record values.
+
+Extract decoy values and real values separately when both are visible.
+
+Extract hidden backing values when they are form values, but avoid replacing visible values unless appropriate.
+
+Extract accessible names and descriptions when visible text is insufficient or misleading.
+
+Extract values from nested hostile wrappers while preserving group context.
+
+---
+
+H00 Data And Naming Rules
+
+---
+
+Use realistic but fictional data. Do not use real personal information.
+
+Use fictional companies, fictional patients, fictional accounts, fictional tickets, fictional order numbers, fictional users, fictional IDs, and example-domain email addresses. Use `href="#"` or `href="/demo/..."` for links. Do not link to real third-party pages.
+
+Use consistent example-specific IDs. Prefix IDs with the example number, such as `ex01-receipt`, `ex09-row-03`, or `ex24-portal-list`.
+
+Use plausible values. Avoid placeholder-only examples. Every example should contain enough populated data to be useful for extraction testing.
+
+Each example should have at least one hostile extraction pattern and at least five realistic extractable values. Many examples should include repeated rows.
+
+Do not use external images. Use CSS boxes, inline SVG, text placeholders, and local HTML only.
+
+Do not store important values only in JavaScript variables, comments, CSS custom properties, or inaccessible attributes. If a value is CSS-generated, include it in a data attribute or accessible fallback as specified by the example. If a value is fake canvas rendered, include a visible or accessible fallback.
+
+Do not make all examples look the same. Use receipts, tables, dashboards, cards, search results, calendars, maps, queues, reports, invoices, and admin panels.
+
+---
+
+I00 Required Examples Overview
+
+---
+
+The page must contain exactly these 25 examples:
+
+Example 01: Unselectable Banking Receipt With Selectable Fallback.
+
+Example 02: CSS-Generated Labels In A Billing Summary.
+
+Example 03: CSS-Generated Values In A Shipment Tracker.
+
+Example 04: Value Split Across Multiple DOM Nodes.
+
+Example 05: Deeply Nested Span Invoice Row.
+
+Example 06: Canvas-Like Ledger With Accessible Fallback.
+
+Example 07: SVG-Based Boarding Pass Text.
+
+Example 08: Virtualized Ticket Queue Viewport.
+
+Example 09: Index And Name Split Across Live Lists.
+
+Example 10: Collapsed Overflow Policy Card.
+
+Example 11: Copy-Disabled Insurance Claim Packet.
+
+Example 12: Masked Bank Account Values With Reveal.
+
+Example 13: DOM Order Different From Visual Order.
+
+Example 14: Duplicate Decoy Values In Product Pricing.
+
+Example 15: Hidden Backing Inputs Behind Pretty Cards.
+
+Example 16: Ellipsized Values With Full Accessible Names.
+
+Example 17: Watermarked Document Preview.
+
+Example 18: Tooltip-Only Critical Values.
+
+Example 19: Fake Table Built From Positioned Divs.
+
+Example 20: Shadow-Like Deep Wrapper Settings Panel.
+
+Example 21: Map Pin List With Visual-Only Coordinates.
+
+Example 22: Calendar Cells With Split Date And Availability.
+
+Example 23: Multi-Column Receipt With Interleaved DOM.
+
+Example 24: Custom Dropdown With Detached Option Text.
+
+Example 25: Mixed Hostile Anti-Pattern Stress Gallery.
+
+Each example below is mandatory.
+
+---
+
+J00 Example 01 - Unselectable Banking Receipt With Selectable Fallback
+
+---
+
+Create a banking transfer receipt where the main receipt panel uses `user-select: none`, but a small accessible fallback details panel remains selectable. The visual receipt should be realistic and not toy-like.
+
+Visible heading:
+
+`Unselectable Banking Receipt With Selectable Fallback`
+
+Visible description:
+
+`This example imitates a banking receipt where visible receipt text is intentionally unselectable. It tests whether extraction can capture field-value data from visible content and fallback content without relying only on manual text selection.`
+
+Receipt header:
+
+`Transfer scheduled`.
+
+`Confirmation number`: `TRN-8841-6029`.
+
+`Status`: badge `Scheduled`.
+
+`Created`: `May 31, 2026, 10:42 AM PT`.
+
+The main receipt panel must have class `no-select`.
+
+Main receipt fields:
+
+`From account`: `Operating Checking ending in 1842`.
+
+`To account`: `Tax Savings ending in 3398`.
+
+`Transfer amount`: `$2,500.00`.
+
+`Transfer date`: `June 3, 2026`.
+
+`Frequency`: `One-time`.
+
+`Fee`: `$0.00`.
+
+`Memo`: `Quarterly estimated tax reserve`.
+
+`Submitted by`: `Renee Coleman`.
+
+`Authorization method`: `Authenticator app`.
+
+Receipt note:
+
+`You can cancel this transfer until June 2, 2026 at 11:59 PM PT.`
+
+Selectable fallback panel:
+
+`Receipt data fallback`.
+
+Fields:
+
+`Confirmation number`: `TRN-8841-6029`.
+
+`Transfer amount`: `$2,500.00`.
+
+`Transfer date`: `June 3, 2026`.
+
+`Fallback status`: `Selectable text`.
+
+Extraction caveat: the extraction tool should capture the unselectable receipt content as visible data. It should not only capture the fallback panel and miss the richer receipt.
+
+Implementation guidance:
+
+```html
+<section class="panel no-select" id="ex01-receipt" aria-labelledby="ex01-receipt-title">
+  <h3 id="ex01-receipt-title">Transfer scheduled</h3>
+  <div class="field-row">
+    <span class="field-label">Confirmation number</span>
+    <span class="field-value">TRN-8841-6029</span>
+  </div>
+  <div class="field-row">
+    <span class="field-label">Transfer amount</span>
+    <span class="field-value">$2,500.00</span>
+  </div>
+</section>
+
+<section class="callout-panel" aria-label="Receipt data fallback">
+  <p><strong>Confirmation number:</strong> TRN-8841-6029</p>
+  <p><strong>Transfer amount:</strong> $2,500.00</p>
+</section>
+```
+
+---
+
+K00 Example 02 - CSS-Generated Labels In A Billing Summary
+
+---
+
+Create a billing summary where labels are generated using CSS `::before` from `data-label` attributes. The visible page should show labels, but the actual label text should not exist as normal text nodes inside each field row.
+
+Visible heading:
+
+`CSS-Generated Labels In A Billing Summary`
+
+Visible description:
+
+`This example imitates a billing summary where field labels are generated with CSS pseudo-elements. It tests extraction of visible labels that are not normal DOM text nodes.`
+
+Billing header:
+
+`Account`: `Atlas Product Studio`.
+
+`Billing period`: `May 2026`.
+
+`Billing status`: badge `Active`.
+
+Use `.pseudo-field[data-label]::before` for these rows:
+
+Row 1:
+
+`data-label`: `Current plan`.
+
+Value text node: `Business annual`.
+
+Row 2:
+
+`data-label`: `Renewal date`.
+
+Value text node: `January 18, 2027`.
+
+Row 3:
+
+`data-label`: `Seats purchased`.
+
+Value text node: `24`.
+
+Row 4:
+
+`data-label`: `Seats used`.
+
+Value text node: `19`.
+
+Row 5:
+
+`data-label`: `Payment method`.
+
+Value text node: `Visa ending in 4242`.
+
+Row 6:
+
+`data-label`: `Latest invoice`.
+
+Value text node: `INV-2026-00118`.
+
+Summary sidebar:
+
+`Generated label pattern`: `Labels are produced by CSS from data-label attributes`.
+
+`Extraction target`: `Visible labels plus values`.
+
+Extraction caveat: the extraction tool should capture labels as rendered or recover them from `data-label`, but should not output unlabeled values only.
+
+Implementation guidance: do not put duplicate visible label text inside each row. The row should rely on `data-label` and CSS pseudo-element.
+
+---
+
+L00 Example 03 - CSS-Generated Values In A Shipment Tracker
+
+---
+
+Create a shipment tracker where labels are normal text, but several values are generated by CSS `::after` from `data-value` attributes. This tests values that are rendered visually but are not ordinary text nodes.
+
+Visible heading:
+
+`CSS-Generated Values In A Shipment Tracker`
+
+Visible description:
+
+`This example imitates a shipment tracker where some visible values are generated by CSS pseudo-elements. It tests extraction of rendered values that may not appear as ordinary text content.`
+
+Shipment header:
+
+`Shipment`: `SHP-2026-77120`.
+
+`Carrier`: `Example Parcel`.
+
+`Tracker status`: badge `In transit`.
+
+Fields:
+
+Row 1:
+
+Visible label text node: `Tracking number`.
+
+Value element class `pseudo-value`.
+
+`data-value`: `1Z999AA10123456784`.
+
+Row 2:
+
+Visible label: `Estimated delivery`.
+
+`data-value`: `June 4, 2026 by 8:00 PM`.
+
+Row 3:
+
+Visible label: `Current location`.
+
+`data-value`: `Sacramento, CA`.
+
+Row 4:
+
+Visible label: `Service`.
+
+`data-value`: `Ground residential`.
+
+Row 5:
+
+Visible label: `Reference`.
+
+`data-value`: `ORD-2026-104922`.
+
+Timeline with ordinary DOM text:
+
+Event 1: `Label created`, `Reno, NV`, `May 31, 2026, 9:18 AM`.
+
+Event 2: `Origin scan`, `Reno, NV`, `May 31, 2026, 7:42 PM`.
+
+Event 3: `Arrived at facility`, `Sacramento, CA`, `June 1, 2026, 2:55 PM`.
+
+Fallback note:
+
+`The shipment tracker intentionally renders core field values through CSS-generated content.`
+
+Extraction caveat: the extraction tool should not miss the tracking number or estimated delivery simply because they are CSS-generated.
+
+Implementation guidance: use `.pseudo-value[data-value]::after { content: attr(data-value); }`.
+
+---
+
+M00 Example 04 - Value Split Across Multiple DOM Nodes
+
+---
+
+Create a payment confirmation where important values are split across many DOM nodes. The rendered value should read normally, but text extraction from individual nodes may fragment it.
+
+Visible heading:
+
+`Value Split Across Multiple DOM Nodes`
+
+Visible description:
+
+`This example imitates a payment confirmation where values are split across multiple text nodes and spans. It tests whether extraction can reconstruct visible values without adding unwanted spaces or dropping fragments.`
+
+Payment header:
+
+`Payment confirmation`.
+
+`Status`: badge `Posted`.
+
+Fields:
+
+`Payment ID`: rendered as `PMT-77120`, but split into nodes:
+
+`PMT`, `-`, `77`, `120`.
+
+`Invoice`: rendered as `INV-2026-00841`, split into nodes:
+
+`INV`, `-`, `2026`, `-`, `008`, `41`.
+
+`Amount`: rendered as `$300.00`, split into nodes:
+
+`$`, `300`, `.`, `00`.
+
+`Payment method`: rendered as `ACH ending in 1842`, split into nodes:
+
+`ACH`, space wrapper, `ending`, space wrapper, `in`, space wrapper, `1842`.
+
+`Posted date`: rendered as `May 21, 2026`, split into spans:
+
+`May`, `21`, `,`, `2026`.
+
+Line items:
+
+Row 1: `Applied invoice`, value `INV-2026-00841`.
+
+Row 2: `Remaining balance`, value `$436.14`.
+
+Extraction caveat: the extraction tool should reconstruct split values correctly. It should not output `PMT - 77 120` or `$ 300 . 00` unless preserving exact DOM fragments is explicitly requested.
+
+Implementation guidance: use a `.fragmented-value` class and multiple spans inside each value.
+
+---
+
+N00 Example 05 - Deeply Nested Span Invoice Row
+
+---
+
+Create an invoice line item table where one row has extremely nested spans around every value. The visible table should be easy to read, but the DOM should be deeply nested.
+
+Visible heading:
+
+`Deeply Nested Span Invoice Row`
+
+Visible description:
+
+`This example imitates an enterprise invoice table where framework wrappers deeply nest every visible value. It tests extraction of row-level data from deeply nested spans while preserving table context.`
+
+Invoice header:
+
+`Invoice`: `INV-2026-00841`.
+
+`Customer`: `Cedar & Pine Design LLC`.
+
+`Status`: badge `Partially paid`.
+
+Table columns:
+
+`SKU`.
+
+`Description`.
+
+`Quantity`.
+
+`Unit price`.
+
+`Amount`.
+
+`Status`.
+
+Rows:
+
+Row 1 normal:
+
+`SKU`: `SEAT-BUS-24`.
+
+`Description`: `Business platform seats`.
+
+`Quantity`: `24`.
+
+`Unit price`: `$18.00`.
+
+`Amount`: `$432.00`.
+
+`Status`: `Matched`.
+
+Row 2 deeply nested:
+
+`SKU`: `ADD-AUDIT-01`.
+
+`Description`: `Audit log retention add-on`.
+
+`Quantity`: `1`.
+
+`Unit price`: `$96.00`.
+
+`Amount`: `$96.00`.
+
+`Status`: `Matched`.
+
+Row 3 deeply nested and fragmented:
+
+`SKU`: `ADD-SUPPORT-PR`.
+
+`Description`: `Priority support package`.
+
+`Quantity`: `1`.
+
+`Unit price`: `$150.00`.
+
+`Amount`: `$135.00`.
+
+`Status`: `Review`.
+
+Nested structure guidance for Row 2 and Row 3:
+
+Wrap each cell value in at least four nested spans or divs, such as:
+
+```html
+<td>
+  <span class="deep-fragment">
+    <span><span><span>ADD</span><span>-</span><span>AUDIT</span><span>-</span><span>01</span></span></span>
+  </span>
+</td>
+```
+
+Extraction caveat: the extraction tool should preserve table row and column context even when values are deeply nested and fragmented.
+
+Implementation guidance: use a native table, but make some cells hostile internally.
+
+---
+
+O00 Example 06 - Canvas-Like Ledger With Accessible Fallback
+
+---
+
+Create a transaction ledger that looks like it is rendered on a canvas. Do not use actual canvas unless there is a text fallback. Prefer a `div` with absolutely positioned rows to simulate a canvas-like surface.
+
+Visible heading:
+
+`Canvas-Like Ledger With Accessible Fallback`
+
+Visible description:
+
+`This example imitates a finance ledger rendered like a canvas or custom drawing surface. It tests extraction from visually positioned rows and an accessible fallback table.`
+
+Ledger header:
+
+`Account`: `Operating Checking ending in 1842`.
+
+`Statement period`: `May 2026`.
+
+`Current balance`: `$48,920.18`.
+
+Canvas-like visual area:
+
+Use `.fake-canvas` with `.fake-row` elements absolutely positioned.
+
+Header row:
+
+`Date`, `Description`, `Amount`, `Balance`.
+
+Rows:
+
+Row 1:
+
+`Date`: `May 31`.
+
+`Description`: `ACH transfer to Tax Savings`.
+
+`Amount`: `-$2,500.00`.
+
+`Balance`: `$48,920.18`.
+
+Row 2:
+
+`Date`: `May 30`.
+
+`Description`: `Northstar Cloud Services`.
+
+`Amount`: `-$300.00`.
+
+`Balance`: `$51,420.18`.
+
+Row 3:
+
+`Date`: `May 29`.
+
+`Description`: `Client payment - Harbor Cafe`.
+
+`Amount`: `+$4,800.00`.
+
+`Balance`: `$51,720.18`.
+
+Row 4:
+
+`Date`: `May 28`.
+
+`Description`: `Payroll batch`.
+
+`Amount`: `-$12,884.42`.
+
+`Balance`: `$46,920.18`.
+
+Accessible fallback:
+
+Include a visually smaller table below or adjacent with `aria-label="Ledger data fallback"` and the same four rows.
+
+Extraction caveat: the extraction tool should be able to extract the visible ledger records. If it relies on the fallback, it should avoid duplicating the same transactions twice.
+
+Implementation guidance: do not use bitmap images. Use absolutely positioned text elements and a fallback table.
+
+---
+
+P00 Example 07 - SVG-Based Boarding Pass Text
+
+---
+
+Create a boarding pass where the primary visible ticket text is inside inline SVG `<text>` elements. Include a normal text fallback panel.
+
+Visible heading:
+
+`SVG-Based Boarding Pass Text`
+
+Visible description:
+
+`This example imitates a boarding pass or ticket where important values are rendered as SVG text. It tests extraction of visible SVG text, fallback values, and ticket field context.`
+
+Ticket header:
+
+`Boarding pass`.
+
+`Trip`: `Design Summit 2026`.
+
+SVG ticket visual must contain visible text values:
+
+`Passenger`: `Lina Romero`.
+
+`Flight`: `AVX 218`.
+
+`From`: `SFO`.
+
+`To`: `JFK`.
+
+`Date`: `September 2, 2026`.
+
+`Departure`: `8:05 AM`.
+
+`Seat`: `14A`.
+
+`Boarding group`: `B`.
+
+`Confirmation`: `AV-9K2LD`.
+
+Fallback details panel:
+
+`Passenger`: `Lina Romero`.
+
+`Flight`: `AVX 218`.
+
+`Route`: `SFO to JFK`.
+
+`Seat`: `14A`.
+
+`Confirmation`: `AV-9K2LD`.
+
+Extraction caveat: the extraction tool should capture text rendered in inline SVG. If it uses the fallback, it should not duplicate the ticket values.
+
+Implementation guidance: use inline `<svg>` with `<text>` elements. Do not use an external SVG file.
+
+---
+
+Q00 Example 08 - Virtualized Ticket Queue Viewport
+
+---
+
+Create a support ticket queue that imitates a virtualized list. Only a subset of rows is visible at one time, with controls to swap the viewport to the next batch. The current visible rows should be real DOM.
+
+Visible heading:
+
+`Virtualized Ticket Queue Viewport`
+
+Visible description:
+
+`This example imitates a virtualized ticket queue where only visible rows are present in the DOM. It tests extraction of visible rows, viewport state, row count summary, and dynamic row replacement.`
+
+Queue header:
+
+`Queue`: `Billing Support`.
+
+`Total matching tickets`: `142`.
+
+`Visible range`: `Rows 41-45`.
+
+`Sort order`: `SLA deadline`.
+
+`Viewport status`: badge `Virtualized view`.
+
+Visible rows initially:
+
+Row 41:
+
+`Ticket`: `TCK-2026-54102`.
+
+`Customer`: `Theo Grant`.
+
+`Subject`: `Invoice PDF missing line item details`.
+
+`Priority`: `High`.
+
+`SLA`: `Due today, 5:00 PM`.
+
+Row 42:
+
+`Ticket`: `TCK-2026-54188`.
+
+`Customer`: `Renee Coleman`.
+
+`Subject`: `Monthly billing export missing discount rows`.
+
+`Priority`: `Medium`.
+
+`SLA`: `Due June 1, 2026, 2:00 PM`.
+
+Row 43:
+
+`Ticket`: `TCK-2026-54217`.
+
+`Customer`: `Maya Chen`.
+
+`Subject`: `Export filter does not preserve date range`.
+
+`Priority`: `High`.
+
+`SLA`: `Due today, 6:30 PM`.
+
+Row 44:
+
+`Ticket`: `TCK-2026-54240`.
+
+`Customer`: `Priya Shah`.
+
+`Subject`: `Invoice recipient list not updating`.
+
+`Priority`: `High`.
+
+`SLA`: `Due tomorrow, 9:00 AM`.
+
+Row 45:
+
+`Ticket`: `TCK-2026-54251`.
+
+`Customer`: `Owen Brooks`.
+
+`Subject`: `Billing CSV includes duplicate rows`.
+
+`Priority`: `Urgent`.
+
+`SLA`: `Due today, 4:00 PM`.
+
+Button:
+
+`Show rows 46-50`.
+
+After clicking, replace the visible rows with:
+
+Row 46: `TCK-2026-54266`, `Grace Miller`, `Saved export sends duplicate CSV attachment`, `Medium`, `Due June 2, 2026`.
+
+Row 47: `TCK-2026-54272`, `Avery Quinn`, `Archived audit log export unavailable`, `Low`, `Due June 3, 2026`.
+
+Row 48: `TCK-2026-54281`, `Noah Kim`, `Billing statement has missing tax line`, `Medium`, `Due June 3, 2026`.
+
+Row 49: `TCK-2026-54290`, `Lina Romero`, `Invoice CSV encoding issue`, `High`, `Due today, 7:00 PM`.
+
+Row 50: `TCK-2026-54298`, `Anika Sharma`, `Cannot download receipt bundle`, `Medium`, `Due June 2, 2026`.
+
+Extraction caveat: the extraction tool should only extract rows that are present and visible in the current viewport. It should capture the visible range and total count as viewport metadata.
+
+Implementation guidance: implement the swap with simple JavaScript. Do not use real virtualization libraries.
+
+---
+
+R00 Example 09 - Index And Name Split Across Live Lists
+
+---
+
+Create a live search result layout where row indexes are in one visual column and row names/details are in a separate list. They align visually by position but are separate DOM lists.
+
+Visible heading:
+
+`Index And Name Split Across Live Lists`
+
+Visible description:
+
+`This example imitates a search UI where result indexes and result bodies are rendered in separate synchronized lists. It tests extraction of row number to record mapping based on visual alignment.`
+
+Search header:
+
+`Search query`: `frontend engineer`.
+
+`Result count`: `5 jobs`.
+
+`Sort order`: `Best match`.
+
+Left index list:
+
+Index 1: `1`.
+
+Index 2: `2`.
+
+Index 3: `3`.
+
+Index 4: `4`.
+
+Index 5: `5`.
+
+Right result body list:
+
+Body 1:
+
+`Job title`: `Senior Frontend Engineer`.
+
+`Company`: `Northstar Cloud`.
+
+`Location`: `Remote - United States`.
+
+`Salary`: `$165,000-$205,000`.
+
+Body 2:
+
+`Job title`: `Frontend Platform Engineer`.
+
+`Company`: `Atlas Product Studio`.
+
+`Location`: `Denver, CO or remote`.
+
+`Salary`: `$150,000-$190,000`.
+
+Body 3:
+
+`Job title`: `Staff UI Engineer`.
+
+`Company`: `Civic Data Lab`.
+
+`Location`: `Oakland, CA`.
+
+`Salary`: `$178,000-$218,000`.
+
+Body 4:
+
+`Job title`: `Senior JavaScript Engineer, Browser Extension`.
+
+`Company`: `Widget Lab Demo`.
+
+`Location`: `Remote - Canada or United States`.
+
+`Salary`: `$155,000-$196,000`.
+
+Body 5:
+
+`Job title`: `Frontend Engineer, Search Experience`.
+
+`Company`: `QueryWorks`.
+
+`Location`: `Remote - United States`.
+
+`Salary`: `$148,000-$172,000`.
+
+Selection summary:
+
+`Selected index`: `1`.
+
+`Selected job`: `Senior Frontend Engineer`.
+
+Extraction caveat: the extraction tool should map each index to the correct result body by visual row position. It should not output a separate index list and body list without relationships.
+
+Implementation guidance: use two sibling containers with matching row heights. Avoid wrapping each index with the result body.
+
+---
+
+S00 Example 10 - Collapsed Overflow Policy Card
+
+---
+
+Create a long policy card where only the top portion is visible because of `overflow: hidden`. Include an expand button that reveals the full text.
+
+Visible heading:
+
+`Collapsed Overflow Policy Card`
+
+Visible description:
+
+`This example imitates a policy or terms panel where most text is clipped by collapsed overflow. It tests extraction of only visible content by default and full content after expansion.`
+
+Policy header:
+
+`Policy`: `Hotel cancellation policy`.
+
+`Reservation`: `HVS-2026-88217`.
+
+`Status`: badge `Applies to booking`.
+
+Collapsed visible content:
+
+`Free cancellation until August 10, 2026 at 6:00 PM hotel local time.`
+
+`After that time, the first night and taxes are non-refundable.`
+
+Hidden below clipped area until expanded:
+
+`No-show reservations are charged the full stay amount.`
+
+`Changes to guest name are allowed until check-in.`
+
+`Parking add-ons may be cancelled separately until August 13, 2026.`
+
+`Refunds may take 5-10 business days to appear on the original payment method.`
+
+Button:
+
+`Show full policy`.
+
+Summary sidebar:
+
+`Visible policy state`: `Collapsed`.
+
+`Cancellation deadline`: `August 10, 2026, 6:00 PM`.
+
+`Non-refundable amount`: `First night and taxes`.
+
+Extraction caveat: the extraction tool should not claim hidden clipped content was visible unless the tester expands the policy. After expansion, it should capture the full policy text.
+
+Implementation guidance: use `.collapsed-box` and `data-expand-target`.
+
+---
+
+T00 Example 11 - Copy-Disabled Insurance Claim Packet
+
+---
+
+Create an insurance claim packet where a central claim details region has local copy prevention using `user-select: none`. Include a toggle button that enables selection for testing.
+
+Visible heading:
+
+`Copy-Disabled Insurance Claim Packet`
+
+Visible description:
+
+`This example imitates a claim portal where the main claim packet disables text selection. It tests extraction from copy-resistant regions and optional selection toggling.`
+
+Claim header:
+
+`Claim number`: `CLM-2026-55109`.
+
+`Claim type`: `Renters property loss`.
+
+`Claim status`: badge `Adjuster review`.
+
+`Assigned adjuster`: `Owen Brooks`.
+
+Copy-disabled packet region:
+
+Use class `copy-disabled` by default.
+
+Claimant panel:
+
+`Name`: `Jordan Parker`.
+
+`Policy`: `REN-2026-44720`.
+
+`Contact`: `jordan.parker@example.test`.
+
+Incident panel:
+
+`Incident date`: `May 22, 2026`.
+
+`Cause`: `Water leak from upstairs unit`.
+
+`Location`: `72 Hillcrest Road, San Mateo, CA`.
+
+Damage panel:
+
+`Estimated loss`: `$4,820.00`.
+
+`Deductible`: `$500.00`.
+
+`Preliminary payout`: `$4,000.00`.
+
+`Payment status`: `Not issued`.
+
+Documents:
+
+`Photos of damage`: `Received`.
+
+`Repair estimate`: `Received`.
+
+`Proof of ownership`: `Missing`.
+
+Button:
+
+`Enable selection for this region`.
+
+Extraction caveat: the extraction tool should capture the visible packet even when selection is disabled. The toggle is only for manual comparison.
+
+Implementation guidance: apply `copy-disabled` only to the claim packet, not to the entire example section.
+
+---
+
+U00 Example 12 - Masked Bank Account Values With Reveal
+
+---
+
+Create a banking account settings panel with masked account values and a reveal control. The default state must show masked values only. The revealed full demo values must be fictional.
+
+Visible heading:
+
+`Masked Bank Account Values With Reveal`
+
+Visible description:
+
+`This example imitates a banking settings page with masked account values. It tests extraction of masked visible values, reveal behavior, and avoiding invention of hidden full values before reveal.`
+
+Header:
+
+`Payment profile`: `Operating account`.
+
+`Profile status`: badge `Verified`.
+
+`Owner`: `Renee Coleman`.
+
+Default visible masked fields:
+
+`Bank`: `Example National Bank`.
+
+`Routing number`: `***084`.
+
+`Account number`: `********1842`.
+
+`Account type`: `Checking`.
+
+`Verification method`: `Micro-deposit`.
+
+`Last verified`: `May 18, 2026`.
+
+Reveal button:
+
+`Reveal demo account details`.
+
+Initially hidden reveal panel:
+
+`Routing number`: `110000084`.
+
+`Account number`: `000771841842`.
+
+`Reveal status`: `Demo full values visible`.
+
+Notice:
+
+`These are fictional demo values for extraction testing.`
+
+Extraction caveat: the extraction tool should extract the masked value exactly as visible by default. It should not infer or invent the full account number before the reveal panel is visible.
+
+Implementation guidance: use `hidden` on the reveal panel and `data-reveal-target` on the button.
+
+---
+
+V00 Example 13 - DOM Order Different From Visual Order
+
+---
+
+Create a three-column priority summary where DOM order intentionally differs from visual order using flexbox or grid ordering. The visible order should be Critical, Warning, Healthy, while the DOM order should be Healthy, Critical, Warning.
+
+Visible heading:
+
+`DOM Order Different From Visual Order`
+
+Visible description:
+
+`This example imitates a dashboard where CSS order differs from DOM order. It tests whether extraction can preserve visual order when needed and still identify each card's content accurately.`
+
+Dashboard header:
+
+`Dashboard`: `Service health summary`.
+
+`Environment`: `Production`.
+
+`Status`: badge `Needs attention`.
+
+DOM order requirement:
+
+Write the cards in DOM order:
+
+1. Healthy.
+
+2. Critical.
+
+3. Warning.
+
+Visual order requirement:
+
+Use CSS order so the visible order is:
+
+1. Critical.
+
+2. Warning.
+
+3. Healthy.
+
+Card `Critical`:
+
+`Service count`: `1`.
+
+`Primary service`: `Extraction API`.
+
+`Current incident`: `INC-2026-1184`.
+
+`Status`: badge `Critical`.
+
+Card `Warning`:
+
+`Service count`: `2`.
+
+`Primary service`: `Job Queue`.
+
+`Current incident`: `INC-2026-1189`.
+
+`Status`: badge `Warning`.
+
+Card `Healthy`:
+
+`Service count`: `18`.
+
+`Primary service`: `Auth Gateway`.
+
+`Current incident`: `None`.
+
+`Status`: badge `Healthy`.
+
+Summary note:
+
+`Visual priority order is Critical, Warning, Healthy.`
+
+Extraction caveat: the extraction tool should understand that the visible order is priority order. It should not accidentally report the DOM order as the displayed priority order unless explicitly configured to preserve DOM order.
+
+Implementation guidance: use flexbox `order` classes such as `.visual-order-1`.
+
+---
+
+W00 Example 14 - Duplicate Decoy Values In Product Pricing
+
+---
+
+Create an ecommerce pricing card where decoy prices appear visibly crossed out or muted, and the real current price is visually emphasized. Include promotions and totals.
+
+Visible heading:
+
+`Duplicate Decoy Values In Product Pricing`
+
+Visible description:
+
+`This example imitates product pricing where old prices, comparison prices, decoy values, and current values appear together. It tests extraction of current price versus struck-through or contextual price values.`
+
+Product header:
+
+`Product`: `Merino Travel Hoodie`.
+
+`Brand`: `TrailKnit`.
+
+`Product status`: badge `In stock`.
+
+Pricing card:
+
+`List price`: visible decoy value `$168.00`, class `decoy`, struck through.
+
+`Current price`: visible real value `$128.00`, class `real-value`.
+
+`Member preview price`: visible muted value `$119.00`, label `Member price after sign-in`.
+
+`Bundle comparison`: visible value `$112.00`, label `Effective price in 3-item bundle`.
+
+`Promotion`: `Free shipping`.
+
+`Tax estimate`: `$11.04`.
+
+`Cart total if added now`: `$139.04`.
+
+Nearby recommendation card with another price:
+
+`Recommended add-on`: `Canvas Organizer Pouch`.
+
+`Add-on price`: `$32.00`.
+
+`Bundle discount`: `Save $6 when bought together`.
+
+Extraction caveat: the extraction tool should identify `$128.00` as the current standalone product price. It should not incorrectly choose the crossed-out list price, member preview price, bundle effective price, add-on price, or cart total.
+
+Implementation guidance: make decoy values visible but visually distinct. Use labels to explain each price.
+
+---
+
+X00 Example 15 - Hidden Backing Inputs Behind Pretty Cards
+
+---
+
+Create a subscription plan selector with pretty cards backed by hidden inputs. The visible plan card should show a friendly label, while hidden inputs carry submitted IDs and prices.
+
+Visible heading:
+
+`Hidden Backing Inputs Behind Pretty Cards`
+
+Visible description:
+
+`This example imitates a plan selector where beautiful cards are backed by hidden form values. It tests extraction of visible labels, selected state, hidden submitted values, and avoiding replacement of user-facing values with internal IDs unless requested.`
+
+Header:
+
+`Workspace`: `Atlas Product Studio`.
+
+`Billing setup`: `Choose annual plan`.
+
+`Setup status`: badge `Plan selected`.
+
+Plan cards:
+
+Card 1:
+
+`Visible plan`: `Starter annual`.
+
+`Visible price`: `$1,188/year`.
+
+`Visible seats`: `Up to 5 seats`.
+
+`Selected`: no.
+
+Hidden inputs:
+
+`plan_id`: `plan_starter_annual`.
+
+`price_cents`: `118800`.
+
+Card 2 selected by default:
+
+`Visible plan`: `Business annual`.
+
+`Visible price`: `$5,760/year`.
+
+`Visible seats`: `24 seats included`.
+
+`Selected`: yes.
+
+Hidden inputs:
+
+`plan_id`: `plan_business_annual`.
+
+`price_cents`: `576000`.
+
+`billing_interval`: `annual`.
+
+Card 3:
+
+`Visible plan`: `Enterprise annual`.
+
+`Visible price`: `Custom quote`.
+
+`Visible seats`: `Unlimited seats`.
+
+`Selected`: no.
+
+Hidden inputs:
+
+`plan_id`: `plan_enterprise_annual`.
+
+`requires_sales`: `true`.
+
+Selection summary:
+
+`Selected visible plan`: `Business annual`.
+
+`Submitted plan ID`: `plan_business_annual`.
+
+`Submitted price cents`: `576000`.
+
+Extraction caveat: the extraction tool should capture both visible selected plan and hidden submitted values when the selected region includes the form. It should not replace the readable plan name with only `plan_business_annual`.
+
+Implementation guidance: include hidden inputs inside each card or adjacent to each card. Mark selected card visually and with `aria-selected="true"`.
+
+---
+
+Y00 Example 16 - Ellipsized Values With Full Accessible Names
+
+---
+
+Create a dense admin list where long values are ellipsized visually but full values are provided via `title` or `aria-label`.
+
+Visible heading:
+
+`Ellipsized Values With Full Accessible Names`
+
+Visible description:
+
+`This example imitates an admin list with narrow columns that truncate long values. It tests extraction of visible truncated text, full accessible names, and row context.`
+
+Header:
+
+`Table`: `API webhook endpoints`.
+
+`Workspace`: `Northwind Analytics`.
+
+`Status`: badge `3 endpoints`.
+
+Rows:
+
+Row 1:
+
+`Endpoint name`: `Billing Export Worker`.
+
+Visible URL cell ellipsized:
+
+`https://example.test/webhooks/billing-expo...`.
+
+Full URL in `title` and `aria-label`:
+
+`https://example.test/webhooks/billing-export-worker`.
+
+`Owner`: `Renee Coleman`.
+
+`Status`: badge `Healthy`.
+
+Row 2:
+
+`Endpoint name`: `CRM Data Import`.
+
+Visible URL:
+
+`https://example.test/webhooks/crm-data-impo...`.
+
+Full URL:
+
+`https://example.test/webhooks/crm-data-import`.
+
+`Owner`: `Nina Patel`.
+
+`Status`: badge `Near limit`.
+
+Row 3:
+
+`Endpoint name`: `Analytics Scheduler`.
+
+Visible URL:
+
+`https://example.test/webhooks/analytics-sch...`.
+
+Full URL:
+
+`https://example.test/webhooks/analytics-scheduler`.
+
+`Owner`: `Grace Miller`.
+
+`Status`: badge `Healthy`.
+
+Detail sidebar:
+
+`Selected endpoint`: `Billing Export Worker`.
+
+`Visible URL state`: `Ellipsized`.
+
+`Full URL available`: `Yes, title and aria-label`.
+
+Extraction caveat: the extraction tool should indicate whether it extracted the visible truncated value or full accessible value. It should not silently invent missing URL segments unless the full value is actually available in the DOM.
+
+Implementation guidance: use `.ellipsized`, `title`, and `aria-label` on the URL span.
+
+---
+
+Z00 Example 17 - Watermarked Document Preview
+
+---
+
+Create a document preview card with a large watermark overlay that should not be confused with document content. The document body should contain invoice-style fields.
+
+Visible heading:
+
+`Watermarked Document Preview`
+
+Visible description:
+
+`This example imitates a document preview with a watermark overlay. It tests extraction of document fields while avoiding decorative overlay text that is visible but not part of the document data.`
+
+Document header:
+
+`Preview`: `Invoice PDF converted preview`.
+
+`Document`: `INV-2026-00841`.
+
+`Preview status`: badge `Demo copy`.
+
+Document preview region:
+
+Apply class `watermark-layer`.
+
+Visible watermark generated by CSS:
+
+`DEMO COPY - NOT FOR PRODUCTION`.
+
+Document body fields:
+
+`Invoice number`: `INV-2026-00841`.
+
+`Issue date`: `May 18, 2026`.
+
+`Due date`: `June 17, 2026`.
+
+`Bill to`: `Cedar & Pine Design LLC`.
+
+`Subtotal`: `$678.00`.
+
+`Tax`: `$58.14`.
+
+`Payments applied`: `-$300.00`.
+
+`Balance due`: `$436.14`.
+
+Document footer:
+
+`Payment terms`: `Net 30`.
+
+`Billing contact`: `billing@northstar.example.test`.
+
+Extraction caveat: the extraction tool should not confuse the watermark text with invoice content. It may record the watermark as a document overlay if selected, but it should not become a field value.
+
+Implementation guidance: use CSS `::before` for the watermark overlay with `pointer-events: none`.
+
+---
+
+AA00 Example 18 - Tooltip-Only Critical Values
+
+---
+
+Create a product availability table where certain critical values only appear inside visible tooltip popovers. The tooltips should be visible by default for testing.
+
+Visible heading:
+
+`Tooltip-Only Critical Values`
+
+Visible description:
+
+`This example imitates an inventory table where detailed stock reasons appear only in tooltip-style popovers. It tests extraction of visible tooltip content and relationship to the correct row.`
+
+Inventory header:
+
+`Warehouse`: `Reno DC`.
+
+`Inventory status`: badge `2 alerts`.
+
+Table rows:
+
+Row 1:
+
+`SKU`: `BAG-TRV-22`.
+
+`Item`: `Canvas Travel Backpack 22L`.
+
+`Available`: `18`.
+
+`Status`: badge `Low stock`.
+
+Tooltip visible next to status:
+
+`Reason`: `Reserved quantity increased after corporate order ORD-2026-104922.`
+
+`Reorder recommendation`: `Create purchase order for 100 units.`
+
+Row 2:
+
+`SKU`: `BAG-COM-28`.
+
+`Item`: `TrailPack Commuter 28L`.
+
+`Available`: `9`.
+
+`Status`: badge `Critical`.
+
+Tooltip visible:
+
+`Reason`: `Back-to-school promotion consumed forecasted stock.`
+
+`Reorder recommendation`: `Expedite inbound shipment PO-2026-7718.`
+
+Row 3:
+
+`SKU`: `BAG-FLT-18`.
+
+`Item`: `Packwell City Flight Bag`.
+
+`Available`: `112`.
+
+`Status`: badge `Healthy`.
+
+No tooltip.
+
+Row 4:
+
+`SKU`: `BAG-SLM-16`.
+
+`Item`: `NexaSlim Tech Backpack`.
+
+`Available`: `0`.
+
+`Status`: badge `Backordered`.
+
+Tooltip visible:
+
+`Reason`: `Supplier delay moved inbound arrival to June 15.`
+
+`Reorder recommendation`: `Notify customers before purchase.`
+
+Extraction caveat: the extraction tool should attach tooltip values to the correct row. It should not collect all tooltip text as unrelated notes.
+
+Implementation guidance: make tooltip panels visible by default with `role="tooltip"` and `aria-describedby` from the status badge.
+
+---
+
+AB00 Example 19 - Fake Table Built From Positioned Divs
+
+---
+
+Create a fake admin table built entirely from divs and absolutely positioned cells. It should look like a table but not use table markup.
+
+Visible heading:
+
+`Fake Table Built From Positioned Divs`
+
+Visible description:
+
+`This example imitates a high-performance grid rendered from positioned divs instead of table elements. It tests extraction of row and column context without native table semantics.`
+
+Grid header:
+
+`Grid`: `License activation records`.
+
+`Rows`: `5`.
+
+`Column model`: `Positioned divs`.
+
+Fake table columns:
+
+`License`.
+
+`Organization`.
+
+`Seats`.
+
+`Status`.
+
+`Last check-in`.
+
+Rows:
+
+Row 1:
+
+`License`: `LIC-2026-882014`.
+
+`Organization`: `Northstar Research Lab`.
+
+`Seats`: `12`.
+
+`Status`: `Active`.
+
+`Last check-in`: `May 31, 2026`.
+
+Row 2:
+
+`License`: `LIC-2026-882115`.
+
+`Organization`: `Atlas Product Studio`.
+
+`Seats`: `24`.
+
+`Status`: `Active`.
+
+`Last check-in`: `May 31, 2026`.
+
+Row 3:
+
+`License`: `LIC-2026-882220`.
+
+`Organization`: `City Museum of Design`.
+
+`Seats`: `8`.
+
+`Status`: `Expiring soon`.
+
+`Last check-in`: `May 30, 2026`.
+
+Row 4:
+
+`License`: `LIC-2026-882314`.
+
+`Organization`: `Civic Data Lab`.
+
+`Seats`: `18`.
+
+`Status`: `Active`.
+
+`Last check-in`: `May 29, 2026`.
+
+Row 5:
+
+`License`: `LIC-2026-882411`.
+
+`Organization`: `Harbor Clinic Network`.
+
+`Seats`: `36`.
+
+`Status`: `Needs review`.
+
+`Last check-in`: `May 28, 2026`.
+
+Fallback note:
+
+`This grid intentionally does not use table elements.`
+
+Extraction caveat: the extraction tool should reconstruct rows and columns from visual layout or ARIA roles. It should not output a flat sequence of cell text.
+
+Implementation guidance: use `role="grid"`, `role="row"`, `role="columnheader"`, and `role="gridcell"` if possible, even though the visual layout uses divs.
+
+---
+
+AC00 Example 20 - Shadow-Like Deep Wrapper Settings Panel
+
+---
+
+Create a settings panel where every field is wrapped in many framework-like div layers. Do not use actual Shadow DOM unless the coding agent can keep it simple and inspectable. Simulate shadow-like complexity with nested wrappers.
+
+Visible heading:
+
+`Shadow-Like Deep Wrapper Settings Panel`
+
+Visible description:
+
+`This example imitates a component-heavy settings panel with deep wrapper layers. It tests extraction of field labels and values through framework-style nesting and generic class names.`
+
+Settings header:
+
+`Component`: `Billing export settings`.
+
+`Workspace`: `Northwind Analytics`.
+
+`Status`: badge `Configured`.
+
+Fields, each wrapped in at least five nested generic containers:
+
+`Export schedule`: `Monthly on the 1st at 6:00 AM`.
+
+`Export format`: `CSV`.
+
+`Recipients`: `billing@example.test`, `finance@example.test`.
+
+`Include tax columns`: `Yes`.
+
+`Include discount columns`: `Yes`.
+
+`Include payment references`: `Yes`.
+
+`Last successful export`: `May 31, 2026, 6:00 AM`.
+
+`Next scheduled export`: `June 1, 2026, 6:00 AM`.
+
+Nested warning panel:
+
+`Warning`: `Payment reference column is required by the finance import template.`
+
+`Severity`: badge `Medium`.
+
+Extraction caveat: the extraction tool should not fail because labels and values are buried inside deep generic wrappers. It should preserve field pairings and warning context.
+
+Implementation guidance: use generic wrappers such as `.component-shell`, `.slot`, `.inner`, `.render-node`, `.text-fragment` around labels and values.
+
+---
+
+AD00 Example 21 - Map Pin List With Visual-Only Coordinates
+
+---
+
+Create a map-like search result where pin labels and coordinates are visually positioned on a fake map, while result cards are listed separately. Use text and CSS only.
+
+Visible heading:
+
+`Map Pin List With Visual-Only Coordinates`
+
+Visible description:
+
+`This example imitates a map search page where pins are visually positioned and result cards are separate. It tests extraction of pin-to-card relationships, visual coordinates, labels, and listing data.`
+
+Search header:
+
+`Search area`: `Monterey waterfront`.
+
+`Result count`: `4 stays`.
+
+`Map status`: badge `Static demo map`.
+
+Fake map panel:
+
+Pins:
+
+Pin A at visual position top 30 percent, left 42 percent:
+
+`Pin`: `A`.
+
+`Price`: `$249`.
+
+Pin B at visual position top 52 percent, left 60 percent:
+
+`Pin`: `B`.
+
+`Price`: `$218`.
+
+Pin C at visual position top 44 percent, left 26 percent:
+
+`Pin`: `C`.
+
+`Price`: `$196`.
+
+Pin D at visual position top 68 percent, left 48 percent:
+
+`Pin`: `D`.
+
+`Price`: `$319`.
+
+Result cards:
+
+Card A:
+
+`Pin`: `A`.
+
+`Hotel`: `Harbor View Suites`.
+
+`Location`: `Monterey waterfront`.
+
+`Nightly rate`: `$249`.
+
+`Status`: `Breakfast included`.
+
+Card B:
+
+`Pin`: `B`.
+
+`Hotel`: `Cypress Garden Inn`.
+
+`Location`: `Downtown Monterey`.
+
+`Nightly rate`: `$218`.
+
+`Status`: `Free cancellation`.
+
+Card C:
+
+`Pin`: `C`.
+
+`Hotel`: `Bayfront Lodge`.
+
+`Location`: `Cannery Row`.
+
+`Nightly rate`: `$196`.
+
+`Status`: `Parking available`.
+
+Card D:
+
+`Pin`: `D`.
+
+`Hotel`: `Pine Coast Hotel`.
+
+`Location`: `Pacific Grove`.
+
+`Nightly rate`: `$319`.
+
+`Status`: `Family suite`.
+
+Extraction caveat: the extraction tool should preserve the relationship between visual pins and result cards using pin labels. It should not treat the map pin prices as separate hotels.
+
+Implementation guidance: use absolute-positioned pin elements inside a fake map container. Use matching pin labels in result cards.
+
+---
+
+AE00 Example 22 - Calendar Cells With Split Date And Availability
+
+---
+
+Create a calendar availability grid where date numbers and availability labels are rendered in separate nested fragments. Some cells should be disabled, selected, or partially available.
+
+Visible heading:
+
+`Calendar Cells With Split Date And Availability`
+
+Visible description:
+
+`This example imitates an appointment calendar where date numbers and availability text are split across nested DOM fragments. It tests extraction of date, availability, selected state, disabled state, and time slot context.`
+
+Calendar header:
+
+`Provider`: `Dr. Helen Park, MD`.
+
+`Service`: `Orthopedics follow-up`.
+
+`Month`: `June 2026`.
+
+`Selected date`: `June 11, 2026`.
+
+Calendar grid cells from June 8 to June 14:
+
+June 8:
+
+Date fragments: `Jun`, ` `, `8`.
+
+Availability fragments: `3`, ` appointments`.
+
+State: available.
+
+June 9:
+
+Date fragments: `Jun`, ` `, `9`.
+
+Availability: `No appointments`.
+
+State: disabled.
+
+June 10:
+
+Date fragments: `Jun`, ` `, `10`.
+
+Availability: `1 appointment`.
+
+State: available.
+
+June 11:
+
+Date fragments: `Jun`, ` `, `11`.
+
+Availability fragments: `2`, ` appointments`.
+
+State: selected.
+
+June 12:
+
+Date fragments: `Jun`, ` `, `12`.
+
+Availability: `4 appointments`.
+
+State: available.
+
+June 13:
+
+Date fragments: `Jun`, ` `, `13`.
+
+Availability: `No appointments`.
+
+State: disabled.
+
+June 14:
+
+Date fragments: `Jun`, ` `, `14`.
+
+Availability: `No appointments`.
+
+State: disabled.
+
+Selected time slot panel:
+
+`Date`: `June 11, 2026`.
+
+`Selected time`: `2:30 PM`.
+
+`Other available times`: `3:15 PM`, `4:00 PM`.
+
+Extraction caveat: the extraction tool should reconstruct each date and availability label from split fragments and preserve disabled or selected state.
+
+Implementation guidance: use buttons or grid cells with `aria-label` containing the complete date and availability state.
+
+---
+
+AF00 Example 23 - Multi-Column Receipt With Interleaved DOM
+
+---
+
+Create a receipt layout where left and right columns are visually separated, but the DOM interleaves fields from both columns. This tests visual grouping versus DOM order.
+
+Visible heading:
+
+`Multi-Column Receipt With Interleaved DOM`
+
+Visible description:
+
+`This example imitates a receipt with two visual columns where DOM order alternates between billing and fulfillment fields. It tests extraction of visual column grouping despite interleaved DOM nodes.`
+
+Receipt header:
+
+`Order`: `ORD-2026-104922`.
+
+`Customer`: `Jordan Ellis`.
+
+`Status`: badge `Processing`.
+
+Visual left column heading:
+
+`Billing`.
+
+Visual right column heading:
+
+`Fulfillment`.
+
+DOM interleaving requirement:
+
+The DOM should alternate fields like:
+
+Billing field 1.
+
+Fulfillment field 1.
+
+Billing field 2.
+
+Fulfillment field 2.
+
+But CSS grid should place billing fields in the left column and fulfillment fields in the right column.
+
+Billing visual fields:
+
+`Payment method`: `Visa ending in 4242`.
+
+`Billing address`: `88 Valencia Street, Suite 402, San Francisco, CA 94103`.
+
+`Invoice status`: `Paid`.
+
+`Billing contact`: `jordan.ellis@example.test`.
+
+Fulfillment visual fields:
+
+`Shipping method`: `Standard ground`.
+
+`Shipping address`: `120 King Street, Dock B, San Francisco, CA 94107`.
+
+`Fulfillment status`: `Processing`.
+
+`Tracking status`: `Label pending`.
+
+Order total panel:
+
+`Merchandise subtotal`: `$153.00`.
+
+`Discount`: `-$15.30`.
+
+`Shipping`: `$8.95`.
+
+`Tax`: `$12.42`.
+
+`Order total`: `$159.07`.
+
+Extraction caveat: the extraction tool should preserve visual group headings and not pair billing labels with fulfillment values because of interleaved DOM order.
+
+Implementation guidance: use CSS grid areas or order classes to force visual grouping.
+
+---
+
+AG00 Example 24 - Custom Dropdown With Detached Option Text
+
+---
+
+Create a custom dropdown where the trigger displays a selected short code, while detached option text elsewhere describes the full selected option. The popup list should be visually close but structurally detached.
+
+Visible heading:
+
+`Custom Dropdown With Detached Option Text`
+
+Visible description:
+
+`This example imitates a compact enterprise dropdown where the trigger shows only a code and the full option label appears in a detached menu. It tests extraction of trigger value, selected full option text, option list, and hidden submitted value.`
+
+Form header:
+
+`Report configuration`: `Invoice export template`.
+
+`Template status`: badge `Draft`.
+
+Dropdown field:
+
+Visible label: `Export template`.
+
+Trigger visible value:
+
+`BILL-LINE-CSV`.
+
+Trigger accessible label:
+
+`Export template, Billing line item CSV`.
+
+Hidden input:
+
+`export_template_id`: `tmpl_billing_line_item_csv`.
+
+Detached option list visible:
+
+Option 1 selected:
+
+`Code`: `BILL-LINE-CSV`.
+
+`Name`: `Billing line item CSV`.
+
+`Description`: `Includes invoice number, SKU, tax, discount, and payment reference columns.`
+
+`aria-selected`: `true`.
+
+Option 2:
+
+`Code`: `BILL-SUM-CSV`.
+
+`Name`: `Billing summary CSV`.
+
+`Description`: `Includes invoice totals, payments applied, and balance due.`
+
+Option 3:
+
+`Code`: `TAX-JUR-CSV`.
+
+`Name`: `Tax jurisdiction CSV`.
+
+`Description`: `Includes tax jurisdiction, tax rate, and taxable amount.`
+
+Option 4:
+
+`Code`: `PAY-REF-CSV`.
+
+`Name`: `Payment reference CSV`.
+
+`Description`: `Includes payment ID, method, applied invoice, and posting date.`
+
+Summary panel:
+
+`Selected visible code`: `BILL-LINE-CSV`.
+
+`Selected full name`: `Billing line item CSV`.
+
+`Submitted template ID`: `tmpl_billing_line_item_csv`.
+
+Extraction caveat: the extraction tool should not extract only the short code. It should connect the trigger code, selected option text, description, and hidden submitted value.
+
+Implementation guidance: make the listbox visually adjacent but outside the field container in DOM.
+
+---
+
+AH00 Example 25 - Mixed Hostile Anti-Pattern Stress Gallery
+
+---
+
+Create a final gallery that combines several hostile patterns in one place. This should be the hardest example on the page, but it must remain deterministic and safe.
+
+Visible heading:
+
+`Mixed Hostile Anti-Pattern Stress Gallery`
+
+Visible description:
+
+`This example combines multiple extraction-resistant patterns in a realistic admin review gallery. It tests whether extraction can handle fragmented values, generated labels, visual-only grouping, decoy text, masked values, ellipsis, and hidden backing values at the same time.`
+
+Gallery header:
+
+`Review set`: `High friction extraction cases`.
+
+`Owner`: `Product Systems`.
+
+`Status`: badge `Stress test`.
+
+`Records`: `6`.
+
+Card 1: `Generated label plus split value`.
+
+Label generated with CSS `data-label`: `Case number`.
+
+Value split into spans but rendered as `TCK-2026-54102`.
+
+Other fields:
+
+`Subject`: `Invoice PDF missing line item details`.
+
+`Priority`: badge `High`.
+
+Card 2: `Masked value plus hidden backing input`.
+
+Visible field:
+
+`API key`: `key_live_****_9K2Q`.
+
+Hidden input:
+
+`api_key_id`: `key_884120_internal`.
+
+Other fields:
+
+`Owner`: `Rafael Ortiz`.
+
+`Rotation due`: `July 1, 2026`.
+
+Card 3: `Decoy price plus real price`.
+
+Visible decoy:
+
+`$168.00`, struck through.
+
+Visible real:
+
+`$128.00`.
+
+Other fields:
+
+`Product`: `Merino Travel Hoodie`.
+
+`Promotion`: `Free shipping`.
+
+Card 4: `Ellipsized URL`.
+
+Visible:
+
+`https://example.test/webhooks/billing-expo...`.
+
+Full value in `title`:
+
+`https://example.test/webhooks/billing-export-worker`.
+
+Other fields:
+
+`Endpoint`: `Billing Export Worker`.
+
+`Status`: badge `Healthy`.
+
+Card 5: `DOM order mismatch`.
+
+DOM text appears in order:
+
+`Healthy`, `Critical`, `Warning`.
+
+Visual order appears:
+
+`Critical`, `Warning`, `Healthy`.
+
+Other fields:
+
+`Service`: `Extraction API`.
+
+`Incident`: `INC-2026-1184`.
+
+Card 6: `Tooltip-attached reason`.
+
+Visible row:
+
+`SKU`: `BAG-TRV-22`.
+
+`Status`: badge `Low stock`.
+
+Visible tooltip:
+
+`Reason`: `Reserved quantity increased after corporate order ORD-2026-104922.`
+
+Gallery summary sidebar:
+
+`Hardest pattern`: `Combined generated labels and split values`.
+
+`Recommended extraction strategy`: `Use visible layout, semantic relationships, and fallback values together`.
+
+`Safety note`: `All values are fictional and local to this test page.`
+
+Extraction caveat: the extraction tool should preserve each card as a separate record and avoid collapsing all hostile patterns into one unstructured text blob.
+
+Implementation guidance: use a grid of six cards and intentionally mix multiple local hostile patterns. Do not use obfuscation or automation detection.
+
+---
+
+AI00 Required Final HTML Skeleton
+
+---
+
+The coding agent should produce a complete HTML document using this general skeleton:
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page 10 - Hostile Extraction Resistant UI</title>
+  <style>
+    /* Inline CSS only. */
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-hero">
+      <p class="page-kicker">Content Extraction Demo Page</p>
+      <h1>Page 10 - Hostile Extraction Resistant UI</h1>
+      <p>
+        This standalone page contains realistic local fixtures for testing extraction from hostile or resistant UI patterns such as unselectable text, CSS-generated labels and values, split DOM text, fake rendered rows, virtualized lists, masked values, copy-disabled regions, collapsed overflow, detached option lists, DOM order mismatch, and decoy content.
+      </p>
+    </header>
+
+    <section class="example-card" id="example-01">
+      <!-- Example 01 content. -->
+    </section>
+
+    <!-- Continue through example-25. -->
+  </main>
+
+  <script>
+    /* Minimal inline JavaScript only. */
+  </script>
+</body>
+</html>
+```
+
+The generated file must include all 25 examples in the same file.
+
+The page must not require a server.
+
+The page must not fetch data.
+
+The page must not include broken links to external assets.
+
+The page must not use placeholder text instead of the specified values.
+
+The page must not use external images, external canvas libraries, external chart libraries, external grid libraries, external anti-scraping libraries, external APIs, external data, or external fonts.
+
+The page must not use real customers, real account numbers, real patient data, real student data, real user data, real credentials, real API keys, real bank numbers, real policy numbers, real government identifiers, or real production identifiers.
+
+The page must not include bot detection, automation detection, fingerprinting, CAPTCHA simulation, global context-menu blocking, keyboard traps, developer-tool blocking, obfuscated JavaScript, infinite mutation loops, or hostile browser behavior.
+
+The page must not convert all examples into simple forms or tables. It must include a mix of receipts, dashboards, fake rendered grids, SVG text, custom widgets, virtualized lists, masked values, clipped panels, map-like layouts, interleaved DOM layouts, and stress-gallery cards.
+
+---
+
+AJ00 Quality Bar
+
+---
+
+The final page should be useful as a long-term manual testing page for a content extraction tool.
+
+Each example must be visibly distinct enough that a tester can scroll to it, select a hostile region, select a card, select a row, select a fake rendered area, select a clipped panel, select a dropdown, or select a whole example and understand what extraction-resistant behavior is being tested.
+
+Each example must contain realistic populated values.
+
+Each example must include the specified heading, description, UI content, labels, values, hostile pattern, realistic context, and extraction caveat.
+
+Every hostile extraction example must expose enough content for extraction testing. Do not hide the most important values only in JavaScript variables, comments, CSS custom properties, or inaccessible attributes.
+
+Use hostile patterns locally and intentionally. Do not make the whole page difficult to use.
+
+Use generated labels, generated values, fragmented text, masked values, clipped overflow, visual-only grouping, fake rows, and detached lists where specified.
+
+Use fallback content where the example would otherwise be impossible to extract fairly, such as canvas-like rows or SVG text. The fallback should not cause duplicate extraction if the tool also extracts the visible rendering.
+
+Use repeated labels and values where useful, but keep group context visible.
+
+Use realistic financial, travel, admin, ticketing, inventory, shipment, and settings scenarios.
+
+Do not make all examples visually identical. The point of this page is to test many real-world variations of extraction-resistant UI.
+
+Do not collapse all metadata into one paragraph if the example calls for structured metadata.
+
+Do not simplify these scenarios into toy examples. This page is intentionally advanced and should be one of the hardest pages in the test suite.
+
+The implementation should favor clarity, deterministic behavior, and realistic hostile-pattern coverage over cleverness.
+
+The coding agent may improve layout, spacing, CSS details, and basic interaction behavior, but it must not remove examples, reduce the number of examples, replace hostile UI examples with generic forms, or remove the extraction-resistant patterns.
+
+The final output must be one portable HTML file.

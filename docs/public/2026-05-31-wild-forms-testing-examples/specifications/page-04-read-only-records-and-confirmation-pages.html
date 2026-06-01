@@ -1,0 +1,2219 @@
+---
+
+A00 Change Request Specification - Page 4 Read-Only Records And Confirmation Pages
+
+---
+
+Create one standalone HTML demo page named `page-04-read-only-records-and-confirmation-pages.html`.
+
+The page must be a self-contained HTML file. Put all HTML, CSS, and JavaScript inside this one file. Do not use React. Do not use TypeScript. Do not use a build step. Do not load external CSS, external JavaScript, external fonts, external images, or external data. The page must work by opening the `.html` file directly in a browser.
+
+This page is a testing surface for a content extraction tool. The page must focus on read-only records and confirmation pages: order confirmations, invoices, receipts, shipment tracking pages, bank transfer confirmations, subscription billing summaries, insurance policy records, warranty registrations, support case records, government application status pages, school registration confirmations, lab result summaries, travel itineraries, utility account summaries, payslips, tax filing receipts, loan payment schedules, and other web page fragments where the user can see field-value data but cannot edit it.
+
+The page must contain 22 separate examples. Each example must have a visible heading, a visible explanatory paragraph, and the actual read-only record or confirmation UI. Each example must be visually separated from the next example. Each example must be realistic enough to test extraction of labels, values, repeated line items, totals, statuses, confirmation numbers, dates, timestamps, account references, addresses, policies, tables, links, and metadata.
+
+Do not make the examples tiny toy records. A complex example is preferred because it can also be used for simple extraction testing. Every example must test a different extraction caveat.
+
+---
+
+B00 Page-Level Purpose
+
+---
+
+The purpose of this page is to test whether an extraction tool can identify, select, and format structured information from read-only web page content.
+
+The extraction tool should be able to handle field-value rows, summary cards, definition-list style records, receipt line items, invoice tables, tracking timelines, masked account values, confirmation numbers, status badges, nested metadata, repeated records, document-like layouts, policy text, totals, subtotals, tax lines, payment details, addresses, links, and visible values that are not inside form controls.
+
+This page should intentionally include both clean semantic read-only markup and messy real-world markup. Some examples should use `<dl>`, tables, headings, and semantic sections. Other examples should use nested divs, cards, badges, spans, summary panels, and visually paired labels and values that are not adjacent in the DOM.
+
+The page should not submit data. The page should not depend on a backend. All record data must be fictional and hardcoded.
+
+---
+
+C00 Required Page Structure
+
+---
+
+The page must start with a top-level header.
+
+Use this visible title:
+
+`Page 4 - Read-Only Records And Confirmation Pages`
+
+Under the title, include a short introduction paragraph explaining that the page contains realistic read-only records and confirmation pages for testing extraction of labels, values, line items, statuses, totals, confirmation numbers, timelines, policy text, and repeated records.
+
+After the introduction, render 22 example sections.
+
+Each example section must follow this pattern:
+
+```html
+<section class="example-card" id="example-01">
+  <header class="example-header">
+    <p class="example-kicker">Example 01</p>
+    <h2>Retail Order Confirmation</h2>
+  </header>
+
+  <p class="example-description">
+    This example imitates...
+  </p>
+
+  <div class="example-surface">
+    <!-- Actual read-only record or confirmation UI goes here. -->
+  </div>
+</section>
+```
+
+The exact class names may vary, but the structure must remain clear. Each section must have a unique `id`, from `example-01` through `example-22`.
+
+Each example heading must be visible. Each description must be visible. The actual read-only record surface must appear below the description.
+
+Do not include large expected extraction output blocks under every example. The page should primarily be the application-under-test surface, not a documentation page. The visible descriptions should explain the purpose and caveat of each example.
+
+---
+
+D00 Visual Design Requirements
+
+---
+
+Use inline CSS in a `<style>` tag.
+
+The page should look like a clean internal testing notebook with realistic read-only records inside it. Use a light background, readable font stack, generous spacing, and card-style sections. The page does not need to look like one unified product. It is better if examples look like different real websites.
+
+Use different visual styles inside examples when useful. For example, one record can look like an ecommerce receipt, another like a banking confirmation page, another like a government status page, another like a shipment tracker, another like an invoice PDF converted into HTML, another like a patient portal result summary, and another like an admin case record.
+
+The page should support narrow and wide screens. Use simple responsive CSS. Avoid fixed widths that break on laptop screens.
+
+Suggested CSS structure:
+
+```html
+<style>
+  :root {
+    --page-bg: #f5f2ea;
+    --card-bg: #fffdf8;
+    --ink: #25221d;
+    --muted: #6f675c;
+    --line: #d8cfc0;
+    --soft: #eee6d8;
+    --panel: #ffffff;
+    --accent: #315f8c;
+    --accent-soft: #e7f0ff;
+    --ok: #276749;
+    --warning: #8a5a00;
+    --danger: #9b332c;
+    --status-bg: #f3f7fb;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--page-bg);
+    color: var(--ink);
+    line-height: 1.45;
+  }
+
+  main {
+    width: min(1180px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 32px 0 64px;
+  }
+
+  .page-hero {
+    margin-bottom: 28px;
+    padding: 28px;
+    background: #fffaf0;
+    border: 2px solid var(--line);
+    border-radius: 18px;
+  }
+
+  .example-card {
+    margin: 28px 0;
+    padding: 24px;
+    background: var(--card-bg);
+    border: 2px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.08);
+  }
+
+  .example-kicker {
+    margin: 0 0 4px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .example-header h2 {
+    margin: 0;
+    font-size: 1.35rem;
+  }
+
+  .example-description {
+    max-width: 900px;
+    color: var(--muted);
+  }
+
+  .example-surface {
+    margin-top: 18px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: white;
+  }
+
+  .record-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--soft);
+  }
+
+  .record-title {
+    margin: 0;
+    font-size: 1.15rem;
+  }
+
+  .record-subtitle {
+    margin: 4px 0 0;
+    color: var(--muted);
+  }
+
+  .record-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 16px;
+  }
+
+  .record-grid-three {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 16px;
+  }
+
+  .summary-panel,
+  .record-panel,
+  .status-panel,
+  .address-panel {
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  .summary-panel {
+    background: #faf7f0;
+  }
+
+  .field-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--soft);
+  }
+
+  .field-row:last-child {
+    border-bottom: 0;
+  }
+
+  .field-label {
+    color: var(--muted);
+    font-weight: 650;
+  }
+
+  .field-value {
+    text-align: right;
+    font-weight: 650;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--status-bg);
+    font-size: 0.88rem;
+    font-weight: 700;
+  }
+
+  .badge.ok {
+    color: var(--ok);
+    background: #edf8f1;
+  }
+
+  .badge.warning {
+    color: var(--warning);
+    background: #fff7df;
+  }
+
+  .badge.danger {
+    color: var(--danger);
+    background: #fff0ef;
+  }
+
+  .line-table {
+    width: 100%;
+    margin-top: 16px;
+    border-collapse: collapse;
+  }
+
+  .line-table th,
+  .line-table td {
+    padding: 9px 8px;
+    border-bottom: 1px solid var(--soft);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .line-table th {
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+
+  .line-table td.number,
+  .line-table th.number {
+    text-align: right;
+  }
+
+  .timeline {
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .timeline-item {
+    display: grid;
+    grid-template-columns: 140px minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--soft);
+  }
+
+  .timeline-item:last-child {
+    border-bottom: 0;
+  }
+
+  .timeline-time {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .note-box {
+    margin-top: 14px;
+    padding: 12px;
+    border: 1px dashed #b7afa3;
+    border-radius: 10px;
+    background: #fffdf4;
+  }
+
+  .two-column-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.7fr);
+    gap: 18px;
+    align-items: start;
+  }
+
+  @media (max-width: 820px) {
+    .record-grid,
+    .record-grid-three,
+    .two-column-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .field-row {
+      display: block;
+    }
+
+    .field-value {
+      display: block;
+      margin-top: 2px;
+      text-align: left;
+    }
+
+    .timeline-item {
+      grid-template-columns: 1fr;
+    }
+
+    .example-card {
+      padding: 18px;
+    }
+  }
+</style>
+```
+
+The coding agent may adjust the CSS, but it must keep the page readable, scrollable, and visually divided into 22 separate examples.
+
+---
+
+E00 JavaScript Requirements
+
+---
+
+Use inline JavaScript in a `<script>` tag only if needed.
+
+This page should be mostly static because it focuses on read-only records and confirmation pages. The important data should exist in the DOM at page load. JavaScript must not be required for the main record values to appear.
+
+Allowed JavaScript behavior includes expanding and collapsing details, switching between read-only tabs, showing a hidden policy panel, revealing masked details in a safe fictional example, toggling a timeline detail row, or copying a confirmation number to a small visible status message.
+
+Do not use a JavaScript framework. Do not generate all examples dynamically. Static HTML must remain visible and inspectable.
+
+Suggested JavaScript structure:
+
+```html
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("[data-toggle-target]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const target = document.querySelector(button.dataset.toggleTarget);
+        if (!target) return;
+
+        target.hidden = !target.hidden;
+        button.setAttribute("aria-expanded", String(!target.hidden));
+      });
+    });
+
+    document.querySelectorAll("[data-copy-value]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const target = document.querySelector(button.dataset.copyValue);
+        const status = document.querySelector(button.dataset.copyStatus || "");
+        if (!target || !status) return;
+
+        status.textContent = "Copied value: " + target.textContent.trim();
+      });
+    });
+
+    document.querySelectorAll("[data-tab-target]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const group = button.dataset.tabGroup;
+        if (!group) return;
+
+        document.querySelectorAll('[data-tab-group="' + group + '"]').forEach(function (tab) {
+          tab.setAttribute("aria-selected", "false");
+        });
+
+        document.querySelectorAll('[data-tab-panel="' + group + '"]').forEach(function (panel) {
+          panel.hidden = true;
+        });
+
+        button.setAttribute("aria-selected", "true");
+        const panel = document.querySelector(button.dataset.tabTarget);
+        if (panel) panel.hidden = false;
+      });
+    });
+  });
+</script>
+```
+
+The coding agent may extend this code for specific examples, but the final file must remain simple and portable.
+
+---
+
+F00 Extraction Behavior To Support
+
+---
+
+The page must make these extraction tasks possible:
+
+Extract field-value pairs from read-only cards and summary panels.
+
+Extract confirmation numbers, order numbers, invoice numbers, policy numbers, case numbers, and application numbers.
+
+Extract status badges and their associated record context.
+
+Extract line item tables with quantity, SKU, description, unit price, amount, tax, and total.
+
+Extract price breakdowns without merging separate subtotal, discount, fee, tax, and total rows.
+
+Extract addresses as structured blocks with labels such as shipping address, billing address, service address, or mailing address.
+
+Extract shipment timelines with timestamps, statuses, locations, and notes.
+
+Extract bank-style confirmations with masked account values and transaction IDs.
+
+Extract subscription and billing summaries with current plan, renewal date, seats, add-ons, and invoice recipients.
+
+Extract policy and legal text as separate notes, not as ordinary field values unless directly labeled.
+
+Extract repeated records such as multiple travelers, multiple line items, multiple documents, multiple payments, or multiple timeline events.
+
+Extract links and visible link labels where read-only pages include actions like `View receipt`, `Download invoice`, `Track shipment`, or `Open case`.
+
+Extract values where the label and value are visually paired but not adjacent in the DOM.
+
+Extract values inside nested cards, tables, tabs, collapsed panels, and summary strips.
+
+Extract masked values without inventing hidden full values.
+
+Extract read-only records that look like forms but are not form controls.
+
+---
+
+G00 Data And Naming Rules
+
+---
+
+Use realistic but fictional data. Do not use real personal information.
+
+Use consistent example-specific IDs. Prefix IDs with the example number, such as `ex01-order-number`, `ex07-policy-number`, or `ex18-payment-schedule`.
+
+Use plausible values. Avoid placeholder-only examples. Every example should contain enough populated read-only data to be useful for extraction testing.
+
+Use a mixture of semantic and non-semantic markup. Use `<dl>`, tables, headings, sections, and paragraphs where appropriate. Also include realistic card layouts made from divs and spans.
+
+Do not use editable form inputs as the main representation on this page. A small disabled or readonly input may appear only when it helps imitate a real confirmation screen, but the main focus must be read-only text, cards, rows, tables, timelines, and summaries.
+
+Do not include full sensitive values. For payment cards, bank accounts, account numbers, member IDs, and policy identifiers, use fictional masked values where appropriate.
+
+Do not make all examples use the same layout. Some examples should be document-like. Some should be card-like. Some should be table-heavy. Some should use timelines. Some should use summary sidebars. Some should use dense field-value strips.
+
+---
+
+H00 Required Examples Overview
+
+---
+
+The page must contain exactly these 22 examples:
+
+Example 01: Retail Order Confirmation.
+
+Example 02: B2B Invoice Detail Page.
+
+Example 03: Shipment Tracking Record.
+
+Example 04: Bank Transfer Confirmation.
+
+Example 05: Subscription Billing Summary.
+
+Example 06: Insurance Policy Details Page.
+
+Example 07: Product Warranty Registration Confirmation.
+
+Example 08: Customer Support Case Detail.
+
+Example 09: Government Application Status Page.
+
+Example 10: School Registration Confirmation.
+
+Example 11: Medical Lab Result Summary.
+
+Example 12: Travel Itinerary Confirmation.
+
+Example 13: Hotel Reservation Confirmation.
+
+Example 14: Utility Account Billing Summary.
+
+Example 15: Payroll Payslip Summary.
+
+Example 16: Tax Filing Receipt.
+
+Example 17: Loan Payment Schedule Summary.
+
+Example 18: Membership Renewal Confirmation.
+
+Example 19: Event Registration Receipt.
+
+Example 20: Property Lease Application Summary.
+
+Example 21: Software License Activation Record.
+
+Example 22: Security Audit Event Detail.
+
+Each example below is mandatory.
+
+---
+
+I00 Example 01 - Retail Order Confirmation
+
+---
+
+Create an ecommerce order confirmation page fragment. It should look like the page shown immediately after a customer completes checkout. Use a main order summary plus shipping and billing cards plus an item table.
+
+Visible heading:
+
+`Retail Order Confirmation`
+
+Visible description:
+
+`This example imitates an ecommerce order confirmation page. It tests extraction of order number, order status, customer email, shipping address, billing address, item rows, delivery estimates, payment method, and price totals from read-only content.`
+
+The record header must show:
+
+`Order confirmed`.
+
+`Order number`: `ORD-2026-104922`.
+
+`Order date`: `May 31, 2026`.
+
+`Status`: badge `Processing`.
+
+`Confirmation email`: `jordan.ellis@example.test`.
+
+Customer and fulfillment fields:
+
+`Customer`: `Jordan Ellis`.
+
+`Shipping method`: `Standard ground`.
+
+`Estimated delivery`: `June 6-9, 2026`.
+
+`Payment method`: `Visa ending in 4242`.
+
+`Billing address`: `88 Valencia Street, Suite 402, San Francisco, CA 94103`.
+
+`Shipping address`: `120 King Street, Dock B, San Francisco, CA 94107`.
+
+Item table rows:
+
+Row 1: `SKU` `BAG-TRV-22`, `Item` `Canvas travel backpack`, `Color` `Forest`, `Quantity` `1`, `Unit price` `$89.00`, `Line total` `$89.00`.
+
+Row 2: `SKU` `BOT-STL-20`, `Item` `Insulated steel bottle`, `Color` `Slate`, `Quantity` `2`, `Unit price` `$24.00`, `Line total` `$48.00`.
+
+Row 3: `SKU` `TAG-LTH-02`, `Item` `Leather luggage tag`, `Color` `Tan`, `Quantity` `1`, `Unit price` `$16.00`, `Line total` `$16.00`.
+
+Price summary:
+
+`Merchandise subtotal`: `$153.00`.
+
+`Discount`: `-$15.30`.
+
+`Shipping`: `$8.95`.
+
+`Estimated tax`: `$12.42`.
+
+`Order total`: `$159.07`.
+
+Action links:
+
+`View receipt`.
+
+`Track shipment`.
+
+The links can use `href="#"`.
+
+Extraction caveat: the extraction tool should extract line item rows as repeated records and should not merge shipping address and billing address. It should capture the status badge as the order status.
+
+Implementation guidance:
+
+```html
+<div class="record-header">
+  <div>
+    <h3 class="record-title">Order confirmed</h3>
+    <p class="record-subtitle">Thank you. A confirmation email was sent to jordan.ellis@example.test.</p>
+  </div>
+  <span class="badge warning" id="ex01-order-status">Processing</span>
+</div>
+
+<div class="record-grid">
+  <section class="record-panel" aria-labelledby="ex01-order-details-title">
+    <h4 id="ex01-order-details-title">Order details</h4>
+    <div class="field-row">
+      <span class="field-label">Order number</span>
+      <span class="field-value" id="ex01-order-number">ORD-2026-104922</span>
+    </div>
+  </section>
+</div>
+```
+
+---
+
+J00 Example 02 - B2B Invoice Detail Page
+
+---
+
+Create a business invoice detail page fragment. It should look like an invoice viewer inside a billing portal. Use invoice metadata, seller and buyer blocks, line items, payment history, and a totals panel.
+
+Visible heading:
+
+`B2B Invoice Detail Page`
+
+Visible description:
+
+`This example imitates a business invoice detail page. It tests extraction of invoice metadata, bill-to information, service period, line items, payment terms, payment history, and totals from a document-like read-only layout.`
+
+Invoice header fields:
+
+`Invoice number`: `INV-2026-00841`.
+
+`Invoice status`: badge `Partially paid`.
+
+`Issue date`: `May 18, 2026`.
+
+`Due date`: `June 17, 2026`.
+
+`Service period`: `May 1-31, 2026`.
+
+`Purchase order`: `PO-44918`.
+
+Seller block:
+
+`Seller`: `Northstar Cloud Services`.
+
+`Seller tax ID`: `XX-XXX8831`.
+
+`Seller email`: `billing@northstar.example.test`.
+
+Buyer block:
+
+`Bill to`: `Cedar & Pine Design LLC`.
+
+`Billing contact`: `Renee Coleman`.
+
+`Billing email`: `finance@example.test`.
+
+`Billing address`: `410 Oak Grove Avenue, Oakland, CA 94610`.
+
+Line item table rows:
+
+Row 1: `Description` `Business platform seats`, `Quantity` `24`, `Unit price` `$18.00`, `Amount` `$432.00`.
+
+Row 2: `Description` `Audit log retention add-on`, `Quantity` `1`, `Unit price` `$96.00`, `Amount` `$96.00`.
+
+Row 3: `Description` `Priority support package`, `Quantity` `1`, `Unit price` `$150.00`, `Amount` `$150.00`.
+
+Payment history rows:
+
+Row 1: `Date` `May 21, 2026`, `Method` `ACH ending 1842`, `Reference` `PMT-77120`, `Amount` `$300.00`.
+
+Totals:
+
+`Subtotal`: `$678.00`.
+
+`Tax`: `$58.14`.
+
+`Payments applied`: `-$300.00`.
+
+`Balance due`: `$436.14`.
+
+Extraction caveat: the extraction tool should preserve table structure for both invoice line items and payment history. It should not confuse `Payments applied` with a positive charge.
+
+Implementation guidance: use one document-like invoice block and a right-side totals card. Use a badge for invoice status.
+
+---
+
+K00 Example 03 - Shipment Tracking Record
+
+---
+
+Create a shipment tracking record with package summary, shipping address, carrier details, and a timeline. The timeline is the main extraction target.
+
+Visible heading:
+
+`Shipment Tracking Record`
+
+Visible description:
+
+`This example imitates a carrier shipment tracking page. It tests extraction of tracking number, delivery status, carrier service, destination, estimated delivery, and timeline events with timestamps, locations, and status notes.`
+
+Shipment summary fields:
+
+`Tracking number`: `1Z999AA10123456784`.
+
+`Carrier`: `Example Parcel`.
+
+`Service`: `Ground residential`.
+
+`Status`: badge `In transit`.
+
+`Estimated delivery`: `June 4, 2026 by 8:00 PM`.
+
+`Shipped from`: `Reno, NV`.
+
+`Destination`: `San Francisco, CA`.
+
+`Package weight`: `7.4 lb`.
+
+`Reference`: `ORD-2026-104922`.
+
+Delivery address block:
+
+`Ship to`: `Jordan Ellis`.
+
+`Address`: `120 King Street, Dock B, San Francisco, CA 94107`.
+
+Timeline events:
+
+Event 1: `May 31, 2026, 9:18 AM`, location `Reno, NV`, status `Label created`, note `Shipment information received`.
+
+Event 2: `May 31, 2026, 7:42 PM`, location `Reno, NV`, status `Origin scan`, note `Package received by carrier`.
+
+Event 3: `June 1, 2026, 4:12 AM`, location `Sparks, NV`, status `Departed facility`, note `Package left carrier facility`.
+
+Event 4: `June 1, 2026, 2:55 PM`, location `Sacramento, CA`, status `Arrived at facility`, note `Package is moving through the network`.
+
+Event 5: `June 2, 2026, 6:30 AM`, location `Sacramento, CA`, status `In transit`, note `Package is on the way to destination facility`.
+
+Links:
+
+`Manage delivery`.
+
+`Proof of delivery unavailable`.
+
+Extraction caveat: the extraction tool should extract timeline rows as ordered events. It should not flatten the timeline into an unreadable paragraph or lose timestamp-location-status relationships.
+
+Implementation guidance:
+
+```html
+<ul class="timeline" aria-label="Shipment tracking timeline">
+  <li class="timeline-item">
+    <time class="timeline-time" datetime="2026-05-31T09:18:00">May 31, 2026, 9:18 AM</time>
+    <div>
+      <strong>Label created</strong>
+      <p>Reno, NV - Shipment information received.</p>
+    </div>
+  </li>
+</ul>
+```
+
+---
+
+L00 Example 04 - Bank Transfer Confirmation
+
+---
+
+Create a bank transfer confirmation page. It should look like a banking app receipt after the user schedules or submits a transfer. Use masked account values only.
+
+Visible heading:
+
+`Bank Transfer Confirmation`
+
+Visible description:
+
+`This example imitates a bank transfer confirmation receipt. It tests extraction of transaction ID, transfer status, source and destination accounts, masked account values, amount, schedule date, fees, memo, and confirmation notices.`
+
+Confirmation header:
+
+`Transfer scheduled`.
+
+`Confirmation number`: `TRN-8841-6029`.
+
+`Status`: badge `Scheduled`.
+
+`Created`: `May 31, 2026, 10:42 AM PT`.
+
+Transfer details:
+
+`From account`: `Operating Checking ending in 1842`.
+
+`To account`: `Tax Savings ending in 3398`.
+
+`Transfer amount`: `$2,500.00`.
+
+`Transfer date`: `June 3, 2026`.
+
+`Frequency`: `One-time`.
+
+`Fee`: `$0.00`.
+
+`Memo`: `Quarterly estimated tax reserve`.
+
+`Submitted by`: `Renee Coleman`.
+
+`Authorization method`: `Authenticator app`.
+
+Notice panel:
+
+`Transfers scheduled after 8:00 PM PT may process the next business day.`
+
+`You can cancel this transfer until June 2, 2026 at 11:59 PM PT.`
+
+Action links:
+
+`Download confirmation`.
+
+`Schedule another transfer`.
+
+Extraction caveat: the extraction tool should capture masked account labels and should not invent full account numbers. It should extract the notice text separately from the core transfer fields.
+
+Implementation guidance: use a receipt-like block with two account cards and a central arrow or text indicator `Transfer to`.
+
+---
+
+M00 Example 05 - Subscription Billing Summary
+
+---
+
+Create a subscription billing summary page for a SaaS product. It should be read-only and show account details, current plan, add-ons, seat usage, invoice recipients, renewal information, and latest invoice.
+
+Visible heading:
+
+`Subscription Billing Summary`
+
+Visible description:
+
+`This example imitates a SaaS subscription billing summary. It tests extraction of plan details, renewal date, seat usage, add-ons, invoice recipients, payment method, and latest invoice data from read-only account settings.`
+
+Account fields:
+
+`Workspace`: `Atlas Product Studio`.
+
+`Workspace ID`: `ws_9A41Q`.
+
+`Billing status`: badge `Active`.
+
+`Current plan`: `Business annual`.
+
+`Renewal date`: `January 18, 2027`.
+
+`Billing currency`: `USD`.
+
+`Payment method`: `Visa ending in 4242`.
+
+Seat usage:
+
+`Seats purchased`: `24`.
+
+`Seats used`: `19`.
+
+`Available seats`: `5`.
+
+Add-ons:
+
+`Audit log retention`: `Enabled`.
+
+`SAML SSO`: `Enabled`.
+
+`Advanced analytics`: `Enabled`.
+
+`Priority support`: `Not enabled`.
+
+Invoice recipients:
+
+`billing@example.test`.
+
+`finance@example.test`.
+
+Latest invoice:
+
+`Invoice number`: `INV-2026-00118`.
+
+`Invoice date`: `January 18, 2026`.
+
+`Invoice total`: `$5,760.00`.
+
+`Invoice status`: badge `Paid`.
+
+`Download invoice` link.
+
+Policy note:
+
+`Plan changes made before the renewal date are prorated on the next invoice.`
+
+Extraction caveat: the extraction tool should extract add-ons as named status values rather than simply reading a paragraph of enabled features. It should also capture multiple invoice recipient emails as repeated values.
+
+Implementation guidance: use a card layout with separate panels for plan, seats, add-ons, invoice recipients, and latest invoice.
+
+---
+
+N00 Example 06 - Insurance Policy Details Page
+
+---
+
+Create an insurance policy details page. It should show policy metadata, insured party, coverage, deductible, premium schedule, documents, and policy notices.
+
+Visible heading:
+
+`Insurance Policy Details Page`
+
+Visible description:
+
+`This example imitates an insurance policy details page. It tests extraction of policy numbers, coverage levels, deductibles, premium schedule, insured property, document links, and policy notices from read-only cards.`
+
+Policy header fields:
+
+`Policy number`: `REN-2026-44720`.
+
+`Policy type`: `Renters insurance`.
+
+`Policy status`: badge `Active`.
+
+`Effective date`: `February 1, 2026`.
+
+`Expiration date`: `January 31, 2027`.
+
+`Named insured`: `Jordan Parker`.
+
+`Property address`: `72 Hillcrest Road, San Mateo, CA 94402`.
+
+Coverage table:
+
+Row 1: `Coverage` `Personal property`, `Limit` `$35,000`, `Deductible` `$500`.
+
+Row 2: `Coverage` `Personal liability`, `Limit` `$300,000`, `Deductible` `None`.
+
+Row 3: `Coverage` `Loss of use`, `Limit` `$10,000`, `Deductible` `$500`.
+
+Row 4: `Coverage` `Medical payments`, `Limit` `$5,000`, `Deductible` `None`.
+
+Premium schedule:
+
+`Monthly premium`: `$18.40`.
+
+`Next payment date`: `June 1, 2026`.
+
+`Autopay`: `Enabled`.
+
+`Payment method`: `Bank account ending in 1842`.
+
+Documents:
+
+`Policy declarations PDF`.
+
+`Proof of insurance`.
+
+`Autopay authorization`.
+
+Notice:
+
+`Coverage limits shown here are summaries. Refer to the declarations page for complete policy language.`
+
+Extraction caveat: the extraction tool should preserve coverage table rows and not merge limits and deductibles across rows. It should treat document links as named documents.
+
+Implementation guidance: use a strong document-like header and a coverage table.
+
+---
+
+O00 Example 07 - Product Warranty Registration Confirmation
+
+---
+
+Create a product warranty registration confirmation page. It should show customer details, product details, warranty plan, receipt file name, coverage dates, and registration status.
+
+Visible heading:
+
+`Product Warranty Registration Confirmation`
+
+Visible description:
+
+`This example imitates a product warranty registration confirmation. It tests extraction of product serial numbers, model details, purchase information, warranty plan, uploaded receipt display, coverage dates, and confirmation status.`
+
+Confirmation header:
+
+`Warranty registration complete`.
+
+`Registration ID`: `WAR-2026-77104`.
+
+`Status`: badge `Registered`.
+
+`Registered on`: `May 31, 2026`.
+
+Customer fields:
+
+`Customer name`: `Iris Walker`.
+
+`Customer email`: `iris.walker@example.test`.
+
+Product fields:
+
+`Product category`: `Laptop`.
+
+`Product model`: `NexaBook Pro 14`.
+
+`Serial number`: `NXB14-26-009184`.
+
+`Purchase date`: `May 2, 2026`.
+
+`Retailer`: `Example Electronics`.
+
+`Order number`: `EE-7739201`.
+
+Warranty fields:
+
+`Warranty plan`: `Extended 3-year protection`.
+
+`Coverage start`: `May 2, 2026`.
+
+`Coverage end`: `May 1, 2029`.
+
+`Receipt file`: `example-electronics-receipt-EE-7739201.pdf`.
+
+`Reminder preference`: `Email warranty reminders enabled`.
+
+Document links:
+
+`View warranty certificate`.
+
+`Download receipt copy`.
+
+Extraction caveat: the extraction tool should capture the receipt filename and warranty dates as read-only values. It should not require a file input because this is a confirmation page, not an upload page.
+
+Implementation guidance: make the product details look like a registration certificate with a status badge.
+
+---
+
+P00 Example 08 - Customer Support Case Detail
+
+---
+
+Create a customer support case detail page. It should show case metadata, customer information, issue summary, priority, status, timeline updates, attachments, and internal-facing fields.
+
+Visible heading:
+
+`Customer Support Case Detail`
+
+Visible description:
+
+`This example imitates a support case record. It tests extraction of case number, customer identity, issue category, priority, status, SLA data, timeline events, attachments, and nested metadata from a read-only case view.`
+
+Case header fields:
+
+`Case number`: `TCK-2026-54091`.
+
+`Status`: badge `Waiting on customer`.
+
+`Priority`: badge `Medium`.
+
+`Created`: `May 29, 2026, 3:14 PM`.
+
+`Last updated`: `May 31, 2026, 9:02 AM`.
+
+`Channel`: `Email`.
+
+Customer fields:
+
+`Customer`: `Lina Romero`.
+
+`Email`: `lina.romero@example.test`.
+
+`Account`: `Civic Data Lab`.
+
+`Plan`: `Business`.
+
+Issue details:
+
+`Category`: `Billing`.
+
+`Subject`: `Refund status request`.
+
+`Related refund reference`: `RF-20441`.
+
+`SLA target`: `June 1, 2026, 3:14 PM`.
+
+`Assigned team`: `Billing Support`.
+
+Timeline events:
+
+Event 1: `May 29, 2026, 3:14 PM`, actor `Customer`, event `Case opened`, note `Customer asked for refund status update.`
+
+Event 2: `May 30, 2026, 10:20 AM`, actor `Agent Maya`, event `Internal review`, note `Refund still processing with payment provider.`
+
+Event 3: `May 31, 2026, 9:02 AM`, actor `Agent Maya`, event `Reply sent`, note `Customer was sent refund timeline and case reference.`
+
+Attachments:
+
+`refund-request-email.eml`.
+
+`billing-screenshot.png`.
+
+Extraction caveat: the extraction tool should extract the timeline as ordered records and should distinguish customer-visible fields from internal metadata when both are selected.
+
+Implementation guidance: use a case header, metadata grid, timeline list, and attachment pills.
+
+---
+
+Q00 Example 09 - Government Application Status Page
+
+---
+
+Create a government-style application status page. It should show application identifiers, applicant details, submitted date, current status, required documents, review steps, and notices.
+
+Visible heading:
+
+`Government Application Status Page`
+
+Visible description:
+
+`This example imitates a public agency application status page. It tests extraction of application numbers, applicant information, status, review milestones, required documents, and formal notice text from a rigid read-only layout.`
+
+Application fields:
+
+`Application number`: `APP-2026-88419`.
+
+`Program`: `Small Business Recovery Grant`.
+
+`Applicant name`: `Cedar & Pine Design LLC`.
+
+`Applicant contact`: `Renee Coleman`.
+
+`Submitted`: `April 18, 2026`.
+
+`Current status`: badge `Under review`.
+
+`Review office`: `District 4 Small Business Unit`.
+
+`Estimated decision date`: `June 20, 2026`.
+
+Required document checklist:
+
+`Business license`: `Received`.
+
+`Tax return transcript`: `Received`.
+
+`Bank verification letter`: `Pending review`.
+
+`Ownership affidavit`: `Received`.
+
+`Lease documentation`: `Missing`.
+
+Review milestones:
+
+Milestone 1: `Application submitted`, date `April 18, 2026`, status `Complete`.
+
+Milestone 2: `Identity verification`, date `April 22, 2026`, status `Complete`.
+
+Milestone 3: `Document review`, date `May 9, 2026`, status `In progress`.
+
+Milestone 4: `Eligibility decision`, date `Pending`, status `Not started`.
+
+Notice text:
+
+`Missing documents must be uploaded by June 7, 2026. Failure to provide required documentation may delay or close the application.`
+
+Action links:
+
+`Upload missing document`.
+
+`Download application copy`.
+
+Extraction caveat: the extraction tool should preserve milestone order and document statuses. It should not confuse the formal notice with a field value called `Notice` unless it labels it as notice text.
+
+Implementation guidance: style this example like a government record with strong borders, all-caps micro labels, and restrained colors.
+
+---
+
+R00 Example 10 - School Registration Confirmation
+
+---
+
+Create a school registration confirmation page for a student. It should show student information, term, registered courses, tuition summary, holds, and next steps.
+
+Visible heading:
+
+`School Registration Confirmation`
+
+Visible description:
+
+`This example imitates a university course registration confirmation. It tests extraction of student identity, term, course rows, credits, grading mode, tuition totals, holds, and next-step instructions from read-only content.`
+
+Student fields:
+
+`Student name`: `Mei Tanaka`.
+
+`Student ID`: `S-884209`.
+
+`Program`: `Computer Science BS`.
+
+`Term`: `Fall 2026`.
+
+`Registration status`: badge `Registered`.
+
+`Confirmation number`: `REG-2026-FALL-1182`.
+
+Registered course table:
+
+Row 1: `Course` `CS 340`, `Title` `Human-Centered Software Design`, `Section` `A`, `Credits` `4`, `Grading mode` `Letter`.
+
+Row 2: `Course` `MATH 221`, `Title` `Linear Algebra`, `Section` `C`, `Credits` `3`, `Grading mode` `Letter`.
+
+Row 3: `Course` `HIST 180`, `Title` `Technology And Society`, `Section` `B`, `Credits` `3`, `Grading mode` `Pass/No Pass`.
+
+Tuition summary:
+
+`Total credits`: `10`.
+
+`Tuition`: `$6,820.00`.
+
+`Student services fee`: `$412.00`.
+
+`Technology fee`: `$96.00`.
+
+`Total charges`: `$7,328.00`.
+
+Holds and next steps:
+
+`Advising hold`: `Cleared`.
+
+`Payment deadline`: `August 21, 2026`.
+
+`Next step`: `Review tuition bill and confirm financial aid status.`
+
+Extraction caveat: the extraction tool should preserve each course row and should not flatten course code, title, section, credits, and grading mode into unrelated fields.
+
+Implementation guidance: use a table for registered courses and a separate summary card for tuition.
+
+---
+
+S00 Example 11 - Medical Lab Result Summary
+
+---
+
+Create a medical lab result summary page. It should show patient details, ordering provider, collection time, result status, test table, reference ranges, and clinical note. Use fictional data.
+
+Visible heading:
+
+`Medical Lab Result Summary`
+
+Visible description:
+
+`This example imitates a patient portal lab result summary. It tests extraction of patient details, test metadata, lab result rows, reference ranges, abnormal flags, provider notes, and status badges from read-only medical-style content.`
+
+Patient and order fields:
+
+`Patient`: `Victor Lane`.
+
+`Date of birth`: `January 22, 1975`.
+
+`Ordering provider`: `Dr. Hannah Cho`.
+
+`Lab order number`: `LAB-2026-11984`.
+
+`Collected`: `May 28, 2026, 8:42 AM`.
+
+`Reported`: `May 29, 2026, 2:15 PM`.
+
+`Result status`: badge `Final`.
+
+Test result table:
+
+Row 1: `Test` `Total cholesterol`, `Result` `182`, `Unit` `mg/dL`, `Reference range` `< 200`, `Flag` `Normal`.
+
+Row 2: `Test` `HDL cholesterol`, `Result` `48`, `Unit` `mg/dL`, `Reference range` `>= 40`, `Flag` `Normal`.
+
+Row 3: `Test` `LDL cholesterol`, `Result` `112`, `Unit` `mg/dL`, `Reference range` `< 100`, `Flag` `High`.
+
+Row 4: `Test` `Triglycerides`, `Result` `136`, `Unit` `mg/dL`, `Reference range` `< 150`, `Flag` `Normal`.
+
+Clinical note:
+
+`LDL remains mildly elevated. Continue current medication and discuss diet changes at the next follow-up visit.`
+
+Disclaimer:
+
+`This page is a fictional demo record and does not represent medical advice.`
+
+Extraction caveat: the extraction tool should preserve result rows with units, reference ranges, and flags. It should not merge the clinical note with the result table.
+
+Implementation guidance: use visible status badges for `Normal` and `High`. Use a clear table.
+
+---
+
+T00 Example 12 - Travel Itinerary Confirmation
+
+---
+
+Create a travel itinerary confirmation page with flight, hotel, and ground transportation records in one confirmation view.
+
+Visible heading:
+
+`Travel Itinerary Confirmation`
+
+Visible description:
+
+`This example imitates a travel booking itinerary confirmation. It tests extraction of multiple reservation types from one page, including flight segments, hotel stay details, car service pickup, confirmation numbers, traveler names, and policy notes.`
+
+Itinerary header fields:
+
+`Trip name`: `Design Summit 2026`.
+
+`Itinerary number`: `ITN-2026-44718`.
+
+`Booking status`: badge `Confirmed`.
+
+`Traveler`: `Lina Romero`.
+
+`Booked on`: `May 31, 2026`.
+
+Flight segment:
+
+`Airline`: `AeroVista`.
+
+`Confirmation`: `AV-9K2LD`.
+
+`Flight`: `AVX 218`.
+
+`From`: `SFO`.
+
+`To`: `JFK`.
+
+`Departure`: `September 2, 2026, 8:05 AM`.
+
+`Arrival`: `September 2, 2026, 4:42 PM`.
+
+`Seat`: `14A`.
+
+Hotel segment:
+
+`Hotel`: `Harbor East Hotel`.
+
+`Confirmation`: `HTL-77120`.
+
+`Check-in`: `September 2, 2026`.
+
+`Check-out`: `September 5, 2026`.
+
+`Room type`: `King room`.
+
+`Guest name`: `Lina Romero`.
+
+Ground transportation segment:
+
+`Provider`: `MetroCar`.
+
+`Confirmation`: `CAR-90418`.
+
+`Pickup`: `JFK Terminal 4`.
+
+`Pickup time`: `September 2, 2026, 5:20 PM`.
+
+`Drop-off`: `Harbor East Hotel`.
+
+Policy notes:
+
+`Flight changes may be subject to fare difference. Hotel cancellation is free until August 29, 2026 at 6:00 PM local hotel time.`
+
+Extraction caveat: the extraction tool should preserve each segment as a separate record. It should not merge flight confirmation, hotel confirmation, and car confirmation into one generic confirmation field.
+
+Implementation guidance: create three segment cards with similar field labels but distinct segment headers.
+
+---
+
+U00 Example 13 - Hotel Reservation Confirmation
+
+---
+
+Create a hotel reservation confirmation page. This is separate from a checkout page and should be fully read-only after booking.
+
+Visible heading:
+
+`Hotel Reservation Confirmation`
+
+Visible description:
+
+`This example imitates a post-booking hotel confirmation page. It tests extraction of confirmation number, guest details, stay dates, room details, rate plan, deposit, balance due, cancellation policy, and hotel contact information.`
+
+Confirmation header:
+
+`Reservation confirmed`.
+
+`Confirmation number`: `HVS-2026-88217`.
+
+`Status`: badge `Confirmed`.
+
+`Booked on`: `May 31, 2026`.
+
+Guest fields:
+
+`Guest name`: `Priya Shah`.
+
+`Guest email`: `priya.shah@example.test`.
+
+`Guest phone`: `415-555-0139`.
+
+Stay details:
+
+`Hotel`: `Harbor View Suites`.
+
+`Hotel address`: `41 Marina Drive, Monterey, CA 93940`.
+
+`Check-in`: `August 14, 2026`.
+
+`Check-out`: `August 18, 2026`.
+
+`Nights`: `4`.
+
+`Guests`: `2 adults, 1 child`.
+
+Room details:
+
+`Room type`: `King Studio With Harbor View`.
+
+`Rate plan`: `Refundable breakfast rate`.
+
+`Breakfast`: `Included`.
+
+`Parking`: `Added`.
+
+Payment summary:
+
+`Deposit paid`: `$325.62`.
+
+`Balance due at property`: `$976.86`.
+
+`Estimated total`: `$1,302.48`.
+
+`Payment method`: `Visa ending in 4242`.
+
+Hotel contact:
+
+`Phone`: `831-555-0190`.
+
+`Email`: `reservations@harborview.example.test`.
+
+Cancellation policy:
+
+`Free cancellation until August 10, 2026 at 6:00 PM hotel local time. After that time, the first night and taxes are non-refundable.`
+
+Extraction caveat: the extraction tool should extract deposit, balance, and total as separate financial values. It should not treat policy text as a price line.
+
+Implementation guidance: use a confirmation-card layout with a prominent confirmation number and separate payment panel.
+
+---
+
+V00 Example 14 - Utility Account Billing Summary
+
+---
+
+Create a utility account billing summary page. It should show account details, service address, meter readings, billing period, charges, payments, and amount due.
+
+Visible heading:
+
+`Utility Account Billing Summary`
+
+Visible description:
+
+`This example imitates an electric utility billing summary. It tests extraction of account number, service address, billing period, meter readings, usage, charges, payments, due date, and utility notices from read-only billing content.`
+
+Account fields:
+
+`Account number`: `UTL-440192-8`.
+
+`Customer name`: `Noah Kim`.
+
+`Service address`: `72 Hillcrest Road, San Mateo, CA 94402`.
+
+`Billing period`: `April 24-May 23, 2026`.
+
+`Bill issue date`: `May 25, 2026`.
+
+`Due date`: `June 14, 2026`.
+
+`Account status`: badge `Current`.
+
+Meter summary:
+
+`Meter number`: `MTR-882014`.
+
+`Previous reading`: `18,442 kWh`.
+
+`Current reading`: `19,018 kWh`.
+
+`Usage`: `576 kWh`.
+
+`Average daily usage`: `19.2 kWh`.
+
+Charges:
+
+`Electric delivery`: `$72.18`.
+
+`Electric generation`: `$94.22`.
+
+`Public purpose programs`: `$8.14`.
+
+`Taxes and local fees`: `$11.36`.
+
+`Previous balance`: `$0.00`.
+
+`Payment received`: `-$181.90`.
+
+`Current amount due`: `$185.90`.
+
+Notice:
+
+`Your usage increased 12 percent compared with the same period last year.`
+
+Extraction caveat: the extraction tool should preserve meter reading labels and financial rows. It should not lose the negative payment value.
+
+Implementation guidance: use a billing summary panel and a meter-reading table.
+
+---
+
+W00 Example 15 - Payroll Payslip Summary
+
+---
+
+Create a payroll payslip summary page. It should show employee details, pay period, earnings, deductions, taxes, direct deposit, and net pay. Use fictional data.
+
+Visible heading:
+
+`Payroll Payslip Summary`
+
+Visible description:
+
+`This example imitates a payroll payslip viewer. It tests extraction of employee information, pay period, earnings rows, tax rows, deduction rows, masked deposit accounts, and net pay from dense read-only financial content.`
+
+Employee fields:
+
+`Employee`: `Taylor Brooks`.
+
+`Employee ID`: `EMP-20417`.
+
+`Department`: `Operations`.
+
+`Pay date`: `May 30, 2026`.
+
+`Pay period`: `May 16-29, 2026`.
+
+`Pay type`: `Biweekly`.
+
+Earnings table:
+
+Row 1: `Earning` `Regular hours`, `Hours` `80.00`, `Rate` `$41.25`, `Current` `$3,300.00`, `YTD` `$42,900.00`.
+
+Row 2: `Earning` `Overtime`, `Hours` `4.00`, `Rate` `$61.88`, `Current` `$247.52`, `YTD` `$1,114.56`.
+
+Taxes table:
+
+Row 1: `Tax` `Federal income tax`, `Current` `$512.84`, `YTD` `$6,667.12`.
+
+Row 2: `Tax` `Social Security`, `Current` `$219.95`, `YTD` `$2,742.33`.
+
+Row 3: `Tax` `Medicare`, `Current` `$51.44`, `YTD` `$641.08`.
+
+Deductions table:
+
+Row 1: `Deduction` `Medical plan`, `Current` `$136.20`, `YTD` `$1,770.60`.
+
+Row 2: `Deduction` `401(k) contribution`, `Current` `$177.38`, `YTD` `$2,306.00`.
+
+Direct deposit:
+
+`Account`: `Checking ending in 7788`.
+
+`Deposit amount`: `$2,449.23`.
+
+Totals:
+
+`Gross pay`: `$3,547.52`.
+
+`Total taxes`: `$784.23`.
+
+`Total deductions`: `$314.06`.
+
+`Net pay`: `$2,449.23`.
+
+Extraction caveat: the extraction tool should preserve multiple financial tables and not merge current-period values with YTD values.
+
+Implementation guidance: use compact tables with right-aligned numeric columns.
+
+---
+
+X00 Example 16 - Tax Filing Receipt
+
+---
+
+Create a tax filing receipt page. It should show filing details, return type, submission timestamp, confirmation ID, refund or payment information, forms included, and status.
+
+Visible heading:
+
+`Tax Filing Receipt`
+
+Visible description:
+
+`This example imitates an electronic tax filing receipt. It tests extraction of filing confirmation numbers, taxpayer identity, filing status, submitted forms, refund or payment details, timestamps, and notices from a read-only receipt.`
+
+Receipt header:
+
+`Tax return submitted`.
+
+`Submission ID`: `EFILE-2025-771209`.
+
+`Status`: badge `Accepted`.
+
+`Accepted timestamp`: `March 14, 2026, 9:42 PM PT`.
+
+Taxpayer fields:
+
+`Taxpayer name`: `Avery Quinn`.
+
+`Tax year`: `2025`.
+
+`Return type`: `Federal individual return`.
+
+`Filing status`: `Single`.
+
+`Last four of SSN`: `1184`.
+
+`Preparation method`: `Self-prepared`.
+
+Forms included:
+
+`Form 1040`.
+
+`Schedule 1`.
+
+`Schedule C`.
+
+`Form 8995`.
+
+Refund details:
+
+`Federal refund`: `$1,284.00`.
+
+`Refund method`: `Direct deposit`.
+
+`Deposit account`: `Checking ending in 1842`.
+
+`Estimated refund timing`: `Within 21 days after acceptance`.
+
+State filing panel:
+
+`State return`: `California`.
+
+`State status`: `Submitted`.
+
+`State balance due`: `$242.00`.
+
+Notice text:
+
+`Acceptance confirms that the return passed initial electronic filing checks. It does not guarantee the accuracy of the return or prevent future review.`
+
+Extraction caveat: the extraction tool should extract federal and state filing details separately. It should preserve the notice as explanatory text, not as a status value.
+
+Implementation guidance: use a receipt layout with formal labels and a document list.
+
+---
+
+Y00 Example 17 - Loan Payment Schedule Summary
+
+---
+
+Create a loan payment schedule summary page. It should show loan metadata, borrower, payment status, next payment, principal, interest, escrow, and an amortization-style table.
+
+Visible heading:
+
+`Loan Payment Schedule Summary`
+
+Visible description:
+
+`This example imitates a loan servicing payment schedule page. It tests extraction of loan number, borrower details, next payment, escrow values, payoff information, and repeated payment schedule rows.`
+
+Loan fields:
+
+`Loan number`: `LN-2026-44091`.
+
+`Borrower`: `Diego Marin`.
+
+`Loan type`: `Fixed-rate personal loan`.
+
+`Original principal`: `$18,500.00`.
+
+`Interest rate`: `7.25 percent`.
+
+`Loan status`: badge `Current`.
+
+`Origination date`: `May 10, 2026`.
+
+Next payment:
+
+`Next payment due`: `June 10, 2026`.
+
+`Minimum payment`: `$447.82`.
+
+`Autopay`: `Enabled`.
+
+`Payment account`: `Checking ending in 1842`.
+
+`Payoff estimate as of May 31, 2026`: `$18,642.18`.
+
+Payment allocation summary:
+
+`Principal`: `$336.10`.
+
+`Interest`: `$111.72`.
+
+`Fees`: `$0.00`.
+
+Schedule rows:
+
+Row 1: `Due date` `June 10, 2026`, `Payment` `$447.82`, `Principal` `$336.10`, `Interest` `$111.72`, `Remaining balance` `$18,163.90`.
+
+Row 2: `Due date` `July 10, 2026`, `Payment` `$447.82`, `Principal` `$338.13`, `Interest` `$109.69`, `Remaining balance` `$17,825.77`.
+
+Row 3: `Due date` `August 10, 2026`, `Payment` `$447.82`, `Principal` `$340.17`, `Interest` `$107.65`, `Remaining balance` `$17,485.60`.
+
+Extraction caveat: the extraction tool should preserve each schedule row with all payment allocation values. It should not confuse next payment summary with the schedule table.
+
+Implementation guidance: use a summary card plus an amortization table.
+
+---
+
+Z00 Example 18 - Membership Renewal Confirmation
+
+---
+
+Create a membership renewal confirmation page. It should show member details, membership level, renewal term, benefits, payment, auto-renew status, and receipt details.
+
+Visible heading:
+
+`Membership Renewal Confirmation`
+
+Visible description:
+
+`This example imitates a membership renewal confirmation. It tests extraction of member ID, membership level, renewal dates, benefits, payment method, receipt number, and auto-renew settings from read-only content.`
+
+Confirmation header:
+
+`Membership renewed`.
+
+`Receipt number`: `MEM-2026-11902`.
+
+`Status`: badge `Active`.
+
+`Renewed on`: `May 31, 2026`.
+
+Member fields:
+
+`Member name`: `Grace Miller`.
+
+`Member ID`: `M-772018`.
+
+`Organization`: `City Museum of Design`.
+
+`Membership level`: `Family Plus`.
+
+`Membership term`: `June 1, 2026-May 31, 2027`.
+
+`Auto-renew`: `Enabled`.
+
+Benefits list:
+
+`Unlimited general admission for 2 adults`.
+
+`Admission for up to 4 children`.
+
+`10 percent museum store discount`.
+
+`Early access to member events`.
+
+`Two guest passes`.
+
+Payment summary:
+
+`Membership fee`: `$165.00`.
+
+`Donation add-on`: `$35.00`.
+
+`Tax-deductible portion`: `$35.00`.
+
+`Total paid`: `$200.00`.
+
+`Payment method`: `Mastercard ending in 9184`.
+
+Links:
+
+`Download receipt`.
+
+`View member card`.
+
+Extraction caveat: the extraction tool should extract benefits as repeated values and keep tax-deductible portion separate from total paid.
+
+Implementation guidance: use a confirmation header, benefits list, and payment summary panel.
+
+---
+
+AA00 Example 19 - Event Registration Receipt
+
+---
+
+Create an event registration receipt page. It should show registration details, attendee records, ticket types, session selections, payment summary, and event policies.
+
+Visible heading:
+
+`Event Registration Receipt`
+
+Visible description:
+
+`This example imitates a conference registration receipt. It tests extraction of registration ID, attendee records, ticket types, selected sessions, payment details, and event policy text from a read-only confirmation page.`
+
+Registration header:
+
+`Registration complete`.
+
+`Registration ID`: `CONF-2026-88420`.
+
+`Event`: `Open Interfaces Summit`.
+
+`Event dates`: `October 12-14, 2026`.
+
+`Status`: badge `Confirmed`.
+
+`Registered on`: `May 31, 2026`.
+
+Attendee table:
+
+Row 1: `Name` `Lina Romero`, `Email` `lina.romero@example.test`, `Ticket` `General admission`, `Badge name` `Lina R.`.
+
+Row 2: `Name` `Theo Grant`, `Email` `theo.grant@example.test`, `Ticket` `Workshop pass`, `Badge name` `Theo Grant`.
+
+Selected sessions:
+
+`Designing Interfaces For Messy Public Data`.
+
+`Accessibility Testing Lab`.
+
+`Practical Browser Automation`.
+
+Payment summary:
+
+`General admission`: `$449.00`.
+
+`Workshop pass`: `$649.00`.
+
+`Group discount`: `-$100.00`.
+
+`Processing fee`: `$34.90`.
+
+`Total paid`: `$1,032.90`.
+
+`Payment method`: `Visa ending in 4242`.
+
+Policy text:
+
+`Tickets may be transferred until September 30, 2026. Workshop capacity is limited and session changes are subject to availability.`
+
+Extraction caveat: the extraction tool should preserve attendee rows and selected session list. It should not confuse session names with ticket types.
+
+Implementation guidance: use an attendee table and a separate selected-sessions list.
+
+---
+
+AB00 Example 20 - Property Lease Application Summary
+
+---
+
+Create a property lease application summary page. It should show applicant details, requested unit, application status, household members, income verification, pets, vehicles, uploaded documents, and fees.
+
+Visible heading:
+
+`Property Lease Application Summary`
+
+Visible description:
+
+`This example imitates a rental application summary after submission. It tests extraction of applicant details, requested unit, application status, household records, verification statuses, pet and vehicle information, document lists, and application fees.`
+
+Application header:
+
+`Rental application submitted`.
+
+`Application ID`: `LEASE-2026-55018`.
+
+`Status`: badge `Screening in progress`.
+
+`Submitted`: `May 30, 2026`.
+
+Applicant fields:
+
+`Applicant`: `Noah Kim`.
+
+`Email`: `noah.kim@example.test`.
+
+`Phone`: `650-555-0191`.
+
+`Requested property`: `Bayfront Apartments`.
+
+`Requested unit`: `Unit 4B - 1 bedroom`.
+
+`Preferred move-in date`: `August 1, 2026`.
+
+Household members:
+
+Row 1: `Name` `Noah Kim`, `Relationship` `Applicant`, `Age group` `Adult`.
+
+Row 2: `Name` `Mina Kim`, `Relationship` `Spouse`, `Age group` `Adult`.
+
+Verification statuses:
+
+`Identity verification`: `Complete`.
+
+`Income verification`: `Pending employer response`.
+
+`Credit screening`: `In progress`.
+
+`Rental history`: `Complete`.
+
+Pets:
+
+`Pet type`: `Cat`.
+
+`Pet name`: `Mochi`.
+
+`Pet age`: `8 years`.
+
+Vehicle:
+
+`Vehicle`: `2018 Toyota Prius`.
+
+`Plate`: `8TRC921`.
+
+Documents:
+
+`Government ID`: `Received`.
+
+`Pay stubs`: `Received`.
+
+`Bank statement`: `Received`.
+
+`Pet vaccination record`: `Missing`.
+
+Fees:
+
+`Application fee`: `$48.00`.
+
+`Screening fee`: `$22.00`.
+
+`Total paid`: `$70.00`.
+
+Extraction caveat: the extraction tool should preserve household rows and verification statuses as separate structured sections. It should not merge pet and vehicle data into applicant identity.
+
+Implementation guidance: use summary cards and small tables for household members and documents.
+
+---
+
+AC00 Example 21 - Software License Activation Record
+
+---
+
+Create a software license activation record. It should show license details, organization, activation status, seats, activated devices, license keys in masked form, entitlement dates, and support plan.
+
+Visible heading:
+
+`Software License Activation Record`
+
+Visible description:
+
+`This example imitates a software license activation page. It tests extraction of license ID, activation status, masked license keys, organization data, seat counts, activated devices, entitlement dates, and support plan metadata.`
+
+License header:
+
+`License activated`.
+
+`License ID`: `LIC-2026-882014`.
+
+`Activation status`: badge `Active`.
+
+`Activated on`: `May 31, 2026`.
+
+Organization fields:
+
+`Organization`: `Northstar Research Lab`.
+
+`License owner`: `Priya Shah`.
+
+`Owner email`: `priya.shah@example.test`.
+
+`Product`: `DataGrid Studio Pro`.
+
+`Edition`: `Team`.
+
+License details:
+
+`License key`: `DGSP-****-****-9K2Q`.
+
+`Seats purchased`: `12`.
+
+`Seats assigned`: `9`.
+
+`Support plan`: `Priority support`.
+
+`Maintenance start`: `May 31, 2026`.
+
+`Maintenance end`: `May 30, 2027`.
+
+Activated devices table:
+
+Row 1: `Device` `PRIYA-MBP-14`, `User` `Priya Shah`, `Activated` `May 31, 2026`, `Last check-in` `May 31, 2026`.
+
+Row 2: `Device` `LAB-WKS-07`, `User` `Rafael Ortiz`, `Activated` `May 31, 2026`, `Last check-in` `May 31, 2026`.
+
+Row 3: `Device` `DESIGN-WS-03`, `User` `Maya Chen`, `Activated` `May 30, 2026`, `Last check-in` `May 31, 2026`.
+
+Links:
+
+`Download license file`.
+
+`View assigned users`.
+
+Extraction caveat: the extraction tool should capture the masked key exactly as visible and should not invent unmasked key segments. It should preserve activated device rows.
+
+Implementation guidance: use a technical admin-style layout with a device table.
+
+---
+
+AD00 Example 22 - Security Audit Event Detail
+
+---
+
+Create a security audit event detail page. It should show event metadata, actor, target, IP address, device, location, risk signals, timeline, and raw event attributes.
+
+Visible heading:
+
+`Security Audit Event Detail`
+
+Visible description:
+
+`This example imitates a security audit log event detail page. It tests extraction of event metadata, actor identity, target resource, IP address, user agent, risk labels, timestamps, and raw attributes from a dense read-only admin record.`
+
+Event header:
+
+`Audit event detail`.
+
+`Event ID`: `evt_2026_05_31_884120`.
+
+`Event type`: `User role changed`.
+
+`Severity`: badge `Medium`.
+
+`Outcome`: badge `Success`.
+
+`Timestamp`: `May 31, 2026, 11:18:44 AM PT`.
+
+Actor fields:
+
+`Actor name`: `Anika Sharma`.
+
+`Actor email`: `anika.sharma@example.test`.
+
+`Actor role`: `Workspace admin`.
+
+`Actor IP address`: `203.0.113.42`.
+
+`Actor device`: `Chrome on macOS`.
+
+Target fields:
+
+`Target user`: `Maya Chen`.
+
+`Target email`: `maya.chen@example.test`.
+
+`Previous role`: `Viewer`.
+
+`New role`: `Billing manager`.
+
+`Workspace`: `Northwind Analytics`.
+
+Risk signals:
+
+`Known device`: `Yes`.
+
+`Known location`: `Yes`.
+
+`MFA satisfied`: `Yes`.
+
+`Impossible travel`: `No`.
+
+`Risk score`: `23`.
+
+Raw attributes table:
+
+Row 1: `Attribute` `request_id`, `Value` `req_771209ab`.
+
+Row 2: `Attribute` `session_id`, `Value` `sess_44018ff`.
+
+Row 3: `Attribute` `source`, `Value` `admin_console`.
+
+Row 4: `Attribute` `policy_version`, `Value` `2026.05`.
+
+Timeline:
+
+Event 1: `11:18:41 AM`, `Admin opened user profile`.
+
+Event 2: `11:18:43 AM`, `Role selector changed from Viewer to Billing manager`.
+
+Event 3: `11:18:44 AM`, `Role update saved successfully`.
+
+Extraction caveat: the extraction tool should preserve raw attribute rows and distinguish actor fields from target fields. It should not merge previous role and new role into a single ambiguous role value.
+
+Implementation guidance: make this example dense and admin-like. Use separate actor, target, risk, raw attributes, and timeline panels.
+
+---
+
+AE00 Required Final HTML Skeleton
+
+---
+
+The coding agent should produce a complete HTML document using this general skeleton:
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page 4 - Read-Only Records And Confirmation Pages</title>
+  <style>
+    /* Inline CSS only. */
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-hero">
+      <p class="page-kicker">Content Extraction Demo Page</p>
+      <h1>Page 4 - Read-Only Records And Confirmation Pages</h1>
+      <p>
+        This standalone page contains realistic read-only records and confirmation pages for testing extraction of labels, values, line items, statuses, totals, confirmation numbers, timelines, policy text, document links, addresses, and repeated records.
+      </p>
+    </header>
+
+    <section class="example-card" id="example-01">
+      <!-- Example 01 content. -->
+    </section>
+
+    <!-- Continue through example-22. -->
+  </main>
+
+  <script>
+    /* Minimal inline JavaScript only. */
+  </script>
+</body>
+</html>
+```
+
+The generated file must include all 22 examples in the same file.
+
+The page must not require a server.
+
+The page must not fetch data.
+
+The page must not include broken links to external assets.
+
+The page must not use placeholder text instead of the specified values.
+
+The page must not convert the read-only record examples into editable forms.
+
+---
+
+AF00 Quality Bar
+
+---
+
+The final page should be useful as a long-term manual testing page for a content extraction tool.
+
+Each example must be visibly distinct enough that a tester can scroll to it, select it, and understand what read-only extraction behavior is being tested.
+
+Each example must contain realistic populated values.
+
+Each example must include the specified heading, description, labels, values, metadata, status badges, links, summary rows, tables, timelines, notices, and extraction caveat.
+
+Every read-only record must expose enough visible content for extraction testing. Do not hide the most important values only in JavaScript variables, hidden inputs, or comments.
+
+Use tables where table structure matters. Use cards where card grouping matters. Use timelines where event order matters. Use summary panels where totals matter.
+
+Use masked values exactly as visible. Do not include full sensitive account numbers, full government identifiers, real personal data, or real credentials.
+
+Use policy text, notices, disclaimers, and instructions as separate visible content. The extraction tool should be able to capture them as text blocks when selected, but they should not be mixed into ordinary field-value rows unless directly labeled.
+
+Use repeated records where specified. Preserve row and section context in the markup.
+
+The implementation should favor clarity and realistic structure over cleverness.
+
+The coding agent may improve layout, spacing, CSS details, and basic interaction behavior, but it must not remove examples, reduce the number of examples, replace read-only records with editable forms, or simplify the scenarios into toy examples.
+
+The final output must be one portable HTML file.

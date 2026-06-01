@@ -1,0 +1,2271 @@
+---
+
+A00 Change Request Specification - Page 3 Booking And Reservation Flows
+
+---
+
+Create one standalone HTML demo page named `page-03-booking-and-reservation-flows.html`.
+
+The page must be a self-contained HTML file. Put all HTML, CSS, and JavaScript inside this one file. Do not use React. Do not use TypeScript. Do not use a build step. Do not load external CSS, external JavaScript, external fonts, external images, or external data. The page must work by opening the `.html` file directly in a browser.
+
+This page is a testing surface for a content extraction tool. The page must focus on booking and reservation flows: travel booking panels, appointment schedulers, hotel reservations, restaurant reservations, ticket selection, vehicle rental, parking reservations, equipment rental, service appointments, class reservations, timed entry bookings, and confirmation-style reservation summaries.
+
+The page must contain 22 separate examples. Each example must have a visible heading, a visible explanatory paragraph, and the actual booking or reservation UI. Each example must be visually separated from the next example. Each example must be realistic enough to test extraction of reservation details, selected options, dates, times, guest counts, passenger records, seat selections, prices, fees, cancellation rules, confirmation numbers, policy text, and structured summaries.
+
+Do not make the examples tiny toy booking forms. A complex example is preferred because it can also be used for simple extraction testing. Every example must test a different extraction caveat.
+
+---
+
+B00 Page-Level Purpose
+
+---
+
+The purpose of this page is to test whether an extraction tool can identify, select, and format structured booking and reservation information from realistic web page fragments.
+
+The extraction tool should be able to handle booking forms, read-only reservation summaries, editable reservation details, selected fare cards, selected room cards, repeated travelers, repeated guests, time slots, seat labels, price breakdowns, cancellation policies, confirmation numbers, hidden booking values, mixed native and custom controls, checkout sidebars, and booking panels where important field-value data is spread across multiple visual regions.
+
+This page should intentionally include both simple native form controls and semi-custom booking UI. Some examples should be clean and semantic. Some examples should imitate real booking websites where values are shown in cards, chips, badges, sidebars, and summary panels rather than ordinary inputs.
+
+The page should not depend on external services. It should not submit real bookings. All booking data must be fictional and hardcoded.
+
+---
+
+C00 Required Page Structure
+
+---
+
+The page must start with a top-level header.
+
+Use this visible title:
+
+`Page 3 - Booking And Reservation Flows`
+
+Under the title, include a short introduction paragraph explaining that the page contains realistic booking and reservation examples for testing extraction of dates, times, guests, travelers, selected services, prices, confirmation details, and policy text.
+
+After the introduction, render 22 example sections.
+
+Each example section must follow this pattern:
+
+```html
+<section class="example-card" id="example-01">
+  <header class="example-header">
+    <p class="example-kicker">Example 01</p>
+    <h2>Intercity Bus Reservation Checkout</h2>
+  </header>
+
+  <p class="example-description">
+    This example imitates...
+  </p>
+
+  <div class="example-surface">
+    <!-- Actual booking or reservation UI goes here. -->
+  </div>
+</section>
+```
+
+The exact class names may vary, but the structure must remain clear. Each section must have a unique `id`, from `example-01` through `example-22`.
+
+Each example heading must be visible. Each description must be visible. The actual booking surface must appear below the description.
+
+Do not include large expected extraction output blocks under every example. The page should primarily be the application-under-test surface, not a documentation page. The visible descriptions should explain the purpose and caveat of each example.
+
+---
+
+D00 Visual Design Requirements
+
+---
+
+Use inline CSS in a `<style>` tag.
+
+The page should look like a clean internal testing notebook with realistic booking widgets inside it. Use a light background, readable font stack, generous spacing, and card-style sections. The page does not need to look like a final product, but each booking example must be readable and visually distinct.
+
+Use different visual styles inside examples when useful. For example, one reservation can look like a travel checkout page, another like a medical appointment portal, another like a hotel room card, another like a ticketing checkout, another like a government appointment scheduler, another like a mobile booking panel, and another like a service quote summary.
+
+The page should support narrow and wide screens. Use simple responsive CSS. Avoid fixed widths that break on laptop screens.
+
+Suggested CSS structure:
+
+```html
+<style>
+  :root {
+    --page-bg: #f5f2ea;
+    --card-bg: #fffdf8;
+    --ink: #25221d;
+    --muted: #6f675c;
+    --line: #d8cfc0;
+    --soft: #eee6d8;
+    --panel: #ffffff;
+    --accent: #315f8c;
+    --accent-soft: #e7f0ff;
+    --warning: #8a5a00;
+    --danger: #9b332c;
+    --ok: #276749;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--page-bg);
+    color: var(--ink);
+    line-height: 1.45;
+  }
+
+  main {
+    width: min(1180px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 32px 0 64px;
+  }
+
+  .page-hero {
+    margin-bottom: 28px;
+    padding: 28px;
+    background: #fffaf0;
+    border: 2px solid var(--line);
+    border-radius: 18px;
+  }
+
+  .example-card {
+    margin: 28px 0;
+    padding: 24px;
+    background: var(--card-bg);
+    border: 2px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.08);
+  }
+
+  .example-kicker {
+    margin: 0 0 4px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .example-header h2 {
+    margin: 0;
+    font-size: 1.35rem;
+  }
+
+  .example-description {
+    max-width: 900px;
+    color: var(--muted);
+  }
+
+  .example-surface {
+    margin-top: 18px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: white;
+  }
+
+  .booking-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.7fr);
+    gap: 18px;
+    align-items: start;
+  }
+
+  .booking-panel,
+  .summary-panel,
+  .option-card,
+  .traveler-card {
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  .summary-panel {
+    background: #faf7f0;
+  }
+
+  .grid-two {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .grid-three {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  label,
+  .field-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 700;
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 10px;
+    border: 1px solid #b7afa3;
+    border-radius: 8px;
+    font: inherit;
+    background: #fff;
+  }
+
+  textarea {
+    min-height: 88px;
+    resize: vertical;
+  }
+
+  fieldset {
+    margin: 0;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+
+  legend {
+    padding: 0 8px;
+    font-weight: 700;
+  }
+
+  .inline-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .inline-options label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0;
+    font-weight: 500;
+  }
+
+  .inline-options input {
+    width: auto;
+    min-height: auto;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 9px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: #faf7f0;
+    font-size: 0.9rem;
+  }
+
+  .selected-card {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .muted {
+    color: var(--muted);
+  }
+
+  .price-line,
+  .summary-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--soft);
+  }
+
+  .price-line:last-child,
+  .summary-line:last-child {
+    border-bottom: 0;
+  }
+
+  .small-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .small-table th,
+  .small-table td {
+    padding: 8px;
+    border-bottom: 1px solid var(--soft);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  @media (max-width: 820px) {
+    .booking-layout,
+    .grid-two,
+    .grid-three {
+      grid-template-columns: 1fr;
+    }
+
+    .example-card {
+      padding: 18px;
+    }
+  }
+</style>
+```
+
+The coding agent may adjust the CSS, but it must keep the page readable, scrollable, and visually divided into 22 separate examples.
+
+---
+
+E00 JavaScript Requirements
+
+---
+
+Use inline JavaScript in a `<script>` tag.
+
+This page should include small interaction where it helps the booking examples feel realistic. The JavaScript must be simple and local to the page. Do not use a framework. Do not generate all examples dynamically. Static HTML must remain visible and inspectable.
+
+Allowed JavaScript behavior includes changing selected cards, opening a simple details panel, updating a visible price summary, incrementing guest counts, switching a selected time slot, showing cancellation details, copying traveler information, revealing conditional fields, and toggling optional add-ons.
+
+Required generic behavior:
+
+Clicking a card or button with `data-select-group` should mark that option as selected inside its group and update a hidden input if one is provided.
+
+Clicking a button with `data-toggle-target` should show or hide a matching details panel.
+
+Guest or ticket steppers should update the visible count and the hidden input value.
+
+Price summaries may update for a few examples, but static summaries are acceptable when the selected data is already visible.
+
+Suggested JavaScript structure:
+
+```html
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("[data-select-group]").forEach(function (option) {
+      option.addEventListener("click", function () {
+        const groupName = option.dataset.selectGroup;
+        if (!groupName || option.getAttribute("aria-disabled") === "true") return;
+
+        document.querySelectorAll('[data-select-group="' + groupName + '"]').forEach(function (item) {
+          item.classList.remove("selected-card");
+          item.setAttribute("aria-selected", "false");
+        });
+
+        option.classList.add("selected-card");
+        option.setAttribute("aria-selected", "true");
+
+        const targetSelector = option.dataset.hiddenTarget;
+        if (targetSelector) {
+          const hiddenInput = document.querySelector(targetSelector);
+          if (hiddenInput) hiddenInput.value = option.dataset.value || "";
+        }
+
+        const labelTarget = option.dataset.labelTarget;
+        if (labelTarget) {
+          const label = document.querySelector(labelTarget);
+          if (label) label.textContent = option.dataset.label || option.textContent.trim();
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-toggle-target]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const target = document.querySelector(button.dataset.toggleTarget);
+        if (!target) return;
+        target.hidden = !target.hidden;
+        button.setAttribute("aria-expanded", String(!target.hidden));
+      });
+    });
+
+    document.querySelectorAll("[data-stepper]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const target = document.querySelector(button.dataset.stepper);
+        if (!target) return;
+
+        const delta = Number(button.dataset.delta || 0);
+        const min = Number(target.dataset.min || 0);
+        const nextValue = Math.max(min, Number(target.textContent || 0) + delta);
+
+        target.textContent = String(nextValue);
+
+        const hiddenSelector = target.dataset.hiddenTarget;
+        if (hiddenSelector) {
+          const hiddenInput = document.querySelector(hiddenSelector);
+          if (hiddenInput) hiddenInput.value = String(nextValue);
+        }
+      });
+    });
+  });
+</script>
+```
+
+The coding agent may extend this code for specific examples, but the final file must remain simple and portable.
+
+---
+
+F00 Extraction Behavior To Support
+
+---
+
+The page must make these extraction tasks possible:
+
+Extract reservation reference numbers and confirmation numbers.
+
+Extract selected route, origin, destination, date, time, passenger count, fare, and seat details.
+
+Extract hotel stay dates, room type, guest count, rate plan, taxes, fees, and cancellation policy.
+
+Extract restaurant reservation date, time, party size, seating preference, and special occasion.
+
+Extract appointment provider, service, location, time, insurance or payment details, and preparation notes.
+
+Extract selected ticket type, seat section, row, seat numbers, ticket quantity, fees, and delivery method.
+
+Extract vehicle pickup and return details, selected vehicle class, mileage terms, add-ons, and total price.
+
+Extract parking facility, entry time, exit time, license plate, access method, and reservation policy.
+
+Extract event, class, and service bookings where values are shown in cards, badges, tables, sidebars, and read-only summaries.
+
+Extract repeated traveler or guest records without losing row or person context.
+
+Extract selected options from card-like controls and radio-like buttons.
+
+Extract hidden backing values when provided, while still preserving visible labels.
+
+Extract booking values spread across a main form and a sticky-style summary panel.
+
+Extract disabled, sold-out, unavailable, or waitlist-only options when the tester opens the relevant option area.
+
+Extract policy text as policy text, not as a field value unless the policy is directly labeled.
+
+Extract price breakdown lines without merging separate taxes, fees, discounts, and totals.
+
+---
+
+G00 Data And Naming Rules
+
+---
+
+Use realistic but fictional data. Do not use real personal information.
+
+Use consistent example-specific IDs. Prefix IDs with the example number, such as `ex01-reservation-code`, `ex07-pickup-date`, or `ex18-selected-seat`.
+
+Use plausible values. Avoid placeholder-only examples. Most examples should have pre-selected booking values so the extraction tool can read content immediately.
+
+Use a mixture of normal inputs, readonly fields, disabled fields, native selects, radio groups, checkboxes, textareas, custom selected cards, hidden inputs, price rows, table rows, chips, badges, and summary panels.
+
+Do not make all examples the same layout. Some examples should be form-heavy. Some should be card-heavy. Some should be table-heavy. Some should look like a checkout sidebar. Some should look like a confirmation page.
+
+Do not use real booking providers, real phone numbers, real customer data, or real account identifiers. Use fictional brand names and example-domain email addresses where needed.
+
+---
+
+H00 Required Examples Overview
+
+---
+
+The page must contain exactly these 22 examples:
+
+Example 01: Intercity Bus Reservation Checkout.
+
+Example 02: Train Seat Reservation Flow.
+
+Example 03: Hotel Room Reservation Checkout.
+
+Example 04: Restaurant Reservation Widget.
+
+Example 05: Medical Appointment Scheduling Flow.
+
+Example 06: Flight Booking Fare Selection.
+
+Example 07: Car Rental Reservation Panel.
+
+Example 08: Event Ticket Seat Selection.
+
+Example 09: Airport Parking Reservation.
+
+Example 10: Coworking Meeting Room Booking.
+
+Example 11: Fitness Class Reservation.
+
+Example 12: Spa Appointment Package Booking.
+
+Example 13: Ferry Passenger And Vehicle Booking.
+
+Example 14: Campsite Reservation Permit.
+
+Example 15: Equipment Rental Reservation.
+
+Example 16: Storage Unit Reservation.
+
+Example 17: Museum Timed Entry Booking.
+
+Example 18: Pet Grooming Appointment Booking.
+
+Example 19: Moving Service Reservation Quote.
+
+Example 20: Bike Rental Day Pass Booking.
+
+Example 21: University Advising Appointment.
+
+Example 22: Passport Office Appointment Reservation.
+
+Each example below is mandatory.
+
+---
+
+I00 Example 01 - Intercity Bus Reservation Checkout
+
+---
+
+Create an intercity bus reservation checkout section that resembles a real bus booking page. The layout should have a main passenger and trip form on the left and a booking summary panel on the right.
+
+Visible heading:
+
+`Intercity Bus Reservation Checkout`
+
+Visible description:
+
+`This example imitates an intercity bus checkout page. It tests extraction of route details, departure time, passenger records, selected fare, seat assignments, baggage options, and a price breakdown spread across a form and a summary panel.`
+
+The example must show trip-level fields and values:
+
+`Reservation code`: readonly input, value `BUS-7K92D`.
+
+`Origin`: readonly input, value `San Francisco Transbay Terminal`.
+
+`Destination`: readonly input, value `Los Angeles Union Station`.
+
+`Travel date`: readonly date input, value `2026-07-03`.
+
+`Departure`: readonly input, value `08:15 AM`.
+
+`Arrival`: readonly input, value `02:40 PM`.
+
+`Carrier`: readonly input, value `Pacific Line Express`.
+
+`Fare class`: radio group with `Saver`, `Flexible`, `Refundable`; selected `Flexible`.
+
+Passenger 1 fields:
+
+`Passenger 1 full name`: `Elena Morales`.
+
+`Passenger 1 ticket type`: select, selected `Adult`.
+
+`Passenger 1 seat`: readonly input, value `12A`.
+
+Passenger 2 fields:
+
+`Passenger 2 full name`: `Rafi Morales`.
+
+`Passenger 2 ticket type`: select, selected `Child`.
+
+`Passenger 2 seat`: readonly input, value `12B`.
+
+Baggage options:
+
+`Checked bag for Passenger 1`: checkbox, checked.
+
+`Checked bag for Passenger 2`: checkbox, unchecked.
+
+`Bike storage`: checkbox, unchecked.
+
+Contact fields:
+
+`Contact email`: email input, value `elena.morales@example.test`.
+
+`Contact phone`: telephone input, value `415-555-0198`.
+
+Summary panel lines:
+
+`Base fare`: `$138.00`.
+
+`Flexible fare upgrade`: `$24.00`.
+
+`Checked baggage`: `$18.00`.
+
+`Service fee`: `$6.50`.
+
+`Total due`: `$186.50`.
+
+Policy text:
+
+`Flexible fares may be changed once before departure without a change fee. Fare difference may apply.`
+
+Extraction caveat: the extraction tool should capture values across both the main form and the summary panel. It should preserve passenger context and not output two unrelated `Seat` fields without identifying Passenger 1 and Passenger 2.
+
+Implementation guidance:
+
+```html
+<div class="booking-layout">
+  <form class="booking-panel" aria-label="Bus reservation checkout">
+    <div class="grid-two">
+      <div>
+        <label for="ex01-origin">Origin</label>
+        <input id="ex01-origin" value="San Francisco Transbay Terminal" readonly>
+      </div>
+      <div>
+        <label for="ex01-destination">Destination</label>
+        <input id="ex01-destination" value="Los Angeles Union Station" readonly>
+      </div>
+    </div>
+
+    <fieldset>
+      <legend>Fare class</legend>
+      <div class="inline-options">
+        <label><input type="radio" name="ex01-fare" value="Saver"> Saver</label>
+        <label><input type="radio" name="ex01-fare" value="Flexible" checked> Flexible</label>
+        <label><input type="radio" name="ex01-fare" value="Refundable"> Refundable</label>
+      </div>
+    </fieldset>
+  </form>
+
+  <aside class="summary-panel" aria-label="Bus reservation price summary">
+    <h3>Trip summary</h3>
+    <div class="price-line"><span>Base fare</span><strong>$138.00</strong></div>
+    <div class="price-line"><span>Total due</span><strong>$186.50</strong></div>
+  </aside>
+</div>
+```
+
+---
+
+J00 Example 02 - Train Seat Reservation Flow
+
+---
+
+Create a train reservation section with coach selection, seat preference, passenger details, and a small seat map. The seat map should use buttons or spans, not a canvas.
+
+Visible heading:
+
+`Train Seat Reservation Flow`
+
+Visible description:
+
+`This example imitates a train booking flow with a selected coach and seat map. It tests extraction of selected seats, coach metadata, passenger details, and nearby unavailable seats represented as custom visual elements.`
+
+Trip fields and values:
+
+`Booking reference`: readonly input, value `RAIL-4028-AQ`.
+
+`Train`: readonly input, value `Coastal Runner 714`.
+
+`From`: readonly input, value `Seattle King Street`.
+
+`To`: readonly input, value `Portland Union Station`.
+
+`Departure date`: readonly date input, value `2026-08-04`.
+
+`Departure time`: readonly time input, value `10:30`.
+
+`Coach`: custom selected card or native select, selected `Coach B - Quiet car`.
+
+`Seat preference`: radio group with `Window`, `Aisle`, `No preference`; selected `Window`.
+
+Seat map must show rows 8 through 11 with seats `A`, `B`, `C`, `D`.
+
+Selected seats:
+
+`9A`, assigned to `Maya Chen`.
+
+`9B`, assigned to `Leo Chen`.
+
+Unavailable seats:
+
+`8A`, `10C`, `11D`.
+
+Available seats:
+
+All other displayed seats.
+
+Passenger records:
+
+Passenger 1 name `Maya Chen`, fare type `Adult`, loyalty number `CR-119204`.
+
+Passenger 2 name `Leo Chen`, fare type `Youth`, loyalty number blank.
+
+Summary panel:
+
+`Coach`: `B - Quiet car`.
+
+`Seats`: `9A, 9B`.
+
+`Ticket subtotal`: `$74.00`.
+
+`Seat reservation fee`: `$8.00`.
+
+`Total`: `$82.00`.
+
+Extraction caveat: the extraction tool should identify selected seats from the visual seat map and passenger records from the form. It should not treat unavailable seats as selected.
+
+Implementation guidance: build the seat map using buttons with text labels, class names such as `is-selected` and `is-unavailable`, and ARIA labels such as `Seat 9A selected for Maya Chen`.
+
+---
+
+K00 Example 03 - Hotel Room Reservation Checkout
+
+---
+
+Create a hotel room checkout section with stay details, selected room, guest details, add-ons, and a price breakdown.
+
+Visible heading:
+
+`Hotel Room Reservation Checkout`
+
+Visible description:
+
+`This example imitates a hotel booking checkout page. It tests extraction of stay dates, room type, guest count, selected rate plan, add-ons, taxes, fees, and cancellation policy from a mixed form and summary layout.`
+
+Stay fields and values:
+
+`Hotel`: readonly input, value `Harbor View Suites`.
+
+`Check-in`: date input, value `2026-08-14`.
+
+`Check-out`: date input, value `2026-08-18`.
+
+`Nights`: readonly number input, value `4`.
+
+`Rooms`: number input, value `1`.
+
+`Adults`: number input, value `2`.
+
+`Children`: number input, value `1`.
+
+Room card:
+
+`Room type`: `King Studio With Harbor View`.
+
+`Bed`: `1 king bed and sofa sleeper`.
+
+`Occupancy`: `Up to 4 guests`.
+
+`Selected rate`: `Refundable breakfast rate`.
+
+`Rate code`: hidden input value `KST-HARBOR-REF-BFAST`.
+
+Rate options:
+
+`Advance purchase`: `$214/night`, disabled, metadata `Non-refundable`.
+
+`Refundable breakfast rate`: `$249/night`, selected.
+
+`Suite flexible rate`: `$319/night`.
+
+Guest fields:
+
+`Guest name`: `Priya Shah`.
+
+`Guest email`: `priya.shah@example.test`.
+
+`Arrival time`: select, selected `6 PM - 8 PM`.
+
+Add-ons:
+
+`Breakfast included`: checkbox, checked and disabled.
+
+`Parking`: checkbox, checked.
+
+`Late checkout request`: checkbox, unchecked.
+
+Price breakdown:
+
+`Room charges`: `$996.00`.
+
+`Parking`: `$96.00`.
+
+`Taxes`: `$142.48`.
+
+`Resort fee`: `$68.00`.
+
+`Total at property`: `$1,302.48`.
+
+Policy text:
+
+`Free cancellation until August 10, 2026 at 6:00 PM hotel local time.`
+
+Extraction caveat: the extraction tool should extract both the selected room card data and the checkout form values. It should treat the disabled checked breakfast checkbox as meaningful because it is part of the selected rate.
+
+Implementation guidance: use a selected room card with nested text and a hidden rate code. Use an aside summary panel for price lines.
+
+---
+
+L00 Example 04 - Restaurant Reservation Widget
+
+---
+
+Create a restaurant reservation widget with date, time, party size, seating preference, occasion, diner information, and special requests.
+
+Visible heading:
+
+`Restaurant Reservation Widget`
+
+Visible description:
+
+`This example imitates a restaurant booking widget. It tests extraction of selected time slot, party size, seating preference, occasion, contact fields, and special requests from a compact reservation panel.`
+
+Reservation fields and values:
+
+`Restaurant`: readonly input, value `Cypress & Fig`.
+
+`Reservation date`: date input, value `2026-06-20`.
+
+`Party size`: select, selected `4`.
+
+`Selected time`: readonly input, value `7:15 PM`.
+
+Time slot buttons:
+
+`6:00 PM`, available.
+
+`6:45 PM`, disabled with visible label `Unavailable`.
+
+`7:15 PM`, selected.
+
+`7:45 PM`, available.
+
+`8:30 PM`, waitlist-only.
+
+Seating preference radio group:
+
+`Dining room`, selected.
+
+`Patio`.
+
+`Bar seating`.
+
+Occasion select:
+
+Selected `Birthday`.
+
+Options include `None`, `Birthday`, `Anniversary`, `Business meal`, `Date night`.
+
+Diner fields:
+
+`Diner name`: `Jordan Ellis`.
+
+`Diner phone`: `415-555-0184`.
+
+`Diner email`: `jordan.ellis@example.test`.
+
+Special requests textarea:
+
+`Please seat us away from the kitchen if possible. One guest has a shellfish allergy.`
+
+Policy text:
+
+`Tables are held for 15 minutes after the reservation time.`
+
+Extraction caveat: the selected time is represented by a button state and mirrored in a readonly input. The extraction tool should identify the selected time and not capture all available slots as selected.
+
+Implementation guidance: use `aria-pressed="true"` on the selected time slot button and `disabled` on unavailable time slot buttons.
+
+---
+
+M00 Example 05 - Medical Appointment Scheduling Flow
+
+---
+
+Create a medical appointment booking section with patient details, provider selection, appointment type, location, insurance, and preparation instructions.
+
+Visible heading:
+
+`Medical Appointment Scheduling Flow`
+
+Visible description:
+
+`This example imitates a healthcare appointment scheduler. It tests extraction of patient identity, appointment type, provider, location, selected time, insurance details, and preparation instructions.`
+
+Patient fields:
+
+`Patient name`: readonly input, value `Riley Stone`.
+
+`Date of birth`: readonly date input, value `1984-03-19`.
+
+`Patient ID`: readonly input, value `PT-771420`.
+
+Appointment fields:
+
+`Specialty`: select, selected `Orthopedics`.
+
+`Provider`: select, selected `Dr. Helen Park, MD`.
+
+`Location`: select, selected `Downtown Clinic`.
+
+`Visit type`: radio group with `In-person`, `Video visit`, `Phone call`; selected `In-person`.
+
+`Appointment reason`: select, selected `Knee pain follow-up`.
+
+`Selected appointment date`: readonly date input, value `2026-06-11`.
+
+`Selected appointment time`: readonly time input, value `14:30`.
+
+Insurance fields:
+
+`Insurance plan`: select, selected `Northstar PPO`.
+
+`Member ID`: text input, value `NSP-44910218`.
+
+`Referral required`: disabled select, selected `No`.
+
+Contact preferences:
+
+`Send SMS reminder`: checkbox, checked.
+
+`Send email reminder`: checkbox, checked.
+
+`Call if earlier appointment opens`: checkbox, unchecked.
+
+Preparation instructions panel:
+
+`Arrive 15 minutes early. Bring photo ID, insurance card, and any recent imaging results.`
+
+Extraction caveat: some important values are readonly or disabled because the scheduler has already selected them. The extraction tool should not skip these values.
+
+Implementation guidance: make this example look like a patient portal card with a right-side appointment summary.
+
+---
+
+N00 Example 06 - Flight Booking Fare Selection
+
+---
+
+Create a flight booking fare selection section with outbound flight details, fare cards, passenger count, baggage, and price summary.
+
+Visible heading:
+
+`Flight Booking Fare Selection`
+
+Visible description:
+
+`This example imitates a flight booking fare selection step. It tests extraction of selected fare card, flight segment details, passenger count, baggage options, fare rules, and a price breakdown.`
+
+Flight segment fields:
+
+`Trip type`: readonly input, value `One-way`.
+
+`From`: readonly input, value `SFO`.
+
+`To`: readonly input, value `JFK`.
+
+`Flight number`: readonly input, value `AVX 218`.
+
+`Departure`: readonly input, value `2026-09-02 08:05`.
+
+`Arrival`: readonly input, value `2026-09-02 16:42`.
+
+`Duration`: readonly input, value `5h 37m`.
+
+Fare cards:
+
+`Basic`: `$219`, metadata `No changes, carry-on included`, not selected.
+
+`Standard`: `$268`, metadata `Seat selection included, changes for fee`, selected.
+
+`Flex`: `$334`, metadata `Free changes, priority boarding`, not selected.
+
+`Business`: `$812`, metadata `Lie-flat seat, two checked bags`, disabled with visible label `Sold out`.
+
+Hidden selected fare value:
+
+`standard`.
+
+Passenger count:
+
+`Adults`: number input, value `1`.
+
+`Children`: number input, value `0`.
+
+Baggage:
+
+`Checked bag`: checkbox, checked.
+
+`Priority boarding`: checkbox, unchecked.
+
+Price summary:
+
+`Base fare`: `$268.00`.
+
+`Checked bag`: `$35.00`.
+
+`Taxes and fees`: `$41.62`.
+
+`Total`: `$344.62`.
+
+Fare rule text:
+
+`Standard fare changes are allowed before departure with a change fee and any fare difference.`
+
+Extraction caveat: the extraction tool should capture only the selected fare as the chosen fare, while still being able to list the other fare options and disabled business fare when the selected region includes the fare cards.
+
+Implementation guidance: use clickable card buttons with `data-select-group="ex06-fare"` and a hidden input named `fareClass`.
+
+---
+
+O00 Example 07 - Car Rental Reservation Panel
+
+---
+
+Create a car rental reservation panel with pickup and return details, selected vehicle class, driver information, add-ons, mileage rules, and price breakdown.
+
+Visible heading:
+
+`Car Rental Reservation Panel`
+
+Visible description:
+
+`This example imitates a rental car booking panel. It tests extraction of pickup and return branches, times, vehicle class, driver age, add-ons, mileage terms, and total price.`
+
+Pickup and return fields:
+
+`Pickup location`: readonly input, value `Seattle Airport - SEA Terminal 1`.
+
+`Pickup date`: date input, value `2026-08-04`.
+
+`Pickup time`: time input, value `10:30`.
+
+`Return location`: readonly input, value `Portland Airport - PDX Garage`.
+
+`Return date`: date input, value `2026-08-09`.
+
+`Return time`: time input, value `16:00`.
+
+Vehicle class cards:
+
+`Economy`: `$49/day`, metadata `Toyota Yaris or similar`, not selected.
+
+`Compact SUV`: `$68/day`, metadata `Mazda CX-30 or similar`, selected.
+
+`Full-size sedan`: `$73/day`, metadata `Toyota Camry or similar`, not selected.
+
+`Minivan`: `$112/day`, metadata `Sold out`, disabled.
+
+Driver fields:
+
+`Primary driver`: `Anika Sharma`.
+
+`Driver age`: number input, value `34`.
+
+`License country`: select, selected `United States`.
+
+Add-ons:
+
+`Collision damage waiver`: checkbox, checked.
+
+`Additional driver`: checkbox, unchecked.
+
+`Child seat`: checkbox, checked.
+
+`Prepaid fuel`: checkbox, unchecked.
+
+Policy and price summary:
+
+`Mileage`: `Unlimited mileage`.
+
+`One-way fee`: `$95.00`.
+
+`Vehicle subtotal`: `$340.00`.
+
+`Add-ons`: `$76.00`.
+
+`Taxes and fees`: `$88.40`.
+
+`Total`: `$599.40`.
+
+Extraction caveat: the extraction tool should preserve pickup and return context and should not merge the two location fields. It should capture selected vehicle class from card state.
+
+Implementation guidance: use a two-column booking panel and an aside price summary. Use selected card styling for `Compact SUV`.
+
+---
+
+P00 Example 08 - Event Ticket Seat Selection
+
+---
+
+Create an event ticket booking section with event details, ticket type, seat selection, delivery method, and fee breakdown.
+
+Visible heading:
+
+`Event Ticket Seat Selection`
+
+Visible description:
+
+`This example imitates an event ticket checkout page. It tests extraction of selected ticket type, section, row, seat numbers, delivery method, fees, and accessibility seating options.`
+
+Event fields:
+
+`Event`: readonly input, value `North Pier Jazz Festival`.
+
+`Venue`: readonly input, value `Harbor Hall`.
+
+`Event date`: readonly date input, value `2026-10-17`.
+
+`Event time`: readonly time input, value `19:30`.
+
+Ticket type radio group:
+
+`Standard`, selected.
+
+`Accessible seating`.
+
+`VIP balcony`.
+
+Seat map summary:
+
+`Selected section`: readonly input, value `Orchestra Center`.
+
+`Selected row`: readonly input, value `H`.
+
+`Selected seats`: readonly input, value `H12, H13`.
+
+Seat buttons must show at least row `H` seats `H10` through `H15`.
+
+Selected seats:
+
+`H12`, `H13`.
+
+Unavailable seats:
+
+`H10`, `H11`.
+
+Available seats:
+
+`H14`, `H15`.
+
+Ticket holder fields:
+
+`Ticket holder name`: `Owen Brooks`.
+
+`Ticket holder email`: `owen.brooks@example.test`.
+
+Delivery method select:
+
+Selected `Mobile tickets`.
+
+Options include `Mobile tickets`, `Print at home`, `Will call`.
+
+Fee breakdown:
+
+`Tickets`: `$156.00`.
+
+`Facility fee`: `$12.00`.
+
+`Service fee`: `$18.50`.
+
+`Delivery`: `$0.00`.
+
+`Total`: `$186.50`.
+
+Extraction caveat: the extraction tool should identify selected seat buttons and preserve section and row context. It should not treat unavailable seats as selected.
+
+Implementation guidance: use button elements for seats. Use `aria-pressed="true"` for selected seats and `disabled` for unavailable seats.
+
+---
+
+Q00 Example 09 - Airport Parking Reservation
+
+---
+
+Create an airport parking reservation checkout with facility selection, entry and exit times, vehicle details, access method, and price summary.
+
+Visible heading:
+
+`Airport Parking Reservation`
+
+Visible description:
+
+`This example imitates an airport parking booking flow. It tests extraction of facility choice, entry and exit date-times, license plate, vehicle type, access method, and reservation policy text.`
+
+Reservation fields:
+
+`Reservation number`: readonly input, value `PKG-SEA-88412`.
+
+`Airport`: readonly input, value `Seattle Tacoma International Airport`.
+
+`Parking facility`: select, selected `Terminal Garage P2`.
+
+`Entry date`: date input, value `2026-07-12`.
+
+`Entry time`: time input, value `06:00`.
+
+`Exit date`: date input, value `2026-07-16`.
+
+`Exit time`: time input, value `21:30`.
+
+Vehicle fields:
+
+`License plate`: text input, value `7KPL219`.
+
+`State`: select, selected `WA`.
+
+`Vehicle type`: radio group with `Car`, `SUV`, `Oversized`; selected `SUV`.
+
+Access method:
+
+`QR code access`: radio selected.
+
+`License plate recognition`: radio unselected.
+
+Add-ons:
+
+`Covered parking`: checkbox, checked and disabled.
+
+`EV charging requested`: checkbox, unchecked.
+
+Summary:
+
+`Duration`: `4 days 15 hours`.
+
+`Base parking`: `$132.00`.
+
+`Reservation fee`: `$5.00`.
+
+`Taxes`: `$14.28`.
+
+`Total prepaid`: `$151.28`.
+
+Policy text:
+
+`Reservation allows one entry and one exit. Overstay fees are charged at the posted drive-up rate.`
+
+Extraction caveat: the extraction tool should capture a date-time range from separate date and time fields and preserve the selected access method.
+
+Implementation guidance: make this example look like a compact airport checkout form with a QR code placeholder box containing text `QR access code will be issued after payment`.
+
+---
+
+R00 Example 10 - Coworking Meeting Room Booking
+
+---
+
+Create a coworking meeting room booking section with room selection, date, time, equipment, catering, attendees, and price estimate.
+
+Visible heading:
+
+`Coworking Meeting Room Booking`
+
+Visible description:
+
+`This example imitates a coworking space room reservation. It tests extraction of selected room card, capacity, time range, equipment options, catering options, attendee count, and price estimate.`
+
+Booking fields:
+
+`Workspace`: readonly input, value `North Market Coworking`.
+
+`Reservation date`: date input, value `2026-06-24`.
+
+`Start time`: time input, value `13:00`.
+
+`End time`: time input, value `15:30`.
+
+`Attendees`: number input, value `8`.
+
+Room cards:
+
+`Room A - Cedar`: capacity `6`, `$35/hour`, not selected.
+
+`Room B - Harbor`: capacity `10`, `$52/hour`, selected.
+
+`Room C - Skyline`: capacity `18`, `$88/hour`, not selected.
+
+`Podcast Studio`: capacity `4`, disabled with visible label `Unavailable`.
+
+Equipment checkboxes:
+
+`Video conferencing kit`: checked.
+
+`Whiteboard`: checked.
+
+`HDMI adapter`: unchecked.
+
+`Conference phone`: unchecked.
+
+Catering select:
+
+Selected `Coffee and tea service`.
+
+Options include `None`, `Coffee and tea service`, `Boxed lunches`, `Snack tray`.
+
+Booker fields:
+
+`Booked by`: `Maya Chen`.
+
+`Team`: `Product Design`.
+
+`Billing code`: text input, value `PD-2026-Q2`.
+
+Summary:
+
+`Selected room`: `Room B - Harbor`.
+
+`Room charge`: `$130.00`.
+
+`Equipment`: `$25.00`.
+
+`Catering`: `$32.00`.
+
+`Estimated total`: `$187.00`.
+
+Extraction caveat: the extraction tool should extract selected room metadata from the selected card and not just the visible room name.
+
+Implementation guidance: use selected room card styling and a summary panel.
+
+---
+
+S00 Example 11 - Fitness Class Reservation
+
+---
+
+Create a fitness class reservation widget with class details, instructor, time, spot selection, membership status, and waitlist option.
+
+Visible heading:
+
+`Fitness Class Reservation`
+
+Visible description:
+
+`This example imitates a gym class booking widget. It tests extraction of class details, selected class time, instructor, spot status, membership fields, waitlist option, and cancellation policy.`
+
+Class fields:
+
+`Class`: readonly input, value `Strength Foundations`.
+
+`Instructor`: readonly input, value `Nina Patel`.
+
+`Location`: readonly input, value `Studio 2`.
+
+`Class date`: readonly date input, value `2026-06-09`.
+
+Class time options:
+
+`6:30 AM`, metadata `3 spots left`, not selected.
+
+`12:00 PM`, metadata `Waitlist only`, disabled or waitlist state.
+
+`5:30 PM`, metadata `Selected, 1 spot left`, selected.
+
+`7:00 PM`, metadata `6 spots left`, not selected.
+
+Reservation fields:
+
+`Member name`: `Grace Miller`.
+
+`Membership ID`: `FIT-44018`.
+
+`Reserve mat position`: select, selected `Back row`.
+
+`Bring guest`: checkbox, unchecked.
+
+`Join waitlist if class fills`: checkbox, checked.
+
+Policy summary:
+
+`Cancellation deadline`: `4 hours before class`.
+
+`Late cancel fee`: `$15.00`.
+
+`Reservation status`: `Confirmed`.
+
+Extraction caveat: the extraction tool should capture the selected class time and reservation status while preserving waitlist metadata for the noon option.
+
+Implementation guidance: implement class times as custom option buttons or cards with `aria-selected`.
+
+---
+
+T00 Example 12 - Spa Appointment Package Booking
+
+---
+
+Create a spa appointment booking section with service package, provider preference, date, time, add-ons, guest information, and deposit summary.
+
+Visible heading:
+
+`Spa Appointment Package Booking`
+
+Visible description:
+
+`This example imitates a spa booking checkout. It tests extraction of selected service package, provider preference, selected time, optional add-ons, guest notes, deposit amount, and cancellation policy.`
+
+Service fields:
+
+`Spa`: readonly input, value `Luma Day Spa`.
+
+`Service category`: select, selected `Massage`.
+
+Package cards:
+
+`Relaxation Massage - 60 minutes`: `$120`, not selected.
+
+`Deep Tissue Massage - 90 minutes`: `$180`, selected.
+
+`Couples Massage - 60 minutes`: `$250`, not selected.
+
+`Hot Stone Massage - 90 minutes`: `$210`, disabled with label `Not available this date`.
+
+Appointment fields:
+
+`Appointment date`: date input, value `2026-07-18`.
+
+`Selected time`: readonly input, value `3:30 PM`.
+
+`Provider preference`: select, selected `Any available provider`.
+
+`Room preference`: radio group with `Quiet room`, `Window room`, `No preference`; selected `Quiet room`.
+
+Add-ons:
+
+`Aromatherapy`: checkbox, checked.
+
+`Scalp treatment`: checkbox, unchecked.
+
+`Extra 15 minutes`: checkbox, checked.
+
+Guest fields:
+
+`Guest name`: `Iris Walker`.
+
+`Guest phone`: `510-555-0138`.
+
+`Health notes`: textarea, value `Avoid deep pressure on left shoulder.`
+
+Summary:
+
+`Service`: `Deep Tissue Massage - 90 minutes`.
+
+`Add-ons`: `$45.00`.
+
+`Deposit due today`: `$75.00`.
+
+`Balance at appointment`: `$150.00`.
+
+Policy text:
+
+`Appointments cancelled less than 24 hours before start time may forfeit the deposit.`
+
+Extraction caveat: the extraction tool should capture selected package and add-ons separately, and should preserve the health notes textarea.
+
+Implementation guidance: make package cards visually rich but text-based.
+
+---
+
+U00 Example 13 - Ferry Passenger And Vehicle Booking
+
+---
+
+Create a ferry booking flow for passengers and a vehicle. It should include route, sailing, passenger counts, vehicle dimensions, fare class, and price summary.
+
+Visible heading:
+
+`Ferry Passenger And Vehicle Booking`
+
+Visible description:
+
+`This example imitates a ferry reservation flow. It tests extraction of route details, sailing time, passenger counts, vehicle information, fare class, and separate passenger and vehicle charges.`
+
+Route fields:
+
+`Route`: readonly input, value `Bainbridge Island to Seattle`.
+
+`Sailing date`: date input, value `2026-07-05`.
+
+`Selected sailing`: readonly input, value `5:20 PM`.
+
+`Arrival estimate`: readonly input, value `5:55 PM`.
+
+Passenger counts:
+
+`Adults`: number input, value `2`.
+
+`Seniors`: number input, value `1`.
+
+`Children`: number input, value `0`.
+
+Vehicle fields:
+
+`Vehicle included`: checkbox, checked.
+
+`Vehicle type`: select, selected `Standard vehicle under 22 ft`.
+
+`License plate`: text input, value `BRC-5821`.
+
+`Vehicle height`: select, selected `Under 7 ft 6 in`.
+
+Fare class:
+
+`Standard fare`: radio selected.
+
+`Priority boarding`: radio unselected.
+
+`Medical priority`: radio unselected.
+
+Summary:
+
+`Passenger fare`: `$24.75`.
+
+`Vehicle fare`: `$49.20`.
+
+`Reservation fee`: `$4.00`.
+
+`Total`: `$77.95`.
+
+Policy text:
+
+`Vehicles must arrive at least 20 minutes before scheduled sailing.`
+
+Extraction caveat: the extraction tool should preserve passenger count labels and vehicle details, especially because both passenger and vehicle data contribute to the booking.
+
+Implementation guidance: use separate fieldsets for route, passengers, vehicle, and payment summary.
+
+---
+
+V00 Example 14 - Campsite Reservation Permit
+
+---
+
+Create a campsite reservation permit form with campground, site, stay dates, occupants, vehicle, permit rules, and fee breakdown.
+
+Visible heading:
+
+`Campsite Reservation Permit`
+
+Visible description:
+
+`This example imitates a campsite reservation page. It tests extraction of selected campsite, stay dates, occupant counts, vehicle permits, rules acknowledgement, and reservation fees.`
+
+Reservation fields:
+
+`Permit number`: readonly input, value `CMP-2026-33108`.
+
+`Campground`: readonly input, value `Pine Ridge Campground`.
+
+`Selected site`: readonly input, value `Site 18 - Creekside`.
+
+`Site type`: readonly input, value `Tent site`.
+
+`Check-in date`: date input, value `2026-09-04`.
+
+`Check-out date`: date input, value `2026-09-07`.
+
+`Nights`: readonly number input, value `3`.
+
+Occupants:
+
+`Adults`: number input, value `2`.
+
+`Children`: number input, value `2`.
+
+`Pets`: number input, value `1`.
+
+Vehicle fields:
+
+`Vehicle 1 plate`: text input, value `8NQX204`.
+
+`Vehicle 1 state`: select, selected `CA`.
+
+`Second vehicle permit`: checkbox, checked.
+
+`Vehicle 2 plate`: text input, value `5PQR882`.
+
+Rules acknowledgements:
+
+`Quiet hours acknowledged`: checkbox, checked.
+
+`Fire rules acknowledged`: checkbox, checked.
+
+`Pet leash rule acknowledged`: checkbox, checked.
+
+Summary:
+
+`Site fee`: `$96.00`.
+
+`Second vehicle permit`: `$18.00`.
+
+`Reservation fee`: `$8.00`.
+
+`Total`: `$122.00`.
+
+Policy text:
+
+`Campfires are allowed only in designated rings when fire restrictions are not active.`
+
+Extraction caveat: the extraction tool should extract rule acknowledgements as checked values, not merely as boolean `on`.
+
+Implementation guidance: make this example look like a permit form with a document-style header.
+
+---
+
+W00 Example 15 - Equipment Rental Reservation
+
+---
+
+Create an equipment rental reservation for camera gear. It should include rental dates, selected items, insurance, pickup location, renter details, and deposit.
+
+Visible heading:
+
+`Equipment Rental Reservation`
+
+Visible description:
+
+`This example imitates a camera equipment rental checkout. It tests extraction of selected rental items, quantities, dates, insurance options, pickup location, deposit, and itemized pricing.`
+
+Rental fields:
+
+`Reservation ID`: readonly input, value `EQP-77291`.
+
+`Rental start`: date input, value `2026-06-28`.
+
+`Rental end`: date input, value `2026-07-02`.
+
+`Pickup location`: select, selected `Mission District pickup desk`.
+
+`Return location`: select, selected `Mission District pickup desk`.
+
+Renter fields:
+
+`Renter name`: `Theo Grant`.
+
+`Renter email`: `theo.grant@example.test`.
+
+`Phone`: `415-555-0133`.
+
+`Organization`: `Independent documentary project`.
+
+Equipment table rows:
+
+Row 1: `Item` `Sony FX3 camera body`, `SKU` `CAM-FX3-02`, `Quantity` `1`, `Daily rate` `$95`, `Selected` checked.
+
+Row 2: `Item` `24-70mm lens`, `SKU` `LNS-2470-GM`, `Quantity` `1`, `Daily rate` `$42`, `Selected` checked.
+
+Row 3: `Item` `Wireless lav kit`, `SKU` `AUD-LAV-4`, `Quantity` `2`, `Daily rate` `$18`, `Selected` checked.
+
+Row 4: `Item` `Tripod kit`, `SKU` `GRP-TRI-1`, `Quantity` `1`, `Daily rate` `$16`, `Selected` unchecked.
+
+Insurance options:
+
+`Damage waiver`: radio selected.
+
+`Proof of production insurance`: radio unselected.
+
+`No coverage`: radio unselected.
+
+Summary:
+
+`Rental days`: `4`.
+
+`Equipment subtotal`: `$716.00`.
+
+`Damage waiver`: `$71.60`.
+
+`Refundable deposit`: `$500.00`.
+
+`Total due today`: `$1,287.60`.
+
+Extraction caveat: the extraction tool should handle selected equipment rows inside a table and preserve quantity and SKU with item names.
+
+Implementation guidance: use a native table containing checkboxes and readonly or text inputs.
+
+---
+
+X00 Example 16 - Storage Unit Reservation
+
+---
+
+Create a self-storage unit reservation form with facility, unit size, move-in date, insurance, promotion, and monthly total.
+
+Visible heading:
+
+`Storage Unit Reservation`
+
+Visible description:
+
+`This example imitates a storage unit reservation checkout. It tests extraction of selected unit size, facility details, move-in date, insurance choice, promotion text, and recurring monthly charges.`
+
+Facility fields:
+
+`Facility`: readonly input, value `Bayfront Storage - Oakland`.
+
+`Address`: readonly input, value `1200 Maritime Avenue, Oakland, CA`.
+
+`Reservation number`: readonly input, value `STO-55018`.
+
+Unit cards:
+
+`5 x 5 indoor`: `$72/month`, metadata `Small closet size`, not selected.
+
+`10 x 10 climate controlled`: `$184/month`, metadata `One-bedroom apartment size`, selected.
+
+`10 x 20 drive-up`: `$276/month`, metadata `Sold out`, disabled.
+
+Reservation fields:
+
+`Move-in date`: date input, value `2026-07-01`.
+
+`Lease term`: select, selected `Month-to-month`.
+
+`Gate access code`: readonly input, value `Issued after payment`.
+
+`Tenant name`: `Camila Torres`.
+
+`Tenant email`: `camila.torres@example.test`.
+
+Insurance radio group:
+
+`Use facility protection plan`, selected.
+
+`Upload proof of insurance`, unselected.
+
+Promotion:
+
+`Promotion code`: text input, value `FIRSTMONTH50`.
+
+`Promotion description`: readonly input, value `50 percent off first full month`.
+
+Summary:
+
+`Monthly rent`: `$184.00`.
+
+`Protection plan`: `$14.00`.
+
+`Admin fee`: `$29.00`.
+
+`Move-in total`: `$135.00`.
+
+Extraction caveat: the extraction tool should distinguish monthly recurring charges from one-time move-in charges.
+
+Implementation guidance: display the selected unit as a card and include a separate price summary panel.
+
+---
+
+Y00 Example 17 - Museum Timed Entry Booking
+
+---
+
+Create a museum timed-entry booking widget with date, entry time, ticket categories, exhibit add-on, accessibility needs, and summary.
+
+Visible heading:
+
+`Museum Timed Entry Booking`
+
+Visible description:
+
+`This example imitates a museum timed-entry reservation. It tests extraction of entry date, selected time slot, ticket quantities, exhibit add-ons, accessibility needs, and reservation summary.`
+
+Booking fields:
+
+`Museum`: readonly input, value `City Museum of Design`.
+
+`Visit date`: date input, value `2026-08-22`.
+
+Time slot buttons:
+
+`10:00 AM`, metadata `Available`, not selected.
+
+`11:30 AM`, metadata `Selected`, selected.
+
+`1:00 PM`, metadata `Limited`, not selected.
+
+`2:30 PM`, metadata `Sold out`, disabled.
+
+Ticket quantities:
+
+`Adult tickets`: number input, value `2`.
+
+`Student tickets`: number input, value `1`.
+
+`Child tickets`: number input, value `0`.
+
+Add-ons:
+
+`Special exhibit: Future Materials`: checkbox, checked.
+
+`Audio guide`: checkbox, checked.
+
+`Guided tour`: checkbox, unchecked.
+
+Accessibility needs:
+
+`Wheelchair accessible route`: checkbox, checked.
+
+`ASL interpretation request`: checkbox, unchecked.
+
+Contact:
+
+`Reservation name`: `Lina Romero`.
+
+`Email`: `lina.romero@example.test`.
+
+Summary:
+
+`Entry time`: `11:30 AM`.
+
+`Tickets`: `3`.
+
+`Add-ons`: `$28.00`.
+
+`Total`: `$86.00`.
+
+Policy text:
+
+`Timed-entry reservations allow entry within 30 minutes of the selected time.`
+
+Extraction caveat: the extraction tool should capture ticket quantities and selected time separately. It should not treat disabled sold-out time as selected.
+
+Implementation guidance: implement time slots as buttons with selected and disabled states.
+
+---
+
+Z00 Example 18 - Pet Grooming Appointment Booking
+
+---
+
+Create a pet grooming appointment booking form with pet details, service package, groomer preference, vaccination status, add-ons, and appointment summary.
+
+Visible heading:
+
+`Pet Grooming Appointment Booking`
+
+Visible description:
+
+`This example imitates a pet grooming appointment scheduler. It tests extraction of pet records, selected service package, add-ons, vaccination status, appointment time, and special handling notes.`
+
+Pet fields:
+
+`Pet name`: `Mochi`.
+
+`Pet type`: select, selected `Dog`.
+
+`Breed`: text input, value `Shiba Inu`.
+
+`Weight range`: select, selected `20-40 lb`.
+
+`Pet age`: number input, value `5`.
+
+Appointment fields:
+
+`Grooming location`: readonly input, value `Paw & Comb - Noe Valley`.
+
+`Appointment date`: date input, value `2026-06-27`.
+
+`Selected time`: readonly input, value `10:45 AM`.
+
+`Groomer preference`: select, selected `Any available groomer`.
+
+Service package radio group:
+
+`Bath only`, unselected.
+
+`Full groom`, selected.
+
+`Full groom plus de-shedding`, unselected.
+
+Add-ons:
+
+`Nail trim`: checked and disabled, included.
+
+`Teeth brushing`: checked.
+
+`Blueberry facial`: unchecked.
+
+Vaccination status:
+
+`Rabies vaccination on file`: radio selected.
+
+`Need to upload vaccination record`: radio unselected.
+
+Handling notes textarea:
+
+`Mochi is nervous around dryers. Please use the low-noise dryer if available.`
+
+Summary:
+
+`Package`: `Full groom`.
+
+`Estimated duration`: `2 hours`.
+
+`Estimated total`: `$96.00`.
+
+Extraction caveat: the extraction tool should extract disabled included add-ons and notes. It should not skip checked disabled values.
+
+Implementation guidance: use fieldsets for pet, service, and health status.
+
+---
+
+AA00 Example 19 - Moving Service Reservation Quote
+
+---
+
+Create a moving service reservation quote with origin, destination, move date, inventory summary, crew size, truck size, time window, and quote breakdown.
+
+Visible heading:
+
+`Moving Service Reservation Quote`
+
+Visible description:
+
+`This example imitates a moving service booking quote. It tests extraction of origin and destination addresses, move details, selected service level, inventory summary, time window, and estimated charges.`
+
+Move details:
+
+`Quote number`: readonly input, value `MOV-2026-90412`.
+
+`Move date`: date input, value `2026-09-12`.
+
+`Arrival window`: select, selected `8 AM - 10 AM`.
+
+`Service level`: radio group with `Labor only`, `Truck and labor`, `Packing and full service`; selected `Truck and labor`.
+
+Origin fields:
+
+`Origin address`: `410 Oak Grove Avenue, Oakland, CA`.
+
+`Origin unit`: `Apt 6`.
+
+`Origin stairs`: select, selected `One flight`.
+
+`Origin elevator`: radio selected `No`.
+
+Destination fields:
+
+`Destination address`: `88 Valencia Street, San Francisco, CA`.
+
+`Destination unit`: `Suite 402`.
+
+`Destination stairs`: select, selected `Elevator building`.
+
+`Destination elevator`: radio selected `Yes`.
+
+Inventory summary fields:
+
+`Bedrooms`: select, selected `1 bedroom`.
+
+`Large items`: checkbox group with `Sofa` checked, `Dining table` checked, `Piano` unchecked, `Washer or dryer` unchecked.
+
+`Boxes estimate`: number input, value `28`.
+
+Quote details:
+
+`Crew size`: readonly input, value `3 movers`.
+
+`Truck size`: readonly input, value `20 ft truck`.
+
+`Estimated labor`: `$720.00`.
+
+`Travel fee`: `$95.00`.
+
+`Materials estimate`: `$64.00`.
+
+`Estimated total`: `$879.00`.
+
+Notes textarea:
+
+`Building manager requires certificate of insurance 48 hours before move date.`
+
+Extraction caveat: the extraction tool should preserve origin and destination contexts and should not merge similarly named address and stairs fields.
+
+Implementation guidance: use a two-column origin/destination layout and a quote summary panel.
+
+---
+
+AB00 Example 20 - Bike Rental Day Pass Booking
+
+---
+
+Create a bike rental day pass booking section with rental location, pass type, pickup time, rider details, equipment add-ons, and deposit.
+
+Visible heading:
+
+`Bike Rental Day Pass Booking`
+
+Visible description:
+
+`This example imitates a bike rental booking page. It tests extraction of selected pass type, rider details, pickup time, equipment options, waiver acknowledgement, and deposit details.`
+
+Rental fields:
+
+`Rental shop`: readonly input, value `Riverfront Cycle House`.
+
+`Pickup date`: date input, value `2026-07-25`.
+
+`Pickup time`: time input, value `09:00`.
+
+`Return time`: time input, value `17:00`.
+
+Pass type cards:
+
+`City bike day pass`: `$28`, not selected.
+
+`Hybrid bike day pass`: `$42`, selected.
+
+`E-bike day pass`: `$76`, not selected.
+
+`Cargo bike day pass`: `$88`, disabled with visible label `Reserved`.
+
+Rider fields:
+
+`Rider name`: `Noah Kim`.
+
+`Rider height`: select, selected `5 ft 8 in - 6 ft`.
+
+`Helmet size`: select, selected `Medium`.
+
+`Phone`: `650-555-0191`.
+
+Equipment:
+
+`Helmet included`: checkbox, checked and disabled.
+
+`Lock rental`: checkbox, checked.
+
+`Rear rack bag`: checkbox, unchecked.
+
+`Child seat`: checkbox, unchecked.
+
+Waiver:
+
+`Safety waiver acknowledged`: checkbox, checked.
+
+`Damage deposit authorized`: checkbox, checked.
+
+Summary:
+
+`Selected pass`: `Hybrid bike day pass`.
+
+`Rental charge`: `$42.00`.
+
+`Add-ons`: `$6.00`.
+
+`Refundable deposit hold`: `$150.00`.
+
+`Total paid today`: `$48.00`.
+
+Extraction caveat: the extraction tool should separate paid total from refundable deposit hold. It should also extract selected pass from a card state.
+
+Implementation guidance: use selected card styling and an aside summary.
+
+---
+
+AC00 Example 21 - University Advising Appointment
+
+---
+
+Create a university advising appointment booking section with student info, advising type, advisor selection, appointment mode, selected time, preparation checklist, and notes.
+
+Visible heading:
+
+`University Advising Appointment`
+
+Visible description:
+
+`This example imitates a university advising appointment scheduler. It tests extraction of student identity, advising reason, advisor, appointment mode, selected time, preparation checklist, and student notes.`
+
+Student fields:
+
+`Student name`: readonly input, value `Mei Tanaka`.
+
+`Student ID`: readonly input, value `S-884209`.
+
+`Program`: readonly input, value `Computer Science BS`.
+
+`Class standing`: readonly input, value `Junior`.
+
+Appointment fields:
+
+`Advising reason`: select, selected `Fall course planning`.
+
+`Advisor`: select, selected `Dr. Hannah Cho`.
+
+`Appointment mode`: radio group with `In person`, `Video call`, `Phone`; selected `Video call`.
+
+`Selected date`: readonly date input, value `2026-06-16`.
+
+`Selected time`: readonly time input, value `11:00`.
+
+`Meeting location or link`: readonly input, value `Video link will be sent after confirmation`.
+
+Preparation checklist:
+
+`Degree audit reviewed`: checkbox, checked.
+
+`Draft schedule prepared`: checkbox, checked.
+
+`Transfer credit question`: checkbox, unchecked.
+
+`Graduation timeline question`: checkbox, checked.
+
+Student notes textarea:
+
+`I want to confirm whether CS 340 and MATH 221 can be taken in the same semester with my current prerequisites.`
+
+Summary:
+
+`Appointment status`: `Ready to confirm`.
+
+`Duration`: `30 minutes`.
+
+`Reminder`: `Email 24 hours before`.
+
+Extraction caveat: the extraction tool should extract checklist values with their labels and preserve readonly meeting details.
+
+Implementation guidance: make this example look like a student portal panel.
+
+---
+
+AD00 Example 22 - Passport Office Appointment Reservation
+
+---
+
+Create a passport office appointment reservation section with applicant details, service type, office location, appointment time, required documents, accessibility needs, and confirmation summary.
+
+Visible heading:
+
+`Passport Office Appointment Reservation`
+
+Visible description:
+
+`This example imitates a government passport office appointment reservation. It tests extraction of applicant details, selected service, location, appointment time, required documents, accessibility requests, and confirmation-style summary data.`
+
+Applicant fields:
+
+`Applicant name`: `Samira Haddad`.
+
+`Application type`: select, selected `Renew passport book`.
+
+`Number of applicants`: number input, value `1`.
+
+`Application locator`: readonly input, value `PPT-2026-551902`.
+
+Appointment fields:
+
+`Office location`: readonly input, value `Downtown Passport Office - Window 4`.
+
+`Office address`: readonly input, value `200 Civic Center Plaza, San Francisco, CA`.
+
+`Appointment date`: readonly date input, value `2026-07-08`.
+
+`Appointment time`: readonly time input, value `09:45`.
+
+`Appointment duration`: readonly input, value `20 minutes`.
+
+Required documents checklist:
+
+`Current passport`: checked.
+
+`Passport photo`: checked.
+
+`Completed renewal form`: checked.
+
+`Payment method`: checked.
+
+`Name change document`: unchecked.
+
+Accessibility and language:
+
+`Wheelchair accessible counter requested`: checkbox, unchecked.
+
+`Interpreter requested`: checkbox, checked.
+
+`Interpreter language`: select, selected `Arabic`.
+
+Contact fields:
+
+`Email`: `samira.haddad@example.test`.
+
+`Phone`: `415-555-0180`.
+
+Confirmation summary:
+
+`Reservation status`: `Held`.
+
+`Check-in instruction`: `Arrive 10 minutes early and check in at kiosk 2.`
+
+`Cancellation deadline`: `July 7, 2026 at 5:00 PM`.
+
+Policy text:
+
+`Late arrivals may need to reschedule. Appointment does not guarantee application approval.`
+
+Extraction caveat: the extraction tool should capture government-style appointment details from both editable fields and readonly confirmation fields. It should distinguish required document checklist values from policy text.
+
+Implementation guidance: style this example like a rigid government appointment confirmation with strong borders and clear labels.
+
+---
+
+AE00 Required Final HTML Skeleton
+
+---
+
+The coding agent should produce a complete HTML document using this general skeleton:
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page 3 - Booking And Reservation Flows</title>
+  <style>
+    /* Inline CSS only. */
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-hero">
+      <p class="page-kicker">Content Extraction Demo Page</p>
+      <h1>Page 3 - Booking And Reservation Flows</h1>
+      <p>
+        This standalone page contains realistic booking and reservation examples for testing extraction of dates, times, guests, travelers, selected services, selected seats, booking summaries, prices, fees, confirmation details, and policy text.
+      </p>
+    </header>
+
+    <section class="example-card" id="example-01">
+      <!-- Example 01 content. -->
+    </section>
+
+    <!-- Continue through example-22. -->
+  </main>
+
+  <script>
+    /* Minimal inline JavaScript only. */
+  </script>
+</body>
+</html>
+```
+
+The generated file must include all 22 examples in the same file.
+
+The page must not require a server.
+
+The page must not fetch data.
+
+The page must not include broken links to external assets.
+
+The page must not use placeholder text instead of the specified values.
+
+---
+
+AF00 Quality Bar
+
+---
+
+The final page should be useful as a long-term manual testing page for a content extraction tool.
+
+Each example must be visibly distinct enough that a tester can scroll to it, select it, and understand what booking behavior is being tested.
+
+Each example must contain realistic populated values.
+
+Each example must include the specified heading, description, controls, labels, values, metadata, selected states, summary lines, policy text, and extraction caveat.
+
+Every booking example must expose enough visible content for extraction testing. Do not hide the most important values only in JavaScript variables or hidden inputs.
+
+Use hidden inputs where useful, but do not make hidden inputs the only source of truth. The selected value must also be visible to the user.
+
+Use realistic summary panels, price lines, policy notices, and confirmation fields. These are important extraction targets.
+
+Use repeated traveler, passenger, guest, item, or location records where specified. Preserve row and section context in the markup.
+
+The implementation should favor clarity and realistic structure over cleverness.
+
+The coding agent may improve layout, spacing, CSS details, and basic interaction behavior, but it must not remove examples, reduce the number of examples, replace all booking surfaces with generic forms, or simplify the scenarios into toy examples.
+
+The final output must be one portable HTML file.

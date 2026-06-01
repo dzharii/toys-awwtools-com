@@ -1,0 +1,3274 @@
+---
+
+A00 Change Request Specification - Page 8 Complex Layout And Visual Grouping
+
+---
+
+Create one standalone HTML demo page named `page-08-complex-layout-and-visual-grouping.html`.
+
+The page must be a self-contained HTML file. Put all HTML, CSS, and JavaScript inside this one file. Do not use React. Do not use TypeScript. Do not use a build step. Do not load external CSS, external JavaScript, external fonts, external images, external maps, external charts, or external data. The page must work by opening the `.html` file directly in a browser.
+
+This page is a testing surface for a content extraction tool. The page must focus on complex layout and visual grouping: split panels, nested cards, multi-column summaries, visually grouped records, repeated field labels in separate regions, dashboard tiles, comparison boards, timeline lanes, grouped sidebars, masonry-like cards, visual sections that are not semantic sections, nested bordered panels, field-value groups separated by spacing and headings, and layouts where the meaning of a value depends heavily on its visual group.
+
+The page must contain 22 separate examples. Each example must have a visible heading, a visible explanatory paragraph, and the actual complex layout UI. Each example must be visually separated from the next example. Each example must be realistic enough to test extraction of group boundaries, section headings, nested relationships, repeated labels, selected panels, visual clusters, summary tiles, sidebars, timelines, comparison columns, and layout-based context.
+
+Do not make the examples simple stacked cards. The goal of this page is to create difficult real-world extraction scenarios where fields are visually grouped, not always semantically obvious. Every example must test a different visual grouping caveat.
+
+---
+
+B00 Page-Level Purpose
+
+---
+
+The purpose of this page is to test whether an extraction tool can identify, select, and format structured information from complex visual layouts where DOM order alone may not be enough.
+
+The extraction tool should be able to handle multi-column layouts, nested field groups, cards inside cards, repeated labels across different panels, visual grouping by borders and background color, row and column proximity, titled sections, side-by-side comparisons, timeline lanes, grouped badges, sticky-looking summaries, callout boxes, accordions, tab-like panels, selected cards, field groups without form controls, and visual regions that are meaningful even when the HTML is a collection of generic divs.
+
+This page should intentionally include both clean semantic markup and messy real-world markup. Some examples should use sections, headings, tables, definition lists, and articles. Other examples should use nested divs, spans, CSS grid, CSS columns, generic card wrappers, repeated labels, and visually paired labels and values that are not adjacent in the DOM.
+
+The page should not submit data. The page should not depend on a backend. All data must be fictional and hardcoded.
+
+---
+
+C00 Required Page Structure
+
+---
+
+The page must start with a top-level header.
+
+Use this visible title:
+
+`Page 8 - Complex Layout And Visual Grouping`
+
+Under the title, include a short introduction paragraph explaining that the page contains realistic complex layout examples for testing extraction of visual groups, nested records, section boundaries, repeated labels, multi-column context, selected panels, comparison layouts, timelines, sidebars, and grouped summaries.
+
+After the introduction, render 22 example sections.
+
+Each example section must follow this pattern:
+
+```html
+<section class="example-card" id="example-01">
+  <header class="example-header">
+    <p class="example-kicker">Example 01</p>
+    <h2>Patient Intake Summary With Repeated Labels</h2>
+  </header>
+
+  <p class="example-description">
+    This example imitates...
+  </p>
+
+  <div class="example-surface">
+    <!-- Actual complex layout UI goes here. -->
+  </div>
+</section>
+```
+
+The exact class names may vary, but the structure must remain clear. Each section must have a unique `id`, from `example-01` through `example-22`.
+
+Each example heading must be visible. Each description must be visible. The actual complex layout surface must appear below the description.
+
+Do not include large expected extraction output blocks under every example. The page should primarily be the application-under-test surface, not a documentation page. The visible descriptions should explain the purpose and caveat of each example.
+
+---
+
+D00 Visual Design Requirements
+
+---
+
+Use inline CSS in a `<style>` tag.
+
+The page should look like a clean internal testing notebook with complex layout examples inside it. Use a light background, readable font stack, generous spacing, and card-style example sections. Inside each example, the UI may look like a different product. That variation is required.
+
+Use visual grouping deliberately. Every example should use at least two of these grouping techniques: border, background, spacing, heading, column placement, nested card, summary strip, badge group, side panel, grid area, timeline lane, section divider, callout box, or selected state.
+
+The page should support narrow and wide screens. Use responsive CSS. Large comparison layouts and wide boards may use horizontal scrolling inside their example surface, but the whole page must remain usable on a laptop screen.
+
+Suggested CSS structure:
+
+```html
+<style>
+  :root {
+    --page-bg: #f5f2ea;
+    --card-bg: #fffdf8;
+    --ink: #25221d;
+    --muted: #6f675c;
+    --line: #d8cfc0;
+    --soft: #eee6d8;
+    --panel: #ffffff;
+    --panel-alt: #faf7f0;
+    --accent: #315f8c;
+    --accent-soft: #e7f0ff;
+    --ok: #276749;
+    --warning: #8a5a00;
+    --danger: #9b332c;
+    --link: #174ea6;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--page-bg);
+    color: var(--ink);
+    line-height: 1.45;
+  }
+
+  main {
+    width: min(1240px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 32px 0 64px;
+  }
+
+  a {
+    color: var(--link);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+
+  .page-hero {
+    margin-bottom: 28px;
+    padding: 28px;
+    background: #fffaf0;
+    border: 2px solid var(--line);
+    border-radius: 18px;
+  }
+
+  .example-card {
+    margin: 28px 0;
+    padding: 24px;
+    background: var(--card-bg);
+    border: 2px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.08);
+  }
+
+  .example-kicker {
+    margin: 0 0 4px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .example-header h2 {
+    margin: 0;
+    font-size: 1.35rem;
+  }
+
+  .example-description {
+    max-width: 940px;
+    color: var(--muted);
+  }
+
+  .example-surface {
+    margin-top: 18px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: white;
+  }
+
+  .layout-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .toolbar-left,
+  .toolbar-right {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .layout-grid-two {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .layout-grid-three {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .layout-grid-four {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .split-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 14px;
+    align-items: start;
+  }
+
+  .wide-scroll {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .panel,
+  .nested-panel,
+  .summary-panel,
+  .detail-panel,
+  .visual-card,
+  .callout-panel {
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel);
+  }
+
+  .summary-panel,
+  .callout-panel {
+    background: var(--panel-alt);
+  }
+
+  .nested-panel {
+    margin-top: 10px;
+    background: #fffdf8;
+  }
+
+  .panel-title {
+    margin: 0 0 10px;
+    font-size: 1rem;
+  }
+
+  .panel-subtitle {
+    margin: -6px 0 10px;
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+
+  .field-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--soft);
+  }
+
+  .field-row:last-child {
+    border-bottom: 0;
+  }
+
+  .field-label {
+    color: var(--muted);
+    font-weight: 650;
+  }
+
+  .field-value {
+    text-align: right;
+    font-weight: 650;
+  }
+
+  .badge,
+  .tag,
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: #fff;
+    font-size: 0.82rem;
+    font-weight: 650;
+    white-space: nowrap;
+  }
+
+  .badge.ok {
+    color: var(--ok);
+    background: #edf8f1;
+  }
+
+  .badge.warning {
+    color: var(--warning);
+    background: #fff7df;
+  }
+
+  .badge.danger {
+    color: var(--danger);
+    background: #fff0ef;
+  }
+
+  .chip-row,
+  .badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0;
+  }
+
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .kpi-card {
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel-alt);
+  }
+
+  .kpi-label {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.86rem;
+  }
+
+  .kpi-value {
+    margin: 4px 0 0;
+    font-size: 1.35rem;
+    font-weight: 800;
+  }
+
+  .kpi-note {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: 0.84rem;
+  }
+
+  .comparison-board {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(260px, 1fr));
+    gap: 14px;
+    min-width: 860px;
+  }
+
+  .lane-board {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(240px, 1fr));
+    gap: 12px;
+    min-width: 980px;
+  }
+
+  .lane {
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel-alt);
+  }
+
+  .lane-title {
+    margin: 0 0 10px;
+    font-size: 0.96rem;
+  }
+
+  .timeline {
+    display: grid;
+    gap: 10px;
+  }
+
+  .timeline-item {
+    display: grid;
+    grid-template-columns: 130px minmax(0, 1fr);
+    gap: 12px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+  }
+
+  .timeline-time {
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+
+  .selected-panel {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .mini-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+  }
+
+  .mini-table th,
+  .mini-table td {
+    padding: 8px;
+    border-bottom: 1px solid var(--soft);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .mini-table th {
+    color: var(--muted);
+    font-size: 0.86rem;
+  }
+
+  @media (max-width: 980px) {
+    .layout-grid-two,
+    .layout-grid-three,
+    .layout-grid-four,
+    .split-layout,
+    .kpi-row {
+      grid-template-columns: 1fr;
+    }
+
+    .field-row {
+      display: block;
+    }
+
+    .field-value {
+      display: block;
+      margin-top: 2px;
+      text-align: left;
+    }
+
+    .timeline-item {
+      grid-template-columns: 1fr;
+    }
+
+    .example-card {
+      padding: 18px;
+    }
+  }
+</style>
+```
+
+The coding agent may adjust the CSS, but it must keep the page readable, scrollable, and visually divided into 22 separate examples.
+
+---
+
+E00 JavaScript Requirements
+
+---
+
+Use inline JavaScript in a `<script>` tag.
+
+This page should include small interactions where they help complex layouts feel realistic. The JavaScript must be simple and local to the page. Do not use a framework. Do not generate all examples dynamically. Static HTML must remain visible and inspectable.
+
+Allowed JavaScript behavior includes selecting a visual card and showing details, expanding nested panels, switching tabs, opening accordion sections, toggling compare columns, selecting a timeline item, revealing hidden notes, and filtering local cards.
+
+The important layout data must exist in the DOM at page load. If a selected panel changes dynamically, the page should still contain enough visible default detail content at load to test extraction without interaction.
+
+Required generic behavior:
+
+Clicking an element with `data-select-card` should mark that card as selected inside its group.
+
+Clicking an element with `data-detail-target` may show a matching detail panel and hide sibling detail panels.
+
+Clicking a button with `data-toggle-target` should show or hide a matching detail area.
+
+Clicking a tab with `data-tab-target` should show the matching panel and hide sibling tab panels.
+
+Typing in a local filter input with `data-local-filter` should hide nonmatching cards or rows.
+
+Suggested JavaScript structure:
+
+```html
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("[data-select-card]").forEach(function (card) {
+      card.addEventListener("click", function (event) {
+        if (event.target.closest("a, button, input, select, textarea")) return;
+
+        const group = card.dataset.selectCard;
+        if (!group) return;
+
+        document.querySelectorAll('[data-select-card="' + group + '"]').forEach(function (item) {
+          item.classList.remove("selected-panel");
+          item.setAttribute("aria-selected", "false");
+        });
+
+        card.classList.add("selected-panel");
+        card.setAttribute("aria-selected", "true");
+
+        const detailTarget = card.dataset.detailTarget;
+        if (detailTarget) {
+          document.querySelectorAll('[data-detail-panel="' + group + '"]').forEach(function (panel) {
+            panel.hidden = true;
+          });
+
+          const panel = document.querySelector(detailTarget);
+          if (panel) panel.hidden = false;
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-toggle-target]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const target = document.querySelector(button.dataset.toggleTarget);
+        if (!target) return;
+
+        target.hidden = !target.hidden;
+        button.setAttribute("aria-expanded", String(!target.hidden));
+      });
+    });
+
+    document.querySelectorAll("[data-tab-target]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const group = button.dataset.tabGroup;
+        if (!group) return;
+
+        document.querySelectorAll('[data-tab-group="' + group + '"]').forEach(function (tab) {
+          tab.setAttribute("aria-selected", "false");
+        });
+
+        document.querySelectorAll('[data-tab-panel="' + group + '"]').forEach(function (panel) {
+          panel.hidden = true;
+        });
+
+        button.setAttribute("aria-selected", "true");
+        const panel = document.querySelector(button.dataset.tabTarget);
+        if (panel) panel.hidden = false;
+      });
+    });
+
+    document.querySelectorAll("[data-local-filter]").forEach(function (input) {
+      input.addEventListener("input", function () {
+        const selector = input.dataset.localFilter;
+        const query = input.value.trim().toLowerCase();
+
+        document.querySelectorAll(selector).forEach(function (item) {
+          const text = item.textContent.toLowerCase();
+          item.hidden = query.length > 0 && !text.includes(query);
+        });
+      });
+    });
+  });
+</script>
+```
+
+The coding agent may extend this code for specific examples, but the final file must remain simple and portable.
+
+---
+
+F00 Extraction Behavior To Support
+
+---
+
+The page must make these extraction tasks possible:
+
+Extract data grouped by visual sections, even when the DOM is made of generic divs.
+
+Extract repeated labels without losing group context, such as multiple `Status`, `Date`, `Owner`, `Amount`, `Total`, `Address`, or `Notes` fields in separate panels.
+
+Extract nested cards as parent-child records.
+
+Extract selected visual cards and their selected detail panels.
+
+Extract comparison columns as separate compared entities.
+
+Extract timeline lanes, sequence groups, and grouped events.
+
+Extract visual summary cards separately from detail records.
+
+Extract sidebars and main panels as distinct related regions.
+
+Extract values from fields that are visually paired by spacing and alignment.
+
+Extract values where a label is above, beside, or far from its value but still in the same visual group.
+
+Extract callout notes and policy text separately from field-value rows.
+
+Extract data from two-column and three-column forms that are read-only and not normal form controls.
+
+Extract dashboard blocks where KPIs, tables, and notes all refer to the same entity but have separate roles.
+
+Extract status badges, tags, chips, and pill groups as metadata attached to the correct visual card.
+
+Extract boards where columns are meaningful group headings.
+
+Extract masonry-like cards where item boundaries depend on borders and spacing.
+
+Extract accordion-like sections when expanded.
+
+Extract tab-like panels and preserve the active tab state.
+
+Extract field groups where background color or border defines a record boundary.
+
+Extract layout-driven hierarchy where DOM order may not match visual order.
+
+---
+
+G00 Data And Naming Rules
+
+---
+
+Use realistic but fictional data. Do not use real personal information.
+
+Use fictional companies, fictional customers, fictional patients, fictional students, fictional records, fictional applications, fictional addresses, fictional IDs, and example-domain email addresses. Use `href="#"` or `href="/demo/..."` for links. Do not link to real third-party pages.
+
+Use consistent example-specific IDs. Prefix IDs with the example number, such as `ex01-patient-summary`, `ex07-lane-review`, or `ex18-selected-package`.
+
+Use plausible values. Avoid placeholder-only examples. Every example should contain enough populated visual groups to be useful for extraction testing.
+
+Each example must include repeated labels in at least two different groups. For example, a layout may have `Status` in the account panel and `Status` in the payment panel, or `Owner` in the task panel and `Owner` in the decision panel.
+
+Use a mixture of semantic and non-semantic markup. Use sections and headings where appropriate, but also include nested div layouts that imitate real admin and consumer pages.
+
+Do not use external images, map tiles, chart libraries, or fonts. Use text placeholders and CSS boxes instead.
+
+Do not make all examples use the same layout. Use boards, split panes, comparison columns, nested cards, timelines, dashboards, summary sidebars, accordions, and dense visual panels.
+
+---
+
+H00 Required Examples Overview
+
+---
+
+The page must contain exactly these 22 examples:
+
+Example 01: Patient Intake Summary With Repeated Labels.
+
+Example 02: Travel Itinerary Day Board.
+
+Example 03: Loan Application Underwriting Workspace.
+
+Example 04: Insurance Claim Visual Packet.
+
+Example 05: Checkout Review With Nested Summary Panels.
+
+Example 06: Executive Metrics Dashboard With Drilldown Panel.
+
+Example 07: Kanban Board With Nested Task Cards.
+
+Example 08: Team Directory Org Layout.
+
+Example 09: Real Estate Comparison Board.
+
+Example 10: Composite Invoice And Receipt Layout.
+
+Example 11: Event Run-Of-Show Visual Schedule.
+
+Example 12: Project Brief Workspace.
+
+Example 13: Vehicle Rental Quote Comparison Layout.
+
+Example 14: Student Degree Audit Visual Planner.
+
+Example 15: Support Case Triage Workspace.
+
+Example 16: Medical Lab Results Visual Grouping.
+
+Example 17: Utility Outage Region Dashboard.
+
+Example 18: Product Configurator Summary Layout.
+
+Example 19: Procurement Quote Comparison Matrix.
+
+Example 20: Legal Contract Clause Review Workspace.
+
+Example 21: Logistics Shipment Route Board.
+
+Example 22: Nested Admin Settings Accordion Layout.
+
+Each example below is mandatory.
+
+---
+
+I00 Example 01 - Patient Intake Summary With Repeated Labels
+
+---
+
+Create a patient intake summary layout with three visually distinct columns: patient identity, appointment context, and insurance/payment context. Reuse labels such as `Status`, `Date`, and `Notes` in multiple columns to test group context.
+
+Visible heading:
+
+`Patient Intake Summary With Repeated Labels`
+
+Visible description:
+
+`This example imitates a patient intake summary screen with repeated labels across visually separate panels. It tests extraction of fields where labels such as Status, Date, and Notes only make sense when attached to their surrounding visual group.`
+
+The layout must have a top summary strip:
+
+`Intake record`: `INTAKE-2026-7712`.
+
+`Overall status`: badge `Ready for review`.
+
+`Last updated`: `May 31, 2026, 9:42 AM`.
+
+`Clinic`: `Downtown Clinic`.
+
+Main layout must have three columns.
+
+Column 1 heading:
+
+`Patient`
+
+Fields:
+
+`Name`: `Riley Stone`.
+
+`Date`: `March 19, 1984`.
+
+`Patient ID`: `PT-771420`.
+
+`Status`: badge `Established patient`.
+
+`Preferred language`: `English`.
+
+`Notes`: `Prefers SMS reminders and afternoon appointments.`
+
+Column 2 heading:
+
+`Appointment`
+
+Fields:
+
+`Provider`: `Dr. Helen Park, MD`.
+
+`Date`: `June 11, 2026`.
+
+`Time`: `2:30 PM`.
+
+`Visit type`: `Orthopedics follow-up`.
+
+`Status`: badge `Scheduled`.
+
+`Location`: `Downtown Clinic, Room pending`.
+
+`Notes`: `Follow-up for knee pain. Bring imaging results if available.`
+
+Column 3 heading:
+
+`Insurance And Payment`
+
+Fields:
+
+`Plan`: `Northstar PPO`.
+
+`Member ID`: `NSP-44910218`.
+
+`Date`: `Eligibility checked May 31, 2026`.
+
+`Status`: badge `Verified`.
+
+`Copay`: `$35.00`.
+
+`Balance`: `$0.00`.
+
+`Notes`: `Referral not required for follow-up visit.`
+
+Below the columns, add a nested panel titled `Outstanding Items`.
+
+Outstanding item cards:
+
+Item 1: `Item` `Medication list confirmation`, `Owner` `Patient`, `Status` `Pending`, `Due` `Before check-in`.
+
+Item 2: `Item` `Imaging upload`, `Owner` `Clinic`, `Status` `Received`, `Due` `Complete`.
+
+Extraction caveat: the extraction tool should not output three ambiguous `Status` values without their group names. It should produce grouped values such as patient status, appointment status, and insurance status.
+
+Implementation guidance:
+
+```html
+<div class="layout-grid-three" id="ex01-patient-summary">
+  <section class="panel" aria-labelledby="ex01-patient-heading">
+    <h3 class="panel-title" id="ex01-patient-heading">Patient</h3>
+    <div class="field-row">
+      <span class="field-label">Name</span>
+      <span class="field-value">Riley Stone</span>
+    </div>
+    <div class="field-row">
+      <span class="field-label">Status</span>
+      <span class="field-value"><span class="badge ok">Established patient</span></span>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="ex01-appointment-heading">
+    <h3 class="panel-title" id="ex01-appointment-heading">Appointment</h3>
+    <div class="field-row">
+      <span class="field-label">Status</span>
+      <span class="field-value"><span class="badge warning">Scheduled</span></span>
+    </div>
+  </section>
+</div>
+```
+
+---
+
+J00 Example 02 - Travel Itinerary Day Board
+
+---
+
+Create a travel itinerary day board with three day columns. Each day column must contain nested cards for flight, hotel, meal, meeting, and transport segments. The same labels should appear under different segment types.
+
+Visible heading:
+
+`Travel Itinerary Day Board`
+
+Visible description:
+
+`This example imitates a travel itinerary board grouped by day. It tests extraction of nested records where each day column contains multiple segment cards, and repeated labels such as Time, Location, Confirmation, and Notes must remain attached to the correct day and segment.`
+
+Top trip header:
+
+`Trip`: `Design Summit 2026`.
+
+`Traveler`: `Lina Romero`.
+
+`Itinerary number`: `ITN-2026-44718`.
+
+`Status`: badge `Confirmed`.
+
+Board columns:
+
+Day 1 heading:
+
+`Wednesday, September 2, 2026`.
+
+Day 1 cards:
+
+Flight card:
+
+`Segment`: `Flight`.
+
+`Time`: `8:05 AM-4:42 PM`.
+
+`From`: `SFO`.
+
+`To`: `JFK`.
+
+`Carrier`: `AeroVista`.
+
+`Flight`: `AVX 218`.
+
+`Confirmation`: `AV-9K2LD`.
+
+`Seat`: `14A`.
+
+`Notes`: `Carry-on included.`
+
+Ground transport card:
+
+`Segment`: `Car service`.
+
+`Time`: `5:20 PM`.
+
+`Location`: `JFK Terminal 4`.
+
+`Provider`: `MetroCar`.
+
+`Confirmation`: `CAR-90418`.
+
+`Drop-off`: `Harbor East Hotel`.
+
+`Notes`: `Driver meets at arrivals level.`
+
+Hotel card:
+
+`Segment`: `Hotel`.
+
+`Time`: `Check-in after 3:00 PM`.
+
+`Location`: `Harbor East Hotel`.
+
+`Confirmation`: `HTL-77120`.
+
+`Room`: `King room`.
+
+`Notes`: `Late arrival noted.`
+
+Day 2 heading:
+
+`Thursday, September 3, 2026`.
+
+Day 2 cards:
+
+Conference card:
+
+`Segment`: `Conference`.
+
+`Time`: `9:00 AM-5:00 PM`.
+
+`Location`: `Pier 12 Conference Center`.
+
+`Session`: `Designing Interfaces For Messy Public Data`.
+
+`Confirmation`: `CONF-2026-88420`.
+
+`Notes`: `Badge pickup starts at 8:00 AM.`
+
+Meal card:
+
+`Segment`: `Dinner`.
+
+`Time`: `7:15 PM`.
+
+`Location`: `Cypress & Fig`.
+
+`Party`: `4 guests`.
+
+`Confirmation`: `DIN-7715`.
+
+`Notes`: `Patio table requested.`
+
+Day 3 heading:
+
+`Friday, September 4, 2026`.
+
+Day 3 cards:
+
+Workshop card:
+
+`Segment`: `Workshop`.
+
+`Time`: `10:00 AM-12:30 PM`.
+
+`Location`: `City Museum Lab`.
+
+`Topic`: `Public Data Visualization Clinic`.
+
+`Confirmation`: `WRK-4418`.
+
+`Notes`: `Bring laptop.`
+
+Return flight card:
+
+`Segment`: `Flight`.
+
+`Time`: `6:40 PM-10:12 PM`.
+
+`From`: `JFK`.
+
+`To`: `SFO`.
+
+`Carrier`: `AeroVista`.
+
+`Flight`: `AVX 411`.
+
+`Confirmation`: `AV-9K2LD`.
+
+`Seat`: `16C`.
+
+`Notes`: `Same airline confirmation as outbound.`
+
+Extraction caveat: the extraction tool should preserve day grouping and segment type. It should not merge all `Confirmation` values into one unrelated list.
+
+Implementation guidance: use `.wide-scroll` and `.lane-board` with each day as a lane. Each segment should be a nested `.visual-card`.
+
+---
+
+K00 Example 03 - Loan Application Underwriting Workspace
+
+---
+
+Create a loan underwriting workspace with borrower summary, property summary, income panel, credit panel, risk panel, and decision sidebar. Multiple groups must reuse labels like `Status`, `Amount`, and `Verified`.
+
+Visible heading:
+
+`Loan Application Underwriting Workspace`
+
+Visible description:
+
+`This example imitates a loan underwriting workspace with several visually grouped panels. It tests extraction of borrower, property, income, credit, risk, and decision data where repeated labels must be disambiguated by panel context.`
+
+Header strip:
+
+`Application`: `LN-APP-2026-8841`.
+
+`Product`: `Fixed-rate personal loan`.
+
+`Review status`: badge `Conditional approval`.
+
+`Assigned underwriter`: `Grace Miller`.
+
+`Submitted`: `May 29, 2026`.
+
+Main layout: two large columns plus right decision sidebar.
+
+Borrower panel:
+
+`Name`: `Diego Marin`.
+
+`Applicant type`: `Primary borrower`.
+
+`Status`: badge `Identity verified`.
+
+`Email`: `diego.marin@example.test`.
+
+`Phone`: `415-555-0118`.
+
+`Verified`: `Yes, May 30, 2026`.
+
+Property or collateral panel:
+
+`Collateral type`: `None`.
+
+`Purpose`: `Debt consolidation`.
+
+`Requested amount`: `$18,500.00`.
+
+`Approved amount`: `$18,500.00`.
+
+`Status`: badge `No collateral required`.
+
+`Verified`: `Not applicable`.
+
+Income panel:
+
+`Employment`: `Full-time`.
+
+`Employer`: `Harbor Systems Group`.
+
+`Monthly income`: `$8,420.00`.
+
+`Verified`: `Yes, payroll records`.
+
+`Status`: badge `Meets threshold`.
+
+`Notes`: `Stable income for 36 months.`
+
+Credit panel:
+
+`Credit score`: `742`.
+
+`Debt-to-income`: `28 percent`.
+
+`Open delinquencies`: `0`.
+
+`Verified`: `Yes, soft pull`.
+
+`Status`: badge `Approved`.
+
+`Notes`: `No recent derogatory marks.`
+
+Risk panel:
+
+`Risk grade`: `B`.
+
+`Rate`: `7.25 percent`.
+
+`Term`: `48 months`.
+
+`Monthly payment`: `$447.82`.
+
+`Status`: badge `Acceptable`.
+
+`Notes`: `Rate includes autopay discount.`
+
+Decision sidebar:
+
+`Decision`: `Conditional approval`.
+
+`Conditions`: `Confirm final payoff letters`, `Accept autopay disclosure`.
+
+`Expiration`: `June 14, 2026`.
+
+`Decision owner`: `Grace Miller`.
+
+`Next action`: `Send conditional approval packet`.
+
+Extraction caveat: the extraction tool should preserve panel names because fields like `Status` and `Verified` appear in multiple panels. It should not treat decision conditions as ordinary notes.
+
+Implementation guidance: use a `.split-layout` where the main area has nested grids and the right side is a `.detail-panel`.
+
+---
+
+L00 Example 04 - Insurance Claim Visual Packet
+
+---
+
+Create an insurance claim packet layout with claim overview, claimant, policy, incident, damage assessment, payments, documents, and adjuster notes.
+
+Visible heading:
+
+`Insurance Claim Visual Packet`
+
+Visible description:
+
+`This example imitates an insurance claim packet made of many visually grouped cards. It tests extraction of claim data where policy details, incident details, payment details, and document details are adjacent but represent separate nested groups.`
+
+Header strip:
+
+`Claim number`: `CLM-2026-55109`.
+
+`Claim type`: `Renters property loss`.
+
+`Claim status`: badge `Adjuster review`.
+
+`Opened`: `May 24, 2026`.
+
+`Assigned adjuster`: `Owen Brooks`.
+
+Group 1: Claimant card.
+
+`Name`: `Jordan Parker`.
+
+`Email`: `jordan.parker@example.test`.
+
+`Phone`: `650-555-0134`.
+
+`Preferred contact`: `Email`.
+
+`Status`: badge `Contacted`.
+
+Group 2: Policy card.
+
+`Policy number`: `REN-2026-44720`.
+
+`Policy status`: badge `Active`.
+
+`Effective date`: `February 1, 2026`.
+
+`Deductible`: `$500`.
+
+`Coverage limit`: `$35,000`.
+
+Group 3: Incident card.
+
+`Date`: `May 22, 2026`.
+
+`Location`: `72 Hillcrest Road, San Mateo, CA`.
+
+`Cause`: `Water leak from upstairs unit`.
+
+`Reported by`: `Policyholder`.
+
+`Status`: badge `Documentation received`.
+
+Group 4: Damage assessment card.
+
+`Estimated loss`: `$4,820.00`.
+
+`Deductible applied`: `$500.00`.
+
+`Recoverable depreciation`: `$320.00`.
+
+`Preliminary payout`: `$4,000.00`.
+
+`Status`: badge `Pending approval`.
+
+Group 5: Payment card.
+
+`Payment method`: `ACH ending in 1842`.
+
+`Payment status`: badge `Not issued`.
+
+`Scheduled date`: `Pending`.
+
+`Amount`: `$4,000.00`.
+
+`Notes`: `Requires supervisor approval.`
+
+Documents panel with document chips:
+
+`Photos of damage`, status `Received`.
+
+`Repair estimate`, status `Received`.
+
+`Proof of ownership`, status `Missing`.
+
+`Landlord statement`, status `Received`.
+
+Adjuster notes panel:
+
+`Latest note`: `Repair estimate received. Waiting for proof of ownership before payout approval.`
+
+`Next review`: `June 3, 2026`.
+
+Extraction caveat: the extraction tool should distinguish claim status, policy status, incident status, damage status, and payment status. It should not merge all statuses into one global claim status.
+
+Implementation guidance: use `.layout-grid-three` for main cards and a nested document panel below.
+
+---
+
+M00 Example 05 - Checkout Review With Nested Summary Panels
+
+---
+
+Create a checkout review page where shipping, billing, delivery, payment, items, promo, and order total are shown in separate visual panels. Use repeated labels such as `Address`, `Status`, and `Total`.
+
+Visible heading:
+
+`Checkout Review With Nested Summary Panels`
+
+Visible description:
+
+`This example imitates a final checkout review screen. It tests extraction of nested summary groups where visually separated panels each contain labels such as Address, Status, Method, and Total.`
+
+Top header:
+
+`Checkout step`: `Review and place order`.
+
+`Cart ID`: `CART-2026-44018`.
+
+`Customer`: `Jordan Ellis`.
+
+`Status`: badge `Ready to submit`.
+
+Main left area panels:
+
+Shipping address panel:
+
+`Address`: `120 King Street, Dock B, San Francisco, CA 94107`.
+
+`Recipient`: `Jordan Ellis`.
+
+`Status`: badge `Validated`.
+
+`Delivery instructions`: `Use freight entrance on King Street.`
+
+Billing address panel:
+
+`Address`: `88 Valencia Street, Suite 402, San Francisco, CA 94103`.
+
+`Billing contact`: `Jordan Ellis`.
+
+`Status`: badge `Matches payment profile`.
+
+`Tax region`: `San Francisco, CA`.
+
+Delivery method panel:
+
+`Method`: `Standard ground`.
+
+`Carrier`: `Example Parcel`.
+
+`Delivery estimate`: `June 6-9, 2026`.
+
+`Status`: badge `Available`.
+
+`Total`: `$8.95`.
+
+Payment panel:
+
+`Method`: `Visa ending in 4242`.
+
+`Authorization status`: badge `Authorized`.
+
+`Billing name`: `Jordan Ellis`.
+
+`Total authorized`: `$159.07`.
+
+Items panel with three nested item rows:
+
+Item 1: `SKU` `BAG-TRV-22`, `Item` `Canvas travel backpack`, `Quantity` `1`, `Total` `$89.00`.
+
+Item 2: `SKU` `BOT-STL-20`, `Item` `Insulated steel bottle`, `Quantity` `2`, `Total` `$48.00`.
+
+Item 3: `SKU` `TAG-LTH-02`, `Item` `Leather luggage tag`, `Quantity` `1`, `Total` `$16.00`.
+
+Right order summary sidebar:
+
+`Merchandise total`: `$153.00`.
+
+`Discount`: `-$15.30`.
+
+`Shipping total`: `$8.95`.
+
+`Tax total`: `$12.42`.
+
+`Order total`: `$159.07`.
+
+`Order status`: badge `Not placed`.
+
+`Primary action`: `Place order`.
+
+Extraction caveat: the extraction tool should preserve each panel's `Total` value with panel context. It should not confuse item totals, delivery total, authorized total, and order total.
+
+Implementation guidance: use a `.split-layout` with nested panels on the left and a summary sidebar on the right.
+
+---
+
+N00 Example 06 - Executive Metrics Dashboard With Drilldown Panel
+
+---
+
+Create an executive dashboard with KPI cards, visual grouping by business area, metric status chips, and a selected drilldown panel.
+
+Visible heading:
+
+`Executive Metrics Dashboard With Drilldown Panel`
+
+Visible description:
+
+`This example imitates an executive metrics dashboard. It tests extraction of KPI cards grouped by business area, metric labels, values, trends, status chips, and a selected drilldown panel that provides additional context.`
+
+Dashboard header:
+
+`Dashboard`: `Product Systems Weekly Review`.
+
+`Period`: `Week ending May 31, 2026`.
+
+`Owner`: `Maya Chen`.
+
+`Status`: badge `Draft`.
+
+Top KPI row:
+
+KPI 1:
+
+`Group`: `Activation`.
+
+`Metric`: `New activated workspaces`.
+
+`Value`: `438`.
+
+`Trend`: `+8 percent week over week`.
+
+`Status`: badge `On track`.
+
+KPI 2:
+
+`Group`: `Activation`.
+
+`Metric`: `Demo completion rate`.
+
+`Value`: `69 percent`.
+
+`Trend`: `-3 percent week over week`.
+
+`Status`: badge `Watch`.
+
+KPI 3:
+
+`Group`: `Reliability`.
+
+`Metric`: `Extraction p95 latency`.
+
+`Value`: `2.1 s`.
+
+`Trend`: `+0.3 s week over week`.
+
+`Status`: badge `At risk`.
+
+KPI 4:
+
+`Group`: `Quality`.
+
+`Metric`: `Duplicate action label rate`.
+
+`Value`: `2.8 percent`.
+
+`Trend`: `-0.6 percent week over week`.
+
+`Status`: badge `On track`.
+
+Middle layout must have three grouped panels:
+
+Panel `Activation Drivers`:
+
+`Top driver`: `Template gallery visits`.
+
+`Supporting metric`: `1,310 templates created`.
+
+`Risk`: `Long demo setup forms reduce completion`.
+
+Panel `Reliability Drivers`:
+
+`Top issue`: `Large page extraction worker memory`.
+
+`Affected segment`: `Pages over 5 MB`.
+
+`Risk`: `Higher timeout rate`.
+
+Panel `Quality Drivers`:
+
+`Top improvement`: `Card action cleanup rollout`.
+
+`Affected segment`: `Feed and card pages`.
+
+`Risk`: `Regression on nested comment cards`.
+
+Selected drilldown panel for KPI 3:
+
+`Selected metric`: `Extraction p95 latency`.
+
+`Current value`: `2.1 s`.
+
+`Target`: `1.8 s`.
+
+`Owner`: `Rafael Ortiz`.
+
+`Primary cause`: `Worker memory pressure on large HTML pages`.
+
+`Next action`: `Increase worker memory and split long extraction jobs`.
+
+Extraction caveat: the extraction tool should preserve business area grouping for KPIs and not treat all metric labels as unrelated. It should distinguish dashboard summary KPIs from drilldown details.
+
+Implementation guidance: use `.kpi-row`, grouped panels, and a right or bottom detail panel with selected state.
+
+---
+
+O00 Example 07 - Kanban Board With Nested Task Cards
+
+---
+
+Create a kanban board with four lanes and nested task cards. Each card must contain repeated labels such as `Owner`, `Status`, `Due`, and `Blocked by`.
+
+Visible heading:
+
+`Kanban Board With Nested Task Cards`
+
+Visible description:
+
+`This example imitates a project kanban board. It tests extraction of tasks grouped by lane, with nested card metadata, repeated labels, status badges, blockers, due dates, and selected task details.`
+
+Board header:
+
+`Board`: `Extraction Fixture Program`.
+
+`Project`: `Demo Pages`.
+
+`Sprint`: `Sprint 12`.
+
+`Status`: badge `In progress`.
+
+Lanes:
+
+Lane 1 heading:
+
+`Backlog`.
+
+Cards:
+
+Task 1:
+
+`Task`: `Add utility outage grouping example`.
+
+`Task ID`: `TASK-801`.
+
+`Owner`: `Owen Brooks`.
+
+`Due`: `June 5, 2026`.
+
+`Status`: badge `Ready`.
+
+`Blocked by`: `None`.
+
+`Tags`: `layout`, `regions`.
+
+Task 2:
+
+`Task`: `Design accordion settings fixture`.
+
+`Task ID`: `TASK-802`.
+
+`Owner`: `Lina Romero`.
+
+`Due`: `June 6, 2026`.
+
+`Status`: badge `Ready`.
+
+`Blocked by`: `None`.
+
+`Tags`: `accordion`, `admin`.
+
+Lane 2 heading:
+
+`In Progress`.
+
+Cards:
+
+Task 3 selected by default:
+
+`Task`: `Build complex visual grouping page`.
+
+`Task ID`: `TASK-812`.
+
+`Owner`: `Maya Chen`.
+
+`Due`: `June 3, 2026`.
+
+`Status`: badge `In progress`.
+
+`Blocked by`: `Review examples list`.
+
+`Tags`: `specification`, `fixtures`.
+
+Task 4:
+
+`Task`: `Review dashboard grouping caveats`.
+
+`Task ID`: `TASK-814`.
+
+`Owner`: `Rafael Ortiz`.
+
+`Due`: `June 4, 2026`.
+
+`Status`: badge `In progress`.
+
+`Blocked by`: `None`.
+
+`Tags`: `dashboard`, `metrics`.
+
+Lane 3 heading:
+
+`Review`.
+
+Cards:
+
+Task 5:
+
+`Task`: `Validate page 7 table examples`.
+
+`Task ID`: `TASK-790`.
+
+`Owner`: `Theo Grant`.
+
+`Due`: `June 2, 2026`.
+
+`Status`: badge `Review`.
+
+`Blocked by`: `QA pass`.
+
+`Tags`: `tables`, `admin`.
+
+Lane 4 heading:
+
+`Done`.
+
+Cards:
+
+Task 6:
+
+`Task`: `Finalize read-only record examples`.
+
+`Task ID`: `TASK-744`.
+
+`Owner`: `Owen Brooks`.
+
+`Due`: `May 30, 2026`.
+
+`Status`: badge `Done`.
+
+`Blocked by`: `None`.
+
+`Tags`: `records`, `confirmations`.
+
+Selected task detail panel for Task 3:
+
+`Selected task`: `Build complex visual grouping page`.
+
+`Acceptance criteria`: `22 examples`, `repeated labels`, `nested visual groups`, `standalone HTML`.
+
+`Reviewer`: `Rafael Ortiz`.
+
+`Latest note`: `Need examples where visual group matters more than DOM order.`
+
+Extraction caveat: the extraction tool should preserve lane grouping. It should not output the task cards as a flat list without lane context.
+
+Implementation guidance: use `.wide-scroll` with `.lane-board`. Each lane should be a `.lane`, and each card should be a `.visual-card`.
+
+---
+
+P00 Example 08 - Team Directory Org Layout
+
+---
+
+Create a team directory layout with grouped teams, manager cards, nested direct report cards, role chips, location, status, and contact details.
+
+Visible heading:
+
+`Team Directory Org Layout`
+
+Visible description:
+
+`This example imitates a team directory organized by visual hierarchy. It tests extraction of teams, managers, direct reports, roles, locations, statuses, and contact values while preserving reporting relationships.`
+
+Directory header:
+
+`Organization`: `Product Systems`.
+
+`Directory snapshot`: `May 31, 2026`.
+
+`Total people shown`: `9`.
+
+`Status`: badge `Current`.
+
+Team panels:
+
+Team panel `Product Experience`.
+
+Manager card:
+
+`Name`: `Maya Chen`.
+
+`Role`: `Product Lead`.
+
+`Email`: `maya.chen@example.test`.
+
+`Location`: `San Francisco, CA`.
+
+`Status`: badge `Available`.
+
+Direct report cards:
+
+Person 1: `Name` `Lina Romero`, `Role` `UX Research Lead`, `Email` `lina.romero@example.test`, `Location` `Oakland, CA`, `Status` `In workshop`.
+
+Person 2: `Name` `Owen Brooks`, `Role` `Customer Education Lead`, `Email` `owen.brooks@example.test`, `Location` `Monterey, CA`, `Status` `Available`.
+
+Team panel `Platform Engineering`.
+
+Manager card:
+
+`Name`: `Rafael Ortiz`.
+
+`Role`: `Engineering Manager`.
+
+`Email`: `rafael.ortiz@example.test`.
+
+`Location`: `Denver, CO`.
+
+`Status`: badge `Available`.
+
+Direct report cards:
+
+Person 3: `Name` `Theo Grant`, `Role` `Frontend Engineer`, `Email` `theo.grant@example.test`, `Location` `Remote`, `Status` `Focus time`.
+
+Person 4: `Name` `Priya Shah`, `Role` `Release Engineer`, `Email` `priya.shah@example.test`, `Location` `San Francisco, CA`, `Status` `Available`.
+
+Team panel `Operations And Finance`.
+
+Manager card:
+
+`Name`: `Grace Miller`.
+
+`Role`: `Operations Director`.
+
+`Email`: `grace.miller@example.test`.
+
+`Location`: `Austin, TX`.
+
+`Status`: badge `Traveling`.
+
+Direct report cards:
+
+Person 5: `Name` `Renee Coleman`, `Role` `Finance Operations`, `Email` `renee.coleman@example.test`, `Location` `Oakland, CA`, `Status` `Available`.
+
+Person 6: `Name` `Anika Sharma`, `Role` `Admin Systems`, `Email` `anika.sharma@example.test`, `Location` `San Mateo, CA`, `Status` `Available`.
+
+Extraction caveat: the extraction tool should preserve the visual reporting hierarchy. It should not flatten managers and direct reports without team and manager context.
+
+Implementation guidance: use nested panels. Put each manager card above direct report cards inside the same team panel.
+
+---
+
+Q00 Example 09 - Real Estate Comparison Board
+
+---
+
+Create a real estate comparison board with three property columns and a shared comparison criteria sidebar.
+
+Visible heading:
+
+`Real Estate Comparison Board`
+
+Visible description:
+
+`This example imitates a property comparison board. It tests extraction of side-by-side comparison columns where the same labels appear under different properties and must remain attached to the correct property.`
+
+Comparison header:
+
+`Comparison name`: `Weekend Open House Shortlist`.
+
+`Buyer`: `Noah Kim`.
+
+`Criteria`: `2+ bedrooms, transit access, under $1.2M`.
+
+`Status`: badge `Shortlist`.
+
+Left criteria sidebar:
+
+`Budget maximum`: `$1,200,000`.
+
+`Required beds`: `2`.
+
+`Required commute`: `Under 45 minutes`.
+
+`Preferred features`: `Parking`, `Natural light`, `In-unit laundry`.
+
+Comparison columns:
+
+Property 1 selected by default:
+
+`Address`: `410 Oak Grove Avenue Unit 6`.
+
+`City`: `Oakland, CA`.
+
+`Price`: `$689,000`.
+
+`Beds`: `2`.
+
+`Baths`: `1`.
+
+`Square feet`: `890 sq ft`.
+
+`HOA`: `$428/month`.
+
+`Commute`: `38 minutes`.
+
+`Open house`: `Sat 1-4 PM`.
+
+`Status`: badge `Open house`.
+
+`Fit score`: `86`.
+
+`Notes`: `Best price, smaller kitchen.`
+
+Property 2:
+
+`Address`: `88 Valencia Street Suite 402`.
+
+`City`: `San Francisco, CA`.
+
+`Price`: `$1,120,000`.
+
+`Beds`: `1`.
+
+`Baths`: `1.5`.
+
+`Square feet`: `1,040 sq ft`.
+
+`HOA`: `$612/month`.
+
+`Commute`: `22 minutes`.
+
+`Open house`: `Sun 2-5 PM`.
+
+`Status`: badge `New listing`.
+
+`Fit score`: `74`.
+
+`Notes`: `Great commute, only one bedroom.`
+
+Property 3:
+
+`Address`: `120 King Street Unit B`.
+
+`City`: `San Francisco, CA`.
+
+`Price`: `$945,000`.
+
+`Beds`: `2`.
+
+`Baths`: `2`.
+
+`Square feet`: `1,180 sq ft`.
+
+`HOA`: `$520/month`.
+
+`Commute`: `26 minutes`.
+
+`Open house`: `Sun 11 AM-1 PM`.
+
+`Status`: badge `Active`.
+
+`Fit score`: `91`.
+
+`Notes`: `Best overall fit, near freight corridor.`
+
+Selected property detail panel:
+
+`Selected property`: `410 Oak Grove Avenue Unit 6`.
+
+`Listing ID`: `PROP-410OG-6`.
+
+`Agent`: `Maya Chen`.
+
+`Price per sq ft`: `$774`.
+
+`Tradeoff`: `Lower price but smaller layout`.
+
+Extraction caveat: the extraction tool should extract each comparison column as a separate property record. It should not merge all `Price`, `Beds`, or `Notes` fields across columns.
+
+Implementation guidance: use `.wide-scroll` and `.comparison-board`. Each property should be one `.visual-card`.
+
+---
+
+R00 Example 10 - Composite Invoice And Receipt Layout
+
+---
+
+Create a composite invoice and receipt view where invoice details, payment receipt, credit memo, and balance summary appear in adjacent visual regions.
+
+Visible heading:
+
+`Composite Invoice And Receipt Layout`
+
+Visible description:
+
+`This example imitates a billing page that shows an invoice, payment receipt, credit memo, and balance summary together. It tests extraction of visually grouped financial documents with repeated labels such as Number, Date, Amount, Status, and Notes.`
+
+Header strip:
+
+`Account`: `Cedar & Pine Design LLC`.
+
+`Billing period`: `May 2026`.
+
+`Account status`: badge `Partially paid`.
+
+`Billing contact`: `Renee Coleman`.
+
+Four visual panels:
+
+Panel 1 heading `Invoice`.
+
+Fields:
+
+`Number`: `INV-2026-00841`.
+
+`Date`: `May 18, 2026`.
+
+`Due date`: `June 17, 2026`.
+
+`Amount`: `$736.14`.
+
+`Status`: badge `Partially paid`.
+
+`Notes`: `Includes business platform seats, audit retention, and priority support.`
+
+Panel 2 heading `Payment Receipt`.
+
+Fields:
+
+`Number`: `PMT-77120`.
+
+`Date`: `May 21, 2026`.
+
+`Method`: `ACH ending in 1842`.
+
+`Amount`: `$300.00`.
+
+`Status`: badge `Posted`.
+
+`Notes`: `Applied to invoice INV-2026-00841.`
+
+Panel 3 heading `Credit Memo`.
+
+Fields:
+
+`Number`: `CM-2026-0042`.
+
+`Date`: `May 24, 2026`.
+
+`Reason`: `Seat proration`.
+
+`Amount`: `-$42.00`.
+
+`Status`: badge `Applied`.
+
+`Notes`: `Proration credit for removed seats.`
+
+Panel 4 heading `Balance Summary`.
+
+Fields:
+
+`Original invoice`: `$736.14`.
+
+`Payment applied`: `-$300.00`.
+
+`Credit applied`: `-$42.00`.
+
+`Remaining balance`: `$394.14`.
+
+`Status`: badge `Due`.
+
+`Notes`: `Balance due by June 17, 2026.`
+
+Nested line item table under invoice panel:
+
+Line 1: `Description` `Business platform seats`, `Amount` `$432.00`.
+
+Line 2: `Description` `Audit log retention add-on`, `Amount` `$96.00`.
+
+Line 3: `Description` `Priority support package`, `Amount` `$150.00`.
+
+Line 4: `Description` `Tax`, `Amount` `$58.14`.
+
+Extraction caveat: the extraction tool should preserve document group context. It should not output four unrelated `Number`, `Date`, `Amount`, and `Status` fields.
+
+Implementation guidance: use four sibling panels in a grid and include a small invoice line item table inside the invoice panel.
+
+---
+
+S00 Example 11 - Event Run-Of-Show Visual Schedule
+
+---
+
+Create an event run-of-show schedule grouped by stage area and time. Use visual lanes for rooms and nested event blocks.
+
+Visible heading:
+
+`Event Run-Of-Show Visual Schedule`
+
+Visible description:
+
+`This example imitates an event operations run-of-show board. It tests extraction of grouped schedule blocks where time, room, owner, status, and notes repeat across visual lanes.`
+
+Header strip:
+
+`Event`: `Open Interfaces Summit`.
+
+`Date`: `October 12, 2026`.
+
+`Venue`: `Harbor Hall`.
+
+`Run status`: badge `Final draft`.
+
+Schedule lanes:
+
+Lane `Main Stage`.
+
+Block 1:
+
+`Time`: `9:00-9:20 AM`.
+
+`Item`: `Welcome and opening remarks`.
+
+`Owner`: `Lina Romero`.
+
+`Status`: badge `Confirmed`.
+
+`Notes`: `House lights down at 8:58 AM.`
+
+Block 2:
+
+`Time`: `9:30-10:15 AM`.
+
+`Item`: `Keynote: Interfaces For Messy Public Data`.
+
+`Owner`: `Owen Brooks`.
+
+`Status`: badge `Confirmed`.
+
+`Notes`: `Slides loaded on stage laptop.`
+
+Lane `Workshop Room A`.
+
+Block 3:
+
+`Time`: `10:30 AM-12:00 PM`.
+
+`Item`: `Accessibility Testing Lab`.
+
+`Owner`: `Maya Chen`.
+
+`Status`: badge `Needs materials`.
+
+`Notes`: `Print keyboard shortcut cards.`
+
+Block 4:
+
+`Time`: `1:30-3:00 PM`.
+
+`Item`: `Practical Browser Automation`.
+
+`Owner`: `Rafael Ortiz`.
+
+`Status`: badge `Confirmed`.
+
+`Notes`: `Requires stable Wi-Fi.`
+
+Lane `Registration Desk`.
+
+Block 5:
+
+`Time`: `8:00-10:00 AM`.
+
+`Item`: `Badge pickup`.
+
+`Owner`: `Grace Miller`.
+
+`Status`: badge `Staffed`.
+
+`Notes`: `Two lines: speakers and attendees.`
+
+Block 6:
+
+`Time`: `12:00-1:00 PM`.
+
+`Item`: `Lunch ticket support`.
+
+`Owner`: `Priya Shah`.
+
+`Status`: badge `Staffed`.
+
+`Notes`: `Keep replacement tickets in drawer B.`
+
+Lane `Operations`.
+
+Block 7:
+
+`Time`: `7:30-8:30 AM`.
+
+`Item`: `AV check`.
+
+`Owner`: `Theo Grant`.
+
+`Status`: badge `In progress`.
+
+`Notes`: `Check microphones in all rooms.`
+
+Block 8:
+
+`Time`: `3:15-3:45 PM`.
+
+`Item`: `Sponsor table reset`.
+
+`Owner`: `Anika Sharma`.
+
+`Status`: badge `Scheduled`.
+
+`Notes`: `Remove morning signage.`
+
+Extraction caveat: the extraction tool should preserve lane headings and event block boundaries. It should not group events only by DOM order if visual lanes are the main structure.
+
+Implementation guidance: use `.wide-scroll` and `.lane-board` with schedule blocks inside each lane.
+
+---
+
+T00 Example 12 - Project Brief Workspace
+
+---
+
+Create a project brief workspace with overview, goals, team, milestones, decisions, risks, and open questions in visually distinct grouped panels.
+
+Visible heading:
+
+`Project Brief Workspace`
+
+Visible description:
+
+`This example imitates a project brief workspace. It tests extraction of related but separate visual groups such as goals, team, decisions, risks, milestones, and open questions.`
+
+Header strip:
+
+`Project`: `Customer Portal Redesign`.
+
+`Project ID`: `PRJ-2026-2048`.
+
+`Owner`: `Maya Chen`.
+
+`Status`: badge `At risk`.
+
+`Last updated`: `May 31, 2026`.
+
+Panel `Overview`:
+
+`Problem`: `Customers cannot easily manage invoices, payment methods, and seats from one place.`
+
+`Target outcome`: `Reduce billing support tickets by 20 percent.`
+
+`Audience`: `Workspace admins and billing managers.`
+
+Panel `Goals` with goal chips:
+
+`Simplify billing navigation`.
+
+`Expose payment status clearly`.
+
+`Improve seat management transparency`.
+
+`Reduce duplicate support contacts`.
+
+Panel `Team`:
+
+`Product`: `Maya Chen`.
+
+`Engineering`: `Rafael Ortiz`.
+
+`Design`: `Lina Romero`.
+
+`Research`: `Owen Brooks`.
+
+`Operations`: `Grace Miller`.
+
+Panel `Milestones`:
+
+Milestone 1: `Prototype review`, date `June 6, 2026`, status `Scheduled`.
+
+Milestone 2: `Beta release`, date `June 21, 2026`, status `At risk`.
+
+Milestone 3: `General availability`, date `August 15, 2026`, status `Planned`.
+
+Panel `Decisions`:
+
+Decision 1: `Use single billing summary page`, owner `Maya Chen`, status `Accepted`.
+
+Decision 2: `Show payment failures in sidebar`, owner `Rafael Ortiz`, status `Pending`.
+
+Panel `Risks`:
+
+Risk 1: `Accessibility review delay`, owner `Lina Romero`, severity `High`.
+
+Risk 2: `Legacy payment method API`, owner `Rafael Ortiz`, severity `Medium`.
+
+Panel `Open Questions`:
+
+Question 1: `Should billing managers edit SSO invoices?`, owner `Grace Miller`, due `June 4, 2026`.
+
+Question 2: `Can seat overage warnings be shown before checkout?`, owner `Maya Chen`, due `June 7, 2026`.
+
+Extraction caveat: the extraction tool should preserve each panel as a separate project section. It should not merge goals, risks, decisions, and questions into one undifferentiated list.
+
+Implementation guidance: use a mosaic-like grid with panels of different sizes, but keep text readable.
+
+---
+
+U00 Example 13 - Vehicle Rental Quote Comparison Layout
+
+---
+
+Create a vehicle rental quote comparison layout with three provider quote columns and a shared trip summary sidebar.
+
+Visible heading:
+
+`Vehicle Rental Quote Comparison Layout`
+
+Visible description:
+
+`This example imitates a vehicle rental comparison page. It tests extraction of quote columns with repeated labels such as Vehicle, Price, Pickup, Return, Fees, Insurance, and Status while preserving provider context.`
+
+Shared trip summary sidebar:
+
+`Pickup location`: `Seattle Airport - SEA Terminal 1`.
+
+`Return location`: `Portland Airport - PDX Garage`.
+
+`Pickup`: `August 4, 2026, 10:30 AM`.
+
+`Return`: `August 9, 2026, 4:00 PM`.
+
+`Driver age`: `34`.
+
+`Trip type`: `One-way rental`.
+
+Quote columns:
+
+Quote 1 selected by default:
+
+`Provider`: `MetroCar`.
+
+`Vehicle`: `Compact SUV`.
+
+`Example model`: `Mazda CX-30 or similar`.
+
+`Base price`: `$340.00`.
+
+`One-way fee`: `$95.00`.
+
+`Insurance`: `Collision damage waiver included`.
+
+`Taxes and fees`: `$88.40`.
+
+`Total`: `$523.40`.
+
+`Status`: badge `Best value`.
+
+`Notes`: `Unlimited mileage.`
+
+Quote 2:
+
+`Provider`: `North Coast Rentals`.
+
+`Vehicle`: `Midsize SUV`.
+
+`Example model`: `Toyota RAV4 or similar`.
+
+`Base price`: `$405.00`.
+
+`One-way fee`: `$120.00`.
+
+`Insurance`: `Optional, $24/day`.
+
+`Taxes and fees`: `$106.18`.
+
+`Total`: `$631.18`.
+
+`Status`: badge `Flexible cancellation`.
+
+`Notes`: `Free cancellation until 24 hours before pickup.`
+
+Quote 3:
+
+`Provider`: `Summit Drive`.
+
+`Vehicle`: `Full-size sedan`.
+
+`Example model`: `Toyota Camry or similar`.
+
+`Base price`: `$365.00`.
+
+`One-way fee`: `$140.00`.
+
+`Insurance`: `Optional, $19/day`.
+
+`Taxes and fees`: `$101.20`.
+
+`Total`: `$606.20`.
+
+`Status`: badge `Limited availability`.
+
+`Notes`: `Only 2 vehicles left at pickup branch.`
+
+Selected quote detail panel:
+
+`Selected provider`: `MetroCar`.
+
+`Quote ID`: `CAR-Q-2026-8841`.
+
+`Deposit hold`: `$300.00`.
+
+`Fuel policy`: `Return full`.
+
+`Mileage`: `Unlimited`.
+
+`Cancellation`: `Free until August 2, 2026`.
+
+Extraction caveat: the extraction tool should extract each quote column as a separate provider quote. It should not merge all `Total` or `Insurance` fields across providers.
+
+Implementation guidance: use `.comparison-board` plus a shared summary panel.
+
+---
+
+V00 Example 14 - Student Degree Audit Visual Planner
+
+---
+
+Create a student degree audit planner with requirement groups, completed courses, in-progress courses, planned courses, warnings, and summary credits.
+
+Visible heading:
+
+`Student Degree Audit Visual Planner`
+
+Visible description:
+
+`This example imitates a degree audit planner. It tests extraction of requirement groups, course cards, completion states, credits, warnings, and summary totals from visual grouped panels.`
+
+Header strip:
+
+`Student`: `Mei Tanaka`.
+
+`Student ID`: `S-884209`.
+
+`Program`: `Computer Science BS`.
+
+`Catalog year`: `2024-2025`.
+
+`Audit status`: badge `On track`.
+
+Summary KPI cards:
+
+`Credits completed`: `84`.
+
+`Credits in progress`: `10`.
+
+`Credits remaining`: `26`.
+
+`Estimated graduation`: `Spring 2027`.
+
+Requirement panels:
+
+Panel `Core Computer Science`.
+
+Courses:
+
+`CS 210`, title `Data Structures`, credits `4`, status `Completed`, term `Fall 2025`.
+
+`CS 340`, title `Human-Centered Software Design`, credits `4`, status `In progress`, term `Fall 2026`.
+
+`CS 375`, title `Browser Automation Systems`, credits `3`, status `Planned`, term `Spring 2027`.
+
+Panel `Mathematics`.
+
+Courses:
+
+`MATH 221`, title `Linear Algebra`, credits `3`, status `In progress`, term `Fall 2026`.
+
+`STAT 240`, title `Applied Statistics`, credits `4`, status `Completed`, term `Spring 2026`.
+
+Panel `Writing And Society`.
+
+Courses:
+
+`HIST 180`, title `Technology And Society`, credits `3`, status `In progress`, term `Fall 2026`.
+
+`WRIT 210`, title `Technical Communication`, credits `3`, status `Completed`, term `Spring 2025`.
+
+Warning panel:
+
+`Warning`: `Upper division elective requirement still needs 6 credits.`
+
+`Advisor`: `Dr. Hannah Cho`.
+
+`Next review`: `June 16, 2026`.
+
+Extraction caveat: the extraction tool should preserve requirement group context for course cards. It should not produce a flat course list without indicating which requirement each course satisfies.
+
+Implementation guidance: use nested requirement panels with course cards and status badges.
+
+---
+
+W00 Example 15 - Support Case Triage Workspace
+
+---
+
+Create a support case triage workspace with customer context, ticket details, suggested macros, related cases, SLA panel, and internal notes.
+
+Visible heading:
+
+`Support Case Triage Workspace`
+
+Visible description:
+
+`This example imitates a support agent triage workspace. It tests extraction of visually grouped customer, ticket, SLA, related-case, suggested-action, and internal-note panels.`
+
+Header strip:
+
+`Ticket`: `TCK-2026-54102`.
+
+`Subject`: `Invoice PDF missing line item details`.
+
+`Status`: badge `Open`.
+
+`Priority`: badge `High`.
+
+`Assigned to`: `Rafael Ortiz`.
+
+Main layout:
+
+Customer panel:
+
+`Customer`: `Theo Grant`.
+
+`Email`: `theo.grant@example.test`.
+
+`Account`: `Independent documentary project`.
+
+`Plan`: `Business`.
+
+`Status`: badge `Active`.
+
+Ticket panel:
+
+`Channel`: `Chat`.
+
+`Created`: `May 31, 2026, 10:14 AM`.
+
+`Last message`: `Can you send a version that includes SKU and tax columns?`.
+
+`Detected topic`: `Invoice export`.
+
+`Status`: badge `Needs reply`.
+
+SLA panel:
+
+`SLA target`: `May 31, 2026, 5:00 PM`.
+
+`Time remaining`: `4h 46m`.
+
+`SLA status`: badge `Due soon`.
+
+`Escalation owner`: `Leah Kim`.
+
+Suggested macro panel:
+
+Macro 1: `Macro` `Invoice line item export explanation`, `Confidence` `92 percent`, `Status` `Recommended`.
+
+Macro 2: `Macro` `CSV export setup steps`, `Confidence` `78 percent`, `Status` `Optional`.
+
+Related cases panel:
+
+Case 1: `Case` `TCK-2026-54188`, `Subject` `Monthly billing export missing discount rows`, `Status` `Waiting on support`.
+
+Case 2: `Case` `TCK-2026-54217`, `Subject` `Export filter does not preserve date range`, `Status` `Open`.
+
+Internal notes panel:
+
+`Latest note`: `Customer needs CSV-compatible details, not only PDF summary.`
+
+`Next action`: `Send export article and offer CSV template.`
+
+Extraction caveat: the extraction tool should preserve customer status, ticket status, SLA status, macro status, and related case status separately.
+
+Implementation guidance: create a multi-panel agent workspace where panels are visually distinct but close together.
+
+---
+
+X00 Example 16 - Medical Lab Results Visual Grouping
+
+---
+
+Create a lab results layout with specimen information, result panels by category, reference ranges, flags, provider note, and patient disclaimer.
+
+Visible heading:
+
+`Medical Lab Results Visual Grouping`
+
+Visible description:
+
+`This example imitates a patient portal lab result view grouped by test category. It tests extraction of specimen metadata, grouped lab result values, units, reference ranges, flags, provider notes, and disclaimers.`
+
+Header strip:
+
+`Patient`: `Victor Lane`.
+
+`Lab order`: `LAB-2026-11984`.
+
+`Collected`: `May 28, 2026, 8:42 AM`.
+
+`Reported`: `May 29, 2026, 2:15 PM`.
+
+`Status`: badge `Final`.
+
+Specimen panel:
+
+`Specimen`: `Blood`.
+
+`Collection site`: `Downtown Clinic`.
+
+`Ordering provider`: `Dr. Hannah Cho`.
+
+`Status`: badge `Processed`.
+
+Result group `Lipid Panel`.
+
+Rows:
+
+`Total cholesterol`: result `182`, unit `mg/dL`, reference `< 200`, flag `Normal`.
+
+`HDL cholesterol`: result `48`, unit `mg/dL`, reference `>= 40`, flag `Normal`.
+
+`LDL cholesterol`: result `112`, unit `mg/dL`, reference `< 100`, flag `High`.
+
+`Triglycerides`: result `136`, unit `mg/dL`, reference `< 150`, flag `Normal`.
+
+Result group `Metabolic Markers`.
+
+Rows:
+
+`Glucose`: result `94`, unit `mg/dL`, reference `70-99`, flag `Normal`.
+
+`Creatinine`: result `0.9`, unit `mg/dL`, reference `0.6-1.3`, flag `Normal`.
+
+`Sodium`: result `139`, unit `mmol/L`, reference `135-145`, flag `Normal`.
+
+Provider note panel:
+
+`Note`: `LDL remains mildly elevated. Continue current medication and discuss diet changes at the next follow-up visit.`
+
+`Provider`: `Dr. Hannah Cho`.
+
+Disclaimer panel:
+
+`Disclaimer`: `This fictional demo record is not medical advice.`
+
+Extraction caveat: the extraction tool should preserve result category groupings. It should not merge units or reference ranges across rows.
+
+Implementation guidance: use grouped panels with small tables inside each result group.
+
+---
+
+Y00 Example 17 - Utility Outage Region Dashboard
+
+---
+
+Create a utility outage dashboard grouped by geographic region, with summary cards, region panels, outage cards, crew assignments, and restoration estimates. Do not use map tiles.
+
+Visible heading:
+
+`Utility Outage Region Dashboard`
+
+Visible description:
+
+`This example imitates a utility outage operations dashboard. It tests extraction of regional grouping, outage records, affected customers, crew assignments, cause, estimated restoration, and status values.`
+
+Header strip:
+
+`Utility`: `Bay Electric Demo`.
+
+`Outage date`: `May 31, 2026`.
+
+`System status`: badge `Active outages`.
+
+`Last refreshed`: `11:45 AM`.
+
+Summary KPI cards:
+
+`Active outages`: `5`.
+
+`Customers affected`: `1,842`.
+
+`Crews assigned`: `8`.
+
+`Estimated full restoration`: `8:30 PM`.
+
+Region panels:
+
+Region `North Bay`.
+
+Outage 1:
+
+`Outage ID`: `OUT-2026-4401`.
+
+`Area`: `San Rafael Hills`.
+
+`Customers affected`: `420`.
+
+`Cause`: `Vegetation contact`.
+
+`Crew`: `Crew N-3`.
+
+`Status`: badge `Crew on site`.
+
+`Estimated restoration`: `3:30 PM`.
+
+Outage 2:
+
+`Outage ID`: `OUT-2026-4408`.
+
+`Area`: `Mill Valley West`.
+
+`Customers affected`: `188`.
+
+`Cause`: `Equipment failure`.
+
+`Crew`: `Crew N-1`.
+
+`Status`: badge `Assessing`.
+
+`Estimated restoration`: `5:00 PM`.
+
+Region `Peninsula`.
+
+Outage 3:
+
+`Outage ID`: `OUT-2026-4412`.
+
+`Area`: `San Mateo Highlands`.
+
+`Customers affected`: `612`.
+
+`Cause`: `Vehicle accident`.
+
+`Crew`: `Crew P-4`.
+
+`Status`: badge `Repair in progress`.
+
+`Estimated restoration`: `4:15 PM`.
+
+Region `East Bay`.
+
+Outage 4:
+
+`Outage ID`: `OUT-2026-4419`.
+
+`Area`: `Oakland Temescal`.
+
+`Customers affected`: `314`.
+
+`Cause`: `Underground cable issue`.
+
+`Crew`: `Crew E-2`.
+
+`Status`: badge `Waiting for parts`.
+
+`Estimated restoration`: `8:30 PM`.
+
+Outage 5:
+
+`Outage ID`: `OUT-2026-4424`.
+
+`Area`: `Alameda West`.
+
+`Customers affected`: `308`.
+
+`Cause`: `Transformer fault`.
+
+`Crew`: `Crew E-5`.
+
+`Status`: badge `Crew dispatched`.
+
+`Estimated restoration`: `6:45 PM`.
+
+Extraction caveat: the extraction tool should preserve regional grouping. It should not merge all outages into a flat list without region context.
+
+Implementation guidance: use region panels in a grid. Use text-based region names and no map assets.
+
+---
+
+Z00 Example 18 - Product Configurator Summary Layout
+
+---
+
+Create a product configurator summary layout with a main product, selected options grouped by category, pricing panels, compatibility warnings, and selected configuration summary.
+
+Visible heading:
+
+`Product Configurator Summary Layout`
+
+Visible description:
+
+`This example imitates a product configurator review page. It tests extraction of selected options grouped by category, repeated labels such as Option, Price, Status, and Notes, plus a final configuration summary.`
+
+Header strip:
+
+`Product`: `DataGrid Studio Pro Deployment Package`.
+
+`Configuration ID`: `CFG-2026-88420`.
+
+`Status`: badge `Ready for quote`.
+
+`Configured by`: `Priya Shah`.
+
+Option group `License`.
+
+`Option`: `Team edition`.
+
+`Seats`: `12`.
+
+`Price`: `$5,760/year`.
+
+`Status`: badge `Selected`.
+
+`Notes`: `Includes shared workspaces and admin controls.`
+
+Option group `Support`.
+
+`Option`: `Priority support`.
+
+`Response time`: `4 business hours`.
+
+`Price`: `$1,200/year`.
+
+`Status`: badge `Selected`.
+
+`Notes`: `Required for production deployment.`
+
+Option group `Data Retention`.
+
+`Option`: `Audit log retention - 2 years`.
+
+`Storage`: `Included`.
+
+`Price`: `$960/year`.
+
+`Status`: badge `Selected`.
+
+`Notes`: `Meets compliance requirement.`
+
+Option group `Integrations`.
+
+Integration cards:
+
+`Integration`: `SAML SSO`, `Price` `$0`, `Status` `Included`, `Notes` `Requires identity provider metadata`.
+
+`Integration`: `SCIM provisioning`, `Price` `$480/year`, `Status` `Selected`, `Notes` `Requires admin token`.
+
+`Integration`: `Webhook export`, `Price` `$0`, `Status` `Available`, `Notes` `Not selected`.
+
+Compatibility warning panel:
+
+`Warning`: `SCIM provisioning requires SAML SSO to be configured first.`
+
+`Severity`: badge `Medium`.
+
+`Owner`: `Admin Systems`.
+
+Pricing summary panel:
+
+`License subtotal`: `$5,760`.
+
+`Support subtotal`: `$1,200`.
+
+`Retention subtotal`: `$960`.
+
+`Integration subtotal`: `$480`.
+
+`Annual total`: `$8,400`.
+
+Extraction caveat: the extraction tool should preserve option group context. It should not merge all `Option`, `Price`, `Status`, and `Notes` fields across categories.
+
+Implementation guidance: use a split layout with grouped option panels and a pricing sidebar.
+
+---
+
+AA00 Example 19 - Procurement Quote Comparison Matrix
+
+---
+
+Create a procurement quote comparison matrix with vendor columns, requirements rows, compliance states, pricing rows, and selected recommendation panel.
+
+Visible heading:
+
+`Procurement Quote Comparison Matrix`
+
+Visible description:
+
+`This example imitates a procurement vendor comparison matrix. It tests extraction of vendor columns, requirement rows, compliance values, pricing values, recommendation status, and selected vendor details.`
+
+Header strip:
+
+`Procurement request`: `REQ-2026-7712`.
+
+`Category`: `Billing platform renewal`.
+
+`Evaluator`: `Renee Coleman`.
+
+`Status`: badge `Vendor comparison`.
+
+Requirement sidebar:
+
+`Required term`: `12 months`.
+
+`Required support`: `Priority support`.
+
+`Required compliance`: `SOC 2 report`.
+
+`Budget`: `$90,000`.
+
+Vendor comparison columns:
+
+Vendor 1 selected by default:
+
+`Vendor`: `Northstar Cloud Services`.
+
+`Quote ID`: `Q-NS-2026-118`.
+
+`Annual price`: `$84,000`.
+
+`Support`: `Priority support included`.
+
+`SOC 2`: `Available`.
+
+`Data retention`: `2 years`.
+
+`Implementation`: `4 weeks`.
+
+`Status`: badge `Recommended`.
+
+`Notes`: `Best match for current requirements.`
+
+Vendor 2:
+
+`Vendor`: `Atlas Systems`.
+
+`Quote ID`: `Q-AS-2026-221`.
+
+`Annual price`: `$92,400`.
+
+`Support`: `Priority support add-on`.
+
+`SOC 2`: `Available`.
+
+`Data retention`: `1 year`.
+
+`Implementation`: `6 weeks`.
+
+`Status`: badge `Over budget`.
+
+`Notes`: `Strong platform but higher cost.`
+
+Vendor 3:
+
+`Vendor`: `CedarStack`.
+
+`Quote ID`: `Q-CS-2026-087`.
+
+`Annual price`: `$76,800`.
+
+`Support`: `Standard support`.
+
+`SOC 2`: `Pending`.
+
+`Data retention`: `90 days`.
+
+`Implementation`: `3 weeks`.
+
+`Status`: badge `Does not meet requirements`.
+
+`Notes`: `Data retention and compliance gaps.`
+
+Selected recommendation panel:
+
+`Selected vendor`: `Northstar Cloud Services`.
+
+`Recommendation`: `Approve renewal`.
+
+`Primary reason`: `Meets compliance and support requirements within budget`.
+
+`Approval chain`: `Finance manager`, `Legal`, `CFO`.
+
+`Next action`: `Send for legal review`.
+
+Extraction caveat: the extraction tool should preserve vendor columns as compared entities. It should not treat requirement sidebar values as another vendor.
+
+Implementation guidance: use `.wide-scroll` and `.comparison-board`, plus a requirement sidebar and recommendation panel.
+
+---
+
+AB00 Example 20 - Legal Contract Clause Review Workspace
+
+---
+
+Create a legal contract clause review workspace with document metadata, clause cards grouped by topic, risk notes, comments, and approval panel.
+
+Visible heading:
+
+`Legal Contract Clause Review Workspace`
+
+Visible description:
+
+`This example imitates a legal contract review workspace. It tests extraction of document metadata, clause groups, clause status, reviewer comments, risk levels, approval state, and repeated labels across legal sections.`
+
+Header strip:
+
+`Document`: `Master Services Agreement - Northstar Cloud`.
+
+`Document ID`: `DOC-8841`.
+
+`Matter`: `Vendor Agreement Review`.
+
+`Review status`: badge `Needs business owner review`.
+
+`Reviewer`: `Renee Coleman`.
+
+Document metadata panel:
+
+`Effective date`: `January 18, 2026`.
+
+`Renewal date`: `January 18, 2027`.
+
+`Notice deadline`: `November 19, 2026`.
+
+`Contract value`: `$84,000 annually`.
+
+Clause group `Termination`.
+
+Clause 1:
+
+`Clause`: `Termination for convenience`.
+
+`Section`: `12.2`.
+
+`Status`: badge `Review`.
+
+`Risk`: badge `Medium`.
+
+`Text summary`: `Either party may terminate with 60 days written notice before renewal.`
+
+`Comment`: `Confirm business owner accepts 60-day notice period.`
+
+Clause 2:
+
+`Clause`: `Termination for cause`.
+
+`Section`: `12.3`.
+
+`Status`: badge `Accepted`.
+
+`Risk`: badge `Low`.
+
+`Text summary`: `Termination allowed after uncured material breach.`
+
+`Comment`: `Standard language.`
+
+Clause group `Data Protection`.
+
+Clause 3:
+
+`Clause`: `Data retention`.
+
+`Section`: `8.4`.
+
+`Status`: badge `Review`.
+
+`Risk`: badge `High`.
+
+`Text summary`: `Vendor retains audit logs for 2 years.`
+
+`Comment`: `Confirm retention meets compliance requirement.`
+
+Clause 4:
+
+`Clause`: `Subprocessors`.
+
+`Section`: `8.7`.
+
+`Status`: badge `Accepted`.
+
+`Risk`: badge `Medium`.
+
+`Text summary`: `Vendor must provide notice for new subprocessors.`
+
+`Comment`: `Notice period acceptable.`
+
+Approval panel:
+
+`Business owner`: `Grace Miller`.
+
+`Legal owner`: `Renee Coleman`.
+
+`Approval status`: badge `Pending`.
+
+`Next action`: `Business owner review by June 7, 2026`.
+
+Extraction caveat: the extraction tool should preserve clause group headings and not merge all statuses, risks, or comments across clauses.
+
+Implementation guidance: use grouped clause panels, each with nested clause cards and a right approval panel.
+
+---
+
+AC00 Example 21 - Logistics Shipment Route Board
+
+---
+
+Create a logistics shipment route board with origin, destination, stop cards, carrier panels, package groups, and exception notes.
+
+Visible heading:
+
+`Logistics Shipment Route Board`
+
+Visible description:
+
+`This example imitates a logistics route board. It tests extraction of route-level fields, stop-level fields, package-level fields, carrier details, exception notes, and repeated labels such as Status, ETA, Location, and Notes.`
+
+Header strip:
+
+`Route`: `RTE-2026-5518`.
+
+`Shipment`: `SHP-2026-77120`.
+
+`Carrier`: `Example Parcel Freight`.
+
+`Overall status`: badge `In transit`.
+
+`Reference`: `ORD-2026-104922`.
+
+Route summary panel:
+
+`Origin`: `Reno DC`.
+
+`Destination`: `San Francisco Dock B`.
+
+`Departure`: `May 31, 2026, 7:42 PM`.
+
+`ETA`: `June 4, 2026, 8:00 PM`.
+
+`Service`: `Ground residential`.
+
+Stop lane cards:
+
+Stop 1:
+
+`Stop`: `Origin scan`.
+
+`Location`: `Reno, NV`.
+
+`Time`: `May 31, 2026, 7:42 PM`.
+
+`Status`: badge `Complete`.
+
+`ETA`: `Complete`.
+
+`Notes`: `Package received by carrier.`
+
+Stop 2:
+
+`Stop`: `Regional facility`.
+
+`Location`: `Sacramento, CA`.
+
+`Time`: `June 1, 2026, 2:55 PM`.
+
+`Status`: badge `Complete`.
+
+`ETA`: `Complete`.
+
+`Notes`: `Package arrived at sorting facility.`
+
+Stop 3 selected by default:
+
+`Stop`: `Destination facility`.
+
+`Location`: `San Francisco, CA`.
+
+`Time`: `Pending`.
+
+`Status`: badge `In transit`.
+
+`ETA`: `June 4, 2026, 5:00 AM`.
+
+`Notes`: `Linehaul trailer departed Sacramento.`
+
+Stop 4:
+
+`Stop`: `Final delivery`.
+
+`Location`: `120 King Street Dock B`.
+
+`Time`: `Pending`.
+
+`Status`: badge `Scheduled`.
+
+`ETA`: `June 4, 2026, by 8:00 PM`.
+
+`Notes`: `Freight entrance required.`
+
+Package group panel:
+
+Package 1: `Package ID` `PKG-001`, `Weight` `7.4 lb`, `Contents` `Canvas backpack and bottle`, `Status` `In transit`.
+
+Package 2: `Package ID` `PKG-002`, `Weight` `1.1 lb`, `Contents` `Leather luggage tag`, `Status` `In transit`.
+
+Exception panel:
+
+`Exception`: `None active`.
+
+`Last exception`: `Address note added by shipper`.
+
+`Owner`: `Logistics desk`.
+
+Extraction caveat: the extraction tool should preserve route-level, stop-level, and package-level grouping. It should not confuse route ETA with stop ETA.
+
+Implementation guidance: use a horizontal timeline-like board for stops and nested package cards below.
+
+---
+
+AD00 Example 22 - Nested Admin Settings Accordion Layout
+
+---
+
+Create a nested admin settings layout with accordion-style groups for billing, security, notifications, integrations, and data retention. Some sections should be open by default and others collapsed.
+
+Visible heading:
+
+`Nested Admin Settings Accordion Layout`
+
+Visible description:
+
+`This example imitates an admin settings page with nested accordion sections. It tests extraction of active settings, section grouping, nested option values, repeated labels, expanded and collapsed panel behavior, and settings summaries.`
+
+Header strip:
+
+`Workspace`: `Northwind Analytics`.
+
+`Settings page`: `Admin configuration`.
+
+`Plan`: `Business annual`.
+
+`Status`: badge `Changes unsaved`.
+
+`Last saved`: `May 30, 2026, 4:12 PM`.
+
+Accordion section 1 open by default:
+
+`Billing Settings`.
+
+Visible summary:
+
+`Status`: badge `Configured`.
+
+Fields:
+
+`Invoice recipients`: `billing@example.test`, `finance@example.test`.
+
+`Payment method`: `Visa ending in 4242`.
+
+`Purchase order required`: `Yes`.
+
+`Renewal date`: `January 18, 2027`.
+
+Nested subsection `Approval Rules`:
+
+`Approval threshold`: `$5,000`.
+
+`Approver`: `Renee Coleman`.
+
+`Status`: badge `Active`.
+
+Accordion section 2 open by default:
+
+`Security Settings`.
+
+Fields:
+
+`Status`: badge `Enforced`.
+
+`SAML SSO`: `Enabled`.
+
+`SCIM provisioning`: `Enabled`.
+
+`MFA requirement`: `Required for all admins`.
+
+`Session length`: `12 hours`.
+
+Nested subsection `Allowed Domains`:
+
+`Domain 1`: `example.test`.
+
+`Domain 2`: `northwind.example.test`.
+
+Accordion section 3 collapsed by default:
+
+`Notification Settings`.
+
+Collapsed summary visible:
+
+`Status`: badge `Partially configured`.
+
+`Summary`: `Email digests enabled, Slack alerts not configured.`
+
+Hidden content when collapsed should include:
+
+`Digest frequency`: `Daily`.
+
+`Recipients`: `ops@example.test`.
+
+`Slack channel`: `Not configured`.
+
+Accordion section 4 open by default:
+
+`Integrations`.
+
+Fields:
+
+`Status`: badge `Healthy`.
+
+`Webhook endpoint`: `https://example.test/webhooks/northwind`.
+
+`Last delivery`: `May 31, 2026, 11:40 AM`.
+
+`Failure count`: `0`.
+
+Nested integration cards:
+
+`Integration`: `SAML SSO`, `Status` `Connected`, `Owner` `Anika Sharma`.
+
+`Integration`: `SCIM`, `Status` `Connected`, `Owner` `Rafael Ortiz`.
+
+`Integration`: `Billing export`, `Status` `Needs attention`, `Owner` `Renee Coleman`.
+
+Accordion section 5 open by default:
+
+`Data Retention`.
+
+Fields:
+
+`Status`: badge `Compliant`.
+
+`Audit log retention`: `2 years`.
+
+`Export retention`: `90 days`.
+
+`Deleted workspace retention`: `30 days`.
+
+`Legal hold`: `Disabled`.
+
+Nested warning:
+
+`Warning`: `Billing export retention is shorter than audit log retention.`
+
+`Severity`: badge `Medium`.
+
+Extraction caveat: the extraction tool should preserve accordion section grouping and nested subsection grouping. It should not extract hidden collapsed content unless the tester expands it and selects it. It should distinguish multiple `Status` fields by section.
+
+Implementation guidance: implement accordion toggles with `data-toggle-target`. The collapsed notification section should show summary content even while detailed content is hidden.
+
+---
+
+AE00 Required Final HTML Skeleton
+
+---
+
+The coding agent should produce a complete HTML document using this general skeleton:
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page 8 - Complex Layout And Visual Grouping</title>
+  <style>
+    /* Inline CSS only. */
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-hero">
+      <p class="page-kicker">Content Extraction Demo Page</p>
+      <h1>Page 8 - Complex Layout And Visual Grouping</h1>
+      <p>
+        This standalone page contains realistic complex layout examples for testing extraction of visual groups, nested records, repeated labels, selected panels, comparison columns, timelines, sidebars, accordions, dashboard sections, and layout-driven context.
+      </p>
+    </header>
+
+    <section class="example-card" id="example-01">
+      <!-- Example 01 content. -->
+    </section>
+
+    <!-- Continue through example-22. -->
+  </main>
+
+  <script>
+    /* Minimal inline JavaScript only. */
+  </script>
+</body>
+</html>
+```
+
+The generated file must include all 22 examples in the same file.
+
+The page must not require a server.
+
+The page must not fetch data.
+
+The page must not include broken links to external assets.
+
+The page must not use placeholder text instead of the specified values.
+
+The page must not use external images, external map tiles, external chart libraries, external dashboard libraries, external APIs, or external fonts.
+
+The page must not use real customers, real account numbers, real patient data, real student data, real user data, real credentials, real policy numbers, or real production identifiers.
+
+The page must not convert all examples into simple stacked cards. It must include a mix of complex grids, split panels, comparison boards, nested cards, visual lanes, timelines, mosaic dashboards, accordions, and sidebars.
+
+---
+
+AF00 Quality Bar
+
+---
+
+The final page should be useful as a long-term manual testing page for a content extraction tool.
+
+Each example must be visibly distinct enough that a tester can scroll to it, select a visual region, select a nested card, select a whole board, or select a sidebar and understand what visual grouping behavior is being tested.
+
+Each example must contain realistic populated values.
+
+Each example must include the specified heading, description, grouped regions, labels, values, repeated labels, statuses, badges, notes, nested records, selected states, side panels, and extraction caveat.
+
+Every complex layout example must expose enough visible content for extraction testing. Do not hide the most important values only in JavaScript variables, hidden inputs, comments, or inaccessible attributes.
+
+Use section headings, panel titles, borders, backgrounds, spacing, and visual hierarchy intentionally. These are the main extraction targets for this page.
+
+Use repeated labels across panels in every example where possible. Repeated labels are important because the extraction tool must preserve group context.
+
+Use selected cards and selected detail panels where specified. The selected detail panel should add new information and may duplicate a few visible fields, but it must not be the only place where the main record data exists.
+
+Use comparison layouts where each column is a distinct compared entity. Use boards where each lane is a meaningful group. Use nested panels where parent-child relationships matter.
+
+Do not make all examples visually identical. The point of this page is to test many real-world variations of layout-driven extraction.
+
+Do not collapse all metadata into one paragraph if the example calls for structured metadata.
+
+Do not convert all examples into ordinary forms, simple tables, or simple lists. This page must focus on complex layouts, visual grouping, nested sections, comparison boards, sidebars, timelines, and layout-driven hierarchy.
+
+The implementation should favor clarity and realistic structure over cleverness.
+
+The coding agent may improve layout, spacing, CSS details, and basic interaction behavior, but it must not remove examples, reduce the number of examples, replace complex visual layouts with generic forms, or simplify the scenarios into toy examples.
+
+The final output must be one portable HTML file.

@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="ja-JP" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ページ 11 - 国際化（日本語・日本）</title>
+<style>
+  :root {
+    --bg: #f7f6f2;
+    --card: #ffffff;
+    --ink: #202124;
+    --muted: #62666d;
+    --line: #dedbd2;
+    --soft: #f0eee7;
+    --panel: #fffdf8;
+    --panel-alt: #f8f7f1;
+    --accent: #243b6b;
+    --accent-soft: #e8ecf6;
+    --subtle-red: #9b3a30;
+    --ok: #28704f;
+    --ok-soft: #e8f4ee;
+    --warn: #8a6415;
+    --warn-soft: #fbf3df;
+    --danger: #b23b34;
+    --danger-soft: #faece9;
+    --info: #31558f;
+    --radius: 10px;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif; background: var(--bg); color: var(--ink); line-height: 1.75; }
+  main { width: min(1160px, calc(100% - 36px)); margin: 0 auto; padding: 30px 0 76px; }
+  a { color: var(--accent); }
+  h1, h2, h3, h4 { line-height: 1.35; }
+  button, input, select, textarea { font: inherit; }
+  :focus-visible { outline: 2px solid var(--subtle-red); outline-offset: 3px; }
+  .page-hero { background: linear-gradient(135deg, #fbfaf6 0%, #eef0f6 100%); color: var(--ink); border: 1px solid var(--line); border-top: 5px solid var(--accent); border-radius: 14px; padding: 28px 30px; margin-bottom: 24px; box-shadow: 0 8px 22px rgba(45, 43, 36, 0.06); }
+  .page-hero h1 { margin: 6px 0 10px; font-size: 1.65rem; letter-spacing: 0.02em; }
+  .page-kicker { letter-spacing: 0.12em; font-size: 0.75rem; color: var(--accent); margin: 0; font-weight: 700; }
+  .page-hero p { margin: 0; max-width: 900px; color: #4d5260; }
+  .example-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 22px; margin: 20px 0; box-shadow: 0 3px 16px rgba(44, 41, 33, 0.045); }
+  .example-kicker { margin: 0 0 5px; color: var(--subtle-red); font-weight: 700; font-size: 0.78rem; letter-spacing: 0.08em; }
+  .example-header h2 { margin: 0; font-size: 1.25rem; }
+  .example-description { color: var(--muted); max-width: 940px; }
+  .test-intent { background: #faf7ec; border-left: 4px solid var(--accent); border-radius: 7px; padding: 10px 14px; color: #38405a; font-size: 0.9rem; max-width: 940px; }
+  .example-surface { margin-top: 15px; padding: 18px; border: 1px solid var(--line); border-radius: 10px; background: #fffefa; }
+  .sr-only { position: absolute; width: 1px; min-height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+  .panel, .summary-panel, .detail-panel { padding: 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+  .summary-panel, .detail-panel { background: var(--panel-alt); }
+  .panel-title { margin: 0 0 10px; font-size: 0.76rem; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; }
+  .layout-grid-two { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+  .layout-grid-three { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+  .split-layout { display: grid; grid-template-columns: minmax(0,1fr) 310px; gap: 14px; align-items: start; }
+  .wide-scroll { overflow-x: auto; }
+  .field-row { display: flex; justify-content: space-between; gap: 14px; padding: 7px 0; border-bottom: 1px solid var(--soft); }
+  .field-row:last-child { border-bottom: 0; }
+  .field-label { color: var(--muted); font-weight: 600; }
+  .field-value { text-align: right; font-weight: 600; }
+  .field-block { padding: 7px 0; border-bottom: 1px solid var(--soft); }
+  .field-block:last-child { border-bottom: 0; }
+  .field-block .field-label { display: block; margin-bottom: 3px; }
+  .form-field { margin-bottom: 12px; }
+  .form-field label { display: block; font-weight: 600; margin-bottom: 4px; }
+  .req::after { content: " *"; color: var(--danger); }
+  input[type=text], input[type=email], input[type=tel], input[type=number], input[type=date], input[type=search], select, textarea { width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid #c9c5bb; border-radius: 7px; background: #fff; }
+  textarea { min-height: 76px; }
+  .help-text { color: var(--muted); font-size: 0.84rem; margin: 4px 0 0; }
+  .error-text { color: var(--danger); font-size: 0.85rem; margin: 4px 0 0; font-weight: 600; }
+  [aria-invalid=true] { border-color: var(--danger); background: var(--danger-soft); }
+  .error-summary { border: 2px solid var(--danger); background: var(--danger-soft); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+  .error-summary h3 { margin: 0 0 8px; color: var(--danger); font-size: 1rem; }
+  .error-summary a { color: var(--danger); font-weight: 600; }
+  .badge, .chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--line); background: #fff; }
+  .badge.ok { color: var(--ok); background: var(--ok-soft); border-color: #bddccf; }
+  .badge.warn { color: var(--warn); background: var(--warn-soft); border-color: #e9d8aa; }
+  .badge.danger { color: var(--danger); background: var(--danger-soft); border-color: #e8c5bf; }
+  .badge.info { color: var(--info); background: var(--accent-soft); border-color: #c6d0e5; }
+  .badge.neutral { color: var(--muted); background: var(--soft); }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 16px; border-radius: 7px; border: 1px solid #c9c5bb; background: #fff; cursor: pointer; font-weight: 600; color: var(--ink); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.ghost { background: transparent; }
+  .stepper { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .step { flex: 1; min-width: 130px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel-alt); }
+  .step[aria-current=step] { border-color: var(--accent); background: var(--accent-soft); }
+  .step .s-num { font-weight: 800; color: var(--accent); }
+  .step .s-label { display: block; font-size: 0.86rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; min-width: 560px; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--soft); text-align: left; vertical-align: top; }
+  th { background: var(--panel-alt); color: var(--muted); }
+  caption { text-align: left; font-weight: 700; padding: 6px 0; }
+  .mono { font-family: var(--mono); }
+  .token-field { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border: 1px solid #c9c5bb; border-radius: 7px; }
+  .token { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-soft); border: 1px solid #c6d0e5; border-radius: 999px; padding: 3px 6px 3px 10px; font-size: 0.86rem; }
+  .token button { border: 0; background: transparent; cursor: pointer; font-size: 1rem; line-height: 1; color: var(--info); }
+  .listbox { list-style: none; margin: 8px 0 0; padding: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .listbox li { padding: 9px 12px; border-bottom: 1px solid var(--soft); cursor: pointer; }
+  .listbox li:last-child { border-bottom: 0; }
+  .listbox li[aria-selected=true] { background: var(--accent-soft); }
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+  .cal .h { text-align: center; font-weight: 700; color: var(--muted); padding: 5px 0; font-size: 0.82rem; }
+  .cal button { min-height: 50px; border: 1px solid var(--line); border-radius: 8px; background: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .cal button[aria-selected=true] { border-color: var(--accent); background: var(--accent-soft); }
+  .cal button[disabled] { background: var(--soft); color: #aaa49a; cursor: not-allowed; }
+  .cal .av { font-size: 0.68rem; color: var(--muted); }
+  .tablist { display: flex; gap: 4px; border-bottom: 2px solid var(--line); margin-bottom: 12px; flex-wrap: wrap; }
+  .tab { border: 0; background: transparent; padding: 9px 14px; cursor: pointer; font-weight: 600; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -2px; }
+  .tab[aria-selected=true] { color: var(--accent); border-bottom-color: var(--accent); }
+  .acc { border: 1px solid var(--line); border-radius: 9px; margin-bottom: 8px; overflow: hidden; }
+  .acc-trigger { width: 100%; text-align: left; background: var(--panel-alt); border: 0; padding: 12px 14px; cursor: pointer; font-weight: 600; display: flex; justify-content: space-between; gap: 10px; }
+  .acc-body { padding: 12px 14px; }
+  .ellipsized { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: bottom; }
+  .kpi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
+  .kpi .card { border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: var(--panel-alt); }
+  .kpi .k-val { font-size: 1.35rem; font-weight: 800; }
+  .kpi .k-lab { color: var(--muted); font-size: 0.84rem; }
+  .bar { min-height: 12px; border-radius: 6px; background: var(--accent); }
+  .bartrack { background: var(--soft); border-radius: 6px; overflow: hidden; }
+  .result-card { border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-bottom: 10px; cursor: pointer; }
+  .result-card[aria-selected=true] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft) inset; }
+  fieldset { border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin: 0 0 14px; }
+  legend { font-weight: 700; padding: 0 6px; }
+  @media (max-width: 920px) { .layout-grid-two, .layout-grid-three, .split-layout, .kpi { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <header class="page-hero">
+    <p class="page-kicker">コンテンツ抽出と国際化デモ</p>
+    <h1>ページ 11 - 国際化（日本）</h1>
+    <p>このページには、フォーム、検証、レイアウト、アクセシビリティ、ロケール別の書式、操作、抽出動作をテストするための、現実的な日本向け UI 例が 20 件含まれています。データはすべて架空です。通貨は日本円、日付は日本の表記、電話番号は日本の形式で表示しています。</p>
+  </header>
+
+  <section class="example-card" id="example-01">
+    <header class="example-header"><p class="example-kicker">例 01</p><h2>複数ステップの購入手続きと国内住所入力</h2></header>
+    <p class="example-description">日本国内の配送先住所、配送方法、条件付きの法人請求パネル、円建ての注文概要を含む 4 ステップの購入手続きです。</p>
+    <p class="test-intent">日本の住所形式、ローカライズされた検証、ステップ名、配送選択、支払い概要、テキストの伸縮をテストします。</p>
+    <div class="example-surface">
+      <div class="stepper" role="list" aria-label="購入手続きのステップ">
+        <div class="step" role="listitem"><span class="s-num">1</span><span class="s-label">カート</span></div>
+        <div class="step" role="listitem" aria-current="step"><span class="s-num">2</span><span class="s-label">配送先</span></div>
+        <div class="step" role="listitem"><span class="s-num">3</span><span class="s-label">お支払い</span></div>
+        <div class="step" role="listitem" id="ex01-review-step"><span class="s-num">4</span><span class="s-label">確認</span></div>
+      </div>
+      <div class="split-layout">
+        <form>
+          <div class="header-strip field-row"><span class="field-label">注文 ID</span><span class="field-value mono">ORD-2026-104922</span></div>
+          <div class="form-field"><label class="req" for="ex01-name">氏名</label><input id="ex01-name" type="text" value="田中 太郎"></div>
+          <div class="form-field"><label class="req" for="ex01-street">住所</label><input id="ex01-street" type="text" value="〒100-0005 東京都千代田区丸の内 1-1-1"></div>
+          <div class="form-field"><label for="ex01-apt">建物名・部屋番号・納品口</label><input id="ex01-apt" type="text" value="丸の内ビル 402号室"></div>
+          <div class="layout-grid-three">
+            <div class="form-field"><label class="req" for="ex01-city">市区町村</label><input id="ex01-city" type="text" value="千代田区"></div>
+            <div class="form-field"><label class="req" for="ex01-state">都道府県</label>
+              <select id="ex01-state"><option selected>東京都</option><option>神奈川県</option><option>大阪府</option><option>福岡県</option></select></div>
+            <div class="form-field"><label class="req" for="ex01-zip">郵便番号</label><input id="ex01-zip" type="text" inputmode="numeric" value="100-0005"></div>
+          </div>
+          <div class="form-field"><label class="req" for="ex01-phone">電話番号</label><input id="ex01-phone" type="tel" value="+81 90-1234-5678"><p class="help-text">形式: +81 90-1234-5678</p></div>
+          <div class="form-field"><label for="ex01-method">配送方法</label>
+            <select id="ex01-method"><option selected>通常配送（3〜5営業日）</option><option>翌々日指定便</option><option>翌日配送</option></select></div>
+          <div class="form-field"><label for="ex01-instr">配送時のご要望</label><textarea id="ex01-instr" data-counter="ex01-count" data-max="120">受付にお預けください。</textarea><p class="help-text"><span id="ex01-count">11</span>/120 文字 <span id="ex01-instr-err" class="error-text" hidden>配送時のご要望が長すぎます。</span></p></div>
+          <fieldset>
+            <legend>請求区分</legend>
+            <label><input type="radio" name="ex01-bill" checked> 個人</label>
+            <label style="margin-left:14px;"><input type="radio" name="ex01-bill" data-toggle-target="#ex01-business"> 法人</label>
+            <div id="ex01-business" hidden style="margin-top:10px;">
+              <div class="form-field"><label for="ex01-company">会社名</label><input id="ex01-company" type="text" placeholder="株式会社アトラス商品企画"></div>
+              <div class="form-field"><label for="ex01-taxid">法人番号（デモ）</label><input id="ex01-taxid" type="text" placeholder="1234567890123"></div>
+            </div>
+          </fieldset>
+          <p><button class="btn primary" type="button" data-status="ex01-status" data-status-msg="確認ステップが選択されました。">確認へ進む</button> <span id="ex01-status" class="help-text" role="status"></span></p>
+        </form>
+        <aside class="summary-panel" aria-label="注文概要">
+          <p class="panel-title">注文概要</p>
+          <div class="field-row"><span class="field-label">商品点数</span><span class="field-value">3</span></div>
+          <div class="field-row"><span class="field-label">商品小計</span><span class="field-value">¥15,300</span></div>
+          <div class="field-row"><span class="field-label">配送料</span><span class="field-value">¥895</span></div>
+          <div class="field-row"><span class="field-label">消費税 10%</span><span class="field-value">¥1,620</span></div>
+          <div class="field-row"><span class="field-label">割引</span><span class="field-value">-¥1,530</span></div>
+          <div class="field-row"><span class="field-label">ご請求合計</span><span class="field-value">¥16,285</span></div>
+          <div class="field-row"><span class="field-label">お届け予定日</span><span class="field-value">2026年6月8日</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-02">
+    <header class="example-header"><p class="example-kicker">例 02</p><h2>氏名と電話番号を含む連絡先プロフィール</h2></header>
+    <p class="example-description">姓・名、フリガナ、表示名、メール、携帯電話、タイムゾーンを入力し、右側のプロフィール概要に反映する連絡先フォームです。</p>
+    <p class="test-intent">日本語の氏名順、電話番号形式、プレースホルダー、補足説明、表示名の文字数カウンター、検証をテストします。</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <form>
+          <div class="layout-grid-two">
+            <div class="form-field"><label class="req" for="ex02-given">名</label><input id="ex02-given" type="text" value="花子"></div>
+            <div class="form-field"><label class="req" for="ex02-family">姓</label><input id="ex02-family" type="text" value="佐藤"></div>
+          </div>
+          <div class="layout-grid-two">
+            <div class="form-field"><label for="ex02-kana-family">姓（カナ）</label><input id="ex02-kana-family" type="text" value="サトウ"></div>
+            <div class="form-field"><label for="ex02-kana-given">名（カナ）</label><input id="ex02-kana-given" type="text" value="ハナコ"></div>
+          </div>
+          <div class="form-field"><label for="ex02-pref">表示名</label><input id="ex02-pref" type="text" value="佐藤 花子" data-counter="ex02-count" data-max="40"><p class="help-text">チームメンバーに表示されます。<span id="ex02-count">5</span>/40</p></div>
+          <div class="form-field"><label class="req" for="ex02-email">メールアドレス</label><input id="ex02-email" type="email" value="hanako.sato@example.test"><p class="help-text">領収書とセキュリティ通知をこちらへ送信します。</p></div>
+          <div class="form-field"><label class="req" for="ex02-phone">携帯電話</label><input id="ex02-phone" type="tel" value="+81 90-1234-5678"><p class="help-text">形式: +81 90-1234-5678</p></div>
+          <div class="form-field"><label for="ex02-tz">タイムゾーン</label>
+            <select id="ex02-tz"><option selected>日本標準時（JST）</option><option>協定世界時（UTC）</option><option>シンガポール時間</option><option>太平洋時間</option></select></div>
+        </form>
+        <aside class="summary-panel" aria-label="プロフィール概要">
+          <p class="panel-title">プロフィール概要</p>
+          <div class="field-row"><span class="field-label">氏名</span><span class="field-value">佐藤 花子</span></div>
+          <div class="field-row"><span class="field-label">表示名</span><span class="field-value">佐藤 花子</span></div>
+          <div class="field-row"><span class="field-label">メール</span><span class="field-value">hanako.sato@example.test</span></div>
+          <div class="field-row"><span class="field-label">携帯</span><span class="field-value">+81 90-1234-5678</span></div>
+          <div class="field-row"><span class="field-label">タイムゾーン</span><span class="field-value">JST</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-03">
+    <header class="example-header"><p class="example-kicker">例 03</p><h2>連動する選択欄を備えた予約フロー</h2></header>
+    <p class="example-description">サービス内容に応じて拠点リストが変わり、拠点に応じて時間帯リストを選ぶ配送作業予約です。空き状況メッセージと概要を表示します。</p>
+    <p class="test-intent">連動ドロップダウン、日本の日付と 24 時間表記、カスタム選択、空き状況メッセージ、人数上限の動的検証をテストします。</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <form>
+          <div class="form-field"><label for="ex03-service">サービス種別</label>
+            <select id="ex03-service"><option value="install" selected>家電設置</option><option value="repair">訪問修理</option><option value="pickup">寄付品回収</option></select></div>
+          <div class="form-field"><label for="ex03-loc">サービス拠点</label><select id="ex03-loc"></select></div>
+          <div class="form-field"><label for="ex03-date">日付</label><input id="ex03-date" type="date" value="2026-06-11"></div>
+          <div class="form-field"><label for="ex03-time">時間帯</label><select id="ex03-time"></select></div>
+          <div class="form-field"><label for="ex03-party">必要な作業員数</label><input id="ex03-party" type="number" min="1" max="4" value="2"><p id="ex03-warn" class="error-text" hidden>この拠点で対応できる作業員数は最大 4 名です。</p></div>
+          <div class="form-field"><label for="ex03-req">特記事項</label><textarea id="ex03-req">インターホンで 4821 を入力してください。</textarea></div>
+          <p id="ex03-avail" class="badge ok" role="status">12 件の予約枠があります</p>
+        </form>
+        <aside class="summary-panel" aria-label="予約概要">
+          <p class="panel-title">予約概要</p>
+          <div class="field-row"><span class="field-label">サービス</span><span class="field-value" id="ex03-s-service">家電設置</span></div>
+          <div class="field-row"><span class="field-label">拠点</span><span class="field-value" id="ex03-s-loc">-</span></div>
+          <div class="field-row"><span class="field-label">日付</span><span class="field-value">2026年6月11日</span></div>
+          <div class="field-row"><span class="field-label">時間</span><span class="field-value" id="ex03-s-time">-</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-04">
+    <header class="example-header"><p class="example-kicker">例 04</p><h2>エラー概要付きの検証重視フォーム</h2></header>
+    <p class="example-description">4 つの無効な項目へリンクするアクセシブルなエラー概要、インラインエラー、必須マーカーを備えたアカウント申請フォームです。</p>
+    <p class="test-intent">エラーメッセージ、必須マーカー、aria-invalid、aria-describedby、エラー概要リンク、翻訳済み検証文をテストします。</p>
+    <div class="example-surface">
+      <div class="error-summary" role="alert" aria-labelledby="ex04-err-h">
+        <h3 id="ex04-err-h">このフォームには 4 件の問題があります</h3>
+        <ul>
+          <li><a href="#ex04-org">組織名を入力してください</a></li>
+          <li><a href="#ex04-phone">有効な電話番号を入力してください</a></li>
+          <li><a href="#ex04-zip">有効な 7 桁の郵便番号を入力してください</a></li>
+          <li><a href="#ex04-consent">続行するには利用規約への同意が必要です</a></li>
+        </ul>
+      </div>
+      <form>
+        <fieldset><legend>申請者</legend>
+          <div class="form-field"><label class="req" for="ex04-name">氏名</label><input id="ex04-name" type="text" value="鈴木 一郎"></div>
+          <div class="form-field"><label class="req" for="ex04-org">組織名</label><input id="ex04-org" type="text" aria-invalid="true" aria-describedby="ex04-org-e"><p id="ex04-org-e" class="error-text">組織名を入力してください。</p></div>
+        </fieldset>
+        <fieldset><legend>連絡先</legend>
+          <div class="form-field"><label class="req" for="ex04-phone">電話番号</label><input id="ex04-phone" type="tel" value="03-12" aria-invalid="true" aria-describedby="ex04-phone-e"><p id="ex04-phone-e" class="error-text">有効な日本の電話番号を入力してください。例: 03-1234-5678。</p></div>
+          <div class="form-field"><label class="req" for="ex04-zip">郵便番号</label><input id="ex04-zip" type="text" value="100-00" aria-invalid="true" aria-describedby="ex04-zip-e"><p id="ex04-zip-e" class="error-text">郵便番号は 100-0005 の形式で入力してください。</p></div>
+          <div class="form-field"><label for="ex04-date">開始日</label><input id="ex04-date" type="date" value="2026-12-31" aria-describedby="ex04-date-e"><p id="ex04-date-e" class="help-text">今後 90 日以内の日付を選択してください。</p></div>
+        </fieldset>
+        <fieldset><legend>同意</legend>
+          <label><input id="ex04-consent" type="checkbox" aria-invalid="true" aria-describedby="ex04-consent-e"> 利用規約およびプライバシーポリシーに同意します。</label>
+          <p id="ex04-consent-e" class="error-text">続行するには利用規約への同意が必要です。</p>
+        </fieldset>
+      </form>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-05">
+    <header class="example-header"><p class="example-kicker">例 05</p><h2>検索候補付きカスタムコンボボックス</h2></header>
+    <p class="example-description">ローカライズされた候補を別配置のリストボックスで表示する目的地都市のコンボボックスです。各候補には補足説明と空港コードがあり、送信用の隠し値も含みます。</p>
+    <p class="test-intent">検索文字列、選択肢テキスト、コンボボックスの ARIA 関係、分離されたリストボックス DOM、隠し送信値をテストします。</p>
+    <div class="example-surface">
+      <div class="form-field" style="max-width:420px;">
+        <label id="ex05-lbl" for="ex05-input">目的地の都市</label>
+        <input id="ex05-input" role="combobox" aria-expanded="true" aria-controls="ex05-list" aria-activedescendant="ex05-opt1" aria-labelledby="ex05-lbl" value="東京">
+        <input type="hidden" name="destination_code" value="HND">
+      </div>
+      <ul class="listbox" id="ex05-list" role="listbox" aria-label="都市の候補">
+        <li id="ex05-opt1" role="option" aria-selected="true"><strong>東京</strong> &middot; 東京都, 日本 <span class="badge neutral mono">HND</span><br><span class="help-text">都心からのアクセスがよい国内外の主要空港</span></li>
+        <li id="ex05-opt2" role="option" aria-selected="false"><strong>大阪</strong> &middot; 大阪府, 日本 <span class="badge neutral mono">ITM/KIX</span><br><span class="help-text">ビジネス利用と国際線を選べる関西の拠点</span></li>
+        <li id="ex05-opt3" role="option" aria-selected="false"><strong>名古屋</strong> &middot; 愛知県, 日本 <span class="badge neutral mono">NGO</span><br><span class="help-text">中部地方の広域移動に便利な空港</span></li>
+        <li id="ex05-opt4" role="option" aria-selected="false"><strong>福岡</strong> &middot; 福岡県, 日本 <span class="badge neutral mono">FUK</span><br><span class="help-text">市街地に近く九州各地への接続が良好</span></li>
+        <li id="ex05-opt5" role="option" aria-selected="false"><strong>札幌</strong> &middot; 北海道, 日本 <span class="badge neutral mono">CTS</span><br><span class="help-text">北海道方面の出張と観光の主要玄関口</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-06">
+    <header class="example-header"><p class="example-kicker">例 06</p><h2>予約カレンダーと時間枠ピッカー</h2></header>
+    <p class="example-description">2026年6月の予約カレンダーです。日本語の曜日、選択済み日付、予約不可日、24 時間表記の時間枠を示します。</p>
+    <p class="test-intent">曜日名、日本の日付表記、選択済みおよび無効の日付状態、アクセシブルな日付ラベル、24 時間表記をテストします。</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <div>
+          <div class="field-row"><span class="field-label">担当</span><span class="field-value">山本 医師</span></div>
+          <div class="field-row" style="margin-bottom:8px;"><span class="field-label">月</span><span class="field-value">2026年6月</span></div>
+          <div class="cal" role="grid" aria-label="2026年6月の空き状況">
+            <div class="h">日</div><div class="h">月</div><div class="h">火</div><div class="h">水</div><div class="h">木</div><div class="h">金</div><div class="h">土</div>
+            <button aria-label="2026年6月8日、予約可能枠 3 件">8<span class="av">空き 3</span></button>
+            <button disabled aria-label="2026年6月9日、予約枠なし">9<span class="av">満席</span></button>
+            <button aria-label="2026年6月10日、予約可能枠 1 件">10<span class="av">空き 1</span></button>
+            <button aria-selected="true" aria-label="2026年6月11日、選択中、予約可能枠 2 件">11<span class="av">空き 2</span></button>
+            <button aria-label="2026年6月12日、予約可能枠 4 件">12<span class="av">空き 4</span></button>
+            <button disabled aria-label="2026年6月13日、予約枠なし">13<span class="av">満席</span></button>
+            <button disabled aria-label="2026年6月14日、予約枠なし">14<span class="av">満席</span></button>
+          </div>
+        </div>
+        <aside class="summary-panel" aria-label="時間枠">
+          <p class="panel-title">2026年6月11日</p>
+          <div class="chip-row">
+            <button class="chip" aria-pressed="true">14:30</button>
+            <button class="chip">15:15</button>
+            <button class="chip">16:00</button>
+            <button class="chip" disabled aria-label="17:00、満席">17:00</button>
+          </div>
+          <div class="field-row"><span class="field-label">選択中の時間</span><span class="field-value">14:30</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-07">
+    <header class="example-header"><p class="example-kicker">例 07</p><h2>読み取り専用の注文確認</h2></header>
+    <p class="example-description">ステータスバッジ、入れ子の商品明細、末尾のみ表示されたカード情報、キャンセル案内を含む読み取り専用の注文確認です。</p>
+    <p class="test-intent">読み取り専用レコード、確認番号、JPY 通貨、日本の日付、ステータスバッジ、入れ子の商品明細、マスク値をテストします。</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <div class="panel">
+          <div class="field-row"><span class="field-label">確認番号</span><span class="field-value mono">CNF-2026-77120</span></div>
+          <div class="field-row"><span class="field-label">ステータス</span><span class="field-value"><span class="badge ok">確定済み</span></span></div>
+          <div class="field-row"><span class="field-label">注文日時</span><span class="field-value">2026年5月31日 10:42 JST</span></div>
+          <div class="field-row"><span class="field-label">お客様</span><span class="field-value">高橋 美咲</span></div>
+          <div class="field-row"><span class="field-label">配送先</span><span class="field-value">〒150-0001 東京都渋谷区神宮前 4-2-8</span></div>
+          <div class="field-row"><span class="field-label">お支払い</span><span class="field-value mono">Visa 下4桁 4242</span></div>
+          <p class="panel-title" style="margin-top:14px;">商品明細</p>
+          <div class="field-row"><span class="field-label">メリノ出張パーカー x1</span><span class="field-value">¥12,800</span></div>
+          <div class="field-row"><span class="field-label">帆布整理ポーチ x1</span><span class="field-value">¥3,200</span></div>
+          <div class="field-row"><span class="field-label">小計</span><span class="field-value">¥16,000</span></div>
+          <div class="field-row"><span class="field-label">消費税 10%</span><span class="field-value">¥1,600</span></div>
+          <div class="field-row"><span class="field-label">合計</span><span class="field-value">¥17,600</span></div>
+        </div>
+        <aside class="detail-panel">
+          <p class="help-text">2026年6月2日 23:59 JST までは無料でキャンセルできます。以降はストアクレジットでの対応となります。</p>
+          <p><button class="btn">領収書をダウンロード</button></p>
+          <p><button class="btn ghost">参照番号をコピー</button></p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-08">
+    <header class="example-header"><p class="example-kicker">例 08</p><h2>請求と税務エクスポート設定</h2></header>
+    <p class="example-description">期間、消費税モード、CSV 形式と文字コード、送信先メール、出力列チェックボックス、定期実行トグルを含む請求エクスポートフォームです。</p>
+    <p class="test-intent">会計項目、チェックボックス、出力項目選択、期間、日本の税ラベル、数値と通貨書式をテストします。</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <form>
+          <div class="form-field"><label for="ex08-name">エクスポート名</label><input id="ex08-name" type="text" value="2026年5月 消費税エクスポート"></div>
+          <div class="layout-grid-two">
+            <div class="form-field"><label for="ex08-from">開始日</label><input id="ex08-from" type="date" value="2026-05-01"></div>
+            <div class="form-field"><label for="ex08-to">終了日</label><input id="ex08-to" type="date" value="2026-05-31"></div>
+          </div>
+          <div class="layout-grid-two">
+            <div class="form-field"><label for="ex08-tax">消費税の扱い</label><select id="ex08-tax"><option selected>税込明細</option><option>税額を別行で出力</option></select></div>
+            <div class="form-field"><label for="ex08-format">形式</label><select id="ex08-format"><option selected>CSV (UTF-8)</option><option>CSV (UTF-8 with BOM)</option><option>XLSX</option></select></div>
+          </div>
+          <div class="form-field"><label for="ex08-email">送信先メール</label><input id="ex08-email" type="email" value="billing@example.test"></div>
+          <fieldset><legend>出力する列</legend>
+            <label><input type="checkbox" checked> 請求書番号</label><br>
+            <label><input type="checkbox" checked> 消費税 10%</label><br>
+            <label><input type="checkbox" checked> 支払い参照</label><br>
+            <label><input type="checkbox"> 顧客名</label><br>
+            <label><input type="checkbox"> 割引額</label><br>
+            <label><input type="checkbox"> 通貨</label>
+          </fieldset>
+          <label><input type="checkbox" checked> このエクスポートを毎月自動実行する</label>
+        </form>
+        <aside class="summary-panel" aria-label="エクスポートのプレビュー">
+          <p class="panel-title">プレビュー</p>
+          <div class="field-row"><span class="field-label">期間</span><span class="field-value">2026/05/01 - 2026/05/31</span></div>
+          <div class="field-row"><span class="field-label">形式</span><span class="field-value">CSV (UTF-8)</span></div>
+          <div class="field-row"><span class="field-label">列</span><span class="field-value">3 件選択済み</span></div>
+          <div class="field-row"><span class="field-label">スケジュール</span><span class="field-value">毎月</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-09">
+    <header class="example-header"><p class="example-kicker">例 09</p><h2>管理者権限マトリクス</h2></header>
+    <p class="example-description">4 つのロール列、グループ化された権限行、チェック済み・未チェック・無効状態、選択中権限の詳細パネルを含む権限表です。</p>
+    <p class="test-intent">表見出し、ロール名、権限名、チェック済みと無効状態、グループラベル、アクセシブルラベルをテストします。</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <div class="wide-scroll">
+          <table>
+            <thead><tr><th>権限</th><th>管理者</th><th>請求管理者</th><th>編集者</th><th>閲覧者</th></tr></thead>
+            <tbody>
+              <tr><th scope="rowgroup" colspan="5" style="background:var(--accent-soft);">請求</th></tr>
+              <tr><th scope="row">請求書の閲覧</th><td><input type="checkbox" checked aria-label="請求書の閲覧、管理者"></td><td><input type="checkbox" checked aria-label="請求書の閲覧、請求管理者"></td><td><input type="checkbox" aria-label="請求書の閲覧、編集者"></td><td><input type="checkbox" aria-label="請求書の閲覧、閲覧者"></td></tr>
+              <tr><th scope="row">支払い方法の更新</th><td><input type="checkbox" checked aria-label="支払い方法の更新、管理者"></td><td><input type="checkbox" checked aria-label="支払い方法の更新、請求管理者"></td><td><input type="checkbox" aria-label="支払い方法の更新、編集者"></td><td><input type="checkbox" disabled aria-label="支払い方法の更新、閲覧者、無効"></td></tr>
+              <tr><th scope="rowgroup" colspan="5" style="background:var(--accent-soft);">ユーザー管理</th></tr>
+              <tr><th scope="row">ユーザーの招待</th><td><input type="checkbox" checked aria-label="ユーザーの招待、管理者"></td><td><input type="checkbox" aria-label="ユーザーの招待、請求管理者"></td><td><input type="checkbox" aria-label="ユーザーの招待、編集者"></td><td><input type="checkbox" aria-label="ユーザーの招待、閲覧者"></td></tr>
+              <tr><th scope="row">ユーザーの削除</th><td><input type="checkbox" checked aria-label="ユーザーの削除、管理者"></td><td><input type="checkbox" aria-label="ユーザーの削除、請求管理者"></td><td><input type="checkbox" aria-label="ユーザーの削除、編集者"></td><td><input type="checkbox" disabled aria-label="ユーザーの削除、閲覧者、無効"></td></tr>
+              <tr><th scope="rowgroup" colspan="5" style="background:var(--accent-soft);">セキュリティ</th></tr>
+              <tr><th scope="row">SSO の管理</th><td><input type="checkbox" checked aria-label="SSO の管理、管理者"></td><td><input type="checkbox" aria-label="SSO の管理、請求管理者"></td><td><input type="checkbox" aria-label="SSO の管理、編集者"></td><td><input type="checkbox" disabled aria-label="SSO の管理、閲覧者、無効"></td></tr>
+              <tr><th scope="row">監査ログの閲覧</th><td><input type="checkbox" checked aria-label="監査ログの閲覧、管理者"></td><td><input type="checkbox" checked aria-label="監査ログの閲覧、請求管理者"></td><td><input type="checkbox" checked aria-label="監査ログの閲覧、編集者"></td><td><input type="checkbox" aria-label="監査ログの閲覧、閲覧者"></td></tr>
+              <tr><th scope="rowgroup" colspan="5" style="background:var(--accent-soft);">レポート</th></tr>
+              <tr><th scope="row">レポートのエクスポート</th><td><input type="checkbox" checked aria-label="レポートのエクスポート、管理者"></td><td><input type="checkbox" checked aria-label="レポートのエクスポート、請求管理者"></td><td><input type="checkbox" aria-label="レポートのエクスポート、編集者"></td><td><input type="checkbox" aria-label="レポートのエクスポート、閲覧者"></td></tr>
+              <tr><th scope="row">レポートの予約作成</th><td><input type="checkbox" checked aria-label="レポートの予約作成、管理者"></td><td><input type="checkbox" aria-label="レポートの予約作成、請求管理者"></td><td><input type="checkbox" aria-label="レポートの予約作成、編集者"></td><td><input type="checkbox" disabled aria-label="レポートの予約作成、閲覧者、無効"></td></tr>
+              <tr><th scope="row">レポートの削除</th><td><input type="checkbox" checked aria-label="レポートの削除、管理者"></td><td><input type="checkbox" aria-label="レポートの削除、請求管理者"></td><td><input type="checkbox" aria-label="レポートの削除、編集者"></td><td><input type="checkbox" disabled aria-label="レポートの削除、閲覧者、無効"></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <aside class="detail-panel">
+          <p class="panel-title">選択中の権限</p>
+          <div class="field-row"><span class="field-label">権限</span><span class="field-value">支払い方法の更新</span></div>
+          <div class="field-row"><span class="field-label">グループ</span><span class="field-value">請求</span></div>
+          <div class="field-block"><span class="field-label">説明</span>更新時や請求書発行時に使用する標準の支払い方法を変更できます。</div>
+          <div class="field-row"><span class="field-label">リスクレベル</span><span class="field-value"><span class="badge danger">高</span></span></div>
+          <div class="field-block"><span class="field-label">推奨ロール</span>管理者、請求管理者</div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-10">
+    <header class="example-header"><p class="example-kicker">例 10</p><h2>フィルターと詳細サイドバー付き検索結果</h2></header>
+    <p class="example-description">有効なフィルターチップ、フィルターサイドバー、5 件の結果カード、選択中結果の詳細サイドバーを含む求人検索です。</p>
+    <p class="test-intent">検索語、フィルター、並び替え、結果カード、繰り返しラベル、選択中レコード状態、サイドバー文脈をテストします。</p>
+    <div class="example-surface">
+      <div class="header-strip field-row"><span class="field-label">検索語</span><span class="field-value">フロントエンドエンジニア &middot; 24 件 &middot; 並び順: 関連度順</span></div>
+      <div class="chip-row"><span class="chip">リモート可</span><span class="chip">正社員</span><span class="chip">今週掲載</span></div>
+      <div class="layout-grid-three" style="grid-template-columns:200px 1fr 280px;">
+        <aside class="panel" aria-label="フィルター">
+          <p class="panel-title">フィルター</p>
+          <p><strong>勤務地</strong><br><label><input type="checkbox" checked> リモート（18）</label><br><label><input type="checkbox"> 東京（4）</label></p>
+          <p><strong>雇用形態</strong><br><label><input type="checkbox" checked> 正社員（20）</label><br><label><input type="checkbox"> 業務委託（4）</label></p>
+          <p><strong>レベル</strong><br><label><input type="checkbox"> シニア（12）</label><br><label><input type="checkbox"> スタッフ（6）</label></p>
+        </aside>
+        <div>
+          <div class="result-card" data-result="ex10" aria-selected="true"><strong>シニアフロントエンドエンジニア</strong> <span class="badge ok">募集中</span><br>北星クラウド株式会社 &middot; リモート - 日本 &middot; 2026年5月30日掲載<br><span class="help-text">¥16,500,000〜¥20,500,000 &middot; React, TypeScript</span><br><a href="/demo/jobs/1842">職種を見る</a></div>
+          <div class="result-card" data-result="ex10" aria-selected="false"><strong>フロントエンド基盤エンジニア</strong> <span class="badge ok">募集中</span><br>株式会社アトラス商品企画 &middot; 大阪またはリモート &middot; 2026年5月29日掲載<br><span class="help-text">¥15,000,000〜¥19,000,000 &middot; デザインシステム</span></div>
+          <div class="result-card" data-result="ex10" aria-selected="false"><strong>スタッフ UI エンジニア</strong> <span class="badge warn">まもなく締切</span><br>市民データラボ &middot; 東京都港区 &middot; 2026年5月22日掲載<br><span class="help-text">¥17,800,000〜¥21,800,000 &middot; アクセシビリティ</span></div>
+          <div class="result-card" data-result="ex10" aria-selected="false"><strong>検索担当フロントエンドエンジニア</strong> <span class="badge ok">募集中</span><br>QueryWorks &middot; リモート - 日本 &middot; 2026年5月27日掲載<br><span class="help-text">¥14,800,000〜¥17,200,000 &middot; 検索 UX</span></div>
+          <div class="result-card" data-result="ex10" aria-selected="false"><strong>シニア JavaScript エンジニア</strong> <span class="badge ok">募集中</span><br>Widget Lab Demo &middot; リモート - 日本/カナダ &middot; 2026年5月26日掲載<br><span class="help-text">¥15,500,000〜¥19,600,000 &middot; ブラウザー拡張</span></div>
+        </div>
+        <aside class="detail-panel">
+          <p class="panel-title">選択中の職種</p>
+          <div class="field-row"><span class="field-label">職種名</span><span class="field-value">シニアフロントエンドエンジニア</span></div>
+          <div class="field-row"><span class="field-label">会社</span><span class="field-value">北星クラウド株式会社</span></div>
+          <div class="field-row"><span class="field-label">勤務地</span><span class="field-value">リモート - 日本</span></div>
+          <div class="field-row"><span class="field-label">年収</span><span class="field-value">¥16,500,000〜¥20,500,000</span></div>
+          <div class="field-row"><span class="field-label">掲載日</span><span class="field-value">2026年5月30日</span></div>
+          <div class="field-row"><span class="field-label">ステータス</span><span class="field-value"><span class="badge ok">募集中</span></span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-11">
+    <header class="example-header"><p class="example-kicker">例 11</p><h2>サービス比較カード</h2></header>
+    <p class="example-description">3 つのサブスクリプションプランを横並びで比較します。価格、ステータス、メモの繰り返しラベル、おすすめプラン、共通条件パネルを含みます。</p>
+    <p class="test-intent">比較列にまたがる繰り返しラベル、JPY 通貨、ステータスタグ、視覚的なグルーピングをテストします。</p>
+    <div class="example-surface">
+      <div class="layout-grid-three">
+        <div class="panel"><p class="panel-title">スターター</p>
+          <div class="field-row"><span class="field-label">料金</span><span class="field-value">¥118,800/年</span></div>
+          <div class="field-row"><span class="field-label">席数</span><span class="field-value">最大 5 名</span></div>
+          <div class="field-row"><span class="field-label">状態</span><span class="field-value"><span class="badge ok">利用可能</span></span></div>
+          <div class="field-block"><span class="field-label">メモ</span>メールサポート、基本エクスポート。</div>
+        </div>
+        <div class="panel" style="border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft) inset;"><p class="panel-title">ビジネス <span class="badge info">おすすめ</span></p>
+          <div class="field-row"><span class="field-label">料金</span><span class="field-value">¥576,000/年</span></div>
+          <div class="field-row"><span class="field-label">席数</span><span class="field-value">24 名分を含む</span></div>
+          <div class="field-row"><span class="field-label">状態</span><span class="field-value"><span class="badge ok">利用可能</span></span></div>
+          <div class="field-block"><span class="field-label">メモ</span>優先サポート、SSO、監査ログ。</div>
+        </div>
+        <div class="panel"><p class="panel-title">エンタープライズ</p>
+          <div class="field-row"><span class="field-label">料金</span><span class="field-value">個別見積もり</span></div>
+          <div class="field-row"><span class="field-label">席数</span><span class="field-value">無制限</span></div>
+          <div class="field-row"><span class="field-label">状態</span><span class="field-value"><span class="badge warn">営業へ相談</span></span></div>
+          <div class="field-block"><span class="field-label">メモ</span>専任担当、個別 SLA。</div>
+        </div>
+      </div>
+      <div class="summary-panel" style="margin-top:12px;"><p class="panel-title">共通条件</p><div class="field-row"><span class="field-label">請求</span><span class="field-value">年払い、JPY</span></div><div class="field-row"><span class="field-label">おすすめ</span><span class="field-value">ビジネス</span></div></div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-12">
+    <header class="example-header"><p class="example-kicker">例 12</p><h2>クリニック問診フォーム</h2></header>
+    <p class="example-description">患者情報、連絡先、受診内容、同意をフィールドセットでグループ化した問診フォームです。条件付きの再診項目も含みます。</p>
+    <p class="test-intent">長いラベル、センシティブなフォームレイアウト、架空識別子、条件付き質問、同意、検証、フィールドセットのグルーピングをテストします。</p>
+    <div class="example-surface">
+      <form>
+        <fieldset><legend>患者情報</legend>
+          <div class="layout-grid-two">
+            <div class="form-field"><label class="req" for="ex12-name">患者氏名</label><input id="ex12-name" type="text" value="渡辺 健"></div>
+            <div class="form-field"><label for="ex12-dob">生年月日</label><input id="ex12-dob" type="date" value="1990-04-12"></div>
+          </div>
+          <div class="form-field"><label for="ex12-mrn">診察券番号（デモ）</label><input id="ex12-mrn" type="text" value="MRN-DEMO-55109" readonly></div>
+        </fieldset>
+        <fieldset><legend>受診内容</legend>
+          <div class="form-field"><label for="ex12-reason">受診理由</label><select id="ex12-reason"><option selected>再診</option><option>新しい症状</option><option>健康診断</option></select></div>
+          <label><input type="checkbox" data-toggle-target="#ex12-followup"> 前回受診のフォローアップです</label>
+          <div id="ex12-followup" hidden class="form-field" style="margin-top:8px;"><label for="ex12-prev">前回受診日</label><input id="ex12-prev" type="date"></div>
+          <p class="help-text">新しい症状、服薬中のお薬、アレルギーなどがあればご記入ください。この情報は診療チームのみに共有され、クリニックの個人情報保護方針に従って保管されます。</p>
+        </fieldset>
+        <fieldset><legend>同意</legend>
+          <label><input type="checkbox" checked> 診療を受けること、および請求のために保険者へ記録を共有することに同意します。</label>
+        </fieldset>
+      </form>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-13">
+    <header class="example-header"><p class="example-kicker">例 13</p><h2>ファイルアップロードと書類確認</h2></header>
+    <p class="example-description">受付可能なファイル形式を示す書類アップロード領域と、ステータス、確認者メモ、行ごとの操作を表示する 4 件の書類行です。不足書類と差し戻し書類も含みます。</p>
+    <p class="test-intent">アップロードラベル、書類ステータス、ファイル名、検証、受付可能なファイル形式、確認メモをテストします。</p>
+    <div class="example-surface">
+      <div class="form-field"><label for="ex13-cat">書類カテゴリ</label><select id="ex13-cat"><option selected>本人確認書類</option><option>住所確認書類</option><option>収入確認書類</option></select></div>
+      <p class="help-text">受付可能なファイル形式: PDF, JPG, PNG。1 ファイルあたり最大 10 MB。</p>
+      <div class="wide-scroll"><table>
+        <thead><tr><th>書類</th><th>ファイル</th><th>サイズ</th><th>アップロード日</th><th>ステータス</th><th>確認者メモ</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>運転免許証</td><td class="mono">license-front.pdf</td><td>1.2 MB</td><td>2026年5月28日</td><td><span class="badge ok">承認済み</span></td><td>鮮明で判読可能です。</td><td><button class="btn ghost">表示</button></td></tr>
+          <tr><td>公共料金明細</td><td class="mono">tokyo-gas-bill.pdf</td><td>0.8 MB</td><td>2026年5月29日</td><td><span class="badge danger">修正が必要</span></td><td>発行日が 90 日を超えています。</td><td><button class="btn ghost">差し替え</button></td></tr>
+          <tr><td>給与明細</td><td class="mono">paystub-may.png</td><td>2.1 MB</td><td>2026年5月30日</td><td><span class="badge warn">確認中</span></td><td>内容確認を待っています。</td><td><button class="btn ghost">表示</button></td></tr>
+          <tr><td>銀行残高証明</td><td class="mono">-</td><td>-</td><td>-</td><td><span class="badge neutral">未提出</span></td><td>まだアップロードされていません。</td><td><button class="btn">アップロード</button></td></tr>
+        </tbody>
+      </table></div>
+      <p class="summary-panel" style="margin-top:12px;">完了状況: 4 件中 1 件が承認済み、1 件が修正必要、1 件が確認中、1 件が未提出です。</p>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-14">
+    <header class="example-header"><p class="example-kicker">例 14</p><h2>同意と連絡設定</h2></header>
+    <p class="example-description">チャネル別スイッチ、ダイジェスト頻度のラジオグループ、希望言語の選択、長い法的同意文、無効化されたチャネルを含む連絡設定です。</p>
+    <p class="test-intent">同意文、オプトインの慣習、チャネルラベル、法的文言の伸縮、スイッチ状態、アクセシビリティラベルをテストします。</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <form>
+          <fieldset><legend>チャネル</legend>
+            <div class="field-row"><span class="field-label">メール通知</span><span><input type="checkbox" role="switch" checked aria-label="メール通知、オン"></span></div>
+            <div class="field-row"><span class="field-label">SMS メッセージ</span><span><input type="checkbox" role="switch" aria-label="SMS メッセージ、オフ"></span></div>
+            <div class="field-row"><span class="field-label">プッシュ通知 <span class="help-text">（アプリのインストール後に有効化できます）</span></span><span><input type="checkbox" role="switch" disabled aria-label="プッシュ通知、無効"></span></div>
+          </fieldset>
+          <fieldset><legend>ダイジェスト頻度</legend>
+            <label><input type="radio" name="ex14-dig" checked> 毎日</label>
+            <label style="margin-left:12px;"><input type="radio" name="ex14-dig"> 毎週</label>
+            <label style="margin-left:12px;"><input type="radio" name="ex14-dig"> オフ</label>
+          </fieldset>
+          <div class="form-field"><label for="ex14-lang">希望言語</label><select id="ex14-lang"><option selected>日本語（日本）</option><option>英語</option><option>フランス語</option></select></div>
+          <label><input type="checkbox" checked> 注文、セキュリティ、アカウントに関する取引メッセージを受け取ることに同意します。マーケティング同意はアカウント設定からいつでも撤回でき、撤回しても重要なサービス通知には影響しないことを理解しています。</label>
+        </form>
+        <aside class="summary-panel" aria-label="設定プレビュー">
+          <p class="panel-title">現在の設定</p>
+          <div class="field-row"><span class="field-label">メール</span><span class="field-value">オン</span></div>
+          <div class="field-row"><span class="field-label">SMS</span><span class="field-value">オフ</span></div>
+          <div class="field-row"><span class="field-label">プッシュ</span><span class="field-value">利用不可</span></div>
+          <div class="field-row"><span class="field-label">ダイジェスト</span><span class="field-value">毎日</span></div>
+          <div class="field-row"><span class="field-label">言語</span><span class="field-value">日本語（日本）</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-15">
+    <header class="example-header"><p class="example-kicker">例 15</p><h2>通貨、数量、税額、合計</h2></header>
+    <p class="example-description">数量や割引を変更すると、小計、消費税、合計を日本円の書式で再計算する価格計算フォームです。</p>
+    <p class="test-intent">ロケール対応の通貨、桁区切り、税用語、数値入力、合計、検証をテストします。</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <form>
+          <div class="form-field"><label for="ex15-item">商品</label><input id="ex15-item" type="text" value="メリノ出張パーカー"></div>
+          <div class="layout-grid-two">
+            <div class="form-field"><label for="ex15-qty">数量</label><input id="ex15-qty" type="number" min="1" value="3" data-calc><p id="ex15-qty-e" class="error-text" hidden>数量は 1 以上にしてください。</p></div>
+            <div class="form-field"><label for="ex15-price">単価（JPY）</label><input id="ex15-price" type="number" step="1" value="12800" data-calc></div>
+          </div>
+          <div class="layout-grid-two">
+            <div class="form-field"><label for="ex15-disc">割引（%）</label><input id="ex15-disc" type="number" min="0" max="100" value="10" data-calc></div>
+            <div class="form-field"><label for="ex15-tax">消費税率（%）</label><input id="ex15-tax" type="number" step="1" value="10" data-calc></div>
+          </div>
+        </form>
+        <aside class="summary-panel" aria-label="合計">
+          <p class="panel-title">合計</p>
+          <div class="field-row"><span class="field-label">小計</span><span class="field-value" id="ex15-subtotal">¥38,400</span></div>
+          <div class="field-row"><span class="field-label">割引</span><span class="field-value" id="ex15-discamt">-¥3,840</span></div>
+          <div class="field-row"><span class="field-label">消費税 10%</span><span class="field-value" id="ex15-taxamt">¥3,456</span></div>
+          <div class="field-row"><span class="field-label">合計</span><span class="field-value" id="ex15-total">¥38,016</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-16">
+    <header class="example-header"><p class="example-kicker">例 16</p><h2>ローカライズされた管理ダッシュボード</h2></header>
+    <p class="example-description">KPI カード、ツールバー、日本の日付と円建て金額を含む請求書テーブル、選択行の詳細パネルを備えた管理ダッシュボードです。</p>
+    <p class="test-intent">表見出し、密度の高いデータ、ステータスラベル、日本の日付と数値、通貨、並び替え操作、選択行の詳細をテストします。</p>
+    <div class="example-surface">
+      <div class="kpi">
+        <div class="card"><div class="k-val">¥8,492,000</div><div class="k-lab">未回収残高</div></div>
+        <div class="card"><div class="k-val">142</div><div class="k-lab">未処理請求書</div></div>
+        <div class="card"><div class="k-val">3.2%</div><div class="k-lab">期限超過率</div></div>
+        <div class="card"><div class="k-val">¥1,288,400</div><div class="k-lab">本日回収額</div></div>
+      </div>
+      <div class="chip-row"><input type="search" placeholder="請求書を検索" style="max-width:200px;"> <select style="max-width:160px;"><option>すべての状態</option><option>期限超過</option></select> <select style="max-width:160px;"><option>2026年5月</option></select></div>
+      <div class="split-layout">
+        <div class="wide-scroll"><table>
+          <thead><tr><th>請求書</th><th>顧客</th><th>担当者</th><th>支払期限</th><th>金額</th><th>状態</th></tr></thead>
+          <tbody>
+            <tr data-result="ex16" aria-selected="true"><td class="mono">INV-2026-00841</td><td>杉並デザイン合同会社</td><td>高橋 美咲</td><td>2026/06/17</td><td>¥43,614</td><td><span class="badge warn">支払待ち</span></td></tr>
+            <tr data-result="ex16"><td class="mono">INV-2026-00842</td><td>港カフェ</td><td>鈴木 一郎</td><td>2026/06/10</td><td>¥120,400</td><td><span class="badge danger">期限超過</span></td></tr>
+            <tr data-result="ex16"><td class="mono">INV-2026-00843</td><td>北星クラウド株式会社</td><td>佐藤 花子</td><td>2026/06/22</td><td>¥576,000</td><td><span class="badge ok">支払済み</span></td></tr>
+            <tr data-result="ex16"><td class="mono">INV-2026-00844</td><td>市民データラボ</td><td>渡辺 健</td><td>2026/06/19</td><td>¥88,050</td><td><span class="badge warn">支払待ち</span></td></tr>
+            <tr data-result="ex16"><td class="mono">INV-2026-00845</td><td>QueryWorks</td><td>高橋 美咲</td><td>2026/06/05</td><td>¥231,075</td><td><span class="badge danger">期限超過</span></td></tr>
+            <tr data-result="ex16"><td class="mono">INV-2026-00846</td><td>株式会社アトラス商品企画</td><td>鈴木 一郎</td><td>2026/06/28</td><td>¥11,880</td><td><span class="badge ok">支払済み</span></td></tr>
+          </tbody>
+        </table></div>
+        <aside class="detail-panel">
+          <p class="panel-title">選択中の請求書</p>
+          <div class="field-row"><span class="field-label">請求書</span><span class="field-value mono">INV-2026-00841</span></div>
+          <div class="field-row"><span class="field-label">顧客</span><span class="field-value">杉並デザイン合同会社</span></div>
+          <div class="field-row"><span class="field-label">金額</span><span class="field-value">¥43,614</span></div>
+          <div class="field-row"><span class="field-label">支払期限</span><span class="field-value">2026年6月17日</span></div>
+          <div class="field-row"><span class="field-label">状態</span><span class="field-value"><span class="badge warn">支払待ち</span></span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-17">
+    <header class="example-header"><p class="example-kicker">例 17</p><h2>アクセシブルなタブとアコーディオン設定</h2></header>
+    <p class="example-description">3 つのタブを持つ設定パネルで、各タブには初期状態で展開または折りたたみされたアコーディオン項目があります。</p>
+    <p class="test-intent">タブラベル、アクティブタブ状態、アコーディオンの展開、繰り返しラベル、非表示コンテンツ、アクセシビリティ状態をテストします。</p>
+    <div class="example-surface">
+      <div class="tablist" role="tablist" aria-label="設定">
+        <button class="tab" role="tab" aria-selected="true" data-tab-group="ex17" data-tab-target="#ex17-p1" id="ex17-t1">請求</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab-group="ex17" data-tab-target="#ex17-p2" id="ex17-t2">セキュリティ</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab-group="ex17" data-tab-target="#ex17-p3" id="ex17-t3">通知</button>
+      </div>
+      <div role="tabpanel" id="ex17-p1" data-tab-panel="ex17" aria-labelledby="ex17-t1">
+        <div class="acc"><button class="acc-trigger" aria-expanded="true" data-acc>支払い方法 <span>-</span></button><div class="acc-body"><div class="field-row"><span class="field-label">カード</span><span class="field-value mono">Visa 下4桁 4242</span></div><div class="field-row"><span class="field-label">次回請求</span><span class="field-value">2026年7月1日</span></div></div></div>
+        <div class="acc"><button class="acc-trigger" aria-expanded="false" data-acc>請求先住所 <span>+</span></button><div class="acc-body" hidden><div class="field-row"><span class="field-label">住所</span><span class="field-value">〒100-0005 東京都千代田区丸の内 1-1-1</span></div></div></div>
+      </div>
+      <div role="tabpanel" id="ex17-p2" data-tab-panel="ex17" aria-labelledby="ex17-t2" hidden>
+        <div class="acc"><button class="acc-trigger" aria-expanded="true" data-acc>二要素認証 <span>-</span></button><div class="acc-body"><div class="field-row"><span class="field-label">状態</span><span class="field-value"><span class="badge ok">有効</span></span></div></div></div>
+        <div class="acc"><button class="acc-trigger" aria-expanded="false" data-acc>有効なセッション <span>+</span></button><div class="acc-body" hidden><div class="field-row"><span class="field-label">セッション</span><span class="field-value">2 台の端末</span></div></div></div>
+      </div>
+      <div role="tabpanel" id="ex17-p3" data-tab-panel="ex17" aria-labelledby="ex17-t3" hidden>
+        <div class="acc"><button class="acc-trigger" aria-expanded="true" data-acc>メールダイジェスト <span>-</span></button><div class="acc-body"><div class="field-row"><span class="field-label">頻度</span><span class="field-value">毎日</span></div></div></div>
+        <div class="acc"><button class="acc-trigger" aria-expanded="false" data-acc>モバイル通知 <span>+</span></button><div class="acc-body" hidden><div class="field-row"><span class="field-label">状態</span><span class="field-value">オフ</span></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-18">
+    <header class="example-header"><p class="example-kicker">例 18</p><h2>トークン化された複数選択と宛先</h2></header>
+    <p class="example-description">削除可能なトークンと隠し値を持つ宛先欄、利用可能な出力項目を示すリストボックス付きのエクスポート項目グループです。</p>
+    <p class="test-intent">選択済みトークン、削除ボタン、隠し値、リストボックスの選択肢、連絡先ラベルをテストします。</p>
+    <div class="example-surface">
+      <div class="layout-grid-two">
+        <div class="panel"><label id="ex18-rec">宛先</label>
+          <div class="token-field" role="group" aria-labelledby="ex18-rec">
+            <span class="token">billing@example.test<button type="button" aria-label="billing@example.test を削除" data-remove-token>&times;</button><input type="hidden" name="rcpt[]" value="billing@example.test"></span>
+            <span class="token">finance@example.test<button type="button" aria-label="finance@example.test を削除" data-remove-token>&times;</button><input type="hidden" name="rcpt[]" value="finance@example.test"></span>
+            <span class="token">misaki.takahashi@example.test<button type="button" aria-label="misaki.takahashi@example.test を削除" data-remove-token>&times;</button><input type="hidden" name="rcpt[]" value="misaki.takahashi@example.test"></span>
+            <input aria-label="宛先を検索" placeholder="宛先を追加" style="border:0;flex:1;min-width:120px;">
+          </div>
+        </div>
+        <div class="panel"><label id="ex18-fld">エクスポート項目</label>
+          <ul class="listbox" role="listbox" aria-label="利用可能なエクスポート項目" aria-multiselectable="true">
+            <li role="option" aria-selected="true">請求書番号</li>
+            <li role="option" aria-selected="true">消費税 10%</li>
+            <li role="option" aria-selected="false">割引額</li>
+            <li role="option" aria-selected="false">支払い参照</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-19">
+    <header class="example-header"><p class="example-kicker">例 19</p><h2>マスク、分割、末尾省略された値</h2></header>
+    <p class="example-description">マスク済みキーと表示操作、分割された参照番号、完全な title を持つ末尾省略 URL、隠しの裏側値を含む API Webhook 設定レコードです。</p>
+    <p class="test-intent">マスクされた表示値、分割 DOM 値、切り詰めテキスト、表示動作、フィールドラベルをテストします。</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <div class="panel">
+          <div class="field-row"><span class="field-label">エンドポイント</span><span class="field-value">請求エクスポートワーカー</span></div>
+          <div class="field-row"><span class="field-label">状態</span><span class="field-value"><span class="badge ok">正常</span></span></div>
+          <div class="field-row"><span class="field-label">API キー</span><span class="field-value mono">key_live_****_9K2Q</span><input type="hidden" name="api_key_id" value="key_884120_internal"></div>
+          <div class="field-row"><span class="field-label">参照</span><span class="field-value mono"><span>WHK</span><span>-</span><span>2026</span><span>-</span><span>008</span><span>41</span></span></div>
+          <div class="field-row"><span class="field-label">Callback URL</span><span class="field-value ellipsized mono" title="https://example.test/webhooks/billing-export-worker">https://example.test/webhooks/billing-expo...</span></div>
+          <p><button class="btn" type="button" data-reveal-target="#ex19-reveal">デモキーを表示</button></p>
+          <div id="ex19-reveal" hidden class="summary-panel"><div class="field-row"><span class="field-label">デモキー</span><span class="field-value mono">key_live_8K41Q_9K2Q</span></div></div>
+        </div>
+        <aside class="detail-panel"><p class="panel-title">概要</p><div class="field-row"><span class="field-label">エンドポイント</span><span class="field-value">請求エクスポートワーカー</span></div><div class="field-row"><span class="field-label">マスク済みキー</span><span class="field-value mono">key_live_****_9K2Q</span></div></aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-20">
+    <header class="example-header"><p class="example-kicker">例 20</p><h2>データ可視化のテキスト代替付きダッシュボード</h2></header>
+    <p class="example-description">3 つの CSS のみのチャートカードです。各カードには表示されるテキスト代替、小さなデータ表、傾向概要、ステータスバッジがあります。</p>
+    <p class="test-intent">チャートタイトル、テキスト代替、データ表、割合表記、傾向表現、複数形に相当する文脈をテストします。</p>
+    <div class="example-surface">
+      <div class="header-strip field-row"><span class="field-label">ダッシュボード</span><span class="field-value">抽出品質の傾向 &middot; 2026年5月 &middot; 担当: プロダクトシステム &middot; <span class="badge ok">公開済み</span></span></div>
+      <div class="layout-grid-three">
+        <figure class="panel" style="margin:0;" aria-describedby="ex20-d1">
+          <h4>重複ラベル率</h4>
+          <div class="bartrack"><div class="bar" style="width:68%;"></div></div>
+          <figcaption class="help-text" id="ex20-d1">2026年5月の間に、重複ラベル率は 4.1% から 2.8% に低下しました。</figcaption>
+          <div class="field-row"><span class="field-label">第 1 週</span><span class="field-value">4.1%</span></div>
+          <div class="field-row"><span class="field-label">第 4 週</span><span class="field-value">2.8%</span></div>
+          <p><span class="badge ok">改善中</span></p>
+        </figure>
+        <figure class="panel" style="margin:0;" aria-describedby="ex20-d2">
+          <h4>行コンテキスト精度</h4>
+          <div class="bartrack"><div class="bar" style="width:93%;background:var(--ok);"></div></div>
+          <figcaption class="help-text" id="ex20-d2">行コンテキスト精度は 91% から 93% に上昇しましたが、目標の 94% を下回っています。あと 1 ポイント不足しています。</figcaption>
+          <div class="field-row"><span class="field-label">第 1 週</span><span class="field-value">91%</span></div>
+          <div class="field-row"><span class="field-label">第 4 週</span><span class="field-value">93%</span></div>
+          <p><span class="badge warn">目標未達</span></p>
+        </figure>
+        <figure class="panel" style="margin:0;" aria-describedby="ex20-d3">
+          <h4>コンボボックス値精度</h4>
+          <div class="bartrack"><div class="bar" style="width:96%;background:var(--ok);"></div></div>
+          <figcaption class="help-text" id="ex20-d3">コンボボックス値精度は、月を通じて 96% 以上で安定しました。</figcaption>
+          <div class="field-row"><span class="field-label">第 1 週</span><span class="field-value">96%</span></div>
+          <div class="field-row"><span class="field-label">第 4 週</span><span class="field-value">96%</span></div>
+          <p><span class="badge ok">安定</span></p>
+        </figure>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var pageLocale = document.documentElement.lang || "ja-JP";
+  var localeConfig = { locale: pageLocale, currency: "JPY", direction: document.documentElement.dir || "ltr" };
+
+  function formatCurrency(value) {
+    try { return new Intl.NumberFormat(localeConfig.locale, { style: "currency", currency: localeConfig.currency }).format(value); }
+    catch (e) { return "¥" + Math.round(value).toLocaleString("ja-JP"); }
+  }
+  function countGraphemes(value) {
+    if (typeof Intl !== "undefined" && Intl.Segmenter) {
+      return Array.from(new Intl.Segmenter(localeConfig.locale, { granularity: "grapheme" }).segment(value)).length;
+    }
+    return Array.from(value).length;
+  }
+
+  // Generic toggle
+  document.querySelectorAll("[data-toggle-target]").forEach(function (el) {
+    el.addEventListener(el.tagName === "INPUT" ? "change" : "click", function () {
+      var t = document.querySelector(el.dataset.toggleTarget);
+      if (!t) return;
+      if (el.type === "checkbox" || el.type === "radio") { t.hidden = !el.checked; }
+      else { t.hidden = !t.hidden; el.setAttribute("aria-expanded", String(!t.hidden)); }
+    });
+  });
+
+  // Status messages
+  document.querySelectorAll("[data-status]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var s = document.getElementById(btn.dataset.status);
+      if (s) s.textContent = btn.dataset.statusMsg;
+      document.querySelectorAll('#example-01 .step').forEach(function (st) { st.removeAttribute("aria-current"); });
+      var rev = document.getElementById("ex01-review-step"); if (rev) rev.setAttribute("aria-current", "step");
+    });
+  });
+
+  // Character counters
+  document.querySelectorAll("[data-counter]").forEach(function (el) {
+    var out = document.getElementById(el.dataset.counter);
+    var max = parseInt(el.dataset.max, 10);
+    var errId = el.id + "-err";
+    el.addEventListener("input", function () {
+      var n = countGraphemes(el.value);
+      if (out) out.textContent = n;
+      var err = document.getElementById(errId);
+      if (err) err.hidden = n <= max;
+    });
+  });
+
+  // Tabs
+  document.querySelectorAll("[data-tab-target]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var g = btn.dataset.tabGroup;
+      document.querySelectorAll('[data-tab-group="' + g + '"]').forEach(function (t) { t.setAttribute("aria-selected", "false"); });
+      document.querySelectorAll('[data-tab-panel="' + g + '"]').forEach(function (p) { p.hidden = true; });
+      btn.setAttribute("aria-selected", "true");
+      var panel = document.querySelector(btn.dataset.tabTarget);
+      if (panel) panel.hidden = false;
+    });
+  });
+
+  // Accordions
+  document.querySelectorAll("[data-acc]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var body = btn.nextElementSibling;
+      var open = btn.getAttribute("aria-expanded") === "true";
+      btn.setAttribute("aria-expanded", String(!open));
+      if (body) body.hidden = open;
+      var sign = btn.querySelector("span"); if (sign) sign.textContent = open ? "+" : "-";
+    });
+  });
+
+  // Reveal
+  document.querySelectorAll("[data-reveal-target]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var t = document.querySelector(btn.dataset.revealTarget);
+      if (t) { t.hidden = false; btn.hidden = true; }
+    });
+  });
+
+  // Token remove
+  document.querySelectorAll("[data-remove-token]").forEach(function (btn) {
+    btn.addEventListener("click", function () { var tok = btn.closest(".token"); if (tok) tok.remove(); });
+  });
+
+  // Result selection
+  document.querySelectorAll("[data-result]").forEach(function (el) {
+    el.addEventListener("click", function () {
+      var g = el.dataset.result;
+      document.querySelectorAll('[data-result="' + g + '"]').forEach(function (r) { r.setAttribute("aria-selected", "false"); });
+      el.setAttribute("aria-selected", "true");
+    });
+  });
+
+  // Example 03 dependent dropdowns
+  var hubs = {
+    install: ["東京湾岸拠点 - 江東区", "横浜北部拠点 - 港北区"],
+    repair: ["大阪中央拠点 - 北区", "名古屋東部拠点 - 千種区"],
+    pickup: ["福岡寄付センター - 博多区"]
+  };
+  var times = ["09:00 - 11:00", "11:00 - 13:00", "14:00 - 16:00", "16:00 - 18:00"];
+  var svc = document.getElementById("ex03-service"), loc = document.getElementById("ex03-loc"), tsel = document.getElementById("ex03-time");
+  var sLoc = document.getElementById("ex03-s-loc"), sTime = document.getElementById("ex03-s-time"), sSvc = document.getElementById("ex03-s-service");
+  function fillLoc() {
+    loc.innerHTML = ""; (hubs[svc.value] || []).forEach(function (h) { var o = document.createElement("option"); o.textContent = h; loc.appendChild(o); });
+    if (sSvc) sSvc.textContent = svc.options[svc.selectedIndex].textContent;
+    fillTime();
+  }
+  function fillTime() {
+    tsel.innerHTML = ""; times.forEach(function (t) { var o = document.createElement("option"); o.textContent = t; tsel.appendChild(o); });
+    if (sLoc) sLoc.textContent = loc.value || "-";
+    if (sTime) sTime.textContent = tsel.value || "-";
+  }
+  if (svc) {
+    svc.addEventListener("change", fillLoc);
+    loc.addEventListener("change", fillTime);
+    tsel.addEventListener("change", function () { if (sTime) sTime.textContent = tsel.value; });
+    var party = document.getElementById("ex03-party"), warn = document.getElementById("ex03-warn");
+    party.addEventListener("input", function () { warn.hidden = parseInt(party.value, 10) <= 4; });
+    fillLoc();
+  }
+
+  // Example 15 totals
+  function recalc() {
+    var qty = parseFloat(document.getElementById("ex15-qty").value) || 0;
+    var price = parseFloat(document.getElementById("ex15-price").value) || 0;
+    var disc = parseFloat(document.getElementById("ex15-disc").value) || 0;
+    var tax = parseFloat(document.getElementById("ex15-tax").value) || 0;
+    document.getElementById("ex15-qty-e").hidden = qty >= 1;
+    var subtotal = qty * price;
+    var discAmt = subtotal * (disc / 100);
+    var taxable = subtotal - discAmt;
+    var taxAmt = taxable * (tax / 100);
+    var total = taxable + taxAmt;
+    document.getElementById("ex15-subtotal").textContent = formatCurrency(subtotal);
+    document.getElementById("ex15-discamt").textContent = "-" + formatCurrency(discAmt);
+    document.getElementById("ex15-taxamt").textContent = formatCurrency(taxAmt);
+    document.getElementById("ex15-total").textContent = formatCurrency(total);
+  }
+  document.querySelectorAll("[data-calc]").forEach(function (el) { el.addEventListener("input", recalc); });
+  if (document.getElementById("ex15-qty")) recalc();
+
+  // Combobox option click
+  document.querySelectorAll('#ex05-list [role=option]').forEach(function (opt) {
+    opt.addEventListener("click", function () {
+      document.querySelectorAll('#ex05-list [role=option]').forEach(function (o) { o.setAttribute("aria-selected", "false"); });
+      opt.setAttribute("aria-selected", "true");
+      var input = document.getElementById("ex05-input");
+      input.value = opt.querySelector("strong").textContent;
+      input.setAttribute("aria-activedescendant", opt.id);
+    });
+  });
+});
+</script>
+</body>
+</html>

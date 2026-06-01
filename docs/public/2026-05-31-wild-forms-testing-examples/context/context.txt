@@ -1,0 +1,281 @@
+---
+
+A00 Understanding Of The Task
+
+---
+
+You are building a testing tool that can select, extract, and format structured content from web pages. The content is not always inside normal form fields. Sometimes it is in visible read-only UI, custom controls, sidebar cards, reservation widgets, feeds, posts, tables, search results, or other page fragments where humans can see field-value information but copying or parsing it is awkward.
+
+The extraction target is usually something like:
+
+```txt
+Field name: Field value
+Field name: Multiple values
+Item title: URL, metadata, status, price, date, points, author, etc.
+```
+
+The difficult part is that real websites often render this information in non-simple ways. A native `select` may be easy. A custom dropdown with hidden DOM, nested buttons, ARIA roles, virtualization, dynamic rendering, overlays, or visually formatted values may be hard. Some content may require the user to open browser devtools, inspect nodes, or manually copy fragments one by one. Your demo pages should reproduce those kinds of situations.
+
+You do not want the HTML implementation yet. You first want specifications for groups of demo pages. Each demo page should be a self-contained HTML file with inline CSS and JavaScript. No React, no build step, no external dependencies. Each page should behave like a small Storybook-style test page: multiple examples on one scrollable page, each example labeled, visually distinct, and realistic enough to test extraction behavior.
+
+The examples should not be toy forms only. They should resemble real web situations: reservation forms, admin panels, job listings, Hacker News-like feeds, account settings, checkout pages, medical intake forms, travel booking widgets, read-only confirmation pages, profile cards, table rows, dynamic sidebars, and custom controls. The point is not full application functionality. The point is to create realistic extraction targets with enough DOM and visual complexity to test whether your tool can identify fields, values, links, lists, and repeated records.
+
+There is one ambiguity in your request: you mentioned "five different specifications" and later "about 10 HTML pages" / "10 different groups." I understand the real target as 10 specification groups, where each group becomes one standalone HTML demo page. Each page would contain roughly 8 to 12 examples, so the whole suite would cover around 80 to 120 extraction scenarios.
+
+---
+
+B00 Proposed 10 Demo Page Collections
+
+---
+
+| Page | Demo page theme                          | What it should test                                                                                                                                                                                                                                  |
+| ---- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | Native and semi-native forms             | Standard inputs, textareas, radio groups, checkbox groups, native selects, disabled fields, readonly fields, placeholder-only labels, fieldsets, validation messages, and repeated address blocks.                                                   |
+| 2    | Custom dropdowns and pickers             | Fake selects, searchable dropdowns, time pickers, date pickers, multi-select chips, comboboxes, hidden menus, nested option groups, keyboard-only options, and controls where the visible value differs from the underlying DOM value.               |
+| 3    | Booking and reservation flows            | Bus, train, hotel, restaurant, doctor, event ticket, car rental, and appointment booking snippets with origin, destination, time, seat, fare class, passenger count, cancellation policy, and confirmation details.                                  |
+| 4    | Read-only records and confirmation pages | Order confirmations, invoices, receipts, shipment tracking, bank transfer summaries, insurance policy details, warranty registrations, and account profile summaries where values are rendered as plain text rather than form controls.              |
+| 5    | Feed, post, and card extraction          | Hacker News-like stories, social posts, marketplace cards, product cards, forum threads, comments, reviews, author/date/score metadata, nested links, badges, and compact repeated records.                                                          |
+| 6    | Search results and dynamic sidebars      | Job listings, real estate listings, flight results, support articles, documentation search results, email search panels, CRM lead lists, and sidebar result cards with titles, links, snippets, tags, and metadata.                                  |
+| 7    | Tables, grids, and admin dashboards      | Sortable tables, sticky columns, nested rows, expandable details, status badges, action menus, invoices, user management grids, inventory rows, analytics summaries, and cells containing multiple values.                                           |
+| 8    | Complex layout and visual grouping       | Two-column forms, wizard steps, accordion sections, tabs, modal dialogs, popovers, sticky summary panels, mobile-style cards, hidden sections, and content where the visual grouping is clearer than the DOM grouping.                               |
+| 9    | Accessibility and semantic edge cases    | ARIA labels, `aria-labelledby`, visually hidden labels, icon-only buttons, malformed label relationships, duplicated labels, field descriptions, error text, shadow DOM components, and content where accessible names are better than visible text. |
+| 10   | Hostile or extraction-resistant UI       | Unselectable text, CSS-generated labels, canvas-like fake rows, deeply nested spans, randomized class names, virtualized lists, collapsed overflow, copy-disabled regions, masked values, and values split across multiple DOM nodes.                |
+
+---
+
+C00 Example Situations Worth Including Across The Suite
+
+---
+
+For the forms page, I would include a simple contact form, a tax-style form with dense labels, a medical intake form, a loan application fragment, an address form with billing and shipping copies, a permissions matrix made from checkboxes, a preferences form with many toggles, a disabled account settings form, a form with missing labels, and a form where labels are visually above fields but DOM order is irregular.
+
+For the custom controls page, I would include a native select beside a custom select for comparison, a custom bus-time dropdown, an airport selector with search, a date range picker, a timezone picker, a country and state cascading selector, a multi-select with removable chips, a menu rendered in an overlay, a dropdown whose options appear only after clicking, and a dropdown with grouped options like "Morning", "Afternoon", and "Evening."
+
+For the booking page, I would include a bus reservation panel, a hotel room selector, a restaurant reservation widget, a medical appointment card, a flight search result, a train ticket form, an event ticket seat selector, a parking reservation form, a rental car quote, and a final booking confirmation summary.
+
+For the read-only records page, I would include a receipt, an invoice, a shipping tracker, a bank transfer review screen, a subscription billing screen, a warranty claim summary, a policy details card, a government-style application status page, a school registration summary, and a customer support case detail page.
+
+For the feed and card page, I would include a Hacker News-like list, Reddit-like posts, LinkedIn-style job posts, marketplace item cards, product review cards, GitHub issue cards, forum comments, support knowledge-base cards, event listings, and news cards with title, URL, source, timestamp, score, author, tags, and comment count.
+
+For the search and sidebar page, I would include a job-search sidebar, a real-estate result list, an email inbox preview pane, a documentation search result panel, a CRM leads panel, a travel itinerary sidebar, a shopping filter sidebar, a helpdesk ticket queue, a map-location result list, and a command-palette style result picker.
+
+For the table and dashboard page, I would include an invoice table, a user permissions table, an inventory grid, a sortable order table, an expandable transaction table, a monitoring dashboard, a usage billing table, a project status table, a security audit log, and a table with cells that contain badges, links, dates, and secondary text.
+
+For the complex layout page, I would include accordion sections, tabs, modal dialogs, popovers, sticky order summaries, mobile card layouts, split-pane layouts, collapsible advanced settings, multi-step wizards, and nested sections where field labels and values are visually paired but far apart in the DOM.
+
+For the accessibility edge-case page, I would include fields labeled only by ARIA, labels hidden with CSS, icon-only controls with tooltips, repeated labels like "Name" in multiple sections, fields with helper text and validation text, controls with `aria-describedby`, custom web components using shadow DOM, and examples where the visible text says one thing but the accessible name says another.
+
+For the hostile UI page, I would include non-selectable text, values split into many spans, fake tables built from divs, CSS pseudo-element labels, copy-disabled sections, masked account values, virtualized lists that only render visible rows, deeply nested markup, randomized class names, and content that visually looks structured but has almost no useful semantic markup.
+
+---
+
+D00 What The Specifications Should Probably Define
+
+---
+
+Each specification should define the page name, the purpose of the page, the extraction problems it is meant to test, and the exact examples that should appear on that page.
+
+Each example should define the visible scenario, the fields and values that should be extractable, the intentional DOM difficulty, the expected formatted output, and any interaction needed before extraction, such as opening a dropdown, expanding an accordion, switching a tab, or clicking "show details."
+
+The specifications should also define common page conventions: each demo page is one portable `.html` file, all CSS and JavaScript are inline, examples are visually separated with headings, each example has a short description, there is no backend, and interactivity is limited to what is needed to expose extraction states.
+
+A useful convention would be to include a visible "Expected extraction" block under each example. That gives you a reference output for automated or manual comparison. For harder examples, the expected output could show both a compact format and a structured JSON-like format.
+
+---
+
+E00 Understanding Of Specification Mode
+
+---
+
+I understand that we are moving from brainstorming into specification-writing mode.
+
+The output you want from me is not the HTML implementation yet. The output should be detailed, practical specifications written for an LLM coding agent that will later create standalone HTML demo pages. The specifications should be clear enough that the coding agent can implement the page without needing to infer too much, but they should not be written like formal enterprise requirements. They should be direct, detailed, and implementation-oriented.
+
+Each specification describes one isolated HTML demo page. That page must be fully self-contained. It should use one `.html` file only, with inline HTML, CSS, and JavaScript. No React, no build system, no external CSS, no external libraries, no shared assets, no cross-page imports, and no dependency on any other specification.
+
+---
+
+F00 Isolation Rule
+
+---
+
+Every page specification must stand alone.
+
+That means each page spec must repeat all requirements it needs. It must not say things like "use the same layout as the previous page," "follow the shared conventions," or "reuse the helper from page 3." Even if multiple pages use similar structural ideas, each specification must restate those requirements directly.
+
+Inside a single page specification, the coding agent should be able to understand everything from that one document alone. The page title, purpose, layout, visual direction, interaction requirements, examples, extraction targets, CSS expectations, JavaScript behavior, and testing notes should all be included in that same spec.
+
+---
+
+G00 Edit Rule
+
+---
+
+When you ask me to edit a specification, I should return the full updated specification again.
+
+I should not return a patch, diff, partial replacement, or "change only this section" response unless you explicitly ask for that. The normal behavior should be: after an edit request, I rewrite the complete current specification with the edit integrated.
+
+This matters because you want each spec to remain copy-pasteable into a coding-agent task. The final answer after any edit should still be a complete usable instruction document.
+
+---
+
+H00 Shape Of One Demo Page Specification
+
+---
+
+For each isolated page, I should describe one focused theme, such as custom dropdowns, booking flows, read-only records, search result sidebars, tables, dashboards, hostile UI, or accessibility edge cases.
+
+Each page should contain about 20 distinct examples. These examples should not be tiny toy cases. They should be closer to real-world web fragments where extraction is useful but annoying. A single complex example is better than several trivial examples, because you can still use the complex example for simpler testing.
+
+Each example should have its own visible section on the page. The page should feel like a plain HTML Storybook: scrollable, labeled, organized, visually separated, and useful for repeatedly testing your extraction tool against different UI fragments.
+
+Each example should include a heading, a short explanation visible on the page, realistic fields and values, and some specific caveat that makes extraction non-trivial. The spec should explain what the coding agent should build, what the user should see, what data should be extractable, and why that example exists.
+
+---
+
+I00 Expected Detail Level
+
+---
+
+The specifications should use a micromanagement style.
+
+That means I should not merely say "create a reservation form." I should describe the kind of reservation, the layout, the fields, the visible labels, the values, the custom controls, the tricky DOM or visual behavior, the repeated records, the hidden or collapsed details, and the expected extraction target.
+
+For each example, I should spend enough text explaining what makes it different from the other examples. I should call out the extraction challenge directly. For example, one case might test a custom time dropdown where the visible time labels are rendered as nested spans. Another might test a sidebar where each job card has title, company, location, salary, badges, and links, but the layout is card-based rather than table-based. Another might test a read-only confirmation screen where the visible labels and values are separated into different columns.
+
+The examples should intentionally vary in layout and programming style. Some can use clean semantic HTML. Some can use messy div-based markup. Some can use native form controls. Some can use custom ARIA widgets. Some can use hidden panels, popovers, tabs, accordions, disabled fields, readonly fields, dynamic sidebars, and fake controls.
+
+---
+
+J00 Implementation Expectations For The Future HTML
+
+---
+
+The generated HTML pages should look reasonably polished, but not over-engineered. Inline CSS should make the examples visually distinct and easier to scan. The styling can be simple, hand-drawn, admin-like, SaaS-like, mobile-like, government-form-like, or marketplace-like depending on the example.
+
+The JavaScript should be minimal and only support the demo behavior needed for testing. For example, opening a dropdown, expanding an accordion, switching tabs, filtering a short list, showing a modal, toggling a summary panel, or revealing hidden details. The goal is not to build a production app. The goal is to create realistic extraction surfaces.
+
+The page can change visual style from example to example. That is useful because real web pages are inconsistent. The coding style and DOM structure can also vary inside the same page, as long as the final file remains understandable and portable.
+
+---
+
+K00 Testing Purpose
+
+---
+
+The real purpose of these specs is to create a strong long-term test suite for your extraction tool.
+
+The demo pages should let you test whether your tool can select a page fragment and produce useful formatted output from it. The output might be field-value pairs, repeated item records, link collections, selected dropdown options, available dropdown options, status summaries, table records, feed items, or structured metadata from cards and posts.
+
+The examples should cover cases where ordinary copying fails, where the DOM is hard to inspect, where labels and values are visually related but not adjacent in the markup, where controls are custom-built, where content is repeated in cards, where some values are hidden until interaction, and where the user would otherwise need browser devtools to extract the information.
+
+---
+
+L00 What I Should Produce Next
+
+---
+
+The next concrete step is to write the first full page specification.
+
+That specification should be a complete standalone instruction document for one HTML file. It should include the page purpose, general implementation rules, visual style direction, required page structure, required examples, expected interaction behavior, and extraction challenges.
+
+For that page, I should define about 20 advanced, realistic examples under one theme. Each example should explain what should appear on the page, what fields or values should be extractable, and what caveat makes it useful for testing.
+
+
+Write specifications, not implementations.
+
+Write for an LLM coding agent.
+
+Each specification describes exactly one standalone HTML demo page.
+
+Each demo page must be fully self-contained in one `.html` file.
+
+Use only inline HTML, CSS, and JavaScript.
+
+Do not use React, build tools, external libraries, external assets, or shared files.
+
+Do not reference any other specification, page, helper, style, convention, or previous result.
+
+Repeat all required rules inside every specification.
+
+When editing a specification, return the full updated specification every time.
+
+Do not return diffs, patches, partial sections, or change summaries unless explicitly requested.
+
+Each page must have one clear theme.
+
+Each page should contain about 20 distinct examples.
+
+Prefer complex, realistic examples over trivial toy examples.
+
+Make every example useful for testing real-world content extraction.
+
+Avoid duplicate scenarios that test the same thing in the same way.
+
+Each example should have a visible heading.
+
+Each example should have a visible explanatory paragraph.
+
+Each example should describe what the UI is imitating.
+
+Each example should describe what content should be extractable.
+
+Each example should describe the extraction caveat or difficulty.
+
+Each example should include realistic labels, values, metadata, links, statuses, options, or repeated records.
+
+Examples may include forms, read-only records, cards, feeds, tables, sidebars, dropdowns, modals, tabs, accordions, and hostile UI.
+
+Use varied layouts across the page.
+
+Use varied DOM structures across the page.
+
+Use both semantic and messy markup when useful.
+
+Use minimal JavaScript only for demo interactions.
+
+Interactions may include opening dropdowns, expanding accordions, switching tabs, filtering lists, showing modals, or revealing hidden details.
+
+Styling should be inline and good enough to make examples readable and visually distinct.
+
+The page should feel like a plain HTML Storybook-style test page.
+
+The page should be scrollable, organized, labeled, and easy to test manually.
+
+The goal is not production functionality.
+
+The goal is realistic extraction surfaces.
+
+Test field-value extraction.
+
+Test repeated record extraction.
+
+Test link and metadata extraction.
+
+Test native controls.
+
+Test custom controls.
+
+Test visible values that are hard to copy.
+
+Test values that are visually paired but DOM-separated.
+
+Test values hidden behind interaction.
+
+Test content where browser devtools would normally be needed.
+
+Test read-only content, not only editable form fields.
+
+Test long forms, short forms, dense forms, and irregular layouts.
+
+Make the coding-agent instructions direct, detailed, and micromanaged.
+
+Do not write vague instructions like "create a booking form."
+
+Describe exact scenarios, fields, values, layout intent, interaction behavior, and extraction challenge.
+
+Let the coding agent use judgment for final visual polish and implementation details.
+
+Do not over-formalize the specification.
+
+Keep the specification practical, explicit, and implementation-oriented.

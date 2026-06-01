@@ -1,0 +1,1998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page 3 - Booking And Reservation Flows</title>
+  <style>
+    :root {
+      --page-bg: #eef1f4;
+      --card-bg: #ffffff;
+      --ink: #1d2430;
+      --muted: #5d6675;
+      --line: #c9d2dd;
+      --soft: #e6ebf1;
+      --panel: #f7f9fc;
+      --accent: #2f5d8c;
+      --accent-soft: #e4eefb;
+      --warning: #8a5a00;
+      --warning-soft: #fdf3df;
+      --danger: #9b332c;
+      --ok: #1f7a4d;
+      --ok-soft: #e3f4ea;
+      --sel: #d7e8fb;
+      --sel-line: #2f5d8c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--page-bg);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    main { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 32px 0 72px; }
+
+    .page-hero {
+      margin-bottom: 28px;
+      padding: 28px 30px;
+      background: linear-gradient(135deg, #ffffff, #eaf1f8);
+      border: 1px solid var(--line);
+      border-left: 8px solid var(--accent);
+      border-radius: 6px;
+    }
+    .page-hero h1 { margin: 0 0 8px; font-size: 1.8rem; letter-spacing: -0.01em; }
+    .page-hero p { margin: 0; color: var(--muted); max-width: 70ch; }
+    .hero-tag {
+      display: inline-block; margin-bottom: 14px; padding: 4px 12px;
+      background: var(--accent); color: #fff; font-size: 0.72rem;
+      text-transform: uppercase; letter-spacing: 0.08em; border-radius: 20px;
+    }
+
+    .example-card {
+      margin: 26px 0;
+      padding: 0;
+      background: var(--card-bg);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .example-header {
+      padding: 18px 24px 14px;
+      border-bottom: 1px solid var(--soft);
+      background: var(--panel);
+    }
+    .example-kicker {
+      margin: 0 0 2px; font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent);
+    }
+    .example-header h2 { margin: 0; font-size: 1.2rem; }
+    .example-description { margin: 16px 24px 0; color: var(--muted); max-width: 86ch; }
+    .example-surface { padding: 20px 24px 26px; }
+
+    .booking-layout { display: grid; grid-template-columns: 1fr; gap: 20px; }
+    @media (min-width: 860px) { .booking-layout { grid-template-columns: 1.7fr 1fr; align-items: start; } }
+
+    .booking-panel { min-width: 0; }
+    fieldset { border: 1px solid var(--line); border-radius: 6px; margin: 0 0 16px; padding: 14px 16px; }
+    legend { font-weight: 700; font-size: 0.85rem; padding: 0 6px; color: var(--ink); }
+    label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+    .inline-options label, .stack-options label { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; color: var(--ink); margin: 0; }
+    .inline-options { display: flex; flex-wrap: wrap; gap: 16px; }
+    .stack-options { display: flex; flex-direction: column; gap: 8px; }
+
+    input[type="text"], input[type="email"], input[type="tel"], input[type="number"],
+    input[type="date"], input[type="time"], select, textarea {
+      width: 100%; padding: 9px 11px; font: inherit; color: var(--ink);
+      background: #fff; border: 1px solid var(--line); border-radius: 5px;
+    }
+    input[readonly], input:disabled, select:disabled, textarea[readonly] {
+      background: var(--soft); color: #44505e;
+    }
+    textarea { min-height: 70px; resize: vertical; }
+
+    .grid-two { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 16px; }
+    .grid-three { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 16px; }
+    @media (min-width: 560px) {
+      .grid-two { grid-template-columns: 1fr 1fr; }
+      .grid-three { grid-template-columns: repeat(3, 1fr); }
+    }
+    .field { min-width: 0; }
+    .field-val { padding: 9px 11px; border: 1px solid var(--line); border-radius: 5px; background: var(--soft); }
+
+    .summary-panel {
+      background: var(--panel); border: 1px solid var(--line);
+      border-radius: 8px; padding: 16px 18px; position: sticky; top: 16px;
+    }
+    .summary-panel h3 { margin: 0 0 12px; font-size: 1rem; }
+    .price-line { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px dashed var(--soft); font-size: 0.9rem; }
+    .price-line:last-of-type { border-bottom: 0; }
+    .price-line.total { margin-top: 8px; padding-top: 10px; border-top: 2px solid var(--line); border-bottom: 0; font-size: 1.02rem; }
+    .price-line.total strong { color: var(--accent); }
+
+    .policy {
+      margin-top: 14px; padding: 12px 14px; font-size: 0.85rem;
+      background: var(--warning-soft); border: 1px solid #e7d2a3;
+      border-radius: 6px; color: #6b4a08;
+    }
+    .meta-strip {
+      display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 16px;
+      padding: 12px 14px; background: var(--accent-soft);
+      border: 1px solid #bcd5ef; border-radius: 6px; font-size: 0.88rem;
+    }
+    .meta-strip span b { color: var(--accent); }
+
+    .card-options { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    @media (min-width: 620px) { .card-options.cols-2 { grid-template-columns: 1fr 1fr; } }
+    .choice-card {
+      text-align: left; width: 100%; cursor: pointer; font: inherit; color: var(--ink);
+      border: 1.5px solid var(--line); border-radius: 8px; background: #fff;
+      padding: 14px 16px; display: flex; flex-direction: column; gap: 4px;
+    }
+    .choice-card .cc-top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+    .choice-card .cc-name { font-weight: 700; }
+    .choice-card .cc-price { font-weight: 700; color: var(--accent); white-space: nowrap; }
+    .choice-card .cc-meta { font-size: 0.84rem; color: var(--muted); }
+    .choice-card[aria-pressed="true"], .choice-card.is-selected {
+      border-color: var(--sel-line); background: var(--sel);
+      box-shadow: inset 0 0 0 1px var(--sel-line);
+    }
+    .choice-card[aria-disabled="true"], .choice-card:disabled {
+      opacity: 0.6; cursor: not-allowed; background: var(--soft);
+    }
+    .badge { display: inline-block; font-size: 0.7rem; font-weight: 700; padding: 1px 8px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .badge.sold { background: #f3dada; color: var(--danger); }
+    .badge.sel { background: var(--ok-soft); color: var(--ok); }
+
+    .seat-map { display: inline-flex; flex-direction: column; gap: 6px; padding: 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+    .seat-row { display: flex; gap: 6px; align-items: center; }
+    .seat-row .row-label { width: 22px; font-size: 0.78rem; font-weight: 700; color: var(--muted); }
+    .seat {
+      width: 40px; height: 38px; border: 1px solid var(--line); border-radius: 6px;
+      background: #fff; font: inherit; font-size: 0.8rem; cursor: pointer; color: var(--ink);
+    }
+    .seat.is-selected { background: var(--sel); border-color: var(--sel-line); font-weight: 700; box-shadow: inset 0 0 0 1px var(--sel-line); }
+    .seat.is-unavailable, .seat:disabled { background: #e1c8c6; border-color: #c99; color: #7a4b48; cursor: not-allowed; }
+    .seat-legend { display: flex; gap: 14px; font-size: 0.78rem; color: var(--muted); margin-top: 6px; }
+    .seat-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: middle; margin-right: 4px; }
+
+    .slot-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .slot-btn {
+      font: inherit; cursor: pointer; padding: 9px 14px; border-radius: 20px;
+      border: 1.5px solid var(--line); background: #fff; color: var(--ink);
+      display: flex; flex-direction: column; align-items: center; line-height: 1.2;
+    }
+    .slot-btn small { font-size: 0.68rem; color: var(--muted); }
+    .slot-btn[aria-pressed="true"], .slot-btn.is-selected { background: var(--sel); border-color: var(--sel-line); font-weight: 700; }
+    .slot-btn:disabled, .slot-btn[aria-disabled="true"] { background: var(--soft); color: #9aa3af; cursor: not-allowed; }
+
+    table.rental { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    table.rental th, table.rental td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; }
+    table.rental th { background: var(--panel); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+    table.rental td input[type="number"] { width: 64px; }
+
+    .status-pill { display: inline-block; padding: 3px 12px; border-radius: 14px; font-size: 0.8rem; font-weight: 700; }
+    .status-pill.ok { background: var(--ok-soft); color: var(--ok); }
+    .status-pill.hold { background: var(--warning-soft); color: var(--warning); }
+
+    .gov-card { border: 2px solid #2c3a4d; border-radius: 4px; }
+    .gov-card .example-header { background: #2c3a4d; }
+    .gov-card .example-kicker { color: #c7d6e8; }
+    .gov-card .example-header h2 { color: #fff; }
+
+    .doc-header {
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+      padding: 12px 16px; margin-bottom: 16px; border: 2px solid var(--ink);
+      border-radius: 4px; background: #fbfbf7;
+    }
+    .doc-header .doc-title { font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+    .qr-box {
+      display: flex; align-items: center; justify-content: center; text-align: center;
+      width: 100%; max-width: 220px; min-height: 90px; margin-top: 10px; padding: 12px;
+      border: 2px dashed var(--line); border-radius: 8px; color: var(--muted); font-size: 0.82rem;
+    }
+    .checklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+    .checklist li { display: flex; align-items: center; gap: 8px; }
+    h4.group-h { margin: 18px 0 8px; font-size: 0.92rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-hero">
+      <span class="hero-tag">Extraction Test Surface</span>
+      <h1>Page 3 - Booking And Reservation Flows</h1>
+      <p>
+        This page contains 22 realistic booking and reservation examples built as a testing surface
+        for a content extraction tool. Each example exercises extraction of dates, times, guests,
+        travelers, selected services, seat assignments, prices, fees, confirmation details, and policy
+        text spread across forms, cards, seat maps, and summary panels. All data is fictional.
+      </p>
+    </header>
+
+    <section class="example-card" id="example-01">
+      <header class="example-header">
+        <p class="example-kicker">Example 01</p>
+        <h2>Intercity Bus Reservation Checkout</h2>
+      </header>
+      <p class="example-description">
+        This example imitates an intercity bus checkout page. It tests extraction of route details,
+        departure time, passenger records, selected fare, seat assignments, baggage options, and a
+        price breakdown spread across a form and a summary panel.
+      </p>
+      <div class="example-surface">
+        <div class="booking-layout">
+          <form class="booking-panel" aria-label="Bus reservation checkout">
+            <div class="grid-two">
+              <div class="field">
+                <label for="ex01-code">Reservation code</label>
+                <input id="ex01-code" value="BUS-7K92D" readonly>
+              </div>
+              <div class="field">
+                <label for="ex01-carrier">Carrier</label>
+                <input id="ex01-carrier" value="Pacific Line Express" readonly>
+              </div>
+              <div class="field">
+                <label for="ex01-origin">Origin</label>
+                <input id="ex01-origin" value="San Francisco Transbay Terminal" readonly>
+              </div>
+              <div class="field">
+                <label for="ex01-dest">Destination</label>
+                <input id="ex01-dest" value="Los Angeles Union Station" readonly>
+              </div>
+              <div class="field">
+                <label for="ex01-date">Travel date</label>
+                <input id="ex01-date" type="date" value="2026-07-03" readonly>
+              </div>
+              <div class="field">
+                <label for="ex01-dep">Departure</label>
+                <input id="ex01-dep" value="08:15 AM" readonly>
+              </div>
+              <div class="field">
+                <label for="ex01-arr">Arrival</label>
+                <input id="ex01-arr" value="02:40 PM" readonly>
+              </div>
+            </div>
+
+            <fieldset>
+              <legend>Fare class</legend>
+              <div class="inline-options">
+                <label><input type="radio" name="ex01-fare" value="Saver"> Saver</label>
+                <label><input type="radio" name="ex01-fare" value="Flexible" checked> Flexible</label>
+                <label><input type="radio" name="ex01-fare" value="Refundable"> Refundable</label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Passenger 1</legend>
+              <div class="grid-three">
+                <div class="field">
+                  <label for="ex01-p1-name">Full name</label>
+                  <input id="ex01-p1-name" value="Elena Morales">
+                </div>
+                <div class="field">
+                  <label for="ex01-p1-type">Ticket type</label>
+                  <select id="ex01-p1-type">
+                    <option selected>Adult</option>
+                    <option>Child</option>
+                    <option>Senior</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="ex01-p1-seat">Seat</label>
+                  <input id="ex01-p1-seat" value="12A" readonly>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Passenger 2</legend>
+              <div class="grid-three">
+                <div class="field">
+                  <label for="ex01-p2-name">Full name</label>
+                  <input id="ex01-p2-name" value="Rafi Morales">
+                </div>
+                <div class="field">
+                  <label for="ex01-p2-type">Ticket type</label>
+                  <select id="ex01-p2-type">
+                    <option>Adult</option>
+                    <option selected>Child</option>
+                    <option>Senior</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="ex01-p2-seat">Seat</label>
+                  <input id="ex01-p2-seat" value="12B" readonly>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Baggage</legend>
+              <div class="stack-options">
+                <label><input type="checkbox" checked> Checked bag for Passenger 1</label>
+                <label><input type="checkbox"> Checked bag for Passenger 2</label>
+                <label><input type="checkbox"> Bike storage</label>
+              </div>
+            </fieldset>
+
+            <div class="grid-two">
+              <div class="field">
+                <label for="ex01-email">Contact email</label>
+                <input id="ex01-email" type="email" value="elena.morales@example.test">
+              </div>
+              <div class="field">
+                <label for="ex01-phone">Contact phone</label>
+                <input id="ex01-phone" type="tel" value="415-555-0198">
+              </div>
+            </div>
+          </form>
+
+          <aside class="summary-panel" aria-label="Bus reservation price summary">
+            <h3>Trip summary</h3>
+            <div class="price-line"><span>Base fare</span><strong>$138.00</strong></div>
+            <div class="price-line"><span>Flexible fare upgrade</span><strong>$24.00</strong></div>
+            <div class="price-line"><span>Checked baggage</span><strong>$18.00</strong></div>
+            <div class="price-line"><span>Service fee</span><strong>$6.50</strong></div>
+            <div class="price-line total"><span>Total due</span><strong>$186.50</strong></div>
+            <p class="policy">Flexible fares may be changed once before departure without a change fee. Fare difference may apply.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-02">
+      <header class="example-header">
+        <p class="example-kicker">Example 02</p>
+        <h2>Train Seat Reservation Flow</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a train booking flow with a selected coach and seat map. It tests
+        extraction of selected seats, coach metadata, passenger details, and nearby unavailable seats
+        represented as custom visual elements.
+      </p>
+      <div class="example-surface">
+        <div class="booking-layout">
+          <form class="booking-panel" aria-label="Train seat reservation">
+            <div class="grid-two">
+              <div class="field">
+                <label for="ex02-ref">Booking reference</label>
+                <input id="ex02-ref" value="RAIL-4028-AQ" readonly>
+              </div>
+              <div class="field">
+                <label for="ex02-train">Train</label>
+                <input id="ex02-train" value="Coastal Runner 714" readonly>
+              </div>
+              <div class="field">
+                <label for="ex02-from">From</label>
+                <input id="ex02-from" value="Seattle King Street" readonly>
+              </div>
+              <div class="field">
+                <label for="ex02-to">To</label>
+                <input id="ex02-to" value="Portland Union Station" readonly>
+              </div>
+              <div class="field">
+                <label for="ex02-date">Departure date</label>
+                <input id="ex02-date" type="date" value="2026-08-04" readonly>
+              </div>
+              <div class="field">
+                <label for="ex02-time">Departure time</label>
+                <input id="ex02-time" type="time" value="10:30" readonly>
+              </div>
+              <div class="field">
+                <label for="ex02-coach">Coach</label>
+                <select id="ex02-coach">
+                  <option>Coach A - Standard</option>
+                  <option selected>Coach B - Quiet car</option>
+                  <option>Coach C - Bistro</option>
+                </select>
+              </div>
+            </div>
+
+            <fieldset>
+              <legend>Seat preference</legend>
+              <div class="inline-options">
+                <label><input type="radio" name="ex02-pref" value="Window" checked> Window</label>
+                <label><input type="radio" name="ex02-pref" value="Aisle"> Aisle</label>
+                <label><input type="radio" name="ex02-pref" value="No preference"> No preference</label>
+              </div>
+            </fieldset>
+
+            <h4 class="group-h">Seat map - Coach B</h4>
+            <div class="seat-map" role="group" aria-label="Coach B seat map">
+              <div class="seat-row">
+                <span class="row-label">8</span>
+                <button type="button" class="seat is-unavailable" disabled aria-label="Seat 8A unavailable">8A</button>
+                <button type="button" class="seat" data-toggle-seat aria-pressed="false" aria-label="Seat 8B available">8B</button>
+                <button type="button" class="seat" data-toggle-seat aria-pressed="false" aria-label="Seat 8C available">8C</button>
+                <button type="button" class="seat" data-toggle-seat aria-pressed="false" aria-label="Seat 8D available">8D</button>
+              </div>
+              <div class="seat-row">
+                <span class="row-label">9</span>
+                <button type="button" class="seat is-selected" data-toggle-seat aria-pressed="true" aria-label="Seat 9A selected for Maya Chen">9A</button>
+                <button type="button" class="seat is-selected" data-toggle-seat aria-pressed="true" aria-label="Seat 9B selected for Leo Chen">9B</button>
+                <button type="button" class="seat" data-toggle-seat aria-pressed="false" aria-label="Seat 9C available">9C</button>
+                <button type="button" class="seat" data-toggle-seat aria-pressed="false" aria-label="Seat 9D available">9D</button>
+              </div>
+              <div class="seat-row">
+                <span class="row-label">10</span>
+                <button type="button" class="seat" data-toggle-seat aria-pressed="false" aria-label="Seat 10A available">10A</button>
+                <button type="button" class="seat" data-toggle-seat aria-pressed="false" aria-label="Seat 10B available">10B</button>
+                <button type="button" class="seat is-unavailable" disabled aria-label="Seat 10C unavailable">10C</button>
+                <button type="button" class="seat" data-toggle-seat aria-pressed="false" aria-label="Seat 10D available">10D</button>
+              </div>
+              <div class="seat-row">
+                <span class="row-label">11</span>
+                <button type="button" class="seat" data-toggle-seat aria-pressed="false" aria-label="Seat 11A available">11A</button>
+                <button type="button" class="seat" data-toggle-seat aria-pressed="false" aria-label="Seat 11B available">11B</button>
+                <button type="button" class="seat" data-toggle-seat aria-pressed="false" aria-label="Seat 11C available">11C</button>
+                <button type="button" class="seat is-unavailable" disabled aria-label="Seat 11D unavailable">11D</button>
+              </div>
+              <div class="seat-legend">
+                <span><i style="background:var(--sel)"></i>Selected</span>
+                <span><i style="background:#e1c8c6"></i>Unavailable</span>
+                <span><i style="background:#fff;border:1px solid var(--line)"></i>Available</span>
+              </div>
+            </div>
+
+            <fieldset style="margin-top:16px">
+              <legend>Passenger 1</legend>
+              <div class="grid-three">
+                <div class="field"><label>Name</label><input value="Maya Chen"></div>
+                <div class="field"><label>Fare type</label><select><option selected>Adult</option><option>Youth</option><option>Senior</option></select></div>
+                <div class="field"><label>Loyalty number</label><input value="CR-119204"></div>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Passenger 2</legend>
+              <div class="grid-three">
+                <div class="field"><label>Name</label><input value="Leo Chen"></div>
+                <div class="field"><label>Fare type</label><select><option>Adult</option><option selected>Youth</option><option>Senior</option></select></div>
+                <div class="field"><label>Loyalty number</label><input value="" placeholder="None"></div>
+              </div>
+            </fieldset>
+          </form>
+
+          <aside class="summary-panel" aria-label="Train reservation summary">
+            <h3>Reservation summary</h3>
+            <div class="price-line"><span>Coach</span><strong>B - Quiet car</strong></div>
+            <div class="price-line"><span>Seats</span><strong>9A, 9B</strong></div>
+            <div class="price-line"><span>Ticket subtotal</span><strong>$74.00</strong></div>
+            <div class="price-line"><span>Seat reservation fee</span><strong>$8.00</strong></div>
+            <div class="price-line total"><span>Total</span><strong>$82.00</strong></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-03">
+      <header class="example-header">
+        <p class="example-kicker">Example 03</p>
+        <h2>Hotel Room Reservation Checkout</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a hotel booking checkout page. It tests extraction of stay dates, room
+        type, guest count, selected rate plan, add-ons, taxes, fees, and cancellation policy from a
+        mixed form and summary layout.
+      </p>
+      <div class="example-surface">
+        <div class="booking-layout">
+          <form class="booking-panel" aria-label="Hotel room checkout">
+            <div class="field" style="margin-bottom:14px">
+              <label for="ex03-hotel">Hotel</label>
+              <input id="ex03-hotel" value="Harbor View Suites" readonly>
+            </div>
+            <div class="grid-three">
+              <div class="field"><label for="ex03-in">Check-in</label><input id="ex03-in" type="date" value="2026-08-14"></div>
+              <div class="field"><label for="ex03-out">Check-out</label><input id="ex03-out" type="date" value="2026-08-18"></div>
+              <div class="field"><label for="ex03-nights">Nights</label><input id="ex03-nights" type="number" value="4" readonly></div>
+              <div class="field"><label for="ex03-rooms">Rooms</label><input id="ex03-rooms" type="number" value="1"></div>
+              <div class="field"><label for="ex03-adults">Adults</label><input id="ex03-adults" type="number" value="2"></div>
+              <div class="field"><label for="ex03-children">Children</label><input id="ex03-children" type="number" value="1"></div>
+            </div>
+
+            <div class="choice-card is-selected" style="margin:16px 0" aria-label="Selected room">
+              <div class="cc-top"><span class="cc-name">King Studio With Harbor View</span><span class="badge sel">Selected</span></div>
+              <div class="cc-meta">Bed: 1 king bed and sofa sleeper</div>
+              <div class="cc-meta">Occupancy: Up to 4 guests</div>
+              <div class="cc-meta">Selected rate: Refundable breakfast rate</div>
+              <input type="hidden" name="rateCode" value="KST-HARBOR-REF-BFAST">
+            </div>
+
+            <fieldset>
+              <legend>Rate options</legend>
+              <div class="card-options">
+                <button type="button" class="choice-card" data-select-group="ex03-rate" disabled aria-disabled="true">
+                  <div class="cc-top"><span class="cc-name">Advance purchase</span><span class="cc-price">$214/night</span></div>
+                  <div class="cc-meta">Non-refundable</div>
+                </button>
+                <button type="button" class="choice-card is-selected" data-select-group="ex03-rate" aria-pressed="true">
+                  <div class="cc-top"><span class="cc-name">Refundable breakfast rate</span><span class="cc-price">$249/night</span></div>
+                  <div class="cc-meta">Free cancellation, breakfast included</div>
+                </button>
+                <button type="button" class="choice-card" data-select-group="ex03-rate" aria-pressed="false">
+                  <div class="cc-top"><span class="cc-name">Suite flexible rate</span><span class="cc-price">$319/night</span></div>
+                  <div class="cc-meta">Flexible changes</div>
+                </button>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Guest details</legend>
+              <div class="grid-three">
+                <div class="field"><label for="ex03-gname">Guest name</label><input id="ex03-gname" value="Priya Shah"></div>
+                <div class="field"><label for="ex03-gemail">Guest email</label><input id="ex03-gemail" type="email" value="priya.shah@example.test"></div>
+                <div class="field"><label for="ex03-arr">Arrival time</label>
+                  <select id="ex03-arr"><option>2 PM - 4 PM</option><option>4 PM - 6 PM</option><option selected>6 PM - 8 PM</option><option>After 8 PM</option></select>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Add-ons</legend>
+              <div class="stack-options">
+                <label><input type="checkbox" checked disabled> Breakfast included</label>
+                <label><input type="checkbox" checked> Parking</label>
+                <label><input type="checkbox"> Late checkout request</label>
+              </div>
+            </fieldset>
+          </form>
+
+          <aside class="summary-panel" aria-label="Hotel price breakdown">
+            <h3>Price breakdown</h3>
+            <div class="price-line"><span>Room charges</span><strong>$996.00</strong></div>
+            <div class="price-line"><span>Parking</span><strong>$96.00</strong></div>
+            <div class="price-line"><span>Taxes</span><strong>$142.48</strong></div>
+            <div class="price-line"><span>Resort fee</span><strong>$68.00</strong></div>
+            <div class="price-line total"><span>Total at property</span><strong>$1,302.48</strong></div>
+            <p class="policy">Free cancellation until August 10, 2026 at 6:00 PM hotel local time.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-04">
+      <header class="example-header">
+        <p class="example-kicker">Example 04</p>
+        <h2>Restaurant Reservation Widget</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a restaurant booking widget. It tests extraction of selected time slot,
+        party size, seating preference, occasion, contact fields, and special requests from a compact
+        reservation panel.
+      </p>
+      <div class="example-surface">
+        <form aria-label="Restaurant reservation" style="max-width:680px">
+          <div class="grid-three">
+            <div class="field"><label for="ex04-rest">Restaurant</label><input id="ex04-rest" value="Cypress & Fig" readonly></div>
+            <div class="field"><label for="ex04-date">Reservation date</label><input id="ex04-date" type="date" value="2026-06-20"></div>
+            <div class="field"><label for="ex04-party">Party size</label>
+              <select id="ex04-party"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option></select>
+            </div>
+          </div>
+
+          <div class="field" style="margin:14px 0">
+            <label for="ex04-seltime">Selected time</label>
+            <input id="ex04-seltime" value="7:15 PM" readonly>
+          </div>
+
+          <h4 class="group-h">Available times</h4>
+          <div class="slot-row" role="group" aria-label="Time slots">
+            <button type="button" class="slot-btn" data-select-group="ex04-time" data-mirror="ex04-seltime" data-label="6:00 PM" aria-pressed="false">6:00 PM</button>
+            <button type="button" class="slot-btn" disabled aria-disabled="true">6:45 PM<small>Unavailable</small></button>
+            <button type="button" class="slot-btn is-selected" data-select-group="ex04-time" data-mirror="ex04-seltime" data-label="7:15 PM" aria-pressed="true">7:15 PM</button>
+            <button type="button" class="slot-btn" data-select-group="ex04-time" data-mirror="ex04-seltime" data-label="7:45 PM" aria-pressed="false">7:45 PM</button>
+            <button type="button" class="slot-btn" data-select-group="ex04-time" data-mirror="ex04-seltime" data-label="8:30 PM" aria-pressed="false">8:30 PM<small>Waitlist</small></button>
+          </div>
+
+          <fieldset style="margin-top:16px">
+            <legend>Seating preference</legend>
+            <div class="inline-options">
+              <label><input type="radio" name="ex04-seat" checked> Dining room</label>
+              <label><input type="radio" name="ex04-seat"> Patio</label>
+              <label><input type="radio" name="ex04-seat"> Bar seating</label>
+            </div>
+          </fieldset>
+
+          <div class="grid-two">
+            <div class="field"><label for="ex04-occ">Occasion</label>
+              <select id="ex04-occ"><option>None</option><option selected>Birthday</option><option>Anniversary</option><option>Business meal</option><option>Date night</option></select>
+            </div>
+            <div class="field"><label for="ex04-dname">Diner name</label><input id="ex04-dname" value="Jordan Ellis"></div>
+            <div class="field"><label for="ex04-dphone">Diner phone</label><input id="ex04-dphone" type="tel" value="415-555-0184"></div>
+            <div class="field"><label for="ex04-demail">Diner email</label><input id="ex04-demail" type="email" value="jordan.ellis@example.test"></div>
+          </div>
+
+          <div class="field" style="margin-top:14px">
+            <label for="ex04-req">Special requests</label>
+            <textarea id="ex04-req">Please seat us away from the kitchen if possible. One guest has a shellfish allergy.</textarea>
+          </div>
+          <p class="policy">Tables are held for 15 minutes after the reservation time.</p>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-05">
+      <header class="example-header">
+        <p class="example-kicker">Example 05</p>
+        <h2>Medical Appointment Scheduling Flow</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a healthcare appointment scheduler. It tests extraction of patient
+        identity, appointment type, provider, location, selected time, insurance details, and
+        preparation instructions.
+      </p>
+      <div class="example-surface">
+        <div class="booking-layout">
+          <form class="booking-panel" aria-label="Medical appointment scheduling">
+            <fieldset>
+              <legend>Patient</legend>
+              <div class="grid-three">
+                <div class="field"><label for="ex05-pname">Patient name</label><input id="ex05-pname" value="Riley Stone" readonly></div>
+                <div class="field"><label for="ex05-dob">Date of birth</label><input id="ex05-dob" type="date" value="1984-03-19" readonly></div>
+                <div class="field"><label for="ex05-pid">Patient ID</label><input id="ex05-pid" value="PT-771420" readonly></div>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Appointment</legend>
+              <div class="grid-three">
+                <div class="field"><label for="ex05-spec">Specialty</label>
+                  <select id="ex05-spec"><option>Primary care</option><option selected>Orthopedics</option><option>Sports medicine</option></select>
+                </div>
+                <div class="field"><label for="ex05-prov">Provider</label>
+                  <select id="ex05-prov"><option selected>Dr. Helen Park, MD</option><option>Dr. Omar Nasser, DO</option></select>
+                </div>
+                <div class="field"><label for="ex05-loc">Location</label>
+                  <select id="ex05-loc"><option selected>Downtown Clinic</option><option>Westside Clinic</option></select>
+                </div>
+                <div class="field"><label for="ex05-reason">Appointment reason</label>
+                  <select id="ex05-reason"><option selected>Knee pain follow-up</option><option>New injury</option><option>Annual exam</option></select>
+                </div>
+                <div class="field"><label for="ex05-adate">Appointment date</label><input id="ex05-adate" type="date" value="2026-06-11" readonly></div>
+                <div class="field"><label for="ex05-atime">Appointment time</label><input id="ex05-atime" type="time" value="14:30" readonly></div>
+              </div>
+              <fieldset style="margin-top:6px">
+                <legend>Visit type</legend>
+                <div class="inline-options">
+                  <label><input type="radio" name="ex05-visit" checked> In-person</label>
+                  <label><input type="radio" name="ex05-visit"> Video visit</label>
+                  <label><input type="radio" name="ex05-visit"> Phone call</label>
+                </div>
+              </fieldset>
+            </fieldset>
+
+            <fieldset>
+              <legend>Insurance</legend>
+              <div class="grid-three">
+                <div class="field"><label for="ex05-plan">Insurance plan</label>
+                  <select id="ex05-plan"><option selected>Northstar PPO</option><option>Northstar HMO</option><option>Self pay</option></select>
+                </div>
+                <div class="field"><label for="ex05-member">Member ID</label><input id="ex05-member" value="NSP-44910218"></div>
+                <div class="field"><label for="ex05-ref">Referral required</label>
+                  <select id="ex05-ref" disabled><option selected>No</option><option>Yes</option></select>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Contact preferences</legend>
+              <div class="stack-options">
+                <label><input type="checkbox" checked> Send SMS reminder</label>
+                <label><input type="checkbox" checked> Send email reminder</label>
+                <label><input type="checkbox"> Call if earlier appointment opens</label>
+              </div>
+            </fieldset>
+          </form>
+
+          <aside class="summary-panel" aria-label="Appointment preparation">
+            <h3>Appointment summary</h3>
+            <div class="price-line"><span>When</span><strong>Jun 11, 2:30 PM</strong></div>
+            <div class="price-line"><span>Provider</span><strong>Dr. Helen Park</strong></div>
+            <div class="price-line"><span>Where</span><strong>Downtown Clinic</strong></div>
+            <p class="policy">Arrive 15 minutes early. Bring photo ID, insurance card, and any recent imaging results.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-06">
+      <header class="example-header">
+        <p class="example-kicker">Example 06</p>
+        <h2>Flight Booking Fare Selection</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a flight booking fare selection step. It tests extraction of selected
+        fare card, flight segment details, passenger count, baggage options, fare rules, and a price
+        breakdown.
+      </p>
+      <div class="example-surface">
+        <div class="booking-layout">
+          <form class="booking-panel" aria-label="Flight fare selection">
+            <fieldset>
+              <legend>Flight segment</legend>
+              <div class="grid-three">
+                <div class="field"><label>Trip type</label><input value="One-way" readonly></div>
+                <div class="field"><label>From</label><input value="SFO" readonly></div>
+                <div class="field"><label>To</label><input value="JFK" readonly></div>
+                <div class="field"><label>Flight number</label><input value="AVX 218" readonly></div>
+                <div class="field"><label>Departure</label><input value="2026-09-02 08:05" readonly></div>
+                <div class="field"><label>Arrival</label><input value="2026-09-02 16:42" readonly></div>
+                <div class="field"><label>Duration</label><input value="5h 37m" readonly></div>
+              </div>
+            </fieldset>
+
+            <input type="hidden" name="fareClass" value="standard">
+            <fieldset>
+              <legend>Select fare</legend>
+              <div class="card-options cols-2">
+                <button type="button" class="choice-card" data-select-group="ex06-fare" data-hidden-name="fareClass" data-value="basic" aria-pressed="false">
+                  <div class="cc-top"><span class="cc-name">Basic</span><span class="cc-price">$219</span></div>
+                  <div class="cc-meta">No changes, carry-on included</div>
+                </button>
+                <button type="button" class="choice-card is-selected" data-select-group="ex06-fare" data-hidden-name="fareClass" data-value="standard" aria-pressed="true">
+                  <div class="cc-top"><span class="cc-name">Standard</span><span class="cc-price">$268</span></div>
+                  <div class="cc-meta">Seat selection included, changes for fee</div>
+                </button>
+                <button type="button" class="choice-card" data-select-group="ex06-fare" data-hidden-name="fareClass" data-value="flex" aria-pressed="false">
+                  <div class="cc-top"><span class="cc-name">Flex</span><span class="cc-price">$334</span></div>
+                  <div class="cc-meta">Free changes, priority boarding</div>
+                </button>
+                <button type="button" class="choice-card" data-select-group="ex06-fare" disabled aria-disabled="true">
+                  <div class="cc-top"><span class="cc-name">Business</span><span class="cc-price">$812</span></div>
+                  <div class="cc-meta">Lie-flat seat, two checked bags</div>
+                  <span class="badge sold">Sold out</span>
+                </button>
+              </div>
+            </fieldset>
+
+            <div class="grid-two">
+              <div class="field"><label for="ex06-adults">Adults</label><input id="ex06-adults" type="number" value="1"></div>
+              <div class="field"><label for="ex06-children">Children</label><input id="ex06-children" type="number" value="0"></div>
+            </div>
+            <fieldset>
+              <legend>Baggage</legend>
+              <div class="stack-options">
+                <label><input type="checkbox" checked> Checked bag</label>
+                <label><input type="checkbox"> Priority boarding</label>
+              </div>
+            </fieldset>
+          </form>
+
+          <aside class="summary-panel" aria-label="Flight price summary">
+            <h3>Price summary</h3>
+            <div class="price-line"><span>Base fare</span><strong>$268.00</strong></div>
+            <div class="price-line"><span>Checked bag</span><strong>$35.00</strong></div>
+            <div class="price-line"><span>Taxes and fees</span><strong>$41.62</strong></div>
+            <div class="price-line total"><span>Total</span><strong>$344.62</strong></div>
+            <p class="policy">Standard fare changes are allowed before departure with a change fee and any fare difference.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-07">
+      <header class="example-header">
+        <p class="example-kicker">Example 07</p>
+        <h2>Car Rental Reservation Panel</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a rental car booking panel. It tests extraction of pickup and return
+        branches, times, vehicle class, driver age, add-ons, mileage terms, and total price.
+      </p>
+      <div class="example-surface">
+        <div class="booking-layout">
+          <form class="booking-panel" aria-label="Car rental reservation">
+            <fieldset>
+              <legend>Pickup</legend>
+              <div class="grid-three">
+                <div class="field"><label for="ex07-ploc">Pickup location</label><input id="ex07-ploc" value="Seattle Airport - SEA Terminal 1" readonly></div>
+                <div class="field"><label for="ex07-pdate">Pickup date</label><input id="ex07-pdate" type="date" value="2026-08-04"></div>
+                <div class="field"><label for="ex07-ptime">Pickup time</label><input id="ex07-ptime" type="time" value="10:30"></div>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Return</legend>
+              <div class="grid-three">
+                <div class="field"><label for="ex07-rloc">Return location</label><input id="ex07-rloc" value="Portland Airport - PDX Garage" readonly></div>
+                <div class="field"><label for="ex07-rdate">Return date</label><input id="ex07-rdate" type="date" value="2026-08-09"></div>
+                <div class="field"><label for="ex07-rtime">Return time</label><input id="ex07-rtime" type="time" value="16:00"></div>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Vehicle class</legend>
+              <div class="card-options cols-2">
+                <button type="button" class="choice-card" data-select-group="ex07-veh" aria-pressed="false">
+                  <div class="cc-top"><span class="cc-name">Economy</span><span class="cc-price">$49/day</span></div>
+                  <div class="cc-meta">Toyota Yaris or similar</div>
+                </button>
+                <button type="button" class="choice-card is-selected" data-select-group="ex07-veh" aria-pressed="true">
+                  <div class="cc-top"><span class="cc-name">Compact SUV</span><span class="cc-price">$68/day</span></div>
+                  <div class="cc-meta">Mazda CX-30 or similar</div>
+                </button>
+                <button type="button" class="choice-card" data-select-group="ex07-veh" aria-pressed="false">
+                  <div class="cc-top"><span class="cc-name">Full-size sedan</span><span class="cc-price">$73/day</span></div>
+                  <div class="cc-meta">Toyota Camry or similar</div>
+                </button>
+                <button type="button" class="choice-card" data-select-group="ex07-veh" disabled aria-disabled="true">
+                  <div class="cc-top"><span class="cc-name">Minivan</span><span class="cc-price">$112/day</span></div>
+                  <div class="cc-meta">Sold out</div>
+                </button>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Driver</legend>
+              <div class="grid-three">
+                <div class="field"><label for="ex07-driver">Primary driver</label><input id="ex07-driver" value="Anika Sharma"></div>
+                <div class="field"><label for="ex07-age">Driver age</label><input id="ex07-age" type="number" value="34"></div>
+                <div class="field"><label for="ex07-lic">License country</label>
+                  <select id="ex07-lic"><option selected>United States</option><option>Canada</option><option>United Kingdom</option></select>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Add-ons</legend>
+              <div class="stack-options">
+                <label><input type="checkbox" checked> Collision damage waiver</label>
+                <label><input type="checkbox"> Additional driver</label>
+                <label><input type="checkbox" checked> Child seat</label>
+                <label><input type="checkbox"> Prepaid fuel</label>
+              </div>
+            </fieldset>
+          </form>
+
+          <aside class="summary-panel" aria-label="Car rental price summary">
+            <h3>Price summary</h3>
+            <div class="price-line"><span>Mileage</span><strong>Unlimited mileage</strong></div>
+            <div class="price-line"><span>One-way fee</span><strong>$95.00</strong></div>
+            <div class="price-line"><span>Vehicle subtotal</span><strong>$340.00</strong></div>
+            <div class="price-line"><span>Add-ons</span><strong>$76.00</strong></div>
+            <div class="price-line"><span>Taxes and fees</span><strong>$88.40</strong></div>
+            <div class="price-line total"><span>Total</span><strong>$599.40</strong></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-08">
+      <header class="example-header">
+        <p class="example-kicker">Example 08</p>
+        <h2>Event Ticket Seat Selection</h2>
+      </header>
+      <p class="example-description">
+        This example imitates an event ticket checkout page. It tests extraction of selected ticket
+        type, section, row, seat numbers, delivery method, fees, and accessibility seating options.
+      </p>
+      <div class="example-surface">
+        <div class="booking-layout">
+          <form class="booking-panel" aria-label="Event ticket seat selection">
+            <fieldset>
+              <legend>Event</legend>
+              <div class="grid-two">
+                <div class="field"><label>Event</label><input value="North Pier Jazz Festival" readonly></div>
+                <div class="field"><label>Venue</label><input value="Harbor Hall" readonly></div>
+                <div class="field"><label>Event date</label><input type="date" value="2026-10-17" readonly></div>
+                <div class="field"><label>Event time</label><input type="time" value="19:30" readonly></div>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Ticket type</legend>
+              <div class="inline-options">
+                <label><input type="radio" name="ex08-type" checked> Standard</label>
+                <label><input type="radio" name="ex08-type"> Accessible seating</label>
+                <label><input type="radio" name="ex08-type"> VIP balcony</label>
+              </div>
+            </fieldset>
+
+            <div class="grid-three">
+              <div class="field"><label>Selected section</label><input value="Orchestra Center" readonly></div>
+              <div class="field"><label>Selected row</label><input value="H" readonly></div>
+              <div class="field"><label>Selected seats</label><input value="H12, H13" readonly></div>
+            </div>
+
+            <h4 class="group-h">Seat map - Row H</h4>
+            <div class="seat-map" role="group" aria-label="Row H seats">
+              <div class="seat-row">
+                <span class="row-label">H</span>
+                <button type="button" class="seat is-unavailable" disabled aria-label="Seat H10 unavailable">H10</button>
+                <button type="button" class="seat is-unavailable" disabled aria-label="Seat H11 unavailable">H11</button>
+                <button type="button" class="seat is-selected" data-toggle-seat aria-pressed="true" aria-label="Seat H12 selected">H12</button>
+                <button type="button" class="seat is-selected" data-toggle-seat aria-pressed="true" aria-label="Seat H13 selected">H13</button>
+                <button type="button" class="seat" data-toggle-seat aria-pressed="false" aria-label="Seat H14 available">H14</button>
+                <button type="button" class="seat" data-toggle-seat aria-pressed="false" aria-label="Seat H15 available">H15</button>
+              </div>
+              <div class="seat-legend">
+                <span><i style="background:var(--sel)"></i>Selected</span>
+                <span><i style="background:#e1c8c6"></i>Unavailable</span>
+                <span><i style="background:#fff;border:1px solid var(--line)"></i>Available</span>
+              </div>
+            </div>
+
+            <fieldset style="margin-top:16px">
+              <legend>Ticket holder</legend>
+              <div class="grid-two">
+                <div class="field"><label>Name</label><input value="Owen Brooks"></div>
+                <div class="field"><label>Email</label><input type="email" value="owen.brooks@example.test"></div>
+                <div class="field"><label for="ex08-del">Delivery method</label>
+                  <select id="ex08-del"><option selected>Mobile tickets</option><option>Print at home</option><option>Will call</option></select>
+                </div>
+              </div>
+            </fieldset>
+          </form>
+
+          <aside class="summary-panel" aria-label="Ticket fee breakdown">
+            <h3>Fee breakdown</h3>
+            <div class="price-line"><span>Tickets</span><strong>$156.00</strong></div>
+            <div class="price-line"><span>Facility fee</span><strong>$12.00</strong></div>
+            <div class="price-line"><span>Service fee</span><strong>$18.50</strong></div>
+            <div class="price-line"><span>Delivery</span><strong>$0.00</strong></div>
+            <div class="price-line total"><span>Total</span><strong>$186.50</strong></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-09">
+      <header class="example-header">
+        <p class="example-kicker">Example 09</p>
+        <h2>Airport Parking Reservation</h2>
+      </header>
+      <p class="example-description">
+        This example imitates an airport parking booking flow. It tests extraction of facility choice,
+        entry and exit date-times, license plate, vehicle type, access method, and reservation policy
+        text.
+      </p>
+      <div class="example-surface">
+        <div class="booking-layout">
+          <form class="booking-panel" aria-label="Airport parking reservation">
+            <div class="grid-two">
+              <div class="field"><label for="ex09-num">Reservation number</label><input id="ex09-num" value="PKG-SEA-88412" readonly></div>
+              <div class="field"><label for="ex09-air">Airport</label><input id="ex09-air" value="Seattle Tacoma International Airport" readonly></div>
+              <div class="field"><label for="ex09-fac">Parking facility</label>
+                <select id="ex09-fac"><option selected>Terminal Garage P2</option><option>Economy Lot A</option><option>Valet Drop-off</option></select>
+              </div>
+            </div>
+            <fieldset>
+              <legend>Entry and exit</legend>
+              <div class="grid-two">
+                <div class="field"><label>Entry date</label><input type="date" value="2026-07-12"></div>
+                <div class="field"><label>Entry time</label><input type="time" value="06:00"></div>
+                <div class="field"><label>Exit date</label><input type="date" value="2026-07-16"></div>
+                <div class="field"><label>Exit time</label><input type="time" value="21:30"></div>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Vehicle</legend>
+              <div class="grid-two">
+                <div class="field"><label for="ex09-plate">License plate</label><input id="ex09-plate" value="7KPL219"></div>
+                <div class="field"><label for="ex09-state">State</label>
+                  <select id="ex09-state"><option selected>WA</option><option>OR</option><option>CA</option></select>
+                </div>
+              </div>
+              <fieldset style="margin-top:8px">
+                <legend>Vehicle type</legend>
+                <div class="inline-options">
+                  <label><input type="radio" name="ex09-vt"> Car</label>
+                  <label><input type="radio" name="ex09-vt" checked> SUV</label>
+                  <label><input type="radio" name="ex09-vt"> Oversized</label>
+                </div>
+              </fieldset>
+            </fieldset>
+            <fieldset>
+              <legend>Access method</legend>
+              <div class="stack-options">
+                <label><input type="radio" name="ex09-access" checked> QR code access</label>
+                <label><input type="radio" name="ex09-access"> License plate recognition</label>
+              </div>
+              <div class="qr-box">QR access code will be issued after payment</div>
+            </fieldset>
+            <fieldset>
+              <legend>Add-ons</legend>
+              <div class="stack-options">
+                <label><input type="checkbox" checked disabled> Covered parking</label>
+                <label><input type="checkbox"> EV charging requested</label>
+              </div>
+            </fieldset>
+          </form>
+
+          <aside class="summary-panel" aria-label="Parking summary">
+            <h3>Summary</h3>
+            <div class="price-line"><span>Duration</span><strong>4 days 15 hours</strong></div>
+            <div class="price-line"><span>Base parking</span><strong>$132.00</strong></div>
+            <div class="price-line"><span>Reservation fee</span><strong>$5.00</strong></div>
+            <div class="price-line"><span>Taxes</span><strong>$14.28</strong></div>
+            <div class="price-line total"><span>Total prepaid</span><strong>$151.28</strong></div>
+            <p class="policy">Reservation allows one entry and one exit. Overstay fees are charged at the posted drive-up rate.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-10">
+      <header class="example-header">
+        <p class="example-kicker">Example 10</p>
+        <h2>Coworking Meeting Room Booking</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a coworking space room reservation. It tests extraction of selected room
+        card, capacity, time range, equipment options, catering options, attendee count, and price
+        estimate.
+      </p>
+      <div class="example-surface">
+        <div class="booking-layout">
+          <form class="booking-panel" aria-label="Meeting room booking">
+            <div class="field" style="margin-bottom:14px">
+              <label for="ex10-ws">Workspace</label><input id="ex10-ws" value="North Market Coworking" readonly>
+            </div>
+            <div class="grid-three">
+              <div class="field"><label>Reservation date</label><input type="date" value="2026-06-24"></div>
+              <div class="field"><label>Start time</label><input type="time" value="13:00"></div>
+              <div class="field"><label>End time</label><input type="time" value="15:30"></div>
+              <div class="field"><label>Attendees</label><input type="number" value="8"></div>
+            </div>
+
+            <fieldset>
+              <legend>Select room</legend>
+              <div class="card-options cols-2">
+                <button type="button" class="choice-card" data-select-group="ex10-room" aria-pressed="false">
+                  <div class="cc-top"><span class="cc-name">Room A - Cedar</span><span class="cc-price">$35/hour</span></div>
+                  <div class="cc-meta">Capacity 6</div>
+                </button>
+                <button type="button" class="choice-card is-selected" data-select-group="ex10-room" aria-pressed="true">
+                  <div class="cc-top"><span class="cc-name">Room B - Harbor</span><span class="cc-price">$52/hour</span></div>
+                  <div class="cc-meta">Capacity 10</div>
+                </button>
+                <button type="button" class="choice-card" data-select-group="ex10-room" aria-pressed="false">
+                  <div class="cc-top"><span class="cc-name">Room C - Skyline</span><span class="cc-price">$88/hour</span></div>
+                  <div class="cc-meta">Capacity 18</div>
+                </button>
+                <button type="button" class="choice-card" data-select-group="ex10-room" disabled aria-disabled="true">
+                  <div class="cc-top"><span class="cc-name">Podcast Studio</span><span class="cc-price">Capacity 4</span></div>
+                  <div class="cc-meta">Unavailable</div>
+                </button>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Equipment</legend>
+              <div class="stack-options">
+                <label><input type="checkbox" checked> Video conferencing kit</label>
+                <label><input type="checkbox" checked> Whiteboard</label>
+                <label><input type="checkbox"> HDMI adapter</label>
+                <label><input type="checkbox"> Conference phone</label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Details</legend>
+              <div class="grid-three">
+                <div class="field"><label for="ex10-cater">Catering</label>
+                  <select id="ex10-cater"><option>None</option><option selected>Coffee and tea service</option><option>Boxed lunches</option><option>Snack tray</option></select>
+                </div>
+                <div class="field"><label>Booked by</label><input value="Maya Chen"></div>
+                <div class="field"><label>Team</label><input value="Product Design"></div>
+                <div class="field"><label>Billing code</label><input value="PD-2026-Q2"></div>
+              </div>
+            </fieldset>
+          </form>
+
+          <aside class="summary-panel" aria-label="Room booking estimate">
+            <h3>Estimate</h3>
+            <div class="price-line"><span>Selected room</span><strong>Room B - Harbor</strong></div>
+            <div class="price-line"><span>Room charge</span><strong>$130.00</strong></div>
+            <div class="price-line"><span>Equipment</span><strong>$25.00</strong></div>
+            <div class="price-line"><span>Catering</span><strong>$32.00</strong></div>
+            <div class="price-line total"><span>Estimated total</span><strong>$187.00</strong></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-11">
+      <header class="example-header">
+        <p class="example-kicker">Example 11</p>
+        <h2>Fitness Class Reservation</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a gym class booking widget. It tests extraction of class details,
+        selected class time, instructor, spot status, membership fields, waitlist option, and
+        cancellation policy.
+      </p>
+      <div class="example-surface">
+        <form aria-label="Fitness class reservation" style="max-width:760px">
+          <div class="grid-two">
+            <div class="field"><label>Class</label><input value="Strength Foundations" readonly></div>
+            <div class="field"><label>Instructor</label><input value="Nina Patel" readonly></div>
+            <div class="field"><label>Location</label><input value="Studio 2" readonly></div>
+            <div class="field"><label>Class date</label><input type="date" value="2026-06-09" readonly></div>
+          </div>
+
+          <h4 class="group-h">Class times</h4>
+          <div class="slot-row" role="group" aria-label="Class times">
+            <button type="button" class="slot-btn" data-select-group="ex11-time" aria-pressed="false">6:30 AM<small>3 spots left</small></button>
+            <button type="button" class="slot-btn" disabled aria-disabled="true">12:00 PM<small>Waitlist only</small></button>
+            <button type="button" class="slot-btn is-selected" data-select-group="ex11-time" aria-pressed="true">5:30 PM<small>1 spot left</small></button>
+            <button type="button" class="slot-btn" data-select-group="ex11-time" aria-pressed="false">7:00 PM<small>6 spots left</small></button>
+          </div>
+
+          <div class="grid-three" style="margin-top:16px">
+            <div class="field"><label>Member name</label><input value="Grace Miller"></div>
+            <div class="field"><label>Membership ID</label><input value="FIT-44018"></div>
+            <div class="field"><label for="ex11-mat">Reserve mat position</label>
+              <select id="ex11-mat"><option>Front row</option><option>Middle row</option><option selected>Back row</option></select>
+            </div>
+          </div>
+          <fieldset style="margin-top:8px">
+            <legend>Options</legend>
+            <div class="stack-options">
+              <label><input type="checkbox"> Bring guest</label>
+              <label><input type="checkbox" checked> Join waitlist if class fills</label>
+            </div>
+          </fieldset>
+
+          <div class="meta-strip" style="margin-top:8px">
+            <span><b>Cancellation deadline:</b> 4 hours before class</span>
+            <span><b>Late cancel fee:</b> $15.00</span>
+            <span><b>Reservation status:</b> <span class="status-pill ok">Confirmed</span></span>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-12">
+      <header class="example-header">
+        <p class="example-kicker">Example 12</p>
+        <h2>Spa Appointment Package Booking</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a spa booking checkout. It tests extraction of selected service package,
+        provider preference, selected time, optional add-ons, guest notes, deposit amount, and
+        cancellation policy.
+      </p>
+      <div class="example-surface">
+        <div class="booking-layout">
+          <form class="booking-panel" aria-label="Spa appointment booking">
+            <div class="grid-two">
+              <div class="field"><label>Spa</label><input value="Luma Day Spa" readonly></div>
+              <div class="field"><label for="ex12-cat">Service category</label>
+                <select id="ex12-cat"><option selected>Massage</option><option>Facial</option><option>Body treatment</option></select>
+              </div>
+            </div>
+
+            <fieldset>
+              <legend>Select package</legend>
+              <div class="card-options cols-2">
+                <button type="button" class="choice-card" data-select-group="ex12-pkg" aria-pressed="false">
+                  <div class="cc-top"><span class="cc-name">Relaxation Massage - 60 minutes</span><span class="cc-price">$120</span></div>
+                </button>
+                <button type="button" class="choice-card is-selected" data-select-group="ex12-pkg" aria-pressed="true">
+                  <div class="cc-top"><span class="cc-name">Deep Tissue Massage - 90 minutes</span><span class="cc-price">$180</span></div>
+                </button>
+                <button type="button" class="choice-card" data-select-group="ex12-pkg" aria-pressed="false">
+                  <div class="cc-top"><span class="cc-name">Couples Massage - 60 minutes</span><span class="cc-price">$250</span></div>
+                </button>
+                <button type="button" class="choice-card" data-select-group="ex12-pkg" disabled aria-disabled="true">
+                  <div class="cc-top"><span class="cc-name">Hot Stone Massage - 90 minutes</span><span class="cc-price">$210</span></div>
+                  <div class="cc-meta">Not available this date</div>
+                </button>
+              </div>
+            </fieldset>
+
+            <div class="grid-three">
+              <div class="field"><label>Appointment date</label><input type="date" value="2026-07-18"></div>
+              <div class="field"><label>Selected time</label><input value="3:30 PM" readonly></div>
+              <div class="field"><label for="ex12-prov">Provider preference</label>
+                <select id="ex12-prov"><option selected>Any available provider</option><option>Maria L.</option><option>Devon K.</option></select>
+              </div>
+            </div>
+            <fieldset>
+              <legend>Room preference</legend>
+              <div class="inline-options">
+                <label><input type="radio" name="ex12-room" checked> Quiet room</label>
+                <label><input type="radio" name="ex12-room"> Window room</label>
+                <label><input type="radio" name="ex12-room"> No preference</label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Add-ons</legend>
+              <div class="stack-options">
+                <label><input type="checkbox" checked> Aromatherapy</label>
+                <label><input type="checkbox"> Scalp treatment</label>
+                <label><input type="checkbox" checked> Extra 15 minutes</label>
+              </div>
+            </fieldset>
+            <div class="grid-two">
+              <div class="field"><label>Guest name</label><input value="Iris Walker"></div>
+              <div class="field"><label>Guest phone</label><input type="tel" value="510-555-0138"></div>
+            </div>
+            <div class="field" style="margin-top:10px"><label for="ex12-health">Health notes</label>
+              <textarea id="ex12-health">Avoid deep pressure on left shoulder.</textarea>
+            </div>
+          </form>
+
+          <aside class="summary-panel" aria-label="Spa booking summary">
+            <h3>Summary</h3>
+            <div class="price-line"><span>Service</span><strong>Deep Tissue 90 min</strong></div>
+            <div class="price-line"><span>Add-ons</span><strong>$45.00</strong></div>
+            <div class="price-line"><span>Deposit due today</span><strong>$75.00</strong></div>
+            <div class="price-line total"><span>Balance at appointment</span><strong>$150.00</strong></div>
+            <p class="policy">Appointments cancelled less than 24 hours before start time may forfeit the deposit.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-13">
+      <header class="example-header">
+        <p class="example-kicker">Example 13</p>
+        <h2>Ferry Passenger And Vehicle Booking</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a ferry reservation flow. It tests extraction of route details, sailing
+        time, passenger counts, vehicle information, fare class, and separate passenger and vehicle
+        charges.
+      </p>
+      <div class="example-surface">
+        <div class="booking-layout">
+          <form class="booking-panel" aria-label="Ferry booking">
+            <fieldset>
+              <legend>Route</legend>
+              <div class="grid-two">
+                <div class="field"><label>Route</label><input value="Bainbridge Island to Seattle" readonly></div>
+                <div class="field"><label>Sailing date</label><input type="date" value="2026-07-05"></div>
+                <div class="field"><label>Selected sailing</label><input value="5:20 PM" readonly></div>
+                <div class="field"><label>Arrival estimate</label><input value="5:55 PM" readonly></div>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Passengers</legend>
+              <div class="grid-three">
+                <div class="field"><label>Adults</label><input type="number" value="2"></div>
+                <div class="field"><label>Seniors</label><input type="number" value="1"></div>
+                <div class="field"><label>Children</label><input type="number" value="0"></div>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Vehicle</legend>
+              <label style="font-weight:500;color:var(--ink);display:flex;gap:6px;align-items:center;margin-bottom:10px"><input type="checkbox" checked> Vehicle included</label>
+              <div class="grid-three">
+                <div class="field"><label for="ex13-vt">Vehicle type</label>
+                  <select id="ex13-vt"><option selected>Standard vehicle under 22 ft</option><option>Vehicle over 22 ft</option><option>Motorcycle</option></select>
+                </div>
+                <div class="field"><label>License plate</label><input value="BRC-5821"></div>
+                <div class="field"><label for="ex13-vh">Vehicle height</label>
+                  <select id="ex13-vh"><option selected>Under 7 ft 6 in</option><option>Over 7 ft 6 in</option></select>
+                </div>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Fare class</legend>
+              <div class="stack-options">
+                <label><input type="radio" name="ex13-fare" checked> Standard fare</label>
+                <label><input type="radio" name="ex13-fare"> Priority boarding</label>
+                <label><input type="radio" name="ex13-fare"> Medical priority</label>
+              </div>
+            </fieldset>
+          </form>
+
+          <aside class="summary-panel" aria-label="Ferry summary">
+            <h3>Summary</h3>
+            <div class="price-line"><span>Passenger fare</span><strong>$24.75</strong></div>
+            <div class="price-line"><span>Vehicle fare</span><strong>$49.20</strong></div>
+            <div class="price-line"><span>Reservation fee</span><strong>$4.00</strong></div>
+            <div class="price-line total"><span>Total</span><strong>$77.95</strong></div>
+            <p class="policy">Vehicles must arrive at least 20 minutes before scheduled sailing.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-14">
+      <header class="example-header">
+        <p class="example-kicker">Example 14</p>
+        <h2>Campsite Reservation Permit</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a campsite reservation page. It tests extraction of selected campsite,
+        stay dates, occupant counts, vehicle permits, rules acknowledgement, and reservation fees.
+      </p>
+      <div class="example-surface">
+        <div class="booking-layout">
+          <form class="booking-panel" aria-label="Campsite reservation permit">
+            <div class="doc-header">
+              <span class="doc-title">Camping Permit</span>
+              <span>Permit number: <strong>CMP-2026-33108</strong></span>
+            </div>
+            <div class="grid-two">
+              <div class="field"><label>Campground</label><input value="Pine Ridge Campground" readonly></div>
+              <div class="field"><label>Selected site</label><input value="Site 18 - Creekside" readonly></div>
+              <div class="field"><label>Site type</label><input value="Tent site" readonly></div>
+              <div class="field"><label>Nights</label><input type="number" value="3" readonly></div>
+              <div class="field"><label>Check-in date</label><input type="date" value="2026-09-04"></div>
+              <div class="field"><label>Check-out date</label><input type="date" value="2026-09-07"></div>
+            </div>
+            <fieldset>
+              <legend>Occupants</legend>
+              <div class="grid-three">
+                <div class="field"><label>Adults</label><input type="number" value="2"></div>
+                <div class="field"><label>Children</label><input type="number" value="2"></div>
+                <div class="field"><label>Pets</label><input type="number" value="1"></div>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Vehicles</legend>
+              <div class="grid-two">
+                <div class="field"><label>Vehicle 1 plate</label><input value="8NQX204"></div>
+                <div class="field"><label for="ex14-v1s">Vehicle 1 state</label>
+                  <select id="ex14-v1s"><option selected>CA</option><option>OR</option><option>NV</option></select>
+                </div>
+              </div>
+              <label style="font-weight:500;color:var(--ink);display:flex;gap:6px;align-items:center;margin:10px 0"><input type="checkbox" checked> Second vehicle permit</label>
+              <div class="field"><label>Vehicle 2 plate</label><input value="5PQR882"></div>
+            </fieldset>
+            <fieldset>
+              <legend>Rules acknowledgement</legend>
+              <div class="stack-options">
+                <label><input type="checkbox" checked> Quiet hours acknowledged</label>
+                <label><input type="checkbox" checked> Fire rules acknowledged</label>
+                <label><input type="checkbox" checked> Pet leash rule acknowledged</label>
+              </div>
+            </fieldset>
+          </form>
+
+          <aside class="summary-panel" aria-label="Campsite fees">
+            <h3>Fees</h3>
+            <div class="price-line"><span>Site fee</span><strong>$96.00</strong></div>
+            <div class="price-line"><span>Second vehicle permit</span><strong>$18.00</strong></div>
+            <div class="price-line"><span>Reservation fee</span><strong>$8.00</strong></div>
+            <div class="price-line total"><span>Total</span><strong>$122.00</strong></div>
+            <p class="policy">Campfires are allowed only in designated rings when fire restrictions are not active.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-15">
+      <header class="example-header">
+        <p class="example-kicker">Example 15</p>
+        <h2>Equipment Rental Reservation</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a camera equipment rental checkout. It tests extraction of selected
+        rental items, quantities, dates, insurance options, pickup location, deposit, and itemized
+        pricing.
+      </p>
+      <div class="example-surface">
+        <div class="booking-layout">
+          <form class="booking-panel" aria-label="Equipment rental reservation">
+            <div class="grid-three">
+              <div class="field"><label>Reservation ID</label><input value="EQP-77291" readonly></div>
+              <div class="field"><label>Rental start</label><input type="date" value="2026-06-28"></div>
+              <div class="field"><label>Rental end</label><input type="date" value="2026-07-02"></div>
+              <div class="field"><label for="ex15-pick">Pickup location</label>
+                <select id="ex15-pick"><option selected>Mission District pickup desk</option><option>SoMa pickup desk</option></select>
+              </div>
+              <div class="field"><label for="ex15-ret">Return location</label>
+                <select id="ex15-ret"><option selected>Mission District pickup desk</option><option>SoMa pickup desk</option></select>
+              </div>
+            </div>
+
+            <fieldset>
+              <legend>Renter</legend>
+              <div class="grid-two">
+                <div class="field"><label>Renter name</label><input value="Theo Grant"></div>
+                <div class="field"><label>Renter email</label><input type="email" value="theo.grant@example.test"></div>
+                <div class="field"><label>Phone</label><input type="tel" value="415-555-0133"></div>
+                <div class="field"><label>Organization</label><input value="Independent documentary project"></div>
+              </div>
+            </fieldset>
+
+            <h4 class="group-h">Equipment</h4>
+            <table class="rental">
+              <thead>
+                <tr><th>Selected</th><th>Item</th><th>SKU</th><th>Qty</th><th>Daily rate</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><input type="checkbox" checked aria-label="Select Sony FX3 camera body"></td><td>Sony FX3 camera body</td><td>CAM-FX3-02</td><td><input type="number" value="1"></td><td>$95</td></tr>
+                <tr><td><input type="checkbox" checked aria-label="Select 24-70mm lens"></td><td>24-70mm lens</td><td>LNS-2470-GM</td><td><input type="number" value="1"></td><td>$42</td></tr>
+                <tr><td><input type="checkbox" checked aria-label="Select Wireless lav kit"></td><td>Wireless lav kit</td><td>AUD-LAV-4</td><td><input type="number" value="2"></td><td>$18</td></tr>
+                <tr><td><input type="checkbox" aria-label="Select Tripod kit"></td><td>Tripod kit</td><td>GRP-TRI-1</td><td><input type="number" value="1"></td><td>$16</td></tr>
+              </tbody>
+            </table>
+
+            <fieldset style="margin-top:16px">
+              <legend>Insurance</legend>
+              <div class="stack-options">
+                <label><input type="radio" name="ex15-ins" checked> Damage waiver</label>
+                <label><input type="radio" name="ex15-ins"> Proof of production insurance</label>
+                <label><input type="radio" name="ex15-ins"> No coverage</label>
+              </div>
+            </fieldset>
+          </form>
+
+          <aside class="summary-panel" aria-label="Equipment rental summary">
+            <h3>Summary</h3>
+            <div class="price-line"><span>Rental days</span><strong>4</strong></div>
+            <div class="price-line"><span>Equipment subtotal</span><strong>$716.00</strong></div>
+            <div class="price-line"><span>Damage waiver</span><strong>$71.60</strong></div>
+            <div class="price-line"><span>Refundable deposit</span><strong>$500.00</strong></div>
+            <div class="price-line total"><span>Total due today</span><strong>$1,287.60</strong></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-16">
+      <header class="example-header">
+        <p class="example-kicker">Example 16</p>
+        <h2>Storage Unit Reservation</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a storage unit reservation checkout. It tests extraction of selected unit
+        size, facility details, move-in date, insurance choice, promotion text, and recurring monthly
+        charges.
+      </p>
+      <div class="example-surface">
+        <div class="booking-layout">
+          <form class="booking-panel" aria-label="Storage unit reservation">
+            <div class="grid-two">
+              <div class="field"><label>Facility</label><input value="Bayfront Storage - Oakland" readonly></div>
+              <div class="field"><label>Address</label><input value="1200 Maritime Avenue, Oakland, CA" readonly></div>
+              <div class="field"><label>Reservation number</label><input value="STO-55018" readonly></div>
+            </div>
+
+            <fieldset>
+              <legend>Select unit</legend>
+              <div class="card-options">
+                <button type="button" class="choice-card" data-select-group="ex16-unit" aria-pressed="false">
+                  <div class="cc-top"><span class="cc-name">5 x 5 indoor</span><span class="cc-price">$72/month</span></div>
+                  <div class="cc-meta">Small closet size</div>
+                </button>
+                <button type="button" class="choice-card is-selected" data-select-group="ex16-unit" aria-pressed="true">
+                  <div class="cc-top"><span class="cc-name">10 x 10 climate controlled</span><span class="cc-price">$184/month</span></div>
+                  <div class="cc-meta">One-bedroom apartment size</div>
+                </button>
+                <button type="button" class="choice-card" data-select-group="ex16-unit" disabled aria-disabled="true">
+                  <div class="cc-top"><span class="cc-name">10 x 20 drive-up</span><span class="cc-price">$276/month</span></div>
+                  <div class="cc-meta">Sold out</div>
+                </button>
+              </div>
+            </fieldset>
+
+            <div class="grid-three">
+              <div class="field"><label>Move-in date</label><input type="date" value="2026-07-01"></div>
+              <div class="field"><label for="ex16-term">Lease term</label>
+                <select id="ex16-term"><option selected>Month-to-month</option><option>6 months</option><option>12 months</option></select>
+              </div>
+              <div class="field"><label>Gate access code</label><input value="Issued after payment" readonly></div>
+              <div class="field"><label>Tenant name</label><input value="Camila Torres"></div>
+              <div class="field"><label>Tenant email</label><input type="email" value="camila.torres@example.test"></div>
+            </div>
+
+            <fieldset>
+              <legend>Insurance</legend>
+              <div class="stack-options">
+                <label><input type="radio" name="ex16-ins" checked> Use facility protection plan</label>
+                <label><input type="radio" name="ex16-ins"> Upload proof of insurance</label>
+              </div>
+            </fieldset>
+            <div class="grid-two">
+              <div class="field"><label>Promotion code</label><input value="FIRSTMONTH50"></div>
+              <div class="field"><label>Promotion description</label><input value="50 percent off first full month" readonly></div>
+            </div>
+          </form>
+
+          <aside class="summary-panel" aria-label="Storage charges">
+            <h3>Charges</h3>
+            <div class="price-line"><span>Monthly rent</span><strong>$184.00</strong></div>
+            <div class="price-line"><span>Protection plan</span><strong>$14.00</strong></div>
+            <div class="price-line"><span>Admin fee</span><strong>$29.00</strong></div>
+            <div class="price-line total"><span>Move-in total</span><strong>$135.00</strong></div>
+            <p class="policy">Monthly rent recurs each month. Move-in total reflects the first-month promotion and one-time fees.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-17">
+      <header class="example-header">
+        <p class="example-kicker">Example 17</p>
+        <h2>Museum Timed Entry Booking</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a museum timed-entry reservation. It tests extraction of entry date,
+        selected time slot, ticket quantities, exhibit add-ons, accessibility needs, and reservation
+        summary.
+      </p>
+      <div class="example-surface">
+        <form aria-label="Museum timed entry booking" style="max-width:780px">
+          <div class="grid-two">
+            <div class="field"><label>Museum</label><input value="City Museum of Design" readonly></div>
+            <div class="field"><label>Visit date</label><input type="date" value="2026-08-22"></div>
+          </div>
+
+          <h4 class="group-h">Entry time</h4>
+          <div class="slot-row" role="group" aria-label="Entry time slots">
+            <button type="button" class="slot-btn" data-select-group="ex17-time" aria-pressed="false">10:00 AM<small>Available</small></button>
+            <button type="button" class="slot-btn is-selected" data-select-group="ex17-time" aria-pressed="true">11:30 AM<small>Selected</small></button>
+            <button type="button" class="slot-btn" data-select-group="ex17-time" aria-pressed="false">1:00 PM<small>Limited</small></button>
+            <button type="button" class="slot-btn" disabled aria-disabled="true">2:30 PM<small>Sold out</small></button>
+          </div>
+
+          <fieldset style="margin-top:16px">
+            <legend>Ticket quantities</legend>
+            <div class="grid-three">
+              <div class="field"><label>Adult tickets</label><input type="number" value="2"></div>
+              <div class="field"><label>Student tickets</label><input type="number" value="1"></div>
+              <div class="field"><label>Child tickets</label><input type="number" value="0"></div>
+            </div>
+          </fieldset>
+          <div class="booking-layout">
+            <div>
+              <fieldset>
+                <legend>Add-ons</legend>
+                <div class="stack-options">
+                  <label><input type="checkbox" checked> Special exhibit: Future Materials</label>
+                  <label><input type="checkbox" checked> Audio guide</label>
+                  <label><input type="checkbox"> Guided tour</label>
+                </div>
+              </fieldset>
+              <fieldset>
+                <legend>Accessibility needs</legend>
+                <div class="stack-options">
+                  <label><input type="checkbox" checked> Wheelchair accessible route</label>
+                  <label><input type="checkbox"> ASL interpretation request</label>
+                </div>
+              </fieldset>
+              <div class="grid-two">
+                <div class="field"><label>Reservation name</label><input value="Lina Romero"></div>
+                <div class="field"><label>Email</label><input type="email" value="lina.romero@example.test"></div>
+              </div>
+            </div>
+            <aside class="summary-panel" aria-label="Museum summary">
+              <h3>Summary</h3>
+              <div class="price-line"><span>Entry time</span><strong>11:30 AM</strong></div>
+              <div class="price-line"><span>Tickets</span><strong>3</strong></div>
+              <div class="price-line"><span>Add-ons</span><strong>$28.00</strong></div>
+              <div class="price-line total"><span>Total</span><strong>$86.00</strong></div>
+              <p class="policy">Timed-entry reservations allow entry within 30 minutes of the selected time.</p>
+            </aside>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-18">
+      <header class="example-header">
+        <p class="example-kicker">Example 18</p>
+        <h2>Pet Grooming Appointment Booking</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a pet grooming appointment scheduler. It tests extraction of pet records,
+        selected service package, add-ons, vaccination status, appointment time, and special handling
+        notes.
+      </p>
+      <div class="example-surface">
+        <div class="booking-layout">
+          <form class="booking-panel" aria-label="Pet grooming booking">
+            <fieldset>
+              <legend>Pet</legend>
+              <div class="grid-three">
+                <div class="field"><label>Pet name</label><input value="Mochi"></div>
+                <div class="field"><label for="ex18-type">Pet type</label>
+                  <select id="ex18-type"><option selected>Dog</option><option>Cat</option></select>
+                </div>
+                <div class="field"><label>Breed</label><input value="Shiba Inu"></div>
+                <div class="field"><label for="ex18-wt">Weight range</label>
+                  <select id="ex18-wt"><option>Under 20 lb</option><option selected>20-40 lb</option><option>40-70 lb</option></select>
+                </div>
+                <div class="field"><label>Pet age</label><input type="number" value="5"></div>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Appointment</legend>
+              <div class="grid-three">
+                <div class="field"><label>Grooming location</label><input value="Paw & Comb - Noe Valley" readonly></div>
+                <div class="field"><label>Appointment date</label><input type="date" value="2026-06-27"></div>
+                <div class="field"><label>Selected time</label><input value="10:45 AM" readonly></div>
+                <div class="field"><label for="ex18-groomer">Groomer preference</label>
+                  <select id="ex18-groomer"><option selected>Any available groomer</option><option>Sam</option><option>Dana</option></select>
+                </div>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Service package</legend>
+              <div class="stack-options">
+                <label><input type="radio" name="ex18-pkg"> Bath only</label>
+                <label><input type="radio" name="ex18-pkg" checked> Full groom</label>
+                <label><input type="radio" name="ex18-pkg"> Full groom plus de-shedding</label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Add-ons</legend>
+              <div class="stack-options">
+                <label><input type="checkbox" checked disabled> Nail trim (included)</label>
+                <label><input type="checkbox" checked> Teeth brushing</label>
+                <label><input type="checkbox"> Blueberry facial</label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Vaccination status</legend>
+              <div class="stack-options">
+                <label><input type="radio" name="ex18-vax" checked> Rabies vaccination on file</label>
+                <label><input type="radio" name="ex18-vax"> Need to upload vaccination record</label>
+              </div>
+            </fieldset>
+            <div class="field" style="margin-top:10px"><label for="ex18-notes">Handling notes</label>
+              <textarea id="ex18-notes">Mochi is nervous around dryers. Please use the low-noise dryer if available.</textarea>
+            </div>
+          </form>
+
+          <aside class="summary-panel" aria-label="Grooming summary">
+            <h3>Summary</h3>
+            <div class="price-line"><span>Package</span><strong>Full groom</strong></div>
+            <div class="price-line"><span>Estimated duration</span><strong>2 hours</strong></div>
+            <div class="price-line total"><span>Estimated total</span><strong>$96.00</strong></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-19">
+      <header class="example-header">
+        <p class="example-kicker">Example 19</p>
+        <h2>Moving Service Reservation Quote</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a moving service booking quote. It tests extraction of origin and
+        destination addresses, move details, selected service level, inventory summary, time window,
+        and estimated charges.
+      </p>
+      <div class="example-surface">
+        <div class="booking-layout">
+          <form class="booking-panel" aria-label="Moving service quote">
+            <div class="grid-two">
+              <div class="field"><label>Quote number</label><input value="MOV-2026-90412" readonly></div>
+              <div class="field"><label>Move date</label><input type="date" value="2026-09-12"></div>
+              <div class="field"><label for="ex19-win">Arrival window</label>
+                <select id="ex19-win"><option selected>8 AM - 10 AM</option><option>10 AM - 12 PM</option><option>12 PM - 2 PM</option></select>
+              </div>
+            </div>
+            <fieldset>
+              <legend>Service level</legend>
+              <div class="inline-options">
+                <label><input type="radio" name="ex19-svc"> Labor only</label>
+                <label><input type="radio" name="ex19-svc" checked> Truck and labor</label>
+                <label><input type="radio" name="ex19-svc"> Packing and full service</label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Origin</legend>
+              <div class="grid-two">
+                <div class="field"><label>Origin address</label><input value="410 Oak Grove Avenue, Oakland, CA"></div>
+                <div class="field"><label>Origin unit</label><input value="Apt 6"></div>
+                <div class="field"><label for="ex19-os">Origin stairs</label>
+                  <select id="ex19-os"><option>None</option><option selected>One flight</option><option>Two or more flights</option></select>
+                </div>
+                <div class="field"><label>Origin elevator</label>
+                  <div class="inline-options"><label><input type="radio" name="ex19-oe"> Yes</label><label><input type="radio" name="ex19-oe" checked> No</label></div>
+                </div>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Destination</legend>
+              <div class="grid-two">
+                <div class="field"><label>Destination address</label><input value="88 Valencia Street, San Francisco, CA"></div>
+                <div class="field"><label>Destination unit</label><input value="Suite 402"></div>
+                <div class="field"><label for="ex19-ds">Destination stairs</label>
+                  <select id="ex19-ds"><option>None</option><option>One flight</option><option selected>Elevator building</option></select>
+                </div>
+                <div class="field"><label>Destination elevator</label>
+                  <div class="inline-options"><label><input type="radio" name="ex19-de" checked> Yes</label><label><input type="radio" name="ex19-de"> No</label></div>
+                </div>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Inventory summary</legend>
+              <div class="field" style="margin-bottom:10px"><label for="ex19-bed">Bedrooms</label>
+                <select id="ex19-bed" style="max-width:240px"><option>Studio</option><option selected>1 bedroom</option><option>2 bedrooms</option></select>
+              </div>
+              <label class="group-h" style="margin:0 0 6px">Large items</label>
+              <div class="stack-options">
+                <label><input type="checkbox" checked> Sofa</label>
+                <label><input type="checkbox" checked> Dining table</label>
+                <label><input type="checkbox"> Piano</label>
+                <label><input type="checkbox"> Washer or dryer</label>
+              </div>
+              <div class="field" style="margin-top:10px;max-width:240px"><label>Boxes estimate</label><input type="number" value="28"></div>
+            </fieldset>
+            <div class="field" style="margin-top:10px"><label for="ex19-notes">Notes</label>
+              <textarea id="ex19-notes">Building manager requires certificate of insurance 48 hours before move date.</textarea>
+            </div>
+          </form>
+
+          <aside class="summary-panel" aria-label="Moving quote details">
+            <h3>Quote details</h3>
+            <div class="price-line"><span>Crew size</span><strong>3 movers</strong></div>
+            <div class="price-line"><span>Truck size</span><strong>20 ft truck</strong></div>
+            <div class="price-line"><span>Estimated labor</span><strong>$720.00</strong></div>
+            <div class="price-line"><span>Travel fee</span><strong>$95.00</strong></div>
+            <div class="price-line"><span>Materials estimate</span><strong>$64.00</strong></div>
+            <div class="price-line total"><span>Estimated total</span><strong>$879.00</strong></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-20">
+      <header class="example-header">
+        <p class="example-kicker">Example 20</p>
+        <h2>Bike Rental Day Pass Booking</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a bike rental booking page. It tests extraction of selected pass type,
+        rider details, pickup time, equipment options, waiver acknowledgement, and deposit details.
+      </p>
+      <div class="example-surface">
+        <div class="booking-layout">
+          <form class="booking-panel" aria-label="Bike rental booking">
+            <div class="grid-three">
+              <div class="field"><label>Rental shop</label><input value="Riverfront Cycle House" readonly></div>
+              <div class="field"><label>Pickup date</label><input type="date" value="2026-07-25"></div>
+              <div class="field"><label>Pickup time</label><input type="time" value="09:00"></div>
+              <div class="field"><label>Return time</label><input type="time" value="17:00"></div>
+            </div>
+
+            <fieldset>
+              <legend>Select pass</legend>
+              <div class="card-options cols-2">
+                <button type="button" class="choice-card" data-select-group="ex20-pass" aria-pressed="false">
+                  <div class="cc-top"><span class="cc-name">City bike day pass</span><span class="cc-price">$28</span></div>
+                </button>
+                <button type="button" class="choice-card is-selected" data-select-group="ex20-pass" aria-pressed="true">
+                  <div class="cc-top"><span class="cc-name">Hybrid bike day pass</span><span class="cc-price">$42</span></div>
+                </button>
+                <button type="button" class="choice-card" data-select-group="ex20-pass" aria-pressed="false">
+                  <div class="cc-top"><span class="cc-name">E-bike day pass</span><span class="cc-price">$76</span></div>
+                </button>
+                <button type="button" class="choice-card" data-select-group="ex20-pass" disabled aria-disabled="true">
+                  <div class="cc-top"><span class="cc-name">Cargo bike day pass</span><span class="cc-price">$88</span></div>
+                  <div class="cc-meta">Reserved</div>
+                </button>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Rider</legend>
+              <div class="grid-two">
+                <div class="field"><label>Rider name</label><input value="Noah Kim"></div>
+                <div class="field"><label for="ex20-h">Rider height</label>
+                  <select id="ex20-h"><option>Under 5 ft 8 in</option><option selected>5 ft 8 in - 6 ft</option><option>Over 6 ft</option></select>
+                </div>
+                <div class="field"><label for="ex20-helmet">Helmet size</label>
+                  <select id="ex20-helmet"><option>Small</option><option selected>Medium</option><option>Large</option></select>
+                </div>
+                <div class="field"><label>Phone</label><input type="tel" value="650-555-0191"></div>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Equipment</legend>
+              <div class="stack-options">
+                <label><input type="checkbox" checked disabled> Helmet included</label>
+                <label><input type="checkbox" checked> Lock rental</label>
+                <label><input type="checkbox"> Rear rack bag</label>
+                <label><input type="checkbox"> Child seat</label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Waiver</legend>
+              <div class="stack-options">
+                <label><input type="checkbox" checked> Safety waiver acknowledged</label>
+                <label><input type="checkbox" checked> Damage deposit authorized</label>
+              </div>
+            </fieldset>
+          </form>
+
+          <aside class="summary-panel" aria-label="Bike rental summary">
+            <h3>Summary</h3>
+            <div class="price-line"><span>Selected pass</span><strong>Hybrid bike day pass</strong></div>
+            <div class="price-line"><span>Rental charge</span><strong>$42.00</strong></div>
+            <div class="price-line"><span>Add-ons</span><strong>$6.00</strong></div>
+            <div class="price-line"><span>Refundable deposit hold</span><strong>$150.00</strong></div>
+            <div class="price-line total"><span>Total paid today</span><strong>$48.00</strong></div>
+            <p class="policy">The refundable deposit hold is released after the bike is returned undamaged and is separate from the amount paid today.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-21">
+      <header class="example-header">
+        <p class="example-kicker">Example 21</p>
+        <h2>University Advising Appointment</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a university advising appointment scheduler. It tests extraction of
+        student identity, advising reason, advisor, appointment mode, selected time, preparation
+        checklist, and student notes.
+      </p>
+      <div class="example-surface">
+        <div class="booking-layout">
+          <form class="booking-panel" aria-label="University advising appointment">
+            <fieldset>
+              <legend>Student</legend>
+              <div class="grid-two">
+                <div class="field"><label>Student name</label><input value="Mei Tanaka" readonly></div>
+                <div class="field"><label>Student ID</label><input value="S-884209" readonly></div>
+                <div class="field"><label>Program</label><input value="Computer Science BS" readonly></div>
+                <div class="field"><label>Class standing</label><input value="Junior" readonly></div>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Appointment</legend>
+              <div class="grid-two">
+                <div class="field"><label for="ex21-reason">Advising reason</label>
+                  <select id="ex21-reason"><option selected>Fall course planning</option><option>Major change</option><option>Graduation check</option></select>
+                </div>
+                <div class="field"><label for="ex21-adv">Advisor</label>
+                  <select id="ex21-adv"><option selected>Dr. Hannah Cho</option><option>Dr. Mark Reyes</option></select>
+                </div>
+                <div class="field"><label>Selected date</label><input type="date" value="2026-06-16" readonly></div>
+                <div class="field"><label>Selected time</label><input type="time" value="11:00" readonly></div>
+                <div class="field" style="grid-column:1/-1"><label>Meeting location or link</label><input value="Video link will be sent after confirmation" readonly></div>
+              </div>
+              <fieldset style="margin-top:6px">
+                <legend>Appointment mode</legend>
+                <div class="inline-options">
+                  <label><input type="radio" name="ex21-mode"> In person</label>
+                  <label><input type="radio" name="ex21-mode" checked> Video call</label>
+                  <label><input type="radio" name="ex21-mode"> Phone</label>
+                </div>
+              </fieldset>
+            </fieldset>
+            <fieldset>
+              <legend>Preparation checklist</legend>
+              <ul class="checklist">
+                <li><input type="checkbox" checked id="ex21-c1"><label for="ex21-c1" style="margin:0;font-weight:500;color:var(--ink)">Degree audit reviewed</label></li>
+                <li><input type="checkbox" checked id="ex21-c2"><label for="ex21-c2" style="margin:0;font-weight:500;color:var(--ink)">Draft schedule prepared</label></li>
+                <li><input type="checkbox" id="ex21-c3"><label for="ex21-c3" style="margin:0;font-weight:500;color:var(--ink)">Transfer credit question</label></li>
+                <li><input type="checkbox" checked id="ex21-c4"><label for="ex21-c4" style="margin:0;font-weight:500;color:var(--ink)">Graduation timeline question</label></li>
+              </ul>
+            </fieldset>
+            <div class="field" style="margin-top:10px"><label for="ex21-notes">Student notes</label>
+              <textarea id="ex21-notes">I want to confirm whether CS 340 and MATH 221 can be taken in the same semester with my current prerequisites.</textarea>
+            </div>
+          </form>
+
+          <aside class="summary-panel" aria-label="Advising summary">
+            <h3>Summary</h3>
+            <div class="price-line"><span>Status</span><strong>Ready to confirm</strong></div>
+            <div class="price-line"><span>Duration</span><strong>30 minutes</strong></div>
+            <div class="price-line"><span>Reminder</span><strong>Email 24 hours before</strong></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card gov-card" id="example-22">
+      <header class="example-header">
+        <p class="example-kicker">Example 22</p>
+        <h2>Passport Office Appointment Reservation</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a government passport office appointment reservation. It tests extraction
+        of applicant details, selected service, location, appointment time, required documents,
+        accessibility requests, and confirmation-style summary data.
+      </p>
+      <div class="example-surface">
+        <div class="booking-layout">
+          <form class="booking-panel" aria-label="Passport office appointment">
+            <fieldset>
+              <legend>Applicant</legend>
+              <div class="grid-two">
+                <div class="field"><label>Applicant name</label><input value="Samira Haddad"></div>
+                <div class="field"><label for="ex22-app">Application type</label>
+                  <select id="ex22-app"><option selected>Renew passport book</option><option>New passport book</option><option>Passport card</option></select>
+                </div>
+                <div class="field"><label>Number of applicants</label><input type="number" value="1"></div>
+                <div class="field"><label>Application locator</label><input value="PPT-2026-551902" readonly></div>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Appointment</legend>
+              <div class="grid-two">
+                <div class="field"><label>Office location</label><input value="Downtown Passport Office - Window 4" readonly></div>
+                <div class="field"><label>Office address</label><input value="200 Civic Center Plaza, San Francisco, CA" readonly></div>
+                <div class="field"><label>Appointment date</label><input type="date" value="2026-07-08" readonly></div>
+                <div class="field"><label>Appointment time</label><input type="time" value="09:45" readonly></div>
+                <div class="field"><label>Appointment duration</label><input value="20 minutes" readonly></div>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Required documents</legend>
+              <ul class="checklist">
+                <li><input type="checkbox" checked id="ex22-d1"><label for="ex22-d1" style="margin:0;font-weight:500;color:var(--ink)">Current passport</label></li>
+                <li><input type="checkbox" checked id="ex22-d2"><label for="ex22-d2" style="margin:0;font-weight:500;color:var(--ink)">Passport photo</label></li>
+                <li><input type="checkbox" checked id="ex22-d3"><label for="ex22-d3" style="margin:0;font-weight:500;color:var(--ink)">Completed renewal form</label></li>
+                <li><input type="checkbox" checked id="ex22-d4"><label for="ex22-d4" style="margin:0;font-weight:500;color:var(--ink)">Payment method</label></li>
+                <li><input type="checkbox" id="ex22-d5"><label for="ex22-d5" style="margin:0;font-weight:500;color:var(--ink)">Name change document</label></li>
+              </ul>
+            </fieldset>
+            <fieldset>
+              <legend>Accessibility and language</legend>
+              <div class="stack-options">
+                <label><input type="checkbox"> Wheelchair accessible counter requested</label>
+                <label><input type="checkbox" checked> Interpreter requested</label>
+              </div>
+              <div class="field" style="margin-top:10px;max-width:240px"><label for="ex22-lang">Interpreter language</label>
+                <select id="ex22-lang"><option>Spanish</option><option selected>Arabic</option><option>Mandarin</option></select>
+              </div>
+            </fieldset>
+            <div class="grid-two">
+              <div class="field"><label>Email</label><input type="email" value="samira.haddad@example.test"></div>
+              <div class="field"><label>Phone</label><input type="tel" value="415-555-0180"></div>
+            </div>
+          </form>
+
+          <aside class="summary-panel" aria-label="Confirmation summary">
+            <h3>Confirmation</h3>
+            <div class="price-line"><span>Reservation status</span><strong><span class="status-pill hold">Held</span></strong></div>
+            <div class="price-line"><span>Check-in</span><strong>Kiosk 2</strong></div>
+            <div class="price-line"><span>Cancellation deadline</span><strong>Jul 7, 5:00 PM</strong></div>
+            <p class="policy" style="background:var(--accent-soft);border-color:#bcd5ef;color:#1d3a57">Arrive 10 minutes early and check in at kiosk 2.</p>
+            <p class="policy">Late arrivals may need to reschedule. Appointment does not guarantee application approval.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      // Single-select card / slot groups: only one [aria-pressed="true"] per group.
+      document.addEventListener("click", function (event) {
+        var btn = event.target.closest("[data-select-group]");
+        if (!btn) return;
+        if (btn.disabled || btn.getAttribute("aria-disabled") === "true") return;
+        var group = btn.getAttribute("data-select-group");
+        var scope = btn.closest(".example-surface") || document;
+        scope.querySelectorAll("[data-select-group='" + group + "']").forEach(function (el) {
+          el.setAttribute("aria-pressed", el === btn ? "true" : "false");
+          el.classList.toggle("is-selected", el === btn);
+        });
+        var hiddenName = btn.getAttribute("data-hidden-name");
+        var hiddenVal = btn.getAttribute("data-value");
+        if (hiddenName) {
+          var input = scope.querySelector("input[type='hidden'][name='" + hiddenName + "']");
+          if (input && hiddenVal != null) input.value = hiddenVal;
+        }
+        var mirror = btn.getAttribute("data-mirror");
+        if (mirror) {
+          var target = scope.querySelector("#" + mirror);
+          if (target) {
+            var label = btn.getAttribute("data-label");
+            if ("value" in target) target.value = label != null ? label : btn.textContent.trim();
+            else target.textContent = label != null ? label : btn.textContent.trim();
+          }
+        }
+      });
+
+      // Seat toggle groups: allow multiple selected seats, but skip unavailable.
+      document.addEventListener("click", function (event) {
+        var seat = event.target.closest(".seat[data-toggle-seat]");
+        if (!seat) return;
+        if (seat.disabled || seat.classList.contains("is-unavailable")) return;
+        var nowSel = !seat.classList.contains("is-selected");
+        seat.classList.toggle("is-selected", nowSel);
+        seat.setAttribute("aria-pressed", nowSel ? "true" : "false");
+      });
+    })();
+  </script>
+</body>
+</html>

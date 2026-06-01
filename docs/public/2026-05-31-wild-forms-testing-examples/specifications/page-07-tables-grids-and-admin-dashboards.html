@@ -1,0 +1,5164 @@
+---
+
+A00 Change Request Specification - Page 7 Tables, Grids, And Admin Dashboards
+
+---
+
+Create one standalone HTML demo page named `page-07-tables-grids-and-admin-dashboards.html`.
+
+The page must be a self-contained HTML file. Put all HTML, CSS, and JavaScript inside this one file. Do not use React. Do not use TypeScript. Do not use a build step. Do not load external CSS, external JavaScript, external fonts, external images, or external data. The page must work by opening the `.html` file directly in a browser.
+
+This page is a testing surface for a content extraction tool. The page must focus on tables, grids, and admin dashboards: invoice tables, order management grids, user permission tables, inventory tables, transaction ledgers, monitoring dashboards, project status dashboards, audit log grids, approval queues, CRM pipeline tables, subscription seat management, API usage dashboards, content moderation queues, warehouse pick lists, reconciliation tables, and dashboard cards where field-value data appears in rows, columns, cells, badges, chips, nested details, and summary panels.
+
+The page must contain 22 separate examples. Each example must have a visible heading, a visible explanatory paragraph, and the actual table, grid, or dashboard UI. Each example must be visually separated from the next example. Each example must be realistic enough to test extraction of rows, columns, headers, selected rows, status badges, numeric values, totals, nested cell content, grouped rows, expandable details, sticky-like summaries, dashboard KPIs, and row-level actions.
+
+Do not make the examples tiny toy tables. A complex example is preferred because it can also be used for simple extraction testing. Every example must test a different extraction caveat.
+
+---
+
+B00 Page-Level Purpose
+
+---
+
+The purpose of this page is to test whether an extraction tool can identify, select, and format structured information from dense tables, data grids, and admin dashboards.
+
+The extraction tool should be able to handle normal tables, div-based grids, compact admin lists, grouped rows, expandable row details, sticky summary rows, pinned columns, checkbox selection columns, action columns, row status badges, nested chips, multi-line cells, right-aligned numeric columns, currency values, percentages, timestamps, IDs, user records, financial rows, inventory rows, dashboard cards, KPI summaries, and side panels tied to selected rows.
+
+This page should intentionally include both clean semantic markup and messy real-world markup. Some examples should use native `<table>`, `<thead>`, `<tbody>`, `<th>`, and `<td>`. Other examples should imitate modern admin grids built from nested divs with ARIA roles such as `grid`, `row`, `columnheader`, and `gridcell`. Some examples should be visually table-like but not semantically table-like. Some examples should have column labels far from values, row actions inside cells, duplicated labels in every row, and summary values outside the table.
+
+The page should not depend on external services. It should not fetch real admin data. It should not use real customers, real account numbers, real patients, real credentials, or real production identifiers. All data must be fictional and hardcoded.
+
+---
+
+C00 Required Page Structure
+
+---
+
+The page must start with a top-level header.
+
+Use this visible title:
+
+`Page 7 - Tables, Grids, And Admin Dashboards`
+
+Under the title, include a short introduction paragraph explaining that the page contains realistic table, grid, and dashboard examples for testing extraction of rows, columns, headers, selected records, badges, totals, nested cell content, grouped data, expandable details, and admin summaries.
+
+After the introduction, render 22 example sections.
+
+Each example section must follow this pattern:
+
+```html
+<section class="example-card" id="example-01">
+  <header class="example-header">
+    <p class="example-kicker">Example 01</p>
+    <h2>Invoice Line Item Reconciliation Table</h2>
+  </header>
+
+  <p class="example-description">
+    This example imitates...
+  </p>
+
+  <div class="example-surface">
+    <!-- Actual table, grid, or dashboard UI goes here. -->
+  </div>
+</section>
+```
+
+The exact class names may vary, but the structure must remain clear. Each section must have a unique `id`, from `example-01` through `example-22`.
+
+Each example heading must be visible. Each description must be visible. The actual table or dashboard surface must appear below the description.
+
+Do not include large expected extraction output blocks under every example. The page should primarily be the application-under-test surface, not a documentation page. The visible descriptions should explain the purpose and caveat of each example.
+
+---
+
+D00 Visual Design Requirements
+
+---
+
+Use inline CSS in a `<style>` tag.
+
+The page should look like a clean internal testing notebook with realistic admin tables and dashboards inside it. Use a light background, readable font stack, generous spacing, and card-style example sections. Inside each example, the UI may look like a different admin product. That variation is desirable.
+
+Use different visual styles inside examples when useful. For example, one table can look like a finance reconciliation view, another like an admin user grid, another like a warehouse dashboard, another like a monitoring console, another like a healthcare operations grid, another like a product analytics dashboard, and another like a spreadsheet-like business table.
+
+The page should support narrow and wide screens. Use simple responsive CSS. Since tables are often wide, wrap large tables in horizontally scrollable containers. Do not allow wide tables to break the whole page layout.
+
+Suggested CSS structure:
+
+```html
+<style>
+  :root {
+    --page-bg: #f5f2ea;
+    --card-bg: #fffdf8;
+    --ink: #25221d;
+    --muted: #6f675c;
+    --line: #d8cfc0;
+    --soft: #eee6d8;
+    --panel: #ffffff;
+    --accent: #315f8c;
+    --accent-soft: #e7f0ff;
+    --ok: #276749;
+    --warning: #8a5a00;
+    --danger: #9b332c;
+    --link: #174ea6;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--page-bg);
+    color: var(--ink);
+    line-height: 1.45;
+  }
+
+  main {
+    width: min(1220px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 32px 0 64px;
+  }
+
+  a {
+    color: var(--link);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+
+  .page-hero {
+    margin-bottom: 28px;
+    padding: 28px;
+    background: #fffaf0;
+    border: 2px solid var(--line);
+    border-radius: 18px;
+  }
+
+  .example-card {
+    margin: 28px 0;
+    padding: 24px;
+    background: var(--card-bg);
+    border: 2px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.08);
+  }
+
+  .example-kicker {
+    margin: 0 0 4px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .example-header h2 {
+    margin: 0;
+    font-size: 1.35rem;
+  }
+
+  .example-description {
+    max-width: 920px;
+    color: var(--muted);
+  }
+
+  .example-surface {
+    margin-top: 18px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: white;
+  }
+
+  .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  table.admin-table {
+    width: 100%;
+    min-width: 780px;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--soft);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .admin-table th {
+    background: #faf7f0;
+    color: var(--muted);
+    font-weight: 750;
+    white-space: nowrap;
+  }
+
+  .admin-table td.number,
+  .admin-table th.number {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .admin-table tr.is-selected td {
+    background: var(--accent-soft);
+  }
+
+  .admin-table tr.summary-row td {
+    background: #fffaf0;
+    font-weight: 750;
+  }
+
+  .admin-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .toolbar-left,
+  .toolbar-right {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .admin-toolbar input,
+  .admin-toolbar select {
+    min-height: 36px;
+    padding: 7px 10px;
+    border: 1px solid #b7afa3;
+    border-radius: 8px;
+    font: inherit;
+    background: #fff;
+  }
+
+  .badge,
+  .tag,
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: #fff;
+    font-size: 0.82rem;
+    font-weight: 650;
+    white-space: nowrap;
+  }
+
+  .badge.ok {
+    color: var(--ok);
+    background: #edf8f1;
+  }
+
+  .badge.warning {
+    color: var(--warning);
+    background: #fff7df;
+  }
+
+  .badge.danger {
+    color: var(--danger);
+    background: #fff0ef;
+  }
+
+  .chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .kpi-card,
+  .panel-card,
+  .detail-panel,
+  .side-panel {
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  .kpi-card {
+    background: #faf7f0;
+  }
+
+  .kpi-label {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.86rem;
+  }
+
+  .kpi-value {
+    margin: 4px 0 0;
+    font-size: 1.35rem;
+    font-weight: 800;
+  }
+
+  .kpi-note {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: 0.84rem;
+  }
+
+  .grid-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 310px;
+    gap: 14px;
+    align-items: start;
+  }
+
+  .field-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--soft);
+  }
+
+  .field-row:last-child {
+    border-bottom: 0;
+  }
+
+  .field-label {
+    color: var(--muted);
+    font-weight: 650;
+  }
+
+  .field-value {
+    text-align: right;
+    font-weight: 650;
+  }
+
+  .fake-grid {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .fake-grid-row {
+    display: grid;
+    grid-template-columns: 160px 1fr 140px 120px 120px;
+    gap: 0;
+    border-bottom: 1px solid var(--soft);
+  }
+
+  .fake-grid-row:last-child {
+    border-bottom: 0;
+  }
+
+  .fake-grid-cell {
+    padding: 10px 12px;
+    border-right: 1px solid var(--soft);
+  }
+
+  .fake-grid-cell:last-child {
+    border-right: 0;
+  }
+
+  .fake-grid-header {
+    background: #faf7f0;
+    color: var(--muted);
+    font-weight: 750;
+  }
+
+  .row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .row-actions button,
+  .plain-button {
+    min-height: 30px;
+    padding: 5px 8px;
+    border: 1px solid #b7afa3;
+    border-radius: 8px;
+    background: #fff;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .details-box {
+    margin-top: 10px;
+    padding: 12px;
+    border: 1px dashed #b7afa3;
+    border-radius: 10px;
+    background: #fffdf4;
+  }
+
+  @media (max-width: 980px) {
+    .dashboard-grid,
+    .grid-shell {
+      grid-template-columns: 1fr;
+    }
+
+    .fake-grid-row {
+      grid-template-columns: 1fr;
+    }
+
+    .fake-grid-cell {
+      border-right: 0;
+      border-bottom: 1px solid var(--soft);
+    }
+
+    .fake-grid-cell:last-child {
+      border-bottom: 0;
+    }
+
+    .field-row {
+      display: block;
+    }
+
+    .field-value {
+      display: block;
+      margin-top: 2px;
+      text-align: left;
+    }
+
+    .example-card {
+      padding: 18px;
+    }
+  }
+</style>
+```
+
+The coding agent may adjust the CSS, but it must keep the page readable, scrollable, and visually divided into 22 separate examples.
+
+---
+
+E00 JavaScript Requirements
+
+---
+
+Use inline JavaScript in a `<script>` tag.
+
+This page should include small interactions where they help tables and dashboards feel realistic. The JavaScript must be simple and local to the page. Do not use a framework. Do not generate all examples dynamically. Static HTML must remain visible and inspectable.
+
+Allowed JavaScript behavior includes selecting a row and showing row details, expanding a row, toggling a details drawer, checking row selection checkboxes, filtering a small local table, switching dashboard tabs, revealing hidden columns, marking an approval row as selected, or toggling a status panel.
+
+The important table and dashboard data must exist in the DOM at page load. If a row detail panel changes dynamically, the page should still contain enough visible default detail content at load to test extraction without interaction.
+
+Required generic behavior:
+
+Clicking a row with `data-select-row` should mark that row as selected inside its example.
+
+Clicking a row with a `data-detail-target` may show a matching detail panel and hide sibling detail panels.
+
+Clicking a button with `data-toggle-target` should show or hide a matching detail area.
+
+Typing in a local filter input with `data-local-filter` should hide nonmatching rows or cards.
+
+Clicking a dashboard tab with `data-tab-target` should show the matching panel and hide sibling panels.
+
+Suggested JavaScript structure:
+
+```html
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("[data-select-row]").forEach(function (row) {
+      row.addEventListener("click", function (event) {
+        if (event.target.closest("a, button, input, select, textarea")) return;
+
+        const group = row.dataset.selectRow;
+        if (!group) return;
+
+        document.querySelectorAll('[data-select-row="' + group + '"]').forEach(function (item) {
+          item.classList.remove("is-selected");
+          item.setAttribute("aria-selected", "false");
+        });
+
+        row.classList.add("is-selected");
+        row.setAttribute("aria-selected", "true");
+
+        const detailTarget = row.dataset.detailTarget;
+        if (detailTarget) {
+          document.querySelectorAll('[data-detail-panel="' + group + '"]').forEach(function (panel) {
+            panel.hidden = true;
+          });
+
+          const panel = document.querySelector(detailTarget);
+          if (panel) panel.hidden = false;
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-toggle-target]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const target = document.querySelector(button.dataset.toggleTarget);
+        if (!target) return;
+
+        target.hidden = !target.hidden;
+        button.setAttribute("aria-expanded", String(!target.hidden));
+      });
+    });
+
+    document.querySelectorAll("[data-local-filter]").forEach(function (input) {
+      input.addEventListener("input", function () {
+        const selector = input.dataset.localFilter;
+        const query = input.value.trim().toLowerCase();
+
+        document.querySelectorAll(selector).forEach(function (item) {
+          const text = item.textContent.toLowerCase();
+          item.hidden = query.length > 0 && !text.includes(query);
+        });
+      });
+    });
+
+    document.querySelectorAll("[data-tab-target]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const group = button.dataset.tabGroup;
+        if (!group) return;
+
+        document.querySelectorAll('[data-tab-group="' + group + '"]').forEach(function (tab) {
+          tab.setAttribute("aria-selected", "false");
+        });
+
+        document.querySelectorAll('[data-tab-panel="' + group + '"]').forEach(function (panel) {
+          panel.hidden = true;
+        });
+
+        button.setAttribute("aria-selected", "true");
+        const panel = document.querySelector(button.dataset.tabTarget);
+        if (panel) panel.hidden = false;
+      });
+    });
+  });
+</script>
+```
+
+The coding agent may extend this code for specific examples, but the final file must remain simple and portable.
+
+---
+
+F00 Extraction Behavior To Support
+
+---
+
+The page must make these extraction tasks possible:
+
+Extract table headers and row values as structured records.
+
+Extract selected rows and selected row detail panels.
+
+Extract summary rows, totals, subtotals, balance values, and right-aligned numeric columns.
+
+Extract row status badges, priority badges, labels, tags, and chips as item-level metadata.
+
+Extract checkbox selection columns without confusing selection checkboxes with boolean business fields.
+
+Extract action buttons without treating actions such as `Edit`, `Approve`, `View`, `Retry`, or `Archive` as row values.
+
+Extract expandable row details when visible.
+
+Extract grouped table sections and preserve group labels.
+
+Extract nested values inside a single table cell, such as customer name plus email, product name plus SKU, or service name plus description.
+
+Extract values from div-based grids using visual and ARIA roles, not only native table semantics.
+
+Extract dashboard KPI cards with label, value, change, time period, and status.
+
+Extract dashboard panels where KPI cards summarize data that also appears in a table.
+
+Extract admin dashboard sidebars tied to selected rows.
+
+Extract dense financial grids without merging adjacent numeric columns.
+
+Extract timestamps, IDs, currency, percentages, counts, rates, and durations.
+
+Extract rows with duplicate labels in different groups while preserving section context.
+
+Extract hidden or collapsed details only when they are visible after interaction.
+
+Extract pinned or sticky-looking columns without duplicating values.
+
+Extract sorted, filtered, and paginated state from visible toolbar controls.
+
+---
+
+G00 Data And Naming Rules
+
+---
+
+Use realistic but fictional data. Do not use real personal information.
+
+Use fictional companies, fictional products, fictional accounts, fictional tickets, fictional users, fictional service names, fictional IDs, and example-domain email addresses. Use `href="#"` or `href="/demo/..."` for links. Do not link to real third-party pages.
+
+Use consistent example-specific IDs. Prefix IDs with the example number, such as `ex01-invoice-table`, `ex07-user-03`, or `ex18-selected-detail`.
+
+Use plausible values. Avoid placeholder-only examples. Every example should contain enough populated table, grid, or dashboard data to be useful for extraction testing.
+
+Each repeated row should have at least four extractable fields. Most rows should have six or more fields.
+
+Use a mixture of semantic and non-semantic markup. Use native tables where table structure matters. Use ARIA grid roles or div-based grids where the example is explicitly about non-table admin grids.
+
+Do not use external images, charts, or dashboard libraries. Use text, CSS boxes, KPI cards, simple bars, and tables instead.
+
+Do not make all examples use the same layout. Some examples should be pure tables. Some should be grids with side panels. Some should be dashboard cards with a table below. Some should have grouped sections. Some should be dense admin consoles. Some should be compact financial ledgers.
+
+---
+
+H00 Required Examples Overview
+
+---
+
+The page must contain exactly these 22 examples:
+
+Example 01: Invoice Line Item Reconciliation Table.
+
+Example 02: User Permissions Admin Grid.
+
+Example 03: Inventory Stock Management Grid.
+
+Example 04: Order Management Dashboard Table.
+
+Example 05: Banking Transaction Ledger.
+
+Example 06: Infrastructure Monitoring Dashboard.
+
+Example 07: Usage Billing Dashboard.
+
+Example 08: Project Portfolio Status Grid.
+
+Example 09: Security Audit Log Table.
+
+Example 10: CRM Pipeline Forecast Grid.
+
+Example 11: Payroll Run Review Table.
+
+Example 12: Feature Flag Rollout Dashboard.
+
+Example 13: Content Moderation Queue Grid.
+
+Example 14: Incident Response Dashboard.
+
+Example 15: Warehouse Pick List Grid.
+
+Example 16: Healthcare Appointment Operations Grid.
+
+Example 17: University Enrollment Capacity Dashboard.
+
+Example 18: Financial Reconciliation Exception Table.
+
+Example 19: Subscription Seat Management Grid.
+
+Example 20: API Usage And Rate Limit Dashboard.
+
+Example 21: Procurement Approval Queue.
+
+Example 22: Spreadsheet-Like KPI Planning Grid.
+
+Each example below is mandatory.
+
+---
+
+I00 Example 01 - Invoice Line Item Reconciliation Table
+
+---
+
+Create a finance reconciliation table that shows invoice line items, expected amounts, received amounts, tax amounts, discounts, variance, and reconciliation status. It should look like a billing operations screen.
+
+Visible heading:
+
+`Invoice Line Item Reconciliation Table`
+
+Visible description:
+
+`This example imitates a finance reconciliation table for invoice line items. It tests extraction of row records with SKU, description, quantity, unit price, expected amount, received amount, tax, discount, variance, status, and a summary total row.`
+
+Toolbar fields:
+
+`Invoice`: `INV-2026-00841`.
+
+`Customer`: `Cedar & Pine Design LLC`.
+
+`Service period`: `May 1-31, 2026`.
+
+`Reconciliation status`: badge `Needs review`.
+
+`Visible rows`: `5 line items`.
+
+Table columns:
+
+`Select`.
+
+`SKU`.
+
+`Description`.
+
+`Quantity`.
+
+`Unit price`.
+
+`Expected amount`.
+
+`Received amount`.
+
+`Tax`.
+
+`Discount`.
+
+`Variance`.
+
+`Status`.
+
+`Actions`.
+
+Rows:
+
+Row 1 selected by default:
+
+`Select`: checked.
+
+`SKU`: `SEAT-BUS-24`.
+
+`Description`: `Business platform seats`.
+
+`Quantity`: `24`.
+
+`Unit price`: `$18.00`.
+
+`Expected amount`: `$432.00`.
+
+`Received amount`: `$432.00`.
+
+`Tax`: `$37.15`.
+
+`Discount`: `$0.00`.
+
+`Variance`: `$0.00`.
+
+`Status`: badge `Matched`.
+
+`Actions`: `View`, `Comment`.
+
+Row 2:
+
+`Select`: unchecked.
+
+`SKU`: `ADD-AUDIT-01`.
+
+`Description`: `Audit log retention add-on`.
+
+`Quantity`: `1`.
+
+`Unit price`: `$96.00`.
+
+`Expected amount`: `$96.00`.
+
+`Received amount`: `$96.00`.
+
+`Tax`: `$8.25`.
+
+`Discount`: `$0.00`.
+
+`Variance`: `$0.00`.
+
+`Status`: badge `Matched`.
+
+`Actions`: `View`, `Comment`.
+
+Row 3:
+
+`Select`: checked.
+
+`SKU`: `ADD-SUPPORT-PR`.
+
+`Description`: `Priority support package`.
+
+`Quantity`: `1`.
+
+`Unit price`: `$150.00`.
+
+`Expected amount`: `$150.00`.
+
+`Received amount`: `$135.00`.
+
+`Tax`: `$11.61`.
+
+`Discount`: `-$15.00`.
+
+`Variance`: `-$15.00`.
+
+`Status`: badge `Review`.
+
+`Actions`: `View`, `Resolve`.
+
+Row 4:
+
+`Select`: unchecked.
+
+`SKU`: `CRD-PRORATE-04`.
+
+`Description`: `Proration credit for removed seats`.
+
+`Quantity`: `1`.
+
+`Unit price`: `-$42.00`.
+
+`Expected amount`: `-$42.00`.
+
+`Received amount`: `-$42.00`.
+
+`Tax`: `-$3.61`.
+
+`Discount`: `$0.00`.
+
+`Variance`: `$0.00`.
+
+`Status`: badge `Matched`.
+
+`Actions`: `View`.
+
+Row 5:
+
+`Select`: unchecked.
+
+`SKU`: `FEE-SVC-01`.
+
+`Description`: `Service processing fee`.
+
+`Quantity`: `1`.
+
+`Unit price`: `$12.00`.
+
+`Expected amount`: `$12.00`.
+
+`Received amount`: `$12.00`.
+
+`Tax`: `$1.03`.
+
+`Discount`: `$0.00`.
+
+`Variance`: `$0.00`.
+
+`Status`: badge `Matched`.
+
+`Actions`: `View`.
+
+Summary row:
+
+`Expected amount total`: `$648.00`.
+
+`Received amount total`: `$633.00`.
+
+`Tax total`: `$54.43`.
+
+`Discount total`: `-$15.00`.
+
+`Variance total`: `-$15.00`.
+
+Detail panel for selected Row 3 must include:
+
+`Selected SKU`: `ADD-SUPPORT-PR`.
+
+`Exception reason`: `Discount applied on received invoice but not expected quote`.
+
+`Owner`: `Renee Coleman`.
+
+`Resolution due`: `June 3, 2026`.
+
+Extraction caveat: the extraction tool should preserve numeric columns separately and should not merge expected, received, tax, discount, and variance values. It should not treat row selection checkboxes as business values.
+
+Implementation guidance:
+
+```html
+<div class="grid-shell">
+  <div>
+    <div class="admin-toolbar">
+      <div class="toolbar-left">
+        <strong>Invoice INV-2026-00841</strong>
+        <span class="badge warning">Needs review</span>
+      </div>
+      <div class="toolbar-right">
+        <input aria-label="Filter line items" data-local-filter="#ex01-invoice-table tbody tr" value="">
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="admin-table" id="ex01-invoice-table">
+        <thead>
+          <tr>
+            <th>Select</th>
+            <th>SKU</th>
+            <th>Description</th>
+            <th class="number">Quantity</th>
+            <th class="number">Unit price</th>
+            <th class="number">Expected amount</th>
+            <th class="number">Received amount</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="is-selected" data-select-row="ex01-lines" data-detail-target="#ex01-line-detail-03">
+            <td><input type="checkbox" checked aria-label="Select line item ADD-SUPPORT-PR"></td>
+            <td>ADD-SUPPORT-PR</td>
+            <td>Priority support package</td>
+            <td class="number">1</td>
+            <td class="number">$150.00</td>
+            <td class="number">$150.00</td>
+            <td class="number">$135.00</td>
+            <td><span class="badge warning">Review</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <aside class="detail-panel" data-detail-panel="ex01-lines" id="ex01-line-detail-03">
+    <h3>Selected line item</h3>
+    <div class="field-row"><span class="field-label">Selected SKU</span><span class="field-value">ADD-SUPPORT-PR</span></div>
+  </aside>
+</div>
+```
+
+---
+
+J00 Example 02 - User Permissions Admin Grid
+
+---
+
+Create an admin user permissions grid with users as rows and product areas as permission columns. It should look like a SaaS workspace admin screen.
+
+Visible heading:
+
+`User Permissions Admin Grid`
+
+Visible description:
+
+`This example imitates a workspace permissions grid. It tests extraction of user rows, roles, teams, permission columns, MFA state, last active timestamp, and selected user detail without confusing permission checkboxes with row selection checkboxes.`
+
+Toolbar fields:
+
+`Workspace`: `Northwind Analytics`.
+
+`Search users`: input value `billing`.
+
+`Filter`: select selected `Active users`.
+
+`Result count`: `6 users`.
+
+Table columns:
+
+`Select`.
+
+`User`.
+
+`Email`.
+
+`Team`.
+
+`Role`.
+
+`Invoices`.
+
+`Payment methods`.
+
+`Seats`.
+
+`Reports`.
+
+`Admin console`.
+
+`MFA`.
+
+`Last active`.
+
+`Status`.
+
+Rows:
+
+Row 1 selected by default:
+
+`Select`: checked.
+
+`User`: `Anika Sharma`.
+
+`Email`: `anika.sharma@example.test`.
+
+`Team`: `Finance`.
+
+`Role`: `Billing manager`.
+
+`Invoices`: checked.
+
+`Payment methods`: checked.
+
+`Seats`: checked.
+
+`Reports`: checked.
+
+`Admin console`: unchecked.
+
+`MFA`: `Enabled`.
+
+`Last active`: `May 31, 2026, 11:18 AM`.
+
+`Status`: badge `Active`.
+
+Row 2:
+
+`User`: `Maya Chen`.
+
+`Email`: `maya.chen@example.test`.
+
+`Team`: `Product`.
+
+`Role`: `Billing manager`.
+
+`Invoices`: checked.
+
+`Payment methods`: unchecked.
+
+`Seats`: checked.
+
+`Reports`: checked.
+
+`Admin console`: unchecked.
+
+`MFA`: `Enabled`.
+
+`Last active`: `May 31, 2026, 9:40 AM`.
+
+`Status`: badge `Active`.
+
+Row 3:
+
+`User`: `Renee Coleman`.
+
+`Email`: `renee.coleman@example.test`.
+
+`Team`: `Finance`.
+
+`Role`: `Workspace admin`.
+
+`Invoices`: checked.
+
+`Payment methods`: checked.
+
+`Seats`: checked.
+
+`Reports`: checked.
+
+`Admin console`: checked.
+
+`MFA`: `Enabled`.
+
+`Last active`: `May 30, 2026, 5:12 PM`.
+
+`Status`: badge `Active`.
+
+Row 4:
+
+`User`: `Theo Grant`.
+
+`Email`: `theo.grant@example.test`.
+
+`Team`: `Research`.
+
+`Role`: `Viewer`.
+
+`Invoices`: unchecked.
+
+`Payment methods`: unchecked.
+
+`Seats`: unchecked.
+
+`Reports`: checked.
+
+`Admin console`: unchecked.
+
+`MFA`: `Enabled`.
+
+`Last active`: `May 29, 2026, 3:04 PM`.
+
+`Status`: badge `Active`.
+
+Row 5:
+
+`User`: `Lina Romero`.
+
+`Email`: `lina.romero@example.test`.
+
+`Team`: `Design`.
+
+`Role`: `Editor`.
+
+`Invoices`: unchecked.
+
+`Payment methods`: unchecked.
+
+`Seats`: unchecked.
+
+`Reports`: checked.
+
+`Admin console`: unchecked.
+
+`MFA`: `Not set up`.
+
+`Last active`: `Never`.
+
+`Status`: badge `Invited`.
+
+Row 6:
+
+`User`: `Owen Brooks`.
+
+`Email`: `owen.brooks@example.test`.
+
+`Team`: `Operations`.
+
+`Role`: `Billing manager`.
+
+`Invoices`: checked.
+
+`Payment methods`: checked.
+
+`Seats`: unchecked.
+
+`Reports`: checked.
+
+`Admin console`: unchecked.
+
+`MFA`: `Enabled`.
+
+`Last active`: `May 10, 2026, 1:20 PM`.
+
+`Status`: badge `Suspended`.
+
+Selected detail panel for Row 1 must include:
+
+`Selected user`: `Anika Sharma`.
+
+`User ID`: `usr_204884`.
+
+`Granted permissions`: `Invoices`, `Payment methods`, `Seats`, `Reports`.
+
+`Restricted permissions`: `Admin console`, `Ownership transfer`, `SSO settings`.
+
+`Role changed by`: `Renee Coleman`.
+
+`Role changed at`: `May 28, 2026, 4:42 PM`.
+
+Extraction caveat: the extraction tool should distinguish the row selection checkbox from permission checkboxes. It should extract permission column names attached to checked states for each user.
+
+Implementation guidance: use checkbox inputs in permission cells with `aria-label` values such as `Anika Sharma can access invoices`.
+
+---
+
+K00 Example 03 - Inventory Stock Management Grid
+
+---
+
+Create an inventory management grid with SKUs, product names, warehouses, stock counts, reorder points, supplier data, inbound shipments, and status badges.
+
+Visible heading:
+
+`Inventory Stock Management Grid`
+
+Visible description:
+
+`This example imitates an inventory operations grid. It tests extraction of SKU rows, nested product information, stock quantities, warehouse locations, reorder thresholds, supplier names, inbound shipment dates, and stock status badges.`
+
+Toolbar fields:
+
+`Warehouse filter`: select selected `All warehouses`.
+
+`Search inventory`: input value `backpack`.
+
+`Sort order`: `Lowest available stock`.
+
+`Result count`: `7 SKUs`.
+
+Dashboard KPI cards above the table:
+
+`Total SKUs`: `7`.
+
+`Low stock`: `2`.
+
+`Inbound units`: `440`.
+
+`Inventory value`: `$38,420`.
+
+Table columns:
+
+`SKU`.
+
+`Product`.
+
+`Warehouse`.
+
+`Available`.
+
+`Reserved`.
+
+`Reorder point`.
+
+`Inbound`.
+
+`Supplier`.
+
+`Last counted`.
+
+`Status`.
+
+Rows:
+
+Row 1 selected by default:
+
+`SKU`: `BAG-TRV-22`.
+
+`Product`: `Canvas Travel Backpack 22L`.
+
+`Variant`: `Forest`.
+
+`Warehouse`: `Reno DC`.
+
+`Available`: `18`.
+
+`Reserved`: `7`.
+
+`Reorder point`: `25`.
+
+`Inbound`: `120 arriving June 4`.
+
+`Supplier`: `Fieldmark Supply`.
+
+`Last counted`: `May 29, 2026`.
+
+`Status`: badge `Low stock`.
+
+Row 2:
+
+`SKU`: `BAG-TRV-22-CH`.
+
+`Product`: `Canvas Travel Backpack 22L`.
+
+`Variant`: `Charcoal`.
+
+`Warehouse`: `Reno DC`.
+
+`Available`: `64`.
+
+`Reserved`: `12`.
+
+`Reorder point`: `25`.
+
+`Inbound`: `0`.
+
+`Supplier`: `Fieldmark Supply`.
+
+`Last counted`: `May 29, 2026`.
+
+`Status`: badge `Healthy`.
+
+Row 3:
+
+`SKU`: `BAG-COM-28`.
+
+`Product`: `TrailPack Commuter 28L`.
+
+`Variant`: `Olive`.
+
+`Warehouse`: `Portland DC`.
+
+`Available`: `9`.
+
+`Reserved`: `4`.
+
+`Reorder point`: `20`.
+
+`Inbound`: `80 arriving June 7`.
+
+`Supplier`: `TrailKnit Logistics`.
+
+`Last counted`: `May 30, 2026`.
+
+`Status`: badge `Critical`.
+
+Row 4:
+
+`SKU`: `BAG-FLT-18`.
+
+`Product`: `Packwell City Flight Bag`.
+
+`Variant`: `Black`.
+
+`Warehouse`: `Las Vegas DC`.
+
+`Available`: `112`.
+
+`Reserved`: `22`.
+
+`Reorder point`: `30`.
+
+`Inbound`: `0`.
+
+`Supplier`: `Packwell Wholesale`.
+
+`Last counted`: `May 27, 2026`.
+
+`Status`: badge `Healthy`.
+
+Row 5:
+
+`SKU`: `BAG-WKD-35`.
+
+`Product`: `Fieldmark Weekender Backpack`.
+
+`Variant`: `Navy`.
+
+`Warehouse`: `Reno DC`.
+
+`Available`: `42`.
+
+`Reserved`: `9`.
+
+`Reorder point`: `18`.
+
+`Inbound`: `60 arriving June 11`.
+
+`Supplier`: `Fieldmark Supply`.
+
+`Last counted`: `May 28, 2026`.
+
+`Status`: badge `Healthy`.
+
+Row 6:
+
+`SKU`: `BAG-SLM-16`.
+
+`Product`: `NexaSlim Tech Backpack`.
+
+`Variant`: `Graphite`.
+
+`Warehouse`: `Portland DC`.
+
+`Available`: `0`.
+
+`Reserved`: `31`.
+
+`Reorder point`: `40`.
+
+`Inbound`: `180 arriving June 15`.
+
+`Supplier`: `Nexa Distribution`.
+
+`Last counted`: `May 25, 2026`.
+
+`Status`: badge `Backordered`.
+
+Row 7:
+
+`SKU`: `BAG-ORG-05`.
+
+`Product`: `Canvas Organizer Pouch`.
+
+`Variant`: `Olive`.
+
+`Warehouse`: `Reno DC`.
+
+`Available`: `195`.
+
+`Reserved`: `14`.
+
+`Reorder point`: `50`.
+
+`Inbound`: `0`.
+
+`Supplier`: `Fieldmark Supply`.
+
+`Last counted`: `May 30, 2026`.
+
+`Status`: badge `Healthy`.
+
+Selected detail panel for Row 1 must include:
+
+`Selected SKU`: `BAG-TRV-22`.
+
+`Inventory value`: `$1,602.00`.
+
+`Reorder recommendation`: `Create purchase order for 100 units`.
+
+`Stockout risk`: `Medium`.
+
+`Open purchase order`: `PO-2026-7718`.
+
+Extraction caveat: the extraction tool should preserve nested product and variant values inside the product cell. It should not merge available, reserved, reorder point, and inbound quantity.
+
+Implementation guidance: use a table with a product cell that contains product name on one line and variant on a second muted line.
+
+---
+
+L00 Example 04 - Order Management Dashboard Table
+
+---
+
+Create an order management dashboard with KPI cards, active filters, order table, fulfillment statuses, payment statuses, and selected order details.
+
+Visible heading:
+
+`Order Management Dashboard Table`
+
+Visible description:
+
+`This example imitates an ecommerce order admin dashboard. It tests extraction of KPI cards, order rows, payment status, fulfillment status, customer information, shipping method, order totals, and selected order detail sidebar.`
+
+KPI cards:
+
+`Orders today`: `128`, note `+14 percent vs yesterday`.
+
+`Unfulfilled`: `37`, note `12 high priority`.
+
+`Revenue today`: `$18,420`, note `before refunds`.
+
+`Average order value`: `$143.91`, note `last 24 hours`.
+
+Toolbar fields:
+
+`Search orders`: input value `ORD-2026`.
+
+`Status filter`: select selected `All open`.
+
+`Sort order`: `Newest first`.
+
+`Visible rows`: `6 orders`.
+
+Table columns:
+
+`Order`.
+
+`Customer`.
+
+`Items`.
+
+`Payment`.
+
+`Fulfillment`.
+
+`Shipping`.
+
+`Total`.
+
+`Created`.
+
+`Actions`.
+
+Rows:
+
+Row 1 selected by default:
+
+`Order`: `ORD-2026-104922`.
+
+`Primary link`: `/demo/admin/orders/ORD-2026-104922`.
+
+`Customer`: `Jordan Ellis`.
+
+`Email`: `jordan.ellis@example.test`.
+
+`Items`: `4 items`.
+
+`Payment`: badge `Paid`.
+
+`Fulfillment`: badge `Processing`.
+
+`Shipping`: `Standard ground`.
+
+`Total`: `$159.07`.
+
+`Created`: `May 31, 2026, 10:18 AM`.
+
+`Actions`: `View`, `Print`.
+
+Row 2:
+
+`Order`: `ORD-2026-104918`.
+
+`Customer`: `Grace Miller`.
+
+`Email`: `grace.miller@example.test`.
+
+`Items`: `2 items`.
+
+`Payment`: badge `Paid`.
+
+`Fulfillment`: badge `Ready to ship`.
+
+`Shipping`: `Expedited`.
+
+`Total`: `$214.50`.
+
+`Created`: `May 31, 2026, 9:42 AM`.
+
+`Actions`: `View`, `Ship`.
+
+Row 3:
+
+`Order`: `ORD-2026-104901`.
+
+`Customer`: `Priya Shah`.
+
+`Email`: `priya.shah@example.test`.
+
+`Items`: `1 item`.
+
+`Payment`: badge `Authorized`.
+
+`Fulfillment`: badge `Hold`.
+
+`Shipping`: `Freight`.
+
+`Total`: `$1,287.60`.
+
+`Created`: `May 31, 2026, 8:05 AM`.
+
+`Actions`: `View`, `Release`.
+
+Row 4:
+
+`Order`: `ORD-2026-104884`.
+
+`Customer`: `Noah Kim`.
+
+`Email`: `noah.kim@example.test`.
+
+`Items`: `3 items`.
+
+`Payment`: badge `Paid`.
+
+`Fulfillment`: badge `Shipped`.
+
+`Shipping`: `Standard ground`.
+
+`Total`: `$86.40`.
+
+`Created`: `May 30, 2026, 6:31 PM`.
+
+`Actions`: `View`, `Track`.
+
+Row 5:
+
+`Order`: `ORD-2026-104870`.
+
+`Customer`: `Lina Romero`.
+
+`Email`: `lina.romero@example.test`.
+
+`Items`: `5 items`.
+
+`Payment`: badge `Failed`.
+
+`Fulfillment`: badge `Blocked`.
+
+`Shipping`: `Standard ground`.
+
+`Total`: `$342.18`.
+
+`Created`: `May 30, 2026, 4:12 PM`.
+
+`Actions`: `View`, `Retry payment`.
+
+Row 6:
+
+`Order`: `ORD-2026-104861`.
+
+`Customer`: `Owen Brooks`.
+
+`Email`: `owen.brooks@example.test`.
+
+`Items`: `2 items`.
+
+`Payment`: badge `Refunded`.
+
+`Fulfillment`: badge `Returned`.
+
+`Shipping`: `Return received`.
+
+`Total`: `-$48.00`.
+
+`Created`: `May 29, 2026, 11:08 AM`.
+
+`Actions`: `View`.
+
+Selected detail panel for Row 1 must include:
+
+`Selected order`: `ORD-2026-104922`.
+
+`Shipping address`: `120 King Street, Dock B, San Francisco, CA 94107`.
+
+`Billing address`: `88 Valencia Street, Suite 402, San Francisco, CA 94103`.
+
+`Risk score`: `Low`.
+
+`Packing note`: `Use freight entrance on King Street`.
+
+Extraction caveat: the extraction tool should extract KPI cards separately from order rows. It should not confuse payment status with fulfillment status.
+
+Implementation guidance: use KPI cards above the table and a right-side selected order detail panel.
+
+---
+
+M00 Example 05 - Banking Transaction Ledger
+
+---
+
+Create a banking transaction ledger with posted and pending transactions, debit and credit columns, running balance, categories, and row details.
+
+Visible heading:
+
+`Banking Transaction Ledger`
+
+Visible description:
+
+`This example imitates a banking transaction ledger. It tests extraction of transaction rows, posted and pending statuses, debit and credit amounts, running balance, categories, merchant names, masked account labels, and selected transaction details.`
+
+Account header fields:
+
+`Account`: `Operating Checking ending in 1842`.
+
+`Current balance`: `$48,920.18`.
+
+`Available balance`: `$46,420.18`.
+
+`Statement period`: `May 2026`.
+
+Toolbar fields:
+
+`Search transactions`: input value `vendor`.
+
+`Type filter`: select selected `All transactions`.
+
+`Result count`: `8 transactions`.
+
+Table columns:
+
+`Date`.
+
+`Description`.
+
+`Category`.
+
+`Reference`.
+
+`Debit`.
+
+`Credit`.
+
+`Balance`.
+
+`Status`.
+
+Rows:
+
+Row 1 selected by default:
+
+`Date`: `May 31, 2026`.
+
+`Description`: `ACH transfer to Tax Savings`.
+
+`Category`: `Transfer`.
+
+`Reference`: `TRN-8841-6029`.
+
+`Debit`: `$2,500.00`.
+
+`Credit`: blank.
+
+`Balance`: `$48,920.18`.
+
+`Status`: badge `Scheduled`.
+
+Row 2:
+
+`Date`: `May 30, 2026`.
+
+`Description`: `Northstar Cloud Services`.
+
+`Category`: `Software`.
+
+`Reference`: `INV-2026-00841`.
+
+`Debit`: `$300.00`.
+
+`Credit`: blank.
+
+`Balance`: `$51,420.18`.
+
+`Status`: badge `Posted`.
+
+Row 3:
+
+`Date`: `May 29, 2026`.
+
+`Description`: `Client payment - Harbor Cafe`.
+
+`Category`: `Income`.
+
+`Reference`: `DEP-77120`.
+
+`Debit`: blank.
+
+`Credit`: `$4,800.00`.
+
+`Balance`: `$51,720.18`.
+
+`Status`: badge `Posted`.
+
+Row 4:
+
+`Date`: `May 28, 2026`.
+
+`Description`: `Payroll batch`.
+
+`Category`: `Payroll`.
+
+`Reference`: `PAY-2026-102`.
+
+`Debit`: `$12,884.42`.
+
+`Credit`: blank.
+
+`Balance`: `$46,920.18`.
+
+`Status`: badge `Posted`.
+
+Row 5:
+
+`Date`: `May 27, 2026`.
+
+`Description`: `Office lease payment`.
+
+`Category`: `Rent`.
+
+`Reference`: `ACH-55820`.
+
+`Debit`: `$7,200.00`.
+
+`Credit`: blank.
+
+`Balance`: `$59,804.60`.
+
+`Status`: badge `Posted`.
+
+Row 6:
+
+`Date`: `May 26, 2026`.
+
+`Description`: `Refund from Example Electronics`.
+
+`Category`: `Refund`.
+
+`Reference`: `RF-20441`.
+
+`Debit`: blank.
+
+`Credit`: `$242.19`.
+
+`Balance`: `$67,004.60`.
+
+`Status`: badge `Posted`.
+
+Row 7:
+
+`Date`: `May 24, 2026`.
+
+`Description`: `Card purchase - Hardware Supply`.
+
+`Category`: `Supplies`.
+
+`Reference`: `CARD-9921`.
+
+`Debit`: `$184.22`.
+
+`Credit`: blank.
+
+`Balance`: `$66,762.41`.
+
+`Status`: badge `Posted`.
+
+Row 8:
+
+`Date`: `May 23, 2026`.
+
+`Description`: `Interest credit`.
+
+`Category`: `Interest`.
+
+`Reference`: `INT-0523`.
+
+`Debit`: blank.
+
+`Credit`: `$18.44`.
+
+`Balance`: `$66,946.63`.
+
+`Status`: badge `Posted`.
+
+Selected detail panel for Row 1 must include:
+
+`Selected transaction`: `TRN-8841-6029`.
+
+`Created`: `May 31, 2026, 10:42 AM PT`.
+
+`Submitted by`: `Renee Coleman`.
+
+`Authorization method`: `Authenticator app`.
+
+`Cancelable until`: `June 2, 2026, 11:59 PM PT`.
+
+Extraction caveat: the extraction tool should preserve debit and credit columns separately. It should not convert blank debit or credit cells into zero unless the output format explicitly requires it.
+
+Implementation guidance: use right-aligned numeric columns and a selected detail panel.
+
+---
+
+N00 Example 06 - Infrastructure Monitoring Dashboard
+
+---
+
+Create an infrastructure monitoring dashboard with KPI cards, service health table, incident indicators, latency values, error rates, and a selected service panel.
+
+Visible heading:
+
+`Infrastructure Monitoring Dashboard`
+
+Visible description:
+
+`This example imitates an infrastructure monitoring dashboard. It tests extraction of KPI cards, service rows, status badges, latency values, error rates, uptime percentages, incident counts, and selected service details.`
+
+KPI cards:
+
+`Healthy services`: `18 of 22`, note `last 5 minutes`.
+
+`Open incidents`: `2`, note `1 major, 1 minor`.
+
+`Median API latency`: `142 ms`, note `p50 across edge regions`.
+
+`Error rate`: `0.38 percent`, note `last 15 minutes`.
+
+Toolbar fields:
+
+`Environment`: select selected `Production`.
+
+`Region`: select selected `All regions`.
+
+`Refresh interval`: `30 seconds`.
+
+Service health table columns:
+
+`Service`.
+
+`Region`.
+
+`Status`.
+
+`p50 latency`.
+
+`p95 latency`.
+
+`Error rate`.
+
+`Uptime 24h`.
+
+`Open incidents`.
+
+`Last deploy`.
+
+Rows:
+
+Row 1 selected by default:
+
+`Service`: `Extraction API`.
+
+`Region`: `Global`.
+
+`Status`: badge `Degraded`.
+
+`p50 latency`: `184 ms`.
+
+`p95 latency`: `612 ms`.
+
+`Error rate`: `1.24 percent`.
+
+`Uptime 24h`: `99.41 percent`.
+
+`Open incidents`: `INC-2026-1184`.
+
+`Last deploy`: `May 31, 2026, 8:14 AM`.
+
+Row 2:
+
+`Service`: `Auth Gateway`.
+
+`Region`: `Global`.
+
+`Status`: badge `Healthy`.
+
+`p50 latency`: `64 ms`.
+
+`p95 latency`: `148 ms`.
+
+`Error rate`: `0.03 percent`.
+
+`Uptime 24h`: `99.99 percent`.
+
+`Open incidents`: `None`.
+
+`Last deploy`: `May 29, 2026, 2:20 PM`.
+
+Row 3:
+
+`Service`: `Job Queue`.
+
+`Region`: `US West`.
+
+`Status`: badge `Warning`.
+
+`p50 latency`: `210 ms`.
+
+`p95 latency`: `1,420 ms`.
+
+`Error rate`: `0.18 percent`.
+
+`Uptime 24h`: `99.78 percent`.
+
+`Open incidents`: `INC-2026-1189`.
+
+`Last deploy`: `May 30, 2026, 6:40 PM`.
+
+Row 4:
+
+`Service`: `Document Renderer`.
+
+`Region`: `US East`.
+
+`Status`: badge `Healthy`.
+
+`p50 latency`: `98 ms`.
+
+`p95 latency`: `244 ms`.
+
+`Error rate`: `0.02 percent`.
+
+`Uptime 24h`: `100.00 percent`.
+
+`Open incidents`: `None`.
+
+`Last deploy`: `May 28, 2026, 9:00 AM`.
+
+Row 5:
+
+`Service`: `Search Indexer`.
+
+`Region`: `EU Central`.
+
+`Status`: badge `Healthy`.
+
+`p50 latency`: `128 ms`.
+
+`p95 latency`: `390 ms`.
+
+`Error rate`: `0.07 percent`.
+
+`Uptime 24h`: `99.96 percent`.
+
+`Open incidents`: `None`.
+
+`Last deploy`: `May 27, 2026, 11:12 AM`.
+
+Selected service panel for Row 1 must include:
+
+`Selected service`: `Extraction API`.
+
+`Current incident`: `INC-2026-1184`.
+
+`Incident title`: `Elevated p95 latency for large page extraction`.
+
+`Started`: `May 31, 2026, 10:52 AM`.
+
+`Current mitigation`: `Traffic shifted away from saturated workers`.
+
+`On-call owner`: `Rafael Ortiz`.
+
+Extraction caveat: the extraction tool should extract dashboard KPIs separately from service rows. It should preserve p50 and p95 latency as separate metrics.
+
+Implementation guidance: use KPI cards above the table and a details panel to the right.
+
+---
+
+O00 Example 07 - Usage Billing Dashboard
+
+---
+
+Create a usage billing dashboard with usage KPI cards, customer usage rows, overage values, plan limits, and selected account details.
+
+Visible heading:
+
+`Usage Billing Dashboard`
+
+Visible description:
+
+`This example imitates a SaaS usage billing dashboard. It tests extraction of usage metrics, account rows, plan limits, overage amounts, billing status, projected charges, and selected account usage detail.`
+
+KPI cards:
+
+`Billable events this month`: `8.42M`.
+
+`Projected usage revenue`: `$42,880`.
+
+`Accounts over limit`: `7`.
+
+`Average utilization`: `74 percent`.
+
+Toolbar fields:
+
+`Billing month`: `May 2026`.
+
+`Metric`: select selected `Extraction events`.
+
+`Sort order`: `Highest utilization`.
+
+Table columns:
+
+`Account`.
+
+`Plan`.
+
+`Included events`.
+
+`Used events`.
+
+`Utilization`.
+
+`Overage`.
+
+`Projected charge`.
+
+`Billing status`.
+
+`Owner`.
+
+Rows:
+
+Row 1 selected by default:
+
+`Account`: `Civic Data Lab`.
+
+`Primary link`: `/demo/billing/accounts/civic-data-lab`.
+
+`Plan`: `Business`.
+
+`Included events`: `500,000`.
+
+`Used events`: `642,118`.
+
+`Utilization`: `128 percent`.
+
+`Overage`: `142,118`.
+
+`Projected charge`: `$1,421.18`.
+
+`Billing status`: badge `Over limit`.
+
+`Owner`: `Owen Brooks`.
+
+Row 2:
+
+`Account`: `Atlas Product Studio`.
+
+`Plan`: `Enterprise`.
+
+`Included events`: `2,000,000`.
+
+`Used events`: `1,884,200`.
+
+`Utilization`: `94 percent`.
+
+`Overage`: `0`.
+
+`Projected charge`: `$0.00`.
+
+`Billing status`: badge `Within limit`.
+
+`Owner`: `Grace Miller`.
+
+Row 3:
+
+`Account`: `Northstar Research Lab`.
+
+`Plan`: `Business`.
+
+`Included events`: `500,000`.
+
+`Used events`: `408,912`.
+
+`Utilization`: `82 percent`.
+
+`Overage`: `0`.
+
+`Projected charge`: `$0.00`.
+
+`Billing status`: badge `Within limit`.
+
+`Owner`: `Priya Shah`.
+
+Row 4:
+
+`Account`: `City Museum of Design`.
+
+`Plan`: `Starter`.
+
+`Included events`: `100,000`.
+
+`Used events`: `121,884`.
+
+`Utilization`: `122 percent`.
+
+`Overage`: `21,884`.
+
+`Projected charge`: `$218.84`.
+
+`Billing status`: badge `Over limit`.
+
+`Owner`: `Owen Brooks`.
+
+Row 5:
+
+`Account`: `Harbor Clinic Network`.
+
+`Plan`: `Enterprise`.
+
+`Included events`: `2,000,000`.
+
+`Used events`: `2,302,441`.
+
+`Utilization`: `115 percent`.
+
+`Overage`: `302,441`.
+
+`Projected charge`: `$2,117.09`.
+
+`Billing status`: badge `Contract review`.
+
+`Owner`: `Nina Patel`.
+
+Selected account panel for Row 1 must include:
+
+`Selected account`: `Civic Data Lab`.
+
+`Contract overage rate`: `$0.01 per event`.
+
+`Usage alert threshold`: `90 percent`.
+
+`Last alert sent`: `May 28, 2026`.
+
+`Invoice owner`: `finance@civicdata.example.test`.
+
+`Recommended action`: `Review usage spike from public records extraction project`.
+
+Extraction caveat: the extraction tool should preserve included events, used events, utilization, overage, and projected charge as separate columns. It should not summarize utilization as simply high or low.
+
+Implementation guidance: use numeric columns with tabular numbers and a right-side account detail panel.
+
+---
+
+P00 Example 08 - Project Portfolio Status Grid
+
+---
+
+Create a project portfolio status grid with project rows, owners, dates, budgets, risks, milestones, and selected project details.
+
+Visible heading:
+
+`Project Portfolio Status Grid`
+
+Visible description:
+
+`This example imitates a project management portfolio dashboard. It tests extraction of project rows, health statuses, owners, start and target dates, budget values, risks, milestones, percent complete, and selected project detail panels.`
+
+KPI cards:
+
+`Active projects`: `14`.
+
+`At risk`: `3`.
+
+`Budget variance`: `+$18,400`.
+
+`Milestones due this week`: `9`.
+
+Table columns:
+
+`Project`.
+
+`Owner`.
+
+`Health`.
+
+`Stage`.
+
+`Percent complete`.
+
+`Start date`.
+
+`Target date`.
+
+`Budget`.
+
+`Forecast`.
+
+`Top risk`.
+
+`Next milestone`.
+
+Rows:
+
+Row 1 selected by default:
+
+`Project`: `Customer Portal Redesign`.
+
+`Primary link`: `/demo/projects/customer-portal-redesign`.
+
+`Owner`: `Maya Chen`.
+
+`Health`: badge `At risk`.
+
+`Stage`: `Build`.
+
+`Percent complete`: `62 percent`.
+
+`Start date`: `March 4, 2026`.
+
+`Target date`: `August 15, 2026`.
+
+`Budget`: `$420,000`.
+
+`Forecast`: `$446,000`.
+
+`Top risk`: `Accessibility review delay`.
+
+`Next milestone`: `Beta release June 21`.
+
+Row 2:
+
+`Project`: `Invoice Export Overhaul`.
+
+`Owner`: `Renee Coleman`.
+
+`Health`: badge `On track`.
+
+`Stage`: `QA`.
+
+`Percent complete`: `78 percent`.
+
+`Start date`: `April 2, 2026`.
+
+`Target date`: `July 8, 2026`.
+
+`Budget`: `$180,000`.
+
+`Forecast`: `$176,500`.
+
+`Top risk`: `CSV compatibility testing`.
+
+`Next milestone`: `Partner test June 10`.
+
+Row 3:
+
+`Project`: `Admin Permissions Refresh`.
+
+`Owner`: `Anika Sharma`.
+
+`Health`: badge `On track`.
+
+`Stage`: `Design`.
+
+`Percent complete`: `34 percent`.
+
+`Start date`: `May 1, 2026`.
+
+`Target date`: `September 1, 2026`.
+
+`Budget`: `$260,000`.
+
+`Forecast`: `$260,000`.
+
+`Top risk`: `Role migration complexity`.
+
+`Next milestone`: `Prototype review June 6`.
+
+Row 4:
+
+`Project`: `Search Result Sidebar Rewrite`.
+
+`Owner`: `Rafael Ortiz`.
+
+`Health`: badge `Warning`.
+
+`Stage`: `Discovery`.
+
+`Percent complete`: `21 percent`.
+
+`Start date`: `May 15, 2026`.
+
+`Target date`: `October 20, 2026`.
+
+`Budget`: `$310,000`.
+
+`Forecast`: `$328,000`.
+
+`Top risk`: `Legacy state model`.
+
+`Next milestone`: `Architecture decision June 12`.
+
+Row 5:
+
+`Project`: `Knowledge Base IA Cleanup`.
+
+`Owner`: `Owen Brooks`.
+
+`Health`: badge `On track`.
+
+`Stage`: `Content migration`.
+
+`Percent complete`: `54 percent`.
+
+`Start date`: `February 10, 2026`.
+
+`Target date`: `July 31, 2026`.
+
+`Budget`: `$96,000`.
+
+`Forecast`: `$91,000`.
+
+`Top risk`: `Article ownership gaps`.
+
+`Next milestone`: `Billing articles June 4`.
+
+Selected detail panel for Row 1 must include:
+
+`Selected project`: `Customer Portal Redesign`.
+
+`Executive sponsor`: `Grace Miller`.
+
+`Current blocker`: `Accessibility review capacity`.
+
+`Open decisions`: `3`.
+
+`Latest status note`: `Timeline risk due to pending review on onboarding and billing flows`.
+
+Extraction caveat: the extraction tool should preserve budget and forecast separately. It should not confuse top risk with health status.
+
+Implementation guidance: use badges for health and a detail panel for selected project narrative fields.
+
+---
+
+Q00 Example 09 - Security Audit Log Table
+
+---
+
+Create a security audit log table with dense event rows, actor, target, IP address, user agent, outcome, severity, and selected event raw details.
+
+Visible heading:
+
+`Security Audit Log Table`
+
+Visible description:
+
+`This example imitates a security audit log admin table. It tests extraction of dense timestamped rows, actor and target fields, event types, IP addresses, outcomes, severity, risk labels, and selected event raw attributes.`
+
+Toolbar fields:
+
+`Date range`: `Last 7 days`.
+
+`Search events`: input value `role changed`.
+
+`Event type filter`: select selected `User management`.
+
+`Result count`: `47 events`.
+
+Table columns:
+
+`Timestamp`.
+
+`Event ID`.
+
+`Actor`.
+
+`Event type`.
+
+`Target`.
+
+`Outcome`.
+
+`Severity`.
+
+`IP address`.
+
+`Risk labels`.
+
+`Actions`.
+
+Rows:
+
+Row 1 selected by default:
+
+`Timestamp`: `May 31, 2026, 11:18:44 AM PT`.
+
+`Event ID`: `evt_2026_05_31_884120`.
+
+`Actor`: `Anika Sharma`.
+
+`Actor email`: `anika.sharma@example.test`.
+
+`Event type`: `User role changed`.
+
+`Target`: `Maya Chen`.
+
+`Outcome`: badge `Success`.
+
+`Severity`: badge `Medium`.
+
+`IP address`: `203.0.113.42`.
+
+`Risk labels`: `Known device`, `MFA satisfied`.
+
+`Actions`: `View raw`.
+
+Row 2:
+
+`Timestamp`: `May 31, 2026, 10:02:11 AM PT`.
+
+`Event ID`: `evt_2026_05_31_882009`.
+
+`Actor`: `Renee Coleman`.
+
+`Event type`: `User invited`.
+
+`Target`: `Lina Romero`.
+
+`Outcome`: badge `Success`.
+
+`Severity`: badge `Low`.
+
+`IP address`: `203.0.113.18`.
+
+`Risk labels`: `Known location`.
+
+`Actions`: `View raw`.
+
+Row 3:
+
+`Timestamp`: `May 30, 2026, 5:44:03 PM PT`.
+
+`Event ID`: `evt_2026_05_30_771840`.
+
+`Actor`: `System`.
+
+`Event type`: `MFA reset`.
+
+`Target`: `Theo Grant`.
+
+`Outcome`: badge `Success`.
+
+`Severity`: badge `Medium`.
+
+`IP address`: `Internal`.
+
+`Risk labels`: `Admin approved`.
+
+`Actions`: `View raw`.
+
+Row 4:
+
+`Timestamp`: `May 30, 2026, 3:22:17 PM PT`.
+
+`Event ID`: `evt_2026_05_30_771102`.
+
+`Actor`: `Owen Brooks`.
+
+`Event type`: `User suspended`.
+
+`Target`: `Former contractor account`.
+
+`Outcome`: badge `Success`.
+
+`Severity`: badge `Medium`.
+
+`IP address`: `203.0.113.77`.
+
+`Risk labels`: `Policy cleanup`.
+
+`Actions`: `View raw`.
+
+Row 5:
+
+`Timestamp`: `May 29, 2026, 9:10:58 AM PT`.
+
+`Event ID`: `evt_2026_05_29_661204`.
+
+`Actor`: `Nina Patel`.
+
+`Event type`: `User role changed`.
+
+`Target`: `Grace Miller`.
+
+`Outcome`: badge `Failure`.
+
+`Severity`: badge `High`.
+
+`IP address`: `198.51.100.25`.
+
+`Risk labels`: `Permission denied`, `Unexpected role`.
+
+`Actions`: `View raw`.
+
+Selected event detail panel for Row 1 must include:
+
+`Selected event`: `evt_2026_05_31_884120`.
+
+`Previous role`: `Viewer`.
+
+`New role`: `Billing manager`.
+
+`Request ID`: `req_771209ab`.
+
+`Session ID`: `sess_44018ff`.
+
+`User agent`: `Chrome on macOS`.
+
+`Policy version`: `2026.05`.
+
+Extraction caveat: the extraction tool should distinguish actor fields from target fields and preserve risk labels as row-level metadata.
+
+Implementation guidance: use dense rows, clipped but visible emails where needed, and a raw detail panel.
+
+---
+
+R00 Example 10 - CRM Pipeline Forecast Grid
+
+---
+
+Create a CRM pipeline forecast grid with opportunities as rows, stage columns, probability, close date, owner, next step, and selected opportunity details.
+
+Visible heading:
+
+`CRM Pipeline Forecast Grid`
+
+Visible description:
+
+`This example imitates a sales pipeline forecast grid. It tests extraction of opportunity rows, account names, contacts, stages, probabilities, forecast categories, values, close dates, owners, next steps, and selected opportunity detail.`
+
+KPI cards:
+
+`Pipeline total`: `$1.42M`.
+
+`Commit forecast`: `$612K`.
+
+`At risk deals`: `4`.
+
+`Weighted forecast`: `$742K`.
+
+Toolbar fields:
+
+`Quarter`: `Q3 2026`.
+
+`Team`: select selected `Enterprise sales`.
+
+`Sort order`: `Close date`.
+
+Table columns:
+
+`Opportunity`.
+
+`Account`.
+
+`Contact`.
+
+`Stage`.
+
+`Probability`.
+
+`Forecast category`.
+
+`Amount`.
+
+`Weighted amount`.
+
+`Close date`.
+
+`Owner`.
+
+`Next step`.
+
+Rows:
+
+Row 1 selected by default:
+
+`Opportunity`: `Westbridge Health care coordination rollout`.
+
+`Primary link`: `/demo/crm/opportunities/opp-2026-7712`.
+
+`Account`: `Westbridge Health`.
+
+`Contact`: `Alex Rivera`.
+
+`Stage`: `Evaluation`.
+
+`Probability`: `65 percent`.
+
+`Forecast category`: badge `Best case`.
+
+`Amount`: `$84,000`.
+
+`Weighted amount`: `$54,600`.
+
+`Close date`: `August 31, 2026`.
+
+`Owner`: `Nina Patel`.
+
+`Next step`: `Security questionnaire follow-up`.
+
+Row 2:
+
+`Opportunity`: `Harbor Clinic scheduling integration`.
+
+`Account`: `Harbor Clinic Network`.
+
+`Contact`: `Dr. Helen Park`.
+
+`Stage`: `Proposal`.
+
+`Probability`: `75 percent`.
+
+`Forecast category`: badge `Commit`.
+
+`Amount`: `$126,000`.
+
+`Weighted amount`: `$94,500`.
+
+`Close date`: `July 30, 2026`.
+
+`Owner`: `Rafael Ortiz`.
+
+`Next step`: `Procurement pricing review`.
+
+Row 3:
+
+`Opportunity`: `City Museum event registration import`.
+
+`Account`: `City Museum of Design`.
+
+`Contact`: `Owen Brooks`.
+
+`Stage`: `Negotiation`.
+
+`Probability`: `80 percent`.
+
+`Forecast category`: badge `Commit`.
+
+`Amount`: `$58,000`.
+
+`Weighted amount`: `$46,400`.
+
+`Close date`: `July 15, 2026`.
+
+`Owner`: `Leah Kim`.
+
+`Next step`: `Finalize data processing terms`.
+
+Row 4:
+
+`Opportunity`: `Northstar Research lab workflow audit`.
+
+`Account`: `Northstar Research Lab`.
+
+`Contact`: `Priya Shah`.
+
+`Stage`: `Discovery`.
+
+`Probability`: `35 percent`.
+
+`Forecast category`: badge `Pipeline`.
+
+`Amount`: `$42,000`.
+
+`Weighted amount`: `$14,700`.
+
+`Close date`: `September 12, 2026`.
+
+`Owner`: `Owen Brooks`.
+
+`Next step`: `Confirm data retention requirements`.
+
+Row 5:
+
+`Opportunity`: `Cedar Pine billing export expansion`.
+
+`Account`: `Cedar & Pine Design LLC`.
+
+`Contact`: `Renee Coleman`.
+
+`Stage`: `Proposal`.
+
+`Probability`: `55 percent`.
+
+`Forecast category`: badge `Best case`.
+
+`Amount`: `$31,000`.
+
+`Weighted amount`: `$17,050`.
+
+`Close date`: `August 18, 2026`.
+
+`Owner`: `Maya Chen`.
+
+`Next step`: `Send revised export scope`.
+
+Selected opportunity panel for Row 1 must include:
+
+`Selected opportunity`: `Westbridge Health care coordination rollout`.
+
+`Opportunity ID`: `OPP-2026-7712`.
+
+`Pain points`: `manual intake`, `status tracking`, `report exports`.
+
+`Decision process`: `Security review then procurement`.
+
+`Competitor`: `Legacy portal vendor`.
+
+`Risk`: `Security questionnaire delay`.
+
+Extraction caveat: the extraction tool should preserve amount and weighted amount separately. It should not confuse stage with forecast category.
+
+Implementation guidance: use KPI cards and a forecast table with right-aligned currency columns.
+
+---
+
+S00 Example 11 - Payroll Run Review Table
+
+---
+
+Create a payroll run review table with employees, earnings, taxes, deductions, net pay, direct deposit status, and exception flags.
+
+Visible heading:
+
+`Payroll Run Review Table`
+
+Visible description:
+
+`This example imitates a payroll run review screen. It tests extraction of employee rows, gross pay, taxes, deductions, net pay, direct deposit status, exception badges, and selected employee payroll detail.`
+
+Header fields:
+
+`Payroll run`: `PAYRUN-2026-11`.
+
+`Pay period`: `May 16-29, 2026`.
+
+`Pay date`: `May 30, 2026`.
+
+`Run status`: badge `Ready for approval`.
+
+KPI cards:
+
+`Employees`: `6`.
+
+`Gross pay`: `$21,884.18`.
+
+`Taxes`: `$4,812.90`.
+
+`Net pay`: `$14,906.44`.
+
+Table columns:
+
+`Employee`.
+
+`Employee ID`.
+
+`Department`.
+
+`Regular hours`.
+
+`Overtime hours`.
+
+`Gross pay`.
+
+`Taxes`.
+
+`Deductions`.
+
+`Net pay`.
+
+`Deposit status`.
+
+`Exceptions`.
+
+Rows:
+
+Row 1 selected by default:
+
+`Employee`: `Taylor Brooks`.
+
+`Employee ID`: `EMP-20417`.
+
+`Department`: `Operations`.
+
+`Regular hours`: `80.00`.
+
+`Overtime hours`: `4.00`.
+
+`Gross pay`: `$3,547.52`.
+
+`Taxes`: `$784.23`.
+
+`Deductions`: `$314.06`.
+
+`Net pay`: `$2,449.23`.
+
+`Deposit status`: badge `Verified`.
+
+`Exceptions`: `None`.
+
+Row 2:
+
+`Employee`: `Maya Chen`.
+
+`Employee ID`: `EMP-20884`.
+
+`Department`: `Product`.
+
+`Regular hours`: `80.00`.
+
+`Overtime hours`: `0.00`.
+
+`Gross pay`: `$4,230.77`.
+
+`Taxes`: `$1,018.42`.
+
+`Deductions`: `$528.85`.
+
+`Net pay`: `$2,683.50`.
+
+`Deposit status`: badge `Verified`.
+
+`Exceptions`: `None`.
+
+Row 3:
+
+`Employee`: `Rafael Ortiz`.
+
+`Employee ID`: `EMP-20918`.
+
+`Department`: `Engineering`.
+
+`Regular hours`: `72.00`.
+
+`Overtime hours`: `0.00`.
+
+`Gross pay`: `$3,807.69`.
+
+`Taxes`: `$898.04`.
+
+`Deductions`: `$486.12`.
+
+`Net pay`: `$2,423.53`.
+
+`Deposit status`: badge `Verified`.
+
+`Exceptions`: `Reduced hours`.
+
+Row 4:
+
+`Employee`: `Lina Romero`.
+
+`Employee ID`: `EMP-21044`.
+
+`Department`: `Design`.
+
+`Regular hours`: `80.00`.
+
+`Overtime hours`: `0.00`.
+
+`Gross pay`: `$3,923.08`.
+
+`Taxes`: `$912.18`.
+
+`Deductions`: `$402.10`.
+
+`Net pay`: `$2,608.80`.
+
+`Deposit status`: badge `Pending verification`.
+
+`Exceptions`: `New account`.
+
+Row 5:
+
+`Employee`: `Owen Brooks`.
+
+`Employee ID`: `EMP-21102`.
+
+`Department`: `Customer Education`.
+
+`Regular hours`: `80.00`.
+
+`Overtime hours`: `2.00`.
+
+`Gross pay`: `$3,612.11`.
+
+`Taxes`: `$805.91`.
+
+`Deductions`: `$344.19`.
+
+`Net pay`: `$2,462.01`.
+
+`Deposit status`: badge `Verified`.
+
+`Exceptions`: `Overtime`.
+
+Row 6:
+
+`Employee`: `Priya Shah`.
+
+`Employee ID`: `EMP-21118`.
+
+`Department`: `Operations`.
+
+`Regular hours`: `80.00`.
+
+`Overtime hours`: `0.00`.
+
+`Gross pay`: `$2,763.01`.
+
+`Taxes`: `$394.12`.
+
+`Deductions`: `$289.52`.
+
+`Net pay`: `$2,079.37`.
+
+`Deposit status`: badge `Paper check`.
+
+`Exceptions`: `Direct deposit missing`.
+
+Selected payroll detail panel for Row 1 must include:
+
+`Selected employee`: `Taylor Brooks`.
+
+`Direct deposit account`: `Checking ending in 7788`.
+
+`Federal filing status`: `Single or married filing separately`.
+
+`Extra withholding`: `$50.00`.
+
+`Approval note`: `No exception for this employee`.
+
+Extraction caveat: the extraction tool should preserve payroll numeric columns and not merge taxes and deductions. It should capture exception badges as row metadata.
+
+Implementation guidance: use compact numeric columns and a detail panel for selected employee.
+
+---
+
+T00 Example 12 - Feature Flag Rollout Dashboard
+
+---
+
+Create a feature flag rollout dashboard with flags, environments, rollout percentages, targeting rules, owners, and status.
+
+Visible heading:
+
+`Feature Flag Rollout Dashboard`
+
+Visible description:
+
+`This example imitates a feature flag admin dashboard. It tests extraction of flag rows, environment, rollout percentage, targeting rules, owners, last changed timestamps, status, and selected rollout details.`
+
+KPI cards:
+
+`Active flags`: `18`.
+
+`Paused rollouts`: `3`.
+
+`Production changes today`: `6`.
+
+`Flags at 100 percent`: `9`.
+
+Toolbar fields:
+
+`Environment`: select selected `Production`.
+
+`Search flags`: input value `extraction`.
+
+`Sort order`: `Recently changed`.
+
+Table columns:
+
+`Flag key`.
+
+`Feature name`.
+
+`Environment`.
+
+`Rollout`.
+
+`Targeting`.
+
+`Owner`.
+
+`Last changed`.
+
+`Status`.
+
+`Actions`.
+
+Rows:
+
+Row 1 selected by default:
+
+`Flag key`: `extractor.card_actions_v2`.
+
+`Feature name`: `Card action cleanup`.
+
+`Environment`: `Production`.
+
+`Rollout`: `35 percent`.
+
+`Targeting`: `Business and Enterprise plans`.
+
+`Owner`: `Maya Chen`.
+
+`Last changed`: `May 31, 2026, 10:44 AM`.
+
+`Status`: badge `Rolling out`.
+
+`Actions`: `Edit`, `Pause`.
+
+Row 2:
+
+`Flag key`: `extractor.table_context`.
+
+`Feature name`: `Improved table context`.
+
+`Environment`: `Production`.
+
+`Rollout`: `100 percent`.
+
+`Targeting`: `All workspaces`.
+
+`Owner`: `Rafael Ortiz`.
+
+`Last changed`: `May 30, 2026, 3:20 PM`.
+
+`Status`: badge `Enabled`.
+
+`Actions`: `Edit`.
+
+Row 3:
+
+`Flag key`: `extractor.sidebar_selection`.
+
+`Feature name`: `Selected sidebar extraction`.
+
+`Environment`: `Production`.
+
+`Rollout`: `20 percent`.
+
+`Targeting`: `Internal beta accounts`.
+
+`Owner`: `Lina Romero`.
+
+`Last changed`: `May 29, 2026, 4:05 PM`.
+
+`Status`: badge `Experiment`.
+
+`Actions`: `Edit`, `Analyze`.
+
+Row 4:
+
+`Flag key`: `extractor.dropdown_portal_map`.
+
+`Feature name`: `Portaled dropdown mapping`.
+
+`Environment`: `Production`.
+
+`Rollout`: `0 percent`.
+
+`Targeting`: `Disabled after incident`.
+
+`Owner`: `Theo Grant`.
+
+`Last changed`: `May 28, 2026, 11:12 AM`.
+
+`Status`: badge `Paused`.
+
+`Actions`: `Edit`, `Resume`.
+
+Row 5:
+
+`Flag key`: `extractor.timeline_rows`.
+
+`Feature name`: `Timeline row grouping`.
+
+`Environment`: `Staging`.
+
+`Rollout`: `100 percent`.
+
+`Targeting`: `QA workspaces`.
+
+`Owner`: `Owen Brooks`.
+
+`Last changed`: `May 27, 2026, 9:30 AM`.
+
+`Status`: badge `Testing`.
+
+`Actions`: `Edit`.
+
+Selected rollout panel for Row 1 must include:
+
+`Selected flag`: `extractor.card_actions_v2`.
+
+`Experiment ID`: `exp_2026_4401`.
+
+`Success metric`: `Action label duplicate rate`.
+
+`Guardrail metric`: `Extraction latency p95`.
+
+`Current error budget impact`: `Low`.
+
+`Next review`: `June 3, 2026`.
+
+Extraction caveat: the extraction tool should extract rollout percentage and targeting as separate fields. It should not confuse environment and status.
+
+Implementation guidance: use a table with flag keys in monospace and a selected detail panel.
+
+---
+
+U00 Example 13 - Content Moderation Queue Grid
+
+---
+
+Create a content moderation queue with content items, reporters, policy categories, risk scores, moderation status, and action buttons.
+
+Visible heading:
+
+`Content Moderation Queue Grid`
+
+Visible description:
+
+`This example imitates a moderation queue. It tests extraction of reported content rows, author, reporter, content type, policy category, risk score, status, timestamps, and row-level moderation actions.`
+
+Toolbar fields:
+
+`Queue`: select selected `Needs review`.
+
+`Policy filter`: select selected `All policies`.
+
+`Sort order`: `Highest risk`.
+
+`Visible rows`: `6 reports`.
+
+Table columns:
+
+`Report ID`.
+
+`Content type`.
+
+`Content preview`.
+
+`Author`.
+
+`Reporter`.
+
+`Policy category`.
+
+`Risk score`.
+
+`Reported`.
+
+`Status`.
+
+`Actions`.
+
+Rows:
+
+Row 1 selected by default:
+
+`Report ID`: `MOD-2026-7712`.
+
+`Content type`: `Marketplace listing`.
+
+`Content preview`: `Portable projector with case, local pickup only`.
+
+`Author`: `Rafael O.`.
+
+`Reporter`: `Mina R.`.
+
+`Policy category`: `Misleading price`.
+
+`Risk score`: `82`.
+
+`Reported`: `May 31, 2026, 10:12 AM`.
+
+`Status`: badge `Needs review`.
+
+`Actions`: `Approve`, `Remove`, `Escalate`.
+
+Row 2:
+
+`Report ID`: `MOD-2026-7715`.
+
+`Content type`: `Community post`.
+
+`Content preview`: `Looking for weekend dog walker`.
+
+`Author`: `Hannah M.`.
+
+`Reporter`: `System filter`.
+
+`Policy category`: `Personal info check`.
+
+`Risk score`: `44`.
+
+`Reported`: `May 31, 2026, 10:20 AM`.
+
+`Status`: badge `Needs review`.
+
+`Actions`: `Approve`, `Edit request`.
+
+Row 3:
+
+`Report ID`: `MOD-2026-7721`.
+
+`Content type`: `Review`.
+
+`Content preview`: `Solid but heavier than expected`.
+
+`Author`: `Grace M.`.
+
+`Reporter`: `Merchant`.
+
+`Policy category`: `Off-topic`.
+
+`Risk score`: `28`.
+
+`Reported`: `May 31, 2026, 9:05 AM`.
+
+`Status`: badge `Needs review`.
+
+`Actions`: `Approve`, `Remove`.
+
+Row 4:
+
+`Report ID`: `MOD-2026-7730`.
+
+`Content type`: `Forum answer`.
+
+`Content preview`: `Inspect visible text order when ARIA is incomplete`.
+
+`Author`: `testwright`.
+
+`Reporter`: `dom_mapper`.
+
+`Policy category`: `Technical accuracy dispute`.
+
+`Risk score`: `15`.
+
+`Reported`: `May 30, 2026, 5:44 PM`.
+
+`Status`: badge `Low risk`.
+
+`Actions`: `Approve`.
+
+Row 5:
+
+`Report ID`: `MOD-2026-7738`.
+
+`Content type`: `Event listing`.
+
+`Content preview`: `Small Team Incident Review Workshop`.
+
+`Author`: `Ops Learning Circle`.
+
+`Reporter`: `System filter`.
+
+`Policy category`: `Venue verification`.
+
+`Risk score`: `51`.
+
+`Reported`: `May 30, 2026, 3:21 PM`.
+
+`Status`: badge `Needs review`.
+
+`Actions`: `Approve`, `Request verification`.
+
+Row 6:
+
+`Report ID`: `MOD-2026-7744`.
+
+`Content type`: `Classified post`.
+
+`Content preview`: `Roommate wanted for August lease`.
+
+`Author`: `Noah K.`.
+
+`Reporter`: `Community member`.
+
+`Policy category`: `Housing policy review`.
+
+`Risk score`: `67`.
+
+`Reported`: `May 30, 2026, 1:10 PM`.
+
+`Status`: badge `Escalated`.
+
+`Actions`: `Approve`, `Remove`, `Legal review`.
+
+Selected moderation panel for Row 1 must include:
+
+`Selected report`: `MOD-2026-7712`.
+
+`Listing price`: `$320`.
+
+`Detected issue`: `Reporter says price changed after contact`.
+
+`Moderator guidance`: `Check listing edit history before action`.
+
+`Previous reports for author`: `1`.
+
+Extraction caveat: the extraction tool should treat action buttons as actions, not as content values. It should preserve content preview separately from policy category.
+
+Implementation guidance: use a table with row-level actions and a side detail panel.
+
+---
+
+V00 Example 14 - Incident Response Dashboard
+
+---
+
+Create an incident response dashboard with incidents, severity, status, affected services, start time, owner, updates, and selected incident detail.
+
+Visible heading:
+
+`Incident Response Dashboard`
+
+Visible description:
+
+`This example imitates an incident response dashboard. It tests extraction of incident rows, severity, status, affected services, timestamps, owners, update counts, customer impact, and selected incident details.`
+
+KPI cards:
+
+`Open incidents`: `2`.
+
+`Major incidents`: `1`.
+
+`Services affected`: `3`.
+
+`Last update`: `8 minutes ago`.
+
+Table columns:
+
+`Incident`.
+
+`Severity`.
+
+`Status`.
+
+`Affected services`.
+
+`Started`.
+
+`Owner`.
+
+`Customer impact`.
+
+`Updates`.
+
+`Next update`.
+
+Rows:
+
+Row 1 selected by default:
+
+`Incident`: `INC-2026-1184`.
+
+`Title`: `Elevated p95 latency for large page extraction`.
+
+`Severity`: badge `Major`.
+
+`Status`: badge `Mitigating`.
+
+`Affected services`: `Extraction API`, `Job Queue`.
+
+`Started`: `May 31, 2026, 10:52 AM`.
+
+`Owner`: `Rafael Ortiz`.
+
+`Customer impact`: `Slow extraction jobs for large pages`.
+
+`Updates`: `4`.
+
+`Next update`: `12:30 PM`.
+
+Row 2:
+
+`Incident`: `INC-2026-1189`.
+
+`Title`: `Delayed background rendering jobs`.
+
+`Severity`: badge `Minor`.
+
+`Status`: badge `Investigating`.
+
+`Affected services`: `Document Renderer`.
+
+`Started`: `May 31, 2026, 11:34 AM`.
+
+`Owner`: `Theo Grant`.
+
+`Customer impact`: `Some PDF exports delayed`.
+
+`Updates`: `1`.
+
+`Next update`: `12:45 PM`.
+
+Row 3:
+
+`Incident`: `INC-2026-1172`.
+
+`Title`: `Search index lag in EU Central`.
+
+`Severity`: badge `Minor`.
+
+`Status`: badge `Resolved`.
+
+`Affected services`: `Search Indexer`.
+
+`Started`: `May 30, 2026, 6:14 PM`.
+
+`Owner`: `Maya Chen`.
+
+`Customer impact`: `Recently uploaded files appeared late in search`.
+
+`Updates`: `5`.
+
+`Next update`: `None`.
+
+Row 4:
+
+`Incident`: `INC-2026-1168`.
+
+`Title`: `Admin console login failures`.
+
+`Severity`: badge `Major`.
+
+`Status`: badge `Resolved`.
+
+`Affected services`: `Auth Gateway`.
+
+`Started`: `May 28, 2026, 9:02 AM`.
+
+`Owner`: `Nina Patel`.
+
+`Customer impact`: `Some admins could not log in for 11 minutes`.
+
+`Updates`: `6`.
+
+`Next update`: `None`.
+
+Selected incident panel for Row 1 must include:
+
+`Selected incident`: `INC-2026-1184`.
+
+`Current mitigation`: `Traffic shifted away from saturated workers`.
+
+`Root cause candidate`: `Worker memory pressure after deployment`.
+
+`Latest update`: `Latency improving after capacity increase`.
+
+`Postmortem owner`: `Rafael Ortiz`.
+
+Extraction caveat: the extraction tool should preserve affected services as repeated values in each incident row. It should not merge status and severity.
+
+Implementation guidance: use incident status badges and a detail panel with narrative fields.
+
+---
+
+W00 Example 15 - Warehouse Pick List Grid
+
+---
+
+Create a warehouse pick list grid with orders, bin locations, SKUs, quantities, picker assignments, batch IDs, and completion status.
+
+Visible heading:
+
+`Warehouse Pick List Grid`
+
+Visible description:
+
+`This example imitates a warehouse pick list dashboard. It tests extraction of pick rows, order IDs, bin locations, SKUs, quantities, picker assignments, batch IDs, priority, and status.`
+
+Toolbar fields:
+
+`Warehouse`: `Reno DC`.
+
+`Pick wave`: `WAVE-2026-0531-A`.
+
+`Sort order`: `Bin location`.
+
+`Visible picks`: `7`.
+
+Table columns:
+
+`Pick ID`.
+
+`Order`.
+
+`Bin`.
+
+`SKU`.
+
+`Item`.
+
+`Quantity`.
+
+`Picker`.
+
+`Batch`.
+
+`Priority`.
+
+`Status`.
+
+Rows:
+
+Row 1 selected by default:
+
+`Pick ID`: `PICK-1001`.
+
+`Order`: `ORD-2026-104922`.
+
+`Bin`: `A-14-03`.
+
+`SKU`: `BAG-TRV-22`.
+
+`Item`: `Canvas Travel Backpack 22L, Forest`.
+
+`Quantity`: `1`.
+
+`Picker`: `Luis M.`.
+
+`Batch`: `BATCH-441`.
+
+`Priority`: badge `Standard`.
+
+`Status`: badge `Assigned`.
+
+Row 2:
+
+`Pick ID`: `PICK-1002`.
+
+`Order`: `ORD-2026-104922`.
+
+`Bin`: `B-02-18`.
+
+`SKU`: `BOT-STL-20`.
+
+`Item`: `Insulated steel bottle, Slate`.
+
+`Quantity`: `2`.
+
+`Picker`: `Luis M.`.
+
+`Batch`: `BATCH-441`.
+
+`Priority`: badge `Standard`.
+
+`Status`: badge `Assigned`.
+
+Row 3:
+
+`Pick ID`: `PICK-1003`.
+
+`Order`: `ORD-2026-104918`.
+
+`Bin`: `C-08-11`.
+
+`SKU`: `STAND-LAP-01`.
+
+`Item`: `Foldable laptop stand, Graphite`.
+
+`Quantity`: `1`.
+
+`Picker`: `Anika W.`.
+
+`Batch`: `BATCH-441`.
+
+`Priority`: badge `Expedited`.
+
+`Status`: badge `Picked`.
+
+Row 4:
+
+`Pick ID`: `PICK-1004`.
+
+`Order`: `ORD-2026-104901`.
+
+`Bin`: `F-01-02`.
+
+`SKU`: `CAM-FX3-02`.
+
+`Item`: `Sony FX3 camera body`.
+
+`Quantity`: `1`.
+
+`Picker`: `Mei T.`.
+
+`Batch`: `BATCH-442`.
+
+`Priority`: badge `High value`.
+
+`Status`: badge `QC hold`.
+
+Row 5:
+
+`Pick ID`: `PICK-1005`.
+
+`Order`: `ORD-2026-104884`.
+
+`Bin`: `A-22-09`.
+
+`SKU`: `TAG-LTH-02`.
+
+`Item`: `Leather luggage tag, Tan`.
+
+`Quantity`: `1`.
+
+`Picker`: `Luis M.`.
+
+`Batch`: `BATCH-441`.
+
+`Priority`: badge `Standard`.
+
+`Status`: badge `Packed`.
+
+Row 6:
+
+`Pick ID`: `PICK-1006`.
+
+`Order`: `ORD-2026-104870`.
+
+`Bin`: `D-04-07`.
+
+`SKU`: `ORG-CAN-05`.
+
+`Item`: `Canvas Organizer Pouch, Olive`.
+
+`Quantity`: `3`.
+
+`Picker`: `Anika W.`.
+
+`Batch`: `BATCH-443`.
+
+`Priority`: badge `Payment hold`.
+
+`Status`: badge `Blocked`.
+
+Row 7:
+
+`Pick ID`: `PICK-1007`.
+
+`Order`: `ORD-2026-104918`.
+
+`Bin`: `E-12-01`.
+
+`SKU`: `CHG-GAN-65`.
+
+`Item`: `Compact GaN Charger 65W, Black`.
+
+`Quantity`: `1`.
+
+`Picker`: `Mei T.`.
+
+`Batch`: `BATCH-441`.
+
+`Priority`: badge `Expedited`.
+
+`Status`: badge `Picked`.
+
+Selected pick detail panel for Row 1 must include:
+
+`Selected pick`: `PICK-1001`.
+
+`Cart location`: `Cart 3, shelf B`.
+
+`Packing instruction`: `Place backpack in medium shipper before bottle items`.
+
+`Scan requirement`: `SKU and bin scan required`.
+
+`Exception note`: `None`.
+
+Extraction caveat: the extraction tool should preserve bin, SKU, item, quantity, picker, and status per row. It should not treat batch ID as the order ID.
+
+Implementation guidance: use compact warehouse-style table rows with strong SKU and bin values.
+
+---
+
+X00 Example 16 - Healthcare Appointment Operations Grid
+
+---
+
+Create a healthcare appointment operations dashboard with appointment rows, providers, patients, visit types, statuses, insurance, check-in state, and selected appointment details. Use fictional data.
+
+Visible heading:
+
+`Healthcare Appointment Operations Grid`
+
+Visible description:
+
+`This example imitates a clinic operations appointment grid. It tests extraction of appointment rows, provider names, patient names, visit times, visit types, insurance status, check-in state, room assignments, and selected appointment details.`
+
+Header fields:
+
+`Clinic`: `Downtown Clinic`.
+
+`Date`: `June 11, 2026`.
+
+`Visible appointments`: `6`.
+
+`Operational status`: badge `Normal`.
+
+KPI cards:
+
+`Checked in`: `2`.
+
+`Waiting`: `1`.
+
+`Running late`: `1`.
+
+`Open rooms`: `3`.
+
+Table columns:
+
+`Time`.
+
+`Patient`.
+
+`Provider`.
+
+`Visit type`.
+
+`Reason`.
+
+`Insurance`.
+
+`Check-in`.
+
+`Room`.
+
+`Status`.
+
+`Actions`.
+
+Rows:
+
+Row 1 selected by default:
+
+`Time`: `8:30 AM`.
+
+`Patient`: `Victor Lane`.
+
+`Provider`: `Dr. Hannah Cho`.
+
+`Visit type`: `Follow-up`.
+
+`Reason`: `Medication review`.
+
+`Insurance`: `Northstar PPO verified`.
+
+`Check-in`: badge `Checked in`.
+
+`Room`: `Room 4`.
+
+`Status`: badge `Ready`.
+
+`Actions`: `Open chart`, `Message`.
+
+Row 2:
+
+`Time`: `9:00 AM`.
+
+`Patient`: `Avery Quinn`.
+
+`Provider`: `Dr. Hannah Cho`.
+
+`Visit type`: `Annual exam`.
+
+`Reason`: `Preventive visit`.
+
+`Insurance`: `Eligibility pending`.
+
+`Check-in`: badge `Waiting`.
+
+`Room`: `Lobby`.
+
+`Status`: badge `Insurance review`.
+
+`Actions`: `Verify`, `Message`.
+
+Row 3:
+
+`Time`: `9:45 AM`.
+
+`Patient`: `Riley Stone`.
+
+`Provider`: `Dr. Helen Park`.
+
+`Visit type`: `Orthopedics follow-up`.
+
+`Reason`: `Knee pain`.
+
+`Insurance`: `Northstar PPO verified`.
+
+`Check-in`: badge `Not arrived`.
+
+`Room`: `Unassigned`.
+
+`Status`: badge `Scheduled`.
+
+`Actions`: `Open chart`.
+
+Row 4:
+
+`Time`: `10:30 AM`.
+
+`Patient`: `Samira Haddad`.
+
+`Provider`: `Dr. Omar Nasser`.
+
+`Visit type`: `Sports medicine consult`.
+
+`Reason`: `Shoulder pain`.
+
+`Insurance`: `Self pay`.
+
+`Check-in`: badge `Checked in`.
+
+`Room`: `Room 2`.
+
+`Status`: badge `In visit`.
+
+`Actions`: `Open chart`.
+
+Row 5:
+
+`Time`: `11:00 AM`.
+
+`Patient`: `Noah Kim`.
+
+`Provider`: `Jamie Lee, PT`.
+
+`Visit type`: `Physical therapy`.
+
+`Reason`: `Post-surgery rehab`.
+
+`Insurance`: `Referral required`.
+
+`Check-in`: badge `Not arrived`.
+
+`Room`: `PT Bay 1`.
+
+`Status`: badge `Needs referral`.
+
+`Actions`: `Review referral`.
+
+Row 6:
+
+`Time`: `11:30 AM`.
+
+`Patient`: `Iris Walker`.
+
+`Provider`: `Dr. Helen Park`.
+
+`Visit type`: `New patient consult`.
+
+`Reason`: `Back pain`.
+
+`Insurance`: `Northstar PPO verified`.
+
+`Check-in`: badge `Late`.
+
+`Room`: `Unassigned`.
+
+`Status`: badge `Running late`.
+
+`Actions`: `Message`.
+
+Selected appointment panel for Row 1 must include:
+
+`Selected appointment`: `Victor Lane at 8:30 AM`.
+
+`Patient ID`: `PT-771420`.
+
+`Preparation note`: `Review recent lipid panel before visit`.
+
+`Outstanding forms`: `None`.
+
+`Preferred pharmacy`: `Central Care Pharmacy`.
+
+Extraction caveat: the extraction tool should preserve appointment time, patient, provider, visit type, check-in, and status separately. It should not treat action buttons as clinical values.
+
+Implementation guidance: use fictional patient data and a clear clinic operations table.
+
+---
+
+Y00 Example 17 - University Enrollment Capacity Dashboard
+
+---
+
+Create a university enrollment capacity dashboard with course sections, seat counts, waitlist counts, room capacity, instructor, and enrollment status.
+
+Visible heading:
+
+`University Enrollment Capacity Dashboard`
+
+Visible description:
+
+`This example imitates a university registrar enrollment dashboard. It tests extraction of course section rows, enrollment counts, waitlists, room capacity, instructor, schedule, status, and selected section details.`
+
+KPI cards:
+
+`Open sections`: `7`.
+
+`Waitlisted students`: `42`.
+
+`Closed sections`: `3`.
+
+`Rooms over 90 percent`: `5`.
+
+Toolbar fields:
+
+`Term`: `Fall 2026`.
+
+`Department`: select selected `Computer Science`.
+
+`Sort order`: `Utilization`.
+
+Table columns:
+
+`Course`.
+
+`Section`.
+
+`Title`.
+
+`Instructor`.
+
+`Schedule`.
+
+`Room`.
+
+`Enrolled`.
+
+`Capacity`.
+
+`Waitlist`.
+
+`Utilization`.
+
+`Status`.
+
+Rows:
+
+Row 1 selected by default:
+
+`Course`: `CS 340`.
+
+`Section`: `A`.
+
+`Title`: `Human-Centered Software Design`.
+
+`Instructor`: `Dr. Hannah Cho`.
+
+`Schedule`: `Mon/Wed 10:00-11:50 AM`.
+
+`Room`: `Engineering Hall 204`.
+
+`Enrolled`: `26`.
+
+`Capacity`: `32`.
+
+`Waitlist`: `0`.
+
+`Utilization`: `81 percent`.
+
+`Status`: badge `Open`.
+
+Row 2:
+
+`Course`: `CS 341`.
+
+`Section`: `B`.
+
+`Title`: `Interface Prototyping Lab`.
+
+`Instructor`: `Lina Romero`.
+
+`Schedule`: `Tue/Thu 2:00-3:20 PM`.
+
+`Room`: `Design Studio 3`.
+
+`Enrolled`: `24`.
+
+`Capacity`: `24`.
+
+`Waitlist`: `4`.
+
+`Utilization`: `100 percent`.
+
+`Status`: badge `Waitlist`.
+
+Row 3:
+
+`Course`: `CS 375`.
+
+`Section`: `A`.
+
+`Title`: `Browser Automation Systems`.
+
+`Instructor`: `Rafael Ortiz`.
+
+`Schedule`: `Fri 9:00-11:45 AM`.
+
+`Room`: `Engineering Hall 108`.
+
+`Enrolled`: `22`.
+
+`Capacity`: `24`.
+
+`Waitlist`: `0`.
+
+`Utilization`: `92 percent`.
+
+`Status`: badge `Open`.
+
+Row 4:
+
+`Course`: `INFO 280`.
+
+`Section`: `C`.
+
+`Title`: `Information Extraction From Web Interfaces`.
+
+`Instructor`: `Maya Chen`.
+
+`Schedule`: `Tue/Thu 11:00 AM-12:20 PM`.
+
+`Room`: `Online synchronous`.
+
+`Enrolled`: `30`.
+
+`Capacity`: `30`.
+
+`Waitlist`: `8`.
+
+`Utilization`: `100 percent`.
+
+`Status`: badge `Closed`.
+
+Row 5:
+
+`Course`: `DES 215`.
+
+`Section`: `A`.
+
+`Title`: `Designing Forms And Flows`.
+
+`Instructor`: `Owen Brooks`.
+
+`Schedule`: `Mon/Wed 1:00-2:20 PM`.
+
+`Room`: `Design Hall 110`.
+
+`Enrolled`: `16`.
+
+`Capacity`: `28`.
+
+`Waitlist`: `0`.
+
+`Utilization`: `57 percent`.
+
+`Status`: badge `Open`.
+
+Selected section panel for Row 1 must include:
+
+`Selected section`: `CS 340-A`.
+
+`Reserved seats`: `4 for CS majors`.
+
+`Final exam`: `December 14, 2026, 8:00 AM`.
+
+`Room equipment`: `Projector`, `Recording microphone`.
+
+`Registrar note`: `Monitor enrollment after July restriction lift`.
+
+Extraction caveat: the extraction tool should preserve enrolled, capacity, waitlist, and utilization as separate numeric values. It should not merge course code and section unless a combined display is explicitly requested.
+
+Implementation guidance: use a registrar-style table with clear numeric columns.
+
+---
+
+Z00 Example 18 - Financial Reconciliation Exception Table
+
+---
+
+Create a financial reconciliation exception table with exception rows, source systems, amounts, dates, owners, aging, and resolution status.
+
+Visible heading:
+
+`Financial Reconciliation Exception Table`
+
+Visible description:
+
+`This example imitates a financial operations exception queue. It tests extraction of exception rows, source systems, transaction IDs, expected and actual amounts, variance, aging, owner, resolution status, and selected exception details.`
+
+KPI cards:
+
+`Open exceptions`: `23`.
+
+`Total variance`: `$18,442.19`.
+
+`Aging over 7 days`: `5`.
+
+`Resolved today`: `8`.
+
+Toolbar fields:
+
+`Reconciliation date`: `May 31, 2026`.
+
+`Source`: select selected `All sources`.
+
+`Sort order`: `Largest variance`.
+
+Table columns:
+
+`Exception ID`.
+
+`Source system`.
+
+`Transaction ID`.
+
+`Expected`.
+
+`Actual`.
+
+`Variance`.
+
+`Aging`.
+
+`Owner`.
+
+`Status`.
+
+`Resolution code`.
+
+Rows:
+
+Row 1 selected by default:
+
+`Exception ID`: `EXC-2026-7712`.
+
+`Source system`: `Billing`.
+
+`Transaction ID`: `INV-2026-00841`.
+
+`Expected`: `$648.00`.
+
+`Actual`: `$633.00`.
+
+`Variance`: `-$15.00`.
+
+`Aging`: `2 days`.
+
+`Owner`: `Renee Coleman`.
+
+`Status`: badge `Needs review`.
+
+`Resolution code`: `Discount mismatch`.
+
+Row 2:
+
+`Exception ID`: `EXC-2026-7718`.
+
+`Source system`: `Payments`.
+
+`Transaction ID`: `PMT-77120`.
+
+`Expected`: `$300.00`.
+
+`Actual`: `$300.00`.
+
+`Variance`: `$0.00`.
+
+`Aging`: `1 day`.
+
+`Owner`: `Theo Grant`.
+
+`Status`: badge `Ready to close`.
+
+`Resolution code`: `Timing difference`.
+
+Row 3:
+
+`Exception ID`: `EXC-2026-7724`.
+
+`Source system`: `Bank`.
+
+`Transaction ID`: `TRN-8841-6029`.
+
+`Expected`: `$2,500.00`.
+
+`Actual`: `$0.00`.
+
+`Variance`: `-$2,500.00`.
+
+`Aging`: `0 days`.
+
+`Owner`: `Maya Chen`.
+
+`Status`: badge `Scheduled`.
+
+`Resolution code`: `Future dated`.
+
+Row 4:
+
+`Exception ID`: `EXC-2026-7731`.
+
+`Source system`: `Payroll`.
+
+`Transaction ID`: `PAYRUN-2026-11`.
+
+`Expected`: `$14,906.44`.
+
+`Actual`: `$14,906.44`.
+
+`Variance`: `$0.00`.
+
+`Aging`: `0 days`.
+
+`Owner`: `Priya Shah`.
+
+`Status`: badge `Matched`.
+
+`Resolution code`: `None`.
+
+Row 5:
+
+`Exception ID`: `EXC-2026-7740`.
+
+`Source system`: `Vendor`.
+
+`Transaction ID`: `ACH-55820`.
+
+`Expected`: `$7,200.00`.
+
+`Actual`: `$7,240.00`.
+
+`Variance`: `$40.00`.
+
+`Aging`: `9 days`.
+
+`Owner`: `Owen Brooks`.
+
+`Status`: badge `Escalated`.
+
+`Resolution code`: `Fee discrepancy`.
+
+Selected exception panel for Row 1 must include:
+
+`Selected exception`: `EXC-2026-7712`.
+
+`Root cause candidate`: `Received invoice includes account-level discount`.
+
+`Linked invoice`: `INV-2026-00841`.
+
+`Evidence`: `Invoice PDF and CSV export`.
+
+`Next action`: `Confirm expected quote discount handling`.
+
+Extraction caveat: the extraction tool should preserve expected, actual, and variance values independently. It should not treat zero variance as a missing value.
+
+Implementation guidance: use financial table styling with right-aligned amounts and a selected exception panel.
+
+---
+
+AA00 Example 19 - Subscription Seat Management Grid
+
+---
+
+Create a subscription seat management grid with users, seat types, license state, last activity, groups, cost allocation, and selected seat details.
+
+Visible heading:
+
+`Subscription Seat Management Grid`
+
+Visible description:
+
+`This example imitates a SaaS subscription seat management page. It tests extraction of user rows, seat type, license status, cost center, groups, last activity, invited users, suspended users, and selected seat details.`
+
+Header fields:
+
+`Workspace`: `Atlas Product Studio`.
+
+`Plan`: `Business annual`.
+
+`Seats purchased`: `24`.
+
+`Seats used`: `19`.
+
+`Available seats`: `5`.
+
+Toolbar fields:
+
+`Search users`: input value `design`.
+
+`Seat filter`: select selected `All paid seats`.
+
+`Sort order`: `Last active`.
+
+Table columns:
+
+`User`.
+
+`Email`.
+
+`Seat type`.
+
+`License status`.
+
+`Groups`.
+
+`Cost center`.
+
+`Last active`.
+
+`Monthly cost`.
+
+`Provisioning`.
+
+Rows:
+
+Row 1 selected by default:
+
+`User`: `Maya Chen`.
+
+`Email`: `maya.chen@example.test`.
+
+`Seat type`: `Editor`.
+
+`License status`: badge `Active`.
+
+`Groups`: `Product`, `Design systems`.
+
+`Cost center`: `PD-2026`.
+
+`Last active`: `May 31, 2026, 9:40 AM`.
+
+`Monthly cost`: `$24.00`.
+
+`Provisioning`: `SCIM`.
+
+Row 2:
+
+`User`: `Lina Romero`.
+
+`Email`: `lina.romero@example.test`.
+
+`Seat type`: `Editor`.
+
+`License status`: badge `Invited`.
+
+`Groups`: `Design`, `Research`.
+
+`Cost center`: `DS-2026`.
+
+`Last active`: `Never`.
+
+`Monthly cost`: `$24.00`.
+
+`Provisioning`: `Manual invite`.
+
+Row 3:
+
+`User`: `Rafael Ortiz`.
+
+`Email`: `rafael.ortiz@example.test`.
+
+`Seat type`: `Admin`.
+
+`License status`: badge `Active`.
+
+`Groups`: `Engineering`, `Platform`.
+
+`Cost center`: `ENG-2026`.
+
+`Last active`: `May 31, 2026, 10:58 AM`.
+
+`Monthly cost`: `$24.00`.
+
+`Provisioning`: `SCIM`.
+
+Row 4:
+
+`User`: `Grace Miller`.
+
+`Email`: `grace.miller@example.test`.
+
+`Seat type`: `Viewer`.
+
+`License status`: badge `Active`.
+
+`Groups`: `QA`, `Hiring`.
+
+`Cost center`: `QA-2026`.
+
+`Last active`: `May 30, 2026, 4:18 PM`.
+
+`Monthly cost`: `$0.00`.
+
+`Provisioning`: `SCIM`.
+
+Row 5:
+
+`User`: `Owen Brooks`.
+
+`Email`: `owen.brooks@example.test`.
+
+`Seat type`: `Editor`.
+
+`License status`: badge `Suspended`.
+
+`Groups`: `Education`, `Content`.
+
+`Cost center`: `EDU-2026`.
+
+`Last active`: `May 10, 2026, 1:20 PM`.
+
+`Monthly cost`: `$24.00`.
+
+`Provisioning`: `Manual`.
+
+Selected seat panel for Row 1 must include:
+
+`Selected user`: `Maya Chen`.
+
+`Seat ID`: `seat_88420`.
+
+`Assigned projects`: `Customer Portal Redesign`, `Admin Permissions Refresh`.
+
+`Last permission review`: `May 28, 2026`.
+
+`Deprovisioning rule`: `Remove after 45 inactive days`.
+
+Extraction caveat: the extraction tool should preserve groups as repeated values inside each row and should not treat viewer monthly cost `$0.00` as missing.
+
+Implementation guidance: use group chips inside table cells.
+
+---
+
+AB00 Example 20 - API Usage And Rate Limit Dashboard
+
+---
+
+Create an API usage and rate limit dashboard with applications, keys, usage metrics, limits, error rates, throttling, and selected application details.
+
+Visible heading:
+
+`API Usage And Rate Limit Dashboard`
+
+Visible description:
+
+`This example imitates a developer platform API usage dashboard. It tests extraction of app rows, API keys in masked form, request counts, limits, error rates, throttle counts, status, and selected app details.`
+
+KPI cards:
+
+`Requests today`: `2.84M`.
+
+`Throttled requests`: `18,442`.
+
+`Error rate`: `0.42 percent`.
+
+`Active API keys`: `17`.
+
+Toolbar fields:
+
+`Date range`: `Last 24 hours`.
+
+`Environment`: select selected `Production`.
+
+`Sort order`: `Highest traffic`.
+
+Table columns:
+
+`Application`.
+
+`API key`.
+
+`Owner`.
+
+`Requests`.
+
+`Rate limit`.
+
+`Utilization`.
+
+`Errors`.
+
+`Throttled`.
+
+`Last request`.
+
+`Status`.
+
+Rows:
+
+Row 1 selected by default:
+
+`Application`: `Billing Export Worker`.
+
+`API key`: `key_live_****_9K2Q`.
+
+`Owner`: `Renee Coleman`.
+
+`Requests`: `842,118`.
+
+`Rate limit`: `1,000,000/day`.
+
+`Utilization`: `84 percent`.
+
+`Errors`: `3,118`.
+
+`Throttled`: `0`.
+
+`Last request`: `May 31, 2026, 11:58 AM`.
+
+`Status`: badge `Healthy`.
+
+Row 2:
+
+`Application`: `Browser Extension Sync`.
+
+`API key`: `key_live_****_4C11`.
+
+`Owner`: `Rafael Ortiz`.
+
+`Requests`: `1,204,884`.
+
+`Rate limit`: `1,000,000/day`.
+
+`Utilization`: `120 percent`.
+
+`Errors`: `8,442`.
+
+`Throttled`: `18,442`.
+
+`Last request`: `May 31, 2026, 11:59 AM`.
+
+`Status`: badge `Throttled`.
+
+Row 3:
+
+`Application`: `Demo Page Renderer`.
+
+`API key`: `key_live_****_8A02`.
+
+`Owner`: `Theo Grant`.
+
+`Requests`: `118,004`.
+
+`Rate limit`: `250,000/day`.
+
+`Utilization`: `47 percent`.
+
+`Errors`: `98`.
+
+`Throttled`: `0`.
+
+`Last request`: `May 31, 2026, 11:55 AM`.
+
+`Status`: badge `Healthy`.
+
+Row 4:
+
+`Application`: `CRM Data Import`.
+
+`API key`: `key_live_****_0D91`.
+
+`Owner`: `Nina Patel`.
+
+`Requests`: `482,991`.
+
+`Rate limit`: `500,000/day`.
+
+`Utilization`: `97 percent`.
+
+`Errors`: `2,194`.
+
+`Throttled`: `1,008`.
+
+`Last request`: `May 31, 2026, 11:52 AM`.
+
+`Status`: badge `Near limit`.
+
+Row 5:
+
+`Application`: `Analytics Report Scheduler`.
+
+`API key`: `key_live_****_661A`.
+
+`Owner`: `Grace Miller`.
+
+`Requests`: `192,410`.
+
+`Rate limit`: `500,000/day`.
+
+`Utilization`: `38 percent`.
+
+`Errors`: `221`.
+
+`Throttled`: `0`.
+
+`Last request`: `May 31, 2026, 11:45 AM`.
+
+`Status`: badge `Healthy`.
+
+Selected application panel for Row 1 must include:
+
+`Selected application`: `Billing Export Worker`.
+
+`App ID`: `app_2026_8841`.
+
+`Webhook endpoint`: `https://example.test/webhooks/billing-export`.
+
+`Allowed scopes`: `invoices:read`, `exports:write`, `accounts:read`.
+
+`Rotation due`: `July 1, 2026`.
+
+`Last deployment`: `May 29, 2026`.
+
+Extraction caveat: the extraction tool should capture masked API keys exactly as visible and should not invent unmasked values. It should preserve utilization, errors, and throttled counts separately.
+
+Implementation guidance: use monospace text for API keys and scope chips in the detail panel.
+
+---
+
+AC00 Example 21 - Procurement Approval Queue
+
+---
+
+Create a procurement approval queue with purchase requests, vendors, requesters, budgets, approval status, due dates, and selected request details.
+
+Visible heading:
+
+`Procurement Approval Queue`
+
+Visible description:
+
+`This example imitates a procurement approval dashboard. It tests extraction of approval rows, request IDs, vendors, requesters, departments, budget codes, amounts, approval status, due dates, and selected purchase request details.`
+
+KPI cards:
+
+`Pending approvals`: `11`.
+
+`Total pending amount`: `$184,220`.
+
+`Over budget`: `2`.
+
+`Due today`: `4`.
+
+Toolbar fields:
+
+`Queue`: select selected `My approvals`.
+
+`Search requests`: input value `software`.
+
+`Sort order`: `Due date`.
+
+Table columns:
+
+`Request ID`.
+
+`Vendor`.
+
+`Requester`.
+
+`Department`.
+
+`Budget code`.
+
+`Amount`.
+
+`Budget status`.
+
+`Approval status`.
+
+`Due`.
+
+`Actions`.
+
+Rows:
+
+Row 1 selected by default:
+
+`Request ID`: `REQ-2026-7712`.
+
+`Vendor`: `Northstar Cloud Services`.
+
+`Requester`: `Renee Coleman`.
+
+`Department`: `Finance`.
+
+`Budget code`: `FIN-SOFT-2026`.
+
+`Amount`: `$84,000`.
+
+`Budget status`: badge `Within budget`.
+
+`Approval status`: badge `Pending approval`.
+
+`Due`: `June 3, 2026`.
+
+`Actions`: `Approve`, `Request changes`.
+
+Row 2:
+
+`Request ID`: `REQ-2026-7720`.
+
+`Vendor`: `Example Electronics`.
+
+`Requester`: `Priya Shah`.
+
+`Department`: `Operations`.
+
+`Budget code`: `OPS-EQUIP-2026`.
+
+`Amount`: `$12,880`.
+
+`Budget status`: badge `Over budget`.
+
+`Approval status`: badge `Needs finance review`.
+
+`Due`: `June 1, 2026`.
+
+`Actions`: `Review`, `Escalate`.
+
+Row 3:
+
+`Request ID`: `REQ-2026-7728`.
+
+`Vendor`: `Harbor Hall Events`.
+
+`Requester`: `Owen Brooks`.
+
+`Department`: `Education`.
+
+`Budget code`: `EDU-EVENT-2026`.
+
+`Amount`: `$4,850`.
+
+`Budget status`: badge `Within budget`.
+
+`Approval status`: badge `Pending approval`.
+
+`Due`: `June 2, 2026`.
+
+`Actions`: `Approve`, `Reject`.
+
+Row 4:
+
+`Request ID`: `REQ-2026-7734`.
+
+`Vendor`: `Civic Data Lab`.
+
+`Requester`: `Lina Romero`.
+
+`Department`: `Research`.
+
+`Budget code`: `RES-DATA-2026`.
+
+`Amount`: `$28,400`.
+
+`Budget status`: badge `Within budget`.
+
+`Approval status`: badge `Legal review`.
+
+`Due`: `June 7, 2026`.
+
+`Actions`: `Review`.
+
+Row 5:
+
+`Request ID`: `REQ-2026-7742`.
+
+`Vendor`: `Packwell Wholesale`.
+
+`Requester`: `Noah Kim`.
+
+`Department`: `Warehouse`.
+
+`Budget code`: `WH-INV-2026`.
+
+`Amount`: `$54,090`.
+
+`Budget status`: badge `Over budget`.
+
+`Approval status`: badge `Manager review`.
+
+`Due`: `June 5, 2026`.
+
+`Actions`: `Approve`, `Request changes`.
+
+Selected request panel for Row 1 must include:
+
+`Selected request`: `REQ-2026-7712`.
+
+`Business justification`: `Annual renewal for billing platform and audit log retention`.
+
+`Contract term`: `January 18, 2027-January 17, 2028`.
+
+`Attached documents`: `MSA`, `Security review`, `Quote`.
+
+`Approval chain`: `Finance manager`, `Legal`, `CFO`.
+
+Extraction caveat: the extraction tool should preserve approval status and budget status as separate fields. It should not treat action buttons as approval values.
+
+Implementation guidance: use procurement-style badges and a selected request detail panel.
+
+---
+
+AD00 Example 22 - Spreadsheet-Like KPI Planning Grid
+
+---
+
+Create a spreadsheet-like KPI planning grid with rows for business metrics, monthly targets, actuals, variances, owners, comments, and status. It should look less like a polished product table and more like an internal planning grid.
+
+Visible heading:
+
+`Spreadsheet-Like KPI Planning Grid`
+
+Visible description:
+
+`This example imitates an internal KPI planning spreadsheet embedded in an admin page. It tests extraction of wide grid columns, monthly targets, actuals, variance values, owners, comments, formula-like cells, and grouped row sections.`
+
+Header fields:
+
+`Planning period`: `Q3 2026`.
+
+`Department`: `Product Systems`.
+
+`Grid status`: badge `Draft`.
+
+`Last edited`: `May 31, 2026, 11:44 AM`.
+
+The grid must have two grouped sections:
+
+Group 1 label: `Acquisition and activation`.
+
+Group 2 label: `Reliability and quality`.
+
+Table columns:
+
+`Metric`.
+
+`Owner`.
+
+`June target`.
+
+`June forecast`.
+
+`July target`.
+
+`July forecast`.
+
+`August target`.
+
+`August forecast`.
+
+`Variance`.
+
+`Status`.
+
+`Comment`.
+
+Rows under `Acquisition and activation`:
+
+Row 1 selected by default:
+
+`Metric`: `New activated workspaces`.
+
+`Owner`: `Nina Patel`.
+
+`June target`: `420`.
+
+`June forecast`: `438`.
+
+`July target`: `470`.
+
+`July forecast`: `462`.
+
+`August target`: `520`.
+
+`August forecast`: `530`.
+
+`Variance`: `+20 vs quarter target`.
+
+`Status`: badge `On track`.
+
+`Comment`: `Partner onboarding campaign starts mid-July.`
+
+Row 2:
+
+`Metric`: `Demo page completion rate`.
+
+`Owner`: `Owen Brooks`.
+
+`June target`: `72 percent`.
+
+`June forecast`: `69 percent`.
+
+`July target`: `76 percent`.
+
+`July forecast`: `77 percent`.
+
+`August target`: `80 percent`.
+
+`August forecast`: `82 percent`.
+
+`Variance`: `0 percent vs quarter target`.
+
+`Status`: badge `Watch`.
+
+`Comment`: `Early June drop caused by long-form setup friction.`
+
+Row 3:
+
+`Metric`: `Saved extraction templates created`.
+
+`Owner`: `Maya Chen`.
+
+`June target`: `1,200`.
+
+`June forecast`: `1,310`.
+
+`July target`: `1,450`.
+
+`July forecast`: `1,480`.
+
+`August target`: `1,700`.
+
+`August forecast`: `1,660`.
+
+`Variance`: `+100 vs quarter target`.
+
+`Status`: badge `On track`.
+
+`Comment`: `Template gallery expected to increase usage.`
+
+Rows under `Reliability and quality`:
+
+Row 4:
+
+`Metric`: `Extraction p95 latency`.
+
+`Owner`: `Rafael Ortiz`.
+
+`June target`: `1.8 s`.
+
+`June forecast`: `2.1 s`.
+
+`July target`: `1.6 s`.
+
+`July forecast`: `1.7 s`.
+
+`August target`: `1.5 s`.
+
+`August forecast`: `1.5 s`.
+
+`Variance`: `+0.4 s above target`.
+
+`Status`: badge `At risk`.
+
+`Comment`: `Large page extraction needs worker memory improvements.`
+
+Row 5:
+
+`Metric`: `Duplicate action label rate`.
+
+`Owner`: `Lina Romero`.
+
+`June target`: `3.0 percent`.
+
+`June forecast`: `2.8 percent`.
+
+`July target`: `2.0 percent`.
+
+`July forecast`: `1.9 percent`.
+
+`August target`: `1.5 percent`.
+
+`August forecast`: `1.4 percent`.
+
+`Variance`: `-0.4 percent better than target`.
+
+`Status`: badge `On track`.
+
+`Comment`: `Card action cleanup rollout performing well.`
+
+Row 6:
+
+`Metric`: `Table row context accuracy`.
+
+`Owner`: `Theo Grant`.
+
+`June target`: `94 percent`.
+
+`June forecast`: `93 percent`.
+
+`July target`: `96 percent`.
+
+`July forecast`: `95 percent`.
+
+`August target`: `97 percent`.
+
+`August forecast`: `97 percent`.
+
+`Variance`: `-2 percent vs quarter target`.
+
+`Status`: badge `Watch`.
+
+`Comment`: `Nested row details still cause ambiguity.`
+
+Selected metric detail panel for Row 1 must include:
+
+`Selected metric`: `New activated workspaces`.
+
+`Formula note`: `Activated workspace means first successful extraction plus saved output within 7 days`.
+
+`Quarter target`: `1,410`.
+
+`Quarter forecast`: `1,430`.
+
+`Confidence`: `Medium`.
+
+`Review owner`: `Nina Patel`.
+
+Extraction caveat: the extraction tool should preserve grouped section labels and wide month columns. It should not collapse target and forecast values into one value per month.
+
+Implementation guidance: use a horizontally scrollable table. Use group rows with `colspan` for section labels.
+
+---
+
+AE00 Required Final HTML Skeleton
+
+---
+
+The coding agent should produce a complete HTML document using this general skeleton:
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page 7 - Tables, Grids, And Admin Dashboards</title>
+  <style>
+    /* Inline CSS only. */
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-hero">
+      <p class="page-kicker">Content Extraction Demo Page</p>
+      <h1>Page 7 - Tables, Grids, And Admin Dashboards</h1>
+      <p>
+        This standalone page contains realistic table, grid, and admin dashboard examples for testing extraction of rows, columns, headers, selected records, badges, totals, nested cell content, grouped rows, expandable details, KPI cards, side panels, and dense admin metadata.
+      </p>
+    </header>
+
+    <section class="example-card" id="example-01">
+      <!-- Example 01 content. -->
+    </section>
+
+    <!-- Continue through example-22. -->
+  </main>
+
+  <script>
+    /* Minimal inline JavaScript only. */
+  </script>
+</body>
+</html>
+```
+
+The generated file must include all 22 examples in the same file.
+
+The page must not require a server.
+
+The page must not fetch data.
+
+The page must not include broken links to external assets.
+
+The page must not use placeholder text instead of the specified values.
+
+The page must not use external chart libraries, grid libraries, images, dashboards, APIs, or fonts.
+
+The page must not use real customers, real account numbers, real patient data, real user data, real credentials, or real production identifiers.
+
+The page must not convert all examples into simple static tables. It must include a mix of semantic tables, div-based grids, KPI dashboards, selected-row detail panels, grouped rows, dense numeric tables, and admin console layouts.
+
+---
+
+AF00 Quality Bar
+
+---
+
+The final page should be useful as a long-term manual testing page for a content extraction tool.
+
+Each example must be visibly distinct enough that a tester can scroll to it, select a table, select a row, select a dashboard panel, or select a whole admin interface and understand what extraction behavior is being tested.
+
+Each example must contain realistic populated values.
+
+Each example must include the specified heading, description, toolbar state, rows, columns, labels, values, statuses, badges, numeric fields, selected states, side panels, and extraction caveat.
+
+Every table or grid example must expose enough visible content for extraction testing. Do not hide the most important values only in JavaScript variables, hidden inputs, comments, or inaccessible attributes.
+
+Use native tables when table semantics are important. Use div-based grids only when the example is meant to test non-native admin grid extraction.
+
+Use row IDs, timestamps, statuses, currency values, counts, percentages, owners, and notes as separate visible elements. These are important extraction targets.
+
+Use selected rows and selected detail panels where specified. The detail panel should add new information and may duplicate a few row fields, but it must not be the only place where the row's main data exists.
+
+Do not make all examples visually identical. The point of this page is to test many real-world variations of table, grid, and dashboard extraction.
+
+Do not collapse all metadata into one paragraph if the example calls for structured metadata.
+
+Do not convert all examples into ordinary forms or simple lists. This page must focus on tables, grids, ledgers, admin dashboards, KPI cards, dense rows, grouped tables, and selected-row details.
+
+The implementation should favor clarity and realistic structure over cleverness.
+
+The coding agent may improve layout, spacing, CSS details, and basic interaction behavior, but it must not remove examples, reduce the number of examples, replace dashboard examples with generic forms, or simplify the scenarios into toy examples.
+
+The final output must be one portable HTML file.

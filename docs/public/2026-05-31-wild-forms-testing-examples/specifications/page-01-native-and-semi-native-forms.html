@@ -1,0 +1,1707 @@
+---
+
+A00 Change Request Specification - Page 1 Native And Semi-Native Forms
+
+---
+
+Create one standalone HTML demo page named `page-01-native-and-semi-native-forms.html`.
+
+The page must be a self-contained HTML file. Put all HTML, CSS, and JavaScript inside this one file. Do not use React. Do not use TypeScript. Do not use a build step. Do not load external CSS, external JavaScript, external fonts, external images, or external data. The page must work by opening the `.html` file directly in a browser.
+
+This page is a testing surface for a content extraction tool. The page must focus on native and semi-native forms: normal `<input>`, `<select>`, `<textarea>`, `<fieldset>`, `<legend>`, `<label>`, native validation patterns, disabled fields, readonly fields, datalist fields, checkbox groups, radio groups, native multi-selects, repeated address blocks, and ordinary form controls arranged in difficult real-world layouts.
+
+The page must contain 22 separate examples. Each example must have a visible heading, a visible explanatory paragraph, and the actual form or form-like UI. Each example must be visually separated from the next example. Each example must be realistic enough to test extraction of field names and field values from a selected region of the page.
+
+Do not make the examples tiny toy forms. A complex example is preferred because it can also be used for simple extraction testing. Every example must test a different extraction caveat.
+
+---
+
+B00 Page-Level Purpose
+
+---
+
+The purpose of this page is to test whether an extraction tool can identify, select, and format field-value content from realistic native and semi-native forms.
+
+The extraction tool should be able to handle editable fields, readonly fields, disabled fields, selected radio buttons, checked checkboxes, selected options, multi-select values, textareas, datalist-backed inputs, repeated field groups, dense government-style layouts, visually grouped fields, fieldsets, legends, helper text, error text, and forms where the visual label-value relationship is not perfectly simple.
+
+The page should intentionally include both clean semantic HTML and slightly messy real-world HTML. Do not make the DOM hostile yet. This page should stay focused on native and semi-native form extraction, not custom dropdowns, modals, feeds, dashboards, or intentionally adversarial UI. However, the examples may still be complex and messy in the way normal business forms are complex and messy.
+
+---
+
+C00 Required Page Structure
+
+---
+
+The page must start with a top-level header.
+
+Use this visible title:
+
+`Page 1 - Native And Semi-Native Forms`
+
+Under the title, include a short introduction paragraph explaining that the page contains realistic native and semi-native form examples for testing extraction of labels, values, selected options, repeated sections, readonly summaries, and validation-related content.
+
+After the introduction, render 22 example sections.
+
+Each example section must follow this pattern:
+
+```html
+<section class="example-card" id="example-01">
+  <header class="example-header">
+    <p class="example-kicker">Example 01</p>
+    <h2>Emergency Contact Intake Form</h2>
+  </header>
+
+  <p class="example-description">
+    This example imitates...
+  </p>
+
+  <div class="example-surface">
+    <!-- Actual form or form-like UI goes here. -->
+  </div>
+</section>
+```
+
+The exact class names may vary, but the structure must remain clear. Each section must have a unique `id`, from `example-01` through `example-22`.
+
+Each example heading must be visible. Each description must be visible. The actual form surface must appear below the description.
+
+Do not include expected extraction output blocks under every example unless needed for a small note. The page should primarily be the application-under-test surface, not a documentation page. The visible descriptions should be enough to explain the purpose of each example.
+
+---
+
+D00 Visual Design Requirements
+
+---
+
+Use inline CSS in a `<style>` tag.
+
+The page should look like a clean internal testing notebook. Use a light background, readable font stack, generous spacing, and card-style sections. The page does not need to be beautiful, but it must be readable and easy to scan.
+
+Use different visual styles inside examples when useful. For example, one form can look like a government paper form, another can look like a SaaS account settings form, another can look like a clinic intake form, another can look like a shipping checkout form, and another can look like a dense spreadsheet-like business form.
+
+The page should support narrow and wide screens. Use simple responsive CSS. Avoid fixed widths that break on laptop screens.
+
+Suggested CSS structure:
+
+```html
+<style>
+  :root {
+    --page-bg: #f6f3ed;
+    --card-bg: #fffdf8;
+    --ink: #25221d;
+    --muted: #6f675c;
+    --line: #d8cfc0;
+    --soft: #eee6d8;
+    --focus: #315f8c;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--page-bg);
+    color: var(--ink);
+    line-height: 1.45;
+  }
+
+  main {
+    width: min(1180px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 32px 0 64px;
+  }
+
+  .page-hero {
+    margin-bottom: 28px;
+    padding: 28px;
+    background: #fffaf0;
+    border: 2px solid var(--line);
+    border-radius: 18px;
+  }
+
+  .example-card {
+    margin: 28px 0;
+    padding: 24px;
+    background: var(--card-bg);
+    border: 2px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.08);
+  }
+
+  .example-kicker {
+    margin: 0 0 4px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .example-header h2 {
+    margin: 0;
+    font-size: 1.35rem;
+  }
+
+  .example-description {
+    max-width: 900px;
+    color: var(--muted);
+  }
+
+  .example-surface {
+    margin-top: 18px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: white;
+  }
+
+  .grid-two {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .grid-three {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  label,
+  .field-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 650;
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 10px;
+    border: 1px solid #b7afa3;
+    border-radius: 8px;
+    font: inherit;
+    background: #fff;
+  }
+
+  textarea {
+    min-height: 90px;
+    resize: vertical;
+  }
+
+  fieldset {
+    margin: 0;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+
+  legend {
+    padding: 0 8px;
+    font-weight: 700;
+  }
+
+  .help-text {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 0.86rem;
+  }
+
+  .inline-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 18px;
+  }
+
+  .inline-options label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0;
+    font-weight: 500;
+  }
+
+  .inline-options input {
+    width: auto;
+    min-height: auto;
+  }
+
+  .readonly-strip {
+    padding: 10px 12px;
+    border: 1px dashed #b7afa3;
+    border-radius: 8px;
+    background: #faf7f0;
+  }
+
+  @media (max-width: 760px) {
+    .grid-two,
+    .grid-three {
+      grid-template-columns: 1fr;
+    }
+
+    .example-card {
+      padding: 18px;
+    }
+  }
+</style>
+```
+
+The coding agent may adjust the CSS, but it must keep the page readable, scrollable, and visually divided into 22 separate examples.
+
+---
+
+E00 JavaScript Requirements
+
+---
+
+Use only small inline JavaScript when a native form behavior needs to be demonstrated.
+
+This page should not depend heavily on JavaScript. The page is about native and semi-native forms, so most content should exist in the DOM at page load.
+
+Allowed JavaScript behaviors for this page are: copying billing address to shipping address, enabling a field when a checkbox is checked, showing an inline validation message, recalculating a small visible summary, revealing a conditional fieldset, or updating a readonly mirror field.
+
+Do not use JavaScript frameworks. Do not generate all examples dynamically. Static HTML must remain visible and inspectable.
+
+Suggested JavaScript snippet:
+
+```html
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const sameAddress = document.querySelector("#ex06-same-address");
+    const billingCity = document.querySelector("#ex06-billing-city");
+    const shippingCity = document.querySelector("#ex06-shipping-city");
+
+    if (sameAddress && billingCity && shippingCity) {
+      sameAddress.addEventListener("change", function () {
+        if (sameAddress.checked) {
+          shippingCity.value = billingCity.value;
+          shippingCity.readOnly = true;
+        } else {
+          shippingCity.readOnly = false;
+        }
+      });
+    }
+
+    const otherLanguage = document.querySelector("#ex03-language-other-check");
+    const otherLanguageText = document.querySelector("#ex03-language-other-text");
+
+    if (otherLanguage && otherLanguageText) {
+      otherLanguage.addEventListener("change", function () {
+        otherLanguageText.disabled = !otherLanguage.checked;
+      });
+    }
+  });
+</script>
+```
+
+The coding agent should write JavaScript defensively. It should not fail if one element is renamed or removed.
+
+---
+
+F00 Extraction Behavior To Support
+
+---
+
+The page must make these extraction tasks possible:
+
+Extract label-value pairs from ordinary input fields.
+
+Extract selected value from native `<select>` controls.
+
+Extract all available options from selected native `<select>` controls when the extraction tool is asked to inspect options.
+
+Extract multiple selected values from `<select multiple>`.
+
+Extract checked values from checkbox groups.
+
+Extract selected values from radio groups.
+
+Extract textarea content with line breaks preserved.
+
+Extract readonly input values.
+
+Extract disabled input values.
+
+Extract repeated groups, such as dependent records or multiple addresses.
+
+Extract values where label text comes from a `<legend>` plus individual option labels.
+
+Extract values where labels are visually adjacent but not perfectly simple in the DOM.
+
+Extract helper text and error text separately from the field value when possible.
+
+Extract forms where the visible layout is multi-column.
+
+Extract dense forms where fields are small and labels are compact.
+
+Extract values from datalist-backed text inputs.
+
+Extract values from date, time, month, week, number, email, telephone, URL, and file-like inputs.
+
+For file inputs, do not require actual file upload. Show nearby selected-file-style text or disabled text fields that imitate file names, because browsers do not allow setting file input values programmatically.
+
+---
+
+G00 Data And Naming Rules
+
+---
+
+Use realistic but fictional data. Do not use real personal information.
+
+Use consistent example-specific IDs. Prefix IDs with the example number, such as `ex01-full-name`, `ex14-plan-tier`, or `ex21-tax-year`.
+
+Use plausible values. Avoid placeholder-only examples. Most fields should have pre-filled values so the extraction tool can read content immediately.
+
+Use a mixture of `value` attributes, selected `<option>` elements, checked checkboxes, checked radio buttons, readonly fields, disabled fields, and textarea text content.
+
+Do not leave every field blank. Blank fields can appear occasionally, but most examples should contain extractable values.
+
+---
+
+H00 Required Examples Overview
+
+---
+
+The page must contain exactly these 22 examples:
+
+Example 01: Emergency Contact Intake Form.
+
+Example 02: Dense Clinic Patient Intake Form.
+
+Example 03: Language And Accessibility Preferences Form.
+
+Example 04: Government-Style Identity Verification Form.
+
+Example 05: Loan Prequalification Form.
+
+Example 06: Billing And Shipping Address Duplication Form.
+
+Example 07: Employee Onboarding Tax And Payroll Form.
+
+Example 08: University Course Registration Form.
+
+Example 09: Insurance Claim Details Form.
+
+Example 10: Subscription Account Settings Form.
+
+Example 11: Travel Passenger Details Form.
+
+Example 12: Vehicle Registration Renewal Form.
+
+Example 13: Conference Speaker Application Form.
+
+Example 14: Field Service Work Order Form.
+
+Example 15: Donation And Gift Designation Form.
+
+Example 16: Property Rental Application Form.
+
+Example 17: Device Warranty Registration Form.
+
+Example 18: Internal IT Access Request Form.
+
+Example 19: Medical Prescription Refill Form.
+
+Example 20: Event Volunteer Signup Form.
+
+Example 21: Small Business Tax Organizer Form.
+
+Example 22: Mixed Readonly And Disabled Profile Form.
+
+Each example below is mandatory.
+
+---
+
+I00 Example 01 - Emergency Contact Intake Form
+
+---
+
+Create a medium-sized emergency contact form that looks like a human resources intake section. It should use clean semantic labels and normal native fields, but it should contain enough fields to test ordinary label-value extraction.
+
+Visible heading:
+
+`Emergency Contact Intake Form`
+
+Visible description:
+
+`This example imitates a standard HR emergency contact form. It tests simple native text inputs, phone inputs, email inputs, radio buttons, and a small textarea, while keeping the label-value relationships mostly clean and semantic.`
+
+The form must include these fields and values:
+
+`Employee full name`: text input, value `Jordan Ellis`.
+
+`Employee ID`: readonly text input, value `EMP-20417`.
+
+`Primary contact name`: text input, value `Morgan Ellis`.
+
+`Relationship`: native select, selected value `Spouse`. Include options `Parent`, `Spouse`, `Sibling`, `Friend`, `Other`.
+
+`Primary phone`: telephone input, value `415-555-0184`.
+
+`Secondary phone`: telephone input, value `415-555-0177`.
+
+`Email address`: email input, value `morgan.ellis@example.test`.
+
+`Preferred contact method`: radio group with `Phone`, `Text message`, `Email`; selected `Text message`.
+
+`Authorized to discuss medical details`: radio group with `Yes`, `No`; selected `Yes`.
+
+`Notes for security desk`: textarea with value `Contact Morgan first. If unavailable, call the secondary phone number and leave a callback message.`
+
+Extraction caveat: this is the baseline example. The extraction tool should return clean field-value pairs and correctly handle the selected radio values rather than listing every radio option as the chosen value.
+
+Implementation guidance:
+
+```html
+<form aria-label="Emergency contact intake">
+  <div class="grid-two">
+    <div>
+      <label for="ex01-employee-name">Employee full name</label>
+      <input id="ex01-employee-name" name="employeeName" value="Jordan Ellis">
+    </div>
+    <div>
+      <label for="ex01-employee-id">Employee ID</label>
+      <input id="ex01-employee-id" name="employeeId" value="EMP-20417" readonly>
+    </div>
+  </div>
+
+  <fieldset>
+    <legend>Preferred contact method</legend>
+    <div class="inline-options">
+      <label><input type="radio" name="ex01-contact-method" value="Phone"> Phone</label>
+      <label><input type="radio" name="ex01-contact-method" value="Text message" checked> Text message</label>
+      <label><input type="radio" name="ex01-contact-method" value="Email"> Email</label>
+    </div>
+  </fieldset>
+</form>
+```
+
+---
+
+J00 Example 02 - Dense Clinic Patient Intake Form
+
+---
+
+Create a clinic intake form that looks denser than Example 01. It should imitate a paper form converted to HTML. Use narrow columns, short labels, date inputs, number inputs, native selects, checkboxes, and textareas.
+
+Visible heading:
+
+`Dense Clinic Patient Intake Form`
+
+Visible description:
+
+`This example imitates a medical intake form with many compact fields arranged in a dense grid. It tests whether extraction can still pair labels and values when the layout is crowded and the field names are short.`
+
+The form must include these fields and values:
+
+`Patient legal name`: `Avery Quinn`.
+
+`Preferred name`: `Avery`.
+
+`Date of birth`: date input, value `1987-09-14`.
+
+`Age`: number input, value `38`.
+
+`Sex listed on insurance`: select, selected `F`. Options `F`, `M`, `X`, `Unspecified`.
+
+`Pronouns`: text input, value `she/her`.
+
+`Mobile phone`: telephone input, value `510-555-0146`.
+
+`Email`: email input, value `avery.quinn@example.test`.
+
+`Preferred pharmacy`: text input, value `Greenline Pharmacy - Market Street`.
+
+`Primary care provider`: text input, value `Dr. Hannah Cho`.
+
+`Visit reason`: select, selected `Follow-up`. Options `New concern`, `Follow-up`, `Annual exam`, `Medication review`, `Lab review`.
+
+`Symptoms started`: date input, value `2026-05-12`.
+
+`Current pain level`: range input with min `0`, max `10`, value `4`. Add visible text near it: `Current value: 4`.
+
+`Known allergies`: checkbox group with `Penicillin` checked, `Latex` unchecked, `Shellfish` checked, `No known allergies` unchecked.
+
+`Current medications`: textarea with `Lisinopril 10 mg once daily\nVitamin D 1000 IU daily`.
+
+`Additional notes`: textarea with `Patient reports mild dizziness after standing quickly.`
+
+Extraction caveat: the extraction tool should not lose values because the fields are visually compact. It should also decide whether the range value should be extracted from the input value, the visible text, or both.
+
+Implementation guidance: use a `.compact-form` CSS class with smaller gaps and a three-column grid. Keep native controls real.
+
+---
+
+K00 Example 03 - Language And Accessibility Preferences Form
+
+---
+
+Create a preferences form for language, communication, and accessibility needs. Use checkbox groups, a disabled conditional text input, a multiple select, and a datalist-backed input.
+
+Visible heading:
+
+`Language And Accessibility Preferences Form`
+
+Visible description:
+
+`This example imitates a preferences section used by a public service portal. It tests checkbox groups, multi-select values, datalist-backed inputs, and a disabled conditional field that becomes editable when the matching checkbox is selected.`
+
+The form must include these fields and values:
+
+`Primary language`: input with datalist, value `Spanish`. Datalist options must include `English`, `Spanish`, `Mandarin`, `Vietnamese`, `Arabic`, `Tagalog`.
+
+`Interpreter required`: radio group with `Yes` selected and `No` unselected.
+
+`Written communication languages`: native multi-select with selected values `English` and `Spanish`. Include options `English`, `Spanish`, `Mandarin`, `Vietnamese`, `Arabic`, `Tagalog`.
+
+`Accessible formats requested`: checkbox group with `Large print` checked, `Screen-reader friendly email` checked, `Braille` unchecked, `Audio recording` unchecked.
+
+`Communication channels`: checkbox group with `Email` checked, `SMS` checked, `Postal mail` unchecked, `Phone call` unchecked.
+
+`Other language needed`: checkbox with label `Other language not listed`.
+
+`Other language details`: text input, disabled by default, value empty. When `Other language not listed` is checked, enable this input.
+
+`Best time to contact`: select, selected `Weekday mornings`. Include options `Weekday mornings`, `Weekday afternoons`, `Weekday evenings`, `Weekends`.
+
+Extraction caveat: the extraction tool should extract the selected values from a multi-select, checked values from checkbox groups, and should not treat every available option as selected. It should also handle a disabled field with no value.
+
+Implementation guidance:
+
+```html
+<label for="ex03-written-languages">Written communication languages</label>
+<select id="ex03-written-languages" name="writtenLanguages" multiple size="6">
+  <option selected>English</option>
+  <option selected>Spanish</option>
+  <option>Mandarin</option>
+  <option>Vietnamese</option>
+  <option>Arabic</option>
+  <option>Tagalog</option>
+</select>
+```
+
+---
+
+L00 Example 04 - Government-Style Identity Verification Form
+
+---
+
+Create a government-style identity verification form. It should look more rigid, with uppercase section labels, small helper text, fieldsets, and a combination of readonly and editable fields.
+
+Visible heading:
+
+`Government-Style Identity Verification Form`
+
+Visible description:
+
+`This example imitates a public agency identity verification form. It tests fieldsets, legends, readonly reference numbers, helper text, date fields, select fields, and values that appear in a strict paper-form layout.`
+
+The form must include these fields and values:
+
+`Application reference number`: readonly input, value `IDV-2026-05-88419`.
+
+`Legal first name`: `Samira`.
+
+`Legal middle name`: `N.`.
+
+`Legal last name`: `Haddad`.
+
+`Former last name`: blank input.
+
+`Date of birth`: date input, value `1992-11-03`.
+
+`Country of birth`: select, selected `Canada`. Include options `United States`, `Canada`, `Mexico`, `United Kingdom`, `Other`.
+
+`Document type`: select, selected `Passport`. Include options `Passport`, `Driver license`, `State ID`, `Permanent resident card`.
+
+`Document number`: text input, value `P90844123`.
+
+`Issuing country`: select, selected `Canada`.
+
+`Issue date`: date input, value `2023-04-15`.
+
+`Expiration date`: date input, value `2033-04-14`.
+
+`Residential address verified`: radio group, selected `Yes`.
+
+`Verification method`: checkbox group with `Document upload` checked, `Credit bureau questions` unchecked, `In-person review` checked.
+
+`Reviewer notes`: textarea, value `Applicant must bring original passport to the appointment.`
+
+Extraction caveat: the extraction tool should include readonly values and correctly associate the document fields under the document information fieldset. It should not confuse helper text with the actual field value.
+
+Implementation guidance: use `<fieldset>` and `<legend>` for `Applicant information`, `Identity document`, and `Verification status`.
+
+---
+
+M00 Example 05 - Loan Prequalification Form
+
+---
+
+Create a financial loan prequalification form. It should use numeric inputs, currency-like values, percentages, selects, radio groups, and validation hints.
+
+Visible heading:
+
+`Loan Prequalification Form`
+
+Visible description:
+
+`This example imitates a personal loan prequalification form. It tests number inputs, select fields, radio groups, currency-like labels, percentage fields, and helper text that should not be confused with entered values.`
+
+The form must include these fields and values:
+
+`Applicant name`: `Diego Marin`.
+
+`Requested loan amount`: number input, value `18500`.
+
+`Loan purpose`: select, selected `Debt consolidation`. Options `Debt consolidation`, `Home improvement`, `Medical expense`, `Major purchase`, `Other`.
+
+`Annual gross income`: number input, value `92000`.
+
+`Monthly housing payment`: number input, value `2450`.
+
+`Employment status`: select, selected `Full-time employee`. Options `Full-time employee`, `Part-time employee`, `Self-employed`, `Retired`, `Unemployed`.
+
+`Years at current employer`: number input, value `4`.
+
+`Credit score range`: radio group, selected `700-749`. Options `Under 620`, `620-659`, `660-699`, `700-749`, `750+`.
+
+`Co-applicant included`: radio group, selected `No`.
+
+`Consent to soft credit check`: checkbox, checked.
+
+`Preferred repayment term`: select, selected `48 months`. Options `24 months`, `36 months`, `48 months`, `60 months`.
+
+`Additional financial notes`: textarea, value `Applicant expects annual bonus in Q4 but does not want it included in base income.`
+
+Extraction caveat: the extraction tool should preserve numeric values without requiring currency symbols to be part of the input. It should handle helper text such as `Enter amount before taxes` as metadata, not as a value.
+
+Implementation guidance: show currency symbols visually using small prefix spans outside the input for at least two amount fields.
+
+---
+
+N00 Example 06 - Billing And Shipping Address Duplication Form
+
+---
+
+Create a checkout-style address form with billing and shipping sections. Include a checkbox that copies some billing values to shipping values and marks the copied shipping fields readonly.
+
+Visible heading:
+
+`Billing And Shipping Address Duplication Form`
+
+Visible description:
+
+`This example imitates a checkout address form with repeated field groups. It tests whether extraction can distinguish billing fields from shipping fields even when the labels are repeated, and whether readonly copied values are still extracted.`
+
+The form must include a billing address section with these fields and values:
+
+`Billing full name`: `Priya Shah`.
+
+`Billing company`: `Northstar Research Lab`.
+
+`Billing address line 1`: `88 Valencia Street`.
+
+`Billing address line 2`: `Suite 402`.
+
+`Billing city`: `San Francisco`.
+
+`Billing state`: select, selected `CA`. Include options `CA`, `OR`, `WA`, `NV`, `AZ`.
+
+`Billing ZIP`: `94103`.
+
+`Billing country`: select, selected `United States`.
+
+The form must include a shipping address section with these fields and values:
+
+`Same as billing address`: checkbox, unchecked by default.
+
+`Shipping full name`: `Priya Shah`.
+
+`Shipping company`: `Northstar Research Lab - Receiving`.
+
+`Shipping address line 1`: `120 King Street`.
+
+`Shipping address line 2`: `Dock B`.
+
+`Shipping city`: `San Francisco`.
+
+`Shipping state`: select, selected `CA`.
+
+`Shipping ZIP`: `94107`.
+
+`Shipping delivery instructions`: textarea, value `Deliver between 9 AM and 3 PM. Use freight entrance on King Street.`
+
+Extraction caveat: repeated labels such as `City`, `State`, and `ZIP` should be extracted with the section context, such as `Billing city` and `Shipping city`. The same visible labels may appear inside different fieldsets.
+
+Implementation guidance: use fieldsets with legends `Billing address` and `Shipping address`. The visible label can be simply `City`, but the spec expects extraction tools to infer or preserve section context.
+
+---
+
+O00 Example 07 - Employee Onboarding Tax And Payroll Form
+
+---
+
+Create an employee onboarding form with tax and payroll details. It should include disabled values set by HR, employee-editable fields, radio groups, checkboxes, and a masked account number style field.
+
+Visible heading:
+
+`Employee Onboarding Tax And Payroll Form`
+
+Visible description:
+
+`This example imitates a payroll setup form. It tests disabled fields, readonly fields, selected tax options, direct deposit fields, and sensitive values that are partially masked but still visible.`
+
+The form must include these fields and values:
+
+`Employee name`: readonly input, value `Taylor Brooks`.
+
+`Worker type`: disabled select, selected `W-2 employee`. Include options `W-2 employee`, `1099 contractor`, `Intern`.
+
+`Department`: disabled input, value `Operations`.
+
+`Start date`: readonly date input, value `2026-06-15`.
+
+`Federal filing status`: radio group, selected `Single or married filing separately`.
+
+`Multiple jobs checkbox`: checkbox, unchecked.
+
+`Claim dependents amount`: number input, value `0`.
+
+`Other income`: number input, value `1200`.
+
+`Deductions`: number input, value `0`.
+
+`Extra withholding`: number input, value `50`.
+
+`Direct deposit account type`: select, selected `Checking`.
+
+`Routing number`: text input, value `121000358`.
+
+`Account number`: password input, value `4455667788`. Add visible help text `Value is intentionally masked by the browser`.
+
+`Deposit allocation`: select, selected `Full net pay`.
+
+`Payroll notes`: textarea, value `Employee requested first paycheck as paper check until direct deposit is verified.`
+
+Extraction caveat: password input values may not be visually readable even though the DOM has a value. The tool should handle visible extraction and DOM extraction carefully. Disabled fields must not be skipped.
+
+Implementation guidance: use `disabled` for fields HR controls and `readonly` for values that are locked but still submitted.
+
+---
+
+P00 Example 08 - University Course Registration Form
+
+---
+
+Create a course registration form that mixes student identity, term selection, course choices, waitlist preferences, and consent checkboxes.
+
+Visible heading:
+
+`University Course Registration Form`
+
+Visible description:
+
+`This example imitates a university registration form. It tests repeated course rows, select controls, checkboxes, readonly student information, and field names that only become clear when row context is included.`
+
+The form must include these student fields:
+
+`Student name`: readonly input, value `Mei Tanaka`.
+
+`Student number`: readonly input, value `S-884209`.
+
+`Program`: readonly input, value `Computer Science BS`.
+
+`Registration term`: select, selected `Fall 2026`. Options `Summer 2026`, `Fall 2026`, `Spring 2027`.
+
+`Enrollment status`: select, selected `Full-time`.
+
+The form must include three course request rows. These may be implemented as a native table containing form controls.
+
+Course row 1:
+
+`Course code`: `CS 340`.
+
+`Section`: select, selected `A`.
+
+`Credits`: number input, value `4`.
+
+`Grading mode`: select, selected `Letter`.
+
+`Waitlist if full`: checkbox, checked.
+
+Course row 2:
+
+`Course code`: `MATH 221`.
+
+`Section`: select, selected `C`.
+
+`Credits`: number input, value `3`.
+
+`Grading mode`: select, selected `Letter`.
+
+`Waitlist if full`: checkbox, unchecked.
+
+Course row 3:
+
+`Course code`: `HIST 180`.
+
+`Section`: select, selected `B`.
+
+`Credits`: number input, value `3`.
+
+`Grading mode`: select, selected `Pass/No Pass`.
+
+`Waitlist if full`: checkbox, checked.
+
+Additional fields:
+
+`Advisor approval code`: text input, value `ADV-73QK`.
+
+`Registration notes`: textarea, value `Student prefers morning sections when available.`
+
+`Acknowledge tuition responsibility`: checkbox, checked.
+
+Extraction caveat: the extraction tool should preserve row grouping. It should not output three unrelated `Course code` fields without row context.
+
+Implementation guidance: use a `<table>` for course requests, but keep labels available with either visible column headers or `aria-label` attributes.
+
+---
+
+Q00 Example 09 - Insurance Claim Details Form
+
+---
+
+Create an insurance claim form. It should mix date/time fields, selects, checkboxes, file input placeholders, textareas, and claim status fields.
+
+Visible heading:
+
+`Insurance Claim Details Form`
+
+Visible description:
+
+`This example imitates an insurance claim intake form. It tests date and time inputs, claim category selection, incident descriptions, checkboxes for attached evidence, and file-related fields where actual file input values cannot be preset by HTML.`
+
+The form must include these fields and values:
+
+`Claim number`: readonly input, value `CLM-6029-1184`.
+
+`Policyholder name`: `Nadia Patel`.
+
+`Policy number`: `AUTO-91-44720`.
+
+`Claim type`: select, selected `Auto collision`. Options `Auto collision`, `Property damage`, `Theft`, `Liability`, `Other`.
+
+`Incident date`: date input, value `2026-05-24`.
+
+`Incident time`: time input, value `18:35`.
+
+`Incident location`: text input, value `5th Avenue and Pine Street`.
+
+`Police report filed`: radio group, selected `Yes`.
+
+`Police report number`: text input, value `PR-2026-77150`.
+
+`Vehicle drivable`: radio group, selected `No`.
+
+`Damage areas`: checkbox group with `Front bumper` checked, `Driver side door` checked, `Rear panel` unchecked, `Windshield` unchecked.
+
+`Evidence provided`: checkbox group with `Photos` checked, `Police report PDF` checked, `Repair estimate` unchecked, `Witness statement` checked.
+
+`Uploaded file display`: disabled text input, value `photos_bundle_0524.zip, police_report_PR-2026-77150.pdf`.
+
+`Incident description`: textarea, value `Another vehicle turned left through the intersection and struck the front driver side. No injuries were reported at the scene.`
+
+Extraction caveat: actual file inputs cannot be prefilled, so this example must include a disabled text field that imitates selected uploaded files. The extraction tool should capture that visible selected-file information.
+
+Implementation guidance: include a real `<input type="file" multiple>` with a nearby disabled text input showing the mock selected file names.
+
+---
+
+R00 Example 10 - Subscription Account Settings Form
+
+---
+
+Create a SaaS subscription settings form. It should include account fields, plan selection, billing cadence, add-on checkboxes, notification settings, and readonly computed fields.
+
+Visible heading:
+
+`Subscription Account Settings Form`
+
+Visible description:
+
+`This example imitates a SaaS account settings screen. It tests a semi-native form where some values are editable, some are readonly, some are disabled by account policy, and checkbox groups represent enabled add-ons.`
+
+The form must include these fields and values:
+
+`Workspace name`: text input, value `Atlas Product Studio`.
+
+`Workspace slug`: readonly input, value `atlas-product-studio`.
+
+`Account owner email`: email input, value `owner@example.test`.
+
+`Current plan`: disabled select, selected `Business`. Options `Starter`, `Business`, `Enterprise`.
+
+`Billing cadence`: radio group, selected `Annual`.
+
+`Seats purchased`: number input, value `24`.
+
+`Seats currently used`: readonly number input, value `19`.
+
+`Plan add-ons`: checkbox group with `Audit log retention` checked, `SAML SSO` checked, `Priority support` unchecked, `Advanced analytics` checked.
+
+`Invoice email recipients`: textarea, value `billing@example.test\nfinance@example.test`.
+
+`Renewal date`: readonly date input, value `2027-01-18`.
+
+`Auto-renew subscription`: checkbox, checked.
+
+`Cancellation reason`: select, disabled, selected `Not cancelling`.
+
+Extraction caveat: selected disabled controls and readonly computed values must still be extractable because they are visible business data.
+
+Implementation guidance: present this example like a modern settings card, not a paper form.
+
+---
+
+S00 Example 11 - Travel Passenger Details Form
+
+---
+
+Create a travel passenger details form for a bus or train reservation. Use native controls only, but make the layout resemble a real travel checkout page.
+
+Visible heading:
+
+`Travel Passenger Details Form`
+
+Visible description:
+
+`This example imitates the passenger details step of a travel booking flow. It tests repeated passenger sections, native select controls for document type and seat preference, and values that belong to similarly named fields across multiple passengers.`
+
+The form must include trip-level fields:
+
+`Reservation code`: readonly input, value `TRP-58K2Q`.
+
+`Route`: readonly input, value `San Jose to Los Angeles`.
+
+`Departure date`: readonly date input, value `2026-07-03`.
+
+`Departure time`: readonly time input, value `08:15`.
+
+`Fare class`: select, selected `Flexible`.
+
+Passenger 1 fields:
+
+`Passenger 1 first name`: `Elena`.
+
+`Passenger 1 last name`: `Morales`.
+
+`Passenger 1 passenger type`: select, selected `Adult`.
+
+`Passenger 1 document type`: select, selected `Driver license`.
+
+`Passenger 1 document number`: `D4829017`.
+
+`Passenger 1 seat preference`: radio group, selected `Window`.
+
+Passenger 2 fields:
+
+`Passenger 2 first name`: `Rafi`.
+
+`Passenger 2 last name`: `Morales`.
+
+`Passenger 2 passenger type`: select, selected `Child`.
+
+`Passenger 2 document type`: select, selected `None`.
+
+`Passenger 2 document number`: blank disabled input.
+
+`Passenger 2 seat preference`: radio group, selected `Aisle`.
+
+Additional fields:
+
+`Special assistance`: checkbox group with `Extra boarding time` checked, `Wheelchair space` unchecked, `Service animal` unchecked.
+
+`Trip notes`: textarea, value `Passenger 2 should be seated next to Passenger 1 if possible.`
+
+Extraction caveat: repeated passenger field labels must retain passenger context. Disabled blank fields should not break extraction.
+
+Implementation guidance: use two bordered passenger subcards inside the same form.
+
+---
+
+T00 Example 12 - Vehicle Registration Renewal Form
+
+---
+
+Create a vehicle registration renewal form. It should include readonly vehicle identity fields, editable mailing fields, checkboxes, radio buttons, and a disabled emissions field.
+
+Visible heading:
+
+`Vehicle Registration Renewal Form`
+
+Visible description:
+
+`This example imitates a motor vehicle registration renewal form. It tests readonly official record fields, editable contact fields, disabled fields controlled by agency status, and checkbox acknowledgements.`
+
+The form must include these fields and values:
+
+`Renewal notice number`: readonly input, value `VRN-2026-449012`.
+
+`Plate number`: readonly input, value `8TRC921`.
+
+`VIN last 6`: readonly input, value `492118`.
+
+`Vehicle year`: readonly number input, value `2021`.
+
+`Vehicle make`: readonly input, value `Subaru`.
+
+`Vehicle model`: readonly input, value `Outback`.
+
+`Registration county`: select, selected `Alameda`.
+
+`Smog certification required`: disabled select, selected `Not required`.
+
+`Insurance on file`: radio group, selected `Yes`.
+
+`Mailing address line 1`: text input, value `410 Oak Grove Avenue`.
+
+`Mailing address line 2`: text input, value `Apt 6`.
+
+`Mailing city`: text input, value `Oakland`.
+
+`Mailing state`: select, selected `CA`.
+
+`Mailing ZIP`: text input, value `94610`.
+
+`Delivery method`: radio group, selected `Mail registration card`.
+
+`Acknowledge penalties statement`: checkbox, checked.
+
+`Renewal comments`: textarea, value `Owner requests updated mailing address to be used for this renewal only.`
+
+Extraction caveat: many official record values are readonly or disabled. The extraction tool should still treat them as meaningful values.
+
+Implementation guidance: make this example visually bureaucratic, with a document-like border and all-caps microcopy.
+
+---
+
+U00 Example 13 - Conference Speaker Application Form
+
+---
+
+Create a conference speaker application form. It should include text inputs, URL inputs, select fields, radio groups, multiple checkboxes, and a long abstract textarea.
+
+Visible heading:
+
+`Conference Speaker Application Form`
+
+Visible description:
+
+`This example imitates a conference speaker proposal form. It tests long textareas, URL fields, topic checkboxes, session format radio buttons, and content where the important value may be a paragraph rather than a short token.`
+
+The form must include these fields and values:
+
+`Speaker name`: `Lina Romero`.
+
+`Speaker email`: `lina.romero@example.test`.
+
+`Organization`: `Civic Data Lab`.
+
+`Speaker website`: URL input, value `https://example.test/lina-romero`.
+
+`Talk title`: `Designing Interfaces For Messy Public Data`.
+
+`Session format`: radio group, selected `Workshop`. Options `Talk`, `Workshop`, `Panel`, `Lightning talk`.
+
+`Audience level`: select, selected `Intermediate`.
+
+`Topic areas`: checkbox group with `Data visualization` checked, `Accessibility` checked, `Open source` unchecked, `Civic technology` checked, `AI systems` unchecked.
+
+`Preferred session length`: select, selected `90 minutes`.
+
+`Travel support needed`: radio group, selected `Yes`.
+
+`Recording permission`: radio group, selected `Yes, record and publish`.
+
+`Abstract`: textarea, value `This workshop walks through practical patterns for turning incomplete public datasets into interfaces that help users understand uncertainty, provenance, and missing values.`
+
+`Speaker notes to organizers`: textarea, value `Can adapt the workshop for a smaller room if tables are available.`
+
+Extraction caveat: the extraction tool should preserve multiline text and long textarea values without truncating them.
+
+Implementation guidance: use a larger textarea for `Abstract` and a smaller textarea for organizer notes.
+
+---
+
+V00 Example 14 - Field Service Work Order Form
+
+---
+
+Create a field service work order form for a repair technician. It should mix readonly job details, editable arrival fields, checklists, select controls, and time inputs.
+
+Visible heading:
+
+`Field Service Work Order Form`
+
+Visible description:
+
+`This example imitates a technician work order form. It tests readonly dispatch details, time inputs, checklist values, service status selection, and repeated parts rows inside a native table.`
+
+The form must include job-level fields:
+
+`Work order number`: readonly input, value `WO-7718`.
+
+`Customer name`: readonly input, value `Harbor Cafe`.
+
+`Service address`: readonly input, value `201 Pier Lane, Monterey, CA`.
+
+`Equipment`: readonly input, value `Walk-in refrigerator`.
+
+`Priority`: disabled select, selected `High`.
+
+`Scheduled date`: date input, value `2026-06-04`.
+
+`Arrival time`: time input, value `09:20`.
+
+`Departure time`: time input, value `11:05`.
+
+`Service status`: select, selected `Completed with parts`.
+
+`Issue category`: select, selected `Cooling failure`.
+
+Checklist fields:
+
+`Diagnostics performed`: checkbox group with `Temperature reading` checked, `Compressor inspection` checked, `Door seal inspection` checked, `Electrical panel inspection` unchecked.
+
+`Customer signature captured`: radio group, selected `Yes`.
+
+Parts table with two rows:
+
+Row 1: `Part number` `GSK-4410`, `Description` `Door gasket`, `Quantity` `1`, `Warranty covered` checked.
+
+Row 2: `Part number` `SNS-209`, `Description` `Temperature sensor`, `Quantity` `2`, `Warranty covered` unchecked.
+
+`Technician notes`: textarea, value `Replaced damaged door gasket and two sensors. Unit returned to target temperature before departure.`
+
+Extraction caveat: the extraction tool should handle form controls embedded in table rows and preserve the relationship between part number, description, quantity, and warranty status.
+
+Implementation guidance: use a table for parts and ordinary input controls inside cells.
+
+---
+
+W00 Example 15 - Donation And Gift Designation Form
+
+---
+
+Create a nonprofit donation form. It should include donor details, gift amount, designation, tribute fields, recurring donation options, and acknowledgement preferences.
+
+Visible heading:
+
+`Donation And Gift Designation Form`
+
+Visible description:
+
+`This example imitates a nonprofit donation form. It tests amount inputs, recurring gift options, conditional tribute fields, acknowledgement preferences, and checkboxes that describe donor intent.`
+
+The form must include these fields and values:
+
+`Donor name`: `Owen Brooks`.
+
+`Donor email`: `owen.brooks@example.test`.
+
+`Gift amount`: number input, value `250`.
+
+`Gift designation`: select, selected `Scholarship fund`. Options `General fund`, `Scholarship fund`, `Community programs`, `Research fund`, `Other`.
+
+`Donation frequency`: radio group, selected `Monthly`.
+
+`Start month`: month input, value `2026-06`.
+
+`Make this gift in honor or memory of someone`: checkbox, checked.
+
+`Tribute type`: radio group, selected `In honor of`.
+
+`Tribute name`: text input, value `Dr. Miriam Brooks`.
+
+`Notify someone about this tribute`: checkbox, checked.
+
+`Notification recipient name`: text input, value `Clara Brooks`.
+
+`Notification recipient email`: email input, value `clara.brooks@example.test`.
+
+`Public donor listing`: radio group, selected `List as anonymous`.
+
+`Receipt delivery`: select, selected `Email receipt`.
+
+`Donor comments`: textarea, value `Please apply the gift to student emergency grants when possible.`
+
+Extraction caveat: tribute and notification fields are meaningful because the tribute checkbox is checked. The extraction tool should not drop conditional fields that are visible and populated.
+
+Implementation guidance: this can be implemented with all fields visible. No JavaScript is required, although a CSS class may make tribute details appear as a nested panel.
+
+---
+
+X00 Example 16 - Property Rental Application Form
+
+---
+
+Create a rental application form with applicant information, employment, income, pets, vehicles, and references. Use grouped native fields.
+
+Visible heading:
+
+`Property Rental Application Form`
+
+Visible description:
+
+`This example imitates a residential rental application. It tests long multi-section forms, repeated reference fields, select controls, checkbox groups, radio groups, and values where section context is essential.`
+
+The form must include applicant fields:
+
+`Applicant full name`: `Noah Kim`.
+
+`Preferred move-in date`: date input, value `2026-08-01`.
+
+`Requested unit`: select, selected `Unit 4B - 1 bedroom`.
+
+`Current address`: text input, value `72 Hillcrest Road, San Mateo, CA`.
+
+`Current landlord phone`: telephone input, value `650-555-0199`.
+
+Employment fields:
+
+`Employer name`: `Bay Analytics Group`.
+
+`Job title`: `Operations Analyst`.
+
+`Employment start date`: date input, value `2022-03-07`.
+
+`Monthly income`: number input, value `7200`.
+
+`Income verified`: radio group, selected `Pending`.
+
+Pets and vehicles:
+
+`Pets`: checkbox group with `Cat` checked, `Dog` unchecked, `Other pet` unchecked, `No pets` unchecked.
+
+`Pet description`: text input, value `One indoor cat, 8 years old`.
+
+`Vehicle make`: `Toyota`.
+
+`Vehicle model`: `Prius`.
+
+`Vehicle year`: number input, value `2018`.
+
+`Parking requested`: radio group, selected `Yes`.
+
+Reference 1:
+
+`Reference 1 name`: `Maya Chen`.
+
+`Reference 1 relationship`: select, selected `Former landlord`.
+
+`Reference 1 phone`: `415-555-0131`.
+
+Reference 2:
+
+`Reference 2 name`: `Leo Ortiz`.
+
+`Reference 2 relationship`: select, selected `Supervisor`.
+
+`Reference 2 phone`: `415-555-0162`.
+
+`Additional application notes`: textarea, value `Applicant prefers a lease start date within the first week of August.`
+
+Extraction caveat: this example is intentionally long. The extraction tool should support selecting the entire form or a subsection without losing repeated reference context.
+
+Implementation guidance: use collapsible-looking sections visually, but do not actually hide content.
+
+---
+
+Y00 Example 17 - Device Warranty Registration Form
+
+---
+
+Create a product warranty registration form. It should include serial numbers, purchase details, product category, store details, communication preferences, and file-related receipt display.
+
+Visible heading:
+
+`Device Warranty Registration Form`
+
+Visible description:
+
+`This example imitates a consumer device warranty registration form. It tests serial-number fields, purchase-date fields, product category selects, receipt upload display, and marketing preference checkboxes.`
+
+The form must include these fields and values:
+
+`Customer name`: `Iris Walker`.
+
+`Customer email`: `iris.walker@example.test`.
+
+`Product category`: select, selected `Laptop`.
+
+`Product model`: text input, value `NexaBook Pro 14`.
+
+`Serial number`: text input, value `NXB14-26-009184`.
+
+`Purchase date`: date input, value `2026-05-02`.
+
+`Purchase channel`: radio group, selected `Online retailer`.
+
+`Retailer name`: text input, value `Example Electronics`.
+
+`Order number`: text input, value `EE-7739201`.
+
+`Warranty plan`: select, selected `Extended 3-year protection`.
+
+`Receipt upload`: real file input, no preset value.
+
+`Selected receipt file`: disabled text input, value `example-electronics-receipt-EE-7739201.pdf`.
+
+`Register for product updates`: checkbox, checked.
+
+`Allow warranty reminders by email`: checkbox, checked.
+
+`Allow promotional messages`: checkbox, unchecked.
+
+`Installation notes`: textarea, value `Device will be used primarily for remote work and travel.`
+
+Extraction caveat: the real file input has no value, but the disabled selected-file display is the extractable visible data. The extraction tool should not treat the empty file input as the only file-related value.
+
+Implementation guidance: place the file input and disabled selected-file display near each other.
+
+---
+
+Z00 Example 18 - Internal IT Access Request Form
+
+---
+
+Create an internal IT access request form. It should include employee identity, system access checkboxes, role selection, manager approval fields, effective dates, and justification.
+
+Visible heading:
+
+`Internal IT Access Request Form`
+
+Visible description:
+
+`This example imitates an internal access request form. It tests checkbox groups with business-critical meaning, readonly employee attributes, date ranges, manager approval fields, and a justification textarea.`
+
+The form must include these fields and values:
+
+`Request ID`: readonly input, value `ITR-2026-11802`.
+
+`Employee name`: readonly input, value `Camila Torres`.
+
+`Employee email`: readonly email input, value `camila.torres@example.test`.
+
+`Department`: readonly input, value `Finance`.
+
+`Access start date`: date input, value `2026-06-10`.
+
+`Access end date`: date input, value `2026-12-31`.
+
+`Systems requested`: checkbox group with `ERP read access` checked, `ERP invoice approval` checked, `Payroll reports` unchecked, `Vendor management` checked, `Admin console` unchecked.
+
+`Requested role level`: select, selected `Approver`.
+
+`Data sensitivity acknowledged`: checkbox, checked.
+
+`Manager name`: text input, value `Renee Coleman`.
+
+`Manager approval status`: select, selected `Approved`.
+
+`Approval date`: date input, value `2026-05-29`.
+
+`Business justification`: textarea, value `Employee is covering vendor payment approvals for the West region during the second half of the year.`
+
+`Security notes`: textarea, value `Access should be reviewed after the temporary coverage period ends.`
+
+Extraction caveat: checked access items are the core extracted values. The tool should not summarize them as simply `Systems requested: on`; it should extract the checked labels.
+
+Implementation guidance: use a fieldset legend `Systems requested` and real checkboxes.
+
+---
+
+AA00 Example 19 - Medical Prescription Refill Form
+
+---
+
+Create a prescription refill form. It should include patient details, prescription details, pharmacy selection, delivery options, and clinical notes.
+
+Visible heading:
+
+`Medical Prescription Refill Form`
+
+Visible description:
+
+`This example imitates a prescription refill request. It tests medication records, dosage fields, pharmacy selection, radio groups, refill urgency, and clinical notes in native form controls.`
+
+The form must include these fields and values:
+
+`Patient name`: readonly input, value `Victor Lane`.
+
+`Patient date of birth`: readonly date input, value `1975-01-22`.
+
+`Prescription number`: text input, value `RX-441982`.
+
+`Medication name`: text input, value `Atorvastatin`.
+
+`Strength`: select, selected `20 mg`.
+
+`Directions`: textarea, value `Take one tablet by mouth every evening.`
+
+`Remaining tablets`: number input, value `5`.
+
+`Refill urgency`: radio group, selected `Needed within 3 days`.
+
+`Preferred pharmacy`: select, selected `Central Care Pharmacy`.
+
+`Pickup or delivery`: radio group, selected `Pickup`.
+
+`Allow generic substitution`: radio group, selected `Yes`.
+
+`Contact patient before refill`: checkbox, unchecked.
+
+`Patient phone`: telephone input, value `415-555-0140`.
+
+`Clinical note to prescriber`: textarea, value `Patient reports no side effects and requests standard 90-day refill if allowed by plan.`
+
+Extraction caveat: the form has medical-style values where the field names are important and the textarea content should not be collapsed into a single unreadable line.
+
+Implementation guidance: use fieldsets for `Patient`, `Prescription`, and `Fulfillment`.
+
+---
+
+AB00 Example 20 - Event Volunteer Signup Form
+
+---
+
+Create a volunteer signup form for an event. It should include personal details, availability, role preferences, skills, emergency contact, and consent.
+
+Visible heading:
+
+`Event Volunteer Signup Form`
+
+Visible description:
+
+`This example imitates an event volunteer signup form. It tests availability checkboxes, role preferences, skill selections, repeated contact details, and consent acknowledgements.`
+
+The form must include these fields and values:
+
+`Volunteer name`: `Grace Miller`.
+
+`Email`: `grace.miller@example.test`.
+
+`Mobile phone`: `408-555-0127`.
+
+`T-shirt size`: select, selected `M`.
+
+`Available shifts`: checkbox group with `Friday setup` checked, `Saturday morning` checked, `Saturday afternoon` unchecked, `Sunday cleanup` checked.
+
+`Preferred roles`: native multi-select with selected `Registration desk` and `Wayfinding`. Include options `Registration desk`, `Wayfinding`, `Speaker support`, `Food service`, `Cleanup crew`.
+
+`Special skills`: checkbox group with `First aid certified` checked, `Bilingual` checked, `AV support` unchecked, `Truck driving` unchecked.
+
+`Languages spoken`: text input with datalist, value `English, Spanish`.
+
+`Emergency contact name`: `Hannah Miller`.
+
+`Emergency contact phone`: `408-555-0114`.
+
+`Can lift 25 pounds`: radio group, selected `Yes`.
+
+`Photo release consent`: checkbox, checked.
+
+`Volunteer notes`: textarea, value `Prefers indoor assignments if possible, but can help with Sunday cleanup.`
+
+Extraction caveat: this example combines checkbox groups and multi-select values. The extraction tool should produce clear grouped values rather than a flat list of unrelated checked boxes.
+
+Implementation guidance: present availability and skills as two side-by-side fieldsets on wide screens.
+
+---
+
+AC00 Example 21 - Small Business Tax Organizer Form
+
+---
+
+Create a small business tax organizer form. It should look like a tax preparation questionnaire with fiscal year fields, business identity, income categories, expense categories, accounting method, and preparer notes.
+
+Visible heading:
+
+`Small Business Tax Organizer Form`
+
+Visible description:
+
+`This example imitates a tax organizer form used before preparing a business return. It tests dense financial fields, repeated numeric inputs, selected accounting methods, checkbox categories, and textareas used for preparer notes.`
+
+The form must include these fields and values:
+
+`Tax year`: select, selected `2025`.
+
+`Business legal name`: `Cedar & Pine Design LLC`.
+
+`Business DBA`: `Cedar Pine Studio`.
+
+`EIN last four`: text input, value `8831`.
+
+`Entity type`: select, selected `LLC taxed as S corporation`.
+
+`Accounting method`: radio group, selected `Accrual`.
+
+`Gross receipts`: number input, value `418250`.
+
+`Returns and allowances`: number input, value `3600`.
+
+`Cost of goods sold`: number input, value `84200`.
+
+`Advertising expense`: number input, value `14200`.
+
+`Contract labor`: number input, value `68500`.
+
+`Office expense`: number input, value `9300`.
+
+`Software subscriptions`: number input, value `11840`.
+
+`Meals expense`: number input, value `4200`.
+
+`Vehicle expense method`: radio group, selected `Standard mileage`.
+
+`Business use vehicle miles`: number input, value `8420`.
+
+`Documents provided`: checkbox group with `Bank statements` checked, `Payroll reports` checked, `1099 forms` checked, `Prior year return` unchecked, `Asset purchase invoices` checked.
+
+`Preparer notes`: textarea, value `Client purchased two laptops and one camera body in November. Confirm capitalization threshold before filing.`
+
+Extraction caveat: the extraction tool should keep numeric financial fields paired with their exact labels. Adjacent currency-like fields should not be merged.
+
+Implementation guidance: use a dense two-column financial grid and a separate checklist fieldset.
+
+---
+
+AD00 Example 22 - Mixed Readonly And Disabled Profile Form
+
+---
+
+Create a profile form that deliberately mixes editable, readonly, disabled, and hidden-but-labeled-looking fields. The form should imitate an account profile page where some information is locked by policy.
+
+Visible heading:
+
+`Mixed Readonly And Disabled Profile Form`
+
+Visible description:
+
+`This example imitates an account profile form where some values are editable, some are readonly, and some are disabled by organization policy. It tests whether extraction treats visible locked values as real field values instead of ignoring them.`
+
+The form must include these fields and values:
+
+`Display name`: editable text input, value `Alex Rivera`.
+
+`Legal name`: readonly text input, value `Alexandra Rivera`.
+
+`Username`: readonly text input, value `arivera`.
+
+`Primary email`: editable email input, value `alex.rivera@example.test`.
+
+`Verified email status`: disabled select, selected `Verified`.
+
+`Organization`: disabled input, value `Westbridge Health`.
+
+`Role`: disabled select, selected `Care coordinator`.
+
+`Time zone`: select, selected `America/Los_Angeles`.
+
+`Locale`: select, selected `English (United States)`.
+
+`Profile visibility`: radio group, selected `Organization only`.
+
+`Notification digest`: select, selected `Daily summary`.
+
+`Security contact method`: radio group, selected `Authenticator app`.
+
+`Backup phone`: telephone input, value `415-555-0190`.
+
+`Account created`: readonly date input, value `2024-02-11`.
+
+`Last policy review`: readonly date input, value `2026-04-30`.
+
+`Profile notes`: textarea, value `User requested that legal name remain hidden from public profile views.`
+
+Extraction caveat: disabled controls often do not submit with a form, but they are visible and important. The extraction tool must not use form-submission semantics as the only rule for extracting visible values.
+
+Implementation guidance: visually mark disabled and readonly fields with small badges or helper text, but keep the actual controls native.
+
+---
+
+AE00 Required Final HTML Skeleton
+
+---
+
+The coding agent should produce a complete HTML document using this general skeleton:
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page 1 - Native And Semi-Native Forms</title>
+  <style>
+    /* Inline CSS only. */
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-hero">
+      <p class="page-kicker">Content Extraction Demo Page</p>
+      <h1>Page 1 - Native And Semi-Native Forms</h1>
+      <p>
+        This standalone page contains realistic native and semi-native form examples for testing extraction of labels, values, selected options, repeated sections, readonly summaries, disabled controls, and validation-related form content.
+      </p>
+    </header>
+
+    <section class="example-card" id="example-01">
+      <!-- Example 01 content. -->
+    </section>
+
+    <!-- Continue through example-22. -->
+  </main>
+
+  <script>
+    /* Minimal inline JavaScript only. */
+  </script>
+</body>
+</html>
+```
+
+The generated file must include all 22 examples in the same file.
+
+The page must not require a server.
+
+The page must not fetch data.
+
+The page must not include broken links to external assets.
+
+The page must not use placeholder text instead of the specified values.
+
+---
+
+AF00 Quality Bar
+
+---
+
+The final page should be useful as a long-term manual testing page for a content extraction tool.
+
+Each example must be visibly distinct enough that a tester can scroll to it, select it, and understand what behavior is being tested.
+
+Each example must contain realistic populated values.
+
+Each example must include the specified heading, description, controls, labels, values, and extraction caveat.
+
+The implementation should favor clarity and realistic structure over cleverness.
+
+The coding agent may improve layout, spacing, and CSS details, but it must not remove examples, reduce the number of examples, replace native controls with custom controls, or simplify the forms into toy examples.
+
+The final output must be one portable HTML file.

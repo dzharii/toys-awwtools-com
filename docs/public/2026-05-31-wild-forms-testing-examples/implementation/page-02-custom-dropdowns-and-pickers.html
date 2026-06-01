@@ -1,0 +1,1707 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page 2 - Custom Dropdowns And Pickers</title>
+  <style>
+    :root {
+      --page-bg: #f5f2ea;
+      --card-bg: #fffdf8;
+      --ink: #25221d;
+      --muted: #6f675c;
+      --line: #d8cfc0;
+      --soft: #eee6d8;
+      --panel: #ffffff;
+      --selected: #e7f0ff;
+      --selected-line: #7aa1d2;
+      --danger: #9b332c;
+      --focus: #315f8c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--page-bg);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 64px;
+    }
+
+    .page-hero {
+      margin-bottom: 28px;
+      padding: 28px;
+      background: #fffaf0;
+      border: 2px solid var(--line);
+      border-radius: 18px;
+    }
+
+    .page-kicker {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .page-hero h1 { margin: 0 0 10px; font-size: 1.9rem; }
+    .page-hero p { margin: 0; max-width: 900px; color: #4a443c; }
+
+    .example-card {
+      margin: 28px 0;
+      padding: 24px;
+      background: var(--card-bg);
+      border: 2px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    .example-kicker {
+      margin: 0 0 4px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .example-header h2 { margin: 0; font-size: 1.35rem; }
+    .example-description { max-width: 900px; color: var(--muted); }
+
+    .example-surface {
+      margin-top: 18px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: white;
+    }
+
+    .context-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 22px;
+      margin-bottom: 14px;
+      padding: 10px 14px;
+      border: 1px dashed #b7afa3;
+      border-radius: 10px;
+      background: #faf7f0;
+      font-size: 0.92rem;
+    }
+    .context-strip b { color: #4a443c; }
+
+    .picker-row {
+      display: grid;
+      grid-template-columns: minmax(180px, 260px) minmax(240px, 1fr);
+      gap: 14px;
+      align-items: start;
+      margin: 14px 0;
+    }
+
+    .field-label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .help-text {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .summary-strip {
+      margin-top: 14px;
+      padding: 10px 14px;
+      border: 1px solid var(--selected-line);
+      border-radius: 10px;
+      background: var(--selected);
+      font-size: 0.92rem;
+    }
+    .summary-strip p { margin: 2px 0; }
+
+    .warn-strip {
+      margin-top: 14px;
+      padding: 10px 14px;
+      border: 1px solid #d8b27a;
+      border-radius: 10px;
+      background: #fcf3e2;
+      color: #6b4d1f;
+      font-size: 0.9rem;
+    }
+
+    .custom-select {
+      position: relative;
+      max-width: 460px;
+    }
+
+    .select-button {
+      width: 100%;
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 12px;
+      border: 1px solid #b7afa3;
+      border-radius: 10px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .select-button::after {
+      content: "\25BC";
+      color: var(--muted);
+      font-size: 0.65rem;
+    }
+
+    .select-menu {
+      display: none;
+      position: absolute;
+      z-index: 10;
+      top: calc(100% + 6px);
+      left: 0;
+      width: min(520px, 100%);
+      max-height: 320px;
+      overflow: auto;
+      padding: 8px;
+      border: 1px solid #b7afa3;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.14);
+    }
+
+    .custom-select.is-open .select-menu { display: block; }
+
+    .option-group-label {
+      margin: 8px 6px 4px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+
+    .option {
+      width: 100%;
+      display: block;
+      padding: 9px 10px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--ink);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .option:hover { background: var(--soft); }
+
+    .option[aria-selected="true"],
+    .option.is-selected {
+      background: var(--selected);
+      outline: 1px solid var(--selected-line);
+    }
+
+    .option[aria-disabled="true"],
+    .option.is-disabled,
+    .option:disabled {
+      color: #9c958a;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+
+    .option-meta {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+
+    .search-input {
+      width: 100%;
+      min-height: 38px;
+      margin-bottom: 8px;
+      padding: 8px 10px;
+      border: 1px solid #b7afa3;
+      border-radius: 8px;
+      font: inherit;
+    }
+
+    .chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 8px 0;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #faf7f0;
+      font-size: 0.9rem;
+    }
+    .chip button {
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1;
+      padding: 0 2px;
+    }
+
+    .picker-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .slot-btn {
+      padding: 9px 8px;
+      border: 1px solid #b7afa3;
+      border-radius: 10px;
+      background: #fff;
+      font: inherit;
+      cursor: pointer;
+      text-align: center;
+    }
+    .slot-btn .slot-meta { display: block; font-size: 0.76rem; color: var(--muted); margin-top: 3px; }
+    .slot-btn[aria-pressed="true"], .slot-btn.is-selected {
+      background: var(--selected);
+      border-color: var(--selected-line);
+      font-weight: 700;
+    }
+    .slot-btn:disabled, .slot-btn[aria-disabled="true"] {
+      color: #9c958a; cursor: not-allowed; background: #f3efe7;
+    }
+    .slot-btn.is-waitlist { border-style: dashed; background: #fcf3e2; }
+
+    .panel {
+      max-width: 460px;
+      padding: 14px;
+      border: 1px solid #b7afa3;
+      border-radius: 12px;
+      background: #fff;
+    }
+    .counter-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--soft);
+    }
+    .counter-row:last-of-type { border-bottom: 0; }
+    .counter-ctl { display: inline-flex; align-items: center; gap: 10px; }
+    .counter-ctl button {
+      width: 32px; height: 32px;
+      border: 1px solid #b7afa3; border-radius: 8px;
+      background: #fff; cursor: pointer; font-size: 1.1rem; line-height: 1;
+    }
+    .counter-ctl .count-value { min-width: 22px; text-align: center; font-weight: 700; }
+
+    .swatch-row, .size-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
+    .swatch, .size-btn {
+      padding: 8px 12px;
+      border: 1px solid #b7afa3;
+      border-radius: 10px;
+      background: #fff;
+      font: inherit;
+      cursor: pointer;
+    }
+    .swatch[aria-pressed="true"], .size-btn[aria-pressed="true"], .swatch.is-selected, .size-btn.is-selected {
+      background: var(--selected); border-color: var(--selected-line); font-weight: 700;
+    }
+    .swatch:disabled, .size-btn:disabled { color: #9c958a; cursor: not-allowed; background: #f3efe7; }
+    .swatch .swatch-meta { display: block; font-size: 0.72rem; color: var(--muted); }
+
+    .avatar {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: #cdd9e8; color: #2c4a5e; font-size: 0.72rem; font-weight: 700;
+    }
+    .person-option { display: flex; align-items: center; gap: 10px; }
+    .person-option .person-main { font-weight: 600; }
+    .person-option .person-sub { display: block; color: var(--muted); font-size: 0.82rem; }
+
+    .columns-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+    .col-list { border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
+    .col-list h4 { margin: 4px 6px 8px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+
+    .grid-pickers {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 14px;
+    }
+
+    /* Calendar */
+    .calendar-panel { display: flex; flex-wrap: wrap; gap: 22px; }
+    .month h4 { margin: 0 0 8px; font-size: 1rem; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 34px); gap: 4px; }
+    .cal-day {
+      width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 8px;
+      background: #fff; cursor: pointer; font: inherit; font-size: 0.85rem;
+    }
+    .cal-day.in-range { background: #eef4ff; }
+    .cal-day.range-start, .cal-day.range-end { background: var(--selected-line); color: #fff; font-weight: 700; }
+    .cal-day.is-disabled { color: #c0b9ac; cursor: not-allowed; background: #f3efe7; text-decoration: line-through; }
+
+    /* Wheel picker */
+    .wheel-wrap { display: flex; gap: 18px; }
+    .wheel {
+      position: relative;
+      width: 150px; height: 180px; overflow: hidden;
+      border: 1px solid var(--line); border-radius: 12px; background: #fff;
+    }
+    .wheel h4, .wheel-title { margin: 0; padding: 6px 10px; font-size: 0.78rem; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--soft); text-align: center; }
+    .wheel-list { list-style: none; margin: 0; padding: 6px 0; display: flex; flex-direction: column; }
+    .wheel-list li, .wheel-item { padding: 8px 12px; color: #9c958a; text-align: center; }
+    .wheel-item { border: 0; background: transparent; font: inherit; cursor: pointer; width: 100%; }
+    .wheel-list li.is-selected, .wheel-item.is-selected {
+      color: var(--ink); font-weight: 800; background: var(--selected);
+      outline: 1px solid var(--selected-line);
+    }
+
+    .segmented { display: inline-flex; border: 1px solid #b7afa3; border-radius: 10px; overflow: hidden; }
+    .segmented button { border: 0; background: #fff; padding: 8px 14px; cursor: pointer; font: inherit; }
+    .segmented button[aria-pressed="true"] { background: var(--selected); font-weight: 700; }
+
+    @media (max-width: 760px) {
+      .picker-row, .grid-pickers, .columns-3 { grid-template-columns: 1fr; }
+      .picker-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .example-card { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-hero">
+      <p class="page-kicker">Content Extraction Demo Page</p>
+      <h1>Page 2 - Custom Dropdowns And Pickers</h1>
+      <p>
+        This standalone page contains realistic custom dropdown and picker examples for testing
+        extraction of selected values, hidden backing values, grouped options, option metadata,
+        multi-select chips, calendar states, time slots, and custom control panels.
+      </p>
+    </header>
+
+    <section class="example-card" id="example-01">
+      <header class="example-header">
+        <p class="example-kicker">Example 01</p>
+        <h2>Bus Departure Time Picker</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a bus reservation time selector where departure options are rendered
+        as a custom dropdown instead of a native select. It tests extraction of the visible selected
+        time, the hidden submitted value, grouped time options, sold-out options, and option
+        metadata such as arrival time and fare class.
+      </p>
+      <div class="example-surface">
+        <div class="context-strip">
+          <span><b>Route:</b> San Francisco Transbay Terminal to Los Angeles Union Station</span>
+          <span><b>Travel date:</b> Friday, July 3, 2026</span>
+          <span><b>Passenger count:</b> 2 passengers</span>
+        </div>
+        <div class="custom-select" data-mode="single" id="ex01-departure-picker">
+          <span class="field-label" id="ex01-departure-label">Departure time</span>
+          <button class="select-button" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="ex01-departure-label ex01-selected-time">
+            <span data-selected-label id="ex01-selected-time">08:15 AM - Express - arrives 02:40 PM</span>
+          </button>
+          <input type="hidden" name="departureTripId" value="SF-LA-20260703-0815-EXP">
+          <div class="select-menu" role="listbox" aria-labelledby="ex01-departure-label">
+            <p class="option-group-label">Morning departures</p>
+            <button class="option" role="option" type="button" data-value="SF-LA-20260703-0630-STD" data-label="06:30 AM - Standard - arrives 01:25 PM" data-search-text="06:30 standard arrives 01:25 8 seats">
+              06:30 AM - Standard - arrives 01:25 PM
+              <span class="option-meta">6h 55m, 8 seats left</span>
+            </button>
+            <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="SF-LA-20260703-0815-EXP" data-label="08:15 AM - Express - arrives 02:40 PM" data-search-text="08:15 express arrives 02:40 selected">
+              08:15 AM - Express - arrives 02:40 PM
+              <span class="option-meta">6h 25m, selected</span>
+            </button>
+            <button class="option is-disabled" role="option" type="button" aria-disabled="true" data-value="SF-LA-20260703-1045-STD" data-label="10:45 AM - Standard - arrives 05:55 PM" data-search-text="10:45 standard sold out">
+              10:45 AM - Standard - arrives 05:55 PM
+              <span class="option-meta">7h 10m, sold out</span>
+            </button>
+            <p class="option-group-label">Afternoon departures</p>
+            <button class="option" role="option" type="button" data-value="SF-LA-20260703-1320-EXP" data-label="01:20 PM - Express - arrives 07:35 PM" data-search-text="01:20 express arrives 07:35 4 seats">
+              01:20 PM - Express - arrives 07:35 PM
+              <span class="option-meta">6h 15m, 4 seats left</span>
+            </button>
+            <button class="option" role="option" type="button" data-value="SF-LA-20260703-1550-STD" data-label="03:50 PM - Standard - arrives 11:15 PM" data-search-text="03:50 standard arrives 11:15 13 seats">
+              03:50 PM - Standard - arrives 11:15 PM
+              <span class="option-meta">7h 25m, 13 seats left</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-02">
+      <header class="example-header">
+        <p class="example-kicker">Example 02</p>
+        <h2>Searchable Airport Combobox</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a flight booking airport selector. It tests a custom combobox where
+        the displayed option includes multiple pieces of metadata, while the hidden value stores only
+        an airport code.
+      </p>
+      <div class="example-surface">
+        <div class="grid-pickers">
+          <div class="custom-select" data-mode="single" role="combobox" aria-expanded="false" id="ex02-from">
+            <span class="field-label" id="ex02-from-label">From airport</span>
+            <button class="select-button" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="ex02-from-label ex02-from-value">
+              <span data-selected-label id="ex02-from-value">San Francisco - San Francisco International Airport (SFO)</span>
+            </button>
+            <input type="hidden" name="fromAirport" value="SFO">
+            <div class="select-menu" role="listbox" aria-labelledby="ex02-from-label">
+              <input class="search-input" type="text" data-filter-options placeholder="Search city, airport, or code" aria-label="Search airports">
+              <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="SFO" data-label="San Francisco - San Francisco International Airport (SFO)" data-search-text="san francisco international sfo united states">
+                <span class="opt-city">San Francisco</span> - <span class="opt-name">San Francisco International Airport</span>
+                <span class="option-meta">Code SFO, United States</span>
+              </button>
+              <button class="option" role="option" type="button" data-value="OAK" data-label="Oakland - Oakland International Airport (OAK)" data-search-text="oakland international oak united states">
+                <span class="opt-city">Oakland</span> - <span class="opt-name">Oakland International Airport</span>
+                <span class="option-meta">Code OAK, United States</span>
+              </button>
+              <button class="option" role="option" type="button" data-value="LAX" data-label="Los Angeles - Los Angeles International Airport (LAX)" data-search-text="los angeles international lax united states">
+                <span class="opt-city">Los Angeles</span> - <span class="opt-name">Los Angeles International Airport</span>
+                <span class="option-meta">Code LAX, United States</span>
+              </button>
+              <button class="option" role="option" type="button" data-value="HND" data-label="Tokyo - Haneda Airport (HND)" data-search-text="tokyo haneda hnd japan">
+                <span class="opt-city">Tokyo</span> - <span class="opt-name">Haneda Airport</span>
+                <span class="option-meta">Code HND, Japan</span>
+              </button>
+              <button class="option" role="option" type="button" data-value="NRT" data-label="Tokyo - Narita International Airport (NRT)" data-search-text="tokyo narita international nrt japan">
+                <span class="opt-city">Tokyo</span> - <span class="opt-name">Narita International Airport</span>
+                <span class="option-meta">Code NRT, Japan</span>
+              </button>
+              <button class="option" role="option" type="button" data-value="KIX" data-label="Osaka - Kansai International Airport (KIX)" data-search-text="osaka kansai international kix japan">
+                <span class="opt-city">Osaka</span> - <span class="opt-name">Kansai International Airport</span>
+                <span class="option-meta">Code KIX, Japan</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="custom-select" data-mode="single" role="combobox" aria-expanded="false" id="ex02-to">
+            <span class="field-label" id="ex02-to-label">To airport</span>
+            <button class="select-button" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="ex02-to-label ex02-to-value">
+              <span data-selected-label id="ex02-to-value">Tokyo - Haneda Airport (HND)</span>
+            </button>
+            <input type="hidden" name="toAirport" value="HND">
+            <div class="select-menu" role="listbox" aria-labelledby="ex02-to-label">
+              <input class="search-input" type="text" data-filter-options placeholder="Search city, airport, or code" aria-label="Search airports">
+              <button class="option" role="option" type="button" data-value="SFO" data-label="San Francisco - San Francisco International Airport (SFO)" data-search-text="san francisco international sfo united states">
+                <span class="opt-city">San Francisco</span> - <span class="opt-name">San Francisco International Airport</span>
+                <span class="option-meta">Code SFO, United States</span>
+              </button>
+              <button class="option" role="option" type="button" data-value="OAK" data-label="Oakland - Oakland International Airport (OAK)" data-search-text="oakland international oak united states">
+                <span class="opt-city">Oakland</span> - <span class="opt-name">Oakland International Airport</span>
+                <span class="option-meta">Code OAK, United States</span>
+              </button>
+              <button class="option" role="option" type="button" data-value="LAX" data-label="Los Angeles - Los Angeles International Airport (LAX)" data-search-text="los angeles international lax united states">
+                <span class="opt-city">Los Angeles</span> - <span class="opt-name">Los Angeles International Airport</span>
+                <span class="option-meta">Code LAX, United States</span>
+              </button>
+              <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="HND" data-label="Tokyo - Haneda Airport (HND)" data-search-text="tokyo haneda hnd japan">
+                <span class="opt-city">Tokyo</span> - <span class="opt-name">Haneda Airport</span>
+                <span class="option-meta">Code HND, Japan</span>
+              </button>
+              <button class="option" role="option" type="button" data-value="NRT" data-label="Tokyo - Narita International Airport (NRT)" data-search-text="tokyo narita international nrt japan">
+                <span class="opt-city">Tokyo</span> - <span class="opt-name">Narita International Airport</span>
+                <span class="option-meta">Code NRT, Japan</span>
+              </button>
+              <button class="option" role="option" type="button" data-value="KIX" data-label="Osaka - Kansai International Airport (KIX)" data-search-text="osaka kansai international kix japan">
+                <span class="opt-city">Osaka</span> - <span class="opt-name">Kansai International Airport</span>
+                <span class="option-meta">Code KIX, Japan</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-03">
+      <header class="example-header">
+        <p class="example-kicker">Example 03</p>
+        <h2>Hotel Guest And Room Picker</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a hotel guest selector where clicking the field opens a small control
+        panel with increment and decrement buttons. It tests extraction of selected counts from a
+        custom picker panel rather than from normal form fields.
+      </p>
+      <div class="example-surface">
+        <div class="context-strip">
+          <span><b>Hotel:</b> Harbor View Suites</span>
+          <span><b>Stay dates:</b> August 14-18, 2026</span>
+          <span><b>Rate plan:</b> Refundable breakfast rate</span>
+        </div>
+        <div class="custom-select" id="ex03-guest-picker">
+          <span class="field-label" id="ex03-guest-label">Guests and rooms</span>
+          <button class="select-button" type="button" aria-haspopup="dialog" aria-expanded="false" aria-labelledby="ex03-guest-label ex03-summary">
+            <span id="ex03-summary">2 adults, 1 child, 1 room</span>
+          </button>
+          <input type="hidden" name="rooms" id="ex03-rooms" value="1">
+          <input type="hidden" name="adults" id="ex03-adults" value="2">
+          <input type="hidden" name="children" id="ex03-children" value="1">
+          <input type="hidden" name="pets" id="ex03-pets" value="0">
+          <div class="select-menu" role="dialog" aria-label="Guests and rooms">
+            <div class="counter-row" data-counter data-hidden="ex03-rooms" data-min="1" data-group="ex03">
+              <span><b>Rooms</b></span>
+              <span class="counter-ctl">
+                <button type="button" data-step="-1" aria-label="Decrease rooms">&minus;</button>
+                <span class="count-value">1</span>
+                <button type="button" data-step="1" aria-label="Increase rooms">+</button>
+              </span>
+            </div>
+            <div class="counter-row" data-counter data-hidden="ex03-adults" data-min="1" data-group="ex03">
+              <span><b>Adults</b><br><small class="help-text">Ages 18+</small></span>
+              <span class="counter-ctl">
+                <button type="button" data-step="-1" aria-label="Decrease adults">&minus;</button>
+                <span class="count-value">2</span>
+                <button type="button" data-step="1" aria-label="Increase adults">+</button>
+              </span>
+            </div>
+            <div class="counter-row" data-counter data-hidden="ex03-children" data-min="0" data-group="ex03">
+              <span><b>Children</b><br><small class="help-text">Ages 0-17</small></span>
+              <span class="counter-ctl">
+                <button type="button" data-step="-1" aria-label="Decrease children">&minus;</button>
+                <span class="count-value">1</span>
+                <button type="button" data-step="1" aria-label="Increase children">+</button>
+              </span>
+            </div>
+            <div class="counter-row" data-counter data-hidden="ex03-pets" data-min="0" data-group="ex03">
+              <span><b>Pets</b><br><small class="help-text">Pet-friendly rooms only</small></span>
+              <span class="counter-ctl">
+                <button type="button" data-step="-1" aria-label="Decrease pets">&minus;</button>
+                <span class="count-value">0</span>
+                <button type="button" data-step="1" aria-label="Increase pets">+</button>
+              </span>
+            </div>
+            <p class="help-text">Maximum occupancy for this rate is 4 guests per room.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-04">
+      <header class="example-header">
+        <p class="example-kicker">Example 04</p>
+        <h2>Restaurant Reservation Time Slot Picker</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a restaurant reservation widget. It tests extraction of a selected time
+        from a grid of custom option buttons, including unavailable times, meal-period group
+        headings, table type metadata, and a waitlist-only option.
+      </p>
+      <div class="example-surface">
+        <div class="context-strip">
+          <span><b>Restaurant:</b> Cypress &amp; Fig</span>
+          <span><b>Party size:</b> 4 guests</span>
+          <span><b>Reservation date:</b> Saturday, June 20, 2026</span>
+        </div>
+        <span class="field-label">Available times</span>
+        <input type="hidden" name="reservationTime" id="ex04-time" value="2026-06-20T19:15:00-07:00">
+        <p class="help-text">Selected time: <strong id="ex04-time-label">7:15 PM</strong></p>
+        <p class="option-group-label">Dinner</p>
+        <div class="picker-grid">
+          <button class="slot-btn" type="button" aria-pressed="false" data-toggle-group="ex04" data-target="ex04-time" data-label="5:30 PM" data-value="2026-06-20T17:30:00-07:00" data-label-target="ex04-time-label">5:30 PM<span class="slot-meta">Dining room</span></button>
+          <button class="slot-btn" type="button" aria-pressed="false" data-toggle-group="ex04" data-target="ex04-time" data-label="6:00 PM" data-value="2026-06-20T18:00:00-07:00" data-label-target="ex04-time-label">6:00 PM<span class="slot-meta">Patio</span></button>
+          <button class="slot-btn" type="button" disabled aria-disabled="true">6:45 PM<span class="slot-meta">Unavailable</span></button>
+          <button class="slot-btn is-selected" type="button" aria-pressed="true" data-toggle-group="ex04" data-target="ex04-time" data-label="7:15 PM" data-value="2026-06-20T19:15:00-07:00" data-label-target="ex04-time-label">7:15 PM<span class="slot-meta">Patio, selected</span></button>
+          <button class="slot-btn" type="button" aria-pressed="false" data-toggle-group="ex04" data-target="ex04-time" data-label="7:45 PM" data-value="2026-06-20T19:45:00-07:00" data-label-target="ex04-time-label">7:45 PM<span class="slot-meta">Bar seating</span></button>
+          <button class="slot-btn is-waitlist" type="button" aria-pressed="false" data-toggle-group="ex04" data-target="ex04-time" data-label="8:30 PM" data-value="2026-06-20T20:30:00-07:00" data-label-target="ex04-time-label">8:30 PM<span class="slot-meta">Waitlist only</span></button>
+        </div>
+        <p class="option-group-label">Late evening</p>
+        <div class="picker-grid">
+          <button class="slot-btn" type="button" aria-pressed="false" data-toggle-group="ex04" data-target="ex04-time" data-label="9:15 PM" data-value="2026-06-20T21:15:00-07:00" data-label-target="ex04-time-label">9:15 PM<span class="slot-meta">Dining room</span></button>
+          <button class="slot-btn" type="button" aria-pressed="false" data-toggle-group="ex04" data-target="ex04-time" data-label="9:45 PM" data-value="2026-06-20T21:45:00-07:00" data-label-target="ex04-time-label">9:45 PM<span class="slot-meta">Bar seating</span></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-05">
+      <header class="example-header">
+        <p class="example-kicker">Example 05</p>
+        <h2>Date Range Calendar Picker</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a lodging or rental booking date range picker. It tests extraction of
+        start date, end date, nights count, disabled dates, and calendar button states from a custom
+        calendar UI.
+      </p>
+      <div class="example-surface">
+        <div class="context-strip">
+          <span><b>Property:</b> Redwood Creek Cabin</span>
+          <span><b>Minimum stay:</b> 3 nights</span>
+          <span><b>Selected stay:</b> September 10-15, 2026</span>
+        </div>
+        <span class="field-label" id="ex05-label">Check-in and check-out</span>
+        <button class="select-button" type="button" style="max-width:340px" aria-labelledby="ex05-label ex05-range">
+          <span id="ex05-range">Sep 10, 2026 - Sep 15, 2026</span>
+        </button>
+        <input type="hidden" name="checkIn" value="2026-09-10">
+        <input type="hidden" name="checkOut" value="2026-09-15">
+        <input type="hidden" name="nights" value="5">
+        <div class="calendar-panel" style="margin-top:16px">
+          <div class="month">
+            <h4>September 2026</h4>
+            <div class="cal-grid" role="grid" aria-label="September 2026">
+              <button class="cal-day" type="button">8</button>
+              <button class="cal-day" type="button">9</button>
+              <button class="cal-day range-start" type="button" aria-label="September 10, check-in">10</button>
+              <button class="cal-day in-range" type="button">11</button>
+              <button class="cal-day in-range" type="button">12</button>
+              <button class="cal-day in-range" type="button">13</button>
+              <button class="cal-day in-range" type="button">14</button>
+              <button class="cal-day range-end" type="button" aria-label="September 15, check-out">15</button>
+              <button class="cal-day" type="button">16</button>
+              <button class="cal-day" type="button">17</button>
+              <button class="cal-day is-disabled" type="button" aria-disabled="true" aria-label="September 18, Unavailable">18</button>
+              <button class="cal-day is-disabled" type="button" aria-disabled="true" aria-label="September 19, Unavailable">19</button>
+              <button class="cal-day" type="button">20</button>
+              <button class="cal-day" type="button">21</button>
+            </div>
+          </div>
+          <div class="month">
+            <h4>October 2026</h4>
+            <div class="cal-grid" role="grid" aria-label="October 2026">
+              <button class="cal-day" type="button">1</button>
+              <button class="cal-day" type="button">2</button>
+              <button class="cal-day" type="button">3</button>
+              <button class="cal-day" type="button">4</button>
+              <button class="cal-day" type="button">5</button>
+              <button class="cal-day" type="button">6</button>
+              <button class="cal-day" type="button">7</button>
+              <button class="cal-day" type="button">8</button>
+              <button class="cal-day" type="button">9</button>
+              <button class="cal-day" type="button">10</button>
+              <button class="cal-day" type="button">11</button>
+              <button class="cal-day" type="button">12</button>
+              <button class="cal-day" type="button">13</button>
+              <button class="cal-day" type="button">14</button>
+            </div>
+          </div>
+        </div>
+        <div class="summary-strip">
+          <p>5 nights selected</p>
+          <p>Estimated lodging total: $1,145</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-06">
+      <header class="example-header">
+        <p class="example-kicker">Example 06</p>
+        <h2>Time Zone Picker With Search</h2>
+      </header>
+      <p class="example-description">
+        This example imitates an account settings time zone control. It tests extraction where the
+        visible value contains a friendly city label and UTC offset, while the hidden submitted value
+        is an IANA time zone identifier.
+      </p>
+      <div class="example-surface">
+        <div class="custom-select" data-mode="single" id="ex06-tz">
+          <span class="field-label" id="ex06-tz-label">Default time zone</span>
+          <button class="select-button" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="ex06-tz-label ex06-tz-value">
+            <span data-selected-label id="ex06-tz-value">Pacific Time - Los Angeles (UTC-07:00)</span>
+          </button>
+          <input type="hidden" name="timeZone" value="America/Los_Angeles">
+          <div class="select-menu" role="listbox" aria-labelledby="ex06-tz-label">
+            <input class="search-input" type="text" data-filter-options placeholder="Filter time zones" aria-label="Filter time zones">
+            <p class="option-group-label">Americas</p>
+            <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="America/Los_Angeles" data-label="Pacific Time - Los Angeles (UTC-07:00)" data-search-text="pacific los angeles america utc-07">
+              Pacific Time - Los Angeles<span class="option-meta">America/Los_Angeles, UTC-07:00</span>
+            </button>
+            <button class="option" role="option" type="button" data-value="America/Denver" data-label="Mountain Time - Denver (UTC-06:00)" data-search-text="mountain denver america utc-06">
+              Mountain Time - Denver<span class="option-meta">America/Denver, UTC-06:00</span>
+            </button>
+            <button class="option" role="option" type="button" data-value="America/Chicago" data-label="Central Time - Chicago (UTC-05:00)" data-search-text="central chicago america utc-05">
+              Central Time - Chicago<span class="option-meta">America/Chicago, UTC-05:00</span>
+            </button>
+            <button class="option" role="option" type="button" data-value="America/New_York" data-label="Eastern Time - New York (UTC-04:00)" data-search-text="eastern new york america utc-04">
+              Eastern Time - New York<span class="option-meta">America/New_York, UTC-04:00</span>
+            </button>
+            <p class="option-group-label">Europe</p>
+            <button class="option" role="option" type="button" data-value="Europe/London" data-label="London (UTC+01:00)" data-search-text="london europe utc+01">
+              London<span class="option-meta">Europe/London, UTC+01:00</span>
+            </button>
+            <button class="option" role="option" type="button" data-value="Europe/Berlin" data-label="Berlin (UTC+02:00)" data-search-text="berlin europe utc+02">
+              Berlin<span class="option-meta">Europe/Berlin, UTC+02:00</span>
+            </button>
+            <button class="option" role="option" type="button" data-value="Europe/Madrid" data-label="Madrid (UTC+02:00)" data-search-text="madrid europe utc+02">
+              Madrid<span class="option-meta">Europe/Madrid, UTC+02:00</span>
+            </button>
+            <p class="option-group-label">Asia Pacific</p>
+            <button class="option" role="option" type="button" data-value="Asia/Tokyo" data-label="Tokyo (UTC+09:00)" data-search-text="tokyo asia utc+09">
+              Tokyo<span class="option-meta">Asia/Tokyo, UTC+09:00</span>
+            </button>
+            <button class="option" role="option" type="button" data-value="Asia/Singapore" data-label="Singapore (UTC+08:00)" data-search-text="singapore asia utc+08">
+              Singapore<span class="option-meta">Asia/Singapore, UTC+08:00</span>
+            </button>
+            <button class="option" role="option" type="button" data-value="Australia/Sydney" data-label="Sydney (UTC+10:00)" data-search-text="sydney australia utc+10">
+              Sydney<span class="option-meta">Australia/Sydney, UTC+10:00</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-07">
+      <header class="example-header">
+        <p class="example-kicker">Example 07</p>
+        <h2>Country And Region Cascading Picker</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a two-step country and region selector. It tests extraction from
+        dependent custom dropdowns where the second picker options depend on the first selected
+        value. Choose a different country to update the active region options.
+      </p>
+      <div class="example-surface">
+        <div class="grid-pickers">
+          <div class="custom-select" data-mode="single" id="ex07-country">
+            <span class="field-label" id="ex07-country-label">Country</span>
+            <button class="select-button" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="ex07-country-label ex07-country-value">
+              <span data-selected-label id="ex07-country-value">United States</span>
+            </button>
+            <input type="hidden" name="country" value="US">
+            <div class="select-menu" role="listbox" aria-labelledby="ex07-country-label">
+              <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="US" data-label="United States">United States</button>
+              <button class="option" role="option" type="button" data-value="CA" data-label="Canada">Canada</button>
+              <button class="option" role="option" type="button" data-value="MX" data-label="Mexico">Mexico</button>
+              <button class="option" role="option" type="button" data-value="GB" data-label="United Kingdom">United Kingdom</button>
+            </div>
+          </div>
+
+          <div class="custom-select" data-mode="single" id="ex07-region">
+            <span class="field-label" id="ex07-region-label">State or region</span>
+            <button class="select-button" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="ex07-region-label ex07-region-value">
+              <span data-selected-label id="ex07-region-value">California</span>
+            </button>
+            <input type="hidden" name="region" value="US-CA">
+            <div class="select-menu" role="listbox" aria-labelledby="ex07-region-label">
+              <div data-region-group="US">
+                <p class="option-group-label">United States</p>
+                <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="US-CA" data-label="California">California</button>
+                <button class="option" role="option" type="button" data-value="US-NY" data-label="New York">New York</button>
+                <button class="option" role="option" type="button" data-value="US-TX" data-label="Texas">Texas</button>
+                <button class="option" role="option" type="button" data-value="US-WA" data-label="Washington">Washington</button>
+              </div>
+              <div data-region-group="CA" hidden>
+                <p class="option-group-label">Canada</p>
+                <button class="option" role="option" type="button" data-value="CA-BC" data-label="British Columbia">British Columbia</button>
+                <button class="option" role="option" type="button" data-value="CA-ON" data-label="Ontario">Ontario</button>
+                <button class="option" role="option" type="button" data-value="CA-QC" data-label="Quebec">Quebec</button>
+                <button class="option" role="option" type="button" data-value="CA-AB" data-label="Alberta">Alberta</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-08">
+      <header class="example-header">
+        <p class="example-kicker">Example 08</p>
+        <h2>Multi-Select Skills Chip Picker</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a profile skills selector with chips. It tests extraction of multiple
+        selected values from visible chips, hidden repeated inputs, and a searchable option list.
+      </p>
+      <div class="example-surface">
+        <span class="field-label">Skills</span>
+        <div class="chip-list" id="ex08-chips">
+          <span class="chip">JavaScript <button type="button" aria-label="Remove JavaScript">&times;</button></span>
+          <span class="chip">Accessibility testing <button type="button" aria-label="Remove Accessibility testing">&times;</button></span>
+          <span class="chip">Data visualization <button type="button" aria-label="Remove Data visualization">&times;</button></span>
+          <span class="chip">Technical writing <button type="button" aria-label="Remove Technical writing">&times;</button></span>
+        </div>
+        <input type="hidden" name="skills[]" value="javascript">
+        <input type="hidden" name="skills[]" value="accessibility-testing">
+        <input type="hidden" name="skills[]" value="data-visualization">
+        <input type="hidden" name="skills[]" value="technical-writing">
+        <div class="custom-select" id="ex08-picker">
+          <button class="select-button" type="button" aria-haspopup="listbox" aria-expanded="false">
+            <span>Add a skill</span>
+          </button>
+          <div class="select-menu" role="listbox" aria-label="Skills">
+            <input class="search-input" type="text" data-filter-options placeholder="Search skills" aria-label="Search skills">
+            <button class="option is-selected" role="option" type="button" aria-selected="true" data-search-text="javascript">JavaScript</button>
+            <button class="option" role="option" type="button" data-search-text="typescript">TypeScript</button>
+            <button class="option" role="option" type="button" data-search-text="react">React</button>
+            <button class="option is-selected" role="option" type="button" aria-selected="true" data-search-text="accessibility testing">Accessibility testing</button>
+            <button class="option is-selected" role="option" type="button" aria-selected="true" data-search-text="data visualization">Data visualization</button>
+            <button class="option is-selected" role="option" type="button" aria-selected="true" data-search-text="technical writing">Technical writing</button>
+            <button class="option" role="option" type="button" data-search-text="node.js node">Node.js</button>
+            <button class="option" role="option" type="button" data-search-text="web scraping">Web scraping</button>
+            <button class="option" role="option" type="button" data-search-text="qa automation">QA automation</button>
+            <button class="option" role="option" type="button" data-search-text="product analytics">Product analytics</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-09">
+      <header class="example-header">
+        <p class="example-kicker">Example 09</p>
+        <h2>Job Listing Location Radius Picker</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a job search sidebar location picker. It tests extraction from a
+        combined custom control where the selected value is split across location, radius, and remote
+        preference pickers.
+      </p>
+      <div class="example-surface">
+        <div class="context-strip">
+          <span><b>Search query:</b> Frontend engineer</span>
+          <span><b>Experience level:</b> Senior</span>
+        </div>
+        <div class="grid-pickers">
+          <div class="custom-select" data-mode="single" id="ex09-location">
+            <span class="field-label" id="ex09-loc-label">Location</span>
+            <button class="select-button" type="button" aria-expanded="false" aria-labelledby="ex09-loc-label ex09-loc-value">
+              <span data-selected-label id="ex09-loc-value">Austin, TX</span>
+            </button>
+            <input type="hidden" name="location" value="austin-tx">
+            <div class="select-menu" role="listbox" aria-labelledby="ex09-loc-label">
+              <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="austin-tx" data-label="Austin, TX">Austin, TX<span class="option-meta">City, selected</span></button>
+              <button class="option" role="option" type="button" data-value="round-rock-tx" data-label="Round Rock, TX">Round Rock, TX<span class="option-meta">18 miles away</span></button>
+              <button class="option" role="option" type="button" data-value="san-antonio-tx" data-label="San Antonio, TX">San Antonio, TX<span class="option-meta">79 miles away</span></button>
+              <button class="option" role="option" type="button" data-value="dallas-tx" data-label="Dallas, TX">Dallas, TX<span class="option-meta">195 miles away</span></button>
+              <button class="option" role="option" type="button" data-value="remote-us" data-label="Remote - United States">Remote - United States<span class="option-meta">Nationwide</span></button>
+            </div>
+          </div>
+
+          <div class="custom-select" data-mode="single" id="ex09-distance">
+            <span class="field-label" id="ex09-dist-label">Distance</span>
+            <button class="select-button" type="button" aria-expanded="false" aria-labelledby="ex09-dist-label ex09-dist-value">
+              <span data-selected-label id="ex09-dist-value">25 miles</span>
+            </button>
+            <input type="hidden" name="radius" value="25">
+            <div class="select-menu" role="listbox" aria-labelledby="ex09-dist-label">
+              <button class="option" role="option" type="button" data-value="5" data-label="5 miles">5 miles</button>
+              <button class="option" role="option" type="button" data-value="10" data-label="10 miles">10 miles</button>
+              <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="25" data-label="25 miles">25 miles</button>
+              <button class="option" role="option" type="button" data-value="50" data-label="50 miles">50 miles</button>
+              <button class="option" role="option" type="button" data-value="100" data-label="100 miles">100 miles</button>
+            </div>
+          </div>
+
+          <div class="custom-select" data-mode="single" id="ex09-remote">
+            <span class="field-label" id="ex09-rem-label">Remote preference</span>
+            <button class="select-button" type="button" aria-expanded="false" aria-labelledby="ex09-rem-label ex09-rem-value">
+              <span data-selected-label id="ex09-rem-value">Hybrid or remote</span>
+            </button>
+            <input type="hidden" name="remotePreference" value="hybrid_remote">
+            <div class="select-menu" role="listbox" aria-labelledby="ex09-rem-label">
+              <button class="option" role="option" type="button" data-value="onsite" data-label="On-site only">On-site only</button>
+              <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="hybrid_remote" data-label="Hybrid or remote">Hybrid or remote</button>
+              <button class="option" role="option" type="button" data-value="remote_only" data-label="Remote only">Remote only</button>
+              <button class="option" role="option" type="button" data-value="no_preference" data-label="No preference">No preference</button>
+            </div>
+          </div>
+        </div>
+        <div class="summary-strip">
+          <p>Showing senior frontend engineer roles near Austin, TX within 25 miles, hybrid or remote</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-10">
+      <header class="example-header">
+        <p class="example-kicker">Example 10</p>
+        <h2>Product Variant Size And Color Picker</h2>
+      </header>
+      <p class="example-description">
+        This example imitates an ecommerce product variant selector. It tests extraction of selected
+        color, selected size, disabled options, SKU values, and variant metadata from non-select form
+        controls.
+      </p>
+      <div class="example-surface">
+        <div class="context-strip">
+          <span><b>Product:</b> TrailKnit Merino Hoodie</span>
+          <span><b>Base price:</b> $128</span>
+        </div>
+        <span class="field-label">Color</span>
+        <input type="hidden" name="variantColor" value="forest-green">
+        <div class="swatch-row">
+          <button class="swatch is-selected" type="button" aria-pressed="true" data-toggle-group="ex10-color" data-target="ex10-color-hidden" data-value="forest-green">Forest Green<span class="swatch-meta">SKU color code FG</span></button>
+          <button class="swatch" type="button" aria-pressed="false" data-toggle-group="ex10-color" data-target="ex10-color-hidden" data-value="charcoal">Charcoal<span class="swatch-meta">SKU color code CH</span></button>
+          <button class="swatch" type="button" aria-pressed="false" data-toggle-group="ex10-color" data-target="ex10-color-hidden" data-value="clay-red">Clay Red<span class="swatch-meta">SKU color code CR</span></button>
+          <button class="swatch" type="button" disabled aria-disabled="true">Ocean Blue<span class="swatch-meta">Low stock unavailable for selected size</span></button>
+        </div>
+        <input type="hidden" id="ex10-color-hidden" value="forest-green">
+        <span class="field-label" style="margin-top:12px">Size</span>
+        <input type="hidden" name="variantSize" value="M">
+        <div class="size-row">
+          <button class="size-btn" type="button" aria-pressed="false" data-toggle-group="ex10-size" data-target="ex10-size-hidden" data-value="XS">XS</button>
+          <button class="size-btn" type="button" aria-pressed="false" data-toggle-group="ex10-size" data-target="ex10-size-hidden" data-value="S">S</button>
+          <button class="size-btn is-selected" type="button" aria-pressed="true" data-toggle-group="ex10-size" data-target="ex10-size-hidden" data-value="M">M</button>
+          <button class="size-btn" type="button" aria-pressed="false" data-toggle-group="ex10-size" data-target="ex10-size-hidden" data-value="L">L</button>
+          <button class="size-btn" type="button" disabled aria-disabled="true">XL <span class="swatch-meta">Sold out</span></button>
+        </div>
+        <input type="hidden" id="ex10-size-hidden" value="M">
+        <div class="summary-strip">
+          <p>Selected variant: Forest Green / M</p>
+          <p>SKU: TKH-FG-M</p>
+          <p>Availability: 6 left</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-11">
+      <header class="example-header">
+        <p class="example-kicker">Example 11</p>
+        <h2>People Assignee Picker</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a task management assignee picker. It tests extraction of selected
+        people from chips, option rows with names and emails, and metadata such as team and
+        availability.
+      </p>
+      <div class="example-surface">
+        <div class="context-strip">
+          <span><b>Task:</b> Review vendor contract language</span>
+          <span><b>Due date:</b> June 12, 2026</span>
+        </div>
+        <span class="field-label">Assignees</span>
+        <div class="chip-list">
+          <span class="chip"><span class="avatar">MC</span> Maya Chen <button type="button" aria-label="Remove Maya Chen">&times;</button></span>
+          <span class="chip"><span class="avatar">RO</span> Rafael Ortiz <button type="button" aria-label="Remove Rafael Ortiz">&times;</button></span>
+        </div>
+        <input type="hidden" name="assignees[]" value="usr_1042">
+        <input type="hidden" name="assignees[]" value="usr_2381">
+        <div class="custom-select" id="ex11-picker">
+          <button class="select-button" type="button" aria-haspopup="listbox" aria-expanded="false">
+            <span>Add assignee</span>
+          </button>
+          <div class="select-menu" role="listbox" aria-label="People">
+            <input class="search-input" type="text" data-filter-options placeholder="Search people" aria-label="Search people">
+            <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="usr_1042" data-search-text="maya chen legal">
+              <span class="person-option"><span class="avatar">MC</span><span><span class="person-main">Maya Chen</span><span class="person-sub">maya.chen@example.test - Legal - Selected</span></span></span>
+            </button>
+            <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="usr_2381" data-search-text="rafael ortiz finance">
+              <span class="person-option"><span class="avatar">RO</span><span><span class="person-main">Rafael Ortiz</span><span class="person-sub">rafael.ortiz@example.test - Finance - Selected</span></span></span>
+            </button>
+            <button class="option" role="option" type="button" data-value="usr_4417" data-search-text="nina patel procurement">
+              <span class="person-option"><span class="avatar">NP</span><span><span class="person-main">Nina Patel</span><span class="person-sub">nina.patel@example.test - Procurement - Available</span></span></span>
+            </button>
+            <button class="option is-disabled" role="option" type="button" aria-disabled="true" data-value="usr_3099" data-search-text="evan brooks operations">
+              <span class="person-option"><span class="avatar">EB</span><span><span class="person-main">Evan Brooks</span><span class="person-sub">evan.brooks@example.test - Operations - Out of office</span></span></span>
+            </button>
+            <button class="option" role="option" type="button" data-value="usr_5120" data-search-text="leah kim legal">
+              <span class="person-option"><span class="avatar">LK</span><span><span class="person-main">Leah Kim</span><span class="person-sub">leah.kim@example.test - Legal - Available</span></span></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-12">
+      <header class="example-header">
+        <p class="example-kicker">Example 12</p>
+        <h2>Project Status Dropdown With Metadata</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a project management status dropdown. It tests extraction where each
+        option has a visible label, a short description, a workflow category, and a hidden machine
+        value.
+      </p>
+      <div class="example-surface">
+        <div class="context-strip">
+          <span><b>Project:</b> Customer Portal Redesign</span>
+          <span><b>Owner:</b> Digital Services Team</span>
+        </div>
+        <div class="custom-select" data-mode="single" id="ex12-status">
+          <span class="field-label" id="ex12-status-label">Project status</span>
+          <button class="select-button" type="button" aria-expanded="false" aria-labelledby="ex12-status-label ex12-status-value">
+            <span data-selected-label id="ex12-status-value">At risk</span>
+          </button>
+          <input type="hidden" name="projectStatus" value="at_risk">
+          <div class="select-menu" role="listbox" aria-labelledby="ex12-status-label">
+            <button class="option" role="option" type="button" data-value="not_started" data-label="Not started">Not started<span class="option-meta">Workflow: planning, color: gray</span></button>
+            <button class="option" role="option" type="button" data-value="on_track" data-label="On track">On track<span class="option-meta">Workflow: active, color: green</span></button>
+            <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="at_risk" data-label="At risk">At risk<span class="option-meta">Workflow: active, color: amber</span></button>
+            <button class="option" role="option" type="button" data-value="blocked" data-label="Blocked">Blocked<span class="option-meta">Workflow: blocked, color: red</span></button>
+            <button class="option" role="option" type="button" data-value="complete" data-label="Complete">Complete<span class="option-meta">Workflow: closed, color: blue</span></button>
+          </div>
+        </div>
+        <div class="summary-strip">
+          <p>Current status note: Timeline risk due to pending accessibility review.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-13">
+      <header class="example-header">
+        <p class="example-kicker">Example 13</p>
+        <h2>Insurance Coverage Tier Picker</h2>
+      </header>
+      <p class="example-description">
+        This example imitates an insurance quote coverage tier selector. It tests extraction of
+        selected plan tier, deductible, monthly premium, and option details from custom card-like
+        picker options.
+      </p>
+      <div class="example-surface">
+        <div class="context-strip">
+          <span><b>Quote number:</b> Q-INS-2026-7719</span>
+          <span><b>Applicant:</b> Jordan Parker</span>
+          <span><b>Policy type:</b> Renters insurance</span>
+        </div>
+        <div class="custom-select" data-mode="single" id="ex13-tier">
+          <span class="field-label" id="ex13-tier-label">Coverage tier</span>
+          <button class="select-button" type="button" aria-expanded="false" aria-labelledby="ex13-tier-label ex13-tier-value">
+            <span data-selected-label id="ex13-tier-value">Standard - $18.40/month</span>
+          </button>
+          <input type="hidden" name="coverageTier" value="standard">
+          <div class="select-menu" role="listbox" aria-labelledby="ex13-tier-label">
+            <button class="option" role="option" type="button" data-value="basic" data-label="Basic - $11.20/month">Basic<span class="option-meta">Personal property $15,000, deductible $1,000, $11.20/month</span></button>
+            <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="standard" data-label="Standard - $18.40/month">Standard<span class="option-meta">Personal property $35,000, deductible $500, $18.40/month</span></button>
+            <button class="option" role="option" type="button" data-value="premium" data-label="Premium - $29.90/month">Premium<span class="option-meta">Personal property $75,000, deductible $250, $29.90/month</span></button>
+            <button class="option is-disabled" role="option" type="button" aria-disabled="true" data-value="custom" data-label="Custom">Custom<span class="option-meta">Requires agent review</span></button>
+          </div>
+        </div>
+        <div class="summary-strip">
+          <p>Selected deductible: $500</p>
+          <p>Selected personal property coverage: $35,000</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-14">
+      <header class="example-header">
+        <p class="example-kicker">Example 14</p>
+        <h2>Delivery Window Picker</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a delivery scheduling control. It tests extraction of selected delivery
+        date, selected time window, delivery fee, limited availability labels, and unavailable windows
+        from custom buttons.
+      </p>
+      <div class="example-surface">
+        <div class="context-strip">
+          <span><b>Order:</b> Furniture order FUR-2026-8842</span>
+          <span><b>Delivery address:</b> 88 Bryant Street, San Francisco, CA</span>
+          <span><b>Items:</b> Dining table, 4 chairs</span>
+        </div>
+        <div class="grid-pickers">
+          <div class="custom-select" data-mode="single" id="ex14-day">
+            <span class="field-label" id="ex14-day-label">Delivery day</span>
+            <button class="select-button" type="button" aria-expanded="false" aria-labelledby="ex14-day-label ex14-day-value">
+              <span data-selected-label id="ex14-day-value">Thursday, June 18, 2026</span>
+            </button>
+            <input type="hidden" name="deliveryDay" value="2026-06-18">
+            <div class="select-menu" role="listbox" aria-labelledby="ex14-day-label">
+              <button class="option" role="option" type="button" data-value="2026-06-17" data-label="Wednesday, June 17, 2026">Wednesday, June 17, 2026<span class="option-meta">$39 fee</span></button>
+              <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="2026-06-18" data-label="Thursday, June 18, 2026">Thursday, June 18, 2026<span class="option-meta">Free, selected</span></button>
+              <button class="option" role="option" type="button" data-value="2026-06-19" data-label="Friday, June 19, 2026">Friday, June 19, 2026<span class="option-meta">$19 fee</span></button>
+              <button class="option" role="option" type="button" data-value="2026-06-20" data-label="Saturday, June 20, 2026">Saturday, June 20, 2026<span class="option-meta">$49 fee, limited</span></button>
+            </div>
+          </div>
+
+          <div class="custom-select" data-mode="single" id="ex14-window">
+            <span class="field-label" id="ex14-win-label">Delivery window</span>
+            <button class="select-button" type="button" aria-expanded="false" aria-labelledby="ex14-win-label ex14-win-value">
+              <span data-selected-label id="ex14-win-value">12:00 PM - 4:00 PM</span>
+            </button>
+            <input type="hidden" name="deliveryWindow" value="12-16">
+            <div class="select-menu" role="listbox" aria-labelledby="ex14-win-label">
+              <button class="option" role="option" type="button" data-value="8-12" data-label="8:00 AM - 12:00 PM">8:00 AM - 12:00 PM<span class="option-meta">2 slots left</span></button>
+              <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="12-16" data-label="12:00 PM - 4:00 PM">12:00 PM - 4:00 PM<span class="option-meta">Selected</span></button>
+              <button class="option is-disabled" role="option" type="button" aria-disabled="true" data-value="16-20" data-label="4:00 PM - 8:00 PM">4:00 PM - 8:00 PM<span class="option-meta">Unavailable</span></button>
+            </div>
+          </div>
+        </div>
+        <div class="summary-strip">
+          <p>Delivery fee: Free</p>
+          <p>Access note: Freight elevator required.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-15">
+      <header class="example-header">
+        <p class="example-kicker">Example 15</p>
+        <h2>Bank Account Selector With Masked Values</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a payment setup funding source dropdown. It tests extraction of selected
+        account labels, masked values, verification status, and hidden token IDs without exposing full
+        account numbers.
+      </p>
+      <div class="example-surface">
+        <div class="context-strip">
+          <span><b>Payment:</b> Monthly invoice autopay</span>
+          <span><b>Amount:</b> $842.19</span>
+        </div>
+        <div class="custom-select" data-mode="single" id="ex15-funding">
+          <span class="field-label" id="ex15-funding-label">Funding source</span>
+          <button class="select-button" type="button" aria-expanded="false" aria-labelledby="ex15-funding-label ex15-funding-value">
+            <span data-selected-label id="ex15-funding-value">Operating Checking - ending in 1842</span>
+          </button>
+          <input type="hidden" name="fundingSource" value="bank_tok_9f72">
+          <div class="select-menu" role="listbox" aria-labelledby="ex15-funding-label">
+            <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="bank_tok_9f72" data-label="Operating Checking - ending in 1842">Operating Checking<span class="option-meta">Checking, ending in 1842, verified</span></button>
+            <button class="option" role="option" type="button" data-value="bank_tok_4c11" data-label="Payroll Checking - ending in 7720">Payroll Checking<span class="option-meta">Checking, ending in 7720, verified</span></button>
+            <button class="option" role="option" type="button" data-value="bank_tok_8a02" data-label="Tax Savings - ending in 3398">Tax Savings<span class="option-meta">Savings, ending in 3398, verification pending</span></button>
+            <button class="option is-disabled" role="option" type="button" aria-disabled="true" data-value="bank_tok_0d91" data-label="Old Vendor Account - ending in 0199">Old Vendor Account<span class="option-meta">Checking, ending in 0199, disabled</span></button>
+          </div>
+        </div>
+        <div class="summary-strip">
+          <p>Selected account type: Checking</p>
+          <p>Verification status: Verified</p>
+          <p>Autopay start date: July 1, 2026</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-16">
+      <header class="example-header">
+        <p class="example-kicker">Example 16</p>
+        <h2>Admin Role And Permission Picker</h2>
+      </header>
+      <p class="example-description">
+        This example imitates an admin user-management role selector. It tests extraction of selected
+        role, role description, included permissions, disabled roles, and permission preview content
+        that changes with the selected option.
+      </p>
+      <div class="example-surface">
+        <div class="context-strip">
+          <span><b>User:</b> Anika Sharma</span>
+          <span><b>Email:</b> anika.sharma@example.test</span>
+          <span><b>Workspace:</b> Northwind Analytics</span>
+        </div>
+        <div class="custom-select" data-mode="single" id="ex16-role">
+          <span class="field-label" id="ex16-role-label">Workspace role</span>
+          <button class="select-button" type="button" aria-expanded="false" aria-labelledby="ex16-role-label ex16-role-value">
+            <span data-selected-label id="ex16-role-value">Billing manager</span>
+          </button>
+          <input type="hidden" name="workspaceRole" value="billing_manager">
+          <div class="select-menu" role="listbox" aria-labelledby="ex16-role-label">
+            <button class="option" role="option" type="button" data-value="viewer" data-label="Viewer">Viewer<span class="option-meta">Can view dashboards and reports</span></button>
+            <button class="option" role="option" type="button" data-value="editor" data-label="Editor">Editor<span class="option-meta">Can edit dashboards and manage saved views</span></button>
+            <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="billing_manager" data-label="Billing manager">Billing manager<span class="option-meta">Can manage invoices, payment methods, and seats</span></button>
+            <button class="option" role="option" type="button" data-value="workspace_admin" data-label="Workspace admin">Workspace admin<span class="option-meta">Can manage users, roles, integrations, and security</span></button>
+            <button class="option is-disabled" role="option" type="button" aria-disabled="true" data-value="owner" data-label="Owner">Owner<span class="option-meta">Only current owner can transfer ownership</span></button>
+          </div>
+        </div>
+        <div style="margin-top:14px">
+          <span class="field-label">Permissions preview (Billing manager)</span>
+          <div class="chip-list">
+            <span class="chip">View invoices</span>
+            <span class="chip">Update payment method</span>
+            <span class="chip">Manage seats</span>
+            <span class="chip">Download receipts</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-17">
+      <header class="example-header">
+        <p class="example-kicker">Example 17</p>
+        <h2>Marketplace Category Nested Picker</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a marketplace listing category picker. It tests extraction of nested
+        selected path values and available category options across multiple levels.
+      </p>
+      <div class="example-surface">
+        <div class="context-strip">
+          <span><b>Listing title:</b> Walnut writing desk with drawer</span>
+          <span><b>Listing type:</b> Local pickup</span>
+        </div>
+        <span class="field-label">Category path</span>
+        <p class="help-text">Selected path: <strong>Home &amp; Garden &gt; Furniture &gt; Desks</strong></p>
+        <input type="hidden" name="categoryPath" value="home-garden/furniture/desks">
+        <div class="columns-3">
+          <div class="col-list">
+            <h4>Department</h4>
+            <button class="option is-selected" type="button" aria-selected="true">Home &amp; Garden</button>
+            <button class="option" type="button">Electronics</button>
+            <button class="option" type="button">Clothing</button>
+            <button class="option" type="button">Sports &amp; Outdoors</button>
+          </div>
+          <div class="col-list">
+            <h4>Category</h4>
+            <button class="option is-selected" type="button" aria-selected="true">Furniture</button>
+            <button class="option" type="button">Kitchen</button>
+            <button class="option" type="button">Garden tools</button>
+            <button class="option" type="button">Decor</button>
+          </div>
+          <div class="col-list">
+            <h4>Subcategory</h4>
+            <button class="option is-selected" type="button" aria-selected="true">Desks</button>
+            <button class="option" type="button">Tables</button>
+            <button class="option" type="button">Chairs</button>
+            <button class="option" type="button">Bookcases</button>
+            <button class="option is-disabled" type="button" aria-disabled="true">Beds<span class="option-meta">Not allowed for local pickup test</span></button>
+          </div>
+        </div>
+        <div class="summary-strip">
+          <p>Selected category: Desks</p>
+          <p>Fee group: Furniture</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-18">
+      <header class="example-header">
+        <p class="example-kicker">Example 18</p>
+        <h2>Calendar Reminder Offset Picker</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a calendar reminder selector. It tests extraction of multiple selected
+        reminder offsets, selected delivery methods, and custom reminder values from a semi-custom
+        picker.
+      </p>
+      <div class="example-surface">
+        <div class="context-strip">
+          <span><b>Event:</b> Quarterly planning review</span>
+          <span><b>Event time:</b> July 9, 2026, 10:00 AM</span>
+        </div>
+        <span class="field-label">Reminders</span>
+        <div class="chip-list">
+          <span class="chip">Email - 1 day before <button type="button" aria-label="Remove Email - 1 day before">&times;</button></span>
+          <span class="chip">Popup - 30 minutes before <button type="button" aria-label="Remove Popup - 30 minutes before">&times;</button></span>
+        </div>
+        <input type="hidden" name="reminders[]" value="email:P1D">
+        <input type="hidden" name="reminders[]" value="popup:PT30M">
+        <div class="custom-select" id="ex18-picker">
+          <button class="select-button" type="button" aria-haspopup="listbox" aria-expanded="false"><span>Add reminder</span></button>
+          <div class="select-menu" role="listbox" aria-label="Reminders">
+            <button class="option" role="option" type="button" data-value="popup:PT10M">Popup - 10 minutes before</button>
+            <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="popup:PT30M">Popup - 30 minutes before</button>
+            <button class="option" role="option" type="button" data-value="email:PT1H">Email - 1 hour before</button>
+            <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="email:P1D">Email - 1 day before</button>
+            <button class="option" role="option" type="button" data-value="email:P1W">Email - 1 week before</button>
+            <div style="border-top:1px solid var(--soft); margin-top:8px; padding-top:8px">
+              <p class="option-group-label">Custom reminder</p>
+              <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; padding:0 6px">
+                <span class="segmented" role="group" aria-label="Custom method">
+                  <button type="button" aria-pressed="true">Email</button>
+                  <button type="button" aria-pressed="false">Popup</button>
+                </span>
+                <span class="counter-ctl">
+                  <button type="button" aria-label="Decrease amount">&minus;</button>
+                  <span class="count-value" id="ex18-custom-amount">2</span>
+                  <button type="button" aria-label="Increase amount">+</button>
+                </span>
+                <span class="custom-select" data-mode="single" id="ex18-unit" style="min-width:160px">
+                  <button class="select-button" type="button" aria-expanded="false"><span data-selected-label>days before</span></button>
+                  <input type="hidden" value="days">
+                  <div class="select-menu" role="listbox">
+                    <button class="option" role="option" type="button" data-value="minutes" data-label="minutes before">minutes before</button>
+                    <button class="option" role="option" type="button" data-value="hours" data-label="hours before">hours before</button>
+                    <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="days" data-label="days before">days before</button>
+                    <button class="option" role="option" type="button" data-value="weeks" data-label="weeks before">weeks before</button>
+                  </div>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-19">
+      <header class="example-header">
+        <p class="example-kicker">Example 19</p>
+        <h2>Support Ticket Macro Picker</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a customer support macro selector. It tests extraction from a searchable
+        custom picker where each option has a title, category, preview text, and internal macro ID.
+      </p>
+      <div class="example-surface">
+        <div class="context-strip">
+          <span><b>Ticket:</b> TCK-2026-54091</span>
+          <span><b>Customer issue:</b> Refund status request</span>
+          <span><b>Channel:</b> Email</span>
+        </div>
+        <div class="grid-pickers">
+          <div class="custom-select" data-mode="single" id="ex19-macro">
+            <span class="field-label" id="ex19-macro-label">Apply macro</span>
+            <button class="select-button" type="button" aria-expanded="false" aria-labelledby="ex19-macro-label ex19-macro-value">
+              <span data-selected-label id="ex19-macro-value">Refund status follow-up</span>
+            </button>
+            <input type="hidden" name="macro" value="macro_refund_status_followup">
+            <div class="select-menu" role="listbox" aria-labelledby="ex19-macro-label">
+              <input class="search-input" type="text" data-filter-options placeholder="Search macros" aria-label="Search macros">
+              <p class="option-group-label">Billing</p>
+              <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="macro_refund_status_followup" data-label="Refund status follow-up" data-search-text="refund status follow-up billing">Refund status follow-up<span class="option-meta">Sends refund timeline and case reference</span></button>
+              <button class="option" role="option" type="button" data-value="macro_invoice_copy" data-label="Invoice copy request" data-search-text="invoice copy request billing">Invoice copy request<span class="option-meta">Asks customer to confirm billing email</span></button>
+              <button class="option" role="option" type="button" data-value="macro_payment_failed" data-label="Payment failed reply" data-search-text="payment failed reply billing">Payment failed reply<span class="option-meta">Provides retry link and card update instructions</span></button>
+              <p class="option-group-label">Account access</p>
+              <button class="option" role="option" type="button" data-value="macro_password_reset" data-label="Password reset instructions" data-search-text="password reset instructions account">Password reset instructions<span class="option-meta">Explains reset process</span></button>
+              <button class="option" role="option" type="button" data-value="macro_2fa_recovery" data-label="Two-factor recovery" data-search-text="two-factor recovery account">Two-factor recovery<span class="option-meta">Requests identity verification</span></button>
+            </div>
+          </div>
+          <div class="panel">
+            <span class="field-label">Macro preview</span>
+            <p id="ex19-preview">Thanks for contacting us about your refund. I checked the case and the refund is still processing under reference RF-20441.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-20">
+      <header class="example-header">
+        <p class="example-kicker">Example 20</p>
+        <h2>Vehicle Pickup And Return Location Picker</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a car rental booking location selector. It tests extraction from paired
+        custom pickers where pickup and return locations have branch codes, hours, airport labels, and
+        warning metadata.
+      </p>
+      <div class="example-surface">
+        <div class="context-strip">
+          <span><b>Vehicle class:</b> Compact SUV</span>
+          <span><b>Rental dates:</b> August 4-9, 2026</span>
+        </div>
+        <div class="grid-pickers">
+          <div class="custom-select" data-mode="single" id="ex20-pickup">
+            <span class="field-label" id="ex20-pickup-label">Pickup location</span>
+            <button class="select-button" type="button" aria-expanded="false" aria-labelledby="ex20-pickup-label ex20-pickup-value">
+              <span data-selected-label id="ex20-pickup-value">Seattle Airport - SEA</span>
+            </button>
+            <input type="hidden" name="pickupLocation" value="SEA-T1">
+            <div class="select-menu" role="listbox" aria-labelledby="ex20-pickup-label">
+              <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="SEA-T1" data-label="Seattle Airport - SEA">Seattle Airport - SEA<span class="option-meta">Terminal 1, open 24 hours</span></button>
+              <button class="option" role="option" type="button" data-value="SEA-DTN" data-label="Seattle Downtown">Seattle Downtown<span class="option-meta">Pine Street branch, open 7 AM-7 PM</span></button>
+              <button class="option" role="option" type="button" data-value="SEA-BEL" data-label="Bellevue">Bellevue<span class="option-meta">NE 8th branch, open 8 AM-6 PM</span></button>
+            </div>
+          </div>
+
+          <div class="custom-select" data-mode="single" id="ex20-return">
+            <span class="field-label" id="ex20-return-label">Return location</span>
+            <button class="select-button" type="button" aria-expanded="false" aria-labelledby="ex20-return-label ex20-return-value">
+              <span data-selected-label id="ex20-return-value">Portland Airport - PDX</span>
+            </button>
+            <input type="hidden" name="returnLocation" value="PDX-AIR">
+            <div class="select-menu" role="listbox" aria-labelledby="ex20-return-label">
+              <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="PDX-AIR" data-label="Portland Airport - PDX">Portland Airport - PDX<span class="option-meta">Airport garage, open 24 hours</span></button>
+              <button class="option" role="option" type="button" data-value="PDX-DTN" data-label="Portland Downtown">Portland Downtown<span class="option-meta">Burnside branch, open 7 AM-7 PM</span></button>
+              <button class="option" role="option" type="button" data-value="SEA-T1" data-label="Seattle Airport - SEA">Seattle Airport - SEA<span class="option-meta">Same as pickup</span></button>
+            </div>
+          </div>
+
+          <div class="custom-select" data-mode="single" id="ex20-pickup-time">
+            <span class="field-label" id="ex20-pt-label">Pickup time</span>
+            <button class="select-button" type="button" aria-expanded="false" aria-labelledby="ex20-pt-label ex20-pt-value">
+              <span data-selected-label id="ex20-pt-value">10:30 AM</span>
+            </button>
+            <input type="hidden" name="pickupTime" value="10:30">
+            <div class="select-menu" role="listbox" aria-labelledby="ex20-pt-label">
+              <button class="option" role="option" type="button" data-value="09:00" data-label="9:00 AM">9:00 AM</button>
+              <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="10:30" data-label="10:30 AM">10:30 AM</button>
+              <button class="option" role="option" type="button" data-value="12:00" data-label="12:00 PM">12:00 PM</button>
+            </div>
+          </div>
+
+          <div class="custom-select" data-mode="single" id="ex20-return-time">
+            <span class="field-label" id="ex20-rt-label">Return time</span>
+            <button class="select-button" type="button" aria-expanded="false" aria-labelledby="ex20-rt-label ex20-rt-value">
+              <span data-selected-label id="ex20-rt-value">4:00 PM</span>
+            </button>
+            <input type="hidden" name="returnTime" value="16:00">
+            <div class="select-menu" role="listbox" aria-labelledby="ex20-rt-label">
+              <button class="option" role="option" type="button" data-value="12:00" data-label="12:00 PM">12:00 PM</button>
+              <button class="option" role="option" type="button" data-value="14:30" data-label="2:30 PM">2:30 PM</button>
+              <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="16:00" data-label="4:00 PM">4:00 PM</button>
+            </div>
+          </div>
+        </div>
+        <div class="warn-strip">
+          One-way rental fee may apply because pickup and return locations are different.
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-21">
+      <header class="example-header">
+        <p class="example-kicker">Example 21</p>
+        <h2>Medical Appointment Provider Picker</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a healthcare appointment scheduling picker. It tests extraction from
+        related custom dropdowns with provider names, credentials, specialties, locations, appointment
+        types, and next-available metadata.
+      </p>
+      <div class="example-surface">
+        <div class="context-strip">
+          <span><b>Patient:</b> Riley Stone</span>
+          <span><b>Reason for visit:</b> Follow-up for knee pain</span>
+        </div>
+        <div class="grid-pickers">
+          <div class="custom-select" data-mode="single" id="ex21-specialty">
+            <span class="field-label" id="ex21-spec-label">Specialty</span>
+            <button class="select-button" type="button" aria-expanded="false" aria-labelledby="ex21-spec-label ex21-spec-value">
+              <span data-selected-label id="ex21-spec-value">Orthopedics</span>
+            </button>
+            <input type="hidden" name="specialty" value="orthopedics">
+            <div class="select-menu" role="listbox" aria-labelledby="ex21-spec-label">
+              <button class="option" role="option" type="button" data-value="primary_care" data-label="Primary care">Primary care</button>
+              <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="orthopedics" data-label="Orthopedics">Orthopedics</button>
+              <button class="option" role="option" type="button" data-value="physical_therapy" data-label="Physical therapy">Physical therapy</button>
+              <button class="option" role="option" type="button" data-value="sports_medicine" data-label="Sports medicine">Sports medicine</button>
+            </div>
+          </div>
+
+          <div class="custom-select" data-mode="single" id="ex21-provider">
+            <span class="field-label" id="ex21-prov-label">Provider</span>
+            <button class="select-button" type="button" aria-expanded="false" aria-labelledby="ex21-prov-label ex21-prov-value">
+              <span data-selected-label id="ex21-prov-value">Dr. Helen Park, MD</span>
+            </button>
+            <input type="hidden" name="provider" value="prov_204">
+            <div class="select-menu" role="listbox" aria-labelledby="ex21-prov-label">
+              <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="prov_204" data-label="Dr. Helen Park, MD">Dr. Helen Park, MD<span class="option-meta">Orthopedics, next available June 11</span></button>
+              <button class="option" role="option" type="button" data-value="prov_331" data-label="Dr. Omar Nasser, DO">Dr. Omar Nasser, DO<span class="option-meta">Sports medicine, next available June 17</span></button>
+              <button class="option" role="option" type="button" data-value="prov_118" data-label="Jamie Lee, PT">Jamie Lee, PT<span class="option-meta">Physical therapy, next available June 10</span></button>
+            </div>
+          </div>
+
+          <div class="custom-select" data-mode="single" id="ex21-location">
+            <span class="field-label" id="ex21-loc-label">Clinic location</span>
+            <button class="select-button" type="button" aria-expanded="false" aria-labelledby="ex21-loc-label ex21-loc-value">
+              <span data-selected-label id="ex21-loc-value">Downtown Clinic</span>
+            </button>
+            <input type="hidden" name="clinicLocation" value="clinic_downtown">
+            <div class="select-menu" role="listbox" aria-labelledby="ex21-loc-label">
+              <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="clinic_downtown" data-label="Downtown Clinic">Downtown Clinic<span class="option-meta">450 Market Street</span></button>
+              <button class="option" role="option" type="button" data-value="clinic_westside" data-label="Westside Clinic">Westside Clinic<span class="option-meta">1200 Irving Street</span></button>
+              <button class="option" role="option" type="button" data-value="telehealth" data-label="Telehealth">Telehealth<span class="option-meta">Video visit</span></button>
+            </div>
+          </div>
+
+          <div class="custom-select" data-mode="single" id="ex21-type">
+            <span class="field-label" id="ex21-type-label">Appointment type</span>
+            <button class="select-button" type="button" aria-expanded="false" aria-labelledby="ex21-type-label ex21-type-value">
+              <span data-selected-label id="ex21-type-value">In-person follow-up</span>
+            </button>
+            <input type="hidden" name="appointmentType" value="in_person_followup">
+            <div class="select-menu" role="listbox" aria-labelledby="ex21-type-label">
+              <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="in_person_followup" data-label="In-person follow-up">In-person follow-up</button>
+              <button class="option" role="option" type="button" data-value="new_patient_consult" data-label="New patient consult">New patient consult</button>
+              <button class="option" role="option" type="button" data-value="telehealth_followup" data-label="Telehealth follow-up">Telehealth follow-up</button>
+              <button class="option is-disabled" role="option" type="button" aria-disabled="true" data-value="procedure_visit" data-label="Procedure visit">Procedure visit<span class="option-meta">Requires referral review</span></button>
+            </div>
+          </div>
+        </div>
+        <div class="summary-strip">
+          <p>Selected appointment search: Orthopedics with Dr. Helen Park at Downtown Clinic, in-person follow-up.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-22">
+      <header class="example-header">
+        <p class="example-kicker">Example 22</p>
+        <h2>Mobile-Style Wheel Picker Imitation</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a mobile wheel picker rendered in a web page. It tests extraction of
+        selected values from visually centered rows where the selected state is based on CSS classes
+        rather than native select controls.
+      </p>
+      <div class="example-surface">
+        <div class="context-strip">
+          <span><b>Card expiration date</b></span>
+          <span><b>Selected:</b> March 2029</span>
+        </div>
+        <input type="hidden" name="expirationMonth" value="03">
+        <input type="hidden" name="expirationYear" value="2029">
+        <div class="wheel-wrap" role="group" aria-label="Card expiration date">
+          <div class="wheel">
+            <p class="wheel-title">Month</p>
+            <div class="wheel-list" role="listbox" aria-label="Month">
+              <button class="wheel-item" role="option" type="button" aria-selected="false" data-value="01">January</button>
+              <button class="wheel-item" role="option" type="button" aria-selected="false" data-value="02">February</button>
+              <button class="wheel-item is-selected" role="option" type="button" aria-selected="true" data-value="03">March</button>
+              <button class="wheel-item" role="option" type="button" aria-selected="false" data-value="04">April</button>
+              <button class="wheel-item" role="option" type="button" aria-selected="false" data-value="05">May</button>
+            </div>
+          </div>
+          <div class="wheel">
+            <p class="wheel-title">Year</p>
+            <div class="wheel-list" role="listbox" aria-label="Year">
+              <button class="wheel-item" role="option" type="button" aria-selected="false" data-value="2027">2027</button>
+              <button class="wheel-item" role="option" type="button" aria-selected="false" data-value="2028">2028</button>
+              <button class="wheel-item is-selected" role="option" type="button" aria-selected="true" data-value="2029">2029</button>
+              <button class="wheel-item" role="option" type="button" aria-selected="false" data-value="2030">2030</button>
+              <button class="wheel-item" role="option" type="button" aria-selected="false" data-value="2031">2031</button>
+            </div>
+          </div>
+        </div>
+        <div class="custom-select" data-mode="single" id="ex22-country" style="margin-top:16px; max-width:320px">
+          <span class="field-label" id="ex22-country-label">Billing country</span>
+          <button class="select-button" type="button" aria-expanded="false" aria-labelledby="ex22-country-label ex22-country-value">
+            <span data-selected-label id="ex22-country-value">United States</span>
+          </button>
+          <input type="hidden" name="billingCountry" value="US">
+          <div class="select-menu" role="listbox" aria-labelledby="ex22-country-label">
+            <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="US" data-label="United States">United States</button>
+            <button class="option" role="option" type="button" data-value="CA" data-label="Canada">Canada</button>
+            <button class="option" role="option" type="button" data-value="GB" data-label="United Kingdom">United Kingdom</button>
+            <button class="option" role="option" type="button" data-value="AU" data-label="Australia">Australia</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+  </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Toggle open/close for custom selects.
+      document.querySelectorAll(".custom-select .select-button").forEach(function (button) {
+        button.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var picker = button.closest(".custom-select");
+          if (!picker) return;
+          document.querySelectorAll(".custom-select.is-open").forEach(function (openPicker) {
+            if (openPicker !== picker) openPicker.classList.remove("is-open");
+          });
+          var willOpen = !picker.classList.contains("is-open");
+          picker.classList.toggle("is-open");
+          button.setAttribute("aria-expanded", willOpen ? "true" : "false");
+        });
+      });
+
+      // Single-select option clicks.
+      document.querySelectorAll(".custom-select[data-mode='single'] .option[data-value]").forEach(function (option) {
+        option.addEventListener("click", function () {
+          if (option.getAttribute("aria-disabled") === "true" || option.disabled) return;
+          var picker = option.closest(".custom-select");
+          if (!picker) return;
+          var valueTarget = picker.querySelector("[data-selected-label]");
+          var hiddenInput = picker.querySelector("input[type='hidden']");
+          var button = picker.querySelector(".select-button");
+          picker.querySelectorAll(".option").forEach(function (item) {
+            item.setAttribute("aria-selected", "false");
+            item.classList.remove("is-selected");
+          });
+          option.setAttribute("aria-selected", "true");
+          option.classList.add("is-selected");
+          if (valueTarget) valueTarget.textContent = option.dataset.label || option.textContent.trim();
+          if (button) button.setAttribute("aria-expanded", "false");
+          if (hiddenInput) hiddenInput.value = option.dataset.value || "";
+          picker.classList.remove("is-open");
+        });
+      });
+
+      // Search filtering inside menus.
+      document.querySelectorAll("[data-filter-options]").forEach(function (input) {
+        input.addEventListener("input", function () {
+          var scope = input.closest(".select-menu, .custom-select, .panel");
+          if (!scope) return;
+          var query = input.value.trim().toLowerCase();
+          scope.querySelectorAll(".option[data-search-text]").forEach(function (option) {
+            var text = option.dataset.searchText.toLowerCase();
+            option.hidden = query.length > 0 && text.indexOf(query) === -1;
+          });
+        });
+        input.addEventListener("click", function (e) { e.stopPropagation(); });
+      });
+
+      // Counter +/- controls (hotel guest picker etc).
+      document.querySelectorAll("[data-counter]").forEach(function (row) {
+        var valueEl = row.querySelector(".count-value");
+        var hidden = document.getElementById(row.dataset.hidden || "");
+        var min = parseInt(row.dataset.min || "0", 10);
+        row.querySelectorAll("button[data-step]").forEach(function (btn) {
+          btn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            var cur = parseInt(valueEl.textContent.trim(), 10) || 0;
+            cur += parseInt(btn.dataset.step, 10);
+            if (cur < min) cur = min;
+            valueEl.textContent = String(cur);
+            if (hidden) hidden.value = String(cur);
+            var summaryFn = window["updateSummary_" + (row.dataset.group || "")];
+            if (typeof summaryFn === "function") summaryFn();
+          });
+        });
+      });
+
+      // Hotel summary updater (example 03).
+      window.updateSummary_ex03 = function () {
+        var a = document.getElementById("ex03-adults");
+        var c = document.getElementById("ex03-children");
+        var r = document.getElementById("ex03-rooms");
+        var out = document.getElementById("ex03-summary");
+        if (a && c && r && out) {
+          out.textContent = a.value + " adults, " + c.value + " child" +
+            (c.value === "1" ? "" : "ren") + ", " + r.value + " room" + (r.value === "1" ? "" : "s");
+        }
+      };
+
+      // Cascading country/region (example 07).
+      var countryPicker = document.getElementById("ex07-country");
+      if (countryPicker) {
+        countryPicker.querySelectorAll(".option[data-value]").forEach(function (opt) {
+          opt.addEventListener("click", function () {
+            var code = opt.dataset.value;
+            document.querySelectorAll("[data-region-group]").forEach(function (g) {
+              g.hidden = g.dataset.regionGroup !== code;
+            });
+          });
+        });
+      }
+
+      // Toggle selectable buttons (slots, swatches, sizes) with single selection per group.
+      document.querySelectorAll("[data-toggle-group]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          if (btn.disabled || btn.getAttribute("aria-disabled") === "true") return;
+          var group = btn.dataset.toggleGroup;
+          document.querySelectorAll("[data-toggle-group='" + group + "']").forEach(function (other) {
+            other.setAttribute("aria-pressed", "false");
+            other.classList.remove("is-selected");
+          });
+          btn.setAttribute("aria-pressed", "true");
+          btn.classList.add("is-selected");
+          var hidden = document.getElementById(btn.dataset.target || "");
+          if (hidden && btn.dataset.value !== undefined) hidden.value = btn.dataset.value;
+          var labelTarget = document.getElementById(btn.dataset.labelTarget || "");
+          if (labelTarget && btn.dataset.label) labelTarget.textContent = btn.dataset.label;
+        });
+      });
+
+      // Segmented controls (single selection).
+      document.querySelectorAll(".segmented").forEach(function (seg) {
+        seg.querySelectorAll("button").forEach(function (b) {
+          b.addEventListener("click", function () {
+            seg.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+            b.setAttribute("aria-pressed", "true");
+          });
+        });
+      });
+
+      // Close menus on outside click.
+      document.addEventListener("click", function (event) {
+        if (event.target.closest(".custom-select")) return;
+        document.querySelectorAll(".custom-select.is-open").forEach(function (picker) {
+          picker.classList.remove("is-open");
+        });
+      });
+    });
+  </script>
+</body>
+</html>

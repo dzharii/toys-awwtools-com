@@ -1,0 +1,3128 @@
+---
+
+A00 Change Request Specification - Page 9 Accessibility And Semantic Edge Cases
+
+---
+
+Create one standalone HTML demo page named `page-09-accessibility-and-semantic-edge-cases.html`.
+
+The page must be a self-contained HTML file. Put all HTML, CSS, and JavaScript inside this one file. Do not use React. Do not use TypeScript. Do not use a build step. Do not load external CSS, external JavaScript, external fonts, external images, external icon sets, external accessibility libraries, external data, or external APIs. The page must work by opening the `.html` file directly in a browser.
+
+This page is a testing surface for a content extraction tool. The page must focus on accessibility and semantic edge cases: accessible names, ARIA labels, visually hidden text, `aria-describedby`, `aria-labelledby`, fieldsets, legends, custom controls, role-based widgets, tab panels, accordions, dialogs, listboxes, comboboxes, tree views, live regions, status messages, error summaries, landmark regions, icon-only buttons, duplicated visible and accessible labels, semantic tables, non-semantic visual layouts, hidden text, disabled controls, readonly values, and mixed good and bad semantics that appear on real web pages.
+
+The page must contain exactly 25 separate examples. Each example must have a visible heading, a visible explanatory paragraph, and the actual accessibility or semantic edge case UI. Each example must be visually separated from the next example. Each example must be realistic enough to test extraction of visible values, accessible names, hidden descriptive text, field group context, state, selected options, expanded or collapsed panels, active tab state, live status text, error messages, semantic table relationships, and widget relationships.
+
+Do not make the examples into small isolated accessibility snippets only. Each example should look like a believable product surface. The examples should include surrounding context, related fields, repeated labels, and multiple extractable values. The purpose is to test whether the extraction tool can use semantic hints without losing visible context, and can use visible grouping without being misled by incomplete or unusual semantics.
+
+---
+
+B00 Page-Level Purpose
+
+---
+
+The purpose of this page is to test whether an extraction tool can identify, select, and format structured information from web content where accessibility semantics strongly affect meaning.
+
+The extraction tool should be able to handle visible labels, accessible labels, hidden labels, duplicated labels, descriptions, error text, invalid states, required states, disabled states, readonly states, expanded states, selected states, active descendant relationships, aria-owned or aria-controlled popups, tab panels, accordions, dialogs, live regions, landmarks, fieldsets, semantic tables, ARIA grids, custom widgets, and intentionally imperfect real-world markup.
+
+This page should not be a pure accessibility best-practices showcase. It should include realistic edge cases. Some examples should be well-structured and semantic. Some examples should be messy but still understandable. Some examples should intentionally contain imperfect semantics that often occur in production, such as a visible label that differs from an `aria-label`, a button with only an accessible name, a card that looks selected but lacks `aria-selected`, a tooltip used as a description, or a custom combobox with a portaled listbox.
+
+The page should not require a screen reader, accessibility testing extension, browser dev tools, or network access. All relevant values must be present in the DOM. Some values may be visually hidden, but the page must still expose enough visible content for manual testing.
+
+---
+
+C00 Required Page Structure
+
+---
+
+The page must start with a top-level header.
+
+Use this visible title:
+
+`Page 9 - Accessibility And Semantic Edge Cases`
+
+Under the title, include a short introduction paragraph explaining that the page contains realistic accessibility and semantic edge cases for testing extraction of accessible names, visible labels, descriptions, states, grouped fields, custom widgets, landmarks, live messages, semantic tables, and ARIA relationships.
+
+After the introduction, render 25 example sections.
+
+Each example section must follow this pattern:
+
+```html
+<section class="example-card" id="example-01">
+  <header class="example-header">
+    <p class="example-kicker">Example 01</p>
+    <h2>Checkout Form With Accessible Descriptions And Error Summary</h2>
+  </header>
+
+  <p class="example-description">
+    This example imitates...
+  </p>
+
+  <div class="example-surface">
+    <!-- Actual accessibility or semantic edge case UI goes here. -->
+  </div>
+</section>
+```
+
+The exact class names may vary, but the structure must remain clear. Each section must have a unique `id`, from `example-01` through `example-25`.
+
+Each example heading must be visible. Each description must be visible. The actual UI surface must appear below the description.
+
+Do not include large expected extraction output blocks under every example. The page should primarily be the application-under-test surface, not a documentation page. The visible descriptions should explain the purpose and caveat of each example.
+
+---
+
+D00 Visual Design Requirements
+
+---
+
+Use inline CSS in a `<style>` tag.
+
+The page should look like a clean internal testing notebook with realistic product surfaces inside it. Use a light background, readable font stack, generous spacing, and card-style example sections. Inside each example, the UI may look like a different website or application. That variation is required.
+
+The examples should look more unique than earlier pages. Use different visual styles and structural patterns: checkout forms, patient portal cards, admin settings, command palettes, tree views, tabbed dashboards, modal dialogs, accessible data tables, compact mobile controls, comparison matrices, notification panels, and semantic article layouts.
+
+Include a reusable `.sr-only` class for visually hidden text. Use it intentionally in examples where accessible-only text matters.
+
+The page should support narrow and wide screens. Use responsive CSS. Large widgets and tables may use horizontal scrolling inside their example surface, but the whole page must remain usable on a laptop screen.
+
+Suggested CSS structure:
+
+```html
+<style>
+  :root {
+    --page-bg: #f5f2ea;
+    --card-bg: #fffdf8;
+    --ink: #25221d;
+    --muted: #6f675c;
+    --line: #d8cfc0;
+    --soft: #eee6d8;
+    --panel: #ffffff;
+    --panel-alt: #faf7f0;
+    --accent: #315f8c;
+    --accent-soft: #e7f0ff;
+    --ok: #276749;
+    --warning: #8a5a00;
+    --danger: #9b332c;
+    --link: #174ea6;
+    --focus: #1a73e8;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--page-bg);
+    color: var(--ink);
+    line-height: 1.45;
+  }
+
+  main {
+    width: min(1240px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 32px 0 64px;
+  }
+
+  a {
+    color: var(--link);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  .page-hero {
+    margin-bottom: 28px;
+    padding: 28px;
+    background: #fffaf0;
+    border: 2px solid var(--line);
+    border-radius: 18px;
+  }
+
+  .example-card {
+    margin: 28px 0;
+    padding: 24px;
+    background: var(--card-bg);
+    border: 2px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.08);
+  }
+
+  .example-kicker {
+    margin: 0 0 4px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .example-header h2 {
+    margin: 0;
+    font-size: 1.35rem;
+  }
+
+  .example-description {
+    max-width: 940px;
+    color: var(--muted);
+  }
+
+  .example-surface {
+    margin-top: 18px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: white;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .layout-grid-two {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .layout-grid-three {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .split-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 14px;
+    align-items: start;
+  }
+
+  .panel,
+  .nested-panel,
+  .summary-panel,
+  .detail-panel,
+  .callout-panel,
+  .semantic-card {
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel);
+  }
+
+  .summary-panel,
+  .callout-panel {
+    background: var(--panel-alt);
+  }
+
+  .nested-panel {
+    margin-top: 10px;
+    background: #fffdf8;
+  }
+
+  .panel-title {
+    margin: 0 0 10px;
+    font-size: 1rem;
+  }
+
+  .panel-subtitle {
+    margin: -6px 0 10px;
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+
+  .field-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--soft);
+  }
+
+  .field-row:last-child {
+    border-bottom: 0;
+  }
+
+  .field-label {
+    color: var(--muted);
+    font-weight: 650;
+  }
+
+  .field-value {
+    text-align: right;
+    font-weight: 650;
+  }
+
+  label,
+  .form-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 700;
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 10px;
+    border: 1px solid #b7afa3;
+    border-radius: 8px;
+    font: inherit;
+    background: #fff;
+  }
+
+  input[aria-invalid="true"],
+  select[aria-invalid="true"],
+  textarea[aria-invalid="true"] {
+    border-color: var(--danger);
+  }
+
+  fieldset {
+    margin: 0;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+
+  legend {
+    padding: 0 8px;
+    font-weight: 800;
+  }
+
+  .help-text {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+
+  .error-text {
+    margin-top: 4px;
+    color: var(--danger);
+    font-size: 0.88rem;
+    font-weight: 700;
+  }
+
+  .badge,
+  .tag,
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: #fff;
+    font-size: 0.82rem;
+    font-weight: 650;
+    white-space: nowrap;
+  }
+
+  .badge.ok {
+    color: var(--ok);
+    background: #edf8f1;
+  }
+
+  .badge.warning {
+    color: var(--warning);
+    background: #fff7df;
+  }
+
+  .badge.danger {
+    color: var(--danger);
+    background: #fff0ef;
+  }
+
+  .chip-row,
+  .badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0;
+  }
+
+  .selected-panel,
+  [aria-selected="true"].selectable-card {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .wide-scroll {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .admin-table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--soft);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .admin-table th {
+    color: var(--muted);
+    background: var(--panel-alt);
+  }
+
+  .tab-list,
+  .toolbar-row,
+  .button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .plain-button,
+  .icon-button,
+  .tab-button {
+    min-height: 34px;
+    padding: 7px 10px;
+    border: 1px solid #b7afa3;
+    border-radius: 8px;
+    background: #fff;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .icon-button {
+    width: 38px;
+    padding: 0;
+    display: inline-grid;
+    place-items: center;
+    font-weight: 800;
+  }
+
+  .tab-button[aria-selected="true"] {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .listbox,
+  .menu-panel,
+  .tree-panel {
+    margin-top: 8px;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+  }
+
+  .option-row,
+  .menu-item,
+  .tree-item {
+    padding: 8px;
+    border-radius: 8px;
+  }
+
+  .option-row[aria-selected="true"],
+  .menu-item[aria-checked="true"],
+  .tree-item[aria-selected="true"] {
+    background: var(--accent-soft);
+    font-weight: 750;
+  }
+
+  .status-region {
+    padding: 12px;
+    border: 1px dashed #b7afa3;
+    border-radius: 10px;
+    background: #fffdf4;
+  }
+
+  .dialog-backdrop {
+    padding: 18px;
+    border: 1px dashed #b7afa3;
+    border-radius: 14px;
+    background: #f8f5ec;
+  }
+
+  .dialog-panel {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 18px;
+    border: 2px solid var(--accent);
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  }
+
+  @media (max-width: 980px) {
+    .layout-grid-two,
+    .layout-grid-three,
+    .split-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .field-row {
+      display: block;
+    }
+
+    .field-value {
+      display: block;
+      margin-top: 2px;
+      text-align: left;
+    }
+
+    .example-card {
+      padding: 18px;
+    }
+  }
+</style>
+```
+
+The coding agent may adjust the CSS, but it must keep the page readable, scrollable, and visually divided into 25 separate examples.
+
+---
+
+E00 JavaScript Requirements
+
+---
+
+Use inline JavaScript in a `<script>` tag.
+
+This page should include small interactions where they help accessibility and semantic examples behave like real interfaces. The JavaScript must be simple and local to the page. Do not use a framework. Do not generate all examples dynamically. Static HTML must remain visible and inspectable.
+
+Allowed JavaScript behavior includes opening and closing accordions, switching tabs, changing selected cards, updating `aria-selected`, updating `aria-expanded`, changing `aria-activedescendant`, showing a dialog, closing a dialog, updating a live region, adding selected tokens, removing tokens, expanding tree nodes, and toggling menu items.
+
+The important data must exist in the DOM at page load. If a popup or hidden panel changes dynamically, the default visible state must still contain enough content for extraction testing.
+
+Required generic behavior:
+
+Clicking an element with `data-select-card` should mark that card as selected inside its group.
+
+Clicking an element with `data-detail-target` may show a matching detail panel and hide sibling detail panels.
+
+Clicking a button with `data-toggle-target` should show or hide a matching detail area and update `aria-expanded`.
+
+Clicking a tab with `data-tab-target` should show the matching panel, hide sibling panels, and update `aria-selected`.
+
+Clicking a button with `data-open-dialog` should show a dialog region.
+
+Clicking a button with `data-close-dialog` should hide the dialog region.
+
+Clicking a button with `data-live-message` should write the provided text to the specified live region.
+
+Suggested JavaScript structure:
+
+```html
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("[data-select-card]").forEach(function (card) {
+      card.addEventListener("click", function (event) {
+        if (event.target.closest("a, button, input, select, textarea")) return;
+
+        const group = card.dataset.selectCard;
+        if (!group) return;
+
+        document.querySelectorAll('[data-select-card="' + group + '"]').forEach(function (item) {
+          item.classList.remove("selected-panel");
+          item.setAttribute("aria-selected", "false");
+        });
+
+        card.classList.add("selected-panel");
+        card.setAttribute("aria-selected", "true");
+
+        const detailTarget = card.dataset.detailTarget;
+        if (detailTarget) {
+          document.querySelectorAll('[data-detail-panel="' + group + '"]').forEach(function (panel) {
+            panel.hidden = true;
+          });
+
+          const panel = document.querySelector(detailTarget);
+          if (panel) panel.hidden = false;
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-toggle-target]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const target = document.querySelector(button.dataset.toggleTarget);
+        if (!target) return;
+
+        target.hidden = !target.hidden;
+        button.setAttribute("aria-expanded", String(!target.hidden));
+      });
+    });
+
+    document.querySelectorAll("[data-tab-target]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const group = button.dataset.tabGroup;
+        if (!group) return;
+
+        document.querySelectorAll('[data-tab-group="' + group + '"]').forEach(function (tab) {
+          tab.setAttribute("aria-selected", "false");
+        });
+
+        document.querySelectorAll('[data-tab-panel="' + group + '"]').forEach(function (panel) {
+          panel.hidden = true;
+        });
+
+        button.setAttribute("aria-selected", "true");
+        const panel = document.querySelector(button.dataset.tabTarget);
+        if (panel) panel.hidden = false;
+      });
+    });
+
+    document.querySelectorAll("[data-open-dialog]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const dialog = document.querySelector(button.dataset.openDialog);
+        if (dialog) dialog.hidden = false;
+      });
+    });
+
+    document.querySelectorAll("[data-close-dialog]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const dialog = document.querySelector(button.dataset.closeDialog);
+        if (dialog) dialog.hidden = true;
+      });
+    });
+
+    document.querySelectorAll("[data-live-target]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const target = document.querySelector(button.dataset.liveTarget);
+        if (target) target.textContent = button.dataset.liveMessage || "";
+      });
+    });
+  });
+</script>
+```
+
+The coding agent may extend this code for specific examples, but the final file must remain simple and portable.
+
+---
+
+F00 Accessibility And Semantic Edge Case Rules
+
+---
+
+Use accessible semantics deliberately. Each example must include at least one explicit accessibility or semantic feature, such as `aria-label`, `aria-labelledby`, `aria-describedby`, `aria-expanded`, `aria-controls`, `aria-selected`, `aria-current`, `aria-invalid`, `aria-live`, `role`, `fieldset`, `legend`, `caption`, `scope`, `headers`, `dialog`, `tablist`, `tree`, `grid`, `combobox`, `listbox`, `menu`, `switch`, or visually hidden text.
+
+Do not make every example perfectly semantic. Include realistic edge cases. Some examples should have visible text that differs from the accessible name. Some should have hidden text that adds context. Some should have labels that are far from controls. Some should use ARIA roles for custom controls. Some should intentionally include a warning in the description that the markup is a realistic imperfect pattern.
+
+Do not intentionally create harmful or completely unusable accessibility failures. The page should be testable. The point is edge cases, not broken pages.
+
+All values needed for extraction should be present in visible text, accessible text, or ordinary DOM text. Do not store important values only inside JavaScript variables, comments, CSS pseudo-elements, or data attributes.
+
+When using visually hidden text, use the `.sr-only` class. Do not hide critical values only with CSS unless the example is explicitly about hidden accessible names or descriptions.
+
+When using ARIA states, make the visual state and ARIA state match unless the example is explicitly about a mismatch. If a mismatch is intentional, state that in the visible example description.
+
+When using native HTML semantics, use them correctly: `fieldset` with `legend`, tables with `caption` and headers, buttons for buttons, anchors for navigation, and labels for inputs.
+
+---
+
+G00 Extraction Behavior To Support
+
+---
+
+The page must make these extraction tasks possible:
+
+Extract visible labels and values.
+
+Extract accessible names from `aria-label`, `aria-labelledby`, visible labels, and visually hidden text.
+
+Extract descriptions from `aria-describedby`, help text, tooltip text, error text, and warning text.
+
+Extract invalid, required, disabled, readonly, selected, checked, expanded, current, active, and hidden states.
+
+Extract grouped form values from fieldsets and legends.
+
+Extract selected options from native and custom widgets.
+
+Extract active tab state and currently visible tab panel content.
+
+Extract expanded accordion content and collapsed accordion summaries.
+
+Extract combobox trigger value, selected option, active descendant, listbox options, and backing hidden values.
+
+Extract menu item labels and checked menu states while preserving the trigger context.
+
+Extract dialog title, description, form fields, and background page summary separately.
+
+Extract semantic table headers and row values.
+
+Extract ARIA grid rows and cells even when not native tables.
+
+Extract treeview hierarchy with expanded and selected nodes.
+
+Extract live region messages when visible in the DOM.
+
+Extract visually hidden text when it forms part of the accessible name, but avoid duplicating it when it repeats visible text.
+
+Extract duplicate labels by using group names and semantic context.
+
+Extract landmark regions and nested section headings.
+
+Extract mismatch cases without blindly trusting either visible or accessible text only.
+
+---
+
+H00 Data And Naming Rules
+
+---
+
+Use realistic but fictional data. Do not use real personal information.
+
+Use fictional companies, fictional patients, fictional students, fictional accounts, fictional tickets, fictional order numbers, fictional users, fictional IDs, and example-domain email addresses. Use `href="#"` or `href="/demo/..."` for links. Do not link to real third-party pages.
+
+Use consistent example-specific IDs. Prefix IDs with the example number, such as `ex01-email`, `ex07-tab-billing`, or `ex21-calendar-grid`.
+
+Use plausible values. Avoid placeholder-only examples. Every example should contain enough populated data to be useful for extraction testing.
+
+Use a mixture of native semantics and ARIA semantics. Do not overuse ARIA when a native control is sufficient unless the example is specifically about custom widgets.
+
+Do not use external images. If an image-like region is needed, use a text placeholder and make the accessible name explicit.
+
+Do not make all examples look the same. Use product-like surfaces, admin-like surfaces, patient portal surfaces, ecommerce surfaces, data tables, mobile panels, nested widgets, and document-like layouts.
+
+---
+
+I00 Required Examples Overview
+
+---
+
+The page must contain exactly these 25 examples:
+
+Example 01: Checkout Form With Accessible Descriptions And Error Summary.
+
+Example 02: Icon-Only Actions With Hidden Accessible Names.
+
+Example 03: Portaled Combobox With Active Descendant.
+
+Example 04: Radio Card Group With Mixed Native And ARIA State.
+
+Example 05: Tabbed Account Settings With Duplicate Panel Labels.
+
+Example 06: Accordion Details With Collapsed Summaries.
+
+Example 07: Error Summary Linking To Invalid Fields.
+
+Example 08: Live Region Notifications And Status Updates.
+
+Example 09: Semantic Data Table With Multi-Level Headers.
+
+Example 10: Landmark Layout With Repeated Navigation Names.
+
+Example 11: Modal Dialog With Background Context.
+
+Example 12: Tree View File Browser With Expanded Nodes.
+
+Example 13: Menu Button With Checked Menu Items.
+
+Example 14: Range Slider And Meter With Accessible Value Text.
+
+Example 15: Checkout Stepper With Current Step And Completed Steps.
+
+Example 16: Sortable List With Accessible Drag Handles.
+
+Example 17: Tokenized Multi-Select With Hidden Input Values.
+
+Example 18: Visually Hidden Text In Search Results.
+
+Example 19: Tooltip And Description Relationship Edge Cases.
+
+Example 20: Data Visualization With Text Equivalent.
+
+Example 21: Calendar Date Picker Grid With Availability Semantics.
+
+Example 22: Permission Matrix With Headers And Group Labels.
+
+Example 23: Fieldset And Legend Grouping In Complex Forms.
+
+Example 24: Search Result Cards With Accessible Name Mismatches.
+
+Example 25: Mixed Semantic Anti-Pattern Gallery.
+
+Each example below is mandatory.
+
+---
+
+J00 Example 01 - Checkout Form With Accessible Descriptions And Error Summary
+
+---
+
+Create a checkout contact and delivery form that uses native labels, `aria-describedby`, required fields, invalid states, helper text, and a visible error summary. The form should look like a real checkout step.
+
+Visible heading:
+
+`Checkout Form With Accessible Descriptions And Error Summary`
+
+Visible description:
+
+`This example imitates a checkout form where accessible descriptions, visible helper text, and error messages provide important extraction context. It tests extraction of labels, values, required state, invalid state, error text, and field group context.`
+
+Form header:
+
+`Checkout step`: `Delivery details`.
+
+`Cart ID`: `CART-2026-44018`.
+
+`Step status`: badge `Needs attention`.
+
+Error summary panel:
+
+Use `role="alert"` or `aria-live="assertive"`.
+
+Visible title: `There are 2 problems with your delivery details`.
+
+Error links:
+
+`Delivery phone number must include an area code`, links to `Delivery phone`.
+
+`Delivery instructions are too long`, links to `Delivery instructions`.
+
+Contact field group using `fieldset` and `legend`:
+
+Legend: `Contact information`.
+
+Fields:
+
+`Full name`: input value `Jordan Ellis`, required.
+
+`Email address`: input value `jordan.ellis@example.test`, required, `aria-describedby` pointing to helper text `We will send your receipt and delivery updates here.`
+
+`Delivery phone`: input value `555-0184`, required, `aria-invalid="true"`, `aria-describedby` pointing to both helper text and error text.
+
+Delivery field group:
+
+Legend: `Delivery address`.
+
+Fields:
+
+`Street address`: input value `120 King Street`.
+
+`Dock or suite`: input value `Dock B`.
+
+`City`: input value `San Francisco`.
+
+`State`: select selected `CA`.
+
+`ZIP code`: input value `94107`.
+
+`Delivery instructions`: textarea value `Use freight entrance on King Street. Please call before unloading. Leave packages with dock supervisor if I am away. This note is intentionally long for validation testing.`, `aria-invalid="true"`, `aria-describedby` pointing to error text.
+
+Order summary sidebar:
+
+`Items`: `4`.
+
+`Delivery method`: `Standard ground`.
+
+`Estimated delivery`: `June 6-9, 2026`.
+
+`Delivery status`: badge `Blocked by form errors`.
+
+Extraction caveat: the extraction tool should include both the field value and its validation context. It should not extract the error summary as unrelated links only. It should preserve that the phone and delivery instructions fields are invalid.
+
+Implementation guidance:
+
+```html
+<div class="split-layout">
+  <form class="panel" aria-labelledby="ex01-form-title" novalidate>
+    <h3 id="ex01-form-title">Delivery details</h3>
+
+    <div class="callout-panel" role="alert" aria-labelledby="ex01-errors-title">
+      <h4 id="ex01-errors-title">There are 2 problems with your delivery details</h4>
+      <p><a href="#ex01-phone">Delivery phone number must include an area code</a></p>
+      <p><a href="#ex01-instructions">Delivery instructions are too long</a></p>
+    </div>
+
+    <fieldset>
+      <legend>Contact information</legend>
+      <label for="ex01-email">Email address</label>
+      <input id="ex01-email" value="jordan.ellis@example.test" required aria-describedby="ex01-email-help">
+      <p class="help-text" id="ex01-email-help">We will send your receipt and delivery updates here.</p>
+
+      <label for="ex01-phone">Delivery phone</label>
+      <input id="ex01-phone" value="555-0184" required aria-invalid="true" aria-describedby="ex01-phone-help ex01-phone-error">
+      <p class="help-text" id="ex01-phone-help">Use a phone number where the driver can reach you.</p>
+      <p class="error-text" id="ex01-phone-error">Delivery phone number must include an area code.</p>
+    </fieldset>
+  </form>
+</div>
+```
+
+---
+
+K00 Example 02 - Icon-Only Actions With Hidden Accessible Names
+
+---
+
+Create a compact account toolbar and card list with icon-only buttons. Use visible symbols or single-letter glyphs, but provide full accessible names with `aria-label` and `.sr-only` text.
+
+Visible heading:
+
+`Icon-Only Actions With Hidden Accessible Names`
+
+Visible description:
+
+`This example imitates a dense admin toolbar that uses icon-only action buttons. It tests extraction of action meanings from accessible names without treating the visible symbols as the only labels.`
+
+Account header:
+
+`Account`: `Atlas Product Studio`.
+
+`Workspace ID`: `ws_9A41Q`.
+
+`Plan`: `Business annual`.
+
+`Status`: badge `Active`.
+
+Toolbar icon buttons:
+
+Button visible text: `+`, `aria-label`: `Add new workspace member`.
+
+Button visible text: `↓`, `aria-label`: `Download billing report`.
+
+Button visible text: `?`, `aria-label`: `Open help for workspace settings`.
+
+Button visible text: `...`, `aria-label`: `Open workspace actions menu`.
+
+Three member cards:
+
+Member 1:
+
+`Name`: `Maya Chen`.
+
+`Email`: `maya.chen@example.test`.
+
+`Role`: `Admin`.
+
+`Status`: badge `Active`.
+
+Icon-only row actions:
+
+Visible `✎`, `aria-label`: `Edit Maya Chen`.
+
+Visible `×`, `aria-label`: `Remove Maya Chen from workspace`.
+
+Member 2:
+
+`Name`: `Rafael Ortiz`.
+
+`Email`: `rafael.ortiz@example.test`.
+
+`Role`: `Editor`.
+
+`Status`: badge `Active`.
+
+Icon-only row actions:
+
+Visible `✎`, `aria-label`: `Edit Rafael Ortiz`.
+
+Visible `×`, `aria-label`: `Remove Rafael Ortiz from workspace`.
+
+Member 3:
+
+`Name`: `Lina Romero`.
+
+`Email`: `lina.romero@example.test`.
+
+`Role`: `Viewer`.
+
+`Status`: badge `Invited`.
+
+Icon-only row actions:
+
+Visible `✎`, `aria-label`: `Edit Lina Romero`.
+
+Visible `↻`, `aria-label`: `Resend invite to Lina Romero`.
+
+Extraction caveat: the extraction tool should capture the accessible button names as action labels. It should not output only `+`, `↓`, `?`, `...`, `✎`, `×`, or `↻` as meaningless actions.
+
+Implementation guidance: use actual button elements and set `aria-label` on each icon button. It is acceptable to include `.sr-only` text inside buttons as an additional test, but do not duplicate both in extraction unless needed.
+
+---
+
+L00 Example 03 - Portaled Combobox With Active Descendant
+
+---
+
+Create a custom destination search combobox that visually appears in a travel form while its listbox appears later in the DOM, imitating a portaled popup. Use `aria-controls`, `aria-expanded`, `aria-activedescendant`, and `role="listbox"`.
+
+Visible heading:
+
+`Portaled Combobox With Active Descendant`
+
+Visible description:
+
+`This example imitates a custom travel destination combobox whose popup listbox is rendered outside the form container. It tests extraction of the combobox label, typed value, active descendant, selected option, hidden submitted value, and portaled option list.`
+
+Travel form panel:
+
+`Search type`: `Hotel destination`.
+
+`Destination label`: visible label `Destination city or hotel`.
+
+Combobox trigger input:
+
+`Visible typed value`: `Monterey`.
+
+`role`: `combobox`.
+
+`aria-expanded`: `true`.
+
+`aria-controls`: points to the portaled listbox.
+
+`aria-activedescendant`: points to option `Monterey, CA`.
+
+Hidden backing input:
+
+`name`: `destinationId`.
+
+`value`: `city_monterey_ca`.
+
+Other fields in the travel form:
+
+`Check-in`: `2026-08-14`.
+
+`Check-out`: `2026-08-18`.
+
+`Guests`: `2 adults, 1 child`.
+
+Portaled listbox panel placed after the form, visually aligned but in a separate DOM area:
+
+Option 1:
+
+`Visible text`: `Monterey, CA`.
+
+`Supporting text`: `City - 31 stays`.
+
+`Value ID`: `city_monterey_ca`.
+
+`aria-selected`: `true`.
+
+Option 2:
+
+`Visible text`: `Monterey Bay Aquarium Area`.
+
+`Supporting text`: `Neighborhood - 12 stays`.
+
+`Value ID`: `area_monterey_aquarium`.
+
+`aria-selected`: `false`.
+
+Option 3:
+
+`Visible text`: `Harbor View Suites`.
+
+`Supporting text`: `Hotel - Monterey waterfront`.
+
+`Value ID`: `hotel_harbor_view_suites`.
+
+`aria-selected`: `false`.
+
+Option 4:
+
+`Visible text`: `Pacific Grove, CA`.
+
+`Supporting text`: `Nearby city - 18 stays`.
+
+`Value ID`: `city_pacific_grove_ca`.
+
+`aria-selected`: `false`.
+
+Search summary sidebar:
+
+`Selected destination`: `Monterey, CA`.
+
+`Submitted destination ID`: `city_monterey_ca`.
+
+`Available stays`: `31`.
+
+Extraction caveat: the extraction tool should connect the combobox input to the portaled listbox using ARIA relationships and visible context. It should not treat the listbox as an unrelated list just because it appears outside the form DOM subtree.
+
+Implementation guidance: place the listbox outside the immediate form panel. Use IDs that clearly link `aria-controls` and `aria-activedescendant`.
+
+---
+
+M00 Example 04 - Radio Card Group With Mixed Native And ARIA State
+
+---
+
+Create a shipping option selector using large visual cards. Include hidden native radio inputs for some cards and ARIA radio roles for others to test mixed implementation patterns.
+
+Visible heading:
+
+`Radio Card Group With Mixed Native And ARIA State`
+
+Visible description:
+
+`This example imitates a shipping option selector built from large selectable cards. It tests extraction of selected option, visible card text, native checked state, ARIA checked state, disabled option state, price, delivery date, and policy notes.`
+
+Group heading:
+
+`Choose a delivery method`.
+
+Group accessible name should use a visible heading or `fieldset` and `legend`.
+
+Card 1:
+
+`Option`: `Standard ground`.
+
+`Delivery estimate`: `June 6-9, 2026`.
+
+`Price`: `$8.95`.
+
+`Status`: `Available`.
+
+`Implementation`: native radio input checked.
+
+`Selected`: yes.
+
+Card 2:
+
+`Option`: `Expedited`.
+
+`Delivery estimate`: `June 4-5, 2026`.
+
+`Price`: `$22.00`.
+
+`Status`: `Available`.
+
+`Implementation`: native radio input unchecked.
+
+`Selected`: no.
+
+Card 3:
+
+`Option`: `Freight dock delivery`.
+
+`Delivery estimate`: `June 7-10, 2026`.
+
+`Price`: `$48.00`.
+
+`Status`: `Requires dock access`.
+
+`Implementation`: custom `role="radio"` and `aria-checked="false"`.
+
+`Selected`: no.
+
+Card 4:
+
+`Option`: `Same day courier`.
+
+`Delivery estimate`: `Today by 8:00 PM`.
+
+`Price`: `$62.00`.
+
+`Status`: `Unavailable for this address`.
+
+`Implementation`: custom `role="radio"`, `aria-checked="false"`, `aria-disabled="true"`.
+
+`Selected`: no.
+
+Order sidebar:
+
+`Selected method`: `Standard ground`.
+
+`Selected price`: `$8.95`.
+
+`Delivery status`: badge `Ready`.
+
+Extraction caveat: the extraction tool should identify the selected card even though the group mixes native and ARIA radio implementations. It should not treat unavailable same-day courier as selected.
+
+Implementation guidance: make cards look visually similar even though their implementations differ. This is intentional.
+
+---
+
+N00 Example 05 - Tabbed Account Settings With Duplicate Panel Labels
+
+---
+
+Create a tabbed account settings interface with three tabs. Each tab panel must contain repeated labels such as `Status`, `Owner`, `Last updated`, and `Notes`.
+
+Visible heading:
+
+`Tabbed Account Settings With Duplicate Panel Labels`
+
+Visible description:
+
+`This example imitates account settings with ARIA tabs and repeated labels inside each tab panel. It tests extraction of active tab state and visible tab panel content while preserving panel context.`
+
+Account header:
+
+`Workspace`: `Northwind Analytics`.
+
+`Workspace ID`: `ws_9A41Q`.
+
+`Settings status`: badge `Changes unsaved`.
+
+Tab list:
+
+Tab 1:
+
+`Visible label`: `Billing`.
+
+`role`: `tab`.
+
+`aria-selected`: `true`.
+
+`aria-controls`: billing panel.
+
+Tab 2:
+
+`Visible label`: `Security`.
+
+`aria-selected`: `false`.
+
+Tab 3:
+
+`Visible label`: `Notifications`.
+
+`aria-selected`: `false`.
+
+Billing panel visible by default:
+
+`Panel heading`: `Billing settings`.
+
+`Status`: badge `Configured`.
+
+`Owner`: `Renee Coleman`.
+
+`Last updated`: `May 30, 2026, 4:12 PM`.
+
+`Invoice recipients`: `billing@example.test`, `finance@example.test`.
+
+`Notes`: `Purchase order required for renewals over $5,000.`
+
+Security panel hidden by default:
+
+`Panel heading`: `Security settings`.
+
+`Status`: badge `Enforced`.
+
+`Owner`: `Anika Sharma`.
+
+`Last updated`: `May 28, 2026, 1:20 PM`.
+
+`MFA requirement`: `Required for admins`.
+
+`Notes`: `SCIM and SAML are enabled.`
+
+Notifications panel hidden by default:
+
+`Panel heading`: `Notification settings`.
+
+`Status`: badge `Partially configured`.
+
+`Owner`: `Grace Miller`.
+
+`Last updated`: `May 22, 2026, 9:18 AM`.
+
+`Digest frequency`: `Daily`.
+
+`Notes`: `Slack alerts are not configured.`
+
+Extraction caveat: the extraction tool should capture the active tab and visible panel content by default. If the tester activates another tab, extraction should preserve which tab panel the repeated labels belong to.
+
+Implementation guidance: implement tabs with `role="tablist"`, `role="tab"`, and `role="tabpanel"`. Use JavaScript to switch visible panels.
+
+---
+
+O00 Example 06 - Accordion Details With Collapsed Summaries
+
+---
+
+Create an accordion-based subscription settings page. Some sections should be expanded and some collapsed. Collapsed sections should still show a visible summary row.
+
+Visible heading:
+
+`Accordion Details With Collapsed Summaries`
+
+Visible description:
+
+`This example imitates a settings page with accordion sections. It tests extraction of expanded content, collapsed summaries, aria-expanded state, and repeated labels inside each section.`
+
+Page header:
+
+`Account`: `Atlas Product Studio`.
+
+`Plan`: `Business annual`.
+
+`Settings status`: badge `Review recommended`.
+
+Accordion sections:
+
+Section 1 expanded by default:
+
+Button text: `Billing contacts`.
+
+`aria-expanded`: `true`.
+
+Visible expanded content:
+
+`Status`: badge `Configured`.
+
+`Primary contact`: `Renee Coleman`.
+
+`Invoice email`: `billing@example.test`.
+
+`Backup email`: `finance@example.test`.
+
+`Last updated`: `May 30, 2026`.
+
+Section 2 collapsed by default:
+
+Button text: `Payment method`.
+
+`aria-expanded`: `false`.
+
+Collapsed summary visible:
+
+`Summary`: `Visa ending in 4242, expires 08/2028`.
+
+Hidden expanded content:
+
+`Status`: badge `Active`.
+
+`Cardholder`: `Jordan Ellis`.
+
+`Billing ZIP`: `94103`.
+
+`Last verified`: `May 18, 2026`.
+
+Section 3 expanded by default:
+
+Button text: `Renewal settings`.
+
+`aria-expanded`: `true`.
+
+Visible expanded content:
+
+`Status`: badge `Auto-renew enabled`.
+
+`Renewal date`: `January 18, 2027`.
+
+`Renewal amount`: `$5,760.00`.
+
+`Purchase order required`: `Yes`.
+
+Section 4 collapsed by default:
+
+Button text: `Cancellation terms`.
+
+`aria-expanded`: `false`.
+
+Collapsed summary visible:
+
+`Summary`: `Notice required 30 days before renewal`.
+
+Hidden expanded content:
+
+`Notice deadline`: `December 19, 2026`.
+
+`Early cancellation`: `Not available for annual plan`.
+
+`Notes`: `Contact billing support for exceptions.`
+
+Extraction caveat: the extraction tool should extract visible collapsed summaries but should not extract hidden details unless the tester expands the accordion before selection.
+
+Implementation guidance: use buttons with `aria-controls` and `aria-expanded`. Hidden panels should use the `hidden` attribute.
+
+---
+
+P00 Example 07 - Error Summary Linking To Invalid Fields
+
+---
+
+Create a multi-section profile form with an error summary at the top. The invalid fields should be in different visual groups, and the error summary should link to them.
+
+Visible heading:
+
+`Error Summary Linking To Invalid Fields`
+
+Visible description:
+
+`This example imitates a profile update form with validation errors spread across multiple sections. It tests extraction of error summary items, invalid fields, field values, aria-invalid state, and error-to-field relationships.`
+
+Header:
+
+`Profile`: `Contractor onboarding`.
+
+`User`: `Samira Haddad`.
+
+`Form status`: badge `Cannot submit`.
+
+Error summary:
+
+Use `role="alert"` and visible heading `Fix 3 fields before continuing`.
+
+Errors:
+
+`Legal name is required`.
+
+`Start date must be after today`.
+
+`Emergency contact phone must include country code`.
+
+Section `Identity`.
+
+Fields:
+
+`Legal name`: empty input, required, `aria-invalid="true"`, error `Legal name is required`.
+
+`Preferred name`: input value `Samira`.
+
+`Email`: readonly input value `samira.haddad@example.test`.
+
+Section `Contract`.
+
+Fields:
+
+`Role`: input value `Accessibility reviewer`.
+
+`Start date`: input type date value `2026-05-15`, `aria-invalid="true"`, error `Start date must be after today`.
+
+`End date`: input type date value `2026-08-15`.
+
+Section `Emergency Contact`.
+
+Fields:
+
+`Contact name`: input value `Leila Haddad`.
+
+`Relationship`: select selected `Sibling`.
+
+`Emergency contact phone`: input value `415-555-0180`, `aria-invalid="true"`, error `Emergency contact phone must include country code`.
+
+Side summary:
+
+`Required fields completed`: `6 of 9`.
+
+`Validation status`: badge `3 errors`.
+
+Extraction caveat: the extraction tool should preserve error summary links and field-level error messages without duplicating them as unrelated notes.
+
+Implementation guidance: each error summary link should point to the invalid field ID. Each invalid field should use `aria-describedby` to include the error text ID.
+
+---
+
+Q00 Example 08 - Live Region Notifications And Status Updates
+
+---
+
+Create a notification center with live regions that update status messages. Include visible current status and a live region area.
+
+Visible heading:
+
+`Live Region Notifications And Status Updates`
+
+Visible description:
+
+`This example imitates an admin page that uses live regions for save, sync, and export status messages. It tests extraction of current visible status, live region text, notification records, and action-triggered updates.`
+
+Header:
+
+`Workspace`: `Northstar Research Lab`.
+
+`Page`: `Export jobs`.
+
+`Overall status`: badge `2 jobs running`.
+
+Live status region:
+
+Use `role="status"` or `aria-live="polite"`.
+
+Initial visible text:
+
+`Last update: Export job EXP-2026-1842 is running. 42 percent complete.`
+
+Action buttons:
+
+`Refresh status`, with `data-live-message`: `Status refreshed. Export job EXP-2026-1842 is 58 percent complete.`
+
+`Start CSV export`, with `data-live-message`: `CSV export started for invoice line items.`
+
+`Cancel export`, with `data-live-message`: `Export cancellation requested for EXP-2026-1842.`
+
+Notification list:
+
+Notification 1:
+
+`Type`: `Export`.
+
+`Job ID`: `EXP-2026-1842`.
+
+`Status`: badge `Running`.
+
+`Progress`: `42 percent`.
+
+`Started`: `May 31, 2026, 11:40 AM`.
+
+Notification 2:
+
+`Type`: `Webhook`.
+
+`Job ID`: `WEB-2026-7710`.
+
+`Status`: badge `Failed`.
+
+`Progress`: `Stopped`.
+
+`Started`: `May 31, 2026, 10:52 AM`.
+
+`Error`: `Endpoint returned 503`.
+
+Notification 3:
+
+`Type`: `Report`.
+
+`Job ID`: `RPT-2026-1190`.
+
+`Status`: badge `Complete`.
+
+`Progress`: `100 percent`.
+
+`Started`: `May 31, 2026, 9:00 AM`.
+
+`Completed`: `May 31, 2026, 9:04 AM`.
+
+Extraction caveat: the extraction tool should capture visible live region content when selected. It should not assume button labels are the current status. If a tester clicks a live update button, the live region text should change in the DOM.
+
+Implementation guidance: connect `data-live-target` buttons to a visible live region.
+
+---
+
+R00 Example 09 - Semantic Data Table With Multi-Level Headers
+
+---
+
+Create a financial comparison table with multi-level column headers. Use semantic table structure with `caption`, column groups, row headers, and scoped headers.
+
+Visible heading:
+
+`Semantic Data Table With Multi-Level Headers`
+
+Visible description:
+
+`This example imitates a finance comparison table with grouped headers. It tests extraction of table captions, row headers, column group headers, nested column headers, currency values, percentages, and summary rows.`
+
+Table caption:
+
+`Quarterly billing performance by product line`.
+
+Column groups:
+
+Group `Q1 2026` with columns `Revenue`, `Refunds`, `Net`.
+
+Group `Q2 2026` with columns `Revenue`, `Refunds`, `Net`.
+
+Final column `Change`.
+
+Rows:
+
+Row 1:
+
+`Product line`: `Business platform seats`.
+
+`Q1 Revenue`: `$128,400`.
+
+`Q1 Refunds`: `$4,220`.
+
+`Q1 Net`: `$124,180`.
+
+`Q2 Revenue`: `$142,880`.
+
+`Q2 Refunds`: `$3,918`.
+
+`Q2 Net`: `$138,962`.
+
+`Change`: `+11.9 percent`.
+
+Row 2:
+
+`Product line`: `Audit log retention`.
+
+`Q1 Revenue`: `$42,100`.
+
+`Q1 Refunds`: `$820`.
+
+`Q1 Net`: `$41,280`.
+
+`Q2 Revenue`: `$48,900`.
+
+`Q2 Refunds`: `$640`.
+
+`Q2 Net`: `$48,260`.
+
+`Change`: `+16.9 percent`.
+
+Row 3:
+
+`Product line`: `Priority support`.
+
+`Q1 Revenue`: `$68,400`.
+
+`Q1 Refunds`: `$3,200`.
+
+`Q1 Net`: `$65,200`.
+
+`Q2 Revenue`: `$74,500`.
+
+`Q2 Refunds`: `$2,980`.
+
+`Q2 Net`: `$71,520`.
+
+`Change`: `+9.7 percent`.
+
+Summary row:
+
+`Product line`: `Total`.
+
+`Q1 Revenue`: `$238,900`.
+
+`Q1 Refunds`: `$8,240`.
+
+`Q1 Net`: `$230,660`.
+
+`Q2 Revenue`: `$266,280`.
+
+`Q2 Refunds`: `$7,538`.
+
+`Q2 Net`: `$258,742`.
+
+`Change`: `+12.2 percent`.
+
+Extraction caveat: the extraction tool should preserve multi-level header context, such as `Q2 2026 Net`, instead of returning generic `Net` values without quarter context.
+
+Implementation guidance: use `<caption>`, `<thead>`, two header rows, `scope="colgroup"`, `scope="col"`, and row header cells with `scope="row"`.
+
+---
+
+S00 Example 10 - Landmark Layout With Repeated Navigation Names
+
+---
+
+Create a page layout with multiple landmark regions and repeated navigation labels. Include a main navigation, account navigation, and footer navigation.
+
+Visible heading:
+
+`Landmark Layout With Repeated Navigation Names`
+
+Visible description:
+
+`This example imitates a complex application shell with multiple navigation landmarks. It tests extraction of landmark context, repeated link labels, and region-specific navigation names.`
+
+App shell header:
+
+`Application`: `Northwind Admin`.
+
+`Signed in as`: `Anika Sharma`.
+
+`Workspace`: `Northwind Analytics`.
+
+Landmark region 1:
+
+`role`: native `nav`.
+
+`aria-label`: `Primary navigation`.
+
+Links:
+
+`Dashboard`.
+
+`Search`.
+
+`Reports`.
+
+`Settings`.
+
+Landmark region 2:
+
+`nav`.
+
+`aria-label`: `Account settings navigation`.
+
+Links:
+
+`Profile`.
+
+`Billing`.
+
+`Security`.
+
+`Settings`.
+
+Main landmark:
+
+`main`.
+
+Page title:
+
+`Workspace settings overview`.
+
+Summary cards:
+
+`Billing status`: `Configured`.
+
+`Security status`: `Enforced`.
+
+`Notification status`: `Partially configured`.
+
+`Integration status`: `Healthy`.
+
+Aside landmark:
+
+`aria-label`: `Related settings`.
+
+Links:
+
+`Settings`.
+
+`Billing contacts`.
+
+`Audit log`.
+
+`API keys`.
+
+Footer navigation:
+
+`aria-label`: `Footer navigation`.
+
+Links:
+
+`Help`.
+
+`Settings`.
+
+`Privacy`.
+
+`Terms`.
+
+Extraction caveat: the extraction tool should preserve which navigation region each repeated `Settings` link belongs to. It should not output a flat link list without landmark context.
+
+Implementation guidance: use semantic `<header>`, `<nav>`, `<main>`, `<aside>`, and `<footer>` elements. Give each navigation region an accessible label.
+
+---
+
+T00 Example 11 - Modal Dialog With Background Context
+
+---
+
+Create a modal dialog example within a visible page context. The dialog should have a title, description, fields, buttons, and a background order summary.
+
+Visible heading:
+
+`Modal Dialog With Background Context`
+
+Visible description:
+
+`This example imitates a modal dialog opened over a checkout page. It tests extraction of dialog content separately from background page content, including dialog title, description, form fields, and action buttons.`
+
+Background page summary visible behind dialog:
+
+`Order`: `ORD-DRAFT-2026-104922`.
+
+`Customer`: `Jordan Ellis`.
+
+`Order total`: `$159.07`.
+
+`Delivery status`: badge `Ready`.
+
+`Background action`: `Edit delivery address`.
+
+Dialog area:
+
+Use `role="dialog"` or `<dialog open>`.
+
+`aria-modal`: `true`.
+
+Dialog title:
+
+`Update delivery instructions`.
+
+Dialog description:
+
+`Add a short note for the driver. Do not include payment information or access codes.`
+
+Fields inside dialog:
+
+`Delivery instruction`: textarea value `Use freight entrance on King Street.`.
+
+`Contact preference`: select selected `Call before unloading`.
+
+`Apply to future orders`: checkbox unchecked.
+
+Buttons:
+
+`Save instructions`.
+
+`Cancel`.
+
+Dialog status text:
+
+`Character count`: `36 of 140`.
+
+Extraction caveat: the extraction tool should distinguish dialog content from background content when the tester selects the dialog. It should not merge background order total into the dialog fields unless the selected region includes it.
+
+Implementation guidance: do not use a real blocking overlay that prevents testing. Use a styled `.dialog-backdrop` and `.dialog-panel` visible by default.
+
+---
+
+U00 Example 12 - Tree View File Browser With Expanded Nodes
+
+---
+
+Create an accessible tree view file browser with folders and files. Use `role="tree"`, `role="treeitem"`, `aria-expanded`, `aria-selected`, and hierarchy.
+
+Visible heading:
+
+`Tree View File Browser With Expanded Nodes`
+
+Visible description:
+
+`This example imitates a file browser tree. It tests extraction of hierarchical folder and file relationships, expanded state, selected state, file metadata, and visually nested tree items.`
+
+Header:
+
+`Workspace`: `Demo Pages`.
+
+`Selected file`: `page-09-accessibility-and-semantic-edge-cases.html`.
+
+`Browser status`: badge `Loaded`.
+
+Tree root:
+
+Folder `Demo Pages`.
+
+`aria-expanded`: `true`.
+
+Children:
+
+Folder `Specifications`.
+
+`aria-expanded`: `true`.
+
+Files under `Specifications`:
+
+`Page 01 - Native Forms Spec`, type `Document`, modified `May 28, 2026`.
+
+`Page 08 - Complex Layout Spec`, type `Document`, modified `May 31, 2026`.
+
+`Page 09 - Accessibility And Semantics Spec`, type `Document`, modified `May 31, 2026`.
+
+Folder `HTML Fixtures`.
+
+`aria-expanded`: `true`.
+
+Files under `HTML Fixtures`:
+
+`page-07-tables-grids-and-admin-dashboards.html`, type `HTML`, modified `May 31, 2026`.
+
+`page-08-complex-layout-and-visual-grouping.html`, type `HTML`, modified `May 31, 2026`.
+
+`page-09-accessibility-and-semantic-edge-cases.html`, type `HTML`, modified `May 31, 2026`, `aria-selected="true"`.
+
+Folder `Archived`.
+
+`aria-expanded`: `false`.
+
+Collapsed summary visible:
+
+`3 archived fixture drafts`.
+
+Selected file detail panel:
+
+`File name`: `page-09-accessibility-and-semantic-edge-cases.html`.
+
+`File type`: `HTML`.
+
+`Owner`: `Product Systems`.
+
+`Status`: badge `Draft`.
+
+`Path`: `/Demo Pages/HTML Fixtures/page-09-accessibility-and-semantic-edge-cases.html`.
+
+Extraction caveat: the extraction tool should preserve hierarchy and selected file state. It should not extract all tree item labels as a flat unrelated list.
+
+Implementation guidance: use nested lists with ARIA tree roles. Keep indentation visible.
+
+---
+
+V00 Example 13 - Menu Button With Checked Menu Items
+
+---
+
+Create an action menu and column visibility menu with checked menu items. Use `aria-haspopup`, `aria-expanded`, `role="menu"`, and `role="menuitemcheckbox"`.
+
+Visible heading:
+
+`Menu Button With Checked Menu Items`
+
+Visible description:
+
+`This example imitates an admin table toolbar with a menu button. It tests extraction of menu trigger label, expanded state, checked menu item state, and action labels without confusing menu items with table data.`
+
+Admin table header:
+
+`Table`: `Invoice exports`.
+
+`Visible exports`: `4`.
+
+`Status`: badge `Ready`.
+
+Toolbar buttons:
+
+Button 1:
+
+Visible text: `Columns`.
+
+`aria-haspopup`: `menu`.
+
+`aria-expanded`: `true`.
+
+`aria-controls`: column menu.
+
+Button 2:
+
+Visible text: `Bulk actions`.
+
+`aria-haspopup`: `menu`.
+
+`aria-expanded`: `false`.
+
+Column menu visible by default:
+
+Use `role="menu"`.
+
+Menu items:
+
+`Invoice number`, `role="menuitemcheckbox"`, `aria-checked="true"`.
+
+`Customer`, `aria-checked="true"`.
+
+`Status`, `aria-checked="true"`.
+
+`Created date`, `aria-checked="true"`.
+
+`Internal notes`, `aria-checked="false"`.
+
+`Export job ID`, `aria-checked="false"`.
+
+Small table below:
+
+Rows:
+
+Export 1: `Invoice` `INV-2026-00841`, `Customer` `Cedar & Pine Design LLC`, `Status` `Ready`, `Created` `May 31, 2026`.
+
+Export 2: `Invoice` `INV-2026-00842`, `Customer` `Atlas Product Studio`, `Status` `Running`, `Created` `May 31, 2026`.
+
+Export 3: `Invoice` `INV-2026-00843`, `Customer` `City Museum of Design`, `Status` `Failed`, `Created` `May 30, 2026`.
+
+Export 4: `Invoice` `INV-2026-00844`, `Customer` `Northstar Research Lab`, `Status` `Ready`, `Created` `May 30, 2026`.
+
+Extraction caveat: the extraction tool should capture checked menu states as column visibility settings. It should not treat menu item names as row values.
+
+Implementation guidance: keep the column menu open by default so it is visible for extraction testing.
+
+---
+
+W00 Example 14 - Range Slider And Meter With Accessible Value Text
+
+---
+
+Create a usage limit settings panel with a range slider, a meter, and accessible value text. Include visible numeric values and `aria-valuetext`.
+
+Visible heading:
+
+`Range Slider And Meter With Accessible Value Text`
+
+Visible description:
+
+`This example imitates a usage threshold configuration panel. It tests extraction of slider value, accessible value text, meter value, min and max values, warning threshold, and current usage context.`
+
+Panel header:
+
+`Setting`: `Monthly extraction usage alert`.
+
+`Account`: `Civic Data Lab`.
+
+`Status`: badge `Alert enabled`.
+
+Slider field:
+
+Visible label: `Alert threshold`.
+
+Input type range:
+
+`min`: `50`.
+
+`max`: `100`.
+
+`value`: `90`.
+
+`aria-valuetext`: `90 percent of monthly included events`.
+
+Visible help text:
+
+`Send an alert when usage reaches 90 percent of included events.`
+
+Meter field:
+
+Visible label: `Current usage`.
+
+Use `<meter>` or a styled element with role meter.
+
+`min`: `0`.
+
+`max`: `500000`.
+
+`value`: `408912`.
+
+Visible value: `408,912 of 500,000 events`.
+
+Accessible value text: `82 percent used`.
+
+Additional fields:
+
+`Included events`: `500,000`.
+
+`Used events`: `408,912`.
+
+`Remaining events`: `91,088`.
+
+`Projected overage`: `$0.00`.
+
+`Alert recipients`: `billing@example.test`, `ops@example.test`.
+
+Extraction caveat: the extraction tool should capture both numeric values and accessible value text. It should not reduce the range slider to only `90` without its unit and context.
+
+Implementation guidance: use native range input for the slider and either native `<meter>` or `role="meter"` with `aria-valuenow`, `aria-valuemin`, `aria-valuemax`, and `aria-valuetext`.
+
+---
+
+X00 Example 15 - Checkout Stepper With Current Step And Completed Steps
+
+---
+
+Create a checkout stepper with completed, current, and upcoming steps. Include associated content for the current step.
+
+Visible heading:
+
+`Checkout Stepper With Current Step And Completed Steps`
+
+Visible description:
+
+`This example imitates a checkout progress stepper. It tests extraction of step order, completed state, current step state, upcoming steps, and the current step's form content.`
+
+Checkout header:
+
+`Checkout`: `Order ORD-DRAFT-2026-104922`.
+
+`Customer`: `Jordan Ellis`.
+
+`Checkout status`: badge `In progress`.
+
+Stepper list:
+
+Step 1:
+
+`Step`: `Cart`.
+
+`Status`: `Complete`.
+
+Use visible badge `Complete`.
+
+Step 2:
+
+`Step`: `Delivery`.
+
+`Status`: `Complete`.
+
+Step 3:
+
+`Step`: `Payment`.
+
+`Status`: `Current`.
+
+Use `aria-current="step"`.
+
+Step 4:
+
+`Step`: `Review`.
+
+`Status`: `Upcoming`.
+
+Current step panel:
+
+Heading: `Payment`.
+
+Fields:
+
+`Payment method`: `Visa ending in 4242`.
+
+`Billing address`: `88 Valencia Street, Suite 402, San Francisco, CA 94103`.
+
+`Authorization status`: badge `Authorized`.
+
+`Amount authorized`: `$159.07`.
+
+`Next action`: `Continue to review`.
+
+Payment method options:
+
+`Visa ending in 4242`, selected.
+
+`ACH ending in 1842`, not selected.
+
+`Add new payment method`, available.
+
+Extraction caveat: the extraction tool should preserve step state and current step content separately. It should not treat all step labels as equivalent navigation links.
+
+Implementation guidance: use an ordered list. Apply `aria-current="step"` on the current step.
+
+---
+
+Y00 Example 16 - Sortable List With Accessible Drag Handles
+
+---
+
+Create a sortable priority list with accessible drag handles, visible order numbers, and item details. It should look like a project priority editor.
+
+Visible heading:
+
+`Sortable List With Accessible Drag Handles`
+
+Visible description:
+
+`This example imitates a sortable priority list. It tests extraction of item order, accessible drag handle names, item records, priorities, owners, due dates, and status values.`
+
+Panel header:
+
+`List`: `Q3 product priorities`.
+
+`Owner`: `Maya Chen`.
+
+`List status`: badge `Draft order`.
+
+Sortable list items:
+
+Item 1:
+
+`Position`: `1`.
+
+Drag handle visible text: `::`.
+
+Drag handle `aria-label`: `Move Customer Portal Redesign`.
+
+`Priority`: `Customer Portal Redesign`.
+
+`Owner`: `Maya Chen`.
+
+`Due`: `August 15, 2026`.
+
+`Status`: badge `At risk`.
+
+`Notes`: `Billing and seat management flows are critical.`
+
+Item 2:
+
+`Position`: `2`.
+
+Drag handle `aria-label`: `Move Invoice Export Overhaul`.
+
+`Priority`: `Invoice Export Overhaul`.
+
+`Owner`: `Renee Coleman`.
+
+`Due`: `July 8, 2026`.
+
+`Status`: badge `On track`.
+
+`Notes`: `CSV line item export is the core deliverable.`
+
+Item 3:
+
+`Position`: `3`.
+
+Drag handle `aria-label`: `Move Admin Permissions Refresh`.
+
+`Priority`: `Admin Permissions Refresh`.
+
+`Owner`: `Anika Sharma`.
+
+`Due`: `September 1, 2026`.
+
+`Status`: badge `Design`.
+
+`Notes`: `Role migration needs careful review.`
+
+Item 4:
+
+`Position`: `4`.
+
+Drag handle `aria-label`: `Move Search Result Sidebar Rewrite`.
+
+`Priority`: `Search Result Sidebar Rewrite`.
+
+`Owner`: `Rafael Ortiz`.
+
+`Due`: `October 20, 2026`.
+
+`Status`: badge `Discovery`.
+
+`Notes`: `Legacy state model is the main risk.`
+
+Extraction caveat: the extraction tool should capture current item order and drag handle accessible names, but should not treat the handle symbol `::` as the item title.
+
+Implementation guidance: no actual drag and drop behavior is required. Use buttons for drag handles with clear `aria-label` values.
+
+---
+
+Z00 Example 17 - Tokenized Multi-Select With Hidden Input Values
+
+---
+
+Create a tokenized multi-select control for choosing report recipients and export fields. Include visible tokens, remove buttons, a search input, a listbox, and hidden backing values.
+
+Visible heading:
+
+`Tokenized Multi-Select With Hidden Input Values`
+
+Visible description:
+
+`This example imitates a tokenized multi-select widget. It tests extraction of selected tokens, accessible remove button names, hidden submitted values, available listbox options, and grouped selected values.`
+
+Report configuration header:
+
+`Report`: `Monthly Billing Export Summary`.
+
+`Status`: badge `Scheduled`.
+
+`Owner`: `Renee Coleman`.
+
+Recipient multi-select group:
+
+Visible label: `Recipients`.
+
+Selected tokens:
+
+Token 1:
+
+`Visible token`: `billing@example.test`.
+
+Remove button `aria-label`: `Remove billing@example.test from recipients`.
+
+Hidden value: `billing@example.test`.
+
+Token 2:
+
+`Visible token`: `finance@example.test`.
+
+Remove button `aria-label`: `Remove finance@example.test from recipients`.
+
+Hidden value: `finance@example.test`.
+
+Search input:
+
+`aria-label`: `Search recipients`.
+
+Value: empty.
+
+Recipient listbox visible:
+
+Option 1: `ops@example.test`, status `Available`.
+
+Option 2: `support-leads@example.test`, status `Available`.
+
+Option 3: `billing@example.test`, status `Already selected`.
+
+Export field multi-select group:
+
+Visible label: `Export fields`.
+
+Selected tokens:
+
+`Invoice number`, hidden value `invoice_number`.
+
+`Customer`, hidden value `customer_name`.
+
+`Balance due`, hidden value `balance_due`.
+
+Available listbox options:
+
+`Tax amount`.
+
+`Discount amount`.
+
+`Payment reference`.
+
+Extraction caveat: the extraction tool should preserve selected tokens as selected values and listbox options as available values. It should not treat remove button labels as selected values.
+
+Implementation guidance: use token spans or buttons, hidden inputs, and listbox roles where appropriate.
+
+---
+
+AA00 Example 18 - Visually Hidden Text In Search Results
+
+---
+
+Create search result cards where visually hidden text adds important context for identical visible titles.
+
+Visible heading:
+
+`Visually Hidden Text In Search Results`
+
+Visible description:
+
+`This example imitates search results that use visually hidden text to disambiguate similar visible links. It tests extraction of accessible link names, visible titles, hidden context, source metadata, and snippets without duplicate output.`
+
+Search header:
+
+`Search query`: `settings`.
+
+`Result count`: `5 results`.
+
+`Sort order`: `Best match`.
+
+Search results:
+
+Result 1:
+
+Visible link text: `Settings`.
+
+Hidden text inside link: `for workspace billing`.
+
+Accessible full link name should effectively be `Settings for workspace billing`.
+
+`Primary link`: `/demo/settings/billing`.
+
+`Source`: `Admin console`.
+
+`Snippet`: `Manage invoice recipients, payment methods, purchase orders, and renewal dates.`
+
+`Updated`: `May 30, 2026`.
+
+Result 2:
+
+Visible link text: `Settings`.
+
+Hidden text inside link: `for workspace security`.
+
+Accessible full link name: `Settings for workspace security`.
+
+`Primary link`: `/demo/settings/security`.
+
+`Source`: `Admin console`.
+
+`Snippet`: `Configure SAML SSO, SCIM provisioning, MFA requirements, and session length.`
+
+`Updated`: `May 28, 2026`.
+
+Result 3:
+
+Visible link text: `Settings`.
+
+Hidden text inside link: `for notification preferences`.
+
+Accessible full link name: `Settings for notification preferences`.
+
+`Primary link`: `/demo/settings/notifications`.
+
+`Source`: `Admin console`.
+
+`Snippet`: `Choose digest frequency, recipients, and alert channels.`
+
+`Updated`: `May 22, 2026`.
+
+Result 4:
+
+Visible link text: `Export settings`.
+
+`Primary link`: `/demo/settings/exports`.
+
+`Source`: `Billing exports`.
+
+`Snippet`: `Configure CSV fields, delivery schedule, and saved export templates.`
+
+`Updated`: `May 29, 2026`.
+
+Result 5:
+
+Visible link text: `API settings`.
+
+`Primary link`: `/demo/settings/api`.
+
+`Source`: `Developer platform`.
+
+`Snippet`: `Manage API keys, webhook endpoints, and rate limits.`
+
+`Updated`: `May 27, 2026`.
+
+Extraction caveat: the extraction tool should avoid outputting three identical `Settings` results when hidden text disambiguates them. It should not duplicate hidden text separately if it is part of the accessible name.
+
+Implementation guidance: use `<span class="sr-only"> for workspace billing</span>` inside the link.
+
+---
+
+AB00 Example 19 - Tooltip And Description Relationship Edge Cases
+
+---
+
+Create a form panel where some fields use `aria-describedby` help text, some use visible tooltips, and one field has a visible tooltip that is not connected semantically.
+
+Visible heading:
+
+`Tooltip And Description Relationship Edge Cases`
+
+Visible description:
+
+`This example imitates a settings form with help text and tooltip descriptions. It tests extraction of connected descriptions, unconnected visual tooltip text, and field values without assuming every nearby tooltip belongs to the field.`
+
+Panel header:
+
+`Settings`: `API key rotation policy`.
+
+`Workspace`: `Northwind Analytics`.
+
+`Status`: badge `Review recommended`.
+
+Fields:
+
+Field 1:
+
+`Label`: `Rotation interval`.
+
+`Value`: select selected `90 days`.
+
+Connected description using `aria-describedby`: `Recommended for production API keys.`
+
+Field 2:
+
+`Label`: `Grace period`.
+
+`Value`: input value `14`.
+
+`Unit`: `days`.
+
+Connected tooltip:
+
+Visible tooltip text: `Requests using the old key will continue during the grace period.`
+
+Tooltip ID referenced by `aria-describedby`.
+
+Field 3:
+
+`Label`: `Owner`.
+
+`Value`: `Rafael Ortiz`.
+
+Help text: `Owner receives rotation reminders.`
+
+Field 4:
+
+`Label`: `Emergency bypass`.
+
+`Value`: switch unchecked.
+
+Nearby visible tooltip text not connected semantically:
+
+`Only use bypass for incident response.`
+
+This tooltip should have no `aria-describedby` relationship on the switch.
+
+Summary panel:
+
+`Policy status`: badge `Configured`.
+
+`Next rotation`: `July 1, 2026`.
+
+`Keys affected`: `3`.
+
+Extraction caveat: the extraction tool should capture connected descriptions when `aria-describedby` exists. It may capture nearby tooltip text as visible text if selected, but should not automatically assign unconnected tooltip text to the wrong field.
+
+Implementation guidance: clearly show both connected and unconnected tooltip patterns.
+
+---
+
+AC00 Example 20 - Data Visualization With Text Equivalent
+
+---
+
+Create a small analytics dashboard with CSS-only chart placeholders and explicit text equivalents. Do not use a chart library or canvas.
+
+Visible heading:
+
+`Data Visualization With Text Equivalent`
+
+Visible description:
+
+`This example imitates an analytics dashboard that provides accessible text equivalents for visual charts. It tests extraction of chart titles, visible chart summaries, text alternatives, data points, and metric context.`
+
+Dashboard header:
+
+`Dashboard`: `Extraction Quality Trends`.
+
+`Period`: `May 2026`.
+
+`Owner`: `Product Systems`.
+
+`Status`: badge `Published`.
+
+Chart card 1:
+
+`Chart title`: `Duplicate action label rate`.
+
+Visual placeholder: simple CSS bar blocks.
+
+Accessible description using `aria-describedby`:
+
+`The duplicate action label rate decreased from 4.1 percent to 2.8 percent during May 2026.`
+
+Visible data table below chart:
+
+Week 1: `4.1 percent`.
+
+Week 2: `3.6 percent`.
+
+Week 3: `3.2 percent`.
+
+Week 4: `2.8 percent`.
+
+Chart card 2:
+
+`Chart title`: `Table row context accuracy`.
+
+Accessible description:
+
+`Table row context accuracy improved from 91 percent to 93 percent, but remains below the 94 percent target.`
+
+Visible data:
+
+Week 1: `91 percent`.
+
+Week 2: `92 percent`.
+
+Week 3: `92 percent`.
+
+Week 4: `93 percent`.
+
+Chart card 3:
+
+`Chart title`: `Combobox selected value accuracy`.
+
+Accessible description:
+
+`Combobox selected value accuracy stayed stable at 96 percent or higher throughout May.`
+
+Visible data:
+
+Week 1: `96 percent`.
+
+Week 2: `97 percent`.
+
+Week 3: `97 percent`.
+
+Week 4: `96 percent`.
+
+Summary callout:
+
+`Overall quality status`: badge `Improving`.
+
+`Primary risk`: `Table row context remains below target`.
+
+Extraction caveat: the extraction tool should extract the text equivalent and visible data points. It should not try to interpret the CSS visual bars as the only source of data.
+
+Implementation guidance: use regular divs for chart placeholders and a small table or field rows for actual data.
+
+---
+
+AD00 Example 21 - Calendar Date Picker Grid With Availability Semantics
+
+---
+
+Create a calendar date picker grid for booking appointments. Use semantic grid roles or table semantics, selected date, unavailable dates, and accessible labels.
+
+Visible heading:
+
+`Calendar Date Picker Grid With Availability Semantics`
+
+Visible description:
+
+`This example imitates a custom appointment calendar. It tests extraction of selected date, available dates, unavailable dates, aria-disabled state, aria-selected state, and accessible labels for dates.`
+
+Booking header:
+
+`Provider`: `Dr. Helen Park, MD`.
+
+`Service`: `Orthopedics follow-up`.
+
+`Calendar month`: `June 2026`.
+
+`Selected date`: `June 11, 2026`.
+
+Calendar grid:
+
+Use either a semantic table or `role="grid"`.
+
+Weekday headers:
+
+`Sunday`, `Monday`, `Tuesday`, `Wednesday`, `Thursday`, `Friday`, `Saturday`.
+
+Visible date cells from June 8 through June 21.
+
+Required date states:
+
+June 8: available, label `June 8, 2026, 3 appointments available`.
+
+June 9: unavailable, `aria-disabled="true"`, label `June 9, 2026, no appointments available`.
+
+June 10: available, label `June 10, 2026, 1 appointment available`.
+
+June 11: selected, `aria-selected="true"`, label `June 11, 2026, selected, 2 appointments available`.
+
+June 12: available, label `June 12, 2026, 4 appointments available`.
+
+June 13: unavailable.
+
+June 14: unavailable.
+
+June 15: available.
+
+June 16: available.
+
+June 17: available.
+
+June 18: unavailable.
+
+June 19: available.
+
+June 20: unavailable.
+
+June 21: unavailable.
+
+Time slot panel for selected date:
+
+`Selected date`: `June 11, 2026`.
+
+Available times:
+
+`2:30 PM`, selected.
+
+`3:15 PM`.
+
+`4:00 PM`.
+
+Unavailable time:
+
+`5:00 PM`, disabled, label `Fully booked`.
+
+Extraction caveat: the extraction tool should capture selected date and availability states. It should not treat unavailable dates as selectable values.
+
+Implementation guidance: use buttons inside grid cells, with `aria-label`, `aria-selected`, and disabled state where applicable.
+
+---
+
+AE00 Example 22 - Permission Matrix With Headers And Group Labels
+
+---
+
+Create a permission matrix with row groups, column headers, and nested permission descriptions. Use semantic table headers where possible.
+
+Visible heading:
+
+`Permission Matrix With Headers And Group Labels`
+
+Visible description:
+
+`This example imitates an admin permission matrix. It tests extraction of row group context, column header context, checked and unchecked states, disabled permissions, and permission descriptions.`
+
+Header:
+
+`Workspace`: `Northwind Analytics`.
+
+`Role template`: `Billing manager`.
+
+`Matrix status`: badge `Draft changes`.
+
+Permission groups:
+
+Group 1: `Billing`.
+
+Rows:
+
+`View invoices`: Admin checked, Billing manager checked, Editor unchecked, Viewer unchecked.
+
+`Download receipts`: Admin checked, Billing manager checked, Editor unchecked, Viewer unchecked.
+
+`Update payment method`: Admin checked, Billing manager checked, Editor unchecked, Viewer disabled unchecked.
+
+Group 2: `User Management`.
+
+Rows:
+
+`Invite users`: Admin checked, Billing manager unchecked, Editor unchecked, Viewer unchecked.
+
+`Manage seats`: Admin checked, Billing manager checked, Editor unchecked, Viewer unchecked.
+
+`Remove users`: Admin checked, Billing manager unchecked, Editor unchecked, Viewer disabled unchecked.
+
+Group 3: `Security`.
+
+Rows:
+
+`Manage SSO`: Admin checked, Billing manager unchecked, Editor unchecked, Viewer disabled unchecked.
+
+`View audit log`: Admin checked, Billing manager checked, Editor checked, Viewer unchecked.
+
+`Rotate API keys`: Admin checked, Billing manager unchecked, Editor unchecked, Viewer disabled unchecked.
+
+Selected permission detail panel:
+
+`Selected permission`: `Update payment method`.
+
+`Group`: `Billing`.
+
+`Description`: `Allows changing the default payment method for renewals and invoices.`
+
+`Risk level`: badge `High`.
+
+`Recommended roles`: `Admin`, `Billing manager`.
+
+Extraction caveat: the extraction tool should preserve both row headers and column headers. It should not output a list of checked boxes without role and permission context.
+
+Implementation guidance: use a wide semantic table with row group header rows and role columns. Use checkboxes or symbols with accessible labels.
+
+---
+
+AF00 Example 23 - Fieldset And Legend Grouping In Complex Forms
+
+---
+
+Create a complex form with nested visual panels and native `fieldset` and `legend` group labels. Some field labels should repeat across groups.
+
+Visible heading:
+
+`Fieldset And Legend Grouping In Complex Forms`
+
+Visible description:
+
+`This example imitates a multi-section application form that uses fieldsets and legends. It tests extraction of repeated labels such as Name, Status, Date, and Notes while preserving form group context.`
+
+Form header:
+
+`Application`: `Small Business Recovery Grant`.
+
+`Application ID`: `APP-2026-88419`.
+
+`Form status`: badge `In progress`.
+
+Fieldset 1 legend:
+
+`Applicant business`.
+
+Fields:
+
+`Name`: `Cedar & Pine Design LLC`.
+
+`Status`: badge `Verified`.
+
+`Date`: `Submitted April 18, 2026`.
+
+`Notes`: `Business license received.`
+
+Fieldset 2 legend:
+
+`Primary contact`.
+
+Fields:
+
+`Name`: `Renee Coleman`.
+
+`Status`: badge `Contact verified`.
+
+`Date`: `Verified April 22, 2026`.
+
+`Email`: `renee.coleman@example.test`.
+
+`Notes`: `Preferred contact method is email.`
+
+Fieldset 3 legend:
+
+`Bank verification`.
+
+Fields:
+
+`Name`: `Operating Checking ending in 1842`.
+
+`Status`: badge `Pending review`.
+
+`Date`: `Uploaded May 9, 2026`.
+
+`Document`: `bank-verification-letter.pdf`.
+
+`Notes`: `Bank letter must show business legal name.`
+
+Fieldset 4 legend:
+
+`Lease documentation`.
+
+Fields:
+
+`Name`: `Oak Grove Studio lease`.
+
+`Status`: badge `Missing`.
+
+`Date`: `Due June 7, 2026`.
+
+`Document`: `Not uploaded`.
+
+`Notes`: `Required for eligibility review.`
+
+Summary sidebar:
+
+`Completed sections`: `2 of 4`.
+
+`Missing sections`: `Lease documentation`.
+
+`Overall status`: badge `Under review`.
+
+Extraction caveat: the extraction tool should use the fieldset legend to qualify repeated labels. It should not return four unrelated `Name`, `Status`, `Date`, and `Notes` fields.
+
+Implementation guidance: use native fieldsets and legends, not only visual headings.
+
+---
+
+AG00 Example 24 - Search Result Cards With Accessible Name Mismatches
+
+---
+
+Create search result cards where visible labels and accessible labels intentionally differ in realistic ways. Make the mismatch visible in the example description but not as a separate expected output block.
+
+Visible heading:
+
+`Search Result Cards With Accessible Name Mismatches`
+
+Visible description:
+
+`This example imitates search result cards where visible titles, aria-label values, and helper text are not identical. It tests whether extraction can preserve visible content while noticing accessible names that add or alter context.`
+
+Search header:
+
+`Search query`: `billing export`.
+
+`Result count`: `4 results`.
+
+`Semantic warning`: `Some result links have accessible names that include extra product area context.`
+
+Result 1:
+
+Visible title link: `Export invoice line items`.
+
+`href`: `/demo/help/export-invoice-line-items`.
+
+`aria-label`: `Help article: Export invoice line items from Billing`.
+
+Visible source: `Help Center`.
+
+Snippet: `Download invoice details as CSV with SKU, tax, discount, and payment columns.`
+
+Result 2:
+
+Visible title link: `Billing export settings`.
+
+`href`: `/demo/settings/exports`.
+
+`aria-label`: `Admin settings page: Billing export settings`.
+
+Visible source: `Admin console`.
+
+Snippet: `Configure CSV fields, schedule, recipients, and saved export templates.`
+
+Result 3:
+
+Visible title link: `Monthly Billing Export Summary`.
+
+`href`: `/demo/analytics/reports/monthly-billing-export-summary`.
+
+`aria-label`: `Analytics report: Monthly Billing Export Summary`.
+
+Visible source: `Analytics`.
+
+Snippet: `Review invoice totals, payments applied, balance due, and report delivery status.`
+
+Result 4:
+
+Visible title link: `Export job health`.
+
+`href`: `/demo/analytics/reports/export-job-health`.
+
+`aria-label`: `Operational report: Export job health`.
+
+Visible source: `Reliability dashboard`.
+
+Snippet: `Monitor export duration, failure count, queue time, and retry status.`
+
+Detail sidebar:
+
+`Selected result`: `Export invoice line items`.
+
+`Visible title`: `Export invoice line items`.
+
+`Accessible link name`: `Help article: Export invoice line items from Billing`.
+
+`Primary source`: `Help Center`.
+
+Extraction caveat: the extraction tool should not replace visible titles blindly with accessible labels, but it should be able to include accessible names when they add useful context. It should avoid duplicate title output.
+
+Implementation guidance: put `aria-label` on result links and show visible title text inside the same anchor.
+
+---
+
+AH00 Example 25 - Mixed Semantic Anti-Pattern Gallery
+
+---
+
+Create a gallery of small but realistic semantic anti-patterns. This is the only example that intentionally combines several imperfect patterns in one place. Keep it readable and label each pattern visually.
+
+Visible heading:
+
+`Mixed Semantic Anti-Pattern Gallery`
+
+Visible description:
+
+`This example imitates a gallery of realistic semantic anti-patterns that appear in production UIs. It tests extraction resilience when markup is imperfect, labels are inconsistent, roles are missing, and visual grouping must be used carefully.`
+
+Gallery header:
+
+`Gallery`: `Semantic edge case review`.
+
+`Purpose`: `Regression testing`.
+
+`Status`: badge `Intentional imperfections`.
+
+Pattern card 1:
+
+Title: `Clickable div that looks like a button`.
+
+Visible control text: `Approve renewal`.
+
+Implementation requirement: use a div with `role="button"` and `tabindex="0"`.
+
+Associated fields:
+
+`Request`: `REQ-2026-7712`.
+
+`Vendor`: `Northstar Cloud Services`.
+
+`Amount`: `$84,000`.
+
+`Status`: badge `Pending approval`.
+
+Extraction caveat inside card:
+
+`The action should be extracted as Approve renewal, not ignored because it is not a native button.`
+
+Pattern card 2:
+
+Title: `Button with vague visible text and useful aria-label`.
+
+Visible button text: `Go`.
+
+`aria-label`: `Open invoice INV-2026-00841`.
+
+Associated fields:
+
+`Invoice`: `INV-2026-00841`.
+
+`Customer`: `Cedar & Pine Design LLC`.
+
+`Balance`: `$394.14`.
+
+`Status`: badge `Due`.
+
+Pattern card 3:
+
+Title: `Visible label differs from input purpose`.
+
+Visible label: `Code`.
+
+Input value: `FIRSTMONTH50`.
+
+`aria-label`: `Promotion code`.
+
+Associated fields:
+
+`Promotion`: `50 percent off first full month`.
+
+`Status`: badge `Applied`.
+
+Pattern card 4:
+
+Title: `Card looks selected but lacks aria-selected`.
+
+Visible card:
+
+`Plan`: `Business annual`.
+
+`Price`: `$5,760/year`.
+
+`Status`: badge `Selected visually`.
+
+Implementation requirement: apply selected styling but do not set `aria-selected`.
+
+Associated note:
+
+`This intentionally tests whether visual selection can be detected when ARIA state is missing.`
+
+Pattern card 5:
+
+Title: `ARIA selected without strong visual selected style`.
+
+Visible card:
+
+`Plan`: `Enterprise annual`.
+
+`Price`: `$12,400/year`.
+
+`aria-selected`: `true`.
+
+`Status`: badge `Selected semantically`.
+
+Associated note:
+
+`This intentionally tests whether semantic selection can be detected when visual styling is subtle.`
+
+Pattern card 6:
+
+Title: `Description text is outside the visual card`.
+
+Visible card:
+
+`API key`: `key_live_****_9K2Q`.
+
+`Owner`: `Rafael Ortiz`.
+
+`Status`: badge `Near rotation`.
+
+Description outside card but referenced by `aria-describedby`:
+
+`This API key rotates on July 1, 2026 and is used by the Billing Export Worker.`
+
+Extraction caveat: the extraction tool should handle each anti-pattern separately and explain or represent the source of meaning when possible. It should not flatten the gallery into one unstructured paragraph.
+
+Implementation guidance: use a grid of six cards. Each card should contain a clear mini-scenario with data and the specific semantic edge case.
+
+---
+
+AI00 Required Final HTML Skeleton
+
+---
+
+The coding agent should produce a complete HTML document using this general skeleton:
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page 9 - Accessibility And Semantic Edge Cases</title>
+  <style>
+    /* Inline CSS only. */
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-hero">
+      <p class="page-kicker">Content Extraction Demo Page</p>
+      <h1>Page 9 - Accessibility And Semantic Edge Cases</h1>
+      <p>
+        This standalone page contains realistic accessibility and semantic edge cases for testing extraction of accessible names, visible labels, descriptions, states, grouped fields, custom widgets, landmarks, live messages, semantic tables, ARIA relationships, and imperfect production-style markup.
+      </p>
+    </header>
+
+    <section class="example-card" id="example-01">
+      <!-- Example 01 content. -->
+    </section>
+
+    <!-- Continue through example-25. -->
+  </main>
+
+  <script>
+    /* Minimal inline JavaScript only. */
+  </script>
+</body>
+</html>
+```
+
+The generated file must include all 25 examples in the same file.
+
+The page must not require a server.
+
+The page must not fetch data.
+
+The page must not include broken links to external assets.
+
+The page must not use placeholder text instead of the specified values.
+
+The page must not use external images, external icon libraries, external accessibility libraries, external chart libraries, external APIs, external data, or external fonts.
+
+The page must not use real customers, real account numbers, real patient data, real student data, real user data, real credentials, real policy numbers, real government identifiers, real API keys, or real production identifiers.
+
+The page must not convert all examples into simple forms. It must include a mix of native forms, custom widgets, ARIA widgets, semantic tables, tab panels, accordions, dialogs, tree views, live regions, menu buttons, steppers, token fields, visual anti-pattern cards, and landmark layouts.
+
+---
+
+AJ00 Quality Bar
+
+---
+
+The final page should be useful as a long-term manual testing page for a content extraction tool.
+
+Each example must be visibly distinct enough that a tester can scroll to it, select a field, select a widget, select a card, select a dialog, select a table, select a sidebar, or select a whole region and understand what accessibility or semantic behavior is being tested.
+
+Each example must contain realistic populated values.
+
+Each example must include the specified heading, description, UI content, labels, values, states, accessible names, descriptions, grouped sections, hidden text where specified, ARIA relationships where specified, and extraction caveat.
+
+Every accessibility example must expose enough visible or accessible content for extraction testing. Do not hide the most important values only in JavaScript variables, comments, CSS pseudo-elements, or inaccessible attributes.
+
+Use native HTML semantics when they are the correct pattern. Use ARIA only when the example requires custom-widget behavior or an accessibility edge case.
+
+Use `.sr-only` text intentionally and sparingly. Hidden text should add useful disambiguation, not create noise.
+
+Use repeated labels across groups where specified. Repeated labels are important because the extraction tool must preserve semantic and visual group context.
+
+Use states such as `checked`, `selected`, `expanded`, `current`, `invalid`, `disabled`, `readonly`, and `required` accurately unless the example explicitly states that a mismatch is intentional.
+
+Use visible helper text, error text, tooltips, and descriptions as separate extraction targets when they add field context.
+
+Do not make every example perfectly clean. Some examples should reflect realistic production edge cases, but the page must remain understandable and testable.
+
+Do not make all examples visually identical. The point of this page is to test many real-world variations of accessibility and semantic extraction.
+
+Do not collapse all metadata into one paragraph if the example calls for structured metadata.
+
+The implementation should favor clarity, realistic structure, and test value over cleverness.
+
+The coding agent may improve layout, spacing, CSS details, and basic interaction behavior, but it must not remove examples, reduce the number of examples, replace accessibility edge cases with generic forms, or simplify the scenarios into toy examples.
+
+The final output must be one portable HTML file.

@@ -1,0 +1,1468 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page 9 - Accessibility And Semantic Edge Cases</title>
+  <style>
+    :root {
+      --page-bg: #f3f1f9;
+      --card-bg: #ffffff;
+      --ink: #221f2b;
+      --muted: #6b6577;
+      --line: #d9d3e6;
+      --soft: #efeaf8;
+      --panel: #ffffff;
+      --panel-alt: #f7f4fd;
+      --accent: #5b3fb0;
+      --accent-soft: #ece6fb;
+      --ok: #1f7a4d;
+      --ok-soft: #e3f4ea;
+      --warning: #8a5a00;
+      --warning-soft: #fbf0d8;
+      --danger: #9b2f3a;
+      --danger-soft: #fbe6e8;
+      --info: #2a4e8a;
+      --info-soft: #e4ecfb;
+      --link: #4338ca;
+      --focus: #1a73e8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--page-bg);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    main { width: min(1240px, calc(100% - 32px)); margin: 0 auto; padding: 32px 0 64px; }
+    a { color: var(--link); text-underline-offset: 2px; }
+    a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible,
+    textarea:focus-visible, [tabindex]:focus-visible {
+      outline: 3px solid var(--focus); outline-offset: 2px;
+    }
+    .page-hero {
+      margin-bottom: 28px; padding: 30px;
+      background: linear-gradient(135deg, #ffffff, #efe9fb);
+      border: 2px solid var(--accent); border-radius: 18px;
+    }
+    .page-hero h1 { margin: 6px 0 10px; font-size: 1.9rem; }
+    .page-kicker { margin: 0; color: var(--accent); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; }
+    .page-hero p { margin: 0; max-width: 920px; color: var(--muted); }
+    .example-card {
+      margin: 26px 0; padding: 24px; background: var(--card-bg);
+      border: 1px solid var(--line); border-left: 6px solid var(--accent);
+      border-radius: 14px; box-shadow: 0 6px 18px rgba(60, 40, 110, 0.06);
+    }
+    .example-kicker { margin: 0 0 4px; color: var(--accent); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; }
+    .example-header h2 { margin: 0; font-size: 1.32rem; }
+    .example-description { max-width: 940px; color: var(--muted); }
+    .example-surface { margin-top: 18px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel-alt); }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+    }
+    .layout-grid-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .layout-grid-three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .split-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+    .panel, .nested-panel, .summary-panel, .detail-panel, .callout-panel, .semantic-card {
+      padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel);
+    }
+    .summary-panel, .detail-panel { background: var(--panel-alt); }
+    .nested-panel { margin-top: 10px; background: #faf8ff; }
+    .callout-panel { background: var(--warning-soft); border-color: #e3c98f; }
+    .panel-title { margin: 0 0 10px; font-size: 1.02rem; }
+    .panel-subtitle { margin: -6px 0 10px; color: var(--muted); font-size: 0.88rem; }
+    .field-row { display: flex; justify-content: space-between; gap: 16px; padding: 7px 0; border-bottom: 1px solid var(--soft); }
+    .field-row:last-child { border-bottom: 0; }
+    .field-label { color: var(--muted); font-weight: 650; }
+    .field-value { text-align: right; font-weight: 650; }
+    .field-block { padding: 7px 0; border-bottom: 1px solid var(--soft); }
+    .field-block:last-child { border-bottom: 0; }
+    .field-block .field-label { display: block; margin-bottom: 2px; }
+    label, .form-label { display: block; margin-bottom: 5px; font-weight: 700; }
+    input, select, textarea {
+      width: 100%; min-height: 38px; padding: 8px 10px; border: 1px solid #b1a8c4;
+      border-radius: 8px; font: inherit; background: #fff;
+    }
+    .form-field { margin-bottom: 14px; }
+    input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--danger); background: #fff7f8; }
+    input[readonly] { background: #f1eef8; color: var(--muted); }
+    fieldset { margin: 0 0 14px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; }
+    legend { padding: 0 8px; font-weight: 800; }
+    .help-text { margin: 4px 0 0; color: var(--muted); font-size: 0.88rem; }
+    .error-text { margin: 4px 0 0; color: var(--danger); font-size: 0.88rem; font-weight: 700; }
+    .badge {
+      display: inline-block; padding: 2px 10px; border-radius: 999px;
+      font-size: 0.78rem; font-weight: 700; border: 1px solid transparent; white-space: nowrap;
+    }
+    .badge.ok { background: var(--ok-soft); color: var(--ok); border-color: #bfe3cd; }
+    .badge.warning { background: var(--warning-soft); color: var(--warning); border-color: #e8cf99; }
+    .badge.danger { background: var(--danger-soft); color: var(--danger); border-color: #edc1c6; }
+    .badge.info { background: var(--info-soft); color: var(--info); border-color: #c3d3ef; }
+    .badge.accent { background: var(--accent-soft); color: var(--accent); border-color: #d2c4f3; }
+    .badge.neutral { background: #ecebf0; color: #4a4658; border-color: #d6d3e0; }
+    .header-strip {
+      display: flex; flex-wrap: wrap; gap: 18px; padding: 12px 16px; margin-bottom: 16px;
+      background: var(--accent-soft); border: 1px solid #d2c4f3; border-radius: 12px;
+    }
+    .hs-item { display: flex; flex-direction: column; gap: 2px; }
+    .hs-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); font-weight: 700; }
+    .hs-value { font-weight: 650; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .icon-btn {
+      width: auto; min-width: 38px; min-height: 38px; padding: 6px 10px; border: 1px solid var(--line);
+      background: #fff; border-radius: 8px; font-size: 1rem; cursor: pointer; line-height: 1;
+    }
+    .icon-btn:hover { background: var(--soft); }
+    .btn {
+      width: auto; min-height: 38px; padding: 8px 14px; border: 1px solid var(--accent);
+      background: var(--accent); color: #fff; border-radius: 8px; font: inherit; font-weight: 650; cursor: pointer;
+    }
+    .btn.secondary { background: #fff; color: var(--accent); }
+    .btn:hover { filter: brightness(0.96); }
+    .member-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; margin-top: 10px; background: #fff; }
+    .member-meta { display: flex; flex-direction: column; gap: 2px; }
+    .member-actions { display: flex; gap: 6px; }
+    .option-card, .semantic-card.selectable {
+      display: block; padding: 14px; border: 2px solid var(--line); border-radius: 12px; margin-top: 10px; background: #fff; cursor: pointer;
+    }
+    .option-card.selected, .semantic-card.selected { border-color: var(--accent); background: var(--accent-soft); }
+    .option-card[aria-disabled="true"], .option-card.disabled { opacity: 0.6; cursor: not-allowed; }
+    .opt-head { display: flex; justify-content: space-between; gap: 10px; font-weight: 700; }
+    .tablist { display: flex; gap: 4px; border-bottom: 2px solid var(--line); flex-wrap: wrap; }
+    .tab {
+      width: auto; min-height: 38px; padding: 8px 16px; border: 1px solid var(--line); border-bottom: 0;
+      background: var(--soft); border-radius: 8px 8px 0 0; cursor: pointer; font: inherit; font-weight: 650; color: var(--ink);
+    }
+    .tab[aria-selected="true"] { background: #fff; color: var(--accent); border-color: var(--accent); position: relative; top: 2px; }
+    .tabpanel { padding: 14px; border: 1px solid var(--line); border-top: 0; border-radius: 0 0 12px 12px; background: #fff; }
+    .accordion-item { border: 1px solid var(--line); border-radius: 10px; margin-top: 10px; overflow: hidden; background: #fff; }
+    .accordion-trigger {
+      width: 100%; text-align: left; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+      padding: 12px 14px; background: var(--panel-alt); border: 0; border-radius: 0; font: inherit; font-weight: 700; cursor: pointer;
+    }
+    .accordion-trigger .twisty::before { content: "\25B8"; }
+    .accordion-trigger[aria-expanded="true"] .twisty::before { content: "\25BE"; }
+    .accordion-summary { color: var(--muted); font-weight: 600; font-size: 0.9rem; }
+    .accordion-panel { padding: 14px; }
+    .accordion-panel[hidden] { display: none; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 8px 10px; border: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 0.92rem; }
+    thead th { background: var(--accent-soft); }
+    caption { text-align: left; font-weight: 700; padding-bottom: 8px; }
+    .tree { list-style: none; margin: 0; padding-left: 0; }
+    .tree ul { list-style: none; margin: 0; padding-left: 20px; }
+    .tree [role="treeitem"] > .tree-row { display: flex; gap: 8px; align-items: center; padding: 4px 6px; border-radius: 6px; }
+    .tree-row:hover { background: var(--soft); }
+    .tree-toggle { width: 18px; min-width: 18px; min-height: 18px; padding: 0; border: 0; background: transparent; cursor: pointer; font-size: 0.85rem; }
+    .menu-wrap { position: relative; display: inline-block; }
+    .menu { list-style: none; margin: 6px 0 0; padding: 6px; border: 1px solid var(--line); border-radius: 10px; background: #fff; box-shadow: 0 8px 20px rgba(0,0,0,0.12); min-width: 220px; }
+    .menu[hidden] { display: none; }
+    .menu li { display: flex; justify-content: space-between; gap: 10px; padding: 7px 10px; border-radius: 6px; }
+    .menu li[aria-checked="true"]::after { content: "\2713"; color: var(--accent); font-weight: 800; }
+    .menu li:hover { background: var(--soft); }
+    .dialog-backdrop { margin-top: 12px; padding: 18px; border: 2px dashed var(--accent); border-radius: 12px; background: #efe9fb; }
+    .dialog {
+      max-width: 460px; margin: 0 auto; padding: 18px; background: #fff; border: 1px solid var(--line);
+      border-radius: 12px; box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+    }
+    .stepper { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; counter-reset: step; }
+    .step { flex: 1; min-width: 150px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+    .step[aria-current="step"] { border-color: var(--accent); background: var(--accent-soft); }
+    .step.done { background: var(--ok-soft); border-color: #bfe3cd; }
+    .step-label { font-weight: 700; }
+    .step-state { font-size: 0.8rem; color: var(--muted); }
+    .token-field { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border: 1px solid #b1a8c4; border-radius: 8px; background: #fff; }
+    .token { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; background: var(--accent-soft); border: 1px solid #d2c4f3; border-radius: 999px; font-size: 0.85rem; font-weight: 650; }
+    .token button { width: auto; min-height: auto; padding: 0 2px; border: 0; background: transparent; cursor: pointer; color: var(--accent); font-size: 0.9rem; }
+    .sortable-list { list-style: none; margin: 0; padding: 0; }
+    .sortable-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; margin-top: 8px; background: #fff; }
+    .drag-handle { cursor: grab; font-size: 1.1rem; color: var(--muted); }
+    meter, progress { width: 100%; height: 16px; }
+    .meter-row { display: grid; grid-template-columns: 160px 1fr auto; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--soft); }
+    .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .cal-head { font-weight: 700; text-align: center; font-size: 0.8rem; color: var(--muted); padding: 4px 0; }
+    .cal-day { padding: 8px 4px; text-align: center; border: 1px solid var(--line); border-radius: 8px; background: #fff; font: inherit; cursor: pointer; min-height: 40px; }
+    .cal-day[aria-disabled="true"] { background: #f0eef5; color: #b3aec0; cursor: not-allowed; }
+    .cal-day[aria-pressed="true"], .cal-day[aria-current="date"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 700; }
+    .cal-day.limited { border-color: var(--warning); }
+    .mono { font-family: "SFMono-Regular", Consolas, monospace; }
+    .live-region { padding: 12px 14px; border: 1px solid var(--accent); border-radius: 10px; background: var(--accent-soft); font-weight: 650; margin: 12px 0; }
+    .notice-list { list-style: none; margin: 12px 0 0; padding: 0; }
+    .notice-item { padding: 12px; border: 1px solid var(--line); border-radius: 10px; margin-top: 8px; background: #fff; }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip { padding: 3px 10px; background: var(--soft); border: 1px solid var(--line); border-radius: 999px; font-size: 0.82rem; font-weight: 600; }
+    .tooltip-host { position: relative; border-bottom: 1px dotted var(--accent); cursor: help; font-weight: 650; }
+    .visually-note { color: var(--muted); font-size: 0.85rem; margin-top: 6px; }
+    .section-block { margin-top: 16px; }
+    h3.surface-title { margin: 0 0 12px; font-size: 1.05rem; }
+    h4 { margin: 0 0 8px; }
+    .text-alt { margin-top: 12px; padding: 12px; border: 1px dashed var(--accent); border-radius: 10px; background: #faf8ff; }
+    @media (max-width: 860px) {
+      .split-layout, .layout-grid-two, .layout-grid-three { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-hero">
+      <p class="page-kicker">Content Extraction Demo Page</p>
+      <h1>Page 9 - Accessibility And Semantic Edge Cases</h1>
+      <p>
+        This standalone page contains realistic accessibility and semantic edge cases for testing extraction of accessible names, visible labels, descriptions, states, grouped fields, custom widgets, landmarks, live messages, semantic tables, ARIA relationships, and imperfect production-style markup.
+      </p>
+    </header>
+
+    <section class="example-card" id="example-01">
+      <header class="example-header"><p class="example-kicker">Example 01</p><h2>Checkout Form With Accessible Descriptions And Error Summary</h2></header>
+      <p class="example-description">This example imitates a checkout form where accessible descriptions, visible helper text, and error messages provide important extraction context. It tests extraction of labels, values, required state, invalid state, error text, and field group context.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Checkout step</span><span class="hs-value">Delivery details</span></div>
+          <div class="hs-item"><span class="hs-label">Cart ID</span><span class="hs-value mono">CART-2026-44018</span></div>
+          <div class="hs-item"><span class="hs-label">Step status</span><span class="hs-value"><span class="badge warning">Needs attention</span></span></div>
+        </div>
+        <div class="split-layout">
+          <form class="panel" aria-labelledby="ex01-form-title" novalidate>
+            <h3 class="surface-title" id="ex01-form-title">Delivery details</h3>
+            <div class="callout-panel" role="alert" aria-labelledby="ex01-errors-title">
+              <h4 id="ex01-errors-title">There are 2 problems with your delivery details</h4>
+              <p><a href="#ex01-phone">Delivery phone number must include an area code</a></p>
+              <p><a href="#ex01-instructions">Delivery instructions are too long</a></p>
+            </div>
+            <fieldset>
+              <legend>Contact information</legend>
+              <div class="form-field">
+                <label for="ex01-name">Full name</label>
+                <input id="ex01-name" value="Jordan Ellis" required>
+              </div>
+              <div class="form-field">
+                <label for="ex01-email">Email address</label>
+                <input id="ex01-email" type="email" value="jordan.ellis@example.test" required aria-describedby="ex01-email-help">
+                <p class="help-text" id="ex01-email-help">We will send your receipt and delivery updates here.</p>
+              </div>
+              <div class="form-field">
+                <label for="ex01-phone">Delivery phone</label>
+                <input id="ex01-phone" value="555-0184" required aria-invalid="true" aria-describedby="ex01-phone-help ex01-phone-error">
+                <p class="help-text" id="ex01-phone-help">Use a phone number where the driver can reach you.</p>
+                <p class="error-text" id="ex01-phone-error">Delivery phone number must include an area code.</p>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Delivery address</legend>
+              <div class="form-field"><label for="ex01-street">Street address</label><input id="ex01-street" value="120 King Street"></div>
+              <div class="form-field"><label for="ex01-dock">Dock or suite</label><input id="ex01-dock" value="Dock B"></div>
+              <div class="layout-grid-two">
+                <div class="form-field"><label for="ex01-city">City</label><input id="ex01-city" value="San Francisco"></div>
+                <div class="form-field"><label for="ex01-state">State</label>
+                  <select id="ex01-state">
+                    <option>WA</option><option>OR</option><option selected>CA</option><option>NV</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-field"><label for="ex01-zip">ZIP code</label><input id="ex01-zip" value="94107"></div>
+              <div class="form-field">
+                <label for="ex01-instructions">Delivery instructions</label>
+                <textarea id="ex01-instructions" rows="3" aria-invalid="true" aria-describedby="ex01-instructions-error">Use freight entrance on King Street. Please call before unloading. Leave packages with dock supervisor if I am away. This note is intentionally long for validation testing.</textarea>
+                <p class="error-text" id="ex01-instructions-error">Delivery instructions are too long.</p>
+              </div>
+            </fieldset>
+          </form>
+          <aside class="summary-panel" aria-label="Order summary">
+            <h3 class="surface-title">Order summary</h3>
+            <div class="field-row"><span class="field-label">Items</span><span class="field-value">4</span></div>
+            <div class="field-row"><span class="field-label">Delivery method</span><span class="field-value">Standard ground</span></div>
+            <div class="field-row"><span class="field-label">Estimated delivery</span><span class="field-value">June 6-9, 2026</span></div>
+            <div class="field-row"><span class="field-label">Delivery status</span><span class="field-value"><span class="badge danger">Blocked by form errors</span></span></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-02">
+      <header class="example-header"><p class="example-kicker">Example 02</p><h2>Icon-Only Actions With Hidden Accessible Names</h2></header>
+      <p class="example-description">This example imitates a dense admin toolbar that uses icon-only action buttons. It tests extraction of action meanings from accessible names without treating the visible symbols as the only labels.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Account</span><span class="hs-value">Atlas Product Studio</span></div>
+          <div class="hs-item"><span class="hs-label">Workspace ID</span><span class="hs-value mono">ws_9A41Q</span></div>
+          <div class="hs-item"><span class="hs-label">Plan</span><span class="hs-value">Business annual</span></div>
+          <div class="hs-item"><span class="hs-label">Status</span><span class="hs-value"><span class="badge ok">Active</span></span></div>
+        </div>
+        <div class="toolbar" role="toolbar" aria-label="Workspace actions">
+          <button type="button" class="icon-btn" aria-label="Add new workspace member">+</button>
+          <button type="button" class="icon-btn" aria-label="Download billing report">&#8595;</button>
+          <button type="button" class="icon-btn" aria-label="Open help for workspace settings">?</button>
+          <button type="button" class="icon-btn" aria-label="Open workspace actions menu">&#8230;</button>
+        </div>
+        <div class="section-block">
+          <div class="member-row">
+            <div class="member-meta"><strong>Maya Chen</strong><span class="help-text">maya.chen@example.test &middot; Admin</span></div>
+            <div class="member-actions">
+              <span class="badge ok">Active</span>
+              <button type="button" class="icon-btn" aria-label="Edit Maya Chen">&#9998;</button>
+              <button type="button" class="icon-btn" aria-label="Remove Maya Chen from workspace">&times;</button>
+            </div>
+          </div>
+          <div class="member-row">
+            <div class="member-meta"><strong>Rafael Ortiz</strong><span class="help-text">rafael.ortiz@example.test &middot; Editor</span></div>
+            <div class="member-actions">
+              <span class="badge ok">Active</span>
+              <button type="button" class="icon-btn" aria-label="Edit Rafael Ortiz">&#9998;</button>
+              <button type="button" class="icon-btn" aria-label="Remove Rafael Ortiz from workspace">&times;</button>
+            </div>
+          </div>
+          <div class="member-row">
+            <div class="member-meta"><strong>Lina Romero</strong><span class="help-text">lina.romero@example.test &middot; Viewer</span></div>
+            <div class="member-actions">
+              <span class="badge accent">Invited</span>
+              <button type="button" class="icon-btn" aria-label="Edit Lina Romero">&#9998;</button>
+              <button type="button" class="icon-btn" aria-label="Resend invite to Lina Romero">&#8635;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-03">
+      <header class="example-header"><p class="example-kicker">Example 03</p><h2>Portaled Combobox With Active Descendant</h2></header>
+      <p class="example-description">This example imitates a custom travel destination combobox whose popup listbox is rendered outside the form container. It tests extraction of the combobox label, typed value, active descendant, selected option, hidden submitted value, and portaled option list.</p>
+      <div class="example-surface">
+        <div class="split-layout">
+          <div>
+            <form class="panel" aria-label="Travel search">
+              <div class="field-row"><span class="field-label">Search type</span><span class="field-value">Hotel destination</span></div>
+              <div class="form-field section-block">
+                <label for="ex03-dest" id="ex03-dest-label">Destination city or hotel</label>
+                <input id="ex03-dest" role="combobox" value="Monterey" aria-expanded="true" aria-controls="ex03-listbox" aria-activedescendant="ex03-opt-1" aria-labelledby="ex03-dest-label" autocomplete="off">
+                <input type="hidden" name="destinationId" value="city_monterey_ca">
+              </div>
+              <div class="layout-grid-two">
+                <div class="form-field"><label for="ex03-checkin">Check-in</label><input id="ex03-checkin" type="date" value="2026-08-14"></div>
+                <div class="form-field"><label for="ex03-checkout">Check-out</label><input id="ex03-checkout" type="date" value="2026-08-18"></div>
+              </div>
+              <div class="form-field"><label for="ex03-guests">Guests</label><input id="ex03-guests" value="2 adults, 1 child"></div>
+            </form>
+            <div class="text-alt">
+              <h4>Portaled listbox (rendered outside the form)</h4>
+              <ul id="ex03-listbox" role="listbox" aria-label="Destination suggestions" style="list-style:none;margin:0;padding:0;">
+                <li id="ex03-opt-1" role="option" aria-selected="true" class="option-card selected" data-value="city_monterey_ca">
+                  <div class="opt-head"><span>Monterey, CA</span><span class="badge ok">Selected</span></div>
+                  <span class="help-text">City - 31 stays</span>
+                </li>
+                <li id="ex03-opt-2" role="option" aria-selected="false" class="option-card" data-value="area_monterey_aquarium">
+                  <div class="opt-head"><span>Monterey Bay Aquarium Area</span></div>
+                  <span class="help-text">Neighborhood - 12 stays</span>
+                </li>
+                <li id="ex03-opt-3" role="option" aria-selected="false" class="option-card" data-value="hotel_harbor_view_suites">
+                  <div class="opt-head"><span>Harbor View Suites</span></div>
+                  <span class="help-text">Hotel - Monterey waterfront</span>
+                </li>
+                <li id="ex03-opt-4" role="option" aria-selected="false" class="option-card" data-value="city_pacific_grove_ca">
+                  <div class="opt-head"><span>Pacific Grove, CA</span></div>
+                  <span class="help-text">Nearby city - 18 stays</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <aside class="summary-panel" aria-label="Search summary">
+            <h3 class="surface-title">Search summary</h3>
+            <div class="field-row"><span class="field-label">Selected destination</span><span class="field-value">Monterey, CA</span></div>
+            <div class="field-row"><span class="field-label">Submitted destination ID</span><span class="field-value mono">city_monterey_ca</span></div>
+            <div class="field-row"><span class="field-label">Available stays</span><span class="field-value">31</span></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-04">
+      <header class="example-header"><p class="example-kicker">Example 04</p><h2>Radio Card Group With Mixed Native And ARIA State</h2></header>
+      <p class="example-description">This example imitates a shipping option selector built from large selectable cards. It tests extraction of selected option, visible card text, native checked state, ARIA checked state, disabled option state, price, delivery date, and policy notes.</p>
+      <div class="example-surface">
+        <div class="split-layout">
+          <fieldset data-radio-cards>
+            <legend>Choose a delivery method</legend>
+            <label class="option-card selected" data-radio-card>
+              <div class="opt-head"><span>Standard ground</span><span>$8.95</span></div>
+              <div class="field-row"><span class="field-label">Delivery estimate</span><span class="field-value">June 6-9, 2026</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Available</span></span></div>
+              <p class="help-text"><input type="radio" name="ex04-ship" checked style="width:auto;min-height:auto;"> Selected (native radio checked)</p>
+            </label>
+            <label class="option-card" data-radio-card>
+              <div class="opt-head"><span>Expedited</span><span>$22.00</span></div>
+              <div class="field-row"><span class="field-label">Delivery estimate</span><span class="field-value">June 4-5, 2026</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Available</span></span></div>
+              <p class="help-text"><input type="radio" name="ex04-ship" style="width:auto;min-height:auto;"> Native radio unchecked</p>
+            </label>
+            <div class="option-card" data-radio-card role="radio" aria-checked="false" tabindex="0">
+              <div class="opt-head"><span>Freight dock delivery</span><span>$48.00</span></div>
+              <div class="field-row"><span class="field-label">Delivery estimate</span><span class="field-value">June 7-10, 2026</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">Requires dock access</span></span></div>
+              <p class="help-text">Custom role=radio, aria-checked=false</p>
+            </div>
+            <div class="option-card disabled" data-radio-card role="radio" aria-checked="false" aria-disabled="true" tabindex="-1">
+              <div class="opt-head"><span>Same day courier</span><span>$62.00</span></div>
+              <div class="field-row"><span class="field-label">Delivery estimate</span><span class="field-value">Today by 8:00 PM</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge danger">Unavailable for this address</span></span></div>
+              <p class="help-text">Custom role=radio, aria-checked=false, aria-disabled=true</p>
+            </div>
+          </fieldset>
+          <aside class="summary-panel" aria-label="Order">
+            <h3 class="surface-title">Order</h3>
+            <div class="field-row"><span class="field-label">Selected method</span><span class="field-value">Standard ground</span></div>
+            <div class="field-row"><span class="field-label">Selected price</span><span class="field-value">$8.95</span></div>
+            <div class="field-row"><span class="field-label">Delivery status</span><span class="field-value"><span class="badge ok">Ready</span></span></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-05">
+      <header class="example-header"><p class="example-kicker">Example 05</p><h2>Tabbed Account Settings With Duplicate Panel Labels</h2></header>
+      <p class="example-description">This example imitates account settings with ARIA tabs and repeated labels inside each tab panel. It tests extraction of active tab state and visible tab panel content while preserving panel context.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Workspace</span><span class="hs-value">Northwind Analytics</span></div>
+          <div class="hs-item"><span class="hs-label">Workspace ID</span><span class="hs-value mono">ws_9A41Q</span></div>
+          <div class="hs-item"><span class="hs-label">Settings status</span><span class="hs-value"><span class="badge warning">Changes unsaved</span></span></div>
+        </div>
+        <div class="tablist" role="tablist" aria-label="Account settings" data-tablist>
+          <button class="tab" role="tab" id="ex05-tab-1" aria-selected="true" aria-controls="ex05-panel-1" tabindex="0">Billing</button>
+          <button class="tab" role="tab" id="ex05-tab-2" aria-selected="false" aria-controls="ex05-panel-2" tabindex="-1">Security</button>
+          <button class="tab" role="tab" id="ex05-tab-3" aria-selected="false" aria-controls="ex05-panel-3" tabindex="-1">Notifications</button>
+        </div>
+        <div class="tabpanel" role="tabpanel" id="ex05-panel-1" aria-labelledby="ex05-tab-1">
+          <h4>Billing settings</h4>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Configured</span></span></div>
+          <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Renee Coleman</span></div>
+          <div class="field-row"><span class="field-label">Last updated</span><span class="field-value">May 30, 2026, 4:12 PM</span></div>
+          <div class="field-row"><span class="field-label">Invoice recipients</span><span class="field-value">billing@example.test, finance@example.test</span></div>
+          <div class="field-block"><span class="field-label">Notes</span>Purchase order required for renewals over $5,000.</div>
+        </div>
+        <div class="tabpanel" role="tabpanel" id="ex05-panel-2" aria-labelledby="ex05-tab-2" hidden>
+          <h4>Security settings</h4>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Enforced</span></span></div>
+          <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Anika Sharma</span></div>
+          <div class="field-row"><span class="field-label">Last updated</span><span class="field-value">May 28, 2026, 1:20 PM</span></div>
+          <div class="field-row"><span class="field-label">MFA requirement</span><span class="field-value">Required for admins</span></div>
+          <div class="field-block"><span class="field-label">Notes</span>SCIM and SAML are enabled.</div>
+        </div>
+        <div class="tabpanel" role="tabpanel" id="ex05-panel-3" aria-labelledby="ex05-tab-3" hidden>
+          <h4>Notification settings</h4>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">Partially configured</span></span></div>
+          <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Grace Miller</span></div>
+          <div class="field-row"><span class="field-label">Last updated</span><span class="field-value">May 22, 2026, 9:18 AM</span></div>
+          <div class="field-row"><span class="field-label">Digest frequency</span><span class="field-value">Daily</span></div>
+          <div class="field-block"><span class="field-label">Notes</span>Slack alerts are not configured.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-06">
+      <header class="example-header"><p class="example-kicker">Example 06</p><h2>Accordion Details With Collapsed Summaries</h2></header>
+      <p class="example-description">This example imitates a settings page with accordion sections. It tests extraction of expanded content, collapsed summaries, aria-expanded state, and repeated labels inside each section.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Account</span><span class="hs-value">Atlas Product Studio</span></div>
+          <div class="hs-item"><span class="hs-label">Plan</span><span class="hs-value">Business annual</span></div>
+          <div class="hs-item"><span class="hs-label">Settings status</span><span class="hs-value"><span class="badge warning">Review recommended</span></span></div>
+        </div>
+        <div class="accordion-item">
+          <button type="button" class="accordion-trigger" aria-expanded="true" aria-controls="ex06-p1"><span><span class="twisty"></span> Billing contacts</span><span class="badge ok">Configured</span></button>
+          <div class="accordion-panel" id="ex06-p1">
+            <div class="field-row"><span class="field-label">Primary contact</span><span class="field-value">Renee Coleman</span></div>
+            <div class="field-row"><span class="field-label">Invoice email</span><span class="field-value">billing@example.test</span></div>
+            <div class="field-row"><span class="field-label">Backup email</span><span class="field-value">finance@example.test</span></div>
+            <div class="field-row"><span class="field-label">Last updated</span><span class="field-value">May 30, 2026</span></div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <button type="button" class="accordion-trigger" aria-expanded="false" aria-controls="ex06-p2"><span><span class="twisty"></span> Payment method</span><span class="accordion-summary">Visa ending in 4242, expires 08/2028</span></button>
+          <div class="accordion-panel" id="ex06-p2" hidden>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Active</span></span></div>
+            <div class="field-row"><span class="field-label">Cardholder</span><span class="field-value">Jordan Ellis</span></div>
+            <div class="field-row"><span class="field-label">Billing ZIP</span><span class="field-value">94103</span></div>
+            <div class="field-row"><span class="field-label">Last verified</span><span class="field-value">May 18, 2026</span></div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <button type="button" class="accordion-trigger" aria-expanded="true" aria-controls="ex06-p3"><span><span class="twisty"></span> Renewal settings</span><span class="badge ok">Auto-renew enabled</span></button>
+          <div class="accordion-panel" id="ex06-p3">
+            <div class="field-row"><span class="field-label">Renewal date</span><span class="field-value">January 18, 2027</span></div>
+            <div class="field-row"><span class="field-label">Renewal amount</span><span class="field-value">$5,760.00</span></div>
+            <div class="field-row"><span class="field-label">Purchase order required</span><span class="field-value">Yes</span></div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <button type="button" class="accordion-trigger" aria-expanded="false" aria-controls="ex06-p4"><span><span class="twisty"></span> Cancellation terms</span><span class="accordion-summary">Notice required 30 days before renewal</span></button>
+          <div class="accordion-panel" id="ex06-p4" hidden>
+            <div class="field-row"><span class="field-label">Notice deadline</span><span class="field-value">December 19, 2026</span></div>
+            <div class="field-row"><span class="field-label">Early cancellation</span><span class="field-value">Not available for annual plan</span></div>
+            <div class="field-block"><span class="field-label">Notes</span>Contact billing support for exceptions.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-07">
+      <header class="example-header"><p class="example-kicker">Example 07</p><h2>Error Summary Linking To Invalid Fields</h2></header>
+      <p class="example-description">This example imitates a profile update form with validation errors spread across multiple sections. It tests extraction of error summary items, invalid fields, field values, aria-invalid state, and error-to-field relationships.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Profile</span><span class="hs-value">Contractor onboarding</span></div>
+          <div class="hs-item"><span class="hs-label">User</span><span class="hs-value">Samira Haddad</span></div>
+          <div class="hs-item"><span class="hs-label">Form status</span><span class="hs-value"><span class="badge danger">Cannot submit</span></span></div>
+        </div>
+        <div class="split-layout">
+          <form class="panel">
+            <div class="callout-panel" role="alert" aria-labelledby="ex07-err-title">
+              <h4 id="ex07-err-title">Fix 3 fields before continuing</h4>
+              <p><a href="#ex07-legal">Legal name is required</a></p>
+              <p><a href="#ex07-start">Start date must be after today</a></p>
+              <p><a href="#ex07-emphone">Emergency contact phone must include country code</a></p>
+            </div>
+            <fieldset>
+              <legend>Identity</legend>
+              <div class="form-field">
+                <label for="ex07-legal">Legal name</label>
+                <input id="ex07-legal" value="" required aria-invalid="true" aria-describedby="ex07-legal-err">
+                <p class="error-text" id="ex07-legal-err">Legal name is required.</p>
+              </div>
+              <div class="form-field"><label for="ex07-pref">Preferred name</label><input id="ex07-pref" value="Samira"></div>
+              <div class="form-field"><label for="ex07-email">Email</label><input id="ex07-email" value="samira.haddad@example.test" readonly></div>
+            </fieldset>
+            <fieldset>
+              <legend>Contract</legend>
+              <div class="form-field"><label for="ex07-role">Role</label><input id="ex07-role" value="Accessibility reviewer"></div>
+              <div class="form-field">
+                <label for="ex07-start">Start date</label>
+                <input id="ex07-start" type="date" value="2026-05-15" aria-invalid="true" aria-describedby="ex07-start-err">
+                <p class="error-text" id="ex07-start-err">Start date must be after today.</p>
+              </div>
+              <div class="form-field"><label for="ex07-end">End date</label><input id="ex07-end" type="date" value="2026-08-15"></div>
+            </fieldset>
+            <fieldset>
+              <legend>Emergency Contact</legend>
+              <div class="form-field"><label for="ex07-cname">Contact name</label><input id="ex07-cname" value="Leila Haddad"></div>
+              <div class="form-field"><label for="ex07-rel">Relationship</label>
+                <select id="ex07-rel"><option>Parent</option><option selected>Sibling</option><option>Partner</option><option>Friend</option></select>
+              </div>
+              <div class="form-field">
+                <label for="ex07-emphone">Emergency contact phone</label>
+                <input id="ex07-emphone" value="415-555-0180" aria-invalid="true" aria-describedby="ex07-emphone-err">
+                <p class="error-text" id="ex07-emphone-err">Emergency contact phone must include country code.</p>
+              </div>
+            </fieldset>
+          </form>
+          <aside class="summary-panel" aria-label="Form summary">
+            <h3 class="surface-title">Summary</h3>
+            <div class="field-row"><span class="field-label">Required fields completed</span><span class="field-value">6 of 9</span></div>
+            <div class="field-row"><span class="field-label">Validation status</span><span class="field-value"><span class="badge danger">3 errors</span></span></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-08">
+      <header class="example-header"><p class="example-kicker">Example 08</p><h2>Live Region Notifications And Status Updates</h2></header>
+      <p class="example-description">This example imitates an admin page that uses live regions for save, sync, and export status messages. It tests extraction of current visible status, live region text, notification records, and action-triggered updates.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Workspace</span><span class="hs-value">Northstar Research Lab</span></div>
+          <div class="hs-item"><span class="hs-label">Page</span><span class="hs-value">Export jobs</span></div>
+          <div class="hs-item"><span class="hs-label">Overall status</span><span class="hs-value"><span class="badge info">2 jobs running</span></span></div>
+        </div>
+        <p class="live-region" id="ex08-live" role="status" aria-live="polite">Last update: Export job EXP-2026-1842 is running. 42 percent complete.</p>
+        <div class="toolbar">
+          <button type="button" class="btn secondary" data-live-target="ex08-live" data-live-message="Status refreshed. Export job EXP-2026-1842 is 58 percent complete.">Refresh status</button>
+          <button type="button" class="btn secondary" data-live-target="ex08-live" data-live-message="CSV export started for invoice line items.">Start CSV export</button>
+          <button type="button" class="btn secondary" data-live-target="ex08-live" data-live-message="Export cancellation requested for EXP-2026-1842.">Cancel export</button>
+        </div>
+        <ul class="notice-list">
+          <li class="notice-item">
+            <div class="field-row"><span class="field-label">Type</span><span class="field-value">Export</span></div>
+            <div class="field-row"><span class="field-label">Job ID</span><span class="field-value mono">EXP-2026-1842</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge info">Running</span></span></div>
+            <div class="field-row"><span class="field-label">Progress</span><span class="field-value">42 percent</span></div>
+            <div class="field-row"><span class="field-label">Started</span><span class="field-value">May 31, 2026, 11:40 AM</span></div>
+          </li>
+          <li class="notice-item">
+            <div class="field-row"><span class="field-label">Type</span><span class="field-value">Webhook</span></div>
+            <div class="field-row"><span class="field-label">Job ID</span><span class="field-value mono">WEB-2026-7710</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge danger">Failed</span></span></div>
+            <div class="field-row"><span class="field-label">Progress</span><span class="field-value">Stopped</span></div>
+            <div class="field-row"><span class="field-label">Started</span><span class="field-value">May 31, 2026, 10:52 AM</span></div>
+            <div class="field-row"><span class="field-label">Error</span><span class="field-value">Endpoint returned 503</span></div>
+          </li>
+          <li class="notice-item">
+            <div class="field-row"><span class="field-label">Type</span><span class="field-value">Report</span></div>
+            <div class="field-row"><span class="field-label">Job ID</span><span class="field-value mono">RPT-2026-1190</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Complete</span></span></div>
+            <div class="field-row"><span class="field-label">Progress</span><span class="field-value">100 percent</span></div>
+            <div class="field-row"><span class="field-label">Started</span><span class="field-value">May 31, 2026, 9:00 AM</span></div>
+            <div class="field-row"><span class="field-label">Completed</span><span class="field-value">May 31, 2026, 9:04 AM</span></div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-09">
+      <header class="example-header"><p class="example-kicker">Example 09</p><h2>Semantic Data Table With Multi-Level Headers</h2></header>
+      <p class="example-description">This example imitates a finance comparison table with grouped headers. It tests extraction of table captions, row headers, column group headers, nested column headers, currency values, percentages, and summary rows.</p>
+      <div class="example-surface" style="overflow-x:auto;">
+        <table>
+          <caption>Quarterly billing performance by product line</caption>
+          <thead>
+            <tr>
+              <th scope="col" rowspan="2">Product line</th>
+              <th scope="colgroup" colspan="3">Q1 2026</th>
+              <th scope="colgroup" colspan="3">Q2 2026</th>
+              <th scope="col" rowspan="2">Change</th>
+            </tr>
+            <tr>
+              <th scope="col">Revenue</th><th scope="col">Refunds</th><th scope="col">Net</th>
+              <th scope="col">Revenue</th><th scope="col">Refunds</th><th scope="col">Net</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Business platform seats</th><td>$128,400</td><td>$4,220</td><td>$124,180</td><td>$142,880</td><td>$3,918</td><td>$138,962</td><td>+11.9 percent</td></tr>
+            <tr><th scope="row">Audit log retention</th><td>$42,100</td><td>$820</td><td>$41,280</td><td>$48,900</td><td>$640</td><td>$48,260</td><td>+16.9 percent</td></tr>
+            <tr><th scope="row">Priority support</th><td>$68,400</td><td>$3,200</td><td>$65,200</td><td>$74,500</td><td>$2,980</td><td>$71,520</td><td>+9.7 percent</td></tr>
+          </tbody>
+          <tfoot>
+            <tr><th scope="row">Total</th><td>$238,900</td><td>$8,240</td><td>$230,660</td><td>$266,280</td><td>$7,538</td><td>$258,742</td><td>+12.2 percent</td></tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-10">
+      <header class="example-header"><p class="example-kicker">Example 10</p><h2>Landmark Layout With Repeated Navigation Names</h2></header>
+      <p class="example-description">This example imitates a complex application shell with multiple navigation landmarks. It tests extraction of landmark context, repeated link labels, and region-specific navigation names.</p>
+      <div class="example-surface">
+        <header class="header-strip">
+          <div class="hs-item"><span class="hs-label">Application</span><span class="hs-value">Northwind Admin</span></div>
+          <div class="hs-item"><span class="hs-label">Signed in as</span><span class="hs-value">Anika Sharma</span></div>
+          <div class="hs-item"><span class="hs-label">Workspace</span><span class="hs-value">Northwind Analytics</span></div>
+        </header>
+        <div class="split-layout">
+          <div>
+            <nav aria-label="Primary navigation" class="panel">
+              <h4>Primary navigation</h4>
+              <div class="chip-row"><a href="#" class="chip">Dashboard</a><a href="#" class="chip">Search</a><a href="#" class="chip">Reports</a><a href="#" class="chip">Settings</a></div>
+            </nav>
+            <nav aria-label="Account settings navigation" class="panel section-block">
+              <h4>Account settings navigation</h4>
+              <div class="chip-row"><a href="#" class="chip">Profile</a><a href="#" class="chip">Billing</a><a href="#" class="chip">Security</a><a href="#" class="chip">Settings</a></div>
+            </nav>
+            <main class="panel section-block">
+              <h3 class="surface-title">Workspace settings overview</h3>
+              <div class="layout-grid-two">
+                <div class="field-row"><span class="field-label">Billing status</span><span class="field-value">Configured</span></div>
+                <div class="field-row"><span class="field-label">Security status</span><span class="field-value">Enforced</span></div>
+                <div class="field-row"><span class="field-label">Notification status</span><span class="field-value">Partially configured</span></div>
+                <div class="field-row"><span class="field-label">Integration status</span><span class="field-value">Healthy</span></div>
+              </div>
+            </main>
+            <footer>
+              <nav aria-label="Footer navigation" class="panel section-block">
+                <h4>Footer navigation</h4>
+                <div class="chip-row"><a href="#" class="chip">Help</a><a href="#" class="chip">Settings</a><a href="#" class="chip">Privacy</a><a href="#" class="chip">Terms</a></div>
+              </nav>
+            </footer>
+          </div>
+          <aside aria-label="Related settings" class="summary-panel">
+            <h4>Related settings</h4>
+            <div class="chip-row" style="flex-direction:column;align-items:flex-start;">
+              <a href="#" class="chip">Settings</a><a href="#" class="chip">Billing contacts</a><a href="#" class="chip">Audit log</a><a href="#" class="chip">API keys</a>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-11">
+      <header class="example-header"><p class="example-kicker">Example 11</p><h2>Modal Dialog With Background Context</h2></header>
+      <p class="example-description">This example imitates a modal dialog opened over a checkout page. It tests extraction of dialog content separately from background page content, including dialog title, description, form fields, and action buttons.</p>
+      <div class="example-surface">
+        <div class="summary-panel" aria-label="Background order summary">
+          <h4>Order summary (background)</h4>
+          <div class="field-row"><span class="field-label">Order</span><span class="field-value mono">ORD-DRAFT-2026-104922</span></div>
+          <div class="field-row"><span class="field-label">Customer</span><span class="field-value">Jordan Ellis</span></div>
+          <div class="field-row"><span class="field-label">Order total</span><span class="field-value">$159.07</span></div>
+          <div class="field-row"><span class="field-label">Delivery status</span><span class="field-value"><span class="badge ok">Ready</span></span></div>
+          <p><button type="button" class="btn secondary" data-dialog-open="ex11-dialog">Edit delivery address</button></p>
+        </div>
+        <div class="dialog-backdrop" id="ex11-dialog">
+          <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="ex11-title" aria-describedby="ex11-desc">
+            <h3 id="ex11-title">Update delivery instructions</h3>
+            <p id="ex11-desc" class="help-text">Add a short note for the driver. Do not include payment information or access codes.</p>
+            <div class="form-field"><label for="ex11-note">Delivery instruction</label><textarea id="ex11-note" rows="2">Use freight entrance on King Street.</textarea></div>
+            <div class="form-field"><label for="ex11-pref">Contact preference</label>
+              <select id="ex11-pref"><option selected>Call before unloading</option><option>Text on arrival</option><option>No contact</option></select>
+            </div>
+            <p><label style="display:inline-flex;gap:8px;align-items:center;font-weight:600;"><input type="checkbox" style="width:auto;min-height:auto;"> Apply to future orders</label></p>
+            <p class="help-text" role="status">Character count: 36 of 140</p>
+            <div class="toolbar">
+              <button type="button" class="btn" data-dialog-close="ex11-dialog">Save instructions</button>
+              <button type="button" class="btn secondary" data-dialog-close="ex11-dialog">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-12">
+      <header class="example-header"><p class="example-kicker">Example 12</p><h2>Tree View File Browser With Expanded Nodes</h2></header>
+      <p class="example-description">This example imitates a file browser tree. It tests extraction of hierarchical folder and file relationships, expanded state, selected state, file metadata, and visually nested tree items.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Workspace</span><span class="hs-value">Demo Pages</span></div>
+          <div class="hs-item"><span class="hs-label">Selected file</span><span class="hs-value mono">page-09-accessibility-and-semantic-edge-cases.html</span></div>
+          <div class="hs-item"><span class="hs-label">Browser status</span><span class="hs-value"><span class="badge ok">Loaded</span></span></div>
+        </div>
+        <div class="split-layout">
+          <ul class="tree" role="tree" aria-label="Demo Pages file tree">
+            <li role="treeitem" aria-expanded="true">
+              <div class="tree-row"><button class="tree-toggle" aria-label="Toggle Demo Pages">&#9662;</button><strong>Demo Pages</strong></div>
+              <ul role="group">
+                <li role="treeitem" aria-expanded="true">
+                  <div class="tree-row"><button class="tree-toggle" aria-label="Toggle Specifications">&#9662;</button><strong>Specifications</strong></div>
+                  <ul role="group">
+                    <li role="treeitem"><div class="tree-row"><span style="width:18px;"></span>Page 01 - Native Forms Spec <span class="help-text">Document &middot; May 28, 2026</span></div></li>
+                    <li role="treeitem"><div class="tree-row"><span style="width:18px;"></span>Page 08 - Complex Layout Spec <span class="help-text">Document &middot; May 31, 2026</span></div></li>
+                    <li role="treeitem"><div class="tree-row"><span style="width:18px;"></span>Page 09 - Accessibility And Semantics Spec <span class="help-text">Document &middot; May 31, 2026</span></div></li>
+                  </ul>
+                </li>
+                <li role="treeitem" aria-expanded="true">
+                  <div class="tree-row"><button class="tree-toggle" aria-label="Toggle HTML Fixtures">&#9662;</button><strong>HTML Fixtures</strong></div>
+                  <ul role="group">
+                    <li role="treeitem"><div class="tree-row"><span style="width:18px;"></span>page-07-tables-grids-and-admin-dashboards.html <span class="help-text">HTML &middot; May 31, 2026</span></div></li>
+                    <li role="treeitem"><div class="tree-row"><span style="width:18px;"></span>page-08-complex-layout-and-visual-grouping.html <span class="help-text">HTML &middot; May 31, 2026</span></div></li>
+                    <li role="treeitem" aria-selected="true"><div class="tree-row" style="background:var(--accent-soft);"><span style="width:18px;"></span><strong>page-09-accessibility-and-semantic-edge-cases.html</strong> <span class="help-text">HTML &middot; May 31, 2026</span></div></li>
+                  </ul>
+                </li>
+                <li role="treeitem" aria-expanded="false">
+                  <div class="tree-row"><button class="tree-toggle" aria-label="Toggle Archived">&#9656;</button><strong>Archived</strong> <span class="accordion-summary">3 archived fixture drafts</span></div>
+                  <ul role="group" hidden>
+                    <li role="treeitem"><div class="tree-row"><span style="width:18px;"></span>draft-a.html</div></li>
+                    <li role="treeitem"><div class="tree-row"><span style="width:18px;"></span>draft-b.html</div></li>
+                    <li role="treeitem"><div class="tree-row"><span style="width:18px;"></span>draft-c.html</div></li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+          </ul>
+          <aside class="summary-panel" aria-label="Selected file details">
+            <h4>Selected file</h4>
+            <div class="field-row"><span class="field-label">File name</span><span class="field-value mono">page-09-accessibility-and-semantic-edge-cases.html</span></div>
+            <div class="field-row"><span class="field-label">File type</span><span class="field-value">HTML</span></div>
+            <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Product Systems</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge accent">Draft</span></span></div>
+            <div class="field-block"><span class="field-label">Path</span><span class="mono">/Demo Pages/HTML Fixtures/page-09-accessibility-and-semantic-edge-cases.html</span></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-13">
+      <header class="example-header"><p class="example-kicker">Example 13</p><h2>Menu Button With Checked Menu Items</h2></header>
+      <p class="example-description">This example imitates an admin table toolbar with a menu button. It tests extraction of menu trigger label, expanded state, checked menu item state, and action labels without confusing menu items with table data.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Table</span><span class="hs-value">Invoice exports</span></div>
+          <div class="hs-item"><span class="hs-label">Visible exports</span><span class="hs-value">4</span></div>
+          <div class="hs-item"><span class="hs-label">Status</span><span class="hs-value"><span class="badge ok">Ready</span></span></div>
+        </div>
+        <div class="toolbar">
+          <div class="menu-wrap">
+            <button type="button" class="btn secondary" data-menu-button aria-haspopup="menu" aria-expanded="true" aria-controls="ex13-colmenu">Columns</button>
+            <ul class="menu" id="ex13-colmenu" role="menu" aria-label="Column visibility">
+              <li role="menuitemcheckbox" aria-checked="true">Invoice number</li>
+              <li role="menuitemcheckbox" aria-checked="true">Customer</li>
+              <li role="menuitemcheckbox" aria-checked="true">Status</li>
+              <li role="menuitemcheckbox" aria-checked="true">Created date</li>
+              <li role="menuitemcheckbox" aria-checked="false">Internal notes</li>
+              <li role="menuitemcheckbox" aria-checked="false">Export job ID</li>
+            </ul>
+          </div>
+          <div class="menu-wrap">
+            <button type="button" class="btn secondary" data-menu-button aria-haspopup="menu" aria-expanded="false" aria-controls="ex13-bulkmenu">Bulk actions</button>
+            <ul class="menu" id="ex13-bulkmenu" role="menu" aria-label="Bulk actions" hidden>
+              <li role="menuitem">Re-run export</li>
+              <li role="menuitem">Download all</li>
+              <li role="menuitem">Delete selected</li>
+            </ul>
+          </div>
+        </div>
+        <div class="section-block" style="overflow-x:auto;">
+          <table>
+            <thead><tr><th scope="col">Invoice number</th><th scope="col">Customer</th><th scope="col">Status</th><th scope="col">Created date</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">INV-2026-00841</td><td>Cedar &amp; Pine Design LLC</td><td><span class="badge ok">Ready</span></td><td>May 31, 2026</td></tr>
+              <tr><td class="mono">INV-2026-00842</td><td>Atlas Product Studio</td><td><span class="badge info">Running</span></td><td>May 31, 2026</td></tr>
+              <tr><td class="mono">INV-2026-00843</td><td>City Museum of Design</td><td><span class="badge danger">Failed</span></td><td>May 30, 2026</td></tr>
+              <tr><td class="mono">INV-2026-00844</td><td>Northstar Research Lab</td><td><span class="badge ok">Ready</span></td><td>May 30, 2026</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-14">
+      <header class="example-header"><p class="example-kicker">Example 14</p><h2>Range Slider And Meter With Accessible Value Text</h2></header>
+      <p class="example-description">This example imitates a usage threshold configuration panel. It tests extraction of slider value, accessible value text, meter value, min and max values, warning threshold, and current usage context.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Setting</span><span class="hs-value">Monthly extraction usage alert</span></div>
+          <div class="hs-item"><span class="hs-label">Account</span><span class="hs-value">Civic Data Lab</span></div>
+          <div class="hs-item"><span class="hs-label">Status</span><span class="hs-value"><span class="badge ok">Alert enabled</span></span></div>
+        </div>
+        <div class="panel">
+          <div class="form-field">
+            <label for="ex14-slider">Alert threshold</label>
+            <input id="ex14-slider" type="range" min="50" max="100" value="90" data-output="ex14-slider-out" data-suffix=" percent" data-valuetext="percent of monthly included events" aria-valuetext="90 percent of monthly included events" aria-describedby="ex14-slider-help">
+            <p class="help-text">Current value: <output id="ex14-slider-out">90 percent</output></p>
+            <p class="help-text" id="ex14-slider-help">Send an alert when usage reaches 90 percent of included events.</p>
+          </div>
+          <div class="form-field">
+            <label for="ex14-meter">Current usage</label>
+            <meter id="ex14-meter" min="0" max="500000" value="408912" aria-valuetext="82 percent used"></meter>
+            <p class="help-text">408,912 of 500,000 events (82 percent used)</p>
+          </div>
+          <div class="layout-grid-two">
+            <div class="field-row"><span class="field-label">Included events</span><span class="field-value">500,000</span></div>
+            <div class="field-row"><span class="field-label">Used events</span><span class="field-value">408,912</span></div>
+            <div class="field-row"><span class="field-label">Remaining events</span><span class="field-value">91,088</span></div>
+            <div class="field-row"><span class="field-label">Projected overage</span><span class="field-value">$0.00</span></div>
+          </div>
+          <div class="field-row"><span class="field-label">Alert recipients</span><span class="field-value">billing@example.test, ops@example.test</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-15">
+      <header class="example-header"><p class="example-kicker">Example 15</p><h2>Checkout Stepper With Current Step And Completed Steps</h2></header>
+      <p class="example-description">This example imitates a checkout progress stepper. It tests extraction of step order, completed state, current step state, upcoming steps, and the current step's form content.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Checkout</span><span class="hs-value mono">Order ORD-DRAFT-2026-104922</span></div>
+          <div class="hs-item"><span class="hs-label">Customer</span><span class="hs-value">Jordan Ellis</span></div>
+          <div class="hs-item"><span class="hs-label">Checkout status</span><span class="hs-value"><span class="badge info">In progress</span></span></div>
+        </div>
+        <ol class="stepper" aria-label="Checkout steps">
+          <li class="step done"><span class="step-label">1. Cart</span><span class="step-state">Complete</span></li>
+          <li class="step done"><span class="step-label">2. Delivery</span><span class="step-state">Complete</span></li>
+          <li class="step" aria-current="step"><span class="step-label">3. Payment</span><span class="step-state">Current</span></li>
+          <li class="step"><span class="step-label">4. Review</span><span class="step-state">Upcoming</span></li>
+        </ol>
+        <div class="panel section-block">
+          <h4>Payment</h4>
+          <div class="field-row"><span class="field-label">Payment method</span><span class="field-value">Visa ending in 4242</span></div>
+          <div class="field-row"><span class="field-label">Billing address</span><span class="field-value">88 Valencia Street, Suite 402, San Francisco, CA 94103</span></div>
+          <div class="field-row"><span class="field-label">Authorization status</span><span class="field-value"><span class="badge ok">Authorized</span></span></div>
+          <div class="field-row"><span class="field-label">Amount authorized</span><span class="field-value">$159.07</span></div>
+          <div class="field-row"><span class="field-label">Next action</span><span class="field-value">Continue to review</span></div>
+          <fieldset class="section-block" data-radio-cards>
+            <legend>Payment method</legend>
+            <label class="option-card selected" data-radio-card><div class="opt-head"><span>Visa ending in 4242</span><span class="badge ok">Selected</span></div><p class="help-text"><input type="radio" name="ex15-pay" checked style="width:auto;min-height:auto;"> Use this card</p></label>
+            <label class="option-card" data-radio-card><div class="opt-head"><span>ACH ending in 1842</span></div><p class="help-text"><input type="radio" name="ex15-pay" style="width:auto;min-height:auto;"> Not selected</p></label>
+            <label class="option-card" data-radio-card><div class="opt-head"><span>Add new payment method</span><span class="badge neutral">Available</span></div></label>
+          </fieldset>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-16">
+      <header class="example-header"><p class="example-kicker">Example 16</p><h2>Sortable List With Accessible Drag Handles</h2></header>
+      <p class="example-description">This example imitates a sortable priority list. It tests extraction of item order, accessible drag handle names, item records, priorities, owners, due dates, and status values.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">List</span><span class="hs-value">Q3 product priorities</span></div>
+          <div class="hs-item"><span class="hs-label">Owner</span><span class="hs-value">Maya Chen</span></div>
+          <div class="hs-item"><span class="hs-label">List status</span><span class="hs-value"><span class="badge accent">Draft order</span></span></div>
+        </div>
+        <ul class="sortable-list" aria-label="Q3 product priorities">
+          <li class="sortable-item">
+            <button type="button" class="drag-handle icon-btn" aria-label="Move Customer Portal Redesign">::</button>
+            <strong>1</strong>
+            <div style="flex:1;">
+              <div class="opt-head"><span>Customer Portal Redesign</span><span class="badge danger">At risk</span></div>
+              <span class="help-text">Owner Maya Chen &middot; Due August 15, 2026</span>
+              <div class="field-block"><span class="field-label">Notes</span>Billing and seat management flows are critical.</div>
+            </div>
+          </li>
+          <li class="sortable-item">
+            <button type="button" class="drag-handle icon-btn" aria-label="Move Invoice Export Overhaul">::</button>
+            <strong>2</strong>
+            <div style="flex:1;">
+              <div class="opt-head"><span>Invoice Export Overhaul</span><span class="badge ok">On track</span></div>
+              <span class="help-text">Owner Renee Coleman &middot; Due July 8, 2026</span>
+              <div class="field-block"><span class="field-label">Notes</span>CSV line item export is the core deliverable.</div>
+            </div>
+          </li>
+          <li class="sortable-item">
+            <button type="button" class="drag-handle icon-btn" aria-label="Move Admin Permissions Refresh">::</button>
+            <strong>3</strong>
+            <div style="flex:1;">
+              <div class="opt-head"><span>Admin Permissions Refresh</span><span class="badge info">Design</span></div>
+              <span class="help-text">Owner Anika Sharma &middot; Due September 1, 2026</span>
+              <div class="field-block"><span class="field-label">Notes</span>Role migration needs careful review.</div>
+            </div>
+          </li>
+          <li class="sortable-item">
+            <button type="button" class="drag-handle icon-btn" aria-label="Move Search Result Sidebar Rewrite">::</button>
+            <strong>4</strong>
+            <div style="flex:1;">
+              <div class="opt-head"><span>Search Result Sidebar Rewrite</span><span class="badge neutral">Discovery</span></div>
+              <span class="help-text">Owner Rafael Ortiz &middot; Due October 20, 2026</span>
+              <div class="field-block"><span class="field-label">Notes</span>Legacy state model is the main risk.</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-17">
+      <header class="example-header"><p class="example-kicker">Example 17</p><h2>Tokenized Multi-Select With Hidden Input Values</h2></header>
+      <p class="example-description">This example imitates a tokenized multi-select widget. It tests extraction of selected tokens, accessible remove button names, hidden submitted values, available listbox options, and grouped selected values.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Report</span><span class="hs-value">Monthly Billing Export Summary</span></div>
+          <div class="hs-item"><span class="hs-label">Status</span><span class="hs-value"><span class="badge info">Scheduled</span></span></div>
+          <div class="hs-item"><span class="hs-label">Owner</span><span class="hs-value">Renee Coleman</span></div>
+        </div>
+        <div class="layout-grid-two">
+          <div class="panel">
+            <label id="ex17-rec-label">Recipients</label>
+            <div class="token-field" role="group" aria-labelledby="ex17-rec-label">
+              <span class="token">billing@example.test<button type="button" aria-label="Remove billing@example.test from recipients">&times;</button><input type="hidden" name="recipients[]" value="billing@example.test"></span>
+              <span class="token">finance@example.test<button type="button" aria-label="Remove finance@example.test from recipients">&times;</button><input type="hidden" name="recipients[]" value="finance@example.test"></span>
+              <input aria-label="Search recipients" value="" placeholder="Search recipients" style="border:0;flex:1;min-width:120px;">
+            </div>
+            <ul role="listbox" aria-label="Available recipients" style="list-style:none;margin:10px 0 0;padding:0;">
+              <li role="option" class="option-card">ops@example.test <span class="badge neutral">Available</span></li>
+              <li role="option" class="option-card">support-leads@example.test <span class="badge neutral">Available</span></li>
+              <li role="option" aria-disabled="true" class="option-card disabled">billing@example.test <span class="badge accent">Already selected</span></li>
+            </ul>
+          </div>
+          <div class="panel">
+            <label id="ex17-fields-label">Export fields</label>
+            <div class="token-field" role="group" aria-labelledby="ex17-fields-label">
+              <span class="token">Invoice number<button type="button" aria-label="Remove Invoice number from export fields">&times;</button><input type="hidden" name="fields[]" value="invoice_number"></span>
+              <span class="token">Customer<button type="button" aria-label="Remove Customer from export fields">&times;</button><input type="hidden" name="fields[]" value="customer_name"></span>
+              <span class="token">Balance due<button type="button" aria-label="Remove Balance due from export fields">&times;</button><input type="hidden" name="fields[]" value="balance_due"></span>
+            </div>
+            <ul role="listbox" aria-label="Available export fields" style="list-style:none;margin:10px 0 0;padding:0;">
+              <li role="option" class="option-card">Tax amount</li>
+              <li role="option" class="option-card">Discount amount</li>
+              <li role="option" class="option-card">Payment reference</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-18">
+      <header class="example-header"><p class="example-kicker">Example 18</p><h2>Visually Hidden Text In Search Results</h2></header>
+      <p class="example-description">This example imitates search results that use visually hidden text to disambiguate similar visible links. It tests extraction of accessible link names, visible titles, hidden context, source metadata, and snippets without duplicate output.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Search query</span><span class="hs-value">settings</span></div>
+          <div class="hs-item"><span class="hs-label">Result count</span><span class="hs-value">5 results</span></div>
+          <div class="hs-item"><span class="hs-label">Sort order</span><span class="hs-value">Best match</span></div>
+        </div>
+        <article class="panel section-block">
+          <h4><a href="/demo/settings/billing">Settings<span class="sr-only"> for workspace billing</span></a></h4>
+          <p class="help-text">Source: Admin console &middot; Updated May 30, 2026</p>
+          <p>Manage invoice recipients, payment methods, purchase orders, and renewal dates.</p>
+        </article>
+        <article class="panel section-block">
+          <h4><a href="/demo/settings/security">Settings<span class="sr-only"> for workspace security</span></a></h4>
+          <p class="help-text">Source: Admin console &middot; Updated May 28, 2026</p>
+          <p>Configure SAML SSO, SCIM provisioning, MFA requirements, and session length.</p>
+        </article>
+        <article class="panel section-block">
+          <h4><a href="/demo/settings/notifications">Settings<span class="sr-only"> for notification preferences</span></a></h4>
+          <p class="help-text">Source: Admin console &middot; Updated May 22, 2026</p>
+          <p>Choose digest frequency, recipients, and alert channels.</p>
+        </article>
+        <article class="panel section-block">
+          <h4><a href="/demo/settings/exports">Export settings</a></h4>
+          <p class="help-text">Source: Billing exports &middot; Updated May 29, 2026</p>
+          <p>Configure CSV fields, delivery schedule, and saved export templates.</p>
+        </article>
+        <article class="panel section-block">
+          <h4><a href="/demo/settings/api">API settings</a></h4>
+          <p class="help-text">Source: Developer platform &middot; Updated May 27, 2026</p>
+          <p>Manage API keys, webhook endpoints, and rate limits.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-19">
+      <header class="example-header"><p class="example-kicker">Example 19</p><h2>Tooltip And Description Relationship Edge Cases</h2></header>
+      <p class="example-description">This example imitates a settings form with help text and tooltip descriptions. It tests extraction of connected descriptions, unconnected visual tooltip text, and field values without assuming every nearby tooltip belongs to the field.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Settings</span><span class="hs-value">API key rotation policy</span></div>
+          <div class="hs-item"><span class="hs-label">Workspace</span><span class="hs-value">Northwind Analytics</span></div>
+          <div class="hs-item"><span class="hs-label">Status</span><span class="hs-value"><span class="badge warning">Review recommended</span></span></div>
+        </div>
+        <div class="split-layout">
+          <form class="panel">
+            <div class="form-field">
+              <label for="ex19-interval">Rotation interval</label>
+              <select id="ex19-interval" aria-describedby="ex19-interval-desc">
+                <option>30 days</option><option>60 days</option><option selected>90 days</option><option>180 days</option>
+              </select>
+              <p class="help-text" id="ex19-interval-desc">Recommended for production API keys.</p>
+            </div>
+            <div class="form-field">
+              <label for="ex19-grace">Grace period</label>
+              <input id="ex19-grace" value="14" aria-describedby="ex19-grace-tip" style="max-width:120px;display:inline-block;"> <span>days</span>
+              <p class="help-text" id="ex19-grace-tip" role="tooltip">Requests using the old key will continue during the grace period.</p>
+            </div>
+            <div class="form-field">
+              <label for="ex19-owner">Owner</label>
+              <input id="ex19-owner" value="Rafael Ortiz" aria-describedby="ex19-owner-help">
+              <p class="help-text" id="ex19-owner-help">Owner receives rotation reminders.</p>
+            </div>
+            <div class="form-field">
+              <label style="display:inline-flex;gap:8px;align-items:center;">Emergency bypass <input type="checkbox" role="switch" style="width:auto;min-height:auto;"></label>
+              <p class="help-text" role="tooltip">Only use bypass for incident response.</p>
+              <p class="visually-note">This tooltip is intentionally not connected to the switch with aria-describedby.</p>
+            </div>
+          </form>
+          <aside class="summary-panel" aria-label="Policy summary">
+            <h4>Policy summary</h4>
+            <div class="field-row"><span class="field-label">Policy status</span><span class="field-value"><span class="badge ok">Configured</span></span></div>
+            <div class="field-row"><span class="field-label">Next rotation</span><span class="field-value">July 1, 2026</span></div>
+            <div class="field-row"><span class="field-label">Keys affected</span><span class="field-value">3</span></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-20">
+      <header class="example-header"><p class="example-kicker">Example 20</p><h2>Data Visualization With Text Equivalent</h2></header>
+      <p class="example-description">This example imitates an analytics dashboard that provides accessible text equivalents for visual charts. It tests extraction of chart titles, visible chart summaries, text alternatives, data points, and metric context.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Dashboard</span><span class="hs-value">Extraction Quality Trends</span></div>
+          <div class="hs-item"><span class="hs-label">Period</span><span class="hs-value">May 2026</span></div>
+          <div class="hs-item"><span class="hs-label">Owner</span><span class="hs-value">Product Systems</span></div>
+          <div class="hs-item"><span class="hs-label">Status</span><span class="hs-value"><span class="badge ok">Published</span></span></div>
+        </div>
+        <div class="layout-grid-three">
+          <figure class="panel" style="margin:0;" aria-describedby="ex20-desc1">
+            <h4>Duplicate action label rate</h4>
+            <div class="chip-row" aria-hidden="true" style="align-items:flex-end;height:80px;">
+              <div style="width:24px;height:80px;background:var(--accent);border-radius:4px;"></div>
+              <div style="width:24px;height:70px;background:var(--accent);border-radius:4px;"></div>
+              <div style="width:24px;height:62px;background:var(--accent);border-radius:4px;"></div>
+              <div style="width:24px;height:54px;background:var(--accent);border-radius:4px;"></div>
+            </div>
+            <figcaption class="help-text" id="ex20-desc1">The duplicate action label rate decreased from 4.1 percent to 2.8 percent during May 2026.</figcaption>
+            <div class="field-row"><span class="field-label">Week 1</span><span class="field-value">4.1 percent</span></div>
+            <div class="field-row"><span class="field-label">Week 2</span><span class="field-value">3.6 percent</span></div>
+            <div class="field-row"><span class="field-label">Week 3</span><span class="field-value">3.2 percent</span></div>
+            <div class="field-row"><span class="field-label">Week 4</span><span class="field-value">2.8 percent</span></div>
+          </figure>
+          <figure class="panel" style="margin:0;" aria-describedby="ex20-desc2">
+            <h4>Table row context accuracy</h4>
+            <div class="chip-row" aria-hidden="true" style="align-items:flex-end;height:80px;">
+              <div style="width:24px;height:60px;background:var(--info);border-radius:4px;"></div>
+              <div style="width:24px;height:64px;background:var(--info);border-radius:4px;"></div>
+              <div style="width:24px;height:64px;background:var(--info);border-radius:4px;"></div>
+              <div style="width:24px;height:68px;background:var(--info);border-radius:4px;"></div>
+            </div>
+            <figcaption class="help-text" id="ex20-desc2">Table row context accuracy improved from 91 percent to 93 percent, but remains below the 94 percent target.</figcaption>
+            <div class="field-row"><span class="field-label">Week 1</span><span class="field-value">91 percent</span></div>
+            <div class="field-row"><span class="field-label">Week 2</span><span class="field-value">92 percent</span></div>
+            <div class="field-row"><span class="field-label">Week 3</span><span class="field-value">92 percent</span></div>
+            <div class="field-row"><span class="field-label">Week 4</span><span class="field-value">93 percent</span></div>
+          </figure>
+          <figure class="panel" style="margin:0;" aria-describedby="ex20-desc3">
+            <h4>Combobox selected value accuracy</h4>
+            <div class="chip-row" aria-hidden="true" style="align-items:flex-end;height:80px;">
+              <div style="width:24px;height:74px;background:var(--ok);border-radius:4px;"></div>
+              <div style="width:24px;height:76px;background:var(--ok);border-radius:4px;"></div>
+              <div style="width:24px;height:76px;background:var(--ok);border-radius:4px;"></div>
+              <div style="width:24px;height:74px;background:var(--ok);border-radius:4px;"></div>
+            </div>
+            <figcaption class="help-text" id="ex20-desc3">Combobox selected value accuracy stayed stable at 96 percent or higher throughout May.</figcaption>
+            <div class="field-row"><span class="field-label">Week 1</span><span class="field-value">96 percent</span></div>
+            <div class="field-row"><span class="field-label">Week 2</span><span class="field-value">97 percent</span></div>
+            <div class="field-row"><span class="field-label">Week 3</span><span class="field-value">97 percent</span></div>
+            <div class="field-row"><span class="field-label">Week 4</span><span class="field-value">96 percent</span></div>
+          </figure>
+        </div>
+        <div class="callout-panel section-block">
+          <div class="field-row"><span class="field-label">Overall quality status</span><span class="field-value"><span class="badge ok">Improving</span></span></div>
+          <div class="field-row"><span class="field-label">Primary risk</span><span class="field-value">Table row context remains below target</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-21">
+      <header class="example-header"><p class="example-kicker">Example 21</p><h2>Calendar Date Picker Grid With Availability Semantics</h2></header>
+      <p class="example-description">This example imitates a custom appointment calendar. It tests extraction of selected date, available dates, unavailable dates, aria-disabled state, aria-selected state, and accessible labels for dates.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Provider</span><span class="hs-value">Dr. Helen Park, MD</span></div>
+          <div class="hs-item"><span class="hs-label">Service</span><span class="hs-value">Orthopedics follow-up</span></div>
+          <div class="hs-item"><span class="hs-label">Calendar month</span><span class="hs-value">June 2026</span></div>
+          <div class="hs-item"><span class="hs-label">Selected date</span><span class="hs-value">June 11, 2026</span></div>
+        </div>
+        <div class="split-layout">
+          <div class="panel" role="grid" aria-label="June 2026 appointment availability">
+            <div class="calendar" role="row" style="margin-bottom:6px;">
+              <span class="cal-head" role="columnheader">Sun</span><span class="cal-head" role="columnheader">Mon</span><span class="cal-head" role="columnheader">Tue</span><span class="cal-head" role="columnheader">Wed</span><span class="cal-head" role="columnheader">Thu</span><span class="cal-head" role="columnheader">Fri</span><span class="cal-head" role="columnheader">Sat</span>
+            </div>
+            <div class="calendar">
+              <button class="cal-day" type="button" aria-label="June 8, 2026, 3 appointments available">8</button>
+              <button class="cal-day" type="button" aria-disabled="true" disabled aria-label="June 9, 2026, no appointments available">9</button>
+              <button class="cal-day" type="button" aria-label="June 10, 2026, 1 appointment available">10</button>
+              <button class="cal-day" type="button" aria-selected="true" aria-pressed="true" aria-label="June 11, 2026, selected, 2 appointments available">11</button>
+              <button class="cal-day" type="button" aria-label="June 12, 2026, 4 appointments available">12</button>
+              <button class="cal-day" type="button" aria-disabled="true" disabled aria-label="June 13, 2026, no appointments available">13</button>
+              <button class="cal-day" type="button" aria-disabled="true" disabled aria-label="June 14, 2026, no appointments available">14</button>
+              <button class="cal-day" type="button" aria-label="June 15, 2026, available">15</button>
+              <button class="cal-day" type="button" aria-label="June 16, 2026, available">16</button>
+              <button class="cal-day" type="button" aria-label="June 17, 2026, available">17</button>
+              <button class="cal-day" type="button" aria-disabled="true" disabled aria-label="June 18, 2026, no appointments available">18</button>
+              <button class="cal-day" type="button" aria-label="June 19, 2026, available">19</button>
+              <button class="cal-day" type="button" aria-disabled="true" disabled aria-label="June 20, 2026, no appointments available">20</button>
+              <button class="cal-day" type="button" aria-disabled="true" disabled aria-label="June 21, 2026, no appointments available">21</button>
+            </div>
+          </div>
+          <aside class="summary-panel" aria-label="Time slots for selected date">
+            <h4>Time slots</h4>
+            <div class="field-row"><span class="field-label">Selected date</span><span class="field-value">June 11, 2026</span></div>
+            <div class="chip-row section-block">
+              <button class="cal-day" type="button" aria-pressed="true" style="width:auto;">2:30 PM</button>
+              <button class="cal-day" type="button" style="width:auto;">3:15 PM</button>
+              <button class="cal-day" type="button" style="width:auto;">4:00 PM</button>
+              <button class="cal-day" type="button" aria-disabled="true" disabled style="width:auto;" aria-label="5:00 PM, fully booked">5:00 PM</button>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-22">
+      <header class="example-header"><p class="example-kicker">Example 22</p><h2>Permission Matrix With Headers And Group Labels</h2></header>
+      <p class="example-description">This example imitates an admin permission matrix. It tests extraction of row group context, column header context, checked and unchecked states, disabled permissions, and permission descriptions.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Workspace</span><span class="hs-value">Northwind Analytics</span></div>
+          <div class="hs-item"><span class="hs-label">Role template</span><span class="hs-value">Billing manager</span></div>
+          <div class="hs-item"><span class="hs-label">Matrix status</span><span class="hs-value"><span class="badge accent">Draft changes</span></span></div>
+        </div>
+        <div class="split-layout">
+          <div style="overflow-x:auto;">
+            <table>
+              <thead><tr><th scope="col">Permission</th><th scope="col">Admin</th><th scope="col">Billing manager</th><th scope="col">Editor</th><th scope="col">Viewer</th></tr></thead>
+              <tbody>
+                <tr><th scope="rowgroup" colspan="5" style="background:var(--accent-soft);">Billing</th></tr>
+                <tr><th scope="row">View invoices</th><td><input type="checkbox" checked aria-label="View invoices for Admin" style="width:auto;min-height:auto;"></td><td><input type="checkbox" checked aria-label="View invoices for Billing manager" style="width:auto;min-height:auto;"></td><td><input type="checkbox" aria-label="View invoices for Editor" style="width:auto;min-height:auto;"></td><td><input type="checkbox" aria-label="View invoices for Viewer" style="width:auto;min-height:auto;"></td></tr>
+                <tr><th scope="row">Download receipts</th><td><input type="checkbox" checked aria-label="Download receipts for Admin" style="width:auto;min-height:auto;"></td><td><input type="checkbox" checked aria-label="Download receipts for Billing manager" style="width:auto;min-height:auto;"></td><td><input type="checkbox" aria-label="Download receipts for Editor" style="width:auto;min-height:auto;"></td><td><input type="checkbox" aria-label="Download receipts for Viewer" style="width:auto;min-height:auto;"></td></tr>
+                <tr><th scope="row">Update payment method</th><td><input type="checkbox" checked aria-label="Update payment method for Admin" style="width:auto;min-height:auto;"></td><td><input type="checkbox" checked aria-label="Update payment method for Billing manager" style="width:auto;min-height:auto;"></td><td><input type="checkbox" aria-label="Update payment method for Editor" style="width:auto;min-height:auto;"></td><td><input type="checkbox" disabled aria-label="Update payment method for Viewer, disabled" style="width:auto;min-height:auto;"></td></tr>
+                <tr><th scope="rowgroup" colspan="5" style="background:var(--accent-soft);">User Management</th></tr>
+                <tr><th scope="row">Invite users</th><td><input type="checkbox" checked aria-label="Invite users for Admin" style="width:auto;min-height:auto;"></td><td><input type="checkbox" aria-label="Invite users for Billing manager" style="width:auto;min-height:auto;"></td><td><input type="checkbox" aria-label="Invite users for Editor" style="width:auto;min-height:auto;"></td><td><input type="checkbox" aria-label="Invite users for Viewer" style="width:auto;min-height:auto;"></td></tr>
+                <tr><th scope="row">Manage seats</th><td><input type="checkbox" checked aria-label="Manage seats for Admin" style="width:auto;min-height:auto;"></td><td><input type="checkbox" checked aria-label="Manage seats for Billing manager" style="width:auto;min-height:auto;"></td><td><input type="checkbox" aria-label="Manage seats for Editor" style="width:auto;min-height:auto;"></td><td><input type="checkbox" aria-label="Manage seats for Viewer" style="width:auto;min-height:auto;"></td></tr>
+                <tr><th scope="row">Remove users</th><td><input type="checkbox" checked aria-label="Remove users for Admin" style="width:auto;min-height:auto;"></td><td><input type="checkbox" aria-label="Remove users for Billing manager" style="width:auto;min-height:auto;"></td><td><input type="checkbox" aria-label="Remove users for Editor" style="width:auto;min-height:auto;"></td><td><input type="checkbox" disabled aria-label="Remove users for Viewer, disabled" style="width:auto;min-height:auto;"></td></tr>
+                <tr><th scope="rowgroup" colspan="5" style="background:var(--accent-soft);">Security</th></tr>
+                <tr><th scope="row">Manage SSO</th><td><input type="checkbox" checked aria-label="Manage SSO for Admin" style="width:auto;min-height:auto;"></td><td><input type="checkbox" aria-label="Manage SSO for Billing manager" style="width:auto;min-height:auto;"></td><td><input type="checkbox" aria-label="Manage SSO for Editor" style="width:auto;min-height:auto;"></td><td><input type="checkbox" disabled aria-label="Manage SSO for Viewer, disabled" style="width:auto;min-height:auto;"></td></tr>
+                <tr><th scope="row">View audit log</th><td><input type="checkbox" checked aria-label="View audit log for Admin" style="width:auto;min-height:auto;"></td><td><input type="checkbox" checked aria-label="View audit log for Billing manager" style="width:auto;min-height:auto;"></td><td><input type="checkbox" checked aria-label="View audit log for Editor" style="width:auto;min-height:auto;"></td><td><input type="checkbox" aria-label="View audit log for Viewer" style="width:auto;min-height:auto;"></td></tr>
+                <tr><th scope="row">Rotate API keys</th><td><input type="checkbox" checked aria-label="Rotate API keys for Admin" style="width:auto;min-height:auto;"></td><td><input type="checkbox" aria-label="Rotate API keys for Billing manager" style="width:auto;min-height:auto;"></td><td><input type="checkbox" aria-label="Rotate API keys for Editor" style="width:auto;min-height:auto;"></td><td><input type="checkbox" disabled aria-label="Rotate API keys for Viewer, disabled" style="width:auto;min-height:auto;"></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <aside class="summary-panel" aria-label="Selected permission detail">
+            <h4>Selected permission</h4>
+            <div class="field-row"><span class="field-label">Permission</span><span class="field-value">Update payment method</span></div>
+            <div class="field-row"><span class="field-label">Group</span><span class="field-value">Billing</span></div>
+            <div class="field-block"><span class="field-label">Description</span>Allows changing the default payment method for renewals and invoices.</div>
+            <div class="field-row"><span class="field-label">Risk level</span><span class="field-value"><span class="badge danger">High</span></span></div>
+            <div class="field-block"><span class="field-label">Recommended roles</span><div class="chip-row"><span class="chip">Admin</span><span class="chip">Billing manager</span></div></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-23">
+      <header class="example-header"><p class="example-kicker">Example 23</p><h2>Fieldset And Legend Grouping In Complex Forms</h2></header>
+      <p class="example-description">This example imitates a multi-section application form that uses fieldsets and legends. It tests extraction of repeated labels such as Name, Status, Date, and Notes while preserving form group context.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Application</span><span class="hs-value">Small Business Recovery Grant</span></div>
+          <div class="hs-item"><span class="hs-label">Application ID</span><span class="hs-value mono">APP-2026-88419</span></div>
+          <div class="hs-item"><span class="hs-label">Form status</span><span class="hs-value"><span class="badge info">In progress</span></span></div>
+        </div>
+        <div class="split-layout">
+          <form>
+            <fieldset>
+              <legend>Applicant business</legend>
+              <div class="field-row"><span class="field-label">Name</span><span class="field-value">Cedar &amp; Pine Design LLC</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Verified</span></span></div>
+              <div class="field-row"><span class="field-label">Date</span><span class="field-value">Submitted April 18, 2026</span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Business license received.</div>
+            </fieldset>
+            <fieldset>
+              <legend>Primary contact</legend>
+              <div class="field-row"><span class="field-label">Name</span><span class="field-value">Renee Coleman</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Contact verified</span></span></div>
+              <div class="field-row"><span class="field-label">Date</span><span class="field-value">Verified April 22, 2026</span></div>
+              <div class="field-row"><span class="field-label">Email</span><span class="field-value">renee.coleman@example.test</span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Preferred contact method is email.</div>
+            </fieldset>
+            <fieldset>
+              <legend>Bank verification</legend>
+              <div class="field-row"><span class="field-label">Name</span><span class="field-value">Operating Checking ending in 1842</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">Pending review</span></span></div>
+              <div class="field-row"><span class="field-label">Date</span><span class="field-value">Uploaded May 9, 2026</span></div>
+              <div class="field-row"><span class="field-label">Document</span><span class="field-value">bank-verification-letter.pdf</span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Bank letter must show business legal name.</div>
+            </fieldset>
+            <fieldset>
+              <legend>Lease documentation</legend>
+              <div class="field-row"><span class="field-label">Name</span><span class="field-value">Oak Grove Studio lease</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge danger">Missing</span></span></div>
+              <div class="field-row"><span class="field-label">Date</span><span class="field-value">Due June 7, 2026</span></div>
+              <div class="field-row"><span class="field-label">Document</span><span class="field-value">Not uploaded</span></div>
+              <div class="field-block"><span class="field-label">Notes</span>Required for eligibility review.</div>
+            </fieldset>
+          </form>
+          <aside class="summary-panel" aria-label="Application summary">
+            <h4>Application summary</h4>
+            <div class="field-row"><span class="field-label">Completed sections</span><span class="field-value">2 of 4</span></div>
+            <div class="field-row"><span class="field-label">Missing sections</span><span class="field-value">Lease documentation</span></div>
+            <div class="field-row"><span class="field-label">Overall status</span><span class="field-value"><span class="badge warning">Under review</span></span></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-24">
+      <header class="example-header"><p class="example-kicker">Example 24</p><h2>Search Result Cards With Accessible Name Mismatches</h2></header>
+      <p class="example-description">This example imitates search result cards where visible titles, aria-label values, and helper text are not identical. It tests whether extraction can preserve visible content while noticing accessible names that add or alter context.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Search query</span><span class="hs-value">billing export</span></div>
+          <div class="hs-item"><span class="hs-label">Result count</span><span class="hs-value">4 results</span></div>
+          <div class="hs-item"><span class="hs-label">Semantic warning</span><span class="hs-value">Some result links have accessible names that include extra product area context.</span></div>
+        </div>
+        <div class="split-layout">
+          <div>
+            <article class="panel section-block">
+              <h4><a href="/demo/help/export-invoice-line-items" aria-label="Help article: Export invoice line items from Billing">Export invoice line items</a></h4>
+              <p class="help-text">Source: Help Center</p>
+              <p>Download invoice details as CSV with SKU, tax, discount, and payment columns.</p>
+            </article>
+            <article class="panel section-block">
+              <h4><a href="/demo/settings/exports" aria-label="Admin settings page: Billing export settings">Billing export settings</a></h4>
+              <p class="help-text">Source: Admin console</p>
+              <p>Configure CSV fields, schedule, recipients, and saved export templates.</p>
+            </article>
+            <article class="panel section-block">
+              <h4><a href="/demo/analytics/reports/monthly-billing-export-summary" aria-label="Analytics report: Monthly Billing Export Summary">Monthly Billing Export Summary</a></h4>
+              <p class="help-text">Source: Analytics</p>
+              <p>Review invoice totals, payments applied, balance due, and report delivery status.</p>
+            </article>
+            <article class="panel section-block">
+              <h4><a href="/demo/analytics/reports/export-job-health" aria-label="Operational report: Export job health">Export job health</a></h4>
+              <p class="help-text">Source: Reliability dashboard</p>
+              <p>Monitor export duration, failure count, queue time, and retry status.</p>
+            </article>
+          </div>
+          <aside class="summary-panel" aria-label="Selected result detail">
+            <h4>Selected result</h4>
+            <div class="field-row"><span class="field-label">Visible title</span><span class="field-value">Export invoice line items</span></div>
+            <div class="field-block"><span class="field-label">Accessible link name</span>Help article: Export invoice line items from Billing</div>
+            <div class="field-row"><span class="field-label">Primary source</span><span class="field-value">Help Center</span></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-25">
+      <header class="example-header"><p class="example-kicker">Example 25</p><h2>Mixed Semantic Anti-Pattern Gallery</h2></header>
+      <p class="example-description">This example imitates a gallery of realistic semantic anti-patterns that appear in production UIs. It tests extraction resilience when markup is imperfect, labels are inconsistent, roles are missing, and visual grouping must be used carefully.</p>
+      <div class="example-surface">
+        <div class="header-strip">
+          <div class="hs-item"><span class="hs-label">Gallery</span><span class="hs-value">Semantic edge case review</span></div>
+          <div class="hs-item"><span class="hs-label">Purpose</span><span class="hs-value">Regression testing</span></div>
+          <div class="hs-item"><span class="hs-label">Status</span><span class="hs-value"><span class="badge warning">Intentional imperfections</span></span></div>
+        </div>
+        <div class="layout-grid-three">
+          <div class="semantic-card">
+            <h4>Clickable div that looks like a button</h4>
+            <div role="button" tabindex="0" class="btn" style="display:inline-block;">Approve renewal</div>
+            <div class="section-block">
+              <div class="field-row"><span class="field-label">Request</span><span class="field-value mono">REQ-2026-7712</span></div>
+              <div class="field-row"><span class="field-label">Vendor</span><span class="field-value">Northstar Cloud Services</span></div>
+              <div class="field-row"><span class="field-label">Amount</span><span class="field-value">$84,000</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">Pending approval</span></span></div>
+            </div>
+            <p class="visually-note">The action should be extracted as Approve renewal, not ignored because it is not a native button.</p>
+          </div>
+          <div class="semantic-card">
+            <h4>Button with vague visible text and useful aria-label</h4>
+            <button type="button" class="btn secondary" aria-label="Open invoice INV-2026-00841">Go</button>
+            <div class="section-block">
+              <div class="field-row"><span class="field-label">Invoice</span><span class="field-value mono">INV-2026-00841</span></div>
+              <div class="field-row"><span class="field-label">Customer</span><span class="field-value">Cedar &amp; Pine Design LLC</span></div>
+              <div class="field-row"><span class="field-label">Balance</span><span class="field-value">$394.14</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warning">Due</span></span></div>
+            </div>
+          </div>
+          <div class="semantic-card">
+            <h4>Visible label differs from input purpose</h4>
+            <label for="ex25-code">Code</label>
+            <input id="ex25-code" value="FIRSTMONTH50" aria-label="Promotion code">
+            <div class="section-block">
+              <div class="field-row"><span class="field-label">Promotion</span><span class="field-value">50 percent off first full month</span></div>
+              <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Applied</span></span></div>
+            </div>
+          </div>
+          <div class="semantic-card selected">
+            <h4>Card looks selected but lacks aria-selected</h4>
+            <div class="field-row"><span class="field-label">Plan</span><span class="field-value">Business annual</span></div>
+            <div class="field-row"><span class="field-label">Price</span><span class="field-value">$5,760/year</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge accent">Selected visually</span></span></div>
+            <p class="visually-note">This intentionally tests whether visual selection can be detected when ARIA state is missing.</p>
+          </div>
+          <div class="semantic-card" aria-selected="true">
+            <h4>ARIA selected without strong visual selected style</h4>
+            <div class="field-row"><span class="field-label">Plan</span><span class="field-value">Enterprise annual</span></div>
+            <div class="field-row"><span class="field-label">Price</span><span class="field-value">$12,400/year</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge info">Selected semantically</span></span></div>
+            <p class="visually-note">This intentionally tests whether semantic selection can be detected when visual styling is subtle.</p>
+          </div>
+          <div class="semantic-card">
+            <h4>Description text is outside the visual card</h4>
+            <div class="field-row"><span class="field-label">API key</span><span class="field-value mono">key_live_****_9K2Q</span></div>
+            <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Rafael Ortiz</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value" aria-describedby="ex25-keydesc"><span class="badge warning">Near rotation</span></span></div>
+          </div>
+        </div>
+        <p class="visually-note" id="ex25-keydesc">This API key rotates on July 1, 2026 and is used by the Billing Export Worker.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Tabs: role=tab elements with aria-controls; clicking activates the panel.
+    document.querySelectorAll('[data-tablist]').forEach(function (list) {
+      var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
+      tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          tabs.forEach(function (t) {
+            var selected = t === tab;
+            t.setAttribute('aria-selected', selected ? 'true' : 'false');
+            t.tabIndex = selected ? 0 : -1;
+            var panel = document.getElementById(t.getAttribute('aria-controls'));
+            if (panel) { panel.hidden = !selected; }
+          });
+        });
+      });
+    });
+
+    // Accordion: button[aria-controls] toggles hidden on its panel.
+    document.querySelectorAll('.accordion-trigger').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var expanded = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+        var panel = document.getElementById(btn.getAttribute('aria-controls'));
+        if (panel) { panel.hidden = expanded; }
+      });
+    });
+
+    // Live regions: data-live-target points to a live region; data-live-message is announced.
+    document.querySelectorAll('[data-live-target]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var region = document.getElementById(btn.getAttribute('data-live-target'));
+        if (region) { region.textContent = btn.getAttribute('data-live-message') || ''; }
+      });
+    });
+
+    // Menu buttons: toggle a menu, support aria-checked toggles on menuitemcheckbox.
+    document.querySelectorAll('[data-menu-button]').forEach(function (btn) {
+      var menu = document.getElementById(btn.getAttribute('aria-controls'));
+      btn.addEventListener('click', function () {
+        var open = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+        if (menu) { menu.hidden = open; }
+      });
+      if (menu) {
+        menu.querySelectorAll('[role="menuitemcheckbox"]').forEach(function (item) {
+          item.addEventListener('click', function () {
+            var checked = item.getAttribute('aria-checked') === 'true';
+            item.setAttribute('aria-checked', checked ? 'false' : 'true');
+          });
+        });
+      }
+    });
+
+    // Tree view: toggle button flips aria-expanded and hides the nested group.
+    document.querySelectorAll('.tree-toggle').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var item = btn.closest('[role="treeitem"]');
+        if (!item) { return; }
+        var expanded = item.getAttribute('aria-expanded') === 'true';
+        item.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+        btn.textContent = expanded ? '\u25B8' : '\u25BE';
+        var group = item.querySelector(':scope > [role="group"]');
+        if (group) { group.hidden = expanded; }
+      });
+    });
+
+    // Modal dialog: open/close by toggling hidden on the backdrop.
+    document.querySelectorAll('[data-dialog-open]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var d = document.getElementById(btn.getAttribute('data-dialog-open'));
+        if (d) { d.hidden = false; }
+      });
+    });
+    document.querySelectorAll('[data-dialog-close]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var d = document.getElementById(btn.getAttribute('data-dialog-close'));
+        if (d) { d.hidden = true; }
+      });
+    });
+
+    // Range slider: mirror the value into an aria-describing output element.
+    document.querySelectorAll('input[type="range"][data-output]').forEach(function (slider) {
+      var out = document.getElementById(slider.getAttribute('data-output'));
+      function sync() {
+        if (out) { out.textContent = slider.dataset.prefix ? slider.dataset.prefix + slider.value + (slider.dataset.suffix || '') : slider.value + (slider.dataset.suffix || ''); }
+        slider.setAttribute('aria-valuenow', slider.value);
+        if (slider.dataset.valuetext) { slider.setAttribute('aria-valuetext', slider.value + ' ' + slider.dataset.valuetext); }
+      }
+      slider.addEventListener('input', sync);
+      sync();
+    });
+
+    // Single-select option cards (radio cards) honoring aria-disabled.
+    document.querySelectorAll('[data-radio-cards]').forEach(function (group) {
+      var cards = group.querySelectorAll('[data-radio-card]');
+      cards.forEach(function (card) {
+        card.addEventListener('click', function (e) {
+          if (card.getAttribute('aria-disabled') === 'true') { return; }
+          if (e.target.closest('input')) { return; }
+          cards.forEach(function (c) {
+            c.classList.toggle('selected', c === card);
+            if (c.getAttribute('role') === 'radio') { c.setAttribute('aria-checked', c === card ? 'true' : 'false'); }
+            var radio = c.querySelector('input[type="radio"]');
+            if (radio) { radio.checked = (c === card); }
+          });
+        });
+      });
+    });
+  </script>
+</body>
+</html>

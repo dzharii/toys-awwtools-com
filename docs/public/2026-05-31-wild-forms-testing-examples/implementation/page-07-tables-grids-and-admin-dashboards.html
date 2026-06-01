@@ -1,0 +1,1168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page 7 - Tables, Grids, And Admin Dashboards</title>
+  <style>
+    :root {
+      --page-bg: #f5f2ea;
+      --card-bg: #fffdf8;
+      --ink: #25221d;
+      --muted: #6f675c;
+      --line: #d8cfc0;
+      --soft: #eee6d8;
+      --panel: #ffffff;
+      --accent: #315f8c;
+      --accent-soft: #e7f0ff;
+      --ok: #276749;
+      --ok-soft: #e3f2e8;
+      --warning: #8a5a00;
+      --warn-soft: #fbeed2;
+      --danger: #9b332c;
+      --danger-soft: #f8e2df;
+      --link: #174ea6;
+      --num: #2b2620;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--page-bg);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    main { width: min(1220px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 80px; }
+    .page-header {
+      background: var(--card-bg);
+      border: 1px solid var(--line);
+      border-left: 6px solid var(--accent);
+      border-radius: 10px;
+      padding: 24px 28px;
+      margin-bottom: 26px;
+    }
+    .page-header .eyebrow { text-transform: uppercase; letter-spacing: .15em; font-size: 12px; color: var(--accent); margin: 0 0 8px; font-weight: 700; }
+    .page-header h1 { margin: 0 0 10px; font-size: 26px; }
+    .page-header p { margin: 0; color: var(--muted); max-width: 90ch; }
+
+    .example-card {
+      background: var(--card-bg);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 22px;
+      margin-bottom: 28px;
+    }
+    .example-header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    .example-kicker { text-transform: uppercase; letter-spacing: .12em; font-size: 11px; color: #fff; background: var(--accent); padding: 3px 9px; border-radius: 4px; margin: 0; font-weight: 700; }
+    .example-header h2 { margin: 0; font-size: 19px; }
+    .example-description { color: var(--muted); margin: 10px 0 18px; max-width: 95ch; }
+
+    /* toolbar */
+    .admin-toolbar {
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+      padding: 12px 14px; background: var(--soft); border: 1px solid var(--line); border-radius: 8px 8px 0 0;
+    }
+    .toolbar-left, .toolbar-right { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+    .tb-field { font-size: 13px; color: var(--muted); }
+    .tb-field b { color: var(--ink); }
+    .admin-toolbar input, .admin-toolbar select {
+      font: inherit; font-size: 13px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff;
+    }
+
+    /* KPI cards */
+    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .kpi-card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+    .kpi-card .kpi-label { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+    .kpi-card .kpi-value { font-size: 24px; font-weight: 700; margin: 4px 0 2px; }
+    .kpi-card .kpi-note { font-size: 12px; color: var(--muted); }
+
+    /* table */
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-top: 0; border-radius: 0 0 8px 8px; }
+    .grid-shell.has-toolbar .table-wrap { border-radius: 0 0 8px 8px; }
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 640px; }
+    .admin-table th, .admin-table td { padding: 9px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    .admin-table thead th { background: #f3ece0; position: sticky; top: 0; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); white-space: nowrap; }
+    .admin-table td.number, .admin-table th.number { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .admin-table tbody tr.is-selected { background: #fff5e0; box-shadow: inset 3px 0 0 var(--accent); }
+    .admin-table tbody tr:hover { background: #fbf7ee; }
+    .admin-table tfoot td { padding: 9px 12px; border-top: 2px solid var(--line); font-weight: 700; background: #f3ece0; text-align: right; font-variant-numeric: tabular-nums; }
+    .admin-table tfoot td.label { text-align: left; }
+    .cell-sub { display: block; color: var(--muted); font-size: 12px; }
+    .row-actions { display: flex; gap: 8px; white-space: nowrap; }
+    .row-actions a, .link { color: var(--link); text-decoration: none; font-size: 12px; }
+    .row-actions a:hover, .link:hover { text-decoration: underline; }
+    .mono { font-family: "Cascadia Code", Consolas, monospace; font-size: 12.5px; }
+
+    /* badges */
+    .badge { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--soft); color: var(--ink); white-space: nowrap; font-weight: 600; }
+    .badge.ok { background: var(--ok-soft); color: var(--ok); }
+    .badge.warning { background: var(--warn-soft); color: var(--warning); }
+    .badge.danger { background: var(--danger-soft); color: var(--danger); }
+    .badge.info { background: var(--accent-soft); color: var(--accent); }
+    .badge.neutral { background: #ece7dd; color: var(--muted); }
+
+    /* grid shell with detail panel */
+    .grid-shell { display: grid; grid-template-columns: 1fr 280px; gap: 16px; align-items: start; }
+    .grid-shell.full { grid-template-columns: 1fr; }
+    @media (max-width: 900px) { .grid-shell { grid-template-columns: 1fr; } }
+    .detail-panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+    .detail-panel h3 { margin: 0 0 12px; font-size: 14px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+    .detail-panel .sel-name { font-weight: 700; margin: 0 0 12px; font-size: 15px; }
+    .field-row { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 13px; }
+    .field-row:last-child { border-bottom: 0; }
+    .field-label { color: var(--muted); }
+    .field-value { text-align: right; font-weight: 500; }
+    .field-block { padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 13px; }
+    .field-block:last-child { border-bottom: 0; }
+    .field-block .field-label { display: block; margin-bottom: 4px; }
+    .field-block ul { margin: 0; padding-left: 18px; }
+
+    /* div-based ARIA grid */
+    .aria-grid { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 13px; }
+    .aria-grid [role="row"] { display: grid; border-bottom: 1px solid var(--line); }
+    .aria-grid [role="row"]:last-child { border-bottom: 0; }
+    .aria-grid [role="columnheader"] { background: #f3ece0; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 700; }
+    .aria-grid [role="columnheader"], .aria-grid [role="gridcell"] { padding: 9px 12px; }
+    .aria-grid [role="row"].is-selected { background: #fff5e0; }
+
+    /* meters / bars */
+    .meter { height: 8px; background: var(--soft); border-radius: 4px; overflow: hidden; min-width: 80px; }
+    .meter > span { display: block; height: 100%; background: var(--accent); }
+    .meter.ok > span { background: var(--ok); }
+    .meter.warn > span { background: var(--warning); }
+    .meter.danger > span { background: var(--danger); }
+
+    details.row-expand { font-size: 13px; }
+    details.row-expand summary { cursor: pointer; color: var(--link); }
+    .nested-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12.5px; }
+    .nested-table th, .nested-table td { padding: 6px 8px; border: 1px solid var(--line); text-align: left; }
+
+    .status-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: baseline; }
+    .status-dot.ok { background: var(--ok); }
+    .status-dot.warn { background: var(--warning); }
+    .status-dot.danger { background: var(--danger); }
+    .status-dot.idle { background: #b8ab95; }
+
+    .chip { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 5px; background: var(--soft); color: var(--ink); border: 1px solid var(--line); white-space: nowrap; }
+    .admin-table tbody tr.group-row td { background: #efe7d6; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); }
+    .admin-table tbody tr.group-row:hover td { background: #efe7d6; }
+    .admin-table.sheet { min-width: 1100px; }
+    .admin-table.sheet td, .admin-table.sheet th { border-right: 1px solid var(--line); }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-header">
+      <p class="eyebrow">Content Extraction Demo Page</p>
+      <h1>Page 7 - Tables, Grids, And Admin Dashboards</h1>
+      <p>
+        This standalone page contains realistic table, grid, and dashboard examples for testing extraction of rows, columns, headers, selected records, status badges, totals, nested cell content, grouped data, expandable details, KPI cards, and admin summaries. Some examples use native tables; others imitate div-based ARIA grids and dashboard cards.
+      </p>
+    </header>
+
+    <section class="example-card" id="example-01">
+      <header class="example-header"><p class="example-kicker">Example 01</p><h2>Invoice Line Item Reconciliation Table</h2></header>
+      <p class="example-description">This example imitates a finance reconciliation table for invoice line items. It tests extraction of row records with SKU, description, quantity, unit price, expected amount, received amount, tax, discount, variance, status, and a summary total row.</p>
+
+      <div class="grid-shell has-toolbar">
+        <div>
+          <div class="admin-toolbar">
+            <div class="toolbar-left">
+              <span class="tb-field">Invoice <b>INV-2026-00841</b></span>
+              <span class="tb-field">Customer <b>Cedar &amp; Pine Design LLC</b></span>
+              <span class="tb-field">Service period <b>May 1-31, 2026</b></span>
+              <span class="badge warning">Needs review</span>
+            </div>
+            <div class="toolbar-right">
+              <span class="tb-field">5 line items</span>
+              <input aria-label="Filter line items" placeholder="Filter" data-local-filter="#ex01-invoice-table tbody tr">
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table" id="ex01-invoice-table">
+              <thead><tr>
+                <th>Select</th><th>SKU</th><th>Description</th><th class="number">Qty</th><th class="number">Unit price</th>
+                <th class="number">Expected</th><th class="number">Received</th><th class="number">Tax</th><th class="number">Discount</th><th class="number">Variance</th><th>Status</th><th>Actions</th>
+              </tr></thead>
+              <tbody>
+                <tr data-select-row="ex01"><td><input type="checkbox" checked aria-label="Select line item SEAT-BUS-24"></td><td class="mono">SEAT-BUS-24</td><td>Business platform seats</td><td class="number">24</td><td class="number">$18.00</td><td class="number">$432.00</td><td class="number">$432.00</td><td class="number">$37.15</td><td class="number">$0.00</td><td class="number">$0.00</td><td><span class="badge ok">Matched</span></td><td><div class="row-actions"><a href="#">View</a><a href="#">Comment</a></div></td></tr>
+                <tr data-select-row="ex01"><td><input type="checkbox" aria-label="Select line item ADD-AUDIT-01"></td><td class="mono">ADD-AUDIT-01</td><td>Audit log retention add-on</td><td class="number">1</td><td class="number">$96.00</td><td class="number">$96.00</td><td class="number">$96.00</td><td class="number">$8.25</td><td class="number">$0.00</td><td class="number">$0.00</td><td><span class="badge ok">Matched</span></td><td><div class="row-actions"><a href="#">View</a><a href="#">Comment</a></div></td></tr>
+                <tr class="is-selected" data-select-row="ex01"><td><input type="checkbox" checked aria-label="Select line item ADD-SUPPORT-PR"></td><td class="mono">ADD-SUPPORT-PR</td><td>Priority support package</td><td class="number">1</td><td class="number">$150.00</td><td class="number">$150.00</td><td class="number">$135.00</td><td class="number">$11.61</td><td class="number">-$15.00</td><td class="number">-$15.00</td><td><span class="badge warning">Review</span></td><td><div class="row-actions"><a href="#">View</a><a href="#">Resolve</a></div></td></tr>
+                <tr data-select-row="ex01"><td><input type="checkbox" aria-label="Select line item CRD-PRORATE-04"></td><td class="mono">CRD-PRORATE-04</td><td>Proration credit for removed seats</td><td class="number">1</td><td class="number">-$42.00</td><td class="number">-$42.00</td><td class="number">-$42.00</td><td class="number">-$3.61</td><td class="number">$0.00</td><td class="number">$0.00</td><td><span class="badge ok">Matched</span></td><td><div class="row-actions"><a href="#">View</a></div></td></tr>
+                <tr data-select-row="ex01"><td><input type="checkbox" aria-label="Select line item FEE-SVC-01"></td><td class="mono">FEE-SVC-01</td><td>Service processing fee</td><td class="number">1</td><td class="number">$12.00</td><td class="number">$12.00</td><td class="number">$12.00</td><td class="number">$1.03</td><td class="number">$0.00</td><td class="number">$0.00</td><td><span class="badge ok">Matched</span></td><td><div class="row-actions"><a href="#">View</a></div></td></tr>
+              </tbody>
+              <tfoot><tr>
+                <td class="label" colspan="5">Totals</td><td>$648.00</td><td>$633.00</td><td>$54.43</td><td>-$15.00</td><td>-$15.00</td><td colspan="2"></td>
+              </tr></tfoot>
+            </table>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected line item detail">
+          <h3>Selected line item</h3>
+          <p class="sel-name mono">ADD-SUPPORT-PR</p>
+          <div class="field-block"><span class="field-label">Exception reason</span>Discount applied on received invoice but not expected quote</div>
+          <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Renee Coleman</span></div>
+          <div class="field-row"><span class="field-label">Resolution due</span><span class="field-value">June 3, 2026</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-02">
+      <header class="example-header"><p class="example-kicker">Example 02</p><h2>User Permissions Admin Grid</h2></header>
+      <p class="example-description">This example imitates a workspace permissions grid. It tests extraction of user rows, roles, teams, permission columns, MFA state, last active timestamp, and selected user detail without confusing permission checkboxes with row selection checkboxes.</p>
+
+      <div class="grid-shell has-toolbar">
+        <div>
+          <div class="admin-toolbar">
+            <div class="toolbar-left">
+              <span class="tb-field">Workspace <b>Northwind Analytics</b></span>
+              <input aria-label="Search users" value="billing">
+              <select aria-label="Filter"><option selected>Active users</option><option>All users</option></select>
+            </div>
+            <div class="toolbar-right"><span class="tb-field">6 users</span></div>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table" id="ex02-perms">
+              <thead><tr>
+                <th>Select</th><th>User</th><th>Email</th><th>Team</th><th>Role</th><th>Invoices</th><th>Payment methods</th><th>Seats</th><th>Reports</th><th>Admin console</th><th>MFA</th><th>Last active</th><th>Status</th>
+              </tr></thead>
+              <tbody>
+                <tr class="is-selected" data-select-row="ex02"><td><input type="checkbox" checked aria-label="Select row Anika Sharma"></td><td>Anika Sharma</td><td>anika.sharma@example.test</td><td>Finance</td><td>Billing manager</td><td><input type="checkbox" checked aria-label="Anika Sharma can access invoices"></td><td><input type="checkbox" checked aria-label="Anika Sharma can access payment methods"></td><td><input type="checkbox" checked aria-label="Anika Sharma can access seats"></td><td><input type="checkbox" checked aria-label="Anika Sharma can access reports"></td><td><input type="checkbox" aria-label="Anika Sharma can access admin console"></td><td>Enabled</td><td>May 31, 2026, 11:18 AM</td><td><span class="badge ok">Active</span></td></tr>
+                <tr data-select-row="ex02"><td><input type="checkbox" aria-label="Select row Maya Chen"></td><td>Maya Chen</td><td>maya.chen@example.test</td><td>Product</td><td>Billing manager</td><td><input type="checkbox" checked aria-label="Maya Chen can access invoices"></td><td><input type="checkbox" aria-label="Maya Chen can access payment methods"></td><td><input type="checkbox" checked aria-label="Maya Chen can access seats"></td><td><input type="checkbox" checked aria-label="Maya Chen can access reports"></td><td><input type="checkbox" aria-label="Maya Chen can access admin console"></td><td>Enabled</td><td>May 31, 2026, 9:40 AM</td><td><span class="badge ok">Active</span></td></tr>
+                <tr data-select-row="ex02"><td><input type="checkbox" aria-label="Select row Renee Coleman"></td><td>Renee Coleman</td><td>renee.coleman@example.test</td><td>Finance</td><td>Workspace admin</td><td><input type="checkbox" checked aria-label="Renee Coleman can access invoices"></td><td><input type="checkbox" checked aria-label="Renee Coleman can access payment methods"></td><td><input type="checkbox" checked aria-label="Renee Coleman can access seats"></td><td><input type="checkbox" checked aria-label="Renee Coleman can access reports"></td><td><input type="checkbox" checked aria-label="Renee Coleman can access admin console"></td><td>Enabled</td><td>May 30, 2026, 5:12 PM</td><td><span class="badge ok">Active</span></td></tr>
+                <tr data-select-row="ex02"><td><input type="checkbox" aria-label="Select row Theo Grant"></td><td>Theo Grant</td><td>theo.grant@example.test</td><td>Research</td><td>Viewer</td><td><input type="checkbox" aria-label="Theo Grant can access invoices"></td><td><input type="checkbox" aria-label="Theo Grant can access payment methods"></td><td><input type="checkbox" aria-label="Theo Grant can access seats"></td><td><input type="checkbox" checked aria-label="Theo Grant can access reports"></td><td><input type="checkbox" aria-label="Theo Grant can access admin console"></td><td>Enabled</td><td>May 29, 2026, 3:04 PM</td><td><span class="badge ok">Active</span></td></tr>
+                <tr data-select-row="ex02"><td><input type="checkbox" aria-label="Select row Lina Romero"></td><td>Lina Romero</td><td>lina.romero@example.test</td><td>Design</td><td>Editor</td><td><input type="checkbox" aria-label="Lina Romero can access invoices"></td><td><input type="checkbox" aria-label="Lina Romero can access payment methods"></td><td><input type="checkbox" aria-label="Lina Romero can access seats"></td><td><input type="checkbox" checked aria-label="Lina Romero can access reports"></td><td><input type="checkbox" aria-label="Lina Romero can access admin console"></td><td>Not set up</td><td>Never</td><td><span class="badge warning">Invited</span></td></tr>
+                <tr data-select-row="ex02"><td><input type="checkbox" aria-label="Select row Owen Brooks"></td><td>Owen Brooks</td><td>owen.brooks@example.test</td><td>Operations</td><td>Billing manager</td><td><input type="checkbox" checked aria-label="Owen Brooks can access invoices"></td><td><input type="checkbox" checked aria-label="Owen Brooks can access payment methods"></td><td><input type="checkbox" aria-label="Owen Brooks can access seats"></td><td><input type="checkbox" checked aria-label="Owen Brooks can access reports"></td><td><input type="checkbox" aria-label="Owen Brooks can access admin console"></td><td>Enabled</td><td>May 10, 2026, 1:20 PM</td><td><span class="badge danger">Suspended</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected user detail">
+          <h3>Selected user</h3>
+          <p class="sel-name">Anika Sharma</p>
+          <div class="field-row"><span class="field-label">User ID</span><span class="field-value mono">usr_204884</span></div>
+          <div class="field-block"><span class="field-label">Granted permissions</span><ul><li>Invoices</li><li>Payment methods</li><li>Seats</li><li>Reports</li></ul></div>
+          <div class="field-block"><span class="field-label">Restricted permissions</span><ul><li>Admin console</li><li>Ownership transfer</li><li>SSO settings</li></ul></div>
+          <div class="field-row"><span class="field-label">Role changed by</span><span class="field-value">Renee Coleman</span></div>
+          <div class="field-row"><span class="field-label">Role changed at</span><span class="field-value">May 28, 2026, 4:42 PM</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-03">
+      <header class="example-header"><p class="example-kicker">Example 03</p><h2>Inventory Stock Management Grid</h2></header>
+      <p class="example-description">This example imitates an inventory operations grid. It tests extraction of SKU rows, nested product information, stock quantities, warehouse locations, reorder thresholds, supplier names, inbound shipment dates, and stock status badges.</p>
+
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Total SKUs</div><div class="kpi-value">7</div></div>
+        <div class="kpi-card"><div class="kpi-label">Low stock</div><div class="kpi-value">2</div></div>
+        <div class="kpi-card"><div class="kpi-label">Inbound units</div><div class="kpi-value">440</div></div>
+        <div class="kpi-card"><div class="kpi-label">Inventory value</div><div class="kpi-value">$38,420</div></div>
+      </div>
+
+      <div class="grid-shell has-toolbar">
+        <div>
+          <div class="admin-toolbar">
+            <div class="toolbar-left">
+              <select aria-label="Warehouse filter"><option selected>All warehouses</option><option>Reno DC</option></select>
+              <input aria-label="Search inventory" value="backpack">
+              <span class="tb-field">Sort: <b>Lowest available stock</b></span>
+            </div>
+            <div class="toolbar-right"><span class="tb-field">7 SKUs</span></div>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr>
+                <th>SKU</th><th>Product</th><th>Warehouse</th><th class="number">Available</th><th class="number">Reserved</th><th class="number">Reorder point</th><th>Inbound</th><th>Supplier</th><th>Last counted</th><th>Status</th>
+              </tr></thead>
+              <tbody>
+                <tr class="is-selected" data-select-row="ex03"><td class="mono">BAG-TRV-22</td><td>Canvas Travel Backpack 22L<span class="cell-sub">Forest</span></td><td>Reno DC</td><td class="number">18</td><td class="number">7</td><td class="number">25</td><td>120 arriving June 4</td><td>Fieldmark Supply</td><td>May 29, 2026</td><td><span class="badge warning">Low stock</span></td></tr>
+                <tr data-select-row="ex03"><td class="mono">BAG-TRV-22-CH</td><td>Canvas Travel Backpack 22L<span class="cell-sub">Charcoal</span></td><td>Reno DC</td><td class="number">64</td><td class="number">12</td><td class="number">25</td><td>0</td><td>Fieldmark Supply</td><td>May 29, 2026</td><td><span class="badge ok">Healthy</span></td></tr>
+                <tr data-select-row="ex03"><td class="mono">BAG-COM-28</td><td>TrailPack Commuter 28L<span class="cell-sub">Olive</span></td><td>Portland DC</td><td class="number">9</td><td class="number">4</td><td class="number">20</td><td>80 arriving June 7</td><td>TrailKnit Logistics</td><td>May 30, 2026</td><td><span class="badge danger">Critical</span></td></tr>
+                <tr data-select-row="ex03"><td class="mono">BAG-FLT-18</td><td>Packwell City Flight Bag<span class="cell-sub">Black</span></td><td>Las Vegas DC</td><td class="number">112</td><td class="number">22</td><td class="number">30</td><td>0</td><td>Packwell Wholesale</td><td>May 27, 2026</td><td><span class="badge ok">Healthy</span></td></tr>
+                <tr data-select-row="ex03"><td class="mono">BAG-WKD-35</td><td>Fieldmark Weekender Backpack<span class="cell-sub">Navy</span></td><td>Reno DC</td><td class="number">42</td><td class="number">9</td><td class="number">18</td><td>60 arriving June 11</td><td>Fieldmark Supply</td><td>May 28, 2026</td><td><span class="badge ok">Healthy</span></td></tr>
+                <tr data-select-row="ex03"><td class="mono">BAG-SLM-16</td><td>NexaSlim Tech Backpack<span class="cell-sub">Graphite</span></td><td>Portland DC</td><td class="number">0</td><td class="number">31</td><td class="number">40</td><td>180 arriving June 15</td><td>Nexa Distribution</td><td>May 25, 2026</td><td><span class="badge danger">Backordered</span></td></tr>
+                <tr data-select-row="ex03"><td class="mono">BAG-ORG-05</td><td>Canvas Organizer Pouch<span class="cell-sub">Olive</span></td><td>Reno DC</td><td class="number">195</td><td class="number">14</td><td class="number">50</td><td>0</td><td>Fieldmark Supply</td><td>May 30, 2026</td><td><span class="badge ok">Healthy</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected SKU detail">
+          <h3>Selected SKU</h3>
+          <p class="sel-name mono">BAG-TRV-22</p>
+          <div class="field-row"><span class="field-label">Inventory value</span><span class="field-value">$1,602.00</span></div>
+          <div class="field-block"><span class="field-label">Reorder recommendation</span>Create purchase order for 100 units</div>
+          <div class="field-row"><span class="field-label">Stockout risk</span><span class="field-value">Medium</span></div>
+          <div class="field-row"><span class="field-label">Open purchase order</span><span class="field-value mono">PO-2026-7718</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-04">
+      <header class="example-header"><p class="example-kicker">Example 04</p><h2>Order Management Dashboard Table</h2></header>
+      <p class="example-description">This example imitates an ecommerce order admin dashboard. It tests extraction of KPI cards, order rows, payment status, fulfillment status, customer information, shipping method, order totals, and selected order detail sidebar.</p>
+
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Orders today</div><div class="kpi-value">128</div><div class="kpi-note">+14 percent vs yesterday</div></div>
+        <div class="kpi-card"><div class="kpi-label">Unfulfilled</div><div class="kpi-value">37</div><div class="kpi-note">12 high priority</div></div>
+        <div class="kpi-card"><div class="kpi-label">Revenue today</div><div class="kpi-value">$18,420</div><div class="kpi-note">before refunds</div></div>
+        <div class="kpi-card"><div class="kpi-label">Average order value</div><div class="kpi-value">$143.91</div><div class="kpi-note">last 24 hours</div></div>
+      </div>
+
+      <div class="grid-shell has-toolbar">
+        <div>
+          <div class="admin-toolbar">
+            <div class="toolbar-left">
+              <input aria-label="Search orders" value="ORD-2026">
+              <select aria-label="Status filter"><option selected>All open</option><option>Unfulfilled</option></select>
+              <span class="tb-field">Sort: <b>Newest first</b></span>
+            </div>
+            <div class="toolbar-right"><span class="tb-field">6 orders</span></div>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Payment</th><th>Fulfillment</th><th>Shipping</th><th class="number">Total</th><th>Created</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr class="is-selected" data-select-row="ex04"><td><a class="link" href="/demo/admin/orders/ORD-2026-104922">ORD-2026-104922</a></td><td>Jordan Ellis<span class="cell-sub">jordan.ellis@example.test</span></td><td>4 items</td><td><span class="badge ok">Paid</span></td><td><span class="badge info">Processing</span></td><td>Standard ground</td><td class="number">$159.07</td><td>May 31, 2026, 10:18 AM</td><td><div class="row-actions"><a href="#">View</a><a href="#">Print</a></div></td></tr>
+                <tr data-select-row="ex04"><td><a class="link" href="/demo/admin/orders/ORD-2026-104918">ORD-2026-104918</a></td><td>Grace Miller<span class="cell-sub">grace.miller@example.test</span></td><td>2 items</td><td><span class="badge ok">Paid</span></td><td><span class="badge warning">Ready to ship</span></td><td>Expedited</td><td class="number">$214.50</td><td>May 31, 2026, 9:42 AM</td><td><div class="row-actions"><a href="#">View</a><a href="#">Ship</a></div></td></tr>
+                <tr data-select-row="ex04"><td><a class="link" href="/demo/admin/orders/ORD-2026-104901">ORD-2026-104901</a></td><td>Priya Shah<span class="cell-sub">priya.shah@example.test</span></td><td>1 item</td><td><span class="badge neutral">Authorized</span></td><td><span class="badge warning">Hold</span></td><td>Freight</td><td class="number">$1,287.60</td><td>May 31, 2026, 8:05 AM</td><td><div class="row-actions"><a href="#">View</a><a href="#">Release</a></div></td></tr>
+                <tr data-select-row="ex04"><td><a class="link" href="/demo/admin/orders/ORD-2026-104884">ORD-2026-104884</a></td><td>Noah Kim<span class="cell-sub">noah.kim@example.test</span></td><td>3 items</td><td><span class="badge ok">Paid</span></td><td><span class="badge ok">Shipped</span></td><td>Standard ground</td><td class="number">$86.40</td><td>May 30, 2026, 6:31 PM</td><td><div class="row-actions"><a href="#">View</a><a href="#">Track</a></div></td></tr>
+                <tr data-select-row="ex04"><td><a class="link" href="/demo/admin/orders/ORD-2026-104870">ORD-2026-104870</a></td><td>Lina Romero<span class="cell-sub">lina.romero@example.test</span></td><td>5 items</td><td><span class="badge danger">Failed</span></td><td><span class="badge danger">Blocked</span></td><td>Standard ground</td><td class="number">$342.18</td><td>May 30, 2026, 4:12 PM</td><td><div class="row-actions"><a href="#">View</a><a href="#">Retry payment</a></div></td></tr>
+                <tr data-select-row="ex04"><td><a class="link" href="/demo/admin/orders/ORD-2026-104861">ORD-2026-104861</a></td><td>Owen Brooks<span class="cell-sub">owen.brooks@example.test</span></td><td>2 items</td><td><span class="badge neutral">Refunded</span></td><td><span class="badge neutral">Returned</span></td><td>Return received</td><td class="number">-$48.00</td><td>May 29, 2026, 11:08 AM</td><td><div class="row-actions"><a href="#">View</a></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected order detail">
+          <h3>Selected order</h3>
+          <p class="sel-name mono">ORD-2026-104922</p>
+          <div class="field-block"><span class="field-label">Shipping address</span>120 King Street, Dock B, San Francisco, CA 94107</div>
+          <div class="field-block"><span class="field-label">Billing address</span>88 Valencia Street, Suite 402, San Francisco, CA 94103</div>
+          <div class="field-row"><span class="field-label">Risk score</span><span class="field-value">Low</span></div>
+          <div class="field-block"><span class="field-label">Packing note</span>Use freight entrance on King Street</div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-05">
+      <header class="example-header"><p class="example-kicker">Example 05</p><h2>Banking Transaction Ledger</h2></header>
+      <p class="example-description">This example imitates a banking transaction ledger. It tests extraction of transaction rows, posted and pending statuses, debit and credit amounts, running balance, categories, merchant names, masked account labels, and selected transaction details.</p>
+
+      <div class="grid-shell has-toolbar">
+        <div>
+          <div class="admin-toolbar">
+            <div class="toolbar-left">
+              <span class="tb-field">Account <b>Operating Checking ending in 1842</b></span>
+              <span class="tb-field">Current balance <b>$48,920.18</b></span>
+              <span class="tb-field">Available balance <b>$46,420.18</b></span>
+              <span class="tb-field">Statement period <b>May 2026</b></span>
+            </div>
+            <div class="toolbar-right">
+              <input aria-label="Search transactions" value="vendor">
+              <select aria-label="Type filter"><option selected>All transactions</option><option>Debits</option></select>
+              <span class="tb-field">8 transactions</span>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Reference</th><th class="number">Debit</th><th class="number">Credit</th><th class="number">Balance</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr class="is-selected" data-select-row="ex05"><td>May 31, 2026</td><td>ACH transfer to Tax Savings</td><td>Transfer</td><td class="mono">TRN-8841-6029</td><td class="number">$2,500.00</td><td class="number"></td><td class="number">$48,920.18</td><td><span class="badge info">Scheduled</span></td></tr>
+                <tr data-select-row="ex05"><td>May 30, 2026</td><td>Northstar Cloud Services</td><td>Software</td><td class="mono">INV-2026-00841</td><td class="number">$300.00</td><td class="number"></td><td class="number">$51,420.18</td><td><span class="badge ok">Posted</span></td></tr>
+                <tr data-select-row="ex05"><td>May 29, 2026</td><td>Client payment - Harbor Cafe</td><td>Income</td><td class="mono">DEP-77120</td><td class="number"></td><td class="number">$4,800.00</td><td class="number">$51,720.18</td><td><span class="badge ok">Posted</span></td></tr>
+                <tr data-select-row="ex05"><td>May 28, 2026</td><td>Payroll batch</td><td>Payroll</td><td class="mono">PAY-2026-102</td><td class="number">$12,884.42</td><td class="number"></td><td class="number">$46,920.18</td><td><span class="badge ok">Posted</span></td></tr>
+                <tr data-select-row="ex05"><td>May 27, 2026</td><td>Office lease payment</td><td>Rent</td><td class="mono">ACH-55820</td><td class="number">$7,200.00</td><td class="number"></td><td class="number">$59,804.60</td><td><span class="badge ok">Posted</span></td></tr>
+                <tr data-select-row="ex05"><td>May 26, 2026</td><td>Refund from Example Electronics</td><td>Refund</td><td class="mono">RF-20441</td><td class="number"></td><td class="number">$242.19</td><td class="number">$67,004.60</td><td><span class="badge ok">Posted</span></td></tr>
+                <tr data-select-row="ex05"><td>May 24, 2026</td><td>Card purchase - Hardware Supply</td><td>Supplies</td><td class="mono">CARD-9921</td><td class="number">$184.22</td><td class="number"></td><td class="number">$66,762.41</td><td><span class="badge ok">Posted</span></td></tr>
+                <tr data-select-row="ex05"><td>May 23, 2026</td><td>Interest credit</td><td>Interest</td><td class="mono">INT-0523</td><td class="number"></td><td class="number">$18.44</td><td class="number">$66,946.63</td><td><span class="badge ok">Posted</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected transaction detail">
+          <h3>Selected transaction</h3>
+          <p class="sel-name mono">TRN-8841-6029</p>
+          <div class="field-row"><span class="field-label">Created</span><span class="field-value">May 31, 2026, 10:42 AM PT</span></div>
+          <div class="field-row"><span class="field-label">Submitted by</span><span class="field-value">Renee Coleman</span></div>
+          <div class="field-row"><span class="field-label">Authorization method</span><span class="field-value">Authenticator app</span></div>
+          <div class="field-row"><span class="field-label">Cancelable until</span><span class="field-value">June 2, 2026, 11:59 PM PT</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-06">
+      <header class="example-header"><p class="example-kicker">Example 06</p><h2>Infrastructure Monitoring Dashboard</h2></header>
+      <p class="example-description">This example imitates an infrastructure monitoring dashboard. It tests extraction of KPI cards, service rows, status badges, latency values, error rates, uptime percentages, incident counts, and selected service details.</p>
+
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Healthy services</div><div class="kpi-value">18 of 22</div><div class="kpi-note">last 5 minutes</div></div>
+        <div class="kpi-card"><div class="kpi-label">Open incidents</div><div class="kpi-value">2</div><div class="kpi-note">1 major, 1 minor</div></div>
+        <div class="kpi-card"><div class="kpi-label">Median API latency</div><div class="kpi-value">142 ms</div><div class="kpi-note">p50 across edge regions</div></div>
+        <div class="kpi-card"><div class="kpi-label">Error rate</div><div class="kpi-value">0.38 percent</div><div class="kpi-note">last 15 minutes</div></div>
+      </div>
+
+      <div class="grid-shell has-toolbar">
+        <div>
+          <div class="admin-toolbar">
+            <div class="toolbar-left">
+              <select aria-label="Environment"><option selected>Production</option><option>Staging</option></select>
+              <select aria-label="Region"><option selected>All regions</option><option>US West</option></select>
+            </div>
+            <div class="toolbar-right"><span class="tb-field">Refresh interval <b>30 seconds</b></span></div>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Service</th><th>Region</th><th>Status</th><th class="number">p50 latency</th><th class="number">p95 latency</th><th class="number">Error rate</th><th class="number">Uptime 24h</th><th>Open incidents</th><th>Last deploy</th></tr></thead>
+              <tbody>
+                <tr class="is-selected" data-select-row="ex06"><td>Extraction API</td><td>Global</td><td><span class="badge warning">Degraded</span></td><td class="number">184 ms</td><td class="number">612 ms</td><td class="number">1.24 percent</td><td class="number">99.41 percent</td><td class="mono">INC-2026-1184</td><td>May 31, 2026, 8:14 AM</td></tr>
+                <tr data-select-row="ex06"><td>Auth Gateway</td><td>Global</td><td><span class="badge ok">Healthy</span></td><td class="number">64 ms</td><td class="number">148 ms</td><td class="number">0.03 percent</td><td class="number">99.99 percent</td><td>None</td><td>May 29, 2026, 2:20 PM</td></tr>
+                <tr data-select-row="ex06"><td>Job Queue</td><td>US West</td><td><span class="badge warning">Warning</span></td><td class="number">210 ms</td><td class="number">1,420 ms</td><td class="number">0.18 percent</td><td class="number">99.78 percent</td><td class="mono">INC-2026-1189</td><td>May 30, 2026, 6:40 PM</td></tr>
+                <tr data-select-row="ex06"><td>Document Renderer</td><td>US East</td><td><span class="badge ok">Healthy</span></td><td class="number">98 ms</td><td class="number">244 ms</td><td class="number">0.02 percent</td><td class="number">100.00 percent</td><td>None</td><td>May 28, 2026, 9:00 AM</td></tr>
+                <tr data-select-row="ex06"><td>Search Indexer</td><td>EU Central</td><td><span class="badge ok">Healthy</span></td><td class="number">128 ms</td><td class="number">390 ms</td><td class="number">0.07 percent</td><td class="number">99.96 percent</td><td>None</td><td>May 27, 2026, 11:12 AM</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected service detail">
+          <h3>Selected service</h3>
+          <p class="sel-name">Extraction API</p>
+          <div class="field-row"><span class="field-label">Current incident</span><span class="field-value mono">INC-2026-1184</span></div>
+          <div class="field-block"><span class="field-label">Incident title</span>Elevated p95 latency for large page extraction</div>
+          <div class="field-row"><span class="field-label">Started</span><span class="field-value">May 31, 2026, 10:52 AM</span></div>
+          <div class="field-block"><span class="field-label">Current mitigation</span>Traffic shifted away from saturated workers</div>
+          <div class="field-row"><span class="field-label">On-call owner</span><span class="field-value">Rafael Ortiz</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-07">
+      <header class="example-header"><p class="example-kicker">Example 07</p><h2>Usage Billing Dashboard</h2></header>
+      <p class="example-description">This example imitates a SaaS usage billing dashboard. It tests extraction of usage metrics, account rows, plan limits, overage amounts, billing status, projected charges, and selected account usage detail.</p>
+
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Billable events this month</div><div class="kpi-value">8.42M</div></div>
+        <div class="kpi-card"><div class="kpi-label">Projected usage revenue</div><div class="kpi-value">$42,880</div></div>
+        <div class="kpi-card"><div class="kpi-label">Accounts over limit</div><div class="kpi-value">7</div></div>
+        <div class="kpi-card"><div class="kpi-label">Average utilization</div><div class="kpi-value">74 percent</div></div>
+      </div>
+
+      <div class="grid-shell has-toolbar">
+        <div>
+          <div class="admin-toolbar">
+            <div class="toolbar-left">
+              <span class="tb-field">Billing month <b>May 2026</b></span>
+              <select aria-label="Metric"><option selected>Extraction events</option><option>API calls</option></select>
+            </div>
+            <div class="toolbar-right"><span class="tb-field">Sort: <b>Highest utilization</b></span></div>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Account</th><th>Plan</th><th class="number">Included events</th><th class="number">Used events</th><th class="number">Utilization</th><th class="number">Overage</th><th class="number">Projected charge</th><th>Billing status</th><th>Owner</th></tr></thead>
+              <tbody>
+                <tr class="is-selected" data-select-row="ex07"><td><a class="link" href="/demo/billing/accounts/civic-data-lab">Civic Data Lab</a></td><td>Business</td><td class="number">500,000</td><td class="number">642,118</td><td class="number">128 percent</td><td class="number">142,118</td><td class="number">$1,421.18</td><td><span class="badge danger">Over limit</span></td><td>Owen Brooks</td></tr>
+                <tr data-select-row="ex07"><td>Atlas Product Studio</td><td>Enterprise</td><td class="number">2,000,000</td><td class="number">1,884,200</td><td class="number">94 percent</td><td class="number">0</td><td class="number">$0.00</td><td><span class="badge ok">Within limit</span></td><td>Grace Miller</td></tr>
+                <tr data-select-row="ex07"><td>Northstar Research Lab</td><td>Business</td><td class="number">500,000</td><td class="number">408,912</td><td class="number">82 percent</td><td class="number">0</td><td class="number">$0.00</td><td><span class="badge ok">Within limit</span></td><td>Priya Shah</td></tr>
+                <tr data-select-row="ex07"><td>City Museum of Design</td><td>Starter</td><td class="number">100,000</td><td class="number">121,884</td><td class="number">122 percent</td><td class="number">21,884</td><td class="number">$218.84</td><td><span class="badge danger">Over limit</span></td><td>Owen Brooks</td></tr>
+                <tr data-select-row="ex07"><td>Harbor Clinic Network</td><td>Enterprise</td><td class="number">2,000,000</td><td class="number">2,302,441</td><td class="number">115 percent</td><td class="number">302,441</td><td class="number">$2,117.09</td><td><span class="badge warning">Contract review</span></td><td>Nina Patel</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected account detail">
+          <h3>Selected account</h3>
+          <p class="sel-name">Civic Data Lab</p>
+          <div class="field-row"><span class="field-label">Contract overage rate</span><span class="field-value">$0.01 per event</span></div>
+          <div class="field-row"><span class="field-label">Usage alert threshold</span><span class="field-value">90 percent</span></div>
+          <div class="field-row"><span class="field-label">Last alert sent</span><span class="field-value">May 28, 2026</span></div>
+          <div class="field-block"><span class="field-label">Invoice owner</span>finance@civicdata.example.test</div>
+          <div class="field-block"><span class="field-label">Recommended action</span>Review usage spike from public records extraction project</div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-08">
+      <header class="example-header"><p class="example-kicker">Example 08</p><h2>Project Portfolio Status Grid</h2></header>
+      <p class="example-description">This example imitates a project management portfolio dashboard. It tests extraction of project rows, health statuses, owners, start and target dates, budget values, risks, milestones, percent complete, and selected project detail panels.</p>
+
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Active projects</div><div class="kpi-value">14</div></div>
+        <div class="kpi-card"><div class="kpi-label">At risk</div><div class="kpi-value">3</div></div>
+        <div class="kpi-card"><div class="kpi-label">Budget variance</div><div class="kpi-value">+$18,400</div></div>
+        <div class="kpi-card"><div class="kpi-label">Milestones due this week</div><div class="kpi-value">9</div></div>
+      </div>
+
+      <div class="grid-shell">
+        <div>
+          <div class="table-wrap" style="border-top:1px solid var(--line);border-radius:8px;">
+            <table class="admin-table">
+              <thead><tr><th>Project</th><th>Owner</th><th>Health</th><th>Stage</th><th class="number">Percent complete</th><th>Start date</th><th>Target date</th><th class="number">Budget</th><th class="number">Forecast</th><th>Top risk</th><th>Next milestone</th></tr></thead>
+              <tbody>
+                <tr class="is-selected" data-select-row="ex08"><td><a class="link" href="/demo/projects/customer-portal-redesign">Customer Portal Redesign</a></td><td>Maya Chen</td><td><span class="badge danger">At risk</span></td><td>Build</td><td class="number">62 percent</td><td>March 4, 2026</td><td>August 15, 2026</td><td class="number">$420,000</td><td class="number">$446,000</td><td>Accessibility review delay</td><td>Beta release June 21</td></tr>
+                <tr data-select-row="ex08"><td>Invoice Export Overhaul</td><td>Renee Coleman</td><td><span class="badge ok">On track</span></td><td>QA</td><td class="number">78 percent</td><td>April 2, 2026</td><td>July 8, 2026</td><td class="number">$180,000</td><td class="number">$176,500</td><td>CSV compatibility testing</td><td>Partner test June 10</td></tr>
+                <tr data-select-row="ex08"><td>Admin Permissions Refresh</td><td>Anika Sharma</td><td><span class="badge ok">On track</span></td><td>Design</td><td class="number">34 percent</td><td>May 1, 2026</td><td>September 1, 2026</td><td class="number">$260,000</td><td class="number">$260,000</td><td>Role migration complexity</td><td>Prototype review June 6</td></tr>
+                <tr data-select-row="ex08"><td>Search Result Sidebar Rewrite</td><td>Rafael Ortiz</td><td><span class="badge warning">Warning</span></td><td>Discovery</td><td class="number">21 percent</td><td>May 15, 2026</td><td>October 20, 2026</td><td class="number">$310,000</td><td class="number">$328,000</td><td>Legacy state model</td><td>Architecture decision June 12</td></tr>
+                <tr data-select-row="ex08"><td>Knowledge Base IA Cleanup</td><td>Owen Brooks</td><td><span class="badge ok">On track</span></td><td>Content migration</td><td class="number">54 percent</td><td>February 10, 2026</td><td>July 31, 2026</td><td class="number">$96,000</td><td class="number">$91,000</td><td>Article ownership gaps</td><td>Billing articles June 4</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected project detail">
+          <h3>Selected project</h3>
+          <p class="sel-name">Customer Portal Redesign</p>
+          <div class="field-row"><span class="field-label">Executive sponsor</span><span class="field-value">Grace Miller</span></div>
+          <div class="field-block"><span class="field-label">Current blocker</span>Accessibility review capacity</div>
+          <div class="field-row"><span class="field-label">Open decisions</span><span class="field-value">3</span></div>
+          <div class="field-block"><span class="field-label">Latest status note</span>Timeline risk due to pending review on onboarding and billing flows</div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-09">
+      <header class="example-header"><p class="example-kicker">Example 09</p><h2>Security Audit Log Table</h2></header>
+      <p class="example-description">This example imitates a security audit log admin table. It tests extraction of dense timestamped rows, actor and target fields, event types, IP addresses, outcomes, severity, risk labels, and selected event raw attributes.</p>
+
+      <div class="grid-shell has-toolbar">
+        <div>
+          <div class="admin-toolbar">
+            <div class="toolbar-left">
+              <span class="tb-field">Date range <b>Last 7 days</b></span>
+              <input aria-label="Search events" value="role changed">
+              <select aria-label="Event type filter"><option selected>User management</option><option>All events</option></select>
+            </div>
+            <div class="toolbar-right"><span class="tb-field">47 events</span></div>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Timestamp</th><th>Event ID</th><th>Actor</th><th>Event type</th><th>Target</th><th>Outcome</th><th>Severity</th><th>IP address</th><th>Risk labels</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr class="is-selected" data-select-row="ex09"><td>May 31, 2026, 11:18:44 AM PT</td><td class="mono">evt_2026_05_31_884120</td><td>Anika Sharma<span class="cell-sub">anika.sharma@example.test</span></td><td>User role changed</td><td>Maya Chen</td><td><span class="badge ok">Success</span></td><td><span class="badge warning">Medium</span></td><td class="mono">203.0.113.42</td><td>Known device, MFA satisfied</td><td><a class="link" href="#">View raw</a></td></tr>
+                <tr data-select-row="ex09"><td>May 31, 2026, 10:02:11 AM PT</td><td class="mono">evt_2026_05_31_882009</td><td>Renee Coleman</td><td>User invited</td><td>Lina Romero</td><td><span class="badge ok">Success</span></td><td><span class="badge neutral">Low</span></td><td class="mono">203.0.113.18</td><td>Known location</td><td><a class="link" href="#">View raw</a></td></tr>
+                <tr data-select-row="ex09"><td>May 30, 2026, 5:44:03 PM PT</td><td class="mono">evt_2026_05_30_771840</td><td>System</td><td>MFA reset</td><td>Theo Grant</td><td><span class="badge ok">Success</span></td><td><span class="badge warning">Medium</span></td><td class="mono">Internal</td><td>Admin approved</td><td><a class="link" href="#">View raw</a></td></tr>
+                <tr data-select-row="ex09"><td>May 30, 2026, 3:22:17 PM PT</td><td class="mono">evt_2026_05_30_771102</td><td>Owen Brooks</td><td>User suspended</td><td>Former contractor account</td><td><span class="badge ok">Success</span></td><td><span class="badge warning">Medium</span></td><td class="mono">203.0.113.77</td><td>Policy cleanup</td><td><a class="link" href="#">View raw</a></td></tr>
+                <tr data-select-row="ex09"><td>May 29, 2026, 9:10:58 AM PT</td><td class="mono">evt_2026_05_29_661204</td><td>Nina Patel</td><td>User role changed</td><td>Grace Miller</td><td><span class="badge danger">Failure</span></td><td><span class="badge danger">High</span></td><td class="mono">198.51.100.25</td><td>Permission denied, Unexpected role</td><td><a class="link" href="#">View raw</a></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected event detail">
+          <h3>Selected event</h3>
+          <p class="sel-name mono">evt_2026_05_31_884120</p>
+          <div class="field-row"><span class="field-label">Previous role</span><span class="field-value">Viewer</span></div>
+          <div class="field-row"><span class="field-label">New role</span><span class="field-value">Billing manager</span></div>
+          <div class="field-row"><span class="field-label">Request ID</span><span class="field-value mono">req_771209ab</span></div>
+          <div class="field-row"><span class="field-label">Session ID</span><span class="field-value mono">sess_44018ff</span></div>
+          <div class="field-row"><span class="field-label">User agent</span><span class="field-value">Chrome on macOS</span></div>
+          <div class="field-row"><span class="field-label">Policy version</span><span class="field-value">2026.05</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-10">
+      <header class="example-header"><p class="example-kicker">Example 10</p><h2>CRM Pipeline Forecast Grid</h2></header>
+      <p class="example-description">This example imitates a sales pipeline forecast grid. It tests extraction of opportunity rows, account names, contacts, stages, probabilities, forecast categories, values, close dates, owners, next steps, and selected opportunity detail.</p>
+
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Pipeline total</div><div class="kpi-value">$1.42M</div></div>
+        <div class="kpi-card"><div class="kpi-label">Commit forecast</div><div class="kpi-value">$612K</div></div>
+        <div class="kpi-card"><div class="kpi-label">At risk deals</div><div class="kpi-value">4</div></div>
+        <div class="kpi-card"><div class="kpi-label">Weighted forecast</div><div class="kpi-value">$742K</div></div>
+      </div>
+
+      <div class="grid-shell has-toolbar">
+        <div>
+          <div class="admin-toolbar">
+            <div class="toolbar-left">
+              <span class="tb-field">Quarter <b>Q3 2026</b></span>
+              <select aria-label="Team"><option selected>Enterprise sales</option><option>Mid-market</option></select>
+            </div>
+            <div class="toolbar-right"><span class="tb-field">Sort: <b>Close date</b></span></div>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Opportunity</th><th>Account</th><th>Contact</th><th>Stage</th><th class="number">Probability</th><th>Forecast category</th><th class="number">Amount</th><th class="number">Weighted amount</th><th>Close date</th><th>Owner</th><th>Next step</th></tr></thead>
+              <tbody>
+                <tr class="is-selected" data-select-row="ex10"><td><a class="link" href="/demo/crm/opportunities/opp-2026-7712">Westbridge Health care coordination rollout</a></td><td>Westbridge Health</td><td>Alex Rivera</td><td>Evaluation</td><td class="number">65 percent</td><td><span class="badge info">Best case</span></td><td class="number">$84,000</td><td class="number">$54,600</td><td>August 31, 2026</td><td>Nina Patel</td><td>Security questionnaire follow-up</td></tr>
+                <tr data-select-row="ex10"><td>Harbor Clinic scheduling integration</td><td>Harbor Clinic Network</td><td>Dr. Helen Park</td><td>Proposal</td><td class="number">75 percent</td><td><span class="badge ok">Commit</span></td><td class="number">$126,000</td><td class="number">$94,500</td><td>July 30, 2026</td><td>Rafael Ortiz</td><td>Procurement pricing review</td></tr>
+                <tr data-select-row="ex10"><td>City Museum event registration import</td><td>City Museum of Design</td><td>Owen Brooks</td><td>Negotiation</td><td class="number">80 percent</td><td><span class="badge ok">Commit</span></td><td class="number">$58,000</td><td class="number">$46,400</td><td>July 15, 2026</td><td>Leah Kim</td><td>Finalize data processing terms</td></tr>
+                <tr data-select-row="ex10"><td>Northstar Research lab workflow audit</td><td>Northstar Research Lab</td><td>Priya Shah</td><td>Discovery</td><td class="number">35 percent</td><td><span class="badge neutral">Pipeline</span></td><td class="number">$42,000</td><td class="number">$14,700</td><td>September 12, 2026</td><td>Owen Brooks</td><td>Confirm data retention requirements</td></tr>
+                <tr data-select-row="ex10"><td>Cedar Pine billing export expansion</td><td>Cedar &amp; Pine Design LLC</td><td>Renee Coleman</td><td>Proposal</td><td class="number">55 percent</td><td><span class="badge info">Best case</span></td><td class="number">$31,000</td><td class="number">$17,050</td><td>August 18, 2026</td><td>Maya Chen</td><td>Send revised export scope</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected opportunity detail">
+          <h3>Selected opportunity</h3>
+          <p class="sel-name">Westbridge Health care coordination rollout</p>
+          <div class="field-row"><span class="field-label">Opportunity ID</span><span class="field-value mono">OPP-2026-7712</span></div>
+          <div class="field-block"><span class="field-label">Pain points</span><ul><li>manual intake</li><li>status tracking</li><li>report exports</li></ul></div>
+          <div class="field-block"><span class="field-label">Decision process</span>Security review then procurement</div>
+          <div class="field-row"><span class="field-label">Competitor</span><span class="field-value">Legacy portal vendor</span></div>
+          <div class="field-block"><span class="field-label">Risk</span>Security questionnaire delay</div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-11">
+      <header class="example-header"><p class="example-kicker">Example 11</p><h2>Payroll Run Review Table</h2></header>
+      <p class="example-description">This example imitates a payroll run review screen. It tests extraction of employee rows, gross pay, taxes, deductions, net pay, direct deposit status, exception badges, and selected employee payroll detail.</p>
+
+      <div class="admin-toolbar" style="border-radius:8px;margin-bottom:14px;">
+        <div class="toolbar-left">
+          <span class="tb-field">Payroll run <b>PAYRUN-2026-11</b></span>
+          <span class="tb-field">Pay period <b>May 16-29, 2026</b></span>
+          <span class="tb-field">Pay date <b>May 30, 2026</b></span>
+        </div>
+        <div class="toolbar-right"><span class="badge warning">Ready for approval</span></div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Employees</div><div class="kpi-value">6</div></div>
+        <div class="kpi-card"><div class="kpi-label">Gross pay</div><div class="kpi-value">$21,884.18</div></div>
+        <div class="kpi-card"><div class="kpi-label">Taxes</div><div class="kpi-value">$4,812.90</div></div>
+        <div class="kpi-card"><div class="kpi-label">Net pay</div><div class="kpi-value">$14,906.44</div></div>
+      </div>
+
+      <div class="grid-shell">
+        <div>
+          <div class="table-wrap" style="border-top:1px solid var(--line);border-radius:8px;">
+            <table class="admin-table">
+              <thead><tr><th>Employee</th><th>Employee ID</th><th>Department</th><th class="number">Regular hours</th><th class="number">Overtime hours</th><th class="number">Gross pay</th><th class="number">Taxes</th><th class="number">Deductions</th><th class="number">Net pay</th><th>Deposit status</th><th>Exceptions</th></tr></thead>
+              <tbody>
+                <tr class="is-selected" data-select-row="ex11"><td>Taylor Brooks</td><td class="mono">EMP-20417</td><td>Operations</td><td class="number">80.00</td><td class="number">4.00</td><td class="number">$3,547.52</td><td class="number">$784.23</td><td class="number">$314.06</td><td class="number">$2,449.23</td><td><span class="badge ok">Verified</span></td><td>None</td></tr>
+                <tr data-select-row="ex11"><td>Maya Chen</td><td class="mono">EMP-20884</td><td>Product</td><td class="number">80.00</td><td class="number">0.00</td><td class="number">$4,230.77</td><td class="number">$1,018.42</td><td class="number">$528.85</td><td class="number">$2,683.50</td><td><span class="badge ok">Verified</span></td><td>None</td></tr>
+                <tr data-select-row="ex11"><td>Rafael Ortiz</td><td class="mono">EMP-20918</td><td>Engineering</td><td class="number">72.00</td><td class="number">0.00</td><td class="number">$3,807.69</td><td class="number">$898.04</td><td class="number">$486.12</td><td class="number">$2,423.53</td><td><span class="badge ok">Verified</span></td><td>Reduced hours</td></tr>
+                <tr data-select-row="ex11"><td>Lina Romero</td><td class="mono">EMP-21044</td><td>Design</td><td class="number">80.00</td><td class="number">0.00</td><td class="number">$3,923.08</td><td class="number">$912.18</td><td class="number">$402.10</td><td class="number">$2,608.80</td><td><span class="badge warning">Pending verification</span></td><td>New account</td></tr>
+                <tr data-select-row="ex11"><td>Owen Brooks</td><td class="mono">EMP-21102</td><td>Customer Education</td><td class="number">80.00</td><td class="number">2.00</td><td class="number">$3,612.11</td><td class="number">$805.91</td><td class="number">$344.19</td><td class="number">$2,462.01</td><td><span class="badge ok">Verified</span></td><td>Overtime</td></tr>
+                <tr data-select-row="ex11"><td>Priya Shah</td><td class="mono">EMP-21118</td><td>Operations</td><td class="number">80.00</td><td class="number">0.00</td><td class="number">$2,763.01</td><td class="number">$394.12</td><td class="number">$289.52</td><td class="number">$2,079.37</td><td><span class="badge neutral">Paper check</span></td><td>Direct deposit missing</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected employee detail">
+          <h3>Selected employee</h3>
+          <p class="sel-name">Taylor Brooks</p>
+          <div class="field-row"><span class="field-label">Direct deposit account</span><span class="field-value">Checking ending in 7788</span></div>
+          <div class="field-block"><span class="field-label">Federal filing status</span>Single or married filing separately</div>
+          <div class="field-row"><span class="field-label">Extra withholding</span><span class="field-value">$50.00</span></div>
+          <div class="field-block"><span class="field-label">Approval note</span>No exception for this employee</div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-12">
+      <header class="example-header"><p class="example-kicker">Example 12</p><h2>Feature Flag Rollout Dashboard</h2></header>
+      <p class="example-description">This example imitates a feature flag admin dashboard. It tests extraction of flag rows, environment, rollout percentage, targeting rules, owners, last changed timestamps, status, and selected rollout details.</p>
+
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Active flags</div><div class="kpi-value">18</div></div>
+        <div class="kpi-card"><div class="kpi-label">Paused rollouts</div><div class="kpi-value">3</div></div>
+        <div class="kpi-card"><div class="kpi-label">Production changes today</div><div class="kpi-value">6</div></div>
+        <div class="kpi-card"><div class="kpi-label">Flags at 100 percent</div><div class="kpi-value">9</div></div>
+      </div>
+
+      <div class="grid-shell has-toolbar">
+        <div>
+          <div class="admin-toolbar">
+            <div class="toolbar-left">
+              <select aria-label="Environment"><option selected>Production</option><option>Staging</option></select>
+              <input aria-label="Search flags" value="extraction">
+            </div>
+            <div class="toolbar-right"><span class="tb-field">Sort: <b>Recently changed</b></span></div>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Flag key</th><th>Feature name</th><th>Environment</th><th class="number">Rollout</th><th>Targeting</th><th>Owner</th><th>Last changed</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr class="is-selected" data-select-row="ex12"><td class="mono">extractor.card_actions_v2</td><td>Card action cleanup</td><td>Production</td><td class="number">35 percent</td><td>Business and Enterprise plans</td><td>Maya Chen</td><td>May 31, 2026, 10:44 AM</td><td><span class="badge info">Rolling out</span></td><td><div class="row-actions"><a href="#">Edit</a><a href="#">Pause</a></div></td></tr>
+                <tr data-select-row="ex12"><td class="mono">extractor.table_context</td><td>Improved table context</td><td>Production</td><td class="number">100 percent</td><td>All workspaces</td><td>Rafael Ortiz</td><td>May 30, 2026, 3:20 PM</td><td><span class="badge ok">Enabled</span></td><td><div class="row-actions"><a href="#">Edit</a></div></td></tr>
+                <tr data-select-row="ex12"><td class="mono">extractor.sidebar_selection</td><td>Selected sidebar extraction</td><td>Production</td><td class="number">20 percent</td><td>Internal beta accounts</td><td>Lina Romero</td><td>May 29, 2026, 4:05 PM</td><td><span class="badge info">Experiment</span></td><td><div class="row-actions"><a href="#">Edit</a><a href="#">Analyze</a></div></td></tr>
+                <tr data-select-row="ex12"><td class="mono">extractor.dropdown_portal_map</td><td>Portaled dropdown mapping</td><td>Production</td><td class="number">0 percent</td><td>Disabled after incident</td><td>Theo Grant</td><td>May 28, 2026, 11:12 AM</td><td><span class="badge warning">Paused</span></td><td><div class="row-actions"><a href="#">Edit</a><a href="#">Resume</a></div></td></tr>
+                <tr data-select-row="ex12"><td class="mono">extractor.timeline_rows</td><td>Timeline row grouping</td><td>Staging</td><td class="number">100 percent</td><td>QA workspaces</td><td>Owen Brooks</td><td>May 27, 2026, 9:30 AM</td><td><span class="badge neutral">Testing</span></td><td><div class="row-actions"><a href="#">Edit</a></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected rollout detail">
+          <h3>Selected flag</h3>
+          <p class="sel-name mono">extractor.card_actions_v2</p>
+          <div class="field-row"><span class="field-label">Experiment ID</span><span class="field-value mono">exp_2026_4401</span></div>
+          <div class="field-block"><span class="field-label">Success metric</span>Action label duplicate rate</div>
+          <div class="field-block"><span class="field-label">Guardrail metric</span>Extraction latency p95</div>
+          <div class="field-row"><span class="field-label">Current error budget impact</span><span class="field-value">Low</span></div>
+          <div class="field-row"><span class="field-label">Next review</span><span class="field-value">June 3, 2026</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-13">
+      <header class="example-header"><p class="example-kicker">Example 13</p><h2>Content Moderation Queue Grid</h2></header>
+      <p class="example-description">This example imitates a moderation queue. It tests extraction of reported content rows, author, reporter, content type, policy category, risk score, status, timestamps, and row-level moderation actions.</p>
+
+      <div class="grid-shell has-toolbar">
+        <div>
+          <div class="admin-toolbar">
+            <div class="toolbar-left">
+              <select aria-label="Queue"><option selected>Needs review</option><option>Escalated</option></select>
+              <select aria-label="Policy filter"><option selected>All policies</option><option>Pricing</option></select>
+            </div>
+            <div class="toolbar-right">
+              <span class="tb-field">Sort: <b>Highest risk</b></span>
+              <span class="tb-field">6 reports</span>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Report ID</th><th>Content type</th><th>Content preview</th><th>Author</th><th>Reporter</th><th>Policy category</th><th class="number">Risk score</th><th>Reported</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr class="is-selected" data-select-row="ex13"><td class="mono">MOD-2026-7712</td><td>Marketplace listing</td><td>Portable projector with case, local pickup only</td><td>Rafael O.</td><td>Mina R.</td><td>Misleading price</td><td class="number">82</td><td>May 31, 2026, 10:12 AM</td><td><span class="badge warning">Needs review</span></td><td><div class="row-actions"><a href="#">Approve</a><a href="#">Remove</a><a href="#">Escalate</a></div></td></tr>
+                <tr data-select-row="ex13"><td class="mono">MOD-2026-7715</td><td>Community post</td><td>Looking for weekend dog walker</td><td>Hannah M.</td><td>System filter</td><td>Personal info check</td><td class="number">44</td><td>May 31, 2026, 10:20 AM</td><td><span class="badge warning">Needs review</span></td><td><div class="row-actions"><a href="#">Approve</a><a href="#">Edit request</a></div></td></tr>
+                <tr data-select-row="ex13"><td class="mono">MOD-2026-7721</td><td>Review</td><td>Solid but heavier than expected</td><td>Grace M.</td><td>Merchant</td><td>Off-topic</td><td class="number">28</td><td>May 31, 2026, 9:05 AM</td><td><span class="badge warning">Needs review</span></td><td><div class="row-actions"><a href="#">Approve</a><a href="#">Remove</a></div></td></tr>
+                <tr data-select-row="ex13"><td class="mono">MOD-2026-7730</td><td>Forum answer</td><td>Inspect visible text order when ARIA is incomplete</td><td>testwright</td><td>dom_mapper</td><td>Technical accuracy dispute</td><td class="number">15</td><td>May 30, 2026, 5:44 PM</td><td><span class="badge ok">Low risk</span></td><td><div class="row-actions"><a href="#">Approve</a></div></td></tr>
+                <tr data-select-row="ex13"><td class="mono">MOD-2026-7738</td><td>Event listing</td><td>Small Team Incident Review Workshop</td><td>Ops Learning Circle</td><td>System filter</td><td>Venue verification</td><td class="number">51</td><td>May 30, 2026, 3:21 PM</td><td><span class="badge warning">Needs review</span></td><td><div class="row-actions"><a href="#">Approve</a><a href="#">Request verification</a></div></td></tr>
+                <tr data-select-row="ex13"><td class="mono">MOD-2026-7744</td><td>Classified post</td><td>Roommate wanted for August lease</td><td>Noah K.</td><td>Community member</td><td>Housing policy review</td><td class="number">67</td><td>May 30, 2026, 1:10 PM</td><td><span class="badge danger">Escalated</span></td><td><div class="row-actions"><a href="#">Approve</a><a href="#">Remove</a><a href="#">Legal review</a></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected report detail">
+          <h3>Selected report</h3>
+          <p class="sel-name mono">MOD-2026-7712</p>
+          <div class="field-row"><span class="field-label">Listing price</span><span class="field-value">$320</span></div>
+          <div class="field-block"><span class="field-label">Detected issue</span>Reporter says price changed after contact</div>
+          <div class="field-block"><span class="field-label">Moderator guidance</span>Check listing edit history before action</div>
+          <div class="field-row"><span class="field-label">Previous reports for author</span><span class="field-value">1</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-14">
+      <header class="example-header"><p class="example-kicker">Example 14</p><h2>Incident Response Dashboard</h2></header>
+      <p class="example-description">This example imitates an incident response dashboard. It tests extraction of incident rows, severity, status, affected services, timestamps, owners, update counts, customer impact, and selected incident details.</p>
+
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Open incidents</div><div class="kpi-value">2</div></div>
+        <div class="kpi-card"><div class="kpi-label">Major incidents</div><div class="kpi-value">1</div></div>
+        <div class="kpi-card"><div class="kpi-label">Services affected</div><div class="kpi-value">3</div></div>
+        <div class="kpi-card"><div class="kpi-label">Last update</div><div class="kpi-value">8 minutes ago</div></div>
+      </div>
+
+      <div class="grid-shell has-toolbar">
+        <div>
+          <div class="admin-toolbar"><div class="toolbar-left"><span class="tb-field">Incident bridge <b>Active</b></span></div><div class="toolbar-right"><input aria-label="Filter incidents" placeholder="Filter"></div></div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Incident</th><th>Severity</th><th>Status</th><th>Affected services</th><th>Started</th><th>Owner</th><th>Customer impact</th><th class="number">Updates</th><th>Next update</th></tr></thead>
+              <tbody>
+                <tr class="is-selected" data-select-row="ex14"><td><span class="mono">INC-2026-1184</span><span class="cell-sub">Elevated p95 latency for large page extraction</span></td><td><span class="badge danger">Major</span></td><td><span class="badge warning">Mitigating</span></td><td>Extraction API, Job Queue</td><td>May 31, 2026, 10:52 AM</td><td>Rafael Ortiz</td><td>Slow extraction jobs for large pages</td><td class="number">4</td><td>12:30 PM</td></tr>
+                <tr data-select-row="ex14"><td><span class="mono">INC-2026-1189</span><span class="cell-sub">Delayed background rendering jobs</span></td><td><span class="badge warning">Minor</span></td><td><span class="badge info">Investigating</span></td><td>Document Renderer</td><td>May 31, 2026, 11:34 AM</td><td>Theo Grant</td><td>Some PDF exports delayed</td><td class="number">1</td><td>12:45 PM</td></tr>
+                <tr data-select-row="ex14"><td><span class="mono">INC-2026-1172</span><span class="cell-sub">Search index lag in EU Central</span></td><td><span class="badge warning">Minor</span></td><td><span class="badge ok">Resolved</span></td><td>Search Indexer</td><td>May 30, 2026, 6:14 PM</td><td>Maya Chen</td><td>Recently uploaded files appeared late in search</td><td class="number">5</td><td>None</td></tr>
+                <tr data-select-row="ex14"><td><span class="mono">INC-2026-1168</span><span class="cell-sub">Admin console login failures</span></td><td><span class="badge danger">Major</span></td><td><span class="badge ok">Resolved</span></td><td>Auth Gateway</td><td>May 28, 2026, 9:02 AM</td><td>Nina Patel</td><td>Some admins could not log in for 11 minutes</td><td class="number">6</td><td>None</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected incident detail">
+          <h3>Selected incident</h3>
+          <p class="sel-name mono">INC-2026-1184</p>
+          <div class="field-block"><span class="field-label">Current mitigation</span>Traffic shifted away from saturated workers</div>
+          <div class="field-block"><span class="field-label">Root cause candidate</span>Worker memory pressure after deployment</div>
+          <div class="field-block"><span class="field-label">Latest update</span>Latency improving after capacity increase</div>
+          <div class="field-row"><span class="field-label">Postmortem owner</span><span class="field-value">Rafael Ortiz</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-15">
+      <header class="example-header"><p class="example-kicker">Example 15</p><h2>Warehouse Pick List Grid</h2></header>
+      <p class="example-description">This example imitates a warehouse pick list dashboard. It tests extraction of pick rows, order IDs, bin locations, SKUs, quantities, picker assignments, batch IDs, priority, and status.</p>
+
+      <div class="grid-shell has-toolbar">
+        <div>
+          <div class="admin-toolbar">
+            <div class="toolbar-left">
+              <span class="tb-field">Warehouse <b>Reno DC</b></span>
+              <span class="tb-field">Pick wave <b>WAVE-2026-0531-A</b></span>
+            </div>
+            <div class="toolbar-right">
+              <span class="tb-field">Sort: <b>Bin location</b></span>
+              <span class="tb-field">7 picks</span>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Pick ID</th><th>Order</th><th>Bin</th><th>SKU</th><th>Item</th><th class="number">Qty</th><th>Picker</th><th>Batch</th><th>Priority</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr class="is-selected" data-select-row="ex15"><td class="mono">PICK-1001</td><td class="mono">ORD-2026-104922</td><td class="mono">A-14-03</td><td class="mono">BAG-TRV-22</td><td>Canvas Travel Backpack 22L, Forest</td><td class="number">1</td><td>Luis M.</td><td class="mono">BATCH-441</td><td><span class="badge neutral">Standard</span></td><td><span class="badge info">Assigned</span></td></tr>
+                <tr data-select-row="ex15"><td class="mono">PICK-1002</td><td class="mono">ORD-2026-104922</td><td class="mono">B-02-18</td><td class="mono">BOT-STL-20</td><td>Insulated steel bottle, Slate</td><td class="number">2</td><td>Luis M.</td><td class="mono">BATCH-441</td><td><span class="badge neutral">Standard</span></td><td><span class="badge info">Assigned</span></td></tr>
+                <tr data-select-row="ex15"><td class="mono">PICK-1003</td><td class="mono">ORD-2026-104918</td><td class="mono">C-08-11</td><td class="mono">STAND-LAP-01</td><td>Foldable laptop stand, Graphite</td><td class="number">1</td><td>Anika W.</td><td class="mono">BATCH-441</td><td><span class="badge warning">Expedited</span></td><td><span class="badge ok">Picked</span></td></tr>
+                <tr data-select-row="ex15"><td class="mono">PICK-1004</td><td class="mono">ORD-2026-104901</td><td class="mono">F-01-02</td><td class="mono">CAM-FX3-02</td><td>Sony FX3 camera body</td><td class="number">1</td><td>Mei T.</td><td class="mono">BATCH-442</td><td><span class="badge warning">High value</span></td><td><span class="badge warning">QC hold</span></td></tr>
+                <tr data-select-row="ex15"><td class="mono">PICK-1005</td><td class="mono">ORD-2026-104884</td><td class="mono">A-22-09</td><td class="mono">TAG-LTH-02</td><td>Leather luggage tag, Tan</td><td class="number">1</td><td>Luis M.</td><td class="mono">BATCH-441</td><td><span class="badge neutral">Standard</span></td><td><span class="badge ok">Packed</span></td></tr>
+                <tr data-select-row="ex15"><td class="mono">PICK-1006</td><td class="mono">ORD-2026-104870</td><td class="mono">D-04-07</td><td class="mono">ORG-CAN-05</td><td>Canvas Organizer Pouch, Olive</td><td class="number">3</td><td>Anika W.</td><td class="mono">BATCH-443</td><td><span class="badge danger">Payment hold</span></td><td><span class="badge danger">Blocked</span></td></tr>
+                <tr data-select-row="ex15"><td class="mono">PICK-1007</td><td class="mono">ORD-2026-104918</td><td class="mono">E-12-01</td><td class="mono">CHG-GAN-65</td><td>Compact GaN Charger 65W, Black</td><td class="number">1</td><td>Mei T.</td><td class="mono">BATCH-441</td><td><span class="badge warning">Expedited</span></td><td><span class="badge ok">Picked</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected pick detail">
+          <h3>Selected pick</h3>
+          <p class="sel-name mono">PICK-1001</p>
+          <div class="field-row"><span class="field-label">Cart location</span><span class="field-value">Cart 3, shelf B</span></div>
+          <div class="field-block"><span class="field-label">Packing instruction</span>Place backpack in medium shipper before bottle items</div>
+          <div class="field-block"><span class="field-label">Scan requirement</span>SKU and bin scan required</div>
+          <div class="field-row"><span class="field-label">Exception note</span><span class="field-value">None</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-16">
+      <header class="example-header"><p class="example-kicker">Example 16</p><h2>Healthcare Appointment Operations Grid</h2></header>
+      <p class="example-description">This example imitates a clinic operations appointment grid. It tests extraction of appointment rows, provider names, patient names, visit times, visit types, insurance status, check-in state, room assignments, and selected appointment details.</p>
+
+      <div class="admin-toolbar" style="border-radius:8px;margin-bottom:14px;">
+        <div class="toolbar-left">
+          <span class="tb-field">Clinic <b>Downtown Clinic</b></span>
+          <span class="tb-field">Date <b>June 11, 2026</b></span>
+          <span class="tb-field">6 appointments</span>
+        </div>
+        <div class="toolbar-right"><span class="tb-field">Operational status <span class="badge ok">Normal</span></span></div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Checked in</div><div class="kpi-value">2</div></div>
+        <div class="kpi-card"><div class="kpi-label">Waiting</div><div class="kpi-value">1</div></div>
+        <div class="kpi-card"><div class="kpi-label">Running late</div><div class="kpi-value">1</div></div>
+        <div class="kpi-card"><div class="kpi-label">Open rooms</div><div class="kpi-value">3</div></div>
+      </div>
+
+      <div class="grid-shell">
+        <div>
+          <div class="table-wrap" style="border-top:1px solid var(--line);border-radius:8px;">
+            <table class="admin-table">
+              <thead><tr><th>Time</th><th>Patient</th><th>Provider</th><th>Visit type</th><th>Reason</th><th>Insurance</th><th>Check-in</th><th>Room</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr class="is-selected" data-select-row="ex16"><td>8:30 AM</td><td>Victor Lane</td><td>Dr. Hannah Cho</td><td>Follow-up</td><td>Medication review</td><td>Northstar PPO verified</td><td><span class="badge ok">Checked in</span></td><td>Room 4</td><td><span class="badge ok">Ready</span></td><td><div class="row-actions"><a href="#">Open chart</a><a href="#">Message</a></div></td></tr>
+                <tr data-select-row="ex16"><td>9:00 AM</td><td>Avery Quinn</td><td>Dr. Hannah Cho</td><td>Annual exam</td><td>Preventive visit</td><td>Eligibility pending</td><td><span class="badge warning">Waiting</span></td><td>Lobby</td><td><span class="badge warning">Insurance review</span></td><td><div class="row-actions"><a href="#">Verify</a><a href="#">Message</a></div></td></tr>
+                <tr data-select-row="ex16"><td>9:45 AM</td><td>Riley Stone</td><td>Dr. Helen Park</td><td>Orthopedics follow-up</td><td>Knee pain</td><td>Northstar PPO verified</td><td><span class="badge neutral">Not arrived</span></td><td>Unassigned</td><td><span class="badge info">Scheduled</span></td><td><div class="row-actions"><a href="#">Open chart</a></div></td></tr>
+                <tr data-select-row="ex16"><td>10:30 AM</td><td>Samira Haddad</td><td>Dr. Omar Nasser</td><td>Sports medicine consult</td><td>Shoulder pain</td><td>Self pay</td><td><span class="badge ok">Checked in</span></td><td>Room 2</td><td><span class="badge info">In visit</span></td><td><div class="row-actions"><a href="#">Open chart</a></div></td></tr>
+                <tr data-select-row="ex16"><td>11:00 AM</td><td>Noah Kim</td><td>Jamie Lee, PT</td><td>Physical therapy</td><td>Post-surgery rehab</td><td>Referral required</td><td><span class="badge neutral">Not arrived</span></td><td>PT Bay 1</td><td><span class="badge warning">Needs referral</span></td><td><div class="row-actions"><a href="#">Review referral</a></div></td></tr>
+                <tr data-select-row="ex16"><td>11:30 AM</td><td>Iris Walker</td><td>Dr. Helen Park</td><td>New patient consult</td><td>Back pain</td><td>Northstar PPO verified</td><td><span class="badge danger">Late</span></td><td>Unassigned</td><td><span class="badge danger">Running late</span></td><td><div class="row-actions"><a href="#">Message</a></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected appointment detail">
+          <h3>Selected appointment</h3>
+          <p class="sel-name">Victor Lane at 8:30 AM</p>
+          <div class="field-row"><span class="field-label">Patient ID</span><span class="field-value mono">PT-771420</span></div>
+          <div class="field-block"><span class="field-label">Preparation note</span>Review recent lipid panel before visit</div>
+          <div class="field-row"><span class="field-label">Outstanding forms</span><span class="field-value">None</span></div>
+          <div class="field-row"><span class="field-label">Preferred pharmacy</span><span class="field-value">Central Care Pharmacy</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-17">
+      <header class="example-header"><p class="example-kicker">Example 17</p><h2>University Enrollment Capacity Dashboard</h2></header>
+      <p class="example-description">This example imitates a university registrar enrollment dashboard. It tests extraction of course section rows, enrollment counts, waitlists, room capacity, instructor, schedule, status, and selected section details.</p>
+
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Open sections</div><div class="kpi-value">7</div></div>
+        <div class="kpi-card"><div class="kpi-label">Waitlisted students</div><div class="kpi-value">42</div></div>
+        <div class="kpi-card"><div class="kpi-label">Closed sections</div><div class="kpi-value">3</div></div>
+        <div class="kpi-card"><div class="kpi-label">Rooms over 90 percent</div><div class="kpi-value">5</div></div>
+      </div>
+
+      <div class="grid-shell has-toolbar">
+        <div>
+          <div class="admin-toolbar">
+            <div class="toolbar-left">
+              <span class="tb-field">Term <b>Fall 2026</b></span>
+              <select aria-label="Department"><option selected>Computer Science</option><option>Design</option></select>
+            </div>
+            <div class="toolbar-right"><span class="tb-field">Sort: <b>Utilization</b></span></div>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Course</th><th>Section</th><th>Title</th><th>Instructor</th><th>Schedule</th><th>Room</th><th class="number">Enrolled</th><th class="number">Capacity</th><th class="number">Waitlist</th><th class="number">Utilization</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr class="is-selected" data-select-row="ex17"><td class="mono">CS 340</td><td>A</td><td>Human-Centered Software Design</td><td>Dr. Hannah Cho</td><td>Mon/Wed 10:00-11:50 AM</td><td>Engineering Hall 204</td><td class="number">26</td><td class="number">32</td><td class="number">0</td><td class="number">81 percent</td><td><span class="badge ok">Open</span></td></tr>
+                <tr data-select-row="ex17"><td class="mono">CS 341</td><td>B</td><td>Interface Prototyping Lab</td><td>Lina Romero</td><td>Tue/Thu 2:00-3:20 PM</td><td>Design Studio 3</td><td class="number">24</td><td class="number">24</td><td class="number">4</td><td class="number">100 percent</td><td><span class="badge warning">Waitlist</span></td></tr>
+                <tr data-select-row="ex17"><td class="mono">CS 375</td><td>A</td><td>Browser Automation Systems</td><td>Rafael Ortiz</td><td>Fri 9:00-11:45 AM</td><td>Engineering Hall 108</td><td class="number">22</td><td class="number">24</td><td class="number">0</td><td class="number">92 percent</td><td><span class="badge ok">Open</span></td></tr>
+                <tr data-select-row="ex17"><td class="mono">INFO 280</td><td>C</td><td>Information Extraction From Web Interfaces</td><td>Maya Chen</td><td>Tue/Thu 11:00 AM-12:20 PM</td><td>Online synchronous</td><td class="number">30</td><td class="number">30</td><td class="number">8</td><td class="number">100 percent</td><td><span class="badge danger">Closed</span></td></tr>
+                <tr data-select-row="ex17"><td class="mono">DES 215</td><td>A</td><td>Designing Forms And Flows</td><td>Owen Brooks</td><td>Mon/Wed 1:00-2:20 PM</td><td>Design Hall 110</td><td class="number">16</td><td class="number">28</td><td class="number">0</td><td class="number">57 percent</td><td><span class="badge ok">Open</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected section detail">
+          <h3>Selected section</h3>
+          <p class="sel-name mono">CS 340-A</p>
+          <div class="field-row"><span class="field-label">Reserved seats</span><span class="field-value">4 for CS majors</span></div>
+          <div class="field-row"><span class="field-label">Final exam</span><span class="field-value">December 14, 2026, 8:00 AM</span></div>
+          <div class="field-block"><span class="field-label">Room equipment</span><ul><li>Projector</li><li>Recording microphone</li></ul></div>
+          <div class="field-block"><span class="field-label">Registrar note</span>Monitor enrollment after July restriction lift</div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-18">
+      <header class="example-header"><p class="example-kicker">Example 18</p><h2>Financial Reconciliation Exception Table</h2></header>
+      <p class="example-description">This example imitates a financial operations exception queue. It tests extraction of exception rows, source systems, transaction IDs, expected and actual amounts, variance, aging, owner, resolution status, and selected exception details.</p>
+
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Open exceptions</div><div class="kpi-value">23</div></div>
+        <div class="kpi-card"><div class="kpi-label">Total variance</div><div class="kpi-value">$18,442.19</div></div>
+        <div class="kpi-card"><div class="kpi-label">Aging over 7 days</div><div class="kpi-value">5</div></div>
+        <div class="kpi-card"><div class="kpi-label">Resolved today</div><div class="kpi-value">8</div></div>
+      </div>
+
+      <div class="grid-shell has-toolbar">
+        <div>
+          <div class="admin-toolbar">
+            <div class="toolbar-left">
+              <span class="tb-field">Reconciliation date <b>May 31, 2026</b></span>
+              <select aria-label="Source"><option selected>All sources</option><option>Bank</option></select>
+            </div>
+            <div class="toolbar-right"><span class="tb-field">Sort: <b>Largest variance</b></span></div>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Exception ID</th><th>Source system</th><th>Transaction ID</th><th class="number">Expected</th><th class="number">Actual</th><th class="number">Variance</th><th>Aging</th><th>Owner</th><th>Status</th><th>Resolution code</th></tr></thead>
+              <tbody>
+                <tr class="is-selected" data-select-row="ex18"><td class="mono">EXC-2026-7712</td><td>Billing</td><td class="mono">INV-2026-00841</td><td class="number">$648.00</td><td class="number">$633.00</td><td class="number">-$15.00</td><td>2 days</td><td>Renee Coleman</td><td><span class="badge warning">Needs review</span></td><td>Discount mismatch</td></tr>
+                <tr data-select-row="ex18"><td class="mono">EXC-2026-7718</td><td>Payments</td><td class="mono">PMT-77120</td><td class="number">$300.00</td><td class="number">$300.00</td><td class="number">$0.00</td><td>1 day</td><td>Theo Grant</td><td><span class="badge info">Ready to close</span></td><td>Timing difference</td></tr>
+                <tr data-select-row="ex18"><td class="mono">EXC-2026-7724</td><td>Bank</td><td class="mono">TRN-8841-6029</td><td class="number">$2,500.00</td><td class="number">$0.00</td><td class="number">-$2,500.00</td><td>0 days</td><td>Maya Chen</td><td><span class="badge info">Scheduled</span></td><td>Future dated</td></tr>
+                <tr data-select-row="ex18"><td class="mono">EXC-2026-7731</td><td>Payroll</td><td class="mono">PAYRUN-2026-11</td><td class="number">$14,906.44</td><td class="number">$14,906.44</td><td class="number">$0.00</td><td>0 days</td><td>Priya Shah</td><td><span class="badge ok">Matched</span></td><td>None</td></tr>
+                <tr data-select-row="ex18"><td class="mono">EXC-2026-7740</td><td>Vendor</td><td class="mono">ACH-55820</td><td class="number">$7,200.00</td><td class="number">$7,240.00</td><td class="number">$40.00</td><td>9 days</td><td>Owen Brooks</td><td><span class="badge danger">Escalated</span></td><td>Fee discrepancy</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected exception detail">
+          <h3>Selected exception</h3>
+          <p class="sel-name mono">EXC-2026-7712</p>
+          <div class="field-block"><span class="field-label">Root cause candidate</span>Received invoice includes account-level discount</div>
+          <div class="field-row"><span class="field-label">Linked invoice</span><span class="field-value mono">INV-2026-00841</span></div>
+          <div class="field-block"><span class="field-label">Evidence</span>Invoice PDF and CSV export</div>
+          <div class="field-block"><span class="field-label">Next action</span>Confirm expected quote discount handling</div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-19">
+      <header class="example-header"><p class="example-kicker">Example 19</p><h2>Subscription Seat Management Grid</h2></header>
+      <p class="example-description">This example imitates a SaaS subscription seat management page. It tests extraction of user rows, seat type, license status, cost center, groups, last activity, invited users, suspended users, and selected seat details.</p>
+
+      <div class="admin-toolbar" style="border-radius:8px;margin-bottom:14px;">
+        <div class="toolbar-left">
+          <span class="tb-field">Workspace <b>Atlas Product Studio</b></span>
+          <span class="tb-field">Plan <b>Business annual</b></span>
+          <span class="tb-field">Seats purchased <b>24</b></span>
+          <span class="tb-field">Seats used <b>19</b></span>
+          <span class="tb-field">Available seats <b>5</b></span>
+        </div>
+      </div>
+
+      <div class="grid-shell has-toolbar">
+        <div>
+          <div class="admin-toolbar">
+            <div class="toolbar-left">
+              <input aria-label="Search users" value="design">
+              <select aria-label="Seat filter"><option selected>All paid seats</option><option>Free seats</option></select>
+            </div>
+            <div class="toolbar-right"><span class="tb-field">Sort: <b>Last active</b></span></div>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>User</th><th>Email</th><th>Seat type</th><th>License status</th><th>Groups</th><th>Cost center</th><th>Last active</th><th class="number">Monthly cost</th><th>Provisioning</th></tr></thead>
+              <tbody>
+                <tr class="is-selected" data-select-row="ex19"><td>Maya Chen</td><td>maya.chen@example.test</td><td>Editor</td><td><span class="badge ok">Active</span></td><td><span class="chip">Product</span> <span class="chip">Design systems</span></td><td class="mono">PD-2026</td><td>May 31, 2026, 9:40 AM</td><td class="number">$24.00</td><td>SCIM</td></tr>
+                <tr data-select-row="ex19"><td>Lina Romero</td><td>lina.romero@example.test</td><td>Editor</td><td><span class="badge warning">Invited</span></td><td><span class="chip">Design</span> <span class="chip">Research</span></td><td class="mono">DS-2026</td><td>Never</td><td class="number">$24.00</td><td>Manual invite</td></tr>
+                <tr data-select-row="ex19"><td>Rafael Ortiz</td><td>rafael.ortiz@example.test</td><td>Admin</td><td><span class="badge ok">Active</span></td><td><span class="chip">Engineering</span> <span class="chip">Platform</span></td><td class="mono">ENG-2026</td><td>May 31, 2026, 10:58 AM</td><td class="number">$24.00</td><td>SCIM</td></tr>
+                <tr data-select-row="ex19"><td>Grace Miller</td><td>grace.miller@example.test</td><td>Viewer</td><td><span class="badge ok">Active</span></td><td><span class="chip">QA</span> <span class="chip">Hiring</span></td><td class="mono">QA-2026</td><td>May 30, 2026, 4:18 PM</td><td class="number">$0.00</td><td>SCIM</td></tr>
+                <tr data-select-row="ex19"><td>Owen Brooks</td><td>owen.brooks@example.test</td><td>Editor</td><td><span class="badge danger">Suspended</span></td><td><span class="chip">Education</span> <span class="chip">Content</span></td><td class="mono">EDU-2026</td><td>May 10, 2026, 1:20 PM</td><td class="number">$24.00</td><td>Manual</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected seat detail">
+          <h3>Selected user</h3>
+          <p class="sel-name">Maya Chen</p>
+          <div class="field-row"><span class="field-label">Seat ID</span><span class="field-value mono">seat_88420</span></div>
+          <div class="field-block"><span class="field-label">Assigned projects</span><ul><li>Customer Portal Redesign</li><li>Admin Permissions Refresh</li></ul></div>
+          <div class="field-row"><span class="field-label">Last permission review</span><span class="field-value">May 28, 2026</span></div>
+          <div class="field-block"><span class="field-label">Deprovisioning rule</span>Remove after 45 inactive days</div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-20">
+      <header class="example-header"><p class="example-kicker">Example 20</p><h2>API Usage And Rate Limit Dashboard</h2></header>
+      <p class="example-description">This example imitates a developer platform API usage dashboard. It is built as a div-based ARIA grid rather than a native table, to test extraction of admin grids that are not semantically tables. It tests extraction of app rows, API keys in masked form, request counts, limits, error rates, throttle counts, status, and selected app details.</p>
+
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Requests today</div><div class="kpi-value">2.84M</div></div>
+        <div class="kpi-card"><div class="kpi-label">Throttled requests</div><div class="kpi-value">18,442</div></div>
+        <div class="kpi-card"><div class="kpi-label">Error rate</div><div class="kpi-value">0.42 percent</div></div>
+        <div class="kpi-card"><div class="kpi-label">Active API keys</div><div class="kpi-value">17</div></div>
+      </div>
+
+      <div class="grid-shell has-toolbar">
+        <div>
+          <div class="admin-toolbar">
+            <div class="toolbar-left">
+              <span class="tb-field">Date range <b>Last 24 hours</b></span>
+              <select aria-label="Environment"><option selected>Production</option><option>Sandbox</option></select>
+            </div>
+            <div class="toolbar-right"><span class="tb-field">Sort: <b>Highest traffic</b></span></div>
+          </div>
+          <style>
+            #ex20-grid [role="row"] { grid-template-columns: 1.6fr 1.2fr 1.1fr .9fr 1.1fr .9fr .8fr .8fr 1.2fr .9fr; }
+          </style>
+          <div class="aria-grid" id="ex20-grid" role="grid" aria-label="API usage by application">
+            <div role="row">
+              <span role="columnheader">Application</span><span role="columnheader">API key</span><span role="columnheader">Owner</span><span role="columnheader">Requests</span><span role="columnheader">Rate limit</span><span role="columnheader">Utilization</span><span role="columnheader">Errors</span><span role="columnheader">Throttled</span><span role="columnheader">Last request</span><span role="columnheader">Status</span>
+            </div>
+            <div role="row" class="is-selected" data-select-row="ex20">
+              <span role="gridcell">Billing Export Worker</span><span role="gridcell" class="mono">key_live_****_9K2Q</span><span role="gridcell">Renee Coleman</span><span role="gridcell">842,118</span><span role="gridcell">1,000,000/day</span><span role="gridcell">84 percent</span><span role="gridcell">3,118</span><span role="gridcell">0</span><span role="gridcell">May 31, 2026, 11:58 AM</span><span role="gridcell"><span class="badge ok">Healthy</span></span>
+            </div>
+            <div role="row" data-select-row="ex20">
+              <span role="gridcell">Browser Extension Sync</span><span role="gridcell" class="mono">key_live_****_4C11</span><span role="gridcell">Rafael Ortiz</span><span role="gridcell">1,204,884</span><span role="gridcell">1,000,000/day</span><span role="gridcell">120 percent</span><span role="gridcell">8,442</span><span role="gridcell">18,442</span><span role="gridcell">May 31, 2026, 11:59 AM</span><span role="gridcell"><span class="badge danger">Throttled</span></span>
+            </div>
+            <div role="row" data-select-row="ex20">
+              <span role="gridcell">Demo Page Renderer</span><span role="gridcell" class="mono">key_live_****_8A02</span><span role="gridcell">Theo Grant</span><span role="gridcell">118,004</span><span role="gridcell">250,000/day</span><span role="gridcell">47 percent</span><span role="gridcell">98</span><span role="gridcell">0</span><span role="gridcell">May 31, 2026, 11:55 AM</span><span role="gridcell"><span class="badge ok">Healthy</span></span>
+            </div>
+            <div role="row" data-select-row="ex20">
+              <span role="gridcell">CRM Data Import</span><span role="gridcell" class="mono">key_live_****_0D91</span><span role="gridcell">Nina Patel</span><span role="gridcell">482,991</span><span role="gridcell">500,000/day</span><span role="gridcell">97 percent</span><span role="gridcell">2,194</span><span role="gridcell">1,008</span><span role="gridcell">May 31, 2026, 11:52 AM</span><span role="gridcell"><span class="badge warning">Near limit</span></span>
+            </div>
+            <div role="row" data-select-row="ex20">
+              <span role="gridcell">Analytics Report Scheduler</span><span role="gridcell" class="mono">key_live_****_661A</span><span role="gridcell">Grace Miller</span><span role="gridcell">192,410</span><span role="gridcell">500,000/day</span><span role="gridcell">38 percent</span><span role="gridcell">221</span><span role="gridcell">0</span><span role="gridcell">May 31, 2026, 11:45 AM</span><span role="gridcell"><span class="badge ok">Healthy</span></span>
+            </div>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected application detail">
+          <h3>Selected application</h3>
+          <p class="sel-name">Billing Export Worker</p>
+          <div class="field-row"><span class="field-label">App ID</span><span class="field-value mono">app_2026_8841</span></div>
+          <div class="field-block"><span class="field-label">Webhook endpoint</span><span class="mono">https://example.test/webhooks/billing-export</span></div>
+          <div class="field-block"><span class="field-label">Allowed scopes</span><span class="chip">invoices:read</span> <span class="chip">exports:write</span> <span class="chip">accounts:read</span></div>
+          <div class="field-row"><span class="field-label">Rotation due</span><span class="field-value">July 1, 2026</span></div>
+          <div class="field-row"><span class="field-label">Last deployment</span><span class="field-value">May 29, 2026</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-21">
+      <header class="example-header"><p class="example-kicker">Example 21</p><h2>Procurement Approval Queue</h2></header>
+      <p class="example-description">This example imitates a procurement approval dashboard. It tests extraction of approval rows, request IDs, vendors, requesters, departments, budget codes, amounts, approval status, due dates, and selected purchase request details.</p>
+
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Pending approvals</div><div class="kpi-value">11</div></div>
+        <div class="kpi-card"><div class="kpi-label">Total pending amount</div><div class="kpi-value">$184,220</div></div>
+        <div class="kpi-card"><div class="kpi-label">Over budget</div><div class="kpi-value">2</div></div>
+        <div class="kpi-card"><div class="kpi-label">Due today</div><div class="kpi-value">4</div></div>
+      </div>
+
+      <div class="grid-shell has-toolbar">
+        <div>
+          <div class="admin-toolbar">
+            <div class="toolbar-left">
+              <select aria-label="Queue"><option selected>My approvals</option><option>All approvals</option></select>
+              <input aria-label="Search requests" value="software">
+            </div>
+            <div class="toolbar-right"><span class="tb-field">Sort: <b>Due date</b></span></div>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Request ID</th><th>Vendor</th><th>Requester</th><th>Department</th><th>Budget code</th><th class="number">Amount</th><th>Budget status</th><th>Approval status</th><th>Due</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr class="is-selected" data-select-row="ex21"><td class="mono">REQ-2026-7712</td><td>Northstar Cloud Services</td><td>Renee Coleman</td><td>Finance</td><td class="mono">FIN-SOFT-2026</td><td class="number">$84,000</td><td><span class="badge ok">Within budget</span></td><td><span class="badge warning">Pending approval</span></td><td>June 3, 2026</td><td><div class="row-actions"><a href="#">Approve</a><a href="#">Request changes</a></div></td></tr>
+                <tr data-select-row="ex21"><td class="mono">REQ-2026-7720</td><td>Example Electronics</td><td>Priya Shah</td><td>Operations</td><td class="mono">OPS-EQUIP-2026</td><td class="number">$12,880</td><td><span class="badge danger">Over budget</span></td><td><span class="badge warning">Needs finance review</span></td><td>June 1, 2026</td><td><div class="row-actions"><a href="#">Review</a><a href="#">Escalate</a></div></td></tr>
+                <tr data-select-row="ex21"><td class="mono">REQ-2026-7728</td><td>Harbor Hall Events</td><td>Owen Brooks</td><td>Education</td><td class="mono">EDU-EVENT-2026</td><td class="number">$4,850</td><td><span class="badge ok">Within budget</span></td><td><span class="badge warning">Pending approval</span></td><td>June 2, 2026</td><td><div class="row-actions"><a href="#">Approve</a><a href="#">Reject</a></div></td></tr>
+                <tr data-select-row="ex21"><td class="mono">REQ-2026-7734</td><td>Civic Data Lab</td><td>Lina Romero</td><td>Research</td><td class="mono">RES-DATA-2026</td><td class="number">$28,400</td><td><span class="badge ok">Within budget</span></td><td><span class="badge info">Legal review</span></td><td>June 7, 2026</td><td><div class="row-actions"><a href="#">Review</a></div></td></tr>
+                <tr data-select-row="ex21"><td class="mono">REQ-2026-7742</td><td>Packwell Wholesale</td><td>Noah Kim</td><td>Warehouse</td><td class="mono">WH-INV-2026</td><td class="number">$54,090</td><td><span class="badge danger">Over budget</span></td><td><span class="badge warning">Manager review</span></td><td>June 5, 2026</td><td><div class="row-actions"><a href="#">Approve</a><a href="#">Request changes</a></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected request detail">
+          <h3>Selected request</h3>
+          <p class="sel-name mono">REQ-2026-7712</p>
+          <div class="field-block"><span class="field-label">Business justification</span>Annual renewal for billing platform and audit log retention</div>
+          <div class="field-row"><span class="field-label">Contract term</span><span class="field-value">January 18, 2027-January 17, 2028</span></div>
+          <div class="field-block"><span class="field-label">Attached documents</span><span class="chip">MSA</span> <span class="chip">Security review</span> <span class="chip">Quote</span></div>
+          <div class="field-block"><span class="field-label">Approval chain</span><ul><li>Finance manager</li><li>Legal</li><li>CFO</li></ul></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-22">
+      <header class="example-header"><p class="example-kicker">Example 22</p><h2>Spreadsheet-Like KPI Planning Grid</h2></header>
+      <p class="example-description">This example imitates an internal KPI planning spreadsheet embedded in an admin page. It tests extraction of wide grid columns, monthly targets, actuals, variance values, owners, comments, formula-like cells, and grouped row sections.</p>
+
+      <div class="admin-toolbar" style="border-radius:8px;margin-bottom:14px;">
+        <div class="toolbar-left">
+          <span class="tb-field">Planning period <b>Q3 2026</b></span>
+          <span class="tb-field">Department <b>Product Systems</b></span>
+          <span class="tb-field">Last edited <b>May 31, 2026, 11:44 AM</b></span>
+        </div>
+        <div class="toolbar-right"><span class="tb-field">Grid status <span class="badge neutral">Draft</span></span></div>
+      </div>
+
+      <div class="grid-shell">
+        <div>
+          <div class="table-wrap" style="border-top:1px solid var(--line);border-radius:8px;">
+            <table class="admin-table sheet">
+              <thead><tr><th>Metric</th><th>Owner</th><th class="number">June target</th><th class="number">June forecast</th><th class="number">July target</th><th class="number">July forecast</th><th class="number">August target</th><th class="number">August forecast</th><th>Variance</th><th>Status</th><th>Comment</th></tr></thead>
+              <tbody>
+                <tr class="group-row"><td colspan="11">Acquisition and activation</td></tr>
+                <tr class="is-selected" data-select-row="ex22"><td>New activated workspaces</td><td>Nina Patel</td><td class="number">420</td><td class="number">438</td><td class="number">470</td><td class="number">462</td><td class="number">520</td><td class="number">530</td><td>+20 vs quarter target</td><td><span class="badge ok">On track</span></td><td>Partner onboarding campaign starts mid-July.</td></tr>
+                <tr data-select-row="ex22"><td>Demo page completion rate</td><td>Owen Brooks</td><td class="number">72 percent</td><td class="number">69 percent</td><td class="number">76 percent</td><td class="number">77 percent</td><td class="number">80 percent</td><td class="number">82 percent</td><td>0 percent vs quarter target</td><td><span class="badge warning">Watch</span></td><td>Early June drop caused by long-form setup friction.</td></tr>
+                <tr data-select-row="ex22"><td>Saved extraction templates created</td><td>Maya Chen</td><td class="number">1,200</td><td class="number">1,310</td><td class="number">1,450</td><td class="number">1,480</td><td class="number">1,700</td><td class="number">1,660</td><td>+100 vs quarter target</td><td><span class="badge ok">On track</span></td><td>Template gallery expected to increase usage.</td></tr>
+                <tr class="group-row"><td colspan="11">Reliability and quality</td></tr>
+                <tr data-select-row="ex22"><td>Extraction p95 latency</td><td>Rafael Ortiz</td><td class="number">1.8 s</td><td class="number">2.1 s</td><td class="number">1.6 s</td><td class="number">1.7 s</td><td class="number">1.5 s</td><td class="number">1.5 s</td><td>+0.4 s above target</td><td><span class="badge danger">At risk</span></td><td>Large page extraction needs worker memory improvements.</td></tr>
+                <tr data-select-row="ex22"><td>Duplicate action label rate</td><td>Lina Romero</td><td class="number">3.0 percent</td><td class="number">2.8 percent</td><td class="number">2.0 percent</td><td class="number">1.9 percent</td><td class="number">1.5 percent</td><td class="number">1.4 percent</td><td>-0.4 percent better than target</td><td><span class="badge ok">On track</span></td><td>Card action cleanup rollout performing well.</td></tr>
+                <tr data-select-row="ex22"><td>Table row context accuracy</td><td>Theo Grant</td><td class="number">94 percent</td><td class="number">93 percent</td><td class="number">96 percent</td><td class="number">95 percent</td><td class="number">97 percent</td><td class="number">97 percent</td><td>-2 percent vs quarter target</td><td><span class="badge warning">Watch</span></td><td>Nested row details still cause ambiguity.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="detail-panel" aria-label="Selected metric detail">
+          <h3>Selected metric</h3>
+          <p class="sel-name">New activated workspaces</p>
+          <div class="field-block"><span class="field-label">Formula note</span>Activated workspace means first successful extraction plus saved output within 7 days</div>
+          <div class="field-row"><span class="field-label">Quarter target</span><span class="field-value">1,410</span></div>
+          <div class="field-row"><span class="field-label">Quarter forecast</span><span class="field-value">1,430</span></div>
+          <div class="field-row"><span class="field-label">Confidence</span><span class="field-value">Medium</span></div>
+          <div class="field-row"><span class="field-label">Review owner</span><span class="field-value">Nina Patel</span></div>
+        </aside>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Generic row-selection highlight. Visual only; does not fabricate detail.
+    document.addEventListener("click", function (ev) {
+      var row = ev.target.closest("[data-select-row]");
+      if (!row) return;
+      if (ev.target.closest("a") || ev.target.matches("input,button,summary")) return;
+      var group = row.getAttribute("data-select-row");
+      var scope = row.closest(".example-card");
+      if (!scope) return;
+      scope.querySelectorAll('[data-select-row="' + group + '"]').forEach(function (el) {
+        el.classList.toggle("is-selected", el === row);
+      });
+    });
+    // Local filter inputs filter rows by text content.
+    document.addEventListener("input", function (ev) {
+      var sel = ev.target.getAttribute("data-local-filter");
+      if (!sel) return;
+      var q = ev.target.value.trim().toLowerCase();
+      document.querySelectorAll(sel).forEach(function (tr) {
+        tr.style.display = (!q || tr.textContent.toLowerCase().indexOf(q) !== -1) ? "" : "none";
+      });
+    });
+  </script>
+</body>
+</html>

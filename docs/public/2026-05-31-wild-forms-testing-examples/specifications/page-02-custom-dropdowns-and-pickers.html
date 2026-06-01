@@ -1,0 +1,2043 @@
+---
+
+A00 Change Request Specification - Page 2 Custom Dropdowns And Pickers
+
+---
+
+Create one standalone HTML demo page named `page-02-custom-dropdowns-and-pickers.html`.
+
+The page must be a self-contained HTML file. Put all HTML, CSS, and JavaScript inside this one file. Do not use React. Do not use TypeScript. Do not use a build step. Do not load external CSS, external JavaScript, external fonts, external images, or external data. The page must work by opening the `.html` file directly in a browser.
+
+This page is a testing surface for a content extraction tool. The page must focus on custom dropdowns and picker controls: custom select menus, custom comboboxes, searchable pickers, grouped option menus, custom date pickers, time slot pickers, color pickers, people pickers, location pickers, multi-select chip pickers, fake native-looking selects, custom menus rendered in overlays, nested dropdowns, and picker controls where the visible value is not a normal native `<select>` value.
+
+The page must contain 22 separate examples. Each example must have a visible heading, a visible explanatory paragraph, and the actual custom dropdown or picker UI. Each example must be visually separated from the next example. Each example must be realistic enough to test extraction of selected values, available options, grouped options, option metadata, disabled options, hidden values, and values displayed inside custom UI instead of ordinary native controls.
+
+Do not make the examples tiny toy dropdowns. A complex example is preferred because it can also be used for simple extraction testing. Every example must test a different extraction caveat.
+
+---
+
+B00 Page-Level Purpose
+
+---
+
+The purpose of this page is to test whether an extraction tool can identify, select, and format values from realistic custom dropdowns and picker controls.
+
+The extraction tool should be able to handle visible selected values, hidden backing inputs, ARIA combobox patterns, custom listbox patterns, dropdown options rendered as buttons, grouped options, disabled options, search-filtered options, option metadata, multi-select chip values, time picker grids, date range pickers, calendar-like controls, nested region pickers, people pickers, location pickers, pseudo-select controls, and controls where the DOM structure is not a simple `<select><option>` list.
+
+This page should intentionally include both accessible custom controls and messy semi-custom controls. Some examples should have good ARIA attributes, hidden inputs, and clear labels. Other examples should imitate real product UI where the label, current value, menu options, and hidden field are separated in the DOM.
+
+The page should not depend on external libraries. All picker behavior must be implemented with small inline JavaScript. The controls do not need to be production-perfect. They only need to be realistic enough for extraction testing.
+
+---
+
+C00 Required Page Structure
+
+---
+
+The page must start with a top-level header.
+
+Use this visible title:
+
+`Page 2 - Custom Dropdowns And Pickers`
+
+Under the title, include a short introduction paragraph explaining that the page contains realistic custom dropdown and picker examples for testing extraction of visible selected values, available options, option metadata, grouped options, multi-select chips, and hidden backing values.
+
+After the introduction, render 22 example sections.
+
+Each example section must follow this pattern:
+
+```html
+<section class="example-card" id="example-01">
+  <header class="example-header">
+    <p class="example-kicker">Example 01</p>
+    <h2>Bus Departure Time Picker</h2>
+  </header>
+
+  <p class="example-description">
+    This example imitates...
+  </p>
+
+  <div class="example-surface">
+    <!-- Actual custom dropdown or picker UI goes here. -->
+  </div>
+</section>
+```
+
+The exact class names may vary, but the structure must remain clear. Each section must have a unique `id`, from `example-01` through `example-22`.
+
+Each example heading must be visible. Each description must be visible. The actual picker surface must appear below the description.
+
+Do not include large expected extraction output blocks under every example. The page should primarily be the application-under-test surface, not a documentation page. The visible descriptions should explain the purpose and caveat of each example.
+
+---
+
+D00 Visual Design Requirements
+
+---
+
+Use inline CSS in a `<style>` tag.
+
+The page should look like a clean internal testing notebook. Use a light background, readable font stack, generous spacing, and card-style sections. The page does not need to be decorative, but it must be readable and easy to scan.
+
+Use different visual styles inside examples when useful. For example, one picker can look like a travel booking widget, another can look like a SaaS settings control, another can look like a calendar picker, another can look like a marketplace filter, another can look like an admin people picker, and another can look like a mobile-style segmented picker.
+
+The page should support narrow and wide screens. Use simple responsive CSS. Avoid fixed widths that break on laptop screens.
+
+The custom dropdown menus should look clickable. Use clear visual states for selected options, disabled options, focused options, and open menus. Since this is a static demo page, do not overbuild keyboard interaction, but implement enough click behavior that a tester can open controls and see the option lists.
+
+Suggested CSS structure:
+
+```html
+<style>
+  :root {
+    --page-bg: #f5f2ea;
+    --card-bg: #fffdf8;
+    --ink: #25221d;
+    --muted: #6f675c;
+    --line: #d8cfc0;
+    --soft: #eee6d8;
+    --panel: #ffffff;
+    --selected: #e7f0ff;
+    --selected-line: #7aa1d2;
+    --danger: #9b332c;
+    --focus: #315f8c;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--page-bg);
+    color: var(--ink);
+    line-height: 1.45;
+  }
+
+  main {
+    width: min(1180px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 32px 0 64px;
+  }
+
+  .page-hero {
+    margin-bottom: 28px;
+    padding: 28px;
+    background: #fffaf0;
+    border: 2px solid var(--line);
+    border-radius: 18px;
+  }
+
+  .example-card {
+    margin: 28px 0;
+    padding: 24px;
+    background: var(--card-bg);
+    border: 2px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.08);
+  }
+
+  .example-kicker {
+    margin: 0 0 4px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .example-header h2 {
+    margin: 0;
+    font-size: 1.35rem;
+  }
+
+  .example-description {
+    max-width: 900px;
+    color: var(--muted);
+  }
+
+  .example-surface {
+    margin-top: 18px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: white;
+  }
+
+  .picker-row {
+    display: grid;
+    grid-template-columns: minmax(180px, 260px) minmax(240px, 1fr);
+    gap: 14px;
+    align-items: start;
+    margin: 14px 0;
+  }
+
+  .field-label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+
+  .help-text {
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 0.86rem;
+  }
+
+  .custom-select {
+    position: relative;
+    max-width: 460px;
+  }
+
+  .select-button {
+    width: 100%;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 12px;
+    border: 1px solid #b7afa3;
+    border-radius: 10px;
+    background: #fff;
+    color: var(--ink);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .select-button::after {
+    content: "v";
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+
+  .select-menu {
+    display: none;
+    position: absolute;
+    z-index: 10;
+    top: calc(100% + 6px);
+    left: 0;
+    width: min(520px, 100%);
+    max-height: 300px;
+    overflow: auto;
+    padding: 8px;
+    border: 1px solid #b7afa3;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.14);
+  }
+
+  .custom-select.is-open .select-menu {
+    display: block;
+  }
+
+  .option {
+    width: 100%;
+    display: block;
+    padding: 9px 10px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .option:hover {
+    background: var(--soft);
+  }
+
+  .option[aria-selected="true"],
+  .option.is-selected {
+    background: var(--selected);
+    outline: 1px solid var(--selected-line);
+  }
+
+  .option[aria-disabled="true"],
+  .option.is-disabled {
+    color: #9c958a;
+    cursor: not-allowed;
+    text-decoration: line-through;
+  }
+
+  .option-meta {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 0.84rem;
+  }
+
+  .chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 0;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 9px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: #faf7f0;
+    font-size: 0.9rem;
+  }
+
+  .picker-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  @media (max-width: 760px) {
+    .picker-row {
+      grid-template-columns: 1fr;
+    }
+
+    .picker-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .example-card {
+      padding: 18px;
+    }
+  }
+</style>
+```
+
+The coding agent may adjust the CSS, but it must keep the page readable, scrollable, and visually divided into 22 separate examples.
+
+---
+
+E00 JavaScript Requirements
+
+---
+
+Use inline JavaScript in a `<script>` tag.
+
+This page must include simple interaction for opening and closing custom dropdowns and pickers. A tester should be able to click a button to open the menu, click an option, and see the selected value update. Multi-select controls should update visible chips or selected state. Searchable controls should filter visible options when text is typed. Date and time picker examples should allow visible selected states to change when clicked.
+
+Do not use a JavaScript framework. Do not generate all examples dynamically. Static HTML must remain visible and inspectable. JavaScript may attach behavior to controls using data attributes.
+
+The JavaScript should be defensive. It should not throw errors if one picker is missing. It should avoid complex architecture. Use straightforward event listeners.
+
+Required generic behavior:
+
+Clicking a `.select-button` inside a `.custom-select` toggles the `.is-open` class.
+
+Clicking an option with `[data-value]` updates a nearby visible value element and a hidden input when the control is single-select.
+
+Clicking an option inside a multi-select toggles the selected state and updates visible chips.
+
+Clicking outside an open picker closes open menus.
+
+Search inputs inside pickers filter visible options by option text.
+
+Date picker and time picker examples can use example-specific code when needed.
+
+Suggested JavaScript structure:
+
+```html
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".custom-select .select-button").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const picker = button.closest(".custom-select");
+        if (!picker) return;
+
+        document.querySelectorAll(".custom-select.is-open").forEach(function (openPicker) {
+          if (openPicker !== picker) openPicker.classList.remove("is-open");
+        });
+
+        picker.classList.toggle("is-open");
+      });
+    });
+
+    document.querySelectorAll(".custom-select[data-mode='single'] .option[data-value]").forEach(function (option) {
+      option.addEventListener("click", function () {
+        if (option.getAttribute("aria-disabled") === "true") return;
+
+        const picker = option.closest(".custom-select");
+        if (!picker) return;
+
+        const valueTarget = picker.querySelector("[data-selected-label]");
+        const hiddenInput = picker.querySelector("input[type='hidden']");
+        const button = picker.querySelector(".select-button");
+
+        picker.querySelectorAll(".option").forEach(function (item) {
+          item.setAttribute("aria-selected", "false");
+          item.classList.remove("is-selected");
+        });
+
+        option.setAttribute("aria-selected", "true");
+        option.classList.add("is-selected");
+
+        if (valueTarget) valueTarget.textContent = option.dataset.label || option.textContent.trim();
+        if (button) button.setAttribute("aria-expanded", "false");
+        if (hiddenInput) hiddenInput.value = option.dataset.value || "";
+        picker.classList.remove("is-open");
+      });
+    });
+
+    document.querySelectorAll("[data-filter-options]").forEach(function (input) {
+      input.addEventListener("input", function () {
+        const picker = input.closest(".custom-select, .picker-panel");
+        if (!picker) return;
+
+        const query = input.value.trim().toLowerCase();
+
+        picker.querySelectorAll(".option[data-search-text]").forEach(function (option) {
+          const text = option.dataset.searchText.toLowerCase();
+          option.hidden = query.length > 0 && !text.includes(query);
+        });
+      });
+    });
+
+    document.addEventListener("click", function (event) {
+      if (event.target.closest(".custom-select")) return;
+      document.querySelectorAll(".custom-select.is-open").forEach(function (picker) {
+        picker.classList.remove("is-open");
+      });
+    });
+  });
+</script>
+```
+
+The coding agent may extend this code for specific examples, but the final file must remain simple and portable.
+
+---
+
+F00 Extraction Behavior To Support
+
+---
+
+The page must make these extraction tasks possible:
+
+Extract the currently selected visible value from a custom dropdown.
+
+Extract the hidden backing value from a hidden input when present.
+
+Extract all available options from an open custom dropdown.
+
+Extract visible option labels and option metadata, such as price, time, airport code, capacity, or status.
+
+Extract disabled options while marking them as unavailable when visually indicated.
+
+Extract grouped options under visible group headings.
+
+Extract selected values from custom multi-select chip controls.
+
+Extract selected values from custom picker grids.
+
+Extract values from searchable comboboxes where visible options are filtered.
+
+Extract date ranges from calendar-like custom controls.
+
+Extract time slots from segmented or grouped time pickers.
+
+Extract values where label text and selected value are separated in the DOM.
+
+Extract values where the visible selected label differs from the hidden machine value.
+
+Extract repeated picker rows where every row has the same picker labels but different row context.
+
+Extract picker values rendered in badges, chips, pills, or summary panels.
+
+Extract values from custom controls that imitate native selects but are not actual native selects.
+
+Extract selected values inside custom controls with ARIA roles such as `combobox`, `listbox`, `option`, `menu`, `menuitem`, and `grid`.
+
+Extract values from controls that are inside nested cards, tables, booking panels, or checkout-style layouts.
+
+---
+
+G00 Data And Naming Rules
+
+---
+
+Use realistic but fictional data. Do not use real personal information.
+
+Use consistent example-specific IDs. Prefix IDs with the example number, such as `ex01-selected-time`, `ex08-airport-search`, or `ex16-hidden-role`.
+
+Use plausible values. Avoid placeholder-only examples. Most controls should have pre-selected values so the extraction tool can read content immediately.
+
+For custom controls, include a visible selected value and, when useful, a hidden input that stores the submitted value. The visible value and hidden value may differ intentionally in some examples.
+
+Use a mixture of buttons, divs, spans, hidden inputs, ARIA roles, data attributes, option metadata, chips, and picker grids.
+
+Do not replace every custom picker with a native `<select>`. Native `<select>` may appear only as a comparison element or a fallback note. The primary controls on this page must be custom.
+
+---
+
+H00 Required Examples Overview
+
+---
+
+The page must contain exactly these 22 examples:
+
+Example 01: Bus Departure Time Picker.
+
+Example 02: Searchable Airport Combobox.
+
+Example 03: Hotel Guest And Room Picker.
+
+Example 04: Restaurant Reservation Time Slot Picker.
+
+Example 05: Date Range Calendar Picker.
+
+Example 06: Time Zone Picker With Search.
+
+Example 07: Country And Region Cascading Picker.
+
+Example 08: Multi-Select Skills Chip Picker.
+
+Example 09: Job Listing Location Radius Picker.
+
+Example 10: Product Variant Size And Color Picker.
+
+Example 11: People Assignee Picker.
+
+Example 12: Project Status Dropdown With Metadata.
+
+Example 13: Insurance Coverage Tier Picker.
+
+Example 14: Delivery Window Picker.
+
+Example 15: Bank Account Selector With Masked Values.
+
+Example 16: Admin Role And Permission Picker.
+
+Example 17: Marketplace Category Nested Picker.
+
+Example 18: Calendar Reminder Offset Picker.
+
+Example 19: Support Ticket Macro Picker.
+
+Example 20: Vehicle Pickup And Return Location Picker.
+
+Example 21: Medical Appointment Provider Picker.
+
+Example 22: Mobile-Style Wheel Picker Imitation.
+
+Each example below is mandatory.
+
+---
+
+I00 Example 01 - Bus Departure Time Picker
+
+---
+
+Create a custom departure time picker that imitates a bus reservation website. The control should look like a native dropdown at first, but it must be built from a button, hidden input, and custom menu options.
+
+Visible heading:
+
+`Bus Departure Time Picker`
+
+Visible description:
+
+`This example imitates a bus reservation time selector where departure options are rendered as a custom dropdown instead of a native select. It tests extraction of the visible selected time, the hidden submitted value, grouped time options, sold-out options, and option metadata such as arrival time and fare class.`
+
+The example must show a small route summary above the picker:
+
+`Route`: `San Francisco Transbay Terminal to Los Angeles Union Station`.
+
+`Travel date`: `Friday, July 3, 2026`.
+
+`Passenger count`: `2 passengers`.
+
+The picker must have a visible label:
+
+`Departure time`
+
+The currently selected visible value must be:
+
+`08:15 AM - Express - arrives 02:40 PM`
+
+The hidden input value must be:
+
+`SF-LA-20260703-0815-EXP`
+
+The menu must include grouped options:
+
+Group `Morning departures`:
+
+`06:30 AM - Standard - arrives 01:25 PM`, metadata `6h 55m, 8 seats left`, value `SF-LA-20260703-0630-STD`.
+
+`08:15 AM - Express - arrives 02:40 PM`, metadata `6h 25m, selected`, value `SF-LA-20260703-0815-EXP`, selected.
+
+`10:45 AM - Standard - arrives 05:55 PM`, metadata `7h 10m, sold out`, value `SF-LA-20260703-1045-STD`, disabled.
+
+Group `Afternoon departures`:
+
+`01:20 PM - Express - arrives 07:35 PM`, metadata `6h 15m, 4 seats left`, value `SF-LA-20260703-1320-EXP`.
+
+`03:50 PM - Standard - arrives 11:15 PM`, metadata `7h 25m, 13 seats left`, value `SF-LA-20260703-1550-STD`.
+
+Extraction caveat: the extraction tool should capture the selected visible label, the hidden machine value, all available options when the menu is open, grouped option headings, and the disabled sold-out option as unavailable.
+
+Implementation guidance:
+
+```html
+<div class="custom-select" data-mode="single" id="ex01-departure-picker">
+  <span class="field-label" id="ex01-departure-label">Departure time</span>
+  <button class="select-button" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="ex01-departure-label ex01-selected-time">
+    <span data-selected-label id="ex01-selected-time">08:15 AM - Express - arrives 02:40 PM</span>
+  </button>
+  <input type="hidden" name="departureTripId" value="SF-LA-20260703-0815-EXP">
+
+  <div class="select-menu" role="listbox" aria-labelledby="ex01-departure-label">
+    <p class="option-group-label">Morning departures</p>
+    <button class="option" role="option" type="button" data-value="SF-LA-20260703-0630-STD" data-label="06:30 AM - Standard - arrives 01:25 PM" data-search-text="06:30 standard arrives 01:25 8 seats">
+      06:30 AM - Standard - arrives 01:25 PM
+      <span class="option-meta">6h 55m, 8 seats left</span>
+    </button>
+    <button class="option is-selected" role="option" type="button" aria-selected="true" data-value="SF-LA-20260703-0815-EXP" data-label="08:15 AM - Express - arrives 02:40 PM" data-search-text="08:15 express arrives 02:40 selected">
+      08:15 AM - Express - arrives 02:40 PM
+      <span class="option-meta">6h 25m, selected</span>
+    </button>
+  </div>
+</div>
+```
+
+---
+
+J00 Example 02 - Searchable Airport Combobox
+
+---
+
+Create a searchable airport combobox that imitates a flight booking origin or destination selector. It should include an input used for search, a visible selected airport card, and a dropdown list of airports with city, airport name, airport code, and country.
+
+Visible heading:
+
+`Searchable Airport Combobox`
+
+Visible description:
+
+`This example imitates a flight booking airport selector. It tests a custom combobox where the displayed option includes multiple pieces of metadata, while the hidden value stores only an airport code.`
+
+The example must show two picker rows:
+
+`From airport`, selected visible value `San Francisco - San Francisco International Airport (SFO)`, hidden value `SFO`.
+
+`To airport`, selected visible value `Tokyo - Haneda Airport (HND)`, hidden value `HND`.
+
+Each picker must have a search input inside the menu with placeholder `Search city, airport, or code`.
+
+The options must include:
+
+`San Francisco - San Francisco International Airport`, code `SFO`, country `United States`.
+
+`Oakland - Oakland International Airport`, code `OAK`, country `United States`.
+
+`Los Angeles - Los Angeles International Airport`, code `LAX`, country `United States`.
+
+`Tokyo - Haneda Airport`, code `HND`, country `Japan`.
+
+`Tokyo - Narita International Airport`, code `NRT`, country `Japan`.
+
+`Osaka - Kansai International Airport`, code `KIX`, country `Japan`.
+
+Extraction caveat: the extraction tool should distinguish the visible label from the hidden code. It should also extract airport metadata when the dropdown is open, not just the selected display string.
+
+Implementation guidance: use `role="combobox"` on the button wrapper or button, `role="listbox"` on the option panel, and `role="option"` on airport rows. Each airport option should include separate spans for city, airport name, airport code, and country.
+
+---
+
+K00 Example 03 - Hotel Guest And Room Picker
+
+---
+
+Create a hotel booking guest picker. It should not be a normal dropdown list. It should open a panel with counters for rooms, adults, children, and pets.
+
+Visible heading:
+
+`Hotel Guest And Room Picker`
+
+Visible description:
+
+`This example imitates a hotel guest selector where clicking the field opens a small control panel with increment and decrement buttons. It tests extraction of selected counts from a custom picker panel rather than from normal form fields.`
+
+The example must show hotel search context:
+
+`Hotel`: `Harbor View Suites`.
+
+`Stay dates`: `August 14-18, 2026`.
+
+`Rate plan`: `Refundable breakfast rate`.
+
+The picker must have a visible label:
+
+`Guests and rooms`
+
+The selected summary must initially show:
+
+`2 adults, 1 child, 1 room`
+
+The hidden fields must store:
+
+`rooms`: `1`.
+
+`adults`: `2`.
+
+`children`: `1`.
+
+`pets`: `0`.
+
+The opened panel must include rows:
+
+`Rooms`: value `1`, decrement button, increment button.
+
+`Adults`: value `2`, helper text `Ages 18+`, decrement button, increment button.
+
+`Children`: value `1`, helper text `Ages 0-17`, decrement button, increment button.
+
+`Pets`: value `0`, helper text `Pet-friendly rooms only`, decrement button, increment button.
+
+The panel must also include a visible note:
+
+`Maximum occupancy for this rate is 4 guests per room.`
+
+Extraction caveat: the extraction tool should extract the current values from visible counters and hidden fields. It should not rely on normal text inputs, because the user-facing values are rendered as spans.
+
+Implementation guidance: implement plus and minus buttons that update the visible number, hidden inputs, and summary text. Keep the behavior simple. Do not enforce complex maximum logic beyond not allowing negative values.
+
+---
+
+L00 Example 04 - Restaurant Reservation Time Slot Picker
+
+---
+
+Create a restaurant reservation picker with custom time slot buttons grouped by meal period. It should resemble a reservation website where available times are clickable pills.
+
+Visible heading:
+
+`Restaurant Reservation Time Slot Picker`
+
+Visible description:
+
+`This example imitates a restaurant reservation widget. It tests extraction of a selected time from a grid of custom option buttons, including unavailable times, meal-period group headings, table type metadata, and a waitlist-only option.`
+
+The example must show reservation context:
+
+`Restaurant`: `Cypress & Fig`.
+
+`Party size`: `4 guests`.
+
+`Reservation date`: `Saturday, June 20, 2026`.
+
+Picker label:
+
+`Available times`
+
+Selected time:
+
+`7:15 PM`
+
+Hidden input value:
+
+`2026-06-20T19:15:00-07:00`
+
+Group `Dinner` must include time slot buttons:
+
+`5:30 PM`, metadata `Dining room`, available.
+
+`6:00 PM`, metadata `Patio`, available.
+
+`6:45 PM`, metadata `Dining room`, unavailable.
+
+`7:15 PM`, metadata `Patio, selected`, selected.
+
+`7:45 PM`, metadata `Bar seating`, available.
+
+`8:30 PM`, metadata `Waitlist only`, special waitlist state.
+
+Group `Late evening` must include:
+
+`9:15 PM`, metadata `Dining room`, available.
+
+`9:45 PM`, metadata `Bar seating`, available.
+
+Extraction caveat: the selected value is a button state, not a form field. The extraction tool should identify selected, available, unavailable, and waitlist states from visible text and classes or ARIA attributes.
+
+Implementation guidance: use buttons with `aria-pressed="true"` for the selected time. Use `disabled` on unavailable buttons. Use a hidden input named `reservationTime`.
+
+---
+
+M00 Example 05 - Date Range Calendar Picker
+
+---
+
+Create a custom date range picker that looks like a two-month calendar panel. It should show selected start and end dates, dates in range, disabled dates, and a visible summary.
+
+Visible heading:
+
+`Date Range Calendar Picker`
+
+Visible description:
+
+`This example imitates a lodging or rental booking date range picker. It tests extraction of start date, end date, nights count, disabled dates, and calendar button states from a custom calendar UI.`
+
+The example must show booking context:
+
+`Property`: `Redwood Creek Cabin`.
+
+`Minimum stay`: `3 nights`.
+
+`Selected stay`: `September 10-15, 2026`.
+
+The picker must include:
+
+Visible label `Check-in and check-out`.
+
+Button summary `Sep 10, 2026 - Sep 15, 2026`.
+
+Hidden inputs:
+
+`checkIn`: `2026-09-10`.
+
+`checkOut`: `2026-09-15`.
+
+`nights`: `5`.
+
+The opened calendar panel must show two visible month headings:
+
+`September 2026`.
+
+`October 2026`.
+
+For September 2026, include date buttons at least from `8` through `21`. Mark:
+
+`10` as selected start.
+
+`11`, `12`, `13`, `14` as in range.
+
+`15` as selected end.
+
+`18` and `19` as disabled with label `Unavailable`.
+
+For October 2026, include date buttons at least from `1` through `14`, with no selected date.
+
+Show a summary strip below the calendar:
+
+`5 nights selected`.
+
+`Estimated lodging total: $1,145`.
+
+Extraction caveat: the extraction tool should extract start and end dates from visible state and hidden inputs. It should not confuse disabled unavailable dates with selected dates.
+
+Implementation guidance: no need to build a complete calendar engine. Hardcode the visible days as buttons. Clicking a date may update selected state, but static preselected state is enough if implementation time is limited.
+
+---
+
+N00 Example 06 - Time Zone Picker With Search
+
+---
+
+Create a custom searchable time zone picker used in account settings. It should include a selected display value, a hidden IANA value, a search input, region headings, and UTC offsets.
+
+Visible heading:
+
+`Time Zone Picker With Search`
+
+Visible description:
+
+`This example imitates an account settings time zone control. It tests extraction where the visible value contains a friendly city label and UTC offset, while the hidden submitted value is an IANA time zone identifier.`
+
+The picker must have label:
+
+`Default time zone`
+
+Selected visible value:
+
+`Pacific Time - Los Angeles (UTC-07:00)`
+
+Hidden input value:
+
+`America/Los_Angeles`
+
+The opened menu must include a search input with placeholder `Filter time zones`.
+
+Group `Americas`:
+
+`Pacific Time - Los Angeles`, metadata `America/Los_Angeles, UTC-07:00`, selected.
+
+`Mountain Time - Denver`, metadata `America/Denver, UTC-06:00`.
+
+`Central Time - Chicago`, metadata `America/Chicago, UTC-05:00`.
+
+`Eastern Time - New York`, metadata `America/New_York, UTC-04:00`.
+
+Group `Europe`:
+
+`London`, metadata `Europe/London, UTC+01:00`.
+
+`Berlin`, metadata `Europe/Berlin, UTC+02:00`.
+
+`Madrid`, metadata `Europe/Madrid, UTC+02:00`.
+
+Group `Asia Pacific`:
+
+`Tokyo`, metadata `Asia/Tokyo, UTC+09:00`.
+
+`Singapore`, metadata `Asia/Singapore, UTC+08:00`.
+
+`Sydney`, metadata `Australia/Sydney, UTC+10:00`.
+
+Extraction caveat: the extraction tool should retain both the human readable time zone and the IANA value. Search filtering must not permanently remove options from the DOM.
+
+Implementation guidance: implement filtering by toggling `hidden` on option rows.
+
+---
+
+O00 Example 07 - Country And Region Cascading Picker
+
+---
+
+Create a custom country and region picker. It should imitate a checkout or tax settings flow where choosing a country changes the available region list.
+
+Visible heading:
+
+`Country And Region Cascading Picker`
+
+Visible description:
+
+`This example imitates a two-step country and region selector. It tests extraction from dependent custom dropdowns where the second picker options depend on the first selected value.`
+
+The example must show two custom dropdown controls:
+
+First picker label:
+
+`Country`
+
+Selected visible value:
+
+`United States`
+
+Hidden value:
+
+`US`
+
+Country options:
+
+`United States`, value `US`.
+
+`Canada`, value `CA`.
+
+`Mexico`, value `MX`.
+
+`United Kingdom`, value `GB`.
+
+Second picker label:
+
+`State or region`
+
+Selected visible value:
+
+`California`
+
+Hidden value:
+
+`US-CA`
+
+When `United States` is selected, region options must include:
+
+`California`, value `US-CA`, selected.
+
+`New York`, value `US-NY`.
+
+`Texas`, value `US-TX`.
+
+`Washington`, value `US-WA`.
+
+When `Canada` is selected, region options may be present in the DOM inside a hidden group and must include:
+
+`British Columbia`, value `CA-BC`.
+
+`Ontario`, value `CA-ON`.
+
+`Quebec`, value `CA-QC`.
+
+`Alberta`, value `CA-AB`.
+
+Extraction caveat: the extraction tool should capture the selected country and selected region. When inspecting options, it should distinguish currently active region options from inactive hidden country-specific options.
+
+Implementation guidance: implement simple JavaScript so selecting country updates the visible region options and resets the region value. Keep inactive options in the DOM in a hidden container to imitate real cascading controls.
+
+---
+
+P00 Example 08 - Multi-Select Skills Chip Picker
+
+---
+
+Create a custom skills picker for a profile or job application. It should include a search input, selected chips, available options, and hidden inputs for each selected value.
+
+Visible heading:
+
+`Multi-Select Skills Chip Picker`
+
+Visible description:
+
+`This example imitates a profile skills selector with chips. It tests extraction of multiple selected values from visible chips, hidden repeated inputs, and a searchable option list.`
+
+The picker label must be:
+
+`Skills`
+
+Selected chips must be visible:
+
+`JavaScript`.
+
+`Accessibility testing`.
+
+`Data visualization`.
+
+`Technical writing`.
+
+Hidden selected values must be included as repeated inputs:
+
+`javascript`.
+
+`accessibility-testing`.
+
+`data-visualization`.
+
+`technical-writing`.
+
+The option panel must include a search input with placeholder `Search skills`.
+
+Available options must include:
+
+`JavaScript`, selected.
+
+`TypeScript`, not selected.
+
+`React`, not selected.
+
+`Accessibility testing`, selected.
+
+`Data visualization`, selected.
+
+`Technical writing`, selected.
+
+`Node.js`, not selected.
+
+`Web scraping`, not selected.
+
+`QA automation`, not selected.
+
+`Product analytics`, not selected.
+
+Each chip should include a small remove button labeled with visible text like `Remove JavaScript`. The remove buttons do not need to function, but they should be present.
+
+Extraction caveat: the extraction tool should extract selected skills from chips or hidden inputs, not from every visible option. It should ignore remove button text as an actual selected value.
+
+Implementation guidance: chips should be in a `.chip-list`. Options should have `aria-selected="true"` when selected.
+
+---
+
+Q00 Example 09 - Job Listing Location Radius Picker
+
+---
+
+Create a custom job search location picker. It should include a selected location, a radius dropdown, remote options, and nearby location suggestions.
+
+Visible heading:
+
+`Job Listing Location Radius Picker`
+
+Visible description:
+
+`This example imitates a job search sidebar location picker. It tests extraction from a combined custom control where the selected value is split across location, radius, and remote preference pickers.`
+
+The example must show a search context:
+
+`Search query`: `Frontend engineer`.
+
+`Experience level`: `Senior`.
+
+Controls:
+
+Location picker label `Location`, selected visible value `Austin, TX`, hidden value `austin-tx`.
+
+Radius picker label `Distance`, selected visible value `25 miles`, hidden value `25`.
+
+Remote preference picker label `Remote preference`, selected visible value `Hybrid or remote`, hidden value `hybrid_remote`.
+
+Location menu options:
+
+`Austin, TX`, metadata `City, selected`.
+
+`Round Rock, TX`, metadata `18 miles away`.
+
+`San Antonio, TX`, metadata `79 miles away`.
+
+`Dallas, TX`, metadata `195 miles away`.
+
+`Remote - United States`, metadata `Nationwide`.
+
+Distance options:
+
+`5 miles`, `10 miles`, `25 miles`, selected `50 miles`, `100 miles`.
+
+Remote preference options:
+
+`On-site only`.
+
+`Hybrid or remote`, selected.
+
+`Remote only`.
+
+`No preference`.
+
+Extraction caveat: the extraction tool should extract a combined search setting, not just one selected dropdown. It should preserve the relationship between location, distance, and remote preference.
+
+Implementation guidance: place the three custom pickers in one sidebar-like panel, with a visible summary line `Showing senior frontend engineer roles near Austin, TX within 25 miles, hybrid or remote`.
+
+---
+
+R00 Example 10 - Product Variant Size And Color Picker
+
+---
+
+Create a product variant picker that imitates an ecommerce product page. It should include color swatches, size buttons, disabled sold-out variants, and a visible SKU summary.
+
+Visible heading:
+
+`Product Variant Size And Color Picker`
+
+Visible description:
+
+`This example imitates an ecommerce product variant selector. It tests extraction of selected color, selected size, disabled options, SKU values, and variant metadata from non-select form controls.`
+
+The example must show product context:
+
+`Product`: `TrailKnit Merino Hoodie`.
+
+`Base price`: `$128`.
+
+Color picker label:
+
+`Color`
+
+Selected color:
+
+`Forest Green`
+
+Hidden color value:
+
+`forest-green`
+
+Color options:
+
+`Forest Green`, selected, metadata `SKU color code FG`.
+
+`Charcoal`, metadata `SKU color code CH`.
+
+`Clay Red`, metadata `SKU color code CR`.
+
+`Ocean Blue`, metadata `SKU color code OB`, disabled with label `Low stock unavailable for selected size`.
+
+Size picker label:
+
+`Size`
+
+Selected size:
+
+`M`
+
+Hidden size value:
+
+`M`
+
+Size options:
+
+`XS`, available.
+
+`S`, available.
+
+`M`, selected.
+
+`L`, available.
+
+`XL`, disabled, metadata `Sold out`.
+
+Visible variant summary:
+
+`Selected variant: Forest Green / M`.
+
+`SKU: TKH-FG-M`.
+
+`Availability: 6 left`.
+
+Extraction caveat: the extraction tool should extract color and size as selected values, not every swatch and size button. It should still be able to list unavailable options when the control is inspected.
+
+Implementation guidance: use buttons for swatches. Add text labels inside swatches or adjacent to them so extraction has visible text, not only background color.
+
+---
+
+S00 Example 11 - People Assignee Picker
+
+---
+
+Create a people picker for assigning a task. It should include selected people chips, a search input, avatars represented by initials, team names, and availability metadata.
+
+Visible heading:
+
+`People Assignee Picker`
+
+Visible description:
+
+`This example imitates a task management assignee picker. It tests extraction of selected people from chips, option rows with names and emails, and metadata such as team and availability.`
+
+The example must show task context:
+
+`Task`: `Review vendor contract language`.
+
+`Due date`: `June 12, 2026`.
+
+Picker label:
+
+`Assignees`
+
+Selected chips:
+
+`Maya Chen`.
+
+`Rafael Ortiz`.
+
+Hidden selected user IDs:
+
+`usr_1042`.
+
+`usr_2381`.
+
+Option panel must include search input placeholder `Search people`.
+
+People options:
+
+`Maya Chen`, email `maya.chen@example.test`, team `Legal`, status `Selected`, value `usr_1042`.
+
+`Rafael Ortiz`, email `rafael.ortiz@example.test`, team `Finance`, status `Selected`, value `usr_2381`.
+
+`Nina Patel`, email `nina.patel@example.test`, team `Procurement`, status `Available`, value `usr_4417`.
+
+`Evan Brooks`, email `evan.brooks@example.test`, team `Operations`, status `Out of office`, value `usr_3099`, disabled.
+
+`Leah Kim`, email `leah.kim@example.test`, team `Legal`, status `Available`, value `usr_5120`.
+
+Extraction caveat: the extraction tool should extract selected assignees as people, not as generic chip text plus unrelated remove buttons. It should also distinguish disabled unavailable people.
+
+Implementation guidance: use initials as text inside small avatar circles, such as `MC`, `RO`, and `NP`.
+
+---
+
+T00 Example 12 - Project Status Dropdown With Metadata
+
+---
+
+Create a project status dropdown used in a project management app. It should show status names, descriptions, color-like text labels, and workflow metadata.
+
+Visible heading:
+
+`Project Status Dropdown With Metadata`
+
+Visible description:
+
+`This example imitates a project management status dropdown. It tests extraction where each option has a visible label, a short description, a workflow category, and a hidden machine value.`
+
+The example must show project context:
+
+`Project`: `Customer Portal Redesign`.
+
+`Owner`: `Digital Services Team`.
+
+Picker label:
+
+`Project status`
+
+Selected visible value:
+
+`At risk`
+
+Hidden value:
+
+`at_risk`
+
+Options:
+
+`Not started`, metadata `Workflow: planning, color: gray`, value `not_started`.
+
+`On track`, metadata `Workflow: active, color: green`, value `on_track`.
+
+`At risk`, metadata `Workflow: active, color: amber`, value `at_risk`, selected.
+
+`Blocked`, metadata `Workflow: blocked, color: red`, value `blocked`.
+
+`Complete`, metadata `Workflow: closed, color: blue`, value `complete`.
+
+Visible summary:
+
+`Current status note: Timeline risk due to pending accessibility review.`
+
+Extraction caveat: the extraction tool should capture selected status and status metadata when option list is open. It should not use only visual color indicators, because colors are represented by text for accessibility.
+
+Implementation guidance: use status pills with text labels, not color-only marks.
+
+---
+
+U00 Example 13 - Insurance Coverage Tier Picker
+
+---
+
+Create a coverage tier picker for an insurance quote. It should show plan cards as custom radio-like options in a dropdown or expandable picker.
+
+Visible heading:
+
+`Insurance Coverage Tier Picker`
+
+Visible description:
+
+`This example imitates an insurance quote coverage tier selector. It tests extraction of selected plan tier, deductible, monthly premium, and option details from custom card-like picker options.`
+
+The example must show quote context:
+
+`Quote number`: `Q-INS-2026-7719`.
+
+`Applicant`: `Jordan Parker`.
+
+`Policy type`: `Renters insurance`.
+
+Picker label:
+
+`Coverage tier`
+
+Selected visible value:
+
+`Standard - $18.40/month`
+
+Hidden value:
+
+`standard`
+
+Options as card rows:
+
+`Basic`, metadata `Personal property $15,000, deductible $1,000, $11.20/month`, value `basic`.
+
+`Standard`, metadata `Personal property $35,000, deductible $500, $18.40/month`, value `standard`, selected.
+
+`Premium`, metadata `Personal property $75,000, deductible $250, $29.90/month`, value `premium`.
+
+`Custom`, metadata `Requires agent review`, value `custom`, disabled.
+
+Visible quote summary:
+
+`Selected deductible: $500`.
+
+`Selected personal property coverage: $35,000`.
+
+Extraction caveat: the extraction tool should extract both the selected tier and the pricing/coverage metadata. It should also see the disabled custom option as unavailable, not selected.
+
+Implementation guidance: card rows can be buttons with nested spans. Use `aria-selected` for selected card.
+
+---
+
+V00 Example 14 - Delivery Window Picker
+
+---
+
+Create a delivery scheduling picker for a furniture order. It should include a selected day, delivery window buttons, fee metadata, and limited-availability states.
+
+Visible heading:
+
+`Delivery Window Picker`
+
+Visible description:
+
+`This example imitates a delivery scheduling control. It tests extraction of selected delivery date, selected time window, delivery fee, limited availability labels, and unavailable windows from custom buttons.`
+
+The example must show order context:
+
+`Order`: `Furniture order FUR-2026-8842`.
+
+`Delivery address`: `88 Bryant Street, San Francisco, CA`.
+
+`Items`: `Dining table, 4 chairs`.
+
+Controls:
+
+Date picker label `Delivery day`, selected `Thursday, June 18, 2026`, hidden value `2026-06-18`.
+
+Window picker label `Delivery window`, selected `12:00 PM - 4:00 PM`, hidden value `12-16`.
+
+Delivery day options:
+
+`Wednesday, June 17, 2026`, metadata `$39 fee`.
+
+`Thursday, June 18, 2026`, metadata `Free, selected`.
+
+`Friday, June 19, 2026`, metadata `$19 fee`.
+
+`Saturday, June 20, 2026`, metadata `$49 fee, limited`.
+
+Window options:
+
+`8:00 AM - 12:00 PM`, metadata `2 slots left`.
+
+`12:00 PM - 4:00 PM`, metadata `Selected`.
+
+`4:00 PM - 8:00 PM`, metadata `Unavailable`, disabled.
+
+Visible summary:
+
+`Delivery fee: Free`.
+
+`Access note: Freight elevator required.`
+
+Extraction caveat: the extraction tool should combine date and window as a scheduling value and preserve fee metadata.
+
+Implementation guidance: use two custom select controls in the same scheduling card.
+
+---
+
+W00 Example 15 - Bank Account Selector With Masked Values
+
+---
+
+Create a custom bank account selector. It should show account nicknames, masked account numbers, account type, verification status, and selected funding source.
+
+Visible heading:
+
+`Bank Account Selector With Masked Values`
+
+Visible description:
+
+`This example imitates a payment setup funding source dropdown. It tests extraction of selected account labels, masked values, verification status, and hidden token IDs without exposing full account numbers.`
+
+The example must show payment context:
+
+`Payment`: `Monthly invoice autopay`.
+
+`Amount`: `$842.19`.
+
+Picker label:
+
+`Funding source`
+
+Selected visible value:
+
+`Operating Checking - ending in 1842`
+
+Hidden value:
+
+`bank_tok_9f72`
+
+Options:
+
+`Operating Checking`, metadata `Checking, ending in 1842, verified`, value `bank_tok_9f72`, selected.
+
+`Payroll Checking`, metadata `Checking, ending in 7720, verified`, value `bank_tok_4c11`.
+
+`Tax Savings`, metadata `Savings, ending in 3398, verification pending`, value `bank_tok_8a02`.
+
+`Old Vendor Account`, metadata `Checking, ending in 0199, disabled`, value `bank_tok_0d91`, disabled.
+
+Visible details panel:
+
+`Selected account type: Checking`.
+
+`Verification status: Verified`.
+
+`Autopay start date: July 1, 2026`.
+
+Extraction caveat: the extraction tool should capture masked account details and hidden token separately. It must not invent full account numbers.
+
+Implementation guidance: do not include full account numbers anywhere. Use masked labels only.
+
+---
+
+X00 Example 16 - Admin Role And Permission Picker
+
+---
+
+Create an admin role picker with a custom dropdown and an adjacent permissions preview. The picker should show roles, descriptions, and permission badges.
+
+Visible heading:
+
+`Admin Role And Permission Picker`
+
+Visible description:
+
+`This example imitates an admin user-management role selector. It tests extraction of selected role, role description, included permissions, disabled roles, and permission preview content that changes with the selected option.`
+
+The example must show user context:
+
+`User`: `Anika Sharma`.
+
+`Email`: `anika.sharma@example.test`.
+
+`Workspace`: `Northwind Analytics`.
+
+Picker label:
+
+`Workspace role`
+
+Selected visible value:
+
+`Billing manager`
+
+Hidden value:
+
+`billing_manager`
+
+Role options:
+
+`Viewer`, metadata `Can view dashboards and reports`, value `viewer`.
+
+`Editor`, metadata `Can edit dashboards and manage saved views`, value `editor`.
+
+`Billing manager`, metadata `Can manage invoices, payment methods, and seats`, value `billing_manager`, selected.
+
+`Workspace admin`, metadata `Can manage users, roles, integrations, and security`, value `workspace_admin`.
+
+`Owner`, metadata `Only current owner can transfer ownership`, value `owner`, disabled.
+
+Permissions preview must show selected role permissions as visible chips:
+
+`View invoices`.
+
+`Update payment method`.
+
+`Manage seats`.
+
+`Download receipts`.
+
+Extraction caveat: the extraction tool should capture both the selected role and the previewed permissions. It should not confuse disabled owner role with the current selection.
+
+Implementation guidance: use a custom dropdown plus static chips. If implementing dynamic changes is time-consuming, it is acceptable for preview chips to remain static for the initially selected role.
+
+---
+
+Y00 Example 17 - Marketplace Category Nested Picker
+
+---
+
+Create a marketplace category picker with nested levels. It should imitate category selection where the user selects department, category, and subcategory.
+
+Visible heading:
+
+`Marketplace Category Nested Picker`
+
+Visible description:
+
+`This example imitates a marketplace listing category picker. It tests extraction of nested selected path values and available category options across multiple levels.`
+
+The example must show listing context:
+
+`Listing title`: `Walnut writing desk with drawer`.
+
+`Listing type`: `Local pickup`.
+
+Picker label:
+
+`Category path`
+
+Selected visible path:
+
+`Home & Garden > Furniture > Desks`
+
+Hidden value:
+
+`home-garden/furniture/desks`
+
+The picker panel must have three columns:
+
+Column `Department` options:
+
+`Home & Garden`, selected.
+
+`Electronics`.
+
+`Clothing`.
+
+`Sports & Outdoors`.
+
+Column `Category` options for Home & Garden:
+
+`Furniture`, selected.
+
+`Kitchen`.
+
+`Garden tools`.
+
+`Decor`.
+
+Column `Subcategory` options for Furniture:
+
+`Desks`, selected.
+
+`Tables`.
+
+`Chairs`.
+
+`Bookcases`.
+
+`Beds`, disabled with metadata `Not allowed for local pickup test`.
+
+Visible summary:
+
+`Selected category: Desks`.
+
+`Fee group: Furniture`.
+
+Extraction caveat: the extraction tool should extract the full selected path and not just the final subcategory. It should also be able to inspect nested visible options by column.
+
+Implementation guidance: implement this as a static three-column picker. No dynamic column switching is required, but selected states must be visible.
+
+---
+
+Z00 Example 18 - Calendar Reminder Offset Picker
+
+---
+
+Create a reminder offset picker for a calendar event. It should include quick options, custom offset controls, selected reminder chips, and hidden values.
+
+Visible heading:
+
+`Calendar Reminder Offset Picker`
+
+Visible description:
+
+`This example imitates a calendar reminder selector. It tests extraction of multiple selected reminder offsets, selected delivery methods, and custom reminder values from a semi-custom picker.`
+
+The example must show event context:
+
+`Event`: `Quarterly planning review`.
+
+`Event time`: `July 9, 2026, 10:00 AM`.
+
+Picker label:
+
+`Reminders`
+
+Selected reminder chips:
+
+`Email - 1 day before`.
+
+`Popup - 30 minutes before`.
+
+Hidden selected values:
+
+`email:P1D`.
+
+`popup:PT30M`.
+
+Option menu must include:
+
+`Popup - 10 minutes before`, value `popup:PT10M`.
+
+`Popup - 30 minutes before`, value `popup:PT30M`, selected.
+
+`Email - 1 hour before`, value `email:PT1H`.
+
+`Email - 1 day before`, value `email:P1D`, selected.
+
+`Email - 1 week before`, value `email:P1W`.
+
+Custom reminder controls inside panel:
+
+`Custom method`: segmented buttons `Email`, `Popup`, selected `Email`.
+
+`Custom amount`: number-like custom counter visible value `2`.
+
+`Custom unit`: custom dropdown selected `days before`.
+
+Extraction caveat: the extraction tool should extract the selected reminder chips and also the custom reminder draft controls if the panel is selected. It should distinguish existing reminders from draft custom controls.
+
+Implementation guidance: chips should have remove buttons. The remove buttons do not need to function.
+
+---
+
+AA00 Example 19 - Support Ticket Macro Picker
+
+---
+
+Create a support ticket macro picker used by a customer support agent. It should include a searchable macro list, category headings, preview text, and a selected macro.
+
+Visible heading:
+
+`Support Ticket Macro Picker`
+
+Visible description:
+
+`This example imitates a customer support macro selector. It tests extraction from a searchable custom picker where each option has a title, category, preview text, and internal macro ID.`
+
+The example must show ticket context:
+
+`Ticket`: `TCK-2026-54091`.
+
+`Customer issue`: `Refund status request`.
+
+`Channel`: `Email`.
+
+Picker label:
+
+`Apply macro`
+
+Selected visible value:
+
+`Refund status follow-up`
+
+Hidden value:
+
+`macro_refund_status_followup`
+
+Search placeholder:
+
+`Search macros`.
+
+Group `Billing`:
+
+`Refund status follow-up`, metadata `Sends refund timeline and case reference`, value `macro_refund_status_followup`, selected.
+
+`Invoice copy request`, metadata `Asks customer to confirm billing email`, value `macro_invoice_copy`.
+
+`Payment failed reply`, metadata `Provides retry link and card update instructions`, value `macro_payment_failed`.
+
+Group `Account access`:
+
+`Password reset instructions`, metadata `Explains reset process`, value `macro_password_reset`.
+
+`Two-factor recovery`, metadata `Requests identity verification`, value `macro_2fa_recovery`.
+
+Preview panel must show:
+
+`Macro preview`: `Thanks for contacting us about your refund. I checked the case and the refund is still processing under reference RF-20441.`
+
+Extraction caveat: the extraction tool should capture selected macro title, hidden macro ID, category, and preview text. It should not treat the preview as a separate selected macro.
+
+Implementation guidance: use a custom combobox layout with search input on top and preview panel on the right.
+
+---
+
+AB00 Example 20 - Vehicle Pickup And Return Location Picker
+
+---
+
+Create a vehicle rental pickup and return picker. It should include two related location pickers, time pickers, branch metadata, and one-way rental warning text.
+
+Visible heading:
+
+`Vehicle Pickup And Return Location Picker`
+
+Visible description:
+
+`This example imitates a car rental booking location selector. It tests extraction from paired custom pickers where pickup and return locations have branch codes, hours, airport labels, and warning metadata.`
+
+The example must show rental context:
+
+`Vehicle class`: `Compact SUV`.
+
+`Rental dates`: `August 4-9, 2026`.
+
+Pickup location picker:
+
+Label `Pickup location`.
+
+Selected visible value `Seattle Airport - SEA`.
+
+Hidden value `SEA-T1`.
+
+Options:
+
+`Seattle Airport - SEA`, metadata `Terminal 1, open 24 hours`, value `SEA-T1`, selected.
+
+`Seattle Downtown`, metadata `Pine Street branch, open 7 AM-7 PM`, value `SEA-DTN`.
+
+`Bellevue`, metadata `NE 8th branch, open 8 AM-6 PM`, value `SEA-BEL`.
+
+Return location picker:
+
+Label `Return location`.
+
+Selected visible value `Portland Airport - PDX`.
+
+Hidden value `PDX-AIR`.
+
+Options:
+
+`Portland Airport - PDX`, metadata `Airport garage, open 24 hours`, value `PDX-AIR`, selected.
+
+`Portland Downtown`, metadata `Burnside branch, open 7 AM-7 PM`, value `PDX-DTN`.
+
+`Seattle Airport - SEA`, metadata `Same as pickup`, value `SEA-T1`.
+
+Time pickers:
+
+`Pickup time`: selected `10:30 AM`, hidden value `10:30`.
+
+`Return time`: selected `4:00 PM`, hidden value `16:00`.
+
+Visible warning:
+
+`One-way rental fee may apply because pickup and return locations are different.`
+
+Extraction caveat: the extraction tool should extract pickup and return values separately and preserve branch metadata. It should not merge the two similar location pickers.
+
+Implementation guidance: use four compact custom pickers in a two-column booking panel.
+
+---
+
+AC00 Example 21 - Medical Appointment Provider Picker
+
+---
+
+Create a medical appointment provider picker. It should include specialty, provider, location, and appointment type custom pickers.
+
+Visible heading:
+
+`Medical Appointment Provider Picker`
+
+Visible description:
+
+`This example imitates a healthcare appointment scheduling picker. It tests extraction from related custom dropdowns with provider names, credentials, specialties, locations, appointment types, and next-available metadata.`
+
+The example must show appointment context:
+
+`Patient`: `Riley Stone`.
+
+`Reason for visit`: `Follow-up for knee pain`.
+
+Specialty picker:
+
+Label `Specialty`.
+
+Selected `Orthopedics`.
+
+Hidden value `orthopedics`.
+
+Options: `Primary care`, `Orthopedics`, `Physical therapy`, `Sports medicine`.
+
+Provider picker:
+
+Label `Provider`.
+
+Selected `Dr. Helen Park, MD`.
+
+Hidden value `prov_204`.
+
+Options:
+
+`Dr. Helen Park, MD`, metadata `Orthopedics, next available June 11`, value `prov_204`, selected.
+
+`Dr. Omar Nasser, DO`, metadata `Sports medicine, next available June 17`, value `prov_331`.
+
+`Jamie Lee, PT`, metadata `Physical therapy, next available June 10`, value `prov_118`.
+
+Location picker:
+
+Label `Clinic location`.
+
+Selected `Downtown Clinic`.
+
+Hidden value `clinic_downtown`.
+
+Options:
+
+`Downtown Clinic`, metadata `450 Market Street`, selected.
+
+`Westside Clinic`, metadata `1200 Irving Street`.
+
+`Telehealth`, metadata `Video visit`.
+
+Appointment type picker:
+
+Label `Appointment type`.
+
+Selected `In-person follow-up`.
+
+Hidden value `in_person_followup`.
+
+Options:
+
+`In-person follow-up`, selected.
+
+`New patient consult`.
+
+`Telehealth follow-up`.
+
+`Procedure visit`, disabled with metadata `Requires referral review`.
+
+Visible summary:
+
+`Selected appointment search: Orthopedics with Dr. Helen Park at Downtown Clinic, in-person follow-up.`
+
+Extraction caveat: the extraction tool should capture related picker values as one appointment search object and preserve provider metadata.
+
+Implementation guidance: present this as a clinic scheduling panel with four custom dropdowns.
+
+---
+
+AD00 Example 22 - Mobile-Style Wheel Picker Imitation
+
+---
+
+Create a mobile-style wheel picker imitation using ordinary HTML elements. It should look like a mobile picker for selecting birth date or expiration date, with three vertical columns and selected rows centered.
+
+Visible heading:
+
+`Mobile-Style Wheel Picker Imitation`
+
+Visible description:
+
+`This example imitates a mobile wheel picker rendered in a web page. It tests extraction of selected values from visually centered rows where the selected state is based on CSS classes rather than native select controls.`
+
+The picker must be for:
+
+`Card expiration date`
+
+Selected visible summary:
+
+`March 2029`
+
+Hidden values:
+
+`expirationMonth`: `03`.
+
+`expirationYear`: `2029`.
+
+The wheel must have two visible columns:
+
+Column `Month`:
+
+`January`, value `01`.
+
+`February`, value `02`.
+
+`March`, value `03`, selected.
+
+`April`, value `04`.
+
+`May`, value `05`.
+
+Column `Year`:
+
+`2027`.
+
+`2028`.
+
+`2029`, selected.
+
+`2030`.
+
+`2031`.
+
+The selected row should be visually centered with a highlight band behind it.
+
+Also include a separate custom dropdown for:
+
+`Billing country`
+
+Selected value:
+
+`United States`
+
+Hidden value:
+
+`US`
+
+Options:
+
+`United States`, selected.
+
+`Canada`.
+
+`United Kingdom`.
+
+`Australia`.
+
+Extraction caveat: the extraction tool should identify selected rows based on visible selected styling and ARIA state. It should not extract every wheel row as selected.
+
+Implementation guidance: implement the wheel as simple static columns with buttons or divs. Use `aria-selected="true"` and class `is-selected` on the selected month and year.
+
+---
+
+AE00 Required Final HTML Skeleton
+
+---
+
+The coding agent should produce a complete HTML document using this general skeleton:
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page 2 - Custom Dropdowns And Pickers</title>
+  <style>
+    /* Inline CSS only. */
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-hero">
+      <p class="page-kicker">Content Extraction Demo Page</p>
+      <h1>Page 2 - Custom Dropdowns And Pickers</h1>
+      <p>
+        This standalone page contains realistic custom dropdown and picker examples for testing extraction of selected values, hidden backing values, grouped options, option metadata, multi-select chips, calendar states, time slots, and custom control panels.
+      </p>
+    </header>
+
+    <section class="example-card" id="example-01">
+      <!-- Example 01 content. -->
+    </section>
+
+    <!-- Continue through example-22. -->
+  </main>
+
+  <script>
+    /* Minimal inline JavaScript only. */
+  </script>
+</body>
+</html>
+```
+
+The generated file must include all 22 examples in the same file.
+
+The page must not require a server.
+
+The page must not fetch data.
+
+The page must not include broken links to external assets.
+
+The page must not use placeholder text instead of the specified values.
+
+---
+
+AF00 Quality Bar
+
+---
+
+The final page should be useful as a long-term manual testing page for a content extraction tool.
+
+Each example must be visibly distinct enough that a tester can scroll to it, open the picker, select the region, and understand what behavior is being tested.
+
+Each example must contain realistic populated values.
+
+Each example must include the specified heading, description, controls, labels, values, metadata, hidden values, and extraction caveat.
+
+Every custom picker must expose enough visible content for extraction testing. Avoid controls that only show icons, colors, or meaningless placeholder text.
+
+Use hidden inputs where useful, but do not make hidden inputs the only source of truth. The selected value must also be visible to the user.
+
+Use ARIA roles where appropriate, but do not make every control perfectly semantic. Some controls should be slightly messy because real custom dropdowns often are.
+
+The implementation should favor clarity and realistic structure over cleverness.
+
+The coding agent may improve layout, spacing, CSS details, and basic interaction behavior, but it must not remove examples, reduce the number of examples, replace custom controls with native selects, or simplify the pickers into toy examples.
+
+The final output must be one portable HTML file.

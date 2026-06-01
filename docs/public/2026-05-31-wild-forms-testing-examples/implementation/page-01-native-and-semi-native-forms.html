@@ -1,0 +1,2783 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page 1 - Native And Semi-Native Forms</title>
+  <style>
+    :root {
+      --page-bg: #f6f3ed;
+      --card-bg: #fffdf8;
+      --ink: #25221d;
+      --muted: #6f675c;
+      --line: #d8cfc0;
+      --soft: #eee6d8;
+      --focus: #315f8c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--page-bg);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 64px;
+    }
+
+    .page-hero {
+      margin-bottom: 28px;
+      padding: 28px;
+      background: #fffaf0;
+      border: 2px solid var(--line);
+      border-radius: 18px;
+    }
+
+    .page-kicker {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .page-hero h1 { margin: 0 0 10px; font-size: 1.9rem; }
+    .page-hero p { margin: 0; max-width: 880px; color: #4a443c; }
+
+    .example-card {
+      margin: 28px 0;
+      padding: 24px;
+      background: var(--card-bg);
+      border: 2px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    .example-kicker {
+      margin: 0 0 4px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .example-header h2 { margin: 0; font-size: 1.35rem; }
+
+    .example-description { max-width: 900px; color: var(--muted); }
+
+    .example-surface {
+      margin-top: 18px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: white;
+    }
+
+    .grid-two {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .grid-three {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    label, .field-label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 650;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      min-height: 38px;
+      padding: 8px 10px;
+      border: 1px solid #b7afa3;
+      border-radius: 8px;
+      font: inherit;
+      background: #fff;
+      color: inherit;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: 2px solid var(--focus);
+      outline-offset: 1px;
+    }
+
+    textarea { min-height: 90px; resize: vertical; }
+
+    input[readonly], input:disabled, select:disabled, textarea[readonly] {
+      background: #f3efe7;
+      color: #5d564c;
+    }
+
+    fieldset {
+      margin: 0 0 14px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+
+    legend { padding: 0 8px; font-weight: 700; }
+
+    .help-text {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .error-text {
+      margin-top: 4px;
+      color: #9b2c2c;
+      font-size: 0.86rem;
+      font-weight: 600;
+    }
+
+    .inline-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 18px;
+    }
+
+    .inline-options label, .stack-options label {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin: 0 0 4px;
+      font-weight: 500;
+    }
+
+    .stack-options { display: flex; flex-direction: column; gap: 4px; }
+
+    .inline-options input, .stack-options input {
+      width: auto;
+      min-height: auto;
+    }
+
+    .readonly-strip {
+      padding: 10px 12px;
+      border: 1px dashed #b7afa3;
+      border-radius: 8px;
+      background: #faf7f0;
+    }
+
+    .field { margin-bottom: 14px; }
+
+    .amount-row { display: flex; align-items: stretch; }
+    .amount-row .prefix {
+      display: inline-flex;
+      align-items: center;
+      padding: 0 12px;
+      border: 1px solid #b7afa3;
+      border-right: none;
+      border-radius: 8px 0 0 8px;
+      background: var(--soft);
+      font-weight: 700;
+    }
+    .amount-row input { border-radius: 0 8px 8px 0; }
+
+    .badge {
+      display: inline-block;
+      padding: 1px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      background: var(--soft);
+      color: #5d564c;
+      vertical-align: middle;
+    }
+    .badge.lock { background: #e7ddca; }
+    .badge.ro { background: #dfe7ec; color: #2c4a5e; }
+
+    table.form-table { width: 100%; border-collapse: collapse; }
+    table.form-table th, table.form-table td {
+      border: 1px solid var(--line);
+      padding: 8px;
+      text-align: left;
+      vertical-align: middle;
+    }
+    table.form-table th { background: var(--soft); font-size: 0.85rem; }
+    table.form-table input, table.form-table select { min-height: 34px; }
+
+    .subcard {
+      margin-bottom: 14px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fdfaf3;
+    }
+    .subcard > h3 { margin: 0 0 12px; font-size: 1.05rem; }
+
+    /* Government style */
+    .gov-form {
+      border: 3px double #5d564c;
+      padding: 18px;
+      background: #fcfbf7;
+    }
+    .gov-form legend { text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.85rem; }
+
+    /* Compact clinic style */
+    .compact-form input, .compact-form select { min-height: 32px; padding: 5px 7px; }
+    .compact-form label { font-size: 0.82rem; margin-bottom: 2px; }
+    .compact-form .grid-three { gap: 8px; }
+
+    /* SaaS settings card */
+    .settings-card {
+      border: 1px solid #d7dde2;
+      border-radius: 12px;
+      padding: 18px;
+      background: linear-gradient(180deg, #ffffff, #f7f9fb);
+    }
+
+    /* Bureaucratic vehicle form */
+    .doc-form {
+      border: 2px solid #2f2a22;
+      padding: 16px;
+      background: #fffef9;
+    }
+    .doc-form .microcopy {
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      color: #6f675c;
+    }
+
+    .two-col-fieldsets {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    @media (max-width: 760px) {
+      .grid-two, .grid-three, .two-col-fieldsets {
+        grid-template-columns: 1fr;
+      }
+      .example-card { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-hero">
+      <p class="page-kicker">Content Extraction Demo Page</p>
+      <h1>Page 1 - Native And Semi-Native Forms</h1>
+      <p>
+        This standalone page contains realistic native and semi-native form examples for testing
+        extraction of labels, values, selected options, repeated sections, readonly summaries,
+        disabled controls, and validation-related form content. Each example is visually separated
+        and prefilled with plausible fictional data.
+      </p>
+    </header>
+
+    <section class="example-card" id="example-01">
+      <header class="example-header">
+        <p class="example-kicker">Example 01</p>
+        <h2>Emergency Contact Intake Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a standard HR emergency contact form. It tests simple native text
+        inputs, phone inputs, email inputs, radio buttons, and a small textarea, while keeping the
+        label-value relationships mostly clean and semantic.
+      </p>
+      <div class="example-surface">
+        <form aria-label="Emergency contact intake">
+          <div class="grid-two">
+            <div class="field">
+              <label for="ex01-employee-name">Employee full name</label>
+              <input id="ex01-employee-name" name="employeeName" value="Jordan Ellis">
+            </div>
+            <div class="field">
+              <label for="ex01-employee-id">Employee ID</label>
+              <input id="ex01-employee-id" name="employeeId" value="EMP-20417" readonly>
+            </div>
+            <div class="field">
+              <label for="ex01-contact-name">Primary contact name</label>
+              <input id="ex01-contact-name" name="contactName" value="Morgan Ellis">
+            </div>
+            <div class="field">
+              <label for="ex01-relationship">Relationship</label>
+              <select id="ex01-relationship" name="relationship">
+                <option>Parent</option>
+                <option selected>Spouse</option>
+                <option>Sibling</option>
+                <option>Friend</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ex01-primary-phone">Primary phone</label>
+              <input id="ex01-primary-phone" type="tel" name="primaryPhone" value="415-555-0184">
+            </div>
+            <div class="field">
+              <label for="ex01-secondary-phone">Secondary phone</label>
+              <input id="ex01-secondary-phone" type="tel" name="secondaryPhone" value="415-555-0177">
+            </div>
+            <div class="field">
+              <label for="ex01-email">Email address</label>
+              <input id="ex01-email" type="email" name="email" value="morgan.ellis@example.test">
+            </div>
+          </div>
+
+          <fieldset>
+            <legend>Preferred contact method</legend>
+            <div class="inline-options">
+              <label><input type="radio" name="ex01-contact-method" value="Phone"> Phone</label>
+              <label><input type="radio" name="ex01-contact-method" value="Text message" checked> Text message</label>
+              <label><input type="radio" name="ex01-contact-method" value="Email"> Email</label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Authorized to discuss medical details</legend>
+            <div class="inline-options">
+              <label><input type="radio" name="ex01-medical-auth" value="Yes" checked> Yes</label>
+              <label><input type="radio" name="ex01-medical-auth" value="No"> No</label>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label for="ex01-notes">Notes for security desk</label>
+            <textarea id="ex01-notes" name="securityNotes">Contact Morgan first. If unavailable, call the secondary phone number and leave a callback message.</textarea>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-02">
+      <header class="example-header">
+        <p class="example-kicker">Example 02</p>
+        <h2>Dense Clinic Patient Intake Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a medical intake form with many compact fields arranged in a dense
+        grid. It tests whether extraction can still pair labels and values when the layout is
+        crowded and the field names are short.
+      </p>
+      <div class="example-surface">
+        <form class="compact-form" aria-label="Clinic patient intake">
+          <div class="grid-three">
+            <div class="field">
+              <label for="ex02-legal-name">Patient legal name</label>
+              <input id="ex02-legal-name" value="Avery Quinn">
+            </div>
+            <div class="field">
+              <label for="ex02-preferred-name">Preferred name</label>
+              <input id="ex02-preferred-name" value="Avery">
+            </div>
+            <div class="field">
+              <label for="ex02-dob">Date of birth</label>
+              <input id="ex02-dob" type="date" value="1987-09-14">
+            </div>
+            <div class="field">
+              <label for="ex02-age">Age</label>
+              <input id="ex02-age" type="number" value="38">
+            </div>
+            <div class="field">
+              <label for="ex02-sex">Sex listed on insurance</label>
+              <select id="ex02-sex">
+                <option selected>F</option>
+                <option>M</option>
+                <option>X</option>
+                <option>Unspecified</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ex02-pronouns">Pronouns</label>
+              <input id="ex02-pronouns" value="she/her">
+            </div>
+            <div class="field">
+              <label for="ex02-mobile">Mobile phone</label>
+              <input id="ex02-mobile" type="tel" value="510-555-0146">
+            </div>
+            <div class="field">
+              <label for="ex02-email">Email</label>
+              <input id="ex02-email" type="email" value="avery.quinn@example.test">
+            </div>
+            <div class="field">
+              <label for="ex02-pharmacy">Preferred pharmacy</label>
+              <input id="ex02-pharmacy" value="Greenline Pharmacy - Market Street">
+            </div>
+            <div class="field">
+              <label for="ex02-pcp">Primary care provider</label>
+              <input id="ex02-pcp" value="Dr. Hannah Cho">
+            </div>
+            <div class="field">
+              <label for="ex02-visit-reason">Visit reason</label>
+              <select id="ex02-visit-reason">
+                <option>New concern</option>
+                <option selected>Follow-up</option>
+                <option>Annual exam</option>
+                <option>Medication review</option>
+                <option>Lab review</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ex02-symptoms-started">Symptoms started</label>
+              <input id="ex02-symptoms-started" type="date" value="2026-05-12">
+            </div>
+            <div class="field">
+              <label for="ex02-pain">Current pain level</label>
+              <input id="ex02-pain" type="range" min="0" max="10" value="4">
+              <p class="help-text" id="ex02-pain-value">Current value: 4</p>
+            </div>
+          </div>
+
+          <fieldset>
+            <legend>Known allergies</legend>
+            <div class="inline-options">
+              <label><input type="checkbox" name="ex02-allergy" value="Penicillin" checked> Penicillin</label>
+              <label><input type="checkbox" name="ex02-allergy" value="Latex"> Latex</label>
+              <label><input type="checkbox" name="ex02-allergy" value="Shellfish" checked> Shellfish</label>
+              <label><input type="checkbox" name="ex02-allergy" value="No known allergies"> No known allergies</label>
+            </div>
+          </fieldset>
+
+          <div class="grid-two">
+            <div class="field">
+              <label for="ex02-meds">Current medications</label>
+              <textarea id="ex02-meds">Lisinopril 10 mg once daily
+Vitamin D 1000 IU daily</textarea>
+            </div>
+            <div class="field">
+              <label for="ex02-additional">Additional notes</label>
+              <textarea id="ex02-additional">Patient reports mild dizziness after standing quickly.</textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-03">
+      <header class="example-header">
+        <p class="example-kicker">Example 03</p>
+        <h2>Language And Accessibility Preferences Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a preferences section used by a public service portal. It tests
+        checkbox groups, multi-select values, datalist-backed inputs, and a disabled conditional
+        field that becomes editable when the matching checkbox is selected.
+      </p>
+      <div class="example-surface">
+        <form aria-label="Language and accessibility preferences">
+          <div class="grid-two">
+            <div class="field">
+              <label for="ex03-primary-language">Primary language</label>
+              <input id="ex03-primary-language" list="ex03-language-list" value="Spanish">
+              <datalist id="ex03-language-list">
+                <option>English</option>
+                <option>Spanish</option>
+                <option>Mandarin</option>
+                <option>Vietnamese</option>
+                <option>Arabic</option>
+                <option>Tagalog</option>
+              </datalist>
+            </div>
+            <div class="field">
+              <label for="ex03-written-languages">Written communication languages</label>
+              <select id="ex03-written-languages" name="writtenLanguages" multiple size="6">
+                <option selected>English</option>
+                <option selected>Spanish</option>
+                <option>Mandarin</option>
+                <option>Vietnamese</option>
+                <option>Arabic</option>
+                <option>Tagalog</option>
+              </select>
+            </div>
+          </div>
+
+          <fieldset>
+            <legend>Interpreter required</legend>
+            <div class="inline-options">
+              <label><input type="radio" name="ex03-interpreter" value="Yes" checked> Yes</label>
+              <label><input type="radio" name="ex03-interpreter" value="No"> No</label>
+            </div>
+          </fieldset>
+
+          <div class="two-col-fieldsets">
+            <fieldset>
+              <legend>Accessible formats requested</legend>
+              <div class="stack-options">
+                <label><input type="checkbox" name="ex03-format" value="Large print" checked> Large print</label>
+                <label><input type="checkbox" name="ex03-format" value="Screen-reader friendly email" checked> Screen-reader friendly email</label>
+                <label><input type="checkbox" name="ex03-format" value="Braille"> Braille</label>
+                <label><input type="checkbox" name="ex03-format" value="Audio recording"> Audio recording</label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Communication channels</legend>
+              <div class="stack-options">
+                <label><input type="checkbox" name="ex03-channel" value="Email" checked> Email</label>
+                <label><input type="checkbox" name="ex03-channel" value="SMS" checked> SMS</label>
+                <label><input type="checkbox" name="ex03-channel" value="Postal mail"> Postal mail</label>
+                <label><input type="checkbox" name="ex03-channel" value="Phone call"> Phone call</label>
+              </div>
+            </fieldset>
+          </div>
+
+          <div class="field">
+            <label><input type="checkbox" id="ex03-language-other-check" style="width:auto;min-height:auto"> Other language not listed</label>
+          </div>
+          <div class="field">
+            <label for="ex03-language-other-text">Other language details</label>
+            <input id="ex03-language-other-text" value="" disabled>
+            <p class="help-text">Enabled only when "Other language not listed" is checked.</p>
+          </div>
+
+          <div class="field">
+            <label for="ex03-best-time">Best time to contact</label>
+            <select id="ex03-best-time">
+              <option selected>Weekday mornings</option>
+              <option>Weekday afternoons</option>
+              <option>Weekday evenings</option>
+              <option>Weekends</option>
+            </select>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-04">
+      <header class="example-header">
+        <p class="example-kicker">Example 04</p>
+        <h2>Government-Style Identity Verification Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a public agency identity verification form. It tests fieldsets,
+        legends, readonly reference numbers, helper text, date fields, select fields, and values
+        that appear in a strict paper-form layout.
+      </p>
+      <div class="example-surface">
+        <form class="gov-form" aria-label="Identity verification">
+          <div class="field">
+            <label for="ex04-ref">Application reference number</label>
+            <input id="ex04-ref" value="IDV-2026-05-88419" readonly>
+          </div>
+
+          <fieldset>
+            <legend>Applicant information</legend>
+            <div class="grid-three">
+              <div class="field">
+                <label for="ex04-first">Legal first name</label>
+                <input id="ex04-first" value="Samira">
+              </div>
+              <div class="field">
+                <label for="ex04-middle">Legal middle name</label>
+                <input id="ex04-middle" value="N.">
+              </div>
+              <div class="field">
+                <label for="ex04-last">Legal last name</label>
+                <input id="ex04-last" value="Haddad">
+              </div>
+              <div class="field">
+                <label for="ex04-former">Former last name</label>
+                <input id="ex04-former" value="">
+              </div>
+              <div class="field">
+                <label for="ex04-dob">Date of birth</label>
+                <input id="ex04-dob" type="date" value="1992-11-03">
+              </div>
+              <div class="field">
+                <label for="ex04-country-birth">Country of birth</label>
+                <select id="ex04-country-birth">
+                  <option>United States</option>
+                  <option selected>Canada</option>
+                  <option>Mexico</option>
+                  <option>United Kingdom</option>
+                  <option>Other</option>
+                </select>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Identity document</legend>
+            <div class="grid-three">
+              <div class="field">
+                <label for="ex04-doc-type">Document type</label>
+                <select id="ex04-doc-type">
+                  <option selected>Passport</option>
+                  <option>Driver license</option>
+                  <option>State ID</option>
+                  <option>Permanent resident card</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="ex04-doc-number">Document number</label>
+                <input id="ex04-doc-number" value="P90844123">
+                <p class="help-text">Enter the number exactly as printed.</p>
+              </div>
+              <div class="field">
+                <label for="ex04-issuing-country">Issuing country</label>
+                <select id="ex04-issuing-country">
+                  <option>United States</option>
+                  <option selected>Canada</option>
+                  <option>Mexico</option>
+                  <option>United Kingdom</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="ex04-issue-date">Issue date</label>
+                <input id="ex04-issue-date" type="date" value="2023-04-15">
+              </div>
+              <div class="field">
+                <label for="ex04-exp-date">Expiration date</label>
+                <input id="ex04-exp-date" type="date" value="2033-04-14">
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Verification status</legend>
+            <div class="field">
+              <span class="field-label">Residential address verified</span>
+              <div class="inline-options">
+                <label><input type="radio" name="ex04-addr-verified" value="Yes" checked> Yes</label>
+                <label><input type="radio" name="ex04-addr-verified" value="No"> No</label>
+              </div>
+            </div>
+            <div class="field">
+              <span class="field-label">Verification method</span>
+              <div class="inline-options">
+                <label><input type="checkbox" name="ex04-method" value="Document upload" checked> Document upload</label>
+                <label><input type="checkbox" name="ex04-method" value="Credit bureau questions"> Credit bureau questions</label>
+                <label><input type="checkbox" name="ex04-method" value="In-person review" checked> In-person review</label>
+              </div>
+            </div>
+            <div class="field">
+              <label for="ex04-reviewer-notes">Reviewer notes</label>
+              <textarea id="ex04-reviewer-notes">Applicant must bring original passport to the appointment.</textarea>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-05">
+      <header class="example-header">
+        <p class="example-kicker">Example 05</p>
+        <h2>Loan Prequalification Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a personal loan prequalification form. It tests number inputs, select
+        fields, radio groups, currency-like labels, percentage fields, and helper text that should
+        not be confused with entered values.
+      </p>
+      <div class="example-surface">
+        <form aria-label="Loan prequalification">
+          <div class="grid-two">
+            <div class="field">
+              <label for="ex05-applicant">Applicant name</label>
+              <input id="ex05-applicant" value="Diego Marin">
+            </div>
+            <div class="field">
+              <label for="ex05-loan-amount">Requested loan amount</label>
+              <div class="amount-row">
+                <span class="prefix">$</span>
+                <input id="ex05-loan-amount" type="number" value="18500">
+              </div>
+              <p class="help-text">Enter amount before fees.</p>
+            </div>
+            <div class="field">
+              <label for="ex05-purpose">Loan purpose</label>
+              <select id="ex05-purpose">
+                <option selected>Debt consolidation</option>
+                <option>Home improvement</option>
+                <option>Medical expense</option>
+                <option>Major purchase</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ex05-income">Annual gross income</label>
+              <div class="amount-row">
+                <span class="prefix">$</span>
+                <input id="ex05-income" type="number" value="92000">
+              </div>
+              <p class="help-text">Enter amount before taxes.</p>
+            </div>
+            <div class="field">
+              <label for="ex05-housing">Monthly housing payment</label>
+              <input id="ex05-housing" type="number" value="2450">
+            </div>
+            <div class="field">
+              <label for="ex05-employment">Employment status</label>
+              <select id="ex05-employment">
+                <option selected>Full-time employee</option>
+                <option>Part-time employee</option>
+                <option>Self-employed</option>
+                <option>Retired</option>
+                <option>Unemployed</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ex05-years">Years at current employer</label>
+              <input id="ex05-years" type="number" value="4">
+            </div>
+            <div class="field">
+              <label for="ex05-term">Preferred repayment term</label>
+              <select id="ex05-term">
+                <option>24 months</option>
+                <option>36 months</option>
+                <option selected>48 months</option>
+                <option>60 months</option>
+              </select>
+            </div>
+          </div>
+
+          <fieldset>
+            <legend>Credit score range</legend>
+            <div class="inline-options">
+              <label><input type="radio" name="ex05-credit" value="Under 620"> Under 620</label>
+              <label><input type="radio" name="ex05-credit" value="620-659"> 620-659</label>
+              <label><input type="radio" name="ex05-credit" value="660-699"> 660-699</label>
+              <label><input type="radio" name="ex05-credit" value="700-749" checked> 700-749</label>
+              <label><input type="radio" name="ex05-credit" value="750+"> 750+</label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Co-applicant included</legend>
+            <div class="inline-options">
+              <label><input type="radio" name="ex05-coapplicant" value="Yes"> Yes</label>
+              <label><input type="radio" name="ex05-coapplicant" value="No" checked> No</label>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label><input type="checkbox" value="Consent" checked style="width:auto;min-height:auto"> Consent to soft credit check</label>
+          </div>
+
+          <div class="field">
+            <label for="ex05-notes">Additional financial notes</label>
+            <textarea id="ex05-notes">Applicant expects annual bonus in Q4 but does not want it included in base income.</textarea>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-06">
+      <header class="example-header">
+        <p class="example-kicker">Example 06</p>
+        <h2>Billing And Shipping Address Duplication Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a checkout address form with repeated field groups. It tests whether
+        extraction can distinguish billing fields from shipping fields even when the labels are
+        repeated, and whether readonly copied values are still extracted. Check "Same as billing
+        address" to copy and lock the shipping fields.
+      </p>
+      <div class="example-surface">
+        <form aria-label="Billing and shipping address">
+          <fieldset>
+            <legend>Billing address</legend>
+            <div class="grid-two">
+              <div class="field">
+                <label for="ex06-billing-name">Full name</label>
+                <input id="ex06-billing-name" value="Priya Shah">
+              </div>
+              <div class="field">
+                <label for="ex06-billing-company">Company</label>
+                <input id="ex06-billing-company" value="Northstar Research Lab">
+              </div>
+              <div class="field">
+                <label for="ex06-billing-addr1">Address line 1</label>
+                <input id="ex06-billing-addr1" value="88 Valencia Street">
+              </div>
+              <div class="field">
+                <label for="ex06-billing-addr2">Address line 2</label>
+                <input id="ex06-billing-addr2" value="Suite 402">
+              </div>
+              <div class="field">
+                <label for="ex06-billing-city">City</label>
+                <input id="ex06-billing-city" value="San Francisco">
+              </div>
+              <div class="field">
+                <label for="ex06-billing-state">State</label>
+                <select id="ex06-billing-state">
+                  <option selected>CA</option>
+                  <option>OR</option>
+                  <option>WA</option>
+                  <option>NV</option>
+                  <option>AZ</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="ex06-billing-zip">ZIP</label>
+                <input id="ex06-billing-zip" value="94103">
+              </div>
+              <div class="field">
+                <label for="ex06-billing-country">Country</label>
+                <select id="ex06-billing-country">
+                  <option selected>United States</option>
+                  <option>Canada</option>
+                  <option>Mexico</option>
+                </select>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label><input type="checkbox" id="ex06-same-address" style="width:auto;min-height:auto"> Same as billing address</label>
+          </div>
+
+          <fieldset>
+            <legend>Shipping address</legend>
+            <div class="grid-two">
+              <div class="field">
+                <label for="ex06-shipping-name">Full name</label>
+                <input id="ex06-shipping-name" value="Priya Shah">
+              </div>
+              <div class="field">
+                <label for="ex06-shipping-company">Company</label>
+                <input id="ex06-shipping-company" value="Northstar Research Lab - Receiving">
+              </div>
+              <div class="field">
+                <label for="ex06-shipping-addr1">Address line 1</label>
+                <input id="ex06-shipping-addr1" value="120 King Street">
+              </div>
+              <div class="field">
+                <label for="ex06-shipping-addr2">Address line 2</label>
+                <input id="ex06-shipping-addr2" value="Dock B">
+              </div>
+              <div class="field">
+                <label for="ex06-shipping-city">City</label>
+                <input id="ex06-shipping-city" value="San Francisco">
+              </div>
+              <div class="field">
+                <label for="ex06-shipping-state">State</label>
+                <select id="ex06-shipping-state">
+                  <option selected>CA</option>
+                  <option>OR</option>
+                  <option>WA</option>
+                  <option>NV</option>
+                  <option>AZ</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="ex06-shipping-zip">ZIP</label>
+                <input id="ex06-shipping-zip" value="94107">
+              </div>
+            </div>
+            <div class="field">
+              <label for="ex06-shipping-instructions">Delivery instructions</label>
+              <textarea id="ex06-shipping-instructions">Deliver between 9 AM and 3 PM. Use freight entrance on King Street.</textarea>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-07">
+      <header class="example-header">
+        <p class="example-kicker">Example 07</p>
+        <h2>Employee Onboarding Tax And Payroll Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a payroll setup form. It tests disabled fields, readonly fields,
+        selected tax options, direct deposit fields, and sensitive values that are partially masked
+        but still present in the DOM.
+      </p>
+      <div class="example-surface">
+        <form aria-label="Employee onboarding tax and payroll">
+          <fieldset>
+            <legend>Employment (HR controlled)</legend>
+            <div class="grid-two">
+              <div class="field">
+                <label for="ex07-name">Employee name <span class="badge ro">readonly</span></label>
+                <input id="ex07-name" value="Taylor Brooks" readonly>
+              </div>
+              <div class="field">
+                <label for="ex07-worker-type">Worker type <span class="badge lock">disabled</span></label>
+                <select id="ex07-worker-type" disabled>
+                  <option selected>W-2 employee</option>
+                  <option>1099 contractor</option>
+                  <option>Intern</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="ex07-department">Department <span class="badge lock">disabled</span></label>
+                <input id="ex07-department" value="Operations" disabled>
+              </div>
+              <div class="field">
+                <label for="ex07-start-date">Start date <span class="badge ro">readonly</span></label>
+                <input id="ex07-start-date" type="date" value="2026-06-15" readonly>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Federal withholding</legend>
+            <div class="field">
+              <span class="field-label">Federal filing status</span>
+              <div class="stack-options">
+                <label><input type="radio" name="ex07-filing" value="Single or married filing separately" checked> Single or married filing separately</label>
+                <label><input type="radio" name="ex07-filing" value="Married filing jointly"> Married filing jointly</label>
+                <label><input type="radio" name="ex07-filing" value="Head of household"> Head of household</label>
+              </div>
+            </div>
+            <div class="field">
+              <label><input type="checkbox" value="Multiple jobs" style="width:auto;min-height:auto"> Multiple jobs checkbox</label>
+            </div>
+            <div class="grid-two">
+              <div class="field">
+                <label for="ex07-dependents">Claim dependents amount</label>
+                <input id="ex07-dependents" type="number" value="0">
+              </div>
+              <div class="field">
+                <label for="ex07-other-income">Other income</label>
+                <input id="ex07-other-income" type="number" value="1200">
+              </div>
+              <div class="field">
+                <label for="ex07-deductions">Deductions</label>
+                <input id="ex07-deductions" type="number" value="0">
+              </div>
+              <div class="field">
+                <label for="ex07-extra">Extra withholding</label>
+                <input id="ex07-extra" type="number" value="50">
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Direct deposit</legend>
+            <div class="grid-two">
+              <div class="field">
+                <label for="ex07-account-type">Account type</label>
+                <select id="ex07-account-type">
+                  <option selected>Checking</option>
+                  <option>Savings</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="ex07-routing">Routing number</label>
+                <input id="ex07-routing" value="121000358">
+              </div>
+              <div class="field">
+                <label for="ex07-account">Account number</label>
+                <input id="ex07-account" type="password" value="4455667788">
+                <p class="help-text">Value is intentionally masked by the browser.</p>
+              </div>
+              <div class="field">
+                <label for="ex07-allocation">Deposit allocation</label>
+                <select id="ex07-allocation">
+                  <option selected>Full net pay</option>
+                  <option>Fixed amount</option>
+                  <option>Percentage split</option>
+                </select>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label for="ex07-notes">Payroll notes</label>
+            <textarea id="ex07-notes">Employee requested first paycheck as paper check until direct deposit is verified.</textarea>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-08">
+      <header class="example-header">
+        <p class="example-kicker">Example 08</p>
+        <h2>University Course Registration Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a university registration form. It tests repeated course rows, select
+        controls, checkboxes, readonly student information, and field names that only become clear
+        when row context is included.
+      </p>
+      <div class="example-surface">
+        <form aria-label="Course registration">
+          <div class="grid-three">
+            <div class="field">
+              <label for="ex08-student-name">Student name</label>
+              <input id="ex08-student-name" value="Mei Tanaka" readonly>
+            </div>
+            <div class="field">
+              <label for="ex08-student-number">Student number</label>
+              <input id="ex08-student-number" value="S-884209" readonly>
+            </div>
+            <div class="field">
+              <label for="ex08-program">Program</label>
+              <input id="ex08-program" value="Computer Science BS" readonly>
+            </div>
+            <div class="field">
+              <label for="ex08-term">Registration term</label>
+              <select id="ex08-term">
+                <option>Summer 2026</option>
+                <option selected>Fall 2026</option>
+                <option>Spring 2027</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ex08-status">Enrollment status</label>
+              <select id="ex08-status">
+                <option selected>Full-time</option>
+                <option>Part-time</option>
+              </select>
+            </div>
+          </div>
+
+          <table class="form-table">
+            <thead>
+              <tr>
+                <th>Course code</th>
+                <th>Section</th>
+                <th>Credits</th>
+                <th>Grading mode</th>
+                <th>Waitlist if full</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input aria-label="Course 1 code" value="CS 340"></td>
+                <td>
+                  <select aria-label="Course 1 section">
+                    <option selected>A</option><option>B</option><option>C</option>
+                  </select>
+                </td>
+                <td><input aria-label="Course 1 credits" type="number" value="4"></td>
+                <td>
+                  <select aria-label="Course 1 grading mode">
+                    <option selected>Letter</option><option>Pass/No Pass</option>
+                  </select>
+                </td>
+                <td><input aria-label="Course 1 waitlist if full" type="checkbox" checked style="width:auto;min-height:auto"></td>
+              </tr>
+              <tr>
+                <td><input aria-label="Course 2 code" value="MATH 221"></td>
+                <td>
+                  <select aria-label="Course 2 section">
+                    <option>A</option><option>B</option><option selected>C</option>
+                  </select>
+                </td>
+                <td><input aria-label="Course 2 credits" type="number" value="3"></td>
+                <td>
+                  <select aria-label="Course 2 grading mode">
+                    <option selected>Letter</option><option>Pass/No Pass</option>
+                  </select>
+                </td>
+                <td><input aria-label="Course 2 waitlist if full" type="checkbox" style="width:auto;min-height:auto"></td>
+              </tr>
+              <tr>
+                <td><input aria-label="Course 3 code" value="HIST 180"></td>
+                <td>
+                  <select aria-label="Course 3 section">
+                    <option>A</option><option selected>B</option><option>C</option>
+                  </select>
+                </td>
+                <td><input aria-label="Course 3 credits" type="number" value="3"></td>
+                <td>
+                  <select aria-label="Course 3 grading mode">
+                    <option>Letter</option><option selected>Pass/No Pass</option>
+                  </select>
+                </td>
+                <td><input aria-label="Course 3 waitlist if full" type="checkbox" checked style="width:auto;min-height:auto"></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="grid-two" style="margin-top:14px">
+            <div class="field">
+              <label for="ex08-advisor">Advisor approval code</label>
+              <input id="ex08-advisor" value="ADV-73QK">
+            </div>
+            <div class="field">
+              <label for="ex08-notes">Registration notes</label>
+              <textarea id="ex08-notes">Student prefers morning sections when available.</textarea>
+            </div>
+          </div>
+          <div class="field">
+            <label><input type="checkbox" checked style="width:auto;min-height:auto"> Acknowledge tuition responsibility</label>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-09">
+      <header class="example-header">
+        <p class="example-kicker">Example 09</p>
+        <h2>Insurance Claim Details Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates an insurance claim intake form. It tests date and time inputs, claim
+        category selection, incident descriptions, checkboxes for attached evidence, and
+        file-related fields where actual file input values cannot be preset by HTML.
+      </p>
+      <div class="example-surface">
+        <form aria-label="Insurance claim details">
+          <div class="grid-two">
+            <div class="field">
+              <label for="ex09-claim-number">Claim number</label>
+              <input id="ex09-claim-number" value="CLM-6029-1184" readonly>
+            </div>
+            <div class="field">
+              <label for="ex09-policyholder">Policyholder name</label>
+              <input id="ex09-policyholder" value="Nadia Patel">
+            </div>
+            <div class="field">
+              <label for="ex09-policy-number">Policy number</label>
+              <input id="ex09-policy-number" value="AUTO-91-44720">
+            </div>
+            <div class="field">
+              <label for="ex09-claim-type">Claim type</label>
+              <select id="ex09-claim-type">
+                <option selected>Auto collision</option>
+                <option>Property damage</option>
+                <option>Theft</option>
+                <option>Liability</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ex09-incident-date">Incident date</label>
+              <input id="ex09-incident-date" type="date" value="2026-05-24">
+            </div>
+            <div class="field">
+              <label for="ex09-incident-time">Incident time</label>
+              <input id="ex09-incident-time" type="time" value="18:35">
+            </div>
+            <div class="field">
+              <label for="ex09-location">Incident location</label>
+              <input id="ex09-location" value="5th Avenue and Pine Street">
+            </div>
+            <div class="field">
+              <label for="ex09-police-report-number">Police report number</label>
+              <input id="ex09-police-report-number" value="PR-2026-77150">
+            </div>
+          </div>
+
+          <div class="two-col-fieldsets">
+            <fieldset>
+              <legend>Police report filed</legend>
+              <div class="inline-options">
+                <label><input type="radio" name="ex09-police" value="Yes" checked> Yes</label>
+                <label><input type="radio" name="ex09-police" value="No"> No</label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Vehicle drivable</legend>
+              <div class="inline-options">
+                <label><input type="radio" name="ex09-drivable" value="Yes"> Yes</label>
+                <label><input type="radio" name="ex09-drivable" value="No" checked> No</label>
+              </div>
+            </fieldset>
+          </div>
+
+          <div class="two-col-fieldsets">
+            <fieldset>
+              <legend>Damage areas</legend>
+              <div class="stack-options">
+                <label><input type="checkbox" name="ex09-damage" value="Front bumper" checked> Front bumper</label>
+                <label><input type="checkbox" name="ex09-damage" value="Driver side door" checked> Driver side door</label>
+                <label><input type="checkbox" name="ex09-damage" value="Rear panel"> Rear panel</label>
+                <label><input type="checkbox" name="ex09-damage" value="Windshield"> Windshield</label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Evidence provided</legend>
+              <div class="stack-options">
+                <label><input type="checkbox" name="ex09-evidence" value="Photos" checked> Photos</label>
+                <label><input type="checkbox" name="ex09-evidence" value="Police report PDF" checked> Police report PDF</label>
+                <label><input type="checkbox" name="ex09-evidence" value="Repair estimate"> Repair estimate</label>
+                <label><input type="checkbox" name="ex09-evidence" value="Witness statement" checked> Witness statement</label>
+              </div>
+            </fieldset>
+          </div>
+
+          <div class="grid-two">
+            <div class="field">
+              <label for="ex09-file">Attach files</label>
+              <input id="ex09-file" type="file" multiple>
+            </div>
+            <div class="field">
+              <label for="ex09-file-display">Uploaded file display</label>
+              <input id="ex09-file-display" value="photos_bundle_0524.zip, police_report_PR-2026-77150.pdf" disabled>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="ex09-description">Incident description</label>
+            <textarea id="ex09-description">Another vehicle turned left through the intersection and struck the front driver side. No injuries were reported at the scene.</textarea>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-10">
+      <header class="example-header">
+        <p class="example-kicker">Example 10</p>
+        <h2>Subscription Account Settings Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a SaaS account settings screen. It tests a semi-native form where some
+        values are editable, some are readonly, some are disabled by account policy, and checkbox
+        groups represent enabled add-ons.
+      </p>
+      <div class="example-surface">
+        <form class="settings-card" aria-label="Subscription account settings">
+          <div class="grid-two">
+            <div class="field">
+              <label for="ex10-workspace">Workspace name</label>
+              <input id="ex10-workspace" value="Atlas Product Studio">
+            </div>
+            <div class="field">
+              <label for="ex10-slug">Workspace slug <span class="badge ro">readonly</span></label>
+              <input id="ex10-slug" value="atlas-product-studio" readonly>
+            </div>
+            <div class="field">
+              <label for="ex10-owner-email">Account owner email</label>
+              <input id="ex10-owner-email" type="email" value="owner@example.test">
+            </div>
+            <div class="field">
+              <label for="ex10-plan">Current plan <span class="badge lock">disabled</span></label>
+              <select id="ex10-plan" disabled>
+                <option>Starter</option>
+                <option selected>Business</option>
+                <option>Enterprise</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ex10-seats">Seats purchased</label>
+              <input id="ex10-seats" type="number" value="24">
+            </div>
+            <div class="field">
+              <label for="ex10-seats-used">Seats currently used <span class="badge ro">readonly</span></label>
+              <input id="ex10-seats-used" type="number" value="19" readonly>
+            </div>
+            <div class="field">
+              <label for="ex10-renewal">Renewal date <span class="badge ro">readonly</span></label>
+              <input id="ex10-renewal" type="date" value="2027-01-18" readonly>
+            </div>
+            <div class="field">
+              <label for="ex10-cancel-reason">Cancellation reason <span class="badge lock">disabled</span></label>
+              <select id="ex10-cancel-reason" disabled>
+                <option selected>Not cancelling</option>
+                <option>Too expensive</option>
+                <option>Switching tools</option>
+                <option>Missing features</option>
+              </select>
+            </div>
+          </div>
+
+          <fieldset>
+            <legend>Billing cadence</legend>
+            <div class="inline-options">
+              <label><input type="radio" name="ex10-cadence" value="Monthly"> Monthly</label>
+              <label><input type="radio" name="ex10-cadence" value="Annual" checked> Annual</label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Plan add-ons</legend>
+            <div class="stack-options">
+              <label><input type="checkbox" name="ex10-addon" value="Audit log retention" checked> Audit log retention</label>
+              <label><input type="checkbox" name="ex10-addon" value="SAML SSO" checked> SAML SSO</label>
+              <label><input type="checkbox" name="ex10-addon" value="Priority support"> Priority support</label>
+              <label><input type="checkbox" name="ex10-addon" value="Advanced analytics" checked> Advanced analytics</label>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label for="ex10-invoice-emails">Invoice email recipients</label>
+            <textarea id="ex10-invoice-emails">billing@example.test
+finance@example.test</textarea>
+          </div>
+
+          <div class="field">
+            <label><input type="checkbox" checked style="width:auto;min-height:auto"> Auto-renew subscription</label>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-11">
+      <header class="example-header">
+        <p class="example-kicker">Example 11</p>
+        <h2>Travel Passenger Details Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates the passenger details step of a travel booking flow. It tests repeated
+        passenger sections, native select controls for document type and seat preference, and values
+        that belong to similarly named fields across multiple passengers.
+      </p>
+      <div class="example-surface">
+        <form aria-label="Travel passenger details">
+          <fieldset>
+            <legend>Trip</legend>
+            <div class="grid-three">
+              <div class="field">
+                <label for="ex11-reservation">Reservation code</label>
+                <input id="ex11-reservation" value="TRP-58K2Q" readonly>
+              </div>
+              <div class="field">
+                <label for="ex11-route">Route</label>
+                <input id="ex11-route" value="San Jose to Los Angeles" readonly>
+              </div>
+              <div class="field">
+                <label for="ex11-dep-date">Departure date</label>
+                <input id="ex11-dep-date" type="date" value="2026-07-03" readonly>
+              </div>
+              <div class="field">
+                <label for="ex11-dep-time">Departure time</label>
+                <input id="ex11-dep-time" type="time" value="08:15" readonly>
+              </div>
+              <div class="field">
+                <label for="ex11-fare">Fare class</label>
+                <select id="ex11-fare">
+                  <option>Economy</option>
+                  <option>Standard</option>
+                  <option selected>Flexible</option>
+                </select>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="subcard">
+            <h3>Passenger 1</h3>
+            <div class="grid-three">
+              <div class="field">
+                <label for="ex11-p1-first">First name</label>
+                <input id="ex11-p1-first" value="Elena">
+              </div>
+              <div class="field">
+                <label for="ex11-p1-last">Last name</label>
+                <input id="ex11-p1-last" value="Morales">
+              </div>
+              <div class="field">
+                <label for="ex11-p1-type">Passenger type</label>
+                <select id="ex11-p1-type">
+                  <option selected>Adult</option>
+                  <option>Child</option>
+                  <option>Senior</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="ex11-p1-doc-type">Document type</label>
+                <select id="ex11-p1-doc-type">
+                  <option selected>Driver license</option>
+                  <option>Passport</option>
+                  <option>None</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="ex11-p1-doc-number">Document number</label>
+                <input id="ex11-p1-doc-number" value="D4829017">
+              </div>
+              <div class="field">
+                <span class="field-label">Seat preference</span>
+                <div class="inline-options">
+                  <label><input type="radio" name="ex11-p1-seat" value="Window" checked> Window</label>
+                  <label><input type="radio" name="ex11-p1-seat" value="Aisle"> Aisle</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="subcard">
+            <h3>Passenger 2</h3>
+            <div class="grid-three">
+              <div class="field">
+                <label for="ex11-p2-first">First name</label>
+                <input id="ex11-p2-first" value="Rafi">
+              </div>
+              <div class="field">
+                <label for="ex11-p2-last">Last name</label>
+                <input id="ex11-p2-last" value="Morales">
+              </div>
+              <div class="field">
+                <label for="ex11-p2-type">Passenger type</label>
+                <select id="ex11-p2-type">
+                  <option>Adult</option>
+                  <option selected>Child</option>
+                  <option>Senior</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="ex11-p2-doc-type">Document type</label>
+                <select id="ex11-p2-doc-type">
+                  <option>Driver license</option>
+                  <option>Passport</option>
+                  <option selected>None</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="ex11-p2-doc-number">Document number</label>
+                <input id="ex11-p2-doc-number" value="" disabled>
+              </div>
+              <div class="field">
+                <span class="field-label">Seat preference</span>
+                <div class="inline-options">
+                  <label><input type="radio" name="ex11-p2-seat" value="Window"> Window</label>
+                  <label><input type="radio" name="ex11-p2-seat" value="Aisle" checked> Aisle</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <fieldset>
+            <legend>Special assistance</legend>
+            <div class="inline-options">
+              <label><input type="checkbox" name="ex11-assist" value="Extra boarding time" checked> Extra boarding time</label>
+              <label><input type="checkbox" name="ex11-assist" value="Wheelchair space"> Wheelchair space</label>
+              <label><input type="checkbox" name="ex11-assist" value="Service animal"> Service animal</label>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label for="ex11-notes">Trip notes</label>
+            <textarea id="ex11-notes">Passenger 2 should be seated next to Passenger 1 if possible.</textarea>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-12">
+      <header class="example-header">
+        <p class="example-kicker">Example 12</p>
+        <h2>Vehicle Registration Renewal Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a motor vehicle registration renewal form. It tests readonly official
+        record fields, editable contact fields, disabled fields controlled by agency status, and
+        checkbox acknowledgements.
+      </p>
+      <div class="example-surface">
+        <form class="doc-form" aria-label="Vehicle registration renewal">
+          <p class="microcopy">Official record - verify all printed values before submitting</p>
+          <fieldset>
+            <legend>Vehicle record</legend>
+            <div class="grid-three">
+              <div class="field">
+                <label for="ex12-notice">Renewal notice number</label>
+                <input id="ex12-notice" value="VRN-2026-449012" readonly>
+              </div>
+              <div class="field">
+                <label for="ex12-plate">Plate number</label>
+                <input id="ex12-plate" value="8TRC921" readonly>
+              </div>
+              <div class="field">
+                <label for="ex12-vin">VIN last 6</label>
+                <input id="ex12-vin" value="492118" readonly>
+              </div>
+              <div class="field">
+                <label for="ex12-year">Vehicle year</label>
+                <input id="ex12-year" type="number" value="2021" readonly>
+              </div>
+              <div class="field">
+                <label for="ex12-make">Vehicle make</label>
+                <input id="ex12-make" value="Subaru" readonly>
+              </div>
+              <div class="field">
+                <label for="ex12-model">Vehicle model</label>
+                <input id="ex12-model" value="Outback" readonly>
+              </div>
+              <div class="field">
+                <label for="ex12-county">Registration county</label>
+                <select id="ex12-county">
+                  <option selected>Alameda</option>
+                  <option>Santa Clara</option>
+                  <option>San Mateo</option>
+                  <option>Contra Costa</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="ex12-smog">Smog certification required <span class="badge lock">disabled</span></label>
+                <select id="ex12-smog" disabled>
+                  <option selected>Not required</option>
+                  <option>Required</option>
+                </select>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Insurance on file</legend>
+            <div class="inline-options">
+              <label><input type="radio" name="ex12-insurance" value="Yes" checked> Yes</label>
+              <label><input type="radio" name="ex12-insurance" value="No"> No</label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Mailing address</legend>
+            <div class="grid-three">
+              <div class="field">
+                <label for="ex12-addr1">Address line 1</label>
+                <input id="ex12-addr1" value="410 Oak Grove Avenue">
+              </div>
+              <div class="field">
+                <label for="ex12-addr2">Address line 2</label>
+                <input id="ex12-addr2" value="Apt 6">
+              </div>
+              <div class="field">
+                <label for="ex12-city">City</label>
+                <input id="ex12-city" value="Oakland">
+              </div>
+              <div class="field">
+                <label for="ex12-state">State</label>
+                <select id="ex12-state">
+                  <option selected>CA</option>
+                  <option>OR</option>
+                  <option>WA</option>
+                  <option>NV</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="ex12-zip">ZIP</label>
+                <input id="ex12-zip" value="94610">
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Delivery method</legend>
+            <div class="inline-options">
+              <label><input type="radio" name="ex12-delivery" value="Mail registration card" checked> Mail registration card</label>
+              <label><input type="radio" name="ex12-delivery" value="Electronic only"> Electronic only</label>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label><input type="checkbox" checked style="width:auto;min-height:auto"> Acknowledge penalties statement</label>
+          </div>
+          <div class="field">
+            <label for="ex12-comments">Renewal comments</label>
+            <textarea id="ex12-comments">Owner requests updated mailing address to be used for this renewal only.</textarea>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-13">
+      <header class="example-header">
+        <p class="example-kicker">Example 13</p>
+        <h2>Conference Speaker Application Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a conference speaker proposal form. It tests long textareas, URL
+        fields, topic checkboxes, session format radio buttons, and content where the important
+        value may be a paragraph rather than a short token.
+      </p>
+      <div class="example-surface">
+        <form aria-label="Conference speaker application">
+          <div class="grid-two">
+            <div class="field">
+              <label for="ex13-name">Speaker name</label>
+              <input id="ex13-name" value="Lina Romero">
+            </div>
+            <div class="field">
+              <label for="ex13-email">Speaker email</label>
+              <input id="ex13-email" type="email" value="lina.romero@example.test">
+            </div>
+            <div class="field">
+              <label for="ex13-org">Organization</label>
+              <input id="ex13-org" value="Civic Data Lab">
+            </div>
+            <div class="field">
+              <label for="ex13-website">Speaker website</label>
+              <input id="ex13-website" type="url" value="https://example.test/lina-romero">
+            </div>
+            <div class="field">
+              <label for="ex13-title">Talk title</label>
+              <input id="ex13-title" value="Designing Interfaces For Messy Public Data">
+            </div>
+            <div class="field">
+              <label for="ex13-audience">Audience level</label>
+              <select id="ex13-audience">
+                <option>Beginner</option>
+                <option selected>Intermediate</option>
+                <option>Advanced</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ex13-length">Preferred session length</label>
+              <select id="ex13-length">
+                <option>30 minutes</option>
+                <option>60 minutes</option>
+                <option selected>90 minutes</option>
+              </select>
+            </div>
+          </div>
+
+          <fieldset>
+            <legend>Session format</legend>
+            <div class="inline-options">
+              <label><input type="radio" name="ex13-format" value="Talk"> Talk</label>
+              <label><input type="radio" name="ex13-format" value="Workshop" checked> Workshop</label>
+              <label><input type="radio" name="ex13-format" value="Panel"> Panel</label>
+              <label><input type="radio" name="ex13-format" value="Lightning talk"> Lightning talk</label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Topic areas</legend>
+            <div class="inline-options">
+              <label><input type="checkbox" name="ex13-topic" value="Data visualization" checked> Data visualization</label>
+              <label><input type="checkbox" name="ex13-topic" value="Accessibility" checked> Accessibility</label>
+              <label><input type="checkbox" name="ex13-topic" value="Open source"> Open source</label>
+              <label><input type="checkbox" name="ex13-topic" value="Civic technology" checked> Civic technology</label>
+              <label><input type="checkbox" name="ex13-topic" value="AI systems"> AI systems</label>
+            </div>
+          </fieldset>
+
+          <div class="two-col-fieldsets">
+            <fieldset>
+              <legend>Travel support needed</legend>
+              <div class="inline-options">
+                <label><input type="radio" name="ex13-travel" value="Yes" checked> Yes</label>
+                <label><input type="radio" name="ex13-travel" value="No"> No</label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Recording permission</legend>
+              <div class="stack-options">
+                <label><input type="radio" name="ex13-recording" value="Yes, record and publish" checked> Yes, record and publish</label>
+                <label><input type="radio" name="ex13-recording" value="Record but do not publish"> Record but do not publish</label>
+                <label><input type="radio" name="ex13-recording" value="Do not record"> Do not record</label>
+              </div>
+            </fieldset>
+          </div>
+
+          <div class="field">
+            <label for="ex13-abstract">Abstract</label>
+            <textarea id="ex13-abstract" style="min-height:120px">This workshop walks through practical patterns for turning incomplete public datasets into interfaces that help users understand uncertainty, provenance, and missing values.</textarea>
+          </div>
+          <div class="field">
+            <label for="ex13-organizer-notes">Speaker notes to organizers</label>
+            <textarea id="ex13-organizer-notes">Can adapt the workshop for a smaller room if tables are available.</textarea>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-14">
+      <header class="example-header">
+        <p class="example-kicker">Example 14</p>
+        <h2>Field Service Work Order Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a technician work order form. It tests readonly dispatch details, time
+        inputs, checklist values, service status selection, and repeated parts rows inside a native
+        table.
+      </p>
+      <div class="example-surface">
+        <form aria-label="Field service work order">
+          <fieldset>
+            <legend>Dispatch details</legend>
+            <div class="grid-two">
+              <div class="field">
+                <label for="ex14-wo">Work order number</label>
+                <input id="ex14-wo" value="WO-7718" readonly>
+              </div>
+              <div class="field">
+                <label for="ex14-customer">Customer name</label>
+                <input id="ex14-customer" value="Harbor Cafe" readonly>
+              </div>
+              <div class="field">
+                <label for="ex14-address">Service address</label>
+                <input id="ex14-address" value="201 Pier Lane, Monterey, CA" readonly>
+              </div>
+              <div class="field">
+                <label for="ex14-equipment">Equipment</label>
+                <input id="ex14-equipment" value="Walk-in refrigerator" readonly>
+              </div>
+              <div class="field">
+                <label for="ex14-priority">Priority <span class="badge lock">disabled</span></label>
+                <select id="ex14-priority" disabled>
+                  <option>Low</option>
+                  <option>Medium</option>
+                  <option selected>High</option>
+                </select>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Visit</legend>
+            <div class="grid-three">
+              <div class="field">
+                <label for="ex14-date">Scheduled date</label>
+                <input id="ex14-date" type="date" value="2026-06-04">
+              </div>
+              <div class="field">
+                <label for="ex14-arrival">Arrival time</label>
+                <input id="ex14-arrival" type="time" value="09:20">
+              </div>
+              <div class="field">
+                <label for="ex14-departure">Departure time</label>
+                <input id="ex14-departure" type="time" value="11:05">
+              </div>
+              <div class="field">
+                <label for="ex14-status">Service status</label>
+                <select id="ex14-status">
+                  <option>Scheduled</option>
+                  <option>In progress</option>
+                  <option selected>Completed with parts</option>
+                  <option>Needs follow-up</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="ex14-category">Issue category</label>
+                <select id="ex14-category">
+                  <option selected>Cooling failure</option>
+                  <option>Electrical</option>
+                  <option>Mechanical</option>
+                  <option>Routine maintenance</option>
+                </select>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Diagnostics performed</legend>
+            <div class="inline-options">
+              <label><input type="checkbox" name="ex14-diag" value="Temperature reading" checked> Temperature reading</label>
+              <label><input type="checkbox" name="ex14-diag" value="Compressor inspection" checked> Compressor inspection</label>
+              <label><input type="checkbox" name="ex14-diag" value="Door seal inspection" checked> Door seal inspection</label>
+              <label><input type="checkbox" name="ex14-diag" value="Electrical panel inspection"> Electrical panel inspection</label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Customer signature captured</legend>
+            <div class="inline-options">
+              <label><input type="radio" name="ex14-signature" value="Yes" checked> Yes</label>
+              <label><input type="radio" name="ex14-signature" value="No"> No</label>
+            </div>
+          </fieldset>
+
+          <table class="form-table">
+            <thead>
+              <tr>
+                <th>Part number</th>
+                <th>Description</th>
+                <th>Quantity</th>
+                <th>Warranty covered</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input aria-label="Part 1 number" value="GSK-4410"></td>
+                <td><input aria-label="Part 1 description" value="Door gasket"></td>
+                <td><input aria-label="Part 1 quantity" type="number" value="1"></td>
+                <td><input aria-label="Part 1 warranty covered" type="checkbox" checked style="width:auto;min-height:auto"></td>
+              </tr>
+              <tr>
+                <td><input aria-label="Part 2 number" value="SNS-209"></td>
+                <td><input aria-label="Part 2 description" value="Temperature sensor"></td>
+                <td><input aria-label="Part 2 quantity" type="number" value="2"></td>
+                <td><input aria-label="Part 2 warranty covered" type="checkbox" style="width:auto;min-height:auto"></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="field" style="margin-top:14px">
+            <label for="ex14-notes">Technician notes</label>
+            <textarea id="ex14-notes">Replaced damaged door gasket and two sensors. Unit returned to target temperature before departure.</textarea>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-15">
+      <header class="example-header">
+        <p class="example-kicker">Example 15</p>
+        <h2>Donation And Gift Designation Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a nonprofit donation form. It tests amount inputs, recurring gift
+        options, conditional tribute fields, acknowledgement preferences, and checkboxes that
+        describe donor intent.
+      </p>
+      <div class="example-surface">
+        <form aria-label="Donation and gift designation">
+          <div class="grid-two">
+            <div class="field">
+              <label for="ex15-donor">Donor name</label>
+              <input id="ex15-donor" value="Owen Brooks">
+            </div>
+            <div class="field">
+              <label for="ex15-donor-email">Donor email</label>
+              <input id="ex15-donor-email" type="email" value="owen.brooks@example.test">
+            </div>
+            <div class="field">
+              <label for="ex15-amount">Gift amount</label>
+              <div class="amount-row">
+                <span class="prefix">$</span>
+                <input id="ex15-amount" type="number" value="250">
+              </div>
+            </div>
+            <div class="field">
+              <label for="ex15-designation">Gift designation</label>
+              <select id="ex15-designation">
+                <option>General fund</option>
+                <option selected>Scholarship fund</option>
+                <option>Community programs</option>
+                <option>Research fund</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ex15-start-month">Start month</label>
+              <input id="ex15-start-month" type="month" value="2026-06">
+            </div>
+            <div class="field">
+              <label for="ex15-receipt">Receipt delivery</label>
+              <select id="ex15-receipt">
+                <option selected>Email receipt</option>
+                <option>Mailed receipt</option>
+                <option>No receipt</option>
+              </select>
+            </div>
+          </div>
+
+          <fieldset>
+            <legend>Donation frequency</legend>
+            <div class="inline-options">
+              <label><input type="radio" name="ex15-frequency" value="One-time"> One-time</label>
+              <label><input type="radio" name="ex15-frequency" value="Monthly" checked> Monthly</label>
+              <label><input type="radio" name="ex15-frequency" value="Annual"> Annual</label>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label><input type="checkbox" checked style="width:auto;min-height:auto"> Make this gift in honor or memory of someone</label>
+          </div>
+
+          <div class="subcard">
+            <h3>Tribute details</h3>
+            <fieldset>
+              <legend>Tribute type</legend>
+              <div class="inline-options">
+                <label><input type="radio" name="ex15-tribute" value="In honor of" checked> In honor of</label>
+                <label><input type="radio" name="ex15-tribute" value="In memory of"> In memory of</label>
+              </div>
+            </fieldset>
+            <div class="grid-two">
+              <div class="field">
+                <label for="ex15-tribute-name">Tribute name</label>
+                <input id="ex15-tribute-name" value="Dr. Miriam Brooks">
+              </div>
+            </div>
+            <div class="field">
+              <label><input type="checkbox" checked style="width:auto;min-height:auto"> Notify someone about this tribute</label>
+            </div>
+            <div class="grid-two">
+              <div class="field">
+                <label for="ex15-notify-name">Notification recipient name</label>
+                <input id="ex15-notify-name" value="Clara Brooks">
+              </div>
+              <div class="field">
+                <label for="ex15-notify-email">Notification recipient email</label>
+                <input id="ex15-notify-email" type="email" value="clara.brooks@example.test">
+              </div>
+            </div>
+          </div>
+
+          <fieldset>
+            <legend>Public donor listing</legend>
+            <div class="inline-options">
+              <label><input type="radio" name="ex15-listing" value="List my name"> List my name</label>
+              <label><input type="radio" name="ex15-listing" value="List as anonymous" checked> List as anonymous</label>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label for="ex15-comments">Donor comments</label>
+            <textarea id="ex15-comments">Please apply the gift to student emergency grants when possible.</textarea>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-16">
+      <header class="example-header">
+        <p class="example-kicker">Example 16</p>
+        <h2>Property Rental Application Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a residential rental application. It tests long multi-section forms,
+        repeated reference fields, select controls, checkbox groups, radio groups, and values where
+        section context is essential.
+      </p>
+      <div class="example-surface">
+        <form aria-label="Property rental application">
+          <fieldset>
+            <legend>Applicant</legend>
+            <div class="grid-two">
+              <div class="field">
+                <label for="ex16-name">Applicant full name</label>
+                <input id="ex16-name" value="Noah Kim">
+              </div>
+              <div class="field">
+                <label for="ex16-movein">Preferred move-in date</label>
+                <input id="ex16-movein" type="date" value="2026-08-01">
+              </div>
+              <div class="field">
+                <label for="ex16-unit">Requested unit</label>
+                <select id="ex16-unit">
+                  <option selected>Unit 4B - 1 bedroom</option>
+                  <option>Unit 2A - studio</option>
+                  <option>Unit 7C - 2 bedroom</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="ex16-current-address">Current address</label>
+                <input id="ex16-current-address" value="72 Hillcrest Road, San Mateo, CA">
+              </div>
+              <div class="field">
+                <label for="ex16-landlord-phone">Current landlord phone</label>
+                <input id="ex16-landlord-phone" type="tel" value="650-555-0199">
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Employment</legend>
+            <div class="grid-two">
+              <div class="field">
+                <label for="ex16-employer">Employer name</label>
+                <input id="ex16-employer" value="Bay Analytics Group">
+              </div>
+              <div class="field">
+                <label for="ex16-title">Job title</label>
+                <input id="ex16-title" value="Operations Analyst">
+              </div>
+              <div class="field">
+                <label for="ex16-emp-start">Employment start date</label>
+                <input id="ex16-emp-start" type="date" value="2022-03-07">
+              </div>
+              <div class="field">
+                <label for="ex16-income">Monthly income</label>
+                <div class="amount-row">
+                  <span class="prefix">$</span>
+                  <input id="ex16-income" type="number" value="7200">
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <span class="field-label">Income verified</span>
+              <div class="inline-options">
+                <label><input type="radio" name="ex16-income-verified" value="Yes"> Yes</label>
+                <label><input type="radio" name="ex16-income-verified" value="No"> No</label>
+                <label><input type="radio" name="ex16-income-verified" value="Pending" checked> Pending</label>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Pets and vehicles</legend>
+            <div class="field">
+              <span class="field-label">Pets</span>
+              <div class="inline-options">
+                <label><input type="checkbox" name="ex16-pets" value="Cat" checked> Cat</label>
+                <label><input type="checkbox" name="ex16-pets" value="Dog"> Dog</label>
+                <label><input type="checkbox" name="ex16-pets" value="Other pet"> Other pet</label>
+                <label><input type="checkbox" name="ex16-pets" value="No pets"> No pets</label>
+              </div>
+            </div>
+            <div class="grid-two">
+              <div class="field">
+                <label for="ex16-pet-desc">Pet description</label>
+                <input id="ex16-pet-desc" value="One indoor cat, 8 years old">
+              </div>
+              <div class="field">
+                <label for="ex16-vehicle-make">Vehicle make</label>
+                <input id="ex16-vehicle-make" value="Toyota">
+              </div>
+              <div class="field">
+                <label for="ex16-vehicle-model">Vehicle model</label>
+                <input id="ex16-vehicle-model" value="Prius">
+              </div>
+              <div class="field">
+                <label for="ex16-vehicle-year">Vehicle year</label>
+                <input id="ex16-vehicle-year" type="number" value="2018">
+              </div>
+            </div>
+            <div class="field">
+              <span class="field-label">Parking requested</span>
+              <div class="inline-options">
+                <label><input type="radio" name="ex16-parking" value="Yes" checked> Yes</label>
+                <label><input type="radio" name="ex16-parking" value="No"> No</label>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="two-col-fieldsets">
+            <fieldset>
+              <legend>Reference 1</legend>
+              <div class="field">
+                <label for="ex16-ref1-name">Name</label>
+                <input id="ex16-ref1-name" value="Maya Chen">
+              </div>
+              <div class="field">
+                <label for="ex16-ref1-rel">Relationship</label>
+                <select id="ex16-ref1-rel">
+                  <option selected>Former landlord</option>
+                  <option>Supervisor</option>
+                  <option>Colleague</option>
+                  <option>Friend</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="ex16-ref1-phone">Phone</label>
+                <input id="ex16-ref1-phone" type="tel" value="415-555-0131">
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Reference 2</legend>
+              <div class="field">
+                <label for="ex16-ref2-name">Name</label>
+                <input id="ex16-ref2-name" value="Leo Ortiz">
+              </div>
+              <div class="field">
+                <label for="ex16-ref2-rel">Relationship</label>
+                <select id="ex16-ref2-rel">
+                  <option>Former landlord</option>
+                  <option selected>Supervisor</option>
+                  <option>Colleague</option>
+                  <option>Friend</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="ex16-ref2-phone">Phone</label>
+                <input id="ex16-ref2-phone" type="tel" value="415-555-0162">
+              </div>
+            </fieldset>
+          </div>
+
+          <div class="field">
+            <label for="ex16-notes">Additional application notes</label>
+            <textarea id="ex16-notes">Applicant prefers a lease start date within the first week of August.</textarea>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-17">
+      <header class="example-header">
+        <p class="example-kicker">Example 17</p>
+        <h2>Device Warranty Registration Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a consumer device warranty registration form. It tests serial-number
+        fields, purchase-date fields, product category selects, receipt upload display, and
+        marketing preference checkboxes.
+      </p>
+      <div class="example-surface">
+        <form aria-label="Device warranty registration">
+          <div class="grid-two">
+            <div class="field">
+              <label for="ex17-name">Customer name</label>
+              <input id="ex17-name" value="Iris Walker">
+            </div>
+            <div class="field">
+              <label for="ex17-email">Customer email</label>
+              <input id="ex17-email" type="email" value="iris.walker@example.test">
+            </div>
+            <div class="field">
+              <label for="ex17-category">Product category</label>
+              <select id="ex17-category">
+                <option selected>Laptop</option>
+                <option>Tablet</option>
+                <option>Phone</option>
+                <option>Accessory</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ex17-model">Product model</label>
+              <input id="ex17-model" value="NexaBook Pro 14">
+            </div>
+            <div class="field">
+              <label for="ex17-serial">Serial number</label>
+              <input id="ex17-serial" value="NXB14-26-009184">
+            </div>
+            <div class="field">
+              <label for="ex17-purchase-date">Purchase date</label>
+              <input id="ex17-purchase-date" type="date" value="2026-05-02">
+            </div>
+            <div class="field">
+              <label for="ex17-retailer">Retailer name</label>
+              <input id="ex17-retailer" value="Example Electronics">
+            </div>
+            <div class="field">
+              <label for="ex17-order">Order number</label>
+              <input id="ex17-order" value="EE-7739201">
+            </div>
+            <div class="field">
+              <label for="ex17-plan">Warranty plan</label>
+              <select id="ex17-plan">
+                <option>Standard 1-year</option>
+                <option>Extended 2-year protection</option>
+                <option selected>Extended 3-year protection</option>
+              </select>
+            </div>
+          </div>
+
+          <fieldset>
+            <legend>Purchase channel</legend>
+            <div class="inline-options">
+              <label><input type="radio" name="ex17-channel" value="In store"> In store</label>
+              <label><input type="radio" name="ex17-channel" value="Online retailer" checked> Online retailer</label>
+              <label><input type="radio" name="ex17-channel" value="Manufacturer direct"> Manufacturer direct</label>
+            </div>
+          </fieldset>
+
+          <div class="grid-two">
+            <div class="field">
+              <label for="ex17-receipt">Receipt upload</label>
+              <input id="ex17-receipt" type="file">
+            </div>
+            <div class="field">
+              <label for="ex17-receipt-display">Selected receipt file</label>
+              <input id="ex17-receipt-display" value="example-electronics-receipt-EE-7739201.pdf" disabled>
+            </div>
+          </div>
+
+          <fieldset>
+            <legend>Communication preferences</legend>
+            <div class="stack-options">
+              <label><input type="checkbox" value="Register for product updates" checked> Register for product updates</label>
+              <label><input type="checkbox" value="Allow warranty reminders by email" checked> Allow warranty reminders by email</label>
+              <label><input type="checkbox" value="Allow promotional messages"> Allow promotional messages</label>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label for="ex17-notes">Installation notes</label>
+            <textarea id="ex17-notes">Device will be used primarily for remote work and travel.</textarea>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-18">
+      <header class="example-header">
+        <p class="example-kicker">Example 18</p>
+        <h2>Internal IT Access Request Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates an internal access request form. It tests checkbox groups with
+        business-critical meaning, readonly employee attributes, date ranges, manager approval
+        fields, and a justification textarea.
+      </p>
+      <div class="example-surface">
+        <form aria-label="Internal IT access request">
+          <fieldset>
+            <legend>Requestor</legend>
+            <div class="grid-two">
+              <div class="field">
+                <label for="ex18-request-id">Request ID</label>
+                <input id="ex18-request-id" value="ITR-2026-11802" readonly>
+              </div>
+              <div class="field">
+                <label for="ex18-emp-name">Employee name</label>
+                <input id="ex18-emp-name" value="Camila Torres" readonly>
+              </div>
+              <div class="field">
+                <label for="ex18-emp-email">Employee email</label>
+                <input id="ex18-emp-email" type="email" value="camila.torres@example.test" readonly>
+              </div>
+              <div class="field">
+                <label for="ex18-department">Department</label>
+                <input id="ex18-department" value="Finance" readonly>
+              </div>
+              <div class="field">
+                <label for="ex18-start">Access start date</label>
+                <input id="ex18-start" type="date" value="2026-06-10">
+              </div>
+              <div class="field">
+                <label for="ex18-end">Access end date</label>
+                <input id="ex18-end" type="date" value="2026-12-31">
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Systems requested</legend>
+            <div class="stack-options">
+              <label><input type="checkbox" name="ex18-system" value="ERP read access" checked> ERP read access</label>
+              <label><input type="checkbox" name="ex18-system" value="ERP invoice approval" checked> ERP invoice approval</label>
+              <label><input type="checkbox" name="ex18-system" value="Payroll reports"> Payroll reports</label>
+              <label><input type="checkbox" name="ex18-system" value="Vendor management" checked> Vendor management</label>
+              <label><input type="checkbox" name="ex18-system" value="Admin console"> Admin console</label>
+            </div>
+          </fieldset>
+
+          <div class="grid-two">
+            <div class="field">
+              <label for="ex18-role">Requested role level</label>
+              <select id="ex18-role">
+                <option>Viewer</option>
+                <option>Editor</option>
+                <option selected>Approver</option>
+                <option>Administrator</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ex18-manager">Manager name</label>
+              <input id="ex18-manager" value="Renee Coleman">
+            </div>
+            <div class="field">
+              <label for="ex18-approval-status">Manager approval status</label>
+              <select id="ex18-approval-status">
+                <option>Pending</option>
+                <option selected>Approved</option>
+                <option>Denied</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ex18-approval-date">Approval date</label>
+              <input id="ex18-approval-date" type="date" value="2026-05-29">
+            </div>
+          </div>
+
+          <div class="field">
+            <label><input type="checkbox" checked style="width:auto;min-height:auto"> Data sensitivity acknowledged</label>
+          </div>
+
+          <div class="field">
+            <label for="ex18-justification">Business justification</label>
+            <textarea id="ex18-justification">Employee is covering vendor payment approvals for the West region during the second half of the year.</textarea>
+          </div>
+          <div class="field">
+            <label for="ex18-security-notes">Security notes</label>
+            <textarea id="ex18-security-notes">Access should be reviewed after the temporary coverage period ends.</textarea>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-19">
+      <header class="example-header">
+        <p class="example-kicker">Example 19</p>
+        <h2>Medical Prescription Refill Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a prescription refill request. It tests medication records, dosage
+        fields, pharmacy selection, radio groups, refill urgency, and clinical notes in native form
+        controls.
+      </p>
+      <div class="example-surface">
+        <form aria-label="Medical prescription refill">
+          <fieldset>
+            <legend>Patient</legend>
+            <div class="grid-two">
+              <div class="field">
+                <label for="ex19-patient">Patient name</label>
+                <input id="ex19-patient" value="Victor Lane" readonly>
+              </div>
+              <div class="field">
+                <label for="ex19-dob">Patient date of birth</label>
+                <input id="ex19-dob" type="date" value="1975-01-22" readonly>
+              </div>
+              <div class="field">
+                <label for="ex19-phone">Patient phone</label>
+                <input id="ex19-phone" type="tel" value="415-555-0140">
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Prescription</legend>
+            <div class="grid-two">
+              <div class="field">
+                <label for="ex19-rx">Prescription number</label>
+                <input id="ex19-rx" value="RX-441982">
+              </div>
+              <div class="field">
+                <label for="ex19-med">Medication name</label>
+                <input id="ex19-med" value="Atorvastatin">
+              </div>
+              <div class="field">
+                <label for="ex19-strength">Strength</label>
+                <select id="ex19-strength">
+                  <option>10 mg</option>
+                  <option selected>20 mg</option>
+                  <option>40 mg</option>
+                  <option>80 mg</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="ex19-remaining">Remaining tablets</label>
+                <input id="ex19-remaining" type="number" value="5">
+              </div>
+            </div>
+            <div class="field">
+              <label for="ex19-directions">Directions</label>
+              <textarea id="ex19-directions">Take one tablet by mouth every evening.</textarea>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Fulfillment</legend>
+            <div class="field">
+              <span class="field-label">Refill urgency</span>
+              <div class="inline-options">
+                <label><input type="radio" name="ex19-urgency" value="Standard"> Standard</label>
+                <label><input type="radio" name="ex19-urgency" value="Needed within 3 days" checked> Needed within 3 days</label>
+                <label><input type="radio" name="ex19-urgency" value="Urgent"> Urgent</label>
+              </div>
+            </div>
+            <div class="grid-two">
+              <div class="field">
+                <label for="ex19-pharmacy">Preferred pharmacy</label>
+                <select id="ex19-pharmacy">
+                  <option selected>Central Care Pharmacy</option>
+                  <option>Greenline Pharmacy</option>
+                  <option>Mail-order pharmacy</option>
+                </select>
+              </div>
+            </div>
+            <div class="two-col-fieldsets">
+              <div class="field">
+                <span class="field-label">Pickup or delivery</span>
+                <div class="inline-options">
+                  <label><input type="radio" name="ex19-method" value="Pickup" checked> Pickup</label>
+                  <label><input type="radio" name="ex19-method" value="Delivery"> Delivery</label>
+                </div>
+              </div>
+              <div class="field">
+                <span class="field-label">Allow generic substitution</span>
+                <div class="inline-options">
+                  <label><input type="radio" name="ex19-generic" value="Yes" checked> Yes</label>
+                  <label><input type="radio" name="ex19-generic" value="No"> No</label>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label><input type="checkbox" style="width:auto;min-height:auto"> Contact patient before refill</label>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label for="ex19-clinical-note">Clinical note to prescriber</label>
+            <textarea id="ex19-clinical-note">Patient reports no side effects and requests standard 90-day refill if allowed by plan.</textarea>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-20">
+      <header class="example-header">
+        <p class="example-kicker">Example 20</p>
+        <h2>Event Volunteer Signup Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates an event volunteer signup form. It tests availability checkboxes, role
+        preferences, skill selections, repeated contact details, and consent acknowledgements.
+      </p>
+      <div class="example-surface">
+        <form aria-label="Event volunteer signup">
+          <div class="grid-two">
+            <div class="field">
+              <label for="ex20-name">Volunteer name</label>
+              <input id="ex20-name" value="Grace Miller">
+            </div>
+            <div class="field">
+              <label for="ex20-email">Email</label>
+              <input id="ex20-email" type="email" value="grace.miller@example.test">
+            </div>
+            <div class="field">
+              <label for="ex20-phone">Mobile phone</label>
+              <input id="ex20-phone" type="tel" value="408-555-0127">
+            </div>
+            <div class="field">
+              <label for="ex20-shirt">T-shirt size</label>
+              <select id="ex20-shirt">
+                <option>S</option>
+                <option selected>M</option>
+                <option>L</option>
+                <option>XL</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ex20-languages">Languages spoken</label>
+              <input id="ex20-languages" list="ex20-language-list" value="English, Spanish">
+              <datalist id="ex20-language-list">
+                <option>English</option>
+                <option>Spanish</option>
+                <option>French</option>
+                <option>Mandarin</option>
+              </datalist>
+            </div>
+            <div class="field">
+              <label for="ex20-roles">Preferred roles</label>
+              <select id="ex20-roles" multiple size="5">
+                <option selected>Registration desk</option>
+                <option selected>Wayfinding</option>
+                <option>Speaker support</option>
+                <option>Food service</option>
+                <option>Cleanup crew</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="two-col-fieldsets">
+            <fieldset>
+              <legend>Available shifts</legend>
+              <div class="stack-options">
+                <label><input type="checkbox" name="ex20-shift" value="Friday setup" checked> Friday setup</label>
+                <label><input type="checkbox" name="ex20-shift" value="Saturday morning" checked> Saturday morning</label>
+                <label><input type="checkbox" name="ex20-shift" value="Saturday afternoon"> Saturday afternoon</label>
+                <label><input type="checkbox" name="ex20-shift" value="Sunday cleanup" checked> Sunday cleanup</label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Special skills</legend>
+              <div class="stack-options">
+                <label><input type="checkbox" name="ex20-skill" value="First aid certified" checked> First aid certified</label>
+                <label><input type="checkbox" name="ex20-skill" value="Bilingual" checked> Bilingual</label>
+                <label><input type="checkbox" name="ex20-skill" value="AV support"> AV support</label>
+                <label><input type="checkbox" name="ex20-skill" value="Truck driving"> Truck driving</label>
+              </div>
+            </fieldset>
+          </div>
+
+          <fieldset>
+            <legend>Emergency contact</legend>
+            <div class="grid-two">
+              <div class="field">
+                <label for="ex20-ec-name">Emergency contact name</label>
+                <input id="ex20-ec-name" value="Hannah Miller">
+              </div>
+              <div class="field">
+                <label for="ex20-ec-phone">Emergency contact phone</label>
+                <input id="ex20-ec-phone" type="tel" value="408-555-0114">
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Can lift 25 pounds</legend>
+            <div class="inline-options">
+              <label><input type="radio" name="ex20-lift" value="Yes" checked> Yes</label>
+              <label><input type="radio" name="ex20-lift" value="No"> No</label>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label><input type="checkbox" checked style="width:auto;min-height:auto"> Photo release consent</label>
+          </div>
+
+          <div class="field">
+            <label for="ex20-notes">Volunteer notes</label>
+            <textarea id="ex20-notes">Prefers indoor assignments if possible, but can help with Sunday cleanup.</textarea>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-21">
+      <header class="example-header">
+        <p class="example-kicker">Example 21</p>
+        <h2>Small Business Tax Organizer Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a tax organizer form used before preparing a business return. It tests
+        dense financial fields, repeated numeric inputs, selected accounting methods, checkbox
+        categories, and textareas used for preparer notes.
+      </p>
+      <div class="example-surface">
+        <form aria-label="Small business tax organizer">
+          <fieldset>
+            <legend>Business identity</legend>
+            <div class="grid-three">
+              <div class="field">
+                <label for="ex21-tax-year">Tax year</label>
+                <select id="ex21-tax-year">
+                  <option>2023</option>
+                  <option>2024</option>
+                  <option selected>2025</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="ex21-legal-name">Business legal name</label>
+                <input id="ex21-legal-name" value="Cedar &amp; Pine Design LLC">
+              </div>
+              <div class="field">
+                <label for="ex21-dba">Business DBA</label>
+                <input id="ex21-dba" value="Cedar Pine Studio">
+              </div>
+              <div class="field">
+                <label for="ex21-ein">EIN last four</label>
+                <input id="ex21-ein" value="8831">
+              </div>
+              <div class="field">
+                <label for="ex21-entity">Entity type</label>
+                <select id="ex21-entity">
+                  <option>Sole proprietorship</option>
+                  <option>Partnership</option>
+                  <option selected>LLC taxed as S corporation</option>
+                  <option>C corporation</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <span class="field-label">Accounting method</span>
+              <div class="inline-options">
+                <label><input type="radio" name="ex21-accounting" value="Cash"> Cash</label>
+                <label><input type="radio" name="ex21-accounting" value="Accrual" checked> Accrual</label>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Income</legend>
+            <div class="grid-two">
+              <div class="field">
+                <label for="ex21-gross">Gross receipts</label>
+                <input id="ex21-gross" type="number" value="418250">
+              </div>
+              <div class="field">
+                <label for="ex21-returns">Returns and allowances</label>
+                <input id="ex21-returns" type="number" value="3600">
+              </div>
+              <div class="field">
+                <label for="ex21-cogs">Cost of goods sold</label>
+                <input id="ex21-cogs" type="number" value="84200">
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Expenses</legend>
+            <div class="grid-three">
+              <div class="field">
+                <label for="ex21-advertising">Advertising expense</label>
+                <input id="ex21-advertising" type="number" value="14200">
+              </div>
+              <div class="field">
+                <label for="ex21-contract">Contract labor</label>
+                <input id="ex21-contract" type="number" value="68500">
+              </div>
+              <div class="field">
+                <label for="ex21-office">Office expense</label>
+                <input id="ex21-office" type="number" value="9300">
+              </div>
+              <div class="field">
+                <label for="ex21-software">Software subscriptions</label>
+                <input id="ex21-software" type="number" value="11840">
+              </div>
+              <div class="field">
+                <label for="ex21-meals">Meals expense</label>
+                <input id="ex21-meals" type="number" value="4200">
+              </div>
+              <div class="field">
+                <label for="ex21-miles">Business use vehicle miles</label>
+                <input id="ex21-miles" type="number" value="8420">
+              </div>
+            </div>
+            <div class="field">
+              <span class="field-label">Vehicle expense method</span>
+              <div class="inline-options">
+                <label><input type="radio" name="ex21-vehicle-method" value="Standard mileage" checked> Standard mileage</label>
+                <label><input type="radio" name="ex21-vehicle-method" value="Actual expenses"> Actual expenses</label>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Documents provided</legend>
+            <div class="stack-options">
+              <label><input type="checkbox" name="ex21-doc" value="Bank statements" checked> Bank statements</label>
+              <label><input type="checkbox" name="ex21-doc" value="Payroll reports" checked> Payroll reports</label>
+              <label><input type="checkbox" name="ex21-doc" value="1099 forms" checked> 1099 forms</label>
+              <label><input type="checkbox" name="ex21-doc" value="Prior year return"> Prior year return</label>
+              <label><input type="checkbox" name="ex21-doc" value="Asset purchase invoices" checked> Asset purchase invoices</label>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label for="ex21-preparer-notes">Preparer notes</label>
+            <textarea id="ex21-preparer-notes">Client purchased two laptops and one camera body in November. Confirm capitalization threshold before filing.</textarea>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-22">
+      <header class="example-header">
+        <p class="example-kicker">Example 22</p>
+        <h2>Mixed Readonly And Disabled Profile Form</h2>
+      </header>
+      <p class="example-description">
+        This example imitates an account profile form where some values are editable, some are
+        readonly, and some are disabled by organization policy. It tests whether extraction treats
+        visible locked values as real field values instead of ignoring them.
+      </p>
+      <div class="example-surface">
+        <form class="settings-card" aria-label="Mixed readonly and disabled profile">
+          <div class="grid-two">
+            <div class="field">
+              <label for="ex22-display">Display name</label>
+              <input id="ex22-display" value="Alex Rivera">
+            </div>
+            <div class="field">
+              <label for="ex22-legal">Legal name <span class="badge ro">readonly</span></label>
+              <input id="ex22-legal" value="Alexandra Rivera" readonly>
+            </div>
+            <div class="field">
+              <label for="ex22-username">Username <span class="badge ro">readonly</span></label>
+              <input id="ex22-username" value="arivera" readonly>
+            </div>
+            <div class="field">
+              <label for="ex22-email">Primary email</label>
+              <input id="ex22-email" type="email" value="alex.rivera@example.test">
+            </div>
+            <div class="field">
+              <label for="ex22-verified">Verified email status <span class="badge lock">disabled</span></label>
+              <select id="ex22-verified" disabled>
+                <option selected>Verified</option>
+                <option>Unverified</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ex22-org">Organization <span class="badge lock">disabled</span></label>
+              <input id="ex22-org" value="Westbridge Health" disabled>
+            </div>
+            <div class="field">
+              <label for="ex22-role">Role <span class="badge lock">disabled</span></label>
+              <select id="ex22-role" disabled>
+                <option selected>Care coordinator</option>
+                <option>Clinician</option>
+                <option>Administrator</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ex22-tz">Time zone</label>
+              <select id="ex22-tz">
+                <option selected>America/Los_Angeles</option>
+                <option>America/Denver</option>
+                <option>America/Chicago</option>
+                <option>America/New_York</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ex22-locale">Locale</label>
+              <select id="ex22-locale">
+                <option selected>English (United States)</option>
+                <option>English (United Kingdom)</option>
+                <option>Spanish (United States)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ex22-digest">Notification digest</label>
+              <select id="ex22-digest">
+                <option>Off</option>
+                <option selected>Daily summary</option>
+                <option>Weekly summary</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ex22-backup-phone">Backup phone</label>
+              <input id="ex22-backup-phone" type="tel" value="415-555-0190">
+            </div>
+            <div class="field">
+              <label for="ex22-created">Account created <span class="badge ro">readonly</span></label>
+              <input id="ex22-created" type="date" value="2024-02-11" readonly>
+            </div>
+            <div class="field">
+              <label for="ex22-policy-review">Last policy review <span class="badge ro">readonly</span></label>
+              <input id="ex22-policy-review" type="date" value="2026-04-30" readonly>
+            </div>
+          </div>
+
+          <div class="two-col-fieldsets">
+            <fieldset>
+              <legend>Profile visibility</legend>
+              <div class="stack-options">
+                <label><input type="radio" name="ex22-visibility" value="Public"> Public</label>
+                <label><input type="radio" name="ex22-visibility" value="Organization only" checked> Organization only</label>
+                <label><input type="radio" name="ex22-visibility" value="Private"> Private</label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Security contact method</legend>
+              <div class="stack-options">
+                <label><input type="radio" name="ex22-security" value="Authenticator app" checked> Authenticator app</label>
+                <label><input type="radio" name="ex22-security" value="SMS code"> SMS code</label>
+                <label><input type="radio" name="ex22-security" value="Email code"> Email code</label>
+              </div>
+            </fieldset>
+          </div>
+
+          <div class="field">
+            <label for="ex22-notes">Profile notes</label>
+            <textarea id="ex22-notes">User requested that legal name remain hidden from public profile views.</textarea>
+          </div>
+        </form>
+      </div>
+    </section>
+
+
+  </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Example 03: enable "other language details" when its checkbox is checked.
+      var otherLang = document.querySelector("#ex03-language-other-check");
+      var otherLangText = document.querySelector("#ex03-language-other-text");
+      if (otherLang && otherLangText) {
+        otherLang.addEventListener("change", function () {
+          otherLangText.disabled = !otherLang.checked;
+        });
+      }
+
+      // Example 02: mirror range value into the visible text.
+      var painRange = document.querySelector("#ex02-pain");
+      var painText = document.querySelector("#ex02-pain-value");
+      if (painRange && painText) {
+        painRange.addEventListener("input", function () {
+          painText.textContent = "Current value: " + painRange.value;
+        });
+      }
+
+      // Example 06: copy billing fields to shipping and lock them when "same as billing" is checked.
+      var sameAddr = document.querySelector("#ex06-same-address");
+      if (sameAddr) {
+        var pairs = [
+          ["ex06-billing-name", "ex06-shipping-name"],
+          ["ex06-billing-company", "ex06-shipping-company"],
+          ["ex06-billing-addr1", "ex06-shipping-addr1"],
+          ["ex06-billing-addr2", "ex06-shipping-addr2"],
+          ["ex06-billing-city", "ex06-shipping-city"],
+          ["ex06-billing-zip", "ex06-shipping-zip"]
+        ];
+        sameAddr.addEventListener("change", function () {
+          pairs.forEach(function (p) {
+            var src = document.getElementById(p[0]);
+            var dst = document.getElementById(p[1]);
+            if (!src || !dst) return;
+            if (sameAddr.checked) {
+              dst.value = src.value;
+              dst.readOnly = true;
+            } else {
+              dst.readOnly = false;
+            }
+          });
+          var bState = document.getElementById("ex06-billing-state");
+          var sState = document.getElementById("ex06-shipping-state");
+          if (bState && sState) {
+            if (sameAddr.checked) { sState.value = bState.value; sState.disabled = true; }
+            else { sState.disabled = false; }
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page 4 - Read-Only Records And Confirmation Pages</title>
+  <style>
+    :root {
+      --page-bg: #f1efe9;
+      --card-bg: #ffffff;
+      --ink: #23262b;
+      --muted: #6b7178;
+      --faint: #8b9097;
+      --line: #d4d0c7;
+      --soft: #ece8df;
+      --panel: #faf8f3;
+      --rule: #e3ded3;
+      --accent: #3a4a63;
+      --accent-soft: #e9eef6;
+      --ok: #1d6b46;
+      --ok-soft: #e1f1e8;
+      --warn: #8a6010;
+      --warn-soft: #fbf0d8;
+      --danger: #97352d;
+      --danger-soft: #f6e2df;
+      --info: #2a5e86;
+      --info-soft: #e2eef7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--page-bg);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    main { width: min(1100px, calc(100% - 32px)); margin: 0 auto; padding: 30px 0 70px; }
+
+    .page-hero {
+      margin-bottom: 26px; padding: 26px 28px;
+      background: var(--card-bg); border: 1px solid var(--line); border-radius: 4px;
+      border-top: 5px solid var(--accent);
+    }
+    .page-hero h1 { margin: 0 0 8px; font-size: 1.7rem; }
+    .page-hero p { margin: 0; color: var(--muted); max-width: 74ch; }
+    .hero-tag {
+      display: inline-block; margin-bottom: 12px; padding: 3px 11px;
+      background: var(--accent); color: #fff; font-size: 0.7rem;
+      letter-spacing: 0.1em; text-transform: uppercase; border-radius: 3px;
+    }
+
+    .example-card { margin: 24px 0; background: var(--card-bg); border: 1px solid var(--line); border-radius: 4px; }
+    .example-header { padding: 16px 22px 12px; border-bottom: 1px solid var(--soft); }
+    .example-kicker { margin: 0 0 2px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; color: var(--accent); }
+    .example-header h2 { margin: 0; font-size: 1.18rem; }
+    .example-description { margin: 14px 22px 0; color: var(--muted); max-width: 88ch; font-size: 0.95rem; }
+    .example-surface { padding: 18px 22px 24px; }
+
+    .record-header {
+      display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
+      flex-wrap: wrap; padding: 16px 18px; margin-bottom: 18px;
+      background: var(--panel); border: 1px solid var(--rule); border-radius: 4px;
+    }
+    .record-title { margin: 0 0 4px; font-size: 1.15rem; }
+    .record-subtitle { margin: 0; color: var(--muted); font-size: 0.9rem; }
+    .header-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .badge {
+      display: inline-block; padding: 3px 11px; border-radius: 12px;
+      font-size: 0.74rem; font-weight: 700; letter-spacing: 0.02em; white-space: nowrap;
+      background: var(--soft); color: var(--ink);
+    }
+    .badge.ok { background: var(--ok-soft); color: var(--ok); }
+    .badge.warn { background: var(--warn-soft); color: var(--warn); }
+    .badge.danger { background: var(--danger-soft); color: var(--danger); }
+    .badge.info { background: var(--info-soft); color: var(--info); }
+    .badge.neutral { background: var(--soft); color: var(--muted); }
+
+    .record-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    @media (min-width: 720px) {
+      .record-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+      .record-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    }
+    .record-panel { border: 1px solid var(--rule); border-radius: 4px; padding: 14px 16px; background: #fff; }
+    .record-panel h4 { margin: 0 0 12px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--faint); border-bottom: 1px solid var(--soft); padding-bottom: 6px; }
+
+    .field-row { display: flex; justify-content: space-between; gap: 14px; padding: 5px 0; border-bottom: 1px dotted var(--soft); }
+    .field-row:last-child { border-bottom: 0; }
+    .field-label { color: var(--muted); font-size: 0.86rem; }
+    .field-value { font-weight: 600; text-align: right; }
+    .field-block { padding: 6px 0; }
+    .field-block .field-label { display: block; margin-bottom: 2px; }
+    .field-block .field-value { text-align: left; font-weight: 600; }
+    .addr { white-space: pre-line; }
+
+    table.data { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 4px 0; }
+    table.data th, table.data td { border: 1px solid var(--rule); padding: 7px 10px; text-align: left; }
+    table.data th { background: var(--panel); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--faint); }
+    table.data td.num, table.data th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    table.data tfoot td { font-weight: 700; background: var(--panel); }
+    table.data.kv td:first-child { width: 200px; font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.82rem; color: var(--faint); background: var(--panel); }
+    table.data.kv td:last-child { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.82rem; }
+
+    .totals { border: 1px solid var(--rule); border-radius: 4px; padding: 12px 16px; background: var(--panel); }
+    .totals h4 { margin: 0 0 10px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--faint); }
+    .total-line { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; font-size: 0.9rem; border-bottom: 1px dotted var(--soft); }
+    .total-line.neg .field-value { color: var(--danger); }
+    .total-line.grand { margin-top: 6px; padding-top: 9px; border-top: 2px solid var(--rule); border-bottom: 0; font-size: 1.05rem; }
+    .total-line.grand .field-value { color: var(--accent); }
+
+    .timeline { list-style: none; margin: 0; padding: 0; }
+    .timeline-item { display: flex; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--soft); }
+    .timeline-item:last-child { border-bottom: 0; }
+    .timeline-time { flex: 0 0 150px; font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .timeline-item strong { display: block; font-size: 0.92rem; }
+    .timeline-item p { margin: 2px 0 0; font-size: 0.86rem; color: var(--muted); }
+
+    .pill-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 0; padding: 0; list-style: none; }
+    .pill-list li { padding: 5px 12px; background: var(--soft); border: 1px solid var(--rule); border-radius: 14px; font-size: 0.84rem; }
+    .doc-pill::before { content: "\1F4CE  "; }
+
+    ul.bullets { margin: 4px 0 0; padding-left: 20px; }
+    ul.bullets li { padding: 2px 0; font-size: 0.9rem; }
+
+    .notice {
+      margin-top: 16px; padding: 12px 14px; font-size: 0.86rem;
+      background: var(--info-soft); border: 1px solid #c5dcef; border-left: 4px solid var(--info);
+      border-radius: 3px; color: #1f4763;
+    }
+    .notice.warn { background: var(--warn-soft); border-color: #e6cd97; border-left-color: var(--warn); color: #6b4a0c; }
+
+    .actions { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
+    .actions a { color: var(--accent); font-weight: 600; font-size: 0.9rem; text-decoration: none; border-bottom: 1px solid currentColor; }
+    .actions a[aria-disabled="true"] { color: var(--faint); cursor: not-allowed; border-bottom-style: dotted; }
+
+    .status-cell .ok { color: var(--ok); font-weight: 600; }
+    .status-cell .warn { color: var(--warn); font-weight: 600; }
+    .status-cell .danger { color: var(--danger); font-weight: 600; }
+
+    .account-flow { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+    .account-card { flex: 1 1 220px; border: 1px solid var(--rule); border-radius: 4px; padding: 12px 14px; background: #fff; }
+    .account-card .field-label { display: block; }
+    .flow-arrow { font-size: 1.4rem; color: var(--accent); text-align: center; }
+
+    .gov-card { border: 2px solid var(--accent); }
+    .gov-card .example-header { background: var(--accent-soft); }
+    .micro-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--faint); display: block; }
+
+    .segment-card { border: 1px solid var(--rule); border-radius: 4px; margin-bottom: 14px; overflow: hidden; }
+    .segment-card > h4 { margin: 0; padding: 9px 14px; background: var(--accent-soft); color: var(--accent); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    .segment-card .seg-body { padding: 12px 14px; }
+    .conf-big { font-size: 1.35rem; font-weight: 800; letter-spacing: 0.02em; color: var(--accent); }
+    h4.group-h { margin: 18px 0 8px; font-size: 0.92rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-hero">
+      <span class="hero-tag">Extraction Test Surface</span>
+      <h1>Page 4 - Read-Only Records And Confirmation Pages</h1>
+      <p>
+        This page contains 22 realistic read-only records and confirmation pages built as a testing
+        surface for a content extraction tool. Each example exercises extraction of identifiers,
+        statuses, repeated record rows, timelines, masked values, price totals, and policy text from
+        static document-like layouts. All data is fictional.
+      </p>
+    </header>
+
+    <section class="example-card" id="example-01">
+      <header class="example-header">
+        <p class="example-kicker">Example 01</p>
+        <h2>Retail Order Confirmation</h2>
+      </header>
+      <p class="example-description">
+        This example imitates an ecommerce order confirmation page. It tests extraction of order
+        number, order status, customer email, shipping address, billing address, item rows, delivery
+        estimates, payment method, and price totals from read-only content.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <h3 class="record-title">Order confirmed</h3>
+            <p class="record-subtitle">Thank you. A confirmation email was sent to jordan.ellis@example.test.</p>
+          </div>
+          <div class="header-badges"><span class="badge warn">Processing</span></div>
+        </div>
+
+        <div class="record-grid cols-2">
+          <div class="record-panel">
+            <h4>Order details</h4>
+            <div class="field-row"><span class="field-label">Order number</span><span class="field-value">ORD-2026-104922</span></div>
+            <div class="field-row"><span class="field-label">Order date</span><span class="field-value">May 31, 2026</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value">Processing</span></div>
+            <div class="field-row"><span class="field-label">Confirmation email</span><span class="field-value">jordan.ellis@example.test</span></div>
+            <div class="field-row"><span class="field-label">Customer</span><span class="field-value">Jordan Ellis</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Fulfillment</h4>
+            <div class="field-row"><span class="field-label">Shipping method</span><span class="field-value">Standard ground</span></div>
+            <div class="field-row"><span class="field-label">Estimated delivery</span><span class="field-value">June 6-9, 2026</span></div>
+            <div class="field-row"><span class="field-label">Payment method</span><span class="field-value">Visa ending in 4242</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Shipping address</h4>
+            <p class="addr field-value" style="font-weight:600">120 King Street, Dock B
+San Francisco, CA 94107</p>
+          </div>
+          <div class="record-panel">
+            <h4>Billing address</h4>
+            <p class="addr field-value" style="font-weight:600">88 Valencia Street, Suite 402
+San Francisco, CA 94103</p>
+          </div>
+        </div>
+
+        <h4 class="group-h">Items</h4>
+        <table class="data">
+          <thead><tr><th>SKU</th><th>Item</th><th>Color</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Line total</th></tr></thead>
+          <tbody>
+            <tr><td>BAG-TRV-22</td><td>Canvas travel backpack</td><td>Forest</td><td class="num">1</td><td class="num">$89.00</td><td class="num">$89.00</td></tr>
+            <tr><td>BOT-STL-20</td><td>Insulated steel bottle</td><td>Slate</td><td class="num">2</td><td class="num">$24.00</td><td class="num">$48.00</td></tr>
+            <tr><td>TAG-LTH-02</td><td>Leather luggage tag</td><td>Tan</td><td class="num">1</td><td class="num">$16.00</td><td class="num">$16.00</td></tr>
+          </tbody>
+        </table>
+
+        <div style="max-width:340px;margin-left:auto;margin-top:14px">
+          <div class="totals">
+            <div class="total-line"><span class="field-label">Merchandise subtotal</span><span class="field-value">$153.00</span></div>
+            <div class="total-line neg"><span class="field-label">Discount</span><span class="field-value">-$15.30</span></div>
+            <div class="total-line"><span class="field-label">Shipping</span><span class="field-value">$8.95</span></div>
+            <div class="total-line"><span class="field-label">Estimated tax</span><span class="field-value">$12.42</span></div>
+            <div class="total-line grand"><span class="field-label">Order total</span><span class="field-value">$159.07</span></div>
+          </div>
+        </div>
+        <div class="actions"><a href="#">View receipt</a><a href="#">Track shipment</a></div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-02">
+      <header class="example-header">
+        <p class="example-kicker">Example 02</p>
+        <h2>B2B Invoice Detail Page</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a business invoice detail page. It tests extraction of invoice metadata,
+        bill-to information, service period, line items, payment terms, payment history, and totals
+        from a document-like read-only layout.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <h3 class="record-title">Invoice INV-2026-00841</h3>
+            <p class="record-subtitle">Northstar Cloud Services</p>
+          </div>
+          <div class="header-badges"><span class="badge warn">Partially paid</span></div>
+        </div>
+
+        <div class="record-grid cols-3">
+          <div class="record-panel">
+            <h4>Invoice</h4>
+            <div class="field-row"><span class="field-label">Invoice number</span><span class="field-value">INV-2026-00841</span></div>
+            <div class="field-row"><span class="field-label">Issue date</span><span class="field-value">May 18, 2026</span></div>
+            <div class="field-row"><span class="field-label">Due date</span><span class="field-value">June 17, 2026</span></div>
+            <div class="field-row"><span class="field-label">Service period</span><span class="field-value">May 1-31, 2026</span></div>
+            <div class="field-row"><span class="field-label">Purchase order</span><span class="field-value">PO-44918</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Seller</h4>
+            <div class="field-block"><span class="field-label">Seller</span><span class="field-value">Northstar Cloud Services</span></div>
+            <div class="field-block"><span class="field-label">Seller tax ID</span><span class="field-value">XX-XXX8831</span></div>
+            <div class="field-block"><span class="field-label">Seller email</span><span class="field-value">billing@northstar.example.test</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Bill to</h4>
+            <div class="field-block"><span class="field-label">Company</span><span class="field-value">Cedar &amp; Pine Design LLC</span></div>
+            <div class="field-block"><span class="field-label">Billing contact</span><span class="field-value">Renee Coleman</span></div>
+            <div class="field-block"><span class="field-label">Billing email</span><span class="field-value">finance@example.test</span></div>
+            <div class="field-block"><span class="field-label">Billing address</span><span class="field-value">410 Oak Grove Avenue, Oakland, CA 94610</span></div>
+          </div>
+        </div>
+
+        <h4 class="group-h">Line items</h4>
+        <table class="data">
+          <thead><tr><th>Description</th><th class="num">Quantity</th><th class="num">Unit price</th><th class="num">Amount</th></tr></thead>
+          <tbody>
+            <tr><td>Business platform seats</td><td class="num">24</td><td class="num">$18.00</td><td class="num">$432.00</td></tr>
+            <tr><td>Audit log retention add-on</td><td class="num">1</td><td class="num">$96.00</td><td class="num">$96.00</td></tr>
+            <tr><td>Priority support package</td><td class="num">1</td><td class="num">$150.00</td><td class="num">$150.00</td></tr>
+          </tbody>
+        </table>
+
+        <div class="record-grid cols-2" style="margin-top:14px">
+          <div>
+            <h4 class="group-h" style="margin-top:0">Payment history</h4>
+            <table class="data">
+              <thead><tr><th>Date</th><th>Method</th><th>Reference</th><th class="num">Amount</th></tr></thead>
+              <tbody><tr><td>May 21, 2026</td><td>ACH ending 1842</td><td>PMT-77120</td><td class="num">$300.00</td></tr></tbody>
+            </table>
+          </div>
+          <div class="totals">
+            <div class="total-line"><span class="field-label">Subtotal</span><span class="field-value">$678.00</span></div>
+            <div class="total-line"><span class="field-label">Tax</span><span class="field-value">$58.14</span></div>
+            <div class="total-line neg"><span class="field-label">Payments applied</span><span class="field-value">-$300.00</span></div>
+            <div class="total-line grand"><span class="field-label">Balance due</span><span class="field-value">$436.14</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-03">
+      <header class="example-header">
+        <p class="example-kicker">Example 03</p>
+        <h2>Shipment Tracking Record</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a carrier shipment tracking page. It tests extraction of tracking number,
+        delivery status, carrier service, destination, estimated delivery, and timeline events with
+        timestamps, locations, and status notes.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <h3 class="record-title">Tracking 1Z999AA10123456784</h3>
+            <p class="record-subtitle">Estimated delivery: June 4, 2026 by 8:00 PM</p>
+          </div>
+          <div class="header-badges"><span class="badge info">In transit</span></div>
+        </div>
+
+        <div class="record-grid cols-2">
+          <div class="record-panel">
+            <h4>Shipment summary</h4>
+            <div class="field-row"><span class="field-label">Tracking number</span><span class="field-value">1Z999AA10123456784</span></div>
+            <div class="field-row"><span class="field-label">Carrier</span><span class="field-value">Example Parcel</span></div>
+            <div class="field-row"><span class="field-label">Service</span><span class="field-value">Ground residential</span></div>
+            <div class="field-row"><span class="field-label">Shipped from</span><span class="field-value">Reno, NV</span></div>
+            <div class="field-row"><span class="field-label">Destination</span><span class="field-value">San Francisco, CA</span></div>
+            <div class="field-row"><span class="field-label">Package weight</span><span class="field-value">7.4 lb</span></div>
+            <div class="field-row"><span class="field-label">Reference</span><span class="field-value">ORD-2026-104922</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Ship to</h4>
+            <div class="field-block"><span class="field-label">Recipient</span><span class="field-value">Jordan Ellis</span></div>
+            <div class="field-block"><span class="field-label">Address</span><span class="field-value">120 King Street, Dock B, San Francisco, CA 94107</span></div>
+          </div>
+        </div>
+
+        <h4 class="group-h">Tracking timeline</h4>
+        <ul class="timeline" aria-label="Shipment tracking timeline">
+          <li class="timeline-item"><time class="timeline-time" datetime="2026-05-31T09:18:00">May 31, 2026, 9:18 AM</time><div><strong>Label created</strong><p>Reno, NV - Shipment information received.</p></div></li>
+          <li class="timeline-item"><time class="timeline-time" datetime="2026-05-31T19:42:00">May 31, 2026, 7:42 PM</time><div><strong>Origin scan</strong><p>Reno, NV - Package received by carrier.</p></div></li>
+          <li class="timeline-item"><time class="timeline-time" datetime="2026-06-01T04:12:00">June 1, 2026, 4:12 AM</time><div><strong>Departed facility</strong><p>Sparks, NV - Package left carrier facility.</p></div></li>
+          <li class="timeline-item"><time class="timeline-time" datetime="2026-06-01T14:55:00">June 1, 2026, 2:55 PM</time><div><strong>Arrived at facility</strong><p>Sacramento, CA - Package is moving through the network.</p></div></li>
+          <li class="timeline-item"><time class="timeline-time" datetime="2026-06-02T06:30:00">June 2, 2026, 6:30 AM</time><div><strong>In transit</strong><p>Sacramento, CA - Package is on the way to destination facility.</p></div></li>
+        </ul>
+        <div class="actions"><a href="#">Manage delivery</a><a href="#" aria-disabled="true">Proof of delivery unavailable</a></div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-04">
+      <header class="example-header">
+        <p class="example-kicker">Example 04</p>
+        <h2>Bank Transfer Confirmation</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a bank transfer confirmation receipt. It tests extraction of transaction
+        ID, transfer status, source and destination accounts, masked account values, amount, schedule
+        date, fees, memo, and confirmation notices.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <h3 class="record-title">Transfer scheduled</h3>
+            <p class="record-subtitle">Confirmation number TRN-8841-6029</p>
+          </div>
+          <div class="header-badges"><span class="badge info">Scheduled</span></div>
+        </div>
+
+        <div class="account-flow" style="margin-bottom:16px">
+          <div class="account-card"><span class="field-label">From account</span><span class="field-value">Operating Checking ending in 1842</span></div>
+          <div class="flow-arrow" aria-hidden="true">&#8594;<div style="font-size:0.7rem;color:var(--muted)">Transfer to</div></div>
+          <div class="account-card"><span class="field-label">To account</span><span class="field-value">Tax Savings ending in 3398</span></div>
+        </div>
+
+        <div class="record-grid cols-2">
+          <div class="record-panel">
+            <h4>Transfer details</h4>
+            <div class="field-row"><span class="field-label">Transfer amount</span><span class="field-value">$2,500.00</span></div>
+            <div class="field-row"><span class="field-label">Transfer date</span><span class="field-value">June 3, 2026</span></div>
+            <div class="field-row"><span class="field-label">Frequency</span><span class="field-value">One-time</span></div>
+            <div class="field-row"><span class="field-label">Fee</span><span class="field-value">$0.00</span></div>
+            <div class="field-row"><span class="field-label">Memo</span><span class="field-value">Quarterly estimated tax reserve</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Authorization</h4>
+            <div class="field-row"><span class="field-label">Created</span><span class="field-value">May 31, 2026, 10:42 AM PT</span></div>
+            <div class="field-row"><span class="field-label">Submitted by</span><span class="field-value">Renee Coleman</span></div>
+            <div class="field-row"><span class="field-label">Authorization method</span><span class="field-value">Authenticator app</span></div>
+          </div>
+        </div>
+
+        <div class="notice">Transfers scheduled after 8:00 PM PT may process the next business day.</div>
+        <div class="notice">You can cancel this transfer until June 2, 2026 at 11:59 PM PT.</div>
+        <div class="actions"><a href="#">Download confirmation</a><a href="#">Schedule another transfer</a></div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-05">
+      <header class="example-header">
+        <p class="example-kicker">Example 05</p>
+        <h2>Subscription Billing Summary</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a SaaS subscription billing summary. It tests extraction of plan details,
+        renewal date, seat usage, add-ons, invoice recipients, payment method, and latest invoice data
+        from read-only account settings.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <h3 class="record-title">Atlas Product Studio</h3>
+            <p class="record-subtitle">Workspace ID ws_9A41Q</p>
+          </div>
+          <div class="header-badges"><span class="badge ok">Active</span></div>
+        </div>
+
+        <div class="record-grid cols-3">
+          <div class="record-panel">
+            <h4>Plan</h4>
+            <div class="field-row"><span class="field-label">Current plan</span><span class="field-value">Business annual</span></div>
+            <div class="field-row"><span class="field-label">Renewal date</span><span class="field-value">January 18, 2027</span></div>
+            <div class="field-row"><span class="field-label">Billing currency</span><span class="field-value">USD</span></div>
+            <div class="field-row"><span class="field-label">Payment method</span><span class="field-value">Visa ending in 4242</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Seat usage</h4>
+            <div class="field-row"><span class="field-label">Seats purchased</span><span class="field-value">24</span></div>
+            <div class="field-row"><span class="field-label">Seats used</span><span class="field-value">19</span></div>
+            <div class="field-row"><span class="field-label">Available seats</span><span class="field-value">5</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Add-ons</h4>
+            <div class="field-row"><span class="field-label">Audit log retention</span><span class="field-value">Enabled</span></div>
+            <div class="field-row"><span class="field-label">SAML SSO</span><span class="field-value">Enabled</span></div>
+            <div class="field-row"><span class="field-label">Advanced analytics</span><span class="field-value">Enabled</span></div>
+            <div class="field-row"><span class="field-label">Priority support</span><span class="field-value">Not enabled</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Invoice recipients</h4>
+            <ul class="pill-list"><li>billing@example.test</li><li>finance@example.test</li></ul>
+          </div>
+          <div class="record-panel">
+            <h4>Latest invoice</h4>
+            <div class="field-row"><span class="field-label">Invoice number</span><span class="field-value">INV-2026-00118</span></div>
+            <div class="field-row"><span class="field-label">Invoice date</span><span class="field-value">January 18, 2026</span></div>
+            <div class="field-row"><span class="field-label">Invoice total</span><span class="field-value">$5,760.00</span></div>
+            <div class="field-row"><span class="field-label">Invoice status</span><span class="field-value"><span class="badge ok">Paid</span></span></div>
+          </div>
+        </div>
+        <div class="notice">Plan changes made before the renewal date are prorated on the next invoice.</div>
+        <div class="actions"><a href="#">Download invoice</a></div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-06">
+      <header class="example-header">
+        <p class="example-kicker">Example 06</p>
+        <h2>Insurance Policy Details Page</h2>
+      </header>
+      <p class="example-description">
+        This example imitates an insurance policy details page. It tests extraction of policy numbers,
+        coverage levels, deductibles, premium schedule, insured property, document links, and policy
+        notices from read-only cards.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <h3 class="record-title">Policy REN-2026-44720</h3>
+            <p class="record-subtitle">Renters insurance</p>
+          </div>
+          <div class="header-badges"><span class="badge ok">Active</span></div>
+        </div>
+
+        <div class="record-grid cols-2">
+          <div class="record-panel">
+            <h4>Policy</h4>
+            <div class="field-row"><span class="field-label">Policy number</span><span class="field-value">REN-2026-44720</span></div>
+            <div class="field-row"><span class="field-label">Policy type</span><span class="field-value">Renters insurance</span></div>
+            <div class="field-row"><span class="field-label">Effective date</span><span class="field-value">February 1, 2026</span></div>
+            <div class="field-row"><span class="field-label">Expiration date</span><span class="field-value">January 31, 2027</span></div>
+            <div class="field-row"><span class="field-label">Named insured</span><span class="field-value">Jordan Parker</span></div>
+            <div class="field-row"><span class="field-label">Property address</span><span class="field-value">72 Hillcrest Road, San Mateo, CA 94402</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Premium schedule</h4>
+            <div class="field-row"><span class="field-label">Monthly premium</span><span class="field-value">$18.40</span></div>
+            <div class="field-row"><span class="field-label">Next payment date</span><span class="field-value">June 1, 2026</span></div>
+            <div class="field-row"><span class="field-label">Autopay</span><span class="field-value">Enabled</span></div>
+            <div class="field-row"><span class="field-label">Payment method</span><span class="field-value">Bank account ending in 1842</span></div>
+          </div>
+        </div>
+
+        <h4 class="group-h">Coverage</h4>
+        <table class="data">
+          <thead><tr><th>Coverage</th><th class="num">Limit</th><th class="num">Deductible</th></tr></thead>
+          <tbody>
+            <tr><td>Personal property</td><td class="num">$35,000</td><td class="num">$500</td></tr>
+            <tr><td>Personal liability</td><td class="num">$300,000</td><td class="num">None</td></tr>
+            <tr><td>Loss of use</td><td class="num">$10,000</td><td class="num">$500</td></tr>
+            <tr><td>Medical payments</td><td class="num">$5,000</td><td class="num">None</td></tr>
+          </tbody>
+        </table>
+
+        <h4 class="group-h">Documents</h4>
+        <ul class="pill-list">
+          <li class="doc-pill">Policy declarations PDF</li>
+          <li class="doc-pill">Proof of insurance</li>
+          <li class="doc-pill">Autopay authorization</li>
+        </ul>
+        <div class="notice">Coverage limits shown here are summaries. Refer to the declarations page for complete policy language.</div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-07">
+      <header class="example-header">
+        <p class="example-kicker">Example 07</p>
+        <h2>Product Warranty Registration Confirmation</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a product warranty registration confirmation. It tests extraction of
+        product serial numbers, model details, purchase information, warranty plan, uploaded receipt
+        display, coverage dates, and confirmation status.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <h3 class="record-title">Warranty registration complete</h3>
+            <p class="record-subtitle">Registration ID WAR-2026-77104 - Registered on May 31, 2026</p>
+          </div>
+          <div class="header-badges"><span class="badge ok">Registered</span></div>
+        </div>
+
+        <div class="record-grid cols-3">
+          <div class="record-panel">
+            <h4>Customer</h4>
+            <div class="field-row"><span class="field-label">Customer name</span><span class="field-value">Iris Walker</span></div>
+            <div class="field-row"><span class="field-label">Customer email</span><span class="field-value">iris.walker@example.test</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Product</h4>
+            <div class="field-row"><span class="field-label">Product category</span><span class="field-value">Laptop</span></div>
+            <div class="field-row"><span class="field-label">Product model</span><span class="field-value">NexaBook Pro 14</span></div>
+            <div class="field-row"><span class="field-label">Serial number</span><span class="field-value">NXB14-26-009184</span></div>
+            <div class="field-row"><span class="field-label">Purchase date</span><span class="field-value">May 2, 2026</span></div>
+            <div class="field-row"><span class="field-label">Retailer</span><span class="field-value">Example Electronics</span></div>
+            <div class="field-row"><span class="field-label">Order number</span><span class="field-value">EE-7739201</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Warranty</h4>
+            <div class="field-row"><span class="field-label">Warranty plan</span><span class="field-value">Extended 3-year protection</span></div>
+            <div class="field-row"><span class="field-label">Coverage start</span><span class="field-value">May 2, 2026</span></div>
+            <div class="field-row"><span class="field-label">Coverage end</span><span class="field-value">May 1, 2029</span></div>
+            <div class="field-row"><span class="field-label">Receipt file</span><span class="field-value">example-electronics-receipt-EE-7739201.pdf</span></div>
+            <div class="field-row"><span class="field-label">Reminder preference</span><span class="field-value">Email warranty reminders enabled</span></div>
+          </div>
+        </div>
+        <div class="actions"><a href="#">View warranty certificate</a><a href="#">Download receipt copy</a></div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-08">
+      <header class="example-header">
+        <p class="example-kicker">Example 08</p>
+        <h2>Customer Support Case Detail</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a support case record. It tests extraction of case number, customer
+        identity, issue category, priority, status, SLA data, timeline events, attachments, and nested
+        metadata from a read-only case view.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <h3 class="record-title">Case TCK-2026-54091</h3>
+            <p class="record-subtitle">Refund status request</p>
+          </div>
+          <div class="header-badges"><span class="badge warn">Waiting on customer</span><span class="badge neutral">Priority: Medium</span></div>
+        </div>
+
+        <div class="record-grid cols-3">
+          <div class="record-panel">
+            <h4>Case</h4>
+            <div class="field-row"><span class="field-label">Case number</span><span class="field-value">TCK-2026-54091</span></div>
+            <div class="field-row"><span class="field-label">Created</span><span class="field-value">May 29, 2026, 3:14 PM</span></div>
+            <div class="field-row"><span class="field-label">Last updated</span><span class="field-value">May 31, 2026, 9:02 AM</span></div>
+            <div class="field-row"><span class="field-label">Channel</span><span class="field-value">Email</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Customer</h4>
+            <div class="field-row"><span class="field-label">Customer</span><span class="field-value">Lina Romero</span></div>
+            <div class="field-row"><span class="field-label">Email</span><span class="field-value">lina.romero@example.test</span></div>
+            <div class="field-row"><span class="field-label">Account</span><span class="field-value">Civic Data Lab</span></div>
+            <div class="field-row"><span class="field-label">Plan</span><span class="field-value">Business</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Issue details</h4>
+            <div class="field-row"><span class="field-label">Category</span><span class="field-value">Billing</span></div>
+            <div class="field-row"><span class="field-label">Subject</span><span class="field-value">Refund status request</span></div>
+            <div class="field-row"><span class="field-label">Related refund reference</span><span class="field-value">RF-20441</span></div>
+            <div class="field-row"><span class="field-label">SLA target</span><span class="field-value">June 1, 2026, 3:14 PM</span></div>
+            <div class="field-row"><span class="field-label">Assigned team</span><span class="field-value">Billing Support</span></div>
+          </div>
+        </div>
+
+        <h4 class="group-h">Timeline</h4>
+        <ul class="timeline" aria-label="Case timeline">
+          <li class="timeline-item"><time class="timeline-time">May 29, 2026, 3:14 PM</time><div><strong>Case opened - Customer</strong><p>Customer asked for refund status update.</p></div></li>
+          <li class="timeline-item"><time class="timeline-time">May 30, 2026, 10:20 AM</time><div><strong>Internal review - Agent Maya</strong><p>Refund still processing with payment provider.</p></div></li>
+          <li class="timeline-item"><time class="timeline-time">May 31, 2026, 9:02 AM</time><div><strong>Reply sent - Agent Maya</strong><p>Customer was sent refund timeline and case reference.</p></div></li>
+        </ul>
+        <h4 class="group-h">Attachments</h4>
+        <ul class="pill-list"><li class="doc-pill">refund-request-email.eml</li><li class="doc-pill">billing-screenshot.png</li></ul>
+      </div>
+    </section>
+
+    <section class="example-card gov-card" id="example-09">
+      <header class="example-header">
+        <p class="example-kicker">Example 09</p>
+        <h2>Government Application Status Page</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a public agency application status page. It tests extraction of
+        application numbers, applicant information, status, review milestones, required documents, and
+        formal notice text from a rigid read-only layout.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <span class="micro-label">Application</span>
+            <h3 class="record-title">APP-2026-88419</h3>
+            <p class="record-subtitle">Small Business Recovery Grant</p>
+          </div>
+          <div class="header-badges"><span class="badge warn">Under review</span></div>
+        </div>
+
+        <div class="record-grid cols-2">
+          <div class="record-panel">
+            <h4>Applicant</h4>
+            <div class="field-row"><span class="field-label">Applicant name</span><span class="field-value">Cedar &amp; Pine Design LLC</span></div>
+            <div class="field-row"><span class="field-label">Applicant contact</span><span class="field-value">Renee Coleman</span></div>
+            <div class="field-row"><span class="field-label">Submitted</span><span class="field-value">April 18, 2026</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Review</h4>
+            <div class="field-row"><span class="field-label">Review office</span><span class="field-value">District 4 Small Business Unit</span></div>
+            <div class="field-row"><span class="field-label">Estimated decision date</span><span class="field-value">June 20, 2026</span></div>
+          </div>
+        </div>
+
+        <div class="record-grid cols-2" style="margin-top:16px">
+          <div>
+            <h4 class="group-h" style="margin-top:0">Required documents</h4>
+            <table class="data">
+              <thead><tr><th>Document</th><th>Status</th></tr></thead>
+              <tbody class="status-cell">
+                <tr><td>Business license</td><td><span class="ok">Received</span></td></tr>
+                <tr><td>Tax return transcript</td><td><span class="ok">Received</span></td></tr>
+                <tr><td>Bank verification letter</td><td><span class="warn">Pending review</span></td></tr>
+                <tr><td>Ownership affidavit</td><td><span class="ok">Received</span></td></tr>
+                <tr><td>Lease documentation</td><td><span class="danger">Missing</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <h4 class="group-h" style="margin-top:0">Review milestones</h4>
+            <table class="data">
+              <thead><tr><th>Milestone</th><th>Date</th><th>Status</th></tr></thead>
+              <tbody class="status-cell">
+                <tr><td>Application submitted</td><td>April 18, 2026</td><td><span class="ok">Complete</span></td></tr>
+                <tr><td>Identity verification</td><td>April 22, 2026</td><td><span class="ok">Complete</span></td></tr>
+                <tr><td>Document review</td><td>May 9, 2026</td><td><span class="warn">In progress</span></td></tr>
+                <tr><td>Eligibility decision</td><td>Pending</td><td>Not started</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="notice warn">Missing documents must be uploaded by June 7, 2026. Failure to provide required documentation may delay or close the application.</div>
+        <div class="actions"><a href="#">Upload missing document</a><a href="#">Download application copy</a></div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-10">
+      <header class="example-header">
+        <p class="example-kicker">Example 10</p>
+        <h2>School Registration Confirmation</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a university course registration confirmation. It tests extraction of
+        student identity, term, course rows, credits, grading mode, tuition totals, holds, and
+        next-step instructions from read-only content.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <h3 class="record-title">Registration confirmed</h3>
+            <p class="record-subtitle">Confirmation number REG-2026-FALL-1182</p>
+          </div>
+          <div class="header-badges"><span class="badge ok">Registered</span></div>
+        </div>
+
+        <div class="record-panel" style="margin-bottom:16px">
+          <h4>Student</h4>
+          <div class="record-grid cols-2">
+            <div>
+              <div class="field-row"><span class="field-label">Student name</span><span class="field-value">Mei Tanaka</span></div>
+              <div class="field-row"><span class="field-label">Student ID</span><span class="field-value">S-884209</span></div>
+            </div>
+            <div>
+              <div class="field-row"><span class="field-label">Program</span><span class="field-value">Computer Science BS</span></div>
+              <div class="field-row"><span class="field-label">Term</span><span class="field-value">Fall 2026</span></div>
+            </div>
+          </div>
+        </div>
+
+        <h4 class="group-h">Registered courses</h4>
+        <table class="data">
+          <thead><tr><th>Course</th><th>Title</th><th>Section</th><th class="num">Credits</th><th>Grading mode</th></tr></thead>
+          <tbody>
+            <tr><td>CS 340</td><td>Human-Centered Software Design</td><td>A</td><td class="num">4</td><td>Letter</td></tr>
+            <tr><td>MATH 221</td><td>Linear Algebra</td><td>C</td><td class="num">3</td><td>Letter</td></tr>
+            <tr><td>HIST 180</td><td>Technology And Society</td><td>B</td><td class="num">3</td><td>Pass/No Pass</td></tr>
+          </tbody>
+        </table>
+
+        <div class="record-grid cols-2" style="margin-top:14px">
+          <div class="totals">
+            <div class="total-line"><span class="field-label">Total credits</span><span class="field-value">10</span></div>
+            <div class="total-line"><span class="field-label">Tuition</span><span class="field-value">$6,820.00</span></div>
+            <div class="total-line"><span class="field-label">Student services fee</span><span class="field-value">$412.00</span></div>
+            <div class="total-line"><span class="field-label">Technology fee</span><span class="field-value">$96.00</span></div>
+            <div class="total-line grand"><span class="field-label">Total charges</span><span class="field-value">$7,328.00</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Holds and next steps</h4>
+            <div class="field-row"><span class="field-label">Advising hold</span><span class="field-value">Cleared</span></div>
+            <div class="field-row"><span class="field-label">Payment deadline</span><span class="field-value">August 21, 2026</span></div>
+            <div class="field-block"><span class="field-label">Next step</span><span class="field-value">Review tuition bill and confirm financial aid status.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-11">
+      <header class="example-header">
+        <p class="example-kicker">Example 11</p>
+        <h2>Medical Lab Result Summary</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a patient portal lab result summary. It tests extraction of patient
+        details, test metadata, lab result rows, reference ranges, abnormal flags, provider notes, and
+        status badges from read-only medical-style content.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <h3 class="record-title">Lab order LAB-2026-11984</h3>
+            <p class="record-subtitle">Lipid panel</p>
+          </div>
+          <div class="header-badges"><span class="badge ok">Final</span></div>
+        </div>
+
+        <div class="record-grid cols-2">
+          <div class="record-panel">
+            <h4>Patient</h4>
+            <div class="field-row"><span class="field-label">Patient</span><span class="field-value">Victor Lane</span></div>
+            <div class="field-row"><span class="field-label">Date of birth</span><span class="field-value">January 22, 1975</span></div>
+            <div class="field-row"><span class="field-label">Ordering provider</span><span class="field-value">Dr. Hannah Cho</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Order</h4>
+            <div class="field-row"><span class="field-label">Lab order number</span><span class="field-value">LAB-2026-11984</span></div>
+            <div class="field-row"><span class="field-label">Collected</span><span class="field-value">May 28, 2026, 8:42 AM</span></div>
+            <div class="field-row"><span class="field-label">Reported</span><span class="field-value">May 29, 2026, 2:15 PM</span></div>
+          </div>
+        </div>
+
+        <h4 class="group-h">Results</h4>
+        <table class="data">
+          <thead><tr><th>Test</th><th class="num">Result</th><th>Unit</th><th>Reference range</th><th>Flag</th></tr></thead>
+          <tbody>
+            <tr><td>Total cholesterol</td><td class="num">182</td><td>mg/dL</td><td>&lt; 200</td><td><span class="badge ok">Normal</span></td></tr>
+            <tr><td>HDL cholesterol</td><td class="num">48</td><td>mg/dL</td><td>&gt;= 40</td><td><span class="badge ok">Normal</span></td></tr>
+            <tr><td>LDL cholesterol</td><td class="num">112</td><td>mg/dL</td><td>&lt; 100</td><td><span class="badge danger">High</span></td></tr>
+            <tr><td>Triglycerides</td><td class="num">136</td><td>mg/dL</td><td>&lt; 150</td><td><span class="badge ok">Normal</span></td></tr>
+          </tbody>
+        </table>
+        <div class="notice">Clinical note: LDL remains mildly elevated. Continue current medication and discuss diet changes at the next follow-up visit.</div>
+        <div class="notice warn">This page is a fictional demo record and does not represent medical advice.</div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-12">
+      <header class="example-header">
+        <p class="example-kicker">Example 12</p>
+        <h2>Travel Itinerary Confirmation</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a travel booking itinerary confirmation. It tests extraction of multiple
+        reservation types from one page, including flight segments, hotel stay details, car service
+        pickup, confirmation numbers, traveler names, and policy notes.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <h3 class="record-title">Design Summit 2026</h3>
+            <p class="record-subtitle">Itinerary number ITN-2026-44718 - Traveler Lina Romero - Booked on May 31, 2026</p>
+          </div>
+          <div class="header-badges"><span class="badge ok">Confirmed</span></div>
+        </div>
+
+        <div class="segment-card">
+          <h4>Flight segment</h4>
+          <div class="seg-body record-grid cols-2">
+            <div>
+              <div class="field-row"><span class="field-label">Airline</span><span class="field-value">AeroVista</span></div>
+              <div class="field-row"><span class="field-label">Confirmation</span><span class="field-value">AV-9K2LD</span></div>
+              <div class="field-row"><span class="field-label">Flight</span><span class="field-value">AVX 218</span></div>
+              <div class="field-row"><span class="field-label">Seat</span><span class="field-value">14A</span></div>
+            </div>
+            <div>
+              <div class="field-row"><span class="field-label">From</span><span class="field-value">SFO</span></div>
+              <div class="field-row"><span class="field-label">To</span><span class="field-value">JFK</span></div>
+              <div class="field-row"><span class="field-label">Departure</span><span class="field-value">September 2, 2026, 8:05 AM</span></div>
+              <div class="field-row"><span class="field-label">Arrival</span><span class="field-value">September 2, 2026, 4:42 PM</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="segment-card">
+          <h4>Hotel segment</h4>
+          <div class="seg-body record-grid cols-2">
+            <div>
+              <div class="field-row"><span class="field-label">Hotel</span><span class="field-value">Harbor East Hotel</span></div>
+              <div class="field-row"><span class="field-label">Confirmation</span><span class="field-value">HTL-77120</span></div>
+              <div class="field-row"><span class="field-label">Room type</span><span class="field-value">King room</span></div>
+            </div>
+            <div>
+              <div class="field-row"><span class="field-label">Check-in</span><span class="field-value">September 2, 2026</span></div>
+              <div class="field-row"><span class="field-label">Check-out</span><span class="field-value">September 5, 2026</span></div>
+              <div class="field-row"><span class="field-label">Guest name</span><span class="field-value">Lina Romero</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="segment-card">
+          <h4>Ground transportation segment</h4>
+          <div class="seg-body record-grid cols-2">
+            <div>
+              <div class="field-row"><span class="field-label">Provider</span><span class="field-value">MetroCar</span></div>
+              <div class="field-row"><span class="field-label">Confirmation</span><span class="field-value">CAR-90418</span></div>
+            </div>
+            <div>
+              <div class="field-row"><span class="field-label">Pickup</span><span class="field-value">JFK Terminal 4</span></div>
+              <div class="field-row"><span class="field-label">Pickup time</span><span class="field-value">September 2, 2026, 5:20 PM</span></div>
+              <div class="field-row"><span class="field-label">Drop-off</span><span class="field-value">Harbor East Hotel</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="notice">Flight changes may be subject to fare difference. Hotel cancellation is free until August 29, 2026 at 6:00 PM local hotel time.</div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-13">
+      <header class="example-header">
+        <p class="example-kicker">Example 13</p>
+        <h2>Hotel Reservation Confirmation</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a post-booking hotel confirmation page. It tests extraction of
+        confirmation number, guest details, stay dates, room details, rate plan, deposit, balance due,
+        cancellation policy, and hotel contact information.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <h3 class="record-title">Reservation confirmed</h3>
+            <p class="record-subtitle">Confirmation number <span class="conf-big">HVS-2026-88217</span> - Booked on May 31, 2026</p>
+          </div>
+          <div class="header-badges"><span class="badge ok">Confirmed</span></div>
+        </div>
+
+        <div class="record-grid cols-3">
+          <div class="record-panel">
+            <h4>Guest</h4>
+            <div class="field-row"><span class="field-label">Guest name</span><span class="field-value">Priya Shah</span></div>
+            <div class="field-row"><span class="field-label">Guest email</span><span class="field-value">priya.shah@example.test</span></div>
+            <div class="field-row"><span class="field-label">Guest phone</span><span class="field-value">415-555-0139</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Stay details</h4>
+            <div class="field-row"><span class="field-label">Hotel</span><span class="field-value">Harbor View Suites</span></div>
+            <div class="field-row"><span class="field-label">Hotel address</span><span class="field-value">41 Marina Drive, Monterey, CA 93940</span></div>
+            <div class="field-row"><span class="field-label">Check-in</span><span class="field-value">August 14, 2026</span></div>
+            <div class="field-row"><span class="field-label">Check-out</span><span class="field-value">August 18, 2026</span></div>
+            <div class="field-row"><span class="field-label">Nights</span><span class="field-value">4</span></div>
+            <div class="field-row"><span class="field-label">Guests</span><span class="field-value">2 adults, 1 child</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Room details</h4>
+            <div class="field-row"><span class="field-label">Room type</span><span class="field-value">King Studio With Harbor View</span></div>
+            <div class="field-row"><span class="field-label">Rate plan</span><span class="field-value">Refundable breakfast rate</span></div>
+            <div class="field-row"><span class="field-label">Breakfast</span><span class="field-value">Included</span></div>
+            <div class="field-row"><span class="field-label">Parking</span><span class="field-value">Added</span></div>
+          </div>
+        </div>
+
+        <div class="record-grid cols-2" style="margin-top:16px">
+          <div class="totals">
+            <div class="total-line"><span class="field-label">Deposit paid</span><span class="field-value">$325.62</span></div>
+            <div class="total-line"><span class="field-label">Balance due at property</span><span class="field-value">$976.86</span></div>
+            <div class="total-line grand"><span class="field-label">Estimated total</span><span class="field-value">$1,302.48</span></div>
+            <div class="total-line"><span class="field-label">Payment method</span><span class="field-value">Visa ending in 4242</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Hotel contact</h4>
+            <div class="field-row"><span class="field-label">Phone</span><span class="field-value">831-555-0190</span></div>
+            <div class="field-row"><span class="field-label">Email</span><span class="field-value">reservations@harborview.example.test</span></div>
+          </div>
+        </div>
+        <div class="notice">Free cancellation until August 10, 2026 at 6:00 PM hotel local time. After that time, the first night and taxes are non-refundable.</div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-14">
+      <header class="example-header">
+        <p class="example-kicker">Example 14</p>
+        <h2>Utility Account Billing Summary</h2>
+      </header>
+      <p class="example-description">
+        This example imitates an electric utility billing summary. It tests extraction of account
+        number, service address, billing period, meter readings, usage, charges, payments, due date,
+        and utility notices from read-only billing content.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <h3 class="record-title">Account UTL-440192-8</h3>
+            <p class="record-subtitle">Billing period April 24-May 23, 2026</p>
+          </div>
+          <div class="header-badges"><span class="badge ok">Current</span></div>
+        </div>
+
+        <div class="record-grid cols-2">
+          <div class="record-panel">
+            <h4>Account</h4>
+            <div class="field-row"><span class="field-label">Account number</span><span class="field-value">UTL-440192-8</span></div>
+            <div class="field-row"><span class="field-label">Customer name</span><span class="field-value">Noah Kim</span></div>
+            <div class="field-row"><span class="field-label">Service address</span><span class="field-value">72 Hillcrest Road, San Mateo, CA 94402</span></div>
+            <div class="field-row"><span class="field-label">Bill issue date</span><span class="field-value">May 25, 2026</span></div>
+            <div class="field-row"><span class="field-label">Due date</span><span class="field-value">June 14, 2026</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Meter summary</h4>
+            <div class="field-row"><span class="field-label">Meter number</span><span class="field-value">MTR-882014</span></div>
+            <div class="field-row"><span class="field-label">Previous reading</span><span class="field-value">18,442 kWh</span></div>
+            <div class="field-row"><span class="field-label">Current reading</span><span class="field-value">19,018 kWh</span></div>
+            <div class="field-row"><span class="field-label">Usage</span><span class="field-value">576 kWh</span></div>
+            <div class="field-row"><span class="field-label">Average daily usage</span><span class="field-value">19.2 kWh</span></div>
+          </div>
+        </div>
+
+        <div style="max-width:380px;margin-left:auto;margin-top:14px">
+          <div class="totals">
+            <div class="total-line"><span class="field-label">Electric delivery</span><span class="field-value">$72.18</span></div>
+            <div class="total-line"><span class="field-label">Electric generation</span><span class="field-value">$94.22</span></div>
+            <div class="total-line"><span class="field-label">Public purpose programs</span><span class="field-value">$8.14</span></div>
+            <div class="total-line"><span class="field-label">Taxes and local fees</span><span class="field-value">$11.36</span></div>
+            <div class="total-line"><span class="field-label">Previous balance</span><span class="field-value">$0.00</span></div>
+            <div class="total-line neg"><span class="field-label">Payment received</span><span class="field-value">-$181.90</span></div>
+            <div class="total-line grand"><span class="field-label">Current amount due</span><span class="field-value">$185.90</span></div>
+          </div>
+        </div>
+        <div class="notice">Your usage increased 12 percent compared with the same period last year.</div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-15">
+      <header class="example-header">
+        <p class="example-kicker">Example 15</p>
+        <h2>Payroll Payslip</h2>
+      </header>
+      <p class="example-description">
+        This example imitates an employee payslip. It tests extraction of pay period, earnings rows,
+        tax withholdings, deductions, employer contributions, net pay, and a masked direct deposit
+        destination across multiple grouped tables.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <h3 class="record-title">Payslip - May 16-31, 2026</h3>
+            <p class="record-subtitle">Pay date June 5, 2026 - Statement PS-2026-0388</p>
+          </div>
+          <div class="header-badges"><span class="badge ok">Paid</span></div>
+        </div>
+
+        <div class="record-grid cols-2">
+          <div class="record-panel">
+            <h4>Employee</h4>
+            <div class="field-row"><span class="field-label">Employee</span><span class="field-value">Daniel Brooks</span></div>
+            <div class="field-row"><span class="field-label">Employee ID</span><span class="field-value">E-20418</span></div>
+            <div class="field-row"><span class="field-label">Department</span><span class="field-value">Engineering</span></div>
+            <div class="field-row"><span class="field-label">Pay type</span><span class="field-value">Salaried</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Pay period</h4>
+            <div class="field-row"><span class="field-label">Period</span><span class="field-value">May 16-31, 2026</span></div>
+            <div class="field-row"><span class="field-label">Pay date</span><span class="field-value">June 5, 2026</span></div>
+            <div class="field-row"><span class="field-label">Pay frequency</span><span class="field-value">Semi-monthly</span></div>
+          </div>
+        </div>
+
+        <div class="record-grid cols-3" style="margin-top:14px">
+          <div>
+            <h4 class="group-h" style="margin-top:0">Earnings</h4>
+            <table class="data">
+              <thead><tr><th>Type</th><th class="num">Current</th><th class="num">YTD</th></tr></thead>
+              <tbody>
+                <tr><td>Regular</td><td class="num">$4,166.67</td><td class="num">$41,666.70</td></tr>
+                <tr><td>Bonus</td><td class="num">$500.00</td><td class="num">$1,500.00</td></tr>
+              </tbody>
+              <tfoot><tr><td>Gross</td><td class="num">$4,666.67</td><td class="num">$43,166.70</td></tr></tfoot>
+            </table>
+          </div>
+          <div>
+            <h4 class="group-h" style="margin-top:0">Taxes</h4>
+            <table class="data">
+              <thead><tr><th>Type</th><th class="num">Current</th></tr></thead>
+              <tbody>
+                <tr><td>Federal income tax</td><td class="num">$612.40</td></tr>
+                <tr><td>Social Security</td><td class="num">$289.33</td></tr>
+                <tr><td>Medicare</td><td class="num">$67.67</td></tr>
+                <tr><td>State income tax</td><td class="num">$201.18</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <h4 class="group-h" style="margin-top:0">Deductions</h4>
+            <table class="data">
+              <thead><tr><th>Type</th><th class="num">Current</th></tr></thead>
+              <tbody>
+                <tr><td>401(k) pre-tax</td><td class="num">$280.00</td></tr>
+                <tr><td>Medical insurance</td><td class="num">$142.00</td></tr>
+                <tr><td>Dental insurance</td><td class="num">$18.50</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="record-grid cols-2" style="margin-top:14px">
+          <div class="record-panel">
+            <h4>Direct deposit</h4>
+            <div class="field-row"><span class="field-label">Bank</span><span class="field-value">Pinewood Credit Union</span></div>
+            <div class="field-row"><span class="field-label">Account</span><span class="field-value">Checking ending in 8841</span></div>
+          </div>
+          <div class="totals">
+            <div class="total-line"><span class="field-label">Gross pay</span><span class="field-value">$4,666.67</span></div>
+            <div class="total-line neg"><span class="field-label">Total taxes</span><span class="field-value">-$1,170.58</span></div>
+            <div class="total-line neg"><span class="field-label">Total deductions</span><span class="field-value">-$440.50</span></div>
+            <div class="total-line grand"><span class="field-label">Net pay</span><span class="field-value">$3,055.59</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-16">
+      <header class="example-header">
+        <p class="example-kicker">Example 16</p>
+        <h2>Tax Filing Confirmation</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a tax filing acceptance confirmation. It tests extraction of separate
+        federal and state filing details, submission identifiers, refund or balance figures, attached
+        forms, and a masked taxpayer identifier.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <h3 class="record-title">Tax year 2025 return accepted</h3>
+            <p class="record-subtitle">Filed May 30, 2026 - Taxpayer SSN ending in 4417</p>
+          </div>
+          <div class="header-badges"><span class="badge ok">Accepted</span></div>
+        </div>
+
+        <div class="record-grid cols-2">
+          <div class="record-panel">
+            <h4>Federal filing</h4>
+            <div class="field-row"><span class="field-label">Submission ID</span><span class="field-value">FED-2026-7741920</span></div>
+            <div class="field-row"><span class="field-label">Filing status</span><span class="field-value">Married filing jointly</span></div>
+            <div class="field-row"><span class="field-label">Adjusted gross income</span><span class="field-value">$112,480.00</span></div>
+            <div class="field-row"><span class="field-label">Total tax</span><span class="field-value">$14,902.00</span></div>
+            <div class="field-row"><span class="field-label">Federal refund</span><span class="field-value">$1,284.00</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value">Accepted</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>State filing</h4>
+            <div class="field-row"><span class="field-label">Submission ID</span><span class="field-value">ST-CA-2026-559013</span></div>
+            <div class="field-row"><span class="field-label">State</span><span class="field-value">California</span></div>
+            <div class="field-row"><span class="field-label">State tax</span><span class="field-value">$4,118.00</span></div>
+            <div class="field-row"><span class="field-label">State balance due</span><span class="field-value">$212.00</span></div>
+            <div class="field-row"><span class="field-label">Payment scheduled</span><span class="field-value">June 12, 2026</span></div>
+            <div class="field-row"><span class="field-label">Status</span><span class="field-value">Accepted</span></div>
+          </div>
+        </div>
+
+        <h4 class="group-h">Forms included</h4>
+        <ul class="pill-list"><li class="doc-pill">Form 1040</li><li class="doc-pill">Schedule A</li><li class="doc-pill">Schedule B</li><li class="doc-pill">CA Form 540</li></ul>
+        <div class="notice">Keep this confirmation for your records. Refund delivery times depend on your selected deposit method.</div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-17">
+      <header class="example-header">
+        <p class="example-kicker">Example 17</p>
+        <h2>Loan Amortization Schedule</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a loan summary with an amortization schedule. It tests extraction of loan
+        terms, summary figures, and per-period rows distinguishing principal, interest, and remaining
+        balance from a dense numeric table.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <h3 class="record-title">Loan LN-2026-30714</h3>
+            <p class="record-subtitle">Auto loan - originated March 1, 2026</p>
+          </div>
+          <div class="header-badges"><span class="badge info">Active</span></div>
+        </div>
+
+        <div class="record-grid cols-3">
+          <div class="record-panel">
+            <h4>Terms</h4>
+            <div class="field-row"><span class="field-label">Principal</span><span class="field-value">$24,000.00</span></div>
+            <div class="field-row"><span class="field-label">Annual rate</span><span class="field-value">6.40%</span></div>
+            <div class="field-row"><span class="field-label">Term</span><span class="field-value">48 months</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Payment</h4>
+            <div class="field-row"><span class="field-label">Monthly payment</span><span class="field-value">$568.42</span></div>
+            <div class="field-row"><span class="field-label">First payment</span><span class="field-value">April 1, 2026</span></div>
+            <div class="field-row"><span class="field-label">Autopay</span><span class="field-value">Enabled</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Totals</h4>
+            <div class="field-row"><span class="field-label">Total interest</span><span class="field-value">$3,284.16</span></div>
+            <div class="field-row"><span class="field-label">Total of payments</span><span class="field-value">$27,284.16</span></div>
+          </div>
+        </div>
+
+        <h4 class="group-h">First payments</h4>
+        <table class="data">
+          <thead><tr><th class="num">No.</th><th>Date</th><th class="num">Payment</th><th class="num">Principal</th><th class="num">Interest</th><th class="num">Balance</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td>April 1, 2026</td><td class="num">$568.42</td><td class="num">$440.42</td><td class="num">$128.00</td><td class="num">$23,559.58</td></tr>
+            <tr><td class="num">2</td><td>May 1, 2026</td><td class="num">$568.42</td><td class="num">$442.77</td><td class="num">$125.65</td><td class="num">$23,116.81</td></tr>
+            <tr><td class="num">3</td><td>June 1, 2026</td><td class="num">$568.42</td><td class="num">$445.13</td><td class="num">$123.29</td><td class="num">$22,671.68</td></tr>
+            <tr><td class="num">4</td><td>July 1, 2026</td><td class="num">$568.42</td><td class="num">$447.50</td><td class="num">$120.92</td><td class="num">$22,224.18</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-18">
+      <header class="example-header">
+        <p class="example-kicker">Example 18</p>
+        <h2>Membership Renewal Receipt</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a nonprofit membership renewal receipt. It tests extraction of membership
+        tier, member details, renewal dates, benefits list, payment breakdown, and a separated
+        tax-deductible portion.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <h3 class="record-title">Membership renewed</h3>
+            <p class="record-subtitle">Receipt MEM-2026-66120 - Riverside Arts Society</p>
+          </div>
+          <div class="header-badges"><span class="badge ok">Active</span><span class="badge info">Patron tier</span></div>
+        </div>
+
+        <div class="record-grid cols-2">
+          <div class="record-panel">
+            <h4>Member</h4>
+            <div class="field-row"><span class="field-label">Member name</span><span class="field-value">Grace Mwangi</span></div>
+            <div class="field-row"><span class="field-label">Member number</span><span class="field-value">M-009418</span></div>
+            <div class="field-row"><span class="field-label">Email</span><span class="field-value">grace.mwangi@example.test</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Term</h4>
+            <div class="field-row"><span class="field-label">Tier</span><span class="field-value">Patron</span></div>
+            <div class="field-row"><span class="field-label">Renewed on</span><span class="field-value">May 31, 2026</span></div>
+            <div class="field-row"><span class="field-label">Valid through</span><span class="field-value">May 31, 2027</span></div>
+            <div class="field-row"><span class="field-label">Auto-renew</span><span class="field-value">Off</span></div>
+          </div>
+        </div>
+
+        <h4 class="group-h">Included benefits</h4>
+        <ul class="bullets">
+          <li>Unlimited gallery admission for two</li>
+          <li>Invitations to four members-only previews</li>
+          <li>15 percent discount in the museum shop</li>
+          <li>Quarterly print magazine</li>
+        </ul>
+
+        <div style="max-width:360px;margin-left:auto;margin-top:8px">
+          <div class="totals">
+            <div class="total-line"><span class="field-label">Membership dues</span><span class="field-value">$250.00</span></div>
+            <div class="total-line"><span class="field-label">Added donation</span><span class="field-value">$50.00</span></div>
+            <div class="total-line grand"><span class="field-label">Total charged</span><span class="field-value">$300.00</span></div>
+            <div class="total-line"><span class="field-label">Tax-deductible portion</span><span class="field-value">$190.00</span></div>
+          </div>
+        </div>
+        <div class="notice">The fair market value of benefits received is $110.00. The tax-deductible portion of this transaction is $190.00.</div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-19">
+      <header class="example-header">
+        <p class="example-kicker">Example 19</p>
+        <h2>Event Registration Confirmation</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a conference registration confirmation. It tests extraction of order
+        details, multiple attendee rows with distinct ticket types, selected sessions, an order total,
+        and event logistics from read-only content.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <h3 class="record-title">You're registered for DataConf 2026</h3>
+            <p class="record-subtitle">Order EVT-2026-51220 - Purchased by Omar Haddad</p>
+          </div>
+          <div class="header-badges"><span class="badge ok">Confirmed</span></div>
+        </div>
+
+        <div class="record-grid cols-2">
+          <div class="record-panel">
+            <h4>Event</h4>
+            <div class="field-row"><span class="field-label">Event</span><span class="field-value">DataConf 2026</span></div>
+            <div class="field-row"><span class="field-label">Dates</span><span class="field-value">October 7-9, 2026</span></div>
+            <div class="field-row"><span class="field-label">Venue</span><span class="field-value">Lakeside Convention Center, Chicago, IL</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Order</h4>
+            <div class="field-row"><span class="field-label">Order number</span><span class="field-value">EVT-2026-51220</span></div>
+            <div class="field-row"><span class="field-label">Purchaser email</span><span class="field-value">omar.haddad@example.test</span></div>
+            <div class="field-row"><span class="field-label">Order date</span><span class="field-value">May 31, 2026</span></div>
+          </div>
+        </div>
+
+        <h4 class="group-h">Attendees</h4>
+        <table class="data">
+          <thead><tr><th>Name</th><th>Ticket type</th><th>Badge ID</th><th class="num">Price</th></tr></thead>
+          <tbody>
+            <tr><td>Omar Haddad</td><td>Full conference</td><td>BD-1180</td><td class="num">$699.00</td></tr>
+            <tr><td>Sara Lindqvist</td><td>Full conference</td><td>BD-1181</td><td class="num">$699.00</td></tr>
+            <tr><td>Theo Park</td><td>Workshop day only</td><td>BD-1182</td><td class="num">$299.00</td></tr>
+          </tbody>
+          <tfoot><tr><td colspan="3">Order total</td><td class="num">$1,697.00</td></tr></tfoot>
+        </table>
+
+        <h4 class="group-h">Selected sessions (Omar Haddad)</h4>
+        <ul class="bullets">
+          <li>Keynote: The State Of Data Tooling - Oct 7, 9:00 AM</li>
+          <li>Workshop: Streaming Pipelines - Oct 8, 1:00 PM</li>
+          <li>Panel: Privacy By Design - Oct 9, 11:00 AM</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-20">
+      <header class="example-header">
+        <p class="example-kicker">Example 20</p>
+        <h2>Rental Lease Application Summary</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a rental lease application review summary. It tests extraction of property
+        details, household member rows, verification statuses, pet and vehicle disclosures, submitted
+        documents, and an application decision pending notice.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <h3 class="record-title">Lease application LSE-2026-77104</h3>
+            <p class="record-subtitle">218 Maple Court, Unit 5B - Submitted May 28, 2026</p>
+          </div>
+          <div class="header-badges"><span class="badge warn">Under review</span></div>
+        </div>
+
+        <div class="record-grid cols-2">
+          <div class="record-panel">
+            <h4>Property</h4>
+            <div class="field-row"><span class="field-label">Address</span><span class="field-value">218 Maple Court, Unit 5B</span></div>
+            <div class="field-row"><span class="field-label">Monthly rent</span><span class="field-value">$2,150.00</span></div>
+            <div class="field-row"><span class="field-label">Requested move-in</span><span class="field-value">July 1, 2026</span></div>
+            <div class="field-row"><span class="field-label">Lease term</span><span class="field-value">12 months</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Disclosures</h4>
+            <div class="field-row"><span class="field-label">Pets</span><span class="field-value">1 cat (spayed)</span></div>
+            <div class="field-row"><span class="field-label">Vehicle</span><span class="field-value">2019 Honda Civic, plate 7XYZ123</span></div>
+            <div class="field-row"><span class="field-label">Smoking</span><span class="field-value">No</span></div>
+          </div>
+        </div>
+
+        <h4 class="group-h">Household members</h4>
+        <table class="data">
+          <thead><tr><th>Name</th><th>Role</th><th>Income verification</th><th>Background check</th></tr></thead>
+          <tbody class="status-cell">
+            <tr><td>Elena Petrov</td><td>Primary applicant</td><td><span class="ok">Verified</span></td><td><span class="ok">Clear</span></td></tr>
+            <tr><td>Marco Petrov</td><td>Co-applicant</td><td><span class="warn">Pending</span></td><td><span class="ok">Clear</span></td></tr>
+            <tr><td>Anya Petrov</td><td>Occupant (minor)</td><td>Not required</td><td>Not required</td></tr>
+          </tbody>
+        </table>
+
+        <h4 class="group-h">Submitted documents</h4>
+        <ul class="pill-list"><li class="doc-pill">pay-stubs-april-may.pdf</li><li class="doc-pill">photo-id-elena.pdf</li><li class="doc-pill">reference-letter.pdf</li></ul>
+        <div class="notice warn">A decision is pending co-applicant income verification. Expected decision by June 6, 2026.</div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-21">
+      <header class="example-header">
+        <p class="example-kicker">Example 21</p>
+        <h2>Software License Activation</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a software license activation page. It tests extraction of a masked
+        license key, plan and seat details, registered devices in a table, and activation status without
+        exposing the full key value.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <h3 class="record-title">License activated</h3>
+            <p class="record-subtitle">Cartograph Pro - Order ORD-2026-90412</p>
+          </div>
+          <div class="header-badges"><span class="badge ok">Active</span></div>
+        </div>
+
+        <div class="record-grid cols-2">
+          <div class="record-panel">
+            <h4>License</h4>
+            <div class="field-row"><span class="field-label">License key</span><span class="field-value">DGSP-****-****-9K2Q</span></div>
+            <div class="field-row"><span class="field-label">Product</span><span class="field-value">Cartograph Pro</span></div>
+            <div class="field-row"><span class="field-label">Plan</span><span class="field-value">Team annual</span></div>
+            <div class="field-row"><span class="field-label">Seats</span><span class="field-value">3 of 5 used</span></div>
+            <div class="field-row"><span class="field-label">Expires</span><span class="field-value">May 31, 2027</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Owner</h4>
+            <div class="field-row"><span class="field-label">Registered to</span><span class="field-value">Northwind Surveys</span></div>
+            <div class="field-row"><span class="field-label">Admin contact</span><span class="field-value">jordan.lee@example.test</span></div>
+            <div class="field-row"><span class="field-label">Activated on</span><span class="field-value">May 31, 2026</span></div>
+          </div>
+        </div>
+
+        <h4 class="group-h">Registered devices</h4>
+        <table class="data">
+          <thead><tr><th>Device name</th><th>Platform</th><th>Last active</th><th>Status</th></tr></thead>
+          <tbody class="status-cell">
+            <tr><td>SURVEY-WS-01</td><td>Windows 11</td><td>May 31, 2026</td><td><span class="ok">Active</span></td></tr>
+            <tr><td>JLEE-MBP</td><td>macOS 15</td><td>May 30, 2026</td><td><span class="ok">Active</span></td></tr>
+            <tr><td>FIELD-TAB-07</td><td>Android 15</td><td>May 24, 2026</td><td><span class="warn">Idle</span></td></tr>
+          </tbody>
+        </table>
+        <div class="notice">For security, only the last four characters of the license key are shown. Retrieve the full key from the admin console.</div>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-22">
+      <header class="example-header">
+        <p class="example-kicker">Example 22</p>
+        <h2>Security Audit Log Entry</h2>
+      </header>
+      <p class="example-description">
+        This example imitates a security audit log detail page. It tests extraction of event metadata,
+        actor and target panels, risk signals, and a raw attributes table whose technical key-value rows
+        differ in style from the human-readable summary above them.
+      </p>
+      <div class="example-surface">
+        <div class="record-header">
+          <div>
+            <h3 class="record-title">Audit event AUD-2026-0099431</h3>
+            <p class="record-subtitle">permission.grant.elevated - May 31, 2026, 11:48:02 UTC</p>
+          </div>
+          <div class="header-badges"><span class="badge danger">High risk</span><span class="badge neutral">Reviewed</span></div>
+        </div>
+
+        <div class="record-grid cols-3">
+          <div class="record-panel">
+            <h4>Actor</h4>
+            <div class="field-row"><span class="field-label">User</span><span class="field-value">priya.nair@example.test</span></div>
+            <div class="field-row"><span class="field-label">User ID</span><span class="field-value">u_4471</span></div>
+            <div class="field-row"><span class="field-label">Role</span><span class="field-value">Org admin</span></div>
+            <div class="field-row"><span class="field-label">IP address</span><span class="field-value">203.0.113.44</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Target</h4>
+            <div class="field-row"><span class="field-label">Target user</span><span class="field-value">contractor.dev@example.test</span></div>
+            <div class="field-row"><span class="field-label">Target ID</span><span class="field-value">u_9920</span></div>
+            <div class="field-row"><span class="field-label">Granted role</span><span class="field-value">Production deploy</span></div>
+            <div class="field-row"><span class="field-label">Scope</span><span class="field-value">repo: payments-api</span></div>
+          </div>
+          <div class="record-panel">
+            <h4>Risk signals</h4>
+            <ul class="bullets">
+              <li>Elevated permission grant</li>
+              <li>New device for actor</li>
+              <li>Outside usual hours</li>
+            </ul>
+          </div>
+        </div>
+
+        <h4 class="group-h">Raw attributes</h4>
+        <table class="data kv">
+          <tbody>
+            <tr><td>event_type</td><td>permission.grant.elevated</td></tr>
+            <tr><td>request_id</td><td>req_8f31c0a47b29</td></tr>
+            <tr><td>session_id</td><td>sess_d20a91ee</td></tr>
+            <tr><td>source</td><td>admin-console</td></tr>
+            <tr><td>mfa_verified</td><td>true</td></tr>
+            <tr><td>device_fingerprint</td><td>fp_5521ab90</td></tr>
+            <tr><td>geo</td><td>US-CA</td></tr>
+            <tr><td>risk_score</td><td>82</td></tr>
+          </tbody>
+        </table>
+        <div class="notice warn">Raw attribute values are stored as recorded and may differ from the human-readable labels above.</div>
+      </div>
+    </section>
+
+  </main>
+</body>
+</html>

@@ -1,0 +1,3726 @@
+---
+
+A00 Change Request Specification - Page 5 Feed, Posts, And Card Extraction
+
+---
+
+Create one standalone HTML demo page named `page-05-feed-posts-and-card-extraction.html`.
+
+The page must be a self-contained HTML file. Put all HTML, CSS, and JavaScript inside this one file. Do not use React. Do not use TypeScript. Do not use a build step. Do not load external CSS, external JavaScript, external fonts, external images, or external data. The page must work by opening the `.html` file directly in a browser.
+
+This page is a testing surface for a content extraction tool. The page must focus on feed, post, and card extraction: news feeds, link aggregators, social posts, job cards, marketplace cards, product cards, forum threads, comment cards, issue cards, review cards, video cards, event cards, real estate cards, repository cards, notification cards, activity feed items, support knowledge cards, and compact repeated records where each item has a title, body, author, link, status, score, timestamp, tags, badges, counts, and metadata.
+
+The page must contain 22 separate examples. Each example must have a visible heading, a visible explanatory paragraph, and the actual feed, post list, or card UI. Each example must be visually separated from the next example. Each example must be realistic enough to test extraction of repeated items, links, titles, authors, timestamps, scores, badges, tags, comment counts, nested metadata, preview text, action labels, and item-level relationships.
+
+Do not make the examples tiny toy cards. A complex example is preferred because it can also be used for simple extraction testing. Every example must test a different extraction caveat.
+
+---
+
+B00 Page-Level Purpose
+
+---
+
+The purpose of this page is to test whether an extraction tool can identify, select, and format structured information from repeated feed items, posts, and cards.
+
+The extraction tool should be able to handle repeated records where the same fields appear many times. It should preserve item boundaries. It should extract item titles, destination links, authors, sources, timestamps, scores, counts, badges, tags, prices, statuses, locations, snippets, preview text, comments, nested replies, and action metadata without flattening everything into one unstructured paragraph.
+
+This page should intentionally include both clean semantic markup and messy real-world card markup. Some examples should use lists, articles, headings, time elements, and clear anchor tags. Other examples should use nested divs, spans, duplicated links, visual badges, action buttons, hidden metadata, and compact card layouts where label-value relationships are implied by visual position.
+
+This page should not depend on external services. It should not fetch real feeds. It should not use real social network brands or real user data. All data must be fictional and hardcoded.
+
+---
+
+C00 Required Page Structure
+
+---
+
+The page must start with a top-level header.
+
+Use this visible title:
+
+`Page 5 - Feed, Posts, And Card Extraction`
+
+Under the title, include a short introduction paragraph explaining that the page contains realistic feed, post, and card examples for testing extraction of repeated records, item boundaries, links, titles, authors, scores, timestamps, tags, badges, comment counts, prices, statuses, snippets, and nested metadata.
+
+After the introduction, render 22 example sections.
+
+Each example section must follow this pattern:
+
+```html
+<section class="example-card" id="example-01">
+  <header class="example-header">
+    <p class="example-kicker">Example 01</p>
+    <h2>Link Aggregator Front Page Feed</h2>
+  </header>
+
+  <p class="example-description">
+    This example imitates...
+  </p>
+
+  <div class="example-surface">
+    <!-- Actual feed, post list, or card UI goes here. -->
+  </div>
+</section>
+```
+
+The exact class names may vary, but the structure must remain clear. Each section must have a unique `id`, from `example-01` through `example-22`.
+
+Each example heading must be visible. Each description must be visible. The actual feed or card surface must appear below the description.
+
+Do not include large expected extraction output blocks under every example. The page should primarily be the application-under-test surface, not a documentation page. The visible descriptions should explain the purpose and caveat of each example.
+
+---
+
+D00 Visual Design Requirements
+
+---
+
+Use inline CSS in a `<style>` tag.
+
+The page should look like a clean internal testing notebook with realistic feed and card examples inside it. Use a light background, readable font stack, generous spacing, and card-style example sections. The examples inside the sections may look very different from each other. That is intentional.
+
+Use different visual styles inside examples when useful. For example, one feed can look like a link aggregator, another like a social timeline, another like a marketplace grid, another like a professional job feed, another like a repository issue list, another like a review site, another like an activity log, and another like compact mobile cards.
+
+The page should support narrow and wide screens. Use simple responsive CSS. Avoid fixed widths that break on laptop screens.
+
+Suggested CSS structure:
+
+```html
+<style>
+  :root {
+    --page-bg: #f5f2ea;
+    --card-bg: #fffdf8;
+    --ink: #25221d;
+    --muted: #6f675c;
+    --line: #d8cfc0;
+    --soft: #eee6d8;
+    --panel: #ffffff;
+    --accent: #315f8c;
+    --accent-soft: #e7f0ff;
+    --ok: #276749;
+    --warning: #8a5a00;
+    --danger: #9b332c;
+    --link: #174ea6;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--page-bg);
+    color: var(--ink);
+    line-height: 1.45;
+  }
+
+  main {
+    width: min(1180px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 32px 0 64px;
+  }
+
+  a {
+    color: var(--link);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+
+  .page-hero {
+    margin-bottom: 28px;
+    padding: 28px;
+    background: #fffaf0;
+    border: 2px solid var(--line);
+    border-radius: 18px;
+  }
+
+  .example-card {
+    margin: 28px 0;
+    padding: 24px;
+    background: var(--card-bg);
+    border: 2px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.08);
+  }
+
+  .example-kicker {
+    margin: 0 0 4px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .example-header h2 {
+    margin: 0;
+    font-size: 1.35rem;
+  }
+
+  .example-description {
+    max-width: 900px;
+    color: var(--muted);
+  }
+
+  .example-surface {
+    margin-top: 18px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: white;
+  }
+
+  .feed-list {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .feed-item,
+  .post-card,
+  .content-card,
+  .listing-card {
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  .feed-item-title,
+  .card-title {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.3;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+
+  .card-body {
+    margin: 10px 0 0;
+  }
+
+  .badge,
+  .tag,
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: #faf7f0;
+    font-size: 0.84rem;
+    font-weight: 650;
+  }
+
+  .badge.ok {
+    color: var(--ok);
+    background: #edf8f1;
+  }
+
+  .badge.warning {
+    color: var(--warning);
+    background: #fff7df;
+  }
+
+  .badge.danger {
+    color: var(--danger);
+    background: #fff0ef;
+  }
+
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .card-grid-two {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .split-feed-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(260px, 0.7fr);
+    gap: 18px;
+    align-items: start;
+  }
+
+  .side-panel {
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #faf7f0;
+  }
+
+  .avatar {
+    display: inline-grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--soft);
+    font-weight: 800;
+    font-size: 0.82rem;
+  }
+
+  .post-header {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .post-header-main {
+    min-width: 0;
+  }
+
+  .stats-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .media-placeholder {
+    display: grid;
+    place-items: center;
+    min-height: 110px;
+    margin-top: 10px;
+    border: 1px dashed #b7afa3;
+    border-radius: 10px;
+    background: #faf7f0;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .compact-row {
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--soft);
+  }
+
+  .compact-row:last-child {
+    border-bottom: 0;
+  }
+
+  .comment-thread {
+    display: grid;
+    gap: 12px;
+  }
+
+  .comment-card {
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+  }
+
+  .comment-card.reply {
+    margin-left: 32px;
+    background: #fffdf6;
+  }
+
+  @media (max-width: 900px) {
+    .card-grid,
+    .card-grid-two,
+    .split-feed-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .compact-row {
+      grid-template-columns: 1fr;
+    }
+
+    .example-card {
+      padding: 18px;
+    }
+
+    .comment-card.reply {
+      margin-left: 14px;
+    }
+  }
+</style>
+```
+
+The coding agent may adjust the CSS, but it must keep the page readable, scrollable, and visually divided into 22 separate examples.
+
+---
+
+E00 JavaScript Requirements
+
+---
+
+Use inline JavaScript in a `<script>` tag only where it helps a feed or card behave like a real interface.
+
+This page should mostly be static. The important data should exist in the DOM at page load. JavaScript must not be required for the main feed items, titles, links, metadata, statuses, or cards to appear.
+
+Allowed JavaScript behavior includes expanding a post body, revealing a card's hidden metadata, toggling comments, switching a compact feed between list and grid view, marking a card as saved, showing an action menu, expanding truncated text, or filtering a small local list.
+
+Do not use a JavaScript framework. Do not generate all examples dynamically. Static HTML must remain visible and inspectable.
+
+Suggested JavaScript structure:
+
+```html
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("[data-toggle-target]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const target = document.querySelector(button.dataset.toggleTarget);
+        if (!target) return;
+
+        target.hidden = !target.hidden;
+        button.setAttribute("aria-expanded", String(!target.hidden));
+      });
+    });
+
+    document.querySelectorAll("[data-save-card]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const isSaved = button.getAttribute("aria-pressed") === "true";
+        button.setAttribute("aria-pressed", String(!isSaved));
+        button.textContent = isSaved ? "Save" : "Saved";
+      });
+    });
+
+    document.querySelectorAll("[data-local-filter]").forEach(function (input) {
+      input.addEventListener("input", function () {
+        const selector = input.dataset.localFilter;
+        const query = input.value.trim().toLowerCase();
+
+        document.querySelectorAll(selector).forEach(function (item) {
+          const text = item.textContent.toLowerCase();
+          item.hidden = query.length > 0 && !text.includes(query);
+        });
+      });
+    });
+  });
+</script>
+```
+
+The coding agent may extend this code for specific examples, but the final file must remain simple and portable.
+
+---
+
+F00 Extraction Behavior To Support
+
+---
+
+The page must make these extraction tasks possible:
+
+Extract a list of repeated feed items as separate records.
+
+Extract item title, destination URL, source domain, author, score, comments count, timestamp, and rank from a link aggregator feed.
+
+Extract post author, handle, timestamp, body text, media placeholder label, reactions, comments, shares, tags, and edited state from social-style posts.
+
+Extract card titles, metadata, badges, links, statuses, and snippets from repeated cards.
+
+Extract nested comments and replies while preserving parent-child relationship.
+
+Extract marketplace listings with title, price, location, seller, condition, shipping, saved state, and item link.
+
+Extract product cards with name, brand, price, rating, review count, stock status, options, and promotion labels.
+
+Extract job post cards with title, company, location, salary, work mode, posted date, badges, and application link.
+
+Extract issue or ticket cards with status, priority, labels, assignee, comments count, and updated time.
+
+Extract review cards with rating, reviewer, date, verified badge, title, body, helpful count, and merchant response.
+
+Extract video or media cards with title, channel, duration, views, upload time, badges, and playlist position.
+
+Extract activity feed records with actor, verb, target, timestamp, project, and detail text.
+
+Extract notification cards with severity, unread state, source, timestamp, action label, and deep link.
+
+Extract values where the item title is a link but the card contains other links that should not replace the primary link.
+
+Extract cards with duplicated visible metadata, such as title appearing in a headline and in an accessible label.
+
+Extract truncated previews and expanded full text when a tester reveals it.
+
+Extract tags and badges as repeated item-level metadata.
+
+Extract items where label-value relationships are visual rather than explicit.
+
+Extract item-level action menu labels without confusing them with item content.
+
+Extract "promoted", "sponsored-style", "pinned", "featured", and "archived" badges as metadata when present, but do not use real ad brands or real sponsors.
+
+---
+
+G00 Data And Naming Rules
+
+---
+
+Use realistic but fictional data. Do not use real personal information.
+
+Use fictional sources, fictional companies, fictional product names, fictional repositories, fictional communities, and example-domain links. Use `href="#"` or `href="/demo/..."` for links. Do not link to real third-party pages.
+
+Use consistent example-specific IDs. Prefix IDs with the example number, such as `ex01-story-01`, `ex06-product-03`, or `ex18-notification-02`.
+
+Use plausible values. Avoid placeholder-only examples. Every example should contain enough populated feed or card data to be useful for extraction testing.
+
+Each repeated item should have at least three extractable fields. Most repeated items should have five or more fields.
+
+Use a mixture of semantic and non-semantic markup. Use `<article>`, `<ol>`, `<ul>`, `<li>`, `<time>`, headings, and anchors where appropriate. Also include nested divs and spans where it imitates real-world card layouts.
+
+Do not use external images. Use text-based media placeholders, initials, emoji-free labels, and CSS boxes instead of image files. If a card needs an image-like area, use a div with text such as `Product photo placeholder`.
+
+Do not make all examples use the same layout. Some examples should be compact list rows. Some should be full posts. Some should be dense cards. Some should be grid cards. Some should be timeline feed items. Some should include nested comments.
+
+---
+
+H00 Required Examples Overview
+
+---
+
+The page must contain exactly these 22 examples:
+
+Example 01: Link Aggregator Front Page Feed.
+
+Example 02: Social Timeline With Rich Posts.
+
+Example 03: Professional Network Job Post Feed.
+
+Example 04: Marketplace Listing Grid.
+
+Example 05: Product Recommendation Card Grid.
+
+Example 06: Forum Question And Answer Thread.
+
+Example 07: Repository Issue List.
+
+Example 08: Pull Request Review Feed.
+
+Example 09: Customer Review Cards With Merchant Replies.
+
+Example 10: News Digest Feed.
+
+Example 11: Video Platform Subscription Feed.
+
+Example 12: Event Discovery Cards.
+
+Example 13: Real Estate Property Cards.
+
+Example 14: Travel Deal Cards.
+
+Example 15: Knowledge Base Article Cards.
+
+Example 16: Support Ticket Queue Cards.
+
+Example 17: Team Activity Feed.
+
+Example 18: Notification Center Feed.
+
+Example 19: Compact Email Thread Cards.
+
+Example 20: Learning Course Catalog Cards.
+
+Example 21: Community Classified Post Cards.
+
+Example 22: Mixed Sponsored, Pinned, And Archived Feed.
+
+Each example below is mandatory.
+
+---
+
+I00 Example 01 - Link Aggregator Front Page Feed
+
+---
+
+Create a link aggregator front page feed that resembles a ranked technical news list. It should not copy any real website branding, but it should feel like a familiar list of ranked links with points, authors, comment counts, domains, and timestamps.
+
+Visible heading:
+
+`Link Aggregator Front Page Feed`
+
+Visible description:
+
+`This example imitates a ranked link aggregator feed. It tests extraction of repeated story records with rank, title, primary link, source domain, points, author, age, comments count, and secondary action links.`
+
+The feed must contain 10 story rows. Use an ordered list if possible. Each row must have a visible rank number, title link, source domain, points, author, timestamp, comments count, and at least one secondary action link.
+
+Story 1:
+
+`Rank`: `1`.
+
+`Title`: `SQLite On Tiny Devices: Notes From A Field Deployment`.
+
+`Primary link`: `/demo/articles/sqlite-tiny-devices`.
+
+`Source domain`: `fieldnotes.example.test`.
+
+`Points`: `428 points`.
+
+`Author`: `mira_dev`.
+
+`Age`: `2 hours ago`.
+
+`Comments`: `117 comments`.
+
+Secondary action: `save`.
+
+Story 2:
+
+`Rank`: `2`.
+
+`Title`: `A Visual Guide To Browser Layout Thrashing`.
+
+`Primary link`: `/demo/articles/layout-thrashing-guide`.
+
+`Source domain`: `renderlab.example.test`.
+
+`Points`: `311 points`.
+
+`Author`: `caspian`.
+
+`Age`: `3 hours ago`.
+
+`Comments`: `64 comments`.
+
+Secondary action: `hide`.
+
+Story 3:
+
+`Rank`: `3`.
+
+`Title`: `Show Project: A Debugger For CSS Specificity`.
+
+`Primary link`: `/demo/projects/css-specificity-debugger`.
+
+`Source domain`: `toolshed.example.test`.
+
+`Points`: `287 points`.
+
+`Author`: `pixelroot`.
+
+`Age`: `4 hours ago`.
+
+`Comments`: `91 comments`.
+
+Secondary action: `discuss`.
+
+Story 4:
+
+`Rank`: `4`.
+
+`Title`: `How We Cut A Search Index From 90 GB To 14 GB`.
+
+`Primary link`: `/demo/articles/search-index-compression`.
+
+`Source domain`: `infraweekly.example.test`.
+
+`Points`: `255 points`.
+
+`Author`: `noah_k`.
+
+`Age`: `5 hours ago`.
+
+`Comments`: `38 comments`.
+
+Secondary action: `save`.
+
+Story 5:
+
+`Rank`: `5`.
+
+`Title`: `The Hidden Cost Of Checkbox-Driven Permissions`.
+
+`Primary link`: `/demo/articles/checkbox-permissions`.
+
+`Source domain`: `productsystems.example.test`.
+
+`Points`: `241 points`.
+
+`Author`: `aclark`.
+
+`Age`: `5 hours ago`.
+
+`Comments`: `72 comments`.
+
+Secondary action: `hide`.
+
+Story 6:
+
+`Rank`: `6`.
+
+`Title`: `Why Our Static Site Generator Uses Plain HTML Templates`.
+
+`Primary link`: `/demo/articles/plain-html-templates`.
+
+`Source domain`: `buildnotes.example.test`.
+
+`Points`: `198 points`.
+
+`Author`: `templatefox`.
+
+`Age`: `6 hours ago`.
+
+`Comments`: `26 comments`.
+
+Secondary action: `save`.
+
+Story 7:
+
+`Rank`: `7`.
+
+`Title`: `Ask: What Are You Using For Local-First Sync?`.
+
+`Primary link`: `/demo/discussions/local-first-sync`.
+
+`Source domain`: `discussion`.
+
+`Points`: `184 points`.
+
+`Author`: `syncdreamer`.
+
+`Age`: `7 hours ago`.
+
+`Comments`: `143 comments`.
+
+Secondary action: `reply`.
+
+Story 8:
+
+`Rank`: `8`.
+
+`Title`: `A Tour Of Unicode Edge Cases In Form Inputs`.
+
+`Primary link`: `/demo/articles/unicode-form-inputs`.
+
+`Source domain`: `textsystems.example.test`.
+
+`Points`: `162 points`.
+
+`Author`: `glyphwatch`.
+
+`Age`: `8 hours ago`.
+
+`Comments`: `44 comments`.
+
+Secondary action: `save`.
+
+Story 9:
+
+`Rank`: `9`.
+
+`Title`: `Launch: Minimal Job Queue Written In 700 Lines`.
+
+`Primary link`: `/demo/projects/minimal-job-queue`.
+
+`Source domain`: `queuekit.example.test`.
+
+`Points`: `151 points`.
+
+`Author`: `workerbee`.
+
+`Age`: `9 hours ago`.
+
+`Comments`: `31 comments`.
+
+Secondary action: `discuss`.
+
+Story 10:
+
+`Rank`: `10`.
+
+`Title`: `Researchers Measure Latency In Everyday Web Forms`.
+
+`Primary link`: `/demo/articles/form-latency-study`.
+
+`Source domain`: `uxmetrics.example.test`.
+
+`Points`: `139 points`.
+
+`Author`: `latencylab`.
+
+`Age`: `10 hours ago`.
+
+`Comments`: `19 comments`.
+
+Secondary action: `save`.
+
+Extraction caveat: the extraction tool should preserve each story as a separate record. It should use the story title link as the primary URL and should not confuse secondary links such as `save`, `hide`, or `discuss` with the story URL.
+
+Implementation guidance:
+
+```html
+<ol class="link-feed" aria-label="Ranked technical stories">
+  <li class="compact-row" id="ex01-story-01">
+    <div class="rank">1</div>
+    <div>
+      <h3 class="feed-item-title">
+        <a class="primary-link" href="/demo/articles/sqlite-tiny-devices">
+          SQLite On Tiny Devices: Notes From A Field Deployment
+        </a>
+        <span class="source-domain">(fieldnotes.example.test)</span>
+      </h3>
+      <div class="meta-row">
+        <span>428 points</span>
+        <span>by <a href="/demo/users/mira_dev">mira_dev</a></span>
+        <time datetime="2026-05-31T10:00:00">2 hours ago</time>
+        <a href="/demo/comments/sqlite-tiny-devices">117 comments</a>
+        <a href="#">save</a>
+      </div>
+    </div>
+  </li>
+</ol>
+```
+
+---
+
+J00 Example 02 - Social Timeline With Rich Posts
+
+---
+
+Create a social timeline with three rich posts. It should not imitate a specific real social media brand, but it should include familiar social post structure: author, handle, timestamp, post body, media placeholder, tags, reactions, comments, shares, and an edited marker.
+
+Visible heading:
+
+`Social Timeline With Rich Posts`
+
+Visible description:
+
+`This example imitates a social timeline with rich posts. It tests extraction of post author, handle, timestamp, body text, tags, media labels, reaction counts, comment counts, share counts, and edited or pinned metadata.`
+
+Post 1 fields:
+
+`Author`: `Maya Chen`.
+
+`Handle`: `@maya-builds`.
+
+`Timestamp`: `May 31, 2026, 8:18 AM`.
+
+`Post badge`: `Pinned`.
+
+`Body`: `Spent the weekend rewriting our onboarding checklist into smaller steps. The biggest improvement came from showing the user what will happen after each permission request.`
+
+`Tags`: `product design`, `onboarding`, `permissions`.
+
+`Media placeholder`: `Screenshot placeholder: onboarding checklist card`.
+
+`Reactions`: `184`.
+
+`Comments`: `26`.
+
+`Shares`: `14`.
+
+`Edited`: `No`.
+
+Post 2 fields:
+
+`Author`: `Rafael Ortiz`.
+
+`Handle`: `@rafi_data`.
+
+`Timestamp`: `May 31, 2026, 9:04 AM`.
+
+`Post badge`: `Thread`.
+
+`Body`: `Three patterns I keep seeing in internal dashboards: totals without units, filters that do not show active state, and exported CSV files without context columns.`
+
+`Tags`: `analytics`, `dashboards`, `data quality`.
+
+`Media placeholder`: `Chart placeholder: dashboard filter audit`.
+
+`Reactions`: `96`.
+
+`Comments`: `11`.
+
+`Shares`: `8`.
+
+`Edited`: `Yes, edited 9:22 AM`.
+
+Post 3 fields:
+
+`Author`: `Lina Romero`.
+
+`Handle`: `@lina_interfaces`.
+
+`Timestamp`: `May 31, 2026, 10:31 AM`.
+
+`Post badge`: `Question`.
+
+`Body`: `For teams working with messy public datasets, do you show missing values as blank cells, labels, warnings, or something else? Looking for examples that are clear without being noisy.`
+
+`Tags`: `public data`, `ux writing`, `research`.
+
+`Media placeholder`: none. Do not include a media block for this post.
+
+`Reactions`: `211`.
+
+`Comments`: `54`.
+
+`Shares`: `22`.
+
+`Edited`: `No`.
+
+Extraction caveat: the extraction tool should keep each post separate and should not merge author handles, tags, and action counts across posts. It should also identify the media placeholder as media metadata, not body text.
+
+Implementation guidance: use `<article>` for each post. Use initials in `.avatar` boxes instead of image files. Place action counts in a `.stats-row`.
+
+---
+
+K00 Example 03 - Professional Network Job Post Feed
+
+---
+
+Create a professional network feed containing job posts as cards. These are not search results. They should look like job posts appearing in a professional feed, with author/company context, job details, salary, work mode, badges, and application link.
+
+Visible heading:
+
+`Professional Network Job Post Feed`
+
+Visible description:
+
+`This example imitates job cards embedded in a professional content feed. It tests extraction of job title, company, location, salary range, work mode, posted date, recruiter, badges, application link, and post engagement metadata.`
+
+Create four job cards.
+
+Job card 1:
+
+`Post author`: `Nina Patel`.
+
+`Author role`: `Recruiting Lead at Northstar Cloud`.
+
+`Posted`: `1 hour ago`.
+
+`Job title`: `Senior Frontend Engineer`.
+
+`Company`: `Northstar Cloud`.
+
+`Location`: `Remote - United States`.
+
+`Work mode`: `Remote`.
+
+`Salary`: `$165,000-$205,000`.
+
+`Employment type`: `Full-time`.
+
+`Badges`: `Actively hiring`, `Visa transfer considered`.
+
+`Application link text`: `Apply on company site`.
+
+`Application href`: `/demo/jobs/northstar-frontend`.
+
+`Reactions`: `48`.
+
+`Comments`: `7`.
+
+Job card 2:
+
+`Post author`: `Owen Brooks`.
+
+`Author role`: `Founder at Civic Data Lab`.
+
+`Posted`: `3 hours ago`.
+
+`Job title`: `Product Designer, Civic Tools`.
+
+`Company`: `Civic Data Lab`.
+
+`Location`: `Oakland, CA`.
+
+`Work mode`: `Hybrid`.
+
+`Salary`: `$128,000-$156,000`.
+
+`Employment type`: `Full-time`.
+
+`Badges`: `Public interest tech`, `Portfolio requested`.
+
+`Application link text`: `View role`.
+
+`Application href`: `/demo/jobs/civic-product-designer`.
+
+`Reactions`: `92`.
+
+`Comments`: `18`.
+
+Job card 3:
+
+`Post author`: `Grace Miller`.
+
+`Author role`: `Engineering Manager at Atlas Product Studio`.
+
+`Posted`: `yesterday`.
+
+`Job title`: `QA Automation Engineer`.
+
+`Company`: `Atlas Product Studio`.
+
+`Location`: `Denver, CO`.
+
+`Work mode`: `On-site`.
+
+`Salary`: `$105,000-$132,000`.
+
+`Employment type`: `Full-time`.
+
+`Badges`: `Selenium`, `Playwright`, `Accessibility testing`.
+
+`Application link text`: `Apply now`.
+
+`Application href`: `/demo/jobs/atlas-qa-automation`.
+
+`Reactions`: `31`.
+
+`Comments`: `4`.
+
+Job card 4:
+
+`Post author`: `Theo Grant`.
+
+`Author role`: `Hiring for contract data projects`.
+
+`Posted`: `2 days ago`.
+
+`Job title`: `Contract Data Cleanup Specialist`.
+
+`Company`: `Harbor Research Group`.
+
+`Location`: `Remote - Canada`.
+
+`Work mode`: `Remote`.
+
+`Salary`: `$70-$95/hour`.
+
+`Employment type`: `Contract`.
+
+`Badges`: `3 month contract`, `Immediate start`.
+
+`Application link text`: `Send profile`.
+
+`Application href`: `/demo/jobs/harbor-data-cleanup`.
+
+`Reactions`: `27`.
+
+`Comments`: `3`.
+
+Extraction caveat: the extraction tool should extract job details from each card and should not confuse the feed post author with the hiring company. The author and company are separate fields.
+
+Implementation guidance: use a post header for recruiter context and a nested job detail panel for the actual job fields.
+
+---
+
+L00 Example 04 - Marketplace Listing Grid
+
+---
+
+Create a marketplace grid with six listing cards. Each listing should have title, price, location, seller, condition, shipping or pickup metadata, saved state, and primary listing link. Use placeholder boxes instead of images.
+
+Visible heading:
+
+`Marketplace Listing Grid`
+
+Visible description:
+
+`This example imitates a local marketplace listing grid. It tests extraction of repeated product cards with title, price, location, seller, condition, fulfillment method, saved state, and primary listing links.`
+
+Create six marketplace cards.
+
+Listing 1:
+
+`Title`: `Walnut writing desk with drawer`.
+
+`Primary link`: `/demo/marketplace/walnut-writing-desk`.
+
+`Price`: `$240`.
+
+`Location`: `San Mateo, CA`.
+
+`Seller`: `Noah K.`.
+
+`Condition`: `Good`.
+
+`Fulfillment`: `Local pickup`.
+
+`Posted`: `2 hours ago`.
+
+`Saved state`: `Not saved`.
+
+`Badge`: `Price reduced`.
+
+Listing 2:
+
+`Title`: `Set of four dining chairs`.
+
+`Primary link`: `/demo/marketplace/four-dining-chairs`.
+
+`Price`: `$180`.
+
+`Location`: `Oakland, CA`.
+
+`Seller`: `Mina R.`.
+
+`Condition`: `Very good`.
+
+`Fulfillment`: `Local pickup`.
+
+`Posted`: `5 hours ago`.
+
+`Saved state`: `Saved`.
+
+`Badge`: `Popular`.
+
+Listing 3:
+
+`Title`: `Portable projector with case`.
+
+`Primary link`: `/demo/marketplace/portable-projector-case`.
+
+`Price`: `$320`.
+
+`Location`: `San Francisco, CA`.
+
+`Seller`: `Rafael O.`.
+
+`Condition`: `Like new`.
+
+`Fulfillment`: `Shipping available`.
+
+`Posted`: `yesterday`.
+
+`Saved state`: `Not saved`.
+
+`Badge`: `Ships`.
+
+Listing 4:
+
+`Title`: `Children's balance bike`.
+
+`Primary link`: `/demo/marketplace/child-balance-bike`.
+
+`Price`: `$45`.
+
+`Location`: `Berkeley, CA`.
+
+`Seller`: `Lina R.`.
+
+`Condition`: `Used`.
+
+`Fulfillment`: `Porch pickup`.
+
+`Posted`: `yesterday`.
+
+`Saved state`: `Saved`.
+
+`Badge`: `Pickup today`.
+
+Listing 5:
+
+`Title`: `Standing desk converter`.
+
+`Primary link`: `/demo/marketplace/standing-desk-converter`.
+
+`Price`: `$95`.
+
+`Location`: `Daly City, CA`.
+
+`Seller`: `Grace M.`.
+
+`Condition`: `Good`.
+
+`Fulfillment`: `Local pickup`.
+
+`Posted`: `3 days ago`.
+
+`Saved state`: `Not saved`.
+
+`Badge`: `Negotiable`.
+
+Listing 6:
+
+`Title`: `Ceramic planter trio`.
+
+`Primary link`: `/demo/marketplace/ceramic-planter-trio`.
+
+`Price`: `$38`.
+
+`Location`: `Alameda, CA`.
+
+`Seller`: `Priya S.`.
+
+`Condition`: `New`.
+
+`Fulfillment`: `Shipping available`.
+
+`Posted`: `4 days ago`.
+
+`Saved state`: `Not saved`.
+
+`Badge`: `New listing`.
+
+Extraction caveat: the extraction tool should preserve each card as one listing. It should not treat placeholder image labels as listing titles. It should extract saved state and fulfillment metadata separately.
+
+Implementation guidance: use `.card-grid` with card anchors around titles only. Include a `Save` or `Saved` button with `aria-pressed`.
+
+---
+
+M00 Example 05 - Product Recommendation Card Grid
+
+---
+
+Create a product recommendation grid with ecommerce-style product cards. Each card should have brand, product name, price, rating, review count, stock status, color options, promotion label, and primary product link.
+
+Visible heading:
+
+`Product Recommendation Card Grid`
+
+Visible description:
+
+`This example imitates an ecommerce recommendation shelf. It tests extraction of product names, brands, prices, ratings, review counts, stock status, promotions, options, and product links from repeated cards.`
+
+Create five product cards.
+
+Product 1:
+
+`Brand`: `TrailKnit`.
+
+`Product name`: `Merino Travel Hoodie`.
+
+`Primary link`: `/demo/products/merino-travel-hoodie`.
+
+`Price`: `$128`.
+
+`Rating`: `4.7`.
+
+`Review count`: `318 reviews`.
+
+`Stock status`: `In stock`.
+
+`Promotion`: `Free shipping`.
+
+`Color options`: `Forest`, `Charcoal`, `Clay`.
+
+Product 2:
+
+`Brand`: `Nexa`.
+
+`Product name`: `Compact GaN Charger 65W`.
+
+`Primary link`: `/demo/products/compact-gan-charger`.
+
+`Price`: `$49`.
+
+`Rating`: `4.5`.
+
+`Review count`: `904 reviews`.
+
+`Stock status`: `Low stock`.
+
+`Promotion`: `15 percent off`.
+
+`Color options`: `White`, `Black`.
+
+Product 3:
+
+`Brand`: `Fieldmark`.
+
+`Product name`: `Canvas Organizer Pouch`.
+
+`Primary link`: `/demo/products/canvas-organizer-pouch`.
+
+`Price`: `$32`.
+
+`Rating`: `4.8`.
+
+`Review count`: `122 reviews`.
+
+`Stock status`: `In stock`.
+
+`Promotion`: `Bundle eligible`.
+
+`Color options`: `Tan`, `Olive`, `Navy`.
+
+Product 4:
+
+`Brand`: `ClearSip`.
+
+`Product name`: `Insulated Bottle 20 oz`.
+
+`Primary link`: `/demo/products/insulated-bottle-20`.
+
+`Price`: `$24`.
+
+`Rating`: `4.4`.
+
+`Review count`: `1,248 reviews`.
+
+`Stock status`: `In stock`.
+
+`Promotion`: `Buy 2 save $6`.
+
+`Color options`: `Slate`, `Mint`, `Steel`.
+
+Product 5:
+
+`Brand`: `Deskwise`.
+
+`Product name`: `Foldable Laptop Stand`.
+
+`Primary link`: `/demo/products/foldable-laptop-stand`.
+
+`Price`: `$58`.
+
+`Rating`: `4.6`.
+
+`Review count`: `487 reviews`.
+
+`Stock status`: `Backordered`.
+
+`Promotion`: `Ships in 2 weeks`.
+
+`Color options`: `Silver`, `Graphite`.
+
+Extraction caveat: the extraction tool should identify the product title link as the primary link and should not confuse color option labels or promotion labels with the product name.
+
+Implementation guidance: use text-only product image placeholders. Use rating text such as `Rating 4.7 out of 5` rather than star-only visuals.
+
+---
+
+N00 Example 06 - Forum Question And Answer Thread
+
+---
+
+Create a forum thread with one question, metadata, tags, accepted answer, other answers, and nested comments. It should resemble a technical Q&A site without using real branding.
+
+Visible heading:
+
+`Forum Question And Answer Thread`
+
+Visible description:
+
+`This example imitates a technical forum question page. It tests extraction of the question title, author, score, tags, accepted answer, answer authors, answer scores, nested comments, and timestamps while preserving hierarchy.`
+
+Question fields:
+
+`Question title`: `How should I extract values from a custom dropdown rendered outside the form?`.
+
+`Question link`: `/demo/forum/custom-dropdown-rendered-outside-form`.
+
+`Author`: `dom_mapper`.
+
+`Asked`: `May 30, 2026, 4:18 PM`.
+
+`Score`: `37`.
+
+`Views`: `2,184`.
+
+`Answers`: `3`.
+
+`Tags`: `html`, `aria`, `forms`, `browser-automation`.
+
+Question body:
+
+`I am building a browser tool that needs to capture the visible selected value from custom dropdowns. Some menus are rendered in a portal near the end of the body, while the label is inside the original form. What signals should I use to preserve the relationship?`
+
+Accepted answer:
+
+`Author`: `layout_sleuth`.
+
+`Answered`: `May 30, 2026, 5:02 PM`.
+
+`Score`: `52`.
+
+`Accepted`: `Yes`.
+
+`Answer body`: `Start with the accessible name and active descendant relationship. Then look for hidden backing inputs, aria-controls, aria-labelledby, and nearby form context. If the menu is portaled, preserve both the trigger location and the menu item state.`
+
+Accepted answer comments:
+
+Comment 1: `Author` `pixelroot`, `Text` `The hidden input point is the part most people miss.`, `Age` `yesterday`.
+
+Comment 2: `Author` `dom_mapper`, `Text` `Thanks, this helped me connect the trigger and option list.`, `Age` `yesterday`.
+
+Other answer 1:
+
+`Author`: `testwright`.
+
+`Answered`: `May 31, 2026, 8:44 AM`.
+
+`Score`: `18`.
+
+`Accepted`: `No`.
+
+`Answer body`: `In practice I also inspect visible text order. ARIA is ideal, but many production widgets have incomplete relationships.`
+
+Other answer 2:
+
+`Author`: `semanticist`.
+
+`Answered`: `May 31, 2026, 10:12 AM`.
+
+`Score`: `9`.
+
+`Accepted`: `No`.
+
+`Answer body`: `If the dropdown is searchable, capture the current selected chip separately from the option list. The filtered list may not contain the selected value at the moment of extraction.`
+
+Extraction caveat: the extraction tool should preserve question, answers, and comments as separate hierarchical records. It should not flatten all authors and scores into one unrelated list.
+
+Implementation guidance: use `<article>` for question and each answer. Use nested `.comment-card` elements for comments.
+
+---
+
+O00 Example 07 - Repository Issue List
+
+---
+
+Create a repository issue list with six issue cards. It should look like a code hosting issue tracker. Each issue should have number, title, status, labels, author, assignee, comments count, updated time, milestone, and link.
+
+Visible heading:
+
+`Repository Issue List`
+
+Visible description:
+
+`This example imitates a repository issue tracker list. It tests extraction of issue numbers, titles, statuses, labels, authors, assignees, comments, milestones, updated timestamps, and primary issue links from repeated compact records.`
+
+Create six issue rows.
+
+Issue 1:
+
+`Issue number`: `#1842`.
+
+`Title`: `Dropdown menu options are missed when menu is portaled`.
+
+`Primary link`: `/demo/repos/extractor/issues/1842`.
+
+`Status`: `Open`.
+
+`Labels`: `bug`, `dropdown`, `portal`.
+
+`Author`: `mira_dev`.
+
+`Assignee`: `rafael`.
+
+`Comments`: `12`.
+
+`Milestone`: `v0.9`.
+
+`Updated`: `updated 18 minutes ago`.
+
+Issue 2:
+
+`Issue number`: `#1837`.
+
+`Title`: `Preserve table row context when extracting checkbox values`.
+
+`Primary link`: `/demo/repos/extractor/issues/1837`.
+
+`Status`: `Open`.
+
+`Labels`: `enhancement`, `tables`.
+
+`Author`: `testwright`.
+
+`Assignee`: `maya`.
+
+`Comments`: `5`.
+
+`Milestone`: `v0.9`.
+
+`Updated`: `updated 2 hours ago`.
+
+Issue 3:
+
+`Issue number`: `#1829`.
+
+`Title`: `Readonly inputs should be extracted from selected forms`.
+
+`Primary link`: `/demo/repos/extractor/issues/1829`.
+
+`Status`: `Closed`.
+
+`Labels`: `forms`, `fixed`.
+
+`Author`: `dom_mapper`.
+
+`Assignee`: `lina`.
+
+`Comments`: `8`.
+
+`Milestone`: `v0.8`.
+
+`Updated`: `updated yesterday`.
+
+Issue 4:
+
+`Issue number`: `#1824`.
+
+`Title`: `Detect selected chips in multi-select controls`.
+
+`Primary link`: `/demo/repos/extractor/issues/1824`.
+
+`Status`: `Open`.
+
+`Labels`: `chips`, `multi-select`, `research`.
+
+`Author`: `pixelroot`.
+
+`Assignee`: `unassigned`.
+
+`Comments`: `21`.
+
+`Milestone`: `v1.0`.
+
+`Updated`: `updated yesterday`.
+
+Issue 5:
+
+`Issue number`: `#1819`.
+
+`Title`: `Extraction output duplicates action menu labels`.
+
+`Primary link`: `/demo/repos/extractor/issues/1819`.
+
+`Status`: `Open`.
+
+`Labels`: `cleanup`, `cards`.
+
+`Author`: `queuekit`.
+
+`Assignee`: `rafael`.
+
+`Comments`: `3`.
+
+`Milestone`: `v0.9`.
+
+`Updated`: `updated 2 days ago`.
+
+Issue 6:
+
+`Issue number`: `#1811`.
+
+`Title`: `Support nested comments in selected forum threads`.
+
+`Primary link`: `/demo/repos/extractor/issues/1811`.
+
+`Status`: `Closed`.
+
+`Labels`: `comments`, `hierarchy`, `fixed`.
+
+`Author`: `semanticist`.
+
+`Assignee`: `maya`.
+
+`Comments`: `14`.
+
+`Milestone`: `v0.8`.
+
+`Updated`: `updated 4 days ago`.
+
+Extraction caveat: the extraction tool should keep issue labels attached to their issue. It should not merge all labels from all issues into one global tag list.
+
+Implementation guidance: use compact rows with status badges. Include the issue number visibly near the title, but keep title as the primary link.
+
+---
+
+P00 Example 08 - Pull Request Review Feed
+
+---
+
+Create a pull request review activity feed. It should show pull request cards, review status, reviewers, changed files, checks, comments, and merge state.
+
+Visible heading:
+
+`Pull Request Review Feed`
+
+Visible description:
+
+`This example imitates a pull request review feed. It tests extraction of pull request title, number, branch names, review status, checks, changed files, reviewers, comments, and merge state from card-like records.`
+
+Create four pull request cards.
+
+Pull request 1:
+
+`PR number`: `#421`.
+
+`Title`: `Add extraction hints for card action menus`.
+
+`Primary link`: `/demo/repos/extractor/pulls/421`.
+
+`Author`: `maya`.
+
+`Source branch`: `maya/card-action-hints`.
+
+`Target branch`: `main`.
+
+`Review status`: `Changes requested`.
+
+`Checks`: `7 passed, 1 failed`.
+
+`Changed files`: `12`.
+
+`Comments`: `19`.
+
+`Reviewers`: `rafael`, `lina`.
+
+`Updated`: `24 minutes ago`.
+
+`Merge state`: `Blocked`.
+
+Pull request 2:
+
+`PR number`: `#419`.
+
+`Title`: `Improve timeline event grouping`.
+
+`Primary link`: `/demo/repos/extractor/pulls/419`.
+
+`Author`: `lina`.
+
+`Source branch`: `lina/timeline-grouping`.
+
+`Target branch`: `main`.
+
+`Review status`: `Approved`.
+
+`Checks`: `8 passed`.
+
+`Changed files`: `5`.
+
+`Comments`: `6`.
+
+`Reviewers`: `maya`, `theo`.
+
+`Updated`: `2 hours ago`.
+
+`Merge state`: `Ready to merge`.
+
+Pull request 3:
+
+`PR number`: `#417`.
+
+`Title`: `Add fixture page for read-only confirmation records`.
+
+`Primary link`: `/demo/repos/extractor/pulls/417`.
+
+`Author`: `theo`.
+
+`Source branch`: `fixtures/read-only-records`.
+
+`Target branch`: `main`.
+
+`Review status`: `Review required`.
+
+`Checks`: `6 passed, 2 pending`.
+
+`Changed files`: `23`.
+
+`Comments`: `11`.
+
+`Reviewers`: `rafael`.
+
+`Updated`: `yesterday`.
+
+`Merge state`: `Pending review`.
+
+Pull request 4:
+
+`PR number`: `#414`.
+
+`Title`: `Fix duplicated hidden input output`.
+
+`Primary link`: `/demo/repos/extractor/pulls/414`.
+
+`Author`: `rafael`.
+
+`Source branch`: `fix/hidden-input-duplication`.
+
+`Target branch`: `release-0.8`.
+
+`Review status`: `Merged`.
+
+`Checks`: `8 passed`.
+
+`Changed files`: `3`.
+
+`Comments`: `4`.
+
+`Reviewers`: `maya`.
+
+`Updated`: `3 days ago`.
+
+`Merge state`: `Merged`.
+
+Extraction caveat: the extraction tool should distinguish PR review status, checks status, and merge state. These are separate fields and should not be collapsed into one generic status.
+
+Implementation guidance: use cards with several badges and a small branch comparison line.
+
+---
+
+Q00 Example 09 - Customer Review Cards With Merchant Replies
+
+---
+
+Create customer review cards with ratings, verified purchase badges, review text, helpful counts, product metadata, and merchant replies.
+
+Visible heading:
+
+`Customer Review Cards With Merchant Replies`
+
+Visible description:
+
+`This example imitates product review cards. It tests extraction of reviewer, rating, date, verified badge, product variant, review title, review body, helpful count, and nested merchant replies.`
+
+Create four review cards.
+
+Review 1:
+
+`Reviewer`: `Avery Q.`.
+
+`Rating`: `5 out of 5`.
+
+`Date`: `May 28, 2026`.
+
+`Verified purchase`: `Yes`.
+
+`Product`: `Merino Travel Hoodie`.
+
+`Variant`: `Forest / M`.
+
+`Review title`: `Good weight for changing weather`.
+
+`Review body`: `Warm enough for cool mornings but not bulky in a backpack. The zipper pocket is deeper than expected.`
+
+`Helpful count`: `42 people found this helpful`.
+
+`Merchant reply`: none.
+
+Review 2:
+
+`Reviewer`: `Diego M.`.
+
+`Rating`: `4 out of 5`.
+
+`Date`: `May 22, 2026`.
+
+`Verified purchase`: `Yes`.
+
+`Product`: `Compact GaN Charger 65W`.
+
+`Variant`: `Black`.
+
+`Review title`: `Small and reliable`.
+
+`Review body`: `Charges my laptop and phone without getting too hot. The prongs are a little stiff when folding.`
+
+`Helpful count`: `18 people found this helpful`.
+
+`Merchant reply`: `Thanks for the feedback. The folding prong tension should loosen slightly after several uses.`
+
+Review 3:
+
+`Reviewer`: `Grace M.`.
+
+`Rating`: `3 out of 5`.
+
+`Date`: `May 19, 2026`.
+
+`Verified purchase`: `No`.
+
+`Product`: `Foldable Laptop Stand`.
+
+`Variant`: `Graphite`.
+
+`Review title`: `Solid but heavier than expected`.
+
+`Review body`: `It feels sturdy on a desk, but I would not choose it for daily travel.`
+
+`Helpful count`: `7 people found this helpful`.
+
+`Merchant reply`: `We are working on a lighter travel model for later this year.`
+
+Review 4:
+
+`Reviewer`: `Priya S.`.
+
+`Rating`: `5 out of 5`.
+
+`Date`: `May 15, 2026`.
+
+`Verified purchase`: `Yes`.
+
+`Product`: `Canvas Organizer Pouch`.
+
+`Variant`: `Olive`.
+
+`Review title`: `Exactly the right size`.
+
+`Review body`: `Fits charger, earbuds, cable, pen, and a small notebook. The inner pocket keeps small items from falling out.`
+
+`Helpful count`: `26 people found this helpful`.
+
+`Merchant reply`: none.
+
+Extraction caveat: the extraction tool should preserve merchant replies as nested response records, not as part of the review body. It should extract rating text even if rating is visually styled.
+
+Implementation guidance: render rating as text such as `Rating: 4 out of 5`, not star-only icons.
+
+---
+
+R00 Example 10 - News Digest Feed
+
+---
+
+Create a news digest feed with story cards. Do not use real publishers or real current news. Use fictional sources and evergreen topics.
+
+Visible heading:
+
+`News Digest Feed`
+
+Visible description:
+
+`This example imitates a personalized news digest. It tests extraction of article title, source, section, author, published time, summary, topic tags, read time, and primary story link from repeated news cards.`
+
+Create five story cards.
+
+Story 1:
+
+`Title`: `Cities Test Cooler Pavement Materials During Early Summer Heat`.
+
+`Primary link`: `/demo/news/cooler-pavement-materials`.
+
+`Source`: `Civic Science Review`.
+
+`Section`: `Urban planning`.
+
+`Author`: `M. Elian`.
+
+`Published`: `May 31, 2026, 7:30 AM`.
+
+`Read time`: `6 min read`.
+
+`Summary`: `Pilot programs compare reflective coatings, tree cover, and porous pavement on neighborhood streets.`
+
+`Tags`: `climate adaptation`, `cities`, `infrastructure`.
+
+Story 2:
+
+`Title`: `Libraries Expand Device Lending Programs For Remote Workers`.
+
+`Primary link`: `/demo/news/library-device-lending`.
+
+`Source`: `Public Access Weekly`.
+
+`Section`: `Technology access`.
+
+`Author`: `R. Singh`.
+
+`Published`: `May 31, 2026, 8:10 AM`.
+
+`Read time`: `4 min read`.
+
+`Summary`: `Several library systems now lend webcams, hotspots, microphones, and portable monitors alongside laptops.`
+
+`Tags`: `libraries`, `remote work`, `digital equity`.
+
+Story 3:
+
+`Title`: `Researchers Map Common Sources Of Form Abandonment`.
+
+`Primary link`: `/demo/news/form-abandonment-study`.
+
+`Source`: `Interface Journal`.
+
+`Section`: `Design research`.
+
+`Author`: `L. Romero`.
+
+`Published`: `May 31, 2026, 9:15 AM`.
+
+`Read time`: `8 min read`.
+
+`Summary`: `A multi-site study identifies confusion around optional fields, hidden fees, and repeated account prompts.`
+
+`Tags`: `forms`, `research`, `user experience`.
+
+Story 4:
+
+`Title`: `Small Manufacturers Turn To Shared Repair Networks`.
+
+`Primary link`: `/demo/news/shared-repair-networks`.
+
+`Source`: `Local Industry Report`.
+
+`Section`: `Business`.
+
+`Author`: `C. Patel`.
+
+`Published`: `May 31, 2026, 10:00 AM`.
+
+`Read time`: `5 min read`.
+
+`Summary`: `Regional shops are pooling technicians and parts inventory to reduce equipment downtime.`
+
+`Tags`: `small business`, `operations`, `repair`.
+
+Story 5:
+
+`Title`: `Universities Publish Plain-Language Financial Aid Timelines`.
+
+`Primary link`: `/demo/news/financial-aid-timelines`.
+
+`Source`: `Campus Systems Monitor`.
+
+`Section`: `Education`.
+
+`Author`: `N. Brooks`.
+
+`Published`: `May 31, 2026, 10:45 AM`.
+
+`Read time`: `3 min read`.
+
+`Summary`: `New student portals explain document review, award packaging, and payment deadlines in step-by-step language.`
+
+`Tags`: `education`, `student services`, `accessibility`.
+
+Extraction caveat: the extraction tool should use the article title link as the primary link and keep source, section, author, published time, and read time as separate metadata fields.
+
+Implementation guidance: use article cards with text-only thumbnail placeholders. Avoid real publisher names.
+
+---
+
+S00 Example 11 - Video Platform Subscription Feed
+
+---
+
+Create a video subscription feed with video cards. Use text placeholders instead of thumbnails. Each video card must have title, channel, duration, views, upload time, badges, playlist or series metadata, and link.
+
+Visible heading:
+
+`Video Platform Subscription Feed`
+
+Visible description:
+
+`This example imitates a video subscription feed. It tests extraction of video title, channel, duration, views, upload time, badges, playlist metadata, and primary video link from cards where thumbnail text is not the title.`
+
+Create five video cards.
+
+Video 1:
+
+`Title`: `Debugging Layout Shift In Complex Forms`.
+
+`Primary link`: `/demo/videos/debug-layout-shift-forms`.
+
+`Channel`: `Browser Workshop`.
+
+`Duration`: `18:42`.
+
+`Views`: `42K views`.
+
+`Uploaded`: `3 hours ago`.
+
+`Badge`: `New`.
+
+`Series`: `Frontend Diagnostics`.
+
+`Thumbnail placeholder`: `Video thumbnail placeholder: layout shift demo`.
+
+Video 2:
+
+`Title`: `How To Read Network Waterfalls Without Guessing`.
+
+`Primary link`: `/demo/videos/read-network-waterfalls`.
+
+`Channel`: `Performance Lab`.
+
+`Duration`: `24:10`.
+
+`Views`: `87K views`.
+
+`Uploaded`: `yesterday`.
+
+`Badge`: `Popular`.
+
+`Series`: `Browser Performance Basics`.
+
+`Thumbnail placeholder`: `Video thumbnail placeholder: waterfall chart`.
+
+Video 3:
+
+`Title`: `Designing Better Empty States`.
+
+`Primary link`: `/demo/videos/designing-empty-states`.
+
+`Channel`: `Product Patterns`.
+
+`Duration`: `12:08`.
+
+`Views`: `16K views`.
+
+`Uploaded`: `2 days ago`.
+
+`Badge`: `Recommended`.
+
+`Series`: `UX Writing Clinic`.
+
+`Thumbnail placeholder`: `Video thumbnail placeholder: empty state examples`.
+
+Video 4:
+
+`Title`: `Accessibility Tree Explained With Simple HTML`.
+
+`Primary link`: `/demo/videos/accessibility-tree-html`.
+
+`Channel`: `Markup Minutes`.
+
+`Duration`: `21:36`.
+
+`Views`: `51K views`.
+
+`Uploaded`: `4 days ago`.
+
+`Badge`: `Captioned`.
+
+`Series`: `Semantic HTML Deep Dive`.
+
+`Thumbnail placeholder`: `Video thumbnail placeholder: accessibility tree`.
+
+Video 5:
+
+`Title`: `Why Data Tables Break On Small Screens`.
+
+`Primary link`: `/demo/videos/data-tables-small-screens`.
+
+`Channel`: `Interface Journal`.
+
+`Duration`: `15:55`.
+
+`Views`: `28K views`.
+
+`Uploaded`: `1 week ago`.
+
+`Badge`: `Saved`.
+
+`Series`: `Responsive UI Problems`.
+
+`Thumbnail placeholder`: `Video thumbnail placeholder: mobile table`.
+
+Extraction caveat: the extraction tool should not treat the thumbnail placeholder as the video title. It should capture duration as video metadata and the title link as the primary video URL.
+
+Implementation guidance: create horizontal video cards with a `.media-placeholder` block and text details.
+
+---
+
+T00 Example 12 - Event Discovery Cards
+
+---
+
+Create an event discovery section with event cards. Each card should include event title, organizer, date, time, venue, location, ticket price, format, tags, attendee count, and link.
+
+Visible heading:
+
+`Event Discovery Cards`
+
+Visible description:
+
+`This example imitates an event discovery feed. It tests extraction of event title, organizer, date, time, venue, location, price, format, tags, attendee count, and event links from repeated cards.`
+
+Create five event cards.
+
+Event 1:
+
+`Title`: `Practical Browser Automation Meetup`.
+
+`Primary link`: `/demo/events/browser-automation-meetup`.
+
+`Organizer`: `Bay Area Testing Guild`.
+
+`Date`: `June 18, 2026`.
+
+`Time`: `6:30 PM`.
+
+`Venue`: `North Market Coworking`.
+
+`Location`: `San Francisco, CA`.
+
+`Price`: `Free`.
+
+`Format`: `In person`.
+
+`Attendees`: `84 attending`.
+
+`Tags`: `testing`, `browser automation`, `JavaScript`.
+
+Event 2:
+
+`Title`: `Design Systems Documentation Night`.
+
+`Primary link`: `/demo/events/design-systems-docs`.
+
+`Organizer`: `Interface Writers Collective`.
+
+`Date`: `June 23, 2026`.
+
+`Time`: `5:30 PM`.
+
+`Venue`: `Civic Data Lab`.
+
+`Location`: `Oakland, CA`.
+
+`Price`: `$12`.
+
+`Format`: `Hybrid`.
+
+`Attendees`: `42 attending`.
+
+`Tags`: `documentation`, `design systems`, `content`.
+
+Event 3:
+
+`Title`: `Local-First Sync Study Group`.
+
+`Primary link`: `/demo/events/local-first-sync-study`.
+
+`Organizer`: `Offline Web Club`.
+
+`Date`: `July 2, 2026`.
+
+`Time`: `7:00 PM`.
+
+`Venue`: `Online`.
+
+`Location`: `Remote`.
+
+`Price`: `Free`.
+
+`Format`: `Online`.
+
+`Attendees`: `127 attending`.
+
+`Tags`: `sync`, `databases`, `offline-first`.
+
+Event 4:
+
+`Title`: `Public Data Visualization Clinic`.
+
+`Primary link`: `/demo/events/public-data-viz-clinic`.
+
+`Organizer`: `Civic Science Review`.
+
+`Date`: `July 10, 2026`.
+
+`Time`: `10:00 AM`.
+
+`Venue`: `City Museum Lab`.
+
+`Location`: `San Mateo, CA`.
+
+`Price`: `$35`.
+
+`Format`: `Workshop`.
+
+`Attendees`: `29 attending`.
+
+`Tags`: `data visualization`, `public data`, `accessibility`.
+
+Event 5:
+
+`Title`: `Small Team Incident Review Workshop`.
+
+`Primary link`: `/demo/events/incident-review-workshop`.
+
+`Organizer`: `Ops Learning Circle`.
+
+`Date`: `July 16, 2026`.
+
+`Time`: `1:00 PM`.
+
+`Venue`: `Harbor Hall`.
+
+`Location`: `Monterey, CA`.
+
+`Price`: `$49`.
+
+`Format`: `In person`.
+
+`Attendees`: `18 attending`.
+
+`Tags`: `operations`, `retrospectives`, `reliability`.
+
+Extraction caveat: the extraction tool should keep date, time, venue, and location separate. It should not merge event organizer and venue because both may look like proper names.
+
+Implementation guidance: use `.card-grid-two` for event cards. Put date and price in prominent badge-like elements.
+
+---
+
+U00 Example 13 - Real Estate Property Cards
+
+---
+
+Create a real estate property card grid. Each card should include address, price, beds, baths, square feet, property type, listing status, open house time, agent, and primary listing link. Use text placeholders instead of photos.
+
+Visible heading:
+
+`Real Estate Property Cards`
+
+Visible description:
+
+`This example imitates a real estate listing feed. It tests extraction of property address, price, beds, baths, square feet, property type, status, open house times, agent, and listing links from repeated cards.`
+
+Create five property cards.
+
+Property 1:
+
+`Address`: `410 Oak Grove Avenue Unit 6`.
+
+`Primary link`: `/demo/properties/410-oak-grove-6`.
+
+`City`: `Oakland, CA`.
+
+`Price`: `$689,000`.
+
+`Beds`: `2`.
+
+`Baths`: `1`.
+
+`Square feet`: `890 sq ft`.
+
+`Property type`: `Condo`.
+
+`Status`: `Open house`.
+
+`Open house`: `Sat 1-4 PM`.
+
+`Agent`: `Maya Chen`.
+
+Property 2:
+
+`Address`: `88 Valencia Street Suite 402`.
+
+`Primary link`: `/demo/properties/88-valencia-402`.
+
+`City`: `San Francisco, CA`.
+
+`Price`: `$1,120,000`.
+
+`Beds`: `1`.
+
+`Baths`: `1.5`.
+
+`Square feet`: `1,040 sq ft`.
+
+`Property type`: `Loft`.
+
+`Status`: `New listing`.
+
+`Open house`: `Sun 2-5 PM`.
+
+`Agent`: `Rafael Ortiz`.
+
+Property 3:
+
+`Address`: `72 Hillcrest Road`.
+
+`Primary link`: `/demo/properties/72-hillcrest`.
+
+`City`: `San Mateo, CA`.
+
+`Price`: `$1,485,000`.
+
+`Beds`: `3`.
+
+`Baths`: `2`.
+
+`Square feet`: `1,620 sq ft`.
+
+`Property type`: `Single-family home`.
+
+`Status`: `Price reduced`.
+
+`Open house`: `By appointment`.
+
+`Agent`: `Lina Romero`.
+
+Property 4:
+
+`Address`: `120 King Street Unit B`.
+
+`Primary link`: `/demo/properties/120-king-b`.
+
+`City`: `San Francisco, CA`.
+
+`Price`: `$945,000`.
+
+`Beds`: `2`.
+
+`Baths`: `2`.
+
+`Square feet`: `1,180 sq ft`.
+
+`Property type`: `Townhome`.
+
+`Status`: `Pending`.
+
+`Open house`: `None`.
+
+`Agent`: `Owen Brooks`.
+
+Property 5:
+
+`Address`: `201 Pier Lane`.
+
+`Primary link`: `/demo/properties/201-pier-lane`.
+
+`City`: `Monterey, CA`.
+
+`Price`: `$1,980,000`.
+
+`Beds`: `4`.
+
+`Baths`: `3`.
+
+`Square feet`: `2,440 sq ft`.
+
+`Property type`: `Waterfront home`.
+
+`Status`: `Active`.
+
+`Open house`: `Sat 11 AM-2 PM`.
+
+`Agent`: `Priya Shah`.
+
+Extraction caveat: the extraction tool should extract the property address as the main title but keep city separate. It should not confuse image placeholder text with address text.
+
+Implementation guidance: use a card grid with text image placeholders and compact statistic rows for beds, baths, and square feet.
+
+---
+
+V00 Example 14 - Travel Deal Cards
+
+---
+
+Create a travel deal card feed with flight and package deal cards. Each card should include destination, origin, dates, price, carrier or provider, deal type, restrictions, badge, and link.
+
+Visible heading:
+
+`Travel Deal Cards`
+
+Visible description:
+
+`This example imitates a travel deal feed. It tests extraction of destination, origin, travel dates, price, provider, deal type, restrictions, badges, and links from promotional-style cards.`
+
+Create five deal cards.
+
+Deal 1:
+
+`Title`: `San Francisco to Tokyo spring fare`.
+
+`Primary link`: `/demo/travel-deals/sfo-tokyo-spring`.
+
+`Origin`: `SFO`.
+
+`Destination`: `Tokyo`.
+
+`Travel window`: `March 3-18, 2027`.
+
+`Price`: `$612 round trip`.
+
+`Provider`: `AeroVista`.
+
+`Deal type`: `Flight`.
+
+`Restrictions`: `Basic economy, limited changes`.
+
+`Badge`: `48 hours left`.
+
+Deal 2:
+
+`Title`: `Monterey coast weekend hotel package`.
+
+`Primary link`: `/demo/travel-deals/monterey-weekend-package`.
+
+`Origin`: `Drive-in`.
+
+`Destination`: `Monterey, CA`.
+
+`Travel window`: `August weekends`.
+
+`Price`: `$429 for 2 nights`.
+
+`Provider`: `Harbor View Suites`.
+
+`Deal type`: `Hotel package`.
+
+`Restrictions`: `Non-refundable after booking`.
+
+`Badge`: `Breakfast included`.
+
+Deal 3:
+
+`Title`: `Seattle to Portland rail saver`.
+
+`Primary link`: `/demo/travel-deals/sea-pdx-rail-saver`.
+
+`Origin`: `Seattle`.
+
+`Destination`: `Portland`.
+
+`Travel window`: `July 8-31, 2026`.
+
+`Price`: `$34 one way`.
+
+`Provider`: `Coastal Runner`.
+
+`Deal type`: `Train`.
+
+`Restrictions`: `Off-peak departures only`.
+
+`Badge`: `Saver fare`.
+
+Deal 4:
+
+`Title`: `Redwood cabin midweek stay`.
+
+`Primary link`: `/demo/travel-deals/redwood-cabin-midweek`.
+
+`Origin`: `Northern California`.
+
+`Destination`: `Redwood Creek`.
+
+`Travel window`: `September 10-15, 2026`.
+
+`Price`: `$229 per night`.
+
+`Provider`: `Creekside Stays`.
+
+`Deal type`: `Vacation rental`.
+
+`Restrictions`: `3 night minimum`.
+
+`Badge`: `Low availability`.
+
+Deal 5:
+
+`Title`: `Airport parking early booking discount`.
+
+`Primary link`: `/demo/travel-deals/airport-parking-discount`.
+
+`Origin`: `SEA`.
+
+`Destination`: `Terminal Garage P2`.
+
+`Travel window`: `July 12-16, 2026`.
+
+`Price`: `$132 prepaid`.
+
+`Provider`: `Example Airport Parking`.
+
+`Deal type`: `Parking`.
+
+`Restrictions`: `One entry and one exit`.
+
+`Badge`: `Prepay and save`.
+
+Extraction caveat: the extraction tool should extract deals as cards with structured travel fields. It should not treat badges such as `48 hours left` as the title.
+
+Implementation guidance: use promotional-style cards with price as a prominent value and restrictions as separate text.
+
+---
+
+W00 Example 15 - Knowledge Base Article Cards
+
+---
+
+Create a knowledge base article card list. Each card should include article title, category, excerpt, updated date, author or owner, helpful score, tags, and link.
+
+Visible heading:
+
+`Knowledge Base Article Cards`
+
+Visible description:
+
+`This example imitates a help center article feed. It tests extraction of article title, category, excerpt, updated date, owner, helpful score, tags, and links from repeated knowledge cards.`
+
+Create six article cards.
+
+Article 1:
+
+`Title`: `How to export invoice line items`.
+
+`Primary link`: `/demo/help/export-invoice-line-items`.
+
+`Category`: `Billing`.
+
+`Excerpt`: `Download invoice details as CSV and include tax, discount, and payment columns.`
+
+`Updated`: `Updated May 29, 2026`.
+
+`Owner`: `Billing Support`.
+
+`Helpful score`: `94 percent helpful`.
+
+`Tags`: `invoices`, `csv`, `billing`.
+
+Article 2:
+
+`Title`: `Set up SAML single sign-on`.
+
+`Primary link`: `/demo/help/setup-saml-sso`.
+
+`Category`: `Security`.
+
+`Excerpt`: `Configure identity provider metadata, claim mappings, and test login before enforcement.`
+
+`Updated`: `Updated May 22, 2026`.
+
+`Owner`: `Security Team`.
+
+`Helpful score`: `88 percent helpful`.
+
+`Tags`: `saml`, `sso`, `security`.
+
+Article 3:
+
+`Title`: `Understand workspace role permissions`.
+
+`Primary link`: `/demo/help/workspace-role-permissions`.
+
+`Category`: `Administration`.
+
+`Excerpt`: `Compare viewer, editor, billing manager, admin, and owner capabilities.`
+
+`Updated`: `Updated May 18, 2026`.
+
+`Owner`: `Admin Experience`.
+
+`Helpful score`: `91 percent helpful`.
+
+`Tags`: `roles`, `permissions`, `users`.
+
+Article 4:
+
+`Title`: `Troubleshoot missing browser extension data`.
+
+`Primary link`: `/demo/help/missing-extension-data`.
+
+`Category`: `Browser Extension`.
+
+`Excerpt`: `Check site permissions, extension status, and page reload requirements.`
+
+`Updated`: `Updated May 11, 2026`.
+
+`Owner`: `Extension Team`.
+
+`Helpful score`: `83 percent helpful`.
+
+`Tags`: `browser`, `extension`, `permissions`.
+
+Article 5:
+
+`Title`: `Create a saved extraction template`.
+
+`Primary link`: `/demo/help/saved-extraction-template`.
+
+`Category`: `Extraction`.
+
+`Excerpt`: `Define reusable fields, review example output, and apply the template to similar pages.`
+
+`Updated`: `Updated May 9, 2026`.
+
+`Owner`: `Product Education`.
+
+`Helpful score`: `96 percent helpful`.
+
+`Tags`: `templates`, `extraction`, `automation`.
+
+Article 6:
+
+`Title`: `Resolve duplicate action menu labels`.
+
+`Primary link`: `/demo/help/duplicate-action-menu-labels`.
+
+`Category`: `Troubleshooting`.
+
+`Excerpt`: `Adjust extraction scope when card action menus are included in selected content.`
+
+`Updated`: `Updated May 1, 2026`.
+
+`Owner`: `Support Engineering`.
+
+`Helpful score`: `79 percent helpful`.
+
+`Tags`: `cards`, `actions`, `cleanup`.
+
+Extraction caveat: the extraction tool should extract the article title and excerpt separately. It should not combine tags and category into one ambiguous topic field.
+
+Implementation guidance: make this a simple list of article cards with category pills and helpful score metadata.
+
+---
+
+X00 Example 16 - Support Ticket Queue Cards
+
+---
+
+Create a support ticket queue made of cards. This is not a full case detail page. It should show compact ticket records in a feed-like queue with customer, subject, status, priority, channel, SLA, assignee, and last message snippet.
+
+Visible heading:
+
+`Support Ticket Queue Cards`
+
+Visible description:
+
+`This example imitates a support agent ticket queue. It tests extraction of repeated ticket cards with case number, customer, subject, status, priority, channel, assignee, SLA deadline, last message snippet, and unread state.`
+
+Create six ticket cards.
+
+Ticket 1:
+
+`Case number`: `TCK-2026-54091`.
+
+`Primary link`: `/demo/support/tickets/TCK-2026-54091`.
+
+`Customer`: `Lina Romero`.
+
+`Account`: `Civic Data Lab`.
+
+`Subject`: `Refund status request`.
+
+`Status`: `Waiting on customer`.
+
+`Priority`: `Medium`.
+
+`Channel`: `Email`.
+
+`Assignee`: `Maya`.
+
+`SLA`: `Due June 1, 2026, 3:14 PM`.
+
+`Last message`: `Thanks for the timeline. I will check with our finance team and reply today.`
+
+`Unread`: `No`.
+
+Ticket 2:
+
+`Case number`: `TCK-2026-54102`.
+
+`Primary link`: `/demo/support/tickets/TCK-2026-54102`.
+
+`Customer`: `Theo Grant`.
+
+`Account`: `Independent documentary project`.
+
+`Subject`: `Invoice PDF missing line item details`.
+
+`Status`: `Open`.
+
+`Priority`: `High`.
+
+`Channel`: `Chat`.
+
+`Assignee`: `Rafael`.
+
+`SLA`: `Due today, 5:00 PM`.
+
+`Last message`: `Can you send a version that includes SKU and tax columns?`.
+
+`Unread`: `Yes`.
+
+Ticket 3:
+
+`Case number`: `TCK-2026-54118`.
+
+`Primary link`: `/demo/support/tickets/TCK-2026-54118`.
+
+`Customer`: `Grace Miller`.
+
+`Account`: `Atlas Product Studio`.
+
+`Subject`: `Need help enabling SAML for test workspace`.
+
+`Status`: `In progress`.
+
+`Priority`: `Medium`.
+
+`Channel`: `Email`.
+
+`Assignee`: `Nina`.
+
+`SLA`: `Due June 2, 2026, 10:00 AM`.
+
+`Last message`: `The identity provider metadata is attached.`
+
+`Unread`: `Yes`.
+
+Ticket 4:
+
+`Case number`: `TCK-2026-54129`.
+
+`Primary link`: `/demo/support/tickets/TCK-2026-54129`.
+
+`Customer`: `Priya Shah`.
+
+`Account`: `Northstar Research Lab`.
+
+`Subject`: `License activation warning on lab workstation`.
+
+`Status`: `Open`.
+
+`Priority`: `Low`.
+
+`Channel`: `Portal`.
+
+`Assignee`: `Unassigned`.
+
+`SLA`: `Due June 3, 2026, 9:00 AM`.
+
+`Last message`: `The warning appears only on LAB-WKS-07 after restart.`
+
+`Unread`: `No`.
+
+Ticket 5:
+
+`Case number`: `TCK-2026-54144`.
+
+`Primary link`: `/demo/support/tickets/TCK-2026-54144`.
+
+`Customer`: `Owen Brooks`.
+
+`Account`: `City Museum of Design`.
+
+`Subject`: `Bulk event registration import failed`.
+
+`Status`: `Escalated`.
+
+`Priority`: `Urgent`.
+
+`Channel`: `Phone`.
+
+`Assignee`: `Leah`.
+
+`SLA`: `Overdue by 34 minutes`.
+
+`Last message`: `The attendee CSV has 214 rows and fails at row 89.`
+
+`Unread`: `Yes`.
+
+Ticket 6:
+
+`Case number`: `TCK-2026-54159`.
+
+`Primary link`: `/demo/support/tickets/TCK-2026-54159`.
+
+`Customer`: `Avery Quinn`.
+
+`Account`: `Cedar Pine Studio`.
+
+`Subject`: `Question about archived audit logs`.
+
+`Status`: `Solved`.
+
+`Priority`: `Low`.
+
+`Channel`: `Email`.
+
+`Assignee`: `Maya`.
+
+`SLA`: `Met`.
+
+`Last message`: `Thanks, that answered my question.`
+
+`Unread`: `No`.
+
+Extraction caveat: the extraction tool should keep each ticket card separate and preserve priority, status, and SLA as separate fields. It should not use the unread visual state as the subject.
+
+Implementation guidance: use status and priority badges. Use one card per ticket.
+
+---
+
+Y00 Example 17 - Team Activity Feed
+
+---
+
+Create a team activity feed with chronological events. Each event should have actor, action, target, project, timestamp, detail text, and optional related link.
+
+Visible heading:
+
+`Team Activity Feed`
+
+Visible description:
+
+`This example imitates a team activity timeline. It tests extraction of actor, verb, target object, project, timestamp, details, and related links from chronological feed items.`
+
+Create eight activity items.
+
+Activity 1:
+
+`Actor`: `Maya Chen`.
+
+`Action`: `commented on`.
+
+`Target`: `Issue #1842`.
+
+`Project`: `Extractor Core`.
+
+`Timestamp`: `May 31, 2026, 11:42 AM`.
+
+`Detail`: `Added reproduction steps for portaled dropdown menus.`
+
+`Related link`: `/demo/repos/extractor/issues/1842`.
+
+Activity 2:
+
+`Actor`: `Rafael Ortiz`.
+
+`Action`: `merged`.
+
+`Target`: `Pull request #414`.
+
+`Project`: `Extractor Core`.
+
+`Timestamp`: `May 31, 2026, 10:58 AM`.
+
+`Detail`: `Fixed duplicated hidden input output in selected forms.`
+
+`Related link`: `/demo/repos/extractor/pulls/414`.
+
+Activity 3:
+
+`Actor`: `Lina Romero`.
+
+`Action`: `created`.
+
+`Target`: `Research note`.
+
+`Project`: `Content Selection Study`.
+
+`Timestamp`: `May 31, 2026, 10:12 AM`.
+
+`Detail`: `Documented patterns from 18 ecommerce confirmation pages.`
+
+`Related link`: `/demo/notes/ecommerce-confirmation-patterns`.
+
+Activity 4:
+
+`Actor`: `Theo Grant`.
+
+`Action`: `uploaded`.
+
+`Target`: `Fixture file`.
+
+`Project`: `Demo Pages`.
+
+`Timestamp`: `May 31, 2026, 9:44 AM`.
+
+`Detail`: `Added screenshot notes for dense card layouts.`
+
+`Related link`: `/demo/files/dense-card-layout-notes`.
+
+Activity 5:
+
+`Actor`: `Nina Patel`.
+
+`Action`: `assigned`.
+
+`Target`: `Ticket TCK-2026-54118`.
+
+`Project`: `Support Queue`.
+
+`Timestamp`: `May 31, 2026, 9:17 AM`.
+
+`Detail`: `Assigned SAML setup question to herself.`
+
+`Related link`: `/demo/support/tickets/TCK-2026-54118`.
+
+Activity 6:
+
+`Actor`: `Grace Miller`.
+
+`Action`: `changed status of`.
+
+`Target`: `Job card QA-204`.
+
+`Project`: `Hiring Pipeline`.
+
+`Timestamp`: `May 31, 2026, 8:53 AM`.
+
+`Detail`: `Moved candidate review card from Screening to Interview.`
+
+`Related link`: `/demo/hiring/cards/QA-204`.
+
+Activity 7:
+
+`Actor`: `Owen Brooks`.
+
+`Action`: `published`.
+
+`Target`: `Help article`.
+
+`Project`: `Knowledge Base`.
+
+`Timestamp`: `May 31, 2026, 8:11 AM`.
+
+`Detail`: `Published article about exporting invoice line items.`
+
+`Related link`: `/demo/help/export-invoice-line-items`.
+
+Activity 8:
+
+`Actor`: `Priya Shah`.
+
+`Action`: `renewed`.
+
+`Target`: `License LIC-2026-882014`.
+
+`Project`: `DataGrid Studio Pro`.
+
+`Timestamp`: `May 30, 2026, 4:20 PM`.
+
+`Detail`: `Renewed priority support and maintenance for 12 seats.`
+
+`Related link`: `/demo/licenses/LIC-2026-882014`.
+
+Extraction caveat: the extraction tool should preserve actor-action-target relationships. It should not reduce each item to a plain sentence if structured fields can be extracted.
+
+Implementation guidance: use timeline-style rows with actor initials and separate spans for actor, verb, target, project, and timestamp.
+
+---
+
+Z00 Example 18 - Notification Center Feed
+
+---
+
+Create a notification center feed. Each notification should include unread state, severity, source app, title, message, timestamp, action label, and deep link.
+
+Visible heading:
+
+`Notification Center Feed`
+
+Visible description:
+
+`This example imitates a notification center. It tests extraction of notification title, message, source, severity, unread state, timestamp, action label, and deep link from compact cards.`
+
+Create seven notification cards.
+
+Notification 1:
+
+`Unread`: `Yes`.
+
+`Severity`: `Warning`.
+
+`Source`: `Billing`.
+
+`Title`: `Invoice payment failed`.
+
+`Message`: `The payment for invoice INV-2026-00841 could not be completed with Visa ending in 4242.`
+
+`Timestamp`: `12 minutes ago`.
+
+`Action label`: `Update payment method`.
+
+`Deep link`: `/demo/billing/payment-method`.
+
+Notification 2:
+
+`Unread`: `Yes`.
+
+`Severity`: `Info`.
+
+`Source`: `Security`.
+
+`Title`: `New sign-in from known device`.
+
+`Message`: `Anika Sharma signed in from Chrome on macOS in San Francisco, CA.`
+
+`Timestamp`: `38 minutes ago`.
+
+`Action label`: `View audit event`.
+
+`Deep link`: `/demo/security/events/evt_2026_05_31_884120`.
+
+Notification 3:
+
+`Unread`: `No`.
+
+`Severity`: `Success`.
+
+`Source`: `Exports`.
+
+`Title`: `CSV export ready`.
+
+`Message`: `Your invoice line item export for May 2026 is ready to download.`
+
+`Timestamp`: `1 hour ago`.
+
+`Action label`: `Download CSV`.
+
+`Deep link`: `/demo/exports/invoice-lines-may-2026`.
+
+Notification 4:
+
+`Unread`: `Yes`.
+
+`Severity`: `Urgent`.
+
+`Source`: `Support`.
+
+`Title`: `Ticket SLA overdue`.
+
+`Message`: `Ticket TCK-2026-54144 is overdue by 34 minutes.`
+
+`Timestamp`: `34 minutes ago`.
+
+`Action label`: `Open ticket`.
+
+`Deep link`: `/demo/support/tickets/TCK-2026-54144`.
+
+Notification 5:
+
+`Unread`: `No`.
+
+`Severity`: `Info`.
+
+`Source`: `Projects`.
+
+`Title`: `Pull request approved`.
+
+`Message`: `Lina approved PR #419: Improve timeline event grouping.`
+
+`Timestamp`: `2 hours ago`.
+
+`Action label`: `View pull request`.
+
+`Deep link`: `/demo/repos/extractor/pulls/419`.
+
+Notification 6:
+
+`Unread`: `No`.
+
+`Severity`: `Info`.
+
+`Source`: `Knowledge Base`.
+
+`Title`: `Article helpful score changed`.
+
+`Message`: `Create a saved extraction template reached 96 percent helpful.`
+
+`Timestamp`: `yesterday`.
+
+`Action label`: `Open article`.
+
+`Deep link`: `/demo/help/saved-extraction-template`.
+
+Notification 7:
+
+`Unread`: `No`.
+
+`Severity`: `Success`.
+
+`Source`: `Licenses`.
+
+`Title`: `License activated`.
+
+`Message`: `DataGrid Studio Pro license LIC-2026-882014 is active for 12 seats.`
+
+`Timestamp`: `yesterday`.
+
+`Action label`: `View license`.
+
+`Deep link`: `/demo/licenses/LIC-2026-882014`.
+
+Extraction caveat: the extraction tool should extract unread state and severity as metadata. It should not confuse the action label with the notification title.
+
+Implementation guidance: use compact notification cards. Make unread cards visually distinct with a small `Unread` badge.
+
+---
+
+AA00 Example 19 - Compact Email Thread Cards
+
+---
+
+Create compact email thread cards that imitate an inbox list. These are not actual emails. They are card-like feed items with sender, recipients preview, subject, snippet, labels, timestamp, attachment marker, unread state, and link.
+
+Visible heading:
+
+`Compact Email Thread Cards`
+
+Visible description:
+
+`This example imitates an inbox thread list. It tests extraction of sender, subject, snippet, timestamp, labels, attachment state, unread state, and thread links from compact repeated cards.`
+
+Create six thread cards.
+
+Thread 1:
+
+`Unread`: `Yes`.
+
+`Sender`: `Renee Coleman`.
+
+`Recipients preview`: `to Finance Team`.
+
+`Subject`: `Invoice approval needed for INV-2026-00841`.
+
+`Snippet`: `Please review the remaining balance and confirm whether the support package should stay on the renewal.`
+
+`Timestamp`: `11:22 AM`.
+
+`Labels`: `Finance`, `Needs approval`.
+
+`Attachment`: `No`.
+
+`Thread link`: `/demo/mail/threads/invoice-approval-00841`.
+
+Thread 2:
+
+`Unread`: `No`.
+
+`Sender`: `Harbor View Suites`.
+
+`Recipients preview`: `to Priya Shah`.
+
+`Subject`: `Reservation HVS-2026-88217 confirmed`.
+
+`Snippet`: `Your stay from August 14 through August 18 is confirmed. Breakfast is included with your rate plan.`
+
+`Timestamp`: `10:48 AM`.
+
+`Labels`: `Travel`, `Receipt`.
+
+`Attachment`: `Yes`.
+
+`Thread link`: `/demo/mail/threads/hotel-confirmation`.
+
+Thread 3:
+
+`Unread`: `Yes`.
+
+`Sender`: `Support Queue`.
+
+`Recipients preview`: `to Billing Support`.
+
+`Subject`: `Urgent ticket TCK-2026-54144 overdue`.
+
+`Snippet`: `The bulk event registration import failed and the customer is waiting on an update.`
+
+`Timestamp`: `10:14 AM`.
+
+`Labels`: `Support`, `Urgent`.
+
+`Attachment`: `No`.
+
+`Thread link`: `/demo/mail/threads/urgent-ticket-54144`.
+
+Thread 4:
+
+`Unread`: `No`.
+
+`Sender`: `City Museum of Design`.
+
+`Recipients preview`: `to Grace Miller`.
+
+`Subject`: `Membership renewal receipt MEM-2026-11902`.
+
+`Snippet`: `Your Family Plus membership has been renewed through May 31, 2027.`
+
+`Timestamp`: `Yesterday`.
+
+`Labels`: `Membership`, `Receipt`.
+
+`Attachment`: `Yes`.
+
+`Thread link`: `/demo/mail/threads/membership-renewal`.
+
+Thread 5:
+
+`Unread`: `No`.
+
+`Sender`: `Northstar Research Lab`.
+
+`Recipients preview`: `to Priya Shah`.
+
+`Subject`: `License activation details for DataGrid Studio Pro`.
+
+`Snippet`: `The license is active for 12 seats and priority support has been renewed.`
+
+`Timestamp`: `Yesterday`.
+
+`Labels`: `Licenses`, `Admin`.
+
+`Attachment`: `No`.
+
+`Thread link`: `/demo/mail/threads/license-activation`.
+
+Thread 6:
+
+`Unread`: `No`.
+
+`Sender`: `Dr. Hannah Cho`.
+
+`Recipients preview`: `to Victor Lane`.
+
+`Subject`: `Lab result follow-up`.
+
+`Snippet`: `LDL remains mildly elevated. Continue current medication and discuss diet changes at the next visit.`
+
+`Timestamp`: `May 29`.
+
+`Labels`: `Health`, `Follow-up`.
+
+`Attachment`: `No`.
+
+`Thread link`: `/demo/mail/threads/lab-follow-up`.
+
+Extraction caveat: the extraction tool should capture subject as the main title and sender as metadata. It should not merge labels into the snippet, and it should preserve unread and attachment states.
+
+Implementation guidance: use compact rows that look like an inbox, with bold subject for unread rows.
+
+---
+
+AB00 Example 20 - Learning Course Catalog Cards
+
+---
+
+Create a learning course catalog feed with course cards. Each course should include title, provider, level, duration, modules count, rating, enrollment count, certificate status, price, tags, and link.
+
+Visible heading:
+
+`Learning Course Catalog Cards`
+
+Visible description:
+
+`This example imitates a learning platform course catalog. It tests extraction of course titles, providers, levels, durations, ratings, enrollment counts, prices, certificate metadata, tags, and course links from repeated cards.`
+
+Create five course cards.
+
+Course 1:
+
+`Title`: `Browser Automation For Practical Testing`.
+
+`Primary link`: `/demo/courses/browser-automation-testing`.
+
+`Provider`: `Testing Guild Academy`.
+
+`Level`: `Intermediate`.
+
+`Duration`: `6 hours`.
+
+`Modules`: `8 modules`.
+
+`Rating`: `4.8`.
+
+`Enrollment`: `12,480 learners`.
+
+`Certificate`: `Certificate included`.
+
+`Price`: `$89`.
+
+`Tags`: `automation`, `testing`, `browser`.
+
+Course 2:
+
+`Title`: `Readable Data Tables For Product Teams`.
+
+`Primary link`: `/demo/courses/readable-data-tables`.
+
+`Provider`: `Interface Journal School`.
+
+`Level`: `Beginner`.
+
+`Duration`: `4 hours`.
+
+`Modules`: `5 modules`.
+
+`Rating`: `4.6`.
+
+`Enrollment`: `4,920 learners`.
+
+`Certificate`: `Certificate included`.
+
+`Price`: `$49`.
+
+`Tags`: `tables`, `data design`, `ux`.
+
+Course 3:
+
+`Title`: `Accessibility Testing With Plain HTML`.
+
+`Primary link`: `/demo/courses/accessibility-testing-html`.
+
+`Provider`: `Markup Minutes`.
+
+`Level`: `Intermediate`.
+
+`Duration`: `7 hours`.
+
+`Modules`: `10 modules`.
+
+`Rating`: `4.9`.
+
+`Enrollment`: `18,112 learners`.
+
+`Certificate`: `Certificate included`.
+
+`Price`: `$109`.
+
+`Tags`: `accessibility`, `html`, `qa`.
+
+Course 4:
+
+`Title`: `Writing Better Error Messages`.
+
+`Primary link`: `/demo/courses/error-message-writing`.
+
+`Provider`: `Product Writing Lab`.
+
+`Level`: `Beginner`.
+
+`Duration`: `2.5 hours`.
+
+`Modules`: `4 modules`.
+
+`Rating`: `4.5`.
+
+`Enrollment`: `3,604 learners`.
+
+`Certificate`: `No certificate`.
+
+`Price`: `Free`.
+
+`Tags`: `ux writing`, `forms`, `content`.
+
+Course 5:
+
+`Title`: `Designing Reliable Admin Workflows`.
+
+`Primary link`: `/demo/courses/reliable-admin-workflows`.
+
+`Provider`: `Ops Learning Circle`.
+
+`Level`: `Advanced`.
+
+`Duration`: `9 hours`.
+
+`Modules`: `12 modules`.
+
+`Rating`: `4.7`.
+
+`Enrollment`: `6,331 learners`.
+
+`Certificate`: `Certificate included`.
+
+`Price`: `$149`.
+
+`Tags`: `admin`, `workflow`, `operations`.
+
+Extraction caveat: the extraction tool should extract course metadata as fields, not as one long snippet. It should preserve price and certificate status separately.
+
+Implementation guidance: use a card grid with a prominent title link and metadata rows.
+
+---
+
+AC00 Example 21 - Community Classified Post Cards
+
+---
+
+Create a community classified board with post cards. Each post should include title, category, neighborhood, poster, posted time, description, contact preference, status, and tags.
+
+Visible heading:
+
+`Community Classified Post Cards`
+
+Visible description:
+
+`This example imitates a neighborhood classified board. It tests extraction of post title, category, neighborhood, poster, posted time, description, contact preference, status, tags, and primary post link from informal card content.`
+
+Create six classified cards.
+
+Post 1:
+
+`Title`: `Looking for weekend dog walker`.
+
+`Primary link`: `/demo/classifieds/weekend-dog-walker`.
+
+`Category`: `Services wanted`.
+
+`Neighborhood`: `Noe Valley`.
+
+`Poster`: `Hannah M.`.
+
+`Posted`: `2 hours ago`.
+
+`Description`: `Need a regular Saturday morning walker for a small senior dog. Calm pace preferred.`
+
+`Contact preference`: `Message through board`.
+
+`Status`: `Open`.
+
+`Tags`: `pets`, `weekend`, `paid`.
+
+Post 2:
+
+`Title`: `Free moving boxes after Friday`.
+
+`Primary link`: `/demo/classifieds/free-moving-boxes`.
+
+`Category`: `Free`.
+
+`Neighborhood`: `Mission Bay`.
+
+`Poster`: `Priya S.`.
+
+`Posted`: `4 hours ago`.
+
+`Description`: `About 25 clean boxes, mostly medium size. Pickup from loading dock.`
+
+`Contact preference`: `Text after 5 PM`.
+
+`Status`: `Available`.
+
+`Tags`: `moving`, `free`, `pickup`.
+
+Post 3:
+
+`Title`: `Borrow ladder for one afternoon`.
+
+`Primary link`: `/demo/classifieds/borrow-ladder`.
+
+`Category`: `Borrow`.
+
+`Neighborhood`: `Oakland Temescal`.
+
+`Poster`: `Owen B.`.
+
+`Posted`: `yesterday`.
+
+`Description`: `Looking to borrow an 8 foot ladder to replace a hallway light fixture.`
+
+`Contact preference`: `Email`.
+
+`Status`: `Open`.
+
+`Tags`: `tools`, `neighbor help`.
+
+Post 4:
+
+`Title`: `Roommate wanted for August lease`.
+
+`Primary link`: `/demo/classifieds/roommate-august-lease`.
+
+`Category`: `Housing`.
+
+`Neighborhood`: `San Mateo`.
+
+`Poster`: `Noah K.`.
+
+`Posted`: `yesterday`.
+
+`Description`: `One bedroom available in a two bedroom apartment near Caltrain. Cat already lives here.`
+
+`Contact preference`: `Message through board`.
+
+`Status`: `Open`.
+
+`Tags`: `housing`, `roommate`, `cat friendly`.
+
+Post 5:
+
+`Title`: `Community garden workday volunteers`.
+
+`Primary link`: `/demo/classifieds/garden-workday-volunteers`.
+
+`Category`: `Volunteer`.
+
+`Neighborhood`: `Alameda`.
+
+`Poster`: `Grace M.`.
+
+`Posted`: `2 days ago`.
+
+`Description`: `Looking for help moving soil and planting herbs Saturday morning.`
+
+`Contact preference`: `Sign up form`.
+
+`Status`: `Open`.
+
+`Tags`: `garden`, `volunteer`, `Saturday`.
+
+Post 6:
+
+`Title`: `Used kids art table`.
+
+`Primary link`: `/demo/classifieds/kids-art-table`.
+
+`Category`: `For sale`.
+
+`Neighborhood`: `Berkeley`.
+
+`Poster`: `Lina R.`.
+
+`Posted`: `3 days ago`.
+
+`Description`: `Small art table with two stools. Paint marks but sturdy.`
+
+`Contact preference`: `Message through board`.
+
+`Status`: `Pending pickup`.
+
+`Tags`: `kids`, `furniture`, `pickup`.
+
+Extraction caveat: the extraction tool should handle informal natural-language descriptions while still extracting structured metadata like category, status, neighborhood, and contact preference.
+
+Implementation guidance: use cards that look less polished than marketplace cards. Include category and status badges.
+
+---
+
+AD00 Example 22 - Mixed Sponsored, Pinned, And Archived Feed
+
+---
+
+Create a mixed content feed that intentionally combines normal posts, pinned posts, promoted-style cards, archived cards, and action menus. Do not use real ads or real sponsors. Use fictional content and clearly mark promoted-style cards as demo content.
+
+Visible heading:
+
+`Mixed Sponsored, Pinned, And Archived Feed`
+
+Visible description:
+
+`This example imitates a mixed feed where ordinary posts appear alongside pinned, promoted-style, and archived items. It tests extraction of item type, title, source, badges, timestamps, primary links, action menu labels, and archived state without confusing promotional metadata with normal content.`
+
+Create seven feed items.
+
+Item 1:
+
+`Item type`: `Pinned post`.
+
+`Title`: `Read this first: extraction testing notes for card feeds`.
+
+`Primary link`: `/demo/feed/extraction-testing-notes`.
+
+`Author`: `Demo Maintainer`.
+
+`Timestamp`: `Pinned this week`.
+
+`Body`: `Use this feed to test repeated card boundaries, primary links, and action menu cleanup.`
+
+`Badges`: `Pinned`, `Maintainer`.
+
+`Actions`: `Open`, `Copy link`, `Dismiss`.
+
+Item 2:
+
+`Item type`: `Normal post`.
+
+`Title`: `Card action menus are often extracted as false metadata`.
+
+`Primary link`: `/demo/feed/card-action-menu-false-metadata`.
+
+`Author`: `Maya Chen`.
+
+`Timestamp`: `2 hours ago`.
+
+`Body`: `A repeated issue in card extraction is treating Save, Share, Hide, and Report as item fields instead of actions.`
+
+`Badges`: `Discussion`.
+
+`Actions`: `Save`, `Share`, `Hide`, `Report`.
+
+Item 3:
+
+`Item type`: `Promoted demo card`.
+
+`Title`: `Demo promotion: Try the fictional Widget Lab`.
+
+`Primary link`: `/demo/promotions/widget-lab`.
+
+`Source`: `Widget Lab Demo`.
+
+`Timestamp`: `Promoted`.
+
+`Body`: `This is a fictional promoted card for extraction testing. It is not a real advertisement.`
+
+`Badges`: `Promoted demo`, `Fictional`.
+
+`Actions`: `Learn more`, `Hide promotion`, `Why am I seeing this?`.
+
+Item 4:
+
+`Item type`: `Normal post`.
+
+`Title`: `What should a selected card return when the title appears twice?`.
+
+`Primary link`: `/demo/feed/duplicated-title-card`.
+
+`Author`: `Rafael Ortiz`.
+
+`Timestamp`: `4 hours ago`.
+
+`Body`: `Some cards repeat the title in visible text, accessible labels, and preview snippets. Extraction should avoid duplicated output.`
+
+`Badges`: `Question`.
+
+`Actions`: `Save`, `Reply`, `Copy link`.
+
+Item 5:
+
+`Item type`: `Archived post`.
+
+`Title`: `Old extraction fixture: legacy table cards`.
+
+`Primary link`: `/demo/feed/legacy-table-cards`.
+
+`Author`: `Theo Grant`.
+
+`Timestamp`: `Archived on May 1, 2026`.
+
+`Body`: `This fixture is kept for historical regression testing but should not be treated as current guidance.`
+
+`Badges`: `Archived`, `Regression`.
+
+`Actions`: `Restore`, `Copy link`.
+
+Item 6:
+
+`Item type`: `Promoted demo card`.
+
+`Title`: `Demo promotion: Structured Cards Handbook`.
+
+`Primary link`: `/demo/promotions/structured-cards-handbook`.
+
+`Source`: `Fictional Learning Store`.
+
+`Timestamp`: `Promoted`.
+
+`Body`: `A fictional handbook card used to test promotional labels, source names, and action links.`
+
+`Badges`: `Promoted demo`, `Fictional`.
+
+`Actions`: `View handbook`, `Hide promotion`.
+
+Item 7:
+
+`Item type`: `Normal post`.
+
+`Title`: `Nested replies need parent context`.
+
+`Primary link`: `/demo/feed/nested-replies-parent-context`.
+
+`Author`: `Lina Romero`.
+
+`Timestamp`: `Yesterday`.
+
+`Body`: `When extracting a selected comment thread, reply depth is often more important than visual indentation alone.`
+
+`Badges`: `Commentary`.
+
+`Actions`: `Save`, `Share`, `Open thread`.
+
+Extraction caveat: the extraction tool should capture the item type and badges, but it should not confuse action menu labels with the main content. Promoted-style demo cards must be extractable as feed items with promotional metadata, not filtered out by default.
+
+Implementation guidance: include a small action menu area on each item. Use visible labels for all actions. Do not use external ads, real sponsors, or ad-network code.
+
+---
+
+AE00 Required Final HTML Skeleton
+
+---
+
+The coding agent should produce a complete HTML document using this general skeleton:
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page 5 - Feed, Posts, And Card Extraction</title>
+  <style>
+    /* Inline CSS only. */
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-hero">
+      <p class="page-kicker">Content Extraction Demo Page</p>
+      <h1>Page 5 - Feed, Posts, And Card Extraction</h1>
+      <p>
+        This standalone page contains realistic feed, post, and card examples for testing extraction of repeated records, item boundaries, titles, links, authors, timestamps, scores, tags, badges, counts, snippets, statuses, prices, nested comments, and action metadata.
+      </p>
+    </header>
+
+    <section class="example-card" id="example-01">
+      <!-- Example 01 content. -->
+    </section>
+
+    <!-- Continue through example-22. -->
+  </main>
+
+  <script>
+    /* Minimal inline JavaScript only. */
+  </script>
+</body>
+</html>
+```
+
+The generated file must include all 22 examples in the same file.
+
+The page must not require a server.
+
+The page must not fetch data.
+
+The page must not include broken links to external assets.
+
+The page must not use placeholder text instead of the specified values.
+
+The page must not use external images. Use text placeholders and CSS boxes instead.
+
+The page must not use real social network names, real marketplace brands, real job boards, real news publishers, real sponsors, or real user data.
+
+---
+
+AF00 Quality Bar
+
+---
+
+The final page should be useful as a long-term manual testing page for a content extraction tool.
+
+Each example must be visibly distinct enough that a tester can scroll to it, select it, and understand what feed, post, or card extraction behavior is being tested.
+
+Each example must contain realistic populated values.
+
+Each example must include the specified heading, description, repeated items, links, titles, metadata, tags, badges, statuses, counts, snippets, and extraction caveat.
+
+Every feed or card example must expose enough visible content for extraction testing. Do not hide the most important values only in JavaScript variables, hidden inputs, comments, or inaccessible attributes.
+
+Use primary links carefully. A card may contain multiple links, but the primary item link must be identifiable by placement, class, or visible text.
+
+Use repeated records where specified. Preserve item boundaries in the markup.
+
+Use tags, badges, action labels, and counts as separate visible elements. These are important extraction targets.
+
+Do not make all cards visually identical. The point of this page is to test many real-world variations of repeated card extraction.
+
+Do not collapse all metadata into one paragraph if the example calls for structured metadata.
+
+Do not convert all examples into ordinary forms or tables. This page must focus on feeds, posts, cards, lists, timelines, threads, and repeated content blocks.
+
+The implementation should favor clarity and realistic structure over cleverness.
+
+The coding agent may improve layout, spacing, CSS details, and basic interaction behavior, but it must not remove examples, reduce the number of examples, replace feed examples with generic forms, or simplify the scenarios into toy examples.
+
+The final output must be one portable HTML file.

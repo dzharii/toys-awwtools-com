@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 11 页 - 国际化（简体中文，中国）</title>
+<style>
+  :root {
+    --bg: #f6f3ee;
+    --card: #fffdf8;
+    --ink: #20221f;
+    --muted: #676d63;
+    --line: #ddd3c4;
+    --soft: #f0e8dc;
+    --panel: #fffaf2;
+    --panel-alt: #f9f3e8;
+    --accent: #d7263d;
+    --accent-deep: #9f1729;
+    --accent-soft: #ffe7ea;
+    --jade: #008f6b;
+    --ok: #087a55;
+    --ok-soft: #e2f4ed;
+    --warn: #a45d00;
+    --warn-soft: #fff1d8;
+    --danger: #c51f32;
+    --danger-soft: #fff0f1;
+    --info: #0a7668;
+    --radius: 8px;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif; background: radial-gradient(circle at top left, #fff4e2 0, var(--bg) 36%, #f4efe7 100%); color: var(--ink); line-height: 1.5; }
+  main { width: min(1220px, calc(100% - 24px)); margin: 0 auto; padding: 20px 0 56px; }
+  a { color: var(--accent-deep); }
+  h1, h2, h3, h4 { line-height: 1.22; }
+  button, input, select, textarea { font: inherit; }
+  :focus-visible { outline: 3px solid var(--jade); outline-offset: 2px; }
+  .page-hero { background: linear-gradient(135deg, #b51227, #d7263d 55%, #0b8f6c); color: #fff; border-radius: 14px; padding: 24px 26px; margin-bottom: 18px; box-shadow: 0 10px 28px rgba(128,24,35,0.2); }
+  .page-hero h1 { margin: 4px 0 8px; font-size: 1.65rem; }
+  .page-kicker { letter-spacing: 0.08em; font-size: 0.78rem; opacity: 0.9; margin: 0; }
+  .page-hero p { margin: 0; max-width: 960px; color: #fff7f4; }
+  .example-card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 16px 0; box-shadow: 0 3px 10px rgba(80,52,22,0.06); }
+  .example-kicker { margin: 0 0 3px; color: var(--accent); font-weight: 800; font-size: 0.8rem; letter-spacing: 0.04em; }
+  .example-header h2 { margin: 0; font-size: 1.22rem; }
+  .example-description { color: var(--muted); max-width: 980px; margin: 8px 0; }
+  .test-intent { background: linear-gradient(90deg, var(--accent-soft), #edf8f4); border-left: 5px solid var(--accent); border-radius: 8px; padding: 9px 12px; color: #67101b; font-size: 0.9rem; max-width: 980px; }
+  .example-surface { margin-top: 12px; padding: 13px; border: 1px solid var(--line); border-radius: 10px; background: #fffdfa; }
+  .sr-only { position: absolute; width: 1px; min-height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .panel, .summary-panel, .detail-panel { padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+  .summary-panel, .detail-panel { background: var(--panel-alt); }
+  .panel-title { margin: 0 0 8px; font-size: 0.78rem; color: var(--muted); font-weight: 800; letter-spacing: 0.04em; }
+  .layout-grid-two { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+  .layout-grid-three { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
+  .split-layout { display: grid; grid-template-columns: minmax(0,1fr) 310px; gap: 12px; align-items: start; }
+  .wide-scroll { overflow-x: auto; }
+  .field-row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px dashed var(--soft); }
+  .field-row:last-child { border-bottom: 0; }
+  .field-label { color: var(--muted); font-weight: 700; }
+  .field-value { text-align: right; font-weight: 700; }
+  .field-block { padding: 6px 0; border-bottom: 1px dashed var(--soft); }
+  .field-block:last-child { border-bottom: 0; }
+  .field-block .field-label { display: block; margin-bottom: 3px; }
+  .form-field { margin-bottom: 10px; }
+  .form-field label { display: block; font-weight: 700; margin-bottom: 3px; }
+  .req::after { content: " *"; color: var(--danger); }
+  input[type=text], input[type=email], input[type=tel], input[type=number], input[type=date], input[type=search], select, textarea { width: 100%; min-height: 36px; padding: 7px 9px; border: 1px solid #cbbfae; border-radius: 7px; background: #fff; }
+  textarea { min-height: 68px; }
+  .help-text { color: var(--muted); font-size: 0.84rem; margin: 4px 0 0; }
+  .error-text { color: var(--danger); font-size: 0.85rem; margin: 4px 0 0; font-weight: 700; }
+  [aria-invalid=true] { border-color: var(--danger); background: var(--danger-soft); }
+  .error-summary { border: 2px solid var(--danger); background: var(--danger-soft); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; }
+  .error-summary h3 { margin: 0 0 7px; color: var(--danger); font-size: 1rem; }
+  .error-summary a { color: var(--danger); font-weight: 700; }
+  .badge, .chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px; font-size: 0.8rem; font-weight: 700; border: 1px solid var(--line); background: #fff; }
+  .badge.ok { color: var(--ok); background: var(--ok-soft); border-color: #bde2d3; }
+  .badge.warn { color: var(--warn); background: var(--warn-soft); border-color: #efd5a2; }
+  .badge.danger { color: var(--danger); background: var(--danger-soft); border-color: #f1bdc5; }
+  .badge.info { color: var(--info); background: #e3f5f1; border-color: #b9ded5; }
+  .badge.neutral { color: var(--muted); background: var(--soft); }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 7px 13px; border-radius: 7px; border: 1px solid #cbbfae; background: #fff; cursor: pointer; font-weight: 700; color: var(--ink); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.ghost { background: transparent; }
+  .stepper { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+  .step { flex: 1; min-width: 120px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-alt); }
+  .step[aria-current=step] { border-color: var(--accent); background: var(--accent-soft); }
+  .step .s-num { font-weight: 900; color: var(--accent); }
+  .step .s-label { display: block; font-size: 0.86rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 560px; }
+  th, td { padding: 7px 8px; border-bottom: 1px solid var(--soft); text-align: left; vertical-align: top; }
+  th { background: #f3eadc; color: var(--muted); }
+  caption { text-align: left; font-weight: 800; padding: 5px 0; }
+  .mono { font-family: var(--mono); }
+  .token-field { display: flex; flex-wrap: wrap; gap: 6px; padding: 7px; border: 1px solid #cbbfae; border-radius: 8px; }
+  .token { display: inline-flex; align-items: center; gap: 5px; background: var(--accent-soft); border: 1px solid #f1bdc5; border-radius: 999px; padding: 3px 6px 3px 9px; font-size: 0.86rem; }
+  .token button { border: 0; background: transparent; cursor: pointer; font-size: 1rem; line-height: 1; color: var(--accent-deep); }
+  .listbox { list-style: none; margin: 8px 0 0; padding: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .listbox li { padding: 8px 10px; border-bottom: 1px solid var(--soft); cursor: pointer; }
+  .listbox li:last-child { border-bottom: 0; }
+  .listbox li[aria-selected=true] { background: var(--accent-soft); }
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal .h { text-align: center; font-weight: 800; color: var(--muted); padding: 4px 0; font-size: 0.82rem; }
+  .cal button { min-height: 46px; border: 1px solid var(--line); border-radius: 7px; background: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .cal button[aria-selected=true] { border-color: var(--accent); background: var(--accent-soft); }
+  .cal button[disabled] { background: var(--soft); color: #aaa199; cursor: not-allowed; }
+  .cal .av { font-size: 0.68rem; color: var(--muted); }
+  .tablist { display: flex; gap: 3px; border-bottom: 2px solid var(--line); margin-bottom: 10px; flex-wrap: wrap; }
+  .tab { border: 0; background: transparent; padding: 8px 12px; cursor: pointer; font-weight: 800; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -2px; }
+  .tab[aria-selected=true] { color: var(--accent); border-bottom-color: var(--accent); }
+  .acc { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 7px; overflow: hidden; }
+  .acc-trigger { width: 100%; text-align: left; background: var(--panel-alt); border: 0; padding: 10px 12px; cursor: pointer; font-weight: 800; display: flex; justify-content: space-between; gap: 10px; }
+  .acc-body { padding: 10px 12px; }
+  .ellipsized { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: bottom; }
+  .kpi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; margin-bottom: 12px; }
+  .kpi .card { border: 1px solid var(--line); border-radius: 9px; padding: 10px; background: var(--panel-alt); }
+  .kpi .k-val { font-size: 1.3rem; font-weight: 900; }
+  .kpi .k-lab { color: var(--muted); font-size: 0.84rem; }
+  .bar { min-height: 12px; border-radius: 6px; background: var(--accent); }
+  .bartrack { background: var(--soft); border-radius: 6px; overflow: hidden; }
+  .result-card { border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 8px; cursor: pointer; }
+  .result-card[aria-selected=true] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft) inset; }
+  fieldset { border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin: 0 0 12px; }
+  legend { font-weight: 800; padding: 0 6px; }
+  @media (max-width: 920px) { .layout-grid-two, .layout-grid-three, .split-layout, .kpi { grid-template-columns: 1fr !important; } }
+</style>
+</head>
+<body>
+<main>
+  <header class="page-hero">
+    <p class="page-kicker">内容抽取与国际化演示</p>
+    <h1>第 11 页 - 国际化（中国大陆）</h1>
+    <p>本页包含 20 个面向中文环境的真实 UI 示例，用于测试表单、校验、布局、无障碍、区域格式、交互和内容抽取行为。所有数据均为虚构；金额使用人民币，日期采用中国大陆习惯，手机号使用 +86 格式。</p>
+  </header>
+
+  <section class="example-card" id="example-01">
+    <header class="example-header"><p class="example-kicker">示例 01</p><h2>多步骤结算与本地地址流程</h2></header>
+    <p class="example-description">四步结算流程包含中国收货地址、配送方式、可展开的企业发票面板，以及人民币订单汇总。</p>
+    <p class="test-intent">测试中文地址顺序、本地化校验、步骤标签、配送选项、支付汇总和文本扩展。</p>
+    <div class="example-surface">
+      <div class="stepper" role="list" aria-label="结算步骤">
+        <div class="step" role="listitem"><span class="s-num">1</span><span class="s-label">购物车</span></div>
+        <div class="step" role="listitem" aria-current="step"><span class="s-num">2</span><span class="s-label">收货信息</span></div>
+        <div class="step" role="listitem"><span class="s-num">3</span><span class="s-label">支付</span></div>
+        <div class="step" role="listitem" id="ex01-review-step"><span class="s-num">4</span><span class="s-label">确认</span></div>
+      </div>
+      <div class="split-layout">
+        <form>
+          <div class="header-strip field-row"><span class="field-label">订单编号</span><span class="field-value mono">ORD-2026-104922</span></div>
+          <div class="form-field"><label class="req" for="ex01-name">收货人姓名</label><input id="ex01-name" type="text" value="张伟"></div>
+          <div class="form-field"><label class="req" for="ex01-street">详细地址</label><input id="ex01-street" type="text" value="上海市浦东新区世纪大道 100 号"></div>
+          <div class="form-field"><label for="ex01-apt">楼栋、单元或收货点</label><input id="ex01-apt" type="text" value="2 号楼 1806 室"></div>
+          <div class="layout-grid-three">
+            <div class="form-field"><label class="req" for="ex01-city">城市</label><input id="ex01-city" type="text" value="上海市"></div>
+            <div class="form-field"><label class="req" for="ex01-state">省/直辖市</label>
+              <select id="ex01-state"><option selected>上海市</option><option>北京市</option><option>广东省</option><option>四川省</option></select></div>
+            <div class="form-field"><label class="req" for="ex01-zip">邮编</label><input id="ex01-zip" type="text" inputmode="numeric" value="200120"></div>
+          </div>
+          <div class="form-field"><label class="req" for="ex01-phone">手机号</label><input id="ex01-phone" type="tel" value="+86 138 0000 1842"><p class="help-text">格式：+86 138 0000 1842</p></div>
+          <div class="form-field"><label for="ex01-method">配送方式</label>
+            <select id="ex01-method"><option selected>标准快递（3-5 个工作日）</option><option>次日达</option><option>同城当日达</option></select></div>
+          <div class="form-field"><label for="ex01-instr">配送备注</label><textarea id="ex01-instr" data-counter="ex01-count" data-max="120">请放在前台并短信通知。</textarea><p class="help-text"><span id="ex01-count">11</span>/120 个字符 <span id="ex01-instr-err" class="error-text" hidden>配送备注过长。</span></p></div>
+          <fieldset>
+            <legend>开票类型</legend>
+            <label><input type="radio" name="ex01-bill" checked> 个人</label>
+            <label style="margin-left:14px;"><input type="radio" name="ex01-bill" data-toggle-target="#ex01-business"> 企业</label>
+            <div id="ex01-business" hidden style="margin-top:10px;">
+              <div class="form-field"><label for="ex01-company">企业名称</label><input id="ex01-company" type="text" placeholder="晨星产品设计（上海）有限公司"></div>
+              <div class="form-field"><label for="ex01-taxid">纳税人识别号（演示）</label><input id="ex01-taxid" type="text" placeholder="91310000DEMO2026X"></div>
+            </div>
+          </fieldset>
+          <p><button class="btn primary" type="button" data-status="ex01-status" data-status-msg="已切换到确认步骤。">继续确认</button> <span id="ex01-status" class="help-text" role="status"></span></p>
+        </form>
+        <aside class="summary-panel" aria-label="订单汇总">
+          <p class="panel-title">订单汇总</p>
+          <div class="field-row"><span class="field-label">商品件数</span><span class="field-value">3</span></div>
+          <div class="field-row"><span class="field-label">商品小计</span><span class="field-value">¥153.00</span></div>
+          <div class="field-row"><span class="field-label">配送费</span><span class="field-value">¥8.95</span></div>
+          <div class="field-row"><span class="field-label">增值税 13%</span><span class="field-value">¥21.05</span></div>
+          <div class="field-row"><span class="field-label">优惠</span><span class="field-value">-¥15.30</span></div>
+          <div class="field-row"><span class="field-label">应付合计</span><span class="field-value">¥167.70</span></div>
+          <div class="field-row"><span class="field-label">预计送达</span><span class="field-value">2026年6月8日</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-02">
+    <header class="example-header"><p class="example-kicker">示例 02</p><h2>联系人资料与姓名电话字段</h2></header>
+    <p class="example-description">账户联系人表单使用中文姓名顺序、常用称呼、邮箱、手机号和时区，并在右侧实时展示资料摘要。</p>
+    <p class="test-intent">测试姓名顺序、电话格式、占位提示、辅助文本、显示名字符计数和校验。</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <form>
+          <div class="layout-grid-two">
+            <div class="form-field"><label class="req" for="ex02-given">姓名</label><input id="ex02-given" type="text" value="李娜"></div>
+            <div class="form-field"><label class="req" for="ex02-family">所在团队</label><input id="ex02-family" type="text" value="增长运营组"></div>
+          </div>
+          <div class="form-field"><label for="ex02-pref">显示名称</label><input id="ex02-pref" type="text" value="李娜" data-counter="ex02-count" data-max="40"><p class="help-text">将展示给同事。<span id="ex02-count">2</span>/40</p></div>
+          <div class="form-field"><label class="req" for="ex02-email">邮箱</label><input id="ex02-email" type="email" value="li.na@example.test"><p class="help-text">收据和安全提醒将发送到此邮箱。</p></div>
+          <div class="form-field"><label class="req" for="ex02-phone">手机号</label><input id="ex02-phone" type="tel" value="+86 138 0000 0162"><p class="help-text">格式：+86 138 0000 0162</p></div>
+          <div class="form-field"><label for="ex02-tz">时区</label>
+            <select id="ex02-tz"><option selected>中国标准时间</option><option>日本标准时间</option><option>新加坡时间</option><option>协调世界时</option></select></div>
+        </form>
+        <aside class="summary-panel" aria-label="资料摘要">
+          <p class="panel-title">资料摘要</p>
+          <div class="field-row"><span class="field-label">姓名</span><span class="field-value">李娜</span></div>
+          <div class="field-row"><span class="field-label">显示名称</span><span class="field-value">李娜</span></div>
+          <div class="field-row"><span class="field-label">邮箱</span><span class="field-value">li.na@example.test</span></div>
+          <div class="field-row"><span class="field-label">手机</span><span class="field-value">+86 138 0000 0162</span></div>
+          <div class="field-row"><span class="field-label">时区</span><span class="field-value">中国标准时间</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-03">
+    <header class="example-header"><p class="example-kicker">示例 03</p><h2>带联动选择器的预约流程</h2></header>
+    <p class="example-description">上门服务预约会根据服务类型更新服务网点，再根据网点显示可选时段，同时给出可预约数量和摘要。</p>
+    <p class="test-intent">测试联动下拉框、中国日期和 24 小时时间格式、自定义选择器、余量提示和动态人数校验。</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <form>
+          <div class="form-field"><label for="ex03-service">服务类型</label>
+            <select id="ex03-service"><option value="install" selected>家电安装</option><option value="repair">上门维修</option><option value="pickup">旧物回收</option></select></div>
+          <div class="form-field"><label for="ex03-loc">服务网点</label><select id="ex03-loc"></select></div>
+          <div class="form-field"><label for="ex03-date">日期</label><input id="ex03-date" type="date" value="2026-06-11"></div>
+          <div class="form-field"><label for="ex03-time">时段</label><select id="ex03-time"></select></div>
+          <div class="form-field"><label for="ex03-party">所需师傅人数</label><input id="ex03-party" type="number" min="1" max="4" value="2"><p id="ex03-warn" class="error-text" hidden>该网点最多支持 4 人上门。</p></div>
+          <div class="form-field"><label for="ex03-req">特殊要求</label><textarea id="ex03-req">门禁码是 4821，请提前电话联系。</textarea></div>
+          <p id="ex03-avail" class="badge ok" role="status">可预约 12 个时段</p>
+        </form>
+        <aside class="summary-panel" aria-label="预约摘要">
+          <p class="panel-title">预约摘要</p>
+          <div class="field-row"><span class="field-label">服务</span><span class="field-value" id="ex03-s-service">家电安装</span></div>
+          <div class="field-row"><span class="field-label">网点</span><span class="field-value" id="ex03-s-loc">-</span></div>
+          <div class="field-row"><span class="field-label">日期</span><span class="field-value">2026年6月11日</span></div>
+          <div class="field-row"><span class="field-label">时间</span><span class="field-value" id="ex03-s-time">-</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-04">
+    <header class="example-header"><p class="example-kicker">示例 04</p><h2>带错误汇总的高校验表单</h2></header>
+    <p class="example-description">账户申请表顶部提供可访问的错误汇总，链接到四个无效字段，并包含行内错误和必填标记。</p>
+    <p class="test-intent">测试错误消息、必填标记、aria-invalid、aria-describedby、错误汇总链接和中文校验文案。</p>
+    <div class="example-surface">
+      <div class="error-summary" role="alert" aria-labelledby="ex04-err-h">
+        <h3 id="ex04-err-h">此表单有 4 个问题</h3>
+        <ul>
+          <li><a href="#ex04-org">请输入机构名称</a></li>
+          <li><a href="#ex04-phone">请输入有效手机号</a></li>
+          <li><a href="#ex04-zip">请输入 6 位邮政编码</a></li>
+          <li><a href="#ex04-consent">必须同意条款后才能继续</a></li>
+        </ul>
+      </div>
+      <form>
+        <fieldset><legend>申请人</legend>
+          <div class="form-field"><label class="req" for="ex04-name">姓名</label><input id="ex04-name" type="text" value="刘洋"></div>
+          <div class="form-field"><label class="req" for="ex04-org">机构</label><input id="ex04-org" type="text" aria-invalid="true" aria-describedby="ex04-org-e"><p id="ex04-org-e" class="error-text">请输入机构名称。</p></div>
+        </fieldset>
+        <fieldset><legend>联系方式</legend>
+          <div class="form-field"><label class="req" for="ex04-phone">手机号</label><input id="ex04-phone" type="tel" value="138-12" aria-invalid="true" aria-describedby="ex04-phone-e"><p id="ex04-phone-e" class="error-text">请输入有效的中国大陆手机号，例如 +86 138 0000 1842。</p></div>
+          <div class="form-field"><label class="req" for="ex04-zip">邮编</label><input id="ex04-zip" type="text" value="20012" aria-invalid="true" aria-describedby="ex04-zip-e"><p id="ex04-zip-e" class="error-text">邮政编码必须是 6 位数字。</p></div>
+          <div class="form-field"><label for="ex04-date">开始日期</label><input id="ex04-date" type="date" value="2026-12-31" aria-describedby="ex04-date-e"><p id="ex04-date-e" class="help-text">请选择未来 90 天内的日期。</p></div>
+        </fieldset>
+        <fieldset><legend>协议</legend>
+          <label><input id="ex04-consent" type="checkbox" aria-invalid="true" aria-describedby="ex04-consent-e"> 我同意服务条款和隐私政策。</label>
+          <p id="ex04-consent-e" class="error-text">必须同意条款后才能继续。</p>
+        </fieldset>
+      </form>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-05">
+    <header class="example-header"><p class="example-kicker">示例 05</p><h2>带搜索建议的自定义组合框</h2></header>
+    <p class="example-description">目的地城市组合框使用独立的建议列表，每项包含补充说明和机场代码，并保留隐藏提交值。</p>
+    <p class="test-intent">测试搜索字符串、已选项文本、combobox ARIA 关系、分离的 listbox DOM 和隐藏提交值。</p>
+    <div class="example-surface">
+      <div class="form-field" style="max-width:420px;">
+        <label id="ex05-lbl" for="ex05-input">目的地城市</label>
+        <input id="ex05-input" role="combobox" aria-expanded="true" aria-controls="ex05-list" aria-activedescendant="ex05-opt1" aria-labelledby="ex05-lbl" value="北京">
+        <input type="hidden" name="destination_code" value="PEK">
+      </div>
+      <ul class="listbox" id="ex05-list" role="listbox" aria-label="城市建议">
+        <li id="ex05-opt1" role="option" aria-selected="true"><strong>北京</strong> &middot; 华北，中国 <span class="badge neutral mono">PEK</span><br><span class="help-text">首都国际机场，连接国际航线</span></li>
+        <li id="ex05-opt2" role="option" aria-selected="false"><strong>上海</strong> &middot; 华东，中国 <span class="badge neutral mono">SHA</span><br><span class="help-text">虹桥机场，市区交通便利</span></li>
+        <li id="ex05-opt3" role="option" aria-selected="false"><strong>广州</strong> &middot; 华南，中国 <span class="badge neutral mono">CAN</span><br><span class="help-text">白云机场，国内外航班密集</span></li>
+        <li id="ex05-opt4" role="option" aria-selected="false"><strong>深圳</strong> &middot; 粤港澳大湾区 <span class="badge neutral mono">SZX</span><br><span class="help-text">宝安机场，商务出行热门</span></li>
+        <li id="ex05-opt5" role="option" aria-selected="false"><strong>成都</strong> &middot; 西南，中国 <span class="badge neutral mono">CTU</span><br><span class="help-text">双流机场，区域中转枢纽</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-06">
+    <header class="example-header"><p class="example-kicker">示例 06</p><h2>预约日历与时段选择器</h2></header>
+    <p class="example-description">2026 年 6 月预约日历展示中国常用星期顺序、选中日期、不可约日期和 24 小时时段。</p>
+    <p class="test-intent">测试星期名称、中国日期格式、选中/禁用日期状态、可访问日期标签和 24 小时时间。</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <div>
+          <div class="field-row"><span class="field-label">服务人员</span><span class="field-value">赵医生</span></div>
+          <div class="field-row" style="margin-bottom:8px;"><span class="field-label">月份</span><span class="field-value">2026年6月</span></div>
+          <div class="cal" role="grid" aria-label="2026年6月可预约时间">
+            <div class="h">周一</div><div class="h">周二</div><div class="h">周三</div><div class="h">周四</div><div class="h">周五</div><div class="h">周六</div><div class="h">周日</div>
+            <button aria-label="2026年6月8日，可预约 3 个号源">8<span class="av">3 个</span></button>
+            <button disabled aria-label="2026年6月9日，无可预约号源">9<span class="av">已满</span></button>
+            <button aria-label="2026年6月10日，可预约 1 个号源">10<span class="av">1 个</span></button>
+            <button aria-selected="true" aria-label="2026年6月11日，已选中，可预约 2 个号源">11<span class="av">2 个</span></button>
+            <button aria-label="2026年6月12日，可预约 4 个号源">12<span class="av">4 个</span></button>
+            <button disabled aria-label="2026年6月13日，无可预约号源">13<span class="av">已满</span></button>
+            <button disabled aria-label="2026年6月14日，无可预约号源">14<span class="av">已满</span></button>
+          </div>
+        </div>
+        <aside class="summary-panel" aria-label="可选时段">
+          <p class="panel-title">2026年6月11日</p>
+          <div class="chip-row">
+            <button class="chip" aria-pressed="true">14:30</button>
+            <button class="chip">15:15</button>
+            <button class="chip">16:00</button>
+            <button class="chip" disabled aria-label="17:00，已约满">17:00</button>
+          </div>
+          <div class="field-row"><span class="field-label">已选时间</span><span class="field-value">14:30</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-07">
+    <header class="example-header"><p class="example-kicker">示例 07</p><h2>只读订单确认页</h2></header>
+    <p class="example-description">只读订单确认页包含状态徽标、嵌套商品明细、尾号遮罩的付款方式和取消说明。</p>
+    <p class="test-intent">测试只读记录、确认号、人民币金额、中国日期、状态徽标、嵌套行项目和遮罩值。</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <div class="panel">
+          <div class="field-row"><span class="field-label">确认号</span><span class="field-value mono">CNF-2026-77120</span></div>
+          <div class="field-row"><span class="field-label">状态</span><span class="field-value"><span class="badge ok">已确认</span></span></div>
+          <div class="field-row"><span class="field-label">下单时间</span><span class="field-value">2026年5月31日 10:42 CST</span></div>
+          <div class="field-row"><span class="field-label">客户</span><span class="field-value">王芳</span></div>
+          <div class="field-row"><span class="field-label">收货地址</span><span class="field-value">北京市朝阳区建国路 88 号，邮编 100022</span></div>
+          <div class="field-row"><span class="field-label">付款</span><span class="field-value mono">银联卡尾号 4242</span></div>
+          <p class="panel-title" style="margin-top:14px;">商品明细</p>
+          <div class="field-row"><span class="field-label">美利奴旅行连帽衫 x1</span><span class="field-value">¥128.00</span></div>
+          <div class="field-row"><span class="field-label">帆布收纳包 x1</span><span class="field-value">¥32.00</span></div>
+          <div class="field-row"><span class="field-label">小计</span><span class="field-value">¥160.00</span></div>
+          <div class="field-row"><span class="field-label">增值税 13%</span><span class="field-value">¥20.80</span></div>
+          <div class="field-row"><span class="field-label">合计</span><span class="field-value">¥180.80</span></div>
+        </div>
+        <aside class="detail-panel">
+          <p class="help-text">可在 2026年6月2日 23:59 CST 前免费取消；之后仅退为店铺余额。</p>
+          <p><button class="btn">下载收据</button></p>
+          <p><button class="btn ghost">复制参考号</button></p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-08">
+    <header class="example-header"><p class="example-kicker">示例 08</p><h2>账单与税务导出配置</h2></header>
+    <p class="example-description">账单导出表单包含日期范围、增值税模式、CSV 格式和编码、收件邮箱、包含字段复选框以及定时开关。</p>
+    <p class="test-intent">测试财务字段、复选框、导出字段选择、日期范围、中国税务标签和数字/货币格式。</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <form>
+          <div class="form-field"><label for="ex08-name">导出名称</label><input id="ex08-name" type="text" value="2026年5月增值税导出"></div>
+          <div class="layout-grid-two">
+            <div class="form-field"><label for="ex08-from">开始日期</label><input id="ex08-from" type="date" value="2026-05-01"></div>
+            <div class="form-field"><label for="ex08-to">结束日期</label><input id="ex08-to" type="date" value="2026-05-31"></div>
+          </div>
+          <div class="layout-grid-two">
+            <div class="form-field"><label for="ex08-tax">增值税模式</label><select id="ex08-tax"><option selected>价税合计行</option><option>税额单独列示</option></select></div>
+            <div class="form-field"><label for="ex08-format">格式</label><select id="ex08-format"><option selected>CSV (UTF-8)</option><option>CSV (UTF-8 with BOM)</option><option>XLSX</option></select></div>
+          </div>
+          <div class="form-field"><label for="ex08-email">收件邮箱</label><input id="ex08-email" type="email" value="billing@example.test"></div>
+          <fieldset><legend>包含列</legend>
+            <label><input type="checkbox" checked> 发票号码</label><br>
+            <label><input type="checkbox" checked> 增值税 13%</label><br>
+            <label><input type="checkbox" checked> 支付参考号</label><br>
+            <label><input type="checkbox"> 客户名称</label><br>
+            <label><input type="checkbox"> 优惠金额</label><br>
+            <label><input type="checkbox"> 币种</label>
+          </fieldset>
+          <label><input type="checkbox" checked> 每月自动运行此导出</label>
+        </form>
+        <aside class="summary-panel" aria-label="导出预览">
+          <p class="panel-title">预览</p>
+          <div class="field-row"><span class="field-label">范围</span><span class="field-value">2026/05/01 - 2026/05/31</span></div>
+          <div class="field-row"><span class="field-label">格式</span><span class="field-value">CSV (UTF-8)</span></div>
+          <div class="field-row"><span class="field-label">列</span><span class="field-value">已选 3 项</span></div>
+          <div class="field-row"><span class="field-label">计划</span><span class="field-value">每月</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-09">
+    <header class="example-header"><p class="example-kicker">示例 09</p><h2>管理员权限矩阵</h2></header>
+    <p class="example-description">权限矩阵包含四个角色列、分组权限行、选中/未选中/禁用状态，以及选中权限的详情面板。</p>
+    <p class="test-intent">测试表头、角色名称、权限名称、勾选和禁用状态、分组标签及可访问标签。</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <div class="wide-scroll">
+          <table>
+            <thead><tr><th>权限</th><th>管理员</th><th>财务经理</th><th>编辑</th><th>查看者</th></tr></thead>
+            <tbody>
+              <tr><th scope="rowgroup" colspan="5" style="background:var(--accent-soft);">账单</th></tr>
+              <tr><th scope="row">查看发票</th><td><input type="checkbox" checked aria-label="查看发票，管理员"></td><td><input type="checkbox" checked aria-label="查看发票，财务经理"></td><td><input type="checkbox" aria-label="查看发票，编辑"></td><td><input type="checkbox" aria-label="查看发票，查看者"></td></tr>
+              <tr><th scope="row">更新付款方式</th><td><input type="checkbox" checked aria-label="更新付款方式，管理员"></td><td><input type="checkbox" checked aria-label="更新付款方式，财务经理"></td><td><input type="checkbox" aria-label="更新付款方式，编辑"></td><td><input type="checkbox" disabled aria-label="更新付款方式，查看者，已禁用"></td></tr>
+              <tr><th scope="rowgroup" colspan="5" style="background:var(--accent-soft);">用户管理</th></tr>
+              <tr><th scope="row">邀请用户</th><td><input type="checkbox" checked aria-label="邀请用户，管理员"></td><td><input type="checkbox" aria-label="邀请用户，财务经理"></td><td><input type="checkbox" aria-label="邀请用户，编辑"></td><td><input type="checkbox" aria-label="邀请用户，查看者"></td></tr>
+              <tr><th scope="row">移除用户</th><td><input type="checkbox" checked aria-label="移除用户，管理员"></td><td><input type="checkbox" aria-label="移除用户，财务经理"></td><td><input type="checkbox" aria-label="移除用户，编辑"></td><td><input type="checkbox" disabled aria-label="移除用户，查看者，已禁用"></td></tr>
+              <tr><th scope="rowgroup" colspan="5" style="background:var(--accent-soft);">安全</th></tr>
+              <tr><th scope="row">管理 SSO</th><td><input type="checkbox" checked aria-label="管理 SSO，管理员"></td><td><input type="checkbox" aria-label="管理 SSO，财务经理"></td><td><input type="checkbox" aria-label="管理 SSO，编辑"></td><td><input type="checkbox" disabled aria-label="管理 SSO，查看者，已禁用"></td></tr>
+              <tr><th scope="row">查看审计日志</th><td><input type="checkbox" checked aria-label="查看审计日志，管理员"></td><td><input type="checkbox" checked aria-label="查看审计日志，财务经理"></td><td><input type="checkbox" checked aria-label="查看审计日志，编辑"></td><td><input type="checkbox" aria-label="查看审计日志，查看者"></td></tr>
+              <tr><th scope="rowgroup" colspan="5" style="background:var(--accent-soft);">报表</th></tr>
+              <tr><th scope="row">导出报表</th><td><input type="checkbox" checked aria-label="导出报表，管理员"></td><td><input type="checkbox" checked aria-label="导出报表，财务经理"></td><td><input type="checkbox" aria-label="导出报表，编辑"></td><td><input type="checkbox" aria-label="导出报表，查看者"></td></tr>
+              <tr><th scope="row">计划报表</th><td><input type="checkbox" checked aria-label="计划报表，管理员"></td><td><input type="checkbox" aria-label="计划报表，财务经理"></td><td><input type="checkbox" aria-label="计划报表，编辑"></td><td><input type="checkbox" disabled aria-label="计划报表，查看者，已禁用"></td></tr>
+              <tr><th scope="row">删除报表</th><td><input type="checkbox" checked aria-label="删除报表，管理员"></td><td><input type="checkbox" aria-label="删除报表，财务经理"></td><td><input type="checkbox" aria-label="删除报表，编辑"></td><td><input type="checkbox" disabled aria-label="删除报表，查看者，已禁用"></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <aside class="detail-panel">
+          <p class="panel-title">选中权限</p>
+          <div class="field-row"><span class="field-label">权限</span><span class="field-value">更新付款方式</span></div>
+          <div class="field-row"><span class="field-label">分组</span><span class="field-value">账单</span></div>
+          <div class="field-block"><span class="field-label">说明</span>允许修改续费和发票使用的默认付款方式。</div>
+          <div class="field-row"><span class="field-label">风险等级</span><span class="field-value"><span class="badge danger">高</span></span></div>
+          <div class="field-block"><span class="field-label">建议角色</span>管理员、财务经理</div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-10">
+    <header class="example-header"><p class="example-kicker">示例 10</p><h2>带筛选和详情侧栏的搜索结果</h2></header>
+    <p class="example-description">职位搜索包含活动筛选标签、筛选侧栏、五张结果卡片和选中结果的详情侧栏。</p>
+    <p class="test-intent">测试搜索词、筛选、排序控件、结果卡片、重复标签、选中记录状态和侧栏上下文。</p>
+    <div class="example-surface">
+      <div class="header-strip field-row"><span class="field-label">查询</span><span class="field-value">前端工程师 &middot; 24 条结果 &middot; 排序：最佳匹配</span></div>
+      <div class="chip-row"><span class="chip">远程</span><span class="chip">全职</span><span class="chip">本周发布</span></div>
+      <div class="layout-grid-three" style="grid-template-columns:200px 1fr 280px;">
+        <aside class="panel" aria-label="筛选条件">
+          <p class="panel-title">筛选</p>
+          <p><strong>地点</strong><br><label><input type="checkbox" checked> 远程 (18)</label><br><label><input type="checkbox"> 上海 (4)</label></p>
+          <p><strong>类型</strong><br><label><input type="checkbox" checked> 全职 (20)</label><br><label><input type="checkbox"> 合同 (4)</label></p>
+          <p><strong>级别</strong><br><label><input type="checkbox"> 高级 (12)</label><br><label><input type="checkbox"> 专家 (6)</label></p>
+        </aside>
+        <div>
+          <div class="result-card" data-result="ex10" aria-selected="true"><strong>高级前端工程师</strong> <span class="badge ok">招聘中</span><br>北辰云科技 &middot; 远程 - 中国 &middot; 发布于 2026年5月30日<br><span class="help-text">¥165,000-¥205,000 &middot; React, TypeScript</span><br><a href="/demo/jobs/1842">查看职位</a></div>
+          <div class="result-card" data-result="ex10" aria-selected="false"><strong>前端平台工程师</strong> <span class="badge ok">招聘中</span><br>图谱产品工作室 &middot; 上海或远程 &middot; 发布于 2026年5月29日<br><span class="help-text">¥150,000-¥190,000 &middot; 设计系统</span></div>
+          <div class="result-card" data-result="ex10" aria-selected="false"><strong>专家级 UI 工程师</strong> <span class="badge warn">即将截止</span><br>城市数据实验室 &middot; 北京 &middot; 发布于 2026年5月22日<br><span class="help-text">¥178,000-¥218,000 &middot; 无障碍</span></div>
+          <div class="result-card" data-result="ex10" aria-selected="false"><strong>搜索前端工程师</strong> <span class="badge ok">招聘中</span><br>问数科技 &middot; 远程 - 中国 &middot; 发布于 2026年5月27日<br><span class="help-text">¥148,000-¥172,000 &middot; 搜索体验</span></div>
+          <div class="result-card" data-result="ex10" aria-selected="false"><strong>高级 JavaScript 工程师</strong> <span class="badge ok">招聘中</span><br>组件实验室 &middot; 远程 - 中国/新加坡 &middot; 发布于 2026年5月26日<br><span class="help-text">¥155,000-¥196,000 &middot; 浏览器扩展</span></div>
+        </div>
+        <aside class="detail-panel">
+          <p class="panel-title">选中职位</p>
+          <div class="field-row"><span class="field-label">职位</span><span class="field-value">高级前端工程师</span></div>
+          <div class="field-row"><span class="field-label">公司</span><span class="field-value">北辰云科技</span></div>
+          <div class="field-row"><span class="field-label">地点</span><span class="field-value">远程 - 中国</span></div>
+          <div class="field-row"><span class="field-label">薪资</span><span class="field-value">¥165,000-¥205,000</span></div>
+          <div class="field-row"><span class="field-label">发布时间</span><span class="field-value">2026年5月30日</span></div>
+          <div class="field-row"><span class="field-label">状态</span><span class="field-value"><span class="badge ok">招聘中</span></span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-11">
+    <header class="example-header"><p class="example-kicker">示例 11</p><h2>服务套餐对比卡片</h2></header>
+    <p class="example-description">三个订阅套餐并排比较，包含重复的价格、状态、备注标签、一个推荐选项和共享条件面板。</p>
+    <p class="test-intent">测试对比列中的重复标签、人民币金额、状态标签和视觉分组。</p>
+    <div class="example-surface">
+      <div class="layout-grid-three">
+        <div class="panel"><p class="panel-title">入门版</p>
+          <div class="field-row"><span class="field-label">价格</span><span class="field-value">¥1,188/年</span></div>
+          <div class="field-row"><span class="field-label">席位</span><span class="field-value">最多 5 个</span></div>
+          <div class="field-row"><span class="field-label">状态</span><span class="field-value"><span class="badge ok">可购买</span></span></div>
+          <div class="field-block"><span class="field-label">备注</span>邮件支持，基础导出。</div>
+        </div>
+        <div class="panel" style="border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft) inset;"><p class="panel-title">商业版 <span class="badge info">推荐</span></p>
+          <div class="field-row"><span class="field-label">价格</span><span class="field-value">¥5,760/年</span></div>
+          <div class="field-row"><span class="field-label">席位</span><span class="field-value">含 24 个</span></div>
+          <div class="field-row"><span class="field-label">状态</span><span class="field-value"><span class="badge ok">可购买</span></span></div>
+          <div class="field-block"><span class="field-label">备注</span>优先支持、SSO、审计日志。</div>
+        </div>
+        <div class="panel"><p class="panel-title">企业版</p>
+          <div class="field-row"><span class="field-label">价格</span><span class="field-value">定制报价</span></div>
+          <div class="field-row"><span class="field-label">席位</span><span class="field-value">不限</span></div>
+          <div class="field-row"><span class="field-label">状态</span><span class="field-value"><span class="badge warn">联系销售</span></span></div>
+          <div class="field-block"><span class="field-label">备注</span>专属经理，定制 SLA。</div>
+        </div>
+      </div>
+      <div class="summary-panel" style="margin-top:12px;"><p class="panel-title">共享条件</p><div class="field-row"><span class="field-label">计费</span><span class="field-value">按年，CNY</span></div><div class="field-row"><span class="field-label">推荐</span><span class="field-value">商业版</span></div></div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-12">
+    <header class="example-header"><p class="example-kicker">示例 12</p><h2>诊所初诊信息表</h2></header>
+    <p class="example-description">诊所信息表按患者信息、就诊详情和同意事项分组，并包含一个条件显示的复诊字段。</p>
+    <p class="test-intent">测试长标签、敏感表单布局、虚构编号、条件问题、同意文本、校验和字段集分组。</p>
+    <div class="example-surface">
+      <form>
+        <fieldset><legend>患者信息</legend>
+          <div class="layout-grid-two">
+            <div class="form-field"><label class="req" for="ex12-name">患者姓名</label><input id="ex12-name" type="text" value="陈静"></div>
+            <div class="form-field"><label for="ex12-dob">出生日期</label><input id="ex12-dob" type="date" value="1990-04-12"></div>
+          </div>
+          <div class="form-field"><label for="ex12-mrn">病历号（演示）</label><input id="ex12-mrn" type="text" value="MRN-DEMO-55109" readonly></div>
+        </fieldset>
+        <fieldset><legend>就诊详情</legend>
+          <div class="form-field"><label for="ex12-reason">就诊原因</label><select id="ex12-reason"><option selected>复诊</option><option>新症状</option><option>年度体检</option></select></div>
+          <label><input type="checkbox" data-toggle-target="#ex12-followup"> 本次为上次就诊后的复诊</label>
+          <div id="ex12-followup" hidden class="form-field" style="margin-top:8px;"><label for="ex12-prev">上次就诊日期</label><input id="ex12-prev" type="date"></div>
+          <p class="help-text">请描述新的症状、用药或过敏情况。此信息仅与您的诊疗团队共享，并按诊所隐私政策保存。</p>
+        </fieldset>
+        <fieldset><legend>同意事项</legend>
+          <label><input type="checkbox" checked> 我同意接受诊疗，并同意为结算目的将病历提供给保险服务方。</label>
+        </fieldset>
+      </form>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-13">
+    <header class="example-header"><p class="example-kicker">示例 13</p><h2>文件上传与材料审核</h2></header>
+    <p class="example-description">材料上传区域显示可接受文件类型，四行材料分别展示状态、审核备注和每行操作，包括缺失和需更正材料。</p>
+    <p class="test-intent">测试上传标签、材料状态、文件名、校验、可接受文件类型和审核备注。</p>
+    <div class="example-surface">
+      <div class="form-field"><label for="ex13-cat">材料类别</label><select id="ex13-cat"><option selected>身份证明</option><option>地址证明</option><option>收入证明</option></select></div>
+      <p class="help-text">可接受文件类型：PDF、JPG、PNG。每个文件最大 10 MB。</p>
+      <div class="wide-scroll"><table>
+        <thead><tr><th>材料</th><th>文件</th><th>大小</th><th>上传时间</th><th>状态</th><th>审核备注</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>身份证正面</td><td class="mono">id-front.pdf</td><td>1.2 MB</td><td>2026年5月28日</td><td><span class="badge ok">已通过</span></td><td>清晰可辨。</td><td><button class="btn ghost">查看</button></td></tr>
+          <tr><td>水电费账单</td><td class="mono">utility-bill.pdf</td><td>0.8 MB</td><td>2026年5月29日</td><td><span class="badge danger">需更正</span></td><td>日期超过 90 天。</td><td><button class="btn ghost">替换</button></td></tr>
+          <tr><td>工资单</td><td class="mono">paystub-may.png</td><td>2.1 MB</td><td>2026年5月30日</td><td><span class="badge warn">审核中</span></td><td>等待核验。</td><td><button class="btn ghost">查看</button></td></tr>
+          <tr><td>银行流水</td><td class="mono">-</td><td>-</td><td>-</td><td><span class="badge neutral">缺失</span></td><td>尚未上传。</td><td><button class="btn">上传</button></td></tr>
+        </tbody>
+      </table></div>
+      <p class="summary-panel" style="margin-top:12px;">完成度：4 项中 1 项已通过，1 项需更正，1 项审核中，1 项缺失。</p>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-14">
+    <header class="example-header"><p class="example-kicker">示例 14</p><h2>同意与沟通偏好</h2></header>
+    <p class="example-description">沟通偏好包含渠道开关、摘要频率单选组、首选语言下拉框、一行较长法律同意文本和一个禁用渠道。</p>
+    <p class="test-intent">测试同意文案、订阅习惯、渠道标签、法律文本扩展、开关状态和可访问标签。</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <form>
+          <fieldset><legend>渠道</legend>
+            <div class="field-row"><span class="field-label">邮件通知</span><span><input type="checkbox" role="switch" checked aria-label="邮件通知，已开启"></span></div>
+            <div class="field-row"><span class="field-label">短信通知</span><span><input type="checkbox" role="switch" aria-label="短信通知，已关闭"></span></div>
+            <div class="field-row"><span class="field-label">应用推送 <span class="help-text">（安装应用后启用）</span></span><span><input type="checkbox" role="switch" disabled aria-label="应用推送，已禁用"></span></div>
+          </fieldset>
+          <fieldset><legend>摘要频率</legend>
+            <label><input type="radio" name="ex14-dig" checked> 每日</label>
+            <label style="margin-left:12px;"><input type="radio" name="ex14-dig"> 每周</label>
+            <label style="margin-left:12px;"><input type="radio" name="ex14-dig"> 关闭</label>
+          </fieldset>
+          <div class="form-field"><label for="ex14-lang">首选语言</label><select id="ex14-lang"><option selected>简体中文（中国）</option><option>英语</option><option>法语</option></select></div>
+          <label><input type="checkbox" checked> 我同意接收关于订单、安全和账户的交易类消息。我理解可随时在账户设置中撤回营销授权，撤回不会影响必要服务消息的发送。</label>
+        </form>
+        <aside class="summary-panel" aria-label="偏好预览">
+          <p class="panel-title">当前偏好</p>
+          <div class="field-row"><span class="field-label">邮件</span><span class="field-value">开启</span></div>
+          <div class="field-row"><span class="field-label">短信</span><span class="field-value">关闭</span></div>
+          <div class="field-row"><span class="field-label">推送</span><span class="field-value">不可用</span></div>
+          <div class="field-row"><span class="field-label">摘要</span><span class="field-value">每日</span></div>
+          <div class="field-row"><span class="field-label">语言</span><span class="field-value">简体中文（中国）</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-15">
+    <header class="example-header"><p class="example-kicker">示例 15</p><h2>货币、数量、税额与合计</h2></header>
+    <p class="example-description">价格计算器在数量或折扣变化时，使用中国区域和人民币格式重新计算小计、税额和合计。</p>
+    <p class="test-intent">测试区域感知货币、小数和千分位分隔符、增值税术语、数字输入、合计和校验。</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <form>
+          <div class="form-field"><label for="ex15-item">商品</label><input id="ex15-item" type="text" value="美利奴旅行连帽衫"></div>
+          <div class="layout-grid-two">
+            <div class="form-field"><label for="ex15-qty">数量</label><input id="ex15-qty" type="number" min="1" value="3" data-calc><p id="ex15-qty-e" class="error-text" hidden>数量必须不少于 1。</p></div>
+            <div class="form-field"><label for="ex15-price">单价（CNY）</label><input id="ex15-price" type="number" step="0.01" value="128.00" data-calc></div>
+          </div>
+          <div class="layout-grid-two">
+            <div class="form-field"><label for="ex15-disc">折扣（%）</label><input id="ex15-disc" type="number" min="0" max="100" value="10" data-calc></div>
+            <div class="form-field"><label for="ex15-tax">增值税税率（%）</label><input id="ex15-tax" type="number" step="0.01" value="13" data-calc></div>
+          </div>
+        </form>
+        <aside class="summary-panel" aria-label="合计">
+          <p class="panel-title">合计</p>
+          <div class="field-row"><span class="field-label">小计</span><span class="field-value" id="ex15-subtotal">¥384.00</span></div>
+          <div class="field-row"><span class="field-label">折扣</span><span class="field-value" id="ex15-discamt">-¥38.40</span></div>
+          <div class="field-row"><span class="field-label">增值税 13%</span><span class="field-value" id="ex15-taxamt">¥44.93</span></div>
+          <div class="field-row"><span class="field-label">总计</span><span class="field-value" id="ex15-total">¥390.53</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-16">
+    <header class="example-header"><p class="example-kicker">示例 16</p><h2>本地化管理仪表盘</h2></header>
+    <p class="example-description">管理仪表盘包含 KPI 卡片、工具栏、带中国日期和人民币金额的发票表格，以及选中行详情面板。</p>
+    <p class="test-intent">测试表头、密集数据、状态标签、中国日期和数字、货币、排序控件和选中行详情。</p>
+    <div class="example-surface">
+      <div class="kpi">
+        <div class="card"><div class="k-val">¥84,920</div><div class="k-lab">未结余额</div></div>
+        <div class="card"><div class="k-val">142</div><div class="k-lab">未结发票</div></div>
+        <div class="card"><div class="k-val">3.2%</div><div class="k-lab">逾期率</div></div>
+        <div class="card"><div class="k-val">¥12,884</div><div class="k-lab">今日回款</div></div>
+      </div>
+      <div class="chip-row"><input type="search" placeholder="搜索发票" style="max-width:200px;"> <select style="max-width:160px;"><option>全部状态</option><option>逾期</option></select> <select style="max-width:160px;"><option>2026年5月</option></select></div>
+      <div class="split-layout">
+        <div class="wide-scroll"><table>
+          <thead><tr><th>发票</th><th>客户</th><th>负责人</th><th>到期日</th><th>金额</th><th>状态</th></tr></thead>
+          <tbody>
+            <tr data-result="ex16" aria-selected="true"><td class="mono">INV-2026-00841</td><td>杉木设计有限公司</td><td>王芳</td><td>2026/06/17</td><td>¥436.14</td><td><span class="badge warn">待支付</span></td></tr>
+            <tr data-result="ex16"><td class="mono">INV-2026-00842</td><td>海岸咖啡</td><td>刘强</td><td>2026/06/10</td><td>¥1,204.00</td><td><span class="badge danger">逾期</span></td></tr>
+            <tr data-result="ex16"><td class="mono">INV-2026-00843</td><td>北辰云科技</td><td>李娜</td><td>2026/06/22</td><td>¥5,760.00</td><td><span class="badge ok">已支付</span></td></tr>
+            <tr data-result="ex16"><td class="mono">INV-2026-00844</td><td>城市数据实验室</td><td>张伟</td><td>2026/06/19</td><td>¥880.50</td><td><span class="badge warn">待支付</span></td></tr>
+            <tr data-result="ex16"><td class="mono">INV-2026-00845</td><td>问数科技</td><td>王芳</td><td>2026/06/05</td><td>¥2,310.75</td><td><span class="badge danger">逾期</span></td></tr>
+            <tr data-result="ex16"><td class="mono">INV-2026-00846</td><td>图谱产品工作室</td><td>刘强</td><td>2026/06/28</td><td>¥118.80</td><td><span class="badge ok">已支付</span></td></tr>
+          </tbody>
+        </table></div>
+        <aside class="detail-panel">
+          <p class="panel-title">选中发票</p>
+          <div class="field-row"><span class="field-label">发票</span><span class="field-value mono">INV-2026-00841</span></div>
+          <div class="field-row"><span class="field-label">客户</span><span class="field-value">杉木设计有限公司</span></div>
+          <div class="field-row"><span class="field-label">金额</span><span class="field-value">¥436.14</span></div>
+          <div class="field-row"><span class="field-label">到期日</span><span class="field-value">2026年6月17日</span></div>
+          <div class="field-row"><span class="field-label">状态</span><span class="field-value"><span class="badge warn">待支付</span></span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-17">
+    <header class="example-header"><p class="example-kicker">示例 17</p><h2>可访问标签页与折叠设置</h2></header>
+    <p class="example-description">设置面板包含三个标签页，每个标签页内有默认展开或折叠的手风琴区域。</p>
+    <p class="test-intent">测试标签页文本、活动状态、折叠展开、重复标签、隐藏内容和无障碍状态。</p>
+    <div class="example-surface">
+      <div class="tablist" role="tablist" aria-label="设置">
+        <button class="tab" role="tab" aria-selected="true" data-tab-group="ex17" data-tab-target="#ex17-p1" id="ex17-t1">账单</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab-group="ex17" data-tab-target="#ex17-p2" id="ex17-t2">安全</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab-group="ex17" data-tab-target="#ex17-p3" id="ex17-t3">通知</button>
+      </div>
+      <div role="tabpanel" id="ex17-p1" data-tab-panel="ex17" aria-labelledby="ex17-t1">
+        <div class="acc"><button class="acc-trigger" aria-expanded="true" data-acc>付款方式 <span>-</span></button><div class="acc-body"><div class="field-row"><span class="field-label">银行卡</span><span class="field-value mono">银联卡尾号 4242</span></div><div class="field-row"><span class="field-label">下次扣款</span><span class="field-value">2026年7月1日</span></div></div></div>
+        <div class="acc"><button class="acc-trigger" aria-expanded="false" data-acc>账单地址 <span>+</span></button><div class="acc-body" hidden><div class="field-row"><span class="field-label">地址</span><span class="field-value">上海市浦东新区世纪大道 100 号</span></div></div></div>
+      </div>
+      <div role="tabpanel" id="ex17-p2" data-tab-panel="ex17" aria-labelledby="ex17-t2" hidden>
+        <div class="acc"><button class="acc-trigger" aria-expanded="true" data-acc>双重验证 <span>-</span></button><div class="acc-body"><div class="field-row"><span class="field-label">状态</span><span class="field-value"><span class="badge ok">已启用</span></span></div></div></div>
+        <div class="acc"><button class="acc-trigger" aria-expanded="false" data-acc>活动会话 <span>+</span></button><div class="acc-body" hidden><div class="field-row"><span class="field-label">会话</span><span class="field-value">2 台设备</span></div></div></div>
+      </div>
+      <div role="tabpanel" id="ex17-p3" data-tab-panel="ex17" aria-labelledby="ex17-t3" hidden>
+        <div class="acc"><button class="acc-trigger" aria-expanded="true" data-acc>邮件摘要 <span>-</span></button><div class="acc-body"><div class="field-row"><span class="field-label">频率</span><span class="field-value">每日</span></div></div></div>
+        <div class="acc"><button class="acc-trigger" aria-expanded="false" data-acc>手机提醒 <span>+</span></button><div class="acc-body" hidden><div class="field-row"><span class="field-label">状态</span><span class="field-value">关闭</span></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-18">
+    <header class="example-header"><p class="example-kicker">示例 18</p><h2>令牌化多选与收件人</h2></header>
+    <p class="example-description">收件人字段包含可移除令牌和隐藏值，并配有导出字段组与可选项列表框。</p>
+    <p class="test-intent">测试已选令牌、移除按钮、隐藏值、列表框选项和联系人标签。</p>
+    <div class="example-surface">
+      <div class="layout-grid-two">
+        <div class="panel"><label id="ex18-rec">收件人</label>
+          <div class="token-field" role="group" aria-labelledby="ex18-rec">
+            <span class="token">billing@example.test<button type="button" aria-label="移除 billing@example.test" data-remove-token>&times;</button><input type="hidden" name="rcpt[]" value="billing@example.test"></span>
+            <span class="token">finance@example.test<button type="button" aria-label="移除 finance@example.test" data-remove-token>&times;</button><input type="hidden" name="rcpt[]" value="finance@example.test"></span>
+            <span class="token">wang.fang@example.test<button type="button" aria-label="移除 wang.fang@example.test" data-remove-token>&times;</button><input type="hidden" name="rcpt[]" value="wang.fang@example.test"></span>
+            <input aria-label="搜索收件人" placeholder="添加收件人" style="border:0;flex:1;min-width:120px;">
+          </div>
+        </div>
+        <div class="panel"><label id="ex18-fld">导出字段</label>
+          <ul class="listbox" role="listbox" aria-label="可用导出字段" aria-multiselectable="true">
+            <li role="option" aria-selected="true">发票号码</li>
+            <li role="option" aria-selected="true">增值税 13%</li>
+            <li role="option" aria-selected="false">优惠金额</li>
+            <li role="option" aria-selected="false">支付参考号</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-19">
+    <header class="example-header"><p class="example-kicker">示例 19</p><h2>遮罩、拆分与省略值</h2></header>
+    <p class="example-description">API webhook 设置记录包含遮罩密钥和显示按钮、拆分的参考号、省略显示但带完整标题的 URL，以及隐藏后备值。</p>
+    <p class="test-intent">测试遮罩可见值、拆分 DOM 值、截断文本、显示行为和字段标签。</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <div class="panel">
+          <div class="field-row"><span class="field-label">端点</span><span class="field-value">账单导出任务</span></div>
+          <div class="field-row"><span class="field-label">状态</span><span class="field-value"><span class="badge ok">正常</span></span></div>
+          <div class="field-row"><span class="field-label">API 密钥</span><span class="field-value mono">key_live_****_9K2Q</span><input type="hidden" name="api_key_id" value="key_884120_internal"></div>
+          <div class="field-row"><span class="field-label">参考号</span><span class="field-value mono"><span>WHK</span><span>-</span><span>2026</span><span>-</span><span>008</span><span>41</span></span></div>
+          <div class="field-row"><span class="field-label">回调 URL</span><span class="field-value ellipsized mono" title="https://example.test/webhooks/billing-export-worker">https://example.test/webhooks/billing-expo...</span></div>
+          <p><button class="btn" type="button" data-reveal-target="#ex19-reveal">显示演示密钥</button></p>
+          <div id="ex19-reveal" hidden class="summary-panel"><div class="field-row"><span class="field-label">演示密钥</span><span class="field-value mono">key_live_8K41Q_9K2Q</span></div></div>
+        </div>
+        <aside class="detail-panel"><p class="panel-title">摘要</p><div class="field-row"><span class="field-label">端点</span><span class="field-value">账单导出任务</span></div><div class="field-row"><span class="field-label">遮罩密钥</span><span class="field-value mono">key_live_****_9K2Q</span></div></aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-20">
+    <header class="example-header"><p class="example-kicker">示例 20</p><h2>带数据可视化文本等价内容的仪表盘</h2></header>
+    <p class="example-description">三张纯 CSS 图表卡片分别包含可见文本等价说明、小型数据表、趋势摘要和状态徽标。</p>
+    <p class="test-intent">测试图表标题、文本替代、数据表、百分比格式、趋势语言和复数表达。</p>
+    <div class="example-surface">
+      <div class="header-strip field-row"><span class="field-label">仪表盘</span><span class="field-value">抽取质量趋势 &middot; 2026年5月 &middot; 负责人：产品系统组 &middot; <span class="badge ok">已发布</span></span></div>
+      <div class="layout-grid-three">
+        <figure class="panel" style="margin:0;" aria-describedby="ex20-d1">
+          <h4>重复标签率</h4>
+          <div class="bartrack"><div class="bar" style="width:68%;"></div></div>
+          <figcaption class="help-text" id="ex20-d1">2026年5月期间，重复标签率从 4.1% 降至 2.8%。</figcaption>
+          <div class="field-row"><span class="field-label">第 1 周</span><span class="field-value">4.1%</span></div>
+          <div class="field-row"><span class="field-label">第 4 周</span><span class="field-value">2.8%</span></div>
+          <p><span class="badge ok">改善中</span></p>
+        </figure>
+        <figure class="panel" style="margin:0;" aria-describedby="ex20-d2">
+          <h4>行上下文准确率</h4>
+          <div class="bartrack"><div class="bar" style="width:93%;background:var(--ok);"></div></div>
+          <figcaption class="help-text" id="ex20-d2">行上下文准确率从 91% 升至 93%，仍低于 94% 目标，差 1 个百分点。</figcaption>
+          <div class="field-row"><span class="field-label">第 1 周</span><span class="field-value">91%</span></div>
+          <div class="field-row"><span class="field-label">第 4 周</span><span class="field-value">93%</span></div>
+          <p><span class="badge warn">低于目标</span></p>
+        </figure>
+        <figure class="panel" style="margin:0;" aria-describedby="ex20-d3">
+          <h4>组合框取值准确率</h4>
+          <div class="bartrack"><div class="bar" style="width:96%;background:var(--ok);"></div></div>
+          <figcaption class="help-text" id="ex20-d3">组合框取值准确率整月保持在 96% 或更高。</figcaption>
+          <div class="field-row"><span class="field-label">第 1 周</span><span class="field-value">96%</span></div>
+          <div class="field-row"><span class="field-label">第 4 周</span><span class="field-value">96%</span></div>
+          <p><span class="badge ok">稳定</span></p>
+        </figure>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var pageLocale = document.documentElement.lang || "zh-CN";
+  var localeConfig = { locale: pageLocale, currency: "CNY", direction: document.documentElement.dir || "ltr" };
+
+  function formatCurrency(value) {
+    try { return new Intl.NumberFormat(localeConfig.locale, { style: "currency", currency: localeConfig.currency }).format(value); }
+    catch (e) { return "¥" + value.toFixed(2); }
+  }
+  function countGraphemes(value) {
+    if (typeof Intl !== "undefined" && Intl.Segmenter) {
+      return Array.from(new Intl.Segmenter(localeConfig.locale, { granularity: "grapheme" }).segment(value)).length;
+    }
+    return Array.from(value).length;
+  }
+
+  // Generic toggle
+  document.querySelectorAll("[data-toggle-target]").forEach(function (el) {
+    el.addEventListener(el.tagName === "INPUT" ? "change" : "click", function () {
+      var t = document.querySelector(el.dataset.toggleTarget);
+      if (!t) return;
+      if (el.type === "checkbox" || el.type === "radio") { t.hidden = !el.checked; }
+      else { t.hidden = !t.hidden; el.setAttribute("aria-expanded", String(!t.hidden)); }
+    });
+  });
+
+  // Status messages
+  document.querySelectorAll("[data-status]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var s = document.getElementById(btn.dataset.status);
+      if (s) s.textContent = btn.dataset.statusMsg;
+      document.querySelectorAll('#example-01 .step').forEach(function (st) { st.removeAttribute("aria-current"); });
+      var rev = document.getElementById("ex01-review-step"); if (rev) rev.setAttribute("aria-current", "step");
+    });
+  });
+
+  // Character counters
+  document.querySelectorAll("[data-counter]").forEach(function (el) {
+    var out = document.getElementById(el.dataset.counter);
+    var max = parseInt(el.dataset.max, 10);
+    var errId = el.id + "-err";
+    el.addEventListener("input", function () {
+      var n = countGraphemes(el.value);
+      if (out) out.textContent = n;
+      var err = document.getElementById(errId);
+      if (err) err.hidden = n <= max;
+    });
+  });
+
+  // Tabs
+  document.querySelectorAll("[data-tab-target]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var g = btn.dataset.tabGroup;
+      document.querySelectorAll('[data-tab-group="' + g + '"]').forEach(function (t) { t.setAttribute("aria-selected", "false"); });
+      document.querySelectorAll('[data-tab-panel="' + g + '"]').forEach(function (p) { p.hidden = true; });
+      btn.setAttribute("aria-selected", "true");
+      var panel = document.querySelector(btn.dataset.tabTarget);
+      if (panel) panel.hidden = false;
+    });
+  });
+
+  // Accordions
+  document.querySelectorAll("[data-acc]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var body = btn.nextElementSibling;
+      var open = btn.getAttribute("aria-expanded") === "true";
+      btn.setAttribute("aria-expanded", String(!open));
+      if (body) body.hidden = open;
+      var sign = btn.querySelector("span"); if (sign) sign.textContent = open ? "+" : "-";
+    });
+  });
+
+  // Reveal
+  document.querySelectorAll("[data-reveal-target]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var t = document.querySelector(btn.dataset.revealTarget);
+      if (t) { t.hidden = false; btn.hidden = true; }
+    });
+  });
+
+  // Token remove
+  document.querySelectorAll("[data-remove-token]").forEach(function (btn) {
+    btn.addEventListener("click", function () { var tok = btn.closest(".token"); if (tok) tok.remove(); });
+  });
+
+  // Result selection
+  document.querySelectorAll("[data-result]").forEach(function (el) {
+    el.addEventListener("click", function () {
+      var g = el.dataset.result;
+      document.querySelectorAll('[data-result="' + g + '"]').forEach(function (r) { r.setAttribute("aria-selected", "false"); });
+      el.setAttribute("aria-selected", "true");
+    });
+  });
+
+  // Example 03 dependent dropdowns
+  var hubs = {
+    install: ["上海浦东服务站", "苏州工业园服务站"],
+    repair: ["北京朝阳服务站", "天津滨海服务站"],
+    pickup: ["广州天河回收中心"]
+  };
+  var times = ["08:00 - 10:00", "10:00 - 12:00", "13:00 - 15:00", "15:00 - 17:00"];
+  var svc = document.getElementById("ex03-service"), loc = document.getElementById("ex03-loc"), tsel = document.getElementById("ex03-time");
+  var sLoc = document.getElementById("ex03-s-loc"), sTime = document.getElementById("ex03-s-time"), sSvc = document.getElementById("ex03-s-service");
+  function fillLoc() {
+    loc.innerHTML = ""; (hubs[svc.value] || []).forEach(function (h) { var o = document.createElement("option"); o.textContent = h; loc.appendChild(o); });
+    if (sSvc) sSvc.textContent = svc.options[svc.selectedIndex].textContent;
+    fillTime();
+  }
+  function fillTime() {
+    tsel.innerHTML = ""; times.forEach(function (t) { var o = document.createElement("option"); o.textContent = t; tsel.appendChild(o); });
+    if (sLoc) sLoc.textContent = loc.value || "-";
+    if (sTime) sTime.textContent = tsel.value || "-";
+  }
+  if (svc) {
+    svc.addEventListener("change", fillLoc);
+    loc.addEventListener("change", fillTime);
+    tsel.addEventListener("change", function () { if (sTime) sTime.textContent = tsel.value; });
+    var party = document.getElementById("ex03-party"), warn = document.getElementById("ex03-warn");
+    party.addEventListener("input", function () { warn.hidden = parseInt(party.value, 10) <= 4; });
+    fillLoc();
+  }
+
+  // Example 15 totals
+  function recalc() {
+    var qty = parseFloat(document.getElementById("ex15-qty").value) || 0;
+    var price = parseFloat(document.getElementById("ex15-price").value) || 0;
+    var disc = parseFloat(document.getElementById("ex15-disc").value) || 0;
+    var tax = parseFloat(document.getElementById("ex15-tax").value) || 0;
+    document.getElementById("ex15-qty-e").hidden = qty >= 1;
+    var subtotal = qty * price;
+    var discAmt = subtotal * (disc / 100);
+    var taxable = subtotal - discAmt;
+    var taxAmt = taxable * (tax / 100);
+    var total = taxable + taxAmt;
+    document.getElementById("ex15-subtotal").textContent = formatCurrency(subtotal);
+    document.getElementById("ex15-discamt").textContent = "-" + formatCurrency(discAmt);
+    document.getElementById("ex15-taxamt").textContent = formatCurrency(taxAmt);
+    document.getElementById("ex15-total").textContent = formatCurrency(total);
+  }
+  document.querySelectorAll("[data-calc]").forEach(function (el) { el.addEventListener("input", recalc); });
+  if (document.getElementById("ex15-qty")) recalc();
+
+  // Combobox option click
+  document.querySelectorAll('#ex05-list [role=option]').forEach(function (opt) {
+    opt.addEventListener("click", function () {
+      document.querySelectorAll('#ex05-list [role=option]').forEach(function (o) { o.setAttribute("aria-selected", "false"); });
+      opt.setAttribute("aria-selected", "true");
+      var input = document.getElementById("ex05-input");
+      input.value = opt.querySelector("strong").textContent;
+      input.setAttribute("aria-activedescendant", opt.id);
+    });
+  });
+});
+</script>
+</body>
+</html>

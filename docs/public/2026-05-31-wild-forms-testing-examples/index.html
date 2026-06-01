@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Extraction Fixture Catalog</title>
+  <style>
+    :root {
+      --bg: #17191f;
+      --bg-2: #20242c;
+      --panel: #f2eadb;
+      --panel-2: #e6dcc8;
+      --panel-3: #d8ccb6;
+      --ink: #17191f;
+      --muted: #60636d;
+      --line: #b8ad98;
+      --line-dark: #373c46;
+      --accent: #f3b23c;
+      --accent-2: #4aa3ff;
+      --ok: #176b43;
+      --ok-bg: #d9f4e3;
+      --warn: #7b4d00;
+      --warn-bg: #ffe9ad;
+      --bad: #8f2d23;
+      --bad-bg: #ffe0dc;
+      --info: #315f8c;
+      --info-bg: #dceeff;
+      --radius: 10px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--panel);
+      background:
+        radial-gradient(circle at 20% 0%, rgba(243, 178, 60, 0.12), transparent 28rem),
+        linear-gradient(180deg, #17191f 0%, #111318 100%);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.42;
+      min-height: 100vh;
+    }
+    a { color: inherit; }
+    a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .catalog-shell {
+      width: min(1280px, calc(100% - 28px));
+      margin-inline: auto;
+      padding-block: 18px 48px;
+    }
+    .catalog-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 540px);
+      gap: 18px;
+      align-items: end;
+      padding: 18px;
+      border: 1px solid var(--line-dark);
+      border-radius: var(--radius);
+      background: rgba(32, 36, 44, 0.92);
+    }
+    .eyebrow {
+      margin: 0 0 4px;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .catalog-header h1 { margin: 0; font-size: clamp(1.6rem, 3vw, 2.3rem); line-height: 1.05; }
+    .compact-description { margin: 8px 0 0; max-width: 760px; color: #c8ccd6; }
+    .meta-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; }
+    .meta-grid div { padding: 8px 10px; border: 1px solid var(--line-dark); border-radius: 8px; background: #14171d; }
+    .meta-grid dt { color: #9fa6b4; font-size: 0.74rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+    .meta-grid dd { margin: 2px 0 0; font-size: 0.9rem; word-break: break-word; }
+    code { font-family: var(--mono); }
+    .status-strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-block: 12px; }
+    .status-tile { padding: 10px 12px; border: 1px solid var(--line-dark); border-radius: var(--radius); background: #20242c; }
+    .status-number { display: block; color: var(--accent); font-size: 1.35rem; font-weight: 900; line-height: 1; }
+    .status-label { display: block; margin-top: 4px; color: #c8ccd6; font-size: 0.78rem; font-weight: 700; }
+    .catalog-toolbar {
+      display: grid;
+      grid-template-columns: minmax(240px, 1.4fr) minmax(150px, 0.8fr) minmax(180px, 0.9fr) auto auto auto;
+      gap: 10px;
+      align-items: end;
+      margin-block: 12px;
+      padding: 12px;
+      border: 1px solid var(--line-dark);
+      border-radius: var(--radius);
+      background: #20242c;
+    }
+    .catalog-toolbar label { display: grid; gap: 4px; color: #c8ccd6; font-size: 0.78rem; font-weight: 800; }
+    .catalog-toolbar input, .catalog-toolbar select {
+      min-height: 36px; width: 100%; border: 1px solid #515866; border-radius: 8px;
+      background: #111318; color: var(--panel); padding: 7px 9px; font: inherit;
+    }
+    .toolbar-check { display: flex; align-items: center; gap: 6px; align-self: end; min-height: 36px; color: #c8ccd6; font-size: 0.8rem; font-weight: 800; }
+    .toolbar-check input { min-height: 0; width: auto; }
+    .secondary-button {
+      min-height: 36px; border: 1px solid #515866; border-radius: 8px; background: #111318;
+      color: var(--panel); padding: 7px 10px; font: inherit; font-weight: 800; cursor: pointer; align-self: end;
+    }
+    .secondary-button:hover { border-color: var(--accent); }
+    .catalog-section { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--ink); overflow: hidden; }
+    .catalog-section-header {
+      display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+      padding: 12px 14px; border-bottom: 1px solid var(--line); background: var(--panel-2);
+    }
+    .catalog-section-header h2 { margin: 0; font-size: 1rem; }
+    .result-count { color: var(--muted); font-size: 0.88rem; font-weight: 700; }
+    .catalog-list { display: grid; }
+    .catalog-row {
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr) minmax(150px, 210px) minmax(130px, auto);
+      gap: 14px; align-items: start; padding: 12px 14px; border-bottom: 1px solid var(--line);
+    }
+    .catalog-row:last-child { border-bottom: 0; }
+    .catalog-row:hover { background: #fbf6ea; }
+    .row-index {
+      display: grid; place-items: center; width: 38px; min-height: 34px; border-radius: 8px;
+      background: var(--ink); color: var(--accent); font-family: var(--mono); font-weight: 900;
+    }
+    .row-main h3 { margin: 0; font-size: 1rem; line-height: 1.25; }
+    .row-main h3 a { text-decoration: none; }
+    .row-main h3 a:hover { text-decoration: underline; }
+    .row-main p { margin: 4px 0 8px; color: #3f424a; font-size: 0.9rem; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 5px; }
+    .tag {
+      display: inline-flex; align-items: center; min-height: 20px; padding: 2px 7px;
+      border: 1px solid var(--line); border-radius: 999px; background: #fffaf0; color: #46413a;
+      font-size: 0.72rem; font-weight: 750;
+    }
+    .row-meta { display: grid; gap: 6px; justify-items: start; color: var(--muted); font-size: 0.82rem; font-weight: 700; }
+    .status-badge {
+      display: inline-flex; align-items: center; min-height: 22px; padding: 2px 8px; border-radius: 999px;
+      font-size: 0.74rem; font-weight: 900; border: 1px solid currentColor; white-space: nowrap;
+    }
+    .status-implemented { color: var(--ok); background: var(--ok-bg); }
+    .status-spec-only, .status-pending { color: var(--warn); background: var(--warn-bg); }
+    .status-expected { color: var(--info); background: var(--info-bg); }
+    .status-missing-spec { color: var(--bad); background: var(--bad-bg); }
+    .row-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+    .action-link {
+      display: inline-flex; align-items: center; justify-content: center; min-height: 30px; padding: 5px 9px;
+      border: 1px solid var(--line); border-radius: 8px; background: #fffaf0; color: var(--ink);
+      text-decoration: none; font-size: 0.82rem; font-weight: 850;
+    }
+    .action-link:hover { border-color: var(--ink); }
+    .action-link.primary { background: var(--ink); color: var(--accent); border-color: var(--ink); }
+    .action-link.is-disabled { color: var(--muted); background: #eee4d0; cursor: default; }
+    .locale-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .locale-pill {
+      display: inline-grid; gap: 1px; min-width: 112px; padding: 6px 8px; border: 1px solid currentColor;
+      border-radius: 8px; text-decoration: none; font-weight: 850;
+    }
+    .locale-pill:hover { filter: brightness(0.97); }
+    .locale-pill span { font-size: 0.82rem; }
+    .locale-pill small { font-size: 0.68rem; font-weight: 650; }
+    .empty-state { padding: 26px 16px; text-align: center; color: var(--ink); }
+    .empty-state h3 { margin: 0 0 6px; font-size: 1rem; }
+    .empty-state p { margin: 0 0 12px; color: var(--muted); }
+    .empty-state .secondary-button { color: var(--ink); background: var(--panel-2); border-color: var(--line); display: inline-flex; }
+    .support-section { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+    .support-card { padding: 12px; border: 1px solid var(--line-dark); border-radius: var(--radius); background: #20242c; color: var(--panel); }
+    .support-card h3 { margin: 0 0 6px; font-size: 0.96rem; }
+    .support-card p { margin: 0 0 8px; color: #c8ccd6; font-size: 0.86rem; }
+    .support-card a { color: var(--accent-2); font-weight: 750; }
+    .support-card ul { margin: 0; padding-left: 18px; font-size: 0.84rem; }
+    .support-card li { margin-bottom: 3px; }
+    .footer-note { margin-top: 16px; padding: 12px 14px; border: 1px solid var(--line-dark); border-radius: var(--radius); background: #14171d; color: #c8ccd6; font-size: 0.84rem; }
+    .noscript-panel { margin-block: 12px; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--ink); }
+    .noscript-panel a { color: var(--info); }
+    .comfortable-density .catalog-row { padding: 18px; }
+    .comfortable-density .row-main p { line-height: 1.5; }
+    @media (max-width: 980px) {
+      .catalog-header, .catalog-toolbar, .support-section { grid-template-columns: 1fr; }
+      .status-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .catalog-row { grid-template-columns: 1fr; }
+      .row-actions { justify-content: flex-start; }
+      .row-meta { flex-direction: row; }
+    }
+  </style>
+</head>
+<body data-catalog-root>
+  <main class="catalog-shell">
+    <header class="catalog-header">
+      <div>
+        <p class="eyebrow">Local QA catalog</p>
+        <h1>Extraction Fixture Catalog</h1>
+        <p class="compact-description">Local launchpad for form, UI, layout, accessibility, hostile extraction, and internationalization test pages.</p>
+      </div>
+      <dl class="meta-grid" aria-label="Project metadata">
+        <div><dt>Root</dt><dd><code>index.html</code></dd></div>
+        <div><dt>Mode</dt><dd>Offline static HTML</dd></div>
+        <div><dt>Implementations</dt><dd><code>implementation/*.html</code></dd></div>
+        <div><dt>Specifications</dt><dd><code>specifications/*.html</code></dd></div>
+        <div><dt>Context</dt><dd><a href="context/context.txt">context.txt</a></dd></div>
+        <div><dt>Audience</dt><dd>QA, extraction testing, browser automation, form understanding</dd></div>
+      </dl>
+    </header>
+
+    <section class="status-strip" aria-label="Project status summary">
+      <article class="status-tile"><span class="status-number" data-count-implemented>0</span><span class="status-label">Implemented pages</span></article>
+      <article class="status-tile"><span class="status-number" data-count-specifications>0</span><span class="status-label">Specification pages</span></article>
+      <article class="status-tile"><span class="status-number" data-count-i18n>0</span><span class="status-label">Internationalization pages</span></article>
+      <article class="status-tile"><span class="status-number" data-count-pending>0</span><span class="status-label">Pending implementations</span></article>
+      <article class="status-tile"><span class="status-number" data-count-total>0</span><span class="status-label">Total catalog entries</span></article>
+    </section>
+
+    <section class="catalog-toolbar" aria-label="Catalog controls">
+      <label class="search-box">
+        <span>Search catalog</span>
+        <input id="catalog-search" type="search" placeholder="Search title, filename, tag, or topic" autocomplete="off">
+      </label>
+      <label>
+        <span>Status</span>
+        <select id="status-filter">
+          <option value="all">All</option>
+          <option value="implemented">Implemented</option>
+          <option value="spec-only">Specification only</option>
+          <option value="pending">Pending implementation</option>
+          <option value="i18n">Internationalization</option>
+        </select>
+      </label>
+      <label>
+        <span>Category</span>
+        <select id="category-filter">
+          <option value="all">All categories</option>
+          <option value="forms">Forms</option>
+          <option value="controls">Custom controls</option>
+          <option value="booking">Booking</option>
+          <option value="records">Read-only records</option>
+          <option value="feeds">Feeds and cards</option>
+          <option value="search">Search and sidebars</option>
+          <option value="tables">Tables and dashboards</option>
+          <option value="layout">Complex layout</option>
+          <option value="accessibility">Accessibility</option>
+          <option value="hostile">Hostile UI</option>
+          <option value="i18n">Internationalization</option>
+        </select>
+      </label>
+      <label class="toolbar-check" for="show-pending"><input type="checkbox" id="show-pending" checked> Show pending pages</label>
+      <button type="button" class="secondary-button" id="density-toggle">Density: compact</button>
+      <button type="button" class="secondary-button" id="clear-filters">Clear filters</button>
+    </section>
+
+    <noscript>
+      <section class="noscript-panel">
+        <h2>Static links</h2>
+        <p>Search and filters require JavaScript. Direct links are listed below.</p>
+        <ul>
+          <li><a href="implementation/page-01-native-and-semi-native-forms.html">Page 01 implementation</a> &middot; <a href="specifications/page-01-native-and-semi-native-forms.html">spec</a></li>
+          <li><a href="implementation/page-02-custom-dropdowns-and-pickers.html">Page 02 implementation</a> &middot; <a href="specifications/page-02-custom-dropdowns-and-pickers.html">spec</a></li>
+          <li><a href="implementation/page-03-booking-and-reservation-flows.html">Page 03 implementation</a> &middot; <a href="specifications/page-03-booking-and-reservation-flows.html">spec</a></li>
+          <li><a href="implementation/page-04-read-only-records-and-confirmation-pages.html">Page 04 implementation</a> &middot; <a href="specifications/page-04-read-only-records-and-confirmation-pages.html">spec</a></li>
+          <li><a href="implementation/page-05-feed-posts-and-card-extraction.html">Page 05 implementation</a> &middot; <a href="specifications/page-05-feed-posts-and-card-extraction.html">spec</a></li>
+          <li><a href="implementation/page-06-search-results-and-dynamic-sidebars.html">Page 06 implementation</a> &middot; <a href="specifications/page-06-search-results-and-dynamic-sidebars.html">spec</a></li>
+          <li><a href="implementation/page-07-tables-grids-and-admin-dashboards.html">Page 07 implementation</a> &middot; <a href="specifications/page-07-tables-grids-and-admin-dashboards.html">spec</a></li>
+          <li><a href="implementation/page-08-complex-layout-and-visual-grouping.html">Page 08 implementation</a> &middot; <a href="specifications/page-08-complex-layout-and-visual-grouping.html">spec</a></li>
+          <li><a href="implementation/page-09-accessibility-and-semantic-edge-cases.html">Page 09 implementation</a> &middot; <a href="specifications/page-09-accessibility-and-semantic-edge-cases.html">spec</a></li>
+          <li><a href="implementation/page-10-hostile-extraction-resistant-ui.html">Page 10 implementation</a> &middot; <a href="specifications/page-10-hostile-extraction-resistant-ui.html">spec</a></li>
+          <li>Page 11 internationalization &middot; <a href="specifications/page-11-internationalization.__locale__.html">spec template</a>:
+            <a href="implementation/page-11-internationalization.en-US.html">en-US</a>,
+            <a href="implementation/page-11-internationalization.es-MX.html">es-MX</a>,
+            <a href="implementation/page-11-internationalization.de-DE.html">de-DE</a>,
+            <a href="implementation/page-11-internationalization.fr-FR.html">fr-FR</a>,
+            <a href="implementation/page-11-internationalization.zh-CN.html">zh-CN</a>,
+            <a href="implementation/page-11-internationalization.ja-JP.html">ja-JP</a>,
+            <a href="implementation/page-11-internationalization.ar-SA.html">ar-SA</a>,
+            <a href="implementation/page-11-internationalization.hi-IN.html">hi-IN</a>,
+            <a href="implementation/page-11-internationalization.uk-UA.html">uk-UA</a>,
+            <a href="implementation/page-11-internationalization.th-TH.html">th-TH</a>
+          </li>
+        </ul>
+      </section>
+    </noscript>
+
+    <section class="catalog-section" aria-labelledby="catalog-title">
+      <div class="catalog-section-header">
+        <h2 id="catalog-title">Page catalog</h2>
+        <span class="result-count" data-result-count aria-live="polite">0 catalog entries shown</span>
+      </div>
+      <div class="catalog-list" data-catalog-list></div>
+      <div class="empty-state" data-empty-state hidden>
+        <h3>No catalog entries match the current filters.</h3>
+        <p>Try clearing search, status, or category filters.</p>
+        <button type="button" class="secondary-button" data-clear-filters>Clear filters</button>
+      </div>
+    </section>
+
+    <section class="support-section" aria-labelledby="support-title">
+      <h2 id="support-title" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Support and reference</h2>
+      <article class="support-card">
+        <h3>Project context</h3>
+        <p>Initial context and project intent used to define the fixture suite.</p>
+        <p><a href="context/context.txt">context/context.txt</a></p>
+      </article>
+      <article class="support-card">
+        <h3>Implementation status</h3>
+        <p>Optional machine-readable progress file maintained by the implementation agent.</p>
+        <p><a href="implementation/status.json">implementation/status.json</a></p>
+      </article>
+      <article class="support-card">
+        <h3>Specifications</h3>
+        <p>Saved specification text files. They use the .html extension but contain saved specification text. This is intentional.</p>
+        <ul>
+          <li><a href="specifications/page-01-native-and-semi-native-forms.html">Page 01 spec</a></li>
+          <li><a href="specifications/page-09-accessibility-and-semantic-edge-cases.html">Page 09 spec</a></li>
+          <li><a href="specifications/page-10-hostile-extraction-resistant-ui.html">Page 10 spec</a></li>
+          <li><a href="specifications/page-11-internationalization.__locale__.html">Page 11 spec template</a></li>
+        </ul>
+      </article>
+      <article class="support-card">
+        <h3>Manual workflow</h3>
+        <p>Open an implementation page, run the extraction tool against a selected region, compare the result with the linked specification, then return to this catalog to continue coverage.</p>
+      </article>
+    </section>
+
+    <p class="footer-note">Suggested workflow: open an implementation page, run the extraction tool against a selected region, compare the result with the linked specification, then return to this catalog to continue coverage. This page works offline as a single portable HTML file and makes no external network requests.</p>
+  </main>
+
+  <script>
+    const catalogEntries = [
+      {
+        id: "page-01", number: "01", title: "Native And Semi-Native Forms", category: "forms", status: "implemented",
+        implementationHref: "implementation/page-01-native-and-semi-native-forms.html",
+        specificationHref: "specifications/page-01-native-and-semi-native-forms.html",
+        examples: "20-25", tags: ["forms", "native controls", "validation", "field groups"],
+        description: "Native inputs, semi-native controls, select lists, textareas, checkboxes, radio groups, disabled states, readonly values, validation, and realistic form extraction cases.",
+        notes: "Baseline page for ordinary and semi-ordinary form extraction."
+      },
+      {
+        id: "page-02", number: "02", title: "Custom Dropdowns And Pickers", category: "controls", status: "implemented",
+        implementationHref: "implementation/page-02-custom-dropdowns-and-pickers.html",
+        specificationHref: "specifications/page-02-custom-dropdowns-and-pickers.html",
+        examples: "20-25", tags: ["custom controls", "dropdowns", "pickers", "ARIA"],
+        description: "Custom dropdowns, comboboxes, date pickers, time pickers, segmented selectors, detached option lists, portaled menus, and difficult picker extraction cases.",
+        notes: "Use for testing visible options, detached lists, and selected custom control values."
+      },
+      {
+        id: "page-03", number: "03", title: "Booking And Reservation Flows", category: "booking", status: "implemented",
+        implementationHref: "implementation/page-03-booking-and-reservation-flows.html",
+        specificationHref: "specifications/page-03-booking-and-reservation-flows.html",
+        examples: "20-25", tags: ["booking", "reservation", "date", "availability"],
+        description: "Booking and reservation flows with dependent fields, date and time selection, guest counts, availability states, cancellation rules, confirmation summaries, and dynamic validation.",
+        notes: "Use for testing multi-step and dependency-heavy flows."
+      },
+      {
+        id: "page-04", number: "04", title: "Read-Only Records And Confirmation Pages", category: "records", status: "implemented",
+        implementationHref: "implementation/page-04-read-only-records-and-confirmation-pages.html",
+        specificationHref: "specifications/page-04-read-only-records-and-confirmation-pages.html",
+        examples: "20-25", tags: ["read-only", "confirmation", "receipt", "records"],
+        description: "Read-only records, confirmations, receipts, account summaries, review pages, status panels, nested field groups, and confirmation-style extraction cases.",
+        notes: "Use for testing field-value extraction from non-editable records."
+      },
+      {
+        id: "page-05", number: "05", title: "Feed, Posts, And Card Extraction", category: "feeds", status: "implemented",
+        implementationHref: "implementation/page-05-feed-posts-and-card-extraction.html",
+        specificationHref: "specifications/page-05-feed-posts-and-card-extraction.html",
+        examples: "20-25", tags: ["cards", "feeds", "posts", "metadata"],
+        description: "Feeds, posts, cards, comments, listing cards, marketplace cards, social-style content, embedded actions, nested metadata, and repeated card extraction cases.",
+        notes: "Use for testing repeated visual records and nested card metadata."
+      },
+      {
+        id: "page-06", number: "06", title: "Search Results And Dynamic Sidebars", category: "search", status: "implemented",
+        implementationHref: "implementation/page-06-search-results-and-dynamic-sidebars.html",
+        specificationHref: "specifications/page-06-search-results-and-dynamic-sidebars.html",
+        examples: "20-25", tags: ["search", "filters", "sidebars", "results"],
+        description: "Search result pages, dynamic sidebars, filters, selected details, result cards, faceted navigation, job-style listings, and query-driven extraction cases.",
+        notes: "Use for testing filter context, result records, and selected detail panels."
+      },
+      {
+        id: "page-07", number: "07", title: "Tables, Grids, And Admin Dashboards", category: "tables", status: "implemented",
+        implementationHref: "implementation/page-07-tables-grids-and-admin-dashboards.html",
+        specificationHref: "specifications/page-07-tables-grids-and-admin-dashboards.html",
+        examples: "22", tags: ["tables", "dashboards", "grids", "admin"],
+        description: "Tables, grids, admin dashboards, financial ledgers, permission matrices, monitoring dashboards, KPI cards, selected row details, and dense row extraction cases.",
+        notes: "Use for dense table and dashboard extraction testing."
+      },
+      {
+        id: "page-08", number: "08", title: "Complex Layout And Visual Grouping", category: "layout", status: "implemented",
+        implementationHref: "implementation/page-08-complex-layout-and-visual-grouping.html",
+        specificationHref: "specifications/page-08-complex-layout-and-visual-grouping.html",
+        examples: "22", tags: ["layout", "visual grouping", "panels", "comparison"],
+        description: "Complex layouts with nested panels, visual grouping, repeated labels, comparison boards, timelines, sidebars, accordions, and layout-driven extraction boundaries.",
+        notes: "Use for visual grouping and repeated-label disambiguation testing."
+      },
+      {
+        id: "page-09", number: "09", title: "Accessibility And Semantic Edge Cases", category: "accessibility", status: "implemented",
+        implementationHref: "implementation/page-09-accessibility-and-semantic-edge-cases.html",
+        specificationHref: "specifications/page-09-accessibility-and-semantic-edge-cases.html",
+        examples: "25", tags: ["accessibility", "semantics", "ARIA", "screen reader"],
+        description: "Accessibility and semantic edge cases covering ARIA labels, descriptions, tabs, accordions, tree views, live regions, semantic tables, hidden text, and accessible custom widgets.",
+        notes: "Use for accessibility-aware extraction testing of accessible names and states."
+      },
+      {
+        id: "page-10", number: "10", title: "Hostile Extraction Resistant UI", category: "hostile", status: "implemented",
+        implementationHref: "implementation/page-10-hostile-extraction-resistant-ui.html",
+        specificationHref: "specifications/page-10-hostile-extraction-resistant-ui.html",
+        examples: "25", tags: ["hostile UI", "split values", "masked", "copy resistant"],
+        description: "Hostile extraction-resistant UI patterns including unselectable text, CSS-generated labels, split values, fake rendered rows, masked values, overflow clipping, and DOM order mismatch.",
+        notes: "Use for advanced extraction stress testing."
+      },
+      {
+        id: "page-11", number: "11", title: "Internationalization", category: "i18n", status: "implemented",
+        implementationHref: "", specificationHref: "specifications/page-11-internationalization.__locale__.html",
+        examples: "20 per locale", tags: ["i18n", "10 locales", "RTL", "non-Latin scripts", "localized validation", "currency and date formats"],
+        description: "Locale-specific internationalization pages for en-US, es-MX, de-DE, fr-FR, zh-CN, ja-JP, ar-SA, hi-IN, uk-UA, and th-TH with localized forms, formatting, layouts, and validation.",
+        notes: "Parent entry for all Page 11 locale-specific implementation files.",
+        locales: [
+          { locale: "en-US", label: "English - United States", href: "implementation/page-11-internationalization.en-US.html", status: "implemented" },
+          { locale: "es-MX", label: "Spanish - Mexico", href: "implementation/page-11-internationalization.es-MX.html", status: "implemented" },
+          { locale: "de-DE", label: "German - Germany", href: "implementation/page-11-internationalization.de-DE.html", status: "implemented" },
+          { locale: "fr-FR", label: "French - France", href: "implementation/page-11-internationalization.fr-FR.html", status: "implemented" },
+          { locale: "zh-CN", label: "Simplified Chinese - China", href: "implementation/page-11-internationalization.zh-CN.html", status: "implemented" },
+          { locale: "ja-JP", label: "Japanese - Japan", href: "implementation/page-11-internationalization.ja-JP.html", status: "implemented" },
+          { locale: "ar-SA", label: "Arabic - Saudi Arabia, RTL", href: "implementation/page-11-internationalization.ar-SA.html", status: "implemented" },
+          { locale: "hi-IN", label: "Hindi - India", href: "implementation/page-11-internationalization.hi-IN.html", status: "implemented" },
+          { locale: "uk-UA", label: "Ukrainian - Ukraine", href: "implementation/page-11-internationalization.uk-UA.html", status: "implemented" },
+          { locale: "th-TH", label: "Thai - Thailand", href: "implementation/page-11-internationalization.th-TH.html", status: "implemented" }
+        ]
+      }
+    ];
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const list = document.querySelector("[data-catalog-list]");
+      const emptyState = document.querySelector("[data-empty-state]");
+      const search = document.querySelector("#catalog-search");
+      const statusFilter = document.querySelector("#status-filter");
+      const categoryFilter = document.querySelector("#category-filter");
+      const showPending = document.querySelector("#show-pending");
+      const countOutput = document.querySelector("[data-result-count]");
+      const densityToggle = document.querySelector("#density-toggle");
+      const clearButton = document.querySelector("#clear-filters");
+      const pendingStatuses = ["spec-only", "pending", "expected"];
+
+      function normalize(value) { return String(value || "").toLowerCase().trim(); }
+
+      function escapeHtml(value) {
+        return String(value == null ? "" : value)
+          .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+      }
+      function escapeAttr(value) { return escapeHtml(value); }
+
+      function statusLabel(status) {
+        const labels = {
+          "implemented": "Implemented", "spec-only": "Specification only",
+          "pending": "Pending", "expected": "Expected", "missing-spec": "Missing spec"
+        };
+        return labels[status] || status;
+      }
+
+      function entryText(entry) {
+        return [
+          entry.number, entry.title, entry.description, entry.category, entry.status,
+          entry.implementationHref, entry.specificationHref, entry.notes,
+          (entry.tags || []).join(" "),
+          (entry.locales || []).map(function (l) { return [l.locale, l.label, l.href, l.status].join(" "); }).join(" ")
+        ].join(" ");
+      }
+
+      function renderLocales(locales) {
+        return '<div class="locale-grid" aria-label="Internationalization locale pages">' + locales.map(function (l) {
+          const tag = l.href ? "a" : "span";
+          const hrefAttr = l.href ? ' href="' + escapeAttr(l.href) + '"' : "";
+          const pendingText = l.status === "implemented" ? "" : " <small>(" + escapeHtml(statusLabel(l.status)) + ")</small>";
+          return "<" + tag + ' class="locale-pill status-' + escapeAttr(l.status) + '"' + hrefAttr + ">" +
+            "<span>" + escapeHtml(l.locale) + "</span>" +
+            "<small>" + escapeHtml(l.label) + "</small>" + pendingText +
+          "</" + tag + ">";
+        }).join("") + "</div>";
+      }
+
+      function renderEntry(entry) {
+        const tags = (entry.tags || []).map(function (t) { return '<span class="tag">' + escapeHtml(t) + "</span>"; }).join("");
+        const titleInner = entry.implementationHref
+          ? '<a href="' + escapeAttr(entry.implementationHref) + '">' + escapeHtml(entry.title) + "</a>"
+          : escapeHtml(entry.title);
+        const implementationLink = entry.implementationHref
+          ? '<a class="action-link primary" href="' + escapeAttr(entry.implementationHref) + '">Open</a>'
+          : '<span class="action-link is-disabled">No single page</span>';
+        const specLink = entry.specificationHref
+          ? '<a class="action-link" href="' + escapeAttr(entry.specificationHref) + '">Spec</a>'
+          : '<span class="action-link is-disabled">No spec</span>';
+        const localeList = entry.locales ? renderLocales(entry.locales) : "";
+        return [
+          '<article class="catalog-row" data-status="' + escapeAttr(entry.status) + '" data-category="' + escapeAttr(entry.category) + '">',
+            '<div class="row-index">' + escapeHtml(entry.number) + "</div>",
+            '<div class="row-main">',
+              "<h3>" + titleInner + "</h3>",
+              "<p>" + escapeHtml(entry.description) + "</p>",
+              '<div class="tag-row">' + tags + "</div>",
+              localeList,
+            "</div>",
+            '<div class="row-meta">',
+              '<span class="status-badge status-' + escapeAttr(entry.status) + '">' + escapeHtml(statusLabel(entry.status)) + "</span>",
+              "<span>" + escapeHtml(entry.examples || "") + " examples</span>",
+            "</div>",
+            '<div class="row-actions">', implementationLink, specLink, "</div>",
+          "</article>"
+        ].join("");
+      }
+
+      function updateCounts() {
+        const implemented = catalogEntries.filter(function (e) { return e.status === "implemented"; }).length;
+        const specifications = catalogEntries.filter(function (e) { return e.specificationHref; }).length;
+        let i18n = 0, pending = 0;
+        catalogEntries.forEach(function (e) {
+          if (e.locales) { i18n += e.locales.length; }
+          if (pendingStatuses.indexOf(e.status) !== -1) { pending += 1; }
+          (e.locales || []).forEach(function (l) { if (pendingStatuses.indexOf(l.status) !== -1) { pending += 1; } });
+        });
+        document.querySelector("[data-count-implemented]").textContent = implemented;
+        document.querySelector("[data-count-specifications]").textContent = specifications;
+        document.querySelector("[data-count-i18n]").textContent = i18n;
+        document.querySelector("[data-count-pending]").textContent = pending;
+        document.querySelector("[data-count-total]").textContent = catalogEntries.length;
+      }
+
+      function render() {
+        const query = normalize(search.value);
+        const status = statusFilter.value;
+        const category = categoryFilter.value;
+        const includePending = showPending.checked;
+
+        const filtered = catalogEntries.filter(function (entry) {
+          const matchesQuery = !query || normalize(entryText(entry)).indexOf(query) !== -1;
+          const matchesStatus =
+            status === "all" ? true :
+            status === "i18n" ? entry.category === "i18n" :
+            entry.status === status;
+          const matchesCategory = category === "all" || entry.category === category;
+          const isPending = pendingStatuses.indexOf(entry.status) !== -1;
+          const matchesPending = includePending || !isPending;
+          return matchesQuery && matchesStatus && matchesCategory && matchesPending;
+        });
+
+        list.innerHTML = filtered.map(renderEntry).join("");
+        countOutput.textContent = filtered.length + " catalog entries shown";
+        emptyState.hidden = filtered.length !== 0;
+      }
+
+      function clearFilters() {
+        search.value = "";
+        statusFilter.value = "all";
+        categoryFilter.value = "all";
+        showPending.checked = true;
+        render();
+        search.focus();
+      }
+
+      search.addEventListener("input", render);
+      statusFilter.addEventListener("change", render);
+      categoryFilter.addEventListener("change", render);
+      showPending.addEventListener("change", render);
+      clearButton.addEventListener("click", clearFilters);
+      document.querySelector("[data-clear-filters]").addEventListener("click", clearFilters);
+
+      densityToggle.addEventListener("click", function () {
+        document.body.classList.toggle("comfortable-density");
+        const comfortable = document.body.classList.contains("comfortable-density");
+        densityToggle.textContent = comfortable ? "Density: comfortable" : "Density: compact";
+      });
+
+      updateCounts();
+      render();
+    });
+  </script>
+</body>
+</html>

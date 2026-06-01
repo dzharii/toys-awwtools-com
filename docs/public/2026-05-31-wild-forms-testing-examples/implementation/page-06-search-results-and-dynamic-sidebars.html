@@ -1,0 +1,1881 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page 6 - Search Results And Dynamic Sidebars</title>
+  <style>
+    :root {
+      --page-bg: #eef1f6;
+      --ink: #1d2430;
+      --muted: #5d6b80;
+      --line: #d3dae6;
+      --card: #ffffff;
+      --panel: #f6f8fc;
+      --accent: #355cc0;
+      --accent-soft: #e2e9fb;
+      --chip: #eaeef6;
+      --sel: #fff7e6;
+      --sel-line: #f0c674;
+      --good: #1f7a4d;
+      --warn: #a8580a;
+      --bad: #b2342f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--page-bg);
+      color: var(--ink);
+      font: 15px/1.5 "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+    }
+    main { max-width: 1180px; margin: 0 auto; padding: 28px 20px 80px; }
+    .page-hero {
+      background: linear-gradient(135deg, #2a3c6b, #355cc0);
+      color: #fff;
+      border-radius: 14px;
+      padding: 30px 32px;
+      margin-bottom: 26px;
+    }
+    .page-kicker {
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      font-size: 12px;
+      margin: 0 0 8px;
+      color: #c9d6f5;
+    }
+    .page-hero h1 { margin: 0 0 12px; font-size: 27px; }
+    .page-hero p { margin: 0; max-width: 80ch; color: #e6ecfb; }
+
+    .example-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 22px;
+      margin-bottom: 30px;
+      box-shadow: 0 1px 2px rgba(20,30,60,.04);
+    }
+    .ex-kicker {
+      display: inline-block;
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 3px 9px;
+      border-radius: 999px;
+      margin: 0 0 10px;
+    }
+    .example-card > h2 { margin: 0 0 6px; font-size: 20px; }
+    .ex-desc { margin: 0 0 18px; color: var(--muted); max-width: 90ch; }
+
+    /* Search header */
+    .search-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: end;
+      padding: 14px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+    .field input, .field select {
+      font: inherit;
+      padding: 7px 9px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      min-width: 160px;
+    }
+    .result-count { font-weight: 600; }
+    .result-count .num { color: var(--accent); }
+    .search-meta { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; margin-left: auto; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .chips .lbl { font-size: 12px; color: var(--muted); align-self: center; text-transform: uppercase; letter-spacing: .06em; }
+    .chip {
+      font-size: 13px;
+      background: var(--chip);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 11px;
+      color: #34405a;
+    }
+    .chip::before { content: "\00d7  "; color: var(--muted); }
+
+    /* 3-column shell */
+    .search-shell {
+      display: grid;
+      grid-template-columns: 210px 1fr 280px;
+      gap: 16px;
+      align-items: start;
+    }
+    .search-shell.no-filter { grid-template-columns: 1fr 290px; }
+    .search-shell.two-col { grid-template-columns: 220px 1fr; }
+    @media (max-width: 880px) { .search-shell, .search-shell.no-filter, .search-shell.two-col { grid-template-columns: 1fr; } }
+
+    .filter-panel, .detail-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .filter-panel h3, .detail-panel h3 { margin: 0 0 12px; font-size: 14px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+    .facet-group { margin-bottom: 16px; }
+    .facet-group h4 { margin: 0 0 7px; font-size: 13px; }
+    .facet-option {
+      display: flex; justify-content: space-between; gap: 8px;
+      font-size: 13px; padding: 3px 0; color: #3a4660;
+    }
+    .facet-option.is-selected { font-weight: 600; color: var(--ink); }
+    .facet-option.is-disabled { color: #9aa6ba; text-decoration: line-through; }
+    .facet-option .cnt { color: var(--muted); }
+
+    .results-panel { display: flex; flex-direction: column; gap: 12px; }
+    .result-card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px 16px;
+      background: #fff;
+      cursor: pointer;
+    }
+    .result-card.is-selected {
+      border-color: var(--sel-line);
+      background: var(--sel);
+      box-shadow: 0 0 0 1px var(--sel-line) inset;
+    }
+    .result-title { margin: 0 0 6px; font-size: 16px; }
+    .result-title a { color: var(--accent); text-decoration: none; }
+    .result-title a:hover { text-decoration: underline; }
+    .meta-row { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+    .meta-row b { color: var(--ink); font-weight: 600; }
+    .snippet { margin: 6px 0; font-size: 14px; }
+    .snippet mark { background: #fde68a; padding: 0 2px; border-radius: 2px; }
+    .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .badge {
+      font-size: 12px; background: var(--accent-soft); color: #2c4a9c;
+      border-radius: 5px; padding: 2px 8px;
+    }
+    .badge.status { background: #e7f3ec; color: var(--good); }
+    .badge.warn { background: #fbeede; color: var(--warn); }
+    .badge.bad { background: #fbe6e5; color: var(--bad); }
+    .badge.tag { background: #edf0f5; color: #4a5670; }
+    .pin-label {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--accent); color: #fff; font-size: 12px; font-weight: 700;
+      margin-right: 6px;
+    }
+
+    /* Detail / preview panel */
+    .detail-panel .sel-name { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
+    .field-row {
+      display: flex; justify-content: space-between; gap: 10px;
+      padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 13px;
+    }
+    .field-row:last-child { border-bottom: 0; }
+    .field-label { color: var(--muted); }
+    .field-value { text-align: right; font-weight: 500; }
+    .field-block { padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 13px; }
+    .field-block:last-child { border-bottom: 0; }
+    .field-block .field-label { display: block; margin-bottom: 4px; }
+    .field-block ul { margin: 0; padding-left: 18px; }
+    .field-block a { color: var(--accent); }
+
+    /* Map placeholder */
+    .map-placeholder {
+      position: relative;
+      background: repeating-linear-gradient(45deg, #e8edf6, #e8edf6 12px, #e1e7f3 12px, #e1e7f3 24px);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      min-height: 170px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .map-placeholder .map-note { position: absolute; top: 8px; left: 10px; font-size: 12px; color: var(--muted); }
+    .map-pin {
+      position: absolute;
+      background: #fff; border: 1px solid var(--accent);
+      color: var(--accent); font-size: 12px; font-weight: 600;
+      border-radius: 999px; padding: 3px 9px; box-shadow: 0 1px 3px rgba(0,0,0,.12);
+    }
+    .map-pin b { background: var(--accent); color: #fff; border-radius: 50%; padding: 0 5px; margin-right: 4px; }
+
+    /* compact table rows */
+    .row-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .row-table th { text-align: left; color: var(--muted); font-weight: 600; padding: 6px 8px; border-bottom: 2px solid var(--line); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    .row-table td { padding: 8px; border-bottom: 1px solid var(--line); }
+    .row-table tr.is-selected { background: var(--sel); }
+    .row-table a { color: var(--accent); text-decoration: none; }
+    .mono { font-family: "Cascadia Code", Consolas, monospace; font-size: 12.5px; }
+    .install-cmd {
+      font-family: "Cascadia Code", Consolas, monospace; font-size: 12.5px;
+      background: #1d2430; color: #e6ecfb; border-radius: 6px; padding: 6px 10px;
+      display: inline-block; margin-top: 4px;
+    }
+    .times { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .time-slot { font-size: 12px; border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; padding: 2px 8px; }
+    .price-level { color: var(--good); font-weight: 700; letter-spacing: 1px; }
+    .stars { color: #c98a00; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-hero">
+      <p class="page-kicker">Content Extraction Demo Page</p>
+      <h1>Page 6 - Search Results And Dynamic Sidebars</h1>
+      <p>
+        This standalone page contains realistic search result and dynamic sidebar examples for testing extraction of repeated results, active filters, result metadata, snippets, selected detail panes, preview panels, sidebars, sorting state, map-style pins, and saved search settings.
+      </p>
+    </header>
+
+    <section class="example-card" id="example-01">
+      <span class="ex-kicker">Example 01</span>
+      <h2>Job Search Results With Detail Sidebar</h2>
+      <p class="ex-desc">This example imitates a job search page with filters, repeated job result cards, and a selected job detail sidebar. It tests extraction of query, active filters, job cards, selected job details, salary metadata, work mode, application status, and primary application links.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>Search query</label><input value="frontend engineer" aria-label="Search query"></div>
+        <div class="field"><label>Location query</label><input value="Remote - United States" aria-label="Location query"></div>
+        <div class="search-meta">
+          <span class="result-count"><span class="num">184</span> jobs found</span>
+          <div class="field"><label>Sort order</label>
+            <select aria-label="Sort order"><option selected>Most relevant</option><option>Newest</option><option>Salary</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span>
+        <span class="chip">Senior level</span><span class="chip">Remote</span><span class="chip">Salary $150k+</span><span class="chip">Full-time</span>
+      </div>
+
+      <div class="search-shell" aria-label="Job search results demo">
+        <aside class="filter-panel" aria-label="Job filters">
+          <h3>Filters</h3>
+          <div class="facet-group"><h4>Date posted</h4>
+            <label class="facet-option"><span><input type="checkbox"> Past 24 hours</span><span class="cnt">18</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Past week</span><span class="cnt">74</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Past month</span><span class="cnt">184</span></label>
+          </div>
+          <div class="facet-group"><h4>Experience level</h4>
+            <label class="facet-option"><span><input type="checkbox"> Mid-level</span><span class="cnt">61</span></label>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> Senior</span><span class="cnt">92</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Staff</span><span class="cnt">31</span></label>
+          </div>
+          <div class="facet-group"><h4>Work mode</h4>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> Remote</span><span class="cnt">108</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Hybrid</span><span class="cnt">49</span></label>
+            <label class="facet-option"><span><input type="checkbox"> On-site</span><span class="cnt">27</span></label>
+          </div>
+          <div class="facet-group"><h4>Salary</h4>
+            <label class="facet-option"><span><input type="checkbox"> $120k+</span><span class="cnt">141</span></label>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> $150k+</span><span class="cnt">83</span></label>
+            <label class="facet-option"><span><input type="checkbox"> $180k+</span><span class="cnt">29</span></label>
+          </div>
+        </aside>
+
+        <section class="results-panel" aria-label="Job results">
+          <article class="result-card is-selected" data-select-result="ex01" aria-selected="true">
+            <h3 class="result-title"><a href="/demo/jobs/northstar-senior-frontend">Senior Frontend Engineer</a></h3>
+            <div class="meta-row"><b>Northstar Cloud</b><span>Remote - United States</span><span>$165,000-$205,000</span></div>
+            <div class="meta-row"><span>Remote</span><span>Full-time</span><span>Posted 2 hours ago</span><span>Status: Not applied</span></div>
+            <p class="snippet">Build accessible workflows for billing, account settings, and admin dashboards using modern JavaScript.</p>
+            <div class="badges"><span class="badge">Actively hiring</span><span class="badge">Visa transfer considered</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex01" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/jobs/atlas-frontend-platform">Frontend Platform Engineer</a></h3>
+            <div class="meta-row"><b>Atlas Product Studio</b><span>Denver, CO or remote</span><span>$150,000-$190,000</span></div>
+            <div class="meta-row"><span>Hybrid or remote</span><span>Full-time</span><span>Posted 1 day ago</span><span>Status: Saved</span></div>
+            <p class="snippet">Own shared components, form primitives, and extraction-friendly UI infrastructure.</p>
+            <div class="badges"><span class="badge">Design systems</span><span class="badge">Internal tools</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex01" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/jobs/civic-staff-ui">Staff UI Engineer</a></h3>
+            <div class="meta-row"><b>Civic Data Lab</b><span>Oakland, CA</span><span>$178,000-$218,000</span></div>
+            <div class="meta-row"><span>Hybrid</span><span>Full-time</span><span>Posted 2 days ago</span><span>Status: Viewed</span></div>
+            <p class="snippet">Lead interface architecture for public data products used by city agencies.</p>
+            <div class="badges"><span class="badge">Public interest tech</span><span class="badge">Accessibility</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex01" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/jobs/browser-extension-engineer">Senior JavaScript Engineer, Browser Extension</a></h3>
+            <div class="meta-row"><b>Widget Lab Demo</b><span>Remote - Canada or United States</span><span>$155,000-$196,000</span></div>
+            <div class="meta-row"><span>Remote</span><span>Full-time</span><span>Posted 3 days ago</span><span>Status: Not applied</span></div>
+            <p class="snippet">Work on content scripts, DOM extraction, permission prompts, and cross-browser testing.</p>
+            <div class="badges"><span class="badge">Browser APIs</span><span class="badge">Automation</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex01" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/jobs/search-experience-frontend">Frontend Engineer, Search Experience</a></h3>
+            <div class="meta-row"><b>QueryWorks</b><span>Remote - United States</span><span>$148,000-$172,000</span></div>
+            <div class="meta-row"><span>Remote</span><span>Full-time</span><span>Posted 5 days ago</span><span>Status: Not applied</span></div>
+            <p class="snippet">Improve large result pages, ranking explanations, saved searches, and filter sidebars.</p>
+            <div class="badges"><span class="badge">Search UI</span><span class="badge">Faceted filters</span></div>
+          </article>
+        </section>
+
+        <aside class="detail-panel" aria-label="Selected job detail">
+          <h3>Selected job</h3>
+          <p class="sel-name">Senior Frontend Engineer</p>
+          <div class="field-row"><span class="field-label">Company</span><span class="field-value">Northstar Cloud</span></div>
+          <div class="field-row"><span class="field-label">Recruiter</span><span class="field-value">Nina Patel</span></div>
+          <div class="field-row"><span class="field-label">Recruiter email</span><span class="field-value">nina.patel@example.test</span></div>
+          <div class="field-row"><span class="field-label">Compensation</span><span class="field-value">$165,000-$205,000 base plus equity</span></div>
+          <div class="field-block"><span class="field-label">Interview process</span>Recruiter screen, technical interview, product review, final panel</div>
+          <div class="field-block"><span class="field-label">Required skills</span>
+            <ul><li>JavaScript</li><li>TypeScript</li><li>Accessibility</li><li>Design systems</li></ul>
+          </div>
+          <div class="field-row"><span class="field-label">Application deadline</span><span class="field-value">June 21, 2026</span></div>
+          <div class="field-block"><span class="field-label">Apply link</span><a href="/demo/jobs/northstar-senior-frontend/apply">/demo/jobs/northstar-senior-frontend/apply</a></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-02">
+      <span class="ex-kicker">Example 02</span>
+      <h2>Real Estate Map Search With Listing Sidebar</h2>
+      <p class="ex-desc">This example imitates a real estate map search page. It tests extraction of property results, active filters, map pin labels, selected listing details, open house metadata, price, address, beds, baths, square feet, and listing status.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>Search area</label><input value="San Mateo County" aria-label="Search area"></div>
+        <div class="search-meta">
+          <span class="result-count"><span class="num">42</span> homes</span>
+          <div class="field"><label>Sort order</label><select aria-label="Sort order"><option selected>Newest</option><option>Price</option></select></div>
+        </div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span>
+        <span class="chip">Condo or townhouse</span><span class="chip">2+ beds</span><span class="chip">Under $1.2M</span><span class="chip">Open house this weekend</span>
+      </div>
+
+      <div class="map-placeholder" aria-label="Map placeholder with property pins">
+        <span class="map-note">Map placeholder (no external tiles)</span>
+        <span class="map-pin" style="top:48px;left:60px;"><b>A</b>$689k</span>
+        <span class="map-pin" style="top:96px;left:200px;"><b>B</b>$945k</span>
+        <span class="map-pin" style="top:54px;left:360px;"><b>C</b>$1.12M</span>
+        <span class="map-pin" style="top:118px;left:470px;"><b>D</b>$1.48M</span>
+        <span class="map-pin" style="top:128px;left:120px;"><b>E</b>$875k</span>
+      </div>
+
+      <div class="search-shell no-filter" aria-label="Real estate search results">
+        <section class="results-panel" aria-label="Property results">
+          <article class="result-card is-selected" data-select-result="ex02" aria-selected="true">
+            <h3 class="result-title"><span class="pin-label">A</span><a href="/demo/properties/410-oak-grove-6">410 Oak Grove Avenue Unit 6</a></h3>
+            <div class="meta-row"><b>$689,000</b><span>Oakland, CA</span><span>2 bd</span><span>1 ba</span><span>890 sq ft</span></div>
+            <div class="meta-row"><span>Condo</span><span>Open house: Sat 1-4 PM</span><span>Agent: Maya Chen</span></div>
+            <div class="badges"><span class="badge status">Open house</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex02" aria-selected="false">
+            <h3 class="result-title"><span class="pin-label">B</span><a href="/demo/properties/120-king-b">120 King Street Unit B</a></h3>
+            <div class="meta-row"><b>$945,000</b><span>San Francisco, CA</span><span>2 bd</span><span>2 ba</span><span>1,180 sq ft</span></div>
+            <div class="meta-row"><span>Townhome</span><span>Open house: Sun 2-4 PM</span><span>Agent: Rafael Ortiz</span></div>
+            <div class="badges"><span class="badge">Active</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex02" aria-selected="false">
+            <h3 class="result-title"><span class="pin-label">C</span><a href="/demo/properties/88-valencia-402">88 Valencia Street Suite 402</a></h3>
+            <div class="meta-row"><b>$1,120,000</b><span>San Francisco, CA</span><span>1 bd</span><span>1.5 ba</span><span>1,040 sq ft</span></div>
+            <div class="meta-row"><span>Loft</span><span>Open house: Sun 2-5 PM</span><span>Agent: Rafael Ortiz</span></div>
+            <div class="badges"><span class="badge status">New listing</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex02" aria-selected="false">
+            <h3 class="result-title"><span class="pin-label">D</span><a href="/demo/properties/72-hillcrest">72 Hillcrest Road</a></h3>
+            <div class="meta-row"><b>$1,485,000</b><span>San Mateo, CA</span><span>3 bd</span><span>2 ba</span><span>1,620 sq ft</span></div>
+            <div class="meta-row"><span>Single-family home</span><span>Open house: By appointment</span><span>Agent: Lina Romero</span></div>
+            <div class="badges"><span class="badge warn">Price reduced</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex02" aria-selected="false">
+            <h3 class="result-title"><span class="pin-label">E</span><a href="/demo/properties/14-bayview-3">14 Bayview Terrace Unit 3</a></h3>
+            <div class="meta-row"><b>$875,000</b><span>Daly City, CA</span><span>2 bd</span><span>2 ba</span><span>1,010 sq ft</span></div>
+            <div class="meta-row"><span>Condo</span><span>Open house: Sat 11 AM-1 PM</span><span>Agent: Owen Brooks</span></div>
+            <div class="badges"><span class="badge">Active</span></div>
+          </article>
+        </section>
+
+        <aside class="detail-panel" aria-label="Selected listing detail">
+          <h3>Selected listing</h3>
+          <p class="sel-name">410 Oak Grove Avenue Unit 6</p>
+          <div class="field-row"><span class="field-label">Listing ID</span><span class="field-value">PROP-410OG-6</span></div>
+          <div class="field-row"><span class="field-label">HOA dues</span><span class="field-value">$428/month</span></div>
+          <div class="field-row"><span class="field-label">Days on market</span><span class="field-value">8</span></div>
+          <div class="field-row"><span class="field-label">Price per sq ft</span><span class="field-value">$774</span></div>
+          <div class="field-block"><span class="field-label">Tour availability</span>Saturday 1-4 PM and Sunday 11 AM-1 PM</div>
+          <div class="field-row"><span class="field-label">Listing agent phone</span><span class="field-value">415-555-0144</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-03">
+      <span class="ex-kicker">Example 03</span>
+      <h2>Flight Search Results With Fare Details Sidebar</h2>
+      <p class="ex-desc">This example imitates a flight search page with result cards and a fare details sidebar. It tests extraction of origin, destination, dates, flight segments, duration, stops, prices, fare class, baggage rules, and selected flight details.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>From</label><input value="SFO" aria-label="From"></div>
+        <div class="field"><label>To</label><input value="JFK" aria-label="To"></div>
+        <div class="field"><label>Depart date</label><input value="September 2, 2026" aria-label="Depart date"></div>
+        <div class="field"><label>Passengers</label><input value="1 adult" aria-label="Passengers"></div>
+        <div class="search-meta"><span class="result-count"><span class="num">36</span> flights</span></div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span>
+        <span class="chip">Nonstop</span><span class="chip">Morning departure</span><span class="chip">Carry-on included</span><span class="chip">Under $400</span>
+      </div>
+
+      <div class="search-shell" aria-label="Flight search results">
+        <aside class="filter-panel" aria-label="Flight filters">
+          <h3>Filters</h3>
+          <div class="facet-group"><h4>Stops</h4>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> Nonstop</span><span class="cnt">12</span></label>
+            <label class="facet-option"><span><input type="checkbox"> 1 stop</span><span class="cnt">24</span></label>
+          </div>
+          <div class="facet-group"><h4>Departure time</h4>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> Morning</span><span class="cnt">14</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Afternoon</span><span class="cnt">11</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Evening</span><span class="cnt">11</span></label>
+          </div>
+          <div class="facet-group"><h4>Airlines</h4>
+            <label class="facet-option"><span><input type="checkbox"> AeroVista</span><span class="cnt">8</span></label>
+            <label class="facet-option"><span><input type="checkbox"> North Coast Air</span><span class="cnt">11</span></label>
+            <label class="facet-option"><span><input type="checkbox"> MetroJet</span><span class="cnt">17</span></label>
+          </div>
+        </aside>
+
+        <section class="results-panel" aria-label="Flight results">
+          <article class="result-card is-selected" data-select-result="ex03" aria-selected="true">
+            <h3 class="result-title"><a href="/demo/flights/avx-218-sfo-jfk">AVX 218</a> &middot; AeroVista</h3>
+            <div class="meta-row"><b>8:05 AM SFO</b><span>&rarr;</span><b>4:42 PM JFK</b><span>5h 37m</span><span>Nonstop</span><span>A321neo</span></div>
+            <div class="meta-row"><span>Lowest fare <b>$268</b></span><span>Fare class: Standard</span></div>
+            <div class="badges"><span class="badge">Carry-on included</span><span class="badge">Seat selection included</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex03" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/flights/nca-884-sfo-jfk">NCA 884</a> &middot; North Coast Air</h3>
+            <div class="meta-row"><b>9:30 AM SFO</b><span>&rarr;</span><b>6:09 PM JFK</b><span>5h 39m</span><span>Nonstop</span><span>737-8</span></div>
+            <div class="meta-row"><span>Lowest fare <b>$294</b></span><span>Fare class: Main</span></div>
+            <div class="badges"><span class="badge">Free changes</span><span class="badge">Wi-Fi</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex03" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/flights/mj-1620-sfo-jfk">MJ 1620</a> &middot; MetroJet</h3>
+            <div class="meta-row"><b>10:45 AM SFO</b><span>&rarr;</span><b>7:18 PM JFK</b><span>5h 33m</span><span>Nonstop</span><span>A320</span></div>
+            <div class="meta-row"><span>Lowest fare <b>$249</b></span><span>Fare class: Basic</span></div>
+            <div class="badges"><span class="badge warn">Personal item only</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex03" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/flights/avx-420-sfo-jfk">AVX 420</a> &middot; AeroVista</h3>
+            <div class="meta-row"><b>11:55 AM SFO</b><span>&rarr;</span><b>8:35 PM JFK</b><span>5h 40m</span><span>Nonstop</span><span>A321</span></div>
+            <div class="meta-row"><span>Lowest fare <b>$318</b></span><span>Fare class: Flex</span></div>
+            <div class="badges"><span class="badge">Refundable credit</span><span class="badge">Priority boarding</span></div>
+          </article>
+        </section>
+
+        <aside class="detail-panel" aria-label="Selected fare detail">
+          <h3>Selected flight</h3>
+          <p class="sel-name">AVX 218</p>
+          <div class="field-row"><span class="field-label">Selected fare</span><span class="field-value">Standard</span></div>
+          <div class="field-row"><span class="field-label">Fare price</span><span class="field-value">$268</span></div>
+          <div class="field-row"><span class="field-label">Taxes and fees</span><span class="field-value">$41.62</span></div>
+          <div class="field-row"><span class="field-label">Total</span><span class="field-value">$309.62</span></div>
+          <div class="field-row"><span class="field-label">Carry-on</span><span class="field-value">Included</span></div>
+          <div class="field-row"><span class="field-label">Checked bag</span><span class="field-value">$35 first bag</span></div>
+          <div class="field-row"><span class="field-label">Seat selection</span><span class="field-value">Included</span></div>
+          <div class="field-row"><span class="field-label">Changes</span><span class="field-value">Allowed with fee</span></div>
+          <div class="field-row"><span class="field-label">Cancellation</span><span class="field-value">Travel credit only</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-04">
+      <span class="ex-kicker">Example 04</span>
+      <h2>Help Center Search Results With Facets</h2>
+      <p class="ex-desc">This example imitates a help center search page. It tests extraction of article results, snippets with highlighted terms, category facets, active filters, helpful scores, updated dates, and related-topic sidebar suggestions.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>Search query</label><input value="export invoice line items" aria-label="Search query"></div>
+        <div class="search-meta">
+          <span class="result-count"><span class="num">18</span> articles</span>
+          <div class="field"><label>Sort order</label><select aria-label="Sort order"><option selected>Best match</option><option>Most recent</option></select></div>
+        </div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span><span class="chip">Billing</span><span class="chip">CSV exports</span></div>
+
+      <div class="search-shell" aria-label="Help center search results">
+        <aside class="filter-panel" aria-label="Help facets">
+          <h3>Refine</h3>
+          <div class="facet-group"><h4>Category</h4>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> Billing</span><span class="cnt">9</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Exports</span><span class="cnt">5</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Troubleshooting</span><span class="cnt">4</span></label>
+          </div>
+          <div class="facet-group"><h4>Content type</h4>
+            <label class="facet-option"><span><input type="checkbox"> Article</span><span class="cnt">12</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Guide</span><span class="cnt">4</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Video</span><span class="cnt">2</span></label>
+          </div>
+          <div class="facet-group"><h4>Updated</h4>
+            <label class="facet-option"><span><input type="checkbox"> Last 30 days</span><span class="cnt">7</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Last 90 days</span><span class="cnt">14</span></label>
+          </div>
+        </aside>
+
+        <section class="results-panel" aria-label="Article results">
+          <article class="result-card is-selected" data-select-result="ex04" aria-selected="true">
+            <h3 class="result-title"><a href="/demo/help/export-invoice-line-items">How to export invoice line items</a></h3>
+            <div class="meta-row"><span>Billing</span><span>Article</span><span>Updated May 29, 2026</span><span>94 percent helpful</span></div>
+            <p class="snippet">Download invoice details as CSV and include <mark>line items</mark>, tax, discount, and payment columns.</p>
+            <div class="badges"><span class="badge tag">invoices</span><span class="badge tag">csv</span><span class="badge tag">billing</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex04" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/help/include-tax-columns">Include tax columns in invoice exports</a></h3>
+            <div class="meta-row"><span>Exports</span><span>Guide</span><span>Updated May 26, 2026</span><span>88 percent helpful</span></div>
+            <p class="snippet">Choose the detailed export template to include jurisdiction, tax rate, and taxable <mark>line item</mark> amount.</p>
+            <div class="badges"><span class="badge tag">tax</span><span class="badge tag">exports</span><span class="badge tag">templates</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex04" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/help/invoice-export-discounts">Why invoice exports may omit discounts</a></h3>
+            <div class="meta-row"><span>Troubleshooting</span><span>Article</span><span>Updated May 20, 2026</span><span>81 percent helpful</span></div>
+            <p class="snippet">Some account-level discounts appear in summary rows instead of individual invoice <mark>line items</mark>.</p>
+            <div class="badges"><span class="badge tag">discounts</span><span class="badge tag">billing</span><span class="badge tag">csv</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex04" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/help/schedule-monthly-billing-export">Schedule a monthly billing export</a></h3>
+            <div class="meta-row"><span>Exports</span><span>Guide</span><span>Updated May 15, 2026</span><span>90 percent helpful</span></div>
+            <p class="snippet">Create a saved export that emails invoice and payment data to your finance team each month.</p>
+            <div class="badges"><span class="badge tag">scheduled exports</span><span class="badge tag">finance</span><span class="badge tag">automation</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex04" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/help/invoice-csv-column-names">Understand invoice CSV column names</a></h3>
+            <div class="meta-row"><span>Billing</span><span>Article</span><span>Updated April 30, 2026</span><span>86 percent helpful</span></div>
+            <p class="snippet">Map invoice number, SKU, description, tax, discount, and payment reference columns to your accounting system.</p>
+            <div class="badges"><span class="badge tag">csv</span><span class="badge tag">columns</span><span class="badge tag">accounting</span></div>
+          </article>
+        </section>
+
+        <aside class="detail-panel" aria-label="Selected article detail">
+          <h3>Selected result</h3>
+          <p class="sel-name">How to export invoice line items</p>
+          <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Billing Support</span></div>
+          <div class="field-row"><span class="field-label">Reading time</span><span class="field-value">4 min</span></div>
+          <div class="field-block"><span class="field-label">Applies to plans</span>
+            <ul><li>Business</li><li>Enterprise</li></ul>
+          </div>
+          <div class="field-block"><span class="field-label">Related articles</span>
+            <ul><li>Understand invoice CSV column names</li><li>Schedule a monthly billing export</li></ul>
+          </div>
+          <div class="field-row"><span class="field-label">Last reviewed by</span><span class="field-value">Renee Coleman</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-05">
+      <span class="ex-kicker">Example 05</span>
+      <h2>Documentation Search With Version Sidebar</h2>
+      <p class="ex-desc">This example imitates a developer documentation search page. It tests extraction of docs search results, version filters, product areas, heading paths, snippets, code terms, selected result details, and deprecated-version badges.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>Search query</label><input value="aria combobox active descendant" aria-label="Search query"></div>
+        <div class="field"><label>Product</label><select aria-label="Product"><option selected>Extractor SDK</option><option>Extension Kit</option></select></div>
+        <div class="field"><label>Version</label><select aria-label="Version"><option selected>v0.9</option><option>v1.0 beta</option></select></div>
+        <div class="search-meta"><span class="result-count"><span class="num">23</span> docs results</span></div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span><span class="chip">Extractor SDK</span><span class="chip">v0.9</span><span class="chip">Accessibility APIs</span></div>
+
+      <div class="search-shell" aria-label="Documentation search results">
+        <aside class="filter-panel" aria-label="Version and area filters">
+          <h3>Versions</h3>
+          <div class="facet-group">
+            <label class="facet-option"><span><input type="checkbox"> v1.0 beta</span><span class="cnt">8</span></label>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> v0.9</span><span class="cnt">23</span></label>
+            <label class="facet-option"><span><input type="checkbox"> v0.8</span><span class="cnt">17</span></label>
+            <label class="facet-option is-disabled"><span><input type="checkbox" disabled> v0.7 deprecated</span><span class="cnt">11</span></label>
+          </div>
+          <h3>Product area</h3>
+          <div class="facet-group">
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> Accessibility APIs</span><span class="cnt">9</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Selection engine</span><span class="cnt">7</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Output formatting</span><span class="cnt">4</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Browser extension</span><span class="cnt">3</span></label>
+          </div>
+        </aside>
+
+        <section class="results-panel" aria-label="Docs results">
+          <article class="result-card is-selected" data-select-result="ex05" aria-selected="true">
+            <h3 class="result-title"><a href="/demo/docs/v0.9/accessibility/combobox-extraction-signals">Combobox extraction signals</a></h3>
+            <div class="meta-row"><span>Extractor SDK / Accessibility APIs / Comboboxes</span><span>v0.9</span><span>Updated May 22, 2026</span></div>
+            <p class="snippet">Use <span class="mono">aria-controls</span>, <span class="mono">aria-expanded</span>, <span class="mono">aria-activedescendant</span>, and selected option text to connect a trigger with its popup listbox.</p>
+            <div class="badges"><span class="badge status">Recommended</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex05" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/docs/v0.9/selection/portaled-listbox-menus">Handling portaled listbox menus</a></h3>
+            <div class="meta-row"><span>Extractor SDK / Selection engine / Portals</span><span>v0.9</span><span>Updated May 18, 2026</span></div>
+            <p class="snippet">When popup content is rendered outside the form subtree, preserve the trigger node, visible label, and active option relationship.</p>
+            <div class="badges"><span class="badge">Advanced</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex05" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/docs/v0.9/output/dropdown-schema">Output schema for selected dropdowns</a></h3>
+            <div class="meta-row"><span>Extractor SDK / Output formatting / Controls</span><span>v0.9</span><span>Updated May 9, 2026</span></div>
+            <p class="snippet">Dropdown output includes <span class="mono">visibleValue</span>, <span class="mono">submittedValue</span>, <span class="mono">optionCount</span>, <span class="mono">selectedIndex</span>, and <span class="mono">disabledOptionLabels</span> when available.</p>
+            <div class="badges"><span class="badge">Schema</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex05" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/docs/v0.8/accessibility/aria-attribute-reference">ARIA attribute reference</a></h3>
+            <div class="meta-row"><span>Extractor SDK / Accessibility APIs / Reference</span><span>v0.8</span><span>Updated April 14, 2026</span></div>
+            <p class="snippet">Reference page for <span class="mono">aria-labelledby</span>, <span class="mono">aria-describedby</span>, <span class="mono">aria-activedescendant</span>, <span class="mono">role=listbox</span>, and <span class="mono">role=option</span>.</p>
+            <div class="badges"><span class="badge warn">Older version</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex05" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/docs/v0.9/extension/content-script-limits">Browser extension content script limits</a></h3>
+            <div class="meta-row"><span>Extractor SDK / Browser extension / Runtime</span><span>v0.9</span><span>Updated April 2, 2026</span></div>
+            <p class="snippet">Content scripts cannot directly access every page context object, so extraction must rely on DOM-visible and accessible state.</p>
+            <div class="badges"><span class="badge">Runtime</span></div>
+          </article>
+        </section>
+
+        <aside class="detail-panel" aria-label="Selected doc detail">
+          <h3>Selected result</h3>
+          <p class="sel-name">Combobox extraction signals</p>
+          <div class="field-row"><span class="field-label">Doc ID</span><span class="field-value mono">doc_exsdk_009_combobox_signals</span></div>
+          <div class="field-row"><span class="field-label">Owner</span><span class="field-value">Accessibility Systems Team</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value">Current</span></div>
+          <div class="field-block"><span class="field-label">Available versions</span>
+            <ul><li>v1.0 beta</li><li>v0.9</li><li>v0.8</li></ul>
+          </div>
+          <div class="field-row"><span class="field-label">Estimated reading time</span><span class="field-value">7 min</span></div>
+          <div class="field-block"><span class="field-label">Related symbols</span>
+            <ul><li class="mono">aria-activedescendant</li><li class="mono">role=listbox</li><li class="mono">role=option</li></ul>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-06">
+      <span class="ex-kicker">Example 06</span>
+      <h2>Email Search Results With Preview Pane</h2>
+      <p class="ex-desc">This example imitates an email search page with a preview pane. It tests extraction of sender, subject, snippet, labels, timestamp, unread state, attachment state, search query, and selected preview body.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>Search query</label><input value="invoice approval" aria-label="Search query"></div>
+        <div class="field"><label>Mailbox</label><select aria-label="Mailbox"><option selected>All mail</option><option>Inbox</option></select></div>
+        <div class="search-meta">
+          <span class="result-count"><span class="num">9</span> conversations</span>
+          <div class="field"><label>Sort order</label><select aria-label="Sort order"><option selected>Newest</option></select></div>
+        </div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span><span class="chip">Has attachment</span><span class="chip">From finance team</span><span class="chip">Last 30 days</span></div>
+
+      <div class="search-shell no-filter" aria-label="Email search results">
+        <section class="results-panel" aria-label="Email threads">
+          <article class="result-card is-selected" data-select-result="ex06" aria-selected="true">
+            <h3 class="result-title"><a href="/demo/mail/threads/invoice-approval-00841">Invoice approval needed for INV-2026-00841</a></h3>
+            <div class="meta-row"><b>Renee Coleman</b><span>to Finance Team</span><span>11:22 AM</span><span class="badge bad">Unread</span><span>Attachment: No</span></div>
+            <p class="snippet">Please review the remaining balance and confirm whether the support package should stay on the renewal.</p>
+            <div class="badges"><span class="badge tag">Finance</span><span class="badge tag">Needs approval</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex06" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/mail/threads/invoice-00841-partial-payment">Invoice INV-2026-00841 partially paid</a></h3>
+            <div class="meta-row"><b>Northstar Cloud Billing</b><span>to Renee Coleman</span><span>Yesterday</span><span>Read</span><span>Attachment: Yes</span></div>
+            <p class="snippet">A payment of $300.00 has been applied. The remaining balance is $436.14.</p>
+            <div class="badges"><span class="badge tag">Billing</span><span class="badge tag">Invoice</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex06" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/mail/threads/annual-subscription-approval">Re: Annual subscription invoice approval</a></h3>
+            <div class="meta-row"><b>Atlas Product Studio</b><span>to Billing</span><span>May 28</span><span>Read</span><span>Attachment: No</span></div>
+            <p class="snippet">The seat count is correct and the audit log add-on should remain enabled.</p>
+            <div class="badges"><span class="badge tag">Vendor</span><span class="badge tag">Approved</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex06" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/mail/threads/invoice-csv-export-question">Question about invoice CSV export</a></h3>
+            <div class="meta-row"><b>Theo Grant</b><span>to Finance Team</span><span>May 27</span><span class="badge bad">Unread</span><span>Attachment: No</span></div>
+            <p class="snippet">Can the export include SKU, tax jurisdiction, discount, and payment reference columns?</p>
+            <div class="badges"><span class="badge tag">Exports</span><span class="badge tag">Finance</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex06" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/mail/threads/ach-transfer-vendor-reserve">ACH transfer confirmation for vendor reserve</a></h3>
+            <div class="meta-row"><b>Payment Operations</b><span>to Renee Coleman</span><span>May 25</span><span>Read</span><span>Attachment: Yes</span></div>
+            <p class="snippet">Transfer TRN-8841-6029 is scheduled for June 3, 2026.</p>
+            <div class="badges"><span class="badge tag">Banking</span><span class="badge tag">Confirmation</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex06" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/mail/threads/line-item-correction-request">Invoice line item correction request</a></h3>
+            <div class="meta-row"><b>Cedar Pine Studio</b><span>to Billing Support</span><span>May 22</span><span>Read</span><span>Attachment: No</span></div>
+            <p class="snippet">The priority support package should be listed under the operations budget code.</p>
+            <div class="badges"><span class="badge tag">Support</span><span class="badge tag">Billing</span></div>
+          </article>
+        </section>
+
+        <aside class="detail-panel" aria-label="Selected email preview">
+          <h3>Preview pane</h3>
+          <p class="sel-name">Invoice approval needed for INV-2026-00841</p>
+          <div class="field-row"><span class="field-label">From</span><span class="field-value">Renee Coleman &lt;renee.coleman@example.test&gt;</span></div>
+          <div class="field-row"><span class="field-label">To</span><span class="field-value">Finance Team</span></div>
+          <div class="field-row"><span class="field-label">Date</span><span class="field-value">May 31, 2026, 11:22 AM</span></div>
+          <div class="field-block"><span class="field-label">Body</span>Please review the remaining balance and confirm whether the support package should stay on the renewal. The vendor needs approval before the June 17 due date.</div>
+          <div class="field-row"><span class="field-label">Detected invoice</span><span class="field-value">INV-2026-00841</span></div>
+          <div class="field-row"><span class="field-label">Detected balance</span><span class="field-value">$436.14</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-07">
+      <span class="ex-kicker">Example 07</span>
+      <h2>CRM Lead Search With Account Detail Sidebar</h2>
+      <p class="ex-desc">This example imitates a CRM lead search page. It tests extraction of lead cards, company names, contacts, lead scores, stages, next actions, account metadata, owner, pipeline value, and selected detail sidebar data.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>Search query</label><input value="healthcare operations" aria-label="Search query"></div>
+        <div class="field"><label>Pipeline</label><select aria-label="Pipeline"><option selected>Enterprise sales</option><option>Mid-market</option></select></div>
+        <div class="search-meta">
+          <span class="result-count"><span class="num">27</span> leads</span>
+          <div class="field"><label>Sort order</label><select aria-label="Sort order"><option selected>Highest score</option></select></div>
+        </div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span><span class="chip">Healthcare</span><span class="chip">Score 80+</span><span class="chip">Open opportunity</span></div>
+
+      <div class="search-shell no-filter" aria-label="CRM lead search results">
+        <section class="results-panel" aria-label="Lead cards">
+          <article class="result-card is-selected" data-select-result="ex07" aria-selected="true">
+            <h3 class="result-title"><a href="/demo/crm/accounts/westbridge-health">Westbridge Health</a></h3>
+            <div class="meta-row"><b>Alex Rivera</b><span>Care Coordination Director</span><span>alex.rivera@example.test</span></div>
+            <div class="meta-row"><span>Score <b>92</b></span><span>Stage: Evaluation</span><span>$84,000</span><span>Owner: Nina Patel</span></div>
+            <div class="meta-row"><span>Next: Send security questionnaire follow-up</span><span>Demo call yesterday</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex07" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/crm/accounts/harbor-clinic-network">Harbor Clinic Network</a></h3>
+            <div class="meta-row"><b>Dr. Helen Park</b><span>Operations Lead</span><span>helen.park@example.test</span></div>
+            <div class="meta-row"><span>Score <b>88</b></span><span>Stage: Proposal</span><span>$126,000</span><span>Owner: Rafael Ortiz</span></div>
+            <div class="meta-row"><span>Next: Review pricing with procurement</span><span>Email opened 2 hours ago</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex07" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/crm/accounts/cedar-valley-care">Cedar Valley Care Group</a></h3>
+            <div class="meta-row"><b>Maya Chen</b><span>Product Manager</span><span>maya.chen@example.test</span></div>
+            <div class="meta-row"><span>Score <b>84</b></span><span>Stage: Discovery</span><span>$58,000</span><span>Owner: Lina Romero</span></div>
+            <div class="meta-row"><span>Next: Schedule workflow mapping session</span><span>Form submitted 3 days ago</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex07" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/crm/accounts/northstar-research-lab">Northstar Research Lab</a></h3>
+            <div class="meta-row"><b>Priya Shah</b><span>Lab Operations Manager</span><span>priya.shah@example.test</span></div>
+            <div class="meta-row"><span>Score <b>81</b></span><span>Stage: Qualification</span><span>$42,000</span><span>Owner: Owen Brooks</span></div>
+            <div class="meta-row"><span>Next: Confirm data retention requirements</span><span>Downloaded whitepaper</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex07" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/crm/accounts/riverbend-therapy">Riverbend Therapy Partners</a></h3>
+            <div class="meta-row"><b>Jamie Lee</b><span>Clinical Systems Lead</span><span>jamie.lee@example.test</span></div>
+            <div class="meta-row"><span>Score <b>79</b></span><span>Stage: Nurture</span><span>$31,000</span><span>Owner: Nina Patel</span></div>
+            <div class="meta-row"><span>Next: Send integration overview</span><span>Newsletter click last week</span></div>
+          </article>
+        </section>
+
+        <aside class="detail-panel" aria-label="Selected account detail">
+          <h3>Selected account</h3>
+          <p class="sel-name">Westbridge Health</p>
+          <div class="field-row"><span class="field-label">Account ID</span><span class="field-value">ACC-88420</span></div>
+          <div class="field-row"><span class="field-label">Industry</span><span class="field-value">Healthcare</span></div>
+          <div class="field-row"><span class="field-label">Employees</span><span class="field-value">1,200</span></div>
+          <div class="field-row"><span class="field-label">Region</span><span class="field-value">West</span></div>
+          <div class="field-row"><span class="field-label">Current system</span><span class="field-value">Legacy care coordination portal</span></div>
+          <div class="field-block"><span class="field-label">Pain points</span>
+            <ul><li>manual intake</li><li>status tracking</li><li>report exports</li></ul>
+          </div>
+          <div class="field-row"><span class="field-label">Open opportunity</span><span class="field-value">OPP-2026-7712</span></div>
+          <div class="field-row"><span class="field-label">Close target</span><span class="field-value">August 31, 2026</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-08">
+      <span class="ex-kicker">Example 08</span>
+      <h2>Support Ticket Search Queue</h2>
+      <p class="ex-desc">This example imitates a support ticket search queue. It tests extraction of ticket cards, status, priority, customer, account, SLA, channel, assignee, last message snippet, active filters, and selected ticket preview.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>Search query</label><input value="invoice export" aria-label="Search query"></div>
+        <div class="field"><label>Queue</label><select aria-label="Queue"><option selected>Billing Support</option><option>Tier 1</option></select></div>
+        <div class="search-meta">
+          <span class="result-count"><span class="num">14</span> tickets</span>
+          <div class="field"><label>Sort order</label><select aria-label="Sort order"><option selected>SLA deadline</option></select></div>
+        </div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span><span class="chip">Open</span><span class="chip">Billing</span><span class="chip">Has customer reply</span><span class="chip">SLA due soon</span></div>
+
+      <div class="search-shell no-filter" aria-label="Support ticket queue">
+        <section class="results-panel" aria-label="Ticket cards">
+          <article class="result-card is-selected" data-select-result="ex08" aria-selected="true">
+            <h3 class="result-title"><a href="/demo/support/tickets/TCK-2026-54102">TCK-2026-54102 &middot; Invoice PDF missing line item details</a></h3>
+            <div class="meta-row"><b>Theo Grant</b><span>Independent documentary project</span><span class="badge status">Open</span><span class="badge bad">High</span><span>Chat</span><span>Assignee: Rafael</span></div>
+            <div class="meta-row"><span>SLA: Due today, 5:00 PM</span><span class="badge bad">Unread</span></div>
+            <p class="snippet">Can you send a version that includes SKU and tax columns?</p>
+          </article>
+          <article class="result-card" data-select-result="ex08" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/support/tickets/TCK-2026-54159">TCK-2026-54159 &middot; Question about archived audit logs</a></h3>
+            <div class="meta-row"><b>Avery Quinn</b><span>Cedar Pine Studio</span><span class="badge">Solved</span><span class="badge">Low</span><span>Email</span><span>Assignee: Maya</span></div>
+            <div class="meta-row"><span>SLA: Met</span><span>Read</span></div>
+            <p class="snippet">Thanks, that answered my question.</p>
+          </article>
+          <article class="result-card" data-select-result="ex08" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/support/tickets/TCK-2026-54188">TCK-2026-54188 &middot; Monthly billing export missing discount rows</a></h3>
+            <div class="meta-row"><b>Renee Coleman</b><span>Cedar &amp; Pine Design LLC</span><span class="badge warn">Waiting on support</span><span class="badge warn">Medium</span><span>Portal</span><span>Assignee: Leah</span></div>
+            <div class="meta-row"><span>SLA: Due June 1, 2026, 2:00 PM</span><span class="badge bad">Unread</span></div>
+            <p class="snippet">The exported file includes tax rows but not account-level discount rows.</p>
+          </article>
+          <article class="result-card" data-select-result="ex08" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/support/tickets/TCK-2026-54204">TCK-2026-54204 &middot; Saved export sends duplicate CSV attachment</a></h3>
+            <div class="meta-row"><b>Grace Miller</b><span>Atlas Product Studio</span><span class="badge">In progress</span><span class="badge warn">Medium</span><span>Email</span><span>Assignee: Nina</span></div>
+            <div class="meta-row"><span>SLA: Due June 2, 2026, 9:00 AM</span><span>Read</span></div>
+            <p class="snippet">The scheduled email contains two copies of the same CSV.</p>
+          </article>
+          <article class="result-card" data-select-result="ex08" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/support/tickets/TCK-2026-54217">TCK-2026-54217 &middot; Export filter does not preserve date range</a></h3>
+            <div class="meta-row"><b>Maya Chen</b><span>Northstar Cloud</span><span class="badge status">Open</span><span class="badge bad">High</span><span>Email</span><span>Assignee: Unassigned</span></div>
+            <div class="meta-row"><span>SLA: Due today, 6:30 PM</span><span class="badge bad">Unread</span></div>
+            <p class="snippet">When I reopen the saved export, the date range resets to this month.</p>
+          </article>
+          <article class="result-card" data-select-result="ex08" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/support/tickets/TCK-2026-54231">TCK-2026-54231 &middot; Need CSV for event registration receipt details</a></h3>
+            <div class="meta-row"><b>Owen Brooks</b><span>City Museum of Design</span><span class="badge warn">Waiting on customer</span><span class="badge">Low</span><span>Chat</span><span>Assignee: Rafael</span></div>
+            <div class="meta-row"><span>SLA: Due June 3, 2026, 10:00 AM</span><span>Read</span></div>
+            <p class="snippet">Can you confirm which event ID should be exported?</p>
+          </article>
+        </section>
+
+        <aside class="detail-panel" aria-label="Selected ticket preview">
+          <h3>Selected ticket</h3>
+          <p class="sel-name">TCK-2026-54102</p>
+          <div class="field-row"><span class="field-label">Customer email</span><span class="field-value">theo.grant@example.test</span></div>
+          <div class="field-row"><span class="field-label">Detected topic</span><span class="field-value">Invoice export</span></div>
+          <div class="field-row"><span class="field-label">Related article</span><span class="field-value">How to export invoice line items</span></div>
+          <div class="field-row"><span class="field-label">Suggested macro</span><span class="field-value">Invoice line item export explanation</span></div>
+          <div class="field-block"><span class="field-label">Latest internal note</span>Customer needs CSV-compatible details, not only PDF summary.</div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-09">
+      <span class="ex-kicker">Example 09</span>
+      <h2>Product Search Results With Filter Sidebar</h2>
+      <p class="ex-desc">This example imitates an ecommerce product search page. It tests extraction of search query, filters, product cards, prices, ratings, review counts, inventory, delivery estimates, selected comparison details, and promotion badges.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>Search query</label><input value="travel backpack" aria-label="Search query"></div>
+        <div class="search-meta">
+          <span class="result-count"><span class="num">63</span> products</span>
+          <div class="field"><label>Sort order</label><select aria-label="Sort order"><option selected>Customer rating</option><option>Price low to high</option></select></div>
+        </div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span><span class="chip">Carry-on size</span><span class="chip">Under $150</span><span class="chip">In stock</span><span class="chip">Laptop sleeve</span></div>
+
+      <div class="search-shell" aria-label="Product search results">
+        <aside class="filter-panel" aria-label="Product filters">
+          <h3>Filters</h3>
+          <div class="facet-group"><h4>Price</h4>
+            <label class="facet-option"><span><input type="checkbox"> Under $50</span><span class="cnt">8</span></label>
+            <label class="facet-option"><span><input type="checkbox"> $50-$100</span><span class="cnt">24</span></label>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> $100-$150</span><span class="cnt">21</span></label>
+            <label class="facet-option"><span><input type="checkbox"> $150+</span><span class="cnt">10</span></label>
+          </div>
+          <div class="facet-group"><h4>Features</h4>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> Laptop sleeve</span><span class="cnt">38</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Water resistant</span><span class="cnt">29</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Expandable</span><span class="cnt">12</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Hidden pocket</span><span class="cnt">17</span></label>
+          </div>
+          <div class="facet-group"><h4>Availability</h4>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> In stock</span><span class="cnt">46</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Backordered</span><span class="cnt">9</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Store pickup</span><span class="cnt">18</span></label>
+          </div>
+          <div class="facet-group"><h4>Brand</h4>
+            <label class="facet-option"><span><input type="checkbox"> TrailKnit</span><span class="cnt">7</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Fieldmark</span><span class="cnt">11</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Packwell</span><span class="cnt">14</span></label>
+          </div>
+        </aside>
+
+        <section class="results-panel" aria-label="Product cards">
+          <article class="result-card is-selected" data-select-result="ex09" aria-selected="true">
+            <h3 class="result-title"><a href="/demo/products/canvas-travel-backpack-22">Canvas Travel Backpack 22L</a></h3>
+            <div class="meta-row"><span>Fieldmark</span><b>$89</b><span class="stars">4.7</span><span>318 reviews</span><span class="badge status">In stock</span><span>Arrives June 5</span></div>
+            <div class="badges"><span class="badge">Carry-on size</span><span class="badge">Laptop sleeve</span><span class="badge status">Free shipping</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex09" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/products/trailpack-commuter-28">TrailPack Commuter 28L</a></h3>
+            <div class="meta-row"><span>TrailKnit</span><b>$128</b><span class="stars">4.6</span><span>904 reviews</span><span class="badge warn">Low stock</span><span>Arrives June 7</span></div>
+            <div class="badges"><span class="badge">Water resistant</span><span class="badge">Expandable</span><span class="badge status">15 percent off</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex09" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/products/packwell-city-flight">Packwell City Flight Bag</a></h3>
+            <div class="meta-row"><span>Packwell</span><b>$112</b><span class="stars">4.4</span><span>221 reviews</span><span class="badge status">In stock</span><span>Arrives June 4</span></div>
+            <div class="badges"><span class="badge">Laptop sleeve</span><span class="badge">Under seat fit</span><span class="badge status">Bundle eligible</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex09" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/products/fieldmark-weekender-backpack">Fieldmark Weekender Backpack</a></h3>
+            <div class="meta-row"><span>Fieldmark</span><b>$146</b><span class="stars">4.8</span><span>147 reviews</span><span class="badge status">In stock</span><span>Arrives June 9</span></div>
+            <div class="badges"><span class="badge">Expandable</span><span class="badge">Carry-on size</span><span class="badge status">New color</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex09" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/products/nexaslim-tech-backpack">NexaSlim Tech Backpack</a></h3>
+            <div class="meta-row"><span>Nexa</span><b>$99</b><span class="stars">4.3</span><span>78 reviews</span><span class="badge bad">Backordered</span><span>Ships in 2 weeks</span></div>
+            <div class="badges"><span class="badge">Laptop sleeve</span><span class="badge">Slim profile</span><span class="badge warn">Backorder price</span></div>
+          </article>
+        </section>
+
+        <aside class="detail-panel" aria-label="Selected product comparison">
+          <h3>Comparison</h3>
+          <p class="sel-name">Canvas Travel Backpack 22L</p>
+          <div class="field-row"><span class="field-label">Dimensions</span><span class="field-value">18 x 11 x 7 in</span></div>
+          <div class="field-row"><span class="field-label">Weight</span><span class="field-value">1.8 lb</span></div>
+          <div class="field-row"><span class="field-label">Laptop compartment</span><span class="field-value">Up to 14 in</span></div>
+          <div class="field-row"><span class="field-label">Material</span><span class="field-value">Waxed canvas</span></div>
+          <div class="field-row"><span class="field-label">Return window</span><span class="field-value">30 days</span></div>
+          <div class="field-block"><span class="field-label">Compared against</span>
+            <ul><li>TrailPack Commuter 28L</li><li>Packwell City Flight Bag</li></ul>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-10">
+      <span class="ex-kicker">Example 10</span>
+      <h2>Hotel Search Results With Sticky Summary Sidebar</h2>
+      <p class="ex-desc">This example imitates a hotel search results page. It tests extraction of hotel cards, stay details, active filters, room rate metadata, review scores, amenities, taxes, fees, and selected hotel summary details.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>Destination</label><input value="Monterey, CA" aria-label="Destination"></div>
+        <div class="field"><label>Check-in</label><input value="August 14, 2026" aria-label="Check-in"></div>
+        <div class="field"><label>Check-out</label><input value="August 18, 2026" aria-label="Check-out"></div>
+        <div class="field"><label>Guests</label><input value="2 adults, 1 child" aria-label="Guests"></div>
+        <div class="field"><label>Rooms</label><input value="1" aria-label="Rooms"></div>
+        <div class="search-meta"><span class="result-count"><span class="num">31</span> stays</span></div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span><span class="chip">Breakfast included</span><span class="chip">Free cancellation</span><span class="chip">Parking available</span><span class="chip">Guest rating 8+</span></div>
+
+      <div class="search-shell" aria-label="Hotel search results">
+        <aside class="filter-panel" aria-label="Hotel filters">
+          <h3>Filters</h3>
+          <div class="facet-group"><h4>Budget</h4>
+            <label class="facet-option"><span><input type="checkbox"> $150-$250/night</span><span class="cnt">14</span></label>
+            <label class="facet-option"><span><input type="checkbox"> $250-$350/night</span><span class="cnt">11</span></label>
+            <label class="facet-option"><span><input type="checkbox"> $350+</span><span class="cnt">6</span></label>
+          </div>
+          <div class="facet-group"><h4>Amenities</h4>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> Breakfast included</span><span class="cnt">19</span></label>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> Parking available</span><span class="cnt">22</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Pool</span><span class="cnt">9</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Pet friendly</span><span class="cnt">7</span></label>
+          </div>
+          <div class="facet-group"><h4>Cancellation</h4>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> Free cancellation</span><span class="cnt">18</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Non-refundable</span><span class="cnt">13</span></label>
+          </div>
+        </aside>
+
+        <section class="results-panel" aria-label="Hotel cards">
+          <article class="result-card is-selected" data-select-result="ex10" aria-selected="true">
+            <h3 class="result-title"><a href="/demo/hotels/harbor-view-suites">Harbor View Suites</a></h3>
+            <div class="meta-row"><span>Monterey waterfront</span><span class="badge status">8.9 Excellent</span><span>0.4 mi from center</span></div>
+            <div class="meta-row"><span>King Studio With Harbor View</span><b>$249</b><span>Total before taxes $996</span></div>
+            <div class="meta-row"><span>Free cancellation until August 10</span></div>
+            <div class="badges"><span class="badge">Breakfast included</span><span class="badge">Parking available</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex10" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/hotels/cypress-garden-inn">Cypress Garden Inn</a></h3>
+            <div class="meta-row"><span>Downtown Monterey</span><span class="badge">8.4 Very good</span><span>0.7 mi from center</span></div>
+            <div class="meta-row"><span>Two queen room</span><b>$218</b><span>Total before taxes $872</span></div>
+            <div class="meta-row"><span>Free cancellation until August 9</span></div>
+            <div class="badges"><span class="badge">Breakfast included</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex10" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/hotels/bayfront-lodge">Bayfront Lodge</a></h3>
+            <div class="meta-row"><span>Cannery Row</span><span class="badge">8.1 Very good</span><span>1.1 mi from center</span></div>
+            <div class="meta-row"><span>Queen room</span><b>$196</b><span>Total before taxes $784</span></div>
+            <div class="meta-row"><span class="badge warn">Non-refundable</span></div>
+            <div class="badges"><span class="badge">Parking available</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex10" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/hotels/pine-coast-hotel">Pine Coast Hotel</a></h3>
+            <div class="meta-row"><span>Pacific Grove</span><span class="badge status">9.1 Wonderful</span><span>2.4 mi from center</span></div>
+            <div class="meta-row"><span>Family suite</span><b>$319</b><span>Total before taxes $1,276</span></div>
+            <div class="meta-row"><span>Free cancellation until August 8</span></div>
+            <div class="badges"><span class="badge">Breakfast included</span><span class="badge">Pool</span></div>
+          </article>
+        </section>
+
+        <aside class="detail-panel" aria-label="Sticky trip summary">
+          <h3>Trip summary</h3>
+          <p class="sel-name">Harbor View Suites</p>
+          <div class="field-row"><span class="field-label">Stay length</span><span class="field-value">4 nights</span></div>
+          <div class="field-row"><span class="field-label">Room</span><span class="field-value">King Studio With Harbor View</span></div>
+          <div class="field-row"><span class="field-label">Base price</span><span class="field-value">$996.00</span></div>
+          <div class="field-row"><span class="field-label">Taxes</span><span class="field-value">$142.48</span></div>
+          <div class="field-row"><span class="field-label">Resort fee</span><span class="field-value">$68.00</span></div>
+          <div class="field-row"><span class="field-label">Estimated total</span><span class="field-value">$1,206.48</span></div>
+          <div class="field-row"><span class="field-label">Pay now</span><span class="field-value">$0.00</span></div>
+          <div class="field-row"><span class="field-label">Pay at property</span><span class="field-value">$1,206.48</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-11">
+      <span class="ex-kicker">Example 11</span>
+      <h2>Restaurant Map Search Results</h2>
+      <p class="ex-desc">This example imitates a restaurant discovery map search. It tests extraction of restaurant names, cuisines, ratings, price levels, availability times, map pins, selected restaurant details, and active filters.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>Search query</label><input value="dinner near waterfront" aria-label="Search query"></div>
+        <div class="field"><label>Location</label><input value="Monterey, CA" aria-label="Location"></div>
+        <div class="field"><label>Date</label><input value="June 20, 2026" aria-label="Date"></div>
+        <div class="field"><label>Party size</label><input value="4" aria-label="Party size"></div>
+        <div class="search-meta"><span class="result-count"><span class="num">28</span> restaurants</span></div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span><span class="chip">Open tonight</span><span class="chip">Patio available</span><span class="chip">Seafood</span><span class="chip">4.5+ rating</span></div>
+
+      <div class="map-placeholder" aria-label="Restaurant map placeholder">
+        <span class="map-note">Map placeholder (no external tiles)</span>
+        <span class="map-pin" style="top:44px;left:80px;"><b>A</b>Cypress &amp; Fig</span>
+        <span class="map-pin" style="top:100px;left:230px;"><b>B</b>Harbor Noodle Bar</span>
+        <span class="map-pin" style="top:56px;left:400px;"><b>C</b>Salt &amp; Ember</span>
+        <span class="map-pin" style="top:122px;left:120px;"><b>D</b>Pier 12 Kitchen</span>
+      </div>
+
+      <div class="search-shell no-filter" aria-label="Restaurant search results">
+        <section class="results-panel" aria-label="Restaurant cards">
+          <article class="result-card is-selected" data-select-result="ex11" aria-selected="true">
+            <h3 class="result-title"><span class="pin-label">A</span><a href="/demo/restaurants/cypress-fig">Cypress &amp; Fig</a></h3>
+            <div class="meta-row"><span>Californian seafood</span><span class="stars">4.7</span><span>842 reviews</span><span class="price-level">$$$</span><span>0.3 mi</span></div>
+            <div class="times"><span class="time-slot">6:00 PM</span><span class="time-slot">7:15 PM</span><span class="time-slot">7:45 PM</span></div>
+            <div class="badges"><span class="badge">Patio</span><span class="badge">Wine list</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex11" aria-selected="false">
+            <h3 class="result-title"><span class="pin-label">B</span><a href="/demo/restaurants/harbor-noodle-bar">Harbor Noodle Bar</a></h3>
+            <div class="meta-row"><span>Japanese</span><span class="stars">4.6</span><span>391 reviews</span><span class="price-level">$$</span><span>0.5 mi</span></div>
+            <div class="times"><span class="time-slot">5:45 PM</span><span class="time-slot">8:15 PM</span></div>
+            <div class="badges"><span class="badge">Casual</span><span class="badge">Counter seating</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex11" aria-selected="false">
+            <h3 class="result-title"><span class="pin-label">C</span><a href="/demo/restaurants/salt-ember">Salt &amp; Ember</a></h3>
+            <div class="meta-row"><span>Wood-fired grill</span><span class="stars">4.8</span><span>1,104 reviews</span><span class="price-level">$$$$</span><span>0.8 mi</span></div>
+            <div class="times"><span class="time-slot">8:30 PM</span></div>
+            <div class="badges"><span class="badge">Chef's counter</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex11" aria-selected="false">
+            <h3 class="result-title"><span class="pin-label">D</span><a href="/demo/restaurants/pier-12-kitchen">Pier 12 Kitchen</a></h3>
+            <div class="meta-row"><span>Seafood</span><span class="stars">4.4</span><span>276 reviews</span><span class="price-level">$$</span><span>1.0 mi</span></div>
+            <div class="times"><span class="time-slot">6:30 PM</span><span class="time-slot">7:00 PM</span></div>
+            <div class="badges"><span class="badge">Family friendly</span><span class="badge">Water view</span></div>
+          </article>
+        </section>
+
+        <aside class="detail-panel" aria-label="Selected restaurant detail">
+          <h3>Selected restaurant</h3>
+          <p class="sel-name">Cypress &amp; Fig</p>
+          <div class="field-row"><span class="field-label">Address</span><span class="field-value">41 Marina Drive, Monterey, CA</span></div>
+          <div class="field-row"><span class="field-label">Selected time</span><span class="field-value">7:15 PM</span></div>
+          <div class="field-row"><span class="field-label">Table type</span><span class="field-value">Patio</span></div>
+          <div class="field-block"><span class="field-label">Cancellation policy</span>Cancel at least 2 hours before reservation time</div>
+          <div class="field-block"><span class="field-label">Special note</span>Shellfish allergy can be accommodated with advance notice</div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-12">
+      <span class="ex-kicker">Example 12</span>
+      <h2>Healthcare Provider Search Results</h2>
+      <p class="ex-desc">This example imitates a healthcare provider search page. It tests extraction of provider names, credentials, specialties, locations, insurance acceptance, appointment availability, languages, ratings, and selected provider details.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>Search query</label><input value="orthopedics knee pain" aria-label="Search query"></div>
+        <div class="field"><label>Location</label><input value="San Francisco, CA" aria-label="Location"></div>
+        <div class="field"><label>Insurance</label><input value="Northstar PPO" aria-label="Insurance"></div>
+        <div class="search-meta"><span class="result-count"><span class="num">16</span> providers</span></div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span><span class="chip">Accepting new patients</span><span class="chip">In-network</span><span class="chip">Next 14 days</span><span class="chip">In-person</span></div>
+
+      <div class="search-shell" aria-label="Healthcare provider search results">
+        <aside class="filter-panel" aria-label="Provider filters">
+          <h3>Filters</h3>
+          <div class="facet-group"><h4>Visit type</h4>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> In-person</span><span class="cnt">12</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Video visit</span><span class="cnt">7</span></label>
+          </div>
+          <div class="facet-group"><h4>Availability</h4>
+            <label class="facet-option"><span><input type="checkbox"> This week</span><span class="cnt">4</span></label>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> Next 14 days</span><span class="cnt">11</span></label>
+          </div>
+          <div class="facet-group"><h4>Languages</h4>
+            <label class="facet-option"><span><input type="checkbox"> English</span><span class="cnt">16</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Spanish</span><span class="cnt">5</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Mandarin</span><span class="cnt">3</span></label>
+          </div>
+        </aside>
+
+        <section class="results-panel" aria-label="Provider cards">
+          <article class="result-card is-selected" data-select-result="ex12" aria-selected="true">
+            <h3 class="result-title"><a href="/demo/providers/helen-park-md">Dr. Helen Park, MD</a></h3>
+            <div class="meta-row"><span>Orthopedics</span><span>Downtown Clinic</span><span>450 Market Street, San Francisco, CA</span></div>
+            <div class="meta-row"><span class="badge status">In-network with Northstar PPO</span><span class="stars">4.8</span><span>126 reviews</span></div>
+            <div class="meta-row"><span>Next available: June 11, 2026, 2:30 PM</span><span>Languages: English, Korean</span></div>
+            <div class="badges"><span class="badge">Accepting new patients</span><span class="badge">Knee specialist</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex12" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/providers/omar-nasser-do">Dr. Omar Nasser, DO</a></h3>
+            <div class="meta-row"><span>Sports medicine</span><span>Westside Clinic</span><span>1200 Irving Street, San Francisco, CA</span></div>
+            <div class="meta-row"><span class="badge status">In-network with Northstar PPO</span><span class="stars">4.6</span><span>84 reviews</span></div>
+            <div class="meta-row"><span>Next available: June 17, 2026, 10:00 AM</span><span>Languages: English, Arabic</span></div>
+            <div class="badges"><span class="badge">Sports injuries</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex12" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/providers/jamie-lee-pt">Jamie Lee, PT</a></h3>
+            <div class="meta-row"><span>Physical therapy</span><span>Downtown Clinic</span><span>450 Market Street, San Francisco, CA</span></div>
+            <div class="meta-row"><span class="badge warn">Referral required</span><span class="stars">4.9</span><span>203 reviews</span></div>
+            <div class="meta-row"><span>Next available: June 10, 2026, 8:30 AM</span><span>Languages: English</span></div>
+            <div class="badges"><span class="badge">Post-surgery rehab</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex12" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/providers/maya-singh-md">Dr. Maya Singh, MD</a></h3>
+            <div class="meta-row"><span>Orthopedics</span><span>Telehealth</span><span>Video visit</span></div>
+            <div class="meta-row"><span class="badge status">In-network with Northstar PPO</span><span class="stars">4.5</span><span>65 reviews</span></div>
+            <div class="meta-row"><span>Next available: June 13, 2026, 4:00 PM</span><span>Languages: English, Spanish</span></div>
+            <div class="badges"><span class="badge">Video visit</span></div>
+          </article>
+        </section>
+
+        <aside class="detail-panel" aria-label="Selected provider detail">
+          <h3>Selected provider</h3>
+          <p class="sel-name">Dr. Helen Park, MD</p>
+          <div class="field-row"><span class="field-label">NPI-like demo ID</span><span class="field-value mono">DEMO-NPI-204884</span></div>
+          <div class="field-row"><span class="field-label">Education</span><span class="field-value">North Coast Medical School</span></div>
+          <div class="field-block"><span class="field-label">Clinical interests</span>
+            <ul><li>knee pain</li><li>sports injuries</li><li>arthritis</li></ul>
+          </div>
+          <div class="field-block"><span class="field-label">Appointment types</span>
+            <ul><li>New patient consult</li><li>Follow-up</li><li>Procedure review</li></ul>
+          </div>
+          <div class="field-block"><span class="field-label">Preparation note</span>Bring imaging results if available</div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-13">
+      <span class="ex-kicker">Example 13</span>
+      <h2>University Course Search Results</h2>
+      <p class="ex-desc">This example imitates a university course search and registration page. It tests extraction of course codes, titles, sections, instructors, meeting times, credits, seats available, enrollment status, active filters, and selected course details.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>Search query</label><input value="human centered software" aria-label="Search query"></div>
+        <div class="field"><label>Term</label><select aria-label="Term"><option selected>Fall 2026</option><option>Spring 2027</option></select></div>
+        <div class="search-meta">
+          <span class="result-count"><span class="num">12</span> sections</span>
+          <div class="field"><label>Sort order</label><select aria-label="Sort order"><option selected>Open seats first</option></select></div>
+        </div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span><span class="chip">Computer Science</span><span class="chip">Open sections</span><span class="chip">3+ credits</span><span class="chip">In person</span></div>
+
+      <div class="search-shell" aria-label="University course search results">
+        <aside class="filter-panel" aria-label="Course filters">
+          <h3>Filters</h3>
+          <div class="facet-group"><h4>Department</h4>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> Computer Science</span><span class="cnt">8</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Design</span><span class="cnt">2</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Information Studies</span><span class="cnt">2</span></label>
+          </div>
+          <div class="facet-group"><h4>Meeting days</h4>
+            <label class="facet-option"><span><input type="checkbox"> Mon/Wed</span><span class="cnt">5</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Tue/Thu</span><span class="cnt">4</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Friday</span><span class="cnt">3</span></label>
+          </div>
+          <div class="facet-group"><h4>Availability</h4>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> Open</span><span class="cnt">7</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Waitlist</span><span class="cnt">3</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Closed</span><span class="cnt">2</span></label>
+          </div>
+        </aside>
+
+        <section class="results-panel" aria-label="Course rows">
+          <table class="row-table" aria-label="Course sections">
+            <thead><tr><th>Course</th><th>Title</th><th>Sec</th><th>Instructor</th><th>Cr</th><th>Meeting</th><th>Seats</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr class="is-selected" data-select-result="ex13" aria-selected="true">
+                <td><a href="/demo/courses/fall-2026/cs-340-a">CS 340</a></td>
+                <td>Human-Centered Software Design<div class="badges"><span class="badge tag">Project-based</span><span class="badge tag">Writing intensive</span></div></td>
+                <td>A</td><td>Dr. Hannah Cho</td><td>4</td><td>Mon/Wed 10:00-11:50 AM<br>Engineering Hall 204</td><td>6 of 32 available</td><td><span class="badge status">Open</span></td>
+              </tr>
+              <tr data-select-result="ex13" aria-selected="false">
+                <td><a href="/demo/courses/fall-2026/cs-341-b">CS 341</a></td>
+                <td>Interface Prototyping Lab<div class="badges"><span class="badge tag">Studio</span></div></td>
+                <td>B</td><td>Lina Romero</td><td>3</td><td>Tue/Thu 2:00-3:20 PM<br>Design Studio 3</td><td>Waitlist 4</td><td><span class="badge warn">Waitlist</span></td>
+              </tr>
+              <tr data-select-result="ex13" aria-selected="false">
+                <td><a href="/demo/courses/fall-2026/cs-375-a">CS 375</a></td>
+                <td>Browser Automation Systems<div class="badges"><span class="badge tag">Lab required</span></div></td>
+                <td>A</td><td>Rafael Ortiz</td><td>3</td><td>Friday 9:00-11:45 AM<br>Engineering Hall 108</td><td>2 of 24 available</td><td><span class="badge status">Open</span></td>
+              </tr>
+              <tr data-select-result="ex13" aria-selected="false">
+                <td><a href="/demo/courses/fall-2026/info-280-c">INFO 280</a></td>
+                <td>Information Extraction From Web Interfaces<div class="badges"><span class="badge tag">Online</span></div></td>
+                <td>C</td><td>Maya Chen</td><td>3</td><td>Tue/Thu 11:00 AM-12:20 PM<br>Online synchronous</td><td>Closed</td><td><span class="badge bad">Closed</span></td>
+              </tr>
+              <tr data-select-result="ex13" aria-selected="false">
+                <td><a href="/demo/courses/fall-2026/des-215-a">DES 215</a></td>
+                <td>Designing Forms And Flows<div class="badges"><span class="badge tag">Portfolio</span></div></td>
+                <td>A</td><td>Owen Brooks</td><td>3</td><td>Mon/Wed 1:00-2:20 PM<br>Design Hall 110</td><td>12 of 28 available</td><td><span class="badge status">Open</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <aside class="detail-panel" aria-label="Selected course detail">
+          <h3>Selected course</h3>
+          <p class="sel-name">CS 340 - Human-Centered Software Design</p>
+          <div class="field-block"><span class="field-label">Prerequisites</span>CS 210 and junior standing</div>
+          <div class="field-block"><span class="field-label">Registration restriction</span>Computer Science majors until July 1</div>
+          <div class="field-row"><span class="field-label">Final exam</span><span class="field-value">December 14, 2026, 8:00 AM</span></div>
+          <div class="field-row"><span class="field-label">Materials</span><span class="field-value">No textbook required</span></div>
+          <div class="field-row"><span class="field-label">Registration action</span><span class="field-value">Add to draft schedule</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-14">
+      <span class="ex-kicker">Example 14</span>
+      <h2>Legal Document Search Results</h2>
+      <p class="ex-desc">This example imitates a legal document search page. It tests extraction of document titles, matter names, document types, dates, custodians, snippets with highlights, privilege status, tags, and selected document metadata.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>Search query</label><input value="termination clause renewal notice" aria-label="Search query"></div>
+        <div class="field"><label>Matter</label><input value="Demo Matter - Vendor Agreement Review" aria-label="Matter"></div>
+        <div class="search-meta">
+          <span class="result-count"><span class="num">128</span> documents</span>
+          <div class="field"><label>Sort order</label><select aria-label="Sort order"><option selected>Relevance</option></select></div>
+        </div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span><span class="chip">Contracts</span><span class="chip">Privileged excluded</span><span class="chip">Date 2024-2026</span><span class="chip">Contains renewal</span></div>
+
+      <div class="search-shell" aria-label="Legal document search results">
+        <aside class="filter-panel" aria-label="Document filters">
+          <h3>Filters</h3>
+          <div class="facet-group"><h4>Document type</h4>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> Contract</span><span class="cnt">42</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Email</span><span class="cnt">51</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Memo</span><span class="cnt">18</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Attachment</span><span class="cnt">17</span></label>
+          </div>
+          <div class="facet-group"><h4>Custodian</h4>
+            <label class="facet-option"><span><input type="checkbox"> Renee Coleman</span><span class="cnt">28</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Owen Brooks</span><span class="cnt">17</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Legal Team Shared</span><span class="cnt">44</span></label>
+          </div>
+          <div class="facet-group"><h4>Privilege</h4>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> Not privileged</span><span class="cnt">91</span></label>
+            <label class="facet-option is-disabled"><span><input type="checkbox" disabled> Potentially privileged</span><span class="cnt">37</span></label>
+          </div>
+        </aside>
+
+        <section class="results-panel" aria-label="Document results">
+          <article class="result-card is-selected" data-select-result="ex14" aria-selected="true">
+            <h3 class="result-title"><a href="/demo/legal/docs/doc-8841">Master Services Agreement - Northstar Cloud</a></h3>
+            <div class="meta-row"><span>DOC-8841</span><span>Contract</span><span>January 18, 2026</span><span>Vendor Agreement Review</span><span>Legal Team Shared</span></div>
+            <p class="snippet">Either party may terminate for convenience with 60 days written <mark>notice</mark> before the automatic <mark>renewal</mark> date.</p>
+            <div class="badges"><span class="badge tag">renewal</span><span class="badge tag">termination</span><span class="badge tag">vendor</span><span class="badge status">Not privileged</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex14" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/legal/docs/doc-8817">Renewal Notice Draft - Atlas Product Studio</a></h3>
+            <div class="meta-row"><span>DOC-8817</span><span>Memo</span><span>December 4, 2025</span><span>Vendor Agreement Review</span><span>Renee Coleman</span></div>
+            <p class="snippet">Draft language for sending a non-renewal <mark>notice</mark> before the subscription term closes.</p>
+            <div class="badges"><span class="badge tag">renewal</span><span class="badge tag">notice</span><span class="badge tag">draft</span><span class="badge warn">Potentially privileged</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex14" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/legal/docs/doc-8774">Support Package Addendum</a></h3>
+            <div class="meta-row"><span>DOC-8774</span><span>Contract</span><span>March 12, 2025</span><span>Vendor Agreement Review</span><span>Legal Team Shared</span></div>
+            <p class="snippet">The addendum follows the same <mark>termination</mark> process as the master agreement unless otherwise stated.</p>
+            <div class="badges"><span class="badge tag">support</span><span class="badge tag">addendum</span><span class="badge status">Not privileged</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex14" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/legal/docs/doc-8720">Vendor Renewal Calendar Export</a></h3>
+            <div class="meta-row"><span>DOC-8720</span><span>Spreadsheet</span><span>November 9, 2024</span><span>Vendor Agreement Review</span><span>Owen Brooks</span></div>
+            <p class="snippet">Spreadsheet listing renewal deadline, notice owner, vendor contact, and contract value.</p>
+            <div class="badges"><span class="badge tag">calendar</span><span class="badge tag">renewal</span><span class="badge tag">operations</span><span class="badge status">Not privileged</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex14" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/legal/docs/doc-8688">Termination Clause Comparison Notes</a></h3>
+            <div class="meta-row"><span>DOC-8688</span><span>Memo</span><span>August 22, 2024</span><span>Vendor Agreement Review</span><span>Renee Coleman</span></div>
+            <p class="snippet">Comparison of convenience termination, cause termination, cure periods, and renewal notice requirements.</p>
+            <div class="badges"><span class="badge tag">termination</span><span class="badge tag">comparison</span><span class="badge status">Not privileged</span></div>
+          </article>
+        </section>
+
+        <aside class="detail-panel" aria-label="Selected document metadata">
+          <h3>Selected document</h3>
+          <p class="sel-name">Master Services Agreement - Northstar Cloud</p>
+          <div class="field-row"><span class="field-label">File name</span><span class="field-value mono">msa_northstar_cloud_2026.pdf</span></div>
+          <div class="field-row"><span class="field-label">Page count</span><span class="field-value">42</span></div>
+          <div class="field-row"><span class="field-label">Relevant page</span><span class="field-value">Page 18</span></div>
+          <div class="field-row"><span class="field-label">Contract value</span><span class="field-value">$84,000 annually</span></div>
+          <div class="field-row"><span class="field-label">Renewal date</span><span class="field-value">January 18, 2027</span></div>
+          <div class="field-row"><span class="field-label">Notice deadline</span><span class="field-value">November 19, 2026</span></div>
+          <div class="field-row"><span class="field-label">Review status</span><span class="field-value">Needs business owner review</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-15">
+      <span class="ex-kicker">Example 15</span>
+      <h2>File Library Search Results With Metadata Sidebar</h2>
+      <p class="ex-desc">This example imitates an internal file library search page. It tests extraction of file names, file types, owners, modified dates, folder paths, snippets, tags, selected file metadata, and action links from a split search layout.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>Search query</label><input value="demo page specification" aria-label="Search query"></div>
+        <div class="field"><label>Scope</label><select aria-label="Scope"><option selected>All project files</option></select></div>
+        <div class="search-meta">
+          <span class="result-count"><span class="num">31</span> files</span>
+          <div class="field"><label>Sort order</label><select aria-label="Sort order"><option selected>Recently modified</option></select></div>
+        </div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span><span class="chip">Documents</span><span class="chip">Modified this month</span><span class="chip">Owner: Product Systems</span></div>
+
+      <div class="search-shell" aria-label="File library search results">
+        <aside class="filter-panel" aria-label="File filters">
+          <h3>Filters</h3>
+          <div class="facet-group"><h4>File type</h4>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> Documents</span><span class="cnt">18</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Spreadsheets</span><span class="cnt">6</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Slides</span><span class="cnt">4</span></label>
+            <label class="facet-option"><span><input type="checkbox"> HTML files</span><span class="cnt">3</span></label>
+          </div>
+          <div class="facet-group"><h4>Owner</h4>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> Product Systems</span><span class="cnt">12</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Research</span><span class="cnt">8</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Engineering</span><span class="cnt">11</span></label>
+          </div>
+          <div class="facet-group"><h4>Modified</h4>
+            <label class="facet-option"><span><input type="checkbox"> Today</span><span class="cnt">3</span></label>
+            <label class="facet-option"><span><input type="checkbox"> This week</span><span class="cnt">14</span></label>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> This month</span><span class="cnt">31</span></label>
+          </div>
+        </aside>
+
+        <section class="results-panel" aria-label="File results">
+          <article class="result-card is-selected" data-select-result="ex15" aria-selected="true">
+            <h3 class="result-title"><a href="/demo/files/page-05-feed-posts-card-extraction-spec">Page 5 - Feed Posts And Card Extraction Spec</a></h3>
+            <div class="meta-row"><span class="badge tag">Document</span><span>Product Systems</span><span>Modified May 31, 2026, 10:18 AM</span><span class="mono">/Demo Pages/Specifications</span></div>
+            <p class="snippet">The page must focus on feed, post, and card extraction: news feeds, link aggregators, social posts...</p>
+            <div class="badges"><span class="badge tag">specification</span><span class="badge tag">cards</span><span class="badge tag">feeds</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex15" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/files/page-04-read-only-records-spec">Page 4 - Read Only Records Spec</a></h3>
+            <div class="meta-row"><span class="badge tag">Document</span><span>Product Systems</span><span>Modified May 30, 2026, 4:12 PM</span><span class="mono">/Demo Pages/Specifications</span></div>
+            <p class="snippet">The page must focus on read-only records and confirmation pages: order confirmations, invoices, receipts...</p>
+            <div class="badges"><span class="badge tag">specification</span><span class="badge tag">records</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex15" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/files/extraction-test-matrix">Extraction Test Matrix</a></h3>
+            <div class="meta-row"><span class="badge tag">Spreadsheet</span><span>Engineering</span><span>Modified May 29, 2026, 2:44 PM</span><span class="mono">/QA/Test Plans</span></div>
+            <p class="snippet">Tracks coverage across native forms, custom dropdowns, booking flows, records, and card extraction.</p>
+            <div class="badges"><span class="badge tag">qa</span><span class="badge tag">matrix</span><span class="badge tag">coverage</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex15" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/files/dropdown-picker-fixture-notes">Dropdown Picker Fixture Notes</a></h3>
+            <div class="meta-row"><span class="badge tag">Document</span><span>Research</span><span>Modified May 27, 2026, 8:05 AM</span><span class="mono">/Research/Patterns</span></div>
+            <p class="snippet">Custom time picker menus frequently separate trigger labels from menu item values using overlay containers.</p>
+            <div class="badges"><span class="badge tag">dropdowns</span><span class="badge tag">research</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex15" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/files/demo-page-visual-references">Demo Page Visual References</a></h3>
+            <div class="meta-row"><span class="badge tag">Slides</span><span>Product Systems</span><span>Modified May 24, 2026, 1:19 PM</span><span class="mono">/Demo Pages/Design</span></div>
+            <p class="snippet">Visual references for Storybook-style HTML test pages, including cards, feeds, forms, and panels.</p>
+            <div class="badges"><span class="badge tag">design</span><span class="badge tag">references</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex15" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/files/portable-html-fixture-checklist">Portable HTML Fixture Checklist</a></h3>
+            <div class="meta-row"><span class="badge tag">Document</span><span>Engineering</span><span>Modified May 22, 2026, 11:38 AM</span><span class="mono">/Engineering/Checklists</span></div>
+            <p class="snippet">Every fixture must be standalone, use inline CSS, avoid external assets, and expose realistic visible values.</p>
+            <div class="badges"><span class="badge tag">html</span><span class="badge tag">fixture</span><span class="badge tag">checklist</span></div>
+          </article>
+        </section>
+
+        <aside class="detail-panel" aria-label="Selected file metadata">
+          <h3>File metadata</h3>
+          <p class="sel-name">Page 5 - Feed Posts And Card Extraction Spec</p>
+          <div class="field-row"><span class="field-label">File ID</span><span class="field-value mono">file_demo_0525</span></div>
+          <div class="field-row"><span class="field-label">Created</span><span class="field-value">May 31, 2026, 9:44 AM</span></div>
+          <div class="field-row"><span class="field-label">Modified by</span><span class="field-value">Rockstar Developer</span></div>
+          <div class="field-row"><span class="field-label">Word count</span><span class="field-value">8,920</span></div>
+          <div class="field-block"><span class="field-label">Shared with</span>
+            <ul><li>Engineering</li><li>Product Systems</li></ul>
+          </div>
+          <div class="field-block"><span class="field-label">Available actions</span>
+            <ul><li>Open</li><li>Copy link</li><li>View history</li></ul>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-16">
+      <span class="ex-kicker">Example 16</span>
+      <h2>Analytics Report Search Results</h2>
+      <p class="ex-desc">This example imitates an analytics workspace search page. It tests extraction of report titles, dashboard names, owners, metric names, refresh schedules, last run times, tags, and selected report metadata.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>Search query</label><input value="monthly billing export" aria-label="Search query"></div>
+        <div class="field"><label>Workspace</label><select aria-label="Workspace"><option selected>Atlas Product Studio</option></select></div>
+        <div class="search-meta">
+          <span class="result-count"><span class="num">19</span> reports</span>
+          <div class="field"><label>Sort order</label><select aria-label="Sort order"><option selected>Recently viewed</option></select></div>
+        </div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span><span class="chip">Scheduled</span><span class="chip">Billing metrics</span><span class="chip">CSV export enabled</span></div>
+
+      <div class="search-shell no-filter" aria-label="Analytics report search results">
+        <section class="results-panel" aria-label="Report cards">
+          <article class="result-card is-selected" data-select-result="ex16" aria-selected="true">
+            <h3 class="result-title"><a href="/demo/analytics/reports/monthly-billing-export-summary">Monthly Billing Export Summary</a></h3>
+            <div class="meta-row"><span>Scheduled report</span><span>Owner: Renee Coleman</span><span>Dashboard: Finance Operations</span></div>
+            <div class="meta-row"><span>Last run May 31, 2026, 6:00 AM</span><span>Schedule: Monthly on the 1st</span><span>Output: CSV and email</span></div>
+            <div class="badges"><span class="badge">invoice total</span><span class="badge">payments applied</span><span class="badge">balance due</span></div>
+            <div class="badges"><span class="badge tag">billing</span><span class="badge tag">exports</span><span class="badge tag">finance</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex16" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/analytics/reports/invoice-line-item-detail">Invoice Line Item Detail</a></h3>
+            <div class="meta-row"><span>Table report</span><span>Owner: Theo Grant</span><span>Dashboard: Billing Diagnostics</span></div>
+            <div class="meta-row"><span>Last run May 30, 2026, 4:15 PM</span><span>Schedule: Manual</span><span>Output: CSV</span></div>
+            <div class="badges"><span class="badge">SKU</span><span class="badge">tax amount</span><span class="badge">discount amount</span></div>
+            <div class="badges"><span class="badge tag">line items</span><span class="badge tag">csv</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex16" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/analytics/reports/subscription-seat-usage-trend">Subscription Seat Usage Trend</a></h3>
+            <div class="meta-row"><span>Chart report</span><span>Owner: Grace Miller</span><span>Dashboard: Customer Success</span></div>
+            <div class="meta-row"><span>Last run May 29, 2026, 8:00 AM</span><span>Schedule: Weekly on Monday</span><span>Output: Dashboard only</span></div>
+            <div class="badges"><span class="badge">seats purchased</span><span class="badge">seats used</span><span class="badge">available seats</span></div>
+            <div class="badges"><span class="badge tag">subscriptions</span><span class="badge tag">usage</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex16" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/analytics/reports/failed-payment-recovery">Failed Payment Recovery</a></h3>
+            <div class="meta-row"><span>Dashboard</span><span>Owner: Nina Patel</span><span>Dashboard: Billing Operations</span></div>
+            <div class="meta-row"><span>Last run May 28, 2026, 7:30 AM</span><span>Schedule: Daily</span><span>Output: Dashboard and email</span></div>
+            <div class="badges"><span class="badge">failed payments</span><span class="badge">recovered amount</span><span class="badge">retry count</span></div>
+            <div class="badges"><span class="badge tag">payments</span><span class="badge tag">recovery</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex16" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/analytics/reports/export-job-health">Export Job Health</a></h3>
+            <div class="meta-row"><span>Operational report</span><span>Owner: Rafael Ortiz</span><span>Dashboard: Platform Reliability</span></div>
+            <div class="meta-row"><span>Last run May 31, 2026, 10:00 AM</span><span>Schedule: Hourly</span><span>Output: Dashboard</span></div>
+            <div class="badges"><span class="badge">export duration</span><span class="badge">failure count</span><span class="badge">queue time</span></div>
+            <div class="badges"><span class="badge tag">exports</span><span class="badge tag">reliability</span></div>
+          </article>
+        </section>
+
+        <aside class="detail-panel" aria-label="Selected report metadata">
+          <h3>Selected report</h3>
+          <p class="sel-name">Monthly Billing Export Summary</p>
+          <div class="field-row"><span class="field-label">Report ID</span><span class="field-value mono">rpt_2026_7712</span></div>
+          <div class="field-row"><span class="field-label">Next scheduled run</span><span class="field-value">June 1, 2026, 6:00 AM</span></div>
+          <div class="field-block"><span class="field-label">Recipients</span>
+            <ul><li>billing@example.test</li><li>finance@example.test</li></ul>
+          </div>
+          <div class="field-row"><span class="field-label">Export format</span><span class="field-value">CSV</span></div>
+          <div class="field-row"><span class="field-label">Rows last run</span><span class="field-value">2,184</span></div>
+          <div class="field-row"><span class="field-label">Last run status</span><span class="field-value">Succeeded</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-17">
+      <span class="ex-kicker">Example 17</span>
+      <h2>Package Registry Search Results</h2>
+      <p class="ex-desc">This example imitates a software package registry search page. It tests extraction of package names, links, descriptions, versions, maintainers, download counts, license, install command, tags, and selected package details.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>Search query</label><input value="dropdown extraction" aria-label="Search query"></div>
+        <div class="field"><label>Registry</label><select aria-label="Registry"><option selected>Demo JavaScript Packages</option></select></div>
+        <div class="search-meta">
+          <span class="result-count"><span class="num">12</span> packages</span>
+          <div class="field"><label>Sort order</label><select aria-label="Sort order"><option selected>Relevance</option></select></div>
+        </div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span><span class="chip">TypeScript types</span><span class="chip">Recently updated</span><span class="chip">MIT license</span></div>
+
+      <div class="search-shell no-filter" aria-label="Package registry search results">
+        <section class="results-panel" aria-label="Package cards">
+          <article class="result-card is-selected" data-select-result="ex17" aria-selected="true">
+            <h3 class="result-title"><a class="mono" href="/demo/packages/extract-dropdown">@demo/extract-dropdown</a></h3>
+            <p class="snippet">Utilities for reading visible and submitted values from custom dropdown widgets.</p>
+            <div class="meta-row"><span>v0.9.4</span><span>Updated May 28, 2026</span><span>18,420 weekly downloads</span><span>MIT</span><span>Maintainers: mira_dev, semanticist</span></div>
+            <div class="install-cmd">npm install @demo/extract-dropdown</div>
+            <div class="badges"><span class="badge tag">dropdown</span><span class="badge tag">aria</span><span class="badge tag">forms</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex17" aria-selected="false">
+            <h3 class="result-title"><a class="mono" href="/demo/packages/card-parser">@demo/card-parser</a></h3>
+            <p class="snippet">Helpers for turning repeated card lists into structured records.</p>
+            <div class="meta-row"><span>v1.2.1</span><span>Updated May 24, 2026</span><span>42,118 weekly downloads</span><span>MIT</span><span>Maintainers: pixelroot, layout_sleuth</span></div>
+            <div class="install-cmd">npm install @demo/card-parser</div>
+            <div class="badges"><span class="badge tag">cards</span><span class="badge tag">extraction</span><span class="badge tag">lists</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex17" aria-selected="false">
+            <h3 class="result-title"><a class="mono" href="/demo/packages/sidebar-state">@demo/sidebar-state</a></h3>
+            <p class="snippet">Small state manager for selected result sidebars and split-pane search views.</p>
+            <div class="meta-row"><span>v0.6.8</span><span>Updated May 20, 2026</span><span>9,812 weekly downloads</span><span>Apache-2.0</span><span>Maintainers: testwright</span></div>
+            <div class="install-cmd">npm install @demo/sidebar-state</div>
+            <div class="badges"><span class="badge tag">sidebar</span><span class="badge tag">search</span><span class="badge tag">state</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex17" aria-selected="false">
+            <h3 class="result-title"><a class="mono" href="/demo/packages/facet-filter">@demo/facet-filter</a></h3>
+            <p class="snippet">Accessible faceted filter primitives for static search fixtures.</p>
+            <div class="meta-row"><span>v2.0.0</span><span>Updated May 18, 2026</span><span>31,004 weekly downloads</span><span>MIT</span><span>Maintainers: dom_mapper</span></div>
+            <div class="install-cmd">npm install @demo/facet-filter</div>
+            <div class="badges"><span class="badge tag">filters</span><span class="badge tag">facets</span><span class="badge tag">search</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex17" aria-selected="false">
+            <h3 class="result-title"><a class="mono" href="/demo/packages/highlight-snippet">@demo/highlight-snippet</a></h3>
+            <p class="snippet">Render search snippets with safe highlighted terms and preserved context.</p>
+            <div class="meta-row"><span>v0.4.5</span><span>Updated April 30, 2026</span><span>7,441 weekly downloads</span><span>BSD-3-Clause</span><span>Maintainers: glyphwatch</span></div>
+            <div class="install-cmd">npm install @demo/highlight-snippet</div>
+            <div class="badges"><span class="badge tag">snippets</span><span class="badge tag">highlighting</span></div>
+          </article>
+        </section>
+
+        <aside class="detail-panel" aria-label="Selected package detail">
+          <h3>Selected package</h3>
+          <p class="sel-name mono">@demo/extract-dropdown</p>
+          <div class="field-row"><span class="field-label">Bundle size</span><span class="field-value">6.8 kB</span></div>
+          <div class="field-row"><span class="field-label">TypeScript types</span><span class="field-value">Included</span></div>
+          <div class="field-block"><span class="field-label">Repository</span><a class="mono" href="/demo/repos/extract-dropdown">/demo/repos/extract-dropdown</a></div>
+          <div class="field-row"><span class="field-label">Open issues</span><span class="field-value">14</span></div>
+          <div class="field-row"><span class="field-label">Last publish</span><span class="field-value">May 28, 2026</span></div>
+          <div class="field-row"><span class="field-label">Security status</span><span class="field-value">No known advisories</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-18">
+      <span class="ex-kicker">Example 18</span>
+      <h2>Recruiting Candidate Search Results</h2>
+      <p class="ex-desc">This example imitates an applicant tracking search page. It tests extraction of candidate cards, roles, stages, skills, scores, locations, availability, last activity, and selected candidate detail sidebar data.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>Search query</label><input value="QA automation Playwright accessibility" aria-label="Search query"></div>
+        <div class="field"><label>Role</label><select aria-label="Role"><option selected>QA Automation Engineer</option></select></div>
+        <div class="search-meta">
+          <span class="result-count"><span class="num">38</span> candidates</span>
+          <div class="field"><label>Sort order</label><select aria-label="Sort order"><option selected>Best match</option></select></div>
+        </div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span><span class="chip">Playwright</span><span class="chip">Accessibility testing</span><span class="chip">Available in 30 days</span><span class="chip">Senior</span></div>
+
+      <div class="search-shell no-filter" aria-label="Recruiting candidate search results">
+        <section class="results-panel" aria-label="Candidate cards">
+          <article class="result-card is-selected" data-select-result="ex18" aria-selected="true">
+            <h3 class="result-title"><a href="/demo/recruiting/candidates/avery-quinn">Avery Quinn</a></h3>
+            <div class="meta-row"><span>Senior QA Engineer</span><span>Remote - United States</span><span>Stage: Technical screen</span><span>Match <b>94</b></span><span>Available 2 weeks</span></div>
+            <div class="meta-row"><span>Last activity: Completed take-home exercise</span><span>Owner: Grace Miller</span></div>
+            <div class="badges"><span class="badge tag">Playwright</span><span class="badge tag">Accessibility testing</span><span class="badge tag">TypeScript</span><span class="badge tag">CI</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex18" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/recruiting/candidates/diego-marin">Diego Marin</a></h3>
+            <div class="meta-row"><span>Automation Lead</span><span>Austin, TX</span><span>Stage: Recruiter screen</span><span>Match <b>89</b></span><span>Available 30 days</span></div>
+            <div class="meta-row"><span>Last activity: Recruiter call scheduled</span><span>Owner: Nina Patel</span></div>
+            <div class="badges"><span class="badge tag">Selenium</span><span class="badge tag">Playwright</span><span class="badge tag">API testing</span><span class="badge tag">Mentoring</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex18" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/recruiting/candidates/mei-tanaka">Mei Tanaka</a></h3>
+            <div class="meta-row"><span>Frontend Test Engineer</span><span>San Mateo, CA</span><span>Stage: New applicant</span><span>Match <b>86</b></span><span>Available Immediate</span></div>
+            <div class="meta-row"><span>Last activity: Applied yesterday</span><span>Owner: Unassigned</span></div>
+            <div class="badges"><span class="badge tag">JavaScript</span><span class="badge tag">Accessibility</span><span class="badge tag">Component testing</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex18" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/recruiting/candidates/noah-kim">Noah Kim</a></h3>
+            <div class="meta-row"><span>Quality Engineer</span><span>Oakland, CA</span><span>Stage: Hiring manager review</span><span>Match <b>82</b></span><span>Available 45 days</span></div>
+            <div class="meta-row"><span>Last activity: Portfolio reviewed</span><span>Owner: Grace Miller</span></div>
+            <div class="badges"><span class="badge tag">Playwright</span><span class="badge tag">Regression testing</span><span class="badge tag">Test plans</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex18" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/recruiting/candidates/priya-shah">Priya Shah</a></h3>
+            <div class="meta-row"><span>Release Test Manager</span><span>San Francisco, CA</span><span>Stage: Panel interview</span><span>Match <b>80</b></span><span>Available 60 days</span></div>
+            <div class="meta-row"><span>Last activity: Panel interview pending</span><span>Owner: Rafael Ortiz</span></div>
+            <div class="badges"><span class="badge tag">QA strategy</span><span class="badge tag">Accessibility audit</span><span class="badge tag">Team leadership</span></div>
+          </article>
+        </section>
+
+        <aside class="detail-panel" aria-label="Selected candidate detail">
+          <h3>Selected candidate</h3>
+          <p class="sel-name">Avery Quinn</p>
+          <div class="field-row"><span class="field-label">Candidate ID</span><span class="field-value mono">CAND-77184</span></div>
+          <div class="field-row"><span class="field-label">Email</span><span class="field-value">avery.quinn@example.test</span></div>
+          <div class="field-row"><span class="field-label">Desired salary</span><span class="field-value">$138,000-$156,000</span></div>
+          <div class="field-block"><span class="field-label">Work authorization</span>Authorized for US employment</div>
+          <div class="field-block"><span class="field-label">Interview feedback</span>Strong test architecture skills and clear accessibility examples</div>
+          <div class="field-row"><span class="field-label">Next step</span><span class="field-value">Schedule final interview</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-19">
+      <span class="ex-kicker">Example 19</span>
+      <h2>Event Venue Search Results</h2>
+      <p class="ex-desc">This example imitates a venue search page for planning an event. It tests extraction of venue names, locations, capacity, available dates, price estimates, amenities, contact links, active filters, and selected venue details.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>Search query</label><input value="workshop venue" aria-label="Search query"></div>
+        <div class="field"><label>City</label><input value="San Francisco, CA" aria-label="City"></div>
+        <div class="field"><label>Event date</label><input value="July 16, 2026" aria-label="Event date"></div>
+        <div class="field"><label>Guest count</label><input value="80" aria-label="Guest count"></div>
+        <div class="search-meta"><span class="result-count"><span class="num">22</span> venues</span></div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span><span class="chip">Capacity 50-100</span><span class="chip">Projector</span><span class="chip">Catering allowed</span><span class="chip">Available July 16</span></div>
+
+      <div class="search-shell no-filter" aria-label="Event venue search results">
+        <section class="results-panel" aria-label="Venue cards">
+          <article class="result-card is-selected" data-select-result="ex19" aria-selected="true">
+            <h3 class="result-title"><a href="/demo/venues/harbor-hall-workshop-room">Harbor Hall Workshop Room</a></h3>
+            <div class="meta-row"><span>Embarcadero</span><span>90 seated</span><b>$1,850 day rate</b><span class="badge status">Available July 16</span><span class="stars">4.7</span></div>
+            <div class="meta-row"><span>Contact: events@harborhall.example.test</span></div>
+            <div class="badges"><span class="badge">Projector</span><span class="badge">Whiteboards</span><span class="badge">Catering allowed</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex19" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/venues/north-market-room-b">North Market Coworking - Room B</a></h3>
+            <div class="meta-row"><span>SoMa</span><span>60 seated</span><b>$980 day rate</b><span class="badge status">Available July 16</span><span class="stars">4.5</span></div>
+            <div class="meta-row"><span>Contact: rooms@northmarket.example.test</span></div>
+            <div class="badges"><span class="badge">Video conferencing</span><span class="badge">Whiteboard</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex19" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/venues/city-museum-lab">City Museum Lab</a></h3>
+            <div class="meta-row"><span>Civic Center</span><span>75 seated</span><b>$1,400 day rate</b><span class="badge warn">Hold available</span><span class="stars">4.8</span></div>
+            <div class="meta-row"><span>Contact: events@citymuseum.example.test</span></div>
+            <div class="badges"><span class="badge">Projector</span><span class="badge">Catering allowed</span><span class="badge">Transit nearby</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex19" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/venues/civic-data-lab-atrium">Civic Data Lab Atrium</a></h3>
+            <div class="meta-row"><span>Oakland</span><span>100 standing, 70 seated</span><b>$1,250 day rate</b><span class="badge warn">Waitlist</span><span class="stars">4.6</span></div>
+            <div class="meta-row"><span>Contact: space@civicdata.example.test</span></div>
+            <div class="badges"><span class="badge">Projector</span><span class="badge">Catering allowed</span><span class="badge">Hybrid setup</span></div>
+          </article>
+          <article class="result-card" data-select-result="ex19" aria-selected="false">
+            <h3 class="result-title"><a href="/demo/venues/pine-coast-meeting-suite">Pine Coast Hotel Meeting Suite</a></h3>
+            <div class="meta-row"><span>Pacific Grove</span><span>85 seated</span><b>$2,100 day rate</b><span class="badge status">Available July 16</span><span class="stars">4.4</span></div>
+            <div class="meta-row"><span>Contact: meetings@pinecoast.example.test</span></div>
+            <div class="badges"><span class="badge">Projector</span><span class="badge">Catering package</span><span class="badge">Parking</span></div>
+          </article>
+        </section>
+
+        <aside class="detail-panel" aria-label="Selected venue detail">
+          <h3>Quote details</h3>
+          <p class="sel-name">Harbor Hall Workshop Room</p>
+          <div class="field-row"><span class="field-label">Room size</span><span class="field-value">1,420 sq ft</span></div>
+          <div class="field-block"><span class="field-label">Setup options</span>
+            <ul><li>Classroom</li><li>U-shape</li><li>Theater</li></ul>
+          </div>
+          <div class="field-row"><span class="field-label">Deposit required</span><span class="field-value">$500</span></div>
+          <div class="field-block"><span class="field-label">Cancellation policy</span>50 percent refund until 14 days before event</div>
+          <div class="field-row"><span class="field-label">Quote status</span><span class="field-value">Ready to request</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-20">
+      <span class="ex-kicker">Example 20</span>
+      <h2>Admin User Search With Permission Sidebar</h2>
+      <p class="ex-desc">This example imitates an admin user search page. It tests extraction of user records, roles, teams, access status, last login, MFA state, active filters, and selected user permission details.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>Search query</label><input value="billing manager" aria-label="Search query"></div>
+        <div class="field"><label>Workspace</label><select aria-label="Workspace"><option selected>Northwind Analytics</option></select></div>
+        <div class="search-meta">
+          <span class="result-count"><span class="num">11</span> users</span>
+          <div class="field"><label>Sort order</label><select aria-label="Sort order"><option selected>Last active</option></select></div>
+        </div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span><span class="chip">Billing manager</span><span class="chip">MFA enabled</span><span class="chip">Active users</span></div>
+
+      <div class="search-shell no-filter" aria-label="Admin user search results">
+        <section class="results-panel" aria-label="User rows">
+          <table class="row-table" aria-label="Admin users">
+            <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Team</th><th>Status</th><th>MFA</th><th>Last login</th><th>Seats</th></tr></thead>
+            <tbody>
+              <tr class="is-selected" data-select-result="ex20" aria-selected="true">
+                <td><a href="/demo/admin/users/anika-sharma">Anika Sharma</a></td><td>anika.sharma@example.test</td><td>Billing manager</td><td>Finance</td><td><span class="badge status">Active</span></td><td>Enabled</td><td>May 31, 2026, 11:18 AM</td><td>Paid seat</td>
+              </tr>
+              <tr data-select-result="ex20" aria-selected="false">
+                <td><a href="/demo/admin/users/maya-chen">Maya Chen</a></td><td>maya.chen@example.test</td><td>Billing manager</td><td>Product</td><td><span class="badge status">Active</span></td><td>Enabled</td><td>May 31, 2026, 9:40 AM</td><td>Paid seat</td>
+              </tr>
+              <tr data-select-result="ex20" aria-selected="false">
+                <td><a href="/demo/admin/users/renee-coleman">Renee Coleman</a></td><td>renee.coleman@example.test</td><td>Workspace admin</td><td>Finance</td><td><span class="badge status">Active</span></td><td>Enabled</td><td>May 30, 2026, 5:12 PM</td><td>Paid seat</td>
+              </tr>
+              <tr data-select-result="ex20" aria-selected="false">
+                <td><a href="/demo/admin/users/theo-grant">Theo Grant</a></td><td>theo.grant@example.test</td><td>Viewer</td><td>Research</td><td><span class="badge status">Active</span></td><td>Enabled</td><td>May 29, 2026, 3:04 PM</td><td>Free viewer</td>
+              </tr>
+              <tr data-select-result="ex20" aria-selected="false">
+                <td><a href="/demo/admin/users/lina-romero">Lina Romero</a></td><td>lina.romero@example.test</td><td>Editor</td><td>Design</td><td><span class="badge warn">Invited</span></td><td>Not set up</td><td>Never</td><td>Pending</td>
+              </tr>
+              <tr data-select-result="ex20" aria-selected="false">
+                <td><a href="/demo/admin/users/owen-brooks">Owen Brooks</a></td><td>owen.brooks@example.test</td><td>Billing manager</td><td>Operations</td><td><span class="badge bad">Suspended</span></td><td>Enabled</td><td>May 10, 2026, 1:20 PM</td><td>Paid seat</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <aside class="detail-panel" aria-label="Selected permission detail">
+          <h3>Permissions</h3>
+          <p class="sel-name">Anika Sharma</p>
+          <div class="field-row"><span class="field-label">User ID</span><span class="field-value mono">usr_204884</span></div>
+          <div class="field-block"><span class="field-label">Granted permissions</span>
+            <ul><li>View invoices</li><li>Update payment method</li><li>Manage seats</li><li>Download receipts</li></ul>
+          </div>
+          <div class="field-block"><span class="field-label">Restricted permissions</span>
+            <ul><li>Manage SSO</li><li>Delete workspace</li><li>Transfer ownership</li></ul>
+          </div>
+          <div class="field-row"><span class="field-label">Role changed by</span><span class="field-value">Renee Coleman</span></div>
+          <div class="field-row"><span class="field-label">Role changed at</span><span class="field-value">May 28, 2026, 4:42 PM</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-21">
+      <span class="ex-kicker">Example 21</span>
+      <h2>Audit Log Search Results With Event Detail Panel</h2>
+      <p class="ex-desc">This example imitates a security audit log search page. It tests extraction of event rows, timestamps, actors, event types, outcomes, IP addresses, risk labels, active filters, and selected event detail attributes.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>Search query</label><input value="role changed" aria-label="Search query"></div>
+        <div class="field"><label>Date range</label><select aria-label="Date range"><option selected>Last 7 days</option></select></div>
+        <div class="search-meta">
+          <span class="result-count"><span class="num">47</span> events</span>
+          <div class="field"><label>Sort order</label><select aria-label="Sort order"><option selected>Newest first</option></select></div>
+        </div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span><span class="chip">User management</span><span class="chip">Success</span><span class="chip">Medium severity</span></div>
+
+      <div class="search-shell" aria-label="Audit log search results">
+        <aside class="filter-panel" aria-label="Event filters">
+          <h3>Filters</h3>
+          <div class="facet-group"><h4>Event type</h4>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> User role changed</span><span class="cnt">11</span></label>
+            <label class="facet-option"><span><input type="checkbox"> User invited</span><span class="cnt">14</span></label>
+            <label class="facet-option"><span><input type="checkbox"> User suspended</span><span class="cnt">6</span></label>
+            <label class="facet-option"><span><input type="checkbox"> MFA reset</span><span class="cnt">16</span></label>
+          </div>
+          <div class="facet-group"><h4>Outcome</h4>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> Success</span><span class="cnt">42</span></label>
+            <label class="facet-option"><span><input type="checkbox"> Failure</span><span class="cnt">5</span></label>
+          </div>
+          <div class="facet-group"><h4>Severity</h4>
+            <label class="facet-option"><span><input type="checkbox"> Low</span><span class="cnt">28</span></label>
+            <label class="facet-option is-selected"><span><input type="checkbox" checked> Medium</span><span class="cnt">17</span></label>
+            <label class="facet-option"><span><input type="checkbox"> High</span><span class="cnt">2</span></label>
+          </div>
+        </aside>
+
+        <section class="results-panel" aria-label="Audit event rows">
+          <table class="row-table" aria-label="Audit events">
+            <thead><tr><th>Event</th><th>Timestamp</th><th>Actor</th><th>Type</th><th>Target</th><th>Outcome</th><th>Severity</th><th>IP</th><th>Risk labels</th></tr></thead>
+            <tbody>
+              <tr class="is-selected" data-select-result="ex21" aria-selected="true">
+                <td><a class="mono" href="/demo/security/events/evt_2026_05_31_884120">evt_2026_05_31_884120</a></td><td>May 31, 2026, 11:18:44 AM PT</td><td>Anika Sharma<br><span class="mono">anika.sharma@example.test</span></td><td>User role changed</td><td>Maya Chen</td><td><span class="badge status">Success</span></td><td><span class="badge warn">Medium</span></td><td class="mono">203.0.113.42</td><td>Known device, MFA satisfied</td>
+              </tr>
+              <tr data-select-result="ex21" aria-selected="false">
+                <td><a class="mono" href="/demo/security/events/evt_2026_05_31_882009">evt_2026_05_31_882009</a></td><td>May 31, 2026, 10:02:11 AM PT</td><td>Renee Coleman<br><span class="mono">renee.coleman@example.test</span></td><td>User invited</td><td>Lina Romero</td><td><span class="badge status">Success</span></td><td><span class="badge">Low</span></td><td class="mono">203.0.113.18</td><td>Known location</td>
+              </tr>
+              <tr data-select-result="ex21" aria-selected="false">
+                <td><a class="mono" href="/demo/security/events/evt_2026_05_30_771840">evt_2026_05_30_771840</a></td><td>May 30, 2026, 5:44:03 PM PT</td><td>System<br><span class="mono">system@example.test</span></td><td>MFA reset</td><td>Theo Grant</td><td><span class="badge status">Success</span></td><td><span class="badge warn">Medium</span></td><td class="mono">Internal</td><td>Admin approved</td>
+              </tr>
+              <tr data-select-result="ex21" aria-selected="false">
+                <td><a class="mono" href="/demo/security/events/evt_2026_05_30_771102">evt_2026_05_30_771102</a></td><td>May 30, 2026, 3:22:17 PM PT</td><td>Owen Brooks<br><span class="mono">owen.brooks@example.test</span></td><td>User suspended</td><td>Former contractor account</td><td><span class="badge status">Success</span></td><td><span class="badge warn">Medium</span></td><td class="mono">203.0.113.77</td><td>Policy cleanup</td>
+              </tr>
+              <tr data-select-result="ex21" aria-selected="false">
+                <td><a class="mono" href="/demo/security/events/evt_2026_05_29_661204">evt_2026_05_29_661204</a></td><td>May 29, 2026, 9:10:58 AM PT</td><td>Nina Patel<br><span class="mono">nina.patel@example.test</span></td><td>User role changed</td><td>Grace Miller</td><td><span class="badge bad">Failure</span></td><td><span class="badge bad">High</span></td><td class="mono">198.51.100.25</td><td>Permission denied, Unexpected role</td>
+              </tr>
+              <tr data-select-result="ex21" aria-selected="false">
+                <td><a class="mono" href="/demo/security/events/evt_2026_05_29_660118">evt_2026_05_29_660118</a></td><td>May 29, 2026, 8:05:32 AM PT</td><td>Maya Chen<br><span class="mono">maya.chen@example.test</span></td><td>User role changed</td><td>Billing service account</td><td><span class="badge status">Success</span></td><td><span class="badge warn">Medium</span></td><td class="mono">203.0.113.42</td><td>Service account, MFA satisfied</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <aside class="detail-panel" aria-label="Selected event detail">
+          <h3>Event detail</h3>
+          <p class="sel-name mono">evt_2026_05_31_884120</p>
+          <div class="field-row"><span class="field-label">Previous role</span><span class="field-value">Viewer</span></div>
+          <div class="field-row"><span class="field-label">New role</span><span class="field-value">Billing manager</span></div>
+          <div class="field-row"><span class="field-label">Request ID</span><span class="field-value mono">req_771209ab</span></div>
+          <div class="field-row"><span class="field-label">Session ID</span><span class="field-value mono">sess_44018ff</span></div>
+          <div class="field-row"><span class="field-label">User agent</span><span class="field-value">Chrome on macOS</span></div>
+          <div class="field-row"><span class="field-label">Policy version</span><span class="field-value mono">2026.05</span></div>
+          <div class="field-row"><span class="field-label">Raw source</span><span class="field-value mono">admin_console</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="example-card" id="example-22">
+      <span class="ex-kicker">Example 22</span>
+      <h2>Saved Search And Alert Builder Results</h2>
+      <p class="ex-desc">This example imitates a saved search builder with dynamic preview results and an alert settings sidebar. It tests extraction of query, selected filters, preview records, alert frequency, recipients, delivery channel, and matching-count summary.</p>
+
+      <div class="search-bar">
+        <div class="field"><label>Saved search name</label><input value="High priority billing tickets" aria-label="Saved search name"></div>
+        <div class="field"><label>Search query</label><input value="billing OR invoice" aria-label="Search query"></div>
+        <div class="field"><label>Scope</label><select aria-label="Scope"><option selected>Support tickets</option></select></div>
+        <div class="search-meta">
+          <span class="result-count"><span class="num">18</span> tickets matching</span>
+          <div class="field"><label>Sort order</label><select aria-label="Sort order"><option selected>Priority then SLA</option></select></div>
+        </div>
+      </div>
+      <div class="chips"><span class="lbl">Active filters</span><span class="chip">Priority: High or Urgent</span><span class="chip">Status: Open or Waiting on support</span><span class="chip">Queue: Billing Support</span><span class="chip">SLA: Due within 24 hours</span></div>
+
+      <div class="search-shell no-filter" aria-label="Saved search builder results">
+        <section class="results-panel" aria-label="Preview matching records">
+          <article class="result-card">
+            <h3 class="result-title"><a href="/demo/support/tickets/TCK-2026-54102">TCK-2026-54102 &middot; Invoice PDF missing line item details</a></h3>
+            <div class="meta-row"><b>Theo Grant</b><span class="badge bad">High</span><span class="badge status">Open</span><span>SLA: Due today, 5:00 PM</span></div>
+            <div class="badges"><span class="badge tag">invoice</span><span class="badge tag">line item</span></div>
+          </article>
+          <article class="result-card">
+            <h3 class="result-title"><a href="/demo/support/tickets/TCK-2026-54188">TCK-2026-54188 &middot; Monthly billing export missing discount rows</a></h3>
+            <div class="meta-row"><b>Renee Coleman</b><span class="badge warn">Medium</span><span class="badge warn">Waiting on support</span><span>SLA: Due June 1, 2026, 2:00 PM</span></div>
+            <div class="badges"><span class="badge tag">billing</span><span class="badge tag">export</span></div>
+          </article>
+          <article class="result-card">
+            <h3 class="result-title"><a href="/demo/support/tickets/TCK-2026-54217">TCK-2026-54217 &middot; Export filter does not preserve date range</a></h3>
+            <div class="meta-row"><b>Maya Chen</b><span class="badge bad">High</span><span class="badge status">Open</span><span>SLA: Due today, 6:30 PM</span></div>
+            <div class="badges"><span class="badge tag">export</span></div>
+          </article>
+          <article class="result-card">
+            <h3 class="result-title"><a href="/demo/support/tickets/TCK-2026-54240">TCK-2026-54240 &middot; Invoice recipient list not updating</a></h3>
+            <div class="meta-row"><b>Priya Shah</b><span class="badge bad">High</span><span class="badge status">Open</span><span>SLA: Due tomorrow, 9:00 AM</span></div>
+            <div class="badges"><span class="badge tag">invoice</span></div>
+          </article>
+          <article class="result-card">
+            <h3 class="result-title"><a href="/demo/support/tickets/TCK-2026-54251">TCK-2026-54251 &middot; Billing CSV includes duplicate rows</a></h3>
+            <div class="meta-row"><b>Owen Brooks</b><span class="badge bad">Urgent</span><span class="badge status">Open</span><span>SLA: Due today, 4:00 PM</span></div>
+            <div class="badges"><span class="badge tag">billing</span><span class="badge tag">CSV</span></div>
+          </article>
+        </section>
+
+        <aside class="detail-panel" aria-label="Alert settings">
+          <h3>Alert settings</h3>
+          <div class="field-row"><span class="field-label">Alert status</span><span class="field-value">Enabled</span></div>
+          <div class="field-row"><span class="field-label">Frequency</span><span class="field-value">Every weekday at 9:00 AM</span></div>
+          <div class="field-row"><span class="field-label">Delivery channel</span><span class="field-value">Email digest</span></div>
+          <div class="field-block"><span class="field-label">Recipients</span>
+            <ul><li>billing@example.test</li><li>support-leads@example.test</li></ul>
+          </div>
+          <div class="field-row"><span class="field-label">Include CSV attachment</span><span class="field-value">Yes</span></div>
+          <div class="field-row"><span class="field-label">Created by</span><span class="field-value">Rafael Ortiz</span></div>
+          <div class="field-row"><span class="field-label">Last run</span><span class="field-value">May 31, 2026, 9:00 AM</span></div>
+          <div class="field-row"><span class="field-label">Next run</span><span class="field-value">June 1, 2026, 9:00 AM</span></div>
+        </aside>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Lightweight, generic result selection highlight. Visual only; does not
+    // fabricate detail content. Clicking a result in a shell marks it selected.
+    document.addEventListener("click", function (ev) {
+      var card = ev.target.closest("[data-select-result]");
+      if (!card) return;
+      if (ev.target.closest("a")) return; // let links work
+      var group = card.getAttribute("data-select-result");
+      var shell = card.closest(".search-shell, .example-card");
+      if (!shell) return;
+      shell.querySelectorAll('[data-select-result="' + group + '"]').forEach(function (el) {
+        var on = el === card;
+        el.classList.toggle("is-selected", on);
+        if (el.hasAttribute("aria-selected")) el.setAttribute("aria-selected", on ? "true" : "false");
+      });
+    });
+  </script>
+</body>
+</html>

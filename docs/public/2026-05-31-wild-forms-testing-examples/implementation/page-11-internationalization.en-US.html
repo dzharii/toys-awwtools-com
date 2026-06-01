@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page 11 - Internationalization (English, United States)</title>
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --ink: #161a22;
+    --muted: #5b6573;
+    --line: #dfe4ec;
+    --soft: #eef1f6;
+    --panel: #ffffff;
+    --panel-alt: #f7f9fc;
+    --accent: #2563eb;
+    --accent-soft: #e7effe;
+    --ok: #167a4a;
+    --ok-soft: #e6f5ec;
+    --warn: #9a5b00;
+    --warn-soft: #fbf2dd;
+    --danger: #c0362c;
+    --danger-soft: #fcebe9;
+    --info: #1c52c4;
+    --radius: 12px;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--ink); line-height: 1.5; }
+  main { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 72px; }
+  a { color: var(--accent); }
+  h1, h2, h3, h4 { line-height: 1.25; }
+  button, input, select, textarea { font: inherit; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .page-hero { background: linear-gradient(135deg, #1e3a8a, #2563eb); color: #fff; border-radius: 18px; padding: 30px; margin-bottom: 26px; }
+  .page-hero h1 { margin: 6px 0 10px; font-size: 1.7rem; }
+  .page-kicker { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.76rem; opacity: 0.85; margin: 0; }
+  .page-hero p { margin: 0; max-width: 880px; color: #dbe6ff; }
+  .example-card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 24px; margin: 22px 0; box-shadow: 0 4px 14px rgba(20,30,60,0.05); }
+  .example-kicker { margin: 0 0 4px; color: var(--accent); font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; }
+  .example-header h2 { margin: 0; font-size: 1.3rem; }
+  .example-description { color: var(--muted); max-width: 920px; }
+  .test-intent { background: var(--accent-soft); border-left: 4px solid var(--accent); border-radius: 8px; padding: 10px 14px; color: #1e3a8a; font-size: 0.9rem; max-width: 920px; }
+  .example-surface { margin-top: 16px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .panel, .summary-panel, .detail-panel { padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+  .summary-panel, .detail-panel { background: var(--panel-alt); }
+  .panel-title { margin: 0 0 10px; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 700; }
+  .layout-grid-two { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+  .layout-grid-three { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+  .split-layout { display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: 14px; align-items: start; }
+  .wide-scroll { overflow-x: auto; }
+  .field-row { display: flex; justify-content: space-between; gap: 14px; padding: 7px 0; border-bottom: 1px solid var(--soft); }
+  .field-row:last-child { border-bottom: 0; }
+  .field-label { color: var(--muted); font-weight: 600; }
+  .field-value { text-align: right; font-weight: 600; }
+  .field-block { padding: 7px 0; border-bottom: 1px solid var(--soft); }
+  .field-block:last-child { border-bottom: 0; }
+  .field-block .field-label { display: block; margin-bottom: 3px; }
+  .form-field { margin-bottom: 12px; }
+  .form-field label { display: block; font-weight: 600; margin-bottom: 4px; }
+  .req::after { content: " *"; color: var(--danger); }
+  input[type=text], input[type=email], input[type=tel], input[type=number], input[type=date], input[type=search], select, textarea { width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid #c3cad6; border-radius: 8px; background: #fff; }
+  textarea { min-height: 72px; }
+  .help-text { color: var(--muted); font-size: 0.84rem; margin: 4px 0 0; }
+  .error-text { color: var(--danger); font-size: 0.85rem; margin: 4px 0 0; font-weight: 600; }
+  [aria-invalid=true] { border-color: var(--danger); background: var(--danger-soft); }
+  .error-summary { border: 2px solid var(--danger); background: var(--danger-soft); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+  .error-summary h3 { margin: 0 0 8px; color: var(--danger); font-size: 1rem; }
+  .error-summary a { color: var(--danger); font-weight: 600; }
+  .badge, .chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--line); background: #fff; }
+  .badge.ok { color: var(--ok); background: var(--ok-soft); border-color: #c4e6d2; }
+  .badge.warn { color: var(--warn); background: var(--warn-soft); border-color: #ecd9a8; }
+  .badge.danger { color: var(--danger); background: var(--danger-soft); border-color: #f0c8c4; }
+  .badge.info { color: var(--info); background: var(--accent-soft); border-color: #c4d6f7; }
+  .badge.neutral { color: var(--muted); background: var(--soft); }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 16px; border-radius: 9px; border: 1px solid #c3cad6; background: #fff; cursor: pointer; font-weight: 600; color: var(--ink); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.ghost { background: transparent; }
+  .stepper { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .step { flex: 1; min-width: 130px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-alt); }
+  .step[aria-current=step] { border-color: var(--accent); background: var(--accent-soft); }
+  .step .s-num { font-weight: 800; color: var(--accent); }
+  .step .s-label { display: block; font-size: 0.86rem; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; min-width: 560px; }
+  th, td { padding: 9px 10px; border-bottom: 1px solid var(--soft); text-align: left; vertical-align: top; }
+  th { background: var(--panel-alt); color: var(--muted); }
+  caption { text-align: left; font-weight: 700; padding: 6px 0; }
+  .mono { font-family: var(--mono); }
+  .token-field { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border: 1px solid #c3cad6; border-radius: 8px; }
+  .token { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-soft); border: 1px solid #c4d6f7; border-radius: 999px; padding: 3px 6px 3px 10px; font-size: 0.86rem; }
+  .token button { border: 0; background: transparent; cursor: pointer; font-size: 1rem; line-height: 1; color: var(--info); }
+  .listbox { list-style: none; margin: 8px 0 0; padding: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .listbox li { padding: 9px 12px; border-bottom: 1px solid var(--soft); cursor: pointer; }
+  .listbox li:last-child { border-bottom: 0; }
+  .listbox li[aria-selected=true] { background: var(--accent-soft); }
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+  .cal .h { text-align: center; font-weight: 700; color: var(--muted); padding: 5px 0; font-size: 0.82rem; }
+  .cal button { min-height: 50px; border: 1px solid var(--line); border-radius: 8px; background: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .cal button[aria-selected=true] { border-color: var(--accent); background: var(--accent-soft); }
+  .cal button[disabled] { background: var(--soft); color: #b1b8c4; cursor: not-allowed; }
+  .cal .av { font-size: 0.68rem; color: var(--muted); }
+  .tablist { display: flex; gap: 4px; border-bottom: 2px solid var(--line); margin-bottom: 12px; flex-wrap: wrap; }
+  .tab { border: 0; background: transparent; padding: 9px 14px; cursor: pointer; font-weight: 600; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -2px; }
+  .tab[aria-selected=true] { color: var(--accent); border-bottom-color: var(--accent); }
+  .acc { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+  .acc-trigger { width: 100%; text-align: left; background: var(--panel-alt); border: 0; padding: 12px 14px; cursor: pointer; font-weight: 600; display: flex; justify-content: space-between; gap: 10px; }
+  .acc-body { padding: 12px 14px; }
+  .ellipsized { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: bottom; }
+  .kpi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
+  .kpi .card { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--panel-alt); }
+  .kpi .k-val { font-size: 1.4rem; font-weight: 800; }
+  .kpi .k-lab { color: var(--muted); font-size: 0.84rem; }
+  .bar { height: 12px; border-radius: 6px; background: var(--accent); }
+  .bartrack { background: var(--soft); border-radius: 6px; overflow: hidden; }
+  .result-card { border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 10px; cursor: pointer; }
+  .result-card[aria-selected=true] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft) inset; }
+  fieldset { border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin: 0 0 14px; }
+  legend { font-weight: 700; padding: 0 6px; }
+  @media (max-width: 920px) { .layout-grid-two, .layout-grid-three, .split-layout, .kpi { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <header class="page-hero">
+    <p class="page-kicker">Content Extraction &amp; Internationalization Demo</p>
+    <h1>Page 11 - Internationalization (United States)</h1>
+    <p>This page contains 20 realistic localized UI examples for testing forms, validation, layout, accessibility, locale formatting, interaction, and extraction behavior. All data is fictional. Currency is shown in US dollars, dates use US conventions, and phone numbers use US formatting.</p>
+  </header>
+
+  <section class="example-card" id="example-01">
+    <header class="example-header"><p class="example-kicker">Example 01</p><h2>Multi-Step Checkout and Local Address Flow</h2></header>
+    <p class="example-description">A four-step checkout with a US shipping address, delivery options, a conditional business billing panel, and an order summary in US dollars.</p>
+    <p class="test-intent">Tests US address format, localized validation, step labels, shipping choices, payment summary, and text expansion.</p>
+    <div class="example-surface">
+      <div class="stepper" role="list" aria-label="Checkout steps">
+        <div class="step" role="listitem"><span class="s-num">1</span><span class="s-label">Cart</span></div>
+        <div class="step" role="listitem" aria-current="step"><span class="s-num">2</span><span class="s-label">Shipping</span></div>
+        <div class="step" role="listitem"><span class="s-num">3</span><span class="s-label">Payment</span></div>
+        <div class="step" role="listitem" id="ex01-review-step"><span class="s-num">4</span><span class="s-label">Review</span></div>
+      </div>
+      <div class="split-layout">
+        <form>
+          <div class="header-strip field-row"><span class="field-label">Order ID</span><span class="field-value mono">ORD-2026-104922</span></div>
+          <div class="form-field"><label class="req" for="ex01-name">Full name</label><input id="ex01-name" type="text" value="Jordan Ellis"></div>
+          <div class="form-field"><label class="req" for="ex01-street">Street address</label><input id="ex01-street" type="text" value="88 Valencia Street"></div>
+          <div class="form-field"><label for="ex01-apt">Apartment, suite, or dock</label><input id="ex01-apt" type="text" value="Suite 402"></div>
+          <div class="layout-grid-three">
+            <div class="form-field"><label class="req" for="ex01-city">City</label><input id="ex01-city" type="text" value="San Francisco"></div>
+            <div class="form-field"><label class="req" for="ex01-state">State</label>
+              <select id="ex01-state"><option selected>California</option><option>Nevada</option><option>Oregon</option><option>Washington</option></select></div>
+            <div class="form-field"><label class="req" for="ex01-zip">ZIP code</label><input id="ex01-zip" type="text" inputmode="numeric" value="94103"></div>
+          </div>
+          <div class="form-field"><label class="req" for="ex01-phone">Phone number</label><input id="ex01-phone" type="tel" value="(415) 555-0184"><p class="help-text">Format: (415) 555-0184</p></div>
+          <div class="form-field"><label for="ex01-method">Delivery method</label>
+            <select id="ex01-method"><option selected>Standard ground (3-5 business days)</option><option>Two-day express</option><option>Overnight</option></select></div>
+          <div class="form-field"><label for="ex01-instr">Delivery instructions</label><textarea id="ex01-instr" data-counter="ex01-count" data-max="120">Leave with front desk.</textarea><p class="help-text"><span id="ex01-count">22</span>/120 characters <span id="ex01-instr-err" class="error-text" hidden>Delivery instructions are too long.</span></p></div>
+          <fieldset>
+            <legend>Billing type</legend>
+            <label><input type="radio" name="ex01-bill" checked> Personal</label>
+            <label style="margin-left:14px;"><input type="radio" name="ex01-bill" data-toggle-target="#ex01-business"> Business</label>
+            <div id="ex01-business" hidden style="margin-top:10px;">
+              <div class="form-field"><label for="ex01-company">Company name</label><input id="ex01-company" type="text" placeholder="Atlas Product Studio"></div>
+              <div class="form-field"><label for="ex01-taxid">Business tax ID (demo)</label><input id="ex01-taxid" type="text" placeholder="EIN 00-0000000"></div>
+            </div>
+          </fieldset>
+          <p><button class="btn primary" type="button" data-status="ex01-status" data-status-msg="Review step selected.">Continue to review</button> <span id="ex01-status" class="help-text" role="status"></span></p>
+        </form>
+        <aside class="summary-panel" aria-label="Order summary">
+          <p class="panel-title">Order summary</p>
+          <div class="field-row"><span class="field-label">Items</span><span class="field-value">3</span></div>
+          <div class="field-row"><span class="field-label">Merchandise subtotal</span><span class="field-value">$153.00</span></div>
+          <div class="field-row"><span class="field-label">Delivery fee</span><span class="field-value">$8.95</span></div>
+          <div class="field-row"><span class="field-label">Sales tax</span><span class="field-value">$12.42</span></div>
+          <div class="field-row"><span class="field-label">Discount</span><span class="field-value">-$15.30</span></div>
+          <div class="field-row"><span class="field-label">Order total</span><span class="field-value">$159.07</span></div>
+          <div class="field-row"><span class="field-label">Estimated delivery</span><span class="field-value">June 8, 2026</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-02">
+    <header class="example-header"><p class="example-kicker">Example 02</p><h2>Contact Profile with Name and Phone Fields</h2></header>
+    <p class="example-description">An account contact form with US-style given/family names, a preferred name, email, mobile phone, and time zone, mirrored in a live profile summary.</p>
+    <p class="test-intent">Tests name order, phone formatting, placeholders, helper text, a display-name character counter, and validation.</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <form>
+          <div class="layout-grid-two">
+            <div class="form-field"><label class="req" for="ex02-given">Given name</label><input id="ex02-given" type="text" value="Maya"></div>
+            <div class="form-field"><label class="req" for="ex02-family">Family name</label><input id="ex02-family" type="text" value="Chen"></div>
+          </div>
+          <div class="form-field"><label for="ex02-pref">Preferred name</label><input id="ex02-pref" type="text" value="Maya" data-counter="ex02-count" data-max="40"><p class="help-text">Shown to teammates. <span id="ex02-count">4</span>/40</p></div>
+          <div class="form-field"><label class="req" for="ex02-email">Email</label><input id="ex02-email" type="email" value="maya.chen@example.test"><p class="help-text">We send receipts and security alerts here.</p></div>
+          <div class="form-field"><label class="req" for="ex02-phone">Mobile phone</label><input id="ex02-phone" type="tel" value="(415) 555-0162"><p class="help-text">Format: (415) 555-0162</p></div>
+          <div class="form-field"><label for="ex02-tz">Time zone</label>
+            <select id="ex02-tz"><option selected>Pacific Time (US &amp; Canada)</option><option>Mountain Time</option><option>Central Time</option><option>Eastern Time</option></select></div>
+        </form>
+        <aside class="summary-panel" aria-label="Profile summary">
+          <p class="panel-title">Profile summary</p>
+          <div class="field-row"><span class="field-label">Name</span><span class="field-value">Maya Chen</span></div>
+          <div class="field-row"><span class="field-label">Preferred name</span><span class="field-value">Maya</span></div>
+          <div class="field-row"><span class="field-label">Email</span><span class="field-value">maya.chen@example.test</span></div>
+          <div class="field-row"><span class="field-label">Mobile</span><span class="field-value">(415) 555-0162</span></div>
+          <div class="field-row"><span class="field-label">Time zone</span><span class="field-value">Pacific Time</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-03">
+    <header class="example-header"><p class="example-kicker">Example 03</p><h2>Booking Flow with Dependent Pickers</h2></header>
+    <p class="example-description">A delivery appointment booking where the location list depends on the chosen service and the time list depends on the location, with a live availability message and summary.</p>
+    <p class="test-intent">Tests dependent dropdowns, US date and 12-hour time formats, custom pickers, availability messages, and dynamic capacity validation.</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <form>
+          <div class="form-field"><label for="ex03-service">Service category</label>
+            <select id="ex03-service"><option value="install" selected>Appliance installation</option><option value="repair">In-home repair</option><option value="pickup">Donation pickup</option></select></div>
+          <div class="form-field"><label for="ex03-loc">Service hub</label><select id="ex03-loc"></select></div>
+          <div class="form-field"><label for="ex03-date">Date</label><input id="ex03-date" type="date" value="2026-06-11"></div>
+          <div class="form-field"><label for="ex03-time">Time slot</label><select id="ex03-time"></select></div>
+          <div class="form-field"><label for="ex03-party">Crew size needed</label><input id="ex03-party" type="number" min="1" max="4" value="2"><p id="ex03-warn" class="error-text" hidden>This hub supports a maximum crew of 4.</p></div>
+          <div class="form-field"><label for="ex03-req">Special requests</label><textarea id="ex03-req">Gate code is 4821.</textarea></div>
+          <p id="ex03-avail" class="badge ok" role="status">12 appointments available</p>
+        </form>
+        <aside class="summary-panel" aria-label="Booking summary">
+          <p class="panel-title">Booking summary</p>
+          <div class="field-row"><span class="field-label">Service</span><span class="field-value" id="ex03-s-service">Appliance installation</span></div>
+          <div class="field-row"><span class="field-label">Hub</span><span class="field-value" id="ex03-s-loc">-</span></div>
+          <div class="field-row"><span class="field-label">Date</span><span class="field-value">June 11, 2026</span></div>
+          <div class="field-row"><span class="field-label">Time</span><span class="field-value" id="ex03-s-time">-</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-04">
+    <header class="example-header"><p class="example-kicker">Example 04</p><h2>Validation-Heavy Form with Error Summary</h2></header>
+    <p class="example-description">An account application with an accessible error summary that links to four invalid fields, inline errors, and required markers.</p>
+    <p class="test-intent">Tests error messages, required markers, aria-invalid, aria-describedby, error-summary links, and translated validation text.</p>
+    <div class="example-surface">
+      <div class="error-summary" role="alert" aria-labelledby="ex04-err-h">
+        <h3 id="ex04-err-h">There are 4 problems with this form</h3>
+        <ul>
+          <li><a href="#ex04-org">Enter your organization name</a></li>
+          <li><a href="#ex04-phone">Enter a valid phone number</a></li>
+          <li><a href="#ex04-zip">Enter a valid 5-digit ZIP code</a></li>
+          <li><a href="#ex04-consent">You must accept the terms to continue</a></li>
+        </ul>
+      </div>
+      <form>
+        <fieldset><legend>Applicant</legend>
+          <div class="form-field"><label class="req" for="ex04-name">Full name</label><input id="ex04-name" type="text" value="Theo Grant"></div>
+          <div class="form-field"><label class="req" for="ex04-org">Organization</label><input id="ex04-org" type="text" aria-invalid="true" aria-describedby="ex04-org-e"><p id="ex04-org-e" class="error-text">Enter your organization name.</p></div>
+        </fieldset>
+        <fieldset><legend>Contact</legend>
+          <div class="form-field"><label class="req" for="ex04-phone">Phone number</label><input id="ex04-phone" type="tel" value="555-12" aria-invalid="true" aria-describedby="ex04-phone-e"><p id="ex04-phone-e" class="error-text">Enter a valid 10-digit US phone number, e.g. (415) 555-0184.</p></div>
+          <div class="form-field"><label class="req" for="ex04-zip">ZIP code</label><input id="ex04-zip" type="text" value="9410" aria-invalid="true" aria-describedby="ex04-zip-e"><p id="ex04-zip-e" class="error-text">ZIP code must be exactly 5 digits.</p></div>
+          <div class="form-field"><label for="ex04-date">Start date</label><input id="ex04-date" type="date" value="2026-12-31" aria-describedby="ex04-date-e"><p id="ex04-date-e" class="help-text">Choose a date within the next 90 days.</p></div>
+        </fieldset>
+        <fieldset><legend>Agreement</legend>
+          <label><input id="ex04-consent" type="checkbox" aria-invalid="true" aria-describedby="ex04-consent-e"> I accept the terms of service and privacy policy.</label>
+          <p id="ex04-consent-e" class="error-text">You must accept the terms to continue.</p>
+        </fieldset>
+      </form>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-05">
+    <header class="example-header"><p class="example-kicker">Example 05</p><h2>Custom Combobox with Search Suggestions</h2></header>
+    <p class="example-description">A destination-city combobox with a detached listbox of localized suggestions, each with supporting text and an airport code, plus a hidden submitted value.</p>
+    <p class="test-intent">Tests search strings, selected option text, combobox ARIA relationships, detached listbox DOM, and hidden submitted values.</p>
+    <div class="example-surface">
+      <div class="form-field" style="max-width:420px;">
+        <label id="ex05-lbl" for="ex05-input">Destination city</label>
+        <input id="ex05-input" role="combobox" aria-expanded="true" aria-controls="ex05-list" aria-activedescendant="ex05-opt1" aria-labelledby="ex05-lbl" value="San Francisco">
+        <input type="hidden" name="destination_code" value="SFO">
+      </div>
+      <ul class="listbox" id="ex05-list" role="listbox" aria-label="City suggestions">
+        <li id="ex05-opt1" role="option" aria-selected="true"><strong>San Francisco</strong> &middot; California, US <span class="badge neutral mono">SFO</span><br><span class="help-text">International airport, 14 mi from downtown</span></li>
+        <li id="ex05-opt2" role="option" aria-selected="false"><strong>San Diego</strong> &middot; California, US <span class="badge neutral mono">SAN</span><br><span class="help-text">Coastal hub, direct flights nationwide</span></li>
+        <li id="ex05-opt3" role="option" aria-selected="false"><strong>San Jose</strong> &middot; California, US <span class="badge neutral mono">SJC</span><br><span class="help-text">Silicon Valley, regional connections</span></li>
+        <li id="ex05-opt4" role="option" aria-selected="false"><strong>Sacramento</strong> &middot; California, US <span class="badge neutral mono">SMF</span><br><span class="help-text">State capital, short-haul routes</span></li>
+        <li id="ex05-opt5" role="option" aria-selected="false"><strong>Seattle</strong> &middot; Washington, US <span class="badge neutral mono">SEA</span><br><span class="help-text">Pacific Northwest gateway</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-06">
+    <header class="example-header"><p class="example-kicker">Example 06</p><h2>Appointment Calendar and Time Slot Picker</h2></header>
+    <p class="example-description">A June 2026 appointment calendar with US weekday order, a selected date, unavailable dates, and 12-hour time slots.</p>
+    <p class="test-intent">Tests weekday names, US date formatting, selected and disabled date states, accessible date labels, and 12-hour times.</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <div>
+          <div class="field-row"><span class="field-label">Provider</span><span class="field-value">Dr. Helen Park, MD</span></div>
+          <div class="field-row" style="margin-bottom:8px;"><span class="field-label">Month</span><span class="field-value">June 2026</span></div>
+          <div class="cal" role="grid" aria-label="June 2026 availability">
+            <div class="h">Sun</div><div class="h">Mon</div><div class="h">Tue</div><div class="h">Wed</div><div class="h">Thu</div><div class="h">Fri</div><div class="h">Sat</div>
+            <button aria-label="June 8, 2026, 3 appointments available">8<span class="av">3 open</span></button>
+            <button disabled aria-label="June 9, 2026, no appointments">9<span class="av">Full</span></button>
+            <button aria-label="June 10, 2026, 1 appointment available">10<span class="av">1 open</span></button>
+            <button aria-selected="true" aria-label="June 11, 2026, selected, 2 appointments available">11<span class="av">2 open</span></button>
+            <button aria-label="June 12, 2026, 4 appointments available">12<span class="av">4 open</span></button>
+            <button disabled aria-label="June 13, 2026, no appointments">13<span class="av">Full</span></button>
+            <button disabled aria-label="June 14, 2026, no appointments">14<span class="av">Full</span></button>
+          </div>
+        </div>
+        <aside class="summary-panel" aria-label="Time slots">
+          <p class="panel-title">June 11, 2026</p>
+          <div class="chip-row">
+            <button class="chip" aria-pressed="true">2:30 PM</button>
+            <button class="chip">3:15 PM</button>
+            <button class="chip">4:00 PM</button>
+            <button class="chip" disabled aria-label="5:00 PM, fully booked">5:00 PM</button>
+          </div>
+          <div class="field-row"><span class="field-label">Selected time</span><span class="field-value">2:30 PM</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-07">
+    <header class="example-header"><p class="example-kicker">Example 07</p><h2>Read-Only Order Confirmation</h2></header>
+    <p class="example-description">A read-only order confirmation with status badge, nested line items, a masked card ending, and a cancellation note.</p>
+    <p class="test-intent">Tests read-only records, confirmation numbers, USD currency, US dates, status badges, nested line items, and masked values.</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <div class="panel">
+          <div class="field-row"><span class="field-label">Confirmation number</span><span class="field-value mono">CNF-2026-77120</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Confirmed</span></span></div>
+          <div class="field-row"><span class="field-label">Placed</span><span class="field-value">May 31, 2026, 10:42 AM PT</span></div>
+          <div class="field-row"><span class="field-label">Customer</span><span class="field-value">Renee Coleman</span></div>
+          <div class="field-row"><span class="field-label">Ship to</span><span class="field-value">120 King Street, San Francisco, CA 94107</span></div>
+          <div class="field-row"><span class="field-label">Payment</span><span class="field-value mono">Visa ending in 4242</span></div>
+          <p class="panel-title" style="margin-top:14px;">Line items</p>
+          <div class="field-row"><span class="field-label">Merino Travel Hoodie x1</span><span class="field-value">$128.00</span></div>
+          <div class="field-row"><span class="field-label">Canvas Organizer Pouch x1</span><span class="field-value">$32.00</span></div>
+          <div class="field-row"><span class="field-label">Subtotal</span><span class="field-value">$160.00</span></div>
+          <div class="field-row"><span class="field-label">Tax</span><span class="field-value">$13.20</span></div>
+          <div class="field-row"><span class="field-label">Total</span><span class="field-value">$173.20</span></div>
+        </div>
+        <aside class="detail-panel">
+          <p class="help-text">Free cancellation until June 2, 2026, 11:59 PM PT. After that, store credit only.</p>
+          <p><button class="btn">Download receipt</button></p>
+          <p><button class="btn ghost">Copy reference</button></p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-08">
+    <header class="example-header"><p class="example-kicker">Example 08</p><h2>Billing and Tax Export Configuration</h2></header>
+    <p class="example-description">A billing export form with a date range, sales-tax mode, CSV format and encoding, recipient email, included-column checkboxes, and a scheduled toggle.</p>
+    <p class="test-intent">Tests fiscal fields, checkboxes, export-field selection, date ranges, US tax labels, and number/currency formatting.</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <form>
+          <div class="form-field"><label for="ex08-name">Export name</label><input id="ex08-name" type="text" value="May 2026 Sales Tax Export"></div>
+          <div class="layout-grid-two">
+            <div class="form-field"><label for="ex08-from">From</label><input id="ex08-from" type="date" value="2026-05-01"></div>
+            <div class="form-field"><label for="ex08-to">To</label><input id="ex08-to" type="date" value="2026-05-31"></div>
+          </div>
+          <div class="layout-grid-two">
+            <div class="form-field"><label for="ex08-tax">Sales tax mode</label><select id="ex08-tax"><option selected>Tax-inclusive lines</option><option>Tax as separate line</option></select></div>
+            <div class="form-field"><label for="ex08-format">Format</label><select id="ex08-format"><option selected>CSV (UTF-8)</option><option>CSV (UTF-8 with BOM)</option><option>XLSX</option></select></div>
+          </div>
+          <div class="form-field"><label for="ex08-email">Recipient email</label><input id="ex08-email" type="email" value="billing@example.test"></div>
+          <fieldset><legend>Included columns</legend>
+            <label><input type="checkbox" checked> Invoice number</label><br>
+            <label><input type="checkbox" checked> Sales tax</label><br>
+            <label><input type="checkbox" checked> Payment reference</label><br>
+            <label><input type="checkbox"> Customer name</label><br>
+            <label><input type="checkbox"> Discount amount</label><br>
+            <label><input type="checkbox"> Currency</label>
+          </fieldset>
+          <label><input type="checkbox" checked> Run this export automatically each month</label>
+        </form>
+        <aside class="summary-panel" aria-label="Export preview">
+          <p class="panel-title">Preview</p>
+          <div class="field-row"><span class="field-label">Range</span><span class="field-value">05/01/2026 - 05/31/2026</span></div>
+          <div class="field-row"><span class="field-label">Format</span><span class="field-value">CSV (UTF-8)</span></div>
+          <div class="field-row"><span class="field-label">Columns</span><span class="field-value">3 selected</span></div>
+          <div class="field-row"><span class="field-label">Schedule</span><span class="field-value">Monthly</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-09">
+    <header class="example-header"><p class="example-kicker">Example 09</p><h2>Admin Permissions Matrix</h2></header>
+    <p class="example-description">A permissions matrix with four role columns, grouped permission rows, checked/unchecked/disabled states, and a selected-permission detail panel.</p>
+    <p class="test-intent">Tests table headers, role names, permission names, checked and disabled states, group labels, and accessible labels.</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <div class="wide-scroll">
+          <table>
+            <thead><tr><th>Permission</th><th>Admin</th><th>Billing manager</th><th>Editor</th><th>Viewer</th></tr></thead>
+            <tbody>
+              <tr><th scope="rowgroup" colspan="5" style="background:var(--accent-soft);">Billing</th></tr>
+              <tr><th scope="row">View invoices</th><td><input type="checkbox" checked aria-label="View invoices, Admin"></td><td><input type="checkbox" checked aria-label="View invoices, Billing manager"></td><td><input type="checkbox" aria-label="View invoices, Editor"></td><td><input type="checkbox" aria-label="View invoices, Viewer"></td></tr>
+              <tr><th scope="row">Update payment method</th><td><input type="checkbox" checked aria-label="Update payment method, Admin"></td><td><input type="checkbox" checked aria-label="Update payment method, Billing manager"></td><td><input type="checkbox" aria-label="Update payment method, Editor"></td><td><input type="checkbox" disabled aria-label="Update payment method, Viewer, disabled"></td></tr>
+              <tr><th scope="rowgroup" colspan="5" style="background:var(--accent-soft);">User management</th></tr>
+              <tr><th scope="row">Invite users</th><td><input type="checkbox" checked aria-label="Invite users, Admin"></td><td><input type="checkbox" aria-label="Invite users, Billing manager"></td><td><input type="checkbox" aria-label="Invite users, Editor"></td><td><input type="checkbox" aria-label="Invite users, Viewer"></td></tr>
+              <tr><th scope="row">Remove users</th><td><input type="checkbox" checked aria-label="Remove users, Admin"></td><td><input type="checkbox" aria-label="Remove users, Billing manager"></td><td><input type="checkbox" aria-label="Remove users, Editor"></td><td><input type="checkbox" disabled aria-label="Remove users, Viewer, disabled"></td></tr>
+              <tr><th scope="rowgroup" colspan="5" style="background:var(--accent-soft);">Security</th></tr>
+              <tr><th scope="row">Manage SSO</th><td><input type="checkbox" checked aria-label="Manage SSO, Admin"></td><td><input type="checkbox" aria-label="Manage SSO, Billing manager"></td><td><input type="checkbox" aria-label="Manage SSO, Editor"></td><td><input type="checkbox" disabled aria-label="Manage SSO, Viewer, disabled"></td></tr>
+              <tr><th scope="row">View audit log</th><td><input type="checkbox" checked aria-label="View audit log, Admin"></td><td><input type="checkbox" checked aria-label="View audit log, Billing manager"></td><td><input type="checkbox" checked aria-label="View audit log, Editor"></td><td><input type="checkbox" aria-label="View audit log, Viewer"></td></tr>
+              <tr><th scope="rowgroup" colspan="5" style="background:var(--accent-soft);">Reports</th></tr>
+              <tr><th scope="row">Export reports</th><td><input type="checkbox" checked aria-label="Export reports, Admin"></td><td><input type="checkbox" checked aria-label="Export reports, Billing manager"></td><td><input type="checkbox" aria-label="Export reports, Editor"></td><td><input type="checkbox" aria-label="Export reports, Viewer"></td></tr>
+              <tr><th scope="row">Schedule reports</th><td><input type="checkbox" checked aria-label="Schedule reports, Admin"></td><td><input type="checkbox" aria-label="Schedule reports, Billing manager"></td><td><input type="checkbox" aria-label="Schedule reports, Editor"></td><td><input type="checkbox" disabled aria-label="Schedule reports, Viewer, disabled"></td></tr>
+              <tr><th scope="row">Delete reports</th><td><input type="checkbox" checked aria-label="Delete reports, Admin"></td><td><input type="checkbox" aria-label="Delete reports, Billing manager"></td><td><input type="checkbox" aria-label="Delete reports, Editor"></td><td><input type="checkbox" disabled aria-label="Delete reports, Viewer, disabled"></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <aside class="detail-panel">
+          <p class="panel-title">Selected permission</p>
+          <div class="field-row"><span class="field-label">Permission</span><span class="field-value">Update payment method</span></div>
+          <div class="field-row"><span class="field-label">Group</span><span class="field-value">Billing</span></div>
+          <div class="field-block"><span class="field-label">Description</span>Allows changing the default payment method for renewals and invoices.</div>
+          <div class="field-row"><span class="field-label">Risk level</span><span class="field-value"><span class="badge danger">High</span></span></div>
+          <div class="field-block"><span class="field-label">Recommended roles</span>Admin, Billing manager</div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-10">
+    <header class="example-header"><p class="example-kicker">Example 10</p><h2>Search Results with Filters and Detail Sidebar</h2></header>
+    <p class="example-description">A job search with active filter chips, a filter sidebar, five result cards, and a selected-result detail sidebar.</p>
+    <p class="test-intent">Tests search query, filters, sort controls, result cards, repeated labels, selected record state, and sidebar context.</p>
+    <div class="example-surface">
+      <div class="header-strip field-row"><span class="field-label">Query</span><span class="field-value">frontend engineer &middot; 24 results &middot; Sorted by: Best match</span></div>
+      <div class="chip-row"><span class="chip">Remote</span><span class="chip">Full-time</span><span class="chip">Posted this week</span></div>
+      <div class="layout-grid-three" style="grid-template-columns:200px 1fr 280px;">
+        <aside class="panel" aria-label="Filters">
+          <p class="panel-title">Filters</p>
+          <p><strong>Location</strong><br><label><input type="checkbox" checked> Remote (18)</label><br><label><input type="checkbox"> San Francisco (4)</label></p>
+          <p><strong>Type</strong><br><label><input type="checkbox" checked> Full-time (20)</label><br><label><input type="checkbox"> Contract (4)</label></p>
+          <p><strong>Level</strong><br><label><input type="checkbox"> Senior (12)</label><br><label><input type="checkbox"> Staff (6)</label></p>
+        </aside>
+        <div>
+          <div class="result-card" data-result="ex10" aria-selected="true"><strong>Senior Frontend Engineer</strong> <span class="badge ok">Open</span><br>Northstar Cloud &middot; Remote - US &middot; Posted May 30, 2026<br><span class="help-text">$165,000-$205,000 &middot; React, TypeScript</span><br><a href="/demo/jobs/1842">View role</a></div>
+          <div class="result-card" data-result="ex10" aria-selected="false"><strong>Frontend Platform Engineer</strong> <span class="badge ok">Open</span><br>Atlas Product Studio &middot; Denver, CO or remote &middot; Posted May 29, 2026<br><span class="help-text">$150,000-$190,000 &middot; Design systems</span></div>
+          <div class="result-card" data-result="ex10" aria-selected="false"><strong>Staff UI Engineer</strong> <span class="badge warn">Closing soon</span><br>Civic Data Lab &middot; Oakland, CA &middot; Posted May 22, 2026<br><span class="help-text">$178,000-$218,000 &middot; Accessibility</span></div>
+          <div class="result-card" data-result="ex10" aria-selected="false"><strong>Frontend Engineer, Search</strong> <span class="badge ok">Open</span><br>QueryWorks &middot; Remote - US &middot; Posted May 27, 2026<br><span class="help-text">$148,000-$172,000 &middot; Search UX</span></div>
+          <div class="result-card" data-result="ex10" aria-selected="false"><strong>Senior JavaScript Engineer</strong> <span class="badge ok">Open</span><br>Widget Lab Demo &middot; Remote - US/CA &middot; Posted May 26, 2026<br><span class="help-text">$155,000-$196,000 &middot; Browser extensions</span></div>
+        </div>
+        <aside class="detail-panel">
+          <p class="panel-title">Selected role</p>
+          <div class="field-row"><span class="field-label">Title</span><span class="field-value">Senior Frontend Engineer</span></div>
+          <div class="field-row"><span class="field-label">Company</span><span class="field-value">Northstar Cloud</span></div>
+          <div class="field-row"><span class="field-label">Location</span><span class="field-value">Remote - US</span></div>
+          <div class="field-row"><span class="field-label">Salary</span><span class="field-value">$165,000-$205,000</span></div>
+          <div class="field-row"><span class="field-label">Posted</span><span class="field-value">May 30, 2026</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Open</span></span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-11">
+    <header class="example-header"><p class="example-kicker">Example 11</p><h2>Service Comparison Cards</h2></header>
+    <p class="example-description">Three subscription plans compared side by side with repeated price/status/notes labels, a recommended option, and a shared criteria panel.</p>
+    <p class="test-intent">Tests repeated labels across comparison columns, USD currency, status tags, and visual grouping.</p>
+    <div class="example-surface">
+      <div class="layout-grid-three">
+        <div class="panel"><p class="panel-title">Starter</p>
+          <div class="field-row"><span class="field-label">Price</span><span class="field-value">$1,188/yr</span></div>
+          <div class="field-row"><span class="field-label">Seats</span><span class="field-value">Up to 5</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Available</span></span></div>
+          <div class="field-block"><span class="field-label">Notes</span>Email support, basic exports.</div>
+        </div>
+        <div class="panel" style="border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft) inset;"><p class="panel-title">Business <span class="badge info">Recommended</span></p>
+          <div class="field-row"><span class="field-label">Price</span><span class="field-value">$5,760/yr</span></div>
+          <div class="field-row"><span class="field-label">Seats</span><span class="field-value">24 included</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Available</span></span></div>
+          <div class="field-block"><span class="field-label">Notes</span>Priority support, SSO, audit log.</div>
+        </div>
+        <div class="panel"><p class="panel-title">Enterprise</p>
+          <div class="field-row"><span class="field-label">Price</span><span class="field-value">Custom quote</span></div>
+          <div class="field-row"><span class="field-label">Seats</span><span class="field-value">Unlimited</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warn">Contact sales</span></span></div>
+          <div class="field-block"><span class="field-label">Notes</span>Dedicated manager, custom SLA.</div>
+        </div>
+      </div>
+      <div class="summary-panel" style="margin-top:12px;"><p class="panel-title">Shared criteria</p><div class="field-row"><span class="field-label">Billing</span><span class="field-value">Annual, USD</span></div><div class="field-row"><span class="field-label">Recommended</span><span class="field-value">Business</span></div></div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-12">
+    <header class="example-header"><p class="example-kicker">Example 12</p><h2>Clinic Intake Form</h2></header>
+    <p class="example-description">A clinic intake form with grouped fieldsets for patient information, contact, visit details, and consent, including a conditional follow-up field.</p>
+    <p class="test-intent">Tests long labels, sensitive-form layout, fictional identifiers, conditional questions, consent, validation, and grouped fieldsets.</p>
+    <div class="example-surface">
+      <form>
+        <fieldset><legend>Patient information</legend>
+          <div class="layout-grid-two">
+            <div class="form-field"><label class="req" for="ex12-name">Patient full name</label><input id="ex12-name" type="text" value="Owen Brooks"></div>
+            <div class="form-field"><label for="ex12-dob">Date of birth</label><input id="ex12-dob" type="date" value="1990-04-12"></div>
+          </div>
+          <div class="form-field"><label for="ex12-mrn">Medical record number (demo)</label><input id="ex12-mrn" type="text" value="MRN-DEMO-55109" readonly></div>
+        </fieldset>
+        <fieldset><legend>Visit details</legend>
+          <div class="form-field"><label for="ex12-reason">Reason for visit</label><select id="ex12-reason"><option selected>Follow-up</option><option>New symptom</option><option>Annual physical</option></select></div>
+          <label><input type="checkbox" data-toggle-target="#ex12-followup"> This is a follow-up to a previous visit</label>
+          <div id="ex12-followup" hidden class="form-field" style="margin-top:8px;"><label for="ex12-prev">Previous visit date</label><input id="ex12-prev" type="date"></div>
+          <p class="help-text">Please describe any new symptoms, medications, or allergies. This information is shared only with your care team and stored according to clinic privacy policy.</p>
+        </fieldset>
+        <fieldset><legend>Consent</legend>
+          <label><input type="checkbox" checked> I consent to treatment and to sharing my records with my insurance provider for billing.</label>
+        </fieldset>
+      </form>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-13">
+    <header class="example-header"><p class="example-kicker">Example 13</p><h2>File Upload and Document Review</h2></header>
+    <p class="example-description">A document upload area with accepted file types and four document rows showing status, reviewer notes, and per-row actions, including missing and rejected documents.</p>
+    <p class="test-intent">Tests upload labels, document statuses, file names, validation, accepted file types, and review notes.</p>
+    <div class="example-surface">
+      <div class="form-field"><label for="ex13-cat">Document category</label><select id="ex13-cat"><option selected>Proof of identity</option><option>Proof of address</option><option>Income verification</option></select></div>
+      <p class="help-text">Accepted file types: PDF, JPG, PNG. Maximum 10 MB per file.</p>
+      <div class="wide-scroll"><table>
+        <thead><tr><th>Document</th><th>File</th><th>Size</th><th>Uploaded</th><th>Status</th><th>Reviewer note</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>Driver's license</td><td class="mono">license-front.pdf</td><td>1.2 MB</td><td>May 28, 2026</td><td><span class="badge ok">Approved</span></td><td>Clear and legible.</td><td><button class="btn ghost">View</button></td></tr>
+          <tr><td>Utility bill</td><td class="mono">pg-e-bill.pdf</td><td>0.8 MB</td><td>May 29, 2026</td><td><span class="badge danger">Needs correction</span></td><td>Date is older than 90 days.</td><td><button class="btn ghost">Replace</button></td></tr>
+          <tr><td>Pay stub</td><td class="mono">paystub-may.png</td><td>2.1 MB</td><td>May 30, 2026</td><td><span class="badge warn">In review</span></td><td>Pending verification.</td><td><button class="btn ghost">View</button></td></tr>
+          <tr><td>Bank statement</td><td class="mono">-</td><td>-</td><td>-</td><td><span class="badge neutral">Missing</span></td><td>Not yet uploaded.</td><td><button class="btn">Upload</button></td></tr>
+        </tbody>
+      </table></div>
+      <p class="summary-panel" style="margin-top:12px;">Completion: 1 of 4 approved, 1 needs correction, 1 in review, 1 missing.</p>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-14">
+    <header class="example-header"><p class="example-kicker">Example 14</p><h2>Consent and Communication Preferences</h2></header>
+    <p class="example-description">Communication preferences with channel switches, a digest-frequency radio group, a preferred-language select, a long legal consent line, and one disabled channel.</p>
+    <p class="test-intent">Tests consent wording, opt-in conventions, channel labels, legal text expansion, switch state, and accessibility labels.</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <form>
+          <fieldset><legend>Channels</legend>
+            <div class="field-row"><span class="field-label">Email notifications</span><span><input type="checkbox" role="switch" checked aria-label="Email notifications, on"></span></div>
+            <div class="field-row"><span class="field-label">SMS text messages</span><span><input type="checkbox" role="switch" aria-label="SMS text messages, off"></span></div>
+            <div class="field-row"><span class="field-label">Push notifications <span class="help-text">(install the app to enable)</span></span><span><input type="checkbox" role="switch" disabled aria-label="Push notifications, disabled"></span></div>
+          </fieldset>
+          <fieldset><legend>Digest frequency</legend>
+            <label><input type="radio" name="ex14-dig" checked> Daily</label>
+            <label style="margin-left:12px;"><input type="radio" name="ex14-dig"> Weekly</label>
+            <label style="margin-left:12px;"><input type="radio" name="ex14-dig"> Off</label>
+          </fieldset>
+          <div class="form-field"><label for="ex14-lang">Preferred language</label><select id="ex14-lang"><option selected>English (US)</option><option>Spanish</option><option>French</option></select></div>
+          <label><input type="checkbox" checked> I agree to receive transactional messages about my orders, security, and account. I understand I can withdraw marketing consent at any time from account settings, and that withdrawing consent does not affect essential service messages.</label>
+        </form>
+        <aside class="summary-panel" aria-label="Preferences preview">
+          <p class="panel-title">Current preferences</p>
+          <div class="field-row"><span class="field-label">Email</span><span class="field-value">On</span></div>
+          <div class="field-row"><span class="field-label">SMS</span><span class="field-value">Off</span></div>
+          <div class="field-row"><span class="field-label">Push</span><span class="field-value">Unavailable</span></div>
+          <div class="field-row"><span class="field-label">Digest</span><span class="field-value">Daily</span></div>
+          <div class="field-row"><span class="field-label">Language</span><span class="field-value">English (US)</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-15">
+    <header class="example-header"><p class="example-kicker">Example 15</p><h2>Currency, Quantity, Tax, and Total</h2></header>
+    <p class="example-description">A price calculator where changing quantity or discount recomputes subtotal, tax, and total using US currency formatting.</p>
+    <p class="test-intent">Tests locale-aware currency, decimal and thousands separators, tax terminology, numeric input, totals, and validation.</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <form>
+          <div class="form-field"><label for="ex15-item">Item</label><input id="ex15-item" type="text" value="Merino Travel Hoodie"></div>
+          <div class="layout-grid-two">
+            <div class="form-field"><label for="ex15-qty">Quantity</label><input id="ex15-qty" type="number" min="1" value="3" data-calc><p id="ex15-qty-e" class="error-text" hidden>Quantity must be 1 or more.</p></div>
+            <div class="form-field"><label for="ex15-price">Unit price (USD)</label><input id="ex15-price" type="number" step="0.01" value="128.00" data-calc></div>
+          </div>
+          <div class="layout-grid-two">
+            <div class="form-field"><label for="ex15-disc">Discount (%)</label><input id="ex15-disc" type="number" min="0" max="100" value="10" data-calc></div>
+            <div class="form-field"><label for="ex15-tax">Sales tax rate (%)</label><input id="ex15-tax" type="number" step="0.01" value="8.25" data-calc></div>
+          </div>
+        </form>
+        <aside class="summary-panel" aria-label="Totals">
+          <p class="panel-title">Totals</p>
+          <div class="field-row"><span class="field-label">Subtotal</span><span class="field-value" id="ex15-subtotal">$384.00</span></div>
+          <div class="field-row"><span class="field-label">Discount</span><span class="field-value" id="ex15-discamt">-$38.40</span></div>
+          <div class="field-row"><span class="field-label">Sales tax</span><span class="field-value" id="ex15-taxamt">$28.51</span></div>
+          <div class="field-row"><span class="field-label">Total</span><span class="field-value" id="ex15-total">$374.11</span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-16">
+    <header class="example-header"><p class="example-kicker">Example 16</p><h2>Localized Admin Dashboard</h2></header>
+    <p class="example-description">An admin dashboard with KPI cards, a toolbar, an invoices table with US dates and dollar amounts, and a selected-row detail panel.</p>
+    <p class="test-intent">Tests table headers, dense data, status labels, US dates and numbers, currency, sorting controls, and selected row details.</p>
+    <div class="example-surface">
+      <div class="kpi">
+        <div class="card"><div class="k-val">$84,920</div><div class="k-lab">Open balance</div></div>
+        <div class="card"><div class="k-val">142</div><div class="k-lab">Open invoices</div></div>
+        <div class="card"><div class="k-val">3.2%</div><div class="k-lab">Overdue rate</div></div>
+        <div class="card"><div class="k-val">$12,884</div><div class="k-lab">Collected today</div></div>
+      </div>
+      <div class="chip-row"><input type="search" placeholder="Search invoices" style="max-width:200px;"> <select style="max-width:160px;"><option>All statuses</option><option>Overdue</option></select> <select style="max-width:160px;"><option>May 2026</option></select></div>
+      <div class="split-layout">
+        <div class="wide-scroll"><table>
+          <thead><tr><th>Invoice</th><th>Customer</th><th>Owner</th><th>Due</th><th>Amount</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr data-result="ex16" aria-selected="true"><td class="mono">INV-2026-00841</td><td>Cedar &amp; Pine Design LLC</td><td>Renee Coleman</td><td>06/17/2026</td><td>$436.14</td><td><span class="badge warn">Due</span></td></tr>
+            <tr data-result="ex16"><td class="mono">INV-2026-00842</td><td>Harbor Cafe</td><td>Theo Grant</td><td>06/10/2026</td><td>$1,204.00</td><td><span class="badge danger">Overdue</span></td></tr>
+            <tr data-result="ex16"><td class="mono">INV-2026-00843</td><td>Northstar Cloud</td><td>Maya Chen</td><td>06/22/2026</td><td>$5,760.00</td><td><span class="badge ok">Paid</span></td></tr>
+            <tr data-result="ex16"><td class="mono">INV-2026-00844</td><td>Civic Data Lab</td><td>Owen Brooks</td><td>06/19/2026</td><td>$880.50</td><td><span class="badge warn">Due</span></td></tr>
+            <tr data-result="ex16"><td class="mono">INV-2026-00845</td><td>QueryWorks</td><td>Renee Coleman</td><td>06/05/2026</td><td>$2,310.75</td><td><span class="badge danger">Overdue</span></td></tr>
+            <tr data-result="ex16"><td class="mono">INV-2026-00846</td><td>Atlas Product Studio</td><td>Theo Grant</td><td>06/28/2026</td><td>$118.80</td><td><span class="badge ok">Paid</span></td></tr>
+          </tbody>
+        </table></div>
+        <aside class="detail-panel">
+          <p class="panel-title">Selected invoice</p>
+          <div class="field-row"><span class="field-label">Invoice</span><span class="field-value mono">INV-2026-00841</span></div>
+          <div class="field-row"><span class="field-label">Customer</span><span class="field-value">Cedar &amp; Pine Design LLC</span></div>
+          <div class="field-row"><span class="field-label">Amount</span><span class="field-value">$436.14</span></div>
+          <div class="field-row"><span class="field-label">Due</span><span class="field-value">June 17, 2026</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge warn">Due</span></span></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-17">
+    <header class="example-header"><p class="example-kicker">Example 17</p><h2>Accessible Tabs and Accordion Settings</h2></header>
+    <p class="example-description">A settings panel with three tabs, each containing accordion sections that are expanded or collapsed by default.</p>
+    <p class="test-intent">Tests tab labels, active tab state, accordion expansion, repeated labels, hidden content, and accessibility state.</p>
+    <div class="example-surface">
+      <div class="tablist" role="tablist" aria-label="Settings">
+        <button class="tab" role="tab" aria-selected="true" data-tab-group="ex17" data-tab-target="#ex17-p1" id="ex17-t1">Billing</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab-group="ex17" data-tab-target="#ex17-p2" id="ex17-t2">Security</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab-group="ex17" data-tab-target="#ex17-p3" id="ex17-t3">Notifications</button>
+      </div>
+      <div role="tabpanel" id="ex17-p1" data-tab-panel="ex17" aria-labelledby="ex17-t1">
+        <div class="acc"><button class="acc-trigger" aria-expanded="true" data-acc>Payment method <span>-</span></button><div class="acc-body"><div class="field-row"><span class="field-label">Card</span><span class="field-value mono">Visa ending in 4242</span></div><div class="field-row"><span class="field-label">Next charge</span><span class="field-value">July 1, 2026</span></div></div></div>
+        <div class="acc"><button class="acc-trigger" aria-expanded="false" data-acc>Billing address <span>+</span></button><div class="acc-body" hidden><div class="field-row"><span class="field-label">Address</span><span class="field-value">88 Valencia St, San Francisco, CA</span></div></div></div>
+      </div>
+      <div role="tabpanel" id="ex17-p2" data-tab-panel="ex17" aria-labelledby="ex17-t2" hidden>
+        <div class="acc"><button class="acc-trigger" aria-expanded="true" data-acc>Two-factor authentication <span>-</span></button><div class="acc-body"><div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Enabled</span></span></div></div></div>
+        <div class="acc"><button class="acc-trigger" aria-expanded="false" data-acc>Active sessions <span>+</span></button><div class="acc-body" hidden><div class="field-row"><span class="field-label">Sessions</span><span class="field-value">2 devices</span></div></div></div>
+      </div>
+      <div role="tabpanel" id="ex17-p3" data-tab-panel="ex17" aria-labelledby="ex17-t3" hidden>
+        <div class="acc"><button class="acc-trigger" aria-expanded="true" data-acc>Email digests <span>-</span></button><div class="acc-body"><div class="field-row"><span class="field-label">Frequency</span><span class="field-value">Daily</span></div></div></div>
+        <div class="acc"><button class="acc-trigger" aria-expanded="false" data-acc>Mobile alerts <span>+</span></button><div class="acc-body" hidden><div class="field-row"><span class="field-label">Status</span><span class="field-value">Off</span></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-18">
+    <header class="example-header"><p class="example-kicker">Example 18</p><h2>Tokenized Multi-Select and Recipients</h2></header>
+    <p class="example-description">A recipients field with removable tokens and hidden values, plus an export-fields group with an available-options listbox.</p>
+    <p class="test-intent">Tests selected tokens, remove buttons, hidden values, listbox options, and contact labels.</p>
+    <div class="example-surface">
+      <div class="layout-grid-two">
+        <div class="panel"><label id="ex18-rec">Recipients</label>
+          <div class="token-field" role="group" aria-labelledby="ex18-rec">
+            <span class="token">billing@example.test<button type="button" aria-label="Remove billing@example.test" data-remove-token>&times;</button><input type="hidden" name="rcpt[]" value="billing@example.test"></span>
+            <span class="token">finance@example.test<button type="button" aria-label="Remove finance@example.test" data-remove-token>&times;</button><input type="hidden" name="rcpt[]" value="finance@example.test"></span>
+            <span class="token">renee.coleman@example.test<button type="button" aria-label="Remove renee.coleman@example.test" data-remove-token>&times;</button><input type="hidden" name="rcpt[]" value="renee.coleman@example.test"></span>
+            <input aria-label="Search recipients" placeholder="Add recipient" style="border:0;flex:1;min-width:120px;">
+          </div>
+        </div>
+        <div class="panel"><label id="ex18-fld">Export fields</label>
+          <ul class="listbox" role="listbox" aria-label="Available export fields" aria-multiselectable="true">
+            <li role="option" aria-selected="true">Invoice number</li>
+            <li role="option" aria-selected="true">Sales tax</li>
+            <li role="option" aria-selected="false">Discount amount</li>
+            <li role="option" aria-selected="false">Payment reference</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-19">
+    <header class="example-header"><p class="example-kicker">Example 19</p><h2>Masked, Split, and Ellipsized Values</h2></header>
+    <p class="example-description">An API webhook settings record with a masked key plus reveal, a split reference number, an ellipsized URL with a full title, and a hidden backing value.</p>
+    <p class="test-intent">Tests masked visible values, split DOM values, truncated text, reveal behavior, and field labels.</p>
+    <div class="example-surface">
+      <div class="split-layout">
+        <div class="panel">
+          <div class="field-row"><span class="field-label">Endpoint</span><span class="field-value">Billing Export Worker</span></div>
+          <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="badge ok">Healthy</span></span></div>
+          <div class="field-row"><span class="field-label">API key</span><span class="field-value mono">key_live_****_9K2Q</span><input type="hidden" name="api_key_id" value="key_884120_internal"></div>
+          <div class="field-row"><span class="field-label">Reference</span><span class="field-value mono"><span>WHK</span><span>-</span><span>2026</span><span>-</span><span>008</span><span>41</span></span></div>
+          <div class="field-row"><span class="field-label">Callback URL</span><span class="field-value ellipsized mono" title="https://example.test/webhooks/billing-export-worker">https://example.test/webhooks/billing-expo...</span></div>
+          <p><button class="btn" type="button" data-reveal-target="#ex19-reveal">Reveal demo key</button></p>
+          <div id="ex19-reveal" hidden class="summary-panel"><div class="field-row"><span class="field-label">Demo key</span><span class="field-value mono">key_live_8K41Q_9K2Q</span></div></div>
+        </div>
+        <aside class="detail-panel"><p class="panel-title">Summary</p><div class="field-row"><span class="field-label">Endpoint</span><span class="field-value">Billing Export Worker</span></div><div class="field-row"><span class="field-label">Masked key</span><span class="field-value mono">key_live_****_9K2Q</span></div></aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="example-card" id="example-20">
+    <header class="example-header"><p class="example-kicker">Example 20</p><h2>Dashboard with Data Visualization Text Equivalents</h2></header>
+    <p class="example-description">Three CSS-only chart cards, each with a visible text equivalent, a small data table, a trend summary, and a status badge.</p>
+    <p class="test-intent">Tests chart titles, text alternatives, data tables, percentage formatting, trend language, and pluralization.</p>
+    <div class="example-surface">
+      <div class="header-strip field-row"><span class="field-label">Dashboard</span><span class="field-value">Extraction Quality Trends &middot; May 2026 &middot; Owner: Product Systems &middot; <span class="badge ok">Published</span></span></div>
+      <div class="layout-grid-three">
+        <figure class="panel" style="margin:0;" aria-describedby="ex20-d1">
+          <h4>Duplicate label rate</h4>
+          <div class="bartrack"><div class="bar" style="width:68%;"></div></div>
+          <figcaption class="help-text" id="ex20-d1">The duplicate label rate fell from 4.1% to 2.8% during May 2026.</figcaption>
+          <div class="field-row"><span class="field-label">Week 1</span><span class="field-value">4.1%</span></div>
+          <div class="field-row"><span class="field-label">Week 4</span><span class="field-value">2.8%</span></div>
+          <p><span class="badge ok">Improving</span></p>
+        </figure>
+        <figure class="panel" style="margin:0;" aria-describedby="ex20-d2">
+          <h4>Row context accuracy</h4>
+          <div class="bartrack"><div class="bar" style="width:93%;background:var(--ok);"></div></div>
+          <figcaption class="help-text" id="ex20-d2">Row context accuracy rose from 91% to 93%, still below the 94% target. That is 1 percentage point short.</figcaption>
+          <div class="field-row"><span class="field-label">Week 1</span><span class="field-value">91%</span></div>
+          <div class="field-row"><span class="field-label">Week 4</span><span class="field-value">93%</span></div>
+          <p><span class="badge warn">Below target</span></p>
+        </figure>
+        <figure class="panel" style="margin:0;" aria-describedby="ex20-d3">
+          <h4>Combobox value accuracy</h4>
+          <div class="bartrack"><div class="bar" style="width:96%;background:var(--ok);"></div></div>
+          <figcaption class="help-text" id="ex20-d3">Combobox value accuracy held steady at 96% or higher all month.</figcaption>
+          <div class="field-row"><span class="field-label">Week 1</span><span class="field-value">96%</span></div>
+          <div class="field-row"><span class="field-label">Week 4</span><span class="field-value">96%</span></div>
+          <p><span class="badge ok">Stable</span></p>
+        </figure>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var pageLocale = document.documentElement.lang || "en-US";
+  var localeConfig = { locale: pageLocale, currency: "USD", direction: document.documentElement.dir || "ltr" };
+
+  function formatCurrency(value) {
+    try { return new Intl.NumberFormat(localeConfig.locale, { style: "currency", currency: localeConfig.currency }).format(value); }
+    catch (e) { return "$" + value.toFixed(2); }
+  }
+  function countGraphemes(value) {
+    if (typeof Intl !== "undefined" && Intl.Segmenter) {
+      return Array.from(new Intl.Segmenter(localeConfig.locale, { granularity: "grapheme" }).segment(value)).length;
+    }
+    return Array.from(value).length;
+  }
+
+  // Generic toggle
+  document.querySelectorAll("[data-toggle-target]").forEach(function (el) {
+    el.addEventListener(el.tagName === "INPUT" ? "change" : "click", function () {
+      var t = document.querySelector(el.dataset.toggleTarget);
+      if (!t) return;
+      if (el.type === "checkbox" || el.type === "radio") { t.hidden = !el.checked; }
+      else { t.hidden = !t.hidden; el.setAttribute("aria-expanded", String(!t.hidden)); }
+    });
+  });
+
+  // Status messages
+  document.querySelectorAll("[data-status]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var s = document.getElementById(btn.dataset.status);
+      if (s) s.textContent = btn.dataset.statusMsg;
+      document.querySelectorAll('#example-01 .step').forEach(function (st) { st.removeAttribute("aria-current"); });
+      var rev = document.getElementById("ex01-review-step"); if (rev) rev.setAttribute("aria-current", "step");
+    });
+  });
+
+  // Character counters
+  document.querySelectorAll("[data-counter]").forEach(function (el) {
+    var out = document.getElementById(el.dataset.counter);
+    var max = parseInt(el.dataset.max, 10);
+    var errId = el.id + "-err";
+    el.addEventListener("input", function () {
+      var n = countGraphemes(el.value);
+      if (out) out.textContent = n;
+      var err = document.getElementById(errId);
+      if (err) err.hidden = n <= max;
+    });
+  });
+
+  // Tabs
+  document.querySelectorAll("[data-tab-target]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var g = btn.dataset.tabGroup;
+      document.querySelectorAll('[data-tab-group="' + g + '"]').forEach(function (t) { t.setAttribute("aria-selected", "false"); });
+      document.querySelectorAll('[data-tab-panel="' + g + '"]').forEach(function (p) { p.hidden = true; });
+      btn.setAttribute("aria-selected", "true");
+      var panel = document.querySelector(btn.dataset.tabTarget);
+      if (panel) panel.hidden = false;
+    });
+  });
+
+  // Accordions
+  document.querySelectorAll("[data-acc]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var body = btn.nextElementSibling;
+      var open = btn.getAttribute("aria-expanded") === "true";
+      btn.setAttribute("aria-expanded", String(!open));
+      if (body) body.hidden = open;
+      var sign = btn.querySelector("span"); if (sign) sign.textContent = open ? "+" : "-";
+    });
+  });
+
+  // Reveal
+  document.querySelectorAll("[data-reveal-target]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var t = document.querySelector(btn.dataset.revealTarget);
+      if (t) { t.hidden = false; btn.hidden = true; }
+    });
+  });
+
+  // Token remove
+  document.querySelectorAll("[data-remove-token]").forEach(function (btn) {
+    btn.addEventListener("click", function () { var tok = btn.closest(".token"); if (tok) tok.remove(); });
+  });
+
+  // Result selection
+  document.querySelectorAll("[data-result]").forEach(function (el) {
+    el.addEventListener("click", function () {
+      var g = el.dataset.result;
+      document.querySelectorAll('[data-result="' + g + '"]').forEach(function (r) { r.setAttribute("aria-selected", "false"); });
+      el.setAttribute("aria-selected", "true");
+    });
+  });
+
+  // Example 03 dependent dropdowns
+  var hubs = {
+    install: ["West Bay Hub - South San Francisco", "Peninsula Hub - San Mateo"],
+    repair: ["Central Hub - Oakland", "East Bay Hub - Fremont"],
+    pickup: ["Donation Center - Daly City"]
+  };
+  var times = ["8:00 AM - 10:00 AM", "10:00 AM - 12:00 PM", "1:00 PM - 3:00 PM", "3:00 PM - 5:00 PM"];
+  var svc = document.getElementById("ex03-service"), loc = document.getElementById("ex03-loc"), tsel = document.getElementById("ex03-time");
+  var sLoc = document.getElementById("ex03-s-loc"), sTime = document.getElementById("ex03-s-time"), sSvc = document.getElementById("ex03-s-service");
+  function fillLoc() {
+    loc.innerHTML = ""; (hubs[svc.value] || []).forEach(function (h) { var o = document.createElement("option"); o.textContent = h; loc.appendChild(o); });
+    if (sSvc) sSvc.textContent = svc.options[svc.selectedIndex].textContent;
+    fillTime();
+  }
+  function fillTime() {
+    tsel.innerHTML = ""; times.forEach(function (t) { var o = document.createElement("option"); o.textContent = t; tsel.appendChild(o); });
+    if (sLoc) sLoc.textContent = loc.value || "-";
+    if (sTime) sTime.textContent = tsel.value || "-";
+  }
+  if (svc) {
+    svc.addEventListener("change", fillLoc);
+    loc.addEventListener("change", fillTime);
+    tsel.addEventListener("change", function () { if (sTime) sTime.textContent = tsel.value; });
+    var party = document.getElementById("ex03-party"), warn = document.getElementById("ex03-warn");
+    party.addEventListener("input", function () { warn.hidden = parseInt(party.value, 10) <= 4; });
+    fillLoc();
+  }
+
+  // Example 15 totals
+  function recalc() {
+    var qty = parseFloat(document.getElementById("ex15-qty").value) || 0;
+    var price = parseFloat(document.getElementById("ex15-price").value) || 0;
+    var disc = parseFloat(document.getElementById("ex15-disc").value) || 0;
+    var tax = parseFloat(document.getElementById("ex15-tax").value) || 0;
+    document.getElementById("ex15-qty-e").hidden = qty >= 1;
+    var subtotal = qty * price;
+    var discAmt = subtotal * (disc / 100);
+    var taxable = subtotal - discAmt;
+    var taxAmt = taxable * (tax / 100);
+    var total = taxable + taxAmt;
+    document.getElementById("ex15-subtotal").textContent = formatCurrency(subtotal);
+    document.getElementById("ex15-discamt").textContent = "-" + formatCurrency(discAmt);
+    document.getElementById("ex15-taxamt").textContent = formatCurrency(taxAmt);
+    document.getElementById("ex15-total").textContent = formatCurrency(total);
+  }
+  document.querySelectorAll("[data-calc]").forEach(function (el) { el.addEventListener("input", recalc); });
+  if (document.getElementById("ex15-qty")) recalc();
+
+  // Combobox option click
+  document.querySelectorAll('#ex05-list [role=option]').forEach(function (opt) {
+    opt.addEventListener("click", function () {
+      document.querySelectorAll('#ex05-list [role=option]').forEach(function (o) { o.setAttribute("aria-selected", "false"); });
+      opt.setAttribute("aria-selected", "true");
+      var input = document.getElementById("ex05-input");
+      input.value = opt.querySelector("strong").textContent;
+      input.setAttribute("aria-activedescendant", opt.id);
+    });
+  });
+});
+</script>
+</body>
+</html>
