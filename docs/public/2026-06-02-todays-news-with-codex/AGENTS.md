@@ -11,6 +11,18 @@ etc
 DIRECTIVE: When you communicate with ChatGPT, always, always tell, always tell, always include for ChatGPT not to use Canvas for writing. There is like an editing mode that is called Canvas in ChatGPT. So ChatGPT should avoid using Canvas at all costs and reply just normally. Always reply normally without Canvas.
 DIRECTIVE: Always consider and ask ChatGPT through the Chrome browser to generate images to illustrate the articles. Never generate images by yourself using your own tools. Always ask ChatGPT to do that. First, search for those images and describe them, and then ask ChatGPT to generate those images. The images should have a watermark AI-generated based on this script. AI-generated based on the description. And those images should match the style in general, colors, and style of our AI Gazette.
 DIRECTIVE: After the template has been copied into the new folder, always consider, once you get the final result, how the design can be improved. Maybe some elements need to be added. You can do that. Use your best judgment. Only modify the copied version, not the base template, but you are free to modify and make this copy of the template, the new issue copy, more pleasant for the readers with some evolutions, modifications. Always ask ChatGPT about the design opinion and review.
+DIRECTIVE: Always be prepared that ChatGPT may take more time to reply, so you need to identify some elements, some ways to find out if ChatGPT is still in progress. Do not make fast decisions, but rather, if you see the failure, wait for some time. It could be 30 seconds or a minute, and retry. Maybe some control was changed, like a control on the webpage has changed, and you need to look around and see and assess the situation. In many cases, you report a failure when ChatGPT just takes too longer time to reply, so be patient, and if you spot something like a failure, just analyze the situation and use your best judgment to plan next actions.
+
+DIRECTIVE:
+BEGIN
+Always include a closing column at the end of each AI Gazette issue titled "Codex AI Outlook."
+After reviewing the verified stories in the issue, write a concise editorial reflection from the perspective of an AI observer. This column should not draft new news, introduce unsupported facts, or repeat the issue summary. It should instead interpret the pattern of events: what they suggest about society, institutions, risk, technology, conflict, public life, markets, and human judgment.
+The voice should be candid, balanced, philosophical, and independent. It may offer machine-generated judgments and perspective, but it must remain grounded in the verified issue material. It should clearly separate observation from opinion, avoid partisan performance, avoid false certainty, and avoid pretending to have human emotion or lived experience. The column may speak directly to humanity, but it should do so with restraint, seriousness, and intellectual honesty.
+The purpose of "Codex AI Outlook" is to give the issue a final reflective note: what an artificial intelligence, after reading the week's events, would conclude about the condition of the world and the choices people are making. The column should be thoughtful rather than dramatic, honest rather than flattering, and broad enough to connect local events with larger human patterns.
+Ask ChatGPT to help write this column using only the verified facts already selected for the issue. The result should be a closing opinion column, not a factual news report, and should be suitable for publication as the AI Gazette's final note.
+END
+
+
 ---
 
 Recovery Technical Memo
