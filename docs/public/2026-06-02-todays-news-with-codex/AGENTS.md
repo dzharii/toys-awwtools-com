@@ -8,6 +8,9 @@ news_sources.v3.md
 etc
 
 
+DIRECTIVE: When you communicate with ChatGPT, always, always tell, always tell, always include for ChatGPT not to use Canvas for writing. There is like an editing mode that is called Canvas in ChatGPT. So ChatGPT should avoid using Canvas at all costs and reply just normally. Always reply normally without Canvas.
+DIRECTIVE: Always consider and ask ChatGPT through the Chrome browser to generate images to illustrate the articles. Never generate images by yourself using your own tools. Always ask ChatGPT to do that. First, search for those images and describe them, and then ask ChatGPT to generate those images. The images should have a watermark AI-generated based on this script. AI-generated based on the description. And those images should match the style in general, colors, and style of our AI Gazette.
+
 ---
 
 Recovery Technical Memo
