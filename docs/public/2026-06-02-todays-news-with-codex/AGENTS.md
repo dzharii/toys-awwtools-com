@@ -10,7 +10,7 @@ etc
 
 DIRECTIVE: When you communicate with ChatGPT, always, always tell, always tell, always include for ChatGPT not to use Canvas for writing. There is like an editing mode that is called Canvas in ChatGPT. So ChatGPT should avoid using Canvas at all costs and reply just normally. Always reply normally without Canvas.
 DIRECTIVE: Always consider and ask ChatGPT through the Chrome browser to generate images to illustrate the articles. Never generate images by yourself using your own tools. Always ask ChatGPT to do that. First, search for those images and describe them, and then ask ChatGPT to generate those images. The images should have a watermark AI-generated based on this script. AI-generated based on the description. And those images should match the style in general, colors, and style of our AI Gazette.
-
+DIRECTIVE: After the template has been copied into the new folder, always consider, once you get the final result, how the design can be improved. Maybe some elements need to be added. You can do that. Use your best judgment. Only modify the copied version, not the base template, but you are free to modify and make this copy of the template, the new issue copy, more pleasant for the readers with some evolutions, modifications. Always ask ChatGPT about the design opinion and review.
 ---
 
 Recovery Technical Memo
