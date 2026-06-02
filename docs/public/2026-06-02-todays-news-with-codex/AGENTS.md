@@ -7,6 +7,24 @@ news_sources.v2.md
 news_sources.v3.md
 etc
 
+
+---
+
+Recovery Technical Memo
+
+---
+
+Codex must treat the AI Gazette run as recoverable work. At the beginning of the run, Codex must save the active ChatGPT conversation URL in the project cache, including the conversation UUID when available. Codex must also save every meaningful ChatGPT prompt, every useful ChatGPT reply, the current issue date, the current workflow stage, selected sources, rejected sources, draft decisions, image prompts, generated asset paths, validation results, and any known blockers in project-local files.
+
+Codex must prefer resuming existing work over restarting. If Chrome closes, the page crashes, the browser session is interrupted, or Codex loses visible context, Codex must reopen the saved ChatGPT URL, read the saved relay artifacts, read the current issue notes, and continue from the latest verified checkpoint. Codex must start a new ChatGPT conversation only when the saved conversation is inaccessible; in that case, Codex must document the failure, summarize the saved state into the new chat, save the new chat URL, and continue.
+
+Codex must use finite recovery attempts. For one failing action, Codex may retry up to three times by default. A retry must change something concrete, such as the prompt, browser action, selector strategy, verification method, source candidate, or image-generation request. Codex must not repeat the same failed action without modification. After three failed attempts, Codex must choose the best available fallback, narrow the task, skip the optional item, publish a best-effort issue with a visible note, or stop only if the failure is critical and blocks safe completion.
+
+Codex must checkpoint before and after major stages: relay handshake, issue mode selection, source discovery, duplicate review, issue planning, article drafting, image generation, content.js integration, archive update, and validation. Checkpoints must be stored inside the repository, not only in memory or browser state.
+
+Codex must not store secrets, credentials, cookies, tokens, passwords, recovery codes, or private authentication data in recovery files. Recovery files are for workflow state, prompts, replies, decisions, source notes, local paths, and validation results only.
+
+
 ---
 
 A00 AGENTS.md Controlling Protocol
@@ -1092,3 +1110,287 @@ Codex must assemble, validate, and publish the issue.
 
 Codex must not become the solo writer, solo planner, solo art director, or solo columnist for AI Gazette.
 
+
+Use this as Appendix B.
+
+---
+
+AB00 Appendix B: Market and Finance Coverage
+
+---
+
+AI Gazette must include a finance and market-health component when the issue would benefit from it. The purpose of this section is to help readers understand what happened in the market today, which visible stock movements matter, which companies had material news, and whether broader market conditions suggest risk, optimism, volatility, sector rotation, earnings pressure, macroeconomic pressure, or company-specific movement. This section is not financial advice and must not tell readers what to buy, sell, or hold. It is an explanatory editorial section. Codex must treat finance coverage as a daily-changing reporting area: prices, percentage moves, market mood, sector leadership, and company-specific explanations may change every day, so Codex must verify current data during the issue run and must not reuse stale finance summaries from prior issues.
+
+---
+
+AB01 Directive: Finance Coverage Scope
+
+---
+
+Directive AB01.01: AI Gazette may include a finance section, market-health column, watchlist table, or company-movement digest when current market conditions are relevant.
+
+Directive AB01.02: The finance section should explain market health in plain language. It should answer what the market appears to be doing today, whether major indexes are broadly rising or falling, which sectors are strong or weak, and whether the day appears driven by earnings, interest rates, inflation data, geopolitical news, company-specific news, AI-sector momentum, semiconductor news, cybersecurity news, consumer demand, labor data, or other identifiable forces.
+
+Directive AB01.03: The finance section may cover individual stocks that appear in the user's watchlist, including companies such as Microsoft, NVIDIA, AMD, Qualcomm, Taiwan Semiconductor, CrowdStrike, Tesla, Meta, Amazon, Apple, Google, Oracle, Intel, Palo Alto Networks, Fortinet, Okta, Akamai, Cloudflare, Duolingo, Uber, Zillow, airlines, retailers, and other listed companies when relevant.
+
+Directive AB01.04: The finance section must not mechanically describe every ticker if the list is too long. Codex must ask ChatGPT to identify the most important movers, the most news-driven movers, the largest positive and negative changes, and the companies whose movement has the clearest explanation.
+
+Directive AB01.05: Finance content must be useful to a general reader. Avoid dense trading jargon unless immediately explained.
+
+---
+
+AB02 Directive: Required ChatGPT-First Finance Workflow
+
+---
+
+Directive AB02.01: Codex must ask ChatGPT first for finance section planning.
+
+Correct behavior:
+
+Codex gathers the current date, visible tickers, market context, and available price-change data. Codex asks ChatGPT to propose the finance section structure: market-health overview, biggest winners, biggest losers, company-specific news explanations, and any relevant macro or sector themes.
+
+Wrong behavior:
+
+Codex directly writes a finance column from the stock list without asking ChatGPT to plan the section.
+
+Why this is wrong:
+
+Finance coverage requires editorial judgment and explanation. Planning the market narrative is a creative and analytical task. ChatGPT must provide the first planning pass, while Codex verifies data and integrates the result.
+
+Directive AB02.02: Codex must ask ChatGPT to help identify likely explanations, but Codex must verify before publication.
+
+Correct behavior:
+
+ChatGPT suggests that a stock may have moved because of earnings, guidance, analyst reports, product news, regulatory news, sector momentum, or macroeconomic data. Codex then verifies this through current sources before using the explanation.
+
+Wrong behavior:
+
+Codex publishes "the stock fell because of weak earnings" solely because ChatGPT guessed it.
+
+Why this is wrong:
+
+A stock-move explanation is a factual claim. ChatGPT may propose candidates, but Codex must verify the cause or frame it carefully as market commentary based on cited reporting.
+
+---
+
+AB03 Directive: Data Requirements
+
+---
+
+Directive AB03.01: For every ticker discussed as a material mover, Codex must try to verify the current price, absolute move, percentage move when available, company name, and date of the market data.
+
+Directive AB03.02: If the finance data comes from screenshots, Codex may use the screenshots as a starting point, but must still verify current market data when publishing a daily issue.
+
+Directive AB03.03: If exact real-time data is unavailable, delayed, or inconsistent across sources, Codex must say that the data is delayed or approximate and must avoid over-precise claims.
+
+Directive AB03.04: Codex must not invent percentage changes when only dollar changes are visible.
+
+Directive AB03.05: Codex must distinguish between stock price movement and company fundamentals. A one-day price move is not proof that the company is healthy or unhealthy.
+
+Directive AB03.06: Codex must not use outdated prices from a previous day unless the section explicitly covers that previous trading session.
+
+---
+
+AB04 Directive: Company-Specific News Explanation
+
+---
+
+Directive AB04.01: For each major company discussed, Codex must look for current company-specific news that could plausibly explain the move.
+
+Relevant company-specific news includes earnings reports, guidance changes, product launches, regulatory decisions, lawsuits, security incidents, executive changes, analyst upgrades or downgrades, major contracts, customer announcements, supply-chain developments, layoffs, acquisitions, partnerships, and sector-specific shocks.
+
+Directive AB04.02: If no company-specific news is found, Codex must not invent one.
+
+Correct wording:
+
+"NVIDIA rose with the broader semiconductor group, and no single company-specific catalyst was verified during this run."
+
+Wrong wording:
+
+"NVIDIA rose because investors were excited about new AI chips."
+
+Why this is wrong:
+
+Unless a verified source connects the move to that product news, this is an unsupported cause.
+
+Directive AB04.03: Codex may report multiple possible drivers only when they are clearly labeled.
+
+Correct wording:
+
+"Reporting during the session pointed to two possible drivers: broader strength in chipmakers and renewed attention to AI infrastructure spending. AI Gazette did not verify a single company-specific announcement that fully explained the move."
+
+Wrong wording:
+
+"The stock rose because of AI infrastructure spending."
+
+Why this is wrong:
+
+It converts a possible explanation into a confirmed cause.
+
+---
+
+AB05 Directive: Market-Health Analysis
+
+---
+
+Directive AB05.01: The market-health section should summarize the condition of the broader market before discussing individual tickers.
+
+Directive AB05.02: The market-health section should consider major indexes, sector breadth, volatility, bond yields, inflation or labor data, Federal Reserve expectations, earnings season, commodity movement, currency pressure, geopolitical news, and sector-specific leadership when relevant.
+
+Directive AB05.03: Codex must ask ChatGPT to draft a plain-language market-health paragraph after Codex provides verified inputs.
+
+Directive AB05.04: The paragraph must not sound like investment advice.
+
+Correct wording:
+
+"Today's watchlist showed a split market: semiconductor and selected platform names were higher, while cybersecurity, software, airlines, and some consumer names were weaker. That pattern suggests investors were not broadly buying risk across the board; they were favoring specific growth and AI-linked names while selling several companies with weaker near-term narratives."
+
+Wrong wording:
+
+"Investors should buy semiconductor stocks and avoid software."
+
+Why this is wrong:
+
+AI Gazette explains market behavior. It does not provide trading instructions.
+
+---
+
+AB06 Directive: Watchlist Coverage
+
+---
+
+Directive AB06.01: If the user provides a watchlist screenshot, Codex must treat it as a requested editorial signal. The finance section should consider the visible tickers as candidates for coverage.
+
+Directive AB06.02: Codex must not cover every visible ticker equally. Codex should prioritize the largest movers, the clearest news-driven moves, the companies most relevant to AI Gazette readers, and the tickers that reveal broader market health.
+
+Directive AB06.03: Codex should group stocks by pattern when useful.
+
+Example groups:
+
+Large-cap technology and platforms.
+
+Semiconductors and AI infrastructure.
+
+Cybersecurity and enterprise software.
+
+Airlines and travel.
+
+Consumer and retail.
+
+Dividend or broad-market ETFs.
+
+Directive AB06.04: Codex must identify outliers. A small move in a major index ETF may matter less than a large move in a single stock, but a small move in a broad ETF may still help explain market health.
+
+---
+
+AB07 Directive: Finance Article Structure
+
+---
+
+A finance section should normally use this structure:
+
+AB07.01 Market-health overview.
+
+Start with what the market looked like today and whether movement was broad, narrow, sector-led, risk-on, risk-off, mixed, or news-driven.
+
+AB07.02 Biggest positive movers.
+
+Identify the strongest visible gainers or most important positive movers. Explain the verified catalyst when available. If the catalyst is not verified, say so.
+
+AB07.03 Biggest negative movers.
+
+Identify the largest visible decliners or most important negative movers. Explain verified negative catalysts when available. If there is no verified cause, frame the decline as unexplained or sector-linked rather than invented.
+
+AB07.04 Company news.
+
+Connect company-specific headlines to stock movement only when the connection is supported by current reporting or credible market commentary.
+
+AB07.05 Reader takeaway.
+
+End with a neutral explanation of what the day's movement suggests, without investment advice.
+
+---
+
+AB08 Directive: Correct and Wrong Finance Examples
+
+---
+
+Correct behavior:
+
+Codex sees that several semiconductor names are green while several cybersecurity names are red. Codex asks ChatGPT to plan a market-health section around sector divergence. Codex verifies current prices and looks for current news affecting the largest movers. Codex provides ChatGPT with a verified fact pack. ChatGPT drafts a finance brief. Codex checks whether every causal claim is supported. Codex removes or revises unsupported claims before publishing.
+
+Wrong behavior:
+
+Codex sees green chip stocks and red software stocks and writes, "AI stocks are booming and cybersecurity is collapsing."
+
+Why this is wrong:
+
+That claim is too broad, unsupported, and exaggerated. A one-day watchlist snapshot does not prove a full market thesis.
+
+Correct behavior:
+
+Codex writes that a company's move "coincided with" sector news when no direct cause is verified.
+
+Wrong behavior:
+
+Codex writes that a company's move "was caused by" sector news without verification.
+
+Why this is wrong:
+
+Causation requires support. Coincidence or likely relationship must be labeled carefully.
+
+Correct behavior:
+
+Codex says, "The move was notable, but AI Gazette did not verify a specific company announcement during this run."
+
+Wrong behavior:
+
+Codex invents a product announcement, earnings result, or analyst downgrade to explain the move.
+
+Why this is wrong:
+
+Finance coverage must be sourced and current.
+
+---
+
+AB09 Directive: Finance Prompt Example
+
+---
+
+When Codex needs finance coverage, Codex should ask ChatGPT with a prompt like this:
+
+"I am preparing the finance section for today's AI Gazette issue. The issue date is [DATE] in America/Los_Angeles. I need market-health analysis, not investment advice. Visible watchlist tickers include [TICKERS]. Current observed moves include [PRICES AND CHANGES WHEN VERIFIED]. Help me plan a concise finance section that explains the broad market mood, identifies the most important positive and negative movers, suggests what current news I should verify for each major mover, and proposes a neutral article structure. Do not invent causes. If a cause needs verification, mark it as a verification target."
+
+For article drafting, Codex should ask ChatGPT with a prompt like this:
+
+"Draft an AI Gazette finance brief from the verified facts below. Do not provide investment advice. Do not tell readers to buy, sell, or hold. Do not invent causes for stock movement. Use careful language such as 'coincided with,' 'came as,' 'was reported after,' or 'market commentary pointed to' when causation is not fully established. Include a market-health overview, notable gainers, notable decliners, and a neutral takeaway. Verified facts: [FACT PACK]."
+
+---
+
+AB10 Directive: Finance Validation
+
+---
+
+Before publishing finance content, Codex must confirm:
+
+1. The market date is correct.
+
+2. Prices and changes are current or clearly labeled as delayed or approximate.
+
+3. Discussed tickers match real company names.
+
+4. Major causal claims are supported by current sources.
+
+5. Unsupported causes are removed or softened.
+
+6. The section does not provide investment advice.
+
+7. The section does not overstate one-day movement.
+
+8. The section distinguishes company-specific news from sector movement.
+
+9. The section is readable for non-specialist readers.
+
+10. The section fits the AI Gazette issue layout.
+
+If these checks fail, Codex must revise the finance section through ChatGPT or omit the unsupported claim.
