@@ -172,10 +172,12 @@
       this.headlineSecondary = null;
       /** @type {{type:'headline', level:number, text:string} | null} */
       this.bylineEntry = null;
-      /** @type {{type:'paragraph', text:string}[]} */
-      this.paragraphList = [];
-      /** @type {{type:'citation', text:string}[]} */
-      this.citations = [];
+      /** @type {{type:'paragraph', text:string}[]} */
+      this.paragraphList = [];
+      /** @type {{type:'short-item', kind:string, label:string, text:string, source:string}[]} */
+      this.shortItemList = [];
+      /** @type {{type:'citation', text:string}[]} */
+      this.citations = [];
       /** @type {{type:'figure', src:string, alt:string, caption:string}[]} */
       this.figures = [];
     }
@@ -232,14 +234,45 @@
       return this;
     }
 
-    paragraphs(list) {
+    paragraphs(list) {
       if (!Array.isArray(list)) {
         this.logger.warn('paragraphs() expects an array of strings', { listType: typeof list });
         return this;
       }
       for (const item of list) this.p(item);
-      return this;
-    }
+      return this;
+    }
+
+    shortItem({ kind, label, text, source } = {}) {
+      const k = safeString(kind || 'Brief').trim();
+      const l = safeString(label || k).trim();
+      const t = safeString(text).trim();
+      const s = safeString(source).trim();
+      if (!isNonEmptyString(t)) {
+        this.logger.warn('shortItem() called with empty text', { kind, label });
+        return this;
+      }
+      this.shortItemList.push({
+        type: 'short-item',
+        kind: isNonEmptyString(k) ? k : 'Brief',
+        label: isNonEmptyString(l) ? l : 'Brief',
+        text: t,
+        source: s
+      });
+      return this;
+    }
+
+    brief({ label, text, source } = {}) {
+      return this.shortItem({ kind: 'Brief', label, text, source });
+    }
+
+    wire({ label, text, source } = {}) {
+      return this.shortItem({ kind: 'Wire', label, text, source });
+    }
+
+    watchlist({ label, text, source } = {}) {
+      return this.shortItem({ kind: 'Watchlist', label, text, source });
+    }
 
     citation(text) {
       const t = safeString(text).trim();
@@ -277,10 +310,10 @@
         if (!isNonEmptyString(f.alt)) bag.add(`${prefix} Figure ${i + 1} alt text is required for accessibility.`);
       }
 
-      const hasText = (this.paragraphList.length + this.citations.length) > 0;
+      const hasText = (this.paragraphList.length + this.shortItemList.length + this.citations.length) > 0;
       const hasMedia = this.figures.length > 0;
       if (!hasText && !hasMedia) {
-        bag.add(`${prefix} has no body content. Add .p(), .paragraphs(), .citation(), or .figure().`);
+        bag.add(`${prefix} has no body content. Add .p(), .paragraphs(), .brief(), .wire(), .watchlist(), .citation(), or .figure().`);
       }
     }
 
@@ -312,9 +345,23 @@
       if (headWrap.childNodes.length) column.appendChild(headWrap);
 
       // paragraphs
-      for (const para of this.paragraphList) {
-        column.appendChild(el('p', { text: para.text }));
-      }
+      for (const para of this.paragraphList) {
+        column.appendChild(el('p', { text: para.text }));
+      }
+
+      if (this.shortItemList.length) {
+        const list = el('div', { className: 'brief-list' });
+        for (const item of this.shortItemList) {
+          const block = el('section', { className: `brief-item brief-item-${item.kind.toLowerCase()}` });
+          block.appendChild(el('div', { className: 'brief-label', text: item.label }));
+          block.appendChild(el('p', { className: 'brief-text', text: item.text }));
+          if (isNonEmptyString(item.source)) {
+            block.appendChild(el('p', { className: 'brief-source', text: item.source }));
+          }
+          list.appendChild(block);
+        }
+        column.appendChild(list);
+      }
 
       // figures interleaved? For simplicity, append figures after paragraphs unless user wants ordering.
       // If you want ordering, add an advanced "block()" API later. Keeping v1 simple & predictable.
@@ -399,9 +446,9 @@
       if (!Array.isArray(this.columns) || this.columns.length === 0) {
         bag.add('At least one column is required. Use .addColumn(cb).');
       }
-      if (this.columns.length > 8) {
-        bag.add(`Too many columns (${this.columns.length}). Consider 1–8 for readability.`);
-      }
+      if (this.columns.length > 16) {
+        bag.add(`Too many columns (${this.columns.length}). Consider 1–16 for readability.`);
+      }
 
       for (let i = 0; i < this.columns.length; i++) {
         this.columns[i].validate(bag, i);
