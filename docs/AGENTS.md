@@ -9,6 +9,7 @@ Guide for maintaining `docs/index.html` in this static GitHub Pages repo.
 
 ## Repository structure
 - `index.html`: main project directory page.
+- `rss.xml`: manually maintained RSS 2.0 feed for projects listed in `index.html`.
 - `style.css`: shared styles for the page and preview panel.
 - `public/<project-folder>/`: individual project folders.
 - `public/readme.md`: top-level note for `public/`.
@@ -22,6 +23,7 @@ Guide for maintaining `docs/index.html` in this static GitHub Pages repo.
   - `Browser Extensions`
   - `Experiments`
 - Each item is a `li.project-item` inside `ul.project-list`.
+- RSS discovery and the visible RSS link point to `/rss.xml`.
 - Current preview logic is inline JS in `index.html`.
 
 ## Project item format
@@ -66,8 +68,19 @@ Use this shape when project has no `index.html`:
 3. Choose target section in `index.html`.
 4. Add one `li.project-item` using one of the templates above.
 5. Add a concise description sentence in `item-desc`.
-6. Keep existing order unless explicitly asked to reorder.
-7. Do not remove existing extra links (`bookmarklet.js`, `readme.html`, etc.) where relevant.
+6. Add a matching `<item>` entry to `rss.xml`.
+7. Keep existing order unless explicitly asked to reorder.
+8. Do not remove existing extra links (`bookmarklet.js`, `readme.html`, etc.) where relevant.
+
+## RSS feed maintenance
+- `rss.xml` is maintained manually when `index.html` changes.
+- Every project item added to `index.html` must have one matching RSS `<item>`.
+- Keep RSS items sorted newest first by project publication date.
+- Use the project date prefix (`YYYY-MM-DD`) as the publication date. Format it as an RFC 822 `pubDate`, using noon GMT for deterministic output.
+- Use the same human-readable project title and description from `index.html`.
+- Use the project link URL as `<link>` and as `<guid isPermaLink="true">`.
+- Use the `index.html` section name as `<category>`.
+- Update `<lastBuildDate>` to the newest item `pubDate`.
 
 ## Content rules for descriptions and README
 - Description in index: one sentence, high-level, non-marketing.
@@ -103,6 +116,30 @@ const targets=[...html.matchAll(/data-index-href="([^"]+)"/g)].map(m=>m[1]);
 const bad=targets.filter(h=>!fs.existsSync('.'+h+'index.html'));
 console.log('bad data-index-href', bad.length);
 if(bad.length) console.log(bad.join('\n'));
+NODE
+```
+
+```bash
+# rss.xml must be well-formed XML
+python3 - <<'PY'
+import xml.etree.ElementTree as ET
+ET.parse('rss.xml')
+print('rss xml ok')
+PY
+```
+
+```bash
+# rss.xml must include one item per index project
+node - <<'NODE'
+const fs=require('fs');
+const html=fs.readFileSync('index.html','utf8');
+const rss=fs.readFileSync('rss.xml','utf8');
+const projectItems=(html.match(/<li class="project-item"/g)||[]).length;
+const rssItems=(rss.match(/<item>/g)||[]).length;
+const hasFeedLink=html.includes('href="/rss.xml"');
+console.log('rss item count', rssItems, 'project item count', projectItems);
+console.log('rss link present', hasFeedLink);
+if(rssItems!==projectItems || !hasFeedLink) process.exit(1);
 NODE
 ```
 
