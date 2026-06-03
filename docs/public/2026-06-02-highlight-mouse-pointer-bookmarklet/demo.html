@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Demo for Highlight Mouse Pointer Bookmarklet</title>
+    <link rel="stylesheet" href="demo.css">
+  </head>
+  <body>
+    <main>
+      <section class="demo-hero">
+        <p class="eyebrow">Local demo page</p>
+        <h1>Pointer visibility test surface</h1>
+        <p>
+          Use this page to check the bookmarklet over normal text, clickable
+          controls, form fields, and editable content.
+        </p>
+        <div class="actions">
+          <button type="button" class="primary-action">Demo action</button>
+          <a href="#details">Review details</a>
+          <label>
+            <input type="checkbox">
+            Confirm target state
+          </label>
+        </div>
+      </section>
+
+      <section class="panel" id="details">
+        <h2>Mixed controls</h2>
+        <div class="form-grid">
+          <label>
+            Project name
+            <input type="text" value="Quarterly walkthrough">
+          </label>
+          <label>
+            Mode
+            <select>
+              <option>Screen share</option>
+              <option>Recording</option>
+              <option>Review</option>
+            </select>
+          </label>
+          <label class="wide">
+            Notes
+            <textarea rows="4">Hover here to confirm text cursor behavior.</textarea>
+          </label>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Editable region</h2>
+        <p contenteditable="true">
+          This paragraph is editable. The pointer highlight should hide here so
+          text selection and caret placement remain normal.
+        </p>
+      </section>
+
+      <section class="panel dense">
+        <h2>Dense page content</h2>
+        <p>
+          Demos and reviews often move quickly between controls, explanatory
+          text, and calls to action. The highlighter should remain visible over
+          clickable targets without making text fields awkward to use.
+        </p>
+        <p>
+          The bookmarklet is intentionally temporary. Running it again should
+          remove the overlay, style node, document classes, and event listeners.
+        </p>
+      </section>
+    </main>
+
+    <script src="bookmarklet.js"></script>
+    <script>
+      window.addEventListener("load", function () {
+        window.highlightMousePointerBookmarklet();
+        var target = document.querySelector(".primary-action");
+        if (!target || typeof PointerEvent !== "function") return;
+        var rect = target.getBoundingClientRect();
+        target.dispatchEvent(
+          new PointerEvent("pointermove", {
+            bubbles: true,
+            clientX: rect.left + rect.width / 2,
+            clientY: rect.top + rect.height / 2
+          })
+        );
+      });
+    </script>
+  </body>
+</html>
