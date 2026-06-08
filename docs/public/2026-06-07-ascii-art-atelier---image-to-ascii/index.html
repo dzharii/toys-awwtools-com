@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ASCII Art Atelier - Image to ASCII Art</title>
+  <meta name="description" content="Convert images into ASCII art directly in your browser. Private, static, and client-side.">
+  <meta name="theme-color" content="#f7f4ee">
+  <meta property="og:title" content="ASCII Art Atelier">
+  <meta property="og:description" content="Convert images into ASCII art directly in your browser. No uploads.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="ASCII Art Atelier">
+  <meta name="twitter:description" content="Convert images into ASCII art directly in your browser. No uploads.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">⚜</span>
+        <div>
+          <h1>ASCII Art Atelier</h1>
+          <p>Image to ASCII Art - In Your Browser</p>
+        </div>
+      </div>
+      <p class="privacy-badge">
+        <span aria-hidden="true">◇</span>
+        Processed locally. No upload.
+      </p>
+    </header>
+
+    <div class="app-layout">
+      <div class="workspace">
+        <section class="panel import-panel" aria-labelledby="import-title">
+          <div class="panel-heading">
+            <h2 id="import-title"><span class="step">1</span>Import an image</h2>
+          </div>
+
+          <input class="visually-hidden" id="image-input" type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
+          <label class="dropzone" id="dropzone" for="image-input">
+            <svg class="dropzone-icon" viewBox="0 0 48 48" aria-hidden="true">
+              <path d="M15 36H11a8 8 0 0 1-1.7-15.8A14 14 0 0 1 36.8 17 9.5 9.5 0 0 1 37 36h-4M24 17v22m-8-14 8-8 8 8"/>
+            </svg>
+            <strong>Drop your image here</strong>
+            <span>or click to select a file</span>
+            <small>PNG, JPG, WEBP up to 10 MB</small>
+          </label>
+
+          <article class="file-card" id="file-card" hidden>
+            <div class="thumbnail-wrap">
+              <img id="file-thumbnail" alt="">
+              <span id="thumbnail-placeholder" aria-hidden="true">IMG</span>
+            </div>
+            <div class="file-summary">
+              <p class="file-name" id="file-name"></p>
+              <p class="file-meta" id="file-meta"></p>
+            </div>
+            <span class="valid-mark" aria-label="Valid image">✓</span>
+          </article>
+        </section>
+
+        <section class="operation-message operation-message-error" id="operation-message" role="alert" aria-live="assertive" hidden>
+          <div class="operation-message-icon" aria-hidden="true">!</div>
+          <div class="operation-message-content">
+            <h2 id="operation-title">Something went wrong</h2>
+            <p id="operation-description"></p>
+            <details>
+              <summary>Technical details</summary>
+              <pre id="operation-details"></pre>
+            </details>
+            <div class="operation-message-actions">
+              <button class="button button-small" id="try-another-button" type="button">Try another image</button>
+              <button class="button button-small" id="copy-error-button" type="button">Copy error details</button>
+            </div>
+            <p class="message-feedback" id="error-copy-feedback" role="status"></p>
+          </div>
+        </section>
+
+        <section class="panel preview-panel" aria-labelledby="preview-title">
+          <div class="panel-heading preview-heading">
+            <h2 id="preview-title"><span class="step">2</span>ASCII preview</h2>
+            <dl class="preview-summary" aria-label="ASCII output metadata">
+              <div><dt>Columns</dt><dd id="columns-meta">-</dd></div>
+              <div><dt>Rows</dt><dd id="rows-meta">-</dd></div>
+              <div><dt>Characters</dt><dd id="characters-meta">-</dd></div>
+              <div><dt>Source</dt><dd id="source-meta">-</dd></div>
+            </dl>
+          </div>
+
+          <div class="ascii-frame" id="ascii-frame" tabindex="0">
+            <pre class="ascii-output is-placeholder" id="ascii-output">ASCII output will appear here after you import an image.</pre>
+          </div>
+
+          <div class="action-row">
+            <button class="button" id="copy-button" type="button" disabled>
+              <span aria-hidden="true">▣</span>
+              Copy text
+            </button>
+            <button class="button button-primary" id="download-button" type="button" disabled>
+              <span aria-hidden="true">↓</span>
+              Download TXT
+            </button>
+          </div>
+
+          <p class="workspace-status" id="workspace-status" role="status" aria-live="polite">Import an image to begin.</p>
+          <p class="local-footnote"><span aria-hidden="true">◇</span>Everything is processed locally in your browser. No data is sent.</p>
+        </section>
+      </div>
+
+      <aside class="panel settings-panel" aria-labelledby="settings-title">
+        <div class="panel-heading settings-heading">
+          <h2 id="settings-title"><span class="step">3</span>Settings</h2>
+          <button class="reset-button" id="reset-button" type="button"><span aria-hidden="true">↻</span>Reset</button>
+        </div>
+
+        <form class="settings-form" id="settings-form" novalidate>
+          <div class="control">
+            <label for="scale">Scale <span>(character size)</span></label>
+            <div class="range-row">
+              <small>Small</small>
+              <input id="scale" name="scale" type="range" min="1" max="32" step="1">
+              <small>Large</small>
+              <input class="number-input" id="scale-number" type="number" min="1" max="32" step="1" aria-label="Scale value">
+            </div>
+            <p class="field-message" id="scale-message"></p>
+          </div>
+
+          <div class="control">
+            <label for="charset-preset">Character set</label>
+            <select id="charset-preset" name="charsetPreset"></select>
+          </div>
+
+          <div class="control">
+            <label for="brightness">Brightness</label>
+            <div class="range-row">
+              <small>Dark</small>
+              <input id="brightness" name="brightness" type="range" min="-100" max="100" step="1">
+              <small>Light</small>
+              <input class="number-input" id="brightness-number" type="number" min="-100" max="100" step="1" aria-label="Brightness value">
+            </div>
+            <p class="field-message" id="brightness-message"></p>
+          </div>
+
+          <div class="control">
+            <label for="contrast">Contrast</label>
+            <div class="range-row">
+              <small>Low</small>
+              <input id="contrast" name="contrast" type="range" min="-100" max="100" step="1">
+              <small>High</small>
+              <input class="number-input" id="contrast-number" type="number" min="-100" max="100" step="1" aria-label="Contrast value">
+            </div>
+            <p class="field-message" id="contrast-message"></p>
+          </div>
+
+          <div class="control">
+            <label for="detail">Softness / detail</label>
+            <div class="range-row">
+              <small>Soft</small>
+              <input id="detail" name="detail" type="range" min="-100" max="100" step="1">
+              <small>Sharp</small>
+              <input class="number-input" id="detail-number" type="number" min="-100" max="100" step="1" aria-label="Softness or detail value">
+            </div>
+            <p class="field-message" id="detail-message"></p>
+          </div>
+
+          <div class="toggle-row">
+            <div>
+              <label for="invert-colors">Invert colors</label>
+              <p>Reverse the light-to-dark character mapping.</p>
+            </div>
+            <label class="switch">
+              <input id="invert-colors" name="invertColors" type="checkbox">
+              <span aria-hidden="true"></span>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <div>
+              <label for="original-color">Original color mode</label>
+              <p>Retain sampled color data in the conversion result.</p>
+            </div>
+            <label class="switch">
+              <input id="original-color" name="originalColor" type="checkbox">
+              <span aria-hidden="true"></span>
+            </label>
+          </div>
+
+          <div class="control">
+            <label for="output-columns">Output columns</label>
+            <div class="range-row range-row-compact">
+              <input id="output-columns" name="outputColumns" type="range" min="40" max="240" step="1">
+              <input class="number-input number-input-wide" id="output-columns-number" type="number" min="40" max="240" step="1" aria-label="Output columns value" aria-describedby="output-columns-message">
+            </div>
+            <p class="control-hint">80-240 recommended.</p>
+            <p class="field-message is-valid" id="output-columns-message"><span aria-hidden="true">✓</span>Value is valid</p>
+          </div>
+
+          <div class="toggle-row">
+            <div>
+              <label for="live-preview">Live preview</label>
+              <p>Update after settings change.</p>
+            </div>
+            <label class="switch">
+              <input id="live-preview" name="livePreview" type="checkbox">
+              <span aria-hidden="true"></span>
+            </label>
+          </div>
+        </form>
+
+        <div class="settings-note">
+          <span aria-hidden="true">i</span>
+          <p>Adjust the settings to get the ASCII rendering that best fits your image.</p>
+        </div>
+      </aside>
+    </div>
+  </main>
+</body>
+</html>
