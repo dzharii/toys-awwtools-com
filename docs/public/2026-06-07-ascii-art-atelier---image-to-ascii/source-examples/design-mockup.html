@@ -1,0 +1,1078 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ASCII Atelier - Image to ASCII Art</title>
+  <style>
+    :root {
+      color-scheme: light;
+
+      --page: #f7f4ee;
+      --surface: #fffdf9;
+      --surface-soft: #fbf8f2;
+      --surface-muted: #f3eee5;
+      --line: #ded6ca;
+      --line-strong: #c8bcae;
+      --ink: #1f1d1a;
+      --ink-soft: #58524b;
+      --ink-muted: #8a8176;
+      --accent: #9a7a3f;
+      --accent-soft: #efe6d3;
+      --success: #4d8b55;
+      --danger: #b85545;
+      --shadow: 0 24px 70px rgb(44 36 24 / 0.12), 0 3px 12px rgb(44 36 24 / 0.08);
+
+      --radius-xl: 22px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 9px;
+
+      --font-display: Georgia, "Times New Roman", serif;
+      --font-ui: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+
+      --container-max: 1320px;
+      --sidebar-width: clamp(320px, 30vw, 420px);
+      --workspace-min: 0;
+      --control-height: 42px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-width: 320px;
+      background:
+        radial-gradient(circle at 50% -10%, rgb(255 255 255 / 0.9), transparent 42rem),
+        linear-gradient(180deg, #faf8f3 0%, var(--page) 100%);
+      color: var(--ink);
+      font-family: var(--font-ui);
+      font-size: 16px;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: clamp(18px, 3vw, 42px);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app-shell {
+      width: min(100%, var(--container-max));
+      margin: 0 auto;
+      background: linear-gradient(180deg, var(--surface), #fbf8f2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      overflow: clip;
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: clamp(24px, 3vw, 36px) clamp(22px, 3vw, 36px) clamp(18px, 2vw, 26px);
+      border-bottom: 1px solid rgb(222 214 202 / 0.55);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      flex: 0 0 auto;
+      color: var(--accent);
+      font-family: var(--font-display);
+      font-size: 34px;
+      line-height: 1;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(34px, 4vw, 48px);
+      font-weight: 500;
+      letter-spacing: -0.04em;
+      line-height: 0.95;
+    }
+
+    .brand-kicker {
+      margin: 8px 0 0;
+      color: var(--ink-muted);
+      font-family: var(--font-display);
+      font-size: 12px;
+      letter-spacing: 0.23em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .privacy-note {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 8px 13px;
+      color: var(--ink-soft);
+      background: rgb(255 255 255 / 0.62);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(var(--workspace-min), 1fr) var(--sidebar-width);
+      gap: clamp(18px, 2vw, 26px);
+      padding: 0 clamp(22px, 3vw, 36px) clamp(22px, 3vw, 34px);
+    }
+
+    .workspace {
+      min-width: 0;
+      display: grid;
+      gap: 18px;
+    }
+
+    .panel {
+      background: rgb(255 253 249 / 0.85);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 1px 0 rgb(255 255 255 / 0.7) inset;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 18px 0;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 500;
+      letter-spacing: -0.015em;
+    }
+
+    .step {
+      display: inline-grid;
+      place-items: center;
+      width: 25px;
+      height: 25px;
+      flex: 0 0 auto;
+      color: white;
+      background: var(--ink);
+      border-radius: 999px;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .upload-panel {
+      padding-bottom: 18px;
+    }
+
+    .dropzone {
+      display: grid;
+      place-items: center;
+      min-height: clamp(160px, 20vw, 216px);
+      margin: 18px;
+      padding: 26px;
+      text-align: center;
+      background:
+        linear-gradient(180deg, rgb(255 255 255 / 0.58), rgb(250 246 239 / 0.58)),
+        radial-gradient(circle at center, rgb(154 122 63 / 0.06), transparent 21rem);
+      border: 1.5px dashed var(--line-strong);
+      border-radius: var(--radius-md);
+    }
+
+    .dropzone-icon {
+      width: 42px;
+      height: 42px;
+      margin: 0 auto 12px;
+      color: var(--ink-soft);
+    }
+
+    .dropzone-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    .dropzone-subtitle,
+    .dropzone-meta {
+      margin: 7px 0 0;
+      color: var(--ink-soft);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .hidden-file {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .file-card {
+      display: grid;
+      grid-template-columns: 156px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 16px;
+      min-height: 92px;
+      margin: 0 18px;
+      padding: 10px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+    }
+
+    .thumbnail-placeholder {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      min-height: 66px;
+      overflow: hidden;
+      border: 1px solid rgb(31 29 26 / 0.1);
+      border-radius: 8px;
+      background:
+        radial-gradient(circle at 22% 25%, #a7d282 0 12%, transparent 13%),
+        radial-gradient(circle at 72% 30%, #78bad1 0 10%, transparent 11%),
+        linear-gradient(145deg, #e9d688 0%, #b8d377 42%, #6ea66b 43%, #4f844f 100%);
+      color: rgb(31 29 26 / 0.55);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .file-name {
+      margin: 0;
+      overflow: hidden;
+      color: var(--ink);
+      font-weight: 650;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-meta {
+      margin: 6px 0 0;
+      color: var(--ink-soft);
+      font-size: 14px;
+    }
+
+    .status-dot {
+      display: inline-grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      color: white;
+      background: var(--success);
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .preview-panel {
+      padding-bottom: 18px;
+    }
+
+    .preview-meta {
+      color: var(--ink-soft);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .ascii-frame {
+      min-height: clamp(320px, 38vw, 430px);
+      margin: 18px 18px 0;
+      overflow: auto;
+      background:
+        linear-gradient(180deg, rgb(255 255 255 / 0.72), rgb(248 245 238 / 0.72)),
+        repeating-linear-gradient(0deg, transparent 0 21px, rgb(31 29 26 / 0.025) 21px 22px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+    }
+
+    .ascii-output {
+      min-width: 760px;
+      margin: 0;
+      padding: 18px;
+      color: #272522;
+      font-family: var(--font-mono);
+      font-size: clamp(7px, 0.72vw, 10px);
+      line-height: 0.95;
+      letter-spacing: 0.01em;
+      white-space: pre;
+    }
+
+    .action-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin: 18px 18px 0;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 43px;
+      min-width: 170px;
+      padding: 10px 18px;
+      color: var(--ink);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-weight: 650;
+      text-decoration: none;
+      transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+      background: white;
+    }
+
+    .button-primary {
+      color: white;
+      background: linear-gradient(180deg, #37332f, #1f1d1a);
+      border-color: #1f1d1a;
+      box-shadow: 0 8px 18px rgb(31 29 26 / 0.16);
+    }
+
+    .button-primary:hover {
+      background: linear-gradient(180deg, #423d38, #24211e);
+      border-color: #1f1d1a;
+    }
+
+    .local-footnote {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 14px 18px 0;
+      color: var(--ink-muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .settings-panel {
+      align-self: start;
+      position: sticky;
+      top: 24px;
+      min-width: 0;
+      max-height: calc(100vh - 48px);
+      overflow: auto;
+      padding-bottom: 18px;
+    }
+
+    .settings-panel .panel-header {
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .reset-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 34px;
+      padding: 4px 0;
+      color: var(--ink-soft);
+      background: transparent;
+      border: 0;
+      font-size: 14px;
+    }
+
+    .settings-body {
+      display: grid;
+      gap: 0;
+      padding: 0 18px;
+    }
+
+    .control {
+      display: grid;
+      gap: 10px;
+      padding: 18px 0;
+      border-bottom: 1px solid rgb(222 214 202 / 0.72);
+    }
+
+    .control:last-child {
+      border-bottom: 0;
+    }
+
+    .control-label {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--ink);
+      font-weight: 650;
+    }
+
+    .control-subtext {
+      margin: -3px 0 0;
+      color: var(--ink-muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .control-line {
+      display: grid;
+      grid-template-columns: auto minmax(110px, 1fr) auto var(--control-height);
+      align-items: center;
+      gap: 12px;
+    }
+
+    .control-line.compact {
+      grid-template-columns: minmax(0, 1fr) var(--control-height);
+    }
+
+    .range-edge {
+      color: var(--ink-soft);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      min-width: 96px;
+      accent-color: var(--ink);
+    }
+
+    .number-field {
+      width: var(--control-height);
+      min-width: var(--control-height);
+      height: var(--control-height);
+      padding: 0 8px;
+      color: var(--ink);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-variant-numeric: tabular-nums;
+      text-align: center;
+    }
+
+    .select-field {
+      width: 100%;
+      height: var(--control-height);
+      padding: 0 40px 0 13px;
+      color: var(--ink);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+    }
+
+    .toggle-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 0;
+      border-bottom: 1px solid rgb(222 214 202 / 0.72);
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 28px;
+      flex: 0 0 auto;
+    }
+
+    .switch input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .switch-track {
+      position: absolute;
+      inset: 0;
+      background: #d8d1c7;
+      border: 1px solid #cfc6ba;
+      border-radius: 999px;
+      transition: background 160ms ease;
+    }
+
+    .switch-track::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 999px;
+      box-shadow: 0 2px 6px rgb(31 29 26 / 0.18);
+      transition: transform 160ms ease;
+    }
+
+    .switch input:checked + .switch-track {
+      background: #2d2a26;
+      border-color: #2d2a26;
+    }
+
+    .switch input:checked + .switch-track::after {
+      transform: translateX(20px);
+    }
+
+    .validation {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: -4px;
+      color: var(--success);
+      font-size: 13px;
+    }
+
+    .settings-note {
+      display: flex;
+      gap: 12px;
+      margin: 20px 18px 0;
+      padding: 15px;
+      color: var(--ink-soft);
+      background: var(--surface-muted);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .info-icon {
+      display: inline-grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      flex: 0 0 auto;
+      color: var(--accent);
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .mobile-actions {
+      display: none;
+    }
+
+    .desktop-only {
+      display: inline;
+    }
+
+    @media (max-width: 1060px) {
+      body {
+        padding: 18px;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .settings-panel {
+        position: static;
+        max-height: none;
+      }
+
+      .app-header {
+        align-items: flex-start;
+      }
+
+      .privacy-note {
+        display: none;
+      }
+    }
+
+    @media (max-width: 720px) {
+      body {
+        padding: 0;
+        background: var(--surface);
+      }
+
+      .app-shell {
+        min-height: 100vh;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      .app-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        padding: 15px 16px;
+        background: rgb(255 253 249 / 0.92);
+        border-bottom: 1px solid var(--line);
+        backdrop-filter: blur(14px);
+      }
+
+      .brand {
+        gap: 10px;
+      }
+
+      .brand-mark {
+        width: 28px;
+        height: 28px;
+        font-size: 25px;
+      }
+
+      .brand-title {
+        font-size: 22px;
+        letter-spacing: -0.02em;
+      }
+
+      .brand-kicker {
+        display: none;
+      }
+
+      .layout {
+        gap: 14px;
+        padding: 0 12px 18px;
+      }
+
+      .panel-header {
+        padding: 15px 14px 0;
+      }
+
+      .section-title {
+        font-size: 16px;
+      }
+
+      .step {
+        width: 22px;
+        height: 22px;
+        font-size: 12px;
+      }
+
+      .dropzone {
+        min-height: 124px;
+        margin: 14px;
+        padding: 18px;
+      }
+
+      .dropzone-icon {
+        width: 32px;
+        height: 32px;
+        margin-bottom: 8px;
+      }
+
+      .dropzone-title {
+        font-size: 14px;
+      }
+
+      .dropzone-subtitle,
+      .dropzone-meta {
+        font-size: 12px;
+      }
+
+      .file-card {
+        grid-template-columns: 72px minmax(0, 1fr) auto;
+        min-height: 68px;
+        margin: 0 14px;
+        gap: 10px;
+      }
+
+      .file-name,
+      .file-meta {
+        font-size: 12px;
+      }
+
+      .preview-meta {
+        display: none;
+      }
+
+      .ascii-frame {
+        min-height: 230px;
+        margin: 14px 14px 0;
+      }
+
+      .ascii-output {
+        min-width: 520px;
+        padding: 12px;
+        font-size: 6.5px;
+        line-height: 0.96;
+      }
+
+      .action-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        margin: 14px 14px 0;
+      }
+
+      .button {
+        min-width: 0;
+        min-height: 40px;
+        padding: 9px 12px;
+        font-size: 13px;
+      }
+
+      .local-footnote {
+        margin: 12px 14px 0;
+        font-size: 12px;
+      }
+
+      .settings-panel {
+        margin-top: 0;
+      }
+
+      .settings-body {
+        padding: 0 14px;
+      }
+
+      .settings-note {
+        margin: 16px 14px 0;
+      }
+
+      .control-line {
+        grid-template-columns: auto minmax(90px, 1fr) auto 42px;
+        gap: 8px;
+      }
+
+      .control-line.compact {
+        grid-template-columns: minmax(0, 1fr) 42px;
+      }
+
+      .desktop-only {
+        display: none;
+      }
+
+      .mobile-actions {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        padding: 0 12px 12px;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .control-line {
+        grid-template-columns: 1fr 42px;
+      }
+
+      .range-edge {
+        display: none;
+      }
+
+      .brand-title {
+        font-size: 20px;
+      }
+
+      .button {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell" aria-label="ASCII Atelier mock interface">
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">⚜</div>
+        <div>
+          <h1 class="brand-title">ASCII Atelier</h1>
+          <p class="brand-kicker">Image to ASCII Art - In Your Browser</p>
+        </div>
+      </div>
+
+      <div class="privacy-note" aria-label="Privacy note">
+        <span aria-hidden="true">▣</span>
+        <span>Processed locally. No upload.</span>
+      </div>
+    </header>
+
+    <div class="layout">
+      <section class="workspace" aria-label="Upload and ASCII preview">
+        <section class="panel upload-panel" aria-labelledby="upload-title">
+          <div class="panel-header">
+            <h2 class="section-title" id="upload-title">
+              <span class="step">1</span>
+              Import an image
+            </h2>
+          </div>
+
+          <label class="dropzone" for="image-file">
+            <input class="hidden-file" id="image-file" type="file" accept="image/png,image/jpeg,image/webp">
+            <span>
+              <svg class="dropzone-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                <path d="M10.5 21.5H8.8A6.8 6.8 0 0 1 8 8a8.4 8.4 0 0 1 15.8 2.2A5.8 5.8 0 0 1 24 21.5h-2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M16 22V12.8m0 0-4 4m4-4 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+              <span class="dropzone-title">Drop your image here</span>
+              <span class="dropzone-subtitle">or click to select a file</span>
+              <span class="dropzone-meta">PNG, JPG, WEBP up to 10 MB</span>
+            </span>
+          </label>
+
+          <div class="file-card" aria-label="Selected file placeholder">
+            <div class="thumbnail-placeholder">Image</div>
+            <div>
+              <p class="file-name">portrait_pixel.png</p>
+              <p class="file-meta">1024 x 1024 px - 1.1 MB</p>
+            </div>
+            <span class="status-dot" aria-label="File is valid">✓</span>
+          </div>
+        </section>
+
+        <section class="panel preview-panel" aria-labelledby="preview-title">
+          <div class="panel-header">
+            <h2 class="section-title" id="preview-title">
+              <span class="step">2</span>
+              ASCII preview <span class="desktop-only">(live)</span>
+            </h2>
+            <div class="preview-meta">Columns: 120 - Height: 60 rows - Characters: ~72K</div>
+          </div>
+
+          <div class="ascii-frame" tabindex="0" aria-label="ASCII output preview">
+<pre class="ascii-output">........................................................................................................................
+..............................:-=+*#%%%@@@@@@@@@@@@@@@@@@@@%%%#*+=-:....................................................
+.........................:-+*#%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%*+-:...............................................
+.....................:=*%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#+-...........................................
+...................-*%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%*-.........................................
+.................-#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#=.......................................
+................+@@@@@@@@@@@@@@@@@@@@@@@%#*+=--::::::--=+*#%@@@@@@@@@@@@@@@@@@@@@*:.....................................
+...............*@@@@@@@@@@@@@@@@@@@%*=-:........................:-=*%@@@@@@@@@@@@@@#.....................................
+..............#@@@@@@@@@@@@@@@@%+-....................................:+%@@@@@@@@@@@*....................................
+.............*@@@@@@@@@@@@@@@#=..........................................=#@@@@@@@@@@+...................................
+............:@@@@@@@@@@@@@@%=....................:::::::...................=%@@@@@@@@%...................................
+............+@@@@@@@@@@@@@*..................:-+*#######*+-:................*@@@@@@@@=..................................
+............%@@@@@@@@@@@@+.................-*%@@@@@@@@@@@@@@%*-..............+@@@@@@@%..................................
+............@@@@@@@@@@@@+................-#@@@@@@@@@@@@@@@@@@@@#-.............+@@@@@@@...................................
+............@@@@@@@@@@@*...............:%@@@@@@@@@@@@@@@@@@@@@@@@:............*@@@@@@@...................................
+............%@@@@@@@@@@=..............-@@@@@@@@@@@@@@@@@@@@@@@@@@@-...........=@@@@@@%...................................
+............+@@@@@@@@@%...............#@@@@@@@@@@@@@@@@@@@@@@@@@@@@#...........%@@@@@@+...................................
+............:@@@@@@@@@*..............:@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@:..........*@@@@@@:...................................
+.............#@@@@@@@@=..............+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@+..........=@@@@@#....................................
+.............=@@@@@@@%..............:@@@@@@@%#*+=--::::--=+*#%@@@@@:..........%@@@@@=....................................
+..............#@@@@@@#...............%@@%+-....................-+%@@%.........#@@@@@#.....................................
+..............:@@@@@@=...............==-..........................-==.........=@@@@@:.....................................
+...............+@@@@%................................................................%@@@@+......................................
+................%@@@*.................-+*##*+-............-+*##*+-...........*@@@%.......................................
+................=@@@=...............=#@@@@@@@@#=........=#@@@@@@@@#=.........=@@@=.......................................
+.................#@@-..............+@@@%*++*%@@@+......+@@@%*++*%@@@+.......-@@#........................................
+.................:@@..............:@@%:......:%@@:....:@@%:......:%@@:.......@@:........................................
+..................#%..............=@@:........:@@=....=@@:........:@@=.......%#.........................................
+..................=%..............-@@+........+@@-....-@@+........+@@-.......%=.........................................
+...................*...............+@@%+----+%@@+......+@@%+----+%@@+........*..........................................
+...................:................=#@@@@@@@@#=........=#@@@@@@@@#=.........:..........................................
+.......................................:-==-:..............:-==-:......................................................
+.................................................:=++++=:...............................................................
+...............................................:+%@@@@@@%+:.............................................................
+..............................................*@@%*+==+*%@@*............................................................
+.............................................:@@=........=@@:...........................................................
+..............................................+@%:......:%@+............................................................
+...............................................-*%#*++*#%*-.............................................................
+..................................................:-==--................................................................
+......................................:--............................--:.................................................
+.......................................+#*=......................=*#+...................................................
+.........................................+%%#+=-:..........:-=+#%%+.....................................................
+...........................................=#@@@@@@@@@@@@@@@@@@#=.......................................................
+..............................................:+#%@@@@@@@@%#+:..........................................................
+..................................................:-====-:..............................................................
+............................::::::::::::::::::::::::::::::::::::::::::::::::::::::::....................................
+.........................:=#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#=:.................................
+......................:=#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#=:..............................
+....................-*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*-............................
+..................-#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#-..........................
+................:*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*:........................
+...............+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@+.......................
+..............#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#......................
+.............%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%.....................
+............*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*....................
+...........:@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@:...................
+........................................................................................................................</pre>
+          </div>
+
+          <div class="action-row">
+            <button class="button" type="button">
+              <span aria-hidden="true">□</span>
+              Copy text
+            </button>
+            <button class="button button-primary" type="button">
+              <span aria-hidden="true">↓</span>
+              Download TXT
+            </button>
+          </div>
+
+          <p class="local-footnote">
+            <span aria-hidden="true">▣</span>
+            Everything is processed locally in your browser. No data is sent.
+          </p>
+        </section>
+      </section>
+
+      <aside class="panel settings-panel" aria-labelledby="settings-title">
+        <div class="panel-header">
+          <h2 class="section-title" id="settings-title">
+            <span class="step">3</span>
+            Settings
+          </h2>
+          <button class="reset-button" type="button">
+            <span aria-hidden="true">↻</span>
+            Reset
+          </button>
+        </div>
+
+        <form class="settings-body">
+          <div class="control">
+            <label class="control-label" for="scale">Scale <span class="control-subtext">(character size)</span></label>
+            <div class="control-line">
+              <span class="range-edge">Small</span>
+              <input id="scale" type="range" min="1" max="32" value="8">
+              <span class="range-edge">Large</span>
+              <input class="number-field" type="text" value="8" inputmode="numeric" aria-label="Scale value">
+            </div>
+          </div>
+
+          <div class="control">
+            <label class="control-label" for="charset">Character set</label>
+            <select class="select-field" id="charset">
+              <option>Standard ( .:-=+*#%@ )</option>
+              <option>Minimal ( ░▓█ )</option>
+              <option>Simple ( .-=+*#%@ )</option>
+              <option>Detailed ( dbkhao*#MW&8%B@$ )</option>
+              <option>Blocks ( ░▒▓█ )</option>
+              <option>Binary ( █ )</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <label class="control-label" for="brightness">Brightness</label>
+            <div class="control-line">
+              <span class="range-edge">Dark</span>
+              <input id="brightness" type="range" min="-100" max="100" value="0">
+              <span class="range-edge">Light</span>
+              <input class="number-field" type="text" value="0" inputmode="numeric" aria-label="Brightness value">
+            </div>
+          </div>
+
+          <div class="control">
+            <label class="control-label" for="contrast">Contrast</label>
+            <div class="control-line">
+              <span class="range-edge">Low</span>
+              <input id="contrast" type="range" min="-100" max="100" value="12">
+              <span class="range-edge">High</span>
+              <input class="number-field" type="text" value="12" inputmode="numeric" aria-label="Contrast value">
+            </div>
+          </div>
+
+          <div class="control">
+            <label class="control-label" for="detail">Softness / detail</label>
+            <div class="control-line">
+              <span class="range-edge">Soft</span>
+              <input id="detail" type="range" min="-100" max="100" value="0">
+              <span class="range-edge">Sharp</span>
+              <input class="number-field" type="text" value="0" inputmode="numeric" aria-label="Detail value">
+            </div>
+          </div>
+
+          <div class="toggle-row">
+            <div>
+              <div class="control-label">Invert colors</div>
+              <p class="control-subtext">Use light text on a dark background.</p>
+            </div>
+            <label class="switch" aria-label="Invert colors">
+              <input type="checkbox">
+              <span class="switch-track"></span>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <div>
+              <div class="control-label">Original color mode</div>
+              <p class="control-subtext">Render ASCII glyphs using sampled image colors.</p>
+            </div>
+            <label class="switch" aria-label="Original color mode">
+              <input type="checkbox">
+              <span class="switch-track"></span>
+            </label>
+          </div>
+
+          <div class="control">
+            <label class="control-label" for="columns">Output columns</label>
+            <div class="control-line compact">
+              <input id="columns" type="range" min="40" max="240" value="120">
+              <input class="number-field" type="text" value="120" inputmode="numeric" aria-label="Output columns value">
+            </div>
+            <p class="control-subtext">80 - 240 recommended.</p>
+            <div class="validation" role="status">
+              <span aria-hidden="true">✓</span>
+              Value is valid
+            </div>
+          </div>
+
+          <div class="toggle-row">
+            <div>
+              <div class="control-label">Live preview</div>
+              <p class="control-subtext">Update while settings change.</p>
+            </div>
+            <label class="switch" aria-label="Live preview">
+              <input type="checkbox" checked>
+              <span class="switch-track"></span>
+            </label>
+          </div>
+        </form>
+
+        <div class="settings-note">
+          <span class="info-icon" aria-hidden="true">i</span>
+          <span>Adjust the settings to get the ASCII rendering that best fits your image.</span>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const rangeControls = document.querySelectorAll('input[type="range"]');
+
+    for (const range of rangeControls) {
+      const parent = range.closest('.control');
+      const textInput = parent ? parent.querySelector('.number-field') : null;
+
+      if (!textInput) continue;
+
+      range.addEventListener('input', () => {
+        textInput.value = range.value;
+      });
+
+      textInput.addEventListener('change', () => {
+        const min = Number(range.min);
+        const max = Number(range.max);
+        const value = Number(textInput.value);
+        const next = Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : Number(range.value);
+
+        range.value = String(next);
+        textInput.value = String(next);
+      });
+    }
+  </script>
+</body>
+</html>
