@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Coding Agent Q&A Log</title>
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --panel: #ffffff;
+      --text: #1f2933;
+      --muted: #5f6b7a;
+      --line: #d8dee4;
+      --accent: #315f8c;
+      --accent-soft: #e8f1fa;
+      --success: #1f6f4a;
+      --success-soft: #e6f4ec;
+      --warn: #8a5a00;
+      --warn-soft: #fff4d6;
+      --code: #f0f2f4;
+      --shadow: 0 10px 30px rgba(31, 41, 51, 0.08);
+      --radius: 18px;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration-thickness: 0.08em;
+      text-underline-offset: 0.2em;
+    }
+
+    .page {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #ffffff, #eef5fb);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 32px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 24px;
+      margin-top: 24px;
+      align-items: start;
+    }
+
+    .toc {
+      position: sticky;
+      top: 16px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .toc h2 {
+      margin: 0 0 12px;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .toc a {
+      display: block;
+      padding: 10px 0;
+      border-top: 1px solid var(--line);
+      font-weight: 650;
+      text-decoration: none;
+    }
+
+    .toc span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .thread-list {
+      display: grid;
+      gap: 22px;
+    }
+
+    .topic-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .topic-header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 16px;
+      margin-bottom: 18px;
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .topic-header h2 {
+      margin: 0;
+      font-size: clamp(1.35rem, 2.5vw, 2rem);
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 10px;
+      background: #fafafa;
+      white-space: nowrap;
+    }
+
+    .chip.status {
+      border-color: #b8dfc8;
+      color: var(--success);
+      background: var(--success-soft);
+      font-weight: 650;
+    }
+
+    .chip.tag {
+      border-color: #bed4ea;
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .qa-section {
+      margin: 18px 0;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fcfcfb;
+    }
+
+    .qa-section h3 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+    }
+
+    .qa-section p {
+      margin: 0 0 12px;
+    }
+
+    .qa-section p:last-child {
+      margin-bottom: 0;
+    }
+
+    .published {
+      border-left: 4px solid var(--accent);
+    }
+
+    .answer {
+      border-left: 4px solid var(--success);
+    }
+
+    .html-embed {
+      margin-top: 14px;
+      padding: 14px;
+      border: 1px dashed #9ab6d1;
+      border-radius: 12px;
+      background: #f7fbff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 0;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+      padding: 10px;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    code {
+      background: var(--code);
+      padding: 0.15em 0.35em;
+      border-radius: 6px;
+      font-size: 0.92em;
+    }
+
+    .references {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .references h3 {
+      margin: 0 0 6px;
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+
+    @media (max-width: 840px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .toc {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <p class="eyebrow">Coding Agent Q&A Log</p>
+      <h1>Coding Agent Q&A Log</h1>
+      <p>This page records questions asked to a coding agent and the agent's explicit answers. The same substantive content is maintained in <code>index.md</code> with a flatter Markdown presentation.</p>
+    </header>
+
+    <div class="layout">
+      <nav class="toc" aria-labelledby="toc-title">
+        <h2 id="toc-title">Thread Index</h2>
+        <a href="#T20260611-001">Maintaining the publication log <span>answered - workflow, synchronization, documentation</span></a>
+        <a href="#T20260611-002">Formatting readable public questions <span>answered - editing, publishing, clarity</span></a>
+        <a href="#T20260611-003">Supporting rich HTML answers <span>answered - HTML, embedded-content, accessibility</span></a>
+      </nav>
+
+      <section class="thread-list" aria-label="Question and answer threads">
+        <article class="topic-card" id="T20260611-001">
+          <header class="topic-header">
+            <p class="eyebrow">Topic T20260611-001</p>
+            <h2><a href="#T20260611-001">Maintaining the Publication Log</a></h2>
+            <p class="meta">
+              <time class="chip" datetime="2026-06-11T09:00:00-07:00">Asked 2026-06-11 09:00 America/Los_Angeles</time>
+              <span class="chip status">answered</span>
+              <span class="chip tag">workflow</span>
+              <span class="chip tag">synchronization</span>
+              <span class="chip tag">documentation</span>
+            </p>
+          </header>
+
+          <section class="qa-section original">
+            <h3>Original question</h3>
+            <p>How will you keep <code>index.md</code> and <code>index.html</code> updated when I ask a question?</p>
+          </section>
+
+          <section class="qa-section published">
+            <h3>Published question</h3>
+            <p>How will the coding agent maintain the Markdown and HTML Q&A logs in parallel?</p>
+          </section>
+
+          <section class="qa-section answer">
+            <h3>Answer</h3>
+            <p>The agent will update <code>index.md</code> and <code>index.html</code> in the same work session whenever it accepts a question for the public log. The Markdown file will remain plain and easy to review in source control. The HTML file will contain the same substantive content, but it may use cards, tags, metadata rows, callouts, tables, and other semantic HTML to improve browser readability.</p>
+            <p>The agent will treat each question as a topic thread. It will assign a stable topic ID, capture the asked date and time, preserve the original question or a faithful excerpt, write a clearer public question, provide a direct answer, and record references when references are used.</p>
+            <p>The agent will verify that both files contain matching topic IDs, titles, dates, statuses, tags, questions, answers, and references. Differences caused only by presentation format are acceptable. Differences that change meaning, omit content, or create stale information must be corrected.</p>
+          </section>
+
+          <footer class="references">
+            <h3>References</h3>
+            <p>AGENTS.md sections B00, C00, K00, and L00.</p>
+          </footer>
+        </article>
+
+        <article class="topic-card" id="T20260611-002">
+          <header class="topic-header">
+            <p class="eyebrow">Topic T20260611-002</p>
+            <h2><a href="#T20260611-002">Formatting Readable Public Questions</a></h2>
+            <p class="meta">
+              <time class="chip" datetime="2026-06-11T09:05:00-07:00">Asked 2026-06-11 09:05 America/Los_Angeles</time>
+              <span class="chip status">answered</span>
+              <span class="chip tag">editing</span>
+              <span class="chip tag">publishing</span>
+              <span class="chip tag">clarity</span>
+            </p>
+          </header>
+
+          <section class="qa-section original">
+            <h3>Original question</h3>
+            <p>Can you organize my original question so it is more readable and suitable for publishing online?</p>
+          </section>
+
+          <section class="qa-section published">
+            <h3>Published question</h3>
+            <p>How should the coding agent convert a raw user question into a readable public question without changing its intent?</p>
+          </section>
+
+          <section class="qa-section answer">
+            <h3>Answer</h3>
+            <p>The agent will keep the original user question available for context and then create a separate public version. The public version may improve grammar, remove filler, clarify ambiguous phrasing, split long sentences, and name the requested output more directly.</p>
+            <p>The agent will not change the meaning of the question. If the raw question contains ambiguity that affects the answer, the published entry will either preserve the ambiguity or state the assumption used by the answer. If the question is too broad, the agent may split it into separate topic entries, but only when the split improves readability and does not distort the user's request.</p>
+          </section>
+
+          <footer class="references">
+            <h3>References</h3>
+            <p>AGENTS.md sections D00 and E00.</p>
+          </footer>
+        </article>
+
+        <article class="topic-card" id="T20260611-003">
+          <header class="topic-header">
+            <p class="eyebrow">Topic T20260611-003</p>
+            <h2><a href="#T20260611-003">Supporting Rich HTML Answers</a></h2>
+            <p class="meta">
+              <time class="chip" datetime="2026-06-11T09:10:00-07:00">Asked 2026-06-11 09:10 America/Los_Angeles</time>
+              <span class="chip status">answered</span>
+              <span class="chip tag">HTML</span>
+              <span class="chip tag">embedded-content</span>
+              <span class="chip tag">accessibility</span>
+            </p>
+          </header>
+
+          <section class="qa-section original">
+            <h3>Original question</h3>
+            <p>Can <code>index.html</code> support richer formatting and extra HTML while <code>index.md</code> stays mostly text-based?</p>
+          </section>
+
+          <section class="qa-section published">
+            <h3>Published question</h3>
+            <p>How will the HTML log support rich answer content while keeping the Markdown log readable?</p>
+          </section>
+
+          <section class="qa-section answer">
+            <h3>Answer</h3>
+            <p>The HTML log will support richer presentation through semantic sections, topic cards, metadata chips, code blocks, callouts, tables, and optional embedded HTML containers. Rich HTML fragments should be placed inside clearly marked <code>.html-embed</code> containers so the source remains understandable and maintainable.</p>
+            <p>The Markdown log will keep the same substantive content in a flatter form. When the HTML file contains a visual component, the Markdown file will describe the same information in text or use a simple Markdown table when that is the clearest plain-text representation.</p>
+
+            <div class="html-embed" aria-label="Example rich HTML content">
+              <strong>Example rich HTML representation</strong>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Field</th>
+                    <th>Required handling</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Topic ID</td>
+                    <td>Stable and shared across both files</td>
+                  </tr>
+                  <tr>
+                    <td>Timestamp</td>
+                    <td>Include date, time, and timezone when known</td>
+                  </tr>
+                  <tr>
+                    <td>Answer</td>
+                    <td>Direct, explicit, and publishable</td>
+                  </tr>
+                  <tr>
+                    <td>HTML extras</td>
+                    <td>Allowed in <code>index.html</code>; summarized or flattened in <code>index.md</code></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <footer class="references">
+            <h3>References</h3>
+            <p>AGENTS.md sections G00, H00, I00, and J00.</p>
+          </footer>
+        </article>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
