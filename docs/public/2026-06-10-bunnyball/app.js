@@ -115,6 +115,11 @@ const MUSIC = {
   scheduleAheadSec: 0.22
 };
 
+const AUDIO_MIX = {
+  musicBusGain: 0.75,
+  sfxBusGain: 0.9
+};
+
 const CHORDS = [
   { name: "C", root: "C3", notes: ["C4", "E4", "G4"] },
   { name: "Am", root: "A2", notes: ["A3", "C4", "E4"] },
@@ -544,8 +549,8 @@ class BunnyAudioEngine {
     this.musicFilter.type = "lowpass";
     this.musicFilter.frequency.setValueAtTime(4200, this.ctx.currentTime);
     this.musicFilter.Q.setValueAtTime(0.7, this.ctx.currentTime);
-    this.musicBus.gain.setValueAtTime(0.11, this.ctx.currentTime);
-    this.sfxBus.gain.setValueAtTime(0.18, this.ctx.currentTime);
+    this.musicBus.gain.setValueAtTime(AUDIO_MIX.musicBusGain, this.ctx.currentTime);
+    this.sfxBus.gain.setValueAtTime(AUDIO_MIX.sfxBusGain, this.ctx.currentTime);
     this.masterGain.gain.setValueAtTime(0.0001, this.ctx.currentTime);
 
     this.musicBus.connect(this.musicFilter);
