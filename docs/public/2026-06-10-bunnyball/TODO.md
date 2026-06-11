@@ -61,7 +61,7 @@ F00 Ball Motion And Effects
 
 ---
 
-- [x] Implement the three Bezier pass definitions exactly from the specification, then verify the loop order is left-to-middle, middle-to-right, right-to-left.
+- [x] Implement and validate the original three Bezier pass loop; this fixed-loop requirement is superseded by the verified CR-001 six-route generated path system below.
 - [x] Drive animation with `requestAnimationFrame`, then verify active pass and progress are derived from elapsed time rather than CSS keyframes alone.
 - [x] Implement ball shadow interpolation from rabbit ground points, then verify the shadow changes size and opacity based on ball height.
 - [x] Implement a short motion trail behind the ball, then verify it shows recent motion only and does not permanently render the full pass path.
@@ -73,8 +73,8 @@ G00 Pass Counter And Persistence
 
 ---
 
-- [x] Implement pass counting from elapsed time and the `5750ms` cycle, then verify one completed pass increments the visible counter exactly once.
-- [x] Store game start state under `bunnyVolleyball.v1`, then verify refreshing the page does not reset the pass count.
+- [x] Implement and validate the original `5750ms` elapsed-time counter; this timing model is superseded by CR-001 persisted pass boundaries while retaining exact one-pass increments.
+- [x] Preserve migration from `bunnyVolleyball.v1`, then verify the active v2 state under `bunnyVolleyball.game.v2` keeps the pass count across refreshes.
 - [x] Format the score with at least six digits, then verify the displayed value updates consistently with the computed completed pass count.
 - [x] Add the score chip bump animation on increment, then verify the animation is subtle and does not dominate the scene.
 
@@ -134,3 +134,41 @@ L00 Regression And Final Validation
 - [x] Compare the implementation against `specs/product_spec.md`, then verify the final project structure, runtime behavior, and acceptance expectations are met.
 - [x] Compare the implementation against `specs/audio_spec.md`, then verify audio controls, procedural music, SFX, and autoplay policy behavior are met.
 - [x] Only after all items above are validated, report completion with created files, verified behaviors, deviations if any, and remaining issues if any.
+
+---
+
+M00 CR-001 Randomized Passing
+
+---
+
+- [x] Add the v2 seeded game-state model, randomized receiver selection, generated Bezier geometry, and reload fast-forward, then verify route state resumes coherently without catch-up effects or audio.
+- [x] Connect randomized passes to ball motion, shadow, trail, impacts, counter, and audio, then verify all six directed routes render and no rabbit passes to itself.
+- [x] Verify duration and arc variation remain within the CR-001 bounds, then verify pass counting and persistence still increment exactly once per completed pass.
+
+---
+
+N00 CR-001 Rabbit Names
+
+---
+
+- [x] Add three scene-positioned editable rabbit name labels, then verify placement, readability, keyboard focus, and plain-text sanitization.
+- [x] Persist sanitized names under `bunnyVolleyball.rabbitNames.v1`, then verify input, paste, Enter behavior, and refresh restoration.
+
+---
+
+O00 CR-001 Ambient Clock
+
+---
+
+- [x] Add the bottom-center clock with local 24-hour time, seconds, date, and subtle tick transition, then verify it updates on second boundaries.
+- [x] Track and persist visible watching time under `bunnyVolleyball.watchTime.v1`, then verify hidden-tab time is excluded and page hide saves state.
+
+---
+
+P00 CR-001 Final Validation
+
+---
+
+- [x] Verify desktop, landscape, portrait panning, reduced motion, UI layering, and rabbit visibility remain usable with the new labels and clock.
+- [x] Revalidate existing animation, score, audio activation, volume persistence, local-file operation, and GitHub Pages readiness after CR-001.
+- [x] Inspect the completed implementation against every CR-001 acceptance criterion, then report completion only if all checks pass.
