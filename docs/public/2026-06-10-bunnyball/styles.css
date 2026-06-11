@@ -1,0 +1,445 @@
+:root {
+  color-scheme: light;
+  --ui-cream: #fff6e1;
+  --ui-brown: #6b3f1f;
+  --ui-orange: #d94a1e;
+  --ui-border-brown: rgba(92, 55, 24, 0.28);
+  --score-bg: rgba(255, 246, 225, 0.94);
+  --score-border: rgba(92, 55, 24, 0.28);
+  --score-label: #6b3f1f;
+  --score-number: #d94a1e;
+  --score-shadow: rgba(0, 0, 0, 0.18);
+  --trail-color: rgba(255, 246, 225, 0.26);
+  --spark-color: #fff7cf;
+  --pulse-color: rgba(255, 247, 207, 0.56);
+  --ball-white: #f7f7ef;
+  --ball-orange: #e9542a;
+  --ball-yellow: #f5c12e;
+  --ball-blue: #2f9fe3;
+  --ball-outline: rgba(72, 50, 30, 0.32);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: #f4f1eb;
+}
+
+body {
+  min-width: 280px;
+  font-family: "Trebuchet MS", system-ui, sans-serif;
+  overscroll-behavior: none;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.page-shell {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 2vh 0;
+}
+
+.scene {
+  position: relative;
+  width: min(96vw, 1672px, calc(96vh * 1672 / 941));
+  width: min(96vw, 1672px, calc(96svh * 1672 / 941));
+  aspect-ratio: 1672 / 941;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: clamp(12px, 2vw, 30px);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.16);
+  background: #1f3a0d;
+  isolation: isolate;
+}
+
+.scene__image {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+
+.rabbit-anchors {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.ball-shadow {
+  position: absolute;
+  z-index: 4;
+  width: calc(var(--shadow-width, 46) / 1672 * 100%);
+  height: calc(var(--shadow-height, 13) / 941 * 100%);
+  min-width: 12px;
+  min-height: 3px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, var(--shadow-opacity, 0.2));
+  filter: blur(clamp(2px, 0.32vw, 5px));
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  will-change: left, top, width, height, opacity;
+}
+
+.scene-effects {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.motion-trail {
+  fill: none;
+  stroke: var(--trail-color);
+  stroke-width: var(--trail-width, 12);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: var(--trail-opacity, 0.8);
+  filter: url("#trailBlur");
+}
+
+.motion-trail--soft {
+  stroke-width: calc(var(--trail-width, 12) * 1.8);
+  opacity: calc(var(--trail-opacity, 0.8) * 0.34);
+}
+
+.beach-ball {
+  position: absolute;
+  z-index: 7;
+  width: calc(64 / 1672 * 100%);
+  min-width: 38px;
+  max-width: 72px;
+  aspect-ratio: 1;
+  transform:
+    translate(-50%, -50%)
+    rotate(var(--ball-rotation, 0deg))
+    scale(var(--ball-scale-x, 1), var(--ball-scale-y, 1));
+  transform-origin: center;
+  pointer-events: none;
+  will-change: left, top, transform;
+}
+
+.beach-ball svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.beach-ball.is-squashing {
+  animation: ball-squash 100ms ease-out;
+}
+
+.score-chip {
+  position: absolute;
+  left: calc(56 / 1672 * 100%);
+  top: calc(56 / 941 * 100%);
+  z-index: 20;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45em;
+  min-height: clamp(34px, calc(52 / 941 * 100%), 52px);
+  padding: clamp(7px, 0.66vw, 11px) clamp(11px, 1.08vw, 18px);
+  border: 1px solid var(--score-border);
+  border-radius: 999px;
+  background: var(--score-bg);
+  box-shadow: 0 6px 18px var(--score-shadow);
+  color: var(--score-label);
+  font-family: "Comic Sans MS", "Trebuchet MS", "Arial Rounded MT Bold", system-ui, sans-serif;
+  font-size: clamp(14px, 1.55vw, 26px);
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.score-chip__number {
+  color: var(--score-number);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  letter-spacing: 0.035em;
+}
+
+.score-chip.is-bumping {
+  animation: score-bump 220ms ease-out;
+}
+
+.audio-chip {
+  position: absolute;
+  right: calc(32 / 1672 * 100%);
+  bottom: calc(32 / 941 * 100%);
+  z-index: 22;
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(4px, 0.48vw, 8px);
+  padding: clamp(6px, 0.48vw, 8px) clamp(7px, 0.6vw, 10px);
+  border: 1px solid rgba(92, 55, 24, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 246, 225, 0.88);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+  color: var(--ui-brown);
+  font-family: "Comic Sans MS", "Trebuchet MS", "Arial Rounded MT Bold", system-ui, sans-serif;
+  font-size: clamp(11px, 1.05vw, 17px);
+  line-height: 1;
+  transition: opacity 140ms ease;
+  white-space: nowrap;
+}
+
+.audio-chip[data-enabled="false"] {
+  opacity: 0.72;
+}
+
+.audio-chip button,
+.audio-chip output {
+  font: inherit;
+}
+
+.audio-chip button {
+  min-width: 2em;
+  min-height: 2em;
+  padding: 0.35em 0.5em;
+  border: 0;
+  border-radius: 999px;
+  color: var(--ui-brown);
+  background: rgba(255, 255, 255, 0.48);
+  cursor: pointer;
+}
+
+.audio-chip button:hover {
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.audio-chip button:active {
+  transform: translateY(1px);
+}
+
+.audio-chip button:focus-visible {
+  outline: 2px solid var(--ui-orange);
+  outline-offset: 2px;
+}
+
+.audio-toggle {
+  min-width: 5.8em;
+}
+
+.audio-volume-value {
+  min-width: 3.2em;
+  color: var(--ui-orange);
+  font-weight: 800;
+  text-align: center;
+}
+
+.impact-pulse {
+  fill: none;
+  stroke: var(--pulse-color);
+  stroke-width: 3;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: impact-pulse 360ms ease-out forwards;
+}
+
+.impact-ray {
+  stroke: var(--spark-color);
+  stroke-width: 4;
+  stroke-linecap: round;
+  animation: impact-ray 180ms ease-out forwards;
+}
+
+.impact-tap {
+  fill: none;
+  stroke: rgba(255, 247, 207, 0.72);
+  stroke-width: 4;
+  stroke-linecap: round;
+  animation: impact-tap 260ms ease-out forwards;
+}
+
+.debug-label {
+  display: none;
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  z-index: 30;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  border: 2px solid #777;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #666;
+  font-weight: 800;
+}
+
+.scene.is-debug .debug-label {
+  display: block;
+}
+
+.debug-anchor {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #ff2d55;
+  border-radius: 50%;
+  background: #fff;
+  transform: translate(-50%, -50%);
+}
+
+.debug-box {
+  position: absolute;
+  border: 1px dashed #ff2d55;
+}
+
+@keyframes score-bump {
+  50% {
+    transform: translateY(-2px) scale(1.08);
+  }
+}
+
+@keyframes ball-squash {
+  45% {
+    transform:
+      translate(-50%, -50%)
+      rotate(var(--ball-rotation, 0deg))
+      scale(1.15, 0.88);
+  }
+}
+
+@keyframes impact-pulse {
+  from {
+    opacity: 0.9;
+    transform: scale(0.55);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.18);
+  }
+}
+
+@keyframes impact-ray {
+  from {
+    opacity: 1;
+    stroke-dasharray: 0 30;
+  }
+  to {
+    opacity: 0;
+    stroke-dasharray: 22 30;
+  }
+}
+
+@keyframes impact-tap {
+  from {
+    opacity: 0.85;
+    stroke-dashoffset: 24;
+  }
+  to {
+    opacity: 0;
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .audio-chip {
+    right: 12px;
+    bottom: 12px;
+    gap: 5px;
+    padding: 6px 7px;
+    font-size: 13px;
+  }
+
+  .audio-chip button {
+    padding: 5px 7px;
+  }
+}
+
+@media (orientation: portrait) and (max-width: 700px) {
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    overflow: hidden;
+  }
+
+  .page-shell {
+    display: flex;
+    min-height: 100%;
+    align-items: center;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0;
+    scroll-behavior: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .page-shell::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scene {
+    width: max(100vw, min(980px, calc(100svh * 1672 / 941)));
+    max-width: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .score-chip {
+    position: fixed;
+    top: max(12px, env(safe-area-inset-top));
+    left: max(12px, env(safe-area-inset-left));
+    font-size: 15px;
+  }
+
+  .audio-chip {
+    position: fixed;
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-trail,
+  .motion-trail--soft {
+    opacity: 0.08;
+  }
+
+  .score-chip.is-bumping,
+  .beach-ball.is-squashing,
+  .impact-ray,
+  .impact-tap {
+    animation: none;
+  }
+
+  .impact-pulse {
+    animation-duration: 500ms;
+    opacity: 0.35;
+  }
+
+  .audio-chip {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .score-chip,
+  .audio-chip,
+  .audio-chip button {
+    border: 1px solid CanvasText;
+  }
+}
