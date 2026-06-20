@@ -1,0 +1,200 @@
+---
+
+A00 Mission
+
+---
+
+Build a production-quality Japanese article typing and writing guidance app. The app lets a learner upload one annotated Japanese article, then rewrite it from the screen while the interface guides them sentence by sentence and token by token.
+
+The product should feel like a calm reading and writing surface, not a dashboard, game, or course platform. Preserve the Zen/e-ink editorial direction: quiet paper-like UI, large Japanese typography, one previous sentence for context, a magnified active sentence, remaining article text below, and a precise caret around the active token with romaji above and meaning below.
+
+---
+
+B00 Repository Structure
+
+---
+
+Current structure:
+
+```txt
+D:.
+|   index.html
+|
+\---specs
+    |   010-main-specification.md
+    |
+    \---010-main-specification.assets
+            image-20260620150729224.png
+            muckup-sample.html
+```
+
+GitHub Pages URL:
+
+```txt
+https://toys.awwtools.com/public/2026-06-20-japanese-article-typing-exercise/
+```
+
+Use `specs/010-main-specification.md` as the main product specification. Use `specs/010-main-specification.assets/image-20260620150729224.png` as the primary visual reference for the final layout. Use `specs/010-main-specification.assets/muckup-sample.html` only as a lower-quality mockup and layout reference. You may reuse ideas from the mockup, but the final implementation should be cleaner, more robust, and production-ready.
+
+---
+
+C00 Implementation Constraints
+
+---
+
+This is a static browser application. Use modern browser technologies only.
+
+Do not add a build step. Do not add a framework. Do not require npm, bundlers, transpilers, servers, or external services.
+
+Implement with plain HTML, CSS, and modern JavaScript. Keep files in the project root unless there is a clear reason to organize them differently. A preferred structure is:
+
+```txt
+index.html
+styles.css
+app.js
+```
+
+Existing files may be refactored if that improves quality. Keep the app deployable as static files through GitHub Pages.
+
+---
+
+D00 Specification Priority
+
+---
+
+Before implementing, read the main specification and inspect the assets. If behavior is unclear, infer the most polished implementation from the specification, the screenshot asset, and the mockup sample.
+
+If the mockup conflicts with the specification or the screenshot, prefer the specification and the screenshot. The mockup is a helper, not the source of truth.
+
+If a small detail is not specified, use best engineering judgment and implement the option that gives the most coherent, high-quality user experience.
+
+---
+
+E00 Core UX Requirements
+
+---
+
+The practice view must support desktop and mobile deliberately. Do not make mobile an afterthought.
+
+Desktop uses a two-column editorial layout: optional article image on the side, writing flow on the main side. Mobile uses a single-column flow: compact header, article image if available, previous sentence, magnified active sentence, remaining text, and bottom controls.
+
+The active token hint must stay attached to the token. Romaji belongs visually above the active token. Meaning belongs visually below the active token. Do not position these hints relative to the whole card if that causes them to drift.
+
+The app should avoid persistent sidebars, dense dashboards, gamification UI, bright colors, and heavy controls. Keep the practice screen quiet.
+
+---
+
+F00 Main Features to Implement
+
+---
+
+The MVP should support one active article at a time.
+
+Required feature set:
+
+| Feature | Requirement |
+|---|---|
+| Article upload | Upload from empty state or hamburger menu |
+| Drag and drop | Show drop overlay and allow article replacement |
+| Replacement confirmation | Custom app dialog before replacing progress |
+| Lesson parsing | Parse custom HTML-like lesson elements |
+| Image anchors | Support referenced image assets from the lesson document |
+| Three-zone reading | Previous sentence, active sentence, remaining text |
+| Caret | Highlight current token with romaji and meaning attached |
+| Typing | Romaji validation with common aliases |
+| Navigation | Previous, pause, next, keyboard arrows |
+| Local recovery | Save latest article and current state in localStorage |
+| Reset progress | Custom confirmation, keep article but clear progress |
+| Export to Tango | Generate hash URL and open in new tab or copy URL |
+| Font size | Inline hamburger-menu control with limits |
+| Theme | Inline Light/Dark selection |
+| Session report | Custom dialog with progress, accuracy, slow and missed tokens |
+| Settings | Simple grouped settings dialog |
+| Text-to-speech | Browser built-in Japanese speech only, no MP3 files |
+
+---
+
+G00 State and Persistence
+
+---
+
+Use `localStorage`, not IndexedDB, for the current version.
+
+Persist only the latest active article and state needed for refresh recovery. Replacing the article overwrites article state. Resetting progress keeps the article but clears practice state.
+
+Persist at least:
+
+| Key area | Data |
+|---|---|
+| Article | Raw source and parsed metadata needed to restore |
+| Position | Current sentence index, token index, current typed input |
+| Session | Timer, pause state, progress, attempt statistics |
+| Settings | Font size, theme, delay presets, display options |
+
+Use try/catch around storage operations. If storage is unavailable, keep the app usable and show a calm warning in settings or the menu.
+
+---
+
+H00 Import and Export
+
+---
+
+Import flows must share one implementation path. Upload button, hamburger-menu import, and drag-and-drop all validate the file and then either load it or ask to replace the current article.
+
+Export / Share with Tango must export plain Japanese article text only. Do not export romaji, meanings, images, progress, settings, or lesson metadata.
+
+Tango URL format:
+
+```txt
+https://tango-japanese.app/mine#import-japanese-text=BASE64:...]]];
+```
+
+Encode the text as UTF-8 before base64. Do not call `btoa()` directly on Japanese text. Open Tango in a new tab with `noopener,noreferrer`. Provide a Copy URL fallback.
+
+---
+
+I00 Quality Bar
+
+---
+
+Write maintainable code. Prefer small functions with clear names. Add comments where they clarify non-obvious behavior, especially parser logic, caret positioning, localStorage recovery, import replacement, and Tango export encoding.
+
+Use semantic HTML where practical. Keep controls keyboard-accessible. Preserve focus behavior in dialogs. Use custom dialogs, not browser `alert`, `confirm`, or `prompt` for normal UX flows.
+
+Handle errors gracefully. Invalid article files, missing images, unavailable localStorage, unavailable Japanese text-to-speech, and clipboard failures should not crash the app.
+
+Use `console.info`, `console.warn`, and `console.error` for lightweight observability. Log enough context to debug import, parsing, state restore, export, and speech failures from the browser console. Do not add a logging framework.
+
+---
+
+J00 Mobile and Responsive Quality
+
+---
+
+Test mobile layout intentionally. The active sentence may wrap across multiple lines, and the active token hint must remain attached to the token after wrapping.
+
+Mobile controls should be touch-friendly. The bottom controls must not cover content. Add safe-area and bottom padding where needed.
+
+Desktop and mobile should share the same state model and rendering logic where possible. Do not implement separate behavior unless the layout truly requires it.
+
+---
+
+K00 Text-to-Speech
+
+---
+
+Use browser built-in text-to-speech through `window.speechSynthesis` and `SpeechSynthesisUtterance`.
+
+Use a Japanese voice if available. The MVP should use the browser default Japanese voice and should not expose voice selection. Hide the audio button if speech synthesis or Japanese voice support is unavailable.
+
+Do not implement MP3 playback, embedded audio assets, or audio file imports.
+
+---
+
+L00 Done Criteria
+
+---
+
+The implementation is acceptable when it can be opened from GitHub Pages, load a valid lesson file, restore after refresh, guide the learner through the article with the three-zone layout, handle desktop and mobile cleanly, import and replace articles safely, export to Tango, and show a basic report.
+
+The final result should look and feel closer to the screenshot asset than to the rough mockup sample. Use the mockup as scaffolding only. Quality, polish, and robust browser behavior matter.

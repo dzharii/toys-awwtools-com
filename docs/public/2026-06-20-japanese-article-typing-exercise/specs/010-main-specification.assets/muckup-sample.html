@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zen Typing Mock</title>
+
+  <style>
+    :root {
+      --page: #f3f0e8;
+      --paper: #fbf8f1;
+      --paper-soft: #f7f2e9;
+      --ink: #171611;
+      --ink-soft: #5c574d;
+      --muted: #9b9488;
+      --line: rgba(55, 50, 41, 0.16);
+      --line-strong: rgba(55, 50, 41, 0.3);
+      --accent: #676e4b;
+      --accent-soft: rgba(103, 110, 75, 0.14);
+      --shadow: 0 20px 60px rgba(52, 46, 38, 0.18);
+      --radius: 22px;
+      --font-jp: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", "Times New Roman", serif;
+      --font-ui: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 16% 0%, rgba(255, 255, 255, 0.88), transparent 36%),
+        radial-gradient(circle at 90% 12%, rgba(255, 255, 255, 0.7), transparent 30%),
+        var(--page);
+      color: var(--ink);
+    }
+
+    body {
+      font-family: var(--font-ui);
+      padding: 24px;
+    }
+
+    .mock-stage {
+      width: min(1440px, 100%);
+      margin: 0 auto;
+    }
+
+    .app-window {
+      min-height: calc(100vh - 48px);
+      border: 1px solid rgba(42, 38, 31, 0.14);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.12)),
+        radial-gradient(circle at 14% 12%, rgba(255, 255, 255, 0.58), transparent 26%),
+        var(--paper);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      min-height: 78px;
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      gap: 28px;
+      align-items: center;
+      padding: 18px 30px;
+      border-bottom: 1px solid var(--line);
+      background:
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.18)),
+        rgba(251, 248, 241, 0.84);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    .seal {
+      width: 46px;
+      height: 46px;
+      border: 2px solid rgba(29, 28, 25, 0.72);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-family: var(--font-jp);
+      font-size: 24px;
+      line-height: 1;
+      color: var(--ink);
+      background:
+        radial-gradient(circle, rgba(255, 255, 255, 0.35), transparent 62%),
+        repeating-conic-gradient(from -8deg, rgba(29, 28, 25, 0.68) 0 6deg, transparent 6deg 12deg);
+      box-shadow: inset 0 0 0 5px var(--paper);
+      flex: 0 0 auto;
+    }
+
+    .brand-text {
+      min-width: 0;
+    }
+
+    .lesson-title {
+      font-family: var(--font-jp);
+      font-size: 22px;
+      line-height: 1.2;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lesson-subtitle {
+      margin-top: 4px;
+      font-size: 13px;
+      color: var(--ink-soft);
+      letter-spacing: 0.03em;
+    }
+
+    .session-meta {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      color: var(--ink-soft);
+      font-size: 15px;
+      white-space: nowrap;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: max-content;
+    }
+
+    .meta-divider {
+      width: 1px;
+      height: 30px;
+      background: var(--line);
+    }
+
+    .progress-group {
+      display: grid;
+      gap: 6px;
+      min-width: 120px;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(29, 28, 25, 0.1);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      width: 36%;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--accent);
+    }
+
+    .menu-button {
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--ink-soft);
+      display: grid;
+      place-items: center;
+      cursor: default;
+    }
+
+    .menu-button::before {
+      content: "";
+      width: 19px;
+      height: 13px;
+      background:
+        linear-gradient(var(--ink-soft), var(--ink-soft)) 0 0 / 100% 1.5px no-repeat,
+        linear-gradient(var(--ink-soft), var(--ink-soft)) 0 50% / 100% 1.5px no-repeat,
+        linear-gradient(var(--ink-soft), var(--ink-soft)) 0 100% / 100% 1.5px no-repeat;
+      opacity: 0.9;
+    }
+
+    .practice-area {
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(250px, 31%) minmax(0, 1fr);
+      gap: 36px;
+      padding: 34px 34px 24px;
+      min-height: 0;
+    }
+
+    .article-art {
+      position: relative;
+      min-height: 520px;
+      border-radius: 18px;
+      overflow: hidden;
+      background:
+        linear-gradient(to bottom, rgba(251, 248, 241, 0), rgba(251, 248, 241, 0.72) 84%),
+        radial-gradient(circle at 52% 18%, rgba(90, 82, 67, 0.13), transparent 30%),
+        radial-gradient(circle at 36% 54%, rgba(90, 82, 67, 0.1), transparent 36%);
+      opacity: 0.9;
+    }
+
+    .article-art::before {
+      content: "";
+      position: absolute;
+      inset: 10px 4px 24px 0;
+      background:
+        linear-gradient(92deg, transparent 0 17%, rgba(73, 67, 56, 0.34) 17.5% 18.8%, transparent 19.2%),
+        linear-gradient(92deg, transparent 0 36%, rgba(73, 67, 56, 0.28) 36.5% 37.8%, transparent 38.2%),
+        linear-gradient(92deg, transparent 0 57%, rgba(73, 67, 56, 0.26) 57.5% 59%, transparent 59.4%),
+        linear-gradient(0deg, transparent 0 26%, rgba(73, 67, 56, 0.18) 26.4% 27.2%, transparent 27.6%),
+        linear-gradient(0deg, transparent 0 44%, rgba(73, 67, 56, 0.18) 44.4% 45.2%, transparent 45.6%),
+        linear-gradient(0deg, transparent 0 64%, rgba(73, 67, 56, 0.14) 64.4% 65.2%, transparent 65.6%);
+      clip-path: polygon(11% 17%, 73% 6%, 86% 64%, 74% 77%, 16% 73%, 4% 44%);
+      filter: blur(0.1px);
+    }
+
+    .article-art::after {
+      content: "上\A野\A松\A竹";
+      white-space: pre;
+      position: absolute;
+      top: 112px;
+      left: 50%;
+      transform: translateX(-8%);
+      width: 44px;
+      padding: 12px 0;
+      border: 1px solid rgba(47, 43, 35, 0.25);
+      background: rgba(255, 255, 255, 0.25);
+      color: rgba(29, 28, 25, 0.76);
+      font-family: var(--font-jp);
+      font-size: 31px;
+      line-height: 1.15;
+      text-align: center;
+      box-shadow: 0 8px 22px rgba(47, 43, 35, 0.06);
+    }
+
+    .art-caption {
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      bottom: 22px;
+      color: rgba(65, 59, 48, 0.52);
+      font-family: var(--font-jp);
+      font-size: 13px;
+      line-height: 1.8;
+      letter-spacing: 0.04em;
+    }
+
+    .reading-column {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      padding: 10px 0 0;
+    }
+
+    .previous-sentence {
+      position: relative;
+      padding: 6px 0 24px;
+      border-bottom: 1px solid var(--line);
+      font-family: var(--font-jp);
+      font-size: clamp(16px, 1.32vw, 20px);
+      line-height: 1.9;
+      letter-spacing: 0.04em;
+      color: var(--ink);
+      text-align: center;
+    }
+
+    .zone-label {
+      position: absolute;
+      right: 0;
+      bottom: 7px;
+      color: var(--muted);
+      font-family: var(--font-ui);
+      font-size: 12px;
+      letter-spacing: 0.05em;
+    }
+
+    .active-sentence {
+      position: relative;
+      padding: 34px 0 40px;
+      border-bottom: 1px solid var(--line);
+      text-align: center;
+    }
+
+    .sentence-line {
+      font-family: var(--font-jp);
+      font-size: clamp(34px, 3.05vw, 52px);
+      line-height: 1.72;
+      letter-spacing: 0.08em;
+      color: var(--ink);
+      white-space: normal;
+    }
+
+    .word {
+      position: relative;
+      display: inline-block;
+      min-width: 2.4em;
+      text-align: center;
+    }
+
+    .word[data-romaji]::before {
+      content: attr(data-romaji);
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 0.48em);
+      transform: translateX(-50%);
+      font-family: var(--font-ui);
+      font-size: 13px;
+      line-height: 1;
+      letter-spacing: 0.08em;
+      color: var(--ink-soft);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .focus-token {
+      position: relative;
+      display: inline-block;
+      vertical-align: baseline;
+      margin: 0 0.06em;
+      padding: 0 0.14em 0.03em;
+      border: 1.5px solid rgba(77, 83, 55, 0.72);
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.22);
+      box-shadow:
+        0 0 0 3px rgba(111, 115, 82, 0.035),
+        inset 0 -0.16em 0 rgba(111, 115, 82, 0.06);
+    }
+
+    .focus-token::before {
+      content: attr(data-romaji);
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 0.48em);
+      transform: translateX(-50%);
+      font-family: var(--font-ui);
+      font-size: 13px;
+      line-height: 1;
+      letter-spacing: 0.08em;
+      color: var(--ink-soft);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .focus-token::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -7px;
+      width: 8px;
+      height: 8px;
+      border-right: 1.5px solid rgba(77, 83, 55, 0.72);
+      border-bottom: 1.5px solid rgba(77, 83, 55, 0.72);
+      background: var(--paper);
+      transform: translateX(-50%) rotate(45deg);
+    }
+
+    .focus-gloss {
+      position: absolute;
+      left: 50%;
+      top: calc(100% + 0.42em);
+      transform: translateX(-50%);
+      display: grid;
+      gap: 4px;
+      justify-items: center;
+      font-family: var(--font-ui);
+      line-height: 1.15;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .focus-gloss .romaji {
+      color: var(--accent);
+      font-size: 15px;
+    }
+
+    .focus-gloss .meaning {
+      color: var(--ink-soft);
+      font-size: 15px;
+    }
+
+    .current-label {
+      position: absolute;
+      right: 0;
+      bottom: 10px;
+      color: var(--muted);
+      font-family: var(--font-ui);
+      font-size: 12px;
+      letter-spacing: 0.05em;
+    }
+
+    .remaining-text {
+      padding: 24px 0 0;
+      font-family: var(--font-jp);
+      font-size: clamp(16px, 1.25vw, 19px);
+      line-height: 2.05;
+      letter-spacing: 0.035em;
+      color: var(--ink);
+    }
+
+    .remaining-text p {
+      margin: 0 0 18px;
+    }
+
+    .bottom-controls {
+      height: 80px;
+      border-top: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 24px;
+      padding: 16px 30px;
+      background: rgba(251, 248, 241, 0.78);
+    }
+
+    .control-button {
+      min-width: 116px;
+      height: 42px;
+      padding: 0 20px;
+      border: 1px solid var(--line-strong);
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.34);
+      color: var(--ink);
+      font-family: var(--font-ui);
+      font-size: 15px;
+      letter-spacing: 0.02em;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.48);
+      cursor: default;
+    }
+
+    .control-button.prev {
+      justify-self: start;
+    }
+
+    .control-button.pause {
+      justify-self: center;
+      min-width: 142px;
+    }
+
+    .control-button.next {
+      justify-self: end;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        padding: 0;
+        background: var(--paper);
+      }
+
+      .mock-stage {
+        width: 100%;
+      }
+
+      .app-window {
+        min-height: 100vh;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      .top-bar {
+        min-height: 0;
+        grid-template-columns: 1fr auto;
+        padding: 18px 18px 12px;
+        gap: 12px;
+      }
+
+      .seal {
+        width: 42px;
+        height: 42px;
+        font-size: 22px;
+      }
+
+      .lesson-title {
+        font-size: 17px;
+      }
+
+      .lesson-subtitle {
+        font-size: 12px;
+      }
+
+      .session-meta {
+        grid-column: 1 / -1;
+        width: 100%;
+        justify-content: space-between;
+        gap: 10px;
+        padding-top: 10px;
+        border-top: 1px solid var(--line);
+        font-size: 13px;
+      }
+
+      .meta-divider {
+        height: 24px;
+      }
+
+      .progress-group {
+        min-width: 92px;
+      }
+
+      .practice-area {
+        display: block;
+        padding: 14px 18px 96px;
+      }
+
+      .article-art {
+        min-height: 178px;
+        height: 178px;
+        margin: 0 0 18px;
+        border-radius: 10px;
+      }
+
+      .article-art::before {
+        inset: 6px 18px 12px;
+        clip-path: polygon(16% 20%, 78% 5%, 91% 70%, 72% 83%, 12% 75%, 4% 45%);
+      }
+
+      .article-art::after {
+        top: 28px;
+        left: 62%;
+        width: 31px;
+        padding: 6px 0;
+        font-size: 20px;
+        line-height: 1.08;
+      }
+
+      .art-caption {
+        display: none;
+      }
+
+      .reading-column {
+        padding: 0;
+      }
+
+      .previous-sentence {
+        padding: 0 0 16px;
+        font-size: 14px;
+        line-height: 1.85;
+        text-align: left;
+      }
+
+      .zone-label {
+        bottom: 4px;
+        font-size: 11px;
+      }
+
+      .active-sentence {
+        padding: 30px 0 44px;
+        text-align: left;
+      }
+
+      .sentence-line {
+        font-size: clamp(29px, 8vw, 42px);
+        line-height: 1.86;
+        letter-spacing: 0.05em;
+      }
+
+      .word {
+        min-width: 2.1em;
+      }
+
+      .word[data-romaji]::before,
+      .focus-token::before {
+        bottom: calc(100% + 0.42em);
+        font-size: 11px;
+      }
+
+      .focus-token {
+        margin: 0 0.02em;
+      }
+
+      .focus-gloss {
+        top: calc(100% + 0.5em);
+      }
+
+      .focus-gloss .romaji,
+      .focus-gloss .meaning {
+        font-size: 12px;
+      }
+
+      .current-label {
+        right: 0;
+        bottom: 8px;
+        font-size: 11px;
+      }
+
+      .remaining-text {
+        padding-top: 18px;
+        font-size: 15px;
+        line-height: 1.95;
+      }
+
+      .remaining-text p {
+        margin-bottom: 14px;
+      }
+
+      .bottom-controls {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 78px;
+        padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+        gap: 10px;
+        background: rgba(251, 248, 241, 0.92);
+        backdrop-filter: blur(12px);
+      }
+
+      .control-button {
+        width: 100%;
+        min-width: 0;
+        height: 44px;
+        padding: 0 10px;
+        font-size: 14px;
+      }
+
+      .control-button.pause {
+        min-width: 0;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .meta-item.characters {
+        display: none;
+      }
+
+      .meta-divider.characters-divider {
+        display: none;
+      }
+
+      .sentence-line {
+        font-size: clamp(27px, 9vw, 38px);
+      }
+
+      .remaining-text {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="mock-stage">
+    <section class="app-window" aria-label="Zen typing practice mockup">
+      <header class="top-bar">
+        <div class="brand">
+          <div class="seal" aria-hidden="true">禅</div>
+          <div class="brand-text">
+            <div class="lesson-title">上野の映画館をめぐる</div>
+            <div class="lesson-subtitle">Zen タイピング</div>
+          </div>
+        </div>
+
+        <div class="session-meta" aria-label="Session status">
+          <div class="meta-item progress-group">
+            <div class="progress-label">
+              <span>進捗</span>
+              <strong>36%</strong>
+            </div>
+            <div class="progress-track" aria-hidden="true">
+              <div class="progress-fill"></div>
+            </div>
+          </div>
+
+          <div class="meta-divider"></div>
+
+          <div class="meta-item">
+            <span aria-hidden="true">◷</span>
+            <span>時間</span>
+            <strong>03:47</strong>
+          </div>
+
+          <div class="meta-divider characters-divider"></div>
+
+          <div class="meta-item characters">
+            <span>文字数</span>
+            <strong>512 / 960</strong>
+          </div>
+
+          <button class="menu-button" aria-label="Menu"></button>
+        </div>
+      </header>
+
+      <section class="practice-area">
+        <aside class="article-art" aria-label="Article image placeholder">
+          <div class="art-caption">
+            記事に紐づいた画像領域。画像がない場合、この列は空白または縮小されます。
+          </div>
+        </aside>
+
+        <article class="reading-column">
+          <section class="previous-sentence" aria-label="Previous sentence">
+            上野は、かつて映画の街として多くの人々に親しまれてきた。
+            <span class="zone-label">前の文</span>
+          </section>
+
+          <section class="active-sentence" aria-label="Active sentence">
+            <div class="sentence-line">
+              <span class="word" data-romaji="ueno">上野</span>には、昔から多くの
+              <span class="focus-token" data-romaji="eigakan">
+                映画館
+                <span class="focus-gloss">
+                  <span class="romaji">eigakan</span>
+                  <span class="meaning">movie theater</span>
+                </span>
+              </span>
+              があります。
+            </div>
+
+            <span class="current-label">現在の文</span>
+          </section>
+
+          <section class="remaining-text" aria-label="Remaining article text">
+            <p>東京で映画を見ます。<br>週末になると、友達と一緒に映画を見に行きます。<br>お気に入りの映画館で、ゆっくりとした時間を過ごします。</p>
+
+            <p>上野の駅の周辺には、大小さまざまな映画館が立ち並び、や東洋館、大映などが、連日多くの観客でにぎわった。</p>
+
+            <p>なかでも、松竹が運営した「上野松竹」は、演劇と映画の両方を楽しめる場として人気を集めていた。</p>
+
+            <p>戦後になると、洋画の封切館や名画座が増え、文化の発信地としての役割をさらに深めていった。</p>
+          </section>
+        </article>
+      </section>
+
+      <nav class="bottom-controls" aria-label="Practice controls">
+        <button class="control-button prev">← 前へ</button>
+        <button class="control-button pause">▮▮　一時停止</button>
+        <button class="control-button next">次へ →</button>
+      </nav>
+    </section>
+  </main>
+</body>
+</html>
