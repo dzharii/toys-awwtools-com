@@ -2157,3 +2157,69 @@ MVP menu requirements:
 
 The hamburger menu should stay small, but the flows behind it must be precise. The practice view remains Zen because these secondary actions are hidden until the learner asks for them.
 
+
+
+------
+
+E00 Appendix E - Social Graph Preview
+
+------
+
+The app must define social preview metadata so shared links show a clear title, concise description, and branded preview image.
+
+The social image file is available at:
+
+```txt
+.\img\social_logo.png
+```
+
+For web metadata, the app should reference it as:
+
+```txt
+/img/social_logo.png
+```
+
+The social description should be short, direct, and feature-aware. It should explain the app in one sentence because most users will only glance at the preview.
+
+Recommended title:
+
+```txt
+Japanese Writing Practice - Rewrite Articles, Learn Words
+```
+
+Recommended description:
+
+```txt
+Practice Japanese by rewriting guided articles with magnified sentences, romaji hints, meanings, progress, and quiet Zen focus.
+```
+
+Recommended HTML title and social metadata section:
+
+```html
+<title>Japanese Writing Practice - Rewrite Articles, Learn Words</title>
+
+<meta
+  name="description"
+  content="Practice Japanese by rewriting guided articles with magnified sentences, romaji hints, meanings, progress, and quiet Zen focus."
+/>
+
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Japanese Writing Practice - Rewrite Articles, Learn Words" />
+<meta
+  property="og:description"
+  content="Practice Japanese by rewriting guided articles with magnified sentences, romaji hints, meanings, progress, and quiet Zen focus."
+/>
+<meta property="og:image" content="/img/social_logo.png" />
+<meta property="og:image:alt" content="Japanese Writing Practice app preview" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Japanese Writing Practice - Rewrite Articles, Learn Words" />
+<meta
+  name="twitter:description"
+  content="Practice Japanese by rewriting guided articles with magnified sentences, romaji hints, meanings, progress, and quiet Zen focus."
+/>
+<meta name="twitter:image" content="/img/social_logo.png" />
+<meta name="twitter:image:alt" content="Japanese Writing Practice app preview" />
+```
