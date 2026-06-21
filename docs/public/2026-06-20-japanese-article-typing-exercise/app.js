@@ -14,7 +14,7 @@
   const DEFAULT_SETTINGS = {
     fontSize: "normal",
     theme: "light",
-    delays: { short: 700, medium: 1400, long: 2600 },
+    delays: { short: 2400, medium: 6400, long: 10000 },
     startTimer: "first-input",
     romajiAliases: true,
     punctuationPractice: false,
@@ -74,6 +74,7 @@
     activeSentence: document.querySelector("#active-sentence"),
     activeSpeakButton: document.querySelector("#active-speak-button"),
     activeSentenceLine: document.querySelector("#active-sentence-line"),
+    activeMeaningLine: document.querySelector("#active-meaning-line"),
     typingInput: document.querySelector("#typing-input"),
     remainingText: document.querySelector("#remaining-text"),
     bottomControls: document.querySelector("#bottom-controls"),
@@ -565,9 +566,13 @@
       els.sessionMeta.hidden = false;
       els.progressPercent.textContent = `${Math.round(progress.percent)}%`;
       els.progressFill.style.width = `${progress.percent}%`;
+      els.progressFill.title = `Progress bar - ${Math.round(progress.percent)}% complete.`;
       els.timerValue.textContent = formatTime(runtime.state.activeElapsedMs);
       els.characterCount.textContent = `${progress.completedChars} / ${progress.totalChars}`;
       els.pauseButton.textContent = runtime.state.paused ? "▶　再開" : "▮▮　一時停止";
+      els.pauseButton.title = runtime.state.paused
+        ? "Resume - restart the timer and automatic token movement."
+        : "Pause - stop the timer and automatic token movement.";
       els.typingInput.value = runtime.state.typedInput || "";
       renderImage();
       renderPrevious();
@@ -599,6 +604,7 @@
       const label = document.createElement("span");
       label.className = "zone-label";
       label.textContent = "前の文";
+      label.title = "Previous sentence - shows one sentence before the active sentence for context.";
       els.previousSentence.append(label);
       return;
     }
@@ -613,11 +619,14 @@
     const label = document.createElement("span");
     label.className = "zone-label";
     label.textContent = "前の文";
+    label.title = "Previous sentence - shows one sentence before the active sentence for context.";
     els.previousSentence.append(label);
   }
 
   function renderActiveSentence(sentence) {
     clearNode(els.activeSentenceLine);
+    els.activeMeaningLine.textContent = buildMeaningSentence(sentence);
+    els.activeMeaningLine.hidden = !els.activeMeaningLine.textContent;
     els.activeSpeakButton.hidden = !canSpeakJapanese();
     sentence.tokens.forEach(token => {
       const span = document.createElement("span");
@@ -1047,9 +1056,6 @@
     } else if (event.key === "ArrowRight") {
       event.preventDefault();
       moveNext(event.shiftKey);
-    } else if (event.key.toLowerCase() === "p") {
-      event.preventDefault();
-      togglePause();
     } else if (event.key === "Escape") {
       event.preventDefault();
       runtime.state.paused = true;
@@ -1183,8 +1189,22 @@
     button.type = "button";
     button.className = "quiet-button";
     button.textContent = label;
+    button.title = menuHint(label);
     button.addEventListener("click", onClick);
     parent.append(button);
+  }
+
+  function menuHint(label) {
+    const hints = {
+      Resume: "Resume - restart practice timing and automatic token movement.",
+      "Restart Sentence": "Restart Sentence - return to the first token of the current sentence.",
+      "Reset Current Article Progress": "Reset Current Article Progress - clear timing and token results for this article.",
+      "Import Article": "Import Article - upload or replace the current lesson file.",
+      "Export / Share with Tango": "Export / Share with Tango - create a Tango import URL from plain Japanese text.",
+      "Session Report": "Session Report - review progress, accuracy, slow tokens, and missed tokens.",
+      Settings: "Settings - adjust timing, display, input, speech, and recovery options."
+    };
+    return hints[label] || `${label} - open this action.`;
   }
 
   function createFontSizeRow() {
@@ -1194,6 +1214,7 @@
     const minus = miniButton("-");
     const plus = miniButton("+");
     const select = document.createElement("select");
+    select.title = "Font Size - choose how large Japanese reading text appears.";
     FONT_SIZES.forEach(size => select.add(new Option(size.label, size.value)));
     select.value = runtime.settings.fontSize;
     const updateDisabled = () => {
@@ -1230,6 +1251,7 @@
     const controls = document.createElement("div");
     controls.className = "inline-controls";
     const select = document.createElement("select");
+    select.title = "Theme - choose the light or dark practice surface.";
     select.add(new Option("Light", "light"));
     select.add(new Option("Dark", "dark"));
     select.value = runtime.settings.theme;
@@ -1250,9 +1272,11 @@
     const strong = document.createElement("div");
     strong.className = "row-title";
     strong.textContent = title;
+    strong.title = `${title} - ${desc}`;
     const small = document.createElement("div");
     small.className = "row-desc";
     small.textContent = desc;
+    small.title = `${title} - ${desc}`;
     label.append(strong, small);
     row.append(label);
     return row;
@@ -1263,6 +1287,9 @@
     button.type = "button";
     button.className = "mini-button";
     button.textContent = label;
+    button.title = label === "+"
+      ? "Increase - make this setting larger."
+      : "Decrease - make this setting smaller.";
     return button;
   }
 
@@ -1379,6 +1406,7 @@
     section.className = "settings-section";
     const heading = document.createElement("h3");
     heading.textContent = title;
+    heading.title = `${title} - settings group.`;
     section.append(heading);
     return section;
   }
@@ -1387,6 +1415,7 @@
     const row = settingRow(title, desc);
     const input = document.createElement("input");
     input.type = "number";
+    input.title = `${title} - ${desc}`;
     input.min = "200";
     input.max = "20000";
     input.step = "100";
@@ -1404,6 +1433,7 @@
     const row = settingRow(title, desc);
     const input = document.createElement("input");
     input.type = "checkbox";
+    input.title = `${title} - ${desc}`;
     input.checked = Boolean(value);
     input.addEventListener("change", () => {
       onChange(input.checked);
@@ -1417,6 +1447,7 @@
   function selectSetting(title, desc, value, options, onChange) {
     const row = settingRow(title, desc);
     const select = document.createElement("select");
+    select.title = `${title} - ${desc}`;
     options.forEach(([optionValue, label]) => select.add(new Option(label, optionValue)));
     select.value = value;
     select.addEventListener("change", () => {
@@ -1440,9 +1471,11 @@
     const strong = document.createElement("div");
     strong.className = "row-title";
     strong.textContent = title;
+    strong.title = `${title} - ${desc}`;
     const small = document.createElement("div");
     small.className = "row-desc";
     small.textContent = desc;
+    small.title = `${title} - ${desc}`;
     label.append(strong, small);
     row.append(label);
     return row;
@@ -1565,8 +1598,10 @@
     card.className = "report-card";
     const span = document.createElement("span");
     span.textContent = label;
+    span.title = `${label} - session summary metric.`;
     const strong = document.createElement("strong");
     strong.textContent = value;
+    strong.title = `${label} - ${value}.`;
     card.append(span, strong);
     parent.append(card);
   }
@@ -1576,11 +1611,13 @@
     section.className = "settings-section";
     const heading = document.createElement("h3");
     heading.textContent = title;
+    heading.title = `${title} - tokens to review from this session.`;
     section.append(heading);
     if (!rows.length) {
       const p = document.createElement("p");
       p.className = "row-desc";
       p.textContent = "None yet.";
+      p.title = `${title} - no matching tokens yet.`;
       section.append(p);
       return section;
     }
@@ -1591,6 +1628,7 @@
     ["Token", "Romaji", "Result", "Time", "Expected"].forEach(label => {
       const th = document.createElement("th");
       th.textContent = label;
+      th.title = reportColumnHint(label);
       headRow.append(th);
     });
     thead.append(headRow);
@@ -1623,6 +1661,17 @@
     if (record.missed) return "Missed";
     if (record.skipped) return "Skipped";
     return "Correct";
+  }
+
+  function reportColumnHint(label) {
+    const hints = {
+      Token: "Token - Japanese text practiced.",
+      Romaji: "Romaji - expected romanized input.",
+      Result: "Result - how the token was completed.",
+      Time: "Time - actual time spent on the token.",
+      Expected: "Expected - configured target time for the token."
+    };
+    return hints[label] || label;
   }
 
   function openMessageDialog(title, message) {
@@ -1661,10 +1710,12 @@
     header.className = "modal-header";
     const heading = document.createElement("h2");
     heading.textContent = title;
+    heading.title = `${title} - dialog title.`;
     header.append(heading);
     if (message) {
       const p = document.createElement("p");
       p.textContent = message;
+      p.title = message;
       header.append(p);
     }
     const modalBody = document.createElement("div");
@@ -1677,6 +1728,7 @@
       button.type = "button";
       button.className = buttonClass(action.kind);
       button.textContent = action.label;
+      button.title = `${action.label} - dialog action.`;
       button.addEventListener("click", action.onClick);
       actionBar.append(button);
     });
@@ -1735,6 +1787,13 @@
     els.activeSpeakButton.hidden = !(runtime.article && canSpeakJapanese());
   }
 
+  function buildMeaningSentence(sentence) {
+    return sentence.tokens
+      .map(token => token.meaning)
+      .filter(Boolean)
+      .join(" ");
+  }
+
   function speakActiveSentence() {
     speakSentence(runtime.state.sentenceIndex);
   }
@@ -1766,6 +1825,7 @@
     button.className = `sentence-speak-button ${size}`.trim();
     button.textContent = "音";
     button.setAttribute("aria-label", label);
+    button.title = `${label} - play browser Japanese text-to-speech for this sentence.`;
     button.hidden = !canSpeakJapanese();
     button.addEventListener("click", () => speakSentence(sentenceIndex));
     return button;
