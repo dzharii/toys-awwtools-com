@@ -717,10 +717,15 @@
     els.activeMeaningLine.textContent = buildMeaningSentence(sentence);
     els.activeMeaningLine.hidden = !els.activeMeaningLine.textContent;
     els.activeSpeakButton.hidden = !canSpeakJapanese();
+    const focusedToken = sentence.tokens.find(token => token.tokenIndex === runtime.state.tokenIndex);
+    const hasBottomHint = Boolean(
+      focusedToken &&
+      ((runtime.settings.showReading && focusedToken.reading) || (runtime.settings.showMeaning && focusedToken.meaning))
+    );
+    els.activeSentence.classList.toggle("has-token-bottom-hint", hasBottomHint);
     sentence.tokens.forEach(token => {
       const span = document.createElement("span");
       span.className = "token";
-      span.textContent = token.text;
       if (token.tokenIndex === runtime.state.tokenIndex) {
         span.classList.add("focus-token");
         if (runtime.settings.showRomaji && token.romaji) {
@@ -729,19 +734,27 @@
           top.textContent = token.romaji;
           span.append(top);
         }
+        const tokenText = document.createElement("span");
+        tokenText.className = "focus-token-text";
+        tokenText.textContent = token.text;
+        span.append(tokenText);
         const bottom = document.createElement("span");
         bottom.className = "focus-hint-bottom";
         if (runtime.settings.showReading && token.reading) {
           const reading = document.createElement("span");
+          reading.className = "focus-reading";
           reading.textContent = token.reading;
           bottom.append(reading);
         }
         if (runtime.settings.showMeaning && token.meaning) {
           const meaning = document.createElement("span");
+          meaning.className = "focus-meaning";
           meaning.textContent = token.meaning;
           bottom.append(meaning);
         }
         if (bottom.children.length) span.append(bottom);
+      } else {
+        span.textContent = token.text;
       }
       els.activeSentenceLine.append(span);
     });
@@ -905,8 +918,22 @@
     return PUNCTUATION_TYPES.has(token.type);
   }
 
+  function isTypingBlocked() {
+    const blockingStates = {
+      blockBecaouseItIsNotArticle: !runtime.article,
+      blockBecaouseModalOpen: runtime.modalOpen,
+      blockBecaouseStateCompleted: runtime.state.completed,
+    };
+    // console.table(blockingStates);
+    return Object.values(blockingStates).some(v => v == true);
+  }
+
+  function isPracticeRunning() {
+    return Boolean(runtime.article && !runtime.modalOpen && !runtime.state.paused && runtime.state.timerStarted && !runtime.state.completed);
+  }
+
   function handleTypingInput() {
-    if (!runtime.article || runtime.modalOpen || runtime.state.paused || runtime.state.completed) {
+    if (isTypingBlocked()) {
       els.typingInput.value = runtime.state.typedInput || "";
       return;
     }
@@ -1087,7 +1114,7 @@
 
   function tick() {
     const now = performance.now();
-    if (runtime.article && !runtime.modalOpen && !runtime.state.paused && runtime.state.timerStarted && !runtime.state.completed) {
+    if (isPracticeRunning()) {
       runtime.state.activeElapsedMs += now - runtime.lastTickAt;
       els.timerValue.textContent = formatTime(runtime.state.activeElapsedMs);
       if (shouldAutoAdvanceToken()) completeTimedOutToken();
@@ -1097,7 +1124,7 @@
 
   function shouldAutoAdvanceToken() {
     if (!runtime.settings.automaticCaretMovement) return false;
-    if (!runtime.article || runtime.modalOpen || runtime.state.paused || !runtime.state.timerStarted || runtime.state.completed) return false;
+    if (!isPracticeRunning()) return false;
     if (runtime.advancing || runtime.rendering) return false;
     const token = currentToken();
     if (!token) return false;
@@ -1198,7 +1225,6 @@
       moveNext(event.shiftKey);
     } else if (event.key === "Escape") {
       event.preventDefault();
-      runtime.state.paused = true;
       openMenu();
     } else if (event.key === " " && event.target !== els.typingInput) {
       event.preventDefault();
@@ -1288,8 +1314,6 @@
       openUploadDialog();
       return;
     }
-    const resumeOnSettingsClose = !runtime.state.paused && !runtime.state.completed;
-    runtime.state.paused = true;
     render();
     openModal({
       title: runtime.article.title,
@@ -1318,10 +1342,10 @@
         const list2 = document.createElement("div");
         list2.className = "menu-list";
         addMenuButton(list2, "Session Report", () => { closeModal(); openReportDialog(false); });
-        addMenuButton(list2, "Settings", () => { closeModal(); openSettingsDialog({ resumeOnClose: resumeOnSettingsClose }); });
+        addMenuButton(list2, "Settings", () => { closeModal(); openSettingsDialog(); });
         body.append(list2);
       },
-      actions: [{ label: "Close", kind: "quiet", onClick: closeModal }]
+      actions: [{ label: "Close", kind: "quiet", onClick: closePracticeModal }]
     });
   }
 
@@ -1434,16 +1458,13 @@
     return button;
   }
 
-  function closeSettingsDialog(resumeOnClose) {
-    if (resumeOnClose) {
-      resumePracticeFromModal("settings-close");
-      return;
-    }
+  function closePracticeModal() {
     closeModal();
     render();
+    focusTyping();
   }
 
-  function openSettingsDialog({ resumeOnClose = false } = {}) {
+  function openSettingsDialog() {
     openModal({
       title: "Settings",
       message: "Changes save immediately.",
@@ -1465,10 +1486,10 @@
             applySettings();
             saveSettings();
             closeModal();
-            openSettingsDialog({ resumeOnClose });
+            openSettingsDialog();
           }
         }) },
-        { label: "Close", kind: "primary", onClick: () => closeSettingsDialog(resumeOnClose) }
+        { label: "Close", kind: "primary", onClick: closePracticeModal }
       ]
     });
   }
@@ -1479,7 +1500,9 @@
     section.append(numberSetting("Medium delay", "Expected time for normal words.", runtime.settings.delays.medium, value => runtime.settings.delays.medium = value));
     section.append(numberSetting("Long delay", "Expected time for names, dates, phrases, and long words.", runtime.settings.delays.long, value => runtime.settings.delays.long = value));
     section.append(selectSetting("Start timer", "Controls when active typing time begins.", runtime.settings.startTimer, [["first-input", "On first input"], ["manual", "Start manually"]], value => runtime.settings.startTimer = value));
-    section.append(toggleSetting("Automatic caret movement", "Move to the next token automatically when the token delay expires.", runtime.settings.automaticCaretMovement, value => runtime.settings.automaticCaretMovement = value));
+    section.append(toggleSetting("Automatic caret movement", "Move to the next token automatically when the token delay expires.", runtime.settings.automaticCaretMovement, value => {
+      runtime.settings.automaticCaretMovement = value;
+    }));
     return section;
   }
 
@@ -1914,7 +1937,7 @@
       runtime.modalOpen = false;
       if (resumeTimer) {
         runtime.lastTickAt = performance.now();
-        if (runtime.article && !runtime.state.paused && runtime.state.timerStarted) {
+        if (isPracticeRunning()) {
           smartScrollToPracticeFrame("modal-close");
         }
       }
@@ -2026,9 +2049,7 @@
 
   function shouldFocusTyping() {
     return Boolean(
-      runtime.article &&
-      !runtime.modalOpen &&
-      !runtime.state.paused &&
+      !isTypingBlocked() &&
       shouldShowTypingInput()
     );
   }
