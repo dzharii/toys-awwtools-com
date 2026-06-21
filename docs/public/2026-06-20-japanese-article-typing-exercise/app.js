@@ -16,8 +16,10 @@
     theme: "light",
     delays: { short: 2400, medium: 6400, long: 10000 },
     startTimer: "first-input",
+    automaticCaretMovement: true,
     romajiAliases: true,
     punctuationPractice: false,
+    typingInputMode: "desktop-only",
     backspaceBehavior: "edit-current",
     manualNavigation: true,
     showRomaji: true,
@@ -175,6 +177,7 @@
     if (runtime.speechSupported) {
       window.speechSynthesis.addEventListener("voiceschanged", detectSpeechVoices);
     }
+    window.addEventListener("resize", applySettings);
   }
 
   function testStorage() {
@@ -251,6 +254,7 @@
       runtime.state.typedInput = localStorage.getItem(STORAGE_KEYS.typedInput) || runtime.state.typedInput || "";
       if (!runtime.state.paused && !runtime.state.completed) runtime.state.timerStarted = true;
       clampPosition();
+      ensureCurrentTokenInteractive("restore");
       resetTokenTimer();
       console.info("Restored saved Japanese typing article", {
         title: runtime.article.title,
@@ -419,6 +423,7 @@
     runtime.state = createFreshState();
     runtime.stats = createFreshStats();
     runtime.pendingImport = null;
+    ensureCurrentTokenInteractive("article-import");
     resetTokenTimer();
     saveAll();
     render();
@@ -665,7 +670,6 @@
       renderRemaining();
       renderSpeechButton();
       saveAll();
-      requestAnimationFrame(skipOptionalPunctuation);
     } finally {
       runtime.rendering = false;
     }
@@ -815,22 +819,86 @@
     return sentence && sentence.tokens[runtime.state.tokenIndex];
   }
 
+  function getFlatTokens() {
+    if (!runtime.article) return [];
+    return runtime.article.sentences.flatMap(sentence =>
+      sentence.tokens.map(token => ({
+        sentenceIndex: sentence.index,
+        tokenIndex: token.tokenIndex,
+        globalIndex: token.globalIndex,
+        token
+      }))
+    );
+  }
+
+  function isInteractiveToken(token) {
+    if (!token) return false;
+    if (!isPunctuation(token)) return true;
+    return runtime.settings.punctuationPractice;
+  }
+
+  function findInteractivePosition(fromGlobalIndex, direction) {
+    const flat = getFlatTokens();
+    let index = flat.findIndex(item => item.globalIndex === fromGlobalIndex);
+    if (index < 0) return null;
+    index += direction;
+    while (index >= 0 && index < flat.length) {
+      if (isInteractiveToken(flat[index].token)) {
+        return {
+          sentenceIndex: flat[index].sentenceIndex,
+          tokenIndex: flat[index].tokenIndex
+        };
+      }
+      index += direction;
+    }
+    return null;
+  }
+
+  function firstInteractiveTokenInSentence(sentenceIndex) {
+    const sentence = runtime.article && runtime.article.sentences[sentenceIndex];
+    if (!sentence) return null;
+    const token = sentence.tokens.find(isInteractiveToken);
+    return token ? { sentenceIndex, tokenIndex: token.tokenIndex } : null;
+  }
+
+  function firstInteractivePosition() {
+    const item = getFlatTokens().find(entry => isInteractiveToken(entry.token));
+    return item ? { sentenceIndex: item.sentenceIndex, tokenIndex: item.tokenIndex } : null;
+  }
+
+  function ensureCurrentTokenInteractive(reason, direction = 1) {
+    if (runtime.state.completed) return true;
+    const token = currentToken();
+    if (!token || isInteractiveToken(token)) return true;
+    return setPracticePosition(
+      findInteractivePosition(token.globalIndex, direction) ||
+        findInteractivePosition(token.globalIndex, -direction) ||
+        firstInteractivePosition(),
+      reason
+    );
+  }
+
+  function setPracticePosition(position, reason = "unknown") {
+    if (!runtime.article || !position) return false;
+    const sentence = runtime.article.sentences[position.sentenceIndex];
+    if (!sentence || !sentence.tokens[position.tokenIndex]) return false;
+    runtime.state.sentenceIndex = position.sentenceIndex;
+    runtime.state.tokenIndex = position.tokenIndex;
+    runtime.state.typedInput = "";
+    runtime.state.completed = false;
+    els.typingInput.classList.remove("invalid");
+    resetTokenTimer();
+    render();
+    if (shouldFocusTyping()) focusTyping();
+    if (!runtime.state.paused) smartScrollToPracticeFrame(reason);
+    return true;
+  }
+
   function clampPosition() {
     if (!runtime.article) return;
     runtime.state.sentenceIndex = clamp(runtime.state.sentenceIndex, 0, runtime.article.sentences.length - 1);
     const sentence = currentSentence();
     runtime.state.tokenIndex = clamp(runtime.state.tokenIndex, 0, sentence.tokens.length - 1);
-  }
-
-  function skipOptionalPunctuation() {
-    if (!runtime.article || runtime.settings.punctuationPractice || runtime.state.completed || runtime.advancing || runtime.rendering) return;
-    let token = currentToken();
-    let guard = 0;
-    while (token && isPunctuation(token) && guard < 100) {
-      completeCurrentToken({ typed: "", skipped: false, autoPunctuation: true, silent: true });
-      token = currentToken();
-      guard += 1;
-    }
   }
 
   function isPunctuation(token) {
@@ -890,7 +958,7 @@
       const expected = resolveDelay(token);
       const typed = options.typed ?? runtime.state.typedInput ?? "";
       const normalized = normalizeRomaji(typed);
-      const skipped = Boolean(options.skipped) || (Boolean(options.timedOut) && !normalized);
+      const skipped = Boolean(options.skipped);
       const missed = Boolean(options.missed) || (Boolean(options.timedOut) && Boolean(normalized)) || els.typingInput.classList.contains("invalid");
       if (!options.silent) {
         const record = {
@@ -903,13 +971,14 @@
           missed,
           skipped,
           timedOut: Boolean(options.timedOut),
+          noInput: Boolean(options.noInput),
           manualSkip: Boolean(options.manualSkip),
           autoPunctuation: Boolean(options.autoPunctuation)
         };
         runtime.stats.records.push(record);
         if (skipped) runtime.stats.skipped.push(record);
         if (missed) runtime.stats.missed.push(record);
-        if (!missed && !skipped) runtime.stats.correct += 1;
+        if (!missed && !skipped && normalized) runtime.stats.correct += 1;
       }
       runtime.state.typedInput = "";
       els.typingInput.classList.remove("invalid");
@@ -920,21 +989,11 @@
   }
 
   function advanceToken() {
-    const sentence = currentSentence();
-    if (runtime.state.tokenIndex < sentence.tokens.length - 1) {
-      runtime.state.tokenIndex += 1;
-      resetTokenTimer();
-      render();
-      focusTyping();
-      return;
-    }
-    if (runtime.state.sentenceIndex < runtime.article.sentences.length - 1) {
-      runtime.state.sentenceIndex += 1;
-      runtime.state.tokenIndex = 0;
-      resetTokenTimer();
-      render();
-      focusTyping();
-      smartScrollToPracticeFrame("sentence-advance");
+    const token = currentToken();
+    if (!token) return;
+    const next = findInteractivePosition(token.globalIndex, 1);
+    if (next) {
+      setPracticePosition(next, "advance-token");
       return;
     }
     runtime.state.completed = true;
@@ -945,44 +1004,42 @@
   }
 
   function movePrevious(sentenceMode = false) {
-    if (!runtime.article || (runtime.modalOpen && !sentenceMode)) return;
+    if (!runtime.article || runtime.modalOpen) return;
     if (!runtime.settings.manualNavigation) return;
-    runtime.state.typedInput = "";
-    els.typingInput.classList.remove("invalid");
     if (sentenceMode) {
-      runtime.state.sentenceIndex = Math.max(0, runtime.state.sentenceIndex - 1);
-      runtime.state.tokenIndex = 0;
-    } else if (runtime.state.tokenIndex > 0) {
-      runtime.state.tokenIndex -= 1;
-    } else if (runtime.state.sentenceIndex > 0) {
-      runtime.state.sentenceIndex -= 1;
-      runtime.state.tokenIndex = runtime.article.sentences[runtime.state.sentenceIndex].tokens.length - 1;
+      moveToPreviousSentence();
+      return;
     }
-    runtime.state.completed = false;
-    resetTokenTimer();
-    render();
-    focusTyping();
-    if (!runtime.state.paused) smartScrollToPracticeFrame("manual-previous");
+    const token = currentToken();
+    if (!token) return;
+    setPracticePosition(findInteractivePosition(token.globalIndex, -1), "manual-previous");
   }
 
   function moveNext(sentenceMode = false) {
-    if (!runtime.article || (runtime.modalOpen && !sentenceMode)) return;
+    if (!runtime.article || runtime.modalOpen) return;
     if (!runtime.settings.manualNavigation) return;
     const typed = runtime.state.typedInput;
     runtime.state.typedInput = "";
     els.typingInput.classList.remove("invalid");
     if (sentenceMode) {
-      runtime.state.sentenceIndex = Math.min(runtime.article.sentences.length - 1, runtime.state.sentenceIndex + 1);
-      runtime.state.tokenIndex = 0;
+      moveToNextSentence();
+      return;
     } else {
       completeCurrentToken({ typed, skipped: true, manualSkip: true });
       return;
     }
-    runtime.state.completed = false;
-    resetTokenTimer();
-    render();
-    focusTyping();
-    if (!runtime.state.paused) smartScrollToPracticeFrame("manual-next");
+  }
+
+  function moveToPreviousSentence() {
+    const targetSentenceIndex = Math.max(0, runtime.state.sentenceIndex - 1);
+    const position = firstInteractiveTokenInSentence(targetSentenceIndex);
+    setPracticePosition(position, "manual-previous-sentence");
+  }
+
+  function moveToNextSentence() {
+    const targetSentenceIndex = Math.min(runtime.article.sentences.length - 1, runtime.state.sentenceIndex + 1);
+    const position = firstInteractiveTokenInSentence(targetSentenceIndex);
+    setPracticePosition(position, "manual-next-sentence");
   }
 
   function togglePause() {
@@ -1013,12 +1070,7 @@
 
   function restartSentence() {
     if (!runtime.article) return;
-    runtime.state.tokenIndex = 0;
-    runtime.state.typedInput = "";
-    runtime.state.completed = false;
-    resetTokenTimer();
-    render();
-    focusTyping();
+    setPracticePosition(firstInteractiveTokenInSentence(runtime.state.sentenceIndex), "restart-sentence");
   }
 
   function resetProgress() {
@@ -1026,6 +1078,7 @@
     if (runtime.speechSupported) window.speechSynthesis.cancel();
     runtime.state = createFreshState();
     runtime.stats = createFreshStats();
+    ensureCurrentTokenInteractive("reset-progress");
     resetTokenTimer();
     saveAll();
     render();
@@ -1043,6 +1096,7 @@
   }
 
   function shouldAutoAdvanceToken() {
+    if (!runtime.settings.automaticCaretMovement) return false;
     if (!runtime.article || runtime.modalOpen || runtime.state.paused || !runtime.state.timerStarted || runtime.state.completed) return false;
     if (runtime.advancing || runtime.rendering) return false;
     const token = currentToken();
@@ -1059,8 +1113,9 @@
     completeCurrentToken({
       typed,
       missed: !correct && Boolean(normalized),
-      skipped: !normalized,
-      timedOut: true
+      skipped: false,
+      timedOut: true,
+      noInput: !normalized
     });
   }
 
@@ -1233,6 +1288,7 @@
       openUploadDialog();
       return;
     }
+    const resumeOnSettingsClose = !runtime.state.paused && !runtime.state.completed;
     runtime.state.paused = true;
     render();
     openModal({
@@ -1262,7 +1318,7 @@
         const list2 = document.createElement("div");
         list2.className = "menu-list";
         addMenuButton(list2, "Session Report", () => { closeModal(); openReportDialog(false); });
-        addMenuButton(list2, "Settings", () => { closeModal(); openSettingsDialog(); });
+        addMenuButton(list2, "Settings", () => { closeModal(); openSettingsDialog({ resumeOnClose: resumeOnSettingsClose }); });
         body.append(list2);
       },
       actions: [{ label: "Close", kind: "quiet", onClick: closeModal }]
@@ -1378,7 +1434,16 @@
     return button;
   }
 
-  function openSettingsDialog() {
+  function closeSettingsDialog(resumeOnClose) {
+    if (resumeOnClose) {
+      resumePracticeFromModal("settings-close");
+      return;
+    }
+    closeModal();
+    render();
+  }
+
+  function openSettingsDialog({ resumeOnClose = false } = {}) {
     openModal({
       title: "Settings",
       message: "Changes save immediately.",
@@ -1400,10 +1465,10 @@
             applySettings();
             saveSettings();
             closeModal();
-            openSettingsDialog();
+            openSettingsDialog({ resumeOnClose });
           }
         }) },
-        { label: "Close", kind: "primary", onClick: () => { closeModal(); render(); } }
+        { label: "Close", kind: "primary", onClick: () => closeSettingsDialog(resumeOnClose) }
       ]
     });
   }
@@ -1414,13 +1479,18 @@
     section.append(numberSetting("Medium delay", "Expected time for normal words.", runtime.settings.delays.medium, value => runtime.settings.delays.medium = value));
     section.append(numberSetting("Long delay", "Expected time for names, dates, phrases, and long words.", runtime.settings.delays.long, value => runtime.settings.delays.long = value));
     section.append(selectSetting("Start timer", "Controls when active typing time begins.", runtime.settings.startTimer, [["first-input", "On first input"], ["manual", "Start manually"]], value => runtime.settings.startTimer = value));
+    section.append(toggleSetting("Automatic caret movement", "Move to the next token automatically when the token delay expires.", runtime.settings.automaticCaretMovement, value => runtime.settings.automaticCaretMovement = value));
     return section;
   }
 
   function settingsInputGroup() {
     const section = settingsSection("Input");
     section.append(toggleSetting("Romaji aliases", "Accept common alternate romaji forms such as si for shi.", runtime.settings.romajiAliases, value => runtime.settings.romajiAliases = value));
-    section.append(toggleSetting("Punctuation practice", "Require punctuation typing instead of auto-advancing punctuation.", runtime.settings.punctuationPractice, value => runtime.settings.punctuationPractice = value));
+    section.append(toggleSetting("Punctuation practice", "Require punctuation typing instead of auto-advancing punctuation.", runtime.settings.punctuationPractice, value => {
+      runtime.settings.punctuationPractice = value;
+      if (!value) ensureCurrentTokenInteractive("punctuation-setting");
+    }));
+    section.append(selectSetting("Typing input", "Controls whether the romaji input box is shown and focused.", runtime.settings.typingInputMode, [["desktop-only", "Desktop only"], ["always", "Always show"], ["hidden", "Hidden"]], value => runtime.settings.typingInputMode = value));
     section.append(selectSetting("Backspace behavior", "Controls editing within the current token.", runtime.settings.backspaceBehavior, [["edit-current", "Allow editing current token"], ["lock-mistakes", "Lock mistakes"]], value => runtime.settings.backspaceBehavior = value));
     section.append(toggleSetting("Manual navigation", "Enable ArrowLeft and ArrowRight caret movement.", runtime.settings.manualNavigation, value => runtime.settings.manualNavigation = value));
     return section;
@@ -1631,7 +1701,9 @@
         addReportCard(grid, "Active time", formatTime(runtime.state.activeElapsedMs));
         addReportCard(grid, "Progress", `${Math.round(getProgress().percent)}%`);
         addReportCard(grid, "Completed tokens", `${report.completedTokens} / ${report.totalTokens}`);
-        addReportCard(grid, "Accuracy", `${report.accuracy}%`);
+        addReportCard(grid, "Typed accuracy", report.typedAccuracy == null ? "No typed attempts" : `${report.typedAccuracy}%`);
+        addReportCard(grid, "Auto-advanced", String(report.autoAdvancedTokens));
+        addReportCard(grid, "Missed", String(report.missedCount));
         body.append(grid);
         body.append(tokenSection("Slow tokens", report.slowTokens));
         body.append(tokenSection("Missed tokens", report.missedTokens));
@@ -1656,21 +1728,25 @@
   function buildReport() {
     const progress = getProgress();
     const completedRecords = runtime.stats.records.filter(record => !record.autoPunctuation);
+    const typedAttempts = completedRecords.filter(record => normalizeRomaji(record.typed));
+    const typedCorrect = typedAttempts.filter(record => !record.missed && !record.skipped && !record.manualSkip && !record.timedOut).length;
+    const autoAdvancedRecords = completedRecords.filter(record => record.timedOut && record.noInput);
     const slowTokens = completedRecords
-      .filter(record => record.elapsed > record.expected)
+      .filter(record => !record.noInput && record.elapsed > record.expected)
       .sort((a, b) => (b.elapsed - b.expected) - (a.elapsed - a.expected))
       .slice(0, 8);
     const missedTokens = completedRecords.filter(record => record.missed).slice(-8);
-    const skippedTokens = completedRecords.filter(record => record.skipped || record.manualSkip).slice(-8);
+    const skippedTokens = completedRecords.filter(record => record.manualSkip || (record.skipped && !record.noInput)).slice(-8);
     const candidates = [...slowTokens, ...missedTokens, ...skippedTokens]
       .filter((item, index, arr) => arr.findIndex(candidate => candidate.tokenId === item.tokenId) === index)
       .slice(0, 8);
-    const attempted = completedRecords.length || 0;
-    const accuracy = attempted ? Math.round((runtime.stats.correct / attempted) * 100) : 100;
+    const typedAccuracy = typedAttempts.length ? Math.round((typedCorrect / typedAttempts.length) * 100) : null;
     return {
       totalTokens: progress.totalTokens,
       completedTokens: progress.completedTokens,
-      accuracy,
+      typedAccuracy,
+      autoAdvancedTokens: autoAdvancedRecords.length,
+      missedCount: missedTokens.length,
       slowTokens,
       missedTokens,
       skippedTokens,
@@ -1741,6 +1817,7 @@
   function tokenResultLabel(record) {
     if (record.autoPunctuation) return "Punctuation";
     if (record.manualSkip) return "Skipped";
+    if (record.timedOut && record.noInput) return "Auto-advanced";
     if (record.timedOut && record.skipped) return "Timed out";
     if (record.timedOut && record.missed) return "Timed out";
     if (record.missed) return "Missed";
@@ -1926,6 +2003,34 @@
     document.documentElement.style.setProperty("--font-scale", String(font.scale));
     document.documentElement.style.setProperty("--caret-duration", CARET_DURATIONS[runtime.settings.caretAnimation] || CARET_DURATIONS.normal);
     document.documentElement.classList.toggle("caret-off", runtime.settings.caretAnimation === "off");
+    const showTypingInput = shouldShowTypingInput();
+    document.body.classList.toggle("typing-input-hidden", !showTypingInput);
+    document.body.classList.toggle("typing-input-visible", showTypingInput);
+    els.typingInput.setAttribute("aria-hidden", showTypingInput ? "false" : "true");
+    els.typingInput.tabIndex = showTypingInput ? 0 : -1;
+    if (!showTypingInput && document.activeElement === els.typingInput) {
+      els.typingInput.blur();
+    }
+  }
+
+  function isMobileViewport() {
+    return window.matchMedia("(max-width: 700px)").matches;
+  }
+
+  function shouldShowTypingInput() {
+    const mode = runtime.settings.typingInputMode || "desktop-only";
+    if (mode === "always") return true;
+    if (mode === "hidden") return false;
+    return !isMobileViewport();
+  }
+
+  function shouldFocusTyping() {
+    return Boolean(
+      runtime.article &&
+      !runtime.modalOpen &&
+      !runtime.state.paused &&
+      shouldShowTypingInput()
+    );
   }
 
   function formatTime(ms) {
@@ -1936,9 +2041,10 @@
   }
 
   function focusTyping() {
-    if (runtime.article && !runtime.modalOpen && !runtime.state.paused) {
-      requestAnimationFrame(() => els.typingInput.focus());
-    }
+    if (!shouldFocusTyping()) return;
+    requestAnimationFrame(() => {
+      if (shouldFocusTyping()) els.typingInput.focus();
+    });
   }
 
   function clearNode(node) {
