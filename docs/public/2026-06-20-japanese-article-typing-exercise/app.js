@@ -1783,8 +1783,11 @@
   }
 
   function renderSpeechButton() {
-    els.speakButton.hidden = !(runtime.article && runtime.speechSupported && runtime.japaneseVoice);
-    els.activeSpeakButton.hidden = !(runtime.article && canSpeakJapanese());
+    const speechAvailable = Boolean(runtime.article && canSpeakJapanese());
+    els.speakButton.hidden = !speechAvailable;
+    document.querySelectorAll(".sentence-speak-button").forEach(button => {
+      button.hidden = !speechAvailable;
+    });
   }
 
   function buildMeaningSentence(sentence) {
