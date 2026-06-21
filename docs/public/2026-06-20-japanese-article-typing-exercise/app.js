@@ -67,9 +67,12 @@
     menuButton: document.querySelector("#menu-button"),
     emptyState: document.querySelector("#empty-state"),
     emptyUploadButton: document.querySelector("#empty-upload-button"),
+    practiceScroll: document.querySelector("#practice-scroll"),
     practiceArea: document.querySelector("#practice-area"),
     articleArt: document.querySelector("#article-art"),
     previousSentence: document.querySelector("#previous-sentence"),
+    activeSentence: document.querySelector("#active-sentence"),
+    activeSpeakButton: document.querySelector("#active-speak-button"),
     activeSentenceLine: document.querySelector("#active-sentence-line"),
     typingInput: document.querySelector("#typing-input"),
     remainingText: document.querySelector("#remaining-text"),
@@ -100,7 +103,10 @@
     japaneseVoice: null,
     speechSupported: "speechSynthesis" in window,
     tokenStartActiveMs: 0,
-    lastTickAt: performance.now()
+    lastTickAt: performance.now(),
+    advancing: false,
+    rendering: false,
+    imageVisible: false
   };
 
   function createFreshState() {
@@ -109,7 +115,7 @@
       tokenIndex: 0,
       typedInput: "",
       paused: false,
-      timerStarted: false,
+      timerStarted: true,
       activeElapsedMs: 0,
       completed: false
     };
@@ -149,6 +155,7 @@
     });
     els.menuButton.addEventListener("click", () => openMenu());
     els.speakButton.addEventListener("click", () => speakActiveSentence());
+    els.activeSpeakButton.addEventListener("click", () => speakActiveSentence());
     els.previousButton.addEventListener("click", event => movePrevious(event.shiftKey));
     els.nextButton.addEventListener("click", event => moveNext(event.shiftKey));
     els.pauseButton.addEventListener("click", togglePause);
@@ -236,6 +243,7 @@
       runtime.state = { ...createFreshState(), ...safeReadJson(STORAGE_KEYS.state, {}) };
       runtime.stats = { ...createFreshStats(), ...safeReadJson(STORAGE_KEYS.stats, {}) };
       runtime.state.typedInput = localStorage.getItem(STORAGE_KEYS.typedInput) || runtime.state.typedInput || "";
+      if (!runtime.state.paused && !runtime.state.completed) runtime.state.timerStarted = true;
       clampPosition();
       resetTokenTimer();
       console.info("Restored saved Japanese typing article", {
@@ -329,6 +337,7 @@
     saveAll();
     render();
     focusTyping();
+    smartScrollToPracticeFrame("article-import", true);
   }
 
   function parseLesson(source) {
@@ -534,40 +543,49 @@
   }
 
   function render() {
+    if (runtime.rendering) return;
+    runtime.rendering = true;
     applySettings();
-    if (!runtime.article) {
-      renderEmpty();
-      return;
+    document.body.classList.toggle("has-article", Boolean(runtime.article));
+    try {
+      if (!runtime.article) {
+        renderEmpty();
+        return;
+      }
+      clampPosition();
+      const article = runtime.article;
+      const sentence = currentSentence();
+      const progress = getProgress();
+      els.title.textContent = article.title;
+      els.subtitle.textContent = "Zen タイピング";
+      els.emptyState.hidden = true;
+      els.practiceScroll.hidden = false;
+      els.practiceArea.hidden = false;
+      els.bottomControls.hidden = false;
+      els.sessionMeta.hidden = false;
+      els.progressPercent.textContent = `${Math.round(progress.percent)}%`;
+      els.progressFill.style.width = `${progress.percent}%`;
+      els.timerValue.textContent = formatTime(runtime.state.activeElapsedMs);
+      els.characterCount.textContent = `${progress.completedChars} / ${progress.totalChars}`;
+      els.pauseButton.textContent = runtime.state.paused ? "▶　再開" : "▮▮　一時停止";
+      els.typingInput.value = runtime.state.typedInput || "";
+      renderImage();
+      renderPrevious();
+      renderActiveSentence(sentence);
+      renderRemaining();
+      renderSpeechButton();
+      saveAll();
+      requestAnimationFrame(skipOptionalPunctuation);
+    } finally {
+      runtime.rendering = false;
     }
-    clampPosition();
-    skipOptionalPunctuation();
-    const article = runtime.article;
-    const sentence = currentSentence();
-    const progress = getProgress();
-    els.title.textContent = article.title;
-    els.subtitle.textContent = "Zen タイピング";
-    els.emptyState.hidden = true;
-    els.practiceArea.hidden = false;
-    els.bottomControls.hidden = false;
-    els.sessionMeta.hidden = false;
-    els.progressPercent.textContent = `${Math.round(progress.percent)}%`;
-    els.progressFill.style.width = `${progress.percent}%`;
-    els.timerValue.textContent = formatTime(runtime.state.activeElapsedMs);
-    els.characterCount.textContent = `${progress.completedChars} / ${progress.totalChars}`;
-    els.pauseButton.textContent = runtime.state.paused ? "▶　再開" : "▮▮　一時停止";
-    els.typingInput.value = runtime.state.typedInput || "";
-    renderImage();
-    renderPrevious();
-    renderActiveSentence(sentence);
-    renderRemaining();
-    renderSpeechButton();
-    saveAll();
   }
 
   function renderEmpty() {
     els.title.textContent = "Japanese Writing Practice";
     els.subtitle.textContent = "Zen タイピング";
     els.emptyState.hidden = false;
+    els.practiceScroll.hidden = true;
     els.practiceArea.hidden = true;
     els.bottomControls.hidden = true;
     els.sessionMeta.hidden = true;
@@ -585,7 +603,13 @@
       return;
     }
     els.previousSentence.classList.remove("empty");
-    els.previousSentence.append(document.createTextNode(previous.text));
+    const row = document.createElement("div");
+    row.className = "sentence-zone-row";
+    row.append(createSentenceSpeakButton(previous.index, "Speak previous sentence", "small"));
+    const text = document.createElement("span");
+    text.textContent = previous.text;
+    row.append(text);
+    els.previousSentence.append(row);
     const label = document.createElement("span");
     label.className = "zone-label";
     label.textContent = "前の文";
@@ -594,6 +618,7 @@
 
   function renderActiveSentence(sentence) {
     clearNode(els.activeSentenceLine);
+    els.activeSpeakButton.hidden = !canSpeakJapanese();
     sentence.tokens.forEach(token => {
       const span = document.createElement("span");
       span.className = "token";
@@ -628,16 +653,13 @@
     clearNode(els.remainingText);
     const remaining = runtime.article.sentences.slice(runtime.state.sentenceIndex + 1);
     if (!remaining.length) return;
-    const paragraphMap = new Map();
     remaining.forEach(sentence => {
-      const key = sentence.paragraphIndex ?? sentence.index;
-      if (!paragraphMap.has(key)) paragraphMap.set(key, []);
-      paragraphMap.get(key).push(sentence.text);
-    });
-    paragraphMap.forEach(lines => {
       const p = document.createElement("p");
-      p.textContent = lines.join("\n");
-      p.style.whiteSpace = "pre-line";
+      p.className = "remaining-sentence-row";
+      p.append(createSentenceSpeakButton(sentence.index, "Speak this remaining sentence", "small"));
+      const text = document.createElement("span");
+      text.textContent = sentence.text;
+      p.append(text);
       els.remainingText.append(p);
     });
   }
@@ -647,21 +669,29 @@
     const ref = currentImageRef();
     if (!runtime.settings.showArticleImage || !ref) {
       els.articleArt.classList.add("empty");
+      runtime.imageVisible = false;
+      els.practiceArea.classList.add("no-article-image");
       return;
     }
     const asset = runtime.article.assets[ref.asset];
     if (!asset) {
       els.articleArt.classList.add("empty");
+      runtime.imageVisible = false;
+      els.practiceArea.classList.add("no-article-image");
       console.warn("Image reference has no usable asset", { asset: ref.asset });
       return;
     }
     els.articleArt.classList.remove("empty");
+    runtime.imageVisible = true;
+    els.practiceArea.classList.remove("no-article-image");
     const img = document.createElement("img");
     img.src = asset.data;
     img.alt = asset.alt;
     img.addEventListener("error", () => {
       console.warn("Article image failed to load", { asset: asset.asset, mime: asset.mime });
       els.articleArt.classList.add("empty");
+      runtime.imageVisible = false;
+      els.practiceArea.classList.add("no-article-image");
       clearNode(els.articleArt);
     });
     els.articleArt.append(img);
@@ -699,7 +729,7 @@
   }
 
   function skipOptionalPunctuation() {
-    if (!runtime.article || runtime.settings.punctuationPractice || runtime.state.completed) return;
+    if (!runtime.article || runtime.settings.punctuationPractice || runtime.state.completed || runtime.advancing || runtime.rendering) return;
     let token = currentToken();
     let guard = 0;
     while (token && isPunctuation(token) && guard < 100) {
@@ -732,8 +762,6 @@
     els.typingInput.classList.toggle("invalid", Boolean(normalized) && !prefixOk);
     if (accepted.includes(normalized)) {
       completeCurrentToken({ typed, missed: false });
-    } else if (normalized && !prefixOk && !runtime.stats.missed.some(item => item.tokenId === token.id)) {
-      runtime.stats.missed.push({ tokenId: token.id, text: token.text, romaji: token.romaji, typed });
     }
     saveAll();
   }
@@ -759,30 +787,42 @@
   }
 
   function completeCurrentToken(options = {}) {
+    if (runtime.advancing) return;
     const token = currentToken();
     if (!token) return;
-    const elapsed = Math.max(0, runtime.state.activeElapsedMs - runtime.tokenStartActiveMs);
-    const expected = resolveDelay(token);
-    const skipped = Boolean(options.skipped);
-    const missed = Boolean(options.missed) || els.typingInput.classList.contains("invalid");
-    if (!options.silent) {
-      runtime.stats.records.push({
-        tokenId: token.id,
-        text: token.text,
-        romaji: token.romaji,
-        typed: options.typed || runtime.state.typedInput || "",
-        elapsed,
-        expected,
-        missed,
-        skipped,
-        autoPunctuation: Boolean(options.autoPunctuation)
-      });
-      if (skipped) runtime.stats.skipped.push({ tokenId: token.id, text: token.text, romaji: token.romaji });
-      if (!missed && !skipped) runtime.stats.correct += 1;
+    runtime.advancing = true;
+    try {
+      const elapsed = Math.max(0, runtime.state.activeElapsedMs - runtime.tokenStartActiveMs);
+      const expected = resolveDelay(token);
+      const typed = options.typed ?? runtime.state.typedInput ?? "";
+      const normalized = normalizeRomaji(typed);
+      const skipped = Boolean(options.skipped) || (Boolean(options.timedOut) && !normalized);
+      const missed = Boolean(options.missed) || (Boolean(options.timedOut) && Boolean(normalized)) || els.typingInput.classList.contains("invalid");
+      if (!options.silent) {
+        const record = {
+          tokenId: token.id,
+          text: token.text,
+          romaji: token.romaji,
+          typed,
+          elapsed,
+          expected,
+          missed,
+          skipped,
+          timedOut: Boolean(options.timedOut),
+          manualSkip: Boolean(options.manualSkip),
+          autoPunctuation: Boolean(options.autoPunctuation)
+        };
+        runtime.stats.records.push(record);
+        if (skipped) runtime.stats.skipped.push(record);
+        if (missed) runtime.stats.missed.push(record);
+        if (!missed && !skipped) runtime.stats.correct += 1;
+      }
+      runtime.state.typedInput = "";
+      els.typingInput.classList.remove("invalid");
+      advanceToken();
+    } finally {
+      runtime.advancing = false;
     }
-    runtime.state.typedInput = "";
-    els.typingInput.classList.remove("invalid");
-    advanceToken();
   }
 
   function advanceToken() {
@@ -800,6 +840,7 @@
       resetTokenTimer();
       render();
       focusTyping();
+      smartScrollToPracticeFrame("sentence-advance");
       return;
     }
     runtime.state.completed = true;
@@ -827,24 +868,27 @@
     resetTokenTimer();
     render();
     focusTyping();
+    if (!runtime.state.paused) smartScrollToPracticeFrame("manual-previous");
   }
 
   function moveNext(sentenceMode = false) {
     if (!runtime.article || (runtime.modalOpen && !sentenceMode)) return;
     if (!runtime.settings.manualNavigation) return;
+    const typed = runtime.state.typedInput;
     runtime.state.typedInput = "";
     els.typingInput.classList.remove("invalid");
     if (sentenceMode) {
       runtime.state.sentenceIndex = Math.min(runtime.article.sentences.length - 1, runtime.state.sentenceIndex + 1);
       runtime.state.tokenIndex = 0;
     } else {
-      completeCurrentToken({ typed: runtime.state.typedInput, skipped: true });
+      completeCurrentToken({ typed, skipped: true, manualSkip: true });
       return;
     }
     runtime.state.completed = false;
     resetTokenTimer();
     render();
     focusTyping();
+    if (!runtime.state.paused) smartScrollToPracticeFrame("manual-next");
   }
 
   function togglePause() {
@@ -856,7 +900,21 @@
     runtime.lastTickAt = performance.now();
     saveAll();
     render();
-    if (!runtime.state.paused) focusTyping();
+    if (!runtime.state.paused) {
+      focusTyping();
+      smartScrollToPracticeFrame("resume", true);
+    }
+  }
+
+  function resumePracticeFromModal(reason) {
+    closeModal();
+    if (!runtime.article) return;
+    runtime.state.paused = false;
+    runtime.state.timerStarted = true;
+    runtime.lastTickAt = performance.now();
+    render();
+    focusTyping();
+    smartScrollToPracticeFrame(reason, true);
   }
 
   function restartSentence() {
@@ -885,12 +943,54 @@
     if (runtime.article && !runtime.modalOpen && !runtime.state.paused && runtime.state.timerStarted && !runtime.state.completed) {
       runtime.state.activeElapsedMs += now - runtime.lastTickAt;
       els.timerValue.textContent = formatTime(runtime.state.activeElapsedMs);
+      if (shouldAutoAdvanceToken()) completeTimedOutToken();
     }
     runtime.lastTickAt = now;
   }
 
+  function shouldAutoAdvanceToken() {
+    if (!runtime.article || runtime.modalOpen || runtime.state.paused || !runtime.state.timerStarted || runtime.state.completed) return false;
+    if (runtime.advancing || runtime.rendering) return false;
+    const token = currentToken();
+    if (!token) return false;
+    return runtime.state.activeElapsedMs - runtime.tokenStartActiveMs >= resolveDelay(token);
+  }
+
+  function completeTimedOutToken() {
+    const token = currentToken();
+    if (!token) return;
+    const typed = runtime.state.typedInput || "";
+    const normalized = normalizeRomaji(typed);
+    const correct = acceptedInputs(token).includes(normalized);
+    completeCurrentToken({
+      typed,
+      missed: !correct && Boolean(normalized),
+      skipped: !normalized,
+      timedOut: true
+    });
+  }
+
   function resetTokenTimer() {
     runtime.tokenStartActiveMs = runtime.state.activeElapsedMs;
+  }
+
+  function smartScrollToPracticeFrame(reason = "unknown", force = false) {
+    if (!runtime.article || runtime.modalOpen || runtime.state.completed) return;
+    if (runtime.state.paused && !force) return;
+    const target = runtime.state.sentenceIndex > 0 ? els.previousSentence : els.activeSentence;
+    if (!target || !els.practiceScroll) return;
+    requestAnimationFrame(() => {
+      const scrollRect = els.practiceScroll.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      const outOfView = targetRect.top < scrollRect.top + 8 || targetRect.bottom > scrollRect.bottom - 24;
+      if (!force && !outOfView) return;
+      console.info("Smart scroll practice frame", { reason, sentenceIndex: runtime.state.sentenceIndex });
+      target.scrollIntoView({
+        block: "start",
+        inline: "nearest",
+        behavior: runtime.settings.caretAnimation === "off" ? "auto" : "smooth"
+      });
+    });
   }
 
   function resolveDelay(token) {
@@ -1051,7 +1151,7 @@
       body: body => {
         const list = document.createElement("div");
         list.className = "menu-list";
-        addMenuButton(list, "Resume", () => { closeModal(); runtime.state.paused = false; runtime.state.timerStarted = true; render(); focusTyping(); });
+        addMenuButton(list, "Resume", () => resumePracticeFromModal("menu-resume"));
         addMenuButton(list, "Restart Sentence", () => { closeModal(); restartSentence(); });
         addMenuButton(list, "Reset Current Article Progress", () => {
           closeModal();
@@ -1406,6 +1506,7 @@
     openModal({
       title: "Session Report",
       message: completed ? "Article complete." : "Current practice progress.",
+      size: "report-modal",
       body: body => {
         const grid = document.createElement("div");
         grid.className = "report-grid";
@@ -1416,11 +1517,11 @@
         body.append(grid);
         body.append(tokenSection("Slow tokens", report.slowTokens));
         body.append(tokenSection("Missed tokens", report.missedTokens));
-        body.append(tokenSection("Skipped tokens", runtime.stats.skipped));
+        body.append(tokenSection("Skipped tokens", report.skippedTokens));
         body.append(tokenSection("Review candidates", report.reviewCandidates));
       },
       actions: [
-        { label: "Return to Practice", kind: "primary", onClick: () => { closeModal(); runtime.state.paused = false; runtime.state.timerStarted = true; render(); focusTyping(); } },
+        { label: "Return to Practice", kind: "primary", onClick: () => resumePracticeFromModal("report-return") },
         { label: "Restart Article", kind: "danger", onClick: () => openConfirmDialog({
           title: "Reset current article progress?",
           message: "This keeps the current article but clears practice progress, timing, typed input, and session statistics.",
@@ -1441,8 +1542,9 @@
       .filter(record => record.elapsed > record.expected)
       .sort((a, b) => (b.elapsed - b.expected) - (a.elapsed - a.expected))
       .slice(0, 8);
-    const missedTokens = runtime.stats.missed.slice(-8);
-    const candidates = [...slowTokens, ...missedTokens]
+    const missedTokens = completedRecords.filter(record => record.missed).slice(-8);
+    const skippedTokens = completedRecords.filter(record => record.skipped || record.manualSkip).slice(-8);
+    const candidates = [...slowTokens, ...missedTokens, ...skippedTokens]
       .filter((item, index, arr) => arr.findIndex(candidate => candidate.tokenId === item.tokenId) === index)
       .slice(0, 8);
     const attempted = completedRecords.length || 0;
@@ -1453,6 +1555,7 @@
       accuracy,
       slowTokens,
       missedTokens,
+      skippedTokens,
       reviewCandidates: candidates
     };
   }
@@ -1485,7 +1588,7 @@
     table.className = "token-table";
     const thead = document.createElement("thead");
     const headRow = document.createElement("tr");
-    ["Token", "Romaji", "Time"].forEach(label => {
+    ["Token", "Romaji", "Result", "Time", "Expected"].forEach(label => {
       const th = document.createElement("th");
       th.textContent = label;
       headRow.append(th);
@@ -1494,7 +1597,13 @@
     const tbody = document.createElement("tbody");
     rows.forEach(row => {
       const tr = document.createElement("tr");
-      [row.text || "", row.romaji || "", row.elapsed ? `${(row.elapsed / 1000).toFixed(1)}s` : ""].forEach(value => {
+      [
+        row.text || "",
+        row.romaji || "",
+        tokenResultLabel(row),
+        row.elapsed != null ? `${(row.elapsed / 1000).toFixed(1)}s` : "",
+        row.expected != null ? `${(row.expected / 1000).toFixed(1)}s` : ""
+      ].forEach(value => {
         const td = document.createElement("td");
         td.textContent = value;
         tr.append(td);
@@ -1504,6 +1613,16 @@
     table.append(thead, tbody);
     section.append(table);
     return section;
+  }
+
+  function tokenResultLabel(record) {
+    if (record.autoPunctuation) return "Punctuation";
+    if (record.manualSkip) return "Skipped";
+    if (record.timedOut && record.skipped) return "Timed out";
+    if (record.timedOut && record.missed) return "Timed out";
+    if (record.missed) return "Missed";
+    if (record.skipped) return "Skipped";
+    return "Correct";
   }
 
   function openMessageDialog(title, message) {
@@ -1579,7 +1698,12 @@
     clearNode(els.modalRoot);
     if (runtime.modalOpen) {
       runtime.modalOpen = false;
-      if (resumeTimer) runtime.lastTickAt = performance.now();
+      if (resumeTimer) {
+        runtime.lastTickAt = performance.now();
+        if (runtime.article && !runtime.state.paused && runtime.state.timerStarted) {
+          smartScrollToPracticeFrame("modal-close");
+        }
+      }
     }
   }
 
@@ -1608,13 +1732,20 @@
 
   function renderSpeechButton() {
     els.speakButton.hidden = !(runtime.article && runtime.speechSupported && runtime.japaneseVoice);
+    els.activeSpeakButton.hidden = !(runtime.article && canSpeakJapanese());
   }
 
   function speakActiveSentence() {
-    if (!runtime.article || !runtime.speechSupported || !runtime.japaneseVoice) return;
+    speakSentence(runtime.state.sentenceIndex);
+  }
+
+  function speakSentence(sentenceIndex) {
+    if (!runtime.article || !canSpeakJapanese()) return;
+    const sentence = runtime.article.sentences[sentenceIndex];
+    if (!sentence) return;
     try {
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(currentSentence().text);
+      const utterance = new SpeechSynthesisUtterance(sentence.text);
       utterance.lang = "ja-JP";
       utterance.voice = runtime.japaneseVoice;
       utterance.rate = Number(runtime.settings.speechRate) || 1;
@@ -1623,6 +1754,21 @@
       console.warn("Text-to-speech failed", error);
       showToast("Japanese speech could not start.");
     }
+  }
+
+  function canSpeakJapanese() {
+    return Boolean(runtime.speechSupported && runtime.japaneseVoice);
+  }
+
+  function createSentenceSpeakButton(sentenceIndex, label, size = "") {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `sentence-speak-button ${size}`.trim();
+    button.textContent = "音";
+    button.setAttribute("aria-label", label);
+    button.hidden = !canSpeakJapanese();
+    button.addEventListener("click", () => speakSentence(sentenceIndex));
+    return button;
   }
 
   function applySettings() {
