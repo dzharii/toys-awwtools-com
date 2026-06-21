@@ -19,6 +19,13 @@ Current structure:
 ```txt
 D:.
 |   index.html
+|   styles.css
+|   app.js
+|   favicon.ico
+|
+\---texts
+|       index.xml
+|       soccer-event-2026-06-20.jp-lesson.xml
 |
 \---specs
     |   010-main-specification.md
@@ -55,6 +62,8 @@ app.js
 ```
 
 Existing files may be refactored if that improves quality. Keep the app deployable as static files through GitHub Pages.
+
+Sample lessons live under `texts/`. The built-in sample dropdown reads `texts/index.xml`. When adding a new sample lesson file under `texts/`, add a matching entry to `texts/index.xml` with its title, relative `href`, and short description.
 
 ---
 

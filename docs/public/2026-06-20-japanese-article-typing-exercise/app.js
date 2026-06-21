@@ -67,6 +67,8 @@
     menuButton: document.querySelector("#menu-button"),
     emptyState: document.querySelector("#empty-state"),
     emptyUploadButton: document.querySelector("#empty-upload-button"),
+    sampleTextSelect: document.querySelector("#sample-text-select"),
+    sampleTextStatus: document.querySelector("#sample-text-status"),
     practiceScroll: document.querySelector("#practice-scroll"),
     practiceArea: document.querySelector("#practice-area"),
     articleArt: document.querySelector("#article-art"),
@@ -101,6 +103,7 @@
     modalOpen: false,
     dropDepth: 0,
     pendingImport: null,
+    sampleTexts: [],
     japaneseVoice: null,
     speechSupported: "speechSynthesis" in window,
     tokenStartActiveMs: 0,
@@ -145,10 +148,12 @@
     detectSpeechVoices();
     setInterval(tick, 500);
     render();
+    loadSampleTextIndex();
   }
 
   function bindEvents() {
     els.emptyUploadButton.addEventListener("click", () => openFilePicker());
+    els.sampleTextSelect.addEventListener("change", () => handleSampleTextSelect());
     els.fileInput.addEventListener("change", () => {
       const file = els.fileInput.files && els.fileInput.files[0];
       els.fileInput.value = "";
@@ -281,6 +286,86 @@
       showToast("This article file could not be read.");
     };
     reader.readAsText(file, "utf-8");
+  }
+
+  async function loadSampleTextIndex() {
+    setSampleTextStatus("Loading samples...");
+    try {
+      const indexUrl = new URL("texts/index.xml", window.location.href);
+      const response = await fetch(indexUrl, { cache: "no-cache" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const source = await response.text();
+      runtime.sampleTexts = parseSampleTextIndex(source, indexUrl);
+      renderSampleTextSelect();
+      console.info("Sample text index loaded", {
+        count: runtime.sampleTexts.length,
+        indexUrl: indexUrl.href
+      });
+    } catch (error) {
+      runtime.sampleTexts = [];
+      renderSampleTextSelect();
+      setSampleTextStatus("Sample list could not be loaded.");
+      console.warn("Sample text index load failed", error);
+    }
+  }
+
+  function parseSampleTextIndex(source, indexUrl) {
+    const doc = new DOMParser().parseFromString(source, "application/xml");
+    const parseError = doc.querySelector("parsererror");
+    if (parseError) throw new Error("Invalid sample text index XML.");
+    return [...doc.querySelectorAll("text")]
+      .map((item, index) => {
+        const href = readAttr(item, "href");
+        const title = readAttr(item, "title") || href || `Sample ${index + 1}`;
+        const description = readAttr(item, "description");
+        if (!href) return null;
+        return {
+          title,
+          description,
+          href: new URL(href, indexUrl).href
+        };
+      })
+      .filter(Boolean);
+  }
+
+  function renderSampleTextSelect() {
+    clearNode(els.sampleTextSelect);
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = runtime.sampleTexts.length ? "Choose a sample article" : "No samples available";
+    els.sampleTextSelect.append(placeholder);
+    runtime.sampleTexts.forEach(sample => {
+      const option = document.createElement("option");
+      option.value = sample.href;
+      option.textContent = sample.title;
+      option.title = sample.description || sample.title;
+      els.sampleTextSelect.append(option);
+    });
+    els.sampleTextSelect.disabled = !runtime.sampleTexts.length;
+    setSampleTextStatus(runtime.sampleTexts.length ? "" : "No sample articles are listed yet.");
+  }
+
+  async function handleSampleTextSelect() {
+    const href = els.sampleTextSelect.value;
+    if (!href) return;
+    const sample = runtime.sampleTexts.find(item => item.href === href);
+    els.sampleTextSelect.value = "";
+    setSampleTextStatus("Loading sample...");
+    try {
+      const response = await fetch(href, { cache: "no-cache" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const source = await response.text();
+      handleImportedSource(source, sample ? sample.title : "Sample article");
+      setSampleTextStatus(sample ? `Loaded sample: ${sample.title}` : "Loaded sample.");
+      console.info("Sample text loaded", { href, title: sample?.title || "" });
+    } catch (error) {
+      setSampleTextStatus("Sample article could not be loaded.");
+      console.warn("Sample text load failed", { href, error });
+    }
+  }
+
+  function setSampleTextStatus(message) {
+    els.sampleTextStatus.textContent = message;
   }
 
   function handleImportedSource(source, fileName) {
@@ -1123,7 +1208,7 @@
       body: modalBody => {
         const dropBox = document.createElement("div");
         dropBox.className = "report-card";
-        dropBox.textContent = "Drop a .jp-lesson.html file here, or choose a file below.";
+        dropBox.textContent = "Drop a .jp-lesson.xml file here, or choose a file below.";
         dropBox.addEventListener("dragover", event => {
           event.preventDefault();
           event.dataTransfer.dropEffect = "copy";

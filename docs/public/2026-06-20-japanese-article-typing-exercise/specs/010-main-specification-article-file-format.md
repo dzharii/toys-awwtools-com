@@ -17,13 +17,13 @@ The format is HTML-compatible custom markup. It uses custom elements such as `jp
 Recommended file extension:
 
 ```txt
-.jp-lesson.html
+.jp-lesson.xml
 ```
 
 Example filename:
 
 ```txt
-ueno-cinema-2026-06-19.jp-lesson.html
+ueno-cinema-2026-06-19.jp-lesson.xml
 ```
 
 The format intentionally does not require `id` attributes on lessons, sections, sentences, or tokens. This is an important authoring decision. Manually writing IDs for every token is too tedious and makes article creation harder than necessary. The app should generate internal identifiers automatically from document order.
