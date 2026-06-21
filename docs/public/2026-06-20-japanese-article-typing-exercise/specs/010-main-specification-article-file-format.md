@@ -806,6 +806,46 @@ The app must not execute image-related scripts. Images are data only.
 
 ---
 
+O01 Recommended Image Dimensions
+
+---
+
+Image dimensions are authoring guidance, not validation rules. The app should keep accepting any supported image data URL that passes normal image validation.
+
+For `placement="side"` images, the current practice layout renders the same asset in two different shapes:
+
+| Context | Approximate rendered shape | Notes |
+| ------- | -------------------------- | ----- |
+| Desktop side column | 250-425 px wide and at least 520 px tall | Tall editorial panel beside the reading column |
+| Mobile banner | Viewport width minus page padding and about 178 px tall | Wide compact banner above the sentence flow |
+
+The image element uses a cover-style crop in the app layout. This means the same source image may crop differently on desktop and mobile.
+
+Recommended embedded source size:
+
+| Use | Recommended dimensions |
+| --- | ---------------------- |
+| Default article image | About 720 x 1180 px portrait |
+| Acceptable portrait range | 640-900 px wide and 1000-1400 px tall |
+| Minimum practical size | About 420 x 530 px |
+
+`420 x 530` is a useful lower bound for small files and quick generated illustrations, but it should not be treated as the ideal source size. A source closer to `720 x 1180` gives the desktop side image enough vertical detail and still compresses well as JPEG or WebP.
+
+Avoid very small images below about 420 px wide for article artwork. Avoid landscape-only compositions for `placement="side"` unless the image is designed to survive heavy vertical cropping.
+
+Composition guidance:
+
+| Rule | Reason |
+| ---- | ------ |
+| Keep the main subject in the center 60-70 percent of the image | Desktop and mobile crops remove different edges |
+| Avoid important text near image edges | Captions, signs, and UI details may be cropped |
+| Make the center horizontal band meaningful | Mobile shows the image as a short wide banner |
+| Prefer quiet editorial artwork or low-saturation photos | The image should support the Zen reading surface |
+
+File-size guidance still applies. A generated or photo-like `720 x 1180` image usually fits the existing larger article image target better as JPEG or WebP than as PNG.
+
+---
+
 P00 Complete Example with Image
 
 ---

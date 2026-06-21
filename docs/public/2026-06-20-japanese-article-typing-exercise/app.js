@@ -1335,7 +1335,12 @@
           });
         });
         addMenuButton(list, "Import Article", () => { closeModal(); openUploadDialog(); });
+        addMenuButton(list, "Copy Article Text", () => copyArticleText());
         addMenuButton(list, "Export / Share with Tango", () => { closeModal(); openExportDialog(); });
+        addMenuButton(list, "Clear Saved Article", () => {
+          closeModal();
+          openClearSavedArticleDialog();
+        }, "Return to home page.");
         body.append(list);
         body.append(createFontSizeRow());
         body.append(createThemeRow());
@@ -1349,11 +1354,19 @@
     });
   }
 
-  function addMenuButton(parent, label, onClick) {
+  function addMenuButton(parent, label, onClick, description = "") {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "quiet-button";
-    button.textContent = label;
+    const text = document.createElement("span");
+    text.textContent = label;
+    button.append(text);
+    if (description) {
+      const small = document.createElement("span");
+      small.className = "menu-button-desc";
+      small.textContent = description;
+      button.append(small);
+    }
     button.title = menuHint(label);
     button.addEventListener("click", onClick);
     parent.append(button);
@@ -1365,7 +1378,9 @@
       "Restart Sentence": "Restart Sentence - return to the first token of the current sentence.",
       "Reset Current Article Progress": "Reset Current Article Progress - clear timing and token results for this article.",
       "Import Article": "Import Article - upload or replace the current lesson file.",
+      "Copy Article Text": "Copy Article Text - copy only the Japanese article text to the clipboard.",
       "Export / Share with Tango": "Export / Share with Tango - create a Tango import URL from plain Japanese text.",
+      "Clear Saved Article": "Clear Saved Article - remove the current article and progress, then return to the home page.",
       "Session Report": "Session Report - review progress, accuracy, slow tokens, and missed tokens.",
       Settings: "Settings - adjust timing, display, input, speech, and recovery options."
     };
@@ -1552,14 +1567,13 @@
     section.append(infoRow("Recovery status", runtime.storageAvailable ? "localStorage recovery is available." : runtime.storageWarning || "Unavailable."));
     section.append(infoRow("Saved article", runtime.article ? runtime.article.title : "No saved article."));
     section.append(infoRow("Last saved", runtime.storageAvailable ? (localStorage.getItem(STORAGE_KEYS.lastSaved) || "Not saved yet.") : "Unavailable."));
-    const clearRow = infoRow("Clear saved article", "Removes the current article and progress from this browser.");
-    const button = document.createElement("button");
-    button.className = "danger-button";
-    button.type = "button";
-    button.textContent = "Clear Saved Article";
-    button.addEventListener("click", () => openConfirmDialog({
+    return section;
+  }
+
+  function openClearSavedArticleDialog() {
+    openConfirmDialog({
       title: "Clear saved article?",
-      message: "This removes the current article and its progress from this browser.",
+      message: "This removes the current article and its progress from this browser, then returns to the home page.",
       confirmLabel: "Clear Saved Article",
       destructive: true,
       onConfirm: () => {
@@ -1573,10 +1587,7 @@
         closeModal();
         render();
       }
-    }));
-    clearRow.append(button);
-    section.append(clearRow);
-    return section;
+    });
   }
 
   function settingsSection(title) {
@@ -1690,6 +1701,33 @@
       binary += String.fromCharCode(...bytes.slice(index, index + chunkSize));
     }
     return `https://tango-japanese.app/mine#import-japanese-text=BASE64:${btoa(binary)}]]];`;
+  }
+
+  async function copyArticleText() {
+    if (!runtime.article) return;
+    try {
+      await navigator.clipboard.writeText(runtime.article.plainText);
+      showToast("Article text copied.");
+      closePracticeModal();
+    } catch (error) {
+      console.warn("Article text copy failed", error);
+      openModal({
+        title: "Copy article text",
+        message: "Clipboard access was unavailable. Select and copy the plain Japanese text below.",
+        body: body => {
+          const textarea = document.createElement("textarea");
+          textarea.className = "url-fallback";
+          textarea.readOnly = true;
+          textarea.value = runtime.article.plainText;
+          body.append(textarea);
+          requestAnimationFrame(() => {
+            textarea.focus();
+            textarea.select();
+          });
+        },
+        actions: [{ label: "Close", kind: "primary", onClick: closePracticeModal }]
+      });
+    }
   }
 
   async function copyTangoUrl(url) {

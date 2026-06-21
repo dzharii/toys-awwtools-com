@@ -1,5 +1,26 @@
 ---
 
+DIRECTIVE - RSS Updates Are User-Facing Only
+
+---
+
+At the end of every application change, consider whether `rss.xml` needs an update.
+
+Update `rss.xml` only for changes that matter to a user of this Japanese writing practice application. User-facing changes include visible features, meaningful UI/UX improvements, new or changed sample lessons, important behavior changes, and bug fixes that users could notice.
+
+Do not update `rss.xml` for developer-only work. Examples that should not create feed entries: AGENTS.md edits, internal refactors with no visible behavior change, test-only updates, validation script changes, formatting-only changes, comments, docs that do not affect app usage, and bug fixes users would not reasonably notice.
+
+RSS update timing rule:
+
+| Latest feed item age | Required action |
+|---|---|
+| 45 minutes old or newer | Update the existing latest item by adding the new user-facing content to its description. Keep its `pubDate`, `guid`, and `link` unchanged. |
+| Older than 45 minutes | Prepend a new `<item>` at the top of the channel and set `lastBuildDate` to the new item's `pubDate`. |
+
+Use the current date and time when deciding whether the latest item is still active. Do not change an existing item's publication date just because more content was added inside the 45-minute active window.
+
+---
+
 A00 Mission
 
 ---
@@ -21,6 +42,7 @@ D:.
 |   index.html
 |   styles.css
 |   app.js
+|   rss.xml
 |   favicon.ico
 |
 \---texts
@@ -64,6 +86,89 @@ app.js
 Existing files may be refactored if that improves quality. Keep the app deployable as static files through GitHub Pages.
 
 Sample lessons live under `texts/`. The built-in sample dropdown reads `texts/index.xml`. When adding a new sample lesson file under `texts/`, add a matching entry to `texts/index.xml` with its title, relative `href`, and short description.
+
+---
+
+C01 RSS Update Feed Rules
+
+---
+
+This project has a local RSS feed:
+
+```txt
+rss.xml
+```
+
+The feed is for calm application update notes. Users can subscribe to receive notifications when important project features or user-visible behavior changes.
+
+The top app header links to `rss.xml`, and `index.html` must keep RSS discovery in the page head:
+
+```html
+<link rel="alternate" type="application/rss+xml" title="Japanese Writing Practice updates" href="rss.xml" />
+```
+
+When a feature, important bug fix, new sample set, or meaningful user-facing improvement is added, update `rss.xml`. Do not update it for developer-only changes.
+
+RSS item rules:
+
+| Field | Rule |
+|---|---|
+| Placement | Prepend a new `<item>` only when the latest feed item is older than 45 minutes |
+| Active latest item | If the latest item is 45 minutes old or newer, update its description instead of adding a new item |
+| `lastBuildDate` | Set to the new item's `pubDate` only when prepending a new item |
+| `title` | Use a calm title such as `Zen Column: Better Manual Typing` |
+| `description` | One short readable sentence, or a short calm list when grouping multiple changes in the active item |
+| `pubDate` | Use RFC 822 format, preferably noon GMT for deterministic output |
+| `link` | Use the project URL with a stable dated fragment |
+| `guid` | Same as `link`, with `isPermaLink="true"` |
+
+Use this project URL as the base link:
+
+```txt
+https://toys.awwtools.com/public/2026-06-20-japanese-article-typing-exercise/
+```
+
+Recommended item shape:
+
+```xml
+<item>
+  <title>Zen Column: Short Human Update Title</title>
+  <link>https://toys.awwtools.com/public/2026-06-20-japanese-article-typing-exercise/#YYYY-MM-DD-short-update-slug</link>
+  <guid isPermaLink="true">https://toys.awwtools.com/public/2026-06-20-japanese-article-typing-exercise/#YYYY-MM-DD-short-update-slug</guid>
+  <pubDate>Sun, 21 Jun 2026 12:00:00 GMT</pubDate>
+  <description>One calm sentence describing the change from the learner's point of view.</description>
+</item>
+```
+
+Tone rules:
+
+| Do | Avoid |
+|---|---|
+| Describe visible value to the learner | Internal-only implementation details |
+| Keep the update short and readable | Long changelog dumps |
+| Use calm Zen-column wording | Marketing language, hype, or noisy labels |
+| Mention important behavior changes | Listing every tiny refactor |
+
+Validation after RSS edits:
+
+```bash
+python3 - <<'PY'
+import xml.etree.ElementTree as ET
+ET.parse('rss.xml')
+print('rss xml ok')
+PY
+```
+
+Also verify that `index.html` still links to the feed:
+
+```bash
+node - <<'NODE'
+const fs=require('fs');
+const html=fs.readFileSync('index.html','utf8');
+if(!html.includes('href="rss.xml"') || !html.includes('application/rss+xml')) process.exit(1);
+console.log('rss link ok');
+NODE
+```
 
 ---
 
