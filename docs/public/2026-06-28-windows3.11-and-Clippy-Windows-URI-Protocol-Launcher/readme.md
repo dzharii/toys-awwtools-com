@@ -1,15 +1,22 @@
-# Windows URI Protocol Launcher
+# Windows 3.11 URI Launcher with Clippy
 
-A compact, searchable launcher and reference for Windows and Microsoft URI schemes. Each card provides an href-based launch link plus a copy button.
+A retro Program Manager-style desktop, in the browser, that launches real Windows URI links. Open program-group icons, browse 353 curated launchers, search, copy, inspect details, edit templates, and ask Windows to open apps, Settings pages, and system surfaces. Clippy guides first-time users.
+
+## How to run
+
+- Open `index.html` directly, or serve the folder: `python -m http.server` then visit `index.html`. Clippy assets load best over a server, but the launcher works either way.
 
 ## Highlights
 
-- Browse and search across apps, settings, and store URIs (`ms-settings:`, `ms-windows-store:`, `microsoft-edge:`, `ms-screenclip`, and more).
-- Filter by type (apps/settings) and category, with dense and card view modes.
-- One-click open and copy for each protocol URI.
-- Status badges flag links that are version-, policy-, hardware-, region-, or app-installation-dependent.
+- Windows 3.11 desktop: draggable/focusable program-group windows, active/inactive title bars, menu bar, status bars, taskbar, dotted focus.
+- 13 program groups: Windows Apps, Settings (nested subgroups), Capture, Store, System and Security, Network and Devices, Accessibility, Privacy, Personalization, Gaming and Xbox, Legacy and Optional, All Links, Help.
+- Icon and details views; concrete links use `href`-based Open, templates open a Template Editor.
+- Global search (press `/`) across title, URI, description, tags, category, status, with aliases (wifi, snip, bt, defender...).
+- Concise, rate-limited Clippy assistant. Hide/Mute/Help controls. Launcher works if Clippy fails.
+- Local retro SVG icons, no CDN, no web fonts, no external runtime assets.
 
 ## Notes
 
-- External protocol links may show a browser confirmation prompt, and behavior varies by Windows version. This is expected.
-- Built on official Microsoft documentation for Settings, Store, Snipping Tool, and default app URI launching.
+- Launches are user-initiated and never claim success; status shows `Launch requested`.
+- Non-Windows shows a banner; browse/copy stay enabled. Templates can't launch with placeholders.
+- Vendored, cleaned subsets: `vendor/win3x/` (classic stylesheets, MIT) and `vendor/clippy/` (clippy.js + jQuery). Data in `src/data/links.js`.
