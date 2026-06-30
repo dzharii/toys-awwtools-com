@@ -407,35 +407,193 @@ I00 Token Types
 
 ---
 
-The `type` attribute describes the token's role.
+The `type` attribute describes the token's learner-facing role.
+
+This value is not a color value. The lesson file stores the semantic classification only. The app decides how to render that classification, including future color highlighting, word-boundary guidance, review filters, legends, and accessibility labels.
 
 Supported MVP token types:
 
-| Type          | Meaning                               | Romaji required |
-| ------------- | ------------------------------------- | --------------: |
-| `word`        | Normal word                           |             Yes |
-| `particle`    | Japanese particle                     |             Yes |
-| `punctuation` | Punctuation mark                      |              No |
-| `phrase`      | Multi-word or multi-part phrase       |             Yes |
-| `name`        | Person, movie, place, brand, or title |     Usually yes |
-| `date`        | Date expression                       |             Yes |
-| `number`      | Number or counter expression          |             Yes |
-| `place`       | Location name                         |             Yes |
-| `verb`        | Verb or verb phrase                   |             Yes |
-| `adjective`   | Adjective                             |             Yes |
+| Type          | Meaning                                               | Romaji required |
+| ------------- | ----------------------------------------------------- | --------------: |
+| `word`        | Normal vocabulary word                                |             Yes |
+| `particle`    | Japanese particle or particle compound                |             Yes |
+| `punctuation` | Punctuation mark or visible separator                 |              No |
+| `phrase`      | Multi-part expression typed as one unit               |             Yes |
+| `name`        | Person, title, brand, organization, or label          |     Usually yes |
+| `date`        | Date, time, calendar, or relative-time expression     |             Yes |
+| `number`      | Number, quantity, score, price, or counter expression |             Yes |
+| `place`       | Geographic or named physical location                 |             Yes |
+| `verb`        | Verb, predicate, or compact action expression         |             Yes |
+| `adjective`   | I-adjective, na-adjective, or descriptive expression  |             Yes |
 
-Good examples:
+Classification priority:
+
+| Priority | Type          | Apply when                                                                                                                            |
+| -------: | ------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+|        1 | `punctuation` | The token is punctuation, quotation mark, bracket, separator, or visible spacing token.                                               |
+|        2 | `particle`    | The token is a Japanese particle or particle compound such as `は`, `を`, `に`, `で`, `から`, `では`, or `には`.                                |
+|        3 | `date`        | The token expresses a date, time, year, month, day, weekday, season, or relative time such as today or tomorrow.                      |
+|        4 | `number`      | The token expresses a number, count, score, price, age, amount, ranking, or counter expression.                                       |
+|        5 | `place`       | The token is a country, city, neighborhood, station name, landmark, venue, airport, park, street, or other named physical location.   |
+|        6 | `name`        | The token is a person, organization, brand, title, team, event name, product name, shop name, or foreign label used as a proper name. |
+|        7 | `verb`        | The token functions as an action, existence, movement, state change, request, or compact predicate.                                   |
+|        8 | `adjective`   | The token describes a noun, situation, quality, condition, size, difficulty, convenience, emotion, or evaluation.                     |
+|        9 | `phrase`      | The token is a multi-part learner chunk, fixed expression, short clause, or natural phrase that should be typed as one unit.          |
+|       10 | `word`        | The token is normal vocabulary and no more specific type applies.                                                                     |
+
+Use the highest-priority type that clearly describes the token in context.
+
+For example, `今日` can be a normal word in a dictionary, but in an article sentence it usually functions as a time expression, so classify it as `date`:
 
 ```html
-<jp-token text="を" reading="を" romaji="wo" aliases="o" meaning="object marker" type="particle" delay="short"></jp-token>
+<jp-token text="今日" reading="きょう" romaji="kyou" meaning="today" type="date" delay="medium"></jp-token>
 ```
 
+If the token includes a time expression and a particle, classify it as `phrase` because the learner is typing the combined expression as one unit:
+
 ```html
-<jp-token text="。" type="punctuation" delay="short"></jp-token>
+<jp-token text="今日は" reading="きょうは" romaji="kyou wa" meaning="today" type="phrase" delay="medium"></jp-token>
 ```
+
+If a token is a named station, classify it as `place`:
+
+```html
+<jp-token text="東京駅" reading="とうきょうえき" romaji="toukyou eki" meaning="Tokyo Station" type="place" delay="long"></jp-token>
+```
+
+If a token is a generic station word, classify it as `word`:
+
+```html
+<jp-token text="駅" reading="えき" romaji="eki" meaning="station" type="word" delay="medium"></jp-token>
+```
+
+If a token is a person, classify it as `name`:
+
+```html
+<jp-token text="ゆい" reading="ゆい" romaji="yui" meaning="Yui" type="name" delay="short"></jp-token>
+```
+
+If a token is a title, brand, team, organization, or foreign label, classify it as `name`:
+
+```html
+<jp-token text="Star Wars" romaji="star wars" meaning="Star Wars" type="name" delay="long"></jp-token>
+```
+
+If a token is a score, classify it as `number`:
+
+```html
+<jp-token text="2-0" reading="にたいぜろ" romaji="ni tai zero" meaning="two to zero" type="number" delay="medium"></jp-token>
+```
+
+If a token is a quantity with a counter, classify it as `number`:
+
+```html
+<jp-token text="二つ" reading="ふたつ" romaji="futatsu" meaning="two things" type="number" delay="medium"></jp-token>
+```
+
+If a token is a full calendar date, classify it as `date`:
 
 ```html
 <jp-token text="2026年6月19日" reading="にせんにじゅうろくねんろくがつじゅうくにち" romaji="nisen nijuuroku nen rokugatsu juuku nichi" meaning="June 19, 2026" type="date" delay="long"></jp-token>
+```
+
+If a token is a verb or polite verb form, classify it as `verb`:
+
+```html
+<jp-token text="見ます" reading="みます" romaji="mimasu" meaning="watch" type="verb" delay="medium"></jp-token>
+```
+
+```html
+<jp-token text="買えます" reading="かえます" romaji="kaemasu" meaning="can buy" type="verb" delay="medium"></jp-token>
+```
+
+If a token is an existence predicate, classify it as `verb`:
+
+```html
+<jp-token text="あります" reading="あります" romaji="arimasu" meaning="there is / there are" type="verb" delay="medium"></jp-token>
+```
+
+If a token is an i-adjective, classify it as `adjective`:
+
+```html
+<jp-token text="近い" reading="ちかい" romaji="chikai" meaning="near" type="adjective" delay="medium"></jp-token>
+```
+
+If a token is a na-adjective or adjectival noun, classify it as `adjective`:
+
+```html
+<jp-token text="便利" reading="べんり" romaji="benri" meaning="convenient" type="adjective" delay="medium"></jp-token>
+```
+
+If a token is a fixed expression, classify it as `phrase`:
+
+```html
+<jp-token text="すみません" reading="すみません" romaji="sumimasen" meaning="excuse me" type="phrase" delay="medium"></jp-token>
+```
+
+If a token combines several meaningful parts and the learner should practice the whole expression as one unit, classify it as `phrase`:
+
+```html
+<jp-token text="駅の近く" reading="えきのちかく" romaji="eki no chikaku" meaning="near the station" type="phrase" delay="long"></jp-token>
+```
+
+Particles should usually be separate tokens:
+
+```html
+<jp-token text="映画" reading="えいが" romaji="eiga" meaning="movie" type="word" delay="medium"></jp-token>
+<jp-token text="を" reading="を" romaji="wo" aliases="o" meaning="object marker" type="particle" delay="short"></jp-token>
+<jp-token text="見ます" reading="みます" romaji="mimasu" meaning="watch" type="verb" delay="medium"></jp-token>
+```
+
+Common particle classifications:
+
+| Token | Type       | Meaning example               |
+| ----- | ---------- | ----------------------------- |
+| `は`   | `particle` | topic marker                  |
+| `が`   | `particle` | subject marker                |
+| `を`   | `particle` | object marker                 |
+| `に`   | `particle` | to / at / for                 |
+| `で`   | `particle` | in / at / by / with           |
+| `の`   | `particle` | of / possessive / nominalizer |
+| `へ`   | `particle` | toward                        |
+| `と`   | `particle` | and / with / quote marker     |
+| `も`   | `particle` | also                          |
+| `や`   | `particle` | and / or                      |
+| `から`  | `particle` | from / because                |
+| `まで`  | `particle` | until / up to                 |
+| `ので`  | `particle` | because                       |
+| `では`  | `particle` | at / in / as for              |
+| `には`  | `particle` | at / among / for              |
+
+Sentence classification example:
+
+```html
+<jp-sentence>
+  <jp-token text="今日は" reading="きょうは" romaji="kyou wa" meaning="today" type="phrase" delay="medium"></jp-token>
+  <jp-token text="上野" reading="うえの" romaji="ueno" meaning="Ueno" type="place" delay="medium"></jp-token>
+  <jp-token text="で" reading="で" romaji="de" meaning="in / at" type="particle" delay="short"></jp-token>
+  <jp-token text="映画" reading="えいが" romaji="eiga" meaning="movie" type="word" delay="medium"></jp-token>
+  <jp-token text="を" reading="を" romaji="wo" aliases="o" meaning="object marker" type="particle" delay="short"></jp-token>
+  <jp-token text="見ます" reading="みます" romaji="mimasu" meaning="watch" type="verb" delay="medium"></jp-token>
+  <jp-token text="。" type="punctuation" delay="short"></jp-token>
+</jp-sentence>
+```
+
+LLM authoring rule:
+
+```txt
+For every jp-token, choose exactly one supported type.
+Use the context of the sentence, not only the dictionary form.
+Classify named physical locations as place.
+Classify people, brands, organizations, titles, and labels as name.
+Classify dates and time expressions as date.
+Classify counts, quantities, prices, and scores as number.
+Classify actions and predicates as verb.
+Classify descriptive words and adjectival expressions as adjective.
+Classify particles and particle compounds as particle.
+Classify punctuation marks as punctuation.
+Classify fixed expressions and multi-part learner chunks as phrase.
+Classify remaining normal vocabulary as word.
 ```
 
 Invalid:
@@ -814,20 +972,20 @@ Image dimensions are authoring guidance, not validation rules. The app should ke
 
 For `placement="side"` images, the current practice layout renders the same asset in two different shapes:
 
-| Context | Approximate rendered shape | Notes |
-| ------- | -------------------------- | ----- |
-| Desktop side column | 250-425 px wide and at least 520 px tall | Tall editorial panel beside the reading column |
-| Mobile banner | Viewport width minus page padding and about 178 px tall | Wide compact banner above the sentence flow |
+| Context             | Approximate rendered shape                              | Notes                                          |
+| ------------------- | ------------------------------------------------------- | ---------------------------------------------- |
+| Desktop side column | 250-425 px wide and at least 520 px tall                | Tall editorial panel beside the reading column |
+| Mobile banner       | Viewport width minus page padding and about 178 px tall | Wide compact banner above the sentence flow    |
 
 The image element uses a cover-style crop in the app layout. This means the same source image may crop differently on desktop and mobile.
 
 Recommended embedded source size:
 
-| Use | Recommended dimensions |
-| --- | ---------------------- |
-| Default article image | About 720 x 1180 px portrait |
+| Use                       | Recommended dimensions                |
+| ------------------------- | ------------------------------------- |
+| Default article image     | About 720 x 1180 px portrait          |
 | Acceptable portrait range | 640-900 px wide and 1000-1400 px tall |
-| Minimum practical size | About 420 x 530 px |
+| Minimum practical size    | About 420 x 530 px                    |
 
 `420 x 530` is a useful lower bound for small files and quick generated illustrations, but it should not be treated as the ideal source size. A source closer to `720 x 1180` gives the desktop side image enough vertical detail and still compresses well as JPEG or WebP.
 
@@ -835,12 +993,12 @@ Avoid very small images below about 420 px wide for article artwork. Avoid lands
 
 Composition guidance:
 
-| Rule | Reason |
-| ---- | ------ |
-| Keep the main subject in the center 60-70 percent of the image | Desktop and mobile crops remove different edges |
-| Avoid important text near image edges | Captions, signs, and UI details may be cropped |
-| Make the center horizontal band meaningful | Mobile shows the image as a short wide banner |
-| Prefer quiet editorial artwork or low-saturation photos | The image should support the Zen reading surface |
+| Rule                                                           | Reason                                           |
+| -------------------------------------------------------------- | ------------------------------------------------ |
+| Keep the main subject in the center 60-70 percent of the image | Desktop and mobile crops remove different edges  |
+| Avoid important text near image edges                          | Captions, signs, and UI details may be cropped   |
+| Make the center horizontal band meaningful                     | Mobile shows the image as a short wide banner    |
+| Prefer quiet editorial artwork or low-saturation photos        | The image should support the Zen reading surface |
 
 File-size guidance still applies. A generated or photo-like `720 x 1180` image usually fits the existing larger article image target better as JPEG or WebP than as PNG.
 
