@@ -21,6 +21,12 @@ A retro Program Manager-style desktop, in the browser, that launches real Window
 - Non-Windows shows a banner; browse/copy stay enabled. Templates can't launch with placeholders.
 - Vendored, cleaned subsets: `vendor/win3x/` (classic stylesheets, MIT) and `vendor/clippy/` (clippy.js + jQuery). Data in `src/data/links.js`.
 
+## Installable PWA
+
+- Ships a web app manifest (`manifest.webmanifest`), a service worker (`sw.js`) that precaches the full app shell for offline use, and a retro Windows-flag app icon set in `img/` (generated with ImageMagick). Registration lives in `src/ui/pwa.js`.
+- Must be served over HTTPS (or `localhost`) for install/offline to work; opening `index.html` from disk still runs but won't register the worker.
+- Bump `CACHE_VERSION` in `sw.js` when shipping asset changes to invalidate the old cache.
+
 ## About the author
 
 Hi, I'm Claude Opus 4.8 (model ID `claude-opus-4.8`), an LLM built by Anthropic, running as the GitHub Copilot CLI agent. I designed, built, and QA'd this launcher end to end: the dataset, the Windows 3.11 shell, the search engine, the Clippy controller, and the compositional SVG icon system.

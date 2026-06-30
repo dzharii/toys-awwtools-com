@@ -28,7 +28,8 @@
     showArticleImage: true,
     caretAnimation: "normal",
     speechRate: 1,
-    wordGuidanceMode: "focus"
+    wordGuidanceMode: "focus",
+    pictureHintsEnabled: true
   };
 
   // Token guidance modes for the practice-screen Guidance control. The XML never
@@ -60,6 +61,33 @@
 
   // Remember which unknown token types we already warned about to avoid console spam.
   const warnedTokenTypes = new Set();
+
+  // Fixed sprite-atlas profile for optional picture hints. The atlas image must be
+  // a 1254x1254 grid of 19x19 cells, each 66x66 px. Any atlas that does not match
+  // this profile is rejected softly (warn once) so practice is never broken.
+  const VISUAL_ATLAS_PROFILE = Object.freeze({
+    profile: "practical-19x19-66",
+    width: 1254,
+    height: 1254,
+    columns: 19,
+    rows: 19,
+    cellSize: 66
+  });
+
+  // Atlas/sprite problems must never throw. Each distinct problem is logged once so
+  // a malformed lesson cannot spam the console while the learner practises.
+  const visualAtlasWarnings = new Set();
+  function warnVisualAtlasOnce(code, message, detail) {
+    if (visualAtlasWarnings.has(code)) return;
+    visualAtlasWarnings.add(code);
+    if (detail !== undefined) console.warn(message, detail);
+    else console.warn(message);
+  }
+
+  // Runtime state for the custom picture-hint tooltip. "pinned" means the hint was
+  // opened by a tap (mobile) and should stay until dismissed; otherwise it follows
+  // the pointer (desktop hover) and hides on leave.
+  const visualHintState = { visible: false, pinned: false, sprite: null };
 
   const FONT_SIZES = [
     { value: "small", label: "Small", scale: 0.9 },
@@ -115,6 +143,9 @@
     bottomControls: document.querySelector("#bottom-controls"),
     guidanceSelect: document.querySelector("#guidance-mode-select"),
     legendButton: document.querySelector("#legend-button"),
+    pictureHintsControl: document.querySelector("#picture-hints-control"),
+    pictureHintsToggle: document.querySelector("#picture-hints-toggle"),
+    visualHintTooltip: document.querySelector("#visual-hint-tooltip"),
     previousButton: document.querySelector("#previous-button"),
     pauseButton: document.querySelector("#pause-button"),
     nextButton: document.querySelector("#next-button"),
@@ -197,6 +228,8 @@
     els.menuButton.addEventListener("click", () => openMenu());
     els.guidanceSelect.addEventListener("change", () => handleGuidanceChange(els.guidanceSelect.value));
     els.legendButton.addEventListener("click", () => openLegendDialog());
+    els.pictureHintsToggle.addEventListener("change", handlePictureHintsToggle);
+    bindVisualHintEvents();
     els.speakButton.addEventListener("click", () => speakActiveSentence());
     els.activeSpeakButton.addEventListener("click", () => speakActiveSentence());
     els.previousButton.addEventListener("click", event => movePrevious(event.shiftKey));
@@ -466,9 +499,31 @@
     smartScrollToPracticeFrame("article-import", true);
   }
 
+  // Parse the lesson source into a DOM. Lesson files are XML and may use
+  // self-closing custom tags such as <jp-token .../> or <jp-image-ref .../>. The
+  // HTML parser ignores self-closing syntax on unknown elements and nests every
+  // following sibling inside them, which hides sentences and breaks validation.
+  // So we parse as XML first (which honors self-closing and explicit-close tags
+  // identically) and only fall back to lenient HTML parsing for legacy documents
+  // that are not well-formed XML.
+  function parseLessonDocument(source) {
+    try {
+      const xmlDoc = new DOMParser().parseFromString(source, "application/xml");
+      if (!xmlDoc.querySelector("parsererror") && xmlDoc.querySelector("jp-lesson")) {
+        return xmlDoc;
+      }
+    } catch (error) {
+      console.warn("Lesson XML parse failed; falling back to HTML parsing.", error);
+    }
+    return new DOMParser().parseFromString(source, "text/html");
+  }
+
   function parseLesson(source) {
     const warnings = [];
-    const doc = new DOMParser().parseFromString(source, "text/html");
+    // A new parse means a new lesson surface: forget previous atlas warnings so a
+    // later malformed lesson can warn again without being silenced by an old code.
+    visualAtlasWarnings.clear();
+    const doc = parseLessonDocument(source);
     const lesson = doc.querySelector("jp-lesson");
     if (!lesson) throwValidation("Missing jp-lesson root.");
 
@@ -553,7 +608,10 @@
           delay,
           delayMs: delayMsRaw ? Number(delayMsRaw) : null,
           tags: splitAliases(readAttr(tokenEl, "tags")),
-          note: readAttr(tokenEl, "note")
+          note: readAttr(tokenEl, "note"),
+          // Optional reference to a sprite key in jp-visual-atlases. Resolved lazily
+          // at render time so an unknown key never blocks parsing or practice.
+          visual: readAttr(tokenEl, "visual")
         };
       });
       if (!tokens.length) throwValidation("Lesson sentence has no jp-token elements.");
@@ -582,6 +640,10 @@
       return true;
     });
 
+    // Optional picture-hint atlases. Always soft-parsed: any problem warns once and
+    // yields an empty sprite map, leaving the rest of the lesson fully usable.
+    const visual = parseVisualAtlases(lesson, assets);
+
     return {
       warnings,
       article: {
@@ -594,6 +656,8 @@
         tokens,
         assets,
         imageRefs: normalizedRefs,
+        visualAtlases: visual.visualAtlases,
+        visualSprites: visual.visualSprites,
         plainText: buildPlainText(sentences, paragraphs)
       }
     };
@@ -624,6 +688,126 @@
       assets[asset] = { asset, mime, alt, title, data };
     });
     return assets;
+  }
+
+  // ---- Optional picture-hint atlas parsing -------------------------------------
+  // Atlases are parsed defensively. Every failure mode warns once and is skipped;
+  // nothing here ever throws, so an invalid atlas can only remove picture hints,
+  // never break reading, typing, or navigation.
+
+  function parseVisualAtlases(lesson, assets) {
+    const visualAtlases = [];
+    const visualSprites = new Map();
+    const root = lesson.querySelector("jp-visual-atlases");
+    if (!root) return { visualAtlases, visualSprites };
+    // querySelectorAll (not .children) because the HTML parser nests self-closing
+    // custom elements; descendant search finds every jp-visual-atlas regardless.
+    [...root.querySelectorAll("jp-visual-atlas")].forEach(atlasEl => {
+      const parsed = parseOneVisualAtlas(atlasEl, assets);
+      if (!parsed) return;
+      visualAtlases.push(parsed);
+      parsed.sprites.forEach((sprite, key) => {
+        if (visualSprites.has(key)) {
+          warnVisualAtlasOnce(`dup-sprite:${key}`, `[visual-atlas] Duplicate sprite key ignored: ${key}`);
+          return;
+        }
+        visualSprites.set(key, sprite);
+      });
+    });
+    return { visualAtlases, visualSprites };
+  }
+
+  function parseOneVisualAtlas(atlasEl, assets) {
+    const key = readAttr(atlasEl, "key");
+    const assetKey = readAttr(atlasEl, "asset");
+    if (!key) {
+      warnVisualAtlasOnce("atlas-missing-key", "[visual-atlas] Atlas is missing a key attribute; skipped.");
+      return null;
+    }
+    if (!assetKey) {
+      warnVisualAtlasOnce(`atlas-missing-asset:${key}`, `[visual-atlas] Atlas "${key}" is missing an asset attribute; skipped.`);
+      return null;
+    }
+    const asset = assets[assetKey];
+    if (!asset || !asset.data || !/^data:image\/[a-z+]+;base64,/i.test(asset.data)) {
+      warnVisualAtlasOnce(`atlas-missing-image:${assetKey}`, `[visual-atlas] Atlas "${key}" references missing or invalid image asset "${assetKey}"; skipped.`);
+      return null;
+    }
+    const profile = VISUAL_ATLAS_PROFILE;
+    const width = Number(readAttr(atlasEl, "width"));
+    const height = Number(readAttr(atlasEl, "height"));
+    const columns = Number(readAttr(atlasEl, "columns"));
+    const rows = Number(readAttr(atlasEl, "rows"));
+    const cellSize = Number(readAttr(atlasEl, "cell-size"));
+    const geometryValid =
+      [width, height, columns, rows, cellSize].every(Number.isFinite) &&
+      width === profile.width && height === profile.height &&
+      columns === profile.columns && rows === profile.rows && cellSize === profile.cellSize &&
+      width / columns === cellSize && height / rows === cellSize;
+    if (!geometryValid) {
+      warnVisualAtlasOnce(`atlas-geometry:${key}`, `[visual-atlas] Atlas "${key}" geometry does not match the ${profile.profile} profile; skipped.`, { width, height, columns, rows, cellSize });
+      return null;
+    }
+    const sprites = new Map();
+    [...atlasEl.querySelectorAll("jp-sprite")].forEach(spriteEl => {
+      const sprite = parseSprite(spriteEl, key, asset.data, width, height, cellSize, columns, rows);
+      if (!sprite) return;
+      if (sprites.has(sprite.key)) {
+        warnVisualAtlasOnce(`dup-sprite-in-atlas:${sprite.key}`, `[visual-atlas] Duplicate sprite "${sprite.key}" within atlas "${key}" ignored.`);
+        return;
+      }
+      sprites.set(sprite.key, sprite);
+    });
+    return {
+      key,
+      asset: assetKey,
+      profile: readAttr(atlasEl, "profile") || profile.profile,
+      title: readAttr(atlasEl, "title"),
+      style: readAttr(atlasEl, "style"),
+      width, height, columns, rows, cellSize,
+      imageDataUrl: asset.data,
+      sprites
+    };
+  }
+
+  function parseSprite(spriteEl, atlasKey, imageDataUrl, atlasWidth, atlasHeight, cellSize, columns, rows) {
+    const key = readAttr(spriteEl, "key");
+    if (!key) {
+      warnVisualAtlasOnce(`sprite-missing-key:${atlasKey}`, `[visual-atlas] A sprite in atlas "${atlasKey}" is missing a key; skipped.`);
+      return null;
+    }
+    const cell = Number(readAttr(spriteEl, "cell"));
+    const row = Number(readAttr(spriteEl, "row"));
+    const col = Number(readAttr(spriteEl, "col"));
+    const maxCell = columns * rows - 1;
+    const coordsValid =
+      Number.isInteger(cell) && Number.isInteger(row) && Number.isInteger(col) &&
+      cell >= 0 && cell <= maxCell &&
+      row >= 0 && row <= rows - 1 &&
+      col >= 0 && col <= columns - 1 &&
+      cell === row * columns + col;
+    if (!coordsValid) {
+      warnVisualAtlasOnce(`sprite-coords:${key}`, `[visual-atlas] Sprite "${key}" has invalid cell/row/col coordinates; skipped.`, { cell, row, col });
+      return null;
+    }
+    // Denormalize all data the tooltip needs to crop the sprite without further
+    // lookups: the image, the full atlas size, and this cell's top-left offset.
+    return {
+      key,
+      atlasKey,
+      text: readAttr(spriteEl, "text"),
+      reading: readAttr(spriteEl, "reading"),
+      meaning: readAttr(spriteEl, "meaning"),
+      type: readAttr(spriteEl, "type"),
+      conceptKind: readAttr(spriteEl, "concept-kind"),
+      cell, row, col,
+      x: col * cellSize,
+      y: row * cellSize,
+      size: cellSize,
+      imageDataUrl,
+      atlasWidth,
+      atlasHeight
+    };
   }
 
   function parseImageRef(el, sentenceIndex, sectionIndex, paragraphIndex) {
@@ -699,6 +883,10 @@
         ? "Resume - restart the timer and automatic token movement."
         : "Pause - stop the timer and automatic token movement.";
       els.typingInput.value = runtime.state.typedInput || "";
+      // Re-rendered token spans replace the ones a hover hint was attached to; hide
+      // a following (non-pinned) hint so it cannot point at a stale element. A
+      // pinned (tapped) hint is independent of the token element and stays open.
+      if (!visualHintState.pinned) hideVisualHint();
       renderImage();
       renderPrevious();
       renderActiveSentence(sentence);
@@ -813,6 +1001,7 @@
     sentence.tokens.forEach(token => {
       const span = document.createElement("span");
       decorateTokenRole(span, token, sentence.index, reviewMap);
+      decorateTokenVisual(span, token);
       if (focusTokenIndex != null && token.tokenIndex === focusTokenIndex) {
         decorateFocusToken(span, token);
       } else {
@@ -820,6 +1009,22 @@
       }
       container.append(span);
     });
+  }
+
+  // Mark a token that has a resolvable picture hint so the delegated tooltip
+  // handlers and CSS can target it. Unknown sprite references are recorded (warn
+  // once) and left undecorated; the token still renders and works normally.
+  function decorateTokenVisual(span, token) {
+    if (!token.visual) return;
+    const sprites = runtime.article && runtime.article.visualSprites;
+    const sprite = sprites && sprites.get(token.visual);
+    if (!sprite) {
+      span.dataset.visualMissing = token.visual;
+      warnVisualAtlasOnce(`missing-sprite:${token.visual}`, `[visual-atlas] Token references unknown visual sprite "${token.visual}"; no picture hint shown.`);
+      return;
+    }
+    span.dataset.visual = token.visual;
+    span.classList.add("has-visual-hint");
   }
 
   function renderPrevious() {
@@ -1683,6 +1888,7 @@
     section.append(toggleSetting("Show meaning", "Shows English meaning below the active token.", runtime.settings.showMeaning, value => runtime.settings.showMeaning = value));
     section.append(toggleSetting("Show reading", "Shows kana reading when available.", runtime.settings.showReading, value => runtime.settings.showReading = value));
     section.append(toggleSetting("Show article image", "Shows anchored article image when available.", runtime.settings.showArticleImage, value => runtime.settings.showArticleImage = value));
+    section.append(toggleSetting("Picture hints", "Show a small picture when you hover, focus, or tap a token that has a visual.", runtime.settings.pictureHintsEnabled, value => { runtime.settings.pictureHintsEnabled = value; hideVisualHint(); }));
     section.append(selectSetting("Word guidance", "Controls token boundary and grammar role highlighting.", runtime.settings.wordGuidanceMode, GUIDANCE_MODES.map(mode => [mode.value, mode.label]), value => runtime.settings.wordGuidanceMode = value));
     section.append(selectSetting("Caret animation", "Controls how quickly the caret moves.", runtime.settings.caretAnimation, [["off", "Off"], ["short", "Short"], ["normal", "Normal"]], value => runtime.settings.caretAnimation = value));
     return section;
@@ -2209,6 +2415,7 @@
     document.documentElement.style.setProperty("--caret-duration", CARET_DURATIONS[runtime.settings.caretAnimation] || CARET_DURATIONS.normal);
     document.documentElement.classList.toggle("caret-off", runtime.settings.caretAnimation === "off");
     applyGuidanceMode();
+    applyPictureHintsSetting();
     const showTypingInput = shouldShowTypingInput();
     document.body.classList.toggle("typing-input-hidden", !showTypingInput);
     document.body.classList.toggle("typing-input-visible", showTypingInput);
@@ -2232,7 +2439,203 @@
     if (els.legendButton) els.legendButton.hidden = mode !== "grammar";
   }
 
-  // The bottom controls can grow to two rows (Guidance row + navigation). Measure
+  // ---- Picture-hint setting + custom tooltip -----------------------------------
+
+  // Apply the picture-hints preference: reflect it on the body, keep the toggle in
+  // sync, and only expose the on-screen control when the current lesson actually
+  // contains usable sprites. Old lessons without an atlas behave exactly as before.
+  function applyPictureHintsSetting() {
+    const enabled = runtime.settings.pictureHintsEnabled !== false;
+    runtime.settings.pictureHintsEnabled = enabled;
+    document.body.dataset.pictureHints = enabled ? "on" : "off";
+    const hasSprites = lessonHasVisualSprites();
+    if (els.pictureHintsControl) els.pictureHintsControl.hidden = !hasSprites;
+    if (els.pictureHintsToggle) els.pictureHintsToggle.checked = enabled;
+    if (!enabled || !hasSprites) hideVisualHint();
+  }
+
+  function lessonHasVisualSprites() {
+    return Boolean(runtime.article && runtime.article.visualSprites && runtime.article.visualSprites.size);
+  }
+
+  function handlePictureHintsToggle() {
+    runtime.settings.pictureHintsEnabled = els.pictureHintsToggle.checked;
+    console.info("Picture hints toggled", { enabled: runtime.settings.pictureHintsEnabled });
+    if (!runtime.settings.pictureHintsEnabled) hideVisualHint();
+    saveSettings();
+    applySettings();
+  }
+
+  function visualHintsAllowed() {
+    return runtime.settings.pictureHintsEnabled !== false && lessonHasVisualSprites();
+  }
+
+  function isCoarsePointer() {
+    return Boolean(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
+  }
+
+  function tokenSpriteFor(tokenEl) {
+    if (!tokenEl) return null;
+    const key = tokenEl.dataset && tokenEl.dataset.visual;
+    if (!key) return null;
+    const sprites = runtime.article && runtime.article.visualSprites;
+    return (sprites && sprites.get(key)) || null;
+  }
+
+  function closestVisualToken(target) {
+    return target && target.closest ? target.closest(".token[data-visual]") : null;
+  }
+
+  // Delegated picture-hint listeners. Delegation keeps the handlers attached even as
+  // token spans are rebuilt on every render. Desktop uses hover/focus that follow
+  // the pointer; coarse-pointer (touch) devices use a pinned tap-to-toggle hint.
+  function bindVisualHintEvents() {
+    const scroll = els.practiceScroll;
+    if (!scroll) return;
+    scroll.addEventListener("pointerover", onVisualPointerOver);
+    scroll.addEventListener("pointermove", onVisualPointerMove);
+    scroll.addEventListener("pointerout", onVisualPointerOut);
+    scroll.addEventListener("click", onVisualClick);
+    scroll.addEventListener("focusin", onVisualFocusIn);
+    scroll.addEventListener("focusout", onVisualFocusOut);
+    document.addEventListener("keydown", onVisualHintKeydown);
+    document.addEventListener("pointerdown", onDocumentPointerDownForHint, true);
+  }
+
+  function onVisualPointerOver(event) {
+    if (isCoarsePointer()) return;
+    if (!visualHintsAllowed()) return;
+    const tokenEl = closestVisualToken(event.target);
+    if (!tokenEl) return;
+    const sprite = tokenSpriteFor(tokenEl);
+    if (!sprite) return;
+    showVisualHintAtPointer(sprite, event.clientX, event.clientY);
+  }
+
+  function onVisualPointerMove(event) {
+    if (!visualHintState.visible || visualHintState.pinned) return;
+    if (!closestVisualToken(event.target)) return;
+    moveVisualHint(event.clientX, event.clientY);
+  }
+
+  function onVisualPointerOut(event) {
+    if (visualHintState.pinned) return;
+    const tokenEl = closestVisualToken(event.target);
+    if (!tokenEl) return;
+    // Moving onto a child of the same token is not a real leave.
+    if (event.relatedTarget && tokenEl.contains(event.relatedTarget)) return;
+    hideVisualHint();
+  }
+
+  function onVisualClick(event) {
+    if (!isCoarsePointer()) return;
+    if (!visualHintsAllowed()) return;
+    const tokenEl = closestVisualToken(event.target);
+    if (!tokenEl) return;
+    const sprite = tokenSpriteFor(tokenEl);
+    if (!sprite) return;
+    if (visualHintState.pinned && visualHintState.sprite === sprite) {
+      hideVisualHint();
+    } else {
+      showVisualHintPinned(sprite);
+    }
+  }
+
+  function onVisualFocusIn(event) {
+    if (isCoarsePointer()) return;
+    if (!visualHintsAllowed()) return;
+    const tokenEl = closestVisualToken(event.target);
+    if (!tokenEl) return;
+    const sprite = tokenSpriteFor(tokenEl);
+    if (!sprite) return;
+    const rect = tokenEl.getBoundingClientRect();
+    showVisualHintAtPointer(sprite, rect.left + rect.width / 2, rect.top);
+  }
+
+  function onVisualFocusOut() {
+    if (!visualHintState.pinned) hideVisualHint();
+  }
+
+  function onVisualHintKeydown(event) {
+    if (event.key === "Escape" && visualHintState.visible) hideVisualHint();
+  }
+
+  function onDocumentPointerDownForHint(event) {
+    if (!visualHintState.pinned) return;
+    const onTooltip = els.visualHintTooltip && els.visualHintTooltip.contains(event.target);
+    const onToken = closestVisualToken(event.target);
+    if (!onTooltip && !onToken) hideVisualHint();
+  }
+
+  // Render the cropped sprite into the tooltip by positioning a scaled copy of the
+  // full atlas image behind a fixed-size window (CSS background, no canvas).
+  function renderVisualHintSprite(sprite) {
+    const tooltip = els.visualHintTooltip;
+    if (!tooltip) return;
+    const spriteEl = tooltip.querySelector(".visual-hint-sprite");
+    if (!spriteEl) return;
+    const displaySize = 132;
+    const scale = displaySize / sprite.size;
+    spriteEl.style.width = `${displaySize}px`;
+    spriteEl.style.height = `${displaySize}px`;
+    spriteEl.style.backgroundImage = `url("${sprite.imageDataUrl}")`;
+    spriteEl.style.backgroundSize = `${sprite.atlasWidth * scale}px ${sprite.atlasHeight * scale}px`;
+    spriteEl.style.backgroundPosition = `-${sprite.x * scale}px -${sprite.y * scale}px`;
+    spriteEl.setAttribute("role", "img");
+    const label = sprite.meaning || sprite.text || sprite.key;
+    spriteEl.setAttribute("aria-label", `Picture hint: ${label}`);
+  }
+
+  function showVisualHintAtPointer(sprite, clientX, clientY) {
+    const tooltip = els.visualHintTooltip;
+    if (!tooltip) return;
+    renderVisualHintSprite(sprite);
+    tooltip.classList.remove("visual-hint-tooltip-mobile");
+    tooltip.hidden = false;
+    visualHintState.visible = true;
+    visualHintState.pinned = false;
+    visualHintState.sprite = sprite;
+    moveVisualHint(clientX, clientY);
+  }
+
+  function showVisualHintPinned(sprite) {
+    const tooltip = els.visualHintTooltip;
+    if (!tooltip) return;
+    renderVisualHintSprite(sprite);
+    tooltip.classList.add("visual-hint-tooltip-mobile");
+    tooltip.style.left = "";
+    tooltip.style.top = "";
+    tooltip.hidden = false;
+    visualHintState.visible = true;
+    visualHintState.pinned = true;
+    visualHintState.sprite = sprite;
+  }
+
+  // Keep the hovering tooltip near the pointer but always inside the viewport.
+  function moveVisualHint(clientX, clientY) {
+    const tooltip = els.visualHintTooltip;
+    if (!tooltip || tooltip.hidden) return;
+    const margin = 14;
+    const rect = tooltip.getBoundingClientRect();
+    let left = clientX + 18;
+    let top = clientY - rect.height - 16;
+    if (left + rect.width + margin > window.innerWidth) left = clientX - rect.width - 18;
+    if (left < margin) left = margin;
+    if (top < margin) top = clientY + 22;
+    if (top + rect.height + margin > window.innerHeight) top = window.innerHeight - rect.height - margin;
+    tooltip.style.left = `${Math.round(left)}px`;
+    tooltip.style.top = `${Math.round(top)}px`;
+  }
+
+  function hideVisualHint() {
+    const tooltip = els.visualHintTooltip;
+    visualHintState.visible = false;
+    visualHintState.pinned = false;
+    visualHintState.sprite = null;
+    if (!tooltip) return;
+    tooltip.hidden = true;
+    tooltip.classList.remove("visual-hint-tooltip-mobile");
+  }
   // the real height so the scroll area reserves enough space on mobile.
   function measureBottomControls() {
     requestAnimationFrame(() => {
