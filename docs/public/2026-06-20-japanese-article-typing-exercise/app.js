@@ -2482,6 +2482,19 @@
     return (sprites && sprites.get(key)) || null;
   }
 
+  // Resolve the token record behind a rendered token span via its data-token-key
+  // (sentenceIndex:tokenIndex). Used so the picture hint can show the same romaji,
+  // reading, and meaning the focus token shows for the word being practised.
+  function tokenRecordFromElement(tokenEl) {
+    if (!tokenEl || !runtime.article) return null;
+    const key = tokenEl.dataset && tokenEl.dataset.tokenKey;
+    if (!key) return null;
+    const [sentenceIndex, tokenIndex] = key.split(":").map(Number);
+    const sentence = runtime.article.sentences[sentenceIndex];
+    if (!sentence) return null;
+    return sentence.tokens.find(token => token.tokenIndex === tokenIndex) || null;
+  }
+
   function closestVisualToken(target) {
     return target && target.closest ? target.closest(".token[data-visual]") : null;
   }
@@ -2509,7 +2522,7 @@
     if (!tokenEl) return;
     const sprite = tokenSpriteFor(tokenEl);
     if (!sprite) return;
-    showVisualHintAtPointer(sprite, event.clientX, event.clientY);
+    showVisualHintAtPointer(sprite, tokenRecordFromElement(tokenEl), event.clientX, event.clientY);
   }
 
   function onVisualPointerMove(event) {
@@ -2537,7 +2550,7 @@
     if (visualHintState.pinned && visualHintState.sprite === sprite) {
       hideVisualHint();
     } else {
-      showVisualHintPinned(sprite);
+      showVisualHintPinned(sprite, tokenRecordFromElement(tokenEl));
     }
   }
 
@@ -2549,7 +2562,7 @@
     const sprite = tokenSpriteFor(tokenEl);
     if (!sprite) return;
     const rect = tokenEl.getBoundingClientRect();
-    showVisualHintAtPointer(sprite, rect.left + rect.width / 2, rect.top);
+    showVisualHintAtPointer(sprite, tokenRecordFromElement(tokenEl), rect.left + rect.width / 2, rect.top);
   }
 
   function onVisualFocusOut() {
@@ -2567,29 +2580,49 @@
     if (!onTooltip && !onToken) hideVisualHint();
   }
 
-  // Render the cropped sprite into the tooltip by positioning a scaled copy of the
-  // full atlas image behind a fixed-size window (CSS background, no canvas).
-  function renderVisualHintSprite(sprite) {
+  // Render the picture hint: a cropped sprite plus the same romaji / reading /
+  // meaning the focus token shows. The sprite image is positioned by scaling the
+  // full atlas behind a fixed-size window (CSS background, no canvas). Romaji comes
+  // from the token (sprites carry no romaji); reading and meaning prefer the token
+  // and fall back to the sprite's own dictionary values.
+  function renderVisualHint(sprite, token) {
     const tooltip = els.visualHintTooltip;
     if (!tooltip) return;
     const spriteEl = tooltip.querySelector(".visual-hint-sprite");
-    if (!spriteEl) return;
-    const displaySize = 132;
-    const scale = displaySize / sprite.size;
-    spriteEl.style.width = `${displaySize}px`;
-    spriteEl.style.height = `${displaySize}px`;
-    spriteEl.style.backgroundImage = `url("${sprite.imageDataUrl}")`;
-    spriteEl.style.backgroundSize = `${sprite.atlasWidth * scale}px ${sprite.atlasHeight * scale}px`;
-    spriteEl.style.backgroundPosition = `-${sprite.x * scale}px -${sprite.y * scale}px`;
-    spriteEl.setAttribute("role", "img");
-    const label = sprite.meaning || sprite.text || sprite.key;
-    spriteEl.setAttribute("aria-label", `Picture hint: ${label}`);
+    if (spriteEl) {
+      const displaySize = 132;
+      const scale = displaySize / sprite.size;
+      spriteEl.style.width = `${displaySize}px`;
+      spriteEl.style.height = `${displaySize}px`;
+      spriteEl.style.backgroundImage = `url("${sprite.imageDataUrl}")`;
+      spriteEl.style.backgroundSize = `${sprite.atlasWidth * scale}px ${sprite.atlasHeight * scale}px`;
+      spriteEl.style.backgroundPosition = `-${sprite.x * scale}px -${sprite.y * scale}px`;
+      spriteEl.setAttribute("role", "img");
+    }
+    const romaji = (token && token.romaji) || "";
+    const reading = (token && token.reading) || sprite.reading || "";
+    const meaning = (token && token.meaning) || sprite.meaning || "";
+    setVisualHintLine(tooltip, ".visual-hint-romaji", romaji);
+    setVisualHintLine(tooltip, ".visual-hint-reading", reading);
+    setVisualHintLine(tooltip, ".visual-hint-meaning", meaning);
+    if (spriteEl) {
+      const label = meaning || (token && token.text) || sprite.text || sprite.key;
+      spriteEl.setAttribute("aria-label", `Picture hint: ${label}`);
+    }
   }
 
-  function showVisualHintAtPointer(sprite, clientX, clientY) {
+  // Fill one optional hint text line and hide it when empty so the card stays calm.
+  function setVisualHintLine(tooltip, selector, value) {
+    const el = tooltip.querySelector(selector);
+    if (!el) return;
+    el.textContent = value;
+    el.hidden = !value;
+  }
+
+  function showVisualHintAtPointer(sprite, token, clientX, clientY) {
     const tooltip = els.visualHintTooltip;
     if (!tooltip) return;
-    renderVisualHintSprite(sprite);
+    renderVisualHint(sprite, token);
     tooltip.classList.remove("visual-hint-tooltip-mobile");
     tooltip.hidden = false;
     visualHintState.visible = true;
@@ -2598,10 +2631,10 @@
     moveVisualHint(clientX, clientY);
   }
 
-  function showVisualHintPinned(sprite) {
+  function showVisualHintPinned(sprite, token) {
     const tooltip = els.visualHintTooltip;
     if (!tooltip) return;
-    renderVisualHintSprite(sprite);
+    renderVisualHint(sprite, token);
     tooltip.classList.add("visual-hint-tooltip-mobile");
     tooltip.style.left = "";
     tooltip.style.top = "";
