@@ -27,8 +27,39 @@
     showReading: false,
     showArticleImage: true,
     caretAnimation: "normal",
-    speechRate: 1
+    speechRate: 1,
+    wordGuidanceMode: "focus"
   };
+
+  // Token guidance modes for the practice-screen Guidance control. The XML never
+  // stores a guidance mode; this is a user preference, not article metadata.
+  const GUIDANCE_MODES = [
+    { value: "focus", label: "Focus Only" },
+    { value: "boundaries", label: "Word Boundaries" },
+    { value: "grammar", label: "Grammar Colors" },
+    { value: "review", label: "Review Highlights" }
+  ];
+
+  // UI labels for semantic token roles. The stored XML value for adjectives stays
+  // "adjective"; only the displayed label uses "Describer".
+  const TOKEN_TYPE_LABELS = {
+    word: "Word",
+    particle: "Particle",
+    punctuation: "Punctuation",
+    phrase: "Phrase",
+    name: "Name",
+    date: "Date",
+    number: "Number",
+    place: "Place",
+    verb: "Verb",
+    adjective: "Describer"
+  };
+
+  // Token roles shown in the Grammar Colors legend, in reading-aid order.
+  const LEGEND_TYPES = ["word", "place", "name", "verb", "adjective", "particle", "phrase", "date", "number", "punctuation"];
+
+  // Remember which unknown token types we already warned about to avoid console spam.
+  const warnedTokenTypes = new Set();
 
   const FONT_SIZES = [
     { value: "small", label: "Small", scale: 0.9 },
@@ -82,6 +113,8 @@
     typingInput: document.querySelector("#typing-input"),
     remainingText: document.querySelector("#remaining-text"),
     bottomControls: document.querySelector("#bottom-controls"),
+    guidanceSelect: document.querySelector("#guidance-mode-select"),
+    legendButton: document.querySelector("#legend-button"),
     previousButton: document.querySelector("#previous-button"),
     pauseButton: document.querySelector("#pause-button"),
     nextButton: document.querySelector("#next-button"),
@@ -162,6 +195,8 @@
       if (file) importFile(file);
     });
     els.menuButton.addEventListener("click", () => openMenu());
+    els.guidanceSelect.addEventListener("change", () => handleGuidanceChange(els.guidanceSelect.value));
+    els.legendButton.addEventListener("click", () => openLegendDialog());
     els.speakButton.addEventListener("click", () => speakActiveSentence());
     els.activeSpeakButton.addEventListener("click", () => speakActiveSentence());
     els.previousButton.addEventListener("click", event => movePrevious(event.shiftKey));
@@ -685,6 +720,108 @@
     els.sessionMeta.hidden = true;
   }
 
+  // Resolve a token's semantic role to a known type. Unknown types fall back to
+  // "word" and log a one-time warning so guidance styling stays predictable.
+  function resolveTokenType(token) {
+    const type = token && token.type;
+    if (type && TOKEN_TYPE_LABELS[type]) return type;
+    if (type && !warnedTokenTypes.has(type)) {
+      warnedTokenTypes.add(type);
+      console.warn("Unknown token type, rendering as word", { type, text: token && token.text });
+    }
+    return "word";
+  }
+
+  // Build a lookup of tokens that deserve review attention from session stats.
+  // Display priority is missed > skipped > slow (timed out).
+  function buildReviewTokenMap() {
+    const map = new Map();
+    runtime.stats.records.forEach(record => {
+      if (!record.tokenId) return;
+      const current = map.get(record.tokenId) || {};
+      if (record.missed) current.missed = true;
+      if (record.skipped) current.skipped = true;
+      if (record.timedOut) current.slow = true;
+      map.set(record.tokenId, current);
+    });
+    return map;
+  }
+
+  // Only compute the review map when Review Highlights is the active guidance mode.
+  function activeReviewMap() {
+    return runtime.settings.wordGuidanceMode === "review" ? buildReviewTokenMap() : null;
+  }
+
+  // Attach semantic role metadata (and optional review state) to a token span.
+  // Color is never the only cue: every token also carries a title and aria-label.
+  function decorateTokenRole(span, token, sentenceIndex, reviewMap) {
+    const type = resolveTokenType(token);
+    span.classList.add("token");
+    span.dataset.tokenType = type;
+    span.dataset.tokenKey = `${sentenceIndex}:${token.tokenIndex}`;
+    const label = TOKEN_TYPE_LABELS[type] || "Word";
+    if (token.text) {
+      span.title = `${label} - ${token.text}`;
+      span.setAttribute("aria-label", `${token.text}, ${label}`);
+    } else {
+      span.title = label;
+    }
+    if (reviewMap) {
+      const review = reviewMap.get(token.id);
+      if (review && review.missed) span.classList.add("review-missed");
+      else if (review && review.skipped) span.classList.add("review-skipped");
+      else if (review && review.slow) span.classList.add("review-slow");
+    }
+  }
+
+  // Build the magnified active token with its attached romaji (above) and
+  // reading/meaning (below) hints. Hints live inside the token element so they
+  // stay attached to the token even when the active sentence wraps.
+  function decorateFocusToken(span, token) {
+    span.classList.add("focus-token");
+    if (runtime.settings.showRomaji && token.romaji) {
+      const top = document.createElement("span");
+      top.className = "focus-hint-top";
+      top.textContent = token.romaji;
+      span.append(top);
+    }
+    const tokenText = document.createElement("span");
+    tokenText.className = "focus-token-text";
+    tokenText.textContent = token.text;
+    span.append(tokenText);
+    const bottom = document.createElement("span");
+    bottom.className = "focus-hint-bottom";
+    if (runtime.settings.showReading && token.reading) {
+      const reading = document.createElement("span");
+      reading.className = "focus-reading";
+      reading.textContent = token.reading;
+      bottom.append(reading);
+    }
+    if (runtime.settings.showMeaning && token.meaning) {
+      const meaning = document.createElement("span");
+      meaning.className = "focus-meaning";
+      meaning.textContent = token.meaning;
+      bottom.append(meaning);
+    }
+    if (bottom.children.length) span.append(bottom);
+  }
+
+  // Render every token of a sentence into a container. When focusTokenIndex is
+  // provided that token receives the active focus treatment; the rest render as
+  // plain token spans. No real spaces are inserted between tokens.
+  function appendSentenceTokens(container, sentence, focusTokenIndex, reviewMap) {
+    sentence.tokens.forEach(token => {
+      const span = document.createElement("span");
+      decorateTokenRole(span, token, sentence.index, reviewMap);
+      if (focusTokenIndex != null && token.tokenIndex === focusTokenIndex) {
+        decorateFocusToken(span, token);
+      } else {
+        span.textContent = token.text;
+      }
+      container.append(span);
+    });
+  }
+
   function renderPrevious() {
     clearNode(els.previousSentence);
     const previous = runtime.article.sentences[runtime.state.sentenceIndex - 1];
@@ -702,7 +839,7 @@
     row.className = "sentence-zone-row";
     row.append(createSentenceSpeakButton(previous.index, "Speak previous sentence", "small"));
     const text = document.createElement("span");
-    text.textContent = previous.text;
+    appendSentenceTokens(text, previous, null, activeReviewMap());
     row.append(text);
     els.previousSentence.append(row);
     const label = document.createElement("span");
@@ -723,53 +860,20 @@
       ((runtime.settings.showReading && focusedToken.reading) || (runtime.settings.showMeaning && focusedToken.meaning))
     );
     els.activeSentence.classList.toggle("has-token-bottom-hint", hasBottomHint);
-    sentence.tokens.forEach(token => {
-      const span = document.createElement("span");
-      span.className = "token";
-      if (token.tokenIndex === runtime.state.tokenIndex) {
-        span.classList.add("focus-token");
-        if (runtime.settings.showRomaji && token.romaji) {
-          const top = document.createElement("span");
-          top.className = "focus-hint-top";
-          top.textContent = token.romaji;
-          span.append(top);
-        }
-        const tokenText = document.createElement("span");
-        tokenText.className = "focus-token-text";
-        tokenText.textContent = token.text;
-        span.append(tokenText);
-        const bottom = document.createElement("span");
-        bottom.className = "focus-hint-bottom";
-        if (runtime.settings.showReading && token.reading) {
-          const reading = document.createElement("span");
-          reading.className = "focus-reading";
-          reading.textContent = token.reading;
-          bottom.append(reading);
-        }
-        if (runtime.settings.showMeaning && token.meaning) {
-          const meaning = document.createElement("span");
-          meaning.className = "focus-meaning";
-          meaning.textContent = token.meaning;
-          bottom.append(meaning);
-        }
-        if (bottom.children.length) span.append(bottom);
-      } else {
-        span.textContent = token.text;
-      }
-      els.activeSentenceLine.append(span);
-    });
+    appendSentenceTokens(els.activeSentenceLine, sentence, runtime.state.tokenIndex, activeReviewMap());
   }
 
   function renderRemaining() {
     clearNode(els.remainingText);
     const remaining = runtime.article.sentences.slice(runtime.state.sentenceIndex + 1);
     if (!remaining.length) return;
+    const reviewMap = activeReviewMap();
     remaining.forEach(sentence => {
       const p = document.createElement("p");
       p.className = "remaining-sentence-row";
       p.append(createSentenceSpeakButton(sentence.index, "Speak this remaining sentence", "small"));
       const text = document.createElement("span");
-      text.textContent = sentence.text;
+      appendSentenceTokens(text, sentence, null, reviewMap);
       p.append(text);
       els.remainingText.append(p);
     });
@@ -1473,6 +1577,45 @@
     return button;
   }
 
+  // Guidance mode changes from the practice-screen control: apply immediately,
+  // persist, and re-render so token highlighting updates across all zones.
+  function handleGuidanceChange(value) {
+    const mode = GUIDANCE_MODES.some(item => item.value === value) ? value : "focus";
+    runtime.settings.wordGuidanceMode = mode;
+    console.info("Guidance mode changed", { mode });
+    applySettings();
+    saveSettings();
+    render();
+  }
+
+  // Compact legend explaining the Grammar Colors palette. Closing returns focus
+  // to the practice flow.
+  function openLegendDialog() {
+    openModal({
+      title: "Grammar Colors legend",
+      message: "Each role keeps the same soft highlight used in the sentence.",
+      size: "small",
+      body: body => {
+        const list = document.createElement("div");
+        list.className = "legend-list";
+        LEGEND_TYPES.forEach(type => {
+          const item = document.createElement("div");
+          item.className = "legend-item";
+          const swatch = document.createElement("span");
+          swatch.className = "legend-swatch";
+          swatch.dataset.tokenType = type;
+          swatch.setAttribute("aria-hidden", "true");
+          const label = document.createElement("span");
+          label.textContent = TOKEN_TYPE_LABELS[type] || "Word";
+          item.append(swatch, label);
+          list.append(item);
+        });
+        body.append(list);
+      },
+      actions: [{ label: "Close", kind: "primary", onClick: closePracticeModal }]
+    });
+  }
+
   function closePracticeModal() {
     closeModal();
     render();
@@ -1540,6 +1683,7 @@
     section.append(toggleSetting("Show meaning", "Shows English meaning below the active token.", runtime.settings.showMeaning, value => runtime.settings.showMeaning = value));
     section.append(toggleSetting("Show reading", "Shows kana reading when available.", runtime.settings.showReading, value => runtime.settings.showReading = value));
     section.append(toggleSetting("Show article image", "Shows anchored article image when available.", runtime.settings.showArticleImage, value => runtime.settings.showArticleImage = value));
+    section.append(selectSetting("Word guidance", "Controls token boundary and grammar role highlighting.", runtime.settings.wordGuidanceMode, GUIDANCE_MODES.map(mode => [mode.value, mode.label]), value => runtime.settings.wordGuidanceMode = value));
     section.append(selectSetting("Caret animation", "Controls how quickly the caret moves.", runtime.settings.caretAnimation, [["off", "Off"], ["short", "Short"], ["normal", "Normal"]], value => runtime.settings.caretAnimation = value));
     return section;
   }
@@ -2064,6 +2208,7 @@
     document.documentElement.style.setProperty("--font-scale", String(font.scale));
     document.documentElement.style.setProperty("--caret-duration", CARET_DURATIONS[runtime.settings.caretAnimation] || CARET_DURATIONS.normal);
     document.documentElement.classList.toggle("caret-off", runtime.settings.caretAnimation === "off");
+    applyGuidanceMode();
     const showTypingInput = shouldShowTypingInput();
     document.body.classList.toggle("typing-input-hidden", !showTypingInput);
     document.body.classList.toggle("typing-input-visible", showTypingInput);
@@ -2072,6 +2217,29 @@
     if (!showTypingInput && document.activeElement === els.typingInput) {
       els.typingInput.blur();
     }
+    measureBottomControls();
+  }
+
+  // Normalize and apply the active guidance mode to the body dataset, keep the
+  // practice-screen control in sync, and show the Legend button only for grammar.
+  function applyGuidanceMode() {
+    const mode = GUIDANCE_MODES.some(item => item.value === runtime.settings.wordGuidanceMode)
+      ? runtime.settings.wordGuidanceMode
+      : "focus";
+    runtime.settings.wordGuidanceMode = mode;
+    document.body.dataset.guidanceMode = mode;
+    if (els.guidanceSelect && els.guidanceSelect.value !== mode) els.guidanceSelect.value = mode;
+    if (els.legendButton) els.legendButton.hidden = mode !== "grammar";
+  }
+
+  // The bottom controls can grow to two rows (Guidance row + navigation). Measure
+  // the real height so the scroll area reserves enough space on mobile.
+  function measureBottomControls() {
+    requestAnimationFrame(() => {
+      if (els.bottomControls && !els.bottomControls.hidden) {
+        document.documentElement.style.setProperty("--bottom-controls-height", `${els.bottomControls.offsetHeight}px`);
+      }
+    });
   }
 
   function isMobileViewport() {
