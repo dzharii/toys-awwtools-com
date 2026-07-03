@@ -8,6 +8,7 @@ import {
   LocatorCtlSegmented,
   LocatorCtlSelect,
 } from "../../framework/controls/locator-controls.js";
+import { agentAutoCapture } from "../../framework/agentic/agent-step.js";
 
 /** camelCase preference key -> kebab-case data-testid token (mirrors js/settings.js kebab()). */
 function kebab(name: string): string {
@@ -80,6 +81,7 @@ export class SettingsPageObject extends PageObjectBase {
   async close(): Promise<void> {
     await this.closeButton.click();
     await this.waitClosed();
+    await agentAutoCapture(this.app, "settings-closed");
   }
 
   async closeWithEscape(): Promise<void> {

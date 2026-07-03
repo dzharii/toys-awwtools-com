@@ -1,4 +1,5 @@
 import type { EinkReaderApp } from "../framework/app/automation-app.js";
+import { agentAutoCapture } from "../framework/agentic/agent-step.js";
 
 /**
  * Switch the reader between paged and scroll modes through the settings UI and
@@ -16,4 +17,5 @@ export async function switchModeFlow(app: EinkReaderApp, mode: "paged" | "scroll
     timeoutMs: app.timeouts.normal,
     description: `reader to switch to ${mode} mode`,
   });
+  await agentAutoCapture(app, `switch-mode-${mode}`);
 }

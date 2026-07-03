@@ -697,3 +697,139 @@ Rules when changing the app:
 ```
 
 If a test fails because of a genuine application bug (not a harness mismatch), record it in `bugs-todo.md` at the project root and keep the test in place (it documents the expected behavior).
+
+---
+
+## V00 Agentic UI Regression Analysis Mode
+
+The repository supports an exploratory Agentic Analysis Mode for the UI regression suite.
+
+Normal test runs remain the main regression gate:
+
+```text
+cd ui-regression-test-suite
+bun run typecheck
+bun run test
+bun run validate
+```
+
+Agentic Analysis Mode is different. It randomly selects 25 tests from the full Playwright test registry, records the random seed, runs the selected tests one by one, and writes extra screenshots, layout snapshots, DOM summaries, visible-element inventories, console/page/network/storage diagnostics, oracle details, traces, and per-step logs into a gitignored run folder.
+
+Use it when looking for subtle UI regressions, visual issues, flaky tests, weak assertions, or gaps that normal assertions did not catch.
+
+Run:
+
+```text
+cd ui-regression-test-suite
+bun run agent:analyze
+```
+
+To reproduce a previous selection:
+
+```text
+cd ui-regression-test-suite
+bun run agent:run -- --count=25 --seed=<seed>
+```
+
+Artifacts are written to `ui-regression-test-suite/.agent-runs/`. This folder must remain gitignored. Do not commit screenshots, traces, videos, temporary reports, or generated analysis logs.
+
+The agent must inspect each selected test's artifacts through the product personas:
+
+```text
+Frank: serious reader, long-form comfort, typography, credible E Ink feel.
+Lily: occasional reader, smoothness, obvious controls, calm errors, no confusion.
+Roman: experienced software engineer, Markdown developer notes, code blocks, links, mobile review, local/offline trust.
+Accessibility reviewer: focus, keyboard, contrast, reduced motion, accessible names.
+```
+
+For every finding, classify it before changing code:
+
+```text
+APP_BUG: the application is wrong. Fix the application and keep or strengthen the test.
+TEST_BUG: the test is wrong. Fix the test.
+HARNESS_TIMING: the test observes too early or races app readiness. Improve synchronization.
+PRODUCT_DECISION: the expected behavior is ambiguous. Use the specs and best judgment, then document the decision.
+VISUAL_MANUAL_ONLY: the issue is aesthetic and cannot be reliably asserted by DOM tests. Record it for manual review.
+```
+
+The main directive remains application correctness. Passing tests are not the goal by themselves. Do not weaken tests merely to make them pass. Do not modify application behavior only to satisfy a bad test. Agentic Analysis Mode may add read-only diagnostics and test instrumentation, but it must never expose book content through logs, localStorage, IndexedDB, Cache Storage, screenshots metadata, or `window.__einkReader`.
+
+After any application or test fix found through Agentic Analysis Mode, run the relevant targeted test, then run `bun run validate`. If a real application bug is discovered, record it in `bugs-todo.md` and keep the failing or newly added test that documents the expected behavior.
+
+## W00 Handling Findings From Agentic Analysis
+
+Agentic Analysis Mode is not only a reporting mode. Its results must be used to improve the application, the tests, or the test framework.
+
+If the application is wrong, fix the application. If the test is wrong, fix the test. If the framework lacks a reusable assertion or helper, improve the framework. If the behavior is ambiguous, make a product decision and document it.
+
+Do not patch only the one visible failure when similar failures may exist elsewhere. Search for related tests, fixtures, page objects, settings, UI controls, and product paths. Apply the fix consistently. If the same assertion belongs in many tests, move it into a helper, page object, oracle extension, or adaptive baseline.
+
+The agent must always ask:
+
+```text
+Where else does this behavior exist?
+Which other tests should be strengthened?
+Which related product paths could break in the same way?
+Should this be a shared framework feature instead of a one-off assertion?
+Does this change require a new fixture, a new helper, or README documentation?
+```
+
+If a test passes but the screenshot shows a confusing, broken, unsafe, or unusable experience, treat that as a real finding. If a clear issue is not explicitly specified but harms the user experience, privacy, safety, accessibility, stability, or reading quality, fix it or document it as known behavior.
+
+After any fix:
+
+```text
+1. Re-run the targeted test.
+2. Re-run related tests.
+3. Re-run the relevant category.
+4. Re-run the full validation suite when stable.
+5. Update bugs-todo.md for real application bugs or product observations.
+6. Update ui-regression-test-suite/README.md when framework behavior changes.
+```
+
+The priority remains a correct, stable, local-first, private, usable E Ink Reader. A green suite is useful only when it protects that product quality.
+
+## X00 Optional UI Test Full Report (HTML)
+
+There is an **optional** UI test full report: a self-contained, human-viewable
+HTML report of an Agentic UI Regression Analysis run.
+
+This report is **opt-in and on-demand only**. Do not generate it during normal
+test runs, normal Agentic Analysis runs, or CI. Generate it **only when the user
+explicitly asks** — for example when they ask to "create a full report", "make
+the full report", "preserve this run as a report", "generate the HTML report", or
+similar. When not asked, an Agentic Analysis run's `summary.md` and `findings.md`
+are sufficient.
+
+Do not confuse this with other reports in the repository. This is specifically
+the **UI regression full report** (HTML), and it is distinct from:
+
+```text
+feed.xml          the app's user-facing RSS update feed
+bugs-todo.md      the application bug/observation tracker
+summary.md        the per-run agentic summary (markdown)
+findings.md       the per-run agentic findings (markdown)
+Playwright's own  playwright-report / test-results HTML+JSON reporters
+```
+
+How to produce it (full, precise, reproducible instructions):
+
+```text
+ui-regression-test-suite/full-report-template/README.md
+```
+
+Short version, from `ui-regression-test-suite/`:
+
+```text
+bun run agent:report -- --run=<run-folder> [--before=<pre-fix-run-folder>]
+```
+
+The generator (`src/agentic/build-report.ts`) fills the HTML shell in
+`full-report-template/report-template.html`, inlines every screenshot as a
+base64 data URI (so the report is fully self-contained and never shows broken
+images), and writes `report.html` into the run's own gitignored
+`.agent-runs/<run-id>/` folder.
+
+Constraints: the report is a development artifact only, imports no application
+source, must never contain real book content (synthetic fixtures only), and its
+output plus all `.agent-runs/` artifacts stay gitignored and are never committed.

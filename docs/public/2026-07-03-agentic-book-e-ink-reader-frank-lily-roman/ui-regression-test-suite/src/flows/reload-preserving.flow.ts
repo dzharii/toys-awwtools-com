@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import type { EinkReaderApp } from "../framework/app/automation-app.js";
+import { agentAutoCapture } from "../framework/agentic/agent-step.js";
 
 /**
  * Reload the page and assert the privacy + persistence contract: saved
@@ -19,6 +20,7 @@ export async function reloadPreservingPreferencesFlow(
 
   // After reload the app must not show a document: content is never persisted.
   await app.openScreen().expectReady();
+  await agentAutoCapture(app, "reload-open-screen");
   expect(await app.reader().isVisible(), "reader must not restore book content after reload").toBe(false);
 
   const after = await app.storage.preferences();

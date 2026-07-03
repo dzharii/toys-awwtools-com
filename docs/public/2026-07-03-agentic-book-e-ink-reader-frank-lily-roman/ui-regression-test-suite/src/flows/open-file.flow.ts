@@ -1,5 +1,6 @@
 import type { EinkReaderApp } from "../framework/app/automation-app.js";
 import type { FixtureName } from "../framework/support/fixtures.js";
+import { agentAutoCapture } from "../framework/agentic/agent-step.js";
 
 /**
  * Open a fixture through the file picker and wait until the reader is ready with
@@ -16,6 +17,7 @@ export async function openFileByPickerFlow(
   await app.busy().waitHidden();
   await app.reader().expectReady();
   if (marker) await app.reader().waitForMarker(marker);
+  await agentAutoCapture(app, `open-file-picker-${name}`);
 }
 
 /**
@@ -31,4 +33,5 @@ export async function openFileByDropFlow(
   await app.busy().waitHidden();
   await app.reader().expectReady();
   if (marker) await app.reader().waitForMarker(marker);
+  await agentAutoCapture(app, `open-file-drop-${name}`);
 }

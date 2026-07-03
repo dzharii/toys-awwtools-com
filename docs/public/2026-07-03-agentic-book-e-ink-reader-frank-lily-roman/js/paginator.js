@@ -9,7 +9,7 @@
 import { clamp } from "./utils.js";
 import { log } from "./logging.js";
 
-const COLUMN_GAP = 48; // px between page columns
+const COLUMN_GAP = 48; // minimum px between page columns (widened per-measure below)
 const V_MARGIN = 8; // extra vertical breathing room inside the viewport
 
 export class Paginator {
@@ -51,8 +51,17 @@ export class Paginator {
     const pageWidth = Math.max(200, Math.min(desiredW, vpW - 8));
     const pageHeight = Math.max(120, vpH - V_MARGIN * 2);
 
+    // The column gap must be wide enough that only one page is ever inside the
+    // clipped viewport. The content column is centered, so the empty slack on
+    // each side is (vpW - pageWidth) / 2. If the gap were smaller than that
+    // slack, the *next* column would peek into the right margin (a visible text
+    // bleed on wide screens where the measure is narrower than the viewport).
+    // Making the gap at least the full slack guarantees the next column starts
+    // at or beyond the right clip edge.
+    const columnGap = Math.max(COLUMN_GAP, Math.ceil(vpW - pageWidth));
+
     this.pageWidth = pageWidth;
-    this.pageStride = pageWidth + COLUMN_GAP;
+    this.pageStride = pageWidth + columnGap;
 
     const c = this.content;
     c.style.position = "absolute";
@@ -61,12 +70,12 @@ export class Paginator {
     c.style.width = `${pageWidth}px`;
     c.style.height = `${pageHeight}px`;
     c.style.columnWidth = `${pageWidth}px`;
-    c.style.columnGap = `${COLUMN_GAP}px`;
+    c.style.columnGap = `${columnGap}px`;
     c.style.columnFill = "auto";
 
     // Force layout, then read the flowed width.
     const scrollW = c.scrollWidth;
-    const count = Math.max(1, Math.round((scrollW + COLUMN_GAP) / this.pageStride));
+    const count = Math.max(1, Math.round((scrollW + columnGap) / this.pageStride));
     this.pageCount = count;
     this.index = clamp(Math.round(frac * (count - 1)), 0, count - 1);
     this.applyTransform();

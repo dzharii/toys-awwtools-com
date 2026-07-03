@@ -74,6 +74,84 @@ src/specs/        one folder per test category
 scripts/          make-fixtures.mjs (regenerates ../tests/fixtures/)
 ```
 
+## Agentic UI Regression Analysis Mode
+
+An **opt-in exploratory mode** (spec `../specs/tests-v3--Agentic-UI-Regression-Analysis-Mode.md`).
+It randomly selects tests from the registry, runs each one individually with
+extra instrumentation, and writes screenshots + telemetry into a **gitignored**
+run folder so the agent can review what happened step by step.
+
+```bash
+bun run agent:discover        # (re)generate + validate src/agentic/test-registry.json
+bun run agent:sample -- --count=25 --seed=184927   # preview a seeded selection
+bun run agent:analyze          # select 25, run individually, capture artifacts
+bun run agent:run -- --count=10 --seed=184927 --category=settings
+bun run agent:report -- --run=<run-folder> [--before=<pre-fix-run-folder>]
+```
+
+Runner flags: `--count=N`, `--seed=N`, `--category=<folder>`, `--tag=<tag>`,
+`--exclude-tag=<tag>`, `--no-balance`, `--list-only`, `--do-not-fail-on-test-failure`.
+
+`agent:report` renders a self-contained, human-viewable `report.html` into a run
+folder: run metadata, reviewer methodology and per-persona decisions, the
+classified findings (with inlined before/after evidence when `--before` points
+at a pre-fix run), and a browsable gallery of every captured screenshot
+correlated with its layout-snapshot facts. It defaults to the latest run folder
+if `--run` is omitted.
+
+Artifacts land under `.agent-runs/<timestamp>_seed-<seed>_count-<n>/`:
+
+```text
+manifest.json            correlation map: test id -> status, steps, artifacts
+selected-tests.json      the seeded selection (reproducible with --seed)
+summary.md               human-readable run summary
+findings.md              classification template the agent fills in
+report.html              self-contained detailed report (via agent:report)
+run.log                  per-test run log
+playwright-results.json  combined Playwright JSON reports
+tests/<TEST_ID>__<slug>/
+  test.json  steps.json  test-output.txt
+  screenshots/  NNN-<label>-after.png          (per meaningful action)
+  snapshots/    NNN-<label>-after-layout.json  + -visible-elements.json [+ -accessibility.json]
+  dom/          NNN-<label>-after.json          (content-safe, truncated)
+  diagnostics/  console.json page-errors.json network.json storage.json oracle.json
+```
+
+Key properties:
+
+- **Opt-in only.** All instrumentation is gated on `EINK_AGENTIC_ANALYSIS=1`.
+  Normal `bun run test` is unchanged, fast, and writes no agentic artifacts.
+- **Stable test IDs.** `src/agentic/test-registry.json` maps a `CATEGORY-NNN` id
+  to every test (title/file/category/line). `agent:discover` regenerates it from
+  the live Playwright test list and validates for duplicate/invalid ids.
+- **Reproducible.** The random seed is recorded; re-passing `--seed` reproduces
+  the exact selection (mulberry32 PRNG, category-balanced, without replacement).
+- **Individual execution.** Each selected test runs in its own Playwright
+  invocation (`--grep <exact title>`) with the `playwright.agentic.config.ts`
+  overrides (`workers:1`, `retries:0`, `trace:on`, `screenshot:on`).
+- **Content-safe.** DOM/element text is truncated; no full book content and no
+  fixture markers are persisted anywhere the product would not persist them.
+  `window.__einkReader` stays read-only and content-free.
+
+Step capture is wired into the shared **flows** and key **page-object** actions
+via `agentAutoCapture` (`src/framework/agentic/agent-step.ts`), plus a per-test
+initial/final-state capture in the `makeApp` fixture. New tests can also call
+`agentStep(...)` for explicit before/after step capture. The non-throwing
+`collectOracleDiagnostics` mirrors the Standard Oracle for `oracle.json` without
+changing normal test semantics.
+
+### Handling findings
+
+For every finding, classify before changing code: **APP_BUG** (fix the app,
+keep/strengthen the test), **TEST_BUG** (fix the test), **HARNESS_TIMING**
+(improve synchronization, not arbitrary sleeps), **PRODUCT_DECISION** (document
+it), **VISUAL_MANUAL_ONLY** (record a manual review item + add the strongest
+mechanical checks available). Search for the *family* of the problem, not just
+the one symptom; promote repeated assertions into shared helpers/page objects.
+Real app bugs go in `../bugs-todo.md` with a regression test that fails before
+the fix. Never weaken a test just to make it pass, and never expose book content
+for test convenience.
+
 ## Fixtures
 
 Fixtures live in `../tests/fixtures/` and each carries a unique text marker

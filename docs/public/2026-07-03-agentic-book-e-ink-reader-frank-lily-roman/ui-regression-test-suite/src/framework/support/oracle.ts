@@ -112,6 +112,19 @@ export async function expectStandardOracle(app: EinkReaderApp, expected: OracleE
         expect(state.index, "page index >= 0").toBeGreaterThanOrEqual(0);
         expect(state.index, "page index within range").toBeLessThan(state.count);
       }
+
+      // No adjacent-column bleed: when the book spans more than one page, the
+      // per-page stride must be at least the clipped viewport width, so only a
+      // single page column can ever be inside the visible clip region. A smaller
+      // stride lets the next page's text peek into the margin (regression: the
+      // fixed column gap was narrower than the centered measure's side slack).
+      const geom = await reader.pagedGeometry();
+      if (geom && geom.pageCount > 1) {
+        expect(
+          geom.pageStride,
+          `paged stride ${geom.pageStride}px must be >= viewport ${geom.viewportWidth}px (adjacent column bleed)`,
+        ).toBeGreaterThanOrEqual(geom.viewportWidth - 1);
+      }
     } else {
       expect(await reader.scrollHost.isVisible(), "#reader-scroll visible in scroll mode").toBe(true);
     }

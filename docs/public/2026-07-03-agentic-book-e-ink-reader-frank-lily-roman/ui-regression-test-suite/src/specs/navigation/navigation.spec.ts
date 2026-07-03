@@ -64,6 +64,10 @@ test.describe("navigation", () => {
       expect(await pageIndex(app)).toBe(0);
       expect(await app.reader().prevButton.isEnabled()).toBe(false);
       expect(await app.reader().nextButton.isEnabled()).toBe(true);
+      // Disabled prev must also look disabled (muted), so readers don't tap a
+      // dead-looking-active control. Active next stays fully opaque.
+      expect(await app.reader().navButtonOpacity("prev")).toBeLessThan(1);
+      expect(await app.reader().navButtonOpacity("next")).toBe(1);
       await expectStandardOracle(app, { documentOpen: true, mode: "paged" });
     });
 
@@ -75,6 +79,7 @@ test.describe("navigation", () => {
       await app.reader().pressKey("End");
       await expect.poll(() => pageIndex(app)).toBe(count - 1);
       expect(await app.reader().nextButton.isEnabled()).toBe(false);
+      expect(await app.reader().navButtonOpacity("next")).toBeLessThan(1);
       await app.reader().pressKey("Home");
       await expect.poll(() => pageIndex(app)).toBe(0);
       await expectStandardOracle(app, { documentOpen: true, mode: "paged" });

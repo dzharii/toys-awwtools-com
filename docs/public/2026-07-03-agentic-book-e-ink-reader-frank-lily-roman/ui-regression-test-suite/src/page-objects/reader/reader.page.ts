@@ -7,6 +7,7 @@ import {
   LocatorCtlStatus,
 } from "../../framework/controls/locator-controls.js";
 import type { ModeValue } from "../../config/suite-config.js";
+import { agentAutoCapture } from "../../framework/agentic/agent-step.js";
 
 /**
  * The reader surface: title bar (title, open, settings), stage (paper with the
@@ -130,10 +131,14 @@ export class ReaderPageObject extends PageObjectBase {
 
   async goToNextPage(): Promise<void> {
     await this.nextButton.click();
+    await this.waitSettled();
+    await agentAutoCapture(this.app, "next-page");
   }
 
   async goToPrevPage(): Promise<void> {
     await this.goToPrevPageInternal();
+    await this.waitSettled();
+    await agentAutoCapture(this.app, "prev-page");
   }
 
   private async goToPrevPageInternal(): Promise<void> {
@@ -142,10 +147,14 @@ export class ReaderPageObject extends PageObjectBase {
 
   async tapNext(): Promise<void> {
     await this.zoneNext.click();
+    await this.waitSettled();
+    await agentAutoCapture(this.app, "tap-next");
   }
 
   async tapPrev(): Promise<void> {
     await this.zonePrev.click();
+    await this.waitSettled();
+    await agentAutoCapture(this.app, "tap-prev");
   }
 
   /** Scroll navigation (scroll mode hides the page-nav buttons; keyboard drives it). */
@@ -168,6 +177,7 @@ export class ReaderPageObject extends PageObjectBase {
 
   async openSettings(): Promise<void> {
     await this.settingsButton.click();
+    await agentAutoCapture(this.app, "open-settings");
   }
 
   async clickOpenAnother(): Promise<void> {
@@ -185,7 +195,31 @@ export class ReaderPageObject extends PageObjectBase {
     });
   }
 
-  /** True when the E Ink overlay is actively shown (used to detect a stuck overlay). */
+  /**
+   * Paged geometry from the paginator: the per-page horizontal stride and the
+   * viewport width the columns are clipped to. Used to assert that adjacent
+   * page columns can never co-appear inside the clip region (no text bleed).
+   */
+  async pagedGeometry(): Promise<{ pageStride: number; viewportWidth: number; pageCount: number } | null> {
+    return this.page.evaluate(() => {
+      const app = (window as unknown as {
+        __einkReader?: { paginator?: { pageStride: number; pageCount: number; viewport?: { clientWidth: number } } };
+      }).__einkReader;
+      const p = app?.paginator;
+      if (!p || !p.viewport) return null;
+      return { pageStride: p.pageStride, viewportWidth: p.viewport.clientWidth, pageCount: p.pageCount };
+    });
+  }
+
+  /** Effective CSS opacity of a footer nav button (disabled buttons read muted). */
+  async navButtonOpacity(which: "prev" | "next"): Promise<number> {
+    const id = which === "prev" ? "prev-page" : "next-page";
+    return this.page.evaluate((elId) => {
+      const el = document.getElementById(elId);
+      if (!el) return 1;
+      return parseFloat(getComputedStyle(el).opacity || "1");
+    }, id);
+  }
   async isEinkOverlayActive(): Promise<boolean> {
     return this.page.evaluate(() => {
       const el = document.querySelector<HTMLElement>(".eink-overlay");

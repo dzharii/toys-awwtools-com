@@ -10,14 +10,19 @@ Status legend: `[ ]` open, `[x]` fixed/closed, `[~]` observation (not a bug).
 
 ## Summary
 
-As of the gap-closure pass, **all 198 automated tests pass** and **no confirmed
-application bugs were found**. Every failure encountered while writing the suite
-was a test-harness mismatch (wrong marker, wrong locator, an incorrect
-assumption about intended behavior, or an induced-condition console error), which
-was corrected in the test code rather than the app.
+The gap-closure automated suite (198 tests) passes. A subsequent **Agentic UI
+Regression Analysis** run (25 randomly-sampled tests, seed `20260703`, with
+per-step screenshots and layout snapshots) surfaced **two genuine application
+defects by visual/usability review** even though every test was green — a
+paged-mode column bleed (F002, high) and missing disabled-state styling on the
+navigation buttons (F001, medium). Both are now fixed and covered by regression
+assertions; see **Confirmed bugs** below.
 
-The items below are minor behavioral observations recorded for a future product
-review. They are not defects and none currently fail a test.
+Every failure encountered while *writing* the suite was a test-harness mismatch
+(wrong marker, wrong locator, an incorrect assumption about intended behavior,
+or an induced-condition console error), which was corrected in the test code
+rather than the app. The items under **Observations** are minor behaviors
+recorded for a future product review; they are not defects and none fail a test.
 
 ---
 
@@ -60,7 +65,39 @@ review. They are not defects and none currently fail a test.
 
 ## Confirmed bugs
 
-_None at this time._
+- [x] **F002 (high) — Paged mode: next column's text bled into the right margin.**
+  Reproduced by the Agentic Analysis run (seed `20260703`) on paged tests
+  EINK-001, NAV-006, TXT-008, FILE-005. When the reading measure was narrower
+  than the viewport, the page columns were centered but the fixed `COLUMN_GAP`
+  (48px) was smaller than the right-side slack `(viewportWidth - pageWidth)/2`,
+  so the start of the next page column peeked into the visible clip region on
+  the right. Absent when the measure ≈ viewport (mobile, font-missing fallback),
+  which confirmed the mechanism.
+  - Expected: only one page column is ever inside the clip region.
+  - Fix: `js/paginator.js` `measure()` now uses
+    `columnGap = Math.max(COLUMN_GAP, Math.ceil(vpW - pageWidth))` for the CSS
+    column gap, the page stride, and the page count, guaranteeing
+    `pageStride >= viewportWidth` so adjacent columns can never co-appear.
+  - Regression guard: the Standard Post-Action Oracle now asserts
+    `paginator.pageStride >= viewport.clientWidth` on every paged step where
+    `pageCount > 1` (`src/framework/support/oracle.ts`), backed by the read-only
+    `window.__einkReader.paginator` handle.
+
+- [x] **F001 (medium) — Disabled Prev/Next nav buttons looked active.**
+  At the first/last page the Prev/Next buttons were functionally disabled
+  (`disabled` attribute set, `isEnabled()` false) but rendered with identical
+  active styling — no muted state — so a reader could tap a dead-looking-active
+  control. Surfaced by reviewing NAV/EINK boundary screenshots in the agentic
+  run.
+  - Expected: a disabled nav control is visibly muted and not hover-reactive.
+  - Fix: `css/reader.css` adds an `.icon-button:disabled` / `[disabled]` rule
+    (opacity `0.38`, `cursor: default`) plus a disabled-hover reset. Family-level
+    fix covering all icon-buttons.
+  - Regression guard: navigation specs `R005` (first page) and `R006` (last
+    page) now assert the disabled button's computed opacity is `< 1` while the
+    still-active button stays fully opaque (`reader.page.ts navButtonOpacity`).
+
+_All confirmed bugs above are fixed and covered by regression assertions._
 
 When a real application bug is discovered:
 

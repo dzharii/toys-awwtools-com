@@ -1,4 +1,5 @@
 import type { EinkReaderApp } from "../framework/app/automation-app.js";
+import { agentAutoCapture } from "../framework/agentic/agent-step.js";
 
 /**
  * Apply a set of preferences through the settings UI in the deterministic order
@@ -53,4 +54,5 @@ export async function applyPreferencesFlow(app: EinkReaderApp, patch: Preference
 
   await settings.close();
   await app.busy().waitHidden();
+  await agentAutoCapture(app, "apply-preferences");
 }
