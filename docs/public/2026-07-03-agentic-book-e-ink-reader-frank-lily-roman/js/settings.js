@@ -6,11 +6,17 @@ import { FONT_OPTIONS } from "./preferences.js";
 import { KEYBOARD_REFERENCE } from "./accessibility.js";
 import { escapeHtml } from "./utils.js";
 
+// Convert a camelCase preference key to a kebab-case token for data-testid
+// values, keeping the automation contract lowercase and dash-separated.
+function kebab(name) {
+  return String(name).replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+}
+
 function seg(name, current, options) {
   const buttons = options
     .map(
       (o) =>
-        `<button type="button" data-seg="${name}" data-value="${o.value}" aria-pressed="${
+        `<button type="button" data-seg="${name}" data-value="${o.value}" data-testid="settings-seg-${kebab(name)}-${o.value}" aria-pressed="${
           o.value === current ? "true" : "false"
         }">${escapeHtml(o.label)}</button>`
     )
@@ -20,8 +26,8 @@ function seg(name, current, options) {
 
 function range(name, current, min, max, step, unit) {
   return `
-    <input type="range" data-range="${name}" min="${min}" max="${max}" step="${step}" value="${current}">
-    <span class="field__value" data-value-for="${name}">${current}${unit || ""}</span>`;
+    <input type="range" data-range="${name}" data-testid="settings-range-${kebab(name)}" min="${min}" max="${max}" step="${step}" value="${current}">
+    <span class="field__value" data-value-for="${name}" data-testid="settings-value-${kebab(name)}">${current}${unit || ""}</span>`;
 }
 
 /**
@@ -60,11 +66,11 @@ export function createSettingsPanel(opts) {
     ).join("");
 
     return `
-      <div class="settings-scrim" data-close="scrim"></div>
-      <aside class="settings" role="dialog" aria-modal="true" aria-label="Reader settings">
+      <div class="settings-scrim" data-close="scrim" data-testid="settings-region-scrim"></div>
+      <aside class="settings" role="dialog" aria-modal="true" aria-label="Reader settings" data-testid="settings-region-dialog">
         <div class="settings__header">
           <span class="settings__title">Settings</span>
-          <button type="button" class="icon-button" data-close="button" aria-label="Close settings">Close</button>
+          <button type="button" class="icon-button" data-close="button" data-testid="settings-button-close" aria-label="Close settings">Close</button>
         </div>
         <div class="settings__body">
 
@@ -83,7 +89,7 @@ export function createSettingsPanel(opts) {
             <h3>Typography</h3>
             <div class="field">
               <label for="set-font">Font</label>
-              <div class="field__control"><select id="set-font" class="font-select" data-select="fontFamily">${fontOpts}</select></div>
+              <div class="field__control"><select id="set-font" class="font-select" data-select="fontFamily" data-testid="settings-select-font-family">${fontOpts}</select></div>
             </div>
             <div class="field">
               <label>Text size</label>
@@ -114,7 +120,7 @@ export function createSettingsPanel(opts) {
             <h3>Display</h3>
             <div class="field">
               <label for="set-theme">Paper</label>
-              <div class="field__control"><select id="set-theme" data-select="theme">${themeOpts}</select></div>
+              <div class="field__control"><select id="set-theme" data-select="theme" data-testid="settings-select-theme">${themeOpts}</select></div>
             </div>
             <div class="field">
               <label>Contrast</label>
@@ -146,7 +152,7 @@ export function createSettingsPanel(opts) {
             </div>
             <div class="field">
               <label for="set-refresh">Refresh style</label>
-              <div class="field__control"><select id="set-refresh" data-select="refreshStyle">${refreshOpts}</select></div>
+              <div class="field__control"><select id="set-refresh" data-select="refreshStyle" data-testid="settings-select-refresh-style">${refreshOpts}</select></div>
             </div>
             <div class="field">
               <label>Full refresh every</label>
@@ -179,8 +185,8 @@ export function createSettingsPanel(opts) {
           </section>
 
           <section class="settings__section">
-            <details>
-              <summary>Advanced diagnostics</summary>
+            <details data-testid="settings-region-advanced">
+              <summary data-testid="settings-button-advanced-toggle">Advanced diagnostics</summary>
               <div class="field">
                 <label>Debug mode</label>
                 <div class="field__control">${seg("debugEnabled", p.debugEnabled ? "on" : "off", [
@@ -188,11 +194,11 @@ export function createSettingsPanel(opts) {
                   { value: "off", label: "Off" },
                 ])}</div>
               </div>
-              <div class="log-view" data-log-view>Enable debug mode to view logs.</div>
+              <div class="log-view" data-log-view data-testid="settings-region-log-view">Enable debug mode to view logs.</div>
               <div class="settings__footer" style="padding-left:0;padding-right:0;border-top:none;">
-                <button type="button" class="button" data-action="copy-logs">Copy logs</button>
-                <button type="button" class="button" data-action="clear-logs">Clear logs</button>
-                <button type="button" class="button" data-action="reset-prefs">Reset preferences</button>
+                <button type="button" class="button" data-action="copy-logs" data-testid="settings-button-copy-logs">Copy logs</button>
+                <button type="button" class="button" data-action="clear-logs" data-testid="settings-button-clear-logs">Clear logs</button>
+                <button type="button" class="button" data-action="reset-prefs" data-testid="settings-button-reset-prefs">Reset preferences</button>
               </div>
             </details>
           </section>

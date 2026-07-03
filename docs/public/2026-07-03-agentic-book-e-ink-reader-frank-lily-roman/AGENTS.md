@@ -619,3 +619,81 @@ No placeholder production URL remains before release.
 
 Fix any failed item before final completion.
 
+
+---
+
+T00 Automated UI Regression Tests
+
+---
+
+The repository ships an automated UI regression suite under `ui-regression-test-suite/`. It automates the manual test plan in `specs/tests-manual-plan-v01.md` and follows the architecture in `doc_automated_testing_plan.md`. The suite is a development tool only. It is NOT a runtime dependency: the app still runs with no npm, no build, and no server.
+
+How to run:
+
+```text
+cd ui-regression-test-suite
+bun install                 # first time only (installs Playwright + types)
+bunx playwright install chromium   # first time only (browser binary)
+bun run test                # full suite (198 tests, all categories)
+bun run test:<category>     # one category, e.g. bun run test:smoke
+bun run typecheck           # tsc --noEmit
+bun run validate            # typecheck + full suite
+```
+
+Category scripts: `test:smoke`, `test:files`, `test:txt`, `test:markdown`, `test:metadata`, `test:rss`, `test:navigation`, `test:settings`, `test:responsive`, `test:accessibility`, `test:privacy`, `test:offline`, `test:resilience`, `test:eink`, `test:pairwise`, `test:journeys`. The full category-to-behavior matrix is in `ui-regression-test-suite/COVERAGE.md`.
+
+Suite layout:
+
+```text
+ui-regression-test-suite/
+  src/config/          product-contract constants (enums, ranges, error copy, viewports)
+  src/framework/       app factory, page-object base, timeouts, diagnostics, storage/network guards, oracle, base-test
+  src/page-objects/    open-screen, reader, settings, toast, busy, code-block
+  src/flows/           reusable multi-step actions (open file, apply prefs, switch mode, reload)
+  src/specs/           one folder per test category
+  scripts/             make-fixtures.mjs (regenerates tests/fixtures/)
+```
+
+Design principles (do not violate):
+
+- The suite is DECOUPLED from product source. It interacts only through the DOM contract: `data-testid` attributes, ARIA roles, and the read-only `window.__einkReader` inspection handle. It never imports app JS modules.
+- Every spec ends actions with the Standard Post-Action Oracle (`expectStandardOracle`) which asserts global invariants: no page/console errors, no stuck busy/E Ink overlay, open XOR reader, valid enums, no horizontal overflow, only the preferences key in storage, no book content in storage, and no unexpected network requests. Gap-closure specs additionally use an adaptive surrounding-state baseline (`src/framework/support/baseline.ts` + `adaptive-baseline.ts`) that snapshots state before an action and asserts only the fields the chosen profile permits changed.
+- When a spec fails, classify before changing anything (APP_BUG / TEST_BUG / HARNESS_TIMING / PRODUCT_DECISION / VISUAL_MANUAL_ONLY). Fix the app for real defects; fix the test for harness mistakes. Never expose book content or internal mutable state solely for test convenience. Offline/resilience specs use Playwright route interception (`page.route`) and must never modify production files. Record genuine defects and product-decision observations in `bugs-todo.md`.
+- Fixtures live in `tests/fixtures/` (project root) and each carries a unique text marker (e.g. `FIXTURE_LONG_BOOK_CH1`). Tests assert against markers, not brittle text blocks. Regenerate with `node scripts/make-fixtures.mjs` (or `bun scripts/make-fixtures.mjs`) after adding a fixture in `scripts/make-fixtures.mjs`.
+
+U00 Test ID Requirements For App Code
+
+---
+
+Every user-interactive element in the runtime app MUST carry a `data-testid` attribute. This is a hard requirement for maintainability of the automated suite. When adding or changing interactive UI, add or update the `data-testid` and keep the page objects in sync.
+
+Naming convention (kebab-case): `<feature>-<surface>-<type>-<name>`
+
+- `feature`: the area, e.g. `reader`, `open-screen`, `settings`, `toast`, `busy`.
+- `surface`: `screen`, `region`, `button`, `input`, `status`, `select`, `range`, `segment`.
+- `name`: the specific control, e.g. `next`, `prev`, `theme`, `font-size`.
+
+Examples already in the app:
+
+```text
+open-screen-button-open        settings-region-dialog
+reader-button-next             settings-region-advanced
+reader-button-prev             settings-button-advanced-toggle
+reader-button-settings         toast-region
+busy-region                    open-screen-status-notice
+```
+
+Settings controls are generated in `js/settings.js`; its `kebab()` helper maps each camelCase preference key to a `settings-<segment|select|range>-<kebab-key>` testid. The page object `settings.page.ts` mirrors that mapping, so a new preference gets a testid automatically as long as the generator convention holds.
+
+Rules when changing the app:
+
+```text
+1. New interactive element  -> add a data-testid using the convention above.
+2. New preference control    -> follow the js/settings.js kebab() pattern (testid is derived).
+3. New fixture need          -> add it to scripts/make-fixtures.mjs, regenerate, record its marker in src/framework/support/fixtures.ts.
+4. New user-facing behavior  -> add/extend a spec under the matching src/specs/<category>/ folder.
+5. Never couple tests to app internals beyond data-testid, ARIA, and window.__einkReader.
+6. Keep window.__einkReader read-only and free of book content.
+```
+
+If a test fails because of a genuine application bug (not a harness mismatch), record it in `bugs-todo.md` at the project root and keep the test in place (it documents the expected behavior).
