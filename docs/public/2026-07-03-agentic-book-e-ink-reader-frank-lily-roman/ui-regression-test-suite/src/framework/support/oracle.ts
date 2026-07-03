@@ -103,6 +103,55 @@ export async function expectStandardOracle(app: EinkReaderApp, expected: OracleE
       expect(box.height, "content height").toBeGreaterThan(0);
     }
 
+    // 12b. Body text remains legible against the paper: the computed color of
+    // the reader content must keep an adequate WCAG contrast ratio versus the
+    // surface it sits on, in every theme x contrast combination. This guards
+    // against theme-unaware contrast overrides (regression: the "soft" contrast
+    // hardcoded a light-theme near-black ink, turning dark-theme prose into
+    // near-black text on the dark background = invisible).
+    const contrastRatio = await page.evaluate(() => {
+      const content = document.querySelector<HTMLElement>(".content");
+      if (!content) return null;
+      const parse = (c: string): [number, number, number, number] | null => {
+        const m = c.match(/rgba?\(([^)]+)\)/);
+        if (!m) return null;
+        const parts = m[1].split(",").map((s) => parseFloat(s.trim()));
+        return [parts[0], parts[1], parts[2], parts.length > 3 ? parts[3] : 1];
+      };
+      const lum = (r: number, g: number, b: number): number => {
+        const f = (v: number) => {
+          const s = v / 255;
+          return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+        };
+        return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+      };
+      const fg = parse(getComputedStyle(content).color);
+      if (!fg) return null;
+      // Find the first ancestor with a non-transparent background.
+      let node: HTMLElement | null = content;
+      let bg: [number, number, number, number] | null = null;
+      while (node) {
+        const parsed = parse(getComputedStyle(node).backgroundColor);
+        if (parsed && parsed[3] > 0) {
+          bg = parsed;
+          break;
+        }
+        node = node.parentElement;
+      }
+      if (!bg) return null;
+      const l1 = lum(fg[0], fg[1], fg[2]);
+      const l2 = lum(bg[0], bg[1], bg[2]);
+      const light = Math.max(l1, l2);
+      const dark = Math.min(l1, l2);
+      return (light + 0.05) / (dark + 0.05);
+    });
+    if (contrastRatio !== null) {
+      expect(
+        contrastRatio,
+        `reader body text contrast ratio ${contrastRatio.toFixed(2)}:1 is too low (theme=${theme}, contrast=${contrast}); text is barely legible against the paper`,
+      ).toBeGreaterThanOrEqual(3);
+    }
+
     // Mode-specific surface visibility.
     if (mode === "paged") {
       expect(await reader.pageViewport.isVisible(), "#page-viewport visible in paged mode").toBe(true);
