@@ -24,6 +24,9 @@ export class OpenScreenPageObject extends PageObjectBase {
   readonly openButton: LocatorCtlButton;
   readonly notice: LocatorCtlStatus;
   readonly rssLink: LocatorCtlElement;
+  readonly updatesPanel: LocatorCtlElement;
+  readonly updatesList: LocatorCtlElement;
+  readonly updatesRssLink: LocatorCtlElement;
 
   constructor(app: UiTestAppContext) {
     super(app, "open-screen");
@@ -42,6 +45,18 @@ export class OpenScreenPageObject extends PageObjectBase {
     this.rssLink = new LocatorCtlElement(
       "open-screen rss link",
       this.page.getByTestId("open-screen-link-rss"),
+    );
+    this.updatesPanel = new LocatorCtlElement(
+      "open-screen updates panel",
+      this.page.getByTestId("open-screen-region-updates"),
+    );
+    this.updatesList = new LocatorCtlElement(
+      "open-screen updates list",
+      this.page.getByTestId("open-screen-list-updates"),
+    );
+    this.updatesRssLink = new LocatorCtlElement(
+      "open-screen updates rss link",
+      this.page.getByTestId("open-screen-link-updates-rss"),
     );
   }
 
@@ -109,6 +124,52 @@ export class OpenScreenPageObject extends PageObjectBase {
 
   async clickOpenButton(): Promise<void> {
     await this.openButton.click();
+  }
+
+  // ---- project updates panel ----
+
+  /** All rendered update-item elements in the updates list. */
+  updateItems(): Locator {
+    return this.page.getByTestId("open-screen-update-item");
+  }
+
+  async updateItemCount(): Promise<number> {
+    return this.updateItems().count();
+  }
+
+  /**
+   * Wait until the updates list has stopped loading (aria-busy=false), i.e. the
+   * feed fetch/parse settled into a rendered, empty, error, or unavailable state.
+   */
+  async waitUpdatesSettled(): Promise<void> {
+    await this.app.timeouts.waitUntil(
+      async () => (await this.updatesList.exists()) &&
+        (await this.page.getByTestId("open-screen-list-updates").getAttribute("aria-busy")) === "false",
+      {
+        timeoutMs: this.app.timeouts.normal,
+        description: `updates list to settle. ${this.app.diagnostics.recentErrorsSummary()}`,
+      },
+    );
+  }
+
+  /** Text content of the whole updates list (items or status message). */
+  async updatesText(): Promise<string> {
+    return (await this.page.getByTestId("open-screen-list-updates").textContent()) ?? "";
+  }
+
+  /** Read the fields of the first rendered update item. */
+  async firstUpdateItem(): Promise<{ title: string; date: string; hasDate: boolean; desc: string }> {
+    const item = this.updateItems().first();
+    const title = (await item.locator(".update-item__title").textContent()) ?? "";
+    const dateLoc = item.locator(".update-item__date");
+    const hasDate = (await dateLoc.count()) > 0;
+    const date = hasDate ? ((await dateLoc.textContent()) ?? "") : "";
+    const desc = (await item.locator(".update-item__desc").textContent()) ?? "";
+    return { title: title.trim(), date: date.trim(), hasDate, desc: desc.trim() };
+  }
+
+  async updatesRssHref(): Promise<string | null> {
+    return this.page.getByTestId("open-screen-link-updates-rss").getAttribute("href");
   }
 
   /**

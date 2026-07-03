@@ -22,6 +22,7 @@ import { EinkController } from "./eink-effect.js";
 import { createSettingsPanel } from "./settings.js";
 import { prefersReducedMotion, onReducedMotionChange, trapFocus } from "./accessibility.js";
 import { debounce } from "./utils.js";
+import { initUpdatesPanel } from "./rss-updates.js";
 
 // Preference keys that require a layout recalculation when changed.
 const LAYOUT_KEYS = new Set([
@@ -45,6 +46,7 @@ class ReaderApp {
     this.settingsPanel = null;
     this.releaseFocusTrap = null;
     this.toastTimer = null;
+    this.loadSeq = 0; // increments on each load/close to cancel stale async work
   }
 
   init() {
@@ -87,6 +89,9 @@ class ReaderApp {
     this.bindResize();
     this.bindReducedMotion();
 
+    // Home-screen project updates (reads local feed.xml; failures are calm).
+    initUpdatesPanel(this.els.updatesList);
+
     // First-run hint: preferences restored, book must be reopened.
     if (hasStoredPreferences()) {
       this.showOpenNotice({
@@ -108,8 +113,10 @@ class ReaderApp {
       dropzone: $("dropzone"),
       fileInput: $("file-input"),
       openButton: $("open-button"),
+      updatesList: $("updates-list"),
       reader: $("reader"),
       readerTitle: $("reader-title"),
+      closeButton: $("close-document-button"),
       settingsButton: $("settings-button"),
       openButton2: $("open-button-2"),
       stage: $("reader-stage"),
@@ -152,6 +159,7 @@ class ReaderApp {
   }
 
   async loadDocument(result, opts = {}) {
+    const seq = ++this.loadSeq; // cancels if closeDocument/another load supersedes
     this.pendingResult = result;
     this.setBusy(true, "Reading…");
     try {
@@ -161,6 +169,9 @@ class ReaderApp {
         sourceText: result.sourceText,
         forceText: !!opts.forceText,
       });
+
+      // A close (or newer load) happened while building — abort silently.
+      if (seq !== this.loadSeq) return;
 
       // Store in memory only (never persisted).
       appState.document = {
@@ -191,10 +202,13 @@ class ReaderApp {
 
       // Enter reader with a full refresh.
       await this.eink.run("full", async () => {
+        if (seq !== this.loadSeq) return; // closed mid-transition
         await this.layoutCurrentMode(true);
       });
+      if (seq !== this.loadSeq) return;
       this.setBusy(false);
     } catch (err) {
+      if (seq !== this.loadSeq) return;
       this.setBusy(false);
       this.handleError(err);
     }
@@ -203,6 +217,51 @@ class ReaderApp {
   enterReader() {
     this.els.openScreen.hidden = true;
     this.els.reader.hidden = false;
+  }
+
+  /**
+   * Close the current document and return to the home screen. Clears in-memory
+   * document state and rendered content, resets reader position/progress, closes
+   * settings, and moves focus to the Open file button. Preferences are never
+   * touched and no book content is persisted. Uses a calm E Ink refresh
+   * (reduced-motion / effect-off collapses to an immediate, calm transition).
+   */
+  async closeDocument() {
+    if (this.els.reader.hidden && !appState.document.loaded) return;
+    // Supersede any in-flight load so a late result cannot reopen the reader.
+    this.loadSeq++;
+
+    if (appState.ui.settingsOpen) this.closeSettings();
+    this.pendingResult = null; // drop retained source text
+
+    await this.eink.run("full", () => {
+      // Clear document + reader state.
+      clearDocument();
+      this.currentContent = null;
+      this.paginator.detach();
+      this.scroll.detach();
+      this.els.readerTitle.textContent = "Reader";
+      this.els.progress.textContent = "";
+      this.els.prevPage.disabled = false;
+      this.els.nextPage.disabled = false;
+      this.els.stage.scrollTop = 0;
+
+      // Swap surfaces.
+      this.els.reader.hidden = true;
+      this.els.openScreen.hidden = false;
+      this.setBusy(false);
+    });
+
+    // Calm, non-restorable notice + sensible focus target.
+    this.showOpenNotice({
+      title: "Document closed",
+      message: "Open a TXT or Markdown file to continue reading.",
+      actions: [],
+    });
+    if (this.els.openButton && typeof this.els.openButton.focus === "function") {
+      this.els.openButton.focus();
+    }
+    log.info("app:document-close");
   }
 
   // ---------- Layout ----------
@@ -316,6 +375,7 @@ class ReaderApp {
     this.els.zoneNext.addEventListener("click", () => this.pageNext());
     this.els.zonePrev.addEventListener("click", () => this.pagePrev());
     this.els.settingsButton.addEventListener("click", () => this.openSettings());
+    this.els.closeButton.addEventListener("click", () => this.closeDocument());
   }
 
   pageNext() {
@@ -526,7 +586,10 @@ class ReaderApp {
         this.pagePrev();
         break;
       case " ": // Space
-        if (inControl) break;
+        // Space is the native activation key for a focused button/link (e.g. the
+        // reader-bar Close/Open/Settings controls); don't hijack it for page
+        // turns in that case. Space turns the page only when reading (stage).
+        if (inControl || /^(BUTTON|A)$/.test(tag)) break;
         e.preventDefault();
         if (e.shiftKey) this.pagePrev();
         else this.pageNext();

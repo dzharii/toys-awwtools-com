@@ -17,6 +17,7 @@ import { agentAutoCapture } from "../../framework/agentic/agent-step.js";
  */
 export class ReaderPageObject extends PageObjectBase {
   readonly title: LocatorCtlStatus;
+  readonly closeButton: LocatorCtlButton;
   readonly openButton: LocatorCtlButton;
   readonly settingsButton: LocatorCtlButton;
   readonly stage: LocatorCtlElement;
@@ -32,6 +33,10 @@ export class ReaderPageObject extends PageObjectBase {
   constructor(app: UiTestAppContext) {
     super(app, "reader");
     this.title = new LocatorCtlStatus("reader title", this.page.getByTestId("reader-text-title"));
+    this.closeButton = new LocatorCtlButton(
+      "reader close-document button",
+      this.page.getByTestId("reader-button-close-document"),
+    );
     this.openButton = new LocatorCtlButton("reader open button", this.page.getByTestId("reader-button-open"));
     this.settingsButton = new LocatorCtlButton(
       "reader settings button",
@@ -182,6 +187,30 @@ export class ReaderPageObject extends PageObjectBase {
 
   async clickOpenAnother(): Promise<void> {
     await this.openButton.click();
+  }
+
+  /**
+   * Close the current document via the reader-bar close button and wait for the
+   * home (open) screen to reappear. The E Ink close transition is serialized, so
+   * this waits for the reader to hide before returning.
+   */
+  async closeDocument(): Promise<void> {
+    await this.closeButton.click();
+    await this.app.timeouts.waitUntil(async () => !(await this.isVisible()), {
+      timeoutMs: this.app.timeouts.long,
+      description: `reader to hide after closing the document. ${this.app.diagnostics.recentErrorsSummary()}`,
+    });
+    await agentAutoCapture(this.app, "close-document");
+  }
+
+  /** Activate the close button with the keyboard (Enter or Space) and wait for home. */
+  async closeDocumentWithKey(key: "Enter" | "Space"): Promise<void> {
+    await this.page.getByTestId("reader-button-close-document").focus();
+    await this.page.keyboard.press(key);
+    await this.app.timeouts.waitUntil(async () => !(await this.isVisible()), {
+      timeoutMs: this.app.timeouts.long,
+      description: `reader to hide after keyboard close (${key})`,
+    });
   }
 
   // ---- page-state via the exposed test hook (runtime contract, not source import) ----

@@ -5,7 +5,7 @@ import type { EinkReaderApp } from "../app/automation-app.js";
  * RSS feed contract helpers (gap-closure spec H00). The feed is fetched from the
  * local static server (same origin, allowed by the network guard) and parsed
  * with the browser DOMParser inside the page (a pure string operation, not a
- * network call, so it is not blocked by connect-src 'none').
+ * network call).
  */
 
 export interface RssItem {

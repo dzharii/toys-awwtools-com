@@ -6,7 +6,8 @@ import type { Page, ConsoleMessage, Request } from "@playwright/test";
  * The suite treats unexpected console errors and uncaught page errors as
  * failures. It also records every network request so tests can assert the app
  * makes no runtime requests beyond the local static server (the app ships a
- * strict connect-src 'none' CSP and an offline-only promise).
+ * connect-src 'self' CSP — enough to read its own local feed.xml — and an
+ * offline-only promise).
  */
 export interface CapturedRequest {
   readonly url: string;

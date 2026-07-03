@@ -7,7 +7,7 @@ import { extname, join, normalize, resolve, sep } from "node:path";
  * A local static HTTP server that serves the E Ink Reader app directory (the
  * "built artifact" analog — the app is already static, no build step) plus the
  * suite's test fixtures, all from 127.0.0.1. Tests must never depend on the
- * public internet; the app itself ships connect-src 'none'.
+ * public internet; the app itself ships connect-src 'self'.
  *
  * Fixtures are exposed under /__fixtures__/<name> so they share the app origin
  * and can be loaded through the file picker / drag-drop without any network.

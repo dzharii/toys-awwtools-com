@@ -5,11 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <!--
     Restrictive CSP for a static, local-first app. No remote resources are
-    permitted. connect-src 'none' blocks all network requests (fetch/XHR/ws).
+    permitted. connect-src 'self' allows fetching only same-origin files (the
+    local feed.xml powering the home-screen updates panel); all cross-origin
+    fetch/XHR/WebSocket traffic remains blocked, preserving the offline promise.
     style-src allows inline styles used for typography custom properties.
   -->
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'">
+    content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'">
   <!-- Primary metadata (static; present in initial HTML for social crawlers). -->
   <title>E Ink Reader - Local TXT and Markdown Reading</title>
   <meta name="description" content="Read local TXT and Markdown files in a calm E Ink-style browser reader with page mode, scroll mode, local fonts, and no uploads.">
@@ -52,32 +54,52 @@
 
     <!-- File-open screen -->
     <section id="open-screen" class="open-screen" aria-label="Open a book" data-testid="open-screen-region-root">
-      <div id="dropzone" class="dropzone" data-testid="open-screen-region-dropzone">
-        <img class="dropzone__icon" src="assets/icons/icon.svg" alt="" aria-hidden="true">
-        <div class="dropzone__title">Drop a TXT or Markdown book here</div>
-        <p class="dropzone__hint">
-          The file is read locally in this browser. It is not uploaded or stored.
-          <span class="dropzone__formats">Supported formats: .txt, .md, .markdown</span>
-        </p>
-        <button id="open-button" type="button" class="button button--primary" data-testid="open-screen-button-open">Open a file</button>
-        <input id="file-input" type="file" accept=".txt,.md,.markdown,text/plain,text/markdown" class="visually-hidden" aria-label="Choose a book file" data-testid="open-screen-input-file">
-        <div id="open-notice" class="notice" hidden data-testid="open-screen-status-notice"></div>
-        <p class="dropzone__updates">
-          <a class="rss-link" href="feed.xml" title="Project updates feed (RSS)" data-testid="open-screen-link-rss">
-            <svg class="rss-link__icon" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">
-              <circle cx="6.2" cy="17.8" r="2.2" fill="currentColor"></circle>
-              <path d="M4 10.2a9.8 9.8 0 0 1 9.8 9.8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path>
-              <path d="M4 4.6A15.4 15.4 0 0 1 19.4 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path>
-            </svg>
-            <span>Updates feed (RSS)</span>
-          </a>
-        </p>
+      <div class="open-screen__content">
+        <div id="dropzone" class="dropzone" data-testid="open-screen-region-dropzone">
+          <img class="dropzone__icon" src="assets/icons/icon.svg" alt="" aria-hidden="true">
+          <div class="dropzone__title">Drop a TXT or Markdown book here</div>
+          <p class="dropzone__hint">
+            The file is read locally in this browser. It is not uploaded or stored.
+            <span class="dropzone__formats">Supported formats: .txt, .md, .markdown</span>
+          </p>
+          <button id="open-button" type="button" class="button button--primary" data-testid="open-screen-button-open">Open a file</button>
+          <input id="file-input" type="file" accept=".txt,.md,.markdown,text/plain,text/markdown" class="visually-hidden" aria-label="Choose a book file" data-testid="open-screen-input-file">
+          <div id="open-notice" class="notice" hidden data-testid="open-screen-status-notice"></div>
+          <p class="dropzone__updates">
+            <a class="rss-link" href="feed.xml" title="Project updates feed (RSS)" data-testid="open-screen-link-rss">
+              <svg class="rss-link__icon" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">
+                <circle cx="6.2" cy="17.8" r="2.2" fill="currentColor"></circle>
+                <path d="M4 10.2a9.8 9.8 0 0 1 9.8 9.8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path>
+                <path d="M4 4.6A15.4 15.4 0 0 1 19.4 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path>
+              </svg>
+              <span>Updates feed (RSS)</span>
+            </a>
+          </p>
+        </div>
+
+        <!-- Project updates: recent items from the local feed.xml (read-only, in memory). -->
+        <section id="updates-panel" class="updates-panel" data-testid="open-screen-region-updates" aria-labelledby="updates-title">
+          <div class="updates-panel__header">
+            <h2 id="updates-title" class="updates-panel__title">Project updates</h2>
+            <a class="rss-link updates-panel__rss-link" href="feed.xml" title="Project updates feed (RSS)" data-testid="open-screen-link-updates-rss">
+              <svg class="rss-link__icon" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">
+                <circle cx="6.2" cy="17.8" r="2.2" fill="currentColor"></circle>
+                <path d="M4 10.2a9.8 9.8 0 0 1 9.8 9.8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path>
+                <path d="M4 4.6A15.4 15.4 0 0 1 19.4 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path>
+              </svg>
+              <span>RSS feed</span>
+            </a>
+          </div>
+          <p class="updates-panel__intro">Recent changes to the local E Ink-style reader.</p>
+          <div id="updates-list" class="updates-list" data-testid="open-screen-list-updates" aria-busy="true"></div>
+        </section>
       </div>
     </section>
 
     <!-- Reader -->
     <main id="reader" class="reader" data-mode="paged" data-eink="balanced" data-motion="full" data-progress="on" hidden data-testid="reader-region-root">
       <header class="reader__bar">
+        <button id="close-document-button" type="button" class="icon-button reader__close" aria-label="Close current document and return to home screen" data-testid="reader-button-close-document">Close</button>
         <span id="reader-title" class="reader__title" data-testid="reader-text-title">Reader</span>
         <div class="reader__bar-actions">
           <button id="open-button-2" type="button" class="icon-button" aria-label="Open another file" data-testid="reader-button-open">Open</button>

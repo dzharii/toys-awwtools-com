@@ -2,10 +2,10 @@ import type { UiDiagnostics } from "../diagnostics/diagnostics.js";
 
 /**
  * Network guard: asserts the app makes no runtime requests beyond the local
- * static server origin. The app ships connect-src 'none' and an offline-only
- * promise, so any request to another origin (or any fetch/XHR/websocket) is a
- * failure. Requests to the suite's own 127.0.0.1 static server (HTML, CSS, JS,
- * fonts, images, fixtures) are expected and allowed.
+ * static server origin. The app ships connect-src 'self' (so it can read its
+ * own local feed.xml) and an offline-only promise, so any request to another
+ * origin is a failure. Requests to the suite's own 127.0.0.1 static server
+ * (HTML, CSS, JS, fonts, images, fixtures, feed.xml) are expected and allowed.
  */
 export interface NetworkGuard {
   assertNoUnexpectedRequests(): void;

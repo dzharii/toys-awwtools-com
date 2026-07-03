@@ -25,6 +25,13 @@ export class ScrollReader {
     this.scrollEl.scrollTop = 0;
   }
 
+  /** Detach content and clear the host (used when closing a document). */
+  detach() {
+    this.content = null;
+    this.host.replaceChildren();
+    this.scrollEl.scrollTop = 0;
+  }
+
   getAnchorFraction() {
     const max = this.scrollEl.scrollHeight - this.scrollEl.clientHeight;
     if (max <= 0) return 0;

@@ -36,6 +36,14 @@ export class Paginator {
     this.viewport.replaceChildren(contentEl);
   }
 
+  /** Detach content and clear the viewport (used when closing a document). */
+  detach() {
+    this.content = null;
+    this.pageCount = 1;
+    this.index = 0;
+    this.viewport.replaceChildren();
+  }
+
   /** Re-measure page geometry, preserving the current reading fraction. */
   measure(measureCh) {
     if (!this.content) return 1;
