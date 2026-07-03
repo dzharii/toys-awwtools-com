@@ -1,1315 +1,1328 @@
-2026-07-03
 ---
 
-A00 Browser Test Plan For E Ink Reader
-
----
-
-This document defines the manual browser test plan for the E Ink Reader application.
-
-The goal is to create a complete, micromanagement-level test plan before automation. The agent must later convert this plan into Playwright tests, but this document itself does not implement test code.
-
-The application under test is a static, local-first browser reader for `.txt`, `.md`, and `.markdown` files. The source snapshot describes a reader with local files only, page and scroll modes, E Ink refresh effects, local fonts, safe Markdown, themes, preference persistence, responsive behavior, and no book-content persistence.
-
-The current specification also requires browser tests for boot behavior, file input, Markdown safety, settings, page and scroll mode, reduced motion, responsive layouts, localStorage privacy, and visual inspection.
+A00 Close Document And Home Updates Feature Specification
 
 ---
 
-B00 Test Philosophy
+Add two related user-facing features to the E Ink Reader.
+
+First, add a clear way to close the currently opened document and return to the home screen. The reader currently has a document title on the left and reader actions such as Open and Settings on the right. The source snapshot shows cached reader elements for `readerTitle`, `settingsButton`, and `openButton2`, but no close-document control.
+
+Second, extend the home screen so it displays the project's own RSS update feed below the file-open drop zone. The project already has RSS feed requirements, an RSS discovery link, and a visible RSS link on the open screen. The new feature makes the feed content visible in the app itself, not only available as a link. The existing project documentation states that the feed lives at `feed.xml`, that it is static RSS 2.0, and that update items should be high-level and user-oriented.
+
+The feature must preserve the product's core rules: static runtime, local assets, no external runtime requests, no book-content persistence, safe rendering, calm UI, responsive behavior, and complete UI regression coverage.
 
 ---
 
-The test plan must verify product behavior, not only code paths.
-
-The tester must act like a reader using the app in a browser. Each test should check the direct feature under test and the surrounding state that can break silently. For example, after changing text size, the test must not only verify that the text size value changed. It must also verify that the reader remains visible, content remains readable, the active mode remains valid, page or scroll position is sane, progress does not disappear, no error toast appears, no overlay is stuck, and no book content was persisted.
-
-The test plan uses four layers.
-
-Smoke tests are broad and shallow. They answer whether the app boots, opens core surfaces, loads basic files, exposes controls, and does not immediately break.
-
-Single-feature tests exercise one feature or one setting at a time. These tests use equivalence classes and boundary values.
-
-Pairwise combination tests exercise meaningful combinations of two settings or two state changes. These tests are data-driven. The goal is to catch interaction bugs without testing every possible Cartesian combination.
-
-Journey tests exercise realistic longer workflows. These combine file loading, settings, navigation, responsive layout, errors, reloads, and privacy checks.
-
-The agent must later automate this plan with Playwright using browser-level observation, DOM checks, console/page-error capture, network request capture, viewport changes, localStorage inspection, and in-page evaluation. The existing app exposes stable DOM surfaces such as `#reader`, `#settings-button`, `#reader-stage`, `#page-viewport`, `#reader-scroll`, `#prev-page`, `#next-page`, `#progress`, `#busy`, and `#toast`, which should be used as automation anchors where appropriate.
+B00 User Problem
 
 ---
 
-C00 Required Test Artifacts
+When a document is open, the user can open another file or open settings, but there is no obvious way to close the current document and return to the home screen. This creates a state-management gap. A reader should have a clear "close document" action because the home screen is where the user opens a new file, sees the privacy explanation, sees supported formats, and now sees project updates.
+
+The home screen currently has the file-open drop zone and an RSS link. That is useful, but it does not let users see what changed in the application without leaving the app. The application should read its own local `feed.xml` and display recent project updates in the same calm visual style as the rest of the app.
 
 ---
 
-The agent must create reproducible test assets before automation.
+C00 Product Behavior Summary
 
-All test assets must live under:
+---
 
-```text
-tests/fixtures/
+When a document is open, the reader top bar must include a close-document button near the document title on the left side.
+
+When the user activates the close-document button, the app returns to the home screen.
+
+Closing the document must clear the active in-memory document state. It must not clear user preferences. It must not persist or restore book content. It must not reload the whole page unless the agent has a strong reason and the behavior remains smooth.
+
+The home screen must show the existing file-open card at the top and a new "Project updates" RSS section below it.
+
+The RSS section must fetch and parse the local `feed.xml`, then display recent update items. It must be styled coherently with the E Ink reader design: warm paper, grayscale, subtle borders, calm spacing, and no visual noise.
+
+The home screen must become vertically scrollable if the combined drop zone and updates section exceed the viewport height.
+
+---
+
+D00 Close Document UI
+
+---
+
+Add a button on the left side of the reader bar, next to the document title.
+
+The preferred reader bar layout is:
+
+```text id="1v4n7y"
+[Close] [document title................................] [Open] [Settings]
 ```
 
-The fixture set must cover plain text, standard Markdown, unsafe Markdown, code-heavy Markdown, long content, Unicode, empty files, unsupported files, and large-file behavior. The original specification already calls for fixtures such as `simple.txt`, `long-book.txt`, `simple.md`, `markdown-edge-cases.md`, `unicode.txt`, `large-headings.md`, and `unsupported.pdf`.
+The close control should be visually padded and readable. It should not be an unlabeled icon-only "X" in the default desktop layout. Lily should understand it without guessing. Use text such as:
 
-The final fixture set should be more explicit.
-
-Use this fixture catalog:
-
-| Fixture                 | Purpose                                                                                                                                       |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `simple-prose.txt`      | Short TXT with title, blank lines, paragraphs, and normal punctuation.                                                                        |
-| `long-book.txt`         | Long TXT with chapters, many paragraphs, and enough content to produce multiple pages.                                                        |
-| `one-long-line.txt`     | TXT with one extremely long line to test wrapping and horizontal overflow.                                                                    |
-| `unicode-mixed.txt`     | TXT with accented Latin, Cyrillic, symbols, em dashes, quotes, and long words.                                                                |
-| `empty.txt`             | Truly empty file.                                                                                                                             |
-| `whitespace-only.txt`   | Spaces, tabs, and blank lines only.                                                                                                           |
-| `standard-markdown.md`  | Headings, paragraphs, emphasis, lists, blockquote, link, horizontal rule, inline code, fenced code.                                           |
-| `code-heavy-notes.md`   | Roman-style technical note with JavaScript, Python, shell, JSON, long code lines, links, and complexity notes.                                |
-| `unsafe-markdown.md`    | Raw HTML, script tags, event attributes, iframe, style tag, remote image syntax, javascript-like URLs.                                        |
-| `markdown-table.md`     | Table, long cells, inline code inside cells, and normal prose before and after.                                                               |
-| `malformed-markdown.md` | Unclosed code fence, broken list nesting, incomplete link, raw HTML fragments.                                                                |
-| `many-headings.md`      | Many H1/H2/H3 sections for pagination and scrolling behavior.                                                                                 |
-| `large-accepted.md`     | A large but accepted Markdown file near the warning threshold.                                                                                |
-| `too-large.txt`         | A file exceeding the configured hard limit if the app has one. If no hard limit exists, this fixture documents a missing product requirement. |
-| `unsupported.pdf`       | Small dummy binary or placeholder with `.pdf` extension to test unsupported-file rejection.                                                   |
-| `unsupported.json`      | Valid JSON file to test unsupported text-like extension rejection.                                                                            |
-| `remote-image.md`       | Markdown image pointing to `https://example.com/image.png` to verify no fetch occurs.                                                         |
-| `links.md`              | External links, mailto-style link, relative link, and malformed link to test safe link behavior.                                              |
-
-Fixtures should contain deterministic text with unique markers. Example markers:
-
-```text
-FIXTURE_SIMPLE_TXT_TITLE
-FIXTURE_STANDARD_MD_HEADING
-FIXTURE_CODE_HEAVY_JS_SNIPPET
-FIXTURE_UNSAFE_SCRIPT_MARKER
-FIXTURE_REMOTE_IMAGE_ALT
-FIXTURE_UNICODE_CYRILLIC_MARKER
+```text id="2t0x9t"
+Close
 ```
 
-The agent must use these markers later in Playwright assertions. This avoids brittle checks against large text blocks.
+The accessible name should be more explicit:
 
-No fixture should require external network access.
-
----
-
-D00 Browser Test Harness Scope
-
----
-
-The eventual Playwright suite must run against the real browser app, not imported modules.
-
-The tests should start a static server if needed, open the app URL, and interact with the rendered page. The app is static and should not need a build step for runtime. Optional developer scripts may serve files, but the browser behavior remains the test target.
-
-The test harness must collect diagnostics on every test:
-
-```text
-Console errors.
-Page errors.
-Unexpected network requests.
-Current URL.
-Viewport size.
-Visible app state.
-Reader mode.
-Settings open/closed state.
-Busy overlay state.
-Toast text if visible.
-localStorage keys and values.
-Relevant DOM dimensions.
+```text id="kx2jkl"
+Close current document and return to home screen
 ```
 
-The harness must treat unexpected console errors and page errors as failures unless explicitly classified as known limitations.
+On narrow mobile widths, the visible label may remain `Close`, while the title truncates with ellipsis. Do not hide the close control behind Settings. Closing the document is a core navigation action.
 
-The harness must fail if runtime network requests occur unexpectedly. The app has a strict local/offline requirement and CSP with `connect-src 'none'`, and the README states that no runtime network requests should occur.
+Use a real button:
 
-The harness must check localStorage after content-load tests. Only preferences may be stored. Book content, parsed HTML, page text, code snippets, excerpts, source Markdown, and search-like indexes must not appear in persistent storage.
-
----
-
-E00 Standard Post-Action Oracle
-
----
-
-Every browser interaction test must run a standard post-action oracle unless the test intentionally expects an error state.
-
-The oracle must check:
-
-```text
-The page has no uncaught page error.
-The console has no unexpected error.
-The busy overlay is hidden after the action settles.
-No E Ink overlay remains stuck.
-The reader and open screen are not both active at the same time.
-The settings panel state matches the expected state.
-The active mode is one of paged or scroll.
-The active theme is one of warm-paper, cool-paper, high-contrast, dark.
-The active E Ink intensity is one of off, reduced, balanced, strong.
-The progress region is visible when a document is open and progress is enabled.
-The reader title is non-empty when a document is open.
-The content area has non-zero dimensions.
-The content area does not produce body-level horizontal overflow.
-No file content appears in localStorage.
-No unexpected network request occurred.
+```html id="b18qw2"
+<button
+  id="close-document-button"
+  data-testid="reader-button-close-document"
+  class="reader__close button button--quiet"
+  type="button"
+  aria-label="Close current document and return to home screen"
+>
+  Close
+</button>
 ```
 
-For page mode, additionally check:
+Exact class names may differ, but the `data-testid` must exist. The project requires every user-interactive runtime element to have a `data-testid`, and the test suite expects page objects to remain synchronized with those hooks.
 
-```text
-#page-viewport is visible.
-#reader-scroll is hidden.
-Page navigation controls exist.
-Progress text contains a page-like state.
-The current page index is in range if observable through UI or app state.
-Next and previous actions do not produce negative page numbers or empty pages.
+---
+
+E00 Close Document State Behavior
+
+---
+
+Closing a document must perform a controlled state transition.
+
+Required behavior:
+
+```text id="4y2ij3"
+Reader hides.
+Open screen becomes visible.
+Active document state is cleared from memory.
+Rendered content is cleared or detached.
+Page index resets.
+Scroll position resets.
+Progress text resets or hides.
+Settings panel closes if it is open.
+Busy state clears.
+Toast state clears or is allowed to expire harmlessly.
+E Ink overlay is not stuck.
+Preferences remain unchanged.
+localStorage remains preferences-only.
+No book content is written to localStorage, IndexedDB, Cache Storage, logs, or window.__einkReader.
 ```
 
-For scroll mode, additionally check:
+The close action should use a full E Ink-style refresh or a calm reduced-motion-compatible transition. The transition must not look like a browser navigation jump. If reduced motion is active or E Ink is off, close should be immediate and calm.
 
-```text
-#reader-scroll is visible.
-#page-viewport is hidden.
-The stage can scroll when content is longer than the viewport.
-Normal scroll does not trigger heavy repeated refresh artifacts.
-Body-level horizontal overflow is absent.
+Do not show the old book title on the home screen after close. Do not keep old page progress visible. Do not leave old document content in hidden DOM if it can confuse tests, accessibility snapshots, or privacy audits. If the implementation keeps temporary hidden nodes for transition purposes, they must be removed after the transition settles.
+
+Suggested user-facing notice after close:
+
+```text id="dzx34q"
+Document closed.
+Open a TXT or Markdown file to continue reading.
 ```
 
-For settings changes, additionally check:
+This notice is optional. If used, keep it calm and short. It should not overwrite a more important error. It should not imply the book can be restored. It should not re-show the "Welcome back" restored-preferences notice unless this is a fresh page load.
 
-```text
-The selected setting value is reflected in UI.
-The corresponding DOM attribute, CSS variable, or rendered behavior changes.
-The document remains readable.
-Reading position is preserved approximately.
-No invalid CSS values appear, such as negative padding or NaN dimensions.
+---
+
+F00 Close Document Edge Cases
+
+---
+
+If the user closes while settings are open, settings must close and the app must return to the home screen.
+
+If the user closes during an E Ink page transition, the app must cancel or finish the transition safely. The final state must be home screen visible, reader hidden, no stuck overlay.
+
+If the user closes while a file is still being read, parsed, or paginated, the app should either disable the close button until safe or support cancellation. Do not allow a late pagination result to reopen the reader after close.
+
+If the user closes and immediately opens another file, the app must open the new file normally.
+
+If the user closes in scroll mode, scroll position must reset. Reopening a file should not start at the old scroll position.
+
+If the user closes in page mode after navigating to page 21, reopening a different file should not inherit page 21.
+
+---
+
+G00 Home Updates Section
+
+---
+
+Add a new section below the drop zone on the open screen.
+
+The section should be visually similar in width and visual language to the existing drop zone. It should not be inside the drop zone. It should sit below the drop zone with clear vertical spacing.
+
+Suggested structure:
+
+```html id="0kfe1r"
+<section
+  id="updates-panel"
+  data-testid="open-screen-region-updates"
+  class="updates-panel"
+  aria-labelledby="updates-title"
+>
+  <div class="updates-panel__header">
+    <h2 id="updates-title">Project updates</h2>
+    <a
+      href="feed.xml"
+      class="updates-panel__rss-link"
+      data-testid="open-screen-link-updates-rss"
+    >
+      RSS feed
+    </a>
+  </div>
+
+  <p class="updates-panel__intro">
+    Recent changes to the local E Ink-style reader.
+  </p>
+
+  <div
+    id="updates-list"
+    data-testid="open-screen-list-updates"
+    class="updates-list"
+  ></div>
+</section>
 ```
 
-This oracle is mandatory because many bugs are not inside the setting that changed. They appear in layout, overlays, progress, storage, or responsiveness.
+Exact markup may differ. The semantics must remain clear: a section with a heading, an RSS link, and a list of update items.
 
----
+Display up to five most recent RSS items by default. Three is acceptable on very small screens if the design is cleaner, but the test should not depend on an exact maximum unless the product contract sets one. A simple and stable default is five.
 
-F00 Smoke Test Layer
+Each update item should show:
 
----
-
-Smoke tests must run first.
-
-Smoke tests are shallow. They do not prove every feature. They prove that the app can boot, load representative files, expose main surfaces, and recover from obvious invalid input.
-
-Smoke test S001: boot open screen.
-
-Action: open the app root in a fresh browser context.
-
-Expected result: `#open-screen` is visible, file input exists, drop zone text explains TXT and Markdown support, RSS link is present if implemented, `#reader` is hidden, `#busy` is hidden, no unexpected console or page errors occur, and no external network requests occur.
-
-Smoke test S002: static metadata.
-
-Action: inspect `document.head`.
-
-Expected result: title, meta description, canonical URL, RSS discovery link, Open Graph tags, X/Twitter tags, social image URL, image width, image height, and image alt text exist and match the product behavior. This is required because social metadata must be static in the HTML head.
-
-Smoke test S003: load simple TXT through file picker.
-
-Action: use the file picker automation path to select `simple-prose.txt`.
-
-Expected result: reader becomes visible, open screen hides, title is derived from file or first content, text marker appears, progress appears, default mode is page mode unless preferences override it, no persistent book content exists.
-
-Smoke test S004: load simple Markdown through file picker.
-
-Action: select `standard-markdown.md`.
-
-Expected result: Markdown heading renders as a heading, paragraph renders as text, list renders as list, inline code and fenced code are visible, raw Markdown syntax is not shown for normal constructs.
-
-Smoke test S005: load TXT through drag-and-drop.
-
-Action: drag one supported TXT fixture onto the drop zone.
-
-Expected result: same successful reader state as file picker. The browser must not navigate away.
-
-Smoke test S006: load Markdown through drag-and-drop.
-
-Action: drag `standard-markdown.md`.
-
-Expected result: same successful Markdown reader state as file picker.
-
-Smoke test S007: unsupported file rejection.
-
-Action: open `unsupported.pdf`.
-
-Expected result: app remains on open screen or returns to safe open state, error message says the file type is not supported and points to `.txt`, `.md`, or `.markdown`, no blank reader, no stack trace.
-
-Smoke test S008: settings open and close.
-
-Action: load a file, click settings, then close settings with Escape and with the visible close control.
-
-Expected result: settings appears, focus enters settings, settings closes, focus returns to reader or sensible control, reader remains usable.
-
-Smoke test S009: page navigation.
-
-Action: load `long-book.txt`, click Next, click Previous, press ArrowRight, press ArrowLeft.
-
-Expected result: visible content or progress changes on next, returns or moves backward on previous, page count remains valid, no overlay stuck.
-
-Smoke test S010: mode switch.
-
-Action: load `long-book.txt`, switch from page mode to scroll mode, then back to page mode.
-
-Expected result: mode attribute changes, correct content mount is visible, position remains approximately near the same content, E Ink full refresh occurs for mode switch unless reduced/off.
-
-Smoke test S011: reload privacy.
-
-Action: load a file, change one preference, reload.
-
-Expected result: preferences remain, open screen is shown, reader is hidden, book content is not restored. This is core privacy behavior.
-
-Smoke test S012: reduced motion browser context.
-
-Action: open the app in a browser context with reduced motion enabled, load `simple-prose.txt`.
-
-Expected result: reader has reduced motion behavior and aggressive flashing/ghosting is disabled or softened. Existing source snippets show a reduced-motion Playwright test already exists, so this should remain a core smoke check.
-
----
-
-G00 File Input Test Cases
-
----
-
-File tests verify input validation, content reading, recovery, and privacy.
-
-F001: single supported `.txt`.
-
-Action: open `simple-prose.txt`.
-
-Expected result: prose renders as paragraphs. Blank lines become paragraph separation. There is no raw preformatted dump unless content is intentionally preformatted.
-
-F002: single supported `.md`.
-
-Action: open `standard-markdown.md`.
-
-Expected result: Markdown renders as safe document HTML.
-
-F003: single supported `.markdown`.
-
-Action: open duplicate of `standard-markdown.md` with `.markdown` extension.
-
-Expected result: identical behavior to `.md`.
-
-F004: unsupported binary.
-
-Action: open `unsupported.pdf`.
-
-Expected result: clear unsupported type message.
-
-F005: unsupported text-like extension.
-
-Action: open `unsupported.json`.
-
-Expected result: clear unsupported type message. The app must not parse JSON just because it is text.
-
-F006: empty file.
-
-Action: open `empty.txt`.
-
-Expected result: clear message such as "This file is empty." Open another file remains available. No blank reader.
-
-F007: whitespace-only file.
-
-Action: open `whitespace-only.txt`.
-
-Expected result: same as empty or "no readable content" behavior.
-
-F008: multiple-file drag.
-
-Action: drag `simple-prose.txt` and `standard-markdown.md` together.
-
-Expected result: app rejects the action with calm "open one file at a time" message. It must not pick the first file silently.
-
-F009: large accepted file.
-
-Action: open `large-accepted.md`.
-
-Expected result: app shows busy or warning if needed, then renders. If page mode is too slow, the fallback should be explicit and recoverable.
-
-F010: too-large file.
-
-Action: open `too-large.txt`.
-
-Expected result: if a hard limit exists, the app rejects early with a clear message. If no hard limit exists, the test should record a product risk and recommend adding one.
-
-F011: reopen another file from reader.
-
-Action: load `simple-prose.txt`, click Open in the reader bar, select `standard-markdown.md`.
-
-Expected result: old content is replaced, new title and content appear, previous content is not visible or stored, preferences remain.
-
-F012: drag supported file while reader is open.
-
-Action: load one file, then drag another supported file onto the reader area if the UI supports it.
-
-Expected result: either accepted as open-new-file or rejected calmly. The behavior must be intentional and documented.
-
----
-
-H00 TXT Rendering Test Cases
-
----
-
-TXT rendering tests verify that plain text becomes readable prose.
-
-T001: paragraph preservation.
-
-Fixture: `simple-prose.txt`.
-
-Expected result: title and paragraphs are visually separated. Consecutive blank lines do not collapse into unreadable density.
-
-T002: long paragraphs.
-
-Fixture: `long-book.txt`.
-
-Expected result: line wrapping follows reader measure. No body-level horizontal overflow.
-
-T003: one long line.
-
-Fixture: `one-long-line.txt`.
-
-Expected result: the long line wraps or is safely contained. The body must not horizontally scroll. In page mode, text must not escape the paper surface.
-
-T004: command-output-like text.
-
-Fixture: add a section in `simple-prose.txt` or create `txt-command-output.txt`.
-
-Expected result: spacing remains understandable. The renderer must not destroy all indentation if the text appears preformatted.
-
-T005: Unicode and encoding.
-
-Fixture: `unicode-mixed.txt`.
-
-Expected result: Cyrillic and accented text render without mojibake. Unsupported glyphs should fall back without breaking layout.
-
-T006: old line endings.
-
-Fixture: create variants or embed line-ending cases.
-
-Expected result: Windows CRLF, Unix LF, and old Mac-style CR are normalized into readable paragraphs.
-
----
-
-I00 Markdown Rendering Test Cases
-
----
-
-Markdown tests verify semantic rendering and safety.
-
-M001: headings.
-
-Fixture: `standard-markdown.md`.
-
-Expected result: H1/H2/H3 render as headings with calm reader styling. First heading may become document title if implemented.
-
-M002: paragraphs and emphasis.
-
-Expected result: paragraphs render as prose. Strong and italic are visible.
-
-M003: lists.
-
-Expected result: ordered and unordered lists render with compact, readable spacing. Nested lists do not create excessive indentation or overflow.
-
-M004: blockquotes.
-
-Expected result: blockquotes have subtle indentation or border and do not dominate the page.
-
-M005: horizontal rules.
-
-Expected result: rules appear as restrained section separators.
-
-M006: inline code.
-
-Expected result: inline code is visually distinct and contained in line.
-
-M007: fenced code.
-
-Expected result: code block preserves indentation, uses monospace, remains inside column, and does not cause body horizontal overflow.
-
-M008: long code line on desktop.
-
-Expected result: code block either scrolls internally or wraps according to design. The whole page must not overflow.
-
-M009: long code line on mobile.
-
-Expected result: code block remains contained inside viewport. This is critical for Roman's mobile use.
-
-M010: tables.
-
-Fixture: `markdown-table.md`.
-
-Expected result: tables render readably and remain inside the reader surface. If tables overflow, overflow must be contained within the table area, not the body.
-
-M011: links.
-
-Fixture: `links.md`.
-
-Expected result: links are subdued, clickable, and do not prefetch. External links open only through explicit user action.
-
-M012: remote image placeholder.
-
-Fixture: `remote-image.md`.
-
-Expected result: remote image is not fetched. Placeholder text appears, such as an image placeholder element. No network request occurs.
-
-M013: raw HTML.
-
-Fixture: `unsafe-markdown.md`.
-
-Expected result: raw HTML is escaped, stripped, or shown as literal safe text. It must not render as trusted markup.
-
-M014: script execution prevention.
-
-Fixture: `unsafe-markdown.md`.
-
-Expected result: script tags, inline handlers, javascript-like URLs, iframe, object, style, and remote images do not execute or load. A global sentinel in the fixture, such as `window.__unsafeMarkdownExecuted = true`, must remain unset.
-
-M015: malformed Markdown fallback.
-
-Fixture: `malformed-markdown.md`.
-
-Expected result: safe best-effort rendering or a calm fallback action to open as plain text. No blank page or raw stack trace.
-
----
-
-J00 Reader Mode Test Cases
-
----
-
-Reader mode tests cover page mode and scroll mode independently.
-
-R001: default mode.
-
-Action: load file in fresh context.
-
-Expected result: mode defaults to `paged` unless a saved preference says otherwise. Reader attribute and visible surface agree.
-
-R002: page mode visible surfaces.
-
-Expected result: `#page-viewport` is visible, `#reader-scroll` is hidden, page nav controls are visible, content fits paper surface.
-
-R003: scroll mode visible surfaces.
-
-Action: switch to scroll mode.
-
-Expected result: `#reader-scroll` is visible, `#page-viewport` is hidden, stage scrolls for long content, normal scrolling works.
-
-R004: switch page to scroll.
-
-Expected result: full E Ink refresh occurs unless effect is off or reduced by system. Approximate position is preserved.
-
-R005: switch scroll to page.
-
-Expected result: app paginates and lands near same section. Page count is valid.
-
-R006: mode switch with short file.
-
-Expected result: no empty page, no broken progress, no impossible scroll state.
-
-R007: mode switch with long file.
-
-Expected result: no freeze without feedback. If pagination fails, app falls back or offers scroll mode.
-
-R008: mode switch during E Ink transition.
-
-Action: trigger page turn, immediately open settings and switch mode.
-
-Expected result: app either queues or cancels safely. No stuck overlay. Final mode is valid.
-
----
-
-K00 Page Navigation Test Cases
-
----
-
-Page navigation tests verify page boundaries, controls, keyboard, tap zones, and progress.
-
-P001: next button.
-
-Action: load `long-book.txt`, click Next.
-
-Expected result: page changes, progress updates, E Ink partial refresh occurs if enabled.
-
-P002: previous button.
-
-Action: after next, click Previous.
-
-Expected result: page changes backward, no negative page index.
-
-P003: previous at first page.
-
-Action: click Previous on page 1.
-
-Expected result: remains on page 1 or shows no-op behavior. No error.
-
-P004: next at last page.
-
-Action: navigate to last page using End, then click Next.
-
-Expected result: remains on last page or no-op. No error.
-
-P005: keyboard next.
-
-Action: press ArrowRight, PageDown, Space.
-
-Expected result: each advances in page mode.
-
-P006: keyboard previous.
-
-Action: press ArrowLeft, PageUp, Shift+Space.
-
-Expected result: each moves backward in page mode where possible.
-
-P007: Home and End.
-
-Expected result: Home moves to first page, End moves to last page.
-
-P008: tap zones.
-
-Action: click `#zone-next` and `#zone-prev`.
-
-Expected result: page navigation works without blocking settings or text interaction.
-
-P009: rapid page turns.
-
-Action: click Next rapidly 10 times.
-
-Expected result: no stuck overlay, page index remains in range, ghosting does not accumulate into unreadability.
-
-P010: page count after font change.
-
-Action: record page count, change font size or font family.
-
-Expected result: page count may change but remains numeric and valid. Current page remains in range.
-
----
-
-L00 Settings Surface Test Cases
-
----
-
-Settings tests verify opening, closing, focus, persistence, validation, and visible effect.
-
-ST001: open settings by button.
-
-Expected result: settings panel visible. Focus moves inside settings.
-
-ST002: close settings by Escape.
-
-Expected result: settings closes. Reader remains active.
-
-ST003: close settings by visible control.
-
-Expected result: settings closes. Focus returns sensibly.
-
-ST004: keyboard trap.
-
-Action: tab through settings controls.
-
-Expected result: focus remains in settings while open and does not disappear.
-
-ST005: settings state matches preferences.
-
-Action: open settings after fresh load.
-
-Expected result: controls show current default preferences.
-
-ST006: settings persistence.
-
-Action: change one setting, reload.
-
-Expected result: changed preference persists, book does not.
-
-ST007: corrupted preferences.
-
-Action: before load, write invalid JSON or invalid values to `localStorage`.
-
-Expected result: app falls back to safe defaults and shows calm message if appropriate.
-
-ST008: localStorage unavailable simulation.
-
-Action: in Playwright, monkey-patch localStorage methods to throw before app boot if feasible, or run a browser context that blocks storage if supported.
-
-Expected result: app still opens and settings apply for session; message says preferences may not be remembered.
-
----
-
-M00 Single-Setting Boundary Test Matrix
-
----
-
-These tests change one setting at a time while a document is open.
-
-Use three classes for numeric settings: minimum, nominal, maximum. Also test below-minimum and above-maximum through localStorage injection or direct app API if exposed, because the preferences validator clamps values. The source snapshot shows validated ranges for preferences: `fontSize` 14-34, `lineHeight` 1.2-2.1, `measure` 40-100, `paraSpacing` 0.2-2, `textureStrength` 0-1, `margin` 8-80, with enumerated fonts, themes, contrast, E Ink values, motion values, modes, and refresh styles.
-
-Use `standard-markdown.md` for most setting tests and `code-heavy-notes.md` for code-sensitive tests.
-
-| Setting               | Classes to test                                                           | Expected checks                                                                                      |
-| --------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Font family           | Literata, Charis SIL, Source Serif 4, Merriweather, Atkinson Hyperlegible | CSS variable or rendered font changes; content remains readable; page count valid; no network fonts. |
-| Font size             | 14, 20, 34, injected 1, injected 200                                      | UI clamps or rejects invalid values; text size changes; layout remains valid; no overlap.            |
-| Line height           | 1.2, 1.55, 2.1, injected 0.1, injected 5                                  | CSS line-height changes; page count valid; no clipped lines.                                         |
-| Measure               | 40, 68, 100, injected 1, injected 200                                     | column width changes; desktop remains centered; mobile no overflow.                                  |
-| Paragraph spacing     | 0.2, 0.9, 2, injected -1, injected 10                                     | paragraph spacing changes; no negative spacing collapse.                                             |
-| Alignment             | left, justify, injected invalid                                           | alignment changes or invalid falls back; code blocks unaffected.                                     |
-| Reader mode           | paged, scroll, injected invalid                                           | mode changes; invalid falls back to paged.                                                           |
-| Theme                 | warm-paper, cool-paper, high-contrast, dark, injected invalid             | html `data-theme` changes; contrast readable; invalid falls back.                                    |
-| Contrast              | soft, normal, injected invalid                                            | html `data-contrast` changes; text visible.                                                          |
-| Texture strength      | 0, 0.5, 1, injected -1, injected 99                                       | texture opacity changes; no readability loss.                                                        |
-| Margin                | 8, 28, 80, injected -100, injected 500                                    | page padding/margins remain non-negative; no content clipping.                                       |
-| E Ink intensity       | off, reduced, balanced, strong, injected invalid                          | reader `data-eink` changes; overlay behavior matches intensity; invalid falls back.                  |
-| Refresh style         | adaptive, flash, wash, injected invalid                                   | setting persists and refresh behavior remains valid.                                                 |
-| Full refresh interval | 1, 6, high value, invalid                                                 | after enough page turns, full refresh cleanup occurs or interval clamps.                             |
-| Ghosting              | low, default, high, invalid                                               | ghost opacity changes but does not obscure text.                                                     |
-| Motion                | system, reduced, full, injected invalid                                   | reader `data-motion` changes; reduced disables aggressive effects.                                   |
-| Show progress         | on, off, invalid                                                          | progress region shows/hides consistently; navigation still works.                                    |
-| Debug enabled         | false, true, invalid                                                      | diagnostics visibility changes; logs do not leak content.                                            |
-
-Every single-setting test must run the standard post-action oracle.
-
----
-
-N00 Pairwise Combination Strategy
-
----
-
-Pairwise tests must not attempt the full Cartesian product. The goal is high interaction coverage at manageable cost.
-
-Use these factors first:
-
-```text
-File type: TXT, standard Markdown, code-heavy Markdown, unsafe Markdown.
-Reader mode: paged, scroll.
-Viewport: desktop, tablet, mobile.
-Font family class: serif default, accessibility sans, dense serif.
-Font size class: min, default, max.
-Line height class: min, default, max.
-Theme: warm-paper, high-contrast, dark.
-Contrast: soft, normal.
-E Ink intensity: off, reduced, balanced, strong.
-Motion: system, reduced, full.
-Texture: off, default, max.
-Progress: on, off.
+```text id="m4gbkr"
+Title.
+Publication date, if valid.
+Description.
+Optional "Read update" link if the item link is present.
 ```
 
-The agent should generate a pairwise table from these factors using any available local tooling or a simple in-script algorithm. The resulting table should be committed as a test planning artifact, for example:
+The item should not look like a news feed from another product. It should look like part of this reader.
 
-```text
-tests/plans/pairwise-settings-matrix.md
+Suggested item layout:
+
+```text id="6kogjg"
+Project updates
+
+Safe Markdown rendering
+Jul 03, 2026
+Raw HTML is not rendered as trusted content, remote images are blocked, and unsafe Markdown can be reopened as plain text.
+
+Read update
 ```
 
-Each pairwise row becomes a manual scenario first and an automated test later.
-
-For each row, the user story is:
-
-```text
-Open the specified fixture.
-Apply the specified viewport.
-Apply the specified settings in a deterministic order.
-Let the reader settle.
-Verify primary expected state.
-Run the standard post-action oracle.
-Verify privacy and no network.
-```
-
-The deterministic order should be:
-
-```text
-Viewport.
-File open.
-Mode.
-Font family.
-Font size.
-Line height.
-Theme.
-Contrast.
-Texture.
-E Ink intensity.
-Motion.
-Progress.
-```
-
-This order makes failures easier to diagnose. If a later setting fails, the report should include all earlier applied values.
+Use concise typography. Do not overload the home screen.
 
 ---
 
-O00 Pairwise Seed Matrix
+H00 RSS Fetch And Parse Behavior
 
 ---
 
-Use this seed matrix before generating a larger table. It covers high-risk combinations by hand.
+Fetch the feed from a relative local URL:
 
-| ID    | Fixture                | Viewport | Mode   | Font                  | Size    | Theme         | E Ink    | Motion  | Main risk                             |
-| ----- | ---------------------- | -------- | ------ | --------------------- | ------- | ------------- | -------- | ------- | ------------------------------------- |
-| PW001 | `standard-markdown.md` | desktop  | paged  | Literata              | default | warm-paper    | balanced | system  | default realistic reading.            |
-| PW002 | `code-heavy-notes.md`  | mobile   | scroll | Atkinson Hyperlegible | max     | high-contrast | reduced  | system  | code blocks on mobile.                |
-| PW003 | `long-book.txt`        | desktop  | paged  | Charis SIL            | max     | warm-paper    | strong   | full    | long page mode with strong refresh.   |
-| PW004 | `many-headings.md`     | tablet   | paged  | Source Serif 4        | min     | cool-paper    | balanced | system  | headings and pagination on tablet.    |
-| PW005 | `unsafe-markdown.md`   | desktop  | scroll | Literata              | default | high-contrast | off      | reduced | unsafe content with no effects.       |
-| PW006 | `remote-image.md`      | mobile   | scroll | Merriweather          | default | dark          | reduced  | reduced | remote image no-fetch in dark mobile. |
-| PW007 | `markdown-table.md`    | mobile   | scroll | Atkinson Hyperlegible | min     | high-contrast | off      | system  | table overflow on small screen.       |
-| PW008 | `unicode-mixed.txt`    | tablet   | paged  | Source Serif 4        | default | cool-paper    | balanced | full    | Unicode fallback and page layout.     |
-| PW009 | `one-long-line.txt`    | mobile   | scroll | Literata              | max     | warm-paper    | off      | reduced | long-line overflow.                   |
-| PW010 | `large-accepted.md`    | desktop  | scroll | Merriweather          | default | warm-paper    | reduced  | system  | large file responsiveness.            |
-| PW011 | `code-heavy-notes.md`  | desktop  | paged  | Atkinson Hyperlegible | default | dark          | strong   | full    | code readability in dark strong mode. |
-| PW012 | `standard-markdown.md` | tablet   | scroll | Charis SIL            | max     | high-contrast | balanced | reduced | large text scroll on tablet.          |
+```text id="18pzaf"
+feed.xml
+```
 
-Each row must verify:
+Do not use an absolute remote URL at runtime. The app is local-first and must not depend on external network access.
 
-```text
-Expected file content visible.
-Correct mode visible.
-Correct theme applied.
-Correct font class or CSS variable applied.
-No body horizontal overflow.
-No stuck busy or E Ink overlay.
-Progress state sane.
-Settings reflect applied values.
-No book content in localStorage.
-No unexpected network.
+Use `fetch("feed.xml", { cache: "no-store" })` or equivalent if the agent decides this is appropriate. Static browser caching is acceptable if it does not create stale behavior in normal use. Do not add any remote dependency.
+
+Parse the XML using `DOMParser`.
+
+Required parser behavior:
+
+```text id="2b9hdu"
+Read channel title if needed.
+Read item title.
+Read item description.
+Read item link.
+Read item guid.
+Read item pubDate.
+Sort by pubDate descending if dates are valid.
+Fall back to document order if dates are missing or invalid.
+Limit rendered items.
+```
+
+Render text safely. Use `textContent`, not unsanitized `innerHTML`.
+
+RSS descriptions may contain escaped HTML or entities. The app may decode entities through XML parsing, but it must display the resulting value as text. Do not render HTML from the feed as trusted markup.
+
+If a feed item has an HTML description such as:
+
+```xml id="cdr95l"
+<description>Markdown rendering is &lt;strong&gt;safer&lt;/strong&gt; now.</description>
+```
+
+The UI should display text, not create a `<strong>` element from feed content.
+
+Links from feed items should be normal anchors. If they open a new tab, use `rel="noopener noreferrer"`. If they point to same-page fragments, same-tab navigation is acceptable. Do not prefetch item links.
+
+---
+
+I00 RSS Failure And Empty States
+
+---
+
+If `feed.xml` cannot be fetched, the app must not show a broken panel or console-only failure.
+
+Show a calm fallback:
+
+```text id="wbo35g"
+Updates are unavailable in this local session.
+You can still open the RSS feed directly.
+```
+
+Keep the RSS feed link visible.
+
+If the feed exists but has no items, show:
+
+```text id="ir1fzh"
+No project updates are listed yet.
+```
+
+If the feed is invalid XML, show:
+
+```text id="55yaez"
+Updates could not be read right now.
+```
+
+Log technical details to the structured logger if debug mode is enabled, but do not show parser exceptions to normal users.
+
+RSS failure must not block file opening. The file-open card must remain usable even if the updates panel fails.
+
+RSS failure must not break the open screen layout.
+
+---
+
+J00 Home Screen Scrolling And Layout
+
+---
+
+The current home screen is centered and sized for the drop zone. The updates panel will make the home screen taller. Adjust layout so the home screen can scroll vertically.
+
+Required behavior:
+
+```text id="55y8wh"
+Open screen supports vertical scrolling when content exceeds viewport height.
+Reader mode remains fixed and usable.
+Scroll behavior on the home screen does not break reader scroll mode.
+The drop zone remains near the top-center on normal desktop viewports.
+The updates panel appears below the drop zone with comfortable spacing.
+On mobile, the drop zone and updates panel stack vertically and fit the viewport width.
+No body-level horizontal overflow is introduced.
+```
+
+Do not simply remove `overflow: hidden` from the entire body if that breaks reader layout. The source uses bounded viewport layout for the app, and previous testing specifically cares that scroll mode works correctly. Choose a scoped solution, such as making the open screen itself scrollable while preserving the reader's bounded layout.
+
+Suggested layout direction:
+
+```text id="krqcv0"
+#app remains viewport bounded.
+.open-screen becomes overflow-y: auto.
+.open-screen uses align-items: flex-start instead of permanent vertical centering when updates are present.
+.open-screen__content or equivalent wrapper centers the cards and provides top/bottom padding.
+.dropzone and .updates-panel share max-width.
+```
+
+The home screen should still look calm and intentional. It should not feel like a long web page with unrelated cards.
+
+---
+
+K00 Styling Requirements
+
+---
+
+The close button must match the reader bar style. It should be visually quiet but discoverable.
+
+Use existing tokens: `--paper-bg`, `--paper-surface`, `--ink`, `--ink-muted`, `--line-soft`, `--line-strong`, and `--radius`.
+
+The updates panel must look coherent with the drop zone. Suggested style:
+
+```text id="5lzg6q"
+Same max width as drop zone.
+Paper-surface background.
+Subtle border.
+Small radius.
+Comfortable padding.
+Heading in UI font.
+Item titles clear but not oversized.
+Descriptions in readable muted ink.
+Dates smaller and muted.
+RSS link subdued.
+```
+
+Avoid saturated colors. Avoid card shadows that make the home screen look like a dashboard. Avoid "marketing website" styling. This is still the E Ink Reader.
+
+Mobile behavior:
+
+```text id="ovsk9y"
+Use smaller padding.
+Keep readable line height.
+Do not truncate update titles too aggressively.
+Ensure RSS link is tappable.
+Ensure close button remains tappable in reader bar.
 ```
 
 ---
 
-P00 Multi-Setting Journey Tests
+L00 RSS Content Security
 
 ---
 
-Journey tests simulate realistic use rather than isolated settings.
+Treat `feed.xml` as local project content, but still render defensively.
 
-J001: Lily smooth recovery journey.
+Required rules:
 
-Action sequence:
-
-```text
-Open app.
-Drop two files.
-Verify calm multiple-file message.
-Open unsupported PDF.
-Verify calm unsupported message.
-Open empty TXT.
-Verify empty-file message.
-Open standard Markdown.
-Switch to scroll mode.
-Increase text size.
-Reduce E Ink effect.
-Close settings.
-Reload.
+```text id="fbrcig"
+Do not use unsanitized innerHTML for feed titles or descriptions.
+Do not execute scripts from feed content.
+Do not render feed-provided HTML as DOM.
+Do not fetch images or enclosures from feed items.
+Do not auto-load item links.
+Do not store feed content in localStorage.
+Do not mix feed parsing with Markdown parsing.
 ```
 
-Expected result: every mistake is recoverable, valid file eventually loads, preferences persist, book does not restore.
+RSS feed content is not book content, but it still should not be stored in user preference storage. Keep it in memory for the current page session.
 
-J002: Frank long reading journey.
+---
 
-Action sequence:
+M00 Accessibility Requirements
 
-```text
+---
+
+The close-document button must be keyboard reachable.
+
+The close-document button must work with Enter and Space.
+
+The close-document button must have a clear accessible name.
+
+When the user closes the document, focus should move to a sensible home-screen element. Preferred target:
+
+```text id="dmfbij"
+Open file button
+```
+
+If a "Document closed" notice is shown, it may receive accessible announcement through an existing notice/live-region pattern, but focus should not be trapped there.
+
+The updates panel must have a heading. The list of updates should be navigable by screen readers. Use semantic list markup if practical:
+
+```html id="kbkw6f"
+<ul>
+  <li>...</li>
+</ul>
+```
+
+Dates should use `<time datetime="...">` when valid.
+
+The RSS feed link must be keyboard reachable and have understandable text.
+
+Reduced motion must be respected when closing a document. Do not force a full flash on users who request reduced motion.
+
+---
+
+N00 State And API Changes
+
+---
+
+Add an application method for closing the document.
+
+Suggested method name:
+
+```text id="u0dqgx"
+closeDocument()
+```
+
+Responsibilities:
+
+```text id="oxnnjj"
+Cancel or ignore pending file-load/layout work if needed.
+Close settings if open.
+Clear active document state.
+Clear current rendered content.
+Reset page and scroll reader state.
+Hide reader.
+Show open screen.
+Reset title/progress surfaces.
+Run full E Ink transition or reduced close transition.
+Move focus to the open file button after transition.
+Log app:document-close without content.
+```
+
+Do not log book text. Do not log source Markdown. Do not log rendered HTML.
+
+Update the read-only inspection handle if needed, but keep it content-safe. It may expose:
+
+```text id="e1ydw1"
+documentLoaded: false
+readerVisible: false
+openScreenVisible: true
+mode
+theme
+```
+
+It must not expose old document text.
+
+Add an updates module if useful:
+
+```text id="4f21sb"
+js/rss-updates.js
+```
+
+Suggested responsibilities:
+
+```text id="r40mzn"
+fetchProjectUpdates()
+parseRssFeed(xmlText)
+normalizeRssItems(items)
+renderUpdates(items)
+renderUpdatesLoading()
+renderUpdatesEmpty()
+renderUpdatesError()
+```
+
+Keep the RSS module independent from Markdown parsing.
+
+---
+
+O00 RSS Feed Update Requirement For This Feature
+
+---
+
+Because this is a user-facing feature, update `feed.xml` in the same implementation pass.
+
+Add a new RSS item describing the feature in user-oriented language.
+
+Suggested item title:
+
+```text id="21xwwt"
+Home screen project updates and document close action
+```
+
+Suggested description:
+
+```text id="3n6bb4"
+The reader now lets you close the current document and return to the home screen. The home screen also shows recent project updates from the local RSS feed, while keeping file reading local and private.
+```
+
+Update `lastBuildDate`.
+
+Ensure `feed.xml` remains valid RSS 2.0. The existing RSS workflow requires every user-facing feature to update the feed in the same implementation pass.
+
+The home updates panel should display this new item after implementation.
+
+---
+
+P00 UI Regression Test Requirements
+
+---
+
+Add automated UI regression tests for all new behavior.
+
+The project already requires that new user-facing behavior adds or extends specs under the matching test category and keeps the test suite decoupled from product source.
+
+Do not implement this feature without tests.
+
+Required new or updated test files:
+
+```text id="68g6f1"
+ui-regression-test-suite/src/specs/navigation/close-document.spec.ts
+ui-regression-test-suite/src/specs/rss/home-updates.spec.ts
+ui-regression-test-suite/src/specs/responsive/home-updates-responsive.spec.ts
+ui-regression-test-suite/src/specs/accessibility/close-and-updates-accessibility.spec.ts
+ui-regression-test-suite/src/specs/privacy/close-document-privacy.spec.ts
+ui-regression-test-suite/src/specs/journeys/home-return-and-updates.spec.ts
+```
+
+If the suite already has better locations for these specs, use them. The coverage must remain explicit.
+
+Update page objects:
+
+```text id="gozehe"
+ReaderPageObject: add closeDocument button locator and closeDocument() action.
+OpenScreenPageObject: add updates panel, updates list, RSS link, update item locators.
+Toast/Notice helper: support document-closed notice if implemented.
+```
+
+Update product constants if the suite centralizes test IDs:
+
+```text id="ekcwfb"
+reader-button-close-document
+open-screen-region-updates
+open-screen-list-updates
+open-screen-link-updates-rss
+open-screen-update-item
+```
+
+Run the full test suite after implementation:
+
+```text id="4e2h5c"
+cd ui-regression-test-suite
+bun run typecheck
+bun run test:navigation
+bun run test:rss
+bun run test:responsive
+bun run test:accessibility
+bun run test:privacy
+bun run test:journeys
+bun run validate
+```
+
+If a test fails, decide whether the application is wrong or the test is wrong. Correct application behavior is the priority.
+
+---
+
+Q00 Close Document Test Cases
+
+---
+
+Test CLOSE001: close button appears when document is open.
+
+Steps:
+
+```text id="00xt87"
+Open the app.
+Open simple-prose.txt.
+Locate reader-button-close-document.
+```
+
+Expected result:
+
+```text id="9hn01d"
+Close button is visible.
+Close button is enabled.
+Close button has accessible name "Close current document and return to home screen" or equivalent.
+Document title remains visible.
+Open and Settings controls remain visible.
+Standard oracle passes.
+```
+
+Test CLOSE002: close returns to home screen.
+
+Steps:
+
+```text id="pm9cpc"
+Open simple-prose.txt.
+Click Close.
+Wait for home screen.
+```
+
+Expected result:
+
+```text id="41xefe"
+Reader is hidden.
+Open screen is visible.
+Drop zone is visible.
+Open file button is visible.
+Updates panel is visible or in loading/empty/error state.
+Old document title is not visible as reader title.
+Old content marker is not visible.
+Progress is hidden or reset.
+No stuck busy overlay.
+No stuck E Ink overlay.
+```
+
+Test CLOSE003: close clears in-memory document without clearing preferences.
+
+Steps:
+
+```text id="csvdh8"
+Open standard-markdown.md.
+Change theme to dark or high contrast.
+Close document.
+Inspect localStorage.
+Open settings or inspect html attributes.
+```
+
+Expected result:
+
+```text id="y0x17l"
+Preference remains.
+Book content marker is not in localStorage.
+Reader is closed.
+Home screen uses current theme.
+```
+
+Test CLOSE004: close after page navigation.
+
+Steps:
+
+```text id="w85wxs"
 Open long-book.txt.
-Read in page mode.
-Turn 10 pages.
-Switch font to Charis SIL.
-Increase line height.
-Switch theme to cool-paper.
-Turn more pages.
+Go to page 3 or later.
+Click Close.
+Open simple-prose.txt.
+```
+
+Expected result:
+
+```text id="341w3a"
+New file starts in a valid initial page state.
+Old page number does not carry over.
+Progress is sane.
+Old long-book marker is absent.
+```
+
+Test CLOSE005: close from scroll mode.
+
+Steps:
+
+```text id="g3xgtj"
+Open long-book.txt.
 Switch to scroll mode.
-Return to page mode.
-Reload.
+Scroll down.
+Click Close.
+Open long-book.txt again.
 ```
 
-Expected result: content remains readable, page count valid, E Ink transitions behave, position remains approximately stable within session, preferences persist, book does not.
+Expected result:
 
-J003: Roman mobile code review journey.
-
-Action sequence:
-
-```text
-Set mobile viewport.
-Open code-heavy-notes.md.
-Switch to scroll mode.
-Set Atkinson Hyperlegible.
-Set high contrast.
-Set E Ink reduced.
-Scroll to code marker.
-Inspect code block dimensions.
-Tap or focus a link without accidental navigation.
-Reload.
+```text id="i9dt9v"
+Home screen appears after close.
+Reopened document does not inherit old scrollTop unless product explicitly chooses active-session restoration for same file before close. Preferred behavior: close resets document reading position.
 ```
 
-Expected result: code blocks contained, no horizontal body overflow, link behavior intentional, preferences persist, note content does not.
+Test CLOSE006: close while settings open.
 
-J004: unsafe Markdown journey.
+Steps:
 
-Action sequence:
-
-```text
-Open unsafe-markdown.md.
-Inspect rendered document.
-Check global script sentinel.
-Check network requests.
-Open diagnostics or debug mode if present.
-Switch theme.
-Switch mode.
-Reload.
-```
-
-Expected result: unsafe content never executes, no remote fetch occurs, document remains safe after mode/theme changes, no unsafe content persists.
-
-J005: reduced motion journey.
-
-Action sequence:
-
-```text
-Open app in reduced-motion context.
-Open standard Markdown.
-Turn page.
-Switch theme.
-Switch font.
-Switch mode.
-Set E Ink strong manually if UI allows.
-Set E Ink off.
-```
-
-Expected result: system reduced motion is respected by default. Manual override behavior is explicit. No aggressive motion unless intentionally enabled.
-
-J006: corrupted preference journey.
-
-Action sequence:
-
-```text
-Before app load, write localStorage preference object with invalid font, negative size, impossible line height, invalid theme, invalid mode, invalid E Ink value.
-Open app.
-Open standard Markdown.
+```text id="s4ct8j"
+Open standard-markdown.md.
 Open settings.
+Click Close if close button remains visible, or press Escape then Close if settings covers it.
 ```
 
-Expected result: preferences are clamped or reset to valid defaults. App does not crash. Settings show valid values.
+Expected result:
 
-J007: rapid interaction dirty-state journey.
+```text id="41vdrp"
+Final state is home screen.
+Settings is closed.
+No overlay remains.
+```
 
-Action sequence:
+If settings intentionally covers the reader bar and close is not reachable while settings is open, add a test that Escape closes settings and then Close works. If the product should allow close from inside settings, add a close action inside settings as a separate product decision.
 
-```text
+Test CLOSE007: keyboard activation.
+
+Steps:
+
+```text id="vbhfvb"
+Open simple-prose.txt.
+Tab to Close.
+Press Enter.
+Reopen file.
+Tab to Close.
+Press Space.
+```
+
+Expected result:
+
+```text id="tquf6x"
+Both keyboard activations return to home screen.
+Focus lands on Open file button or another sensible home control.
+```
+
+Test CLOSE008: close does not create network or storage side effects.
+
+Steps:
+
+```text id="mtnoqx"
+Open code-heavy Markdown.
+Click Close.
+Inspect network and storage diagnostics.
+```
+
+Expected result:
+
+```text id="b55n78"
+No external request.
+No fixture marker in storage.
+No source code snippet in storage.
+No window.__einkReader content leak.
+```
+
+---
+
+R00 Home Updates RSS Test Cases
+
+---
+
+Test RSSHOME001: updates panel appears on home screen.
+
+Steps:
+
+```text id="w48pmb"
+Open app fresh.
+Locate open-screen-region-updates.
+```
+
+Expected result:
+
+```text id="t68nln"
+Updates panel is visible below the drop zone.
+Heading says "Project updates" or equivalent.
+RSS feed link exists.
+Open file area remains visible and usable.
+```
+
+Test RSSHOME002: feed items render from feed.xml.
+
+Steps:
+
+```text id="p20fyt"
+Open app fresh.
+Wait for updates list to settle.
+Read update items.
+```
+
+Expected result:
+
+```text id="qhxoq2"
+At least one update item is visible if feed.xml has items.
+Item title is visible.
+Description is visible.
+Date is visible if pubDate is valid.
+No raw XML is shown.
+No parser error is shown.
+```
+
+Test RSSHOME003: RSS item content is rendered as text, not HTML.
+
+Steps:
+
+```text id="k0qevs"
+Serve or route a test feed item with escaped HTML in description.
+Open app.
+Inspect rendered item.
+```
+
+Expected result:
+
+```text id="bnqpvr"
+The description does not create unexpected HTML nodes from feed content.
+Scripts, if present in test feed text, do not execute.
+Description appears as safe text or sanitized plain text.
+```
+
+Test RSSHOME004: RSS feed failure state.
+
+Steps:
+
+```text id="exlj94"
+Route feed.xml to 404 or network failure in Playwright.
+Open app.
+```
+
+Expected result:
+
+```text id="fh8a4o"
+Updates panel shows calm unavailable message.
+RSS feed link remains visible.
+Open file button still works.
+No unhandled page error.
+```
+
+Test RSSHOME005: invalid XML state.
+
+Steps:
+
+```text id="y1eugl"
+Route feed.xml to invalid XML.
+Open app.
+```
+
+Expected result:
+
+```text id="z71tnu"
+Updates panel shows calm could-not-read message.
+Open screen remains usable.
+No raw parser exception visible to user.
+```
+
+Test RSSHOME006: empty feed state.
+
+Steps:
+
+```text id="kzgz6w"
+Route feed.xml to valid RSS with zero items.
+Open app.
+```
+
+Expected result:
+
+```text id="7jpyoy"
+Updates panel shows "No project updates are listed yet" or equivalent.
+```
+
+Test RSSHOME007: updates panel after closing document.
+
+Steps:
+
+```text id="6s3x4d"
+Open standard-markdown.md.
+Click Close.
+Wait for home screen.
+```
+
+Expected result:
+
+```text id="vkjgtc"
+Updates panel is present.
+Feed items are visible or graceful fallback appears.
+Open file button works.
+```
+
+Test RSSHOME008: RSS rendering does not create external requests.
+
+Steps:
+
+```text id="v1ncff"
+Open app.
+Capture network.
+Wait for updates.
+```
+
+Expected result:
+
+```text id="r4zij1"
+Request to same-origin feed.xml is allowed.
+No external RSS, image, enclosure, or item-link request occurs.
+```
+
+---
+
+S00 Responsive Tests For Home Updates
+
+---
+
+Test RESPUPD001: desktop home layout.
+
+Steps:
+
+```text id="ou9mnp"
+Set desktop viewport.
+Open app.
+```
+
+Expected result:
+
+```text id="c9p5we"
+Drop zone is centered.
+Updates panel is below the drop zone.
+Both share a coherent width.
+No horizontal overflow.
+```
+
+Test RESPUPD002: mobile home layout.
+
+Steps:
+
+```text id="l0sb2l"
+Set mobile narrow viewport.
+Open app.
+```
+
+Expected result:
+
+```text id="golj8w"
+Drop zone fits viewport.
+Updates panel fits viewport.
+Home screen scrolls vertically if needed.
+RSS link is tappable.
+No horizontal overflow.
+```
+
+Test RESPUPD003: home screen vertical scroll.
+
+Steps:
+
+```text id="fjlqpf"
+Use a shorter viewport or route feed.xml with several items.
+Open app.
+Attempt to scroll open screen.
+```
+
+Expected result:
+
+```text id="3oaq7l"
+Open screen scrolls.
+Reader scroll mode is not involved because no document is open.
+File-open controls remain reachable.
+```
+
+Test RESPUPD004: reader layout unaffected.
+
+Steps:
+
+```text id="bycb5i"
+Open app and wait for updates panel.
 Open long-book.txt.
-Rapidly click Next five times.
-Open settings immediately.
-Change mode.
-Change font size.
+Switch to scroll mode.
+Scroll reader.
+```
+
+Expected result:
+
+```text id="fs3gzr"
+Reader scroll behavior remains correct.
+Home screen updates layout did not break reader's bounded viewport layout.
+```
+
+---
+
+T00 Accessibility Tests For Close And Updates
+
+---
+
+Test A11Y_CLOSE001: close button accessible name.
+
+Steps:
+
+```text id="udk8i3"
+Open a document.
+Query button by role and accessible name.
+```
+
+Expected result:
+
+```text id="dxdv9w"
+Close button is discoverable by role button and name.
+```
+
+Test A11Y_CLOSE002: focus after close.
+
+Steps:
+
+```text id="6tyguq"
+Open document.
+Focus Close button.
+Press Enter.
+```
+
+Expected result:
+
+```text id="8bb8dl"
+Home screen appears.
+Focus lands on Open file button or a sensible home control.
+```
+
+Test A11Y_UPDATES001: updates region semantics.
+
+Steps:
+
+```text id="n1ny3n"
+Open app.
+Inspect updates panel.
+```
+
+Expected result:
+
+```text id="cq2o18"
+Panel has a heading.
+Items are grouped as list or equivalent semantic structure.
+RSS feed link is keyboard reachable.
+Dates use time elements when valid.
+```
+
+Test A11Y_UPDATES002: keyboard navigation through home screen.
+
+Steps:
+
+```text id="a1709w"
+Open app.
+Tab through Open file button, RSS link, update item links.
+```
+
+Expected result:
+
+```text id="303mk4"
+Focus is visible.
+No focus trap.
+No unreachable controls.
+```
+
+---
+
+U00 Privacy And Storage Tests
+
+---
+
+Test PRIV_CLOSE001: close does not persist document content.
+
+Steps:
+
+```text id="af2tr4"
+Open code-heavy Markdown fixture.
+Click Close.
+Inspect localStorage.
+Inspect window.__einkReader serialized output.
+```
+
+Expected result:
+
+```text id="vi5f1d"
+No fixture marker, paragraph, code snippet, source Markdown, or rendered HTML appears in persistent storage or inspection handle.
+```
+
+Test PRIV_UPDATES001: RSS content is not stored in preferences.
+
+Steps:
+
+```text id="3awe2s"
+Open app.
+Wait for updates.
+Inspect localStorage.
+```
+
+Expected result:
+
+```text id="h8pa76"
+RSS item titles/descriptions are not stored in the preferences object.
+```
+
+Test PRIV_CLOSE002: close clears visible old content.
+
+Steps:
+
+```text id="ddug9q"
+Open standard-markdown.md.
+Click Close.
+Inspect visible DOM text for fixture marker.
+```
+
+Expected result:
+
+```text id="5rvbdf"
+Old fixture marker is not visible.
+If hidden DOM is inspected, old content should be absent unless a short transition is active. After transition settles, it must be absent.
+```
+
+---
+
+V00 Journey Tests
+
+---
+
+Test JOURNEY_CLOSE_UPDATES001: close and home updates journey.
+
+Steps:
+
+```text id="iy609a"
+Open app.
+Wait for updates panel.
+Open standard-markdown.md.
+Turn a page.
+Open settings.
 Close settings.
-Resize viewport to mobile.
-Switch theme.
+Click Close.
+Read updates panel.
+Open simple-prose.txt.
+Click Close.
 ```
 
-Expected result: final state is valid, no overlay stuck, content visible, no invalid dimensions, no page index out of range.
+Expected result:
 
----
-
-Q00 Responsive Test Cases
-
----
-
-Responsive tests must use real browser viewport sizes.
-
-Use these baseline viewports:
-
-```text
-Desktop: 1440 x 900.
-Small desktop: 1024 x 768.
-Tablet portrait: 768 x 1024.
-Tablet landscape: 1024 x 768.
-Mobile narrow: 390 x 844.
-Mobile small: 360 x 640.
-Mobile landscape: 844 x 390.
+```text id="xjrj6f"
+Document can be closed repeatedly.
+Home screen remains usable.
+Updates panel remains available after close.
+Opening another file after close works.
+No storage leak.
+No network leak.
+No stuck overlay.
 ```
 
-RESP001: open screen at each viewport.
-
-Expected result: drop zone and open button visible, no clipped text, RSS link visible or reasonably placed.
-
-RESP002: page mode at each viewport.
-
-Expected result: content fits, controls reachable, no body horizontal overflow.
-
-RESP003: scroll mode at each viewport.
-
-Expected result: natural scrolling, no control overlap.
-
-RESP004: settings at each viewport.
-
-Expected result: settings panel fits. On mobile, it should be usable without horizontal scrolling.
-
-RESP005: code block mobile.
-
-Expected result: code blocks are contained in the content area.
-
-RESP006: orientation change.
-
-Action: load long document on tablet portrait, switch to landscape.
-
-Expected result: layout recalculates, position remains near same content, no invalid page count.
-
----
-
-R00 Accessibility Test Cases
-
----
-
-A11Y001: keyboard-only file open path.
-
-Action: use Tab and Enter to reach file picker where automation allows.
-
-Expected result: file open control is keyboard reachable.
-
-A11Y002: keyboard reading path.
-
-Action: use keyboard to turn pages and open/close settings.
-
-Expected result: all documented shortcuts work outside form controls.
-
-A11Y003: focus visibility.
-
-Action: tab through controls.
-
-Expected result: focus ring is visible against all themes.
-
-A11Y004: settings focus management.
-
-Action: open settings, tab through, press Escape.
-
-Expected result: focus stays inside while open and returns after close.
-
-A11Y005: ARIA progress.
-
-Expected result: progress region uses live region or accessible text and updates after page turns.
-
-A11Y006: reduced motion.
-
-Expected result: reduced-motion context reduces aggressive visual effects.
-
-A11Y007: high contrast.
-
-Expected result: high-contrast theme makes text and controls readable.
-
-A11Y008: form controls do not trigger shortcuts.
-
-Action: focus a setting control, press arrow keys or Space.
-
-Expected result: control changes normally; page does not turn unexpectedly.
-
----
-
-S00 Error Message Test Cases
-
----
-
-Error message tests must verify exact or near-exact user-facing copy. The wording should remain calm and actionable.
-
-E001: multiple files.
-
-Expected copy class: "Open one file at a time. Choose a single .txt, .md, or .markdown file to continue."
-
-E002: unsupported file.
-
-Expected copy class: "This file type is not supported. Open a .txt, .md, or .markdown file."
-
-E003: empty file.
-
-Expected copy class: "This file is empty. Choose another TXT or Markdown file to read."
-
-E004: too large.
-
-Expected copy class: "This file is too large for this reader. Try a smaller TXT or Markdown file."
-
-E005: Markdown unsafe/fallback.
-
-Expected copy class: "Markdown could not be shown safely. You can open this file as plain text instead."
-
-E006: pagination failure.
-
-Expected copy class: "Page layout could not be prepared for this file. You can read it in scroll mode instead."
-
-E007: missing font.
-
-Expected copy class: "That font is not available, so the reader used Literata."
-
-E008: preference restore failure.
-
-Expected copy class: "Reader preferences could not be restored. The default settings are being used for this session."
-
-E009: preference save failure.
-
-Expected copy class: "These settings will apply for now, but they may not be remembered after you close the app."
-
-E010: missing Markdown dependency.
-
-Expected copy class: "Markdown support is not available in this copy of the reader. You can open this file as plain text, or use a complete copy of the app."
-
-Each error test must also verify recovery: the file picker or alternative action remains available, no blank state, no raw stack trace in the visible UI, and no persistent book content.
-
----
-
-T00 Privacy And Storage Test Cases
-
----
-
-PR001: no content in localStorage after TXT load.
-
-Action: load `simple-prose.txt`.
-
-Expected result: localStorage contains preferences only. Fixture markers do not appear.
-
-PR002: no content in localStorage after Markdown load.
-
-Action: load `code-heavy-notes.md`.
-
-Expected result: source Markdown, code snippets, rendered HTML, and markers do not appear.
-
-PR003: reload removes book.
-
-Action: load file, reload.
-
-Expected result: open screen appears, reader hidden, preferences restored.
-
-PR004: no IndexedDB content.
-
-Action: after loading file, inspect IndexedDB databases if browser allows.
-
-Expected result: no app-created DB containing book content.
-
-PR005: no Cache Storage content.
-
-Expected result: app does not cache book or source files.
-
-PR006: logs do not contain book content.
-
-Action: enable debug if present, load private marker fixture.
-
-Expected result: logs may contain metadata such as file name and size, but not content markers.
-
-PR007: no network upload.
-
-Action: capture network while loading files and changing settings.
-
-Expected result: no external requests and no upload.
-
----
-
-U00 E Ink Effect Test Cases
-
----
-
-Visual effects cannot be fully proven by DOM tests, but automation can verify state changes and manual inspection must verify quality.
-
-INK001: full refresh on file load.
-
-Expected result: E Ink classes or observable overlay appear briefly unless disabled/reduced. Overlay clears.
-
-INK002: partial refresh on page turn.
-
-Expected result: page turn triggers partial effect and ghost layer behavior if enabled.
-
-INK003: full refresh on mode switch.
-
-Expected result: mode switch uses full redraw behavior.
-
-INK004: full refresh on font change.
-
-Expected result: font change refreshes and re-layouts.
-
-INK005: full refresh on theme change.
-
-Expected result: theme change refreshes.
-
-INK006: E Ink off.
-
-Action: set effect off.
-
-Expected result: no overlay, no ghosting, navigation still works.
-
-INK007: E Ink reduced.
-
-Expected result: reduced effect is subtle, ghosting low or absent.
-
-INK008: E Ink strong.
-
-Expected result: stronger effect appears but does not obscure content or stick.
-
-INK009: reduced motion.
-
-Expected result: no aggressive flashing in reduced-motion context.
-
-INK010: rapid transitions.
-
-Expected result: effect controller does not leave overlay stuck.
-
-Manual visual checks must answer:
-
-```text
-Does the effect look like E Ink refresh rather than a generic fade?
-Is ghosting subtle?
-Is strong mode still safe and readable?
-Is reduced mode comfortable?
-Does the effect support reading instead of distracting from it?
+Test JOURNEY_LILY_CLOSE001: Lily calm close flow.
+
+Steps:
+
+```text id="xncmdj"
+Open simple-prose.txt.
+Click Close.
+Observe home screen.
+Open unsupported.pdf.
+Observe error.
+Read updates panel.
+Open standard-markdown.md.
+```
+
+Expected result:
+
+```text id="jwhhz1"
+Close is understandable.
+Home screen gives clear next action.
+Error recovery remains calm.
+Updates panel does not distract from file opening.
+```
+
+Test JOURNEY_ROMAN_CLOSE001: Roman technical note close flow.
+
+Steps:
+
+```text id="d23tlb"
+Open code-heavy Roman fixture.
+Switch to scroll mode.
+Scroll to code block.
+Click Close.
+Inspect storage.
+Open another Roman fixture.
+```
+
+Expected result:
+
+```text id="o6hjp0"
+Code-heavy content closes cleanly.
+No code snippet persists.
+Reopening another technical note works.
+Updates panel does not affect code-note rendering.
 ```
 
 ---
 
-V00 Offline, Vendor, And Metadata Test Cases
+W00 Manual Visual Review Requirements
 
 ---
 
-OFF001: no runtime external requests.
+After implementation, perform manual visual checks using screenshots similar to the provided examples.
 
-Action: run app with network capture.
+Check reader view:
 
-Expected result: only local files load.
-
-OFF002: offline mode.
-
-Action: set browser offline after initial page load or serve locally with network disabled.
-
-Expected result: app works with vendored scripts, fonts, textures, social image, RSS link if local.
-
-OFF003: CSP enforcement.
-
-Action: inspect CSP meta tag and attempt prohibited fetch from console if feasible.
-
-Expected result: fetch blocked. App remains stable.
-
-OFF004: vendor files exist.
-
-Action: check expected vendor files and licenses.
-
-Expected result: markdown-it, DOMPurify, fonts, licenses, and manifest exist.
-
-OFF005: social image.
-
-Expected result: social image exists at expected path, is 1200 x 630, and tags match dimensions.
-
-OFF006: RSS feed.
-
-Expected result: `feed.xml` exists, is valid XML, has RSS channel metadata, items are user-oriented, and head link points to it.
-
----
-
-W00 Automation Design Notes For Later Implementation
-
----
-
-The Playwright implementation should use data-driven test tables.
-
-Each row should define:
-
-```text
-Test id.
-Fixture.
-Viewport.
-Initial preference state.
-Actions.
-Expected primary result.
-Expected surrounding checks.
-Expected recovery if failure state is intentional.
+```text id="96uyr6"
+Close button appears on the left near the document title.
+Close button is padded enough to click.
+Document title still has enough room.
+Open and Settings remain aligned on the right.
+Reader bar does not feel crowded.
+Mobile reader bar still works.
 ```
 
-The automated suite should have directories like:
+Check home screen:
 
-```text
-tests/playwright/smoke/
-tests/playwright/files/
-tests/playwright/markdown/
-tests/playwright/settings/
-tests/playwright/navigation/
-tests/playwright/responsive/
-tests/playwright/privacy/
-tests/playwright/pairwise/
-tests/playwright/journeys/
+```text id="nyozk4"
+Drop zone remains calm and centered.
+Updates panel appears below with coherent spacing.
+Updates panel width matches or visually aligns with the drop zone.
+RSS items are readable.
+The panel does not make the home screen feel like a generic marketing page.
+Vertical scrolling feels intentional when needed.
 ```
 
-The suite must not import product source modules. The rendered DOM and browser behavior are the contract.
-
-Prefer stable selectors first: IDs already present in the app, accessible roles, labels, and visible text. If selectors are unstable, the agent should add minimal `data-testid` attributes to product markup in a future implementation pass, then test through those hooks.
-
-The test harness should provide helpers later, but this plan does not implement them.
-
-Needed helpers:
-
-```text
-openApp(page)
-openFixtureByFileInput(page, fixtureName)
-dropFixture(page, fixtureName)
-openSettings(page)
-closeSettings(page)
-setPreference(page, name, value)
-expectReaderReady(page)
-expectOpenScreenReady(page)
-expectNoContentPersisted(page, markers)
-expectNoUnexpectedNetwork(page)
-expectNoCriticalConsoleErrors(page)
-expectNoHorizontalOverflow(page)
-expectNoStuckOverlay(page)
-expectMode(page, mode)
-expectTheme(page, theme)
-expectProgressSane(page)
-```
-
-Each helper must report diagnosable errors. A failed test should say what user action failed and which surrounding invariant broke.
+If the visual result feels awkward, fix it. Automated tests cannot decide whether the home screen feels coherent.
 
 ---
 
-X00 Manual Execution Order
+X00 Files Likely To Change
 
 ---
 
-Run the manual plan in this order before automation:
+Expected runtime changes:
 
-```text
-1. Smoke tests.
-2. File input tests.
-3. TXT rendering tests.
-4. Markdown rendering and safety tests.
-5. Page mode tests.
-6. Scroll mode tests.
-7. Settings open/close and persistence tests.
-8. Single-setting boundary tests.
-9. Pairwise seed matrix.
-10. Generated pairwise matrix.
-11. Responsive tests.
-12. Accessibility tests.
-13. Error recovery tests.
-14. Privacy/storage tests.
-15. E Ink visual tests.
-16. Offline/vendor/social/RSS tests.
-17. Persona journeys.
-18. Final regression pass.
+```text id="huv64n"
+index.html
+css/base.css
+css/reader.css
+css/responsive.css
+js/app.js
+js/state.js
+js/rss-updates.js or equivalent new module
+feed.xml
+README.md if feature list is documented there
+AGENTS.md if test instructions or new feature workflow need updating
 ```
 
-Do not skip smoke tests after fixing a deep bug. Smoke tests must remain the first safety net.
+Expected test changes:
 
----
-
-Y00 Exit Criteria
-
----
-
-The manual test plan is complete when every feature has at least one direct test, every major setting has boundary tests, every high-risk interaction has pairwise coverage, every user persona has a journey, and every privacy/security constraint has a browser-verifiable check.
-
-The application is ready for automated test implementation when:
-
-```text
-All required fixtures are specified.
-Smoke tests are explicit.
-Single-feature tests are explicit.
-Single-setting boundary classes are explicit.
-Pairwise factors are explicit.
-Journey tests are explicit.
-Expected surrounding-state oracle is explicit.
-Error messages are specified.
-Privacy checks are specified.
-Responsive viewports are specified.
-Manual visual E Ink checks are specified.
-Playwright automation hooks are identified.
+```text id="8rt3q7"
+ui-regression-test-suite/src/page-objects/reader.page.ts
+ui-regression-test-suite/src/page-objects/open-screen.page.ts
+ui-regression-test-suite/src/config/testids.ts or equivalent
+ui-regression-test-suite/src/specs/navigation/close-document.spec.ts
+ui-regression-test-suite/src/specs/rss/home-updates.spec.ts
+ui-regression-test-suite/src/specs/responsive/home-updates-responsive.spec.ts
+ui-regression-test-suite/src/specs/accessibility/close-and-updates-accessibility.spec.ts
+ui-regression-test-suite/src/specs/privacy/close-document-privacy.spec.ts
+ui-regression-test-suite/src/specs/journeys/home-return-and-updates.spec.ts
 ```
 
-The later Playwright implementation should not improvise scope. It should implement this plan, then report which manual test cases are automated, which require manual visual inspection, and which are blocked by browser limitations.
+Do not change vendored dependencies for this feature. RSS parsing can use browser-native `fetch` and `DOMParser`.
+
+---
+
+Y00 Implementation Order
+
+---
+
+Implement in this order:
+
+```text id="vay3m1"
+1. Read current app source for reader bar, open screen, app state, file open, and settings behavior.
+2. Add close-document button markup with data-testid.
+3. Add closeDocument application method.
+4. Wire close button event.
+5. Verify close from page mode manually.
+6. Verify close from scroll mode manually.
+7. Add home screen layout wrapper if needed.
+8. Add updates panel markup.
+9. Add RSS updates module using local feed.xml and DOMParser.
+10. Render loading, success, empty, invalid, and unavailable states.
+11. Style close button and updates panel.
+12. Make open screen vertically scrollable without breaking reader scroll mode.
+13. Update feed.xml with a new user-facing item.
+14. Update UI regression page objects.
+15. Add close-document tests.
+16. Add home updates RSS tests.
+17. Add responsive, accessibility, privacy, and journey tests.
+18. Run targeted tests.
+19. Run the full validation suite.
+20. Perform manual visual review.
+21. Fix issues found by tests or visual inspection.
+```
+
+Do not defer tests. This is user-facing behavior and must be protected by UI regression coverage.
+
+---
+
+Z00 Acceptance Criteria
+
+---
+
+The feature is complete only when all of these are true:
+
+```text id="4tmxjf"
+Reader bar has a visible Close button near the document title.
+Close button has data-testid reader-button-close-document.
+Close button has a clear accessible name.
+Close returns to the home screen.
+Close clears current document state.
+Close clears rendered document content after transition settles.
+Close does not clear preferences.
+Close does not persist book content.
+Close works from page mode.
+Close works from scroll mode.
+Close works after page navigation.
+Close behaves safely with settings open.
+Home screen shows updates panel below the drop zone.
+Updates panel reads local feed.xml.
+Updates panel displays recent RSS items.
+Updates panel handles feed failure calmly.
+Updates panel handles invalid XML calmly.
+Updates panel handles empty feed calmly.
+Feed content is rendered as safe text.
+RSS item links do not prefetch.
+Home screen scrolls vertically when needed.
+Reader scroll mode remains correct.
+Mobile home screen has no horizontal overflow.
+feed.xml includes a new item for this feature.
+RSS remains valid XML.
+UI regression tests cover close behavior.
+UI regression tests cover home updates behavior.
+UI regression tests cover responsive home updates behavior.
+UI regression tests cover accessibility behavior.
+UI regression tests cover privacy and no-content persistence.
+Full UI regression suite passes.
+Manual visual review confirms the feature feels coherent.
+```
+
+The priority remains product correctness. If a test passes but the close button feels hidden, the home updates panel feels noisy, or the home screen layout feels broken, fix the application.
