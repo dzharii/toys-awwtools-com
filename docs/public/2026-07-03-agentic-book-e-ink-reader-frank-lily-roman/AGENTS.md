@@ -1,0 +1,483 @@
+# AGENTS.md
+
+---
+
+A00 Project Mission
+
+---
+
+Build a static, local-first E Ink-style reader for local TXT and Markdown files.
+
+The runtime app must be plain HTML, CSS, JavaScript, and local assets. It must not require npm, a framework, a build step, a server, a database, account login, cloud storage, remote fonts, remote scripts, analytics, or runtime network access.
+
+The app must let a user open one local `.txt`, `.md`, or `.markdown` file through file picker or drag-and-drop. The app must render the file as a calm E Ink-like reading surface with page mode, scroll mode, local fonts, local settings, safe Markdown handling, clear errors, responsive layouts, keyboard and touch input, and a realistic visual refresh effect.
+
+Book contents must not be persisted. User preferences may be persisted. The user must reopen the book file each session.
+
+Work autonomously. Use best judgment. Research when needed. Make decisions. Validate those decisions. Refactor when the result is not clean enough. Do not wait for user approval when the specifications provide enough direction.
+
+---
+
+B00 Source Documents
+
+---
+
+Read these files before implementation begins:
+
+```text
+specs/eink-reader-design-note.md
+specs/frank-usage-scenario.md
+specs/lily-usage-scenario.md
+specs/roman-usage-scenario.md
+```
+
+These files are the project authority.
+
+The design note defines the required product, constraints, architecture, quality bar, dependency policy, security policy, rendering behavior, visual simulation, testing expectations, and acceptance criteria.
+
+The Frank scenario defines the demanding daily-reader perspective. Frank tests whether the app is good enough for serious long-form reading, typography, privacy, page mode, scroll mode, visual quality, and complete feature coverage.
+
+The Lily scenario defines the occasional-reader perspective. Lily tests smoothness, clarity, calm recovery, nontechnical error messages, obvious controls, minimal confusion, and whether the app works without requiring software expertise.
+
+The Roman scenario defines the experienced software engineer perspective. Roman tests technical Markdown, code blocks, mobile note review, local/offline integrity, inspectable behavior, diagnostics, safe Markdown, reliable settings, and engineering quality.
+
+The agent may read all files at the beginning to build full context. Implementation must still proceed in the sequence defined below.
+
+---
+
+C00 Required Implementation Sequence
+
+---
+
+Implement the project in four passes.
+
+Pass 1 is the design note pass.
+
+Read:
+
+```text
+specs/eink-reader-design-note.md
+```
+
+Create:
+
+```text
+specs/eink-reader-design-note_todo.md
+```
+
+The todo file must contain a complete acceptance checklist extracted from the design note. The checklist must be specific enough to drive implementation. It must include product behavior, runtime constraints, dependency vendoring, font vendoring, file loading, TXT parsing, Markdown parsing, security, storage, rendering, page mode, scroll mode, E Ink simulation, settings, accessibility, responsive behavior, logging, error handling, testing, and documentation.
+
+Validate the todo file before implementing. Check whether any requirement from the design note was missed. Add missing items before coding.
+
+Implement the app against this todo list. After implementation, review the todo list item by item. Mark completed items only when they have been implemented and validated. If implementation reveals that a todo item was incomplete or ambiguous, revise the todo item using best judgment, then satisfy the revised item.
+
+Run tests. Inspect the app manually. Refactor. Do not move to the Frank pass until the design note todo is complete or any remaining limitation is explicitly documented with a reason.
+
+Pass 2 is the Frank pass.
+
+Read:
+
+```text
+specs/frank-usage-scenario.md
+```
+
+Create:
+
+```text
+specs/frank-usage-scenario_todo.md
+```
+
+Extract Frank-specific acceptance requirements. Focus on serious reading quality, long-form comfort, typography, page and scroll behavior, privacy, full feature coverage, realistic E Ink behavior, desktop/tablet/mobile reading, strong defaults, and recovery from mistakes.
+
+Validate the Frank todo list against the already implemented app. Some items may already be satisfied by the design note pass. Keep them in the todo list and mark them only after validation.
+
+Use Frank's perspective while reviewing the app. Ask whether the software would satisfy a demanding reader who can leave for a better tool. If something was implemented technically but feels weak, generic, visually poor, or inconvenient for real reading, fix it.
+
+If Frank's requirements reveal that an earlier design decision was wrong, go back and change the implementation. Then rerun relevant tests. Refactor after fixes.
+
+Pass 3 is the Lily pass.
+
+Read:
+
+```text
+specs/lily-usage-scenario.md
+```
+
+Create:
+
+```text
+specs/lily-usage-scenario_todo.md
+```
+
+Extract Lily-specific acceptance requirements. Focus on smoothness, obvious first use, nontechnical UI copy, calm errors, easy recovery, mobile simplicity, minimal configuration burden, understandable settings, and no confusing intermediate states.
+
+Validate the Lily todo list against the current app. Use Lily's perspective while reviewing. Ask whether an occasional user with less software troubleshooting experience can open a file, read, adjust basics, recover from mistakes, and leave without confusion.
+
+If a feature that worked for Frank feels too technical, too dense, too noisy, or too confusing for Lily, revise the UI while preserving Frank's power-user needs. Prefer progressive disclosure. Keep main paths simple and move technical details into diagnostics or advanced sections.
+
+If Lily's requirements contradict an earlier implementation detail, do not ignore the conflict. Re-evaluate the design. Use best judgment to satisfy both perspectives when possible. If impossible, prioritize the core product constraints, safety, privacy, and reading usability.
+
+Run tests. Add or update tests for Lily-specific error messages and smooth recovery paths. Refactor.
+
+Pass 4 is the Roman pass.
+
+Read:
+
+```text
+specs/roman-usage-scenario.md
+```
+
+Create:
+
+```text
+specs/roman-usage-scenario_todo.md
+```
+
+Extract Roman-specific acceptance requirements. Focus on technical Markdown, code-heavy notes, mobile review, links, code block containment, diagnostics, local/offline runtime, inspectable implementation, safe Markdown, preference persistence without content persistence, and engineering quality.
+
+Validate the Roman todo list against the current app. Use Roman's perspective while reviewing. Ask whether an experienced software engineer would trust the app as a serious local reader for code notes and technical documentation.
+
+If Lily-driven simplification removed useful technical detail, restore it through advanced diagnostics or clear optional controls without making the main experience confusing. If Frank-driven visual choices harm code readability, adjust typography, contrast, code block styling, or theme behavior.
+
+Run tests with code-heavy Markdown fixtures. Inspect mobile rendering. Confirm no book or note content is persisted. Confirm no external network requests occur at runtime. Refactor.
+
+---
+
+D00 Todo File Requirements
+
+---
+
+Each generated todo file must be written as Markdown.
+
+Each todo file must start with the source document path and the pass name.
+
+Each todo file must include acceptance items that can be checked manually or by tests.
+
+Each todo item must be concrete. Avoid vague items like "make UI good." Replace them with verifiable items like "default reader uses local Literata, off-white paper background, constrained line width, and readable line height."
+
+Each todo file must include a validation section.
+
+Each todo file must include a risk section for requirements that are easy to miss.
+
+Each todo file must include a final review section.
+
+Suggested todo structure:
+
+```md
+# specs/eink-reader-design-note_todo.md
+
+Source: specs/eink-reader-design-note.md
+Pass: Design Note
+
+---
+
+A00 Acceptance Checklist
+
+- [ ] Runtime app is static HTML, CSS, JavaScript, and local assets.
+- [ ] No npm, framework, bundler, server, or build step is required for runtime.
+- [ ] Runtime makes no external network requests.
+- [ ] TXT files can be opened through file picker.
+- [ ] TXT files can be opened through drag-and-drop.
+
+---
+
+B00 Validation Checklist
+
+- [ ] App was opened locally.
+- [ ] Browser console was checked.
+- [ ] Runtime network requests were checked.
+- [ ] Storage was checked for book content.
+- [ ] Desktop viewport was tested.
+- [ ] Mobile viewport was tested.
+
+---
+
+C00 Risks And Edge Cases
+
+- [ ] Large files do not freeze the app without feedback.
+- [ ] Markdown raw HTML does not render as trusted HTML.
+- [ ] Font loading failure falls back safely.
+
+---
+
+D00 Final Review
+
+- [ ] All implemented items were retested after refactoring.
+- [ ] Remaining limitations are documented.
+```
+
+Do not treat the example as exhaustive. Extract the actual todo items from the source document.
+
+Before coding each pass, inspect the todo file and ask whether it misses any requirement from the source document. Fix the todo file first. Then implement.
+
+After coding each pass, inspect the todo file again. Do not mark an item done just because code exists. Mark it done only when the app behavior was validated.
+
+---
+
+E00 Autonomous Work Standard
+
+---
+
+Work without interactive clarification unless the repository is missing the specification files entirely or a requirement is impossible under the hard constraints.
+
+Use best judgment often. The specifications intentionally define product direction, constraints, personas, and quality criteria without micromanaging every implementation detail.
+
+When there are multiple viable approaches, compare them briefly, choose one, implement it, validate it, and revise if the result is poor.
+
+When the app behavior satisfies one persona but harms another, reconcile the conflict through design. Use progressive disclosure, safer defaults, advanced diagnostics, responsive layout differences, and settings where appropriate.
+
+Do not stop after the first working version. After each pass, refactor the code. Remove duplication. Improve names. Simplify state flow. Strengthen error handling. Add tests for the behavior that was just added or repaired.
+
+The agent must repeatedly use this loop:
+
+```text
+Read.
+Extract requirements.
+Create todo.
+Validate todo completeness.
+Plan implementation.
+Implement.
+Test.
+Inspect visually.
+Compare against persona.
+Fix.
+Refactor.
+Update todo.
+Move to next pass.
+```
+
+---
+
+F00 Product Quality Priorities
+
+---
+
+Prioritize reading quality.
+
+The app exists to make local TXT and Markdown files feel better to read. Typography, layout, page width, line height, paper tone, code block readability, and visual calm are not optional polish.
+
+Prioritize safety.
+
+Markdown input is untrusted. Raw HTML must not execute. External resources from Markdown must not load automatically. Book contents must not persist.
+
+Prioritize offline integrity.
+
+Every runtime dependency and font must be local and documented. Runtime must not depend on CDN access.
+
+Prioritize recoverability.
+
+Errors must be understandable and actionable. The app must never leave the user behind a stuck overlay, endless spinner, blank page, or raw stack trace.
+
+Prioritize inspectability.
+
+The code should be readable. Dependencies should be readable and unminified. Vendored assets should have license records. Logs should help diagnose failures without leaking book content.
+
+Prioritize responsiveness.
+
+Desktop, tablet, and mobile must be tested. Page mode and scroll mode must both feel intentional.
+
+---
+
+G00 Hard Constraints
+
+---
+
+Do not use npm for runtime.
+
+Do not require `node_modules`.
+
+Do not introduce a framework.
+
+Do not require a bundler.
+
+Do not require a server for runtime.
+
+Do not load runtime scripts from a CDN.
+
+Do not load runtime fonts from a CDN.
+
+Do not use minified-only vendored dependency files.
+
+Do not use source maps as a substitute for readable dependency source.
+
+Do not store book contents.
+
+Do not render raw Markdown HTML as trusted HTML.
+
+Do not automatically load remote images from Markdown.
+
+Do not send telemetry.
+
+Do not add analytics.
+
+Do not convert the app into a note manager, editor, sync system, cloud library, or multi-file document database.
+
+Optional developer scripts may use Bun, Bash, or PowerShell. Optional tests may use Playwright. These tools must not become runtime requirements.
+
+---
+
+H00 Expected Project Files
+
+---
+
+The repository should contain the static app, local assets, vendored dependencies, scripts, tests, and specs.
+
+Expected high-level structure:
+
+```text
+AGENTS.md
+index.html
+README.md
+LICENSES.md
+
+assets/
+css/
+js/
+vendor/
+scripts/
+tests/
+specs/
+```
+
+Expected specs:
+
+```text
+specs/eink-reader-design-note.md
+specs/frank-usage-scenario.md
+specs/lily-usage-scenario.md
+specs/roman-usage-scenario.md
+```
+
+Expected generated todo files:
+
+```text
+specs/eink-reader-design-note_todo.md
+specs/frank-usage-scenario_todo.md
+specs/lily-usage-scenario_todo.md
+specs/roman-usage-scenario_todo.md
+```
+
+The exact app module names may vary if there is a good reason, but the repository must remain simple, static, and inspectable.
+
+---
+
+I00 Dependency And Font Handling
+
+---
+
+Vendor all runtime dependencies.
+
+Vendor all runtime fonts.
+
+Use readable, unminified dependency sources.
+
+Include license files or license notes for every vendored dependency and font.
+
+Track vendored sources in a manifest.
+
+Optional vendor scripts may download missing files from documented upstream locations. If a file already exists, the script should skip it by default and report it. Do not overwrite vendored files silently.
+
+At runtime, the app must use only local vendored files.
+
+The default reading font must be local Literata.
+
+Other font choices must also be local.
+
+If a selected font is missing, fall back safely and show a calm message.
+
+---
+
+J00 Testing Expectations
+
+---
+
+Create test fixtures for TXT, Markdown, code-heavy Markdown, unsafe Markdown, Unicode, long files, empty files, and unsupported files.
+
+Use Playwright if available. If Playwright is not available, document the limitation and still perform manual browser validation.
+
+Test desktop, tablet, and mobile viewports.
+
+Test page mode and scroll mode.
+
+Test file picker and drag-and-drop where practical.
+
+Test Markdown safety.
+
+Test storage to confirm book content is not persisted.
+
+Test offline runtime behavior.
+
+Test reduced motion.
+
+Test settings persistence.
+
+Test error recovery.
+
+Test code block behavior on mobile.
+
+Test missing dependency and missing font behavior if practical.
+
+Manual visual inspection is required. Automated tests cannot decide whether the E Ink simulation feels credible or whether the reading surface is comfortable.
+
+---
+
+K00 Persona Review Rules
+
+---
+
+During the Frank pass, review the app as a serious reader. Ask whether the app is good enough for long reading sessions and whether the E Ink visual experience feels intentional.
+
+During the Lily pass, review the app as an occasional user who dislikes confusion. Ask whether every message is clear, every mistake is recoverable, and the app can be used without technical knowledge.
+
+During the Roman pass, review the app as an experienced software engineer reading code-heavy Markdown notes on mobile and desktop. Ask whether code blocks, links, diagnostics, offline behavior, local assets, and privacy behavior are technically trustworthy.
+
+If a later persona reveals a flaw in an earlier implementation, go back and fix it. Do not preserve a poor decision merely because it came from an earlier pass.
+
+If the personas pull in different directions, use this resolution order:
+
+```text
+1. Hard constraints and safety.
+2. Privacy and no content persistence.
+3. Reading usability.
+4. Accessibility and recoverability.
+5. Offline/static runtime integrity.
+6. Persona-specific comfort.
+7. Visual polish.
+```
+
+When possible, satisfy multiple personas by using defaults, settings, responsive behavior, and advanced panels.
+
+---
+
+L00 Final Completion Gate
+
+---
+
+The project is not complete until all four todo files exist, all four passes have been implemented and validated, and the final app satisfies the design note plus Frank, Lily, and Roman usage scenarios.
+
+Before finalizing, perform a final review:
+
+```text
+Read all four todo files.
+Confirm completed items were actually validated.
+Run available automated tests.
+Perform manual desktop inspection.
+Perform manual mobile inspection.
+Check browser console.
+Check runtime network requests.
+Check persistent storage.
+Check vendored dependency files.
+Check font loading.
+Check Markdown safety.
+Check page mode.
+Check scroll mode.
+Check E Ink transitions.
+Check reduced motion.
+Check error messages.
+Refactor any code that is fragile or hard to troubleshoot.
+Update README and license notes if needed.
+```
+
+If any item remains incomplete, either fix it or document the limitation with a precise reason. Do not hide known gaps.
+
+The final result should be a coherent static E Ink-style reader that can satisfy Frank's seriousness, Lily's need for smooth clarity, and Roman's engineering standards.
