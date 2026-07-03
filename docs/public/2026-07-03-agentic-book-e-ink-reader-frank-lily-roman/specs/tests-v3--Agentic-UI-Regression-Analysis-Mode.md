@@ -1294,3 +1294,580 @@ It should make the agent slower and more observant on purpose. It should give th
 The agent must not confuse test success with product success. A test can be wrong. A test can be too weak. A test can pass while the screen looks bad. A test can fail because it revealed a real user-visible race.
 
 The correct application is the priority. The test suite exists to protect that correctness.
+
+
+---
+
+AC00 Result Handling And Follow-Up Work Appendix
+
+---
+
+Agentic Analysis Mode does not end when a random exploratory run finishes.
+
+The run produces evidence: screenshots, step logs, traces, layout snapshots, DOM summaries, visible-element inventories, console diagnostics, network diagnostics, storage diagnostics, oracle results, and failure output. The agent must use that evidence to improve the application, the tests, or the testing framework.
+
+The result of an exploratory run must always be converted into one of these outcomes:
+
+```text
+1. Application fix.
+2. Test enhancement.
+3. Test framework enhancement.
+4. New regression test.
+5. Refactor of related test coverage.
+6. Product decision documented as known behavior.
+7. Known bug recorded for later work.
+8. Manual visual review item.
+9. No action, with a clear reason.
+```
+
+Do not treat the exploratory run as passive observation. If it reveals a meaningful issue, act on it.
+
+The main directive remains application correctness and user experience. Tests exist to protect the product. The application is not written to satisfy tests. Tests are written to prove that user requirements, product constraints, privacy expectations, accessibility expectations, and reading experience expectations are satisfied.
+
+---
+
+AD00 Finding Classification Workflow
+
+---
+
+For every finding from Agentic Analysis Mode, classify it before changing code.
+
+Use this sequence:
+
+```text
+1. Identify the exact test ID and step ID.
+2. Open the screenshots, layout snapshot, DOM summary, oracle output, console output, network output, and storage output.
+3. Describe what the user would see.
+4. Describe what the test expected.
+5. Decide whether the issue is in the application, the test, the fixture, the framework, or the product expectation.
+6. Search for related tests, related UI paths, related settings, and related fixtures.
+7. Decide whether the fix should be local, shared, or product-wide.
+8. Implement the smallest correct fix that improves the application or the suite without hiding the real issue.
+9. Re-run the targeted test.
+10. Re-run related tests.
+11. Re-run the full validation suite when the change is stable.
+12. Update documentation, coverage notes, bugs-todo.md, or test-suite README if behavior or framework capability changed.
+```
+
+Do not fix only the one visible failure if the root cause exists elsewhere.
+
+If one settings test lacks a surrounding-state check, inspect all settings tests. If one Markdown test lacks a code-block containment check, inspect all Markdown and Roman developer-note tests. If one responsive test misses horizontal overflow, inspect all responsive tests and the shared oracle. If one journey misses storage validation, inspect all journeys.
+
+The agent must look for the family of the problem, not only the single symptom.
+
+---
+
+AE00 When A Test Is Lacking
+
+---
+
+If the exploratory run shows that a test is too weak, enhance the test.
+
+A weak test may pass while the screenshot shows a visible problem. A weak test may assert only one local detail while ignoring broken surrounding UI. A weak test may check that a button exists but not that the action preserves the reader. A weak test may load a fixture but not verify that important Markdown elements rendered correctly.
+
+When a weak test is found, do this:
+
+```text
+1. Improve the specific test.
+2. Search for similar tests.
+3. Apply the same improvement pattern where appropriate.
+4. Move repeated assertions into shared helpers or page objects.
+5. Add a framework-level helper if the same assertion belongs to many tests.
+6. Update the test-suite documentation so future tests use the stronger pattern.
+7. Re-run the modified tests and related category.
+```
+
+Example:
+
+```text
+Finding:
+A mobile code-block test checks only that the marker is visible.
+
+Correct response:
+Add assertions for code block containment, no body horizontal overflow, line-number visibility if implemented, and reader state validity. Then inspect other Markdown, Roman, responsive, and pairwise tests that open code-heavy fixtures. Move code-block checks into a shared CodeBlockPage object or markdown assertion helper.
+```
+
+Do not paste custom one-off assertions into many files when a shared helper would make the suite more consistent.
+
+---
+
+AF00 When The Application Is Wrong
+
+---
+
+If the application is wrong, fix the application.
+
+Application bugs include visible UI breakage, privacy violations, unsafe Markdown behavior, missing recovery paths, unreadable layouts, broken settings, incorrect state persistence, inaccessible controls, unexpected network requests, stuck overlays, broken responsive behavior, or confusing errors.
+
+When fixing the application, the agent must analyze related functionality before editing.
+
+Use this checklist:
+
+```text
+1. Which user journey is affected?
+2. Which persona is affected: Frank, Lily, Roman, accessibility reviewer, or all?
+3. Is this a local defect or a shared architectural issue?
+4. Does the same behavior exist in page mode and scroll mode?
+5. Does it affect desktop, tablet, mobile, or all viewports?
+6. Does it affect TXT, Markdown, code-heavy Markdown, or unsafe Markdown?
+7. Does it affect settings, navigation, file loading, privacy, or E Ink transitions?
+8. Could fixing it change the expected behavior of existing tests?
+9. Should the fix be made in product code, shared UI logic, parser logic, renderer logic, settings logic, or CSS?
+10. Does the fix require a new regression test?
+```
+
+Do not make hidden product changes just to satisfy a test. Make product changes because they improve correctness, stability, privacy, accessibility, or user experience.
+
+If a small bug reveals a larger design weakness, consider refactoring. If the refactor is safe and improves the product, do it. If the refactor is large and risky, document the issue in `bugs-todo.md` or a product decision note and add a narrow test that protects current behavior.
+
+---
+
+AG00 When The Test Framework Is Lacking
+
+---
+
+Some findings indicate missing framework capability rather than a single test problem.
+
+Examples:
+
+```text
+Repeated tests need code-block containment checks.
+Many settings tests need the same adaptive baseline comparison.
+Several responsive tests need settings-panel viewport checks.
+Multiple journeys need storage and network diagnostics.
+Several tests need screenshot-step correlation.
+Line-number checks need a reusable CodeBlockPage object.
+```
+
+When this happens, improve the framework.
+
+Framework improvements may include:
+
+```text
+Shared page objects.
+Shared assertion helpers.
+Adaptive baseline profiles.
+Visible-element snapshots.
+Layout snapshots.
+Markdown assertion helpers.
+Line-number assertion helpers.
+Storage privacy scanners.
+Network guards.
+Error-message assertion helpers.
+Fixture-marker utilities.
+Step-screenshot correlation utilities.
+```
+
+After adding framework functionality, update all relevant tests to use it. Do not leave similar tests with inconsistent approaches unless there is a clear reason.
+
+Update the test-suite documentation after adding shared functionality.
+
+Recommended documentation file:
+
+```text
+ui-regression-test-suite/README.md
+```
+
+If the README already exists, update it. If it does not, create it.
+
+The README must explain:
+
+```text
+How the suite is organized.
+How to run normal tests.
+How to run Agentic Analysis Mode.
+How test IDs work.
+How step screenshots are correlated.
+How adaptive baselines work.
+How to add fixtures.
+How to add page objects.
+How to add new assertions.
+How to classify failures.
+How to avoid leaking book content.
+How to decide whether to fix app code or test code.
+```
+
+The testing framework should become more capable over time. Every exploratory run should make it easier to catch the next regression.
+
+---
+
+AH00 Similarity Search Requirement
+
+---
+
+Before applying a fix, search for similar tests and similar product paths.
+
+The agent must not patch one test and leave the same weakness in five other places.
+
+For every finding, search by:
+
+```text
+Test category.
+Page object method.
+Fixture name.
+Preference key.
+DOM test ID.
+Helper function.
+Error message.
+Reader mode.
+Viewport class.
+Markdown element type.
+Persona journey.
+```
+
+Examples:
+
+```text
+If a settings test lacks storage checks, search all settings tests and pairwise tests that apply preferences.
+
+If a Markdown code test lacks line-number checks, search all tests that open code-heavy fixtures.
+
+If mobile layout overflows in one journey, search responsive tests, Roman journey tests, pairwise mobile rows, and Markdown table/code tests.
+
+If a file rejection leaves stale notice state, search all file rejection tests and Lily recovery journey tests.
+
+If an error message is too technical, search all error-copy assertions and all tests that expect rejection or fallback.
+```
+
+If similar tests should share the same helper, refactor.
+
+If similar tests intentionally differ, document the difference in the test or helper.
+
+---
+
+AI00 Related Functionality Review Requirement
+
+---
+
+Every fix must include a related-functionality review.
+
+The agent must ask:
+
+```text
+What else could this change affect?
+What else uses this helper?
+What else uses this preference?
+What else uses this fixture?
+What else uses this UI component?
+What else uses this parser path?
+What else uses this mode switch?
+What else uses this overlay?
+What else uses this storage key?
+```
+
+Then run relevant related tests, not only the failing test.
+
+Example:
+
+```text
+Change:
+Fix code block overflow on mobile.
+
+Related tests to run:
+markdown code tests.
+Roman developer-note journey.
+responsive mobile tests.
+pairwise rows with mobile + code-heavy Markdown.
+privacy tests for code-heavy markers.
+settings tests for font size and measure.
+```
+
+Example:
+
+```text
+Change:
+Fix settings dialog clipping on mobile landscape.
+
+Related tests to run:
+responsive settings tests.
+accessibility focus tests.
+keyboard shortcut suppression tests.
+Lily journey.
+pairwise mobile landscape rows.
+```
+
+The full suite must be run after related fixes stabilize.
+
+---
+
+AJ00 Research Requirement
+
+---
+
+The agent should use existing project knowledge first. If the issue is clear, fix it based on the specification, source code, and current test behavior.
+
+If the issue is unclear, research it.
+
+Research is required when the agent is unsure about:
+
+```text
+Browser behavior.
+Playwright behavior.
+Accessibility behavior.
+CSS layout behavior.
+Reduced motion behavior.
+RSS or metadata requirements.
+Markdown parsing or sanitization behavior.
+Font loading behavior.
+Storage APIs.
+Security implications.
+Cross-browser behavior.
+```
+
+Use primary sources when possible: browser documentation, Playwright documentation, relevant standards, official library documentation, or existing project documentation.
+
+Research must be purposeful. Do not browse randomly. Do not introduce new dependencies merely because a search result suggests them. The project remains static at runtime and local-first.
+
+If research changes the implementation plan, document the reason in the relevant test, README section, or product note.
+
+---
+
+AK00 Product-Correctness Priority
+
+---
+
+Every test-suite improvement must serve product correctness.
+
+The agent must assume the role of a user of the application. If the app feels broken, confusing, unsafe, visually poor, or unstable in screenshots, that matters even if assertions pass.
+
+The agent must inspect the product from multiple viewpoints:
+
+```text
+Frank: Would a serious reader keep using this for long reading sessions?
+Lily: Would an occasional user understand what happened and what to do next?
+Roman: Would an experienced engineer trust this for code-heavy Markdown notes?
+Accessibility reviewer: Can the app be used with keyboard, reduced motion, and readable contrast?
+```
+
+If an issue is not explicitly written in the requirements but is clearly harmful to usability, privacy, stability, safety, accessibility, or reading quality, the agent should fix it or document it as a known issue.
+
+Do not ignore clear problems because they were not specified. Specifications guide the work; they do not excuse poor product behavior.
+
+---
+
+AL00 Known Behavior And Known Bug Handling
+
+---
+
+Not every finding should be fixed immediately.
+
+Some issues are small but may require broad architectural changes. Some behaviors may be acceptable product decisions. Some changes may create more risk than benefit in the current pass.
+
+When the agent decides not to fix something immediately, it must record the decision.
+
+Use `bugs-todo.md` for real application bugs and product observations.
+
+Each item should include:
+
+```text
+Status.
+Finding classification.
+Test ID.
+Step ID.
+Evidence location.
+Expected behavior.
+Actual behavior.
+Why it is not fixed now, if deferred.
+Risk.
+Suggested future fix.
+Related tests.
+```
+
+Do not hide known bugs.
+
+Do not mark a real issue as a test problem because it is inconvenient.
+
+Do not create a known-bug item for every harmless implementation detail. Use judgment.
+
+---
+
+AM00 Regression Strengthening After A Fix
+
+---
+
+Every real application bug fix must produce or strengthen a regression test.
+
+Process:
+
+```text
+1. Reproduce the issue manually or through the failing exploratory test.
+2. Write or update a deterministic regression test that fails before the fix.
+3. Fix the application.
+4. Verify the test passes.
+5. Run related tests.
+6. Run the full suite.
+7. Update bugs-todo.md.
+8. Update test-suite README if a new pattern or helper was introduced.
+```
+
+If the bug is visual and hard to automate, add the strongest mechanical checks available and record a manual visual review item.
+
+Example:
+
+```text
+Visual issue:
+E Ink ghosting looks too heavy in strong mode.
+
+Automated protection:
+Verify overlay clears, ghost opacity is within expected computed bounds, text remains visible, and no body overflow occurs.
+
+Manual item:
+Review strong E Ink screenshot for readability and comfort.
+```
+
+---
+
+AN00 Test Enhancement After A Test Gap
+
+---
+
+Every confirmed test gap should improve the suite beyond the local failing spot.
+
+Process:
+
+```text
+1. Identify the missing assertion.
+2. Decide whether the assertion belongs in a specific test, page object, helper, oracle, or adaptive baseline.
+3. Search for similar tests.
+4. Apply the assertion pattern to all relevant tests.
+5. Add or update documentation.
+6. Run related tests.
+7. Run the full suite.
+```
+
+Example:
+
+```text
+Gap:
+One test checks only that settings open, but screenshot shows clipped controls on mobile.
+
+Correct fix:
+Add responsive settings helper that checks close button, primary controls, no horizontal overflow, and panel scrollability. Use it in all responsive settings tests and in Lily/Roman journeys.
+```
+
+---
+
+AO00 Test Suite README Requirement
+
+---
+
+Create or maintain:
+
+```text
+ui-regression-test-suite/README.md
+```
+
+The README must be updated whenever the framework gains a new reusable feature.
+
+Required sections:
+
+```text
+Project purpose.
+Normal test commands.
+Agentic Analysis Mode commands.
+Test ID convention.
+Fixture marker convention.
+Page object convention.
+Standard Post-Action Oracle.
+Adaptive baseline profiles.
+Screenshot and artifact policy.
+How to add a test.
+How to add a fixture.
+How to add a page object.
+How to add a shared assertion.
+How to classify failures.
+How to handle flaky tests.
+How to handle product bugs.
+How to handle test bugs.
+How to update bugs-todo.md.
+Privacy rules for tests and diagnostics.
+Git hygiene for generated artifacts.
+```
+
+The README should be practical. It should help the next agent modify the suite without rediscovering the architecture.
+
+---
+
+AP00 AGENTS.md Appendix Addition
+
+---
+
+Add this text to the existing Agentic UI Regression Analysis Mode appendix in `AGENTS.md`.
+
+````md id="bvfveg"
+---
+
+W00 Handling Findings From Agentic Analysis
+
+---
+
+Agentic Analysis Mode is not only a reporting mode. Its results must be used to improve the application, the tests, or the test framework.
+
+For every finding, first classify the issue:
+
+```text
+APP_BUG
+TEST_BUG
+HARNESS_TIMING
+PRODUCT_DECISION
+VISUAL_MANUAL_ONLY
+````
+
+Then decide the correct action.
+
+If the application is wrong, fix the application. If the test is wrong, fix the test. If the framework lacks a reusable assertion or helper, improve the framework. If the behavior is ambiguous, make a product decision and document it.
+
+Do not patch only the one visible failure when similar failures may exist elsewhere. Search for related tests, related fixtures, related page objects, related settings, related UI controls, and related product paths. Apply the fix consistently. If the same assertion belongs in many tests, move it into a helper, page object, oracle extension, or adaptive baseline.
+
+The agent must always ask:
+
+```text
+Where else does this behavior exist?
+Which other tests should be strengthened?
+Which related product paths could break in the same way?
+Should this be a shared framework feature instead of a one-off assertion?
+Does this change require a new fixture, a new helper, or README documentation?
+```
+
+Tests serve product correctness. The application is not written to satisfy tests. Tests are written to prove that user requirements are satisfied. If a test passes but the screenshot shows a confusing, broken, unsafe, or unusable experience, treat that as a real finding.
+
+If a clear issue is not explicitly specified but harms the user experience, privacy, safety, accessibility, stability, or reading quality, fix it or document it as known behavior. Use best judgment.
+
+If the cause is unclear, research it. Use project documents first. Use browser, Playwright, accessibility, CSS, security, or library documentation when needed. Prefer primary sources.
+
+After any fix:
+
+```text
+1. Re-run the targeted test.
+2. Re-run related tests.
+3. Re-run the relevant category.
+4. Re-run the full validation suite when stable.
+5. Update bugs-todo.md for real application bugs or product observations.
+6. Update ui-regression-test-suite/README.md when framework behavior changes.
+```
+
+The priority remains a correct, stable, local-first, private, usable E Ink Reader. A green suite is useful only when it protects that product quality.
+
+```
+
+---
+
+AQ00 Final Directive
+
+---
+
+The exploratory run is valuable only if it changes future behavior.
+
+If it finds an app bug, fix the app and add regression protection.
+
+If it finds a weak test, strengthen the test and related tests.
+
+If it finds repeated missing logic, improve the framework.
+
+If it finds a confusing product behavior, make a product decision and document it.
+
+If it finds a visual issue that cannot be automated, record a manual review item and add mechanical checks where possible.
+
+Always prefer product correctness, user experience, privacy, stability, accessibility, and maintainability over local test convenience.
+
+```
