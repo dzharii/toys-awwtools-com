@@ -1,5 +1,7 @@
 # AGENTS.md
 
+you must read and understand: ./doc_detailed_project_description.md 
+
 ---
 
 A00 Project Mission
@@ -481,3 +483,139 @@ Update README and license notes if needed.
 If any item remains incomplete, either fix it or document the limitation with a precise reason. Do not hide known gaps.
 
 The final result should be a coherent static E Ink-style reader that can satisfy Frank's seriousness, Lily's need for smooth clarity, and Roman's engineering standards.
+
+---
+
+M00 Social Preview And Update Feed
+
+---
+
+The project ships social preview metadata and a static RSS update feed.
+
+The social preview must make a concise, honest promise: this is a local TXT and Markdown reader with an E Ink-like reading surface, local fonts, page and scroll modes, and no uploads.
+
+All social metadata must be static in the HTML head, not injected by JavaScript. Social crawlers may not run JavaScript, so title, description, canonical URL, RSS discovery link, Open Graph tags, and X/Twitter card tags must appear in the initial HTML of `index.html`.
+
+Canonical product strings (keep in sync with the head, feed, README, and repo index):
+
+```text
+Title:       E Ink Reader - Local TXT and Markdown Reading
+Description: Read local TXT and Markdown files in a calm E Ink-style browser reader with page mode, scroll mode, local fonts, and no uploads.
+```
+
+The social image is a local project asset:
+
+```text
+assets/social/social_logo_1200x630.jpg   (1200 x 630, JPG)
+```
+
+The image must be `1200 x 630`, PNG or JPG (never SVG for social compatibility). If the image is replaced, update `og:image:type`, `og:image:width`, and `og:image:height` to match the real file.
+
+Deployed base URL for absolute tags (do not use `https://example.com/` placeholders):
+
+```text
+https://toys.awwtools.com/public/2026-07-03-agentic-book-e-ink-reader-frank-lily-roman/
+```
+
+If the app is not yet deployed at a URL, keep placeholders clearly marked and do not invent a production URL.
+
+---
+
+N00 Required HTML Head Metadata
+
+---
+
+`index.html` head must contain primary metadata (title, description, canonical), RSS discovery, Open Graph tags (type, site_name, title, description, url, image, image:secure_url, image:type, image:width, image:height, image:alt, locale), and X/Twitter card tags (card=summary_large_image, title, description, image, image:alt). Absolute `og:image`/`twitter:image` URLs must point at the deployed image path above. Validate that the metadata is static, in the head, and matches implemented behavior. If a described feature does not exist, either revise the copy or finish the feature.
+
+---
+
+O00 RSS Update Feed
+
+---
+
+The user-facing update feed lives at `feed.xml` at the project root. It is static RSS 2.0 XML, requires no server and no npm, and is maintained manually (an optional developer script may help).
+
+The head must include discovery:
+
+```html
+<link rel="alternate" type="application/rss+xml" title="E Ink Reader Updates"
+  href="https://toys.awwtools.com/public/2026-07-03-agentic-book-e-ink-reader-frank-lily-roman/feed.xml">
+```
+
+A non-intrusive RSS link is also shown on the open screen (`.rss-link`, pointing at `feed.xml`).
+
+The feed contains high-level, user-oriented updates, not a commit log. Do not list internal refactors unless users benefit (reliability, performance, security, accessibility, privacy, maintainability). Each item should answer: what changed, why it matters to a reader, which workflow improves, any visible behavior change, any compatibility/privacy/safety note.
+
+Poor: `Updated parser and fixed bugs.`
+Better: `Markdown rendering is safer and clearer. Raw HTML is escaped or removed before display, code blocks stay contained on mobile, and malformed Markdown can be reopened as plain text.`
+
+---
+
+P00 Feed Item Format
+
+---
+
+Use RSS 2.0. Every `<item>` includes `title`, `link`, `guid` (stable, `isPermaLink="false"`, e.g. `eink-reader-update-0001`), `pubDate` (RFC 822, e.g. `Fri, 03 Jul 2026 00:00:00 -0700`), and `description`. If there is no separate update page, link to the homepage with a fragment (e.g. `#updates-safe-markdown`). The channel needs `title`, `link`, `description`, `language`, and `lastBuildDate`. Keep descriptions plain-text (escape any HTML). Replace placeholder dates/URLs with real project values before release.
+
+---
+
+Q00 RSS Update Workflow For New Features
+
+---
+
+Whenever a change affects users — a visible feature, user-facing behavior, file handling, accessibility, privacy, security, visual behavior, or a meaningful user-facing bug fix — update `feed.xml` in the same implementation pass. Do not defer feed updates.
+
+```text
+1. Decide whether the change affects users.
+2. If yes, write a high-level, user-oriented update.
+3. Give enough detail that a subscriber understands what improved.
+4. Avoid internal implementation noise.
+5. Add an <item> with title, link, guid, pubDate, description.
+6. Update channel lastBuildDate to the newest item's pubDate.
+7. Validate that feed.xml is still well-formed XML.
+8. Confirm the HTML head still links to feed.xml.
+```
+
+Changes that need a feed item include: TXT/Markdown loading, raw-HTML sanitization, page/scroll modes, font settings, E Ink transition controls, reduced-motion support, mobile code-block handling, preference persistence, storage-privacy fixes, offline-dependency fixes, large-file handling, clearer errors. Changes that usually do not: internal renames, code moves without behavior change, CSS reformatting, test-helper or comment-only edits. If unsure, add the item.
+
+---
+
+R00 RSS Writing Style
+
+---
+
+Write for users, not maintainers. Say what the reader can do now or what works better now.
+
+Prefer: `Markdown notes with code blocks now read better on phones. Long code lines stay inside the code block instead of pushing the whole page sideways.`
+Avoid: `Refactored Markdown renderer and adjusted CSS overflow handling.`
+
+Prefer: `Book contents are still not stored. Preferences are remembered, but reopening the app asks you to choose the file again.`
+Avoid: `Changed localStorage payload.`
+
+Each update should be useful to Frank (serious reading quality), Lily (clarity and calm recovery), or Roman (technical reliability, code readability, local behavior, diagnostics).
+
+---
+
+S00 Social And RSS Validation Checklist
+
+---
+
+```text
+HTML title is concise and descriptive.
+Meta description is honest and not too long.
+Open Graph title, description, url, and image are present.
+Open Graph image width and height match the actual image.
+Open Graph image alt text is present.
+X/Twitter card uses summary_large_image with title, description, image, image alt.
+Social image exists at assets/social/social_logo_1200x630.jpg and is 1200 x 630 PNG/JPG.
+HTML head links to feed.xml; feed.xml exists.
+feed.xml is well-formed RSS 2.0 XML.
+Channel has title, link, description, language, lastBuildDate.
+Every item has title, link, guid, pubDate, description.
+Item descriptions are user-oriented, not commit-style.
+No item claims a feature that is not implemented.
+No placeholder production URL remains before release.
+```
+
+Fix any failed item before final completion.
+
