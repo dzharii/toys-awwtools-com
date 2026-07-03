@@ -1,0 +1,354 @@
+/*
+  Reader surface: the paper page, typography for prose and Markdown blocks,
+  page-mode viewport, scroll-mode column, and the quiet reader controls.
+  Typography values come from CSS custom properties set by the settings module.
+*/
+
+.reader {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--paper-bg);
+}
+
+/* Top bar: title + minimal controls. Stays quiet. */
+.reader__bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--line-soft);
+  background: color-mix(in srgb, var(--paper-bg) 92%, var(--paper-surface) 8%);
+  flex: 0 0 auto;
+}
+
+.reader__title {
+  flex: 1 1 auto;
+  font-family: var(--ui-font);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reader__bar-actions {
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--control-size);
+  min-height: var(--control-size);
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  font-family: var(--ui-font);
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.icon-button:hover {
+  background: color-mix(in srgb, var(--paper-bg) 88%, var(--ink) 12%);
+  border-color: var(--line-soft);
+}
+
+/* Stage holds the paper surface centered on desktop. */
+.reader__stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+/* Paper surface with subtle texture and grain. */
+.paper {
+  position: relative;
+  width: 100%;
+  background: var(--paper-surface);
+}
+
+.paper::after {
+  /* Subtle paper grain overlay. Opacity scales with texture-strength pref. */
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("../assets/textures/paper-noise.svg");
+  background-size: 180px 180px;
+  opacity: calc(0.22 * var(--texture-strength));
+  mix-blend-mode: multiply;
+  z-index: 1;
+}
+
+html[data-theme="dark"] .paper::after {
+  mix-blend-mode: screen;
+}
+
+/* Content column: the typographic measure lives here. */
+.content {
+  position: relative;
+  z-index: 2;
+  max-width: var(--reader-measure);
+  margin: 0 auto;
+  font-family: var(--reader-font);
+  font-size: var(--reader-font-size);
+  line-height: var(--reader-line-height);
+  color: var(--ink);
+  text-align: var(--reader-align);
+  hyphens: auto;
+}
+
+/* ---------- Prose + Markdown element styling ---------- */
+
+.content p {
+  margin: 0 0 var(--reader-para-spacing);
+}
+
+.content h1,
+.content h2,
+.content h3,
+.content h4 {
+  font-family: var(--reader-font);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ink);
+  margin: 1.4em 0 0.5em;
+  text-align: left;
+}
+
+.content h1 { font-size: 1.6em; }
+.content h2 { font-size: 1.35em; }
+.content h3 { font-size: 1.15em; }
+.content h4 { font-size: 1.02em; }
+.content > :first-child { margin-top: 0; }
+
+.content strong { font-weight: 700; }
+.content em { font-style: italic; }
+
+.content blockquote {
+  margin: var(--reader-para-spacing) 0;
+  padding: 0.1em 0 0.1em 1em;
+  border-left: 2px solid var(--line-strong);
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.content ul,
+.content ol {
+  margin: 0 0 var(--reader-para-spacing);
+  padding-left: 1.4em;
+}
+
+.content li {
+  margin: 0.2em 0;
+}
+
+.content li > ul,
+.content li > ol {
+  margin: 0.2em 0;
+}
+
+.content hr {
+  border: none;
+  border-top: 1px solid var(--line-strong);
+  margin: 1.8em auto;
+  width: 40%;
+}
+
+.content a {
+  color: var(--ink-soft);
+  text-decoration: underline;
+  text-decoration-color: var(--accent-underline);
+  text-underline-offset: 2px;
+}
+
+.content a:hover {
+  text-decoration-color: var(--ink);
+}
+
+/* Inline code: distinct but not loud. */
+.content code {
+  font-family: var(--mono-font);
+  font-size: 0.9em;
+  background: var(--code-bg);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+
+/* Fenced code blocks: legible, contained, never break the page width. */
+.content pre {
+  margin: var(--reader-para-spacing) 0;
+  padding: 0.9em 1em;
+  background: var(--code-bg);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.content pre code {
+  display: block;
+  background: none;
+  padding: 0;
+  font-size: 0.82em;
+  line-height: 1.5;
+  white-space: pre;
+  color: var(--ink-soft);
+}
+
+/* Tables render readably and stay inside the column. */
+.content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--reader-para-spacing) 0;
+  font-size: 0.92em;
+}
+.content th,
+.content td {
+  border: 1px solid var(--line-soft);
+  padding: 0.4em 0.6em;
+  text-align: left;
+}
+.content th {
+  font-weight: 700;
+  background: var(--code-bg);
+}
+
+/* Image placeholder — remote images are never fetched. */
+.md-image-placeholder {
+  display: inline-block;
+  padding: 0.2em 0.6em;
+  margin: 0.2em 0;
+  border: 1px dashed var(--line-strong);
+  border-radius: 4px;
+  color: var(--ink-muted);
+  font-family: var(--ui-font);
+  font-size: 0.82em;
+  font-style: normal;
+}
+
+/* Escaped raw HTML shown as literal source text. */
+.md-raw-html {
+  font-family: var(--mono-font);
+  font-size: 0.85em;
+  color: var(--ink-muted);
+}
+
+/* Two mount points inside .paper — one per reading mode. */
+#reader-scroll,
+#page-viewport {
+  display: none;
+}
+
+/* ---------- Scroll mode ---------- */
+
+.reader[data-mode="scroll"] .reader__stage {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.reader[data-mode="scroll"] .paper {
+  min-height: 100%;
+}
+
+.reader[data-mode="scroll"] #reader-scroll {
+  display: block;
+}
+
+.reader[data-mode="scroll"] .content {
+  padding: 48px 28px 96px;
+}
+
+/* ---------- Page mode ---------- */
+
+.reader[data-mode="paged"] .reader__stage {
+  overflow: hidden;
+}
+
+.reader[data-mode="paged"] .paper {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.reader[data-mode="paged"] #page-viewport {
+  display: block;
+}
+
+/* The pane clips overflow; the content is offset by the paginator. */
+.page-viewport {
+  position: relative;
+  flex: 1 1 auto;
+  overflow: hidden;
+  padding: 40px 28px 8px;
+}
+
+.reader[data-mode="paged"] .content {
+  height: 100%;
+}
+
+/* Column-based pagination: text flows into stacked columns, and we shift
+   horizontally to reveal the current page. */
+.reader[data-mode="paged"] .content--paged {
+  column-fill: auto;
+  height: 100%;
+}
+
+/* ---------- Reader footer: navigation + progress ---------- */
+
+.reader__footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 16px;
+  border-top: 1px solid var(--line-soft);
+  flex: 0 0 auto;
+  font-family: var(--ui-font);
+}
+
+.reader__progress {
+  flex: 1 1 auto;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  letter-spacing: 0.02em;
+}
+
+.reader[data-mode="scroll"] .page-nav {
+  display: none;
+}
+
+/* Edge tap/click zones for page turns (page mode only). */
+.page-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 22%;
+  z-index: 3;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.page-zone--prev { left: 0; }
+.page-zone--next { right: 0; }
+.reader[data-mode="scroll"] .page-zone { display: none; }
+
+/* Progress hidden when the preference is off. */
+.reader[data-progress="off"] .reader__progress {
+  visibility: hidden;
+}

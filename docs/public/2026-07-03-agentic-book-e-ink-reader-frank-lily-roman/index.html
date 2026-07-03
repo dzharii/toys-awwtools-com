@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="warm-paper" data-contrast="soft">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!--
+    Restrictive CSP for a static, local-first app. No remote resources are
+    permitted. connect-src 'none' blocks all network requests (fetch/XHR/ws).
+    style-src allows inline styles used for typography custom properties.
+  -->
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'">
+  <title>E Ink Reader</title>
+  <meta name="description" content="A static, local-first E Ink-style reader for local TXT and Markdown files.">
+  <link rel="icon" href="assets/icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="assets/fonts/fonts.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/reader.css">
+  <link rel="stylesheet" href="css/eink.css">
+  <link rel="stylesheet" href="css/settings.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- File-open screen -->
+    <section id="open-screen" class="open-screen" aria-label="Open a book">
+      <div id="dropzone" class="dropzone">
+        <img class="dropzone__icon" src="assets/icons/icon.svg" alt="" aria-hidden="true">
+        <div class="dropzone__title">Drop a TXT or Markdown book here</div>
+        <p class="dropzone__hint">
+          The file is read locally in this browser. It is not uploaded or stored.
+          <span class="dropzone__formats">Supported formats: .txt, .md, .markdown</span>
+        </p>
+        <button id="open-button" type="button" class="button button--primary">Open a file</button>
+        <input id="file-input" type="file" accept=".txt,.md,.markdown,text/plain,text/markdown" class="visually-hidden" aria-label="Choose a book file">
+        <div id="open-notice" class="notice" hidden></div>
+      </div>
+    </section>
+
+    <!-- Reader -->
+    <main id="reader" class="reader" data-mode="paged" data-eink="balanced" data-motion="full" data-progress="on" hidden>
+      <header class="reader__bar">
+        <span id="reader-title" class="reader__title">Reader</span>
+        <div class="reader__bar-actions">
+          <button id="open-button-2" type="button" class="icon-button" aria-label="Open another file">Open</button>
+          <button id="settings-button" type="button" class="icon-button" aria-label="Open settings">Settings</button>
+        </div>
+      </header>
+
+      <div id="reader-stage" class="reader__stage" tabindex="0">
+        <div class="eink-ghost" aria-hidden="true"></div>
+        <div class="eink-overlay" aria-hidden="true"></div>
+        <button id="zone-prev" type="button" class="page-zone page-zone--prev" aria-label="Previous page" tabindex="-1"></button>
+        <button id="zone-next" type="button" class="page-zone page-zone--next" aria-label="Next page" tabindex="-1"></button>
+        <div id="paper" class="paper">
+          <div id="page-viewport" class="page-viewport"></div>
+          <div id="reader-scroll"></div>
+        </div>
+      </div>
+
+      <footer class="reader__footer">
+        <button id="prev-page" type="button" class="icon-button page-nav" aria-label="Previous page">‹ Prev</button>
+        <div id="progress" class="reader__progress" aria-live="polite"></div>
+        <button id="next-page" type="button" class="icon-button page-nav" aria-label="Next page">Next ›</button>
+      </footer>
+    </main>
+
+    <!-- Settings mount (populated by settings.js) -->
+    <div id="settings-mount"></div>
+
+    <!-- Busy indicator -->
+    <div id="busy" class="busy" hidden>
+      <div id="busy-label" class="busy__label">Working…</div>
+    </div>
+
+    <!-- Transient toast -->
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  </div>
+
+  <!-- Vendored dependencies (classic scripts expose window globals). -->
+  <script src="vendor/markdown-it/markdown-it.js"></script>
+  <script src="vendor/dompurify/purify.js"></script>
+
+  <!-- Application (ES modules). -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,264 @@
+/*
+  Design tokens and theming. Grayscale-first, warm-paper default.
+  Themes are applied by setting data-theme on <html>. Contrast is a separate
+  modifier so it can be combined with any paper tone.
+*/
+
+:root {
+  /* Paper + ink palette (warm paper default) */
+  --paper-bg: #f3f0e8;
+  --paper-surface: #f6f3ec;
+  --ink: #1f1f1c;
+  --ink-soft: #34342f;
+  --ink-muted: #686860;
+  --line-soft: rgba(31, 31, 28, 0.16);
+  --line-strong: rgba(31, 31, 28, 0.32);
+  --surface-shadow: rgba(31, 31, 28, 0.10);
+  --code-bg: rgba(31, 31, 28, 0.05);
+  --accent-underline: rgba(31, 31, 28, 0.35);
+  --selection-bg: rgba(31, 31, 28, 0.16);
+
+  /* Typography (driven by preferences via inline custom props on the reader) */
+  --ui-font: "Atkinson Hyperlegible", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --reader-font: "Literata", Georgia, "Times New Roman", serif;
+  --mono-font: ui-monospace, "SFMono-Regular", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace;
+  --reader-font-size: 20px;
+  --reader-line-height: 1.55;
+  --reader-measure: 68ch;
+  --reader-para-spacing: 0.9em;
+  --reader-align: left;
+
+  /* Texture + eink */
+  --texture-strength: 0.5;
+  --eink-wash-duration: 220ms;
+  --eink-settle-duration: 320ms;
+  --ghost-opacity: 0.10;
+
+  /* Layout */
+  --control-size: 44px;
+  --radius: 6px;
+}
+
+/* Cool paper theme */
+html[data-theme="cool-paper"] {
+  --paper-bg: #eef0ed;
+  --paper-surface: #f2f4f1;
+  --ink: #1d1f1f;
+  --ink-soft: #313534;
+  --ink-muted: #5f6564;
+  --line-soft: rgba(29, 31, 31, 0.16);
+  --line-strong: rgba(29, 31, 31, 0.32);
+  --code-bg: rgba(29, 31, 31, 0.05);
+}
+
+/* High contrast grayscale theme (required for readability) */
+html[data-theme="high-contrast"] {
+  --paper-bg: #ffffff;
+  --paper-surface: #ffffff;
+  --ink: #000000;
+  --ink-soft: #111111;
+  --ink-muted: #333333;
+  --line-soft: rgba(0, 0, 0, 0.35);
+  --line-strong: rgba(0, 0, 0, 0.6);
+  --code-bg: rgba(0, 0, 0, 0.06);
+  --accent-underline: rgba(0, 0, 0, 0.6);
+  --selection-bg: rgba(0, 0, 0, 0.2);
+}
+
+/* Dark inverse theme (optional, useful at night) */
+html[data-theme="dark"] {
+  --paper-bg: #16171a;
+  --paper-surface: #1c1e22;
+  --ink: #d7d5cc;
+  --ink-soft: #c2c0b8;
+  --ink-muted: #8d8b83;
+  --line-soft: rgba(215, 213, 204, 0.16);
+  --line-strong: rgba(215, 213, 204, 0.3);
+  --surface-shadow: rgba(0, 0, 0, 0.4);
+  --code-bg: rgba(215, 213, 204, 0.06);
+  --accent-underline: rgba(215, 213, 204, 0.4);
+  --selection-bg: rgba(215, 213, 204, 0.18);
+}
+
+/* Contrast modifier: soft lowers text contrast slightly for the eink feel. */
+html[data-contrast="soft"] {
+  --ink: color-mix(in srgb, var(--paper-bg) 12%, #1f1f1c);
+}
+html[data-contrast="normal"] {
+  /* use theme defaults */
+}
+
+html,
+body {
+  background-color: var(--paper-bg);
+  color: var(--ink);
+  font-family: var(--ui-font);
+}
+
+::selection {
+  background: var(--selection-bg);
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Visible, grayscale-friendly focus ring used app-wide. */
+:focus-visible {
+  outline: 2px solid var(--ink-soft);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* App root fills the viewport. */
+#app {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* ---------- File-open screen ---------- */
+
+.open-screen {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.dropzone {
+  width: min(560px, 100%);
+  padding: 48px 40px;
+  text-align: center;
+  background: var(--paper-surface);
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+  box-shadow: 0 1px 0 var(--surface-shadow);
+}
+
+.dropzone.is-dragover {
+  border-style: solid;
+  border-color: var(--ink-soft);
+  background: color-mix(in srgb, var(--paper-surface) 88%, var(--ink) 12%);
+}
+
+.dropzone__icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 18px;
+  opacity: 0.85;
+}
+
+.dropzone__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+
+.dropzone__hint {
+  font-size: 0.95rem;
+  color: var(--ink-muted);
+  line-height: 1.5;
+  margin-bottom: 22px;
+}
+
+.dropzone__formats {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--control-size);
+  padding: 10px 20px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--paper-bg);
+  color: var(--ink);
+  font-weight: 600;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.button:hover {
+  background: color-mix(in srgb, var(--paper-bg) 90%, var(--ink) 10%);
+}
+
+.button--primary {
+  border-color: var(--ink-soft);
+}
+
+/* ---------- Notice / warning banner ---------- */
+
+.notice {
+  margin: 18px auto 0;
+  max-width: 520px;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-strong);
+  background: var(--paper-surface);
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.notice__actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.notice--error {
+  border-color: var(--line-strong);
+}
+
+/* Toast for transient, non-blocking warnings (e.g. font fallback). */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  max-width: min(520px, 92vw);
+  padding: 10px 16px;
+  background: var(--paper-surface);
+  color: var(--ink-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 14px var(--surface-shadow);
+  font-size: 0.9rem;
+  z-index: 60;
+}
+
+/* Busy indicator during read/parse/paginate. */
+.busy {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--paper-bg) 70%, transparent);
+  z-index: 40;
+  pointer-events: none;
+}
+
+.busy__label {
+  padding: 10px 18px;
+  background: var(--paper-surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+}

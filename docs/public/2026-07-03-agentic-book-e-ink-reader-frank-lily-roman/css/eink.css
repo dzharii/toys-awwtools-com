@@ -1,0 +1,174 @@
+/*
+  E Ink refresh simulation.
+
+  The effect is coordinated by js/eink-effect.js which toggles classes and sets
+  a --eink-dir custom property. The visuals here intentionally avoid a plain
+  opacity fade: a refresh is a short wash (darken + desaturate, like pigment
+  charging) followed by a stepped grayscale settle of the new page, and page
+  turns leave a faint residual ghost that a full refresh clears.
+
+  Intensity is controlled by data-eink on the reader root:
+    off | reduced | balanced | strong
+  Reduced motion (data-motion="reduced") softens everything further.
+*/
+
+.reader__stage {
+  /* filter is animated during a refresh; default is identity */
+  will-change: filter;
+}
+
+/* Overlay sits above the paper during a refresh only. */
+.eink-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  opacity: 0;
+  background: var(--ink);
+}
+
+/* Residual ghost layer: a faint imprint left after partial refreshes. */
+.eink-ghost {
+  position: absolute;
+  inset: 0;
+  z-index: 19;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(31, 31, 28, 0.04) 0,
+      rgba(31, 31, 28, 0.04) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  transition: opacity 600ms ease-out;
+}
+
+.eink-ghost.is-visible {
+  opacity: calc(var(--ghost-opacity) * 1);
+}
+
+/* ---------- Full refresh (file load, mode/theme/font change) ---------- */
+
+.reader__stage.eink-full .eink-overlay {
+  animation: eink-full-wash var(--eink-wash-duration) steps(3, end) forwards;
+}
+
+.reader__stage.eink-full .content {
+  animation: eink-settle var(--eink-settle-duration) steps(4, end);
+}
+
+.reader__stage.eink-full {
+  animation: eink-surface-flash calc(var(--eink-wash-duration) + 40ms) linear;
+}
+
+/* ---------- Partial refresh (page turn) ---------- */
+
+.reader__stage.eink-partial .eink-overlay {
+  animation: eink-partial-wash calc(var(--eink-wash-duration) * 0.7) steps(2, end) forwards;
+}
+
+.reader__stage.eink-partial .content {
+  animation: eink-settle calc(var(--eink-settle-duration) * 0.7) steps(3, end);
+}
+
+/* ---------- Keyframes ---------- */
+
+@keyframes eink-full-wash {
+  0%   { opacity: 0; }
+  20%  { opacity: 0.9; }   /* charge: surface darkens */
+  45%  { opacity: 0.65; }
+  70%  { opacity: 0.25; }  /* discharge */
+  100% { opacity: 0; }
+}
+
+@keyframes eink-partial-wash {
+  0%   { opacity: 0; }
+  35%  { opacity: 0.55; }
+  100% { opacity: 0; }
+}
+
+/* The incoming page resolves through stepped grayscale + contrast. */
+@keyframes eink-settle {
+  0%   { filter: grayscale(1) contrast(0.6) brightness(1.15); }
+  50%  { filter: grayscale(0.6) contrast(0.85) brightness(1.04); }
+  100% { filter: none; }
+}
+
+/* Brief whole-surface flash suggesting a global electrophoretic update. */
+@keyframes eink-surface-flash {
+  0%   { filter: none; }
+  15%  { filter: invert(0.06) brightness(0.9); }
+  40%  { filter: brightness(1.06); }
+  100% { filter: none; }
+}
+
+/* ---------- Intensity scaling ---------- */
+
+.reader[data-eink="off"] .eink-overlay,
+.reader[data-eink="off"] .eink-ghost {
+  display: none;
+}
+.reader[data-eink="off"] .reader__stage.eink-full,
+.reader[data-eink="off"] .reader__stage.eink-partial {
+  animation: none;
+}
+.reader[data-eink="off"] .reader__stage.eink-full .content,
+.reader[data-eink="off"] .reader__stage.eink-partial .content {
+  animation: none;
+}
+
+.reader[data-eink="reduced"] {
+  --eink-wash-duration: 160ms;
+  --eink-settle-duration: 200ms;
+  --ghost-opacity: 0.04;
+}
+
+.reader[data-eink="balanced"] {
+  --eink-wash-duration: 220ms;
+  --eink-settle-duration: 320ms;
+  --ghost-opacity: 0.10;
+}
+
+.reader[data-eink="strong"] {
+  --eink-wash-duration: 300ms;
+  --eink-settle-duration: 420ms;
+  --ghost-opacity: 0.18;
+}
+
+/* Strong mode adds a more visible inversion pulse on full refresh. */
+.reader[data-eink="strong"] .reader__stage.eink-full {
+  animation: eink-surface-flash-strong calc(var(--eink-wash-duration) + 60ms) linear;
+}
+
+@keyframes eink-surface-flash-strong {
+  0%   { filter: none; }
+  12%  { filter: invert(0.14) brightness(0.82); }
+  30%  { filter: invert(0.03) brightness(1.1); }
+  55%  { filter: brightness(0.96); }
+  100% { filter: none; }
+}
+
+/* ---------- Reduced motion: keep it calm, no flashing ---------- */
+
+.reader[data-motion="reduced"] .eink-overlay {
+  animation: none !important;
+}
+.reader[data-motion="reduced"] .reader__stage.eink-full,
+.reader[data-motion="reduced"] .reader__stage.eink-partial {
+  animation: none !important;
+}
+.reader[data-motion="reduced"] .reader__stage.eink-full .content,
+.reader[data-motion="reduced"] .reader__stage.eink-partial .content {
+  /* a gentle, brief grayscale settle with no flashing */
+  animation: eink-settle-calm 260ms ease-out !important;
+}
+.reader[data-motion="reduced"] .eink-ghost {
+  display: none;
+}
+
+@keyframes eink-settle-calm {
+  0%   { opacity: 0.55; filter: grayscale(0.5); }
+  100% { opacity: 1; filter: none; }
+}
