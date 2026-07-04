@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Reading Navigator — Demo Article</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 17px/1.7 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1a1a1a;
+    background: #fbfbf9;
+  }
+  header.site {
+    padding: 18px 24px;
+    border-bottom: 1px solid #e2e2dc;
+    background: #fff;
+  }
+  header.site p { margin: 4px 0 0; color: #666; font-size: 14px; }
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 32px 20px 160px;
+  }
+  h1 { font-size: 2rem; line-height: 1.25; margin: 0 0 8px; }
+  h2 { font-size: 1.5rem; margin: 2.2em 0 0.5em; padding-top: 8px; border-top: 1px solid #ececec; }
+  h3 { font-size: 1.2rem; margin: 1.6em 0 0.4em; }
+  h4 { font-size: 1.05rem; margin: 1.4em 0 0.3em; color: #333; }
+  p { margin: 0 0 1.1em; }
+  blockquote {
+    margin: 1.2em 0; padding: 0.4em 1.1em; border-left: 4px solid #c9c9c0;
+    color: #444; font-style: italic; background: #f4f4ee;
+  }
+  pre {
+    background: #1e1e2e; color: #e6e6f0; padding: 14px 16px; border-radius: 8px;
+    overflow-x: auto; font: 13px/1.55 "SFMono-Regular", Consolas, monospace;
+  }
+  code { font-family: "SFMono-Regular", Consolas, monospace; }
+  p code { background: #ecece4; padding: 1px 5px; border-radius: 4px; font-size: 0.9em; }
+  ul, ol { margin: 0 0 1.1em; padding-left: 1.5em; }
+  li { margin: 0.3em 0; }
+  table { border-collapse: collapse; width: 100%; margin: 1.2em 0; font-size: 0.95em; }
+  th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; }
+  th { background: #f0f0e8; }
+  figure { margin: 1.4em 0; text-align: center; }
+  figure img { max-width: 100%; border-radius: 8px; }
+  figcaption { color: #777; font-size: 0.9em; margin-top: 6px; }
+  .filler { min-height: 60vh; }
+  button.load-more {
+    font: inherit; padding: 10px 16px; border: 1px solid #bbb; border-radius: 8px;
+    background: #fff; cursor: pointer;
+  }
+  #dynamic-region:empty::before {
+    content: "Dynamic content not loaded yet.";
+    color: #999; font-style: italic;
+  }
+</style>
+</head>
+<body>
+<header class="site">
+  <strong>Demo Journal</strong>
+  <p>A local test page for the Reading Navigator bookmarklet.</p>
+</header>
+
+<main>
+  <article>
+    <h1>The Long Now of Reading on the Web</h1>
+    <p>Reading long-form content in a browser is a strange, fragmented experience.
+      We open a tab, read for a while, get interrupted, close the laptop, and come
+      back hours later to a wall of text with no memory of where we stopped. This
+      article exists purely as a fixture for testing a reading-position assistant,
+      so it is deliberately long, varied, and full of the kinds of structures a
+      real article contains.</p>
+
+    <p>Below you will find headings at several levels, short and long paragraphs,
+      ordered and unordered lists, blockquotes, code blocks, a data table, a
+      figure, and a button that injects content after the page has loaded. Scroll
+      slowly through some sections and quickly through others to exercise the
+      dwell-time tracking.</p>
+
+    <h2>1. Orientation and Context</h2>
+    <p>The core problem is loss of orientation. Scroll position alone is a poor
+      proxy for where a reader last spent meaningful attention. A layout shift, a
+      late-loading image, or a font swap can move the content under a fixed scroll
+      offset, and suddenly the restored position is meaningless.</p>
+    <p>Instead of trusting raw pixels, we track how long readable content dwells
+      inside the middle band of the viewport, while the reader is actually present
+      and not scrolling past. Attention, not position, is the signal.</p>
+
+    <h3>1.1 The active reading band</h3>
+    <p>The active band is the vertical slice of the viewport where reading actually
+      happens. Content that lingers there while the reader is present accumulates
+      credit. Content that flies past during a fast scroll does not.</p>
+
+    <blockquote>Position is where the page is. Attention is where the reader is.
+      These are not the same thing, and conflating them is the original sin of
+      naive scroll restoration.</blockquote>
+
+    <h3>1.2 Velocity matters</h3>
+    <p>A page can move under the reader at wildly different speeds. Slow scrolling
+      suggests reading; a violent flick suggests searching or skipping. The tracker
+      classifies velocity and scales credit accordingly.</p>
+    <ul>
+      <li>Slow drift: full reading credit.</li>
+      <li>Normal scroll: partial credit.</li>
+      <li>Skim: visible-only, little credit.</li>
+      <li>Jump: no credit at all.</li>
+    </ul>
+
+    <h2>2. Segmenting the Page</h2>
+    <p>Before anything can be tracked, the page must be broken into meaningful
+      blocks. Not every element matters. Navigation chrome, footers, and sidebars
+      are noise; the article body is signal.</p>
+
+    <h3>2.1 What counts as a segment</h3>
+    <ol>
+      <li>Headings, which anchor the outline.</li>
+      <li>Paragraphs, the bulk of prose.</li>
+      <li>List items, both ordered and unordered.</li>
+      <li>Blockquotes and pull quotes.</li>
+      <li>Code blocks, which take longer to read.</li>
+      <li>Figures and images with captions.</li>
+      <li>Tables of data.</li>
+    </ol>
+
+    <h3>2.2 A code example</h3>
+    <p>Code blocks deserve a higher reading threshold than prose, because scanning
+      code takes longer per pixel. Here is a representative block:</p>
+    <pre><code>function classifyVelocity(pxPerSec) {
+  if (pxPerSec &lt;= 80) return "slow";
+  if (pxPerSec &lt;= 300) return "normal";
+  if (pxPerSec &lt;= 1200) return "skim";
+  return "jump";
+}
+
+// Credit is scaled by the classification above.
+const factor = { slow: 1.0, normal: 0.6, skim: 0.12, jump: 0 };</code></pre>
+
+    <h2>3. A Table of Thresholds</h2>
+    <p>Different block types require different amounts of dwell before we are
+      willing to say a reader has <em>probably</em> read them. Certainty is never
+      claimed.</p>
+    <table>
+      <thead>
+        <tr><th>Block type</th><th>Base threshold</th><th>Rationale</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Heading</td><td>1.0s</td><td>Short, quickly absorbed.</td></tr>
+        <tr><td>Paragraph</td><td>3.5s</td><td>Typical prose block.</td></tr>
+        <tr><td>List item</td><td>2.5s</td><td>Short but discrete.</td></tr>
+        <tr><td>Code</td><td>8.0s</td><td>Slower to parse.</td></tr>
+        <tr><td>Table</td><td>9.0s</td><td>Dense, non-linear.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>4. A Figure</h2>
+    <figure>
+      <img
+        alt="A simple gradient placeholder illustration"
+        width="640" height="240"
+        src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='640' height='240'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%237c9cff'/><stop offset='1' stop-color='%23b18cff'/></linearGradient></defs><rect width='640' height='240' fill='url(%23g)'/><text x='320' y='130' font-family='sans-serif' font-size='24' fill='white' text-anchor='middle'>Figure 1</text></svg>" />
+      <figcaption>Figure 1. A placeholder figure to exercise figure segmentation.</figcaption>
+    </figure>
+
+    <h2>5. A Very Long Section</h2>
+    <p>This section is intentionally long to test virtual splitting of tall blocks
+      and scrolling through extended prose. Read a little, then scroll fast to the
+      next heading, and observe how the tracker distinguishes the two behaviors.</p>
+    <div class="filler"></div>
+    <h3>5.1 Midway marker</h3>
+    <p>You are now roughly halfway through the long section. If you paused here for
+      a while, this paragraph should accumulate reading credit and eventually be
+      classified as probably read.</p>
+    <div class="filler"></div>
+    <h3>5.2 Near the end</h3>
+    <p>The long section ends here. Beyond this lies the dynamic content region,
+      which loads only when you ask it to.</p>
+
+    <h2>6. Dynamic Content</h2>
+    <p>Real pages inject content after load: comments, related links, lazy sections.
+      Press the button to append new readable blocks and confirm the tracker
+      re-scans without breaking existing progress.</p>
+    <p><button class="load-more" id="load-more">Load more content</button></p>
+    <div id="dynamic-region"></div>
+
+    <h2>7. Conclusion</h2>
+    <p>If reading progress was tracked well, closing and reopening this page should
+      let you jump back to roughly where you stopped, with a highlight on the
+      restored block. That is the entire promise: not perfect precision, but a
+      reliable, honest sense of place.</p>
+    <div class="filler"></div>
+  </article>
+</main>
+
+<script>
+  (function () {
+    var count = 0;
+    var btn = document.getElementById("load-more");
+    var region = document.getElementById("dynamic-region");
+    if (!btn || !region) return;
+    btn.addEventListener("click", function () {
+      count += 1;
+      var h = document.createElement("h3");
+      h.textContent = "Dynamically Loaded Section " + count;
+      var p1 = document.createElement("p");
+      p1.textContent =
+        "This paragraph was injected after the page loaded (batch " + count +
+        "). The Reading Navigator should notice the new content on its next " +
+        "debounced rescan and include it in tracking without losing prior state.";
+      var p2 = document.createElement("p");
+      p2.textContent =
+        "A second injected paragraph adds more readable length so the new " +
+        "section is substantial enough to track and classify.";
+      region.appendChild(h);
+      region.appendChild(p1);
+      region.appendChild(p2);
+    });
+  })();
+</script>
+</body>
+</html>
