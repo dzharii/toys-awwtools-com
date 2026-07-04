@@ -23,6 +23,7 @@ import { createSettingsPanel } from "./settings.js";
 import { prefersReducedMotion, onReducedMotionChange, trapFocus } from "./accessibility.js";
 import { debounce } from "./utils.js";
 import { initUpdatesPanel } from "./rss-updates.js";
+import { createPageSwipe } from "./page-swipe.js";
 
 // Preference keys that require a layout recalculation when changed.
 const LAYOUT_KEYS = new Set([
@@ -86,6 +87,7 @@ class ReaderApp {
     this.bindFileOpen();
     this.bindReaderControls();
     this.bindKeyboard();
+    this.bindSwipe();
     this.bindResize();
     this.bindReducedMotion();
 
@@ -376,6 +378,20 @@ class ReaderApp {
     this.els.zonePrev.addEventListener("click", () => this.pagePrev());
     this.els.settingsButton.addEventListener("click", () => this.openSettings());
     this.els.closeButton.addEventListener("click", () => this.closeDocument());
+  }
+
+  bindSwipe() {
+    // Mobile page-turn swipe, page mode only. The controller drives the exact
+    // same navigation as the Prev/Next controls; it never touches page indices.
+    this.pageSwipe = createPageSwipe(this.els.stage, {
+      isPagedActive: () =>
+        appState.document.loaded &&
+        appState.preferences.readerMode === "paged" &&
+        !appState.ui.settingsOpen &&
+        !this.eink.busy,
+      onNext: () => this.pageNext(),
+      onPrev: () => this.pagePrev(),
+    });
   }
 
   pageNext() {

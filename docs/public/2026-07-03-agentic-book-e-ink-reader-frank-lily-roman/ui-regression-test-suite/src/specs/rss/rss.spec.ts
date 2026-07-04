@@ -72,4 +72,41 @@ test.describe("rss", () => {
       expect(bad, `item "${item.title}" must not claim unsupported feature: ${bad}`).toBeNull();
     }
   });
+
+  // Dates must reflect reality: no future-dated items or channel build date
+  // (feature spec M00/O00). A small tolerance absorbs clock skew.
+  const FUTURE_TOLERANCE_MS = 5 * 60 * 1000;
+
+  test("RSSDATE001 no feed item is future-dated", async ({ makeApp }) => {
+    const app = await makeApp();
+    const { items } = await fetchFeed(app);
+    const now = Date.now();
+    expect(items.length).toBeGreaterThan(0);
+    for (const item of items) {
+      const t = Date.parse(item.pubDate ?? "");
+      expect(Number.isNaN(t), `item "${item.title}" has a valid pubDate`).toBe(false);
+      expect(t, `item "${item.title}" pubDate is not in the future: ${item.pubDate}`).toBeLessThanOrEqual(
+        now + FUTURE_TOLERANCE_MS,
+      );
+    }
+  });
+
+  test("RSSDATE002 channel lastBuildDate is not future-dated", async ({ makeApp }) => {
+    const app = await makeApp();
+    const { channel } = await fetchFeed(app);
+    const t = Date.parse(channel.lastBuildDate ?? "");
+    expect(Number.isNaN(t), "lastBuildDate is valid").toBe(false);
+    expect(t, `lastBuildDate is not in the future: ${channel.lastBuildDate}`).toBeLessThanOrEqual(
+      Date.now() + FUTURE_TOLERANCE_MS,
+    );
+  });
+
+  test("RSSDATE003 lastBuildDate is at least as recent as the newest item", async ({ makeApp }) => {
+    const app = await makeApp();
+    const { channel, items } = await fetchFeed(app);
+    const build = Date.parse(channel.lastBuildDate ?? "");
+    const newest = Math.max(...items.map((i) => Date.parse(i.pubDate ?? "")).filter((t) => !Number.isNaN(t)));
+    expect(Number.isNaN(build)).toBe(false);
+    expect(build, "lastBuildDate >= newest item pubDate").toBeGreaterThanOrEqual(newest);
+  });
 });

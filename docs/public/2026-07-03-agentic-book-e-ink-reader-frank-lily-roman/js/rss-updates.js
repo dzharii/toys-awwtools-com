@@ -7,7 +7,8 @@
 import { log } from "./logging.js";
 
 const DEFAULT_FEED_URL = "feed.xml";
-const DEFAULT_LIMIT = 5;
+// The home updates panel shows only the latest items after sorting by date.
+const DEFAULT_LIMIT = 10;
 
 /**
  * Fetch the local feed. Same-origin only (connect-src 'self'); never a remote

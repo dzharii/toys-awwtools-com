@@ -213,6 +213,106 @@ export class ReaderPageObject extends PageObjectBase {
     });
   }
 
+  // ---- swipe intent (mobile page-turn gestures) ----
+
+  /**
+   * Perform a pointer drag across a target element (the reader stage by
+   * default) using mouse pointer events. Playwright's mouse dispatches Pointer
+   * Events with pointerType "mouse"; on a mobile-sized viewport the app accepts
+   * these as swipe candidates, so no touch-enabled context is required. All
+   * coordinates are ratios [0..1] of the target's bounding box. Duration is
+   * paced to stay inside the app's accepted window (80-900ms).
+   */
+  /**
+   * Wait until the E Ink transition controller is idle. The reader
+   * intentionally ignores swipe gestures while a page-turn transition is
+   * running, so a deliberate gesture in a test must start from an idle state
+   * (mirrors a reader who swipes after the page has settled).
+   */
+  async waitEinkIdle(): Promise<void> {
+    await this.page.waitForFunction(() => {
+      const app = (window as unknown as { __einkReader?: { eink?: { busy?: boolean } } }).__einkReader;
+      return !app || !app.eink || app.eink.busy !== true;
+    });
+  }
+
+  private async rawSwipe(opts: {
+    x0: number;
+    y0: number;
+    x1: number;
+    y1: number;
+    durationMs?: number;
+    target?: Locator;
+    skipIdleWait?: boolean;
+  }): Promise<void> {
+    if (!opts.skipIdleWait) await this.waitEinkIdle();
+    const target = opts.target ?? this.page.getByTestId("reader-region-stage");
+    const box = await target.boundingBox();
+    if (!box) throw new Error("swipe target has no bounding box");
+    const sx = box.x + box.width * opts.x0;
+    const sy = box.y + box.height * opts.y0;
+    const ex = box.x + box.width * opts.x1;
+    const ey = box.y + box.height * opts.y1;
+    // Interpolate the drag with driver-side steps (fast, not paced by
+    // waitForTimeout) so the recognized gesture duration is set by a single
+    // deliberate pause. Per-step waits balloon under CPU contention and could
+    // push the wall-clock duration past the product's max, causing a valid
+    // swipe to be rejected as "too slow" — an artifact of the simulation, not
+    // the product. A single pause keeps the duration inside [80, 900] ms even
+    // under heavy parallel load.
+    const duration = opts.durationMs ?? 200;
+    await this.page.mouse.move(sx, sy);
+    await this.page.mouse.down();
+    await this.page.mouse.move(ex, ey, { steps: 12 });
+    await this.page.waitForTimeout(duration);
+    await this.page.mouse.up();
+  }
+
+  /** Deliberate right-to-left swipe over the reading surface (expects next page). */
+  async swipePageLeft(): Promise<void> {
+    await this.rawSwipe({ x0: 0.74, y0: 0.5, x1: 0.26, y1: 0.5 });
+    await this.waitSettled();
+    await agentAutoCapture(this.app, "swipe-next");
+  }
+
+  /** Deliberate left-to-right swipe over the reading surface (expects prev page). */
+  async swipePageRight(): Promise<void> {
+    await this.rawSwipe({ x0: 0.26, y0: 0.5, x1: 0.74, y1: 0.5 });
+    await this.waitSettled();
+    await agentAutoCapture(this.app, "swipe-prev");
+  }
+
+  /** Horizontal movement below the distance threshold (must not turn the page). */
+  async shortSwipeLeft(): Promise<void> {
+    await this.rawSwipe({ x0: 0.55, y0: 0.5, x1: 0.45, y1: 0.5, durationMs: 160 });
+  }
+
+  /** Mostly-vertical / diagonal movement (must not turn the page). */
+  async diagonalSwipe(): Promise<void> {
+    await this.rawSwipe({ x0: 0.65, y0: 0.28, x1: 0.28, y1: 0.82 });
+  }
+
+  /** A very slow horizontal drag beyond the max duration (must not turn the page). */
+  async slowSwipeLeft(): Promise<void> {
+    await this.rawSwipe({ x0: 0.74, y0: 0.5, x1: 0.26, y1: 0.5, durationMs: 1400 });
+  }
+
+  /** Start a next-swipe on a given element (e.g. a control or code block). */
+  async swipeLeftOn(target: Locator): Promise<void> {
+    await this.rawSwipe({ x0: 0.72, y0: 0.5, x1: 0.14, y1: 0.5, target });
+  }
+
+  /** Start a next-swipe inside the first code block (must scroll code, not turn page). */
+  async swipeInsideCodeBlock(): Promise<void> {
+    const block = this.page.locator(".content pre.code-block").first();
+    await this.rawSwipe({ x0: 0.7, y0: 0.5, x1: 0.14, y1: 0.5, target: block });
+  }
+
+  /** A fast next-swipe that does not wait for the transition to settle (rapid input). */
+  async quickSwipeNext(): Promise<void> {
+    await this.rawSwipe({ x0: 0.74, y0: 0.5, x1: 0.26, y1: 0.5, durationMs: 140, skipIdleWait: true });
+  }
+
   // ---- page-state via the exposed test hook (runtime contract, not source import) ----
 
   /** Current page index and count from the paginator (paged mode only). */

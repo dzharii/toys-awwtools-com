@@ -596,6 +596,31 @@ Each update should be useful to Frank (serious reading quality), Lily (clarity a
 
 ---
 
+RSS Date And Home Display Rules
+
+---
+
+When updating `feed.xml`, always use the current actual date and time for the new item's `pubDate`. Do not use example dates, future dates, or dates copied from prior specifications.
+
+Before editing the feed, check the current system date. For scripted updates, use `new Date().toUTCString()` or an equivalent current-time source. RSS dates must be RFC 822-style date-time strings.
+
+After adding a feed item:
+
+```text
+1. Set the item's pubDate to the current actual date/time.
+2. Set channel lastBuildDate to the newest item date.
+3. Verify no item pubDate is in the future.
+4. Verify channel lastBuildDate is not in the future.
+5. Validate that feed.xml is still well-formed RSS 2.0.
+6. Run RSS regression tests.
+```
+
+The home screen updates panel displays only the latest 10 RSS items. Keep `feed.xml` complete, but limit the in-app updates list to 10 items after sorting by publication date descending.
+
+If a future-dated RSS item is discovered, fix the feed. Do not hide the issue only in the UI.
+
+---
+
 S00 Social And RSS Validation Checklist
 
 ---

@@ -38,7 +38,7 @@ test.describe("rss: home updates panel", () => {
 
     const count = await app.openScreen().updateItemCount();
     expect(count, "at least one update item").toBeGreaterThan(0);
-    expect(count, "at most five items shown by default").toBeLessThanOrEqual(5);
+    expect(count, "at most ten items shown by default").toBeLessThanOrEqual(10);
 
     const first = await app.openScreen().firstUpdateItem();
     expect(first.title.length, "item title non-empty").toBeGreaterThan(0);
@@ -150,4 +150,79 @@ test.describe("rss: home updates panel", () => {
     app.network.assertNoUnexpectedRequests();
     await expectStandardOracle(app, { documentOpen: false });
   });
+
+  test("RSSHOME009 home screen displays at most ten updates", async ({ makeApp }) => {
+    const app = await makeApp({ skipGoto: true });
+    await app.page.route("**/feed.xml", (route) =>
+      route.fulfill({ status: 200, contentType: "application/xml", body: feedWithItems(12) }),
+    );
+    await app.page.goto(app.server.url("/index.html"), { waitUntil: "domcontentloaded" });
+
+    await app.openScreen().waitUpdatesSettled();
+    expect(await app.openScreen().updateItemCount(), "exactly ten items shown").toBe(10);
+    // The two oldest (lowest-numbered) items are not rendered.
+    const text = await app.openScreen().updatesText();
+    expect(text).not.toContain("Update 01");
+    expect(text).not.toContain("Update 02");
+    await expectStandardOracle(app, { documentOpen: false });
+  });
+
+  test("RSSHOME010 home screen displays the latest ten by date, newest first", async ({ makeApp }) => {
+    const app = await makeApp({ skipGoto: true });
+    // 12 items in shuffled document order; item N is dated N days into July 2026.
+    await app.page.route("**/feed.xml", (route) =>
+      route.fulfill({ status: 200, contentType: "application/xml", body: feedWithItems(12, true) }),
+    );
+    await app.page.goto(app.server.url("/index.html"), { waitUntil: "domcontentloaded" });
+
+    await app.openScreen().waitUpdatesSettled();
+    const titles = await app.openScreen().updateItems().locator(".update-item__title").allTextContents();
+    expect(titles.length).toBe(10);
+    // Newest ten are items 12..3 in descending date order; 01 and 02 excluded.
+    const expected = Array.from({ length: 10 }, (_, i) => `Update ${String(12 - i).padStart(2, "0")}`);
+    expect(titles).toEqual(expected);
+    await expectStandardOracle(app, { documentOpen: false });
+  });
+
+  test("RSSHOME011 a feed with fewer than ten items shows all of them", async ({ makeApp }) => {
+    const app = await makeApp({ skipGoto: true });
+    await app.page.route("**/feed.xml", (route) =>
+      route.fulfill({ status: 200, contentType: "application/xml", body: feedWithItems(3) }),
+    );
+    await app.page.goto(app.server.url("/index.html"), { waitUntil: "domcontentloaded" });
+
+    await app.openScreen().waitUpdatesSettled();
+    expect(await app.openScreen().updateItemCount(), "all three items shown").toBe(3);
+    expect(await app.openScreen().updatesText()).not.toMatch(/no project updates/i);
+    await expectStandardOracle(app, { documentOpen: false });
+  });
 });
+
+/**
+ * Build a valid RSS 2.0 feed body with `n` items titled "Update 01".."Update n".
+ * Item N is dated N days into July 2026 (all past, well-formed RFC-822 dates).
+ * When `shuffle` is true the items are emitted out of chronological order to
+ * verify the app sorts by date rather than trusting document order.
+ */
+function feedWithItems(n: number, shuffle = false): string {
+  const items = Array.from({ length: n }, (_, i) => i + 1);
+  if (shuffle) {
+    // Deterministic non-chronological ordering.
+    items.sort((a, b) => ((a * 7) % n) - ((b * 7) % n));
+  }
+  const day = (num: number) => String(num).padStart(2, "0");
+  const body = items
+    .map((num) => {
+      const title = `Update ${day(num)}`;
+      return `  <item><title>${title}</title><link>#u${num}</link>
+    <guid isPermaLink="false">gen-${num}</guid>
+    <pubDate>Wed, ${day(num)} Jul 2026 00:00:00 -0700</pubDate>
+    <description>Generated user-oriented update number ${num} for display-limit testing purposes.</description></item>`;
+    })
+    .join("\n");
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel><title>T</title><link>#</link><description>d</description>
+<language>en-us</language><lastBuildDate>Wed, ${day(n)} Jul 2026 00:00:00 -0700</lastBuildDate>
+${body}
+</channel></rss>`;
+}
