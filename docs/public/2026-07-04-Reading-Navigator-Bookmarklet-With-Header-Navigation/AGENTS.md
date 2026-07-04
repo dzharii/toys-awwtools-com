@@ -5,6 +5,10 @@ This is explicit directive that agent should use rather its own best judgment wh
 Do not automatically commit or push any changes to the repositrory. 
 Never use git write commands. 
 
+Specifications:
+
+See in ./specs/*
+
 
 ---
 
