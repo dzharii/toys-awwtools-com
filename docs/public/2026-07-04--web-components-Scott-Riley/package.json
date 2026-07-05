@@ -1,0 +1,34 @@
+{
+  "name": "framework-agnostic-design-system",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/components",
+    "packages/tokens"
+  ],
+  "scripts": {
+    "build": "npm run build:tokens && npm run build:lib && npm run docs:generate && npm run docs:build",
+    "build:tokens": "npm run build --workspace=@my-ds/tokens",
+    "watch:tokens": "npm run watch --workspace=@my-ds/tokens",
+    "build:lib": "npm run build --workspace=@my-ds/components",
+    "watch:lib": "npm run watch --workspace=@my-ds/components",
+    "docs:dev": "vitepress dev docs --host 127.0.0.1",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs --host 127.0.0.1",
+    "docs:generate": "node scripts/generate-component-docs.mjs",
+    "dev": "concurrently \"npm run watch:tokens\" \"npm run watch:lib\" \"npm run docs:dev\"",
+    "test": "npm run build:tokens && npm run build:lib && npm run docs:generate && npm run test:unit && npm run test:a11y",
+    "test:unit": "vitest run",
+    "test:a11y": "node scripts/check-token-contrast.mjs",
+    "release:check": "npm run test && npm run docs:build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "happy-dom": "^20.10.6",
+    "markdown-it": "^14.1.0",
+    "vitepress": "^1.6.4",
+    "vitest": "^3.2.4",
+    "vue": "^3.5.22"
+  }
+}
