@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src 'none'; object-src 'none'; base-uri 'none'">
+  <title>Grid and Atlas Helper — Pixel-Accurate Atlas Slicer</title>
+  <meta name="description" content="Create exact raster grids, inspect sprite coordinates, and slice local image atlases into deterministic PNG files and ZIP manifests — entirely in your browser.">
+  <meta name="theme-color" content="#0b1524">
+  <link rel="canonical" href="https://toys.awwtools.com/public/2026-08-01-atlas-slicer/">
+  <link rel="icon" href="assets/icons/atlas-slicer.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/icons/favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" sizes="180x180">
+  <link rel="manifest" href="site.webmanifest">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Grid and Atlas Helper">
+  <meta property="og:title" content="Grid and Atlas Helper — Pixel-Accurate Atlas Slicer">
+  <meta property="og:description" content="Build exact raster grids and slice sprite atlases into deterministic PNG files and ZIP manifests, locally in your browser.">
+  <meta property="og:url" content="https://toys.awwtools.com/public/2026-08-01-atlas-slicer/">
+  <meta property="og:image" content="https://toys.awwtools.com/public/2026-08-01-atlas-slicer/assets/social/atlas-slicer-social-1200x630.jpg">
+  <meta property="og:image:secure_url" content="https://toys.awwtools.com/public/2026-08-01-atlas-slicer/assets/social/atlas-slicer-social-1200x630.jpg">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Grid and Atlas Helper preview showing a glowing sprite sheet grid with one selected cell and extracted sprite tiles.">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Grid and Atlas Helper — Pixel-Accurate Atlas Slicer">
+  <meta name="twitter:description" content="Create exact grids and slice local sprite atlases into PNG files and ZIP manifests.">
+  <meta name="twitter:image" content="https://toys.awwtools.com/public/2026-08-01-atlas-slicer/assets/social/atlas-slicer-social-1200x630.jpg">
+  <meta name="twitter:image:alt" content="Grid and Atlas Helper sprite atlas slicing preview.">
+  <link rel="image_src" href="assets/social/atlas-slicer-social-1200x630.jpg">
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <header class="app-header">
+      <div class="identity">
+        <img src="assets/icons/atlas-slicer.svg" width="28" height="28" alt="">
+        <div><strong>Grid and Atlas Helper</strong><span>Exact pixels. Predictable slices.</span></div>
+      </div>
+      <nav class="mode-tabs" role="tablist" aria-label="Application mode">
+        <button id="grid-tab" class="mode-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="workspace" data-mode="grid-creator">Grid Creator</button>
+        <button id="atlas-tab" class="mode-tab" type="button" role="tab" aria-selected="false" aria-controls="workspace" data-mode="atlas-slicer">Atlas Slicer</button>
+      </nav>
+      <div class="toolbar" aria-label="Workspace actions">
+        <div class="button-group atlas-only">
+          <button id="open-image-button" type="button" class="button">Open image</button>
+          <button id="reload-image-button" type="button" class="button" disabled>Reload</button>
+          <input id="image-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+        </div>
+        <div class="button-group">
+          <button id="fit-button" type="button" class="button">Fit</button>
+          <button type="button" class="button zoom-preset" data-zoom="1">100%</button>
+          <button type="button" class="button zoom-preset" data-zoom="2">200%</button>
+          <button type="button" class="button zoom-preset" data-zoom="4">400%</button>
+        </div>
+        <button id="show-grid-button" type="button" class="button atlas-only is-pressed" aria-pressed="true">Show Grid</button>
+        <button id="primary-export-button" type="button" class="button button-primary">Download PNG</button>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <aside class="tools-panel" aria-label="Grid tools">
+        <section class="tool-section grid-only">
+          <h2>Canvas</h2>
+          <div class="form-grid">
+            <label for="canvas-width">Width</label><input id="canvas-width" data-path="canvas.widthPixels" type="number" min="1" max="16384"><span>px</span>
+            <label for="canvas-height">Height</label><input id="canvas-height" data-path="canvas.heightPixels" type="number" min="1" max="16384"><span>px</span>
+          </div>
+        </section>
+        <section class="tool-section atlas-only">
+          <h2>Source Image</h2>
+          <div id="source-empty" class="empty-compact">No image loaded. PNG, JPEG, WebP, and GIF are decoded locally.</div>
+          <dl id="source-metadata" class="data-list" hidden></dl>
+          <button id="clear-image-button" type="button" class="button button-compact" disabled>Clear image</button>
+        </section>
+        <section class="tool-section">
+          <h2>Grid Geometry</h2>
+          <div class="form-grid">
+            <label for="cell-width">Cell width</label><input id="cell-width" data-path="cell.widthPixels" type="number" min="1" max="16384"><span>px</span>
+            <label for="cell-height">Cell height</label><input id="cell-height" data-path="cell.heightPixels" type="number" min="1" max="16384"><span>px</span>
+            <label for="count-mode">Count mode</label><select id="count-mode"><option value="automatic">Automatic fit</option><option value="fixed">Fixed count</option></select><span></span>
+            <label for="column-count">Columns</label><input id="column-count" data-path="count.requestedColumns" type="number" min="1"><span></span>
+            <label for="row-count">Rows</label><input id="row-count" data-path="count.requestedRows" type="number" min="1"><span></span>
+          </div>
+        </section>
+        <section class="tool-section">
+          <h2>Borders and Separators</h2>
+          <label class="check-row"><input id="border-enabled" type="checkbox"> Enable independent outer borders</label>
+          <div class="form-grid">
+            <label for="separator-x">Separator X</label><input id="separator-x" data-path="separator.widthPixels" type="number" min="0"><span>px</span>
+            <label for="separator-y">Separator Y</label><input id="separator-y" data-path="separator.heightPixels" type="number" min="0"><span>px</span>
+            <label for="border-left">Left border</label><input id="border-left" data-path="outerBorder.leftPixels" type="number" min="0"><span>px</span>
+            <label for="border-top">Top border</label><input id="border-top" data-path="outerBorder.topPixels" type="number" min="0"><span>px</span>
+            <label for="border-right">Right border</label><input id="border-right" data-path="outerBorder.rightPixels" type="number" min="0"><span>px</span>
+            <label for="border-bottom">Bottom border</label><input id="border-bottom" data-path="outerBorder.bottomPixels" type="number" min="0"><span>px</span>
+            <label for="origin-x">Origin X</label><input id="origin-x" data-path="gridOrigin.xPixels" type="number" min="0"><span>px</span>
+            <label for="origin-y">Origin Y</label><input id="origin-y" data-path="gridOrigin.yPixels" type="number" min="0"><span>px</span>
+          </div>
+        </section>
+        <section class="tool-section grid-only">
+          <h2>Appearance</h2>
+          <div class="form-grid">
+            <label for="line-color">Grid color</label><input id="line-color" data-path="gridAppearance.lineColor" type="color"><span></span>
+            <label for="line-opacity">Opacity</label><input id="line-opacity" type="range" min="0" max="100"><output id="line-opacity-output"></output>
+            <label for="line-style">Line style</label><select id="line-style"><option>solid</option><option>dashed</option><option>dotted</option></select><span></span>
+            <label for="background-mode">Background</label><select id="background-mode"><option value="transparent">Transparent</option><option value="solid">Solid</option></select><span></span>
+            <label for="background-color">Color</label><input id="background-color" data-path="background.color" type="color"><span></span>
+            <label for="background-opacity">Opacity</label><input id="background-opacity" type="range" min="0" max="100"><output id="background-opacity-output"></output>
+          </div>
+        </section>
+        <section class="tool-section atlas-only">
+          <h2>Traversal and Edge Policy</h2>
+          <div class="form-grid wide-fields">
+            <label for="traversal-order">Order</label><select id="traversal-order"><option value="row-major">Row-major: left → right</option><option value="column-major">Column-major: top → bottom</option></select><span></span>
+            <label for="show-sequence-numbers">Cell indices</label><input id="show-sequence-numbers" type="checkbox"><span>Show</span>
+            <label for="right-edge-policy">Right edge</label><select id="right-edge-policy"><option value="skip">Skip partial cells</option><option value="crop">Crop and include</option><option value="pad-transparent">Pad transparency</option><option value="pad-color">Pad solid color</option></select><span></span>
+            <label for="bottom-edge-policy">Bottom edge</label><select id="bottom-edge-policy"><option value="skip">Skip partial cells</option><option value="crop">Crop and include</option><option value="pad-transparent">Pad transparency</option><option value="pad-color">Pad solid color</option></select><span></span>
+            <label for="pad-color">Pad color</label><input id="pad-color" type="color"><span></span>
+          </div>
+        </section>
+        <section class="tool-section atlas-only">
+          <h2>Naming Template</h2>
+          <label class="stacked-label" for="naming-template">Template</label>
+          <input id="naming-template" class="full-input" type="text" spellcheck="false">
+          <p class="hint">Tokens: {prefix}, {name}, {index:000}, {row}, {column}, {x}, {y}</p>
+          <p id="naming-preview" class="code-preview"></p>
+          <p id="naming-error" class="field-error" role="alert"></p>
+        </section>
+        <section class="tool-section">
+          <h2>Presets and Sharing</h2>
+          <div class="action-row">
+            <button id="save-preset-button" type="button" class="button button-compact">Save preset</button>
+            <select id="preset-select" aria-label="Saved presets"><option value="">Saved presets</option></select>
+          </div>
+          <div class="action-row">
+            <button id="update-preset-button" type="button" class="button button-compact">Update</button>
+            <button id="rename-preset-button" type="button" class="button button-compact">Rename</button>
+            <button id="duplicate-preset-button" type="button" class="button button-compact">Duplicate</button>
+            <button id="delete-preset-button" type="button" class="button button-compact">Delete</button>
+          </div>
+          <div class="action-row">
+            <button id="export-json-button" type="button" class="button button-compact">Export JSON</button>
+            <button id="import-json-button" type="button" class="button button-compact">Import JSON</button>
+            <input id="json-input" type="file" accept="application/json,.json" hidden>
+          </div>
+          <button id="copy-url-button" type="button" class="button button-compact full-button">Copy shareable URL</button>
+        </section>
+      </aside>
+
+      <section id="workspace" class="workspace-panel" role="tabpanel" aria-labelledby="grid-tab">
+        <div id="viewport" class="viewport" tabindex="0" aria-label="Grid preview. Use the mouse wheel to zoom and Space plus drag to pan.">
+          <div id="empty-state" class="empty-state atlas-only">
+            <img src="assets/icons/atlas-slicer.svg" width="64" height="64" alt="">
+            <h2>No atlas loaded</h2><p>Open an image to overlay a grid and inspect exact sprite rectangles.</p>
+            <button id="empty-open-button" type="button" class="button button-primary">Open Image</button>
+          </div>
+          <div id="transform-layer" class="transform-layer checkerboard">
+            <canvas id="source-canvas" aria-hidden="true"></canvas>
+            <canvas id="overlay-canvas" aria-hidden="true"></canvas>
+          </div>
+        </div>
+        <div id="workspace-summary" class="workspace-summary"></div>
+        <section id="sprite-strip-section" class="sprite-strip atlas-only" aria-labelledby="sprite-strip-title">
+          <header><h2 id="sprite-strip-title">Sprite Preview Strip</h2><span id="sprite-position">0 / 0</span></header>
+          <div class="strip-controls"><button id="previous-sprite" type="button" aria-label="Previous sprite">‹</button><div id="sprite-track" class="sprite-track" tabindex="0"></div><button id="next-sprite" type="button" aria-label="Next sprite">›</button></div>
+        </section>
+      </section>
+
+      <aside class="context-panel" aria-label="Contextual information">
+        <section class="context-section atlas-only">
+          <h2>Selected Cell</h2>
+          <div id="selected-empty" class="empty-compact">No cell selected. Click a cell or choose a sprite below.</div>
+          <dl id="selected-metadata" class="data-list" hidden></dl>
+          <div class="selected-preview checkerboard"><canvas id="selected-canvas"></canvas></div>
+          <button id="download-cell-button" type="button" class="button full-button" disabled>Download Cell PNG</button>
+        </section>
+        <section class="context-section grid-only">
+          <h2>Layout Summary</h2><div id="layout-details"></div>
+        </section>
+        <section class="context-section">
+          <h2>Recommendations</h2><div id="recommendations"></div>
+        </section>
+        <section class="context-section">
+          <h2>Export Summary</h2><div id="export-summary"></div>
+          <button id="context-export-button" type="button" class="button button-primary full-button">Download PNG</button>
+          <button id="diagnostics-button" type="button" class="button button-compact full-button">Export diagnostics</button>
+        </section>
+      </aside>
+    </main>
+    <footer class="status-bar"><span class="status-dot"></span><span id="status-message" role="status" aria-live="polite">Ready</span><span id="pointer-status"></span><span id="zoom-status">Zoom: 100%</span></footer>
+  </div>
+  <script src="vendor-libs/jszip-3.10.1.js"></script>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
