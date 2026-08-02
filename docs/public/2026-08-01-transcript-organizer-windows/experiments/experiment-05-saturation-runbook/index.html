@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A detect–diagnose–contain–recover workflow for when queues, limits and corrective loops start interacting.">
+  <title>Saturation response runbook</title>
+  
+  <link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../assets/documentation.css">
+</head>
+<body class="experiment-page">
+  <div class="site-bar"><div class="site-bar-inner"><a class="site-name" href="../../index.html">Transcript Organizer</a><div class="site-links"><a href="../../docs/manual/index.html">Manual</a><a href="../index.html">Experiments</a><a href="../../dist/transcript-organizer-windows-version-001.zip">Download v001</a></div></div></div>
+  <header><p class="page-context">Experiment 05 · Operations</p><h1>Saturation response runbook</h1><p class="dek">A detect–diagnose–contain–recover workflow for when queues, limits and corrective loops start interacting.</p></header>
+  <main><article class="prose">
+  <p class="lede">Use this runbook when latency, refusal, resource queues or recovery loops suggest that effective demand has outrun finite service capacity. The first objective is not full diagnosis. It is to protect critical work while preventing the response from adding more load.</p>
+  <div class="callout"><strong>Declare early if:</strong> queue age rises across two measurement intervals; retry traffic exceeds 10% of attempts; a hard resource or dependency quota exceeds 85%; or two capacity controls are interacting unexpectedly. Tune these provisional gates to the service.</div>
+  <h2>0–5 minutes · Bound the incident</h2>
+  <ol><li>Name the user-visible critical path and the work allowed to fail closed, fail open, delay or degrade.</li><li>Assign incident lead, operations owner and communications owner. Record every temporary control with owner and expiry.</li><li>Freeze nonessential deploys, batch starts and experiments. Do not automatically disable safe rollback.</li><li>Capture a before-state: throughput, latency, errors, queue age/depth, retry volume, concurrency and dependency health.</li></ol>
+  <h2>5–15 minutes · Locate queued work</h2>
+  <table><thead><tr><th>Layer</th><th>Inspect</th><th>Saturation evidence</th><th>Misleading comfort signal</th></tr></thead><tbody>
+    <tr><td>CPU</td><td>Run queue, steal, throttling, per-core load</td><td>Runnable work and latency rise together</td><td>Average CPU below 100%</td></tr>
+    <tr><td>Memory</td><td>Live set, allocation, reclaim, GC, OOM</td><td>Reclaim or collector work crowds out service</td><td>Free bytes after killing workers</td></tr>
+    <tr><td>Disk / logs</td><td>Latency, queue, bytes, inodes, amplification</td><td>Writes wait or metadata cannot allocate</td><td>Capacity in bytes when inodes are gone</td></tr>
+    <tr><td>Network</td><td>Connections, ports, retransmits, backlog</td><td>Allocation/wait failures and retransmission</td><td>Aggregate bandwidth below link rate</td></tr>
+    <tr><td>Application pools</td><td>Active, waiting, timeout, service time</td><td>Wait time grows; completions fall</td><td>Pool fully utilized</td></tr>
+    <tr><td>Queues</td><td>Age of oldest, ingress, egress, expiry</td><td>Drain rate below arrival rate</td><td>Depth falls due to expiration</td></tr>
+    <tr><td>People / control plane</td><td>Approvals, access, API quotas, deploy queue</td><td>Recovery action waits or fails</td><td>Primary data plane looks stable</td></tr>
+  </tbody></table>
+  <h2>15–30 minutes · Stop amplification</h2>
+  <table><thead><tr><th>Mechanism</th><th>Containment</th><th>Guardrail</th><th>Success signal</th></tr></thead><tbody>
+    <tr><td>Client or service retries</td><td>Increase backoff, add jitter, reduce attempt budget</td><td>Preserve necessary at-most-once semantics</td><td>Retry share and duplicate work fall</td></tr>
+    <tr><td>Fan-out / expensive input</td><td>Cap per-request work, reject or defer bulk classes</td><td>Return explicit partial/refusal status</td><td>Downstream operations per request fall</td></tr>
+    <tr><td>Autoscaling / recovery</td><td>Pause the loop or cap change rate</td><td>Maintain minimum healthy capacity</td><td>Control-plane and warm-up demand fall</td></tr>
+    <tr><td>Error logging</td><td>Sample, aggregate or rate-limit repeated errors</td><td>Retain unique signatures and security events</td><td>Write rate drops without losing incident shape</td></tr>
+    <tr><td>Optional features</td><td>Disable via tested dynamic control</td><td>Record owner, scope and expiry</td><td>Critical-path service rate recovers</td></tr>
+    <tr><td>Background work</td><td>Pause intake; preserve durable cursor</td><td>Estimate reconciliation debt</td><td>Oldest critical work drains</td></tr>
+  </tbody></table>
+  <h2>Decision gates</h2>
+  <h3>Scale only when all are true</h3><ul><li>The constrained resource scales with the proposed unit.</li><li>Warm-up and control-plane work do not consume the same bottleneck.</li><li>The dependency can accept the increased concurrency.</li><li>A measurable stop condition and rollback owner exist.</li></ul>
+  <h3>Use break-glass access only when all are true</h3><ul><li>Ordinary access is unavailable or too slow for the declared impact.</li><li>A human approver, incident identifier and audit trail exist.</li><li>The action is narrow, reversible where possible, and has a second observer.</li><li>Credentials or grants have an explicit expiry.</li></ul>
+  <h2>Stabilization checklist</h2>
+  <ul><li>Arrival rate is at or below sustainable completion rate for critical work.</li><li>Age of oldest critical item declines for three consecutive intervals.</li><li>Retries and duplicate work are bounded.</li><li>No temporary action is silently amplifying another scarce path.</li><li>Ambiguous or dropped work is quantified and assigned.</li><li>Temporary controls, permissions and flags have owners and removal conditions.</li></ul>
+  <h2>After the incident · Preserve adaptive evidence</h2>
+  <p>Save the hypothesis timeline, control changes, missing access, ambiguous signals, near-misses and actions that bought time. Separate improvements to the base envelope from improvements to adaptive capacity. For each corrective action, ask what new resource it consumes and how it might participate in a future cascade.</p>
+  <div class="callout"><strong>Do not copy thresholds blindly.</strong> The provisional gates in this runbook are prompts. Establish service-specific values through load tests, dependency contracts and incidents.</div>
+</article></main>
+  <footer>Built from the timestamped extraction of Lorin Hochsteinʼs SSW 2026 talk. <a href="../index.html">All experiments</a> · <a href="../../index.html">Project documentation</a></footer>
+  
+</body>
+</html>

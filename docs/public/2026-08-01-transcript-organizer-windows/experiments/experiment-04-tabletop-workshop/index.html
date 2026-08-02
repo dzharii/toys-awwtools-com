@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A 95-minute facilitator-ready simulation of interacting limits, misleading signals and recovery machinery under pressure.">
+  <title>The helpful system makes it worse</title>
+  
+  <link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../assets/documentation.css">
+</head>
+<body class="experiment-page">
+  <div class="site-bar"><div class="site-bar-inner"><a class="site-name" href="../../index.html">Transcript Organizer</a><div class="site-links"><a href="../../docs/manual/index.html">Manual</a><a href="../index.html">Experiments</a><a href="../../dist/transcript-organizer-windows-version-001.zip">Download v001</a></div></div></div>
+  <header><p class="page-context">Experiment 04 · Tabletop workshop</p><h1>The helpful system makes it worse</h1><p class="dek">A 95-minute facilitator-ready simulation of interacting limits, misleading signals and recovery machinery under pressure.</p></header>
+  <main><div class="grid"><article class="prose">
+  <p class="lede">You operate Atlas, a multi-tenant document-analysis service. Monday traffic is 35% above forecast. The exercise is not a capacity quiz: it tests whether your team can recognize interacting limits, preserve optionality and reorganize when the original operating model stops working.</p>
+  <div class="callout"><strong>Success condition:</strong> protect existing interactive work, restore a controlled service state and leave an evidence trail. There is no single correct sequence.</div>
+  <h2>Facilitator setup · 15 minutes</h2>
+  <ul><li>Roles: incident lead, operations, application, dependency liaison, communications and observer.</li><li>Provide only the initial dashboard in Inject 0. Reveal later evidence when requested or at the marked time.</li><li>Score observable coordination, not whether participants guess the hidden mechanism.</li><li>Timebox the scenario to 55 minutes and the debrief to 25 minutes.</li></ul>
+  <h2>Inject 0 · Normal, but closer to the edge <span class="tag">T+00</span></h2>
+  <p>P95 latency is 420 ms against a 500 ms objective. CPU is 72%. Queue depth is stable. A new bulk-import client begins sending 18,000-item manifests, which are valid and within the documented API limit.</p>
+  <p><strong>Prompt:</strong> What evidence distinguishes high utilization from saturation? What must remain available if load rises?</p>
+  <h2>Inject 1 · A locally sensible response <span class="tag">T+08</span></h2>
+  <p>P95 reaches 2.6 s. HTTP timeouts rise. Autoscaling adds workers. Database connections climb to 94% of pool capacity; the queueʼs oldest item is now 80 seconds old although depth fluctuates.</p>
+  <p><strong>Evidence on request:</strong> each manifest item fans out to three object-store reads. Clients retry twice after 2 seconds. New workers open fresh connections during warm-up.</p>
+  <p><strong>Decision gate:</strong> Continue scaling, cap concurrency, reject bulk work, alter retries, or choose another action. State what scarce resource the action consumes.</p>
+  <h2>Inject 2 · The recovery path joins the incident <span class="tag">T+18</span></h2>
+  <p>Verbose error logging was enabled to aid diagnosis. Log throughput rises 14×. Two nodes hit inode warnings; garbage-collection CPU rises. Deploying a configuration change fails because the deployment controller has exhausted an API quota while autoscaling.</p>
+  <p><strong>Constraint:</strong> normal deployment and normal privilege elevation are unavailable. Break-glass access exists but requires two-person approval and an incident identifier.</p>
+  <p><strong>Decision gate:</strong> What gets disabled, delayed or bypassed? Who owns the risk? How will the team know whether the action helped?</p>
+  <h2>Inject 3 · Conflicting signs <span class="tag">T+30</span></h2>
+  <p>CPU falls to 55%, yet interactive latency worsens. Queue depth falls, but age of oldest work rises. A dependency dashboard is green. Customer support reports duplicate imports.</p>
+  <p><strong>Evidence on request:</strong> workers are blocked waiting for database connections; expired items leave the head of one queue while older work remains in a lower-priority partition. Retried requests are not idempotent.</p>
+  <p><strong>Prompt:</strong> Which metric was an attractive red herring? Rewrite the incident model in one sentence.</p>
+  <h2>Inject 4 · Stabilization is not recovery <span class="tag">T+42</span></h2>
+  <p>Bulk intake is paused, retry budgets are zeroed, and interactive traffic is recovering. There are 11,000 ambiguous import operations, elevated manual-support load and a feature flag that cannot safely remain off overnight.</p>
+  <p><strong>Decision gate:</strong> Define stable state, recovery owner, reconciliation plan, customer message and conditions for re-enabling work.</p>
+  <h2>Debrief</h2>
+  <ol><li>Where did demand get amplified?</li><li>Which mechanism intended to help became another consumer?</li><li>Which control existed but was not usable quickly?</li><li>When did the team change its operating strategy rather than merely add capacity?</li><li>What did observers learn about expertise, authority and coordination?</li><li>Which corrective action might create a future incident?</li></ol>
+</article><aside class="side"><div class="card"><strong>Observer rubric</strong><p class="small">Score 0–2 for each:</p><ul class="small"><li>Names critical work</li><li>Tracks queue age and drain rate</li><li>Models action-generated load</li><li>Uses explicit decision ownership</li><li>Preserves reversibility</li><li>Updates hypotheses from evidence</li><li>Plans reconciliation</li></ul><p><strong>Good-enough:</strong> 9/14 with no zero for critical work or decision ownership.</p></div><div class="card"><strong>Talk anchors</strong><p class="small"><a href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=1140">Bluesky 19:00</a><br><a href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=1200">Slack 20:00</a><br><a href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=2050">Optionality 34:10</a><br><a href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=2380">Learning 39:40</a></p></div></aside></div></main>
+  <footer>Built from the timestamped extraction of Lorin Hochsteinʼs SSW 2026 talk. <a href="../index.html">All experiments</a> · <a href="../../index.html">Project documentation</a></footer>
+  
+</body>
+</html>

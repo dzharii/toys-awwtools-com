@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>At the Edge of the Competence Envelope — a companion to Lorin Hochstein’s saturation talk</title>
+  <link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../assets/documentation.css">
+</head>
+<body class="experiment-page">
+<div class="site-bar"><div class="site-bar-inner"><a class="site-name" href="../../index.html">Transcript Organizer</a><div class="site-links"><a href="../../docs/manual/index.html">Manual</a><a href="../index.html">Experiments</a><a href="../../dist/transcript-organizer-windows-version-001.zip">Download v001</a></div></div></div>
+<header>
+  <p class="page-context">Experiment 01 · faithful talk companion · 51-minute recording</p>
+  <h1>At the edge of the competence envelope</h1>
+  <p>Lorin Hochstein’s argument is not merely that overloaded systems fail. It is that every sociotechnical system has a boundary, surprise will eventually push it across that boundary, and engineering must cultivate the ability to adapt when design runs out.</p>
+</header>
+<main>
+  <section class="lede">
+    <div>
+      <p>This companion follows the talk in order, including its incident stories and Q&amp;A. It is intentionally faithful: no outside research has been added, and every quoted passage is tied to a timestamp in the supplied recording.</p>
+      <p>The compact version is this: improve the design, but also improve the organization’s capacity to improvise. Those are different capabilities, and a system needs both.</p>
+    </div>
+    <nav class="contents" aria-label="Article contents"><div class="label">Reading path</div><ol>
+      <li><a href="#logic">Logic and biology</a></li><li><a href="#saturation">What saturation means</a></li><li><a href="#limits">The inventory of limits</a></li><li><a href="#incidents">Three incident portraits</a></li><li><a href="#paths">How systems approach the edge</a></li><li><a href="#extensibility">Graceful extensibility</a></li><li><a href="#practice">Optionality and expertise</a></li><li><a href="#qa">What the Q&amp;A changes</a></li>
+    </ol></nav>
+  </section>
+
+  <article class="article">
+    <section id="logic">
+      <h2>1. Logic, biology, and the systems we actually operate</h2>
+      <p><a class="time" href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=19">00:19</a> Hochstein opens with Leslie Lamport and a 2003 lecture, <em>The Future of Computing: Logic or Biology</em>. Lamport’s “logic” path is mathematical description: specify a system’s initial state and the rules by which state can change, then reason about its behavior. Hochstein connects this to TLA+: an <code>Init</code> predicate constrains the starting state and actions describe possible next states.</p>
+      <p>The biological path accepts a different condition. Biological systems are extraordinarily complex; we can understand aspects of them without possessing a complete mathematical description. Lamport’s warning was caustic: if computer systems become incomprehensible, people will coax them through ritual instead of understanding them.</p>
+      <blockquote>“We should not accept this.”<footer>Lorin quoting Lamport’s conclusion · <a href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=220">03:40</a></footer></blockquote>
+      <figure><img src="assets/01-lamport.jpg" alt="Talk slide showing a photograph of Leslie Lamport, with Lorin Hochstein speaking in the lower-left corner"><figcaption>Lamport provides the talk’s opening provocation. Sampled from the source video at 00:00.</figcaption></figure>
+      <p>Hochstein’s diagnosis is that Lamport’s feared future arrived: production software systems are treated more like biological organisms than fully comprehensible machines. But he immediately sharpens what “software failure” means. Source code is inert. The thing that breaks is a running system: software on hardware, surrounded by deploy and test tools, and operated by people.</p>
+      <p>That whole arrangement is a <strong>complex adaptive sociotechnical system</strong>. Its people and automation react to changing conditions; those reactions alter the conditions for every other part. If this sounds biological, Hochstein argues, then biology and resilience engineering may offer useful models—not homeopathy, but concepts for understanding adaptation at a boundary.</p>
+    </section>
+
+    <section id="saturation">
+      <h2>2. Saturation is the boundary, not merely “100%”</h2>
+      <p><a class="time" href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=359">05:59</a> The first model comes from the heart. On a Frank–Starling curve, increasing ventricular preload initially yields greater stroke volume. Eventually the curve flattens: more input no longer produces proportional output. The heart has reached a limit.</p>
+      <figure><img src="assets/02-frank-starling.jpg" alt="Slide with a heart diagram and a Frank-Starling curve that rises and then flattens"><figcaption>The physiological analogy: response improves with demand only up to a limit. Sampled at 06:00.</figcaption></figure>
+      <blockquote>“Everything we deal with, all the systems we work with, they have a limit.”<footer><a href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=420">07:00</a></footer></blockquote>
+      <p>Hochstein borrows a more general saturation model from resilience researcher David Woods. Imagine the entire system as a point moving inside a region: the <strong>competence envelope</strong>. Traffic, network faults, bugs, deployments, tooling and human action push that point around. Within the envelope, the system absorbs stress: spare capacity takes the spike, retries hide a transient failure, a canary catches the bug, or an operator rolls back quickly. Outside it, the system has reached the boundary of what it can presently handle.</p>
+      <figure><img src="assets/03-competence-envelope.jpg" alt="Hand-drawn oval labeled competence envelope with a point moving within it"><figcaption>A system can handle many disturbances—until their size, rate, combination or kind moves it beyond the current envelope. Sampled at 10:00.</figcaption></figure>
+      <p>This definition is deliberately broader than a performance counter. Saturation is not only a CPU at 100%. It is a system exhausting its remaining capacity to maneuver. The relevant “system” includes responders, permissions, CI pipelines and external providers. A human decision queue can saturate just as surely as a thread pool.</p>
+    </section>
+
+    <section id="limits">
+      <h2>3. A tour of finite things</h2>
+      <p>The talk inventories limits from the obvious to the obscure. The point is not to make a definitive checklist. It is to train the eye to see waiting work, fixed populations and hidden fail-safes wherever they occur.</p>
+      <div class="grid">
+        <div class="card"><h3>CPU</h3><p>When runnable tasks outnumber cores, work waits. Latency rises, deadlines are missed and callers time out. “Utilization” is only the surface; the queue of runnable work is the saturation signal.</p></div>
+        <div class="card"><h3>Memory and GC</h3><p>Virtual allocation can succeed before physical capacity exists. Later, OOM handling may kill a process. Under pressure, garbage collection may effectively convert memory saturation into CPU pauses and blocked application threads.</p></div>
+        <div class="card"><h3>Storage and inodes</h3><p>Disk bytes are finite, but so is file metadata. A service can have space remaining and still fail after exhausting inodes. Harmless errors can become harmful when full stack traces fill a device.</p></div>
+        <div class="card"><h3>Network bandwidth</h3><p>A NIC or a link can carry only so much. Once bandwidth is consumed, additional data cannot move at the demanded rate.</p></div>
+        <div class="card"><h3>Pools and queues</h3><p>Threads and database connections are pooled partly for speed and partly to limit damage. A bounded queue is a fail-safe, but a full queue must block or reject new work.</p></div>
+        <div class="card"><h3>Dependency limits</h3><p>A provider’s HTTP 429 is a boundary imposed by another system. Your service may have capacity locally and still be saturated at its dependency relationship.</p></div>
+      </div>
+      <p><a class="time" href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=940">15:40</a> Virtual limits deserve special attention. They are often deliberate circuit breakers placed below a physical breaking point. Failing earlier can produce a lower-consequence failure. Yet the limit is still real to the caller that hits it. Safety is not the absence of failure; it is choosing where and how failure occurs.</p>
+    </section>
+
+    <section id="incidents">
+      <h2>4. Three portraits of coupled saturation</h2>
+      <p>The most memorable examples are not components simply reaching a number. They are loops in which protective behavior, misleading signals and coupled resources reshape the incident.</p>
+      <div class="incident"><h3>Bluesky: a small request rate with enormous fan-out</h3><p><a class="time" href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=1100">18:20</a> A request containing roughly 15,000–20,000 URIs spawned a huge number of goroutines and outbound local connections. Client-side ephemeral ports became the finite resource. The familiar “bind: address already in use” message looked like a server listening conflict, but the exhausted population was the client port range—even though the destination was localhost. The later error path added logging, thread and memory pressure, illustrating how one boundary can push another.</p></div>
+      <figure><img src="assets/04-bluesky.jpg" alt="Talk slide illustrating the Bluesky ephemeral port incident"><figcaption>The Bluesky example turns a low request rate into high internal concurrency. Sampled at 19:00.</figcaption></figure>
+      <div class="incident"><h3>Slack: autoscaling meets four different limits</h3><p><a class="time" href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=1200">20:00</a> A post-holiday traffic surge overloaded a transit gateway. Web-tier calls blocked on the slow network. A thread-count rule correctly triggered rapid scale-out, but that surge overloaded the provisioning service, which hit open-file and cloud quota limits. The autoscaling group itself eventually reached its configured maximum. The attempted adaptation consumed capacity elsewhere.</p></div>
+      <figure><img src="assets/05-slack.jpg" alt="Hand-drawn architecture diagram titled Slack: Multiple components are saturated"><figcaption>One incident, several boundaries, and an adaptive response that became new load. Sampled at 20:00.</figcaption></figure>
+      <div class="incident"><h3>Waymo: a safety check becomes a city-scale queue</h3><p><a class="time" href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=1315">21:55</a> During a San Francisco power outage, dark traffic signals produced an unusual correlated demand. Vehicles could treat them as four-way stops but sometimes requested a “confirmation check.” The sudden population of dark intersections overwhelmed that confirmation path, creating a backlog and leaving vehicles stopped. A safeguard appropriate for sparse exceptions did not have capacity for a city-wide exception.</p></div>
+      <figure><img src="assets/06-waymo.jpg" alt="Talk slide about Waymo vehicles and dark traffic lights during a power outage"><figcaption>The Waymo slide at 22:00. The talk carefully labels the speaker’s teleoperator explanation as an assumption, not a known fact.</figcaption></figure>
+    </section>
+
+    <section id="paths">
+      <h2>5. Systems reach the edge by more than “too much traffic”</h2>
+      <p><strong>Load growth</strong> is the familiar path. Bad traffic such as scrapers and runaway automation can overwhelm a service, but so can desired success. Hochstein shows near-contemporaneous comments from engineers at fast-growing AI companies: demand is welcome and still capable of exhausting the system.</p>
+      <p><strong>Correlated spikes</strong> produce a thundering herd. Retries are a special feedback form: when an overloaded service returns failures, automatic or human retries add traffic precisely when capacity is scarce. A local reliability mechanism can become global load.</p>
+      <figure><img src="assets/07-retry-storm.jpg" alt="Talk slide illustrating requests returning to an overloaded service as a retry storm"><figcaption>Retry storms are a feedback loop: failed work returns as additional demand. Sampled at 25:00.</figcaption></figure>
+      <p><strong>Amplification</strong> hides behind normal-looking ingress. One call into service A may fan out into many calls to service B. The edge rate appears modest while an internal dependency is flooded.</p>
+      <p><strong>Leaks</strong> separate the time of change from the time of impact. A resource leak introduced months earlier may remain invisible because frequent deployments restart the process. A safety-motivated deploy freeze can finally allow the pool to empty, exposing the latent defect when nothing recently changed.</p>
+      <p><strong>Work becomes more expensive.</strong> A feature may be functionally correct while consuming far more CPU or memory than expected. Hochstein points to Cloudflare’s 2019 WAF regex, whose extreme backtracking saturated CPUs. Batch jobs, ad hoc database queries and GUI tools can similarly compete with the online path.</p>
+      <p><strong>Configuration guesses wrong.</strong> A rate limit, maximum group size or other virtual bound may be fine under nominal load and too low at the peak. The configuration has not “broken”; its assumption has met a new environment.</p>
+    </section>
+
+    <section id="extensibility">
+      <h2>6. You cannot design away finitude</h2>
+      <blockquote>“You can’t actually avoid saturation.”<footer><a href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=1707">28:27</a></footer></blockquote>
+      <p>Hochstein gives three reasons. Resources are finite, so infinite headroom is impossible. Organizations face production pressure, so engineering time is always allocated among competing forms of value. And some boundaries remain unknown until a system touches them. The result is not fatalism: design work matters enormously, but every expanded envelope still has an edge.</p>
+      <p>Incidents often enlarge the competence envelope. After encountering a failure mode, a team changes the design so the system can absorb that case next time. This is useful base adaptive capacity. Woods’s additional concept is <strong>graceful extensibility</strong>: the ability to change the system when surprise challenges the boundary, bringing operation back into a viable region.</p>
+      <blockquote>“To be resilient, we need to prepare to be surprised.”<footer><a href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=2027">33:47</a></footer></blockquote>
+      <p>People remain central because truly unanticipated cases are precisely the cases not already encoded into automatic recovery. An on-call responder recognizes an unfamiliar combination, forms and revises hypotheses, and changes the system. The talk’s definition of resilience is active: not “nothing bad happened,” but the system found a way to alter its relationship to the demand.</p>
+    </section>
+
+    <section id="practice">
+      <h2>7. Build optionality before you need it</h2>
+      <p>During an incident, something must change: demand, capacity, code, configuration, topology or user-visible quality. The team rarely knows in advance which change will be needed, so it needs optionality—knobs that already exist and people capable of operating them.</p>
+      <blockquote>“The two worst times to write code are A, during an interview, and B, during an incident.”<footer><a href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=2061">34:21</a></footer></blockquote>
+      <p>Hochstein’s examples form a practical menu:</p>
+      <ul>
+        <li>break-glass paths for urgent production changes;</li>
+        <li>known procedures to cycle containers or restart a service;</li>
+        <li>rapid manual scale-up when autoscaling has reached a limit;</li>
+        <li>fast rollback—and, when rollback is impossible, a fast fix-forward path;</li>
+        <li>dynamic configuration and feature flags for changing limits without a deploy;</li>
+        <li>rules that can quickly block abusive traffic, a pathological query or a misbehaving rule.</li>
+      </ul>
+      <p>Every knob creates risk as well as possibility. A bypass around normal gates can accelerate recovery or accelerate damage. That tension cannot be eliminated by declaring one side safe. The incident already changed the risk balance; sometimes not making a dangerous change is more dangerous than making it.</p>
+      <h3>Operational expertise is part of capacity</h3>
+      <p>Tools are useful only if responders know they exist and can interpret their consequences. General industry expertise can be hired; detailed knowledge of one company’s history, dependencies and “particular weirdnesses” must be grown inside the organization.</p>
+      <p>Hochstein names two learning channels. <strong>Experiential learning</strong> comes from responding to real incidents. Provocatively, he says that an organization with no incidents for a long time has a risk: the response muscle weakens.</p>
+      <blockquote>“There’s an optimal number of incidents and it’s not zero.”<footer><a href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=2300">38:20</a></footer></blockquote>
+      <p><strong>Vicarious learning</strong> comes from seeing how skilled colleagues worked. A valuable post-incident review therefore reconstructs cognition and adaptation: which signals responders noticed, what they remembered, which dashboards they consulted, how they knew an unusual action was possible, and which plausible red herrings delayed them. The story of response builds future response capacity.</p>
+    </section>
+
+    <section id="qa">
+      <h2>8. The Q&amp;A adds guardrails and correctives</h2>
+      <h3>Emergency access needs a path, an approver and a purpose</h3>
+      <p><a class="time" href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=2490">41:30</a> Asked how to allow ad hoc production intervention without enabling reckless damage, Hochstein describes a straightforward break-glass request tied to an incident and approved by another human. Forbidding direct access entirely can push responders into improvised workarounds; unconstrained access creates a different danger. The design task is to make the risk trade explicit and usable.</p>
+      <h3>Logic and biology are tools, not mutually exclusive destinies</h3>
+      <p><a class="time" href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=2650">44:10</a> The talk’s opening dichotomy is challenged. Hochstein answers that it is ultimately not correct as a strict choice. Formal methods can improve the design of parts of a distributed system and force important questions. Resilience models force different questions about surprise and response. Better design expands the envelope; realism acknowledges that it will never become infinite.</p>
+      <h3>Premortems and tabletops create practice—but practice has a maintenance cost</h3>
+      <p><a class="time" href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=2790">46:30</a> A premortem imagines that a project has already failed completely and asks each participant to explain why. The wording matters: it bypasses the softer “what could go wrong?” and treats failure as a fact to be explained.</p>
+      <p>Tabletop exercises can build similar response muscles. Hochstein believes in them and still identifies their failure mode: inventing and facilitating fresh scenarios takes enough effort that teams often start, run a few, and stop. That observation is itself a saturation story—the organization’s capacity to maintain the learning mechanism is finite.</p>
+      <h3>Do not let corrective actions consume all the oxygen</h3>
+      <p><a class="time" href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=2950">49:10</a> High-severity incidents normally produce write-ups, reviews and corrective actions. Hochstein’s complaint is not that teams refuse changes, but that they reach for them too early. A corrective action from one incident can contribute to another. First understand how the incident happened and how people responded; then judge the intervention in the context of the whole system.</p>
+    </section>
+
+    <aside class="takeaway">
+      <div class="label">The closing allocation decision</div>
+      <h2>Invest in the envelope—and in what happens when it is exceeded.</h2>
+      <p>Engineering cycles are finite. Spend some on making known situations safe by design. Spend some on the ability to change course when an unknown situation crosses the boundary. Woods calls the combination net adaptive value; Hochstein puts it more plainly: balance improving the design with improving the ability to improvise.</p>
+      <figure style="margin:1.5rem 0 0"><img src="assets/08-competence-close.jpg" alt="Final talk slide reading Don't just focus on expanding the competence envelope"><figcaption>The talk’s final design challenge, sampled at 40:00.</figcaption></figure>
+    </aside>
+
+    <section class="source-note">
+      <strong>Source and fidelity.</strong> This article was produced exclusively from the supplied video, its full timestamped extraction corpus and sampled source frames. Obvious transcript spellings were normalized against visible slides (for example Leslie Lamport, TLA+, Frank–Starling and competence envelope). The prepared talk runs to about 41:18; the remainder is Q&amp;A. Quotes are short selections from the extracted transcript and link to the corresponding point in the local video.
+    </section>
+  </article>
+</main>
+<footer class="page">Experiment 01 · generated independently from the shared source corpus · <a href="../index.html">All experiments</a> · <a href="../../index.html">Project documentation</a></footer>
+</body>
+</html>

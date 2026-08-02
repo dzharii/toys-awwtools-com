@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Transcript Organizer for Windows</title>
+  <meta name="description" content="A Windows PowerShell tool for validated FFmpeg Whisper transcription, reusable extraction corpora, subtitles, timestamps, and sampled video frames.">
+  <link rel="canonical" href="https://toys.awwtools.com/public/2026-08-01-transcript-organizer-windows/">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/documentation.css">
+  <meta name="theme-color" content="#f6f7f9">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="AWW Tools">
+  <meta property="og:title" content="Transcript Organizer for Windows">
+  <meta property="og:description" content="Validated local transcription, source-preserving extraction, and reusable timestamped evidence from video and audio files.">
+  <meta property="og:url" content="https://toys.awwtools.com/public/2026-08-01-transcript-organizer-windows/">
+  <meta property="og:image" content="https://toys.awwtools.com/public/2026-08-01-transcript-organizer-windows/assets/social-preview.jpg">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Transcript Organizer converts a local technical talk into timestamped transcript evidence and reusable workflows">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Transcript Organizer for Windows">
+  <meta name="twitter:description" content="Validated local transcription and reusable source extraction with PowerShell and FFmpeg Whisper.">
+  <meta name="twitter:image" content="https://toys.awwtools.com/public/2026-08-01-transcript-organizer-windows/assets/social-preview.jpg">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    "name": "Transcript Organizer",
+    "description": "A Windows PowerShell tool for validated FFmpeg Whisper transcription and reusable source extraction.",
+    "url": "https://toys.awwtools.com/public/2026-08-01-transcript-organizer-windows/",
+    "operatingSystem": "Windows 10, Windows 11",
+    "programmingLanguage": "PowerShell",
+    "runtimePlatform": "PowerShell 7",
+    "image": "https://toys.awwtools.com/public/2026-08-01-transcript-organizer-windows/assets/social-preview.jpg"
+  }
+  </script>
+</head>
+<body class="project-page">
+  <a class="skip" href="#content">Skip to main content</a>
+
+  <header>
+    <div class="header-inner">
+      <h1>Transcript Organizer — version 001</h1>
+      <p class="tagline">A Windows PowerShell tool for validated local transcription and reusable extraction of text, subtitles, timestamps, media metadata, and sampled video frames.</p>
+      <ul class="document-links" aria-label="Project documentation">
+        <li><a href="docs/manual/index.html">User manual</a></li>
+        <li><a href="experiments/index.html">Experiment results</a></li>
+        <li><a class="download" href="dist/transcript-organizer-windows-version-001.zip" download>Download PowerShell distribution — version 001</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="page-nav" aria-label="Page contents">
+      <h2>Project</h2>
+      <ul>
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#quick-start">Quick start</a></li>
+        <li><a href="#download-video">Download a video</a></li>
+        <li><a href="#outputs">Generated outputs</a></li>
+        <li><a href="#validation">Field validation</a></li>
+        <li><a href="#skills">Reusable agent skills</a></li>
+        <li><a href="#screenshots">Report screenshots</a></li>
+        <li><a href="#experiments">Ten experiments</a></li>
+      </ul>
+      <h2>Documentation</h2>
+      <ul>
+        <li><a href="docs/manual/index.html">Full user manual</a></li>
+        <li><a href="experiments/index.html">Experiment collection</a></li>
+        <li><a href="docs/error-codes.md">Error reference</a></li>
+        <li><a href="README.md">Repository README</a></li>
+      </ul>
+    </nav>
+
+    <main id="content">
+      <section id="overview">
+        <h2>What the project does</h2>
+        <p>Transcript Organizer runs an FFmpeg build containing the Whisper filter through a typed PowerShell interface. It checks the Windows runtime, executable capabilities, input media, model, output path, GPU policy, timeout, and result contract before it treats a transcription as successful.</p>
+        <p>Each run performs one internal JSON transcription and writes a reusable output folder containing raw and normalized timestamped evidence, readable text, SRT subtitles, media metadata, sampled frames, hashes, provenance, and validation.</p>
+        <div class="notice"><strong>Primary value:</strong> expensive inference is separated from later editorial or analytical work. Multiple downstream projects can reuse the same timestamped evidence without retranscribing the source or silently altering the raw backend output.</div>
+        <table class="quick-facts"><tbody>
+          <tr><th scope="row">Release</th><td>Distribution version 001; PowerShell module version 0.0.1</td></tr>
+          <tr><th scope="row">Platform</th><td>Windows 10 or 11, x64</td></tr>
+          <tr><th scope="row">Runtime</th><td>PowerShell 7 and FFmpeg with the <code>whisper</code> filter</td></tr>
+          <tr><th scope="row">Inputs</th><td>Local speech-bearing audio or video files</td></tr>
+          <tr><th scope="row">Outputs</th><td>One output folder with JSON evidence, readable text, SRT subtitles, metadata, validation, and sampled frames</td></tr>
+          <tr><th scope="row">Execution</th><td>GPU preferred, at most one classified CPU fallback, sequential requests</td></tr>
+        </tbody></table>
+      </section>
+
+      <section id="quick-start">
+        <h2>Quick start</h2>
+        <ol>
+          <li><a href="dist/transcript-organizer-windows-version-001.zip" download>Download the distribution ZIP</a> and extract it to a writable directory.</li>
+          <li>Install PowerShell 7 and an FFmpeg build containing the Whisper filter.</li>
+          <li>Place <code>ggml-model-whisper-medium.en-q5_0.bin</code> in the extracted project directory or its <code>models</code> subdirectory.</li>
+          <li>Copy a speech-bearing file such as <code>video.webm</code> into that directory.</li>
+          <li>Open PowerShell 7 in the directory and run the video file as the first argument.</li>
+        </ol>
+
+        <div class="code-wrap"><button class="copy" type="button" aria-label="Copy transcription command">Copy</button><pre><code>pwsh -File .\Invoke-TranscriptOrganizer.ps1 '.\video.webm'</code></pre></div>
+
+        <p>Preview the resolved backend, model, output folder, media duration, timeout, and execution plan without starting inference:</p>
+        <div class="code-wrap"><button class="copy" type="button" aria-label="Copy dry-run command">Copy</button><pre><code>pwsh -File .\Invoke-TranscriptOrganizer.ps1 '.\video.webm' -DryRun</code></pre></div>
+
+        <div class="notice"><strong>Expected result:</strong> a new <code>video-transcript</code> folder contains raw JSON Lines, readable text, SRT subtitles, metadata, validation, and sampled frames. A repeated run creates <code>video-transcript_001</code>. Recognition is probabilistic; review important wording against the recording.</div>
+
+        <p>The launcher automatically examines project-local, WinGet, <code>PATH</code>, and Program Files candidates and selects a paired FFmpeg/FFprobe installation with the Whisper filter. For an authoritative custom installation, edit <code>FFmpegPath</code> and <code>FFprobePath</code> in the script’s user-editable settings block.</p>
+
+        <p>See the <a href="docs/manual/index.html#start">first-transcription manual</a> for the module API, configuration object, model setup, VAD, CPU-only mode, batching, and troubleshooting.</p>
+      </section>
+
+      <section id="download-video">
+        <h2>Download a source video with yt-dlp</h2>
+        <p>If you are authorized to download the source, <a href="https://github.com/yt-dlp/yt-dlp">yt-dlp</a> can save it with a filesystem-safe name. Replace <code>&lt;VIDEO_URL&gt;</code> with the actual page URL.</p>
+        <div class="code-wrap"><button class="copy" type="button" aria-label="Copy yt-dlp command">Copy</button><pre><code>yt-dlp.exe -o "%(title)s.%(ext)s" --restrict-filenames "&lt;VIDEO_URL&gt;"</code></pre></div>
+        <p>The downloaded file appears in the current directory. Use its exact filename as <code>InputPath</code>. Download only material you have permission to access and process.</p>
+      </section>
+
+      <section id="outputs">
+        <h2>Generated outputs</h2>
+        <table><thead><tr><th scope="col">Artifact</th><th scope="col">Purpose</th></tr></thead><tbody>
+          <tr><td><code>transcript.raw.jsonl</code></td><td>Byte-preserved FFmpeg Whisper output used as the source record.</td></tr>
+          <tr><td><code>transcript.segments.json</code></td><td>Normalized timestamps, text, source lines, and parser-recovery provenance.</td></tr>
+          <tr><td><code>transcript.txt</code></td><td>Readable transcript suitable for review and search.</td></tr>
+          <tr><td><code>transcript.srt</code></td><td>Timestamped subtitles derived without another inference run.</td></tr>
+          <tr><td><code>media-metadata.json</code></td><td>FFprobe media and stream metadata.</td></tr>
+          <tr><td><code>frames/</code> and <code>visual-index.json</code></td><td>Bounded, timestamp-related source frames for visual review.</td></tr>
+          <tr><td><code>corpus-manifest.json</code></td><td>Inputs, hashes, backend information, and artifact inventory.</td></tr>
+          <tr><td><code>validation-report.json</code></td><td>Ordering, coverage, gaps, overlaps, frame count, and recovery evidence.</td></tr>
+        </tbody></table>
+
+        <p>To produce a complete corpus through the module API:</p>
+        <div class="code-wrap"><button class="copy" type="button" aria-label="Copy corpus export example">Copy</button><pre><code>$manifest = '.\module\TranscriptOrganizer.psd1'
+Import-Module $manifest -Force
+
+$configuration = New-TranscriptOrganizerConfiguration -ProjectDirectory $PWD
+
+Export-TranscriptOrganizerCorpus -InputPath '.\video.webm' -OutputFolder '.\video-transcript' -Configuration $configuration</code></pre></div>
+      </section>
+
+      <section id="validation">
+        <h2>Validated production result</h2>
+        <p>The supplied 50-minute conference recording was used as a full field test on the documented Windows target machine. The run used the explicit FFmpeg 8.1.2 backend and one GPU attempt. No CPU fallback or retranscription was required.</p>
+        <table class="status-table"><tbody>
+          <tr><td>Media</td><td>50:54 duration</td></tr>
+          <tr><td>Processing</td><td>Approximately 53 minutes 21 seconds on the GTX 1050 Ti</td></tr>
+          <tr><td>Transcript</td><td>1,013 normalized segments</td></tr>
+          <tr><td>Visual source</td><td>51 sampled frames</td></tr>
+          <tr><td>Endpoint coverage</td><td>99.93%</td></tr>
+          <tr><td>Backend recovery</td><td>10 malformed quotation-bearing JSON records recovered under the explicit exact-record policy</td></tr>
+          <tr><td>Automated verification</td><td>55/55 Pester, 286/286 experiment, 110/110 landing-page, and 103/103 distribution checks passed</td></tr>
+        </tbody></table>
+        <ul>
+          <li><a href="source-extraction/saturation-how-software-fails-at-scale/validation-report.json">Corpus validation report</a></li>
+          <li><a href="source-extraction/saturation-how-software-fails-at-scale/corpus-manifest.json">Corpus manifest</a></li>
+          <li><a href="artifacts/latest-test-output.txt">Latest test output</a></li>
+          <li><a href="docs/coding-agent-report.md">Implementation and acceptance report</a></li>
+        </ul>
+      </section>
+
+      <section id="skills">
+        <h2>Reusable coding-agent skills</h2>
+        <p>Three successful field workflows were distilled into dated, self-contained <code>SKILL.md</code> prompts. Each skill documents the complete extraction-folder structure and can start from an arbitrary validated video corpus without reading this talk or another experiment.</p>
+        <table><thead><tr><th scope="col">Origin</th><th scope="col">Skill</th><th scope="col">Reusable outcome</th></tr></thead><tbody>
+          <tr><td>Experiment 01</td><td><a href="prompts/2026-08-01_create-faithful-video-companion/SKILL.md">Create a Faithful Video Companion</a></td><td>A detailed source-only illustrated HTML article.</td></tr>
+          <tr><td>Experiment 02</td><td><a href="prompts/2026-08-01_build-researched-video-field-guide/SKILL.md">Build a Researched Video Field Guide</a></td><td>A primary-source-enriched guide with explicit claim boundaries.</td></tr>
+          <tr><td>Experiment 10</td><td><a href="prompts/2026-08-01_build-searchable-transcript-navigator/SKILL.md">Build a Searchable Transcript Navigator</a></td><td>A dependency-free interface exposing every timestamped segment.</td></tr>
+        </tbody></table>
+      </section>
+
+      <section id="screenshots">
+        <h2>Generated report examples</h2>
+        <p>These screenshots were captured from the actual local HTML outputs after the shared documentation style was applied. They are not mockups.</p>
+        <div class="screenshot-grid">
+          <figure><a href="experiments/experiment-01-faithful-talk-companion/index.html"><img src="assets/screenshots/01-faithful-article.jpg" width="1200" height="720" loading="lazy" alt="Faithful companion article with timestamped technical prose"></a><figcaption>Faithful illustrated article</figcaption></figure>
+          <figure><a href="experiments/experiment-03-concept-map/index.html"><img src="assets/screenshots/03-concept-map.jpg" width="1200" height="720" loading="lazy" alt="Concept map filtered to amplifying feedback relationships"></a><figcaption>Interactive concept map</figcaption></figure>
+          <figure><a href="experiments/experiment-04-tabletop-workshop/index.html"><img src="assets/screenshots/04-tabletop.jpg" width="1200" height="720" loading="lazy" alt="Tabletop workshop showing staged incident injects"></a><figcaption>Facilitator-ready tabletop workshop</figcaption></figure>
+          <figure><a href="experiments/experiment-06-teaching-kit/index.html"><img src="assets/screenshots/06-teaching-kit.jpg" width="1200" height="720" loading="lazy" alt="Teaching kit showing its timed lesson sequence"></a><figcaption>Instructor teaching kit</figcaption></figure>
+          <figure><a href="experiments/experiment-08-claim-audit/index.html"><img src="assets/screenshots/08-claim-audit.jpg" width="1200" height="720" loading="lazy" alt="Claim audit with support, assumptions, challenges, and verdicts"></a><figcaption>Skeptical claim audit</figcaption></figure>
+          <figure><a href="experiments/experiment-10-transcript-navigator/index.html"><img src="assets/screenshots/10-transcript-navigator.jpg" width="1200" height="720" loading="lazy" alt="Transcript navigator filtered to segments containing retry"></a><figcaption>Full transcript navigator</figcaption></figure>
+        </div>
+      </section>
+
+      <section id="experiments">
+        <h2>Experiment results</h2>
+        <p>Every workflow begins independently from the shared extraction corpus. Experiments do not inherit prose, design decisions, evidence selections, or conclusions from one another.</p>
+        <ol class="experiment-list">
+          <li><h3><a href="experiments/experiment-01-faithful-talk-companion/index.html">Faithful illustrated talk companion</a></h3><p>Tested whether the corpus alone could support a complete technical article.</p><p class="result">Result: a detailed source-only companion covering the prepared talk and material Q&amp;A with eight local frames. <a href="prompts/2026-08-01_create-faithful-video-companion/SKILL.md">Reusable skill</a>.</p></li>
+          <li><h3><a href="experiments/experiment-02-researched-field-guide/index.html">Primary-source researched field guide</a></h3><p>Tested whether external research could add depth without obscuring the talk.</p><p class="result">Result: a field guide using ten primary or authoritative sources with report, claim, and inference boundaries preserved. <a href="prompts/2026-08-01_build-researched-video-field-guide/SKILL.md">Reusable skill</a>.</p></li>
+          <li><h3><a href="experiments/experiment-03-concept-map/index.html">Interactive concept map</a></h3><p>Tested whether linear transcript evidence could become an inspectable systems model.</p><p class="result">Result: 20 editable timestamp-audited relations across limits, feedback, controls, expertise, and learning.</p></li>
+          <li><h3><a href="experiments/experiment-04-tabletop-workshop/index.html">Saturation tabletop workshop</a></h3><p>Tested whether the talk’s mechanisms could support team practice.</p><p class="result">Result: a 95-minute scenario with five injects, decision gates, observer rubric, debrief, and worksheet.</p></li>
+          <li><h3><a href="experiments/experiment-05-saturation-runbook/index.html">Saturation response runbook</a></h3><p>Tested whether conceptual material could become an operational incident workflow.</p><p class="result">Result: a detect, diagnose, contain, and recover process with guardrails and service-specific decision gates.</p></li>
+          <li><h3><a href="experiments/experiment-06-teaching-kit/index.html">75-minute teaching kit</a></h3><p>Tested whether the source could support instruction beyond slogan recall.</p><p class="result">Result: objectives, timed activities, exercises, misconception checks, quiz, and a separate answer key.</p></li>
+          <li><h3><a href="experiments/experiment-07-executive-brief/index.html">Engineering leadership brief</a></h3><p>Tested whether mechanisms could be reframed as allocation decisions and evidence requests.</p><p class="result">Result: a compact decision brief and six prompts ready for a leadership review.</p></li>
+          <li><h3><a href="experiments/experiment-08-claim-audit/index.html">Skeptical claim audit</a></h3><p>Tested the talk as an argument to interrogate rather than a set of facts to repeat.</p><p class="result">Result: 13 claims classified by support, assumptions, challenges, and bounded verdicts in HTML and CSV.</p></li>
+          <li><h3><a href="experiments/experiment-09-publishing-kit/index.html">Multi-surface publishing kit</a></h3><p>Tested whether one source could yield distinct editorial formats without quote drift.</p><p class="result">Result: newsletter copy, five short posts, two contextual image cards, and an editorial risk checklist.</p></li>
+          <li><h3><a href="experiments/experiment-10-transcript-navigator/index.html">Full transcript navigator</a></h3><p>Tested whether every normalized segment could remain directly inspectable without a server.</p><p class="result">Result: local search, eight chapters, recovery-provenance filtering, frames, and timestamp links for all 1,013 segments. <a href="prompts/2026-08-01_build-searchable-transcript-navigator/SKILL.md">Reusable skill</a>.</p></li>
+        </ol>
+        <p>Open the <a href="experiments/index.html">experiment collection</a> for the compact catalog and clean-room protocol.</p>
+      </section>
+    </main>
+  </div>
+
+  <footer><div class="header-inner">Transcript Organizer version 001 · Windows PowerShell distribution · <a href="docs/manual/index.html">Manual</a> · <a href="experiments/index.html">Experiments</a> · <a href="dist/transcript-organizer-windows-version-001.zip">Download v001 ZIP</a></div></footer>
+
+  <script>
+    document.querySelectorAll('.copy').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var text = button.parentElement.querySelector('code').textContent;
+        navigator.clipboard.writeText(text).then(function () {
+          button.textContent = 'Copied';
+          window.setTimeout(function () { button.textContent = 'Copy'; }, 1500);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

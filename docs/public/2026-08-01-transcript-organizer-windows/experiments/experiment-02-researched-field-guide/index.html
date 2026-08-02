@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A research-enriched guide to saturation, competence boundaries and graceful extensibility—grounded in Lorin Hochsteinʼs talk and checked against primary technical sources.">
+  <title>Beyond the capacity chart</title>
+  
+  <link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../assets/documentation.css">
+</head>
+<body class="experiment-page">
+  <div class="site-bar"><div class="site-bar-inner"><a class="site-name" href="../../index.html">Transcript Organizer</a><div class="site-links"><a href="../../docs/manual/index.html">Manual</a><a href="../index.html">Experiments</a><a href="../../dist/transcript-organizer-windows-version-001.zip">Download v001</a></div></div></div>
+  <header><p class="page-context">Experiment 02 · Researched field guide</p><h1>Beyond the capacity chart</h1><p class="dek">A research-enriched guide to saturation, competence boundaries and graceful extensibility—grounded in Lorin Hochsteinʼs talk and checked against primary technical sources.</p></header>
+  <main><div class="grid"><article class="prose">
+  <p class="lede">At scale, failure is rarely the moment when one function returns the wrong value. It is the moment a finite sociotechnical system can no longer adapt to the demands placed on it. Hochsteinʼs talk gives that moment a useful name—<em>saturation</em>—and connects it to a larger resilience-engineering argument: capacity is necessary, but the ability to change strategy under pressure is what keeps surprise from becoming collapse.</p>
+
+  <h2 id="model">1. Replace the machine metaphor with a boundary</h2>
+  <p>The talk begins with Leslie Lamportʼs contrast between computing as logic and computing as biology. Lamportʼs concern was that systems were becoming too complicated for any one person to understand. Formal specification attacks that problem by making selected behavior precise. Hochstein does not reject that project; in the Q&amp;A he treats it as valuable for parts of a design. His narrower point is operational: even correctly specified components are embedded in organizations, traffic patterns, deployment machinery and dependencies that do not fit inside one complete model.</p>
+  <p>The useful unit of analysis is therefore not "the code" but a system operating inside a <strong>competence envelope</strong>. David Woodsʼs theory of graceful extensibility describes systems as having a finite region of competent performance. Pressure moves the system toward a boundary. Once events exceed the base envelope, continued performance depends on whether people and machinery can deploy additional adaptive capacity. This framing explains why a dashboard can be green right until several individually tolerable pressures interact.</p>
+  <figure><img src="assets/competence-envelope.jpg" alt="Talk slide showing a competence envelope and pressure pushing a system toward its boundary"><figcaption>The talkʼs central geometry: pressure, a finite region of competence, and the possibility of extending that region. Source frame near <a href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=600">10:00</a>.</figcaption></figure>
+  <div class="callout"><strong>Operational translation.</strong> Capacity planning asks how far away the known boundary is. Resilience engineering also asks what the organization can do when the boundary is wrong, moves, or is reached in an unfamiliar way.</div>
+
+  <h2 id="finite">2. Saturation is finite supply meeting effective demand</h2>
+  <p>The talk tours physical limits—CPU run queues, memory, garbage collection, disks, inodes and network capacity—and virtual limits such as worker pools, bounded queues, connection limits and rate limits. The distinction matters less than the shared mechanism: arrival or retention of work outpaces the systemʼs ability to complete or discard it. Brendan Greggʼs USE method provides a practical first pass for hardware resources: examine utilization, saturation and errors for each resource. Saturation is the queued work, not merely a high utilization percentage.</p>
+  <p>Virtual bounds can be deliberate safety valves. A connection pool or queue that refuses additional work before the host exhausts memory localizes the damage. The design question is not "bounded or unbounded?" but which failure mode is preferable when the bound is reached. A queue trades refusal for latency and memory; retries trade immediate failure for more future load; a larger pool can trade throughput for contention at the next dependency.</p>
+  <table><thead><tr><th>Pressure</th><th>Leading evidence</th><th>Common trap</th><th>Useful control</th></tr></thead><tbody>
+    <tr><td>CPU</td><td>Runnable queue and latency rising together</td><td>Scaling callers increases downstream work</td><td>Admission control; shed optional work</td></tr>
+    <tr><td>Memory / GC</td><td>Allocation rate, pause time, reclaim and OOM events</td><td>Treating collector CPU as the original cause</td><td>Bound live sets; reduce retention; degrade features</td></tr>
+    <tr><td>Connections / ports</td><td>Pool wait, socket states, allocation failures</td><td>Adding workers consumes the scarce resource faster</td><td>Reuse connections; cap concurrency; fail fast</td></tr>
+    <tr><td>Queues</td><td>Age of oldest item and drain rate, not depth alone</td><td>A growing queue appears to be successful intake</td><td>Bound, prioritize, expire and expose backlog</td></tr>
+    <tr><td>Logs / storage</td><td>Write amplification, free bytes and free inodes</td><td>Error logging magnifies the triggering failure</td><td>Sample, rate-limit, rotate and reserve capacity</td></tr>
+  </tbody></table>
+
+  <h2 id="incidents">3. Three incidents expose different coupling</h2>
+  <h3>Bluesky: a large batch found a cross-layer loop</h3>
+  <p>Hochstein recounts Blueskyʼs April 2026 outage using engineer Jim Calabroʼs postmortem. A request containing roughly 15,000–20,000 URIs expanded into goroutines and network activity. Ephemeral-port pressure and logging increased thread and memory demand; garbage collection then consumed more CPU, reinforcing the slowdown. The lesson is not "Go cannot handle concurrency." It is that apparently independent limits formed a feedback loop, so adding concurrency reduced the systemʼs capacity to recover.</p>
+  <figure><img src="assets/bluesky.jpg" alt="Talk slide summarizing the Bluesky saturation incident"><figcaption>A compact incident chain captured in the talk. Source frame near <a href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=1140">19:00</a>.</figcaption></figure>
+  <h3>Slack: adaptation amplified the original pressure</h3>
+  <p>Slackʼs January 4, 2021 outage followed the post-holiday return to work. Network saturation caused requests to wait, which occupied web threads. Autoscaling correctly observed distress and provisioned more capacity, but that activity increased load on the provisioning service and encountered its own file-descriptor, API-quota and autoscaling-group limits. Every local control had a rationale; together they created cascading saturation. Googleʼs SRE guidance describes this general pattern: resource exhaustion, latency and retries can propagate failure through a distributed system unless load is rejected or contained.</p>
+  <figure><img src="assets/slack.jpg" alt="Talk slide showing several Slack components becoming saturated"><figcaption>Multiple adaptive mechanisms became consumers of scarce capacity. Source frame near <a href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=1200">20:00</a>.</figcaption></figure>
+  <h3>Waymo: the safe fallback can itself be finite</h3>
+  <p>During San Franciscoʼs December 2025 power outage, dark traffic signals increased ambiguity for autonomous vehicles. Waymoʼs official account says vehicles treated non-functioning signals as all-way stops and some requested fleet-response confirmation; the resulting volume contributed to congestion and some vehicles remaining stationary. Hochstein labels the operational inference that matters: confirmation is a safety mechanism, yet its service capacity is finite. Fail-safes need capacity models and degraded modes just as primary services do.</p>
+  <figure><img src="assets/waymo.jpg" alt="Talk slide describing Waymo vehicles during the San Francisco power outage"><figcaption>Safety work entered a finite confirmation path. Source frame near <a href="../../Saturation_-_How_Your_Software_Will_Fail_at_Scale_-_Lorin_Hochstein_SSW_2026.webm#t=1320">22:00</a>.</figcaption></figure>
+
+  <h2 id="routes">4. The routes to saturation are forms of amplification</h2>
+  <p>Desired load can simply grow. More dangerous are mechanisms that make effective demand larger than user demand: thundering herds after a shared event, retry storms, high fan-out, pathological but valid inputs, batch work, expensive ad hoc queries and error logs emitted once per failed item. Slow leaks are especially deceptive because regular deployments reset them before ordinary monitoring sees the boundary.</p>
+  <p>Cloudflareʼs July 2019 outage is a precise example of functionally valid work becoming operationally catastrophic. A regular expression in a Web Application Firewall rule caused excessive CPU consumption. The rule was deployed globally and CPUs handling HTTP traffic exhausted rapidly. Correctness review alone was insufficient; the missing question was how resource cost behaved for adversarial input and at global rollout speed.</p>
+  <div class="callout"><strong>Review prompt.</strong> For every automatic response to failure—retry, scale, log, replicate, rebuild—identify the scarce resource it consumes and the condition that stops it.</div>
+
+  <h2 id="extensibility">5. Graceful extensibility is a repertoire, not spare capacity</h2>
+  <p>Because every implemented limit is finite and some interactions are unknown, Hochstein argues that teams cannot engineer saturation away. They can move known limits outward, simplify coupling and add safety margins. But they also need <strong>optionality</strong>: break-glass access, controlled traffic blocking, dynamic configuration, feature flags, quick rollback and fix-forward paths, the ability to recycle or scale units, and people who understand which control is safe in context.</p>
+  <p>This is where Woodsʼs distinction earns its keep. Robustness is the ability to absorb a modeled disturbance within the base envelope. Graceful extensibility is the capacity to change how the system works when the disturbance exceeds that design. A feature flag is only latent optionality; it becomes adaptive capacity when responders can recognize the situation, have authority to use it, understand its side effects and can observe whether it worked.</p>
+
+  <h2 id="learning">6. Incident learning should preserve thought, not only fixes</h2>
+  <p>The provocative line in the talk is that the optimal number of incidents is not zero. It is not an argument for preventable harm. It is a recognition that systems hiding all weak signals can accumulate unknown brittleness, while small contained failures can reveal boundaries. The operational goal is to reduce harmful impact while maximizing what can be learned from real pressure and from other organizationsʼ incidents.</p>
+  <p>That changes the shape of a postmortem. A list of failed components and corrective actions documents the final explanation; it often discards how responders noticed the event, which signals were ambiguous, which hypotheses were rejected, where access or knowledge was missing, and which improvised actions bought time. Those details reveal adaptive capacity. Corrective actions also carry risk: every new limit, retry, detector or automated response changes the next incidentʼs coupling.</p>
+
+  <h2 id="practice">7. A practical saturation review</h2>
+  <ol>
+    <li><strong>Name the critical work.</strong> Define what must still succeed under stress and what may be delayed, degraded or refused.</li>
+    <li><strong>Map finite resources.</strong> Include human attention, emergency authorization and dependency quotas alongside CPU, memory and queues.</li>
+    <li><strong>Trace amplification.</strong> Draw retries, fan-out, autoscaling, logging and recovery actions as load-producing edges.</li>
+    <li><strong>Choose refusal semantics.</strong> Decide where to queue, shed, expire, cache or return a partial answer before the physical limit decides for you.</li>
+    <li><strong>Exercise the controls.</strong> A dormant runbook or permission is not capacity. Test access, observability, reversibility and side effects.</li>
+    <li><strong>Preserve adaptive evidence.</strong> During review, record how people made sense of the event—not only the final root cause.</li>
+  </ol>
+  <p class="lede">The most durable conclusion is an allocation rule: keep improving the base system, but reserve engineering attention for the means of adaptation. A taller wall helps only for pressures already imagined; a practiced repertoire helps when reality chooses a different direction.</p>
+</article><aside class="side">
+  <div class="card"><strong>Research boundary</strong><p class="small">The talk supplied the argument and incidents. External material was limited to first-party incident reports, official technical documentation and original or authoritative publications.</p></div>
+  <div class="card"><strong>Primary sources</strong><ul class="small">
+    <li><a href="https://www.microsoft.com/en-us/research/publication/future-computing-logic-biology/">Lamport: The Future of Computing</a></li>
+    <li><a href="https://www.irgc.org/wp-content/uploads/2018/09/Woods-Resilience-as-Graceful-Extensibility-to-Overcome-Brittleness-1.pdf">Woods: Graceful Extensibility</a></li>
+    <li><a href="https://www.brendangregg.com/usemethod.html">Gregg: USE Method</a></li>
+    <li><a href="https://pckt.blog/b/jcalabro/april-2026-outage-post-mortem-219ebg2">Bluesky engineer postmortem</a></li>
+    <li><a href="https://slack.engineering/slacks-outage-on-january-4th-2021/">Slack outage report</a></li>
+    <li><a href="https://waymo.com/blog/2025/12/autonomously-navigating-the-real-world/">Waymo incident account</a></li>
+    <li><a href="https://sre.google/sre-book/addressing-cascading-failures/">Google SRE: Cascading Failures</a></li>
+    <li><a href="https://blog.cloudflare.com/details-of-the-cloudflare-outage-on-july-2-2019/">Cloudflare July 2019 outage</a></li>
+    <li><a href="https://www.kernel.org/doc/html/latest/mm/overcommit-accounting.html">Linux memory overcommit</a></li>
+    <li><a href="https://docs.oracle.com/en/java/javase/26/gctuning/garbage-first-g1-garbage-collector1.html">Oracle G1 tuning guide</a></li>
+  </ul></div>
+</aside></div></main>
+  <footer>Built from the timestamped extraction of Lorin Hochsteinʼs SSW 2026 talk. <a href="../index.html">All experiments</a> · <a href="../../index.html">Project documentation</a></footer>
+  
+</body>
+</html>
