@@ -1,0 +1,16 @@
+export const ID_PATTERN = /^[A-Za-z0-9]{8}$/;
+export const ID_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+export const ENTRY_PAGE_SIZE = 6;
+export const CACHE_TTL_MS = 3_600_000;
+export const FETCH_TIMEOUT_MS = 15_000;
+export const MAX_RECORD_REQUESTS = 6;
+export const PREVIEW_WIDTH = 1200;
+export const PREVIEW_HEIGHT = 630;
+export const PREVIEW_QUALITY = 90;
+export const CAPTURE_VIEWPORT = Object.freeze({ width: 1440, height: 1000 });
+export const CAPTURE_SEARCH_HEIGHT = 4000;
+export const MAX_CAPTURE_CANDIDATES = 100;
+export const NAVIGATION_TIMEOUT_MS = 30_000;
+export const STABILIZATION_BUDGET_MS = 5_000;
+export const PAGE_TURN_MS = 460;
+export const CAMERA = Object.freeze({ min: 0.7, default: 1, max: 1.4, step: 0.08 });
