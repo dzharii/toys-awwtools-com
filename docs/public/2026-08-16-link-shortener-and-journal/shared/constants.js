@@ -13,4 +13,4 @@ export const MAX_CAPTURE_CANDIDATES = 100;
 export const NAVIGATION_TIMEOUT_MS = 30_000;
 export const STABILIZATION_BUDGET_MS = 5_000;
 export const PAGE_TURN_MS = 460;
-export const CAMERA = Object.freeze({ min: 0.7, default: 1, max: 1.4, step: 0.08 });
+export const PAN_THRESHOLD_PX = 7;

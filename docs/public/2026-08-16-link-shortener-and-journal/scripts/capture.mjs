@@ -1,9 +1,10 @@
 import { CAPTURE_SEARCH_HEIGHT, CAPTURE_VIEWPORT, MAX_CAPTURE_CANDIDATES, NAVIGATION_TIMEOUT_MS, PREVIEW_HEIGHT, PREVIEW_QUALITY, PREVIEW_WIDTH, STABILIZATION_BUDGET_MS } from "../shared/constants.js";
 import { validateJpeg } from "./jpeg.mjs";
+import { findCaptureAdapter } from "./capture-adapters/registry.mjs";
 
 const now = () => performance.now();
 
-export async function capturePage({ browser, targetUrl, outputPath, logger }) {
+export async function capturePage({ browser, targetUrl, outputPath, logger, userAgent, captureMode = "headless" }) {
   const timings = {};
   const started = now();
   const context = await browser.newContext({
@@ -11,20 +12,36 @@ export async function capturePage({ browser, targetUrl, outputPath, logger }) {
     deviceScaleFactor: 1,
     reducedMotion: "reduce",
     permissions: [],
-    colorScheme: "light"
+    colorScheme: "light",
+    ...(userAgent ? { userAgent } : {})
   });
   const page = await context.newPage();
   page.on("dialog", (dialog) => dialog.dismiss().catch(() => {}));
-  context.on("page", (popup) => { if (popup !== page) popup.close().catch(() => {}); });
+  page.on("popup", (popup) => popup.close().catch(() => {}));
   try {
     logger.info("capture", `Opening target in Chromium: ${targetUrl}`);
     const navigationStart = now();
     const response = await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: NAVIGATION_TIMEOUT_MS });
     timings.navigation = now() - navigationStart;
+    const responseHeaders = response?.headers() || {};
+    const navigationContext = {
+      "HTTP status": response?.status(),
+      "Final URL": page.url(),
+      Server: responseHeaders.server,
+      "Challenge marker": responseHeaders["cf-mitigated"],
+      "Cloudflare Ray ID": responseHeaders["cf-ray"],
+      "Capture mode": captureMode
+    };
+    logger.debug("capture", `Main document response. Mode: ${captureMode}; status: ${response?.status() ?? "unavailable"}; challenge marker: ${responseHeaders["cf-mitigated"] || "none"}.`);
     if (response && response.status() >= 400) {
-      const error = new Error(`Target returned HTTP ${response.status()}.`);
-      error.code = "CAPTURE_HTTP_ERROR";
-      error.stage = "page navigation";
+      const headerChallenge = responseHeaders["cf-mitigated"]?.toLowerCase() === "challenge";
+      const renderedBarrier = headerChallenge ? "an access challenge" : await detectBarrier(page);
+      const challenged = renderedBarrier === "an access challenge";
+      if (challenged && !headerChallenge) navigationContext["Challenge evidence"] = "rendered access-challenge text";
+      const error = new Error(challenged ? `The target returned an access challenge (HTTP ${response.status()}).` : `Target returned HTTP ${response.status()}.`);
+      error.code = challenged ? "CAPTURE_ACCESS_CHALLENGE" : "CAPTURE_HTTP_ERROR";
+      error.stage = challenged ? "page readiness" : "page navigation";
+      error.context = navigationContext;
       throw error;
     }
 
@@ -55,13 +72,35 @@ export async function capturePage({ browser, targetUrl, outputPath, logger }) {
     const barrier = await detectBarrier(page);
     if (barrier) {
       const error = new Error(`The target rendered ${barrier} instead of accessible content.`);
-      error.code = "CAPTURE_ACCESS_CHALLENGE";
+      error.code = barrier === "an access challenge" ? "CAPTURE_ACCESS_CHALLENGE" : barrier === "a CAPTCHA challenge" ? "CAPTURE_CAPTCHA_REQUIRED" : "CAPTURE_AUTHENTICATION_WALL";
       error.stage = "page readiness";
+      error.context = navigationContext;
       throw error;
     }
 
     const metadata = await extractMetadata(page);
     logger.debug("capture", `Metadata title source: ${metadata.titleSource}; description source: ${metadata.descriptionSource}`);
+
+    const { hostname, adapter } = findCaptureAdapter(targetUrl);
+    logger.debug("capture", `Target hostname: ${hostname}; matched adapter: ${adapter?.name || "none"}`);
+    let adapterFailure = null;
+    if (adapter) {
+      logger.debug("capture", `Site-specific capture adapter selected. Hostname: ${hostname}; adapter: ${adapter.name}; strategy: ${adapter.strategy}`);
+      try {
+        const adapterResult = await adapter.capture({ page, targetUrl, outputPath, logger });
+        if (adapterResult) {
+          const image = await validateJpeg(outputPath, PREVIEW_WIDTH, PREVIEW_HEIGHT);
+          timings.screenshot = now() - stabilizeStart;
+          timings.total = now() - started;
+          logger.debug("capture", `Site-specific capture succeeded. Adapter: ${adapter.name}; strategy: ${adapterResult.strategy}; source=${adapterResult.sourceUrl}; sourceDimensions=${adapterResult.sourceWidth}x${adapterResult.sourceHeight}; genericFallback=false`);
+          return { metadata, finalUrl: page.url(), clip: null, image, timings, adapter: { name: adapter.name, ...adapterResult } };
+        }
+        adapterFailure = "No usable thumbnail was found.";
+      } catch (error) {
+        adapterFailure = error.message;
+      }
+      logger.warn("capture", `Site-specific preview extraction failed. Hostname: ${hostname}; adapter: ${adapter.name}; result: ${adapterFailure}; generic fallback: attempting once.`);
+    }
 
     const analysisStart = now();
     const analysis = await analyzeCandidates(page);
@@ -74,7 +113,7 @@ export async function capturePage({ browser, targetUrl, outputPath, logger }) {
       const error = new Error(`No page region satisfied the minimum content requirements. ${analysis.inspected} candidate regions were inspected.`);
       error.code = "CAPTURE_NO_VALID_REGION";
       error.stage = "preview selection";
-      error.context = { candidatesInspected: analysis.inspected, fallbackAttempted: true };
+      error.context = { candidatesInspected: analysis.inspected, fallbackAttempted: true, ...(adapter ? { hostname, adapter: adapter.name, adapterResult: adapterFailure, genericFallback: "No page region satisfied the minimum content requirements." } : {}) };
       throw error;
     }
 
@@ -122,7 +161,8 @@ async function detectBarrier(page) {
   return page.evaluate(() => {
     const text = (document.body?.innerText || "").slice(0, 8000).toLowerCase();
     const forms = [...document.forms];
-    if (/(captcha|checking your browser|verify you are human|access denied|security challenge)/.test(text)) return "an access challenge";
+    if (/captcha/.test(text)) return "a CAPTCHA challenge";
+    if (/(checking your browser|verify you are human|access denied|security challenge)/.test(text)) return "an access challenge";
     const hasPassword = forms.some((form) => form.querySelector('input[type="password"]'));
     if (hasPassword && /(sign in|log in|password|authentication)/.test(text)) return "an authentication wall";
     return null;

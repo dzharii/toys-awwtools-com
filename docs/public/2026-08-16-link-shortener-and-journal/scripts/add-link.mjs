@@ -7,7 +7,7 @@ import path from "node:path";
 import { chromium } from "playwright";
 import { buildPublicUrls, generateRecordHtml, isoUtcSeconds, normalizeSiteBase, parseTargetUrl, randomId, sanitizeText } from "../shared/core.js";
 import { createDiagnostic, createLogger, formatUserError } from "../shared/diagnostics.js";
-import { capturePage } from "./capture.mjs";
+import { captureWithBrowserFallback } from "./capture-session.mjs";
 import { validateJpeg } from "./jpeg.mjs";
 import { ROOT, acquireLock, metaFromHtml, prependManifest, validateRepository } from "./repository.mjs";
 
@@ -16,7 +16,6 @@ const operationId = `add-${randomBytes(4).toString("base64url").slice(0, 6)}`;
 const logger = createLogger({ debug, correlationId: operationId });
 let stage = "input validation";
 let tempPath;
-let browser;
 let releaseLock;
 let committedPath;
 let mutationState = "none";
@@ -63,7 +62,6 @@ async function main() {
   stage = "dependency validation";
   const executable = chromium.executablePath();
   await access(executable, fsConstants.X_OK).catch(() => access(executable, fsConstants.R_OK));
-  browser = await chromium.launch({ headless: true });
   logger.debug("authoring", `Chromium dependency available: ${executable}`);
 
   stage = "ID generation";
@@ -72,9 +70,7 @@ async function main() {
   const previewPath = path.join(tempPath, "preview.jpg");
 
   stage = "page capture";
-  const capture = await capturePage({ browser, targetUrl, outputPath: previewPath, logger });
-  await browser.close();
-  browser = undefined;
+  const capture = await captureWithBrowserFallback({ targetUrl, outputPath: previewPath, logger });
   const title = sanitizeText(capture.metadata.title, "title");
   const description = sanitizeText(capture.metadata.description, "description");
   if (title === "(no title)") logger.warn("authoring", "Title contained no usable characters after sanitization; using (no title).");
@@ -154,7 +150,6 @@ async function validateTemporaryRecord(recordPath, expected) {
 }
 
 main().catch(async (cause) => {
-  if (browser) await browser.close().catch(() => {});
   if (releaseLock) await releaseLock().catch(() => {});
   if (tempPath) await rm(tempPath, { recursive: true, force: true }).catch(() => {});
   const code = cause.code || (stage.includes("capture") || cause.stage ? "CAPTURE_FAILED" : stage.includes("repository") ? "REPOSITORY_INVALID" : "AUTHORING_FAILED");

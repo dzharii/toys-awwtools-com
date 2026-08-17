@@ -27,7 +27,9 @@ test("sanitizer applies the exact script, punctuation, replacement and fallback 
   assert.equal(sanitizeText("-- Статья о браузерах --"), "Статья о браузерах");
   assert.equal(sanitizeText("1234 😀"), "(no title)");
   assert.equal(sanitizeText("1234 😀", "description"), "(no description)");
-  assert.equal(Array.from(sanitizeText("A".repeat(200))).length, 160);
+  assert.equal(Array.from(sanitizeText("A".repeat(1200))).length, 1000);
+  assert.equal(Array.from(sanitizeText("Ж".repeat(1200), "description")).length, 1000);
+  assert.equal(sanitizeText("A".repeat(1000)).endsWith("…"), false);
 });
 
 test("page ranges retain six-entry logical boundaries", () => {

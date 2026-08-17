@@ -1,4 +1,4 @@
-import { CAMERA, PAGE_TURN_MS } from "../shared/constants.js";
+import { PAGE_TURN_MS, PAN_THRESHOLD_PX } from "../shared/constants.js";
 import { JournalData } from "./data.js";
 
 const viewport = document.querySelector("#viewport");
@@ -9,7 +9,7 @@ const turnLayer = document.querySelector("#turn-layer");
 const previous = document.querySelector("#previous-page");
 const next = document.querySelector("#next-page");
 const data = new JournalData();
-const state = { page: 0, mode: "spread", zoom: CAMERA.default, baseScale: 1, panX: 0, panY: 0, turning: false, pointer: null, touch: null, hiddenAt: 0 };
+const state = { page: 0, mode: "spread", baseScale: 1, panX: 0, panY: 0, turning: false, pointer: null, suppressClick: false, touch: null, hiddenAt: 0 };
 
 start();
 
@@ -84,8 +84,10 @@ function loadingCard(id) {
 }
 
 function entryCard(entry) {
+  const wrapper = document.createElement("article");
+  wrapper.className = "entry-record"; wrapper.dataset.id = entry.id;
   const link = document.createElement("a");
-  link.className = "entry-card"; link.href = entry.targetUrl; link.dataset.id = entry.id; link.rel = "noopener noreferrer";
+  link.className = "entry-card"; link.href = entry.targetUrl; link.target = "_blank"; link.draggable = false; link.dataset.id = entry.id; link.rel = "noopener noreferrer";
   const frame = document.createElement("div"); frame.className = "preview-frame";
   const image = document.createElement("img"); image.src = entry.previewUrl; image.alt = ""; image.draggable = false; image.loading = "lazy";
   image.addEventListener("error", () => {
@@ -94,12 +96,56 @@ function entryCard(entry) {
   }, { once: true });
   frame.append(image);
   const title = document.createElement("h2"); title.textContent = entry.title;
+  const description = document.createElement("p"); description.className = "entry-description"; description.textContent = entry.description;
   const host = document.createElement("div"); host.className = "entry-host"; host.textContent = new URL(entry.targetUrl).hostname.replace(/^www\./, "");
   const date = document.createElement("time"); date.dateTime = entry.createdAt; date.textContent = `Added ${formatDate(entry.createdAt)}`;
-  link.append(frame, title, host, date);
+  link.append(frame, title);
+  if (entry.description !== "(no description)") link.append(description);
+  else link.classList.add("has-no-description");
+  link.append(host, date);
   if (entry.status === "stale") { const badge = document.createElement("span"); badge.className = "cached-badge"; badge.textContent = "Cached"; link.append(badge); }
-  link.addEventListener("click", (event) => { if (link.dataset.dragSuppressed === "true") { event.preventDefault(); link.dataset.dragSuppressed = "false"; } });
-  return link;
+  const copy = document.createElement("button");
+  copy.className = "copy-short-url"; copy.type = "button"; copy.textContent = "Copy short URL"; copy.setAttribute("aria-live", "polite");
+  copy.addEventListener("click", () => copyShortUrl(copy, entry));
+  wrapper.append(link, copy);
+  return wrapper;
+}
+
+async function copyShortUrl(button, entry) {
+  if (button.dataset.copying === "true") return;
+  button.dataset.copying = "true";
+  clearTimeout(button.copyResetTimer);
+  try {
+    await writeClipboard(entry.shortUrl);
+    button.textContent = "Copied";
+    button.dataset.copyState = "success";
+  } catch (error) {
+    button.textContent = "Copy failed";
+    button.dataset.copyState = "error";
+    console.warn(`[WARN] [journal] Short URL could not be copied\n\nID:\n  ${entry.id}\n\nReason:\n  ${error.name || "Clipboard error"}\n\nEntry remains usable:\n  yes\n\nError code:\n  JOURNAL_CLIPBOARD_WRITE_FAILED`);
+  } finally {
+    delete button.dataset.copying;
+    button.copyResetTimer = setTimeout(() => {
+      button.textContent = "Copy short URL";
+      delete button.dataset.copyState;
+    }, 1600);
+  }
+}
+
+async function writeClipboard(value) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+  const temporary = document.createElement("textarea");
+  temporary.value = value; temporary.readOnly = true; temporary.setAttribute("aria-hidden", "true");
+  temporary.style.cssText = "position:fixed;inset:auto auto 0 -9999px;opacity:0";
+  document.body.append(temporary); temporary.select();
+  try {
+    if (!document.execCommand("copy")) throw new Error("Clipboard fallback was rejected.");
+  } finally {
+    temporary.remove();
+  }
 }
 
 function errorCard(entry, slot) {
@@ -162,14 +208,13 @@ function updateGeometry(initial = false) {
   const designWidth = mode === "spread" ? 1272 : 518;
   const available = Math.max(1, innerWidth - (mode === "spread" ? 72 : 24));
   state.baseScale = Math.max(mode === "spread" ? 0.76 : 0.72, Math.min(1, available / designWidth));
-  const scale = state.baseScale * state.zoom;
+  const scale = state.baseScale;
   const designHeight = 900;
   sceneSpace.style.setProperty("--scene-width", `${Math.max(innerWidth, designWidth * scale + (mode === "spread" ? 72 : 24))}px`);
   sceneSpace.style.setProperty("--scene-height", `${designHeight * scale + 150}px`);
   scene.style.setProperty("--camera-scale", scale);
   scene.style.setProperty("--pan-x", `${state.panX}px`);
   scene.style.setProperty("--pan-y", `${state.panY}px`);
-  scene.dataset.zoomedOut = state.zoom <= 0.82 ? "true" : "false";
   clampPan();
   requestAnimationFrame(() => {
     if (initial || mode === "single") viewport.scrollLeft = Math.max(0, (viewport.scrollWidth - viewport.clientWidth) / 2);
@@ -177,8 +222,8 @@ function updateGeometry(initial = false) {
 }
 
 function clampPan() {
-  const scaledWidth = (state.mode === "spread" ? 1272 : 518) * state.baseScale * state.zoom;
-  const scaledHeight = 900 * state.baseScale * state.zoom;
+  const scaledWidth = (state.mode === "spread" ? 1272 : 518) * state.baseScale;
+  const scaledHeight = 900 * state.baseScale;
   const maxX = Math.max(40, (scaledWidth - innerWidth) / 2 + innerWidth * 0.35);
   const maxY = Math.max(50, (scaledHeight - innerHeight) / 2 + innerHeight * 0.3);
   state.panX = Math.max(-maxX, Math.min(maxX, state.panX));
@@ -193,30 +238,39 @@ function installInteractions() {
     if (event.key === "ArrowRight" || event.key === "PageDown") { event.preventDefault(); turn(1); }
     if (event.key === "ArrowLeft" || event.key === "PageUp") { event.preventDefault(); turn(-1); }
   });
-  viewport.addEventListener("wheel", (event) => {
-    if (!(event.ctrlKey || event.metaKey)) return;
+  viewport.addEventListener("click", (event) => {
+    if (!state.suppressClick || event.detail === 0 || !event.target.closest("a.entry-card")) return;
+    state.suppressClick = false;
     event.preventDefault();
-    state.zoom = Math.max(CAMERA.min, Math.min(CAMERA.max, state.zoom + (event.deltaY < 0 ? CAMERA.step : -CAMERA.step)));
-    updateGeometry();
-  }, { passive: false });
+    event.stopImmediatePropagation();
+  }, true);
+  viewport.addEventListener("dragstart", (event) => {
+    if (state.pointer) event.preventDefault();
+  });
   viewport.addEventListener("pointerdown", (event) => {
-    if (event.pointerType === "touch" || event.button !== 0 || event.target.closest("button.page-edge")) return;
-    state.pointer = { id: event.pointerId, x: event.clientX, y: event.clientY, panX: state.panX, panY: state.panY, moved: false, link: event.target.closest("a.entry-card") };
-    viewport.setPointerCapture(event.pointerId);
+    if (event.pointerType === "touch" || event.button !== 0 || event.target.closest("button")) return;
+    state.suppressClick = false;
+    state.pointer = { id: event.pointerId, x: event.clientX, y: event.clientY, panX: state.panX, panY: state.panY, moved: false };
+    viewport.classList.add("is-pan-armed");
   });
   viewport.addEventListener("pointermove", (event) => {
     const pointer = state.pointer; if (!pointer || pointer.id !== event.pointerId) return;
     const dx = event.clientX - pointer.x, dy = event.clientY - pointer.y;
-    if (!pointer.moved && Math.hypot(dx, dy) < 7) return;
-    pointer.moved = true; viewport.classList.add("is-panning");
+    if (!pointer.moved && Math.hypot(dx, dy) < PAN_THRESHOLD_PX) return;
+    pointer.moved = true; viewport.setPointerCapture(event.pointerId); viewport.classList.add("is-panning");
+    event.preventDefault();
+    document.getSelection()?.removeAllRanges();
     state.panX = pointer.panX + dx; state.panY = pointer.panY + dy; clampPan();
   });
   const finishPointer = (event) => {
     if (!state.pointer || state.pointer.id !== event.pointerId) return;
-    if (state.pointer.moved && state.pointer.link) state.pointer.link.dataset.dragSuppressed = "true";
-    state.pointer = null; viewport.classList.remove("is-panning");
+    state.suppressClick = event.type === "pointerup" && state.pointer.moved;
+    if (state.suppressClick) setTimeout(() => { state.suppressClick = false; }, 100);
+    state.pointer = null; viewport.classList.remove("is-pan-armed", "is-panning");
   };
-  viewport.addEventListener("pointerup", finishPointer); viewport.addEventListener("pointercancel", finishPointer);
+  viewport.addEventListener("pointerup", finishPointer);
+  viewport.addEventListener("pointercancel", finishPointer);
+  viewport.addEventListener("lostpointercapture", finishPointer);
   viewport.addEventListener("touchstart", onTouchStart, { passive: true });
   viewport.addEventListener("touchmove", onTouchMove, { passive: false });
   viewport.addEventListener("touchend", onTouchEnd, { passive: true });
@@ -231,27 +285,22 @@ function installInteractions() {
 }
 
 function onTouchStart(event) {
+  if (event.target.closest("button")) { state.touch = null; return; }
   if (event.touches.length === 1) state.touch = { mode: "pending", x: event.touches[0].clientX, y: event.touches[0].clientY, lastX: event.touches[0].clientX, lastY: event.touches[0].clientY, time: Date.now(), edgeIntent: event.touches[0].clientX < 44 || event.touches[0].clientX > innerWidth - 44 };
-  if (event.touches.length === 2) {
-    const distance = touchDistance(event.touches); state.touch = { mode: "pinch", distance, zoom: state.zoom };
-  }
+  else state.touch = null;
 }
 function onTouchMove(event) {
   if (!state.touch) return;
-  if (event.touches.length === 2 && state.touch.mode === "pinch") {
-    event.preventDefault(); state.zoom = Math.max(CAMERA.min, Math.min(CAMERA.max, state.touch.zoom * touchDistance(event.touches) / state.touch.distance)); updateGeometry(); return;
-  }
-  if (event.touches.length !== 1 || state.touch.mode === "pinch") return;
+  if (event.touches.length !== 1) { state.touch = null; return; }
   const touch = event.touches[0], dx = touch.clientX - state.touch.x, dy = touch.clientY - state.touch.y;
   if (state.touch.mode === "pending" && Math.hypot(dx, dy) > 10) state.touch.mode = Math.abs(dx) > Math.abs(dy) * 1.35 ? "horizontal" : "vertical";
-  if (state.touch.mode === "horizontal" && state.zoom > 1.02 && !state.touch.edgeIntent) { event.preventDefault(); state.panX += touch.clientX - state.touch.lastX; state.panY += touch.clientY - state.touch.lastY; clampPan(); }
+  if (state.touch.mode === "horizontal") event.preventDefault();
   state.touch.lastX = touch.clientX; state.touch.lastY = touch.clientY;
 }
 function onTouchEnd() {
-  if (state.touch?.mode === "horizontal" && (state.zoom <= 1.02 || state.touch.edgeIntent)) {
+  if (state.touch?.mode === "horizontal") {
     const dx = state.touch.lastX - state.touch.x;
     if (Math.abs(dx) > 55 && Date.now() - state.touch.time < 800) turn(dx < 0 ? 1 : -1);
   }
   state.touch = null;
 }
-function touchDistance(touches) { return Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY); }

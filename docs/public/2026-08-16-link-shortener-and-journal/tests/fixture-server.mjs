@@ -14,6 +14,13 @@ const titles = [
   "Practical Browser Testing Patterns", "The Architecture of Useful Notes", "Small Tools With Lasting Value",
   "Exploring Mountain Trails in Autumn", "Readable Code for Everyday Teams", "A Better Personal Knowledge Archive"
 ];
+const descriptions = [
+  "A short, useful memory cue.",
+  "A deliberately long description that should remain quiet and readable while being visually clamped to exactly two lines inside the fixed journal card geometry. ".repeat(4),
+  "L".repeat(1000),
+  "(no description)",
+  "A controlled visual fixture for the journal experience"
+];
 
 createServer(async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host}`);
@@ -23,7 +30,7 @@ createServer(async (request, response) => {
   if (record) {
     const id = record[1], index = ids.indexOf(id), title = titles[index % titles.length];
     const base = `http://127.0.0.1:${port}/lnk/${id}/`;
-    const html = generateRecordHtml({ id, targetUrl: `https://example.com/articles/${index + 1}`, createdAt: new Date(Date.UTC(2026, 7, 16 - (index % 15), 12)).toISOString().replace(".000", ""), title, description: "A controlled visual fixture for the journal experience", shortUrl: base, previewUrl: `${base}preview.jpg` });
+    const html = generateRecordHtml({ id, targetUrl: `https://example.com/articles/${index + 1}`, createdAt: new Date(Date.UTC(2026, 7, 16 - (index % 15), 12)).toISOString().replace(".000", ""), title, description: descriptions[index % descriptions.length], shortUrl: base, previewUrl: `${base}preview.jpg` });
     return send(response, 200, "text/html; charset=utf-8", html);
   }
   const preview = url.pathname.match(/^\/lnk\/Demo(\d{4})\/preview\.jpg$/);

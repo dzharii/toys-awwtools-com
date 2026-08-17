@@ -50,7 +50,7 @@ export function sanitizeText(input, kind = "title") {
     .trim();
   while (value && !ALLOWED_LETTER.test(value[0])) value = value.slice(1).trimStart();
   while (value && !ALLOWED_LETTER.test(value.at(-1))) value = value.slice(0, -1).trimEnd();
-  const limit = kind === "description" ? 320 : 160;
+  const limit = 1000;
   if (Array.from(value).length > limit) {
     value = Array.from(value).slice(0, limit).join("").trimEnd();
     while (value && !ALLOWED_LETTER.test(value.at(-1))) value = value.slice(0, -1).trimEnd();
