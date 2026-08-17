@@ -1,0 +1,1411 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Enter to Newline Bookmarklet Installer</title>
+  <style>
+    :root { color-scheme: light dark; font-family: "Segoe UI", Tahoma, Arial, sans-serif; }
+    body { max-width: 760px; margin: 40px auto; padding: 0 20px; line-height: 1.5; }
+    .panel { border: 1px solid CanvasText; border-radius: 6px; padding: 20px; background: Canvas; }
+    .bookmarklet { display: inline-block; margin: 12px 0; padding: 10px 16px; border: 1px solid CanvasText; border-radius: 4px; background: ButtonFace; color: ButtonText; font-weight: 600; text-decoration: none; cursor: grab; }
+    button { min-height: 34px; padding: 6px 12px; font: inherit; }
+    .status { min-height: 1.5em; margin-top: 10px; }
+    details { margin-top: 16px; }
+    textarea { width: 100%; min-height: 180px; margin-top: 8px; font: 12px/1.4 Consolas, "Courier New", monospace; }
+  </style>
+</head>
+<body>
+  <main class="panel">
+    <h1>Enter to Newline</h1>
+    <p>Drag the link below to the bookmarks bar. Run it on a page to make Enter insert a newline. Use Ctrl+Enter or Cmd+Enter to send. Close the control panel or run the bookmarklet again to deactivate it.</p>
+    <p><a id="install" class="bookmarklet" href="#">Enter to Newline</a></p>
+    <button id="copy" type="button">Copy bookmarklet URL</button>
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+    <details>
+      <summary>Manual installation</summary>
+      <p>Create a bookmark and paste the complete value below into its URL field.</p>
+      <textarea id="bookmarklet" readonly>javascript:(() =&gt; {
+  &#x27;use strict&#x27;;
+
+  const GLOBAL_KEY = &#x27;__enterToNewlineBookmarkletController__&#x27;;
+  const VERSION = &#x27;1.0.0&#x27;;
+  const HOST_ID = &#x27;enter-to-newline-bookmarklet-host&#x27;;
+  const POSITION_STORAGE_KEY = &#x27;enter-to-newline-bookmarklet-position-v1&#x27;;
+  const MAX_LOG_ENTRIES = 40;
+  const DISPLAYED_LOG_ENTRIES = 12;
+
+  const existingController = window[GLOBAL_KEY];
+
+  if (existingController &amp;&amp; typeof existingController.destroy === &#x27;function&#x27;) {
+    try {
+      existingController.destroy({ reason: &#x27;bookmarklet-toggle&#x27; });
+    } catch (error) {
+      console.error(&#x27;[Enter to Newline] Failed to deactivate the existing controller.&#x27;, error);
+      document.getElementById(HOST_ID)?.remove();
+      delete window[GLOBAL_KEY];
+    }
+    return;
+  }
+
+  document.getElementById(HOST_ID)?.remove();
+
+  const platform = navigator.userAgentData?.platform || navigator.platform || &#x27;&#x27;;
+  const isMac = /mac|iphone|ipad|ipod/i.test(platform);
+  const sendShortcutLabel = isMac ? &#x27;Cmd+Enter&#x27; : &#x27;Ctrl+Enter&#x27;;
+
+  const locators = Object.freeze({
+    editable: Object.freeze([
+      Object.freeze({
+        id: &#x27;textarea&#x27;,
+        selector: &#x27;textarea&#x27;,
+        description: &#x27;an enabled textarea element&#x27;
+      }),
+      Object.freeze({
+        id: &#x27;contenteditable&#x27;,
+        selector: &#x27;[contenteditable=&quot;true&quot;]&#x27;,
+        description: &#x27;an element explicitly marked contenteditable=true&#x27;
+      }),
+      Object.freeze({
+        id: &#x27;lexical-editor&#x27;,
+        selector: &#x27;[data-lexical-editor=&quot;true&quot;]&#x27;,
+        description: &#x27;a Lexical editor root or container&#x27;
+      }),
+      Object.freeze({
+        id: &#x27;textbox-role&#x27;,
+        selector: &#x27;[role=&quot;textbox&quot;]&#x27;,
+        description: &#x27;an element exposing the textbox accessibility role&#x27;
+      })
+    ]),
+    send: Object.freeze([
+      Object.freeze({
+        id: &#x27;chatgpt-send-button&#x27;,
+        selector: &#x27;button[data-testid=&quot;send-button&quot;]&#x27;,
+        description: &#x27;the ChatGPT send button identified by data-testid=send-button&#x27;
+      }),
+      Object.freeze({
+        id: &#x27;composer-submit-button&#x27;,
+        selector: &#x27;button[data-testid=&quot;composer-submit-button&quot;]&#x27;,
+        description: &#x27;a composer submit button identified by data-testid=composer-submit-button&#x27;
+      }),
+      Object.freeze({
+        id: &#x27;accessible-send-button&#x27;,
+        selector: &#x27;button[aria-label=&quot;Send&quot; i], button[aria-label^=&quot;Send &quot; i], button[aria-label*=&quot;Send message&quot; i], button[aria-label*=&quot;Send prompt&quot; i]&#x27;,
+        description: &#x27;an enabled button whose accessible label describes a send action&#x27;
+      })
+    ])
+  });
+
+  const state = {
+    active: true,
+    destroyed: false,
+    host: null,
+    shadow: null,
+    ui: {},
+    cleanupTasks: [],
+    logEntries: [],
+    sequence: 0,
+    counters: {
+      newlines: 0,
+      sends: 0,
+      warnings: 0,
+      errors: 0
+    },
+    drag: null,
+    warnedElements: new WeakSet(),
+    repeatedLogTimes: new Map(),
+    themeQuery: null
+  };
+
+  const controller = {
+    version: VERSION,
+    destroy: options =&gt; destroy(options),
+    getDiagnostics: () =&gt; ({
+      version: VERSION,
+      active: state.active,
+      counters: { ...state.counters },
+      logs: state.logEntries.map(entry =&gt; ({ ...entry }))
+    })
+  };
+
+  window[GLOBAL_KEY] = controller;
+
+  const addCleanup = cleanup =&gt; {
+    state.cleanupTasks.push(cleanup);
+  };
+
+  const listen = (target, type, handler, options) =&gt; {
+    target.addEventListener(type, handler, options);
+    addCleanup(() =&gt; target.removeEventListener(type, handler, options));
+  };
+
+  const truncate = (value, length = 120) =&gt; {
+    const text = String(value ?? &#x27;&#x27;);
+    return text.length &lt;= length ? text : `${text.slice(0, length - 1)}...`;
+  };
+
+  const describeElement = element =&gt; {
+    if (!(element instanceof Element)) {
+      return &#x27;no element&#x27;;
+    }
+
+    const attributes = [
+      [&#x27;id&#x27;, element.id],
+      [&#x27;role&#x27;, element.getAttribute(&#x27;role&#x27;)],
+      [&#x27;contenteditable&#x27;, element.getAttribute(&#x27;contenteditable&#x27;)],
+      [&#x27;aria-label&#x27;, element.getAttribute(&#x27;aria-label&#x27;)],
+      [&#x27;data-testid&#x27;, element.getAttribute(&#x27;data-testid&#x27;)],
+      [&#x27;data-lexical-editor&#x27;, element.getAttribute(&#x27;data-lexical-editor&#x27;)]
+    ]
+      .filter(([, value]) =&gt; value)
+      .map(([name, value]) =&gt; `${name}=&quot;${truncate(value, 80)}&quot;`);
+
+    const classNames = typeof element.className === &#x27;string&#x27;
+      ? element.className.trim().split(/\s+/).filter(Boolean).slice(0, 4)
+      : [];
+
+    const classDescription = classNames.length ? ` class=&quot;${classNames.join(&#x27; &#x27;)}&quot;` : &#x27;&#x27;;
+    const attributeDescription = attributes.length ? ` ${attributes.join(&#x27; &#x27;)}` : &#x27;&#x27;;
+
+    return `&lt;${element.tagName.toLowerCase()}${attributeDescription}${classDescription}&gt;`;
+  };
+
+  const serializeContext = context =&gt; {
+    const entries = Object.entries(context || {}).filter(([, value]) =&gt; value !== undefined &amp;&amp; value !== null &amp;&amp; value !== &#x27;&#x27;);
+    return entries.map(([key, value]) =&gt; `${key}=${truncate(typeof value === &#x27;string&#x27; ? value : JSON.stringify(value), 160)}`).join(&#x27;; &#x27;);
+  };
+
+  const renderCounters = () =&gt; {
+    if (!state.ui.counters) {
+      return;
+    }
+
+    state.ui.counters.textContent = `New lines: ${state.counters.newlines} | Sends: ${state.counters.sends} | Warnings: ${state.counters.warnings} | Errors: ${state.counters.errors}`;
+  };
+
+  const renderLogs = () =&gt; {
+    if (!state.ui.logList) {
+      return;
+    }
+
+    state.ui.logList.replaceChildren();
+
+    const visibleEntries = state.logEntries.slice(-DISPLAYED_LOG_ENTRIES).reverse();
+
+    for (const entry of visibleEntries) {
+      const item = document.createElement(&#x27;li&#x27;);
+      item.className = `log-entry log-entry--${entry.level}`;
+
+      const header = document.createElement(&#x27;div&#x27;);
+      header.className = &#x27;log-entry__header&#x27;;
+      header.textContent = `${entry.time} ${entry.level.toUpperCase()} ${entry.operation}`;
+
+      const message = document.createElement(&#x27;div&#x27;);
+      message.className = &#x27;log-entry__message&#x27;;
+      message.textContent = entry.message;
+
+      item.append(header, message);
+
+      if (entry.context) {
+        const context = document.createElement(&#x27;div&#x27;);
+        context.className = &#x27;log-entry__context&#x27;;
+        context.textContent = entry.context;
+        item.append(context);
+      }
+
+      state.ui.logList.append(item);
+    }
+  };
+
+  const setStatus = (level, message) =&gt; {
+    if (!state.ui.status) {
+      return;
+    }
+
+    state.ui.status.dataset.level = level;
+    state.ui.status.textContent = message;
+  };
+
+  const writeLog = (level, operation, message, context = {}, options = {}) =&gt; {
+    const throttleKey = options.throttleKey;
+    const throttleMs = options.throttleMs ?? 3000;
+    const now = Date.now();
+
+    if (throttleKey) {
+      const previousTime = state.repeatedLogTimes.get(throttleKey) || 0;
+      if (now - previousTime &lt; throttleMs) {
+        return;
+      }
+      state.repeatedLogTimes.set(throttleKey, now);
+    }
+
+    const entry = {
+      id: ++state.sequence,
+      time: new Date(now).toLocaleTimeString([], { hour12: false }),
+      level,
+      operation,
+      message,
+      context: serializeContext(context)
+    };
+
+    state.logEntries.push(entry);
+    if (state.logEntries.length &gt; MAX_LOG_ENTRIES) {
+      state.logEntries.splice(0, state.logEntries.length - MAX_LOG_ENTRIES);
+    }
+
+    if (level === &#x27;warning&#x27;) {
+      state.counters.warnings += 1;
+    }
+
+    if (level === &#x27;error&#x27;) {
+      state.counters.errors += 1;
+    }
+
+    const consoleMethod = level === &#x27;error&#x27; ? &#x27;error&#x27; : level === &#x27;warning&#x27; ? &#x27;warn&#x27; : &#x27;info&#x27;;
+    console[consoleMethod](`[Enter to Newline] ${operation}: ${message}`, context);
+
+    renderCounters();
+    renderLogs();
+
+    if (level === &#x27;error&#x27; &amp;&amp; state.ui.activityDetails) {
+      state.ui.activityDetails.open = true;
+    }
+  };
+
+  const reportError = (operation, error, context = {}) =&gt; {
+    const normalizedError = error instanceof Error ? error : new Error(String(error));
+    writeLog(&#x27;error&#x27;, operation, normalizedError.message || &#x27;An unknown error occurred.&#x27;, {
+      ...context,
+      errorName: normalizedError.name,
+      stack: truncate(normalizedError.stack || &#x27;&#x27;, 300)
+    });
+    setStatus(&#x27;error&#x27;, `${operation} failed. Open Activity for details.`);
+  };
+
+  const isAriaDisabled = element =&gt; element.getAttribute(&#x27;aria-disabled&#x27;) === &#x27;true&#x27;;
+
+  const isEligibleTextarea = element =&gt; element instanceof HTMLTextAreaElement &amp;&amp; !element.disabled &amp;&amp; !element.readOnly &amp;&amp; !isAriaDisabled(element);
+
+  const isEligibleContenteditable = element =&gt; {
+    if (!(element instanceof HTMLElement) || isAriaDisabled(element)) {
+      return false;
+    }
+
+    return element.isContentEditable || element.getAttribute(&#x27;contenteditable&#x27;) === &#x27;true&#x27;;
+  };
+
+  const findNestedEditable = container =&gt; {
+    if (!(container instanceof Element)) {
+      return null;
+    }
+
+    const candidates = container.querySelectorAll(&#x27;textarea, [contenteditable=&quot;true&quot;]&#x27;);
+
+    for (const candidate of candidates) {
+      if (isEligibleTextarea(candidate) || isEligibleContenteditable(candidate)) {
+        return candidate;
+      }
+    }
+
+    return null;
+  };
+
+  const collectPathElements = event =&gt; {
+    const path = typeof event.composedPath === &#x27;function&#x27; ? event.composedPath() : [event.target];
+    return path.filter(node =&gt; node instanceof Element);
+  };
+
+  const matchLocator = (element, locator) =&gt; {
+    try {
+      if (element.matches(locator.selector)) {
+        return element;
+      }
+
+      return element.closest(locator.selector);
+    } catch (error) {
+      reportError(&#x27;locator.match&#x27;, error, {
+        locatorId: locator.id,
+        selector: locator.selector,
+        description: locator.description,
+        element: describeElement(element)
+      });
+      return null;
+    }
+  };
+
+  const resolveEditableTarget = event =&gt; {
+    const pathElements = collectPathElements(event);
+    const visited = new Set();
+    let unsupportedMatch = null;
+
+    for (const pathElement of pathElements) {
+      for (const locator of locators.editable) {
+        const candidate = matchLocator(pathElement, locator);
+
+        if (!candidate || visited.has(candidate)) {
+          continue;
+        }
+
+        visited.add(candidate);
+
+        if (isEligibleTextarea(candidate)) {
+          return { element: candidate, locator };
+        }
+
+        if (isEligibleContenteditable(candidate)) {
+          return { element: candidate, locator };
+        }
+
+        const nestedEditable = findNestedEditable(candidate);
+        if (nestedEditable) {
+          return {
+            element: nestedEditable,
+            locator,
+            resolvedFromContainer: candidate
+          };
+        }
+
+        unsupportedMatch ||= { element: candidate, locator };
+      }
+    }
+
+    return { element: null, unsupportedMatch };
+  };
+
+  const focusElement = element =&gt; {
+    try {
+      element.focus({ preventScroll: true });
+    } catch (error) {
+      element.focus();
+      writeLog(&#x27;warning&#x27;, &#x27;editable.focus&#x27;, &#x27;Focus options were not accepted; focus() was called without options.&#x27;, {
+        target: describeElement(element),
+        error: error instanceof Error ? error.message : String(error)
+      }, {
+        throttleKey: &#x27;focus-options-fallback&#x27;,
+        throttleMs: 10000
+      });
+    }
+  };
+
+  const dispatchInputEvent = (element, inputType, data) =&gt; {
+    try {
+      const inputEvent = new InputEvent(&#x27;input&#x27;, {
+        bubbles: true,
+        composed: true,
+        cancelable: false,
+        inputType,
+        data
+      });
+      element.dispatchEvent(inputEvent);
+      return &#x27;InputEvent&#x27;;
+    } catch (error) {
+      const fallbackEvent = new Event(&#x27;input&#x27;, { bubbles: true, composed: true });
+      element.dispatchEvent(fallbackEvent);
+      writeLog(&#x27;warning&#x27;, &#x27;input.dispatch&#x27;, &#x27;InputEvent construction failed; a generic input event was dispatched instead.&#x27;, {
+        target: describeElement(element),
+        inputType,
+        error: error instanceof Error ? error.message : String(error)
+      }, {
+        throttleKey: &#x27;input-event-fallback&#x27;,
+        throttleMs: 10000
+      });
+      return &#x27;Event&#x27;;
+    }
+  };
+
+  const insertTextareaNewline = textarea =&gt; {
+    const start = textarea.selectionStart ?? textarea.value.length;
+    const end = textarea.selectionEnd ?? textarea.value.length;
+    const previousLength = textarea.value.length;
+
+    focusElement(textarea);
+    textarea.setRangeText(&#x27;\n&#x27;, start, end, &#x27;end&#x27;);
+    const eventType = dispatchInputEvent(textarea, &#x27;insertLineBreak&#x27;, &#x27;\n&#x27;);
+
+    const expectedLength = previousLength - (end - start) + 1;
+    if (textarea.value.length !== expectedLength || textarea.value.charAt(start) !== &#x27;\n&#x27;) {
+      throw new Error(&#x27;The textarea value did not contain the expected newline after setRangeText completed.&#x27;);
+    }
+
+    return {
+      strategy: &#x27;HTMLTextAreaElement.setRangeText&#x27;,
+      inputEvent: eventType,
+      selectionStart: start,
+      selectionEnd: end
+    };
+  };
+
+  const ensureSelectionInside = editable =&gt; {
+    const selection = window.getSelection();
+
+    if (!selection) {
+      throw new Error(&#x27;window.getSelection() returned no Selection object.&#x27;);
+    }
+
+    if (selection.rangeCount &gt; 0) {
+      const currentRange = selection.getRangeAt(0);
+      if (editable.contains(currentRange.commonAncestorContainer)) {
+        return { selection, range: currentRange };
+      }
+    }
+
+    const range = document.createRange();
+    range.selectNodeContents(editable);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    return { selection, range };
+  };
+
+  const insertRangeNewline = editable =&gt; {
+    const { selection, range } = ensureSelectionInside(editable);
+
+    range.deleteContents();
+
+    const lineBreak = document.createElement(&#x27;br&#x27;);
+    range.insertNode(lineBreak);
+
+    if (!lineBreak.nextSibling) {
+      const trailingBreak = document.createElement(&#x27;br&#x27;);
+      lineBreak.parentNode?.insertBefore(trailingBreak, lineBreak.nextSibling);
+    }
+
+    const caretRange = document.createRange();
+    caretRange.setStartAfter(lineBreak);
+    caretRange.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(caretRange);
+
+    dispatchInputEvent(editable, &#x27;insertLineBreak&#x27;, null);
+
+    if (!editable.contains(lineBreak)) {
+      throw new Error(&#x27;The fallback range insertion did not leave the line break inside the editable element.&#x27;);
+    }
+
+    return {
+      strategy: &#x27;Range.insertNode&#x27;,
+      inputEvent: &#x27;synthetic input event&#x27;
+    };
+  };
+
+  const insertContenteditableNewline = editable =&gt; {
+    focusElement(editable);
+    ensureSelectionInside(editable);
+
+    if (typeof document.execCommand === &#x27;function&#x27;) {
+      try {
+        const accepted = document.execCommand(&#x27;insertLineBreak&#x27;, false, null);
+        if (accepted) {
+          return {
+            strategy: &#x27;document.execCommand(insertLineBreak)&#x27;,
+            inputEvent: &#x27;browser-managed&#x27;
+          };
+        }
+      } catch (error) {
+        writeLog(&#x27;warning&#x27;, &#x27;newline.execCommand&#x27;, &#x27;The browser rejected the insertLineBreak command; range insertion will be used.&#x27;, {
+          target: describeElement(editable),
+          error: error instanceof Error ? error.message : String(error)
+        }, {
+          throttleKey: &#x27;exec-command-failure&#x27;,
+          throttleMs: 5000
+        });
+      }
+    }
+
+    return insertRangeNewline(editable);
+  };
+
+  const insertNewline = resolvedTarget =&gt; {
+    const editable = resolvedTarget.element;
+
+    if (isEligibleTextarea(editable)) {
+      return insertTextareaNewline(editable);
+    }
+
+    if (isEligibleContenteditable(editable)) {
+      return insertContenteditableNewline(editable);
+    }
+
+    throw new Error(&#x27;The resolved target is no longer editable.&#x27;);
+  };
+
+  const getAssociatedForm = editable =&gt; {
+    if (editable instanceof HTMLTextAreaElement &amp;&amp; editable.form) {
+      return editable.form;
+    }
+
+    let current = editable;
+
+    while (current instanceof Element) {
+      const form = current.closest(&#x27;form&#x27;);
+      if (form) {
+        return form;
+      }
+
+      const root = current.getRootNode();
+      current = root instanceof ShadowRoot ? root.host : null;
+    }
+
+    return null;
+  };
+
+  const isActionableControl = element =&gt; {
+    if (!(element instanceof HTMLElement)) {
+      return false;
+    }
+
+    if (&#x27;disabled&#x27; in element &amp;&amp; element.disabled) {
+      return false;
+    }
+
+    if (element.hidden || isAriaDisabled(element)) {
+      return false;
+    }
+
+    const style = getComputedStyle(element);
+    return style.display !== &#x27;none&#x27; &amp;&amp; style.visibility !== &#x27;hidden&#x27;;
+  };
+
+  const findSubmitControls = form =&gt; {
+    const controls = Array.from(form.querySelectorAll(&#x27;button[type=&quot;submit&quot;], input[type=&quot;submit&quot;], button:not([type])&#x27;));
+    return {
+      all: controls,
+      actionable: controls.find(isActionableControl) || null
+    };
+  };
+
+  const collectSearchRoots = (editable, form) =&gt; {
+    const roots = [];
+    const addRoot = root =&gt; {
+      if (root &amp;&amp; !roots.includes(root) &amp;&amp; typeof root.querySelector === &#x27;function&#x27;) {
+        roots.push(root);
+      }
+    };
+
+    addRoot(form);
+    addRoot(editable.getRootNode());
+    addRoot(document);
+
+    return roots;
+  };
+
+  const resolveSendAction = editable =&gt; {
+    const form = getAssociatedForm(editable);
+
+    if (form) {
+      const submitControls = findSubmitControls(form);
+
+      if (typeof form.requestSubmit === &#x27;function&#x27; &amp;&amp; (submitControls.actionable || submitControls.all.length === 0)) {
+        return {
+          action: {
+            id: &#x27;form-request-submit&#x27;,
+            description: submitControls.actionable
+              ? &#x27;submit the nearest form through requestSubmit with its enabled submit control&#x27;
+              : &#x27;submit the nearest form through requestSubmit because the form has no explicit submit control&#x27;,
+            target: submitControls.actionable || form,
+            execute: () =&gt; submitControls.actionable ? form.requestSubmit(submitControls.actionable) : form.requestSubmit()
+          },
+          diagnostics: {
+            form: describeElement(form),
+            explicitSubmitControlCount: submitControls.all.length
+          }
+        };
+      }
+
+      if (submitControls.actionable) {
+        return {
+          action: {
+            id: &#x27;form-submit-control&#x27;,
+            description: &#x27;activate the enabled submit control in the nearest form&#x27;,
+            target: submitControls.actionable,
+            execute: () =&gt; submitControls.actionable.click()
+          },
+          diagnostics: {
+            form: describeElement(form),
+            explicitSubmitControlCount: submitControls.all.length
+          }
+        };
+      }
+    }
+
+    const searchRoots = collectSearchRoots(editable, form);
+    const ambiguities = [];
+
+    for (const locator of locators.send) {
+      const candidates = [];
+      const seen = new Set();
+
+      for (const root of searchRoots) {
+        let matches = [];
+
+        try {
+          matches = Array.from(root.querySelectorAll(locator.selector));
+        } catch (error) {
+          reportError(&#x27;send.locator&#x27;, error, {
+            locatorId: locator.id,
+            selector: locator.selector,
+            description: locator.description
+          });
+          continue;
+        }
+
+        for (const candidate of matches) {
+          if (!seen.has(candidate) &amp;&amp; isActionableControl(candidate)) {
+            seen.add(candidate);
+            candidates.push(candidate);
+          }
+        }
+      }
+
+      if (candidates.length === 1) {
+        const candidate = candidates[0];
+        return {
+          action: {
+            id: locator.id,
+            description: locator.description,
+            target: candidate,
+            execute: () =&gt; candidate.click()
+          },
+          diagnostics: {
+            locatorId: locator.id,
+            candidateCount: 1
+          }
+        };
+      }
+
+      if (candidates.length &gt; 1) {
+        ambiguities.push({
+          locatorId: locator.id,
+          selector: locator.selector,
+          candidateCount: candidates.length,
+          candidates: candidates.slice(0, 4).map(describeElement)
+        });
+      }
+    }
+
+    return {
+      action: null,
+      diagnostics: {
+        form: describeElement(form),
+        ambiguities
+      }
+    };
+  };
+
+  const isPlainEnter = event =&gt; event.key === &#x27;Enter&#x27;
+    &amp;&amp; !event.shiftKey
+    &amp;&amp; !event.ctrlKey
+    &amp;&amp; !event.metaKey
+    &amp;&amp; !event.altKey;
+
+  const isSendShortcut = event =&gt; {
+    if (event.key !== &#x27;Enter&#x27; || event.shiftKey || event.altKey) {
+      return false;
+    }
+
+    return isMac
+      ? event.metaKey &amp;&amp; !event.ctrlKey
+      : event.ctrlKey &amp;&amp; !event.metaKey;
+  };
+
+  const handlePlainEnter = (event, resolvedTarget) =&gt; {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    const targetDescription = describeElement(resolvedTarget.element);
+
+    writeLog(&#x27;info&#x27;, &#x27;newline.intercept&#x27;, &#x27;Plain Enter was intercepted for newline insertion.&#x27;, {
+      target: targetDescription,
+      locatorId: resolvedTarget.locator.id,
+      locator: resolvedTarget.locator.selector,
+      resolvedFromContainer: describeElement(resolvedTarget.resolvedFromContainer)
+    });
+
+    try {
+      const result = insertNewline(resolvedTarget);
+      state.counters.newlines += 1;
+      renderCounters();
+      setStatus(&#x27;success&#x27;, `New line inserted using ${result.strategy}.`);
+      writeLog(&#x27;info&#x27;, &#x27;newline.insert&#x27;, &#x27;A newline was inserted successfully.&#x27;, {
+        target: targetDescription,
+        locatorId: resolvedTarget.locator.id,
+        strategy: result.strategy,
+        inputEvent: result.inputEvent,
+        selectionStart: result.selectionStart,
+        selectionEnd: result.selectionEnd
+      });
+    } catch (error) {
+      reportError(&#x27;newline.insert&#x27;, error, {
+        target: targetDescription,
+        locatorId: resolvedTarget.locator.id,
+        locator: resolvedTarget.locator.selector,
+        locatorDescription: resolvedTarget.locator.description
+      });
+    }
+  };
+
+  const handleSendShortcut = (event, resolvedTarget) =&gt; {
+    let resolution = null;
+
+    try {
+      resolution = resolveSendAction(resolvedTarget.element);
+    } catch (error) {
+      reportError(&#x27;send.resolve&#x27;, error, {
+        target: describeElement(resolvedTarget.element),
+        attemptedLocators: locators.send.map(locator =&gt; `${locator.id}:${locator.selector}`).join(&#x27; | &#x27;)
+      });
+      return;
+    }
+
+    const action = resolution.action;
+
+    if (!action) {
+      writeLog(&#x27;warning&#x27;, &#x27;send.resolve&#x27;, `No unambiguous send action was found. ${sendShortcutLabel} was passed to the page unchanged.`, {
+        target: describeElement(resolvedTarget.element),
+        expectedForm: &#x27;nearest ancestor form with requestSubmit or an enabled submit control&#x27;,
+        attemptedLocators: locators.send.map(locator =&gt; `${locator.id}:${locator.selector}`).join(&#x27; | &#x27;),
+        resolutionDiagnostics: resolution.diagnostics
+      }, {
+        throttleKey: `send-action-missing:${describeElement(resolvedTarget.element)}`,
+        throttleMs: 5000
+      });
+      setStatus(&#x27;warning&#x27;, &#x27;No unambiguous send control was found. The shortcut was passed to the page.&#x27;);
+      return;
+    }
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    try {
+      action.execute();
+      state.counters.sends += 1;
+      renderCounters();
+      setStatus(&#x27;success&#x27;, `Send command issued using ${action.description}.`);
+      writeLog(&#x27;info&#x27;, &#x27;send.execute&#x27;, &#x27;The send action was invoked successfully.&#x27;, {
+        shortcut: sendShortcutLabel,
+        actionId: action.id,
+        actionDescription: action.description,
+        target: describeElement(action.target),
+        editor: describeElement(resolvedTarget.element)
+      });
+    } catch (error) {
+      reportError(&#x27;send.execute&#x27;, error, {
+        shortcut: sendShortcutLabel,
+        actionId: action.id,
+        actionDescription: action.description,
+        target: describeElement(action.target),
+        editor: describeElement(resolvedTarget.element)
+      });
+    }
+  };
+
+  const keydownHandler = event =&gt; {
+    if (!state.active || state.destroyed || event.defaultPrevented || event.isComposing || event.keyCode === 229) {
+      return;
+    }
+
+    if (!isPlainEnter(event) &amp;&amp; !isSendShortcut(event)) {
+      return;
+    }
+
+    try {
+      const resolvedTarget = resolveEditableTarget(event);
+
+      if (!resolvedTarget.element) {
+        const unsupported = resolvedTarget.unsupportedMatch;
+
+        if (unsupported &amp;&amp; !state.warnedElements.has(unsupported.element)) {
+          state.warnedElements.add(unsupported.element);
+          writeLog(&#x27;warning&#x27;, &#x27;editable.resolve&#x27;, &#x27;A textbox-like element matched a locator but no supported editable surface was found, so the key event was not changed.&#x27;, {
+            matchedElement: describeElement(unsupported.element),
+            locatorId: unsupported.locator.id,
+            locator: unsupported.locator.selector,
+            locatorDescription: unsupported.locator.description,
+            expected: &#x27;an enabled textarea or a contenteditable=true element&#x27;
+          });
+          setStatus(&#x27;warning&#x27;, &#x27;A textbox-like control was detected, but it is not safely editable.&#x27;);
+        }
+        return;
+      }
+
+      if (isPlainEnter(event)) {
+        handlePlainEnter(event, resolvedTarget);
+        return;
+      }
+
+      handleSendShortcut(event, resolvedTarget);
+    } catch (error) {
+      reportError(&#x27;keyboard.handle&#x27;, error, {
+        key: event.key,
+        target: describeElement(event.target),
+        composedPathLength: typeof event.composedPath === &#x27;function&#x27; ? event.composedPath().length : &#x27;unavailable&#x27;
+      });
+    }
+  };
+
+  const detectDarkTheme = () =&gt; {
+    const documentDark = document.documentElement.classList.contains(&#x27;dark&#x27;) || document.body?.classList.contains(&#x27;dark&#x27;);
+    return Boolean(documentDark || state.themeQuery?.matches);
+  };
+
+  const applyTheme = () =&gt; {
+    if (!state.host) {
+      return;
+    }
+
+    state.host.dataset.theme = detectDarkTheme() ? &#x27;dark&#x27; : &#x27;light&#x27;;
+  };
+
+  const loadSavedPosition = () =&gt; {
+    try {
+      const value = localStorage.getItem(POSITION_STORAGE_KEY);
+      if (!value) {
+        return null;
+      }
+
+      const parsed = JSON.parse(value);
+      if (!Number.isFinite(parsed.left) || !Number.isFinite(parsed.top)) {
+        return null;
+      }
+
+      return parsed;
+    } catch (error) {
+      writeLog(&#x27;warning&#x27;, &#x27;position.load&#x27;, &#x27;The saved panel position could not be read. The default position will be used.&#x27;, {
+        storageKey: POSITION_STORAGE_KEY,
+        error: error instanceof Error ? error.message : String(error)
+      }, {
+        throttleKey: &#x27;position-load-failure&#x27;,
+        throttleMs: 10000
+      });
+      return null;
+    }
+  };
+
+  const savePosition = () =&gt; {
+    if (!state.host) {
+      return;
+    }
+
+    const rect = state.host.getBoundingClientRect();
+
+    try {
+      localStorage.setItem(POSITION_STORAGE_KEY, JSON.stringify({
+        left: Math.round(rect.left),
+        top: Math.round(rect.top)
+      }));
+    } catch (error) {
+      writeLog(&#x27;warning&#x27;, &#x27;position.save&#x27;, &#x27;The panel position could not be saved.&#x27;, {
+        storageKey: POSITION_STORAGE_KEY,
+        error: error instanceof Error ? error.message : String(error)
+      }, {
+        throttleKey: &#x27;position-save-failure&#x27;,
+        throttleMs: 10000
+      });
+    }
+  };
+
+  const clampPanelPosition = (left, top) =&gt; {
+    if (!state.host) {
+      return { left, top };
+    }
+
+    const rect = state.host.getBoundingClientRect();
+    const margin = 8;
+    const maximumLeft = Math.max(margin, window.innerWidth - rect.width - margin);
+    const maximumTop = Math.max(margin, window.innerHeight - rect.height - margin);
+
+    return {
+      left: Math.min(Math.max(margin, left), maximumLeft),
+      top: Math.min(Math.max(margin, top), maximumTop)
+    };
+  };
+
+  const positionPanel = position =&gt; {
+    if (!state.host || !position) {
+      return;
+    }
+
+    const clamped = clampPanelPosition(position.left, position.top);
+    state.host.style.left = `${clamped.left}px`;
+    state.host.style.top = `${clamped.top}px`;
+    state.host.style.right = &#x27;auto&#x27;;
+  };
+
+  const pointerDownHandler = event =&gt; {
+    const handle = event.target instanceof Element ? event.target.closest(&#x27;[data-drag-handle]&#x27;) : null;
+    const interactive = event.target instanceof Element ? event.target.closest(&#x27;button, summary, a, input, select, textarea&#x27;) : null;
+
+    if (!handle || interactive || event.button !== 0 || !state.host) {
+      return;
+    }
+
+    const rect = state.host.getBoundingClientRect();
+    state.drag = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      left: rect.left,
+      top: rect.top
+    };
+
+    state.host.style.left = `${rect.left}px`;
+    state.host.style.top = `${rect.top}px`;
+    state.host.style.right = &#x27;auto&#x27;;
+    handle.setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+  };
+
+  const pointerMoveHandler = event =&gt; {
+    if (!state.drag || event.pointerId !== state.drag.pointerId || !state.host) {
+      return;
+    }
+
+    const nextPosition = clampPanelPosition(
+      state.drag.left + event.clientX - state.drag.startX,
+      state.drag.top + event.clientY - state.drag.startY
+    );
+
+    state.host.style.left = `${nextPosition.left}px`;
+    state.host.style.top = `${nextPosition.top}px`;
+  };
+
+  const pointerUpHandler = event =&gt; {
+    if (!state.drag || event.pointerId !== state.drag.pointerId) {
+      return;
+    }
+
+    state.drag = null;
+    savePosition();
+    writeLog(&#x27;info&#x27;, &#x27;panel.move&#x27;, &#x27;The control panel was moved and its position was saved.&#x27;, {
+      position: state.host ? {
+        left: Math.round(state.host.getBoundingClientRect().left),
+        top: Math.round(state.host.getBoundingClientRect().top)
+      } : &#x27;unavailable&#x27;
+    });
+  };
+
+  const createUi = () =&gt; {
+    const host = document.createElement(&#x27;div&#x27;);
+    host.id = HOST_ID;
+    host.setAttribute(&#x27;data-enter-to-newline-version&#x27;, VERSION);
+    host.style.position = &#x27;fixed&#x27;;
+    host.style.top = &#x27;12px&#x27;;
+    host.style.right = &#x27;12px&#x27;;
+    host.style.zIndex = &#x27;2147483647&#x27;;
+
+    const shadow = host.attachShadow({ mode: &#x27;open&#x27; });
+
+    shadow.innerHTML = `
+      &lt;style&gt;
+        :host {
+          all: initial;
+          color-scheme: light;
+          --window-bg: #f3f3f3;
+          --window-panel: #ffffff;
+          --window-border: #8b8b8b;
+          --window-border-soft: #c8c8c8;
+          --window-text: #111111;
+          --window-muted: #5b5b5b;
+          --window-accent: #0f6cbd;
+          --window-success: #107c10;
+          --window-warning: #8a5800;
+          --window-error: #a4262c;
+          --window-button: #e8e8e8;
+          --window-button-hover: #dddddd;
+          display: block;
+          font-family: &quot;Segoe UI&quot;, Tahoma, Arial, sans-serif;
+          font-size: 13px;
+          line-height: 1.35;
+        }
+
+        :host([data-theme=&quot;dark&quot;]) {
+          color-scheme: dark;
+          --window-bg: #252525;
+          --window-panel: #1f1f1f;
+          --window-border: #6a6a6a;
+          --window-border-soft: #444444;
+          --window-text: #f1f1f1;
+          --window-muted: #b9b9b9;
+          --window-accent: #60a5fa;
+          --window-success: #6ccb5f;
+          --window-warning: #f0b429;
+          --window-error: #ff8085;
+          --window-button: #343434;
+          --window-button-hover: #424242;
+        }
+
+        * {
+          box-sizing: border-box;
+        }
+
+        .window {
+          width: min(390px, calc(100vw - 16px));
+          max-height: min(640px, calc(100vh - 16px));
+          overflow: hidden;
+          border: 1px solid var(--window-border);
+          border-radius: 5px;
+          background: var(--window-bg);
+          color: var(--window-text);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+        }
+
+        .titlebar {
+          display: flex;
+          align-items: center;
+          min-height: 34px;
+          padding: 5px 5px 5px 9px;
+          border-bottom: 1px solid var(--window-border-soft);
+          background: var(--window-panel);
+          cursor: move;
+          user-select: none;
+          touch-action: none;
+        }
+
+        .titlebar__indicator {
+          width: 9px;
+          height: 9px;
+          margin-right: 8px;
+          border-radius: 50%;
+          background: var(--window-success);
+          box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.18);
+        }
+
+        .titlebar__title {
+          min-width: 0;
+          flex: 1;
+          overflow: hidden;
+          font-weight: 600;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        button {
+          font: inherit;
+        }
+
+        .close-button {
+          width: 28px;
+          height: 24px;
+          border: 1px solid transparent;
+          border-radius: 3px;
+          background: transparent;
+          color: var(--window-text);
+          cursor: pointer;
+          line-height: 20px;
+        }
+
+        .close-button:hover,
+        .close-button:focus-visible {
+          border-color: var(--window-border-soft);
+          background: var(--window-error);
+          color: #ffffff;
+          outline: none;
+        }
+
+        .body {
+          max-height: calc(min(640px, 100vh - 16px) - 35px);
+          overflow: auto;
+          padding: 12px;
+        }
+
+        .lead {
+          margin: 0 0 10px;
+        }
+
+        .shortcut-grid {
+          display: grid;
+          grid-template-columns: max-content 1fr;
+          gap: 6px 10px;
+          margin: 0 0 10px;
+          padding: 9px;
+          border: 1px solid var(--window-border-soft);
+          background: var(--window-panel);
+        }
+
+        kbd {
+          min-width: 76px;
+          padding: 2px 6px;
+          border: 1px solid var(--window-border);
+          border-radius: 3px;
+          background: var(--window-button);
+          color: var(--window-text);
+          font: 12px/1.4 &quot;Segoe UI&quot;, Tahoma, Arial, sans-serif;
+          text-align: center;
+          box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+        }
+
+        .shortcut-description {
+          align-self: center;
+        }
+
+        .status {
+          margin: 0 0 8px;
+          padding: 7px 8px;
+          border-left: 3px solid var(--window-accent);
+          background: var(--window-panel);
+          color: var(--window-text);
+        }
+
+        .status[data-level=&quot;success&quot;] {
+          border-left-color: var(--window-success);
+        }
+
+        .status[data-level=&quot;warning&quot;] {
+          border-left-color: var(--window-warning);
+        }
+
+        .status[data-level=&quot;error&quot;] {
+          border-left-color: var(--window-error);
+        }
+
+        .counters {
+          margin: 0 0 8px;
+          color: var(--window-muted);
+          font-size: 12px;
+        }
+
+        details {
+          margin: 0 0 10px;
+          border: 1px solid var(--window-border-soft);
+          background: var(--window-panel);
+        }
+
+        summary {
+          padding: 7px 8px;
+          cursor: pointer;
+          font-weight: 600;
+          user-select: none;
+        }
+
+        .log-list {
+          max-height: 210px;
+          margin: 0;
+          overflow: auto;
+          padding: 0 8px 8px;
+          list-style: none;
+        }
+
+        .log-entry {
+          padding: 6px 0;
+          border-top: 1px solid var(--window-border-soft);
+        }
+
+        .log-entry__header {
+          color: var(--window-muted);
+          font-size: 11px;
+          font-weight: 600;
+        }
+
+        .log-entry--warning .log-entry__header {
+          color: var(--window-warning);
+        }
+
+        .log-entry--error .log-entry__header {
+          color: var(--window-error);
+        }
+
+        .log-entry__message {
+          margin-top: 2px;
+        }
+
+        .log-entry__context {
+          margin-top: 2px;
+          color: var(--window-muted);
+          font-family: Consolas, &quot;Courier New&quot;, monospace;
+          font-size: 10px;
+          overflow-wrap: anywhere;
+        }
+
+        .actions {
+          display: flex;
+          justify-content: flex-end;
+        }
+
+        .deactivate-button {
+          min-width: 92px;
+          min-height: 30px;
+          padding: 4px 12px;
+          border: 1px solid var(--window-border);
+          border-radius: 3px;
+          background: var(--window-button);
+          color: var(--window-text);
+          cursor: pointer;
+        }
+
+        .deactivate-button:hover,
+        .deactivate-button:focus-visible {
+          background: var(--window-button-hover);
+          outline: 2px solid var(--window-accent);
+          outline-offset: 1px;
+        }
+      &lt;/style&gt;
+      &lt;section class=&quot;window&quot; role=&quot;dialog&quot; aria-label=&quot;Enter to Newline mode controls&quot;&gt;
+        &lt;header class=&quot;titlebar&quot; data-drag-handle&gt;
+          &lt;span class=&quot;titlebar__indicator&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;
+          &lt;span class=&quot;titlebar__title&quot;&gt;Enter to Newline&lt;/span&gt;
+          &lt;button class=&quot;close-button&quot; type=&quot;button&quot; data-action=&quot;deactivate&quot; aria-label=&quot;Close this panel and deactivate Enter to Newline mode&quot; title=&quot;Close and deactivate&quot;&gt;x&lt;/button&gt;
+        &lt;/header&gt;
+        &lt;div class=&quot;body&quot;&gt;
+          &lt;p class=&quot;lead&quot;&gt;Mode is active. Close this panel, press Deactivate, or run the bookmarklet again to restore the page&#x27;s original keyboard behavior.&lt;/p&gt;
+          &lt;div class=&quot;shortcut-grid&quot; aria-label=&quot;Keyboard behavior&quot;&gt;
+            &lt;kbd&gt;Enter&lt;/kbd&gt;&lt;span class=&quot;shortcut-description&quot;&gt;Insert a new line&lt;/span&gt;
+            &lt;kbd&gt;${sendShortcutLabel}&lt;/kbd&gt;&lt;span class=&quot;shortcut-description&quot;&gt;Send through the nearest reliable page action&lt;/span&gt;
+          &lt;/div&gt;
+          &lt;div class=&quot;status&quot; data-level=&quot;info&quot; role=&quot;status&quot; aria-live=&quot;polite&quot;&gt;Ready. Focus an editable text area or rich-text editor.&lt;/div&gt;
+          &lt;div class=&quot;counters&quot;&gt;New lines: 0 | Sends: 0 | Warnings: 0 | Errors: 0&lt;/div&gt;
+          &lt;details&gt;
+            &lt;summary&gt;Activity and diagnostics&lt;/summary&gt;
+            &lt;ol class=&quot;log-list&quot; aria-label=&quot;Recent activity&quot;&gt;&lt;/ol&gt;
+          &lt;/details&gt;
+          &lt;div class=&quot;actions&quot;&gt;
+            &lt;button class=&quot;deactivate-button&quot; type=&quot;button&quot; data-action=&quot;deactivate&quot;&gt;Deactivate&lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/section&gt;
+    `;
+
+    document.documentElement.appendChild(host);
+
+    state.host = host;
+    state.shadow = shadow;
+    state.ui.status = shadow.querySelector(&#x27;.status&#x27;);
+    state.ui.counters = shadow.querySelector(&#x27;.counters&#x27;);
+    state.ui.logList = shadow.querySelector(&#x27;.log-list&#x27;);
+    state.ui.activityDetails = shadow.querySelector(&#x27;details&#x27;);
+
+    for (const button of shadow.querySelectorAll(&#x27;[data-action=&quot;deactivate&quot;]&#x27;)) {
+      listen(button, &#x27;click&#x27;, () =&gt; destroy({ reason: &#x27;user-interface&#x27; }));
+    }
+
+    listen(shadow, &#x27;pointerdown&#x27;, pointerDownHandler);
+    listen(window, &#x27;pointermove&#x27;, pointerMoveHandler, { capture: true });
+    listen(window, &#x27;pointerup&#x27;, pointerUpHandler, { capture: true });
+    listen(window, &#x27;pointercancel&#x27;, pointerUpHandler, { capture: true });
+
+    const savedPosition = loadSavedPosition();
+    requestAnimationFrame(() =&gt; positionPanel(savedPosition));
+
+    applyTheme();
+    renderCounters();
+    renderLogs();
+  };
+
+  const destroy = ({ reason = &#x27;unknown&#x27; } = {}) =&gt; {
+    if (state.destroyed) {
+      return;
+    }
+
+    state.destroyed = true;
+    state.active = false;
+
+    writeLog(&#x27;info&#x27;, &#x27;lifecycle.deactivate&#x27;, &#x27;Enter to Newline mode is being deactivated and all installed resources will be removed.&#x27;, {
+      reason,
+      cleanupTaskCount: state.cleanupTasks.length,
+      version: VERSION
+    });
+
+    const cleanupErrors = [];
+
+    while (state.cleanupTasks.length) {
+      const cleanup = state.cleanupTasks.pop();
+      try {
+        cleanup();
+      } catch (error) {
+        cleanupErrors.push(error);
+      }
+    }
+
+    state.host?.remove();
+    state.host = null;
+    state.shadow = null;
+
+    if (window[GLOBAL_KEY] === controller) {
+      delete window[GLOBAL_KEY];
+    }
+
+    if (cleanupErrors.length) {
+      console.error(&#x27;[Enter to Newline] One or more cleanup operations failed.&#x27;, cleanupErrors);
+    }
+
+    console.info(`[Enter to Newline] Mode deactivated. reason=${reason}; cleanupErrors=${cleanupErrors.length}`);
+  };
+
+  const setup = () =&gt; {
+    try {
+      createUi();
+      listen(window, &#x27;keydown&#x27;, keydownHandler, { capture: true });
+      listen(window, &#x27;resize&#x27;, () =&gt; {
+        if (!state.host) {
+          return;
+        }
+        const rect = state.host.getBoundingClientRect();
+        positionPanel({ left: rect.left, top: rect.top });
+      });
+
+      state.themeQuery = window.matchMedia?.(&#x27;(prefers-color-scheme: dark)&#x27;) || null;
+      if (state.themeQuery) {
+        if (typeof state.themeQuery.addEventListener === &#x27;function&#x27;) {
+          listen(state.themeQuery, &#x27;change&#x27;, applyTheme);
+        } else if (typeof state.themeQuery.addListener === &#x27;function&#x27;) {
+          state.themeQuery.addListener(applyTheme);
+          addCleanup(() =&gt; state.themeQuery?.removeListener?.(applyTheme));
+        }
+      }
+
+      const healthInterval = window.setInterval(() =&gt; {
+        if (!state.host?.isConnected) {
+          writeLog(&#x27;error&#x27;, &#x27;lifecycle.health&#x27;, &#x27;The control panel was removed from the document while the keyboard handler was still active. The mode will deactivate to avoid invisible behavior.&#x27;, {
+            expectedHostId: HOST_ID,
+            expectedLocator: `#${HOST_ID}`
+          });
+          destroy({ reason: &#x27;host-removed&#x27; });
+          return;
+        }
+
+        applyTheme();
+      }, 2000);
+
+      addCleanup(() =&gt; window.clearInterval(healthInterval));
+
+      writeLog(&#x27;info&#x27;, &#x27;lifecycle.activate&#x27;, &#x27;Enter to Newline mode was activated successfully.&#x27;, {
+        version: VERSION,
+        sendShortcut: sendShortcutLabel,
+        editableLocators: locators.editable.map(locator =&gt; `${locator.id}:${locator.selector}`).join(&#x27; | &#x27;),
+        sendLocators: locators.send.map(locator =&gt; `${locator.id}:${locator.selector}`).join(&#x27; | &#x27;)
+      });
+      setStatus(&#x27;success&#x27;, `Active. Enter inserts a new line; ${sendShortcutLabel} sends.`);
+    } catch (error) {
+      reportError(&#x27;lifecycle.activate&#x27;, error, {
+        expectedHostId: HOST_ID,
+        expectedDocumentRoot: &#x27;document.documentElement&#x27;
+      });
+      destroy({ reason: &#x27;activation-failed&#x27; });
+    }
+  };
+
+  setup();
+})();
+</textarea>
+    </details>
+  </main>
+  <script>
+    const bookmarklet = "javascript:(() => {\n  'use strict';\n\n  const GLOBAL_KEY = '__enterToNewlineBookmarkletController__';\n  const VERSION = '1.0.0';\n  const HOST_ID = 'enter-to-newline-bookmarklet-host';\n  const POSITION_STORAGE_KEY = 'enter-to-newline-bookmarklet-position-v1';\n  const MAX_LOG_ENTRIES = 40;\n  const DISPLAYED_LOG_ENTRIES = 12;\n\n  const existingController = window[GLOBAL_KEY];\n\n  if (existingController && typeof existingController.destroy === 'function') {\n    try {\n      existingController.destroy({ reason: 'bookmarklet-toggle' });\n    } catch (error) {\n      console.error('[Enter to Newline] Failed to deactivate the existing controller.', error);\n      document.getElementById(HOST_ID)?.remove();\n      delete window[GLOBAL_KEY];\n    }\n    return;\n  }\n\n  document.getElementById(HOST_ID)?.remove();\n\n  const platform = navigator.userAgentData?.platform || navigator.platform || '';\n  const isMac = /mac|iphone|ipad|ipod/i.test(platform);\n  const sendShortcutLabel = isMac ? 'Cmd+Enter' : 'Ctrl+Enter';\n\n  const locators = Object.freeze({\n    editable: Object.freeze([\n      Object.freeze({\n        id: 'textarea',\n        selector: 'textarea',\n        description: 'an enabled textarea element'\n      }),\n      Object.freeze({\n        id: 'contenteditable',\n        selector: '[contenteditable=\"true\"]',\n        description: 'an element explicitly marked contenteditable=true'\n      }),\n      Object.freeze({\n        id: 'lexical-editor',\n        selector: '[data-lexical-editor=\"true\"]',\n        description: 'a Lexical editor root or container'\n      }),\n      Object.freeze({\n        id: 'textbox-role',\n        selector: '[role=\"textbox\"]',\n        description: 'an element exposing the textbox accessibility role'\n      })\n    ]),\n    send: Object.freeze([\n      Object.freeze({\n        id: 'chatgpt-send-button',\n        selector: 'button[data-testid=\"send-button\"]',\n        description: 'the ChatGPT send button identified by data-testid=send-button'\n      }),\n      Object.freeze({\n        id: 'composer-submit-button',\n        selector: 'button[data-testid=\"composer-submit-button\"]',\n        description: 'a composer submit button identified by data-testid=composer-submit-button'\n      }),\n      Object.freeze({\n        id: 'accessible-send-button',\n        selector: 'button[aria-label=\"Send\" i], button[aria-label^=\"Send \" i], button[aria-label*=\"Send message\" i], button[aria-label*=\"Send prompt\" i]',\n        description: 'an enabled button whose accessible label describes a send action'\n      })\n    ])\n  });\n\n  const state = {\n    active: true,\n    destroyed: false,\n    host: null,\n    shadow: null,\n    ui: {},\n    cleanupTasks: [],\n    logEntries: [],\n    sequence: 0,\n    counters: {\n      newlines: 0,\n      sends: 0,\n      warnings: 0,\n      errors: 0\n    },\n    drag: null,\n    warnedElements: new WeakSet(),\n    repeatedLogTimes: new Map(),\n    themeQuery: null\n  };\n\n  const controller = {\n    version: VERSION,\n    destroy: options => destroy(options),\n    getDiagnostics: () => ({\n      version: VERSION,\n      active: state.active,\n      counters: { ...state.counters },\n      logs: state.logEntries.map(entry => ({ ...entry }))\n    })\n  };\n\n  window[GLOBAL_KEY] = controller;\n\n  const addCleanup = cleanup => {\n    state.cleanupTasks.push(cleanup);\n  };\n\n  const listen = (target, type, handler, options) => {\n    target.addEventListener(type, handler, options);\n    addCleanup(() => target.removeEventListener(type, handler, options));\n  };\n\n  const truncate = (value, length = 120) => {\n    const text = String(value ?? '');\n    return text.length <= length ? text : `${text.slice(0, length - 1)}...`;\n  };\n\n  const describeElement = element => {\n    if (!(element instanceof Element)) {\n      return 'no element';\n    }\n\n    const attributes = [\n      ['id', element.id],\n      ['role', element.getAttribute('role')],\n      ['contenteditable', element.getAttribute('contenteditable')],\n      ['aria-label', element.getAttribute('aria-label')],\n      ['data-testid', element.getAttribute('data-testid')],\n      ['data-lexical-editor', element.getAttribute('data-lexical-editor')]\n    ]\n      .filter(([, value]) => value)\n      .map(([name, value]) => `${name}=\"${truncate(value, 80)}\"`);\n\n    const classNames = typeof element.className === 'string'\n      ? element.className.trim().split(/\\s+/).filter(Boolean).slice(0, 4)\n      : [];\n\n    const classDescription = classNames.length ? ` class=\"${classNames.join(' ')}\"` : '';\n    const attributeDescription = attributes.length ? ` ${attributes.join(' ')}` : '';\n\n    return `<${element.tagName.toLowerCase()}${attributeDescription}${classDescription}>`;\n  };\n\n  const serializeContext = context => {\n    const entries = Object.entries(context || {}).filter(([, value]) => value !== undefined && value !== null && value !== '');\n    return entries.map(([key, value]) => `${key}=${truncate(typeof value === 'string' ? value : JSON.stringify(value), 160)}`).join('; ');\n  };\n\n  const renderCounters = () => {\n    if (!state.ui.counters) {\n      return;\n    }\n\n    state.ui.counters.textContent = `New lines: ${state.counters.newlines} | Sends: ${state.counters.sends} | Warnings: ${state.counters.warnings} | Errors: ${state.counters.errors}`;\n  };\n\n  const renderLogs = () => {\n    if (!state.ui.logList) {\n      return;\n    }\n\n    state.ui.logList.replaceChildren();\n\n    const visibleEntries = state.logEntries.slice(-DISPLAYED_LOG_ENTRIES).reverse();\n\n    for (const entry of visibleEntries) {\n      const item = document.createElement('li');\n      item.className = `log-entry log-entry--${entry.level}`;\n\n      const header = document.createElement('div');\n      header.className = 'log-entry__header';\n      header.textContent = `${entry.time} ${entry.level.toUpperCase()} ${entry.operation}`;\n\n      const message = document.createElement('div');\n      message.className = 'log-entry__message';\n      message.textContent = entry.message;\n\n      item.append(header, message);\n\n      if (entry.context) {\n        const context = document.createElement('div');\n        context.className = 'log-entry__context';\n        context.textContent = entry.context;\n        item.append(context);\n      }\n\n      state.ui.logList.append(item);\n    }\n  };\n\n  const setStatus = (level, message) => {\n    if (!state.ui.status) {\n      return;\n    }\n\n    state.ui.status.dataset.level = level;\n    state.ui.status.textContent = message;\n  };\n\n  const writeLog = (level, operation, message, context = {}, options = {}) => {\n    const throttleKey = options.throttleKey;\n    const throttleMs = options.throttleMs ?? 3000;\n    const now = Date.now();\n\n    if (throttleKey) {\n      const previousTime = state.repeatedLogTimes.get(throttleKey) || 0;\n      if (now - previousTime < throttleMs) {\n        return;\n      }\n      state.repeatedLogTimes.set(throttleKey, now);\n    }\n\n    const entry = {\n      id: ++state.sequence,\n      time: new Date(now).toLocaleTimeString([], { hour12: false }),\n      level,\n      operation,\n      message,\n      context: serializeContext(context)\n    };\n\n    state.logEntries.push(entry);\n    if (state.logEntries.length > MAX_LOG_ENTRIES) {\n      state.logEntries.splice(0, state.logEntries.length - MAX_LOG_ENTRIES);\n    }\n\n    if (level === 'warning') {\n      state.counters.warnings += 1;\n    }\n\n    if (level === 'error') {\n      state.counters.errors += 1;\n    }\n\n    const consoleMethod = level === 'error' ? 'error' : level === 'warning' ? 'warn' : 'info';\n    console[consoleMethod](`[Enter to Newline] ${operation}: ${message}`, context);\n\n    renderCounters();\n    renderLogs();\n\n    if (level === 'error' && state.ui.activityDetails) {\n      state.ui.activityDetails.open = true;\n    }\n  };\n\n  const reportError = (operation, error, context = {}) => {\n    const normalizedError = error instanceof Error ? error : new Error(String(error));\n    writeLog('error', operation, normalizedError.message || 'An unknown error occurred.', {\n      ...context,\n      errorName: normalizedError.name,\n      stack: truncate(normalizedError.stack || '', 300)\n    });\n    setStatus('error', `${operation} failed. Open Activity for details.`);\n  };\n\n  const isAriaDisabled = element => element.getAttribute('aria-disabled') === 'true';\n\n  const isEligibleTextarea = element => element instanceof HTMLTextAreaElement && !element.disabled && !element.readOnly && !isAriaDisabled(element);\n\n  const isEligibleContenteditable = element => {\n    if (!(element instanceof HTMLElement) || isAriaDisabled(element)) {\n      return false;\n    }\n\n    return element.isContentEditable || element.getAttribute('contenteditable') === 'true';\n  };\n\n  const findNestedEditable = container => {\n    if (!(container instanceof Element)) {\n      return null;\n    }\n\n    const candidates = container.querySelectorAll('textarea, [contenteditable=\"true\"]');\n\n    for (const candidate of candidates) {\n      if (isEligibleTextarea(candidate) || isEligibleContenteditable(candidate)) {\n        return candidate;\n      }\n    }\n\n    return null;\n  };\n\n  const collectPathElements = event => {\n    const path = typeof event.composedPath === 'function' ? event.composedPath() : [event.target];\n    return path.filter(node => node instanceof Element);\n  };\n\n  const matchLocator = (element, locator) => {\n    try {\n      if (element.matches(locator.selector)) {\n        return element;\n      }\n\n      return element.closest(locator.selector);\n    } catch (error) {\n      reportError('locator.match', error, {\n        locatorId: locator.id,\n        selector: locator.selector,\n        description: locator.description,\n        element: describeElement(element)\n      });\n      return null;\n    }\n  };\n\n  const resolveEditableTarget = event => {\n    const pathElements = collectPathElements(event);\n    const visited = new Set();\n    let unsupportedMatch = null;\n\n    for (const pathElement of pathElements) {\n      for (const locator of locators.editable) {\n        const candidate = matchLocator(pathElement, locator);\n\n        if (!candidate || visited.has(candidate)) {\n          continue;\n        }\n\n        visited.add(candidate);\n\n        if (isEligibleTextarea(candidate)) {\n          return { element: candidate, locator };\n        }\n\n        if (isEligibleContenteditable(candidate)) {\n          return { element: candidate, locator };\n        }\n\n        const nestedEditable = findNestedEditable(candidate);\n        if (nestedEditable) {\n          return {\n            element: nestedEditable,\n            locator,\n            resolvedFromContainer: candidate\n          };\n        }\n\n        unsupportedMatch ||= { element: candidate, locator };\n      }\n    }\n\n    return { element: null, unsupportedMatch };\n  };\n\n  const focusElement = element => {\n    try {\n      element.focus({ preventScroll: true });\n    } catch (error) {\n      element.focus();\n      writeLog('warning', 'editable.focus', 'Focus options were not accepted; focus() was called without options.', {\n        target: describeElement(element),\n        error: error instanceof Error ? error.message : String(error)\n      }, {\n        throttleKey: 'focus-options-fallback',\n        throttleMs: 10000\n      });\n    }\n  };\n\n  const dispatchInputEvent = (element, inputType, data) => {\n    try {\n      const inputEvent = new InputEvent('input', {\n        bubbles: true,\n        composed: true,\n        cancelable: false,\n        inputType,\n        data\n      });\n      element.dispatchEvent(inputEvent);\n      return 'InputEvent';\n    } catch (error) {\n      const fallbackEvent = new Event('input', { bubbles: true, composed: true });\n      element.dispatchEvent(fallbackEvent);\n      writeLog('warning', 'input.dispatch', 'InputEvent construction failed; a generic input event was dispatched instead.', {\n        target: describeElement(element),\n        inputType,\n        error: error instanceof Error ? error.message : String(error)\n      }, {\n        throttleKey: 'input-event-fallback',\n        throttleMs: 10000\n      });\n      return 'Event';\n    }\n  };\n\n  const insertTextareaNewline = textarea => {\n    const start = textarea.selectionStart ?? textarea.value.length;\n    const end = textarea.selectionEnd ?? textarea.value.length;\n    const previousLength = textarea.value.length;\n\n    focusElement(textarea);\n    textarea.setRangeText('\\n', start, end, 'end');\n    const eventType = dispatchInputEvent(textarea, 'insertLineBreak', '\\n');\n\n    const expectedLength = previousLength - (end - start) + 1;\n    if (textarea.value.length !== expectedLength || textarea.value.charAt(start) !== '\\n') {\n      throw new Error('The textarea value did not contain the expected newline after setRangeText completed.');\n    }\n\n    return {\n      strategy: 'HTMLTextAreaElement.setRangeText',\n      inputEvent: eventType,\n      selectionStart: start,\n      selectionEnd: end\n    };\n  };\n\n  const ensureSelectionInside = editable => {\n    const selection = window.getSelection();\n\n    if (!selection) {\n      throw new Error('window.getSelection() returned no Selection object.');\n    }\n\n    if (selection.rangeCount > 0) {\n      const currentRange = selection.getRangeAt(0);\n      if (editable.contains(currentRange.commonAncestorContainer)) {\n        return { selection, range: currentRange };\n      }\n    }\n\n    const range = document.createRange();\n    range.selectNodeContents(editable);\n    range.collapse(false);\n    selection.removeAllRanges();\n    selection.addRange(range);\n\n    return { selection, range };\n  };\n\n  const insertRangeNewline = editable => {\n    const { selection, range } = ensureSelectionInside(editable);\n\n    range.deleteContents();\n\n    const lineBreak = document.createElement('br');\n    range.insertNode(lineBreak);\n\n    if (!lineBreak.nextSibling) {\n      const trailingBreak = document.createElement('br');\n      lineBreak.parentNode?.insertBefore(trailingBreak, lineBreak.nextSibling);\n    }\n\n    const caretRange = document.createRange();\n    caretRange.setStartAfter(lineBreak);\n    caretRange.collapse(true);\n    selection.removeAllRanges();\n    selection.addRange(caretRange);\n\n    dispatchInputEvent(editable, 'insertLineBreak', null);\n\n    if (!editable.contains(lineBreak)) {\n      throw new Error('The fallback range insertion did not leave the line break inside the editable element.');\n    }\n\n    return {\n      strategy: 'Range.insertNode',\n      inputEvent: 'synthetic input event'\n    };\n  };\n\n  const insertContenteditableNewline = editable => {\n    focusElement(editable);\n    ensureSelectionInside(editable);\n\n    if (typeof document.execCommand === 'function') {\n      try {\n        const accepted = document.execCommand('insertLineBreak', false, null);\n        if (accepted) {\n          return {\n            strategy: 'document.execCommand(insertLineBreak)',\n            inputEvent: 'browser-managed'\n          };\n        }\n      } catch (error) {\n        writeLog('warning', 'newline.execCommand', 'The browser rejected the insertLineBreak command; range insertion will be used.', {\n          target: describeElement(editable),\n          error: error instanceof Error ? error.message : String(error)\n        }, {\n          throttleKey: 'exec-command-failure',\n          throttleMs: 5000\n        });\n      }\n    }\n\n    return insertRangeNewline(editable);\n  };\n\n  const insertNewline = resolvedTarget => {\n    const editable = resolvedTarget.element;\n\n    if (isEligibleTextarea(editable)) {\n      return insertTextareaNewline(editable);\n    }\n\n    if (isEligibleContenteditable(editable)) {\n      return insertContenteditableNewline(editable);\n    }\n\n    throw new Error('The resolved target is no longer editable.');\n  };\n\n  const getAssociatedForm = editable => {\n    if (editable instanceof HTMLTextAreaElement && editable.form) {\n      return editable.form;\n    }\n\n    let current = editable;\n\n    while (current instanceof Element) {\n      const form = current.closest('form');\n      if (form) {\n        return form;\n      }\n\n      const root = current.getRootNode();\n      current = root instanceof ShadowRoot ? root.host : null;\n    }\n\n    return null;\n  };\n\n  const isActionableControl = element => {\n    if (!(element instanceof HTMLElement)) {\n      return false;\n    }\n\n    if ('disabled' in element && element.disabled) {\n      return false;\n    }\n\n    if (element.hidden || isAriaDisabled(element)) {\n      return false;\n    }\n\n    const style = getComputedStyle(element);\n    return style.display !== 'none' && style.visibility !== 'hidden';\n  };\n\n  const findSubmitControls = form => {\n    const controls = Array.from(form.querySelectorAll('button[type=\"submit\"], input[type=\"submit\"], button:not([type])'));\n    return {\n      all: controls,\n      actionable: controls.find(isActionableControl) || null\n    };\n  };\n\n  const collectSearchRoots = (editable, form) => {\n    const roots = [];\n    const addRoot = root => {\n      if (root && !roots.includes(root) && typeof root.querySelector === 'function') {\n        roots.push(root);\n      }\n    };\n\n    addRoot(form);\n    addRoot(editable.getRootNode());\n    addRoot(document);\n\n    return roots;\n  };\n\n  const resolveSendAction = editable => {\n    const form = getAssociatedForm(editable);\n\n    if (form) {\n      const submitControls = findSubmitControls(form);\n\n      if (typeof form.requestSubmit === 'function' && (submitControls.actionable || submitControls.all.length === 0)) {\n        return {\n          action: {\n            id: 'form-request-submit',\n            description: submitControls.actionable\n              ? 'submit the nearest form through requestSubmit with its enabled submit control'\n              : 'submit the nearest form through requestSubmit because the form has no explicit submit control',\n            target: submitControls.actionable || form,\n            execute: () => submitControls.actionable ? form.requestSubmit(submitControls.actionable) : form.requestSubmit()\n          },\n          diagnostics: {\n            form: describeElement(form),\n            explicitSubmitControlCount: submitControls.all.length\n          }\n        };\n      }\n\n      if (submitControls.actionable) {\n        return {\n          action: {\n            id: 'form-submit-control',\n            description: 'activate the enabled submit control in the nearest form',\n            target: submitControls.actionable,\n            execute: () => submitControls.actionable.click()\n          },\n          diagnostics: {\n            form: describeElement(form),\n            explicitSubmitControlCount: submitControls.all.length\n          }\n        };\n      }\n    }\n\n    const searchRoots = collectSearchRoots(editable, form);\n    const ambiguities = [];\n\n    for (const locator of locators.send) {\n      const candidates = [];\n      const seen = new Set();\n\n      for (const root of searchRoots) {\n        let matches = [];\n\n        try {\n          matches = Array.from(root.querySelectorAll(locator.selector));\n        } catch (error) {\n          reportError('send.locator', error, {\n            locatorId: locator.id,\n            selector: locator.selector,\n            description: locator.description\n          });\n          continue;\n        }\n\n        for (const candidate of matches) {\n          if (!seen.has(candidate) && isActionableControl(candidate)) {\n            seen.add(candidate);\n            candidates.push(candidate);\n          }\n        }\n      }\n\n      if (candidates.length === 1) {\n        const candidate = candidates[0];\n        return {\n          action: {\n            id: locator.id,\n            description: locator.description,\n            target: candidate,\n            execute: () => candidate.click()\n          },\n          diagnostics: {\n            locatorId: locator.id,\n            candidateCount: 1\n          }\n        };\n      }\n\n      if (candidates.length > 1) {\n        ambiguities.push({\n          locatorId: locator.id,\n          selector: locator.selector,\n          candidateCount: candidates.length,\n          candidates: candidates.slice(0, 4).map(describeElement)\n        });\n      }\n    }\n\n    return {\n      action: null,\n      diagnostics: {\n        form: describeElement(form),\n        ambiguities\n      }\n    };\n  };\n\n  const isPlainEnter = event => event.key === 'Enter'\n    && !event.shiftKey\n    && !event.ctrlKey\n    && !event.metaKey\n    && !event.altKey;\n\n  const isSendShortcut = event => {\n    if (event.key !== 'Enter' || event.shiftKey || event.altKey) {\n      return false;\n    }\n\n    return isMac\n      ? event.metaKey && !event.ctrlKey\n      : event.ctrlKey && !event.metaKey;\n  };\n\n  const handlePlainEnter = (event, resolvedTarget) => {\n    event.preventDefault();\n    event.stopImmediatePropagation();\n\n    const targetDescription = describeElement(resolvedTarget.element);\n\n    writeLog('info', 'newline.intercept', 'Plain Enter was intercepted for newline insertion.', {\n      target: targetDescription,\n      locatorId: resolvedTarget.locator.id,\n      locator: resolvedTarget.locator.selector,\n      resolvedFromContainer: describeElement(resolvedTarget.resolvedFromContainer)\n    });\n\n    try {\n      const result = insertNewline(resolvedTarget);\n      state.counters.newlines += 1;\n      renderCounters();\n      setStatus('success', `New line inserted using ${result.strategy}.`);\n      writeLog('info', 'newline.insert', 'A newline was inserted successfully.', {\n        target: targetDescription,\n        locatorId: resolvedTarget.locator.id,\n        strategy: result.strategy,\n        inputEvent: result.inputEvent,\n        selectionStart: result.selectionStart,\n        selectionEnd: result.selectionEnd\n      });\n    } catch (error) {\n      reportError('newline.insert', error, {\n        target: targetDescription,\n        locatorId: resolvedTarget.locator.id,\n        locator: resolvedTarget.locator.selector,\n        locatorDescription: resolvedTarget.locator.description\n      });\n    }\n  };\n\n  const handleSendShortcut = (event, resolvedTarget) => {\n    let resolution = null;\n\n    try {\n      resolution = resolveSendAction(resolvedTarget.element);\n    } catch (error) {\n      reportError('send.resolve', error, {\n        target: describeElement(resolvedTarget.element),\n        attemptedLocators: locators.send.map(locator => `${locator.id}:${locator.selector}`).join(' | ')\n      });\n      return;\n    }\n\n    const action = resolution.action;\n\n    if (!action) {\n      writeLog('warning', 'send.resolve', `No unambiguous send action was found. ${sendShortcutLabel} was passed to the page unchanged.`, {\n        target: describeElement(resolvedTarget.element),\n        expectedForm: 'nearest ancestor form with requestSubmit or an enabled submit control',\n        attemptedLocators: locators.send.map(locator => `${locator.id}:${locator.selector}`).join(' | '),\n        resolutionDiagnostics: resolution.diagnostics\n      }, {\n        throttleKey: `send-action-missing:${describeElement(resolvedTarget.element)}`,\n        throttleMs: 5000\n      });\n      setStatus('warning', 'No unambiguous send control was found. The shortcut was passed to the page.');\n      return;\n    }\n\n    event.preventDefault();\n    event.stopImmediatePropagation();\n\n    try {\n      action.execute();\n      state.counters.sends += 1;\n      renderCounters();\n      setStatus('success', `Send command issued using ${action.description}.`);\n      writeLog('info', 'send.execute', 'The send action was invoked successfully.', {\n        shortcut: sendShortcutLabel,\n        actionId: action.id,\n        actionDescription: action.description,\n        target: describeElement(action.target),\n        editor: describeElement(resolvedTarget.element)\n      });\n    } catch (error) {\n      reportError('send.execute', error, {\n        shortcut: sendShortcutLabel,\n        actionId: action.id,\n        actionDescription: action.description,\n        target: describeElement(action.target),\n        editor: describeElement(resolvedTarget.element)\n      });\n    }\n  };\n\n  const keydownHandler = event => {\n    if (!state.active || state.destroyed || event.defaultPrevented || event.isComposing || event.keyCode === 229) {\n      return;\n    }\n\n    if (!isPlainEnter(event) && !isSendShortcut(event)) {\n      return;\n    }\n\n    try {\n      const resolvedTarget = resolveEditableTarget(event);\n\n      if (!resolvedTarget.element) {\n        const unsupported = resolvedTarget.unsupportedMatch;\n\n        if (unsupported && !state.warnedElements.has(unsupported.element)) {\n          state.warnedElements.add(unsupported.element);\n          writeLog('warning', 'editable.resolve', 'A textbox-like element matched a locator but no supported editable surface was found, so the key event was not changed.', {\n            matchedElement: describeElement(unsupported.element),\n            locatorId: unsupported.locator.id,\n            locator: unsupported.locator.selector,\n            locatorDescription: unsupported.locator.description,\n            expected: 'an enabled textarea or a contenteditable=true element'\n          });\n          setStatus('warning', 'A textbox-like control was detected, but it is not safely editable.');\n        }\n        return;\n      }\n\n      if (isPlainEnter(event)) {\n        handlePlainEnter(event, resolvedTarget);\n        return;\n      }\n\n      handleSendShortcut(event, resolvedTarget);\n    } catch (error) {\n      reportError('keyboard.handle', error, {\n        key: event.key,\n        target: describeElement(event.target),\n        composedPathLength: typeof event.composedPath === 'function' ? event.composedPath().length : 'unavailable'\n      });\n    }\n  };\n\n  const detectDarkTheme = () => {\n    const documentDark = document.documentElement.classList.contains('dark') || document.body?.classList.contains('dark');\n    return Boolean(documentDark || state.themeQuery?.matches);\n  };\n\n  const applyTheme = () => {\n    if (!state.host) {\n      return;\n    }\n\n    state.host.dataset.theme = detectDarkTheme() ? 'dark' : 'light';\n  };\n\n  const loadSavedPosition = () => {\n    try {\n      const value = localStorage.getItem(POSITION_STORAGE_KEY);\n      if (!value) {\n        return null;\n      }\n\n      const parsed = JSON.parse(value);\n      if (!Number.isFinite(parsed.left) || !Number.isFinite(parsed.top)) {\n        return null;\n      }\n\n      return parsed;\n    } catch (error) {\n      writeLog('warning', 'position.load', 'The saved panel position could not be read. The default position will be used.', {\n        storageKey: POSITION_STORAGE_KEY,\n        error: error instanceof Error ? error.message : String(error)\n      }, {\n        throttleKey: 'position-load-failure',\n        throttleMs: 10000\n      });\n      return null;\n    }\n  };\n\n  const savePosition = () => {\n    if (!state.host) {\n      return;\n    }\n\n    const rect = state.host.getBoundingClientRect();\n\n    try {\n      localStorage.setItem(POSITION_STORAGE_KEY, JSON.stringify({\n        left: Math.round(rect.left),\n        top: Math.round(rect.top)\n      }));\n    } catch (error) {\n      writeLog('warning', 'position.save', 'The panel position could not be saved.', {\n        storageKey: POSITION_STORAGE_KEY,\n        error: error instanceof Error ? error.message : String(error)\n      }, {\n        throttleKey: 'position-save-failure',\n        throttleMs: 10000\n      });\n    }\n  };\n\n  const clampPanelPosition = (left, top) => {\n    if (!state.host) {\n      return { left, top };\n    }\n\n    const rect = state.host.getBoundingClientRect();\n    const margin = 8;\n    const maximumLeft = Math.max(margin, window.innerWidth - rect.width - margin);\n    const maximumTop = Math.max(margin, window.innerHeight - rect.height - margin);\n\n    return {\n      left: Math.min(Math.max(margin, left), maximumLeft),\n      top: Math.min(Math.max(margin, top), maximumTop)\n    };\n  };\n\n  const positionPanel = position => {\n    if (!state.host || !position) {\n      return;\n    }\n\n    const clamped = clampPanelPosition(position.left, position.top);\n    state.host.style.left = `${clamped.left}px`;\n    state.host.style.top = `${clamped.top}px`;\n    state.host.style.right = 'auto';\n  };\n\n  const pointerDownHandler = event => {\n    const handle = event.target instanceof Element ? event.target.closest('[data-drag-handle]') : null;\n    const interactive = event.target instanceof Element ? event.target.closest('button, summary, a, input, select, textarea') : null;\n\n    if (!handle || interactive || event.button !== 0 || !state.host) {\n      return;\n    }\n\n    const rect = state.host.getBoundingClientRect();\n    state.drag = {\n      pointerId: event.pointerId,\n      startX: event.clientX,\n      startY: event.clientY,\n      left: rect.left,\n      top: rect.top\n    };\n\n    state.host.style.left = `${rect.left}px`;\n    state.host.style.top = `${rect.top}px`;\n    state.host.style.right = 'auto';\n    handle.setPointerCapture?.(event.pointerId);\n    event.preventDefault();\n  };\n\n  const pointerMoveHandler = event => {\n    if (!state.drag || event.pointerId !== state.drag.pointerId || !state.host) {\n      return;\n    }\n\n    const nextPosition = clampPanelPosition(\n      state.drag.left + event.clientX - state.drag.startX,\n      state.drag.top + event.clientY - state.drag.startY\n    );\n\n    state.host.style.left = `${nextPosition.left}px`;\n    state.host.style.top = `${nextPosition.top}px`;\n  };\n\n  const pointerUpHandler = event => {\n    if (!state.drag || event.pointerId !== state.drag.pointerId) {\n      return;\n    }\n\n    state.drag = null;\n    savePosition();\n    writeLog('info', 'panel.move', 'The control panel was moved and its position was saved.', {\n      position: state.host ? {\n        left: Math.round(state.host.getBoundingClientRect().left),\n        top: Math.round(state.host.getBoundingClientRect().top)\n      } : 'unavailable'\n    });\n  };\n\n  const createUi = () => {\n    const host = document.createElement('div');\n    host.id = HOST_ID;\n    host.setAttribute('data-enter-to-newline-version', VERSION);\n    host.style.position = 'fixed';\n    host.style.top = '12px';\n    host.style.right = '12px';\n    host.style.zIndex = '2147483647';\n\n    const shadow = host.attachShadow({ mode: 'open' });\n\n    shadow.innerHTML = `\n      <style>\n        :host {\n          all: initial;\n          color-scheme: light;\n          --window-bg: #f3f3f3;\n          --window-panel: #ffffff;\n          --window-border: #8b8b8b;\n          --window-border-soft: #c8c8c8;\n          --window-text: #111111;\n          --window-muted: #5b5b5b;\n          --window-accent: #0f6cbd;\n          --window-success: #107c10;\n          --window-warning: #8a5800;\n          --window-error: #a4262c;\n          --window-button: #e8e8e8;\n          --window-button-hover: #dddddd;\n          display: block;\n          font-family: \"Segoe UI\", Tahoma, Arial, sans-serif;\n          font-size: 13px;\n          line-height: 1.35;\n        }\n\n        :host([data-theme=\"dark\"]) {\n          color-scheme: dark;\n          --window-bg: #252525;\n          --window-panel: #1f1f1f;\n          --window-border: #6a6a6a;\n          --window-border-soft: #444444;\n          --window-text: #f1f1f1;\n          --window-muted: #b9b9b9;\n          --window-accent: #60a5fa;\n          --window-success: #6ccb5f;\n          --window-warning: #f0b429;\n          --window-error: #ff8085;\n          --window-button: #343434;\n          --window-button-hover: #424242;\n        }\n\n        * {\n          box-sizing: border-box;\n        }\n\n        .window {\n          width: min(390px, calc(100vw - 16px));\n          max-height: min(640px, calc(100vh - 16px));\n          overflow: hidden;\n          border: 1px solid var(--window-border);\n          border-radius: 5px;\n          background: var(--window-bg);\n          color: var(--window-text);\n          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);\n        }\n\n        .titlebar {\n          display: flex;\n          align-items: center;\n          min-height: 34px;\n          padding: 5px 5px 5px 9px;\n          border-bottom: 1px solid var(--window-border-soft);\n          background: var(--window-panel);\n          cursor: move;\n          user-select: none;\n          touch-action: none;\n        }\n\n        .titlebar__indicator {\n          width: 9px;\n          height: 9px;\n          margin-right: 8px;\n          border-radius: 50%;\n          background: var(--window-success);\n          box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.18);\n        }\n\n        .titlebar__title {\n          min-width: 0;\n          flex: 1;\n          overflow: hidden;\n          font-weight: 600;\n          text-overflow: ellipsis;\n          white-space: nowrap;\n        }\n\n        button {\n          font: inherit;\n        }\n\n        .close-button {\n          width: 28px;\n          height: 24px;\n          border: 1px solid transparent;\n          border-radius: 3px;\n          background: transparent;\n          color: var(--window-text);\n          cursor: pointer;\n          line-height: 20px;\n        }\n\n        .close-button:hover,\n        .close-button:focus-visible {\n          border-color: var(--window-border-soft);\n          background: var(--window-error);\n          color: #ffffff;\n          outline: none;\n        }\n\n        .body {\n          max-height: calc(min(640px, 100vh - 16px) - 35px);\n          overflow: auto;\n          padding: 12px;\n        }\n\n        .lead {\n          margin: 0 0 10px;\n        }\n\n        .shortcut-grid {\n          display: grid;\n          grid-template-columns: max-content 1fr;\n          gap: 6px 10px;\n          margin: 0 0 10px;\n          padding: 9px;\n          border: 1px solid var(--window-border-soft);\n          background: var(--window-panel);\n        }\n\n        kbd {\n          min-width: 76px;\n          padding: 2px 6px;\n          border: 1px solid var(--window-border);\n          border-radius: 3px;\n          background: var(--window-button);\n          color: var(--window-text);\n          font: 12px/1.4 \"Segoe UI\", Tahoma, Arial, sans-serif;\n          text-align: center;\n          box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.12);\n        }\n\n        .shortcut-description {\n          align-self: center;\n        }\n\n        .status {\n          margin: 0 0 8px;\n          padding: 7px 8px;\n          border-left: 3px solid var(--window-accent);\n          background: var(--window-panel);\n          color: var(--window-text);\n        }\n\n        .status[data-level=\"success\"] {\n          border-left-color: var(--window-success);\n        }\n\n        .status[data-level=\"warning\"] {\n          border-left-color: var(--window-warning);\n        }\n\n        .status[data-level=\"error\"] {\n          border-left-color: var(--window-error);\n        }\n\n        .counters {\n          margin: 0 0 8px;\n          color: var(--window-muted);\n          font-size: 12px;\n        }\n\n        details {\n          margin: 0 0 10px;\n          border: 1px solid var(--window-border-soft);\n          background: var(--window-panel);\n        }\n\n        summary {\n          padding: 7px 8px;\n          cursor: pointer;\n          font-weight: 600;\n          user-select: none;\n        }\n\n        .log-list {\n          max-height: 210px;\n          margin: 0;\n          overflow: auto;\n          padding: 0 8px 8px;\n          list-style: none;\n        }\n\n        .log-entry {\n          padding: 6px 0;\n          border-top: 1px solid var(--window-border-soft);\n        }\n\n        .log-entry__header {\n          color: var(--window-muted);\n          font-size: 11px;\n          font-weight: 600;\n        }\n\n        .log-entry--warning .log-entry__header {\n          color: var(--window-warning);\n        }\n\n        .log-entry--error .log-entry__header {\n          color: var(--window-error);\n        }\n\n        .log-entry__message {\n          margin-top: 2px;\n        }\n\n        .log-entry__context {\n          margin-top: 2px;\n          color: var(--window-muted);\n          font-family: Consolas, \"Courier New\", monospace;\n          font-size: 10px;\n          overflow-wrap: anywhere;\n        }\n\n        .actions {\n          display: flex;\n          justify-content: flex-end;\n        }\n\n        .deactivate-button {\n          min-width: 92px;\n          min-height: 30px;\n          padding: 4px 12px;\n          border: 1px solid var(--window-border);\n          border-radius: 3px;\n          background: var(--window-button);\n          color: var(--window-text);\n          cursor: pointer;\n        }\n\n        .deactivate-button:hover,\n        .deactivate-button:focus-visible {\n          background: var(--window-button-hover);\n          outline: 2px solid var(--window-accent);\n          outline-offset: 1px;\n        }\n      </style>\n      <section class=\"window\" role=\"dialog\" aria-label=\"Enter to Newline mode controls\">\n        <header class=\"titlebar\" data-drag-handle>\n          <span class=\"titlebar__indicator\" aria-hidden=\"true\"></span>\n          <span class=\"titlebar__title\">Enter to Newline</span>\n          <button class=\"close-button\" type=\"button\" data-action=\"deactivate\" aria-label=\"Close this panel and deactivate Enter to Newline mode\" title=\"Close and deactivate\">x</button>\n        </header>\n        <div class=\"body\">\n          <p class=\"lead\">Mode is active. Close this panel, press Deactivate, or run the bookmarklet again to restore the page's original keyboard behavior.</p>\n          <div class=\"shortcut-grid\" aria-label=\"Keyboard behavior\">\n            <kbd>Enter</kbd><span class=\"shortcut-description\">Insert a new line</span>\n            <kbd>${sendShortcutLabel}</kbd><span class=\"shortcut-description\">Send through the nearest reliable page action</span>\n          </div>\n          <div class=\"status\" data-level=\"info\" role=\"status\" aria-live=\"polite\">Ready. Focus an editable text area or rich-text editor.</div>\n          <div class=\"counters\">New lines: 0 | Sends: 0 | Warnings: 0 | Errors: 0</div>\n          <details>\n            <summary>Activity and diagnostics</summary>\n            <ol class=\"log-list\" aria-label=\"Recent activity\"></ol>\n          </details>\n          <div class=\"actions\">\n            <button class=\"deactivate-button\" type=\"button\" data-action=\"deactivate\">Deactivate</button>\n          </div>\n        </div>\n      </section>\n    `;\n\n    document.documentElement.appendChild(host);\n\n    state.host = host;\n    state.shadow = shadow;\n    state.ui.status = shadow.querySelector('.status');\n    state.ui.counters = shadow.querySelector('.counters');\n    state.ui.logList = shadow.querySelector('.log-list');\n    state.ui.activityDetails = shadow.querySelector('details');\n\n    for (const button of shadow.querySelectorAll('[data-action=\"deactivate\"]')) {\n      listen(button, 'click', () => destroy({ reason: 'user-interface' }));\n    }\n\n    listen(shadow, 'pointerdown', pointerDownHandler);\n    listen(window, 'pointermove', pointerMoveHandler, { capture: true });\n    listen(window, 'pointerup', pointerUpHandler, { capture: true });\n    listen(window, 'pointercancel', pointerUpHandler, { capture: true });\n\n    const savedPosition = loadSavedPosition();\n    requestAnimationFrame(() => positionPanel(savedPosition));\n\n    applyTheme();\n    renderCounters();\n    renderLogs();\n  };\n\n  const destroy = ({ reason = 'unknown' } = {}) => {\n    if (state.destroyed) {\n      return;\n    }\n\n    state.destroyed = true;\n    state.active = false;\n\n    writeLog('info', 'lifecycle.deactivate', 'Enter to Newline mode is being deactivated and all installed resources will be removed.', {\n      reason,\n      cleanupTaskCount: state.cleanupTasks.length,\n      version: VERSION\n    });\n\n    const cleanupErrors = [];\n\n    while (state.cleanupTasks.length) {\n      const cleanup = state.cleanupTasks.pop();\n      try {\n        cleanup();\n      } catch (error) {\n        cleanupErrors.push(error);\n      }\n    }\n\n    state.host?.remove();\n    state.host = null;\n    state.shadow = null;\n\n    if (window[GLOBAL_KEY] === controller) {\n      delete window[GLOBAL_KEY];\n    }\n\n    if (cleanupErrors.length) {\n      console.error('[Enter to Newline] One or more cleanup operations failed.', cleanupErrors);\n    }\n\n    console.info(`[Enter to Newline] Mode deactivated. reason=${reason}; cleanupErrors=${cleanupErrors.length}`);\n  };\n\n  const setup = () => {\n    try {\n      createUi();\n      listen(window, 'keydown', keydownHandler, { capture: true });\n      listen(window, 'resize', () => {\n        if (!state.host) {\n          return;\n        }\n        const rect = state.host.getBoundingClientRect();\n        positionPanel({ left: rect.left, top: rect.top });\n      });\n\n      state.themeQuery = window.matchMedia?.('(prefers-color-scheme: dark)') || null;\n      if (state.themeQuery) {\n        if (typeof state.themeQuery.addEventListener === 'function') {\n          listen(state.themeQuery, 'change', applyTheme);\n        } else if (typeof state.themeQuery.addListener === 'function') {\n          state.themeQuery.addListener(applyTheme);\n          addCleanup(() => state.themeQuery?.removeListener?.(applyTheme));\n        }\n      }\n\n      const healthInterval = window.setInterval(() => {\n        if (!state.host?.isConnected) {\n          writeLog('error', 'lifecycle.health', 'The control panel was removed from the document while the keyboard handler was still active. The mode will deactivate to avoid invisible behavior.', {\n            expectedHostId: HOST_ID,\n            expectedLocator: `#${HOST_ID}`\n          });\n          destroy({ reason: 'host-removed' });\n          return;\n        }\n\n        applyTheme();\n      }, 2000);\n\n      addCleanup(() => window.clearInterval(healthInterval));\n\n      writeLog('info', 'lifecycle.activate', 'Enter to Newline mode was activated successfully.', {\n        version: VERSION,\n        sendShortcut: sendShortcutLabel,\n        editableLocators: locators.editable.map(locator => `${locator.id}:${locator.selector}`).join(' | '),\n        sendLocators: locators.send.map(locator => `${locator.id}:${locator.selector}`).join(' | ')\n      });\n      setStatus('success', `Active. Enter inserts a new line; ${sendShortcutLabel} sends.`);\n    } catch (error) {\n      reportError('lifecycle.activate', error, {\n        expectedHostId: HOST_ID,\n        expectedDocumentRoot: 'document.documentElement'\n      });\n      destroy({ reason: 'activation-failed' });\n    }\n  };\n\n  setup();\n})();\n";
+    const installLink = document.getElementById('install');
+    const status = document.getElementById('status');
+    installLink.href = bookmarklet;
+    document.getElementById('copy').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(bookmarklet);
+        status.textContent = 'Bookmarklet URL copied.';
+      } catch (error) {
+        const field = document.getElementById('bookmarklet');
+        field.focus();
+        field.select();
+        const copied = document.execCommand('copy');
+        status.textContent = copied ? 'Bookmarklet URL copied.' : 'Copy failed. Select the URL manually.';
+      }
+    });
+  </script>
+</body>
+</html>

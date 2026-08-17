@@ -1,0 +1,1361 @@
+javascript:(() => {
+  'use strict';
+
+  const GLOBAL_KEY = '__enterToNewlineBookmarkletController__';
+  const VERSION = '1.0.0';
+  const HOST_ID = 'enter-to-newline-bookmarklet-host';
+  const POSITION_STORAGE_KEY = 'enter-to-newline-bookmarklet-position-v1';
+  const MAX_LOG_ENTRIES = 40;
+  const DISPLAYED_LOG_ENTRIES = 12;
+
+  const existingController = window[GLOBAL_KEY];
+
+  if (existingController && typeof existingController.destroy === 'function') {
+    try {
+      existingController.destroy({ reason: 'bookmarklet-toggle' });
+    } catch (error) {
+      console.error('[Enter to Newline] Failed to deactivate the existing controller.', error);
+      document.getElementById(HOST_ID)?.remove();
+      delete window[GLOBAL_KEY];
+    }
+    return;
+  }
+
+  document.getElementById(HOST_ID)?.remove();
+
+  const platform = navigator.userAgentData?.platform || navigator.platform || '';
+  const isMac = /mac|iphone|ipad|ipod/i.test(platform);
+  const sendShortcutLabel = isMac ? 'Cmd+Enter' : 'Ctrl+Enter';
+
+  const locators = Object.freeze({
+    editable: Object.freeze([
+      Object.freeze({
+        id: 'textarea',
+        selector: 'textarea',
+        description: 'an enabled textarea element'
+      }),
+      Object.freeze({
+        id: 'contenteditable',
+        selector: '[contenteditable="true"]',
+        description: 'an element explicitly marked contenteditable=true'
+      }),
+      Object.freeze({
+        id: 'lexical-editor',
+        selector: '[data-lexical-editor="true"]',
+        description: 'a Lexical editor root or container'
+      }),
+      Object.freeze({
+        id: 'textbox-role',
+        selector: '[role="textbox"]',
+        description: 'an element exposing the textbox accessibility role'
+      })
+    ]),
+    send: Object.freeze([
+      Object.freeze({
+        id: 'chatgpt-send-button',
+        selector: 'button[data-testid="send-button"]',
+        description: 'the ChatGPT send button identified by data-testid=send-button'
+      }),
+      Object.freeze({
+        id: 'composer-submit-button',
+        selector: 'button[data-testid="composer-submit-button"]',
+        description: 'a composer submit button identified by data-testid=composer-submit-button'
+      }),
+      Object.freeze({
+        id: 'accessible-send-button',
+        selector: 'button[aria-label="Send" i], button[aria-label^="Send " i], button[aria-label*="Send message" i], button[aria-label*="Send prompt" i]',
+        description: 'an enabled button whose accessible label describes a send action'
+      })
+    ])
+  });
+
+  const state = {
+    active: true,
+    destroyed: false,
+    host: null,
+    shadow: null,
+    ui: {},
+    cleanupTasks: [],
+    logEntries: [],
+    sequence: 0,
+    counters: {
+      newlines: 0,
+      sends: 0,
+      warnings: 0,
+      errors: 0
+    },
+    drag: null,
+    warnedElements: new WeakSet(),
+    repeatedLogTimes: new Map(),
+    themeQuery: null
+  };
+
+  const controller = {
+    version: VERSION,
+    destroy: options => destroy(options),
+    getDiagnostics: () => ({
+      version: VERSION,
+      active: state.active,
+      counters: { ...state.counters },
+      logs: state.logEntries.map(entry => ({ ...entry }))
+    })
+  };
+
+  window[GLOBAL_KEY] = controller;
+
+  const addCleanup = cleanup => {
+    state.cleanupTasks.push(cleanup);
+  };
+
+  const listen = (target, type, handler, options) => {
+    target.addEventListener(type, handler, options);
+    addCleanup(() => target.removeEventListener(type, handler, options));
+  };
+
+  const truncate = (value, length = 120) => {
+    const text = String(value ?? '');
+    return text.length <= length ? text : `${text.slice(0, length - 1)}...`;
+  };
+
+  const describeElement = element => {
+    if (!(element instanceof Element)) {
+      return 'no element';
+    }
+
+    const attributes = [
+      ['id', element.id],
+      ['role', element.getAttribute('role')],
+      ['contenteditable', element.getAttribute('contenteditable')],
+      ['aria-label', element.getAttribute('aria-label')],
+      ['data-testid', element.getAttribute('data-testid')],
+      ['data-lexical-editor', element.getAttribute('data-lexical-editor')]
+    ]
+      .filter(([, value]) => value)
+      .map(([name, value]) => `${name}="${truncate(value, 80)}"`);
+
+    const classNames = typeof element.className === 'string'
+      ? element.className.trim().split(/\s+/).filter(Boolean).slice(0, 4)
+      : [];
+
+    const classDescription = classNames.length ? ` class="${classNames.join(' ')}"` : '';
+    const attributeDescription = attributes.length ? ` ${attributes.join(' ')}` : '';
+
+    return `<${element.tagName.toLowerCase()}${attributeDescription}${classDescription}>`;
+  };
+
+  const serializeContext = context => {
+    const entries = Object.entries(context || {}).filter(([, value]) => value !== undefined && value !== null && value !== '');
+    return entries.map(([key, value]) => `${key}=${truncate(typeof value === 'string' ? value : JSON.stringify(value), 160)}`).join('; ');
+  };
+
+  const renderCounters = () => {
+    if (!state.ui.counters) {
+      return;
+    }
+
+    state.ui.counters.textContent = `New lines: ${state.counters.newlines} | Sends: ${state.counters.sends} | Warnings: ${state.counters.warnings} | Errors: ${state.counters.errors}`;
+  };
+
+  const renderLogs = () => {
+    if (!state.ui.logList) {
+      return;
+    }
+
+    state.ui.logList.replaceChildren();
+
+    const visibleEntries = state.logEntries.slice(-DISPLAYED_LOG_ENTRIES).reverse();
+
+    for (const entry of visibleEntries) {
+      const item = document.createElement('li');
+      item.className = `log-entry log-entry--${entry.level}`;
+
+      const header = document.createElement('div');
+      header.className = 'log-entry__header';
+      header.textContent = `${entry.time} ${entry.level.toUpperCase()} ${entry.operation}`;
+
+      const message = document.createElement('div');
+      message.className = 'log-entry__message';
+      message.textContent = entry.message;
+
+      item.append(header, message);
+
+      if (entry.context) {
+        const context = document.createElement('div');
+        context.className = 'log-entry__context';
+        context.textContent = entry.context;
+        item.append(context);
+      }
+
+      state.ui.logList.append(item);
+    }
+  };
+
+  const setStatus = (level, message) => {
+    if (!state.ui.status) {
+      return;
+    }
+
+    state.ui.status.dataset.level = level;
+    state.ui.status.textContent = message;
+  };
+
+  const writeLog = (level, operation, message, context = {}, options = {}) => {
+    const throttleKey = options.throttleKey;
+    const throttleMs = options.throttleMs ?? 3000;
+    const now = Date.now();
+
+    if (throttleKey) {
+      const previousTime = state.repeatedLogTimes.get(throttleKey) || 0;
+      if (now - previousTime < throttleMs) {
+        return;
+      }
+      state.repeatedLogTimes.set(throttleKey, now);
+    }
+
+    const entry = {
+      id: ++state.sequence,
+      time: new Date(now).toLocaleTimeString([], { hour12: false }),
+      level,
+      operation,
+      message,
+      context: serializeContext(context)
+    };
+
+    state.logEntries.push(entry);
+    if (state.logEntries.length > MAX_LOG_ENTRIES) {
+      state.logEntries.splice(0, state.logEntries.length - MAX_LOG_ENTRIES);
+    }
+
+    if (level === 'warning') {
+      state.counters.warnings += 1;
+    }
+
+    if (level === 'error') {
+      state.counters.errors += 1;
+    }
+
+    const consoleMethod = level === 'error' ? 'error' : level === 'warning' ? 'warn' : 'info';
+    console[consoleMethod](`[Enter to Newline] ${operation}: ${message}`, context);
+
+    renderCounters();
+    renderLogs();
+
+    if (level === 'error' && state.ui.activityDetails) {
+      state.ui.activityDetails.open = true;
+    }
+  };
+
+  const reportError = (operation, error, context = {}) => {
+    const normalizedError = error instanceof Error ? error : new Error(String(error));
+    writeLog('error', operation, normalizedError.message || 'An unknown error occurred.', {
+      ...context,
+      errorName: normalizedError.name,
+      stack: truncate(normalizedError.stack || '', 300)
+    });
+    setStatus('error', `${operation} failed. Open Activity for details.`);
+  };
+
+  const isAriaDisabled = element => element.getAttribute('aria-disabled') === 'true';
+
+  const isEligibleTextarea = element => element instanceof HTMLTextAreaElement && !element.disabled && !element.readOnly && !isAriaDisabled(element);
+
+  const isEligibleContenteditable = element => {
+    if (!(element instanceof HTMLElement) || isAriaDisabled(element)) {
+      return false;
+    }
+
+    return element.isContentEditable || element.getAttribute('contenteditable') === 'true';
+  };
+
+  const findNestedEditable = container => {
+    if (!(container instanceof Element)) {
+      return null;
+    }
+
+    const candidates = container.querySelectorAll('textarea, [contenteditable="true"]');
+
+    for (const candidate of candidates) {
+      if (isEligibleTextarea(candidate) || isEligibleContenteditable(candidate)) {
+        return candidate;
+      }
+    }
+
+    return null;
+  };
+
+  const collectPathElements = event => {
+    const path = typeof event.composedPath === 'function' ? event.composedPath() : [event.target];
+    return path.filter(node => node instanceof Element);
+  };
+
+  const matchLocator = (element, locator) => {
+    try {
+      if (element.matches(locator.selector)) {
+        return element;
+      }
+
+      return element.closest(locator.selector);
+    } catch (error) {
+      reportError('locator.match', error, {
+        locatorId: locator.id,
+        selector: locator.selector,
+        description: locator.description,
+        element: describeElement(element)
+      });
+      return null;
+    }
+  };
+
+  const resolveEditableTarget = event => {
+    const pathElements = collectPathElements(event);
+    const visited = new Set();
+    let unsupportedMatch = null;
+
+    for (const pathElement of pathElements) {
+      for (const locator of locators.editable) {
+        const candidate = matchLocator(pathElement, locator);
+
+        if (!candidate || visited.has(candidate)) {
+          continue;
+        }
+
+        visited.add(candidate);
+
+        if (isEligibleTextarea(candidate)) {
+          return { element: candidate, locator };
+        }
+
+        if (isEligibleContenteditable(candidate)) {
+          return { element: candidate, locator };
+        }
+
+        const nestedEditable = findNestedEditable(candidate);
+        if (nestedEditable) {
+          return {
+            element: nestedEditable,
+            locator,
+            resolvedFromContainer: candidate
+          };
+        }
+
+        unsupportedMatch ||= { element: candidate, locator };
+      }
+    }
+
+    return { element: null, unsupportedMatch };
+  };
+
+  const focusElement = element => {
+    try {
+      element.focus({ preventScroll: true });
+    } catch (error) {
+      element.focus();
+      writeLog('warning', 'editable.focus', 'Focus options were not accepted; focus() was called without options.', {
+        target: describeElement(element),
+        error: error instanceof Error ? error.message : String(error)
+      }, {
+        throttleKey: 'focus-options-fallback',
+        throttleMs: 10000
+      });
+    }
+  };
+
+  const dispatchInputEvent = (element, inputType, data) => {
+    try {
+      const inputEvent = new InputEvent('input', {
+        bubbles: true,
+        composed: true,
+        cancelable: false,
+        inputType,
+        data
+      });
+      element.dispatchEvent(inputEvent);
+      return 'InputEvent';
+    } catch (error) {
+      const fallbackEvent = new Event('input', { bubbles: true, composed: true });
+      element.dispatchEvent(fallbackEvent);
+      writeLog('warning', 'input.dispatch', 'InputEvent construction failed; a generic input event was dispatched instead.', {
+        target: describeElement(element),
+        inputType,
+        error: error instanceof Error ? error.message : String(error)
+      }, {
+        throttleKey: 'input-event-fallback',
+        throttleMs: 10000
+      });
+      return 'Event';
+    }
+  };
+
+  const insertTextareaNewline = textarea => {
+    const start = textarea.selectionStart ?? textarea.value.length;
+    const end = textarea.selectionEnd ?? textarea.value.length;
+    const previousLength = textarea.value.length;
+
+    focusElement(textarea);
+    textarea.setRangeText('\n', start, end, 'end');
+    const eventType = dispatchInputEvent(textarea, 'insertLineBreak', '\n');
+
+    const expectedLength = previousLength - (end - start) + 1;
+    if (textarea.value.length !== expectedLength || textarea.value.charAt(start) !== '\n') {
+      throw new Error('The textarea value did not contain the expected newline after setRangeText completed.');
+    }
+
+    return {
+      strategy: 'HTMLTextAreaElement.setRangeText',
+      inputEvent: eventType,
+      selectionStart: start,
+      selectionEnd: end
+    };
+  };
+
+  const ensureSelectionInside = editable => {
+    const selection = window.getSelection();
+
+    if (!selection) {
+      throw new Error('window.getSelection() returned no Selection object.');
+    }
+
+    if (selection.rangeCount > 0) {
+      const currentRange = selection.getRangeAt(0);
+      if (editable.contains(currentRange.commonAncestorContainer)) {
+        return { selection, range: currentRange };
+      }
+    }
+
+    const range = document.createRange();
+    range.selectNodeContents(editable);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    return { selection, range };
+  };
+
+  const insertRangeNewline = editable => {
+    const { selection, range } = ensureSelectionInside(editable);
+
+    range.deleteContents();
+
+    const lineBreak = document.createElement('br');
+    range.insertNode(lineBreak);
+
+    if (!lineBreak.nextSibling) {
+      const trailingBreak = document.createElement('br');
+      lineBreak.parentNode?.insertBefore(trailingBreak, lineBreak.nextSibling);
+    }
+
+    const caretRange = document.createRange();
+    caretRange.setStartAfter(lineBreak);
+    caretRange.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(caretRange);
+
+    dispatchInputEvent(editable, 'insertLineBreak', null);
+
+    if (!editable.contains(lineBreak)) {
+      throw new Error('The fallback range insertion did not leave the line break inside the editable element.');
+    }
+
+    return {
+      strategy: 'Range.insertNode',
+      inputEvent: 'synthetic input event'
+    };
+  };
+
+  const insertContenteditableNewline = editable => {
+    focusElement(editable);
+    ensureSelectionInside(editable);
+
+    if (typeof document.execCommand === 'function') {
+      try {
+        const accepted = document.execCommand('insertLineBreak', false, null);
+        if (accepted) {
+          return {
+            strategy: 'document.execCommand(insertLineBreak)',
+            inputEvent: 'browser-managed'
+          };
+        }
+      } catch (error) {
+        writeLog('warning', 'newline.execCommand', 'The browser rejected the insertLineBreak command; range insertion will be used.', {
+          target: describeElement(editable),
+          error: error instanceof Error ? error.message : String(error)
+        }, {
+          throttleKey: 'exec-command-failure',
+          throttleMs: 5000
+        });
+      }
+    }
+
+    return insertRangeNewline(editable);
+  };
+
+  const insertNewline = resolvedTarget => {
+    const editable = resolvedTarget.element;
+
+    if (isEligibleTextarea(editable)) {
+      return insertTextareaNewline(editable);
+    }
+
+    if (isEligibleContenteditable(editable)) {
+      return insertContenteditableNewline(editable);
+    }
+
+    throw new Error('The resolved target is no longer editable.');
+  };
+
+  const getAssociatedForm = editable => {
+    if (editable instanceof HTMLTextAreaElement && editable.form) {
+      return editable.form;
+    }
+
+    let current = editable;
+
+    while (current instanceof Element) {
+      const form = current.closest('form');
+      if (form) {
+        return form;
+      }
+
+      const root = current.getRootNode();
+      current = root instanceof ShadowRoot ? root.host : null;
+    }
+
+    return null;
+  };
+
+  const isActionableControl = element => {
+    if (!(element instanceof HTMLElement)) {
+      return false;
+    }
+
+    if ('disabled' in element && element.disabled) {
+      return false;
+    }
+
+    if (element.hidden || isAriaDisabled(element)) {
+      return false;
+    }
+
+    const style = getComputedStyle(element);
+    return style.display !== 'none' && style.visibility !== 'hidden';
+  };
+
+  const findSubmitControls = form => {
+    const controls = Array.from(form.querySelectorAll('button[type="submit"], input[type="submit"], button:not([type])'));
+    return {
+      all: controls,
+      actionable: controls.find(isActionableControl) || null
+    };
+  };
+
+  const collectSearchRoots = (editable, form) => {
+    const roots = [];
+    const addRoot = root => {
+      if (root && !roots.includes(root) && typeof root.querySelector === 'function') {
+        roots.push(root);
+      }
+    };
+
+    addRoot(form);
+    addRoot(editable.getRootNode());
+    addRoot(document);
+
+    return roots;
+  };
+
+  const resolveSendAction = editable => {
+    const form = getAssociatedForm(editable);
+
+    if (form) {
+      const submitControls = findSubmitControls(form);
+
+      if (typeof form.requestSubmit === 'function' && (submitControls.actionable || submitControls.all.length === 0)) {
+        return {
+          action: {
+            id: 'form-request-submit',
+            description: submitControls.actionable
+              ? 'submit the nearest form through requestSubmit with its enabled submit control'
+              : 'submit the nearest form through requestSubmit because the form has no explicit submit control',
+            target: submitControls.actionable || form,
+            execute: () => submitControls.actionable ? form.requestSubmit(submitControls.actionable) : form.requestSubmit()
+          },
+          diagnostics: {
+            form: describeElement(form),
+            explicitSubmitControlCount: submitControls.all.length
+          }
+        };
+      }
+
+      if (submitControls.actionable) {
+        return {
+          action: {
+            id: 'form-submit-control',
+            description: 'activate the enabled submit control in the nearest form',
+            target: submitControls.actionable,
+            execute: () => submitControls.actionable.click()
+          },
+          diagnostics: {
+            form: describeElement(form),
+            explicitSubmitControlCount: submitControls.all.length
+          }
+        };
+      }
+    }
+
+    const searchRoots = collectSearchRoots(editable, form);
+    const ambiguities = [];
+
+    for (const locator of locators.send) {
+      const candidates = [];
+      const seen = new Set();
+
+      for (const root of searchRoots) {
+        let matches = [];
+
+        try {
+          matches = Array.from(root.querySelectorAll(locator.selector));
+        } catch (error) {
+          reportError('send.locator', error, {
+            locatorId: locator.id,
+            selector: locator.selector,
+            description: locator.description
+          });
+          continue;
+        }
+
+        for (const candidate of matches) {
+          if (!seen.has(candidate) && isActionableControl(candidate)) {
+            seen.add(candidate);
+            candidates.push(candidate);
+          }
+        }
+      }
+
+      if (candidates.length === 1) {
+        const candidate = candidates[0];
+        return {
+          action: {
+            id: locator.id,
+            description: locator.description,
+            target: candidate,
+            execute: () => candidate.click()
+          },
+          diagnostics: {
+            locatorId: locator.id,
+            candidateCount: 1
+          }
+        };
+      }
+
+      if (candidates.length > 1) {
+        ambiguities.push({
+          locatorId: locator.id,
+          selector: locator.selector,
+          candidateCount: candidates.length,
+          candidates: candidates.slice(0, 4).map(describeElement)
+        });
+      }
+    }
+
+    return {
+      action: null,
+      diagnostics: {
+        form: describeElement(form),
+        ambiguities
+      }
+    };
+  };
+
+  const isPlainEnter = event => event.key === 'Enter'
+    && !event.shiftKey
+    && !event.ctrlKey
+    && !event.metaKey
+    && !event.altKey;
+
+  const isSendShortcut = event => {
+    if (event.key !== 'Enter' || event.shiftKey || event.altKey) {
+      return false;
+    }
+
+    return isMac
+      ? event.metaKey && !event.ctrlKey
+      : event.ctrlKey && !event.metaKey;
+  };
+
+  const handlePlainEnter = (event, resolvedTarget) => {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    const targetDescription = describeElement(resolvedTarget.element);
+
+    writeLog('info', 'newline.intercept', 'Plain Enter was intercepted for newline insertion.', {
+      target: targetDescription,
+      locatorId: resolvedTarget.locator.id,
+      locator: resolvedTarget.locator.selector,
+      resolvedFromContainer: describeElement(resolvedTarget.resolvedFromContainer)
+    });
+
+    try {
+      const result = insertNewline(resolvedTarget);
+      state.counters.newlines += 1;
+      renderCounters();
+      setStatus('success', `New line inserted using ${result.strategy}.`);
+      writeLog('info', 'newline.insert', 'A newline was inserted successfully.', {
+        target: targetDescription,
+        locatorId: resolvedTarget.locator.id,
+        strategy: result.strategy,
+        inputEvent: result.inputEvent,
+        selectionStart: result.selectionStart,
+        selectionEnd: result.selectionEnd
+      });
+    } catch (error) {
+      reportError('newline.insert', error, {
+        target: targetDescription,
+        locatorId: resolvedTarget.locator.id,
+        locator: resolvedTarget.locator.selector,
+        locatorDescription: resolvedTarget.locator.description
+      });
+    }
+  };
+
+  const handleSendShortcut = (event, resolvedTarget) => {
+    let resolution = null;
+
+    try {
+      resolution = resolveSendAction(resolvedTarget.element);
+    } catch (error) {
+      reportError('send.resolve', error, {
+        target: describeElement(resolvedTarget.element),
+        attemptedLocators: locators.send.map(locator => `${locator.id}:${locator.selector}`).join(' | ')
+      });
+      return;
+    }
+
+    const action = resolution.action;
+
+    if (!action) {
+      writeLog('warning', 'send.resolve', `No unambiguous send action was found. ${sendShortcutLabel} was passed to the page unchanged.`, {
+        target: describeElement(resolvedTarget.element),
+        expectedForm: 'nearest ancestor form with requestSubmit or an enabled submit control',
+        attemptedLocators: locators.send.map(locator => `${locator.id}:${locator.selector}`).join(' | '),
+        resolutionDiagnostics: resolution.diagnostics
+      }, {
+        throttleKey: `send-action-missing:${describeElement(resolvedTarget.element)}`,
+        throttleMs: 5000
+      });
+      setStatus('warning', 'No unambiguous send control was found. The shortcut was passed to the page.');
+      return;
+    }
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    try {
+      action.execute();
+      state.counters.sends += 1;
+      renderCounters();
+      setStatus('success', `Send command issued using ${action.description}.`);
+      writeLog('info', 'send.execute', 'The send action was invoked successfully.', {
+        shortcut: sendShortcutLabel,
+        actionId: action.id,
+        actionDescription: action.description,
+        target: describeElement(action.target),
+        editor: describeElement(resolvedTarget.element)
+      });
+    } catch (error) {
+      reportError('send.execute', error, {
+        shortcut: sendShortcutLabel,
+        actionId: action.id,
+        actionDescription: action.description,
+        target: describeElement(action.target),
+        editor: describeElement(resolvedTarget.element)
+      });
+    }
+  };
+
+  const keydownHandler = event => {
+    if (!state.active || state.destroyed || event.defaultPrevented || event.isComposing || event.keyCode === 229) {
+      return;
+    }
+
+    if (!isPlainEnter(event) && !isSendShortcut(event)) {
+      return;
+    }
+
+    try {
+      const resolvedTarget = resolveEditableTarget(event);
+
+      if (!resolvedTarget.element) {
+        const unsupported = resolvedTarget.unsupportedMatch;
+
+        if (unsupported && !state.warnedElements.has(unsupported.element)) {
+          state.warnedElements.add(unsupported.element);
+          writeLog('warning', 'editable.resolve', 'A textbox-like element matched a locator but no supported editable surface was found, so the key event was not changed.', {
+            matchedElement: describeElement(unsupported.element),
+            locatorId: unsupported.locator.id,
+            locator: unsupported.locator.selector,
+            locatorDescription: unsupported.locator.description,
+            expected: 'an enabled textarea or a contenteditable=true element'
+          });
+          setStatus('warning', 'A textbox-like control was detected, but it is not safely editable.');
+        }
+        return;
+      }
+
+      if (isPlainEnter(event)) {
+        handlePlainEnter(event, resolvedTarget);
+        return;
+      }
+
+      handleSendShortcut(event, resolvedTarget);
+    } catch (error) {
+      reportError('keyboard.handle', error, {
+        key: event.key,
+        target: describeElement(event.target),
+        composedPathLength: typeof event.composedPath === 'function' ? event.composedPath().length : 'unavailable'
+      });
+    }
+  };
+
+  const detectDarkTheme = () => {
+    const documentDark = document.documentElement.classList.contains('dark') || document.body?.classList.contains('dark');
+    return Boolean(documentDark || state.themeQuery?.matches);
+  };
+
+  const applyTheme = () => {
+    if (!state.host) {
+      return;
+    }
+
+    state.host.dataset.theme = detectDarkTheme() ? 'dark' : 'light';
+  };
+
+  const loadSavedPosition = () => {
+    try {
+      const value = localStorage.getItem(POSITION_STORAGE_KEY);
+      if (!value) {
+        return null;
+      }
+
+      const parsed = JSON.parse(value);
+      if (!Number.isFinite(parsed.left) || !Number.isFinite(parsed.top)) {
+        return null;
+      }
+
+      return parsed;
+    } catch (error) {
+      writeLog('warning', 'position.load', 'The saved panel position could not be read. The default position will be used.', {
+        storageKey: POSITION_STORAGE_KEY,
+        error: error instanceof Error ? error.message : String(error)
+      }, {
+        throttleKey: 'position-load-failure',
+        throttleMs: 10000
+      });
+      return null;
+    }
+  };
+
+  const savePosition = () => {
+    if (!state.host) {
+      return;
+    }
+
+    const rect = state.host.getBoundingClientRect();
+
+    try {
+      localStorage.setItem(POSITION_STORAGE_KEY, JSON.stringify({
+        left: Math.round(rect.left),
+        top: Math.round(rect.top)
+      }));
+    } catch (error) {
+      writeLog('warning', 'position.save', 'The panel position could not be saved.', {
+        storageKey: POSITION_STORAGE_KEY,
+        error: error instanceof Error ? error.message : String(error)
+      }, {
+        throttleKey: 'position-save-failure',
+        throttleMs: 10000
+      });
+    }
+  };
+
+  const clampPanelPosition = (left, top) => {
+    if (!state.host) {
+      return { left, top };
+    }
+
+    const rect = state.host.getBoundingClientRect();
+    const margin = 8;
+    const maximumLeft = Math.max(margin, window.innerWidth - rect.width - margin);
+    const maximumTop = Math.max(margin, window.innerHeight - rect.height - margin);
+
+    return {
+      left: Math.min(Math.max(margin, left), maximumLeft),
+      top: Math.min(Math.max(margin, top), maximumTop)
+    };
+  };
+
+  const positionPanel = position => {
+    if (!state.host || !position) {
+      return;
+    }
+
+    const clamped = clampPanelPosition(position.left, position.top);
+    state.host.style.left = `${clamped.left}px`;
+    state.host.style.top = `${clamped.top}px`;
+    state.host.style.right = 'auto';
+  };
+
+  const pointerDownHandler = event => {
+    const handle = event.target instanceof Element ? event.target.closest('[data-drag-handle]') : null;
+    const interactive = event.target instanceof Element ? event.target.closest('button, summary, a, input, select, textarea') : null;
+
+    if (!handle || interactive || event.button !== 0 || !state.host) {
+      return;
+    }
+
+    const rect = state.host.getBoundingClientRect();
+    state.drag = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      left: rect.left,
+      top: rect.top
+    };
+
+    state.host.style.left = `${rect.left}px`;
+    state.host.style.top = `${rect.top}px`;
+    state.host.style.right = 'auto';
+    handle.setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+  };
+
+  const pointerMoveHandler = event => {
+    if (!state.drag || event.pointerId !== state.drag.pointerId || !state.host) {
+      return;
+    }
+
+    const nextPosition = clampPanelPosition(
+      state.drag.left + event.clientX - state.drag.startX,
+      state.drag.top + event.clientY - state.drag.startY
+    );
+
+    state.host.style.left = `${nextPosition.left}px`;
+    state.host.style.top = `${nextPosition.top}px`;
+  };
+
+  const pointerUpHandler = event => {
+    if (!state.drag || event.pointerId !== state.drag.pointerId) {
+      return;
+    }
+
+    state.drag = null;
+    savePosition();
+    writeLog('info', 'panel.move', 'The control panel was moved and its position was saved.', {
+      position: state.host ? {
+        left: Math.round(state.host.getBoundingClientRect().left),
+        top: Math.round(state.host.getBoundingClientRect().top)
+      } : 'unavailable'
+    });
+  };
+
+  const createUi = () => {
+    const host = document.createElement('div');
+    host.id = HOST_ID;
+    host.setAttribute('data-enter-to-newline-version', VERSION);
+    host.style.position = 'fixed';
+    host.style.top = '12px';
+    host.style.right = '12px';
+    host.style.zIndex = '2147483647';
+
+    const shadow = host.attachShadow({ mode: 'open' });
+
+    shadow.innerHTML = `
+      <style>
+        :host {
+          all: initial;
+          color-scheme: light;
+          --window-bg: #f3f3f3;
+          --window-panel: #ffffff;
+          --window-border: #8b8b8b;
+          --window-border-soft: #c8c8c8;
+          --window-text: #111111;
+          --window-muted: #5b5b5b;
+          --window-accent: #0f6cbd;
+          --window-success: #107c10;
+          --window-warning: #8a5800;
+          --window-error: #a4262c;
+          --window-button: #e8e8e8;
+          --window-button-hover: #dddddd;
+          display: block;
+          font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+          font-size: 13px;
+          line-height: 1.35;
+        }
+
+        :host([data-theme="dark"]) {
+          color-scheme: dark;
+          --window-bg: #252525;
+          --window-panel: #1f1f1f;
+          --window-border: #6a6a6a;
+          --window-border-soft: #444444;
+          --window-text: #f1f1f1;
+          --window-muted: #b9b9b9;
+          --window-accent: #60a5fa;
+          --window-success: #6ccb5f;
+          --window-warning: #f0b429;
+          --window-error: #ff8085;
+          --window-button: #343434;
+          --window-button-hover: #424242;
+        }
+
+        * {
+          box-sizing: border-box;
+        }
+
+        .window {
+          width: min(390px, calc(100vw - 16px));
+          max-height: min(640px, calc(100vh - 16px));
+          overflow: hidden;
+          border: 1px solid var(--window-border);
+          border-radius: 5px;
+          background: var(--window-bg);
+          color: var(--window-text);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+        }
+
+        .titlebar {
+          display: flex;
+          align-items: center;
+          min-height: 34px;
+          padding: 5px 5px 5px 9px;
+          border-bottom: 1px solid var(--window-border-soft);
+          background: var(--window-panel);
+          cursor: move;
+          user-select: none;
+          touch-action: none;
+        }
+
+        .titlebar__indicator {
+          width: 9px;
+          height: 9px;
+          margin-right: 8px;
+          border-radius: 50%;
+          background: var(--window-success);
+          box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.18);
+        }
+
+        .titlebar__title {
+          min-width: 0;
+          flex: 1;
+          overflow: hidden;
+          font-weight: 600;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        button {
+          font: inherit;
+        }
+
+        .close-button {
+          width: 28px;
+          height: 24px;
+          border: 1px solid transparent;
+          border-radius: 3px;
+          background: transparent;
+          color: var(--window-text);
+          cursor: pointer;
+          line-height: 20px;
+        }
+
+        .close-button:hover,
+        .close-button:focus-visible {
+          border-color: var(--window-border-soft);
+          background: var(--window-error);
+          color: #ffffff;
+          outline: none;
+        }
+
+        .body {
+          max-height: calc(min(640px, 100vh - 16px) - 35px);
+          overflow: auto;
+          padding: 12px;
+        }
+
+        .lead {
+          margin: 0 0 10px;
+        }
+
+        .shortcut-grid {
+          display: grid;
+          grid-template-columns: max-content 1fr;
+          gap: 6px 10px;
+          margin: 0 0 10px;
+          padding: 9px;
+          border: 1px solid var(--window-border-soft);
+          background: var(--window-panel);
+        }
+
+        kbd {
+          min-width: 76px;
+          padding: 2px 6px;
+          border: 1px solid var(--window-border);
+          border-radius: 3px;
+          background: var(--window-button);
+          color: var(--window-text);
+          font: 12px/1.4 "Segoe UI", Tahoma, Arial, sans-serif;
+          text-align: center;
+          box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+        }
+
+        .shortcut-description {
+          align-self: center;
+        }
+
+        .status {
+          margin: 0 0 8px;
+          padding: 7px 8px;
+          border-left: 3px solid var(--window-accent);
+          background: var(--window-panel);
+          color: var(--window-text);
+        }
+
+        .status[data-level="success"] {
+          border-left-color: var(--window-success);
+        }
+
+        .status[data-level="warning"] {
+          border-left-color: var(--window-warning);
+        }
+
+        .status[data-level="error"] {
+          border-left-color: var(--window-error);
+        }
+
+        .counters {
+          margin: 0 0 8px;
+          color: var(--window-muted);
+          font-size: 12px;
+        }
+
+        details {
+          margin: 0 0 10px;
+          border: 1px solid var(--window-border-soft);
+          background: var(--window-panel);
+        }
+
+        summary {
+          padding: 7px 8px;
+          cursor: pointer;
+          font-weight: 600;
+          user-select: none;
+        }
+
+        .log-list {
+          max-height: 210px;
+          margin: 0;
+          overflow: auto;
+          padding: 0 8px 8px;
+          list-style: none;
+        }
+
+        .log-entry {
+          padding: 6px 0;
+          border-top: 1px solid var(--window-border-soft);
+        }
+
+        .log-entry__header {
+          color: var(--window-muted);
+          font-size: 11px;
+          font-weight: 600;
+        }
+
+        .log-entry--warning .log-entry__header {
+          color: var(--window-warning);
+        }
+
+        .log-entry--error .log-entry__header {
+          color: var(--window-error);
+        }
+
+        .log-entry__message {
+          margin-top: 2px;
+        }
+
+        .log-entry__context {
+          margin-top: 2px;
+          color: var(--window-muted);
+          font-family: Consolas, "Courier New", monospace;
+          font-size: 10px;
+          overflow-wrap: anywhere;
+        }
+
+        .actions {
+          display: flex;
+          justify-content: flex-end;
+        }
+
+        .deactivate-button {
+          min-width: 92px;
+          min-height: 30px;
+          padding: 4px 12px;
+          border: 1px solid var(--window-border);
+          border-radius: 3px;
+          background: var(--window-button);
+          color: var(--window-text);
+          cursor: pointer;
+        }
+
+        .deactivate-button:hover,
+        .deactivate-button:focus-visible {
+          background: var(--window-button-hover);
+          outline: 2px solid var(--window-accent);
+          outline-offset: 1px;
+        }
+      </style>
+      <section class="window" role="dialog" aria-label="Enter to Newline mode controls">
+        <header class="titlebar" data-drag-handle>
+          <span class="titlebar__indicator" aria-hidden="true"></span>
+          <span class="titlebar__title">Enter to Newline</span>
+          <button class="close-button" type="button" data-action="deactivate" aria-label="Close this panel and deactivate Enter to Newline mode" title="Close and deactivate">x</button>
+        </header>
+        <div class="body">
+          <p class="lead">Mode is active. Close this panel, press Deactivate, or run the bookmarklet again to restore the page's original keyboard behavior.</p>
+          <div class="shortcut-grid" aria-label="Keyboard behavior">
+            <kbd>Enter</kbd><span class="shortcut-description">Insert a new line</span>
+            <kbd>${sendShortcutLabel}</kbd><span class="shortcut-description">Send through the nearest reliable page action</span>
+          </div>
+          <div class="status" data-level="info" role="status" aria-live="polite">Ready. Focus an editable text area or rich-text editor.</div>
+          <div class="counters">New lines: 0 | Sends: 0 | Warnings: 0 | Errors: 0</div>
+          <details>
+            <summary>Activity and diagnostics</summary>
+            <ol class="log-list" aria-label="Recent activity"></ol>
+          </details>
+          <div class="actions">
+            <button class="deactivate-button" type="button" data-action="deactivate">Deactivate</button>
+          </div>
+        </div>
+      </section>
+    `;
+
+    document.documentElement.appendChild(host);
+
+    state.host = host;
+    state.shadow = shadow;
+    state.ui.status = shadow.querySelector('.status');
+    state.ui.counters = shadow.querySelector('.counters');
+    state.ui.logList = shadow.querySelector('.log-list');
+    state.ui.activityDetails = shadow.querySelector('details');
+
+    for (const button of shadow.querySelectorAll('[data-action="deactivate"]')) {
+      listen(button, 'click', () => destroy({ reason: 'user-interface' }));
+    }
+
+    listen(shadow, 'pointerdown', pointerDownHandler);
+    listen(window, 'pointermove', pointerMoveHandler, { capture: true });
+    listen(window, 'pointerup', pointerUpHandler, { capture: true });
+    listen(window, 'pointercancel', pointerUpHandler, { capture: true });
+
+    const savedPosition = loadSavedPosition();
+    requestAnimationFrame(() => positionPanel(savedPosition));
+
+    applyTheme();
+    renderCounters();
+    renderLogs();
+  };
+
+  const destroy = ({ reason = 'unknown' } = {}) => {
+    if (state.destroyed) {
+      return;
+    }
+
+    state.destroyed = true;
+    state.active = false;
+
+    writeLog('info', 'lifecycle.deactivate', 'Enter to Newline mode is being deactivated and all installed resources will be removed.', {
+      reason,
+      cleanupTaskCount: state.cleanupTasks.length,
+      version: VERSION
+    });
+
+    const cleanupErrors = [];
+
+    while (state.cleanupTasks.length) {
+      const cleanup = state.cleanupTasks.pop();
+      try {
+        cleanup();
+      } catch (error) {
+        cleanupErrors.push(error);
+      }
+    }
+
+    state.host?.remove();
+    state.host = null;
+    state.shadow = null;
+
+    if (window[GLOBAL_KEY] === controller) {
+      delete window[GLOBAL_KEY];
+    }
+
+    if (cleanupErrors.length) {
+      console.error('[Enter to Newline] One or more cleanup operations failed.', cleanupErrors);
+    }
+
+    console.info(`[Enter to Newline] Mode deactivated. reason=${reason}; cleanupErrors=${cleanupErrors.length}`);
+  };
+
+  const setup = () => {
+    try {
+      createUi();
+      listen(window, 'keydown', keydownHandler, { capture: true });
+      listen(window, 'resize', () => {
+        if (!state.host) {
+          return;
+        }
+        const rect = state.host.getBoundingClientRect();
+        positionPanel({ left: rect.left, top: rect.top });
+      });
+
+      state.themeQuery = window.matchMedia?.('(prefers-color-scheme: dark)') || null;
+      if (state.themeQuery) {
+        if (typeof state.themeQuery.addEventListener === 'function') {
+          listen(state.themeQuery, 'change', applyTheme);
+        } else if (typeof state.themeQuery.addListener === 'function') {
+          state.themeQuery.addListener(applyTheme);
+          addCleanup(() => state.themeQuery?.removeListener?.(applyTheme));
+        }
+      }
+
+      const healthInterval = window.setInterval(() => {
+        if (!state.host?.isConnected) {
+          writeLog('error', 'lifecycle.health', 'The control panel was removed from the document while the keyboard handler was still active. The mode will deactivate to avoid invisible behavior.', {
+            expectedHostId: HOST_ID,
+            expectedLocator: `#${HOST_ID}`
+          });
+          destroy({ reason: 'host-removed' });
+          return;
+        }
+
+        applyTheme();
+      }, 2000);
+
+      addCleanup(() => window.clearInterval(healthInterval));
+
+      writeLog('info', 'lifecycle.activate', 'Enter to Newline mode was activated successfully.', {
+        version: VERSION,
+        sendShortcut: sendShortcutLabel,
+        editableLocators: locators.editable.map(locator => `${locator.id}:${locator.selector}`).join(' | '),
+        sendLocators: locators.send.map(locator => `${locator.id}:${locator.selector}`).join(' | ')
+      });
+      setStatus('success', `Active. Enter inserts a new line; ${sendShortcutLabel} sends.`);
+    } catch (error) {
+      reportError('lifecycle.activate', error, {
+        expectedHostId: HOST_ID,
+        expectedDocumentRoot: 'document.documentElement'
+      });
+      destroy({ reason: 'activation-failed' });
+    }
+  };
+
+  setup();
+})();

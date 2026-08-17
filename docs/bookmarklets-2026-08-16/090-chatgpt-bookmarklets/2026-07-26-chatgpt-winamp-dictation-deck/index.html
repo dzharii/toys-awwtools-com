@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Install ChatGPT Dictation Deck</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #090a0c;
+        color: #f4f4e8;
+      }
+      * { box-sizing: border-box; }
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background:
+          radial-gradient(circle at 50% 0%, rgba(255, 132, 0, 0.18), transparent 38rem),
+          #090a0c;
+      }
+      main {
+        width: min(620px, 100%);
+        padding: clamp(26px, 6vw, 48px);
+        border: 1px solid #343630;
+        border-radius: 18px;
+        background: linear-gradient(180deg, #171914, #10110f);
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+        text-align: center;
+      }
+      .mark {
+        width: 54px;
+        height: 54px;
+        margin: 0 auto 18px;
+        border: 2px solid #111;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #fff56d 0 32%, #ff8a00 33% 66%, #b41500 67%);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3), 0 8px 28px rgba(255, 112, 0, 0.22);
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(28px, 5vw, 42px);
+        line-height: 1.05;
+        letter-spacing: -0.035em;
+      }
+      .subtitle {
+        max-width: 470px;
+        margin: 16px auto 28px;
+        color: #b9bba9;
+        font-size: 16px;
+        line-height: 1.55;
+      }
+      .install {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 54px;
+        padding: 0 24px;
+        border: 1px solid #d9eb4a;
+        border-radius: 12px;
+        background: linear-gradient(#eaff68, #a7c62b);
+        color: #101207;
+        text-decoration: none;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        cursor: grab;
+        box-shadow: 0 10px 34px rgba(190, 228, 45, 0.18);
+      }
+      .install:active { cursor: grabbing; transform: translateY(1px); }
+      .steps {
+        margin: 26px auto 0;
+        color: #d2d4c3;
+        line-height: 1.65;
+      }
+      .steps span { color: #f4f668; font-weight: 700; }
+      .copy {
+        margin-top: 18px;
+        padding: 9px 12px;
+        border: 1px solid #3c3f37;
+        border-radius: 9px;
+        background: #171914;
+        color: #c7c9b9;
+        cursor: pointer;
+      }
+      .copy:hover { border-color: #777b68; color: #fff; }
+      #status {
+        min-height: 20px;
+        margin-top: 14px;
+        color: #8f9283;
+        font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      .error { color: #ff8a7b !important; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="mark" aria-hidden="true"></div>
+      <h1>ChatGPT Dictation Deck</h1>
+      <p class="subtitle">A memory-first voice recorder and resilient transcription panel for ChatGPT.</p>
+      <a id="install" class="install" href="#" draggable="true">📢 ChatGPT Dictation Deck</a>
+      <p class="steps"><span>1.</span> Drag the button to the bookmarks bar. <span>2.</span> Open ChatGPT. <span>3.</span> Click the bookmark.</p>
+      <button id="copy" class="copy" type="button">Copy bookmarklet URL</button>
+      <div id="status" aria-live="polite">Preparing bookmarklet...</div>
+    </main>
+
+    <script src="./chatgpt-winamp-dictation.bookmarklet.js"></script>
+    <script>
+      (() => {
+        const install = document.getElementById('install');
+        const copy = document.getElementById('copy');
+        const status = document.getElementById('status');
+        const entryPoint = window.bookmarklet_chatgpt_winamp_dictation_deck;
+
+        if (typeof entryPoint !== 'function') {
+          install.href = '#';
+          copy.disabled = true;
+          status.className = 'error';
+          status.textContent = 'Could not load the bookmarklet source file.';
+          return;
+        }
+
+        const bookmarkletUrl = `javascript:(${entryPoint.toString()})();`;
+        install.href = bookmarkletUrl;
+        status.textContent = `Ready. Generated from one source function (${bookmarkletUrl.length.toLocaleString()} characters).`;
+
+        install.addEventListener('click', event => {
+          event.preventDefault();
+          status.textContent = 'Drag this button to the bookmarks bar, or use Copy bookmarklet URL.';
+        });
+
+        copy.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(bookmarkletUrl);
+            status.textContent = 'Bookmarklet URL copied.';
+          } catch {
+            const textarea = document.createElement('textarea');
+            textarea.value = bookmarkletUrl;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.append(textarea);
+            textarea.select();
+            const copied = document.execCommand('copy');
+            textarea.remove();
+            status.textContent = copied ? 'Bookmarklet URL copied.' : 'Copy failed. Drag the install button instead.';
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

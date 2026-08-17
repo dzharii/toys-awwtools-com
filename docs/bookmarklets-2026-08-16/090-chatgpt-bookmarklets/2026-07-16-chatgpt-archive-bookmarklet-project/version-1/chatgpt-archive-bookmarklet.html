@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ChatGPT Archive Mode 1.0.0</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 32px; background: #f3f4f6; color: #111827; font: 14px/1.5 Segoe UI, Arial, sans-serif; }
+    main { max-width: 920px; margin: 0 auto; padding: 24px; border: 1px solid #9ca3af; border-radius: 6px; background: #fff; }
+    h1 { margin: 0 0 12px; font-size: 22px; }
+    p { margin: 8px 0 16px; }
+    .bookmarklet { display: inline-block; padding: 10px 14px; border: 1px solid #4b5563; border-radius: 4px; background: #e5e7eb; color: #111827; font-weight: 600; text-decoration: none; cursor: grab; }
+    textarea { width: 100%; min-height: 260px; margin-top: 18px; padding: 12px; border: 1px solid #9ca3af; border-radius: 4px; background: #f9fafb; font: 12px/1.4 Consolas, Monaco, monospace; white-space: pre; }
+    code { font-family: Consolas, Monaco, monospace; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>ChatGPT Archive Mode 1.0.0</h1>
+    <p>Drag the button to the bookmarks bar, then activate it while an authenticated ChatGPT page is open. Activating it a second time disables the tool.</p>
+    <a class="bookmarklet" href="javascript:(()%20%3D%3E%20%7B%0A%20%20&#x27;use%20strict&#x27;%3B%0A%0A%20%20const%20APP_KEY%20%3D%20&#x27;__CHATGPT_ARCHIVE_MODE_V1__&#x27;%3B%0A%20%20const%20APP_VERSION%20%3D%20&#x27;1.0.0&#x27;%3B%0A%20%20const%20UI_HOST_ID%20%3D%20&#x27;cgpt-archive-mode-v1-ui&#x27;%3B%0A%20%20const%20HOST_STYLE_ID%20%3D%20&#x27;cgpt-archive-mode-v1-styles&#x27;%3B%0A%20%20const%20STORAGE_KEY%20%3D%20&#x27;cgpt-archive-mode.archived-conversation-ids.v1&#x27;%3B%0A%20%20const%20SIDEBAR_WIDTH%20%3D%20600%3B%0A%20%20const%20REQUEST_TIMEOUT_MS%20%3D%2030000%3B%0A%20%20const%20SCAN_DELAY_MS%20%3D%20120%3B%0A%0A%20%20const%20LOCATORS%20%3D%20Object.freeze(%7B%0A%20%20%20%20sidebar%3A%20Object.freeze(%7B%0A%20%20%20%20%20%20description%3A%20&#x27;Expanded%20ChatGPT%20sidebar&#x27;%2C%0A%20%20%20%20%20%20selectors%3A%20Object.freeze(%5B%0A%20%20%20%20%20%20%20%20&#x27;%23stage-slideover-sidebar&#x27;%2C%0A%20%20%20%20%20%20%20%20&#x27;%5Bid%3D%22stage-slideover-sidebar%22%5D&#x27;%0A%20%20%20%20%20%20%5D)%0A%20%20%20%20%7D)%2C%0A%20%20%20%20history%3A%20Object.freeze(%7B%0A%20%20%20%20%20%20description%3A%20&#x27;Scrollable%20ChatGPT%20chat-history%20area&#x27;%2C%0A%20%20%20%20%20%20selectors%3A%20Object.freeze(%5B%0A%20%20%20%20%20%20%20%20&#x27;%23stage-slideover-sidebar%20nav%5Baria-label%3D%22Chat%20history%22%5D&#x27;%2C%0A%20%20%20%20%20%20%20%20&#x27;%23stage-slideover-sidebar%20%5Baria-label%3D%22Chat%20history%22%5D&#x27;%2C%0A%20%20%20%20%20%20%20%20&#x27;%23history&#x27;%0A%20%20%20%20%20%20%5D)%0A%20%20%20%20%7D)%2C%0A%20%20%20%20conversationRows%3A%20Object.freeze(%7B%0A%20%20%20%20%20%20description%3A%20&#x27;Conversation%20links%20in%20the%20ChatGPT%20sidebar&#x27;%2C%0A%20%20%20%20%20%20selectors%3A%20Object.freeze(%5B%0A%20%20%20%20%20%20%20%20&#x27;%23stage-slideover-sidebar%20a%5Bdata-sidebar-item%3D%22true%22%5D%5Bhref%5E%3D%22%2Fc%2F%22%5D&#x27;%2C%0A%20%20%20%20%20%20%20%20&#x27;%23stage-slideover-sidebar%20a.__menu-item%5Bhref%5E%3D%22%2Fc%2F%22%5D&#x27;%2C%0A%20%20%20%20%20%20%20%20&#x27;%23stage-slideover-sidebar%20a%5Bhref%5E%3D%22%2Fc%2F%22%5D&#x27;%2C%0A%20%20%20%20%20%20%20%20&#x27;%23history%20a%5Bhref%5E%3D%22%2Fc%2F%22%5D&#x27;%0A%20%20%20%20%20%20%5D)%0A%20%20%20%20%7D)%2C%0A%20%20%20%20conversationTitle%3A%20Object.freeze(%7B%0A%20%20%20%20%20%20description%3A%20&#x27;Visible%20title%20inside%20a%20conversation%20row&#x27;%2C%0A%20%20%20%20%20%20selectors%3A%20Object.freeze(%5B%0A%20%20%20%20%20%20%20%20&#x27;.truncate%20span%5Bdir%3D%22auto%22%5D&#x27;%2C%0A%20%20%20%20%20%20%20%20&#x27;.truncate%20span&#x27;%2C%0A%20%20%20%20%20%20%20%20&#x27;.truncate&#x27;%0A%20%20%20%20%20%20%5D)%0A%20%20%20%20%7D)%0A%20%20%7D)%3B%0A%0A%20%20const%20existing%20%3D%20window%5BAPP_KEY%5D%3B%0A%20%20if%20(existing%3F.destroy)%20%7B%0A%20%20%20%20existing.destroy(&#x27;Archive%20mode%20disabled%20by%20a%20second%20invocation.&#x27;)%3B%0A%20%20%20%20return%3B%0A%20%20%7D%0A%0A%20%20const%20state%20%3D%20%7B%0A%20%20%20%20destroyed%3A%20false%2C%0A%20%20%20%20archivedIds%3A%20loadArchivedIds()%2C%0A%20%20%20%20entriesById%3A%20new%20Map()%2C%0A%20%20%20%20processedAnchors%3A%20new%20WeakSet()%2C%0A%20%20%20%20observer%3A%20null%2C%0A%20%20%20%20scanTimer%3A%200%2C%0A%20%20%20%20uiHost%3A%20null%2C%0A%20%20%20%20logList%3A%20null%2C%0A%20%20%20%20status%3A%20null%2C%0A%20%20%20%20originalSidebarWidth%3A%20document.documentElement.style.getPropertyValue(&#x27;--sidebar-width&#x27;)%2C%0A%20%20%20%20dragCleanup%3A%20null%2C%0A%20%20%20%20resizeHandle%3A%20null%2C%0A%20%20%20%20resizeCleanup%3A%20null%2C%0A%20%20%20%20tokenPromise%3A%20null%0A%20%20%7D%3B%0A%0A%20%20window%5BAPP_KEY%5D%20%3D%20%7B%0A%20%20%20%20version%3A%20APP_VERSION%2C%0A%20%20%20%20destroy%2C%0A%20%20%20%20scan%3A%20()%20%3D%3E%20scheduleScan(&#x27;manual&#x27;)%0A%20%20%7D%3B%0A%0A%20%20void%20initialize()%3B%0A%0A%20%20async%20function%20initialize()%20%7B%0A%20%20%20%20try%20%7B%0A%20%20%20%20%20%20await%20waitForBody()%3B%0A%20%20%20%20%20%20installStyles()%3B%0A%20%20%20%20%20%20createWindow()%3B%0A%20%20%20%20%20%20log(&#x27;info&#x27;%2C%20&#x27;startup&#x27;%2C%20&#x27;Starting%20ChatGPT%20Archive%20Mode.&#x27;%2C%20%7B%0A%20%20%20%20%20%20%20%20version%3A%20APP_VERSION%2C%0A%20%20%20%20%20%20%20%20page%3A%20location.href%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20widenSidebar()%3B%0A%20%20%20%20%20%20installSidebarResizer()%3B%0A%20%20%20%20%20%20installObserver()%3B%0A%20%20%20%20%20%20scheduleScan(&#x27;startup&#x27;)%3B%0A%20%20%20%20%20%20log(&#x27;success&#x27;%2C%20&#x27;startup&#x27;%2C%20&#x27;Archive%20mode%20initialized.&#x27;%2C%20%7B%0A%20%20%20%20%20%20%20%20rememberedArchived%3A%20state.archivedIds.size%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%7D%20catch%20(error)%20%7B%0A%20%20%20%20%20%20log(&#x27;error&#x27;%2C%20&#x27;startup&#x27;%2C%20&#x27;Archive%20mode%20failed%20to%20initialize.&#x27;%2C%20%7B%0A%20%20%20%20%20%20%20%20error%3A%20formatError(error)%2C%0A%20%20%20%20%20%20%20%20page%3A%20location.href%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20alert(%60ChatGPT%20Archive%20Mode%20could%20not%20start%3A%20%24%7BformatError(error)%7D%60)%3B%0A%20%20%20%20%7D%0A%20%20%7D%0A%0A%20%20async%20function%20waitForBody()%20%7B%0A%20%20%20%20if%20(document.body)%20return%3B%0A%20%20%20%20const%20startedAt%20%3D%20Date.now()%3B%0A%20%20%20%20while%20(!document.body%20%26%26%20Date.now()%20-%20startedAt%20%3C%205000)%20%7B%0A%20%20%20%20%20%20await%20delay(100)%3B%0A%20%20%20%20%7D%0A%20%20%20%20if%20(!document.body)%20%7B%0A%20%20%20%20%20%20throw%20new%20Error(&#x27;Document%20body%20was%20not%20available%20within%205000ms.&#x27;)%3B%0A%20%20%20%20%7D%0A%20%20%7D%0A%0A%20%20function%20installStyles()%20%7B%0A%20%20%20%20const%20oldStyle%20%3D%20document.getElementById(HOST_STYLE_ID)%3B%0A%20%20%20%20oldStyle%3F.remove()%3B%0A%20%20%20%20const%20style%20%3D%20document.createElement(&#x27;style&#x27;)%3B%0A%20%20%20%20style.id%20%3D%20HOST_STYLE_ID%3B%0A%20%20%20%20style.textContent%20%3D%20%60%0A%20%20%20%20%20%20%5Bdata-cgpt-archive-row%3D%22true%22%5D%20%7B%0A%20%20%20%20%20%20%20%20position%3A%20relative%20!important%3B%0A%20%20%20%20%20%20%20%20display%3A%20grid%20!important%3B%0A%20%20%20%20%20%20%20%20grid-template-columns%3A%20minmax(0%2C%201fr)%2092px%20!important%3B%0A%20%20%20%20%20%20%20%20align-items%3A%20center%20!important%3B%0A%20%20%20%20%20%20%20%20column-gap%3A%206px%20!important%3B%0A%20%20%20%20%20%20%20%20padding-inline-end%3A%206px%20!important%3B%0A%20%20%20%20%20%20%20%20border-radius%3A%207px%20!important%3B%0A%20%20%20%20%20%20%20%20transition%3A%20opacity%20120ms%20ease%2C%20background-color%20120ms%20ease%2C%20outline-color%20120ms%20ease%20!important%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%5Bdata-cgpt-archive-row%3D%22true%22%5D%20%3E%20a%5Bhref%5E%3D%22%2Fc%2F%22%5D%20%7B%0A%20%20%20%20%20%20%20%20min-width%3A%200%20!important%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%5Bdata-cgpt-archive-state%3D%22pending%22%5D%20%7B%0A%20%20%20%20%20%20%20%20background%3A%20rgba(59%2C%20130%2C%20246%2C%200.08)%20!important%3B%0A%20%20%20%20%20%20%20%20outline%3A%201px%20solid%20rgba(59%2C%20130%2C%20246%2C%200.35)%20!important%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%5Bdata-cgpt-archive-state%3D%22archived%22%5D%20%7B%0A%20%20%20%20%20%20%20%20opacity%3A%200.5%20!important%3B%0A%20%20%20%20%20%20%20%20background%3A%20rgba(107%2C%20114%2C%20128%2C%200.1)%20!important%3B%0A%20%20%20%20%20%20%20%20outline%3A%201px%20solid%20rgba(107%2C%20114%2C%20128%2C%200.3)%20!important%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%5Bdata-cgpt-archive-state%3D%22error%22%5D%20%7B%0A%20%20%20%20%20%20%20%20background%3A%20rgba(220%2C%2038%2C%2038%2C%200.08)%20!important%3B%0A%20%20%20%20%20%20%20%20outline%3A%201px%20solid%20rgba(220%2C%2038%2C%2038%2C%200.35)%20!important%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%5Bdata-cgpt-archive-action-host%3D%22true%22%5D%20%7B%0A%20%20%20%20%20%20%20%20display%3A%20block%20!important%3B%0A%20%20%20%20%20%20%20%20width%3A%2092px%20!important%3B%0A%20%20%20%20%20%20%20%20min-width%3A%2092px%20!important%3B%0A%20%20%20%20%20%20%20%20position%3A%20relative%20!important%3B%0A%20%20%20%20%20%20%20%20z-index%3A%204%20!important%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%23%24%7BUI_HOST_ID%7D%20%7B%0A%20%20%20%20%20%20%20%20all%3A%20initial%3B%0A%20%20%20%20%20%20%20%20position%3A%20fixed%3B%0A%20%20%20%20%20%20%20%20inset%3A%200%3B%0A%20%20%20%20%20%20%20%20width%3A%200%3B%0A%20%20%20%20%20%20%20%20height%3A%200%3B%0A%20%20%20%20%20%20%20%20z-index%3A%202147483646%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%5Bdata-cgpt-archive-resizer%3D%22true%22%5D%20%7B%0A%20%20%20%20%20%20%20%20position%3A%20fixed%3B%0A%20%20%20%20%20%20%20%20top%3A%200%3B%0A%20%20%20%20%20%20%20%20bottom%3A%200%3B%0A%20%20%20%20%20%20%20%20width%3A%208px%3B%0A%20%20%20%20%20%20%20%20cursor%3A%20ew-resize%3B%0A%20%20%20%20%20%20%20%20z-index%3A%202147483645%3B%0A%20%20%20%20%20%20%20%20background%3A%20transparent%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%5Bdata-cgpt-archive-resizer%3D%22true%22%5D%3Ahover%20%7B%0A%20%20%20%20%20%20%20%20background%3A%20rgba(59%2C%20130%2C%20246%2C%200.25)%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%60%3B%0A%20%20%20%20(document.head%20%7C%7C%20document.documentElement).append(style)%3B%0A%20%20%20%20log(&#x27;info&#x27;%2C%20&#x27;install-styles&#x27;%2C%20&#x27;Host-page%20styles%20installed.&#x27;%2C%20%7B%0A%20%20%20%20%20%20styleId%3A%20HOST_STYLE_ID%0A%20%20%20%20%7D)%3B%0A%20%20%7D%0A%0A%20%20function%20createWindow()%20%7B%0A%20%20%20%20document.getElementById(UI_HOST_ID)%3F.remove()%3B%0A%20%20%20%20const%20host%20%3D%20document.createElement(&#x27;div&#x27;)%3B%0A%20%20%20%20host.id%20%3D%20UI_HOST_ID%3B%0A%20%20%20%20const%20shadow%20%3D%20host.attachShadow(%7B%20mode%3A%20&#x27;open&#x27;%20%7D)%3B%0A%20%20%20%20shadow.innerHTML%20%3D%20%60%0A%20%20%20%20%20%20%3Cstyle%3E%0A%20%20%20%20%20%20%20%20%3Ahost%20%7B%20all%3A%20initial%3B%20%7D%0A%20%20%20%20%20%20%20%20*%20%7B%20box-sizing%3A%20border-box%3B%20%7D%0A%20%20%20%20%20%20%20%20.window%20%7B%0A%20%20%20%20%20%20%20%20%20%20position%3A%20fixed%3B%0A%20%20%20%20%20%20%20%20%20%20top%3A%2072px%3B%0A%20%20%20%20%20%20%20%20%20%20right%3A%2028px%3B%0A%20%20%20%20%20%20%20%20%20%20width%3A%20430px%3B%0A%20%20%20%20%20%20%20%20%20%20height%3A%20310px%3B%0A%20%20%20%20%20%20%20%20%20%20min-width%3A%20320px%3B%0A%20%20%20%20%20%20%20%20%20%20min-height%3A%20180px%3B%0A%20%20%20%20%20%20%20%20%20%20resize%3A%20both%3B%0A%20%20%20%20%20%20%20%20%20%20overflow%3A%20hidden%3B%0A%20%20%20%20%20%20%20%20%20%20display%3A%20flex%3B%0A%20%20%20%20%20%20%20%20%20%20flex-direction%3A%20column%3B%0A%20%20%20%20%20%20%20%20%20%20border%3A%201px%20solid%20%236b7280%3B%0A%20%20%20%20%20%20%20%20%20%20border-radius%3A%204px%3B%0A%20%20%20%20%20%20%20%20%20%20background%3A%20%23f3f4f6%3B%0A%20%20%20%20%20%20%20%20%20%20color%3A%20%23111827%3B%0A%20%20%20%20%20%20%20%20%20%20box-shadow%3A%200%2010px%2030px%20rgba(0%2C%200%2C%200%2C%200.28)%3B%0A%20%20%20%20%20%20%20%20%20%20font%3A%2012px%2F1.35%20Segoe%20UI%2C%20Arial%2C%20sans-serif%3B%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20.titlebar%20%7B%0A%20%20%20%20%20%20%20%20%20%20height%3A%2032px%3B%0A%20%20%20%20%20%20%20%20%20%20flex%3A%200%200%2032px%3B%0A%20%20%20%20%20%20%20%20%20%20display%3A%20flex%3B%0A%20%20%20%20%20%20%20%20%20%20align-items%3A%20center%3B%0A%20%20%20%20%20%20%20%20%20%20gap%3A%208px%3B%0A%20%20%20%20%20%20%20%20%20%20padding%3A%200%208px%3B%0A%20%20%20%20%20%20%20%20%20%20border-bottom%3A%201px%20solid%20%239ca3af%3B%0A%20%20%20%20%20%20%20%20%20%20background%3A%20%23e5e7eb%3B%0A%20%20%20%20%20%20%20%20%20%20cursor%3A%20move%3B%0A%20%20%20%20%20%20%20%20%20%20user-select%3A%20none%3B%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20.title%20%7B%20flex%3A%201%3B%20font-weight%3A%20600%3B%20%7D%0A%20%20%20%20%20%20%20%20.status%20%7B%20color%3A%20%234b5563%3B%20font-size%3A%2011px%3B%20%7D%0A%20%20%20%20%20%20%20%20.close%20%7B%0A%20%20%20%20%20%20%20%20%20%20width%3A%2024px%3B%0A%20%20%20%20%20%20%20%20%20%20height%3A%2022px%3B%0A%20%20%20%20%20%20%20%20%20%20border%3A%201px%20solid%20%239ca3af%3B%0A%20%20%20%20%20%20%20%20%20%20border-radius%3A%203px%3B%0A%20%20%20%20%20%20%20%20%20%20background%3A%20%23f9fafb%3B%0A%20%20%20%20%20%20%20%20%20%20color%3A%20%23111827%3B%0A%20%20%20%20%20%20%20%20%20%20cursor%3A%20pointer%3B%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20.close%3Ahover%20%7B%20background%3A%20%23fee2e2%3B%20border-color%3A%20%23dc2626%3B%20%7D%0A%20%20%20%20%20%20%20%20.log%20%7B%0A%20%20%20%20%20%20%20%20%20%20flex%3A%201%3B%0A%20%20%20%20%20%20%20%20%20%20margin%3A%200%3B%0A%20%20%20%20%20%20%20%20%20%20padding%3A%208px%3B%0A%20%20%20%20%20%20%20%20%20%20overflow%3A%20auto%3B%0A%20%20%20%20%20%20%20%20%20%20list-style%3A%20none%3B%0A%20%20%20%20%20%20%20%20%20%20background%3A%20%23ffffff%3B%0A%20%20%20%20%20%20%20%20%20%20font%3A%2011px%2F1.45%20Consolas%2C%20Monaco%2C%20monospace%3B%0A%20%20%20%20%20%20%20%20%20%20white-space%3A%20pre-wrap%3B%0A%20%20%20%20%20%20%20%20%20%20overflow-wrap%3A%20anywhere%3B%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20.entry%20%7B%20padding%3A%204px%202px%3B%20border-bottom%3A%201px%20solid%20%23e5e7eb%3B%20%7D%0A%20%20%20%20%20%20%20%20.entry%5Bdata-level%3D%22success%22%5D%20%7B%20color%3A%20%23166534%3B%20%7D%0A%20%20%20%20%20%20%20%20.entry%5Bdata-level%3D%22warn%22%5D%20%7B%20color%3A%20%2392400e%3B%20%7D%0A%20%20%20%20%20%20%20%20.entry%5Bdata-level%3D%22error%22%5D%20%7B%20color%3A%20%23b91c1c%3B%20%7D%0A%20%20%20%20%20%20%20%20.entry%5Bdata-level%3D%22debug%22%5D%20%7B%20color%3A%20%234b5563%3B%20%7D%0A%20%20%20%20%20%20%3C%2Fstyle%3E%0A%20%20%20%20%20%20%3Csection%20class%3D%22window%22%20role%3D%22dialog%22%20aria-label%3D%22ChatGPT%20Archive%20Mode%20log%20window%22%3E%0A%20%20%20%20%20%20%20%20%3Cheader%20class%3D%22titlebar%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3Cspan%20class%3D%22title%22%3EChatGPT%20Archive%20Mode%3C%2Fspan%3E%0A%20%20%20%20%20%20%20%20%20%20%3Cspan%20class%3D%22status%22%3EStarting%3C%2Fspan%3E%0A%20%20%20%20%20%20%20%20%20%20%3Cbutton%20class%3D%22close%22%20type%3D%22button%22%20title%3D%22Disable%20archive%20mode%22%3Ex%3C%2Fbutton%3E%0A%20%20%20%20%20%20%20%20%3C%2Fheader%3E%0A%20%20%20%20%20%20%20%20%3Col%20class%3D%22log%22%20aria-live%3D%22polite%22%3E%3C%2Fol%3E%0A%20%20%20%20%20%20%3C%2Fsection%3E%0A%20%20%20%20%60%3B%0A%20%20%20%20document.body.append(host)%3B%0A%20%20%20%20state.uiHost%20%3D%20host%3B%0A%20%20%20%20state.logList%20%3D%20shadow.querySelector(&#x27;.log&#x27;)%3B%0A%20%20%20%20state.status%20%3D%20shadow.querySelector(&#x27;.status&#x27;)%3B%0A%20%20%20%20const%20windowElement%20%3D%20shadow.querySelector(&#x27;.window&#x27;)%3B%0A%20%20%20%20const%20titlebar%20%3D%20shadow.querySelector(&#x27;.titlebar&#x27;)%3B%0A%20%20%20%20shadow.querySelector(&#x27;.close&#x27;).addEventListener(&#x27;click&#x27;%2C%20()%20%3D%3E%20destroy(&#x27;Archive%20mode%20disabled%20from%20the%20utility%20window.&#x27;))%3B%0A%20%20%20%20installWindowDrag(windowElement%2C%20titlebar)%3B%0A%20%20%7D%0A%0A%20%20function%20installWindowDrag(windowElement%2C%20handle)%20%7B%0A%20%20%20%20const%20onPointerDown%20%3D%20event%20%3D%3E%20%7B%0A%20%20%20%20%20%20if%20(event.button%20!%3D%3D%200%20%7C%7C%20event.target.closest(&#x27;button&#x27;))%20return%3B%0A%20%20%20%20%20%20const%20rect%20%3D%20windowElement.getBoundingClientRect()%3B%0A%20%20%20%20%20%20const%20offsetX%20%3D%20event.clientX%20-%20rect.left%3B%0A%20%20%20%20%20%20const%20offsetY%20%3D%20event.clientY%20-%20rect.top%3B%0A%20%20%20%20%20%20windowElement.style.right%20%3D%20&#x27;auto&#x27;%3B%0A%20%20%20%20%20%20handle.setPointerCapture(event.pointerId)%3B%0A%0A%20%20%20%20%20%20const%20onPointerMove%20%3D%20moveEvent%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20const%20maxLeft%20%3D%20Math.max(0%2C%20window.innerWidth%20-%20windowElement.offsetWidth)%3B%0A%20%20%20%20%20%20%20%20const%20maxTop%20%3D%20Math.max(0%2C%20window.innerHeight%20-%20windowElement.offsetHeight)%3B%0A%20%20%20%20%20%20%20%20const%20left%20%3D%20Math.min(maxLeft%2C%20Math.max(0%2C%20moveEvent.clientX%20-%20offsetX))%3B%0A%20%20%20%20%20%20%20%20const%20top%20%3D%20Math.min(maxTop%2C%20Math.max(0%2C%20moveEvent.clientY%20-%20offsetY))%3B%0A%20%20%20%20%20%20%20%20windowElement.style.left%20%3D%20%60%24%7Bleft%7Dpx%60%3B%0A%20%20%20%20%20%20%20%20windowElement.style.top%20%3D%20%60%24%7Btop%7Dpx%60%3B%0A%20%20%20%20%20%20%7D%3B%0A%0A%20%20%20%20%20%20const%20onPointerUp%20%3D%20upEvent%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20handle.releasePointerCapture(upEvent.pointerId)%3B%0A%20%20%20%20%20%20%20%20handle.removeEventListener(&#x27;pointermove&#x27;%2C%20onPointerMove)%3B%0A%20%20%20%20%20%20%20%20handle.removeEventListener(&#x27;pointerup&#x27;%2C%20onPointerUp)%3B%0A%20%20%20%20%20%20%20%20handle.removeEventListener(&#x27;pointercancel&#x27;%2C%20onPointerUp)%3B%0A%20%20%20%20%20%20%7D%3B%0A%0A%20%20%20%20%20%20handle.addEventListener(&#x27;pointermove&#x27;%2C%20onPointerMove)%3B%0A%20%20%20%20%20%20handle.addEventListener(&#x27;pointerup&#x27;%2C%20onPointerUp)%3B%0A%20%20%20%20%20%20handle.addEventListener(&#x27;pointercancel&#x27;%2C%20onPointerUp)%3B%0A%20%20%20%20%7D%3B%0A%0A%20%20%20%20handle.addEventListener(&#x27;pointerdown&#x27;%2C%20onPointerDown)%3B%0A%20%20%20%20state.dragCleanup%20%3D%20()%20%3D%3E%20handle.removeEventListener(&#x27;pointerdown&#x27;%2C%20onPointerDown)%3B%0A%20%20%7D%0A%0A%20%20function%20widenSidebar()%20%7B%0A%20%20%20%20const%20sidebar%20%3D%20queryFirst(&#x27;sidebar&#x27;%2C%20document%2C%20&#x27;resize-sidebar&#x27;%2C%20false)%3B%0A%20%20%20%20document.documentElement.style.setProperty(&#x27;--sidebar-width&#x27;%2C%20%60%24%7BSIDEBAR_WIDTH%7Dpx%60)%3B%0A%20%20%20%20if%20(!sidebar)%20%7B%0A%20%20%20%20%20%20reportMissing(&#x27;sidebar&#x27;%2C%20&#x27;resize-sidebar&#x27;%2C%20&#x27;The%20CSS%20variable%20was%20set%2C%20but%20the%20sidebar%20element%20was%20not%20found.&#x27;)%3B%0A%20%20%20%20%20%20return%3B%0A%20%20%20%20%7D%0A%20%20%20%20log(&#x27;success&#x27;%2C%20&#x27;resize-sidebar&#x27;%2C%20&#x27;Sidebar%20width%20increased.&#x27;%2C%20%7B%0A%20%20%20%20%20%20width%3A%20%60%24%7BSIDEBAR_WIDTH%7Dpx%60%2C%0A%20%20%20%20%20%20element%3A%20describeElement(sidebar)%0A%20%20%20%20%7D)%3B%0A%20%20%7D%0A%0A%20%20function%20installSidebarResizer()%20%7B%0A%20%20%20%20state.resizeHandle%3F.remove()%3B%0A%20%20%20%20const%20handle%20%3D%20document.createElement(&#x27;div&#x27;)%3B%0A%20%20%20%20handle.dataset.cgptArchiveResizer%20%3D%20&#x27;true&#x27;%3B%0A%20%20%20%20document.body.append(handle)%3B%0A%20%20%20%20state.resizeHandle%20%3D%20handle%3B%0A%0A%20%20%20%20const%20positionHandle%20%3D%20()%20%3D%3E%20%7B%0A%20%20%20%20%20%20const%20sidebar%20%3D%20queryFirst(&#x27;sidebar&#x27;%2C%20document%2C%20&#x27;position-sidebar-resizer&#x27;%2C%20false)%3B%0A%20%20%20%20%20%20if%20(!sidebar)%20%7B%0A%20%20%20%20%20%20%20%20handle.style.display%20%3D%20&#x27;none&#x27;%3B%0A%20%20%20%20%20%20%20%20return%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20const%20rect%20%3D%20sidebar.getBoundingClientRect()%3B%0A%20%20%20%20%20%20handle.style.display%20%3D%20&#x27;block&#x27;%3B%0A%20%20%20%20%20%20const%20leftSide%20%3D%20rect.left%20%3C%20window.innerWidth%20%2F%202%3B%0A%20%20%20%20%20%20handle.style.left%20%3D%20%60%24%7BleftSide%20%3F%20rect.right%20-%204%20%3A%20rect.left%20-%204%7Dpx%60%3B%0A%20%20%20%20%7D%3B%0A%0A%20%20%20%20const%20onPointerDown%20%3D%20event%20%3D%3E%20%7B%0A%20%20%20%20%20%20if%20(event.button%20!%3D%3D%200)%20return%3B%0A%20%20%20%20%20%20const%20sidebar%20%3D%20queryFirst(&#x27;sidebar&#x27;%2C%20document%2C%20&#x27;resize-sidebar-drag&#x27;%2C%20true)%3B%0A%20%20%20%20%20%20if%20(!sidebar)%20return%3B%0A%20%20%20%20%20%20const%20rect%20%3D%20sidebar.getBoundingClientRect()%3B%0A%20%20%20%20%20%20const%20leftSide%20%3D%20rect.left%20%3C%20window.innerWidth%20%2F%202%3B%0A%20%20%20%20%20%20handle.setPointerCapture(event.pointerId)%3B%0A%20%20%20%20%20%20log(&#x27;info&#x27;%2C%20&#x27;resize-sidebar-drag&#x27;%2C%20&#x27;Sidebar%20resize%20started.&#x27;%2C%20%7B%0A%20%20%20%20%20%20%20%20element%3A%20describeElement(sidebar)%2C%0A%20%20%20%20%20%20%20%20initialWidth%3A%20Math.round(rect.width)%0A%20%20%20%20%20%20%7D)%3B%0A%0A%20%20%20%20%20%20const%20onPointerMove%20%3D%20moveEvent%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20const%20rawWidth%20%3D%20leftSide%20%3F%20moveEvent.clientX%20%3A%20window.innerWidth%20-%20moveEvent.clientX%3B%0A%20%20%20%20%20%20%20%20const%20width%20%3D%20Math.min(760%2C%20Math.max(360%2C%20Math.round(rawWidth)))%3B%0A%20%20%20%20%20%20%20%20document.documentElement.style.setProperty(&#x27;--sidebar-width&#x27;%2C%20%60%24%7Bwidth%7Dpx%60)%3B%0A%20%20%20%20%20%20%20%20positionHandle()%3B%0A%20%20%20%20%20%20%7D%3B%0A%0A%20%20%20%20%20%20const%20onPointerUp%20%3D%20upEvent%20%3D%3E%20%7B%0A%20%20%20%20%20%20%20%20handle.releasePointerCapture(upEvent.pointerId)%3B%0A%20%20%20%20%20%20%20%20handle.removeEventListener(&#x27;pointermove&#x27;%2C%20onPointerMove)%3B%0A%20%20%20%20%20%20%20%20handle.removeEventListener(&#x27;pointerup&#x27;%2C%20onPointerUp)%3B%0A%20%20%20%20%20%20%20%20handle.removeEventListener(&#x27;pointercancel&#x27;%2C%20onPointerUp)%3B%0A%20%20%20%20%20%20%20%20log(&#x27;success&#x27;%2C%20&#x27;resize-sidebar-drag&#x27;%2C%20&#x27;Sidebar%20resize%20completed.&#x27;%2C%20%7B%0A%20%20%20%20%20%20%20%20%20%20width%3A%20document.documentElement.style.getPropertyValue(&#x27;--sidebar-width&#x27;)%0A%20%20%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20%7D%3B%0A%0A%20%20%20%20%20%20handle.addEventListener(&#x27;pointermove&#x27;%2C%20onPointerMove)%3B%0A%20%20%20%20%20%20handle.addEventListener(&#x27;pointerup&#x27;%2C%20onPointerUp)%3B%0A%20%20%20%20%20%20handle.addEventListener(&#x27;pointercancel&#x27;%2C%20onPointerUp)%3B%0A%20%20%20%20%7D%3B%0A%0A%20%20%20%20handle.addEventListener(&#x27;pointerdown&#x27;%2C%20onPointerDown)%3B%0A%20%20%20%20window.addEventListener(&#x27;resize&#x27;%2C%20positionHandle)%3B%0A%20%20%20%20positionHandle()%3B%0A%20%20%20%20state.resizeCleanup%20%3D%20()%20%3D%3E%20%7B%0A%20%20%20%20%20%20handle.removeEventListener(&#x27;pointerdown&#x27;%2C%20onPointerDown)%3B%0A%20%20%20%20%20%20window.removeEventListener(&#x27;resize&#x27;%2C%20positionHandle)%3B%0A%20%20%20%20%7D%3B%0A%20%20%7D%0A%0A%20%20function%20installObserver()%20%7B%0A%20%20%20%20state.observer%20%3D%20new%20MutationObserver(records%20%3D%3E%20%7B%0A%20%20%20%20%20%20const%20addedNodes%20%3D%20records.reduce((count%2C%20record)%20%3D%3E%20count%20%2B%20record.addedNodes.length%2C%200)%3B%0A%20%20%20%20%20%20if%20(addedNodes%20%3E%200)%20scheduleScan(%60mutation%3A%24%7BaddedNodes%7D%60)%3B%0A%20%20%20%20%7D)%3B%0A%20%20%20%20state.observer.observe(document.body%2C%20%7B%20childList%3A%20true%2C%20subtree%3A%20true%20%7D)%3B%0A%20%20%20%20log(&#x27;info&#x27;%2C%20&#x27;observe-chat-list&#x27;%2C%20&#x27;DOM%20observer%20installed%20for%20dynamically%20loaded%20conversation%20rows.&#x27;%2C%20%7B%0A%20%20%20%20%20%20root%3A%20describeElement(document.body)%0A%20%20%20%20%7D)%3B%0A%20%20%7D%0A%0A%20%20function%20scheduleScan(source)%20%7B%0A%20%20%20%20if%20(state.destroyed)%20return%3B%0A%20%20%20%20clearTimeout(state.scanTimer)%3B%0A%20%20%20%20state.scanTimer%20%3D%20window.setTimeout(()%20%3D%3E%20scan(source)%2C%20SCAN_DELAY_MS)%3B%0A%20%20%7D%0A%0A%20%20function%20scan(source)%20%7B%0A%20%20%20%20if%20(state.destroyed)%20return%3B%0A%20%20%20%20const%20history%20%3D%20queryFirst(&#x27;history&#x27;%2C%20document%2C%20&#x27;scan-history&#x27;%2C%20false)%3B%0A%20%20%20%20if%20(!history)%20%7B%0A%20%20%20%20%20%20reportMissing(&#x27;history&#x27;%2C%20&#x27;scan-history&#x27;%2C%20&#x27;Conversation%20controls%20cannot%20be%20installed%20until%20the%20history%20area%20exists.&#x27;)%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20const%20anchors%20%3D%20queryAll(&#x27;conversationRows&#x27;%2C%20document)%3B%0A%20%20%20%20if%20(anchors.length%20%3D%3D%3D%200)%20%7B%0A%20%20%20%20%20%20reportMissing(&#x27;conversationRows&#x27;%2C%20&#x27;scan-conversation-rows&#x27;%2C%20&#x27;No%20conversation%20rows%20were%20available%20during%20this%20scan.&#x27;)%3B%0A%20%20%20%20%20%20updateStatus()%3B%0A%20%20%20%20%20%20return%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20let%20installed%20%3D%200%3B%0A%20%20%20%20let%20skipped%20%3D%200%3B%0A%20%20%20%20for%20(const%20anchor%20of%20anchors)%20%7B%0A%20%20%20%20%20%20if%20(state.processedAnchors.has(anchor))%20%7B%0A%20%20%20%20%20%20%20%20skipped%20%2B%3D%201%3B%0A%20%20%20%20%20%20%20%20continue%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20if%20(installConversationControl(anchor))%20installed%20%2B%3D%201%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20log(installed%20%3E%200%20%3F%20&#x27;success&#x27;%20%3A%20&#x27;debug&#x27;%2C%20&#x27;scan-conversation-rows&#x27;%2C%20&#x27;Conversation%20row%20scan%20completed.&#x27;%2C%20%7B%0A%20%20%20%20%20%20source%2C%0A%20%20%20%20%20%20found%3A%20anchors.length%2C%0A%20%20%20%20%20%20installed%2C%0A%20%20%20%20%20%20alreadyProcessed%3A%20skipped%0A%20%20%20%20%7D)%3B%0A%20%20%20%20updateStatus()%3B%0A%20%20%7D%0A%0A%20%20function%20installConversationControl(anchor)%20%7B%0A%20%20%20%20const%20operation%20%3D%20&#x27;install-archive-control&#x27;%3B%0A%20%20%20%20const%20id%20%3D%20extractConversationId(anchor.href)%3B%0A%20%20%20%20if%20(!id)%20%7B%0A%20%20%20%20%20%20log(&#x27;error&#x27;%2C%20operation%2C%20&#x27;Conversation%20identifier%20could%20not%20be%20extracted%20from%20the%20row%20URL.&#x27;%2C%20%7B%0A%20%20%20%20%20%20%20%20element%3A%20describeElement(anchor)%2C%0A%20%20%20%20%20%20%20%20href%3A%20anchor.getAttribute(&#x27;href&#x27;)%20%7C%7C%20&#x27;&#x27;%2C%0A%20%20%20%20%20%20%20%20expectedPattern%3A%20&#x27;%2Fc%2F%7Bconversation-id%7D&#x27;%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20state.processedAnchors.add(anchor)%3B%0A%20%20%20%20%20%20return%20false%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20const%20title%20%3D%20getConversationTitle(anchor)%3B%0A%20%20%20%20const%20container%20%3D%20anchor.closest(&#x27;li&#x27;)%20%7C%7C%20anchor.parentElement%3B%0A%20%20%20%20if%20(!container)%20%7B%0A%20%20%20%20%20%20log(&#x27;error&#x27;%2C%20operation%2C%20&#x27;Conversation%20row%20container%20was%20not%20found.&#x27;%2C%20%7B%0A%20%20%20%20%20%20%20%20conversationId%3A%20id%2C%0A%20%20%20%20%20%20%20%20title%2C%0A%20%20%20%20%20%20%20%20element%3A%20describeElement(anchor)%2C%0A%20%20%20%20%20%20%20%20expectedContainer%3A%20&#x27;closest%20li%20or%20parentElement&#x27;%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20state.processedAnchors.add(anchor)%3B%0A%20%20%20%20%20%20return%20false%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20const%20existingHost%20%3D%20Array.from(container.children).find(child%20%3D%3E%20child.dataset%3F.cgptArchiveActionHost%20%3D%3D%3D%20&#x27;true&#x27;)%3B%0A%20%20%20%20if%20(existingHost)%20%7B%0A%20%20%20%20%20%20state.processedAnchors.add(anchor)%3B%0A%20%20%20%20%20%20registerEntry(id%2C%20%7B%20anchor%2C%20container%2C%20host%3A%20existingHost%2C%20button%3A%20existingHost.shadowRoot%3F.querySelector(&#x27;button&#x27;)%2C%20title%20%7D)%3B%0A%20%20%20%20%20%20applyState(id)%3B%0A%20%20%20%20%20%20return%20true%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20const%20host%20%3D%20document.createElement(&#x27;span&#x27;)%3B%0A%20%20%20%20host.dataset.cgptArchiveActionHost%20%3D%20&#x27;true&#x27;%3B%0A%20%20%20%20const%20shadow%20%3D%20host.attachShadow(%7B%20mode%3A%20&#x27;open&#x27;%20%7D)%3B%0A%20%20%20%20shadow.innerHTML%20%3D%20%60%0A%20%20%20%20%20%20%3Cstyle%3E%0A%20%20%20%20%20%20%20%20%3Ahost%20%7B%20all%3A%20initial%3B%20display%3A%20block%3B%20width%3A%2092px%3B%20%7D%0A%20%20%20%20%20%20%20%20button%20%7B%0A%20%20%20%20%20%20%20%20%20%20width%3A%2092px%3B%0A%20%20%20%20%20%20%20%20%20%20min-width%3A%2092px%3B%0A%20%20%20%20%20%20%20%20%20%20height%3A%2032px%3B%0A%20%20%20%20%20%20%20%20%20%20padding%3A%200%209px%3B%0A%20%20%20%20%20%20%20%20%20%20border%3A%201px%20solid%20%236b7280%3B%0A%20%20%20%20%20%20%20%20%20%20border-radius%3A%204px%3B%0A%20%20%20%20%20%20%20%20%20%20background%3A%20%23f9fafb%3B%0A%20%20%20%20%20%20%20%20%20%20color%3A%20%23111827%3B%0A%20%20%20%20%20%20%20%20%20%20font%3A%20600%2012px%2F1%20Segoe%20UI%2C%20Arial%2C%20sans-serif%3B%0A%20%20%20%20%20%20%20%20%20%20cursor%3A%20pointer%3B%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20button%3Ahover%3Anot(%3Adisabled)%20%7B%20background%3A%20%23e5e7eb%3B%20border-color%3A%20%23374151%3B%20%7D%0A%20%20%20%20%20%20%20%20button%3Afocus-visible%20%7B%20outline%3A%202px%20solid%20%232563eb%3B%20outline-offset%3A%202px%3B%20%7D%0A%20%20%20%20%20%20%20%20button%5Bdata-state%3D%22pending%22%5D%20%7B%20cursor%3A%20wait%3B%20background%3A%20%23dbeafe%3B%20border-color%3A%20%232563eb%3B%20%7D%0A%20%20%20%20%20%20%20%20button%5Bdata-state%3D%22archived%22%5D%20%7B%20cursor%3A%20default%3B%20background%3A%20%23e5e7eb%3B%20color%3A%20%234b5563%3B%20%7D%0A%20%20%20%20%20%20%20%20button%5Bdata-state%3D%22error%22%5D%20%7B%20background%3A%20%23fee2e2%3B%20border-color%3A%20%23dc2626%3B%20color%3A%20%23991b1b%3B%20%7D%0A%20%20%20%20%20%20%20%20button%3Adisabled%20%7B%20opacity%3A%200.85%3B%20%7D%0A%20%20%20%20%20%20%3C%2Fstyle%3E%0A%20%20%20%20%20%20%3Cbutton%20type%3D%22button%22%3EArchive%3C%2Fbutton%3E%0A%20%20%20%20%60%3B%0A%20%20%20%20const%20button%20%3D%20shadow.querySelector(&#x27;button&#x27;)%3B%0A%20%20%20%20button.addEventListener(&#x27;click&#x27;%2C%20event%20%3D%3E%20%7B%0A%20%20%20%20%20%20event.preventDefault()%3B%0A%20%20%20%20%20%20event.stopPropagation()%3B%0A%20%20%20%20%20%20void%20archiveConversation(id%2C%20title)%3B%0A%20%20%20%20%7D)%3B%0A%0A%20%20%20%20container.dataset.cgptArchiveRow%20%3D%20&#x27;true&#x27;%3B%0A%20%20%20%20container.append(host)%3B%0A%20%20%20%20state.processedAnchors.add(anchor)%3B%0A%20%20%20%20registerEntry(id%2C%20%7B%20anchor%2C%20container%2C%20host%2C%20button%2C%20title%20%7D)%3B%0A%20%20%20%20applyState(id)%3B%0A%20%20%20%20log(&#x27;info&#x27;%2C%20operation%2C%20&#x27;Archive%20control%20installed.&#x27;%2C%20%7B%0A%20%20%20%20%20%20conversationId%3A%20id%2C%0A%20%20%20%20%20%20title%2C%0A%20%20%20%20%20%20anchor%3A%20describeElement(anchor)%2C%0A%20%20%20%20%20%20container%3A%20describeElement(container)%0A%20%20%20%20%7D)%3B%0A%20%20%20%20return%20true%3B%0A%20%20%7D%0A%0A%20%20function%20registerEntry(id%2C%20entry)%20%7B%0A%20%20%20%20const%20entries%20%3D%20state.entriesById.get(id)%20%7C%7C%20new%20Set()%3B%0A%20%20%20%20entries.add(entry)%3B%0A%20%20%20%20state.entriesById.set(id%2C%20entries)%3B%0A%20%20%7D%0A%0A%20%20async%20function%20archiveConversation(id%2C%20title)%20%7B%0A%20%20%20%20const%20operation%20%3D%20%60archive%3A%24%7Bid%7D%60%3B%0A%20%20%20%20const%20currentState%20%3D%20getState(id)%3B%0A%20%20%20%20if%20(currentState%20%3D%3D%3D%20&#x27;pending&#x27;%20%7C%7C%20currentState%20%3D%3D%3D%20&#x27;archived&#x27;)%20%7B%0A%20%20%20%20%20%20log(&#x27;warn&#x27;%2C%20operation%2C%20&#x27;Archive%20action%20ignored%20because%20the%20conversation%20is%20not%20actionable.&#x27;%2C%20%7B%0A%20%20%20%20%20%20%20%20conversationId%3A%20id%2C%0A%20%20%20%20%20%20%20%20title%2C%0A%20%20%20%20%20%20%20%20currentState%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20return%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20setState(id%2C%20&#x27;pending&#x27;)%3B%0A%20%20%20%20log(&#x27;info&#x27;%2C%20operation%2C%20&#x27;Archiving%20conversation.&#x27;%2C%20%7B%0A%20%20%20%20%20%20conversationId%3A%20id%2C%0A%20%20%20%20%20%20title%2C%0A%20%20%20%20%20%20endpoint%3A%20%60%2Fbackend-api%2Fconversation%2F%24%7Bid%7D%60%0A%20%20%20%20%7D)%3B%0A%0A%20%20%20%20try%20%7B%0A%20%20%20%20%20%20const%20token%20%3D%20await%20getAccessToken()%3B%0A%20%20%20%20%20%20const%20controller%20%3D%20new%20AbortController()%3B%0A%20%20%20%20%20%20const%20timeout%20%3D%20window.setTimeout(()%20%3D%3E%20controller.abort()%2C%20REQUEST_TIMEOUT_MS)%3B%0A%20%20%20%20%20%20let%20response%3B%0A%20%20%20%20%20%20try%20%7B%0A%20%20%20%20%20%20%20%20const%20headers%20%3D%20%7B%0A%20%20%20%20%20%20%20%20%20%20accept%3A%20&#x27;*%2F*&#x27;%2C%0A%20%20%20%20%20%20%20%20%20%20&#x27;content-type&#x27;%3A%20&#x27;application%2Fjson&#x27;%0A%20%20%20%20%20%20%20%20%7D%3B%0A%20%20%20%20%20%20%20%20if%20(token)%20headers.authorization%20%3D%20%60Bearer%20%24%7Btoken%7D%60%3B%0A%20%20%20%20%20%20%20%20response%20%3D%20await%20fetch(%60%2Fbackend-api%2Fconversation%2F%24%7BencodeURIComponent(id)%7D%60%2C%20%7B%0A%20%20%20%20%20%20%20%20%20%20method%3A%20&#x27;PATCH&#x27;%2C%0A%20%20%20%20%20%20%20%20%20%20credentials%3A%20&#x27;include&#x27;%2C%0A%20%20%20%20%20%20%20%20%20%20headers%2C%0A%20%20%20%20%20%20%20%20%20%20body%3A%20JSON.stringify(%7B%20is_archived%3A%20true%20%7D)%2C%0A%20%20%20%20%20%20%20%20%20%20signal%3A%20controller.signal%0A%20%20%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20%7D%20finally%20%7B%0A%20%20%20%20%20%20%20%20clearTimeout(timeout)%3B%0A%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20const%20responseText%20%3D%20await%20response.text().catch(()%20%3D%3E%20&#x27;&#x27;)%3B%0A%20%20%20%20%20%20if%20(!response.ok)%20%7B%0A%20%20%20%20%20%20%20%20throw%20new%20Error(%60Archive%20request%20failed%20with%20HTTP%20%24%7Bresponse.status%7D%20%24%7Bresponse.statusText%7D.%20Response%3A%20%24%7BresponseText.slice(0%2C%20300)%20%7C%7C%20&#x27;%5Bempty%5D&#x27;%7D%60)%3B%0A%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20state.archivedIds.add(id)%3B%0A%20%20%20%20%20%20saveArchivedIds()%3B%0A%20%20%20%20%20%20setState(id%2C%20&#x27;archived&#x27;)%3B%0A%20%20%20%20%20%20log(&#x27;success&#x27;%2C%20operation%2C%20&#x27;Conversation%20archived.&#x27;%2C%20%7B%0A%20%20%20%20%20%20%20%20conversationId%3A%20id%2C%0A%20%20%20%20%20%20%20%20title%2C%0A%20%20%20%20%20%20%20%20status%3A%20response.status%2C%0A%20%20%20%20%20%20%20%20authorizationAttached%3A%20Boolean(token)%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%7D%20catch%20(error)%20%7B%0A%20%20%20%20%20%20setState(id%2C%20&#x27;error&#x27;)%3B%0A%20%20%20%20%20%20log(&#x27;error&#x27;%2C%20operation%2C%20&#x27;Conversation%20archive%20operation%20failed.&#x27;%2C%20%7B%0A%20%20%20%20%20%20%20%20conversationId%3A%20id%2C%0A%20%20%20%20%20%20%20%20title%2C%0A%20%20%20%20%20%20%20%20endpoint%3A%20%60%2Fbackend-api%2Fconversation%2F%24%7Bid%7D%60%2C%0A%20%20%20%20%20%20%20%20timeoutMs%3A%20REQUEST_TIMEOUT_MS%2C%0A%20%20%20%20%20%20%20%20error%3A%20formatError(error)%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%7D%0A%20%20%7D%0A%0A%20%20async%20function%20getAccessToken()%20%7B%0A%20%20%20%20if%20(state.tokenPromise)%20return%20state.tokenPromise%3B%0A%20%20%20%20state.tokenPromise%20%3D%20(async%20()%20%3D%3E%20%7B%0A%20%20%20%20%20%20const%20operation%20%3D%20&#x27;load-session-token&#x27;%3B%0A%20%20%20%20%20%20try%20%7B%0A%20%20%20%20%20%20%20%20log(&#x27;info&#x27;%2C%20operation%2C%20&#x27;Requesting%20the%20current%20ChatGPT%20session.&#x27;%2C%20%7B%0A%20%20%20%20%20%20%20%20%20%20endpoint%3A%20&#x27;%2Fapi%2Fauth%2Fsession&#x27;%0A%20%20%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20%20%20const%20response%20%3D%20await%20fetch(&#x27;%2Fapi%2Fauth%2Fsession&#x27;%2C%20%7B%0A%20%20%20%20%20%20%20%20%20%20credentials%3A%20&#x27;include&#x27;%2C%0A%20%20%20%20%20%20%20%20%20%20headers%3A%20%7B%20accept%3A%20&#x27;application%2Fjson&#x27;%20%7D%0A%20%20%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20%20%20if%20(!response.ok)%20%7B%0A%20%20%20%20%20%20%20%20%20%20log(&#x27;warn&#x27;%2C%20operation%2C%20&#x27;Session%20endpoint%20did%20not%20return%20a%20successful%20response.%20Archive%20requests%20will%20use%20cookies%20only.&#x27;%2C%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20status%3A%20response.status%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20statusText%3A%20response.statusText%0A%20%20%20%20%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20%20%20%20%20return%20null%3B%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20const%20session%20%3D%20await%20response.json()%3B%0A%20%20%20%20%20%20%20%20const%20token%20%3D%20typeof%20session%3F.accessToken%20%3D%3D%3D%20&#x27;string&#x27;%20%3F%20session.accessToken%20%3A%20null%3B%0A%20%20%20%20%20%20%20%20log(token%20%3F%20&#x27;success&#x27;%20%3A%20&#x27;warn&#x27;%2C%20operation%2C%20token%20%3F%20&#x27;Session%20access%20token%20loaded.&#x27;%20%3A%20&#x27;Session%20response%20did%20not%20contain%20an%20access%20token.%20Archive%20requests%20will%20use%20cookies%20only.&#x27;%2C%20%7B%0A%20%20%20%20%20%20%20%20%20%20tokenPresent%3A%20Boolean(token)%2C%0A%20%20%20%20%20%20%20%20%20%20tokenValueLogged%3A%20false%0A%20%20%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20%20%20return%20token%3B%0A%20%20%20%20%20%20%7D%20catch%20(error)%20%7B%0A%20%20%20%20%20%20%20%20log(&#x27;error&#x27;%2C%20operation%2C%20&#x27;Session%20token%20lookup%20failed.%20Archive%20requests%20will%20use%20cookies%20only.&#x27;%2C%20%7B%0A%20%20%20%20%20%20%20%20%20%20endpoint%3A%20&#x27;%2Fapi%2Fauth%2Fsession&#x27;%2C%0A%20%20%20%20%20%20%20%20%20%20error%3A%20formatError(error)%0A%20%20%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20%20%20return%20null%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D)()%3B%0A%20%20%20%20return%20state.tokenPromise%3B%0A%20%20%7D%0A%0A%20%20function%20setState(id%2C%20status)%20%7B%0A%20%20%20%20if%20(status%20%3D%3D%3D%20&#x27;archived&#x27;)%20state.archivedIds.add(id)%3B%0A%20%20%20%20for%20(const%20entry%20of%20state.entriesById.get(id)%20%7C%7C%20%5B%5D)%20%7B%0A%20%20%20%20%20%20if%20(!entry.container.isConnected)%20continue%3B%0A%20%20%20%20%20%20entry.container.dataset.cgptArchiveState%20%3D%20status%3B%0A%20%20%20%20%20%20if%20(!entry.button)%20continue%3B%0A%20%20%20%20%20%20entry.button.dataset.state%20%3D%20status%3B%0A%20%20%20%20%20%20entry.button.disabled%20%3D%20status%20%3D%3D%3D%20&#x27;pending&#x27;%20%7C%7C%20status%20%3D%3D%3D%20&#x27;archived&#x27;%3B%0A%20%20%20%20%20%20entry.button.textContent%20%3D%20status%20%3D%3D%3D%20&#x27;pending&#x27;%20%3F%20&#x27;Archiving&#x27;%20%3A%20status%20%3D%3D%3D%20&#x27;archived&#x27;%20%3F%20&#x27;Archived&#x27;%20%3A%20status%20%3D%3D%3D%20&#x27;error&#x27;%20%3F%20&#x27;Retry&#x27;%20%3A%20&#x27;Archive&#x27;%3B%0A%20%20%20%20%20%20entry.button.title%20%3D%20status%20%3D%3D%3D%20&#x27;archived&#x27;%0A%20%20%20%20%20%20%20%20%3F%20%60Archived%3A%20%24%7Bentry.title%7D%60%0A%20%20%20%20%20%20%20%20%3A%20status%20%3D%3D%3D%20&#x27;error&#x27;%0A%20%20%20%20%20%20%20%20%20%20%3F%20%60Archive%20failed.%20Retry%3A%20%24%7Bentry.title%7D%60%0A%20%20%20%20%20%20%20%20%20%20%3A%20%60Archive%3A%20%24%7Bentry.title%7D%60%3B%0A%20%20%20%20%7D%0A%20%20%20%20updateStatus()%3B%0A%20%20%7D%0A%0A%20%20function%20applyState(id)%20%7B%0A%20%20%20%20setState(id%2C%20getState(id))%3B%0A%20%20%7D%0A%0A%20%20function%20getState(id)%20%7B%0A%20%20%20%20if%20(state.archivedIds.has(id))%20return%20&#x27;archived&#x27;%3B%0A%20%20%20%20const%20entries%20%3D%20state.entriesById.get(id)%20%7C%7C%20%5B%5D%3B%0A%20%20%20%20for%20(const%20entry%20of%20entries)%20%7B%0A%20%20%20%20%20%20const%20status%20%3D%20entry.container.dataset.cgptArchiveState%3B%0A%20%20%20%20%20%20if%20(status)%20return%20status%3B%0A%20%20%20%20%7D%0A%20%20%20%20return%20&#x27;ready&#x27;%3B%0A%20%20%7D%0A%0A%20%20function%20updateStatus()%20%7B%0A%20%20%20%20if%20(!state.status)%20return%3B%0A%20%20%20%20const%20tracked%20%3D%20Array.from(state.entriesById.values()).reduce((total%2C%20entries)%20%3D%3E%20total%20%2B%20entries.size%2C%200)%3B%0A%20%20%20%20state.status.textContent%20%3D%20%60%24%7Btracked%7D%20rows%2C%20%24%7Bstate.archivedIds.size%7D%20archived%60%3B%0A%20%20%7D%0A%0A%20%20function%20queryFirst(locatorName%2C%20root%2C%20operation%2C%20logFailure)%20%7B%0A%20%20%20%20const%20locator%20%3D%20LOCATORS%5BlocatorName%5D%3B%0A%20%20%20%20if%20(!locator)%20%7B%0A%20%20%20%20%20%20log(&#x27;error&#x27;%2C%20operation%2C%20&#x27;Unknown%20locator%20was%20requested.&#x27;%2C%20%7B%20locatorName%20%7D)%3B%0A%20%20%20%20%20%20return%20null%3B%0A%20%20%20%20%7D%0A%20%20%20%20for%20(const%20selector%20of%20locator.selectors)%20%7B%0A%20%20%20%20%20%20try%20%7B%0A%20%20%20%20%20%20%20%20const%20element%20%3D%20root.querySelector(selector)%3B%0A%20%20%20%20%20%20%20%20if%20(element)%20return%20element%3B%0A%20%20%20%20%20%20%7D%20catch%20(error)%20%7B%0A%20%20%20%20%20%20%20%20log(&#x27;error&#x27;%2C%20operation%2C%20&#x27;DOM%20selector%20evaluation%20failed.&#x27;%2C%20%7B%0A%20%20%20%20%20%20%20%20%20%20locatorName%2C%0A%20%20%20%20%20%20%20%20%20%20locatorDescription%3A%20locator.description%2C%0A%20%20%20%20%20%20%20%20%20%20selector%2C%0A%20%20%20%20%20%20%20%20%20%20root%3A%20describeElement(root)%2C%0A%20%20%20%20%20%20%20%20%20%20error%3A%20formatError(error)%0A%20%20%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%20%20if%20(logFailure)%20reportMissing(locatorName%2C%20operation)%3B%0A%20%20%20%20return%20null%3B%0A%20%20%7D%0A%0A%20%20function%20queryAll(locatorName%2C%20root)%20%7B%0A%20%20%20%20const%20locator%20%3D%20LOCATORS%5BlocatorName%5D%3B%0A%20%20%20%20if%20(!locator)%20%7B%0A%20%20%20%20%20%20log(&#x27;error&#x27;%2C%20&#x27;query-all&#x27;%2C%20&#x27;Unknown%20locator%20was%20requested.&#x27;%2C%20%7B%20locatorName%20%7D)%3B%0A%20%20%20%20%20%20return%20%5B%5D%3B%0A%20%20%20%20%7D%0A%20%20%20%20const%20result%20%3D%20%5B%5D%3B%0A%20%20%20%20const%20seen%20%3D%20new%20Set()%3B%0A%20%20%20%20for%20(const%20selector%20of%20locator.selectors)%20%7B%0A%20%20%20%20%20%20try%20%7B%0A%20%20%20%20%20%20%20%20for%20(const%20element%20of%20root.querySelectorAll(selector))%20%7B%0A%20%20%20%20%20%20%20%20%20%20if%20(!seen.has(element))%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20seen.add(element)%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20result.push(element)%3B%0A%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%7D%20catch%20(error)%20%7B%0A%20%20%20%20%20%20%20%20log(&#x27;error&#x27;%2C%20&#x27;query-all&#x27;%2C%20&#x27;DOM%20selector%20evaluation%20failed.&#x27;%2C%20%7B%0A%20%20%20%20%20%20%20%20%20%20locatorName%2C%0A%20%20%20%20%20%20%20%20%20%20locatorDescription%3A%20locator.description%2C%0A%20%20%20%20%20%20%20%20%20%20selector%2C%0A%20%20%20%20%20%20%20%20%20%20root%3A%20describeElement(root)%2C%0A%20%20%20%20%20%20%20%20%20%20error%3A%20formatError(error)%0A%20%20%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%20%20return%20result%3B%0A%20%20%7D%0A%0A%20%20function%20reportMissing(locatorName%2C%20operation%2C%20consequence%20%3D%20&#x27;&#x27;)%20%7B%0A%20%20%20%20const%20locator%20%3D%20LOCATORS%5BlocatorName%5D%3B%0A%20%20%20%20log(&#x27;error&#x27;%2C%20operation%2C%20&#x27;Expected%20page%20element%20was%20not%20found.&#x27;%2C%20%7B%0A%20%20%20%20%20%20locatorName%2C%0A%20%20%20%20%20%20locatorDescription%3A%20locator%3F.description%20%7C%7C%20&#x27;Unknown%20locator&#x27;%2C%0A%20%20%20%20%20%20selectors%3A%20locator%3F.selectors%3F.join(&#x27;%20%7C%7C%20&#x27;)%20%7C%7C%20&#x27;%5Bnone%5D&#x27;%2C%0A%20%20%20%20%20%20root%3A%20&#x27;document&#x27;%2C%0A%20%20%20%20%20%20page%3A%20location.href%2C%0A%20%20%20%20%20%20consequence%0A%20%20%20%20%7D)%3B%0A%20%20%7D%0A%0A%20%20function%20getConversationTitle(anchor)%20%7B%0A%20%20%20%20for%20(const%20selector%20of%20LOCATORS.conversationTitle.selectors)%20%7B%0A%20%20%20%20%20%20const%20element%20%3D%20anchor.querySelector(selector)%3B%0A%20%20%20%20%20%20const%20text%20%3D%20element%3F.textContent%3F.trim()%3B%0A%20%20%20%20%20%20if%20(text)%20return%20text%3B%0A%20%20%20%20%7D%0A%20%20%20%20const%20ariaLabel%20%3D%20anchor.getAttribute(&#x27;aria-label&#x27;)%3F.trim()%3B%0A%20%20%20%20return%20ariaLabel%20%7C%7C%20%60Conversation%20%24%7BextractConversationId(anchor.href)%20%7C%7C%20&#x27;unknown&#x27;%7D%60%3B%0A%20%20%7D%0A%0A%20%20function%20extractConversationId(href)%20%7B%0A%20%20%20%20try%20%7B%0A%20%20%20%20%20%20const%20pathname%20%3D%20new%20URL(href%2C%20location.href).pathname%3B%0A%20%20%20%20%20%20const%20match%20%3D%20pathname.match(%2F%5E%5C%2Fc%5C%2F(%5B%5E%2F%3F%23%5D%2B)%2F)%3B%0A%20%20%20%20%20%20return%20match%3F.%5B1%5D%20%7C%7C%20null%3B%0A%20%20%20%20%7D%20catch%20%7B%0A%20%20%20%20%20%20return%20null%3B%0A%20%20%20%20%7D%0A%20%20%7D%0A%0A%20%20function%20loadArchivedIds()%20%7B%0A%20%20%20%20try%20%7B%0A%20%20%20%20%20%20const%20parsed%20%3D%20JSON.parse(localStorage.getItem(STORAGE_KEY)%20%7C%7C%20&#x27;%5B%5D&#x27;)%3B%0A%20%20%20%20%20%20return%20new%20Set(Array.isArray(parsed)%20%3F%20parsed.filter(value%20%3D%3E%20typeof%20value%20%3D%3D%3D%20&#x27;string&#x27;%20%26%26%20value.length%20%3E%200)%20%3A%20%5B%5D)%3B%0A%20%20%20%20%7D%20catch%20%7B%0A%20%20%20%20%20%20return%20new%20Set()%3B%0A%20%20%20%20%7D%0A%20%20%7D%0A%0A%20%20function%20saveArchivedIds()%20%7B%0A%20%20%20%20try%20%7B%0A%20%20%20%20%20%20localStorage.setItem(STORAGE_KEY%2C%20JSON.stringify(Array.from(state.archivedIds)))%3B%0A%20%20%20%20%20%20log(&#x27;debug&#x27;%2C%20&#x27;save-archived-state&#x27;%2C%20&#x27;Archived%20conversation%20state%20saved.&#x27;%2C%20%7B%0A%20%20%20%20%20%20%20%20storageKey%3A%20STORAGE_KEY%2C%0A%20%20%20%20%20%20%20%20count%3A%20state.archivedIds.size%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%7D%20catch%20(error)%20%7B%0A%20%20%20%20%20%20log(&#x27;error&#x27;%2C%20&#x27;save-archived-state&#x27;%2C%20&#x27;Archived%20conversation%20state%20could%20not%20be%20saved.&#x27;%2C%20%7B%0A%20%20%20%20%20%20%20%20storageKey%3A%20STORAGE_KEY%2C%0A%20%20%20%20%20%20%20%20error%3A%20formatError(error)%0A%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%7D%0A%20%20%7D%0A%0A%20%20function%20describeElement(element)%20%7B%0A%20%20%20%20if%20(!element)%20return%20&#x27;%5Bnull%5D&#x27;%3B%0A%20%20%20%20if%20(element%20%3D%3D%3D%20document)%20return%20&#x27;document&#x27;%3B%0A%20%20%20%20if%20(element%20%3D%3D%3D%20document.body)%20return%20&#x27;body&#x27;%3B%0A%20%20%20%20const%20tag%20%3D%20element.tagName%3F.toLowerCase%3F.()%20%7C%7C%20element.nodeName%20%7C%7C%20&#x27;node&#x27;%3B%0A%20%20%20%20const%20id%20%3D%20element.id%20%3F%20%60%23%24%7Belement.id%7D%60%20%3A%20&#x27;&#x27;%3B%0A%20%20%20%20const%20classes%20%3D%20typeof%20element.className%20%3D%3D%3D%20&#x27;string&#x27;%0A%20%20%20%20%20%20%3F%20element.className.trim().split(%2F%5Cs%2B%2F).filter(Boolean).slice(0%2C%204).map(name%20%3D%3E%20%60.%24%7Bname%7D%60).join(&#x27;&#x27;)%0A%20%20%20%20%20%20%3A%20&#x27;&#x27;%3B%0A%20%20%20%20const%20href%20%3D%20element.getAttribute%3F.(&#x27;href&#x27;)%3B%0A%20%20%20%20return%20%60%24%7Btag%7D%24%7Bid%7D%24%7Bclasses%7D%24%7Bhref%20%3F%20%60%5Bhref%3D%22%24%7Bhref%7D%22%5D%60%20%3A%20&#x27;&#x27;%7D%60%3B%0A%20%20%7D%0A%0A%20%20function%20log(level%2C%20operation%2C%20message%2C%20context%20%3D%20%7B%7D)%20%7B%0A%20%20%20%20const%20timestamp%20%3D%20new%20Date().toISOString()%3B%0A%20%20%20%20const%20safeContext%20%3D%20sanitizeContext(context)%3B%0A%20%20%20%20const%20line%20%3D%20%60%5B%24%7Btimestamp%7D%5D%20%5B%24%7Blevel.toUpperCase()%7D%5D%20%5B%24%7Boperation%7D%5D%20%24%7Bmessage%7D%24%7BObject.keys(safeContext).length%20%3F%20%60%5Cn%24%7BJSON.stringify(safeContext)%7D%60%20%3A%20&#x27;&#x27;%7D%60%3B%0A%20%20%20%20console%5Blevel%20%3D%3D%3D%20&#x27;debug&#x27;%20%3F%20&#x27;debug&#x27;%20%3A%20level%20%3D%3D%3D%20&#x27;error&#x27;%20%3F%20&#x27;error&#x27;%20%3A%20level%20%3D%3D%3D%20&#x27;warn&#x27;%20%3F%20&#x27;warn&#x27;%20%3A%20&#x27;log&#x27;%5D(%60%5BChatGPT%20Archive%20Mode%5D%20%24%7Bline%7D%60)%3B%0A%20%20%20%20if%20(!state.logList)%20return%3B%0A%20%20%20%20const%20item%20%3D%20document.createElement(&#x27;li&#x27;)%3B%0A%20%20%20%20item.className%20%3D%20&#x27;entry&#x27;%3B%0A%20%20%20%20item.dataset.level%20%3D%20level%3B%0A%20%20%20%20item.textContent%20%3D%20line%3B%0A%20%20%20%20state.logList.append(item)%3B%0A%20%20%20%20while%20(state.logList.children.length%20%3E%20500)%20state.logList.firstElementChild%3F.remove()%3B%0A%20%20%20%20state.logList.scrollTop%20%3D%20state.logList.scrollHeight%3B%0A%20%20%7D%0A%0A%20%20function%20sanitizeContext(context)%20%7B%0A%20%20%20%20const%20safe%20%3D%20%7B%7D%3B%0A%20%20%20%20for%20(const%20%5Bkey%2C%20value%5D%20of%20Object.entries(context))%20%7B%0A%20%20%20%20%20%20safe%5Bkey%5D%20%3D%20%2Ftoken%7Cauthorization%7Ccookie%7Csecret%2Fi.test(key)%20%26%26%20!%2Fpresent%7Cattached%7Clogged%2Fi.test(key)%0A%20%20%20%20%20%20%20%20%3F%20&#x27;%5Bredacted%5D&#x27;%0A%20%20%20%20%20%20%20%20%3A%20String(value).replace(%2FBearer%5Cs%2B%5BA-Za-z0-9._~-%5D%2B%2Fgi%2C%20&#x27;Bearer%20%5Bredacted%5D&#x27;)%3B%0A%20%20%20%20%7D%0A%20%20%20%20return%20safe%3B%0A%20%20%7D%0A%0A%20%20function%20formatError(error)%20%7B%0A%20%20%20%20if%20(error%20instanceof%20DOMException%20%26%26%20error.name%20%3D%3D%3D%20&#x27;AbortError&#x27;)%20return%20%60Request%20timed%20out%20after%20%24%7BREQUEST_TIMEOUT_MS%7Dms.%60%3B%0A%20%20%20%20if%20(error%20instanceof%20Error)%20return%20%60%24%7Berror.name%7D%3A%20%24%7Berror.message%7D%60%3B%0A%20%20%20%20return%20String(error)%3B%0A%20%20%7D%0A%0A%20%20function%20delay(ms)%20%7B%0A%20%20%20%20return%20new%20Promise(resolve%20%3D%3E%20setTimeout(resolve%2C%20ms))%3B%0A%20%20%7D%0A%0A%20%20function%20destroy(reason)%20%7B%0A%20%20%20%20if%20(state.destroyed)%20return%3B%0A%20%20%20%20log(&#x27;info&#x27;%2C%20&#x27;shutdown&#x27;%2C%20reason%20%7C%7C%20&#x27;Archive%20mode%20disabled.&#x27;%2C%20%7B%0A%20%20%20%20%20%20trackedConversations%3A%20state.entriesById.size%2C%0A%20%20%20%20%20%20archivedConversations%3A%20state.archivedIds.size%0A%20%20%20%20%7D)%3B%0A%20%20%20%20state.destroyed%20%3D%20true%3B%0A%20%20%20%20clearTimeout(state.scanTimer)%3B%0A%20%20%20%20state.observer%3F.disconnect()%3B%0A%20%20%20%20state.dragCleanup%3F.()%3B%0A%20%20%20%20state.resizeCleanup%3F.()%3B%0A%20%20%20%20state.resizeHandle%3F.remove()%3B%0A%20%20%20%20state.uiHost%3F.remove()%3B%0A%20%20%20%20document.getElementById(HOST_STYLE_ID)%3F.remove()%3B%0A%20%20%20%20for%20(const%20entries%20of%20state.entriesById.values())%20%7B%0A%20%20%20%20%20%20for%20(const%20entry%20of%20entries)%20%7B%0A%20%20%20%20%20%20%20%20entry.host%3F.remove()%3B%0A%20%20%20%20%20%20%20%20if%20(entry.container%3F.isConnected)%20%7B%0A%20%20%20%20%20%20%20%20%20%20delete%20entry.container.dataset.cgptArchiveRow%3B%0A%20%20%20%20%20%20%20%20%20%20delete%20entry.container.dataset.cgptArchiveState%3B%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%20%20if%20(state.originalSidebarWidth)%20%7B%0A%20%20%20%20%20%20document.documentElement.style.setProperty(&#x27;--sidebar-width&#x27;%2C%20state.originalSidebarWidth)%3B%0A%20%20%20%20%7D%20else%20%7B%0A%20%20%20%20%20%20document.documentElement.style.removeProperty(&#x27;--sidebar-width&#x27;)%3B%0A%20%20%20%20%7D%0A%20%20%20%20delete%20window%5BAPP_KEY%5D%3B%0A%20%20%7D%0A%7D)()%3B%0A">ChatGPT Archive Mode</a>
+    <textarea readonly aria-label="Readable bookmarklet source">javascript:(() =&gt; {
+  &#x27;use strict&#x27;;
+
+  const APP_KEY = &#x27;__CHATGPT_ARCHIVE_MODE_V1__&#x27;;
+  const APP_VERSION = &#x27;1.0.0&#x27;;
+  const UI_HOST_ID = &#x27;cgpt-archive-mode-v1-ui&#x27;;
+  const HOST_STYLE_ID = &#x27;cgpt-archive-mode-v1-styles&#x27;;
+  const STORAGE_KEY = &#x27;cgpt-archive-mode.archived-conversation-ids.v1&#x27;;
+  const SIDEBAR_WIDTH = 600;
+  const REQUEST_TIMEOUT_MS = 30000;
+  const SCAN_DELAY_MS = 120;
+
+  const LOCATORS = Object.freeze({
+    sidebar: Object.freeze({
+      description: &#x27;Expanded ChatGPT sidebar&#x27;,
+      selectors: Object.freeze([
+        &#x27;#stage-slideover-sidebar&#x27;,
+        &#x27;[id=&quot;stage-slideover-sidebar&quot;]&#x27;
+      ])
+    }),
+    history: Object.freeze({
+      description: &#x27;Scrollable ChatGPT chat-history area&#x27;,
+      selectors: Object.freeze([
+        &#x27;#stage-slideover-sidebar nav[aria-label=&quot;Chat history&quot;]&#x27;,
+        &#x27;#stage-slideover-sidebar [aria-label=&quot;Chat history&quot;]&#x27;,
+        &#x27;#history&#x27;
+      ])
+    }),
+    conversationRows: Object.freeze({
+      description: &#x27;Conversation links in the ChatGPT sidebar&#x27;,
+      selectors: Object.freeze([
+        &#x27;#stage-slideover-sidebar a[data-sidebar-item=&quot;true&quot;][href^=&quot;/c/&quot;]&#x27;,
+        &#x27;#stage-slideover-sidebar a.__menu-item[href^=&quot;/c/&quot;]&#x27;,
+        &#x27;#stage-slideover-sidebar a[href^=&quot;/c/&quot;]&#x27;,
+        &#x27;#history a[href^=&quot;/c/&quot;]&#x27;
+      ])
+    }),
+    conversationTitle: Object.freeze({
+      description: &#x27;Visible title inside a conversation row&#x27;,
+      selectors: Object.freeze([
+        &#x27;.truncate span[dir=&quot;auto&quot;]&#x27;,
+        &#x27;.truncate span&#x27;,
+        &#x27;.truncate&#x27;
+      ])
+    })
+  });
+
+  const existing = window[APP_KEY];
+  if (existing?.destroy) {
+    existing.destroy(&#x27;Archive mode disabled by a second invocation.&#x27;);
+    return;
+  }
+
+  const state = {
+    destroyed: false,
+    archivedIds: loadArchivedIds(),
+    entriesById: new Map(),
+    processedAnchors: new WeakSet(),
+    observer: null,
+    scanTimer: 0,
+    uiHost: null,
+    logList: null,
+    status: null,
+    originalSidebarWidth: document.documentElement.style.getPropertyValue(&#x27;--sidebar-width&#x27;),
+    dragCleanup: null,
+    resizeHandle: null,
+    resizeCleanup: null,
+    tokenPromise: null
+  };
+
+  window[APP_KEY] = {
+    version: APP_VERSION,
+    destroy,
+    scan: () =&gt; scheduleScan(&#x27;manual&#x27;)
+  };
+
+  void initialize();
+
+  async function initialize() {
+    try {
+      await waitForBody();
+      installStyles();
+      createWindow();
+      log(&#x27;info&#x27;, &#x27;startup&#x27;, &#x27;Starting ChatGPT Archive Mode.&#x27;, {
+        version: APP_VERSION,
+        page: location.href
+      });
+      widenSidebar();
+      installSidebarResizer();
+      installObserver();
+      scheduleScan(&#x27;startup&#x27;);
+      log(&#x27;success&#x27;, &#x27;startup&#x27;, &#x27;Archive mode initialized.&#x27;, {
+        rememberedArchived: state.archivedIds.size
+      });
+    } catch (error) {
+      log(&#x27;error&#x27;, &#x27;startup&#x27;, &#x27;Archive mode failed to initialize.&#x27;, {
+        error: formatError(error),
+        page: location.href
+      });
+      alert(`ChatGPT Archive Mode could not start: ${formatError(error)}`);
+    }
+  }
+
+  async function waitForBody() {
+    if (document.body) return;
+    const startedAt = Date.now();
+    while (!document.body &amp;&amp; Date.now() - startedAt &lt; 5000) {
+      await delay(100);
+    }
+    if (!document.body) {
+      throw new Error(&#x27;Document body was not available within 5000ms.&#x27;);
+    }
+  }
+
+  function installStyles() {
+    const oldStyle = document.getElementById(HOST_STYLE_ID);
+    oldStyle?.remove();
+    const style = document.createElement(&#x27;style&#x27;);
+    style.id = HOST_STYLE_ID;
+    style.textContent = `
+      [data-cgpt-archive-row=&quot;true&quot;] {
+        position: relative !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 92px !important;
+        align-items: center !important;
+        column-gap: 6px !important;
+        padding-inline-end: 6px !important;
+        border-radius: 7px !important;
+        transition: opacity 120ms ease, background-color 120ms ease, outline-color 120ms ease !important;
+      }
+      [data-cgpt-archive-row=&quot;true&quot;] &gt; a[href^=&quot;/c/&quot;] {
+        min-width: 0 !important;
+      }
+      [data-cgpt-archive-state=&quot;pending&quot;] {
+        background: rgba(59, 130, 246, 0.08) !important;
+        outline: 1px solid rgba(59, 130, 246, 0.35) !important;
+      }
+      [data-cgpt-archive-state=&quot;archived&quot;] {
+        opacity: 0.5 !important;
+        background: rgba(107, 114, 128, 0.1) !important;
+        outline: 1px solid rgba(107, 114, 128, 0.3) !important;
+      }
+      [data-cgpt-archive-state=&quot;error&quot;] {
+        background: rgba(220, 38, 38, 0.08) !important;
+        outline: 1px solid rgba(220, 38, 38, 0.35) !important;
+      }
+      [data-cgpt-archive-action-host=&quot;true&quot;] {
+        display: block !important;
+        width: 92px !important;
+        min-width: 92px !important;
+        position: relative !important;
+        z-index: 4 !important;
+      }
+      #${UI_HOST_ID} {
+        all: initial;
+        position: fixed;
+        inset: 0;
+        width: 0;
+        height: 0;
+        z-index: 2147483646;
+      }
+      [data-cgpt-archive-resizer=&quot;true&quot;] {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        width: 8px;
+        cursor: ew-resize;
+        z-index: 2147483645;
+        background: transparent;
+      }
+      [data-cgpt-archive-resizer=&quot;true&quot;]:hover {
+        background: rgba(59, 130, 246, 0.25);
+      }
+    `;
+    (document.head || document.documentElement).append(style);
+    log(&#x27;info&#x27;, &#x27;install-styles&#x27;, &#x27;Host-page styles installed.&#x27;, {
+      styleId: HOST_STYLE_ID
+    });
+  }
+
+  function createWindow() {
+    document.getElementById(UI_HOST_ID)?.remove();
+    const host = document.createElement(&#x27;div&#x27;);
+    host.id = UI_HOST_ID;
+    const shadow = host.attachShadow({ mode: &#x27;open&#x27; });
+    shadow.innerHTML = `
+      &lt;style&gt;
+        :host { all: initial; }
+        * { box-sizing: border-box; }
+        .window {
+          position: fixed;
+          top: 72px;
+          right: 28px;
+          width: 430px;
+          height: 310px;
+          min-width: 320px;
+          min-height: 180px;
+          resize: both;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          border: 1px solid #6b7280;
+          border-radius: 4px;
+          background: #f3f4f6;
+          color: #111827;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+          font: 12px/1.35 Segoe UI, Arial, sans-serif;
+        }
+        .titlebar {
+          height: 32px;
+          flex: 0 0 32px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 0 8px;
+          border-bottom: 1px solid #9ca3af;
+          background: #e5e7eb;
+          cursor: move;
+          user-select: none;
+        }
+        .title { flex: 1; font-weight: 600; }
+        .status { color: #4b5563; font-size: 11px; }
+        .close {
+          width: 24px;
+          height: 22px;
+          border: 1px solid #9ca3af;
+          border-radius: 3px;
+          background: #f9fafb;
+          color: #111827;
+          cursor: pointer;
+        }
+        .close:hover { background: #fee2e2; border-color: #dc2626; }
+        .log {
+          flex: 1;
+          margin: 0;
+          padding: 8px;
+          overflow: auto;
+          list-style: none;
+          background: #ffffff;
+          font: 11px/1.45 Consolas, Monaco, monospace;
+          white-space: pre-wrap;
+          overflow-wrap: anywhere;
+        }
+        .entry { padding: 4px 2px; border-bottom: 1px solid #e5e7eb; }
+        .entry[data-level=&quot;success&quot;] { color: #166534; }
+        .entry[data-level=&quot;warn&quot;] { color: #92400e; }
+        .entry[data-level=&quot;error&quot;] { color: #b91c1c; }
+        .entry[data-level=&quot;debug&quot;] { color: #4b5563; }
+      &lt;/style&gt;
+      &lt;section class=&quot;window&quot; role=&quot;dialog&quot; aria-label=&quot;ChatGPT Archive Mode log window&quot;&gt;
+        &lt;header class=&quot;titlebar&quot;&gt;
+          &lt;span class=&quot;title&quot;&gt;ChatGPT Archive Mode&lt;/span&gt;
+          &lt;span class=&quot;status&quot;&gt;Starting&lt;/span&gt;
+          &lt;button class=&quot;close&quot; type=&quot;button&quot; title=&quot;Disable archive mode&quot;&gt;x&lt;/button&gt;
+        &lt;/header&gt;
+        &lt;ol class=&quot;log&quot; aria-live=&quot;polite&quot;&gt;&lt;/ol&gt;
+      &lt;/section&gt;
+    `;
+    document.body.append(host);
+    state.uiHost = host;
+    state.logList = shadow.querySelector(&#x27;.log&#x27;);
+    state.status = shadow.querySelector(&#x27;.status&#x27;);
+    const windowElement = shadow.querySelector(&#x27;.window&#x27;);
+    const titlebar = shadow.querySelector(&#x27;.titlebar&#x27;);
+    shadow.querySelector(&#x27;.close&#x27;).addEventListener(&#x27;click&#x27;, () =&gt; destroy(&#x27;Archive mode disabled from the utility window.&#x27;));
+    installWindowDrag(windowElement, titlebar);
+  }
+
+  function installWindowDrag(windowElement, handle) {
+    const onPointerDown = event =&gt; {
+      if (event.button !== 0 || event.target.closest(&#x27;button&#x27;)) return;
+      const rect = windowElement.getBoundingClientRect();
+      const offsetX = event.clientX - rect.left;
+      const offsetY = event.clientY - rect.top;
+      windowElement.style.right = &#x27;auto&#x27;;
+      handle.setPointerCapture(event.pointerId);
+
+      const onPointerMove = moveEvent =&gt; {
+        const maxLeft = Math.max(0, window.innerWidth - windowElement.offsetWidth);
+        const maxTop = Math.max(0, window.innerHeight - windowElement.offsetHeight);
+        const left = Math.min(maxLeft, Math.max(0, moveEvent.clientX - offsetX));
+        const top = Math.min(maxTop, Math.max(0, moveEvent.clientY - offsetY));
+        windowElement.style.left = `${left}px`;
+        windowElement.style.top = `${top}px`;
+      };
+
+      const onPointerUp = upEvent =&gt; {
+        handle.releasePointerCapture(upEvent.pointerId);
+        handle.removeEventListener(&#x27;pointermove&#x27;, onPointerMove);
+        handle.removeEventListener(&#x27;pointerup&#x27;, onPointerUp);
+        handle.removeEventListener(&#x27;pointercancel&#x27;, onPointerUp);
+      };
+
+      handle.addEventListener(&#x27;pointermove&#x27;, onPointerMove);
+      handle.addEventListener(&#x27;pointerup&#x27;, onPointerUp);
+      handle.addEventListener(&#x27;pointercancel&#x27;, onPointerUp);
+    };
+
+    handle.addEventListener(&#x27;pointerdown&#x27;, onPointerDown);
+    state.dragCleanup = () =&gt; handle.removeEventListener(&#x27;pointerdown&#x27;, onPointerDown);
+  }
+
+  function widenSidebar() {
+    const sidebar = queryFirst(&#x27;sidebar&#x27;, document, &#x27;resize-sidebar&#x27;, false);
+    document.documentElement.style.setProperty(&#x27;--sidebar-width&#x27;, `${SIDEBAR_WIDTH}px`);
+    if (!sidebar) {
+      reportMissing(&#x27;sidebar&#x27;, &#x27;resize-sidebar&#x27;, &#x27;The CSS variable was set, but the sidebar element was not found.&#x27;);
+      return;
+    }
+    log(&#x27;success&#x27;, &#x27;resize-sidebar&#x27;, &#x27;Sidebar width increased.&#x27;, {
+      width: `${SIDEBAR_WIDTH}px`,
+      element: describeElement(sidebar)
+    });
+  }
+
+  function installSidebarResizer() {
+    state.resizeHandle?.remove();
+    const handle = document.createElement(&#x27;div&#x27;);
+    handle.dataset.cgptArchiveResizer = &#x27;true&#x27;;
+    document.body.append(handle);
+    state.resizeHandle = handle;
+
+    const positionHandle = () =&gt; {
+      const sidebar = queryFirst(&#x27;sidebar&#x27;, document, &#x27;position-sidebar-resizer&#x27;, false);
+      if (!sidebar) {
+        handle.style.display = &#x27;none&#x27;;
+        return;
+      }
+      const rect = sidebar.getBoundingClientRect();
+      handle.style.display = &#x27;block&#x27;;
+      const leftSide = rect.left &lt; window.innerWidth / 2;
+      handle.style.left = `${leftSide ? rect.right - 4 : rect.left - 4}px`;
+    };
+
+    const onPointerDown = event =&gt; {
+      if (event.button !== 0) return;
+      const sidebar = queryFirst(&#x27;sidebar&#x27;, document, &#x27;resize-sidebar-drag&#x27;, true);
+      if (!sidebar) return;
+      const rect = sidebar.getBoundingClientRect();
+      const leftSide = rect.left &lt; window.innerWidth / 2;
+      handle.setPointerCapture(event.pointerId);
+      log(&#x27;info&#x27;, &#x27;resize-sidebar-drag&#x27;, &#x27;Sidebar resize started.&#x27;, {
+        element: describeElement(sidebar),
+        initialWidth: Math.round(rect.width)
+      });
+
+      const onPointerMove = moveEvent =&gt; {
+        const rawWidth = leftSide ? moveEvent.clientX : window.innerWidth - moveEvent.clientX;
+        const width = Math.min(760, Math.max(360, Math.round(rawWidth)));
+        document.documentElement.style.setProperty(&#x27;--sidebar-width&#x27;, `${width}px`);
+        positionHandle();
+      };
+
+      const onPointerUp = upEvent =&gt; {
+        handle.releasePointerCapture(upEvent.pointerId);
+        handle.removeEventListener(&#x27;pointermove&#x27;, onPointerMove);
+        handle.removeEventListener(&#x27;pointerup&#x27;, onPointerUp);
+        handle.removeEventListener(&#x27;pointercancel&#x27;, onPointerUp);
+        log(&#x27;success&#x27;, &#x27;resize-sidebar-drag&#x27;, &#x27;Sidebar resize completed.&#x27;, {
+          width: document.documentElement.style.getPropertyValue(&#x27;--sidebar-width&#x27;)
+        });
+      };
+
+      handle.addEventListener(&#x27;pointermove&#x27;, onPointerMove);
+      handle.addEventListener(&#x27;pointerup&#x27;, onPointerUp);
+      handle.addEventListener(&#x27;pointercancel&#x27;, onPointerUp);
+    };
+
+    handle.addEventListener(&#x27;pointerdown&#x27;, onPointerDown);
+    window.addEventListener(&#x27;resize&#x27;, positionHandle);
+    positionHandle();
+    state.resizeCleanup = () =&gt; {
+      handle.removeEventListener(&#x27;pointerdown&#x27;, onPointerDown);
+      window.removeEventListener(&#x27;resize&#x27;, positionHandle);
+    };
+  }
+
+  function installObserver() {
+    state.observer = new MutationObserver(records =&gt; {
+      const addedNodes = records.reduce((count, record) =&gt; count + record.addedNodes.length, 0);
+      if (addedNodes &gt; 0) scheduleScan(`mutation:${addedNodes}`);
+    });
+    state.observer.observe(document.body, { childList: true, subtree: true });
+    log(&#x27;info&#x27;, &#x27;observe-chat-list&#x27;, &#x27;DOM observer installed for dynamically loaded conversation rows.&#x27;, {
+      root: describeElement(document.body)
+    });
+  }
+
+  function scheduleScan(source) {
+    if (state.destroyed) return;
+    clearTimeout(state.scanTimer);
+    state.scanTimer = window.setTimeout(() =&gt; scan(source), SCAN_DELAY_MS);
+  }
+
+  function scan(source) {
+    if (state.destroyed) return;
+    const history = queryFirst(&#x27;history&#x27;, document, &#x27;scan-history&#x27;, false);
+    if (!history) {
+      reportMissing(&#x27;history&#x27;, &#x27;scan-history&#x27;, &#x27;Conversation controls cannot be installed until the history area exists.&#x27;);
+    }
+
+    const anchors = queryAll(&#x27;conversationRows&#x27;, document);
+    if (anchors.length === 0) {
+      reportMissing(&#x27;conversationRows&#x27;, &#x27;scan-conversation-rows&#x27;, &#x27;No conversation rows were available during this scan.&#x27;);
+      updateStatus();
+      return;
+    }
+
+    let installed = 0;
+    let skipped = 0;
+    for (const anchor of anchors) {
+      if (state.processedAnchors.has(anchor)) {
+        skipped += 1;
+        continue;
+      }
+      if (installConversationControl(anchor)) installed += 1;
+    }
+
+    log(installed &gt; 0 ? &#x27;success&#x27; : &#x27;debug&#x27;, &#x27;scan-conversation-rows&#x27;, &#x27;Conversation row scan completed.&#x27;, {
+      source,
+      found: anchors.length,
+      installed,
+      alreadyProcessed: skipped
+    });
+    updateStatus();
+  }
+
+  function installConversationControl(anchor) {
+    const operation = &#x27;install-archive-control&#x27;;
+    const id = extractConversationId(anchor.href);
+    if (!id) {
+      log(&#x27;error&#x27;, operation, &#x27;Conversation identifier could not be extracted from the row URL.&#x27;, {
+        element: describeElement(anchor),
+        href: anchor.getAttribute(&#x27;href&#x27;) || &#x27;&#x27;,
+        expectedPattern: &#x27;/c/{conversation-id}&#x27;
+      });
+      state.processedAnchors.add(anchor);
+      return false;
+    }
+
+    const title = getConversationTitle(anchor);
+    const container = anchor.closest(&#x27;li&#x27;) || anchor.parentElement;
+    if (!container) {
+      log(&#x27;error&#x27;, operation, &#x27;Conversation row container was not found.&#x27;, {
+        conversationId: id,
+        title,
+        element: describeElement(anchor),
+        expectedContainer: &#x27;closest li or parentElement&#x27;
+      });
+      state.processedAnchors.add(anchor);
+      return false;
+    }
+
+    const existingHost = Array.from(container.children).find(child =&gt; child.dataset?.cgptArchiveActionHost === &#x27;true&#x27;);
+    if (existingHost) {
+      state.processedAnchors.add(anchor);
+      registerEntry(id, { anchor, container, host: existingHost, button: existingHost.shadowRoot?.querySelector(&#x27;button&#x27;), title });
+      applyState(id);
+      return true;
+    }
+
+    const host = document.createElement(&#x27;span&#x27;);
+    host.dataset.cgptArchiveActionHost = &#x27;true&#x27;;
+    const shadow = host.attachShadow({ mode: &#x27;open&#x27; });
+    shadow.innerHTML = `
+      &lt;style&gt;
+        :host { all: initial; display: block; width: 92px; }
+        button {
+          width: 92px;
+          min-width: 92px;
+          height: 32px;
+          padding: 0 9px;
+          border: 1px solid #6b7280;
+          border-radius: 4px;
+          background: #f9fafb;
+          color: #111827;
+          font: 600 12px/1 Segoe UI, Arial, sans-serif;
+          cursor: pointer;
+        }
+        button:hover:not(:disabled) { background: #e5e7eb; border-color: #374151; }
+        button:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+        button[data-state=&quot;pending&quot;] { cursor: wait; background: #dbeafe; border-color: #2563eb; }
+        button[data-state=&quot;archived&quot;] { cursor: default; background: #e5e7eb; color: #4b5563; }
+        button[data-state=&quot;error&quot;] { background: #fee2e2; border-color: #dc2626; color: #991b1b; }
+        button:disabled { opacity: 0.85; }
+      &lt;/style&gt;
+      &lt;button type=&quot;button&quot;&gt;Archive&lt;/button&gt;
+    `;
+    const button = shadow.querySelector(&#x27;button&#x27;);
+    button.addEventListener(&#x27;click&#x27;, event =&gt; {
+      event.preventDefault();
+      event.stopPropagation();
+      void archiveConversation(id, title);
+    });
+
+    container.dataset.cgptArchiveRow = &#x27;true&#x27;;
+    container.append(host);
+    state.processedAnchors.add(anchor);
+    registerEntry(id, { anchor, container, host, button, title });
+    applyState(id);
+    log(&#x27;info&#x27;, operation, &#x27;Archive control installed.&#x27;, {
+      conversationId: id,
+      title,
+      anchor: describeElement(anchor),
+      container: describeElement(container)
+    });
+    return true;
+  }
+
+  function registerEntry(id, entry) {
+    const entries = state.entriesById.get(id) || new Set();
+    entries.add(entry);
+    state.entriesById.set(id, entries);
+  }
+
+  async function archiveConversation(id, title) {
+    const operation = `archive:${id}`;
+    const currentState = getState(id);
+    if (currentState === &#x27;pending&#x27; || currentState === &#x27;archived&#x27;) {
+      log(&#x27;warn&#x27;, operation, &#x27;Archive action ignored because the conversation is not actionable.&#x27;, {
+        conversationId: id,
+        title,
+        currentState
+      });
+      return;
+    }
+
+    setState(id, &#x27;pending&#x27;);
+    log(&#x27;info&#x27;, operation, &#x27;Archiving conversation.&#x27;, {
+      conversationId: id,
+      title,
+      endpoint: `/backend-api/conversation/${id}`
+    });
+
+    try {
+      const token = await getAccessToken();
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() =&gt; controller.abort(), REQUEST_TIMEOUT_MS);
+      let response;
+      try {
+        const headers = {
+          accept: &#x27;*/*&#x27;,
+          &#x27;content-type&#x27;: &#x27;application/json&#x27;
+        };
+        if (token) headers.authorization = `Bearer ${token}`;
+        response = await fetch(`/backend-api/conversation/${encodeURIComponent(id)}`, {
+          method: &#x27;PATCH&#x27;,
+          credentials: &#x27;include&#x27;,
+          headers,
+          body: JSON.stringify({ is_archived: true }),
+          signal: controller.signal
+        });
+      } finally {
+        clearTimeout(timeout);
+      }
+
+      const responseText = await response.text().catch(() =&gt; &#x27;&#x27;);
+      if (!response.ok) {
+        throw new Error(`Archive request failed with HTTP ${response.status} ${response.statusText}. Response: ${responseText.slice(0, 300) || &#x27;[empty]&#x27;}`);
+      }
+
+      state.archivedIds.add(id);
+      saveArchivedIds();
+      setState(id, &#x27;archived&#x27;);
+      log(&#x27;success&#x27;, operation, &#x27;Conversation archived.&#x27;, {
+        conversationId: id,
+        title,
+        status: response.status,
+        authorizationAttached: Boolean(token)
+      });
+    } catch (error) {
+      setState(id, &#x27;error&#x27;);
+      log(&#x27;error&#x27;, operation, &#x27;Conversation archive operation failed.&#x27;, {
+        conversationId: id,
+        title,
+        endpoint: `/backend-api/conversation/${id}`,
+        timeoutMs: REQUEST_TIMEOUT_MS,
+        error: formatError(error)
+      });
+    }
+  }
+
+  async function getAccessToken() {
+    if (state.tokenPromise) return state.tokenPromise;
+    state.tokenPromise = (async () =&gt; {
+      const operation = &#x27;load-session-token&#x27;;
+      try {
+        log(&#x27;info&#x27;, operation, &#x27;Requesting the current ChatGPT session.&#x27;, {
+          endpoint: &#x27;/api/auth/session&#x27;
+        });
+        const response = await fetch(&#x27;/api/auth/session&#x27;, {
+          credentials: &#x27;include&#x27;,
+          headers: { accept: &#x27;application/json&#x27; }
+        });
+        if (!response.ok) {
+          log(&#x27;warn&#x27;, operation, &#x27;Session endpoint did not return a successful response. Archive requests will use cookies only.&#x27;, {
+            status: response.status,
+            statusText: response.statusText
+          });
+          return null;
+        }
+        const session = await response.json();
+        const token = typeof session?.accessToken === &#x27;string&#x27; ? session.accessToken : null;
+        log(token ? &#x27;success&#x27; : &#x27;warn&#x27;, operation, token ? &#x27;Session access token loaded.&#x27; : &#x27;Session response did not contain an access token. Archive requests will use cookies only.&#x27;, {
+          tokenPresent: Boolean(token),
+          tokenValueLogged: false
+        });
+        return token;
+      } catch (error) {
+        log(&#x27;error&#x27;, operation, &#x27;Session token lookup failed. Archive requests will use cookies only.&#x27;, {
+          endpoint: &#x27;/api/auth/session&#x27;,
+          error: formatError(error)
+        });
+        return null;
+      }
+    })();
+    return state.tokenPromise;
+  }
+
+  function setState(id, status) {
+    if (status === &#x27;archived&#x27;) state.archivedIds.add(id);
+    for (const entry of state.entriesById.get(id) || []) {
+      if (!entry.container.isConnected) continue;
+      entry.container.dataset.cgptArchiveState = status;
+      if (!entry.button) continue;
+      entry.button.dataset.state = status;
+      entry.button.disabled = status === &#x27;pending&#x27; || status === &#x27;archived&#x27;;
+      entry.button.textContent = status === &#x27;pending&#x27; ? &#x27;Archiving&#x27; : status === &#x27;archived&#x27; ? &#x27;Archived&#x27; : status === &#x27;error&#x27; ? &#x27;Retry&#x27; : &#x27;Archive&#x27;;
+      entry.button.title = status === &#x27;archived&#x27;
+        ? `Archived: ${entry.title}`
+        : status === &#x27;error&#x27;
+          ? `Archive failed. Retry: ${entry.title}`
+          : `Archive: ${entry.title}`;
+    }
+    updateStatus();
+  }
+
+  function applyState(id) {
+    setState(id, getState(id));
+  }
+
+  function getState(id) {
+    if (state.archivedIds.has(id)) return &#x27;archived&#x27;;
+    const entries = state.entriesById.get(id) || [];
+    for (const entry of entries) {
+      const status = entry.container.dataset.cgptArchiveState;
+      if (status) return status;
+    }
+    return &#x27;ready&#x27;;
+  }
+
+  function updateStatus() {
+    if (!state.status) return;
+    const tracked = Array.from(state.entriesById.values()).reduce((total, entries) =&gt; total + entries.size, 0);
+    state.status.textContent = `${tracked} rows, ${state.archivedIds.size} archived`;
+  }
+
+  function queryFirst(locatorName, root, operation, logFailure) {
+    const locator = LOCATORS[locatorName];
+    if (!locator) {
+      log(&#x27;error&#x27;, operation, &#x27;Unknown locator was requested.&#x27;, { locatorName });
+      return null;
+    }
+    for (const selector of locator.selectors) {
+      try {
+        const element = root.querySelector(selector);
+        if (element) return element;
+      } catch (error) {
+        log(&#x27;error&#x27;, operation, &#x27;DOM selector evaluation failed.&#x27;, {
+          locatorName,
+          locatorDescription: locator.description,
+          selector,
+          root: describeElement(root),
+          error: formatError(error)
+        });
+      }
+    }
+    if (logFailure) reportMissing(locatorName, operation);
+    return null;
+  }
+
+  function queryAll(locatorName, root) {
+    const locator = LOCATORS[locatorName];
+    if (!locator) {
+      log(&#x27;error&#x27;, &#x27;query-all&#x27;, &#x27;Unknown locator was requested.&#x27;, { locatorName });
+      return [];
+    }
+    const result = [];
+    const seen = new Set();
+    for (const selector of locator.selectors) {
+      try {
+        for (const element of root.querySelectorAll(selector)) {
+          if (!seen.has(element)) {
+            seen.add(element);
+            result.push(element);
+          }
+        }
+      } catch (error) {
+        log(&#x27;error&#x27;, &#x27;query-all&#x27;, &#x27;DOM selector evaluation failed.&#x27;, {
+          locatorName,
+          locatorDescription: locator.description,
+          selector,
+          root: describeElement(root),
+          error: formatError(error)
+        });
+      }
+    }
+    return result;
+  }
+
+  function reportMissing(locatorName, operation, consequence = &#x27;&#x27;) {
+    const locator = LOCATORS[locatorName];
+    log(&#x27;error&#x27;, operation, &#x27;Expected page element was not found.&#x27;, {
+      locatorName,
+      locatorDescription: locator?.description || &#x27;Unknown locator&#x27;,
+      selectors: locator?.selectors?.join(&#x27; || &#x27;) || &#x27;[none]&#x27;,
+      root: &#x27;document&#x27;,
+      page: location.href,
+      consequence
+    });
+  }
+
+  function getConversationTitle(anchor) {
+    for (const selector of LOCATORS.conversationTitle.selectors) {
+      const element = anchor.querySelector(selector);
+      const text = element?.textContent?.trim();
+      if (text) return text;
+    }
+    const ariaLabel = anchor.getAttribute(&#x27;aria-label&#x27;)?.trim();
+    return ariaLabel || `Conversation ${extractConversationId(anchor.href) || &#x27;unknown&#x27;}`;
+  }
+
+  function extractConversationId(href) {
+    try {
+      const pathname = new URL(href, location.href).pathname;
+      const match = pathname.match(/^\/c\/([^/?#]+)/);
+      return match?.[1] || null;
+    } catch {
+      return null;
+    }
+  }
+
+  function loadArchivedIds() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || &#x27;[]&#x27;);
+      return new Set(Array.isArray(parsed) ? parsed.filter(value =&gt; typeof value === &#x27;string&#x27; &amp;&amp; value.length &gt; 0) : []);
+    } catch {
+      return new Set();
+    }
+  }
+
+  function saveArchivedIds() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(state.archivedIds)));
+      log(&#x27;debug&#x27;, &#x27;save-archived-state&#x27;, &#x27;Archived conversation state saved.&#x27;, {
+        storageKey: STORAGE_KEY,
+        count: state.archivedIds.size
+      });
+    } catch (error) {
+      log(&#x27;error&#x27;, &#x27;save-archived-state&#x27;, &#x27;Archived conversation state could not be saved.&#x27;, {
+        storageKey: STORAGE_KEY,
+        error: formatError(error)
+      });
+    }
+  }
+
+  function describeElement(element) {
+    if (!element) return &#x27;[null]&#x27;;
+    if (element === document) return &#x27;document&#x27;;
+    if (element === document.body) return &#x27;body&#x27;;
+    const tag = element.tagName?.toLowerCase?.() || element.nodeName || &#x27;node&#x27;;
+    const id = element.id ? `#${element.id}` : &#x27;&#x27;;
+    const classes = typeof element.className === &#x27;string&#x27;
+      ? element.className.trim().split(/\s+/).filter(Boolean).slice(0, 4).map(name =&gt; `.${name}`).join(&#x27;&#x27;)
+      : &#x27;&#x27;;
+    const href = element.getAttribute?.(&#x27;href&#x27;);
+    return `${tag}${id}${classes}${href ? `[href=&quot;${href}&quot;]` : &#x27;&#x27;}`;
+  }
+
+  function log(level, operation, message, context = {}) {
+    const timestamp = new Date().toISOString();
+    const safeContext = sanitizeContext(context);
+    const line = `[${timestamp}] [${level.toUpperCase()}] [${operation}] ${message}${Object.keys(safeContext).length ? `\n${JSON.stringify(safeContext)}` : &#x27;&#x27;}`;
+    console[level === &#x27;debug&#x27; ? &#x27;debug&#x27; : level === &#x27;error&#x27; ? &#x27;error&#x27; : level === &#x27;warn&#x27; ? &#x27;warn&#x27; : &#x27;log&#x27;](`[ChatGPT Archive Mode] ${line}`);
+    if (!state.logList) return;
+    const item = document.createElement(&#x27;li&#x27;);
+    item.className = &#x27;entry&#x27;;
+    item.dataset.level = level;
+    item.textContent = line;
+    state.logList.append(item);
+    while (state.logList.children.length &gt; 500) state.logList.firstElementChild?.remove();
+    state.logList.scrollTop = state.logList.scrollHeight;
+  }
+
+  function sanitizeContext(context) {
+    const safe = {};
+    for (const [key, value] of Object.entries(context)) {
+      safe[key] = /token|authorization|cookie|secret/i.test(key) &amp;&amp; !/present|attached|logged/i.test(key)
+        ? &#x27;[redacted]&#x27;
+        : String(value).replace(/Bearer\s+[A-Za-z0-9._~-]+/gi, &#x27;Bearer [redacted]&#x27;);
+    }
+    return safe;
+  }
+
+  function formatError(error) {
+    if (error instanceof DOMException &amp;&amp; error.name === &#x27;AbortError&#x27;) return `Request timed out after ${REQUEST_TIMEOUT_MS}ms.`;
+    if (error instanceof Error) return `${error.name}: ${error.message}`;
+    return String(error);
+  }
+
+  function delay(ms) {
+    return new Promise(resolve =&gt; setTimeout(resolve, ms));
+  }
+
+  function destroy(reason) {
+    if (state.destroyed) return;
+    log(&#x27;info&#x27;, &#x27;shutdown&#x27;, reason || &#x27;Archive mode disabled.&#x27;, {
+      trackedConversations: state.entriesById.size,
+      archivedConversations: state.archivedIds.size
+    });
+    state.destroyed = true;
+    clearTimeout(state.scanTimer);
+    state.observer?.disconnect();
+    state.dragCleanup?.();
+    state.resizeCleanup?.();
+    state.resizeHandle?.remove();
+    state.uiHost?.remove();
+    document.getElementById(HOST_STYLE_ID)?.remove();
+    for (const entries of state.entriesById.values()) {
+      for (const entry of entries) {
+        entry.host?.remove();
+        if (entry.container?.isConnected) {
+          delete entry.container.dataset.cgptArchiveRow;
+          delete entry.container.dataset.cgptArchiveState;
+        }
+      }
+    }
+    if (state.originalSidebarWidth) {
+      document.documentElement.style.setProperty(&#x27;--sidebar-width&#x27;, state.originalSidebarWidth);
+    } else {
+      document.documentElement.style.removeProperty(&#x27;--sidebar-width&#x27;);
+    }
+    delete window[APP_KEY];
+  }
+})();
+</textarea>
+  </main>
+</body>
+</html>

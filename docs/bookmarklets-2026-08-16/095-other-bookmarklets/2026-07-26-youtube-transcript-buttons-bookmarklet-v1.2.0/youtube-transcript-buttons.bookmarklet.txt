@@ -1,0 +1,2884 @@
+javascript:(function bookmarklet_youtube_transcript_buttons() {
+  'use strict';
+
+  const APP_KEY = '__YOUTUBE_TRANSCRIPT_BUTTONS_V1__';
+  const APP_VERSION = '1.2.0';
+  const PANEL_HOST_ID = 'yttb-control-panel-v1';
+  const TRANSCRIPT_HOST_ID = 'yttb-transcript-window-v1';
+  const BUTTON_HOST_ATTRIBUTE = 'data-yttb-button-host';
+  const CARD_MARK_ATTRIBUTE = 'data-yttb-card-version';
+  const SUPPORTED_HOST_PATTERN = /(^|\.)youtube\.com$/i;
+  const PLAYER_ENDPOINT = '/youtubei/v1/player';
+  const ALTERNATIVE_PLAYER_CLIENTS = [
+    {
+      id: 'web-safari',
+      clientName: 'WEB',
+      clientNameId: '1',
+      clientVersion: null,
+      credentials: 'same-origin',
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.5 Safari/605.1.15,gzip(gfe)'
+    },
+    {
+      id: 'android-vr',
+      clientName: 'ANDROID_VR',
+      clientNameId: '28',
+      clientVersion: '1.65.10',
+      credentials: 'omit',
+      userAgent: 'com.google.android.apps.youtube.vr.oculus/1.65.10 (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip',
+      extraClient: {
+        deviceMake: 'Oculus',
+        deviceModel: 'Quest 3',
+        androidSdkVersion: 32,
+        osName: 'Android',
+        osVersion: '12L'
+      }
+    },
+    {
+      id: 'tv',
+      clientName: 'TVHTML5',
+      clientNameId: '7',
+      clientVersion: '7.20260707.07.00',
+      credentials: 'omit',
+      userAgent: 'Mozilla/5.0 (ChromiumStylePlatform) Cobalt/25.lts.30.1034943-gold (unlike Gecko), Unknown_TV_Unknown_0/Unknown (Unknown, Unknown)'
+    }
+  ];
+  const SCAN_DELAY_MS = 80;
+  const PERIODIC_SCAN_MS = 3000;
+  const REQUEST_TIMEOUT_MS = 30000;
+  const MAX_DIAGNOSTIC_BODY_CHARS = 1200;
+  const responseTraceEntries = new WeakMap();
+
+  if (!SUPPORTED_HOST_PATTERN.test(location.hostname)) {
+    alert('YouTube Transcript Buttons only runs on youtube.com pages.');
+    return;
+  }
+
+  const existing = window[APP_KEY];
+  if (existing && existing.version === APP_VERSION && typeof existing.focus === 'function') {
+    existing.focus();
+    existing.scan();
+    return;
+  }
+  if (existing && typeof existing.destroy === 'function') {
+    existing.destroy();
+  }
+
+  const state = {
+    destroyed: false,
+    panelHost: null,
+    panelShadow: null,
+    panelRefs: {},
+    buttonHosts: new Set(),
+    observer: null,
+    scanTimer: 0,
+    periodicTimer: 0,
+    routeHandlers: [],
+    totalAttached: 0,
+    lastScanCount: 0,
+    statusLevel: 'idle',
+    statusText: 'Starting...',
+    activeRequests: new Map(),
+    transcriptHost: null,
+    transcriptController: null,
+    transcriptAbortController: null,
+    transcriptVideoId: null
+  };
+
+  window[APP_KEY] = {
+    version: APP_VERSION,
+    focus,
+    scan: () => scheduleScan(true),
+    destroy
+  };
+
+  void initialize();
+
+  async function initialize() {
+    try {
+      await waitForBody();
+      createControlPanel();
+      installObservers();
+      scheduleScan(true);
+      setPanelStatus('success', 'Active. Scanning visible YouTube videos.');
+    } catch (error) {
+      const diagnostic = normalizeError(error, 'INITIALIZE');
+      console.error('[YouTube Transcript Buttons]', diagnostic);
+      alert(`YouTube Transcript Buttons could not start.\n\n${diagnostic.message}`);
+      destroy();
+    }
+  }
+
+  async function waitForBody() {
+    if (document.body) return;
+    const startedAt = Date.now();
+    while (!document.body && Date.now() - startedAt < 5000) {
+      await delay(50);
+    }
+    if (!document.body) {
+      throw createError('DOCUMENT_NOT_READY', 'The YouTube document body was not available within 5000 ms.', {
+        stage: 'startup',
+        pageUrl: location.href
+      });
+    }
+  }
+
+  function createElement(doc, tagName, options) {
+    const element = doc.createElement(tagName);
+    const config = options || {};
+
+    if (config.className) element.className = config.className;
+    if (config.text !== undefined) element.textContent = String(config.text);
+    if (config.title) element.title = config.title;
+    if (config.type) element.type = config.type;
+    if (config.value !== undefined) element.value = String(config.value);
+    if (config.name) element.name = config.name;
+    if (config.id) element.id = config.id;
+    if (config.href) element.href = config.href;
+    if (config.download) element.download = config.download;
+    if (config.selected !== undefined) element.selected = Boolean(config.selected);
+    if (config.role) element.setAttribute('role', config.role);
+    if (config.ariaLabel) element.setAttribute('aria-label', config.ariaLabel);
+    if (config.ariaLive) element.setAttribute('aria-live', config.ariaLive);
+    if (config.dataset) {
+      for (const [key, value] of Object.entries(config.dataset)) {
+        element.dataset[key] = String(value);
+      }
+    }
+    if (config.attributes) {
+      for (const [name, value] of Object.entries(config.attributes)) {
+        element.setAttribute(name, String(value));
+      }
+    }
+    return element;
+  }
+
+  function append(parent, ...children) {
+    for (const child of children) {
+      if (child !== null && child !== undefined) parent.append(child);
+    }
+    return parent;
+  }
+
+  function createControlPanel() {
+    document.getElementById(PANEL_HOST_ID)?.remove();
+
+    const host = createElement(document, 'div', { id: PANEL_HOST_ID });
+    const shadow = host.attachShadow({ mode: 'open' });
+    const style = createElement(document, 'style');
+    style.textContent = `
+      :host {
+        all: initial;
+        position: fixed;
+        top: 82px;
+        right: 18px;
+        z-index: 2147483647;
+        color-scheme: dark;
+      }
+      *, *::before, *::after { box-sizing: border-box; }
+      button { font: inherit; }
+      .panel {
+        width: 310px;
+        overflow: hidden;
+        border: 1px solid #633300;
+        border-radius: 12px;
+        background: #17110c;
+        color: #fff2e2;
+        box-shadow: 0 16px 48px rgba(0, 0, 0, .46);
+        font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      .titlebar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 36px;
+        padding: 6px 8px 6px 10px;
+        background: linear-gradient(180deg, #ff9d21, #db5b00);
+        color: #1d0d00;
+        font-weight: 800;
+      }
+      .mark {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 14px;
+        border: 2px solid #3b1700;
+        border-radius: 50%;
+        background: #fff3be;
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, .26);
+      }
+      .title { flex: 1; min-width: 0; }
+      .version { opacity: .72; font-size: 10px; }
+      .icon-button {
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        border: 1px solid rgba(48, 18, 0, .45);
+        border-radius: 6px;
+        background: rgba(255, 255, 255, .26);
+        color: #2c1000;
+        cursor: pointer;
+        font-weight: 900;
+      }
+      .icon-button:hover { background: rgba(255, 255, 255, .42); }
+      .body { padding: 10px; }
+      .status {
+        min-height: 42px;
+        padding: 8px;
+        border: 1px solid #453326;
+        border-radius: 7px;
+        background: #0d0a08;
+        color: #c9b9aa;
+        overflow-wrap: anywhere;
+      }
+      .status[data-level="success"] { border-color: #3f6a35; color: #bce9ac; }
+      .status[data-level="working"] { border-color: #756529; color: #ffe993; }
+      .status[data-level="error"] { border-color: #8f352c; color: #ffb7ad; }
+      .stats { margin-top: 7px; color: #8f7d70; font-size: 10px; }
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 7px;
+        margin-top: 9px;
+      }
+      .button {
+        min-height: 31px;
+        padding: 5px 8px;
+        border: 1px solid #71400c;
+        border-radius: 7px;
+        background: linear-gradient(#ff9c27, #d85c00);
+        color: #211000;
+        cursor: pointer;
+        font-weight: 800;
+      }
+      .button.secondary {
+        border-color: #49372a;
+        background: #2a211a;
+        color: #efdbc8;
+      }
+      .button:hover { filter: brightness(1.1); }
+      .collapsed .body { display: none; }
+    `;
+
+    const panel = createElement(document, 'section', {
+      className: 'panel',
+      ariaLabel: 'YouTube Transcript Buttons controls'
+    });
+    const titlebar = createElement(document, 'div', { className: 'titlebar' });
+    const mark = createElement(document, 'span', { className: 'mark' });
+    const title = createElement(document, 'span', { className: 'title', text: 'YT Transcript Buttons' });
+    const version = createElement(document, 'span', { className: 'version', text: `v${APP_VERSION}` });
+    const collapseButton = createElement(document, 'button', {
+      className: 'icon-button',
+      type: 'button',
+      text: '−',
+      title: 'Collapse or expand',
+      ariaLabel: 'Collapse or expand transcript controls'
+    });
+    const closeButton = createElement(document, 'button', {
+      className: 'icon-button',
+      type: 'button',
+      text: '×',
+      title: 'Remove transcript buttons',
+      ariaLabel: 'Remove YouTube Transcript Buttons'
+    });
+    append(titlebar, mark, title, version, collapseButton, closeButton);
+
+    const body = createElement(document, 'div', { className: 'body' });
+    const status = createElement(document, 'div', {
+      className: 'status',
+      text: state.statusText,
+      ariaLive: 'polite'
+    });
+    status.dataset.level = state.statusLevel;
+    const stats = createElement(document, 'div', { className: 'stats', text: 'Attached: 0' });
+    const actions = createElement(document, 'div', { className: 'actions' });
+    const currentButton = createElement(document, 'button', {
+      className: 'button',
+      type: 'button',
+      text: 'Current video',
+      title: 'Open the transcript for the current YouTube video'
+    });
+    const rescanButton = createElement(document, 'button', {
+      className: 'button secondary',
+      type: 'button',
+      text: 'Rescan page',
+      title: 'Scan the current YouTube DOM again'
+    });
+    append(actions, currentButton, rescanButton);
+    append(body, status, stats, actions);
+    append(panel, titlebar, body);
+    append(shadow, style, panel);
+    document.body.append(host);
+
+    collapseButton.addEventListener('click', () => {
+      const collapsed = panel.classList.toggle('collapsed');
+      collapseButton.textContent = collapsed ? '+' : '−';
+    });
+    closeButton.addEventListener('click', destroy);
+    rescanButton.addEventListener('click', () => scheduleScan(true));
+    currentButton.addEventListener('click', () => {
+      const video = getCurrentPageVideo();
+      if (!video) {
+        setPanelStatus('error', 'The current page URL does not identify a YouTube video. Use an orange button on a video card.');
+        return;
+      }
+      void openTranscript(video);
+    });
+
+    state.panelHost = host;
+    state.panelShadow = shadow;
+    state.panelRefs = { panel, status, stats, currentButton };
+    updateCurrentButton();
+  }
+
+  function updateCurrentButton() {
+    const button = state.panelRefs.currentButton;
+    if (!button) return;
+    const currentVideo = getCurrentPageVideo();
+    button.disabled = !currentVideo;
+    button.textContent = currentVideo ? 'Current video' : 'No current video';
+  }
+
+  function setPanelStatus(level, message) {
+    state.statusLevel = level;
+    state.statusText = message;
+    const status = state.panelRefs.status;
+    if (status) {
+      status.dataset.level = level;
+      status.textContent = message;
+    }
+  }
+
+  function updatePanelStats() {
+    pruneDetachedHosts();
+    const stats = state.panelRefs.stats;
+    if (!stats) return;
+    const activeCount = state.buttonHosts.size;
+    stats.textContent = `Attached: ${activeCount} | Last scan: ${state.lastScanCount} cards | Active requests: ${state.activeRequests.size}`;
+  }
+
+  function focus() {
+    if (!state.panelHost || !state.panelRefs.panel) return;
+    state.panelRefs.panel.classList.remove('collapsed');
+    state.panelHost.style.display = '';
+    state.panelRefs.panel.animate(
+      [
+        { transform: 'translateX(0)' },
+        { transform: 'translateX(-5px)' },
+        { transform: 'translateX(4px)' },
+        { transform: 'translateX(0)' }
+      ],
+      { duration: 260 }
+    );
+  }
+
+  function installObservers() {
+    state.observer = new MutationObserver(() => scheduleScan(false));
+    state.observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['href']
+    });
+
+    const routeEvents = ['yt-navigate-finish', 'yt-page-data-updated', 'yt-rendererstamper-finished'];
+    for (const eventName of routeEvents) {
+      const handler = () => {
+        updateCurrentButton();
+        scheduleScan(true);
+      };
+      window.addEventListener(eventName, handler, true);
+      state.routeHandlers.push([eventName, handler]);
+    }
+
+    const popStateHandler = () => {
+      updateCurrentButton();
+      scheduleScan(true);
+    };
+    window.addEventListener('popstate', popStateHandler, true);
+    state.routeHandlers.push(['popstate', popStateHandler]);
+
+    state.periodicTimer = window.setInterval(() => {
+      updateCurrentButton();
+      scheduleScan(false);
+    }, PERIODIC_SCAN_MS);
+  }
+
+  function scheduleScan(immediate) {
+    if (state.destroyed) return;
+    if (state.scanTimer) window.clearTimeout(state.scanTimer);
+    state.scanTimer = window.setTimeout(
+      () => {
+        state.scanTimer = 0;
+        scanDocument();
+      },
+      immediate ? 0 : SCAN_DELAY_MS
+    );
+  }
+
+  function scanDocument() {
+    if (state.destroyed || !document.body) return;
+
+    const cardSelector = [
+      'ytd-rich-item-renderer',
+      'ytd-rich-grid-media',
+      'ytd-video-renderer',
+      'ytd-grid-video-renderer',
+      'ytd-compact-video-renderer',
+      'ytd-playlist-video-renderer',
+      'ytd-reel-item-renderer',
+      'yt-lockup-view-model',
+      'ytm-video-with-context-renderer'
+    ].join(',');
+
+    const cards = Array.from(document.querySelectorAll(cardSelector));
+    let attachedThisScan = 0;
+
+    for (const card of cards) {
+      if (!(card instanceof HTMLElement)) continue;
+      const video = getVideoFromCard(card);
+      if (!video) continue;
+      if (ensureButtonForCard(card, video)) attachedThisScan += 1;
+    }
+
+    state.lastScanCount = cards.length;
+    state.totalAttached += attachedThisScan;
+    updatePanelStats();
+
+    if (attachedThisScan > 0) {
+      setPanelStatus('success', `Added ${attachedThisScan} transcript button${attachedThisScan === 1 ? '' : 's'}.`);
+    } else if (state.buttonHosts.size === 0) {
+      setPanelStatus('working', 'Active, but no supported video cards are currently visible. Scroll or navigate and the page will be rescanned.');
+    }
+  }
+
+  function getVideoFromCard(card) {
+    const preferredSelectors = [
+      'a#thumbnail[href]',
+      'a#video-title[href]',
+      'a#video-title-link[href]',
+      'a.yt-lockup-view-model__content-image[href]',
+      'a[href*="/watch?v="]',
+      'a[href^="/shorts/"]',
+      'a[href^="/live/"]'
+    ];
+
+    for (const selector of preferredSelectors) {
+      const links = card.querySelectorAll(selector);
+      for (const link of links) {
+        const videoId = extractVideoId(link.href || link.getAttribute('href') || '');
+        if (!videoId) continue;
+        return {
+          id: videoId,
+          url: normalizeVideoUrl(videoId),
+          title: extractCardTitle(card, link, videoId)
+        };
+      }
+    }
+    return null;
+  }
+
+  function extractCardTitle(card, fallbackLink, videoId) {
+    const titleElement = card.querySelector(
+      '#video-title, #video-title-link, h3 a[title], a.yt-lockup-metadata-view-model__title, [aria-label][href*="/watch"]'
+    );
+    const raw =
+      titleElement?.getAttribute('title') ||
+      titleElement?.textContent ||
+      fallbackLink?.getAttribute('title') ||
+      fallbackLink?.getAttribute('aria-label') ||
+      `YouTube video ${videoId}`;
+    return cleanSingleLine(raw) || `YouTube video ${videoId}`;
+  }
+
+  function ensureButtonForCard(card, video) {
+    const existingHost = findOwnedHost(card);
+    if (existingHost) {
+      if (existingHost.dataset.videoId === video.id) return false;
+      removeButtonHost(existingHost);
+    }
+
+    const target = findButtonTarget(card);
+    if (!target) return false;
+
+    const host = createElement(document, 'span', {
+      attributes: { [BUTTON_HOST_ATTRIBUTE]: APP_VERSION },
+      dataset: { videoId: video.id }
+    });
+    host.style.display = 'inline-flex';
+    host.style.maxWidth = '100%';
+    host.style.margin = '6px 6px 2px 0';
+    host.style.verticalAlign = 'middle';
+
+    const shadow = host.attachShadow({ mode: 'open' });
+    const style = createElement(document, 'style');
+    style.textContent = `
+      :host { all: initial; display: inline-flex; max-width: 100%; }
+      button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        min-height: 27px;
+        max-width: 100%;
+        padding: 4px 9px;
+        border: 1px solid #8f3b00;
+        border-radius: 999px;
+        background: linear-gradient(180deg, #ffad35, #ec6800);
+        color: #201000;
+        box-shadow: 0 2px 8px rgba(146, 56, 0, .3), inset 0 1px rgba(255, 255, 255, .42);
+        cursor: pointer;
+        font: 800 11px/1.2 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        letter-spacing: .01em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      button:hover { filter: brightness(1.08); transform: translateY(-1px); }
+      button:active { filter: brightness(.94); transform: translateY(0); }
+      button:focus-visible { outline: 3px solid rgba(255, 158, 48, .45); outline-offset: 2px; }
+      .dot { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: #fff5cd; box-shadow: 0 0 0 2px rgba(80, 25, 0, .25); }
+      .label { overflow: hidden; text-overflow: ellipsis; }
+    `;
+    const button = createElement(document, 'button', {
+      type: 'button',
+      title: `Open transcript: ${video.title}`,
+      ariaLabel: `Open transcript for ${video.title}`
+    });
+    const dot = createElement(document, 'span', { className: 'dot' });
+    const label = createElement(document, 'span', { className: 'label', text: 'Transcript' });
+    append(button, dot, label);
+    append(shadow, style, button);
+    target.append(host);
+
+    button.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      void openTranscript(video);
+    });
+
+    card.setAttribute(CARD_MARK_ATTRIBUTE, APP_VERSION);
+    state.buttonHosts.add(host);
+    return true;
+  }
+
+  function findOwnedHost(card) {
+    const hosts = card.querySelectorAll(`[${BUTTON_HOST_ATTRIBUTE}]`);
+    for (const host of hosts) {
+      if (host instanceof HTMLElement) return host;
+    }
+    return null;
+  }
+
+  function findButtonTarget(card) {
+    const titleLink = card.querySelector(
+      'a#video-title, a#video-title-link, h3 a[href*="/watch"], a.yt-lockup-metadata-view-model__title'
+    );
+    if (titleLink && titleLink.parentElement && titleLink.parentElement.tagName !== 'A') {
+      return titleLink.parentElement;
+    }
+
+    const metadata = card.querySelector('#meta, #metadata, #details, .yt-lockup-metadata-view-model__text-container');
+    if (metadata instanceof HTMLElement) return metadata;
+    return card;
+  }
+
+  function pruneDetachedHosts() {
+    for (const host of state.buttonHosts) {
+      if (!host.isConnected) state.buttonHosts.delete(host);
+    }
+  }
+
+  function removeButtonHost(host) {
+    state.buttonHosts.delete(host);
+    host.remove();
+  }
+
+  function getCurrentPageVideo() {
+    const videoId = extractVideoId(location.href);
+    if (!videoId) return null;
+    const title = cleanSingleLine(document.title.replace(/\s*-\s*YouTube\s*$/i, '')) || `YouTube video ${videoId}`;
+    return { id: videoId, url: normalizeVideoUrl(videoId), title };
+  }
+
+  function extractVideoId(value) {
+    if (!value) return null;
+    const direct = String(value).trim();
+    if (/^[A-Za-z0-9_-]{11}$/.test(direct)) return direct;
+
+    try {
+      const url = new URL(direct, location.origin);
+      if (!SUPPORTED_HOST_PATTERN.test(url.hostname)) return null;
+      const watchId = url.searchParams.get('v');
+      if (watchId && /^[A-Za-z0-9_-]{11}$/.test(watchId)) return watchId;
+
+      const parts = url.pathname.split('/').filter(Boolean);
+      if (parts.length >= 2 && ['shorts', 'live', 'embed'].includes(parts[0])) {
+        return /^[A-Za-z0-9_-]{11}$/.test(parts[1]) ? parts[1] : null;
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  }
+
+  function normalizeVideoUrl(videoId) {
+    return `${location.origin}/watch?v=${encodeURIComponent(videoId)}`;
+  }
+
+  async function openTranscript(video) {
+    const controller = createTranscriptWindow(video);
+    const previousController = state.transcriptAbortController;
+    if (previousController) {
+      previousController.abort(createError('REQUEST_CANCELLED', 'The previous transcript request was replaced by a new video.', {
+        stage: 'request replacement',
+        previousVideoId: state.transcriptVideoId || null,
+        nextVideoId: video.id
+      }, 'No action is required. The new transcript request has replaced the old one.'));
+    }
+
+    const requestController = new AbortController();
+    const requestKey = `${video.id}:${Date.now()}`;
+    state.transcriptAbortController = requestController;
+    state.transcriptVideoId = video.id;
+    state.activeRequests.set(requestKey, { video, controller });
+    updatePanelStats();
+    setPanelStatus('working', `Loading transcript for ${video.title}`);
+
+    try {
+      await loadTranscriptBundle(video, controller, requestController.signal);
+      if (!controller.isConnected()) return;
+      setPanelStatus('success', `Transcript loaded: ${video.title}`);
+    } catch (error) {
+      const diagnostic = normalizeError(error, 'TRANSCRIPT');
+      if (diagnostic.code !== 'REQUEST_CANCELLED') {
+        console.error('[YouTube Transcript Buttons]', diagnostic);
+        if (controller.isConnected()) controller.showError(diagnostic);
+        setPanelStatus('error', `${diagnostic.code}: ${diagnostic.message}`);
+      }
+    } finally {
+      state.activeRequests.delete(requestKey);
+      updatePanelStats();
+    }
+  }
+
+  function createTranscriptWindow(video) {
+    if (state.transcriptController?.isConnected()) {
+      state.transcriptController.reset(video);
+      state.transcriptController.focus();
+      return state.transcriptController;
+    }
+
+    document.getElementById(TRANSCRIPT_HOST_ID)?.remove();
+
+    const host = createElement(document, 'div', { id: TRANSCRIPT_HOST_ID });
+    const shadow = host.attachShadow({ mode: 'open' });
+    const style = createElement(document, 'style');
+    style.textContent = `
+      :host {
+        all: initial;
+        position: fixed;
+        inset: 0;
+        z-index: 2147483646;
+        pointer-events: none;
+        color-scheme: dark;
+      }
+      *, *::before, *::after { box-sizing: border-box; }
+      button, select, textarea { font: inherit; }
+      .window {
+        position: absolute;
+        top: 72px;
+        left: 50%;
+        width: min(980px, calc(100vw - 32px));
+        height: min(760px, calc(100vh - 104px));
+        min-width: min(520px, calc(100vw - 20px));
+        min-height: 420px;
+        transform: translateX(-50%);
+        overflow: hidden;
+        resize: both;
+        border: 1px solid #683714;
+        border-radius: 12px;
+        background: #0d0b09;
+        color: #f8eee5;
+        box-shadow: 0 24px 90px rgba(0, 0, 0, .66);
+        pointer-events: auto;
+        display: grid;
+        grid-template-rows: auto auto auto auto minmax(180px, 1fr) auto;
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      .titlebar {
+        min-height: 38px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 7px 6px 11px;
+        background: linear-gradient(180deg, #ff9d21, #d85b00);
+        color: #221000;
+        cursor: move;
+        user-select: none;
+        touch-action: none;
+      }
+      .titlebar:active { cursor: grabbing; }
+      .window-title {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font: 850 12px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      .version { opacity: .7; font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+      .close-button {
+        width: 25px;
+        height: 25px;
+        min-height: 0;
+        padding: 0;
+        border: 1px solid rgba(54, 20, 0, .55);
+        border-radius: 6px;
+        background: rgba(255, 255, 255, .26);
+        color: #2b1000;
+        cursor: pointer;
+        font-weight: 900;
+      }
+      .close-button:hover { background: rgba(255, 255, 255, .45); }
+      .header { padding: 14px 18px 12px; border-bottom: 1px solid #4c2a12; background: linear-gradient(180deg, #2c180b, #17100b); }
+      .eyebrow { color: #ff9a2f; font: 800 10px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .12em; text-transform: uppercase; }
+      h1 { margin: 5px 0 0; font-size: clamp(18px, 2.6vw, 28px); line-height: 1.18; overflow-wrap: anywhere; }
+      .video-link { display: inline-block; margin-top: 6px; color: #ffb45c; overflow-wrap: anywhere; font-size: 13px; }
+      .status { padding: 10px 18px; border-bottom: 1px solid #3b2b20; background: #15110e; color: #d8c8b9; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+      .status[data-level="working"] { color: #ffe397; background: #241d0c; }
+      .status[data-level="success"] { color: #bdeeb1; background: #10200e; }
+      .status[data-level="error"] { color: #ffc0b8; background: #27100e; }
+      .toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 9px; padding: 10px 18px; border-bottom: 1px solid #3b2b20; background: #16120f; }
+      label { display: grid; gap: 4px; color: #ae9a89; font-size: 11px; }
+      select { min-height: 34px; max-width: 300px; padding: 4px 28px 4px 8px; border: 1px solid #62401f; border-radius: 7px; background: #0c0a08; color: #f6e8dc; }
+      .action-button { min-height: 34px; padding: 6px 12px; border: 1px solid #8e3c00; border-radius: 7px; background: linear-gradient(#ffad37, #e26000); color: #211000; cursor: pointer; font-weight: 800; }
+      .action-button.secondary { border-color: #4b382a; background: #2a211a; color: #f0dfd1; }
+      .action-button:hover:not(:disabled) { filter: brightness(1.08); }
+      .action-button:disabled { cursor: not-allowed; opacity: .45; }
+      .output-wrap { min-height: 0; padding: 12px 18px; display: grid; }
+      textarea { width: 100%; min-height: 100%; resize: none; padding: 14px; border: 1px solid #4b382a; border-radius: 9px; background: #080706; color: #f7f1eb; font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; tab-size: 2; }
+      details { max-height: 190px; margin: 0 18px 14px; overflow: auto; border: 1px solid #3c2d22; border-radius: 8px; background: #100d0b; }
+      summary { position: sticky; top: 0; padding: 8px 10px; cursor: pointer; color: #c6b4a4; background: #100d0b; }
+      pre { margin: 0; padding: 0 10px 11px; color: #9f8c7d; font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+      @media (max-width: 620px) {
+        .window { top: 10px; left: 10px; width: calc(100vw - 20px); height: calc(100vh - 20px); min-width: 0; transform: none; }
+        .header, .status, .toolbar, .output-wrap { padding-left: 12px; padding-right: 12px; }
+        details { margin-left: 12px; margin-right: 12px; }
+      }
+    `;
+
+    const windowElement = createElement(document, 'section', {
+      className: 'window',
+      role: 'dialog',
+      ariaLabel: 'YouTube transcript window',
+      attributes: { tabindex: '-1' }
+    });
+    const titlebar = createElement(document, 'div', { className: 'titlebar' });
+    const windowTitle = createElement(document, 'div', { className: 'window-title', text: `Transcript - ${video.title}` });
+    const version = createElement(document, 'span', { className: 'version', text: `v${APP_VERSION}` });
+    const closeButton = createElement(document, 'button', {
+      className: 'close-button',
+      type: 'button',
+      text: '×',
+      title: 'Close transcript window',
+      ariaLabel: 'Close transcript window'
+    });
+    append(titlebar, windowTitle, version, closeButton);
+
+    const header = createElement(document, 'header', { className: 'header' });
+    const eyebrow = createElement(document, 'div', { className: 'eyebrow', text: 'YouTube Transcript Buttons' });
+    const heading = createElement(document, 'h1', { text: video.title });
+    const videoLink = createElement(document, 'a', {
+      className: 'video-link',
+      text: video.url,
+      href: video.url
+    });
+    append(header, eyebrow, heading, videoLink);
+
+    const status = createElement(document, 'div', {
+      className: 'status',
+      text: 'Preparing transcript request...',
+      ariaLive: 'polite'
+    });
+    status.dataset.level = 'working';
+
+    const toolbar = createElement(document, 'div', { className: 'toolbar' });
+    const languageLabel = createElement(document, 'label', { text: 'Caption track' });
+    const languageSelect = createElement(document, 'select', { ariaLabel: 'Caption track' });
+    languageSelect.disabled = true;
+    append(languageLabel, languageSelect);
+    const formatLabel = createElement(document, 'label', { text: 'Output format' });
+    const formatSelect = createElement(document, 'select', { ariaLabel: 'Output format' });
+    for (const [value, labelText] of [
+      ['srt', 'SubRip (.srt)'],
+      ['text', 'Plain transcript (.txt)'],
+      ['vtt', 'WebVTT (.vtt)']
+    ]) {
+      formatSelect.append(createElement(document, 'option', { value, text: labelText }));
+    }
+    append(formatLabel, formatSelect);
+    const copyButton = createElement(document, 'button', { className: 'action-button', type: 'button', text: 'Copy output' });
+    copyButton.disabled = true;
+    const downloadButton = createElement(document, 'button', { className: 'action-button', type: 'button', text: 'Download file' });
+    downloadButton.disabled = true;
+    const reloadButton = createElement(document, 'button', { className: 'action-button secondary', type: 'button', text: 'Reload transcript' });
+    append(toolbar, languageLabel, formatLabel, copyButton, downloadButton, reloadButton);
+
+    const outputWrap = createElement(document, 'div', { className: 'output-wrap' });
+    const output = createElement(document, 'textarea', {
+      ariaLabel: 'Extracted transcript',
+      attributes: { spellcheck: 'false', placeholder: 'Transcript output will appear here.' }
+    });
+    append(outputWrap, output);
+
+    const diagnostics = createElement(document, 'details');
+    const summary = createElement(document, 'summary', { text: 'Troubleshooting details and network requests' });
+    const diagnosticText = createElement(document, 'pre', { text: 'No diagnostics yet.' });
+    append(diagnostics, summary, diagnosticText);
+    append(windowElement, titlebar, header, status, toolbar, outputWrap, diagnostics);
+    append(shadow, style, windowElement);
+    document.body.append(host);
+
+    const transcriptState = {
+      video,
+      bundle: null,
+      selectedTrackIndex: -1,
+      loadTrack: null,
+      reload: null,
+      disposed: false
+    };
+
+    function setStatus(level, message) {
+      if (transcriptState.disposed) return;
+      status.dataset.level = level;
+      status.textContent = message;
+    }
+
+    function renderDiagnostics(value) {
+      if (transcriptState.disposed) return;
+      const objectValue = value && typeof value === 'object' ? value : null;
+      const requestList = objectValue?.networkRequests || objectValue?.details?.networkRequests || [];
+      const requestCount = Array.isArray(requestList) ? requestList.length : 0;
+      summary.textContent = requestCount > 0
+        ? `Troubleshooting details and network requests (${requestCount})`
+        : 'Troubleshooting details and network requests';
+      diagnosticText.textContent = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+    }
+
+    function updateOutput() {
+      if (!transcriptState.bundle || transcriptState.disposed) return;
+      const format = formatSelect.value;
+      output.value = transcriptState.bundle.outputs[format] || '';
+      copyButton.disabled = output.value.length === 0;
+      downloadButton.disabled = output.value.length === 0;
+    }
+
+    function renderTrackOptions(tracks, selectedIndex) {
+      languageSelect.replaceChildren();
+      tracks.forEach((track, index) => {
+        const autoLabel = track.autoGenerated ? 'auto-generated' : 'manual';
+        const option = createElement(document, 'option', {
+          value: index,
+          text: `${track.name} [${track.languageCode || 'unknown'}; ${autoLabel}]`
+        });
+        if (index === selectedIndex) option.selected = true;
+        languageSelect.append(option);
+      });
+      languageSelect.disabled = tracks.length <= 1;
+    }
+
+    async function copyOutput() {
+      if (!output.value) return;
+      try {
+        await navigator.clipboard.writeText(output.value);
+        setStatus('success', `Copied ${output.value.length.toLocaleString()} characters to the clipboard.`);
+      } catch {
+        output.focus();
+        output.select();
+        const copied = document.execCommand('copy');
+        setStatus(copied ? 'success' : 'error', copied ? 'Transcript copied.' : 'Clipboard access failed. The transcript is selected; copy it manually.');
+      }
+    }
+
+    function downloadOutput() {
+      if (!output.value || !transcriptState.bundle) return;
+      const format = formatSelect.value;
+      const extension = format === 'text' ? 'txt' : format;
+      const mimeType = format === 'srt'
+        ? 'application/x-subrip;charset=utf-8'
+        : format === 'vtt'
+          ? 'text/vtt;charset=utf-8'
+          : 'text/plain;charset=utf-8';
+      const blob = new Blob([output.value], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const anchor = createElement(document, 'a', {
+        href: url,
+        download: `${transcriptState.video.id}.${extension}`
+      });
+      document.body.append(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setStatus('success', `Downloaded ${transcriptState.video.id}.${extension}`);
+    }
+
+    function focusTranscriptWindow() {
+      if (transcriptState.disposed) return;
+      host.style.display = '';
+      windowElement.focus({ preventScroll: true });
+      windowElement.animate(
+        [
+          { transform: windowElement.style.transform || 'translateX(-50%) scale(1)' },
+          { transform: windowElement.style.transform ? 'scale(1.01)' : 'translateX(-50%) scale(1.01)' },
+          { transform: windowElement.style.transform || 'translateX(-50%) scale(1)' }
+        ],
+        { duration: 180 }
+      );
+    }
+
+    function closeTranscriptWindow() {
+      if (transcriptState.disposed) return;
+      transcriptState.disposed = true;
+      state.transcriptAbortController?.abort(createError('REQUEST_CANCELLED', 'The transcript window was closed.', {
+        stage: 'window close',
+        videoId: transcriptState.video.id
+      }, 'No action is required. Open the transcript again to start a new request.'));
+      state.transcriptAbortController = null;
+      state.transcriptVideoId = null;
+      host.remove();
+      if (state.transcriptHost === host) state.transcriptHost = null;
+      if (state.transcriptController === controller) state.transcriptController = null;
+      setPanelStatus('success', 'Transcript window closed. Card buttons remain active.');
+    }
+
+    function installDragBehavior() {
+      let drag = null;
+
+      titlebar.addEventListener('pointerdown', event => {
+        if (event.button !== 0 || event.target === closeButton) return;
+        const rect = windowElement.getBoundingClientRect();
+        windowElement.style.left = `${rect.left}px`;
+        windowElement.style.top = `${rect.top}px`;
+        windowElement.style.transform = 'none';
+        drag = {
+          pointerId: event.pointerId,
+          offsetX: event.clientX - rect.left,
+          offsetY: event.clientY - rect.top
+        };
+        titlebar.setPointerCapture(event.pointerId);
+        event.preventDefault();
+      });
+
+      titlebar.addEventListener('pointermove', event => {
+        if (!drag || drag.pointerId !== event.pointerId) return;
+        const rect = windowElement.getBoundingClientRect();
+        const maxLeft = Math.max(0, window.innerWidth - Math.min(rect.width, window.innerWidth));
+        const maxTop = Math.max(0, window.innerHeight - Math.min(42, rect.height));
+        const nextLeft = Math.min(maxLeft, Math.max(0, event.clientX - drag.offsetX));
+        const nextTop = Math.min(maxTop, Math.max(0, event.clientY - drag.offsetY));
+        windowElement.style.left = `${nextLeft}px`;
+        windowElement.style.top = `${nextTop}px`;
+      });
+
+      const finishDrag = event => {
+        if (!drag || drag.pointerId !== event.pointerId) return;
+        drag = null;
+        if (titlebar.hasPointerCapture(event.pointerId)) titlebar.releasePointerCapture(event.pointerId);
+      };
+      titlebar.addEventListener('pointerup', finishDrag);
+      titlebar.addEventListener('pointercancel', finishDrag);
+    }
+
+    formatSelect.addEventListener('change', updateOutput);
+    copyButton.addEventListener('click', () => void copyOutput());
+    downloadButton.addEventListener('click', downloadOutput);
+    reloadButton.addEventListener('click', () => {
+      if (typeof transcriptState.reload === 'function') {
+        void transcriptState.reload().catch(error => {
+          if (error?.code !== 'REQUEST_CANCELLED') console.error('[YouTube Transcript Buttons]', normalizeError(error, 'CAPTION_RELOAD'));
+        });
+      }
+    });
+    languageSelect.addEventListener('change', () => {
+      const index = Number(languageSelect.value);
+      if (typeof transcriptState.loadTrack === 'function' && Number.isInteger(index)) {
+        void transcriptState.loadTrack(index).catch(error => {
+          if (error?.code !== 'REQUEST_CANCELLED') console.error('[YouTube Transcript Buttons]', normalizeError(error, 'CAPTION_TRACK'));
+        });
+      }
+    });
+    closeButton.addEventListener('click', closeTranscriptWindow);
+    installDragBehavior();
+
+    const controller = {
+      reset(nextVideo) {
+        transcriptState.video = nextVideo;
+        transcriptState.bundle = null;
+        transcriptState.selectedTrackIndex = -1;
+        transcriptState.loadTrack = null;
+        transcriptState.reload = null;
+        windowTitle.textContent = `Transcript - ${nextVideo.title}`;
+        heading.textContent = nextVideo.title;
+        videoLink.textContent = nextVideo.url;
+        videoLink.href = nextVideo.url;
+        output.value = '';
+        languageSelect.replaceChildren();
+        languageSelect.disabled = true;
+        copyButton.disabled = true;
+        downloadButton.disabled = true;
+        renderDiagnostics('No diagnostics yet.');
+        setStatus('working', 'Preparing transcript request...');
+      },
+      focus: focusTranscriptWindow,
+      close: closeTranscriptWindow,
+      isConnected() {
+        return !transcriptState.disposed && host.isConnected;
+      },
+      setStatus,
+      setDiagnostics(value) {
+        if (transcriptState.disposed) return;
+        renderDiagnostics(value);
+      },
+      configureTracks(tracks, selectedIndex, loadTrack, reload) {
+        if (transcriptState.disposed) return;
+        transcriptState.loadTrack = loadTrack;
+        transcriptState.reload = reload;
+        transcriptState.selectedTrackIndex = selectedIndex;
+        renderTrackOptions(tracks, selectedIndex);
+      },
+      showBundle(bundle) {
+        if (transcriptState.disposed) return;
+        transcriptState.bundle = bundle;
+        transcriptState.selectedTrackIndex = bundle.selectedTrackIndex;
+        renderTrackOptions(bundle.tracks, bundle.selectedTrackIndex);
+        updateOutput();
+        const track = bundle.tracks[bundle.selectedTrackIndex];
+        setStatus(
+          'success',
+          `Loaded ${bundle.segments.length.toLocaleString()} caption segments from ${track.name} (${track.languageCode || 'unknown'}). Output defaults to SRT.`
+        );
+        renderDiagnostics(bundle.diagnostics);
+      },
+      showError(diagnostic) {
+        if (transcriptState.disposed) return;
+        setStatus('error', `${diagnostic.code}: ${diagnostic.message}\n\nTroubleshooting: ${diagnostic.troubleshooting}`);
+        renderDiagnostics(diagnostic);
+        diagnostics.open = true;
+      }
+    };
+
+    state.transcriptHost = host;
+    state.transcriptController = controller;
+    controller.focus();
+    return controller;
+  }
+
+  async function loadTranscriptBundle(video, controller, signal) {
+    const startedAt = performance.now();
+    const trace = createNetworkTrace(controller, video);
+    controller.setStatus('working', 'Discovering caption tracks from the current YouTube session...');
+    trace.publish({
+      stage: 'caption track discovery',
+      strategy: [
+        'current player response',
+        'watch-page player response',
+        'Innertube player fallback',
+        'caption download from discovered timed-text URL',
+        'offscreen same-origin YouTube watch frame and transcript-panel fallback',
+        'alternate Innertube clients for subtitle-token avoidance'
+      ]
+    });
+
+    const discovery = await discoverCaptionTracks(video.id, signal, trace);
+    const tracks = discovery.tracks;
+    const selectedIndex = choosePreferredTrack(tracks);
+    let lastBundle = null;
+
+    const loadTrack = async index => {
+      if (!Number.isInteger(index) || index < 0 || index >= tracks.length) return;
+      controller.setStatus('working', `Fetching ${tracks[index].name} captions from YouTube...`);
+      try {
+        const trackResult = await requestCaptionTrack(tracks[index], signal, video, trace);
+        const segments = trackResult.segments;
+        const outputs = {
+          srt: segmentsToSrt(segments),
+          text: segmentsToPlainText(segments),
+          vtt: segmentsToVtt(segments)
+        };
+        const diagnostics = {
+          appVersion: APP_VERSION,
+          generatedAt: new Date().toISOString(),
+          videoId: video.id,
+          videoUrl: video.url,
+          pageUrl: location.href,
+          metadataSource: discovery.source,
+          metadataEndpoint: discovery.endpoint,
+          metadataHttpStatus: discovery.status,
+          playabilityStatus: discovery.data?.playabilityStatus?.status || null,
+          discoveryAttempts: discovery.attempts,
+          availableTracks: tracks.map(track => ({
+            name: track.name,
+            languageCode: track.languageCode,
+            autoGenerated: track.autoGenerated,
+            translatable: track.translatable
+          })),
+          selectedTrackIndex: index,
+          selectedTrack: {
+            name: tracks[index].name,
+            languageCode: tracks[index].languageCode,
+            autoGenerated: tracks[index].autoGenerated,
+            translatable: tracks[index].translatable
+          },
+          captionEndpoint: trackResult.safeUrl,
+          captionHttpStatus: trackResult.status,
+          captionFormat: trackResult.format,
+          captionMetadataSource: trackResult.metadataSource,
+          captionClientProfile: trackResult.clientProfile,
+          captionAttempts: trackResult.attempts,
+          captionFallbackMetadataAttempts: trackResult.fallbackMetadataAttempts,
+          networkRequests: trace.snapshot(),
+          segmentCount: segments.length,
+          elapsedMs: Math.round(performance.now() - startedAt)
+        };
+        lastBundle = { video, tracks, selectedTrackIndex: index, segments, outputs, diagnostics };
+        controller.showBundle(lastBundle);
+        return lastBundle;
+      } catch (error) {
+        const diagnostic = normalizeError(error, 'CAPTION_TRACK');
+        diagnostic.details = { ...(diagnostic.details || {}), networkRequests: trace.snapshot() };
+        if (diagnostic.code !== 'REQUEST_CANCELLED') controller.showError(diagnostic);
+        throw error;
+      }
+    };
+
+    const reload = async () => {
+      await loadTrack(lastBundle ? lastBundle.selectedTrackIndex : selectedIndex);
+    };
+
+    controller.configureTracks(tracks, selectedIndex, loadTrack, reload);
+    return loadTrack(selectedIndex);
+  }
+
+  async function discoverCaptionTracks(videoId, signal, trace) {
+    const attempts = [];
+    let lastCandidate = null;
+    let lastError = null;
+
+    const currentData = getCurrentPlayerResponse(videoId);
+    if (currentData) {
+      const tracks = extractCaptionTracks(currentData);
+      attempts.push(createDiscoveryAttempt('current-player', true, null, currentData, tracks.length));
+      const currentCandidate = {
+        data: currentData,
+        tracks,
+        source: 'current-player',
+        endpoint: 'YouTube movie_player.getPlayerResponse()',
+        status: null
+      };
+      lastCandidate = chooseBetterMetadataCandidate(lastCandidate, currentCandidate);
+      if (tracks.length > 0) return { ...currentCandidate, attempts };
+    } else {
+      attempts.push(createDiscoveryAttempt('current-player', false, 'The target video is not loaded in the active YouTube player.', null, 0));
+    }
+
+    try {
+      const watchResult = await requestWatchPagePlayer(videoId, signal, trace);
+      const tracks = extractCaptionTracks(watchResult.data);
+      attempts.push(createDiscoveryAttempt('watch-page', true, null, watchResult.data, tracks.length, watchResult.status, watchResult.endpoint));
+      const watchCandidate = {
+        data: watchResult.data,
+        tracks,
+        source: 'watch-page',
+        endpoint: watchResult.endpoint,
+        status: watchResult.status
+      };
+      lastCandidate = chooseBetterMetadataCandidate(lastCandidate, watchCandidate);
+      if (tracks.length > 0) return { ...watchCandidate, attempts };
+    } catch (error) {
+      lastError = error;
+      attempts.push(createDiscoveryAttempt('watch-page', false, String(error?.message || error), null, 0, error?.details?.httpStatus, error?.details?.endpoint, error?.code));
+    }
+
+    try {
+      const config = getInnertubeConfig();
+      const playerResult = await requestPlayer(videoId, config, signal, trace);
+      const tracks = extractCaptionTracks(playerResult.data);
+      attempts.push(createDiscoveryAttempt('innertube-player', true, null, playerResult.data, tracks.length, playerResult.status, PLAYER_ENDPOINT));
+      const playerCandidate = {
+        data: playerResult.data,
+        tracks,
+        source: 'innertube-player',
+        endpoint: PLAYER_ENDPOINT,
+        status: playerResult.status
+      };
+      lastCandidate = chooseBetterMetadataCandidate(lastCandidate, playerCandidate);
+      if (tracks.length > 0) return { ...playerCandidate, attempts };
+    } catch (error) {
+      lastError = error;
+      attempts.push(createDiscoveryAttempt('innertube-player', false, String(error?.message || error), null, 0, error?.details?.httpStatus, PLAYER_ENDPOINT, error?.code));
+    }
+
+    if (lastCandidate) {
+      const playabilityStatus = lastCandidate.data?.playabilityStatus?.status || null;
+      const reason = getPlayabilityReason(lastCandidate.data);
+      if (playabilityStatus && !['OK', 'LIVE_STREAM_OFFLINE'].includes(playabilityStatus)) {
+        throw createError('VIDEO_NOT_PLAYABLE', reason || `YouTube reported ${playabilityStatus}.`, {
+          stage: 'caption track discovery',
+          videoId,
+          metadataSource: lastCandidate.source,
+          playabilityStatus,
+          subreason: extractText(lastCandidate.data?.playabilityStatus?.errorScreen?.playerErrorMessageRenderer?.subreason),
+          attempts
+        }, 'Open the video normally in the current YouTube tab and confirm that it plays. Then retry. Sign-in, consent, age, region, membership, or anti-bot checks can prevent caption metadata from being returned.');
+      }
+
+      throw createError('NO_CAPTIONS', reason || 'YouTube returned no caption tracks for this video.', {
+        stage: 'caption track discovery',
+        videoId,
+        metadataSource: lastCandidate.source,
+        playabilityStatus,
+        attempts
+      }, 'Confirm that the video has subtitles in YouTube. Open the video and use YouTube\'s own captions control to verify that a track exists, then retry.');
+    }
+
+    if (lastError) {
+      lastError.details = {
+        ...(lastError.details || {}),
+        stage: lastError.details?.stage || 'caption track discovery',
+        videoId,
+        attempts
+      };
+      throw lastError;
+    }
+
+    throw createError('METADATA_DISCOVERY_FAILED', 'No YouTube player response could be obtained for the selected video.', {
+      stage: 'caption track discovery',
+      videoId,
+      attempts
+    }, 'Open the video in the current YouTube tab, wait until the player loads, and retry.');
+  }
+
+  function chooseBetterMetadataCandidate(current, next) {
+    if (!current) return next;
+    const score = candidate => {
+      const status = candidate?.data?.playabilityStatus?.status || '';
+      let value = 0;
+      if (candidate?.tracks?.length) value += 1000;
+      if (status === 'OK') value += 100;
+      else if (status === 'LIVE_STREAM_OFFLINE') value += 60;
+      else if (!status) value += 20;
+      if (candidate?.source === 'current-player') value += 12;
+      else if (candidate?.source === 'watch-page') value += 8;
+      return value;
+    };
+    return score(next) > score(current) ? next : current;
+  }
+
+  function createDiscoveryAttempt(source, success, message, data, trackCount, httpStatus, endpoint, code) {
+    return {
+      source,
+      success,
+      code: code || null,
+      message: message || null,
+      endpoint: endpoint ? safeUrlForDiagnostics(endpoint) : null,
+      httpStatus: httpStatus ?? null,
+      playabilityStatus: data?.playabilityStatus?.status || null,
+      trackCount
+    };
+  }
+
+  function getCurrentPlayerResponse(videoId) {
+    try {
+      const moviePlayer = document.getElementById('movie_player');
+      if (moviePlayer && typeof moviePlayer.getPlayerResponse === 'function') {
+        const videoData = typeof moviePlayer.getVideoData === 'function' ? moviePlayer.getVideoData() : null;
+        const loadedVideoId = videoData?.video_id || videoData?.videoId || null;
+        const response = moviePlayer.getPlayerResponse();
+        const responseVideoId = response?.videoDetails?.videoId || loadedVideoId;
+        if (response && responseVideoId === videoId) return clonePlainObject(response);
+      }
+    } catch {
+      /* The player is not ready or does not expose these methods in this renderer. */
+    }
+
+    try {
+      const initial = window.ytInitialPlayerResponse;
+      if (initial?.videoDetails?.videoId === videoId) return clonePlainObject(initial);
+    } catch {
+      /* Ignore unavailable page globals and continue to the watch-page request. */
+    }
+
+    return null;
+  }
+
+  async function requestWatchPagePlayer(videoId, signal, trace) {
+    const url = new URL('/watch', location.origin);
+    url.searchParams.set('v', videoId);
+    url.searchParams.set('hl', String(navigator.language || 'en').split('-')[0]);
+    url.searchParams.set('bpctr', '9999999999');
+    url.searchParams.set('has_verified', '1');
+
+    const response = await fetchWithTimeout(url.toString(), {
+      method: 'GET',
+      credentials: 'include',
+      cache: 'no-store',
+      headers: { Accept: 'text/html,application/xhtml+xml' },
+      signal
+    }, REQUEST_TIMEOUT_MS, 'watch page metadata', trace);
+    const html = await readResponseText(response, trace);
+
+    if (!response.ok) {
+      throw createError('WATCH_PAGE_HTTP_ERROR', `YouTube watch-page request failed with HTTP ${response.status}.`, {
+        stage: 'watch page metadata',
+        httpStatus: response.status,
+        endpoint: safeUrlForDiagnostics(url),
+        responsePreview: truncate(html, MAX_DIAGNOSTIC_BODY_CHARS),
+        videoId
+      }, response.status === 429
+        ? 'YouTube rate-limited the browser session. Stop retrying temporarily and try again later.'
+        : 'Open the video in YouTube and retry after the page loads.');
+    }
+
+    if (/consent\.youtube\.com|Before you continue to YouTube/i.test(html)) {
+      throw createError('YOUTUBE_CONSENT_REQUIRED', 'YouTube returned a consent page instead of video metadata.', {
+        stage: 'watch page metadata',
+        httpStatus: response.status,
+        endpoint: safeUrlForDiagnostics(url),
+        videoId
+      }, 'Complete the YouTube consent prompt in this browser profile, reload YouTube, and retry.');
+    }
+
+    const data = parsePlayerResponseFromHtml(html);
+    if (!data) {
+      throw createError('WATCH_PAGE_RESPONSE_INVALID', 'The YouTube watch page did not contain a readable player response.', {
+        stage: 'watch page parsing',
+        httpStatus: response.status,
+        endpoint: safeUrlForDiagnostics(url),
+        responsePreview: truncate(html, MAX_DIAGNOSTIC_BODY_CHARS),
+        videoId
+      }, 'Open the video normally, wait for the player to initialize, and retry. YouTube may have changed its watch-page data format.');
+    }
+
+    return {
+      data,
+      status: response.status,
+      endpoint: safeUrlForDiagnostics(url)
+    };
+  }
+
+  function parsePlayerResponseFromHtml(html) {
+    const source = String(html || '');
+    const objectMarkers = [
+      'ytInitialPlayerResponse =',
+      'ytInitialPlayerResponse=',
+      'window["ytInitialPlayerResponse"] =',
+      'window[\'ytInitialPlayerResponse\'] =',
+      '"ytInitialPlayerResponse":'
+    ];
+
+    for (const marker of objectMarkers) {
+      let offset = 0;
+      while (offset < source.length) {
+        const markerIndex = source.indexOf(marker, offset);
+        if (markerIndex < 0) break;
+        const parsed = parseJsonValueAfter(source, markerIndex + marker.length);
+        if (parsed && typeof parsed === 'object') return parsed;
+        offset = markerIndex + marker.length;
+      }
+    }
+
+    for (const marker of ['"playerResponse":', '"player_response":']) {
+      let offset = 0;
+      while (offset < source.length) {
+        const markerIndex = source.indexOf(marker, offset);
+        if (markerIndex < 0) break;
+        const parsed = parseJsonValueAfter(source, markerIndex + marker.length);
+        if (parsed && typeof parsed === 'object') return parsed;
+        if (typeof parsed === 'string') {
+          try {
+            const nested = JSON.parse(parsed);
+            if (nested && typeof nested === 'object') return nested;
+          } catch {
+            /* Continue looking for another playerResponse occurrence. */
+          }
+        }
+        offset = markerIndex + marker.length;
+      }
+    }
+
+    return null;
+  }
+
+  function parseJsonValueAfter(source, startIndex) {
+    let index = startIndex;
+    while (index < source.length && /[\s:=]/.test(source[index])) index += 1;
+    if (source[index] === '{' || source[index] === '[') {
+      const jsonText = extractBalancedJson(source, index);
+      if (!jsonText) return null;
+      try {
+        return JSON.parse(jsonText);
+      } catch {
+        return null;
+      }
+    }
+    if (source[index] === '"') {
+      const stringText = extractJsonString(source, index);
+      if (!stringText) return null;
+      try {
+        return JSON.parse(stringText);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  function extractBalancedJson(source, startIndex) {
+    const opening = source[startIndex];
+    const closing = opening === '{' ? '}' : ']';
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+
+    for (let index = startIndex; index < source.length; index += 1) {
+      const character = source[index];
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (character === '\\') escaped = true;
+        else if (character === '"') inString = false;
+        continue;
+      }
+      if (character === '"') {
+        inString = true;
+        continue;
+      }
+      if (character === opening) depth += 1;
+      else if (character === closing) {
+        depth -= 1;
+        if (depth === 0) return source.slice(startIndex, index + 1);
+      }
+    }
+    return null;
+  }
+
+  function extractJsonString(source, startIndex) {
+    let escaped = false;
+    for (let index = startIndex + 1; index < source.length; index += 1) {
+      const character = source[index];
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+      if (character === '\\') {
+        escaped = true;
+        continue;
+      }
+      if (character === '"') return source.slice(startIndex, index + 1);
+    }
+    return null;
+  }
+
+  function getInnertubeConfig() {
+    const ytcfg = window.ytcfg;
+    const get = key => {
+      try {
+        return ytcfg && typeof ytcfg.get === 'function' ? ytcfg.get(key) : undefined;
+      } catch {
+        return undefined;
+      }
+    };
+
+    const apiKey = get('INNERTUBE_API_KEY');
+    const rawContext = get('INNERTUBE_CONTEXT');
+    const context = clonePlainObject(rawContext);
+    const clientName = String(
+      get('INNERTUBE_CLIENT_NAME') ||
+      context?.client?.clientName ||
+      'WEB'
+    );
+    const clientVersion = String(
+      get('INNERTUBE_CLIENT_VERSION') ||
+      context?.client?.clientVersion ||
+      ''
+    );
+    const clientNameId = String(
+      get('INNERTUBE_CONTEXT_CLIENT_NAME') ||
+      context?.client?.clientName ||
+      '1'
+    );
+    const visitorData = String(
+      get('VISITOR_DATA') ||
+      context?.client?.visitorData ||
+      ''
+    );
+
+    if (!apiKey || !context || !context.client || !clientVersion) {
+      throw createError(
+        'YOUTUBE_CONFIG_MISSING',
+        'The current YouTube page did not expose the Innertube client configuration required for a same-origin transcript request.',
+        {
+          stage: 'configuration',
+          hasYtcfg: Boolean(ytcfg),
+          hasApiKey: Boolean(apiKey),
+          hasContext: Boolean(context),
+          hasClientVersion: Boolean(clientVersion),
+          pageUrl: location.href
+        },
+        'Reload the YouTube page, wait for it to finish loading, run the bookmarklet again, and press Transcript. If this persists, YouTube may have changed its page configuration.'
+      );
+    }
+
+    return { apiKey, context, clientName, clientVersion, clientNameId, visitorData };
+  }
+
+  function clonePlainObject(value) {
+    if (!value || typeof value !== 'object') return null;
+    try {
+      return JSON.parse(JSON.stringify(value));
+    } catch {
+      return null;
+    }
+  }
+
+  function buildAlternativePlayerConfig(baseConfig, profile) {
+    const sourceClient = baseConfig.context?.client || {};
+    const client = {
+      hl: sourceClient.hl || String(navigator.language || 'en').split('-')[0] || 'en',
+      gl: sourceClient.gl || 'US',
+      clientName: profile.clientName,
+      clientVersion: profile.clientVersion || baseConfig.clientVersion,
+      utcOffsetMinutes: Number.isFinite(sourceClient.utcOffsetMinutes)
+        ? sourceClient.utcOffsetMinutes
+        : -new Date().getTimezoneOffset()
+    };
+
+    if (baseConfig.visitorData) client.visitorData = baseConfig.visitorData;
+    if (profile.userAgent) client.userAgent = profile.userAgent;
+    if (profile.extraClient) Object.assign(client, profile.extraClient);
+
+    const context = { client };
+    const sourceUser = clonePlainObject(baseConfig.context?.user);
+    const sourceRequest = clonePlainObject(baseConfig.context?.request);
+    if (sourceUser) context.user = sourceUser;
+    if (sourceRequest) context.request = sourceRequest;
+
+    return {
+      apiKey: baseConfig.apiKey,
+      context,
+      clientName: profile.clientName,
+      clientVersion: client.clientVersion,
+      clientNameId: profile.clientNameId,
+      visitorData: baseConfig.visitorData,
+      credentials: profile.credentials,
+      clientProfile: profile.id
+    };
+  }
+
+  async function requestPlayer(videoId, config, signal, trace) {
+    const url = new URL(PLAYER_ENDPOINT, location.origin);
+    url.searchParams.set('prettyPrint', 'false');
+    url.searchParams.set('key', config.apiKey);
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-Youtube-Client-Name': config.clientNameId,
+      'X-Youtube-Client-Version': config.clientVersion
+    };
+    if (config.visitorData) headers['X-Goog-Visitor-Id'] = config.visitorData;
+
+    const body = {
+      context: config.context,
+      videoId,
+      contentCheckOk: true,
+      racyCheckOk: true
+    };
+
+    const response = await fetchWithTimeout(url.toString(), {
+      method: 'POST',
+      credentials: config.credentials || 'same-origin',
+      headers,
+      body: JSON.stringify(body),
+      signal
+    }, REQUEST_TIMEOUT_MS, `player metadata${config.clientProfile ? ` (${config.clientProfile})` : ''}`, trace);
+
+    const rawText = await readResponseText(response, trace);
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch (cause) {
+      throw createError('PLAYER_RESPONSE_INVALID', 'YouTube returned a non-JSON player response.', {
+        stage: 'player metadata',
+        clientProfile: config.clientProfile || 'page-web',
+        httpStatus: response.status,
+        responsePreview: truncate(rawText, MAX_DIAGNOSTIC_BODY_CHARS)
+      }, 'Reload YouTube and retry. If the response remains non-JSON, inspect the troubleshooting details for a consent, authentication, or server error page.', cause);
+    }
+
+    if (!response.ok) {
+      throw createError('PLAYER_HTTP_ERROR', `YouTube player metadata request failed with HTTP ${response.status}.`, {
+        stage: 'player metadata',
+        clientProfile: config.clientProfile || 'page-web',
+        httpStatus: response.status,
+        responsePreview: truncate(rawText, MAX_DIAGNOSTIC_BODY_CHARS),
+        videoId
+      }, response.status === 429
+        ? 'YouTube rate-limited the browser session. Stop retrying temporarily and try again later.'
+        : 'Reload YouTube and retry. Confirm that the video is public and playable in the current browser session.');
+    }
+
+    return {
+      data,
+      status: response.status,
+      endpoint: safeUrlForDiagnostics(url),
+      clientProfile: config.clientProfile || 'page-web'
+    };
+  }
+
+  function extractCaptionTracks(playerData) {
+    const renderer = playerData?.captions?.playerCaptionsTracklistRenderer;
+    const tracks = Array.isArray(renderer?.captionTracks) ? renderer.captionTracks : [];
+    return tracks
+      .map((track, index) => ({
+        index,
+        baseUrl: typeof track.baseUrl === 'string' ? track.baseUrl : '',
+        name: extractText(track.name) || track.languageCode || `Track ${index + 1}`,
+        languageCode: track.languageCode || '',
+        autoGenerated: track.kind === 'asr' || String(track.vssId || '').startsWith('a.'),
+        translatable: Boolean(track.isTranslatable),
+        vssId: track.vssId || ''
+      }))
+      .filter(track => track.baseUrl);
+  }
+
+  function choosePreferredTrack(tracks) {
+    const browserLanguage = String(navigator.language || 'en').toLowerCase();
+    const baseLanguage = browserLanguage.split('-')[0];
+    const scored = tracks.map((track, index) => {
+      const code = String(track.languageCode || '').toLowerCase();
+      let score = 0;
+      if (!track.autoGenerated) score += 30;
+      if (code === browserLanguage) score += 100;
+      else if (code === baseLanguage) score += 80;
+      else if (code.startsWith(`${baseLanguage}-`)) score += 70;
+      if (code === 'en') score += 60;
+      else if (code.startsWith('en-')) score += 50;
+      return { index, score };
+    });
+    scored.sort((a, b) => b.score - a.score || a.index - b.index);
+    return scored[0]?.index ?? 0;
+  }
+
+  async function requestCaptionTrack(track, signal, video, trace) {
+    const videoId = video.id;
+    const attempts = [];
+    const fallbackMetadataAttempts = [];
+
+    const primaryResult = await tryCaptionTrackVariant(
+      track,
+      signal,
+      attempts,
+      'page-web',
+      null,
+      trace
+    );
+    if (primaryResult) {
+      return {
+        ...primaryResult,
+        fallbackMetadataAttempts
+      };
+    }
+
+    try {
+      const frameResult = await requestCaptionThroughWatchFrame(video, track, signal, trace, attempts);
+      if (frameResult) {
+        return {
+          ...frameResult,
+          fallbackMetadataAttempts
+        };
+      }
+    } catch (error) {
+      if (error?.code === 'REQUEST_CANCELLED') throw error;
+      fallbackMetadataAttempts.push({
+        clientProfile: 'same-origin-watch-frame',
+        success: false,
+        code: error?.code || 'WATCH_FRAME_FAILED',
+        message: String(error?.message || error),
+        details: error?.details || null
+      });
+    }
+
+    let baseConfig;
+    try {
+      baseConfig = getInnertubeConfig();
+    } catch (error) {
+      fallbackMetadataAttempts.push({
+        clientProfile: 'configuration',
+        success: false,
+        code: error?.code || 'YOUTUBE_CONFIG_MISSING',
+        message: String(error?.message || error)
+      });
+    }
+
+    if (baseConfig) {
+      for (const profile of ALTERNATIVE_PLAYER_CLIENTS) {
+        let playerResult;
+        let alternativeTrack;
+        try {
+          const config = buildAlternativePlayerConfig(baseConfig, profile);
+          playerResult = await requestPlayer(videoId, config, signal, trace);
+          const alternativeTracks = extractCaptionTracks(playerResult.data);
+          alternativeTrack = findMatchingCaptionTrack(alternativeTracks, track);
+          fallbackMetadataAttempts.push({
+            clientProfile: profile.id,
+            success: Boolean(alternativeTrack),
+            httpStatus: playerResult.status,
+            playabilityStatus: playerResult.data?.playabilityStatus?.status || null,
+            availableTrackCount: alternativeTracks.length,
+            matchedLanguageCode: alternativeTrack?.languageCode || null,
+            matchedAutoGenerated: alternativeTrack?.autoGenerated ?? null
+          });
+        } catch (error) {
+          if (error?.code === 'REQUEST_CANCELLED') throw error;
+          fallbackMetadataAttempts.push({
+            clientProfile: profile.id,
+            success: false,
+            code: error?.code || 'PLAYER_REQUEST_FAILED',
+            message: String(error?.message || error),
+            httpStatus: error?.details?.httpStatus ?? null,
+            playabilityStatus: error?.details?.playabilityStatus ?? null
+          });
+          continue;
+        }
+
+        if (!alternativeTrack) continue;
+
+        const alternativeResult = await tryCaptionTrackVariant(
+          alternativeTrack,
+          signal,
+          attempts,
+          `alternative-player:${profile.id}`,
+          profile.id,
+          trace
+        );
+        if (alternativeResult) {
+          return {
+            ...alternativeResult,
+            fallbackMetadataAttempts
+          };
+        }
+      }
+    }
+
+    const lastAttempt = attempts[attempts.length - 1] || {};
+    throw createError('CAPTION_PARSE_ERROR', 'YouTube did not return usable JSON3, WebVTT, or XML caption data.', {
+      stage: 'caption parsing',
+      languageCode: track.languageCode,
+      autoGenerated: track.autoGenerated,
+      lastHttpStatus: lastAttempt.httpStatus || null,
+      attempts,
+      fallbackMetadataAttempts
+    }, "The normal web timed-text URL returned no usable body. The bookmarklet also tried an offscreen same-origin YouTube player, YouTube's own transcript panel, and alternate player clients. Expand Troubleshooting details and network requests to see every request, HTTP status, content type, response length, and response preview.");
+  }
+
+  async function tryCaptionTrackVariant(track, signal, attempts, metadataSource, clientProfile, trace) {
+    const formats = [
+      {
+        name: 'json3',
+        configure(url) { url.searchParams.set('fmt', 'json3'); },
+        accept: 'application/json,text/plain,*/*',
+        parse(text) {
+          const parsed = JSON.parse(text);
+          return parseJson3Segments(parsed);
+        }
+      },
+      {
+        name: 'vtt',
+        configure(url) { url.searchParams.set('fmt', 'vtt'); },
+        accept: 'text/vtt,text/plain,*/*',
+        parse: parseVttSegments
+      },
+      {
+        name: 'xml',
+        configure(url) { url.searchParams.delete('fmt'); },
+        accept: 'application/xml,text/xml,text/plain,*/*',
+        parse: parseXmlSegments
+      }
+    ];
+
+    for (const format of formats) {
+      const url = validateCaptionUrl(track.baseUrl);
+      format.configure(url);
+      let response;
+      let text = '';
+      try {
+        response = await fetchWithTimeout(url.toString(), {
+          method: 'GET',
+          credentials: clientProfile === 'android-vr' ? 'omit' : 'include',
+          headers: { Accept: format.accept },
+          signal
+        }, REQUEST_TIMEOUT_MS, `caption ${format.name} download`, trace);
+        text = await readResponseText(response, trace);
+      } catch (error) {
+        attempts.push({
+          metadataSource,
+          clientProfile,
+          format: format.name,
+          endpoint: safeUrlForDiagnostics(url),
+          code: error?.code || 'NETWORK_ERROR',
+          message: String(error?.message || error)
+        });
+        if (error?.code === 'REQUEST_CANCELLED') throw error;
+        continue;
+      }
+
+      const contentType = response.headers.get('content-type') || '';
+      const responseLength = text.length;
+
+      if (!response.ok) {
+        attempts.push({
+          metadataSource,
+          clientProfile,
+          format: format.name,
+          endpoint: safeUrlForDiagnostics(url),
+          httpStatus: response.status,
+          contentType,
+          responseLength,
+          responsePreview: truncate(text, MAX_DIAGNOSTIC_BODY_CHARS)
+        });
+        if (response.status === 429) {
+          throw createError('CAPTION_HTTP_ERROR', 'YouTube rate-limited the caption request.', {
+            stage: 'caption download',
+            httpStatus: response.status,
+            captionEndpoint: safeUrlForDiagnostics(url),
+            languageCode: track.languageCode,
+            autoGenerated: track.autoGenerated,
+            attempts
+          }, 'Stop retrying temporarily and try again later. Repeated requests can extend rate limiting.');
+        }
+        continue;
+      }
+
+      try {
+        const segments = format.parse(text);
+        if (segments.length > 0) {
+          return {
+            status: response.status,
+            format: format.name,
+            safeUrl: safeUrlForDiagnostics(url),
+            metadataSource,
+            clientProfile,
+            attempts,
+            segments
+          };
+        }
+        attempts.push({
+          metadataSource,
+          clientProfile,
+          format: format.name,
+          endpoint: safeUrlForDiagnostics(url),
+          httpStatus: response.status,
+          contentType,
+          responseLength,
+          message: responseLength === 0
+            ? 'YouTube returned HTTP 200 with an empty caption body.'
+            : 'The response contained no usable caption segments.',
+          responsePreview: truncate(text, MAX_DIAGNOSTIC_BODY_CHARS)
+        });
+      } catch (error) {
+        attempts.push({
+          metadataSource,
+          clientProfile,
+          format: format.name,
+          endpoint: safeUrlForDiagnostics(url),
+          httpStatus: response.status,
+          contentType,
+          responseLength,
+          message: String(error?.message || error),
+          responsePreview: truncate(text, MAX_DIAGNOSTIC_BODY_CHARS)
+        });
+      }
+    }
+
+    return null;
+  }
+
+  async function requestCaptionThroughWatchFrame(video, requestedTrack, signal, trace, attempts) {
+    const frame = createElement(document, 'iframe', {
+      title: 'YouTube transcript extraction frame',
+      attributes: {
+        tabindex: '-1',
+        'aria-hidden': 'true',
+        loading: 'eager',
+        allow: 'autoplay; encrypted-media'
+      }
+    });
+    frame.style.position = 'fixed';
+    frame.style.left = '-12000px';
+    frame.style.top = '0';
+    frame.style.width = '960px';
+    frame.style.height = '720px';
+    frame.style.opacity = '0';
+    frame.style.pointerEvents = 'none';
+    frame.style.border = '0';
+    frame.style.zIndex = '-1';
+
+    const frameUrl = new URL('/watch', location.origin);
+    frameUrl.searchParams.set('v', video.id);
+    frameUrl.searchParams.set('autoplay', '0');
+    frameUrl.searchParams.set('mute', '1');
+    frameUrl.searchParams.set('hl', String(navigator.language || 'en').split('-')[0]);
+    frameUrl.searchParams.set('bpctr', '9999999999');
+    frameUrl.searchParams.set('has_verified', '1');
+
+    const navigationEntry = trace.beginNavigation('same-origin watch frame', frameUrl);
+    try {
+      await loadSameOriginFrame(frame, frameUrl, signal);
+      const frameWindow = frame.contentWindow;
+      const frameDocument = frame.contentDocument;
+      if (!frameWindow || !frameDocument) {
+        throw createError('WATCH_FRAME_INACCESSIBLE', 'The offscreen YouTube watch frame loaded but its same-origin document was not accessible.', {
+          stage: 'same-origin watch frame',
+          videoId: video.id
+        }, 'Open the video normally in the current tab and retry. A browser isolation policy may have prevented same-origin frame access.');
+      }
+
+      trace.completeNavigation(navigationEntry, frameWindow.location.href, {
+        documentTitle: frameDocument.title || '',
+        readyState: frameDocument.readyState
+      });
+
+      trace.note('same-origin watch frame', 'The timed-text response was empty, so the bookmarklet loaded the selected video in an offscreen same-origin YouTube frame to let YouTube initialize its normal player session and subtitle tokens.', {
+        videoId: video.id
+      });
+
+      const playerData = await waitForFramePlayerResponse(frame, video.id, signal, 18000);
+      if (playerData) {
+        const frameTracks = extractCaptionTracks(playerData);
+        const frameTrack = findMatchingCaptionTrack(frameTracks, requestedTrack);
+        trace.note('watch-frame player metadata', `The embedded player exposed ${frameTracks.length} caption track(s).`, {
+          matchedRequestedTrack: Boolean(frameTrack),
+          playabilityStatus: playerData?.playabilityStatus?.status || null,
+          availableTracks: frameTracks.map(track => ({
+            name: track.name,
+            languageCode: track.languageCode,
+            autoGenerated: track.autoGenerated,
+            hasProofTokenParameter: captionUrlHasProofToken(track.baseUrl)
+          }))
+        });
+
+        if (frameTrack) {
+          const frameTimedText = await tryCaptionTrackVariant(
+            frameTrack,
+            signal,
+            attempts,
+            'same-origin-watch-frame-player',
+            'embedded-web-player',
+            trace
+          );
+          if (frameTimedText) return frameTimedText;
+        }
+      } else {
+        trace.note('watch-frame player metadata', 'The embedded watch page did not expose a readable player response before the timeout. The bookmarklet continued with YouTube\'s visible transcript panel inside the frame.', null);
+      }
+
+      const panelResult = await extractTranscriptPanelFromFrame(frame, video, requestedTrack, signal, trace);
+      if (panelResult.segments.length === 0) {
+        throw createError('WATCH_FRAME_TRANSCRIPT_EMPTY', 'YouTube opened its transcript panel but no usable timed segments were found.', {
+          stage: 'same-origin transcript panel',
+          videoId: video.id,
+          panelDetails: panelResult.details
+        }, 'Open the video normally and verify that Show transcript displays timestamped text. YouTube may have changed the transcript panel DOM or may require an account, consent, or region check.');
+      }
+
+      return {
+        status: null,
+        format: 'youtube-transcript-panel',
+        safeUrl: safeUrlForDiagnostics(frameUrl),
+        metadataSource: 'same-origin-watch-frame-transcript-panel',
+        clientProfile: 'embedded-web-player',
+        attempts,
+        segments: panelResult.segments
+      };
+    } catch (error) {
+      if (navigationEntry.state === 'pending') trace.failNavigation(navigationEntry, error);
+      throw error;
+    } finally {
+      try {
+        const resources = collectFrameNetworkResourceSummary(frame);
+        if (resources.length > 0) {
+          trace.note('same-origin watch frame resource timing', `Recorded ${resources.length} relevant internal YouTube resource request(s) observed by the offscreen watch frame.`, {
+            resources,
+            limitation: 'Resource Timing exposes URL, duration, sizes, initiator, and responseStatus when the browser provides it. It does not expose response bodies.'
+          });
+        }
+      } catch {
+        /* Ignore unavailable frame performance data during cleanup. */
+      }
+      frame.remove();
+    }
+  }
+
+  function collectFrameNetworkResourceSummary(frame) {
+    const entries = frame.contentWindow?.performance?.getEntriesByType?.('resource') || [];
+    return entries
+      .filter(entry => /\/youtubei\/v1\/(player|get_transcript)|\/api\/timedtext|\/watch\?/i.test(String(entry.name || '')))
+      .slice(-30)
+      .map(entry => ({
+        url: safeUrlForDiagnostics(entry.name),
+        initiatorType: entry.initiatorType || null,
+        durationMs: Math.round(Number(entry.duration || 0)),
+        transferSize: Number(entry.transferSize || 0),
+        encodedBodySize: Number(entry.encodedBodySize || 0),
+        decodedBodySize: Number(entry.decodedBodySize || 0),
+        responseStatus: Number.isFinite(Number(entry.responseStatus)) && Number(entry.responseStatus) > 0
+          ? Number(entry.responseStatus)
+          : null
+      }));
+  }
+
+  function captionUrlHasProofToken(rawUrl) {
+    try {
+      const url = new URL(rawUrl, location.origin);
+      return url.searchParams.has('pot') || url.searchParams.has('potc');
+    } catch {
+      return false;
+    }
+  }
+
+  function loadSameOriginFrame(frame, url, signal) {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const finish = callback => value => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timer);
+        signal?.removeEventListener('abort', onAbort);
+        frame.removeEventListener('load', onLoad);
+        frame.removeEventListener('error', onError);
+        callback(value);
+      };
+      const onLoad = finish(resolve);
+      const onError = finish(() => reject(createError('WATCH_FRAME_LOAD_ERROR', 'The offscreen YouTube watch frame failed to load.', {
+        stage: 'same-origin watch frame',
+        endpoint: safeUrlForDiagnostics(url)
+      }, 'Check the network connection and retry.')));
+      const onAbort = finish(() => reject(createError('REQUEST_CANCELLED', 'The same-origin watch-frame fallback was cancelled.', {
+        stage: 'same-origin watch frame',
+        endpoint: safeUrlForDiagnostics(url)
+      }, 'Open the transcript again to start a new request.')));
+      const timer = window.setTimeout(finish(() => reject(createError('WATCH_FRAME_TIMEOUT', 'The offscreen YouTube watch frame did not finish loading within 30000 ms.', {
+        stage: 'same-origin watch frame',
+        endpoint: safeUrlForDiagnostics(url),
+        timeoutMs: 30000
+      }, 'Open the video normally and retry after the watch page is fully loaded.'))), 30000);
+
+      frame.addEventListener('load', onLoad, { once: true });
+      frame.addEventListener('error', onError, { once: true });
+      signal?.addEventListener('abort', onAbort, { once: true });
+      frame.src = url.toString();
+      document.body.append(frame);
+      if (signal?.aborted) onAbort();
+    });
+  }
+
+  async function waitForFramePlayerResponse(frame, videoId, signal, timeoutMs) {
+    const startedAt = Date.now();
+    while (Date.now() - startedAt < timeoutMs) {
+      throwIfAborted(signal, 'watch-frame player metadata');
+      try {
+        const frameDocument = frame.contentDocument;
+        const frameWindow = frame.contentWindow;
+        const player = frameDocument?.getElementById('movie_player');
+        if (player && typeof player.getPlayerResponse === 'function') {
+          const response = player.getPlayerResponse();
+          const responseVideoId = response?.videoDetails?.videoId;
+          if (response && responseVideoId === videoId) return clonePlainObject(response);
+        }
+        const initial = frameWindow?.ytInitialPlayerResponse;
+        if (initial?.videoDetails?.videoId === videoId) return clonePlainObject(initial);
+      } catch {
+        /* Continue waiting while the same-origin watch frame initializes. */
+      }
+      await delayWithSignal(250, signal, 'watch-frame player metadata');
+    }
+    return null;
+  }
+
+  async function extractTranscriptPanelFromFrame(frame, video, requestedTrack, signal, trace) {
+    const frameDocument = frame.contentDocument;
+    if (!frameDocument) {
+      throw createError('WATCH_FRAME_INACCESSIBLE', 'The transcript frame document is unavailable.', {
+        stage: 'same-origin transcript panel',
+        videoId: video.id
+      });
+    }
+
+    let panel = findTranscriptPanel(frameDocument);
+    if (!panel) {
+      let transcriptButton = findTranscriptButton(frameDocument);
+      if (!transcriptButton) {
+        const expandButton = findDescriptionExpandButton(frameDocument);
+        if (expandButton) {
+          expandButton.click();
+          trace.note('same-origin transcript panel', 'Expanded the YouTube video description while searching for the Show transcript control.', null);
+          await delayWithSignal(700, signal, 'transcript panel preparation');
+        }
+        transcriptButton = await waitForFrameElement(() => findTranscriptButton(frameDocument), signal, 12000, 'Show transcript button');
+      }
+
+      if (!transcriptButton) {
+        throw createError('TRANSCRIPT_BUTTON_NOT_FOUND', 'The offscreen YouTube watch page did not expose a Show transcript control.', {
+          stage: 'same-origin transcript panel',
+          videoId: video.id,
+          documentTitle: frameDocument.title || ''
+        }, 'Open the video normally and verify that YouTube displays Show transcript in the description area.');
+      }
+
+      transcriptButton.click();
+      trace.note('same-origin transcript panel', 'Clicked YouTube\'s own Show transcript control inside the offscreen watch page.', {
+        buttonText: cleanSingleLine(transcriptButton.textContent || transcriptButton.getAttribute('aria-label') || '')
+      });
+      panel = await waitForFrameElement(() => findTranscriptPanel(frameDocument), signal, 15000, 'transcript panel');
+    }
+
+    if (!panel) {
+      throw createError('TRANSCRIPT_PANEL_NOT_FOUND', 'YouTube did not open a transcript panel after the Show transcript control was activated.', {
+        stage: 'same-origin transcript panel',
+        videoId: video.id
+      }, 'Open the video normally and check whether YouTube can display its transcript panel in this browser profile.');
+    }
+
+    const collection = await collectFrameTranscriptSegments(panel, frameDocument, signal);
+    trace.note('same-origin transcript panel', `Collected ${collection.segments.length} timestamped transcript segment(s) from YouTube\'s own transcript panel.`, {
+      requestedLanguageCode: requestedTrack.languageCode,
+      requestedAutoGenerated: requestedTrack.autoGenerated,
+      renderedSegmentNodes: collection.renderedSegmentNodes,
+      uniqueSegmentKeys: collection.uniqueSegmentKeys,
+      scrollPasses: collection.scrollPasses
+    });
+    return collection;
+  }
+
+  function findTranscriptPanel(doc) {
+    return doc.querySelector(
+      'ytd-engagement-panel-section-list-renderer[target-id="engagement-panel-searchable-transcript"], ' +
+      'ytd-transcript-search-panel-renderer, ytd-transcript-renderer'
+    );
+  }
+
+  function findTranscriptButton(doc) {
+    const structural = doc.querySelector(
+      'ytd-video-description-transcript-section-renderer button, ' +
+      'ytd-video-description-transcript-section-renderer tp-yt-paper-button, ' +
+      'ytd-video-description-transcript-section-renderer yt-button-shape button'
+    );
+    if (structural) return structural;
+
+    const candidates = Array.from(doc.querySelectorAll('button, tp-yt-paper-button'));
+    return candidates.find(candidate => {
+      const text = cleanSingleLine(`${candidate.getAttribute('aria-label') || ''} ${candidate.textContent || ''}`).toLowerCase();
+      return text === 'show transcript' || text.startsWith('show transcript ') || text === 'transcript';
+    }) || null;
+  }
+
+  function findDescriptionExpandButton(doc) {
+    return doc.querySelector(
+      'ytd-watch-metadata #description-inline-expander #expand, ' +
+      'ytd-watch-metadata #description #expand, ' +
+      'ytd-video-secondary-info-renderer #expand'
+    );
+  }
+
+  async function waitForFrameElement(getter, signal, timeoutMs, stage) {
+    const startedAt = Date.now();
+    while (Date.now() - startedAt < timeoutMs) {
+      throwIfAborted(signal, stage);
+      const value = getter();
+      if (value) return value;
+      await delayWithSignal(200, signal, stage);
+    }
+    return null;
+  }
+
+  async function collectFrameTranscriptSegments(panel, doc, signal) {
+    const container = panel.querySelector('#segments-container, ytd-transcript-segment-list-renderer, #body') || panel;
+    const collected = new Map();
+    let renderedSegmentNodes = 0;
+    let stablePasses = 0;
+    let scrollPasses = 0;
+
+    if ('scrollTop' in container) container.scrollTop = 0;
+
+    for (let pass = 0; pass < 100; pass += 1) {
+      throwIfAborted(signal, 'transcript panel segment collection');
+      const nodes = Array.from(doc.querySelectorAll('ytd-transcript-segment-renderer'))
+        .filter(node => panel.contains(node));
+      renderedSegmentNodes = Math.max(renderedSegmentNodes, nodes.length);
+      const before = collected.size;
+      for (const node of nodes) {
+        const segment = readFrameTranscriptSegment(node);
+        if (!segment) continue;
+        collected.set(`${segment.startMs}:${segment.text}`, segment);
+      }
+
+      if (collected.size === before) stablePasses += 1;
+      else stablePasses = 0;
+
+      const scrollHeight = Number(container.scrollHeight || 0);
+      const clientHeight = Number(container.clientHeight || 0);
+      const currentTop = Number(container.scrollTop || 0);
+      const atBottom = scrollHeight <= clientHeight + currentTop + 4;
+      if (atBottom && stablePasses >= 3) break;
+
+      const step = Math.max(320, Math.floor(clientHeight * 0.85));
+      container.scrollTop = Math.min(scrollHeight, currentTop + step);
+      scrollPasses += 1;
+      await delayWithSignal(120, signal, 'transcript panel segment collection');
+    }
+
+    const segments = normalizeSegmentTimings(Array.from(collected.values()));
+    return {
+      segments,
+      renderedSegmentNodes,
+      uniqueSegmentKeys: collected.size,
+      scrollPasses,
+      details: {
+        panelTagName: panel.tagName,
+        containerTagName: container.tagName,
+        renderedSegmentNodes,
+        uniqueSegmentKeys: collected.size,
+        scrollPasses
+      }
+    };
+  }
+
+  function readFrameTranscriptSegment(node) {
+    const timestampNode = node.querySelector(
+      '.segment-timestamp, #segment-timestamp, [class*="segment-timestamp"], [id*="segment-timestamp"]'
+    );
+    const timestampText = cleanSingleLine(timestampNode?.textContent || '');
+    const startMs = parseTranscriptPanelTimestamp(timestampText);
+    if (!Number.isFinite(startMs)) return null;
+
+    const textNode = node.querySelector(
+      '.segment-text, #segment-text, [class*="segment-text"], [id*="segment-text"]'
+    );
+    let text = cleanCaptionText(textNode?.textContent || '');
+    if (!text) {
+      const candidates = Array.from(node.querySelectorAll('yt-formatted-string, span'))
+        .map(candidate => cleanCaptionText(candidate.textContent || ''))
+        .filter(value => value && value !== timestampText);
+      text = candidates.sort((a, b) => b.length - a.length)[0] || '';
+    }
+    if (!text) return null;
+    return { startMs, durationMs: 0, text };
+  }
+
+  function parseTranscriptPanelTimestamp(value) {
+    const parts = String(value || '').trim().split(':').map(part => Number(part));
+    if (parts.length < 2 || parts.length > 3 || parts.some(part => !Number.isFinite(part))) return NaN;
+    let seconds = 0;
+    for (const part of parts) seconds = seconds * 60 + part;
+    return Math.max(0, Math.round(seconds * 1000));
+  }
+
+  function throwIfAborted(signal, stage) {
+    if (!signal?.aborted) return;
+    const reason = signal.reason;
+    if (reason?.code) throw reason;
+    throw createError('REQUEST_CANCELLED', `${stage} was cancelled.`, { stage }, 'Open the transcript again to start a new request.');
+  }
+
+  function delayWithSignal(milliseconds, signal, stage) {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const finish = callback => value => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timer);
+        signal?.removeEventListener('abort', onAbort);
+        callback(value);
+      };
+      const onAbort = finish(() => reject(signal?.reason?.code
+        ? signal.reason
+        : createError('REQUEST_CANCELLED', `${stage} was cancelled.`, { stage }, 'Open the transcript again to start a new request.')));
+      const timer = window.setTimeout(finish(resolve), milliseconds);
+      signal?.addEventListener('abort', onAbort, { once: true });
+      if (signal?.aborted) onAbort();
+    });
+  }
+
+  function findMatchingCaptionTrack(tracks, requestedTrack) {
+    if (!Array.isArray(tracks) || tracks.length === 0) return null;
+    const requestedLanguage = String(requestedTrack.languageCode || '').toLowerCase();
+    const requestedVssId = String(requestedTrack.vssId || '');
+
+    if (requestedVssId) {
+      const vssMatch = tracks.find(track => String(track.vssId || '') === requestedVssId);
+      if (vssMatch) return vssMatch;
+    }
+
+    const exactMatch = tracks.find(track => (
+      String(track.languageCode || '').toLowerCase() === requestedLanguage &&
+      Boolean(track.autoGenerated) === Boolean(requestedTrack.autoGenerated)
+    ));
+    if (exactMatch) return exactMatch;
+
+    const languageMatch = tracks.find(track => (
+      String(track.languageCode || '').toLowerCase() === requestedLanguage
+    ));
+    if (languageMatch) return languageMatch;
+
+    const requestedBaseLanguage = requestedLanguage.split('-')[0];
+    if (requestedBaseLanguage) {
+      const baseLanguageMatch = tracks.find(track => (
+        String(track.languageCode || '').toLowerCase().split('-')[0] === requestedBaseLanguage &&
+        Boolean(track.autoGenerated) === Boolean(requestedTrack.autoGenerated)
+      ));
+      if (baseLanguageMatch) return baseLanguageMatch;
+    }
+
+    return null;
+  }
+
+  function validateCaptionUrl(rawUrl) {
+    let url;
+    try {
+      url = new URL(rawUrl, location.origin);
+    } catch (cause) {
+      throw createError('CAPTION_URL_INVALID', 'YouTube supplied an invalid caption URL.', {
+        stage: 'caption URL validation',
+        rawUrl: truncate(String(rawUrl), 300)
+      }, 'Reload the YouTube page and retry.', cause);
+    }
+
+    if (!SUPPORTED_HOST_PATTERN.test(url.hostname)) {
+      throw createError('CAPTION_HOST_REJECTED', `Rejected an unexpected caption host: ${url.hostname}`, {
+        stage: 'caption URL validation',
+        hostname: url.hostname,
+        pathname: url.pathname
+      }, 'Do not bypass this check. Reload YouTube; a normal YouTube caption track should resolve to a youtube.com host.');
+    }
+
+    if (url.protocol !== 'https:') {
+      throw createError('CAPTION_PROTOCOL_REJECTED', `Rejected caption protocol: ${url.protocol}`, {
+        stage: 'caption URL validation',
+        protocol: url.protocol
+      });
+    }
+
+    if (url.origin !== location.origin) {
+      url.protocol = location.protocol;
+      url.host = location.host;
+    }
+    return url;
+  }
+
+  function parseJson3Segments(json) {
+    const events = Array.isArray(json?.events) ? json.events : [];
+    const segments = [];
+    for (const event of events) {
+      if (!Array.isArray(event?.segs)) continue;
+      const text = cleanCaptionText(event.segs.map(segment => segment?.utf8 || '').join(''));
+      if (!text) continue;
+      const startMs = toFiniteNonNegative(event.tStartMs, 0);
+      const durationMs = Math.max(1, toFiniteNonNegative(event.dDurationMs, 0));
+      segments.push({ startMs, durationMs, text });
+    }
+    return normalizeSegmentTimings(segments);
+  }
+
+  function parseVttSegments(vttText) {
+    const normalized = String(vttText || '').replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
+    const blocks = normalized.split(/\n{2,}/);
+    const segments = [];
+    for (const block of blocks) {
+      const lines = block.split('\n').map(line => line.trimEnd());
+      const timingIndex = lines.findIndex(line => line.includes('-->'));
+      if (timingIndex < 0) continue;
+      const timing = lines[timingIndex].match(/(\d{1,2}:)?\d{2}:\d{2}[.,]\d{3}\s*-->\s*(\d{1,2}:)?\d{2}:\d{2}[.,]\d{3}/);
+      if (!timing) continue;
+      const [startText, endText] = lines[timingIndex].split('-->').map(part => part.trim().split(/\s+/)[0]);
+      const startMs = parseTimestamp(startText);
+      const endMs = parseTimestamp(endText);
+      const text = cleanCaptionText(lines.slice(timingIndex + 1).join('\n').replace(/<[^>]+>/g, ''));
+      if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || !text) continue;
+      segments.push({ startMs, durationMs: Math.max(1, endMs - startMs), text });
+    }
+    return normalizeSegmentTimings(segments);
+  }
+
+  function parseXmlSegments(xmlText) {
+    const source = String(xmlText || '').replace(/^\uFEFF/, '');
+    const segments = [];
+    const nodePattern = /<(text|p)\b([^>]*)>([\s\S]*?)<\/\1>/gi;
+    let match;
+
+    while ((match = nodePattern.exec(source))) {
+      const tagName = match[1].toLowerCase();
+      const attributes = parseXmlAttributes(match[2]);
+      const rawText = match[3].replace(/<[^>]*>/g, '');
+      const text = cleanCaptionText(decodeXmlEntities(rawText));
+      if (!text) continue;
+
+      if (tagName === 'text') {
+        const startSeconds = Number(attributes.start);
+        const durationSeconds = Number(attributes.dur || '0');
+        if (!Number.isFinite(startSeconds)) continue;
+        segments.push({
+          startMs: Math.max(0, Math.round(startSeconds * 1000)),
+          durationMs: Math.max(1, Math.round(Math.max(0, durationSeconds) * 1000)),
+          text
+        });
+        continue;
+      }
+
+      const startMs = Number(attributes.t);
+      const durationMs = Number(attributes.d || '0');
+      if (!Number.isFinite(startMs)) continue;
+      segments.push({
+        startMs: Math.max(0, Math.round(startMs)),
+        durationMs: Math.max(1, Math.round(Math.max(0, durationMs))),
+        text
+      });
+    }
+
+    return normalizeSegmentTimings(segments);
+  }
+
+  function parseXmlAttributes(source) {
+    const attributes = {};
+    const attributePattern = /([:\w-]+)\s*=\s*("([^"]*)"|'([^']*)')/g;
+    let match;
+    while ((match = attributePattern.exec(String(source || '')))) {
+      attributes[match[1]] = decodeXmlEntities(match[3] !== undefined ? match[3] : match[4]);
+    }
+    return attributes;
+  }
+
+  function decodeXmlEntities(value) {
+    return String(value || '').replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos|nbsp);/gi, (entity, body) => {
+      const normalized = String(body).toLowerCase();
+      if (normalized === 'amp') return '&';
+      if (normalized === 'lt') return '<';
+      if (normalized === 'gt') return '>';
+      if (normalized === 'quot') return '"';
+      if (normalized === 'apos') return "'";
+      if (normalized === 'nbsp') return ' ';
+      if (normalized.startsWith('#x')) {
+        const codePoint = Number.parseInt(normalized.slice(2), 16);
+        return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : entity;
+      }
+      if (normalized.startsWith('#')) {
+        const codePoint = Number.parseInt(normalized.slice(1), 10);
+        return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : entity;
+      }
+      return entity;
+    });
+  }
+
+  function normalizeSegmentTimings(segments) {
+    const sorted = segments
+      .filter(segment => Number.isFinite(segment.startMs) && segment.text)
+      .sort((a, b) => a.startMs - b.startMs);
+
+    for (let index = 0; index < sorted.length; index += 1) {
+      const segment = sorted[index];
+      const next = sorted[index + 1];
+      if (!segment.durationMs || segment.durationMs < 1) {
+        segment.durationMs = next ? Math.max(1, next.startMs - segment.startMs) : 2000;
+      }
+      if (next && segment.startMs + segment.durationMs > next.startMs + 1000) {
+        segment.durationMs = Math.max(1, next.startMs - segment.startMs);
+      }
+    }
+    return sorted;
+  }
+
+  function segmentsToSrt(segments) {
+    return segments.map((segment, index) => {
+      const start = formatTimestamp(segment.startMs, ',');
+      const end = formatTimestamp(segment.startMs + segment.durationMs, ',');
+      return `${index + 1}\n${start} --> ${end}\n${segment.text}`;
+    }).join('\n\n');
+  }
+
+  function segmentsToVtt(segments) {
+    const cues = segments.map(segment => {
+      const start = formatTimestamp(segment.startMs, '.');
+      const end = formatTimestamp(segment.startMs + segment.durationMs, '.');
+      return `${start} --> ${end}\n${segment.text}`;
+    }).join('\n\n');
+    return `WEBVTT\n\n${cues}`;
+  }
+
+  function segmentsToPlainText(segments) {
+    const lines = [];
+    let previous = '';
+    for (const segment of segments) {
+      const text = cleanSingleLine(segment.text);
+      if (!text || text === previous) continue;
+      lines.push(text);
+      previous = text;
+    }
+    return lines.join('\n');
+  }
+
+  function formatTimestamp(milliseconds, separator) {
+    const total = Math.max(0, Math.round(milliseconds));
+    const hours = Math.floor(total / 3600000);
+    const minutes = Math.floor((total % 3600000) / 60000);
+    const seconds = Math.floor((total % 60000) / 1000);
+    const millis = total % 1000;
+    return `${pad(hours, 2)}:${pad(minutes, 2)}:${pad(seconds, 2)}${separator}${pad(millis, 3)}`;
+  }
+
+  function parseTimestamp(value) {
+    const match = String(value || '').match(/^(?:(\d{1,2}):)?(\d{2}):(\d{2})[.,](\d{3})$/);
+    if (!match) return NaN;
+    const hours = Number(match[1] || 0);
+    const minutes = Number(match[2]);
+    const seconds = Number(match[3]);
+    const millis = Number(match[4]);
+    return hours * 3600000 + minutes * 60000 + seconds * 1000 + millis;
+  }
+
+  function pad(value, size) {
+    return String(value).padStart(size, '0');
+  }
+
+  function cleanCaptionText(value) {
+    return String(value || '')
+      .replace(/\u200B/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
+  function cleanSingleLine(value) {
+    return String(value || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function extractText(value) {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    if (Array.isArray(value)) return value.map(extractText).filter(Boolean).join(' ');
+    if (typeof value.simpleText === 'string') return value.simpleText;
+    if (Array.isArray(value.runs)) return value.runs.map(run => run?.text || '').join('');
+    return '';
+  }
+
+  function getPlayabilityReason(data) {
+    return (
+      extractText(data?.playabilityStatus?.reason) ||
+      extractText(data?.playabilityStatus?.messages) ||
+      extractText(data?.playabilityStatus?.errorScreen?.playerErrorMessageRenderer?.reason) ||
+      extractText(data?.playabilityStatus?.errorScreen?.playerErrorMessageRenderer?.subreason) ||
+      ''
+    );
+  }
+
+  async function fetchWithTimeout(url, options, timeoutMs, stage, trace) {
+    const controller = new AbortController();
+    const externalSignal = options?.signal || null;
+    const requestOptions = { ...(options || {}) };
+    delete requestOptions.signal;
+
+    const abortFromExternal = () => {
+      const reason = externalSignal?.reason || createError('REQUEST_CANCELLED', `${stage} request was cancelled.`, {
+        stage,
+        endpoint: safeUrlForDiagnostics(url)
+      }, 'Open the transcript again to start a new request.');
+      if (!controller.signal.aborted) controller.abort(reason);
+    };
+
+    if (externalSignal?.aborted) abortFromExternal();
+    else externalSignal?.addEventListener('abort', abortFromExternal, { once: true });
+
+    const timer = window.setTimeout(() => {
+      if (controller.signal.aborted) return;
+      controller.abort(createError('REQUEST_TIMEOUT', `${stage} request exceeded ${timeoutMs} ms.`, {
+        stage,
+        timeoutMs,
+        endpoint: safeUrlForDiagnostics(url)
+      }, 'Check the network connection and retry. If YouTube is responding slowly, wait before retrying repeatedly.'));
+    }, timeoutMs);
+
+    const traceEntry = trace ? trace.beginRequest(stage, requestOptions.method || 'GET', url, requestOptions) : null;
+
+    try {
+      const response = await fetch(url, { ...requestOptions, signal: controller.signal });
+      if (traceEntry) {
+        responseTraceEntries.set(response, traceEntry);
+        trace.recordResponse(traceEntry, response);
+      }
+      return response;
+    } catch (cause) {
+      if (traceEntry) trace.recordFailure(traceEntry, cause);
+      if (cause?.name === 'AbortError' || controller.signal.aborted) {
+        const reason = controller.signal.reason;
+        if (reason && reason.code) throw reason;
+        if (externalSignal?.aborted) {
+          throw createError('REQUEST_CANCELLED', `${stage} request was cancelled.`, {
+            stage,
+            endpoint: safeUrlForDiagnostics(url)
+          }, 'Open the transcript again to start a new request.', cause);
+        }
+        throw createError('REQUEST_TIMEOUT', `${stage} request exceeded ${timeoutMs} ms.`, {
+          stage,
+          timeoutMs,
+          endpoint: safeUrlForDiagnostics(url)
+        }, 'Check the network connection and retry.', cause);
+      }
+      throw createError('NETWORK_ERROR', `${stage} request failed before YouTube returned an HTTP response.`, {
+        stage,
+        endpoint: safeUrlForDiagnostics(url),
+        browserError: String(cause?.message || cause)
+      }, 'Check whether YouTube is online, whether the browser is blocking requests, and whether a privacy tool is blocking /watch, /youtubei/, or /api/timedtext/.', cause);
+    } finally {
+      window.clearTimeout(timer);
+      externalSignal?.removeEventListener('abort', abortFromExternal);
+    }
+  }
+
+  async function readResponseText(response, trace) {
+    const text = await response.text();
+    const entry = responseTraceEntries.get(response);
+    if (trace && entry) trace.recordBody(entry, text);
+    return text;
+  }
+
+  function createNetworkTrace(controller, video) {
+    const requests = [];
+    const notes = [];
+    let sequence = 0;
+    let context = {};
+
+    const publish = nextContext => {
+      if (nextContext && typeof nextContext === 'object') context = { ...context, ...nextContext };
+      controller.setDiagnostics({
+        appVersion: APP_VERSION,
+        videoId: video.id,
+        videoUrl: video.url,
+        pageUrl: location.href,
+        updatedAt: new Date().toISOString(),
+        ...context,
+        networkRequests: requests.map(item => ({ ...item })),
+        traceNotes: notes.map(item => ({ ...item }))
+      });
+    };
+
+    return {
+      publish,
+      beginRequest(stage, method, url, options) {
+        const entry = {
+          id: ++sequence,
+          type: 'http',
+          stage,
+          method: String(method || 'GET').toUpperCase(),
+          url: safeUrlForDiagnostics(url),
+          credentials: options?.credentials || 'same-origin default',
+          cache: options?.cache || 'default',
+          startedAt: new Date().toISOString(),
+          state: 'pending'
+        };
+        requests.push(entry);
+        publish();
+        return entry;
+      },
+      recordResponse(entry, response) {
+        entry.state = 'response-received';
+        entry.httpStatus = response.status;
+        entry.statusText = response.statusText || '';
+        entry.ok = response.ok;
+        entry.responseType = response.type;
+        entry.contentType = response.headers.get('content-type') || '';
+        entry.contentLengthHeader = response.headers.get('content-length') || null;
+        entry.responseUrl = safeUrlForDiagnostics(response.url || entry.url);
+        entry.headersReceivedAt = new Date().toISOString();
+        publish();
+      },
+      recordBody(entry, body) {
+        const text = String(body || '');
+        entry.state = 'complete';
+        entry.responseLength = text.length;
+        entry.emptyBody = text.length === 0;
+        entry.responsePreview = truncate(text, MAX_DIAGNOSTIC_BODY_CHARS);
+        entry.completedAt = new Date().toISOString();
+        entry.elapsedMs = Math.max(0, Date.parse(entry.completedAt) - Date.parse(entry.startedAt));
+        publish();
+      },
+      recordFailure(entry, error) {
+        entry.state = 'failed';
+        entry.errorName = error?.name || 'Error';
+        entry.errorCode = error?.code || null;
+        entry.errorMessage = String(error?.message || error);
+        entry.completedAt = new Date().toISOString();
+        entry.elapsedMs = Math.max(0, Date.parse(entry.completedAt) - Date.parse(entry.startedAt));
+        publish();
+      },
+      beginNavigation(stage, url) {
+        const entry = {
+          id: ++sequence,
+          type: 'navigation',
+          stage,
+          method: 'GET',
+          url: safeUrlForDiagnostics(url),
+          startedAt: new Date().toISOString(),
+          state: 'pending'
+        };
+        requests.push(entry);
+        publish();
+        return entry;
+      },
+      completeNavigation(entry, frameUrl, details) {
+        entry.state = 'complete';
+        entry.responseUrl = safeUrlForDiagnostics(frameUrl || entry.url);
+        entry.completedAt = new Date().toISOString();
+        entry.elapsedMs = Math.max(0, Date.parse(entry.completedAt) - Date.parse(entry.startedAt));
+        Object.assign(entry, details || {});
+        publish();
+      },
+      failNavigation(entry, error) {
+        entry.state = 'failed';
+        entry.errorName = error?.name || 'Error';
+        entry.errorCode = error?.code || null;
+        entry.errorMessage = String(error?.message || error);
+        entry.completedAt = new Date().toISOString();
+        entry.elapsedMs = Math.max(0, Date.parse(entry.completedAt) - Date.parse(entry.startedAt));
+        publish();
+      },
+      note(stage, message, details) {
+        notes.push({
+          at: new Date().toISOString(),
+          stage,
+          message,
+          details: details || null
+        });
+        publish();
+      },
+      snapshot() {
+        return requests.map(item => ({ ...item }));
+      }
+    };
+  }
+
+  function safeUrlForDiagnostics(value) {
+    try {
+      const url = value instanceof URL ? new URL(value.toString()) : new URL(String(value), location.origin);
+      const visibleKeys = ['fmt', 'lang', 'kind', 'tlang'];
+      const safe = new URL(url.origin + url.pathname);
+      for (const key of visibleKeys) {
+        const current = url.searchParams.get(key);
+        if (current) safe.searchParams.set(key, current);
+      }
+      return safe.toString();
+    } catch {
+      return truncate(String(value), 240);
+    }
+  }
+
+  function createError(code, message, details, troubleshooting, cause) {
+    const error = new Error(message, cause ? { cause } : undefined);
+    error.name = 'YouTubeTranscriptError';
+    error.code = code;
+    error.details = details || {};
+    error.troubleshooting = troubleshooting || defaultTroubleshooting(code);
+    return error;
+  }
+
+  function normalizeError(error, fallbackCode) {
+    const code = error?.code || fallbackCode || 'UNKNOWN_ERROR';
+    const message = String(error?.message || error || 'Unknown error.');
+    return {
+      name: error?.name || 'Error',
+      code,
+      message,
+      troubleshooting: error?.troubleshooting || defaultTroubleshooting(code),
+      details: redactDiagnostics(error?.details || {}),
+      browser: navigator.userAgent,
+      pageUrl: location.href,
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  function redactDiagnostics(value) {
+    const blockedKeys = /key|token|cookie|authorization|signature|sig|visitor/i;
+    if (Array.isArray(value)) return value.map(redactDiagnostics);
+    if (!value || typeof value !== 'object') return value;
+    const output = {};
+    for (const [key, item] of Object.entries(value)) {
+      output[key] = blockedKeys.test(key) ? '[redacted]' : redactDiagnostics(item);
+    }
+    return output;
+  }
+
+  function defaultTroubleshooting(code) {
+    const messages = {
+      YOUTUBE_CONFIG_MISSING: 'Reload the YouTube page and run the bookmarklet after the page has fully loaded.',
+      WATCH_PAGE_HTTP_ERROR: 'Open the video normally in YouTube and retry after the watch page loads.',
+      WATCH_PAGE_RESPONSE_INVALID: 'Open the video normally, wait for the player to initialize, and retry.',
+      YOUTUBE_CONSENT_REQUIRED: 'Complete the YouTube consent prompt in this browser profile, reload YouTube, and retry.',
+      METADATA_DISCOVERY_FAILED: 'Open the video in the current YouTube tab, wait for the player to load, and retry.',
+      NO_CAPTIONS: 'Confirm that the video has subtitles in YouTube. Some videos have no caption track or restrict caption access.',
+      VIDEO_NOT_PLAYABLE: 'Open the video normally and satisfy any sign-in, age, region, consent, membership, or anti-bot requirement.',
+      PLAYER_HTTP_ERROR: 'Reload YouTube and confirm the video is public and playable in the current browser session.',
+      CAPTION_HTTP_ERROR: 'Reload YouTube to obtain a fresh signed caption URL, or select another track.',
+      CAPTION_PARSE_ERROR: 'Try another track. YouTube may have changed its timed-text format or may require an additional subtitle token.',
+      REQUEST_CANCELLED: 'Open the transcript again to start a new request.',
+      NETWORK_ERROR: 'Check the network and privacy tools. Requests must be allowed to /watch, /youtubei/, and /api/timedtext/ on YouTube.',
+      REQUEST_TIMEOUT: 'Check the connection and retry after YouTube is responsive.'
+    };
+    return messages[code] || 'Reload YouTube, run the bookmarklet again, and review the troubleshooting details. YouTube may have changed an undocumented web interface.';
+  }
+
+  function toFiniteNonNegative(value, fallback) {
+    const number = Number(value);
+    return Number.isFinite(number) && number >= 0 ? number : fallback;
+  }
+
+  function truncate(value, maximum) {
+    const text = String(value || '');
+    return text.length <= maximum ? text : `${text.slice(0, maximum)}\n...[truncated ${text.length - maximum} characters]`;
+  }
+
+  function delay(milliseconds) {
+    return new Promise(resolve => window.setTimeout(resolve, milliseconds));
+  }
+
+  function destroy() {
+    if (state.destroyed) return;
+    state.destroyed = true;
+
+    if (state.scanTimer) window.clearTimeout(state.scanTimer);
+    if (state.periodicTimer) window.clearInterval(state.periodicTimer);
+    state.observer?.disconnect();
+    for (const [eventName, handler] of state.routeHandlers) {
+      window.removeEventListener(eventName, handler, true);
+    }
+    state.routeHandlers.length = 0;
+
+    state.transcriptAbortController?.abort(createError('REQUEST_CANCELLED', 'YouTube Transcript Buttons was removed.', {
+      stage: 'bookmarklet cleanup',
+      videoId: state.transcriptVideoId || null
+    }, 'Run the bookmarklet again to restore transcript controls.'));
+    state.transcriptAbortController = null;
+    state.transcriptVideoId = null;
+    state.transcriptController?.close?.();
+    state.transcriptController = null;
+    state.transcriptHost?.remove();
+    state.transcriptHost = null;
+
+    for (const host of state.buttonHosts) host.remove();
+    state.buttonHosts.clear();
+    document.querySelectorAll(`[${CARD_MARK_ATTRIBUTE}]`).forEach(card => card.removeAttribute(CARD_MARK_ATTRIBUTE));
+    state.panelHost?.remove();
+    delete window[APP_KEY];
+  }
+})();
