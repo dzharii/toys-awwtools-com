@@ -1,0 +1,2661 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+        http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'sha256-4nCIONlnINbfK3ZbUaN1TCDy/KKWIZkn9L0XY1XALik='; script-src-attr 'none'; style-src 'sha256-SD0m3GRiYZYSoWUJ/zt3J2tgrnTCIGyQz32KNxc7zRY='; style-src-attr 'none'; img-src 'none'; media-src blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; manifest-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'"
+    >
+    <meta name="color-scheme" content="dark">
+    <title>Kanji PiP</title>
+    <style>
+:root {
+    color-scheme: dark;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+    background: #000;
+    color: #f4f4f4;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    min-height: 100%;
+    margin: 0;
+    background: #000;
+}
+
+body {
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+button,
+canvas {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.app-shell {
+    width: min(100%, 560px);
+    display: grid;
+    justify-items: center;
+    gap: 18px;
+}
+
+.app-header {
+    text-align: center;
+}
+
+.app-header h1 {
+    margin: 0;
+    font-size: clamp(1.55rem, 4vw, 2rem);
+    font-weight: 650;
+    letter-spacing: 0.01em;
+}
+
+.app-header p {
+    margin: 8px 0 0;
+    color: #9a9a9a;
+    font-size: 0.95rem;
+}
+
+.preview-panel {
+    position: relative;
+    width: 100%;
+}
+
+#studyCanvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    border: 1px solid #242424;
+    border-radius: 12px;
+    background: #000;
+    box-shadow: 0 18px 60px rgb(0 0 0 / 45%);
+}
+
+.media-transport {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    left: 0;
+    bottom: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.pip-button {
+    min-width: 230px;
+    min-height: 44px;
+    padding: 10px 18px;
+    border: 1px solid #454545;
+    border-radius: 9px;
+    background: #151515;
+    color: #f5f5f5;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+
+.pip-button:hover:not(:disabled) {
+    background: #1d1d1d;
+    border-color: #656565;
+}
+
+.pip-button:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.pip-button:focus-visible {
+    outline: 2px solid #d9e8ff;
+    outline-offset: 3px;
+}
+
+.pip-button:disabled {
+    color: #777;
+    border-color: #292929;
+    background: #0c0c0c;
+    cursor: not-allowed;
+}
+
+.status-message {
+    min-height: 1.4em;
+    max-width: 48ch;
+    margin: 0;
+    color: #b7b7b7;
+    font-size: 0.88rem;
+    line-height: 1.45;
+    text-align: center;
+}
+
+.status-message[data-kind="error"] {
+    color: #f0b8b8;
+}
+
+@media (max-width: 520px) {
+    body {
+        padding: 14px;
+    }
+
+    .app-shell {
+        gap: 14px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pip-button {
+        transition: none;
+    }
+}
+</style>
+</head>
+<body>
+    <main class="app-shell" aria-labelledby="appTitle">
+        <header class="app-header">
+            <h1 id="appTitle">Kanji PiP</h1>
+            <p>Ambient Japanese study in Picture-in-Picture.</p>
+        </header>
+
+        <section class="preview-panel" aria-label="Kanji PiP preview">
+            <canvas
+                id="studyCanvas"
+                width="480"
+                height="270"
+                role="img"
+                aria-label="Ambient Japanese study display"
+            ></canvas>
+
+            <video
+                id="pipVideo"
+                class="media-transport"
+                autoplay
+                muted
+                playsinline
+                aria-hidden="true"
+                tabindex="-1"
+            ></video>
+        </section>
+
+        <button id="pipButton" class="pip-button" type="button">
+            Enter Picture-in-Picture
+        </button>
+
+        <p id="statusMessage" class="status-message" role="status" aria-live="polite"></p>
+    </main>
+
+    <script>
+(() => {
+    "use strict";
+
+    /**
+     * Recursively freezes an object graph while preserving its inferred type.
+     * @template T
+     * @param {T} value
+     * @returns {T}
+     */
+    function deepFreeze(value) {
+        if (!value || typeof value !== "object" || Object.isFrozen(value)) {
+            return value;
+        }
+
+        Object.freeze(value);
+        for (const child of Object.values(value)) {
+            deepFreeze(child);
+        }
+        return value;
+    }
+
+    /** @type {KanjiCard[]} */
+    const data = [
+        {
+            kanji: "日",
+            meanings: ["day", "sun"],
+            readings: { on: ["ニチ", "ジツ"], kun: ["ひ", "び", "か"] },
+            romaji: { on: ["nichi", "jitsu"], kun: ["hi", "bi", "ka"] },
+            examples: [
+                { word: "日本", reading: "にほん", romaji: "nihon", meaning: "Japan" },
+                { word: "毎日", reading: "まいにち", romaji: "mainichi", meaning: "every day" },
+                { word: "日曜日", reading: "にちようび", romaji: "nichiyoubi", meaning: "Sunday" }
+            ],
+            sentences: [
+                { japanese: "毎日本を読みます。", reading: "まいにち ほん を よみます。", romaji: "Mainichi hon o yomimasu.", meaning: "I read a book every day." }
+            ]
+        },
+        {
+            kanji: "一",
+            meanings: ["one"],
+            readings: { on: ["イチ", "イツ"], kun: ["ひと", "ひとつ"] },
+            romaji: { on: ["ichi", "itsu"], kun: ["hito", "hitotsu"] },
+            examples: [
+                { word: "一人", reading: "ひとり", romaji: "hitori", meaning: "one person" },
+                { word: "一日", reading: "いちにち", romaji: "ichinichi", meaning: "one day" },
+                { word: "一番", reading: "いちばん", romaji: "ichiban", meaning: "number one" }
+            ]
+        },
+        {
+            kanji: "国",
+            meanings: ["country"],
+            readings: { on: ["コク"], kun: ["くに"] },
+            romaji: { on: ["koku"], kun: ["kuni"] },
+            examples: [
+                { word: "外国", reading: "がいこく", romaji: "gaikoku", meaning: "foreign country" },
+                { word: "中国", reading: "ちゅうごく", romaji: "chuugoku", meaning: "China" },
+                { word: "全国", reading: "ぜんこく", romaji: "zenkoku", meaning: "nationwide" }
+            ]
+        },
+        {
+            kanji: "人",
+            meanings: ["person"],
+            readings: { on: ["ジン", "ニン"], kun: ["ひと"] },
+            romaji: { on: ["jin", "nin"], kun: ["hito"] },
+            examples: [
+                { word: "日本人", reading: "にほんじん", romaji: "nihonjin", meaning: "Japanese person" },
+                { word: "人間", reading: "にんげん", romaji: "ningen", meaning: "human" },
+                { word: "一人", reading: "ひとり", romaji: "hitori", meaning: "one person" }
+            ],
+            sentences: [
+                { japanese: "あの人は先生です。", reading: "あの ひと は せんせい です。", romaji: "Ano hito wa sensei desu.", meaning: "That person is a teacher." }
+            ]
+        },
+        {
+            kanji: "年",
+            meanings: ["year"],
+            readings: { on: ["ネン"], kun: ["とし"] },
+            romaji: { on: ["nen"], kun: ["toshi"] },
+            examples: [
+                { word: "今年", reading: "ことし", romaji: "kotoshi", meaning: "this year" },
+                { word: "来年", reading: "らいねん", romaji: "rainen", meaning: "next year" },
+                { word: "毎年", reading: "まいとし", romaji: "maitoshi", meaning: "every year" }
+            ]
+        },
+        {
+            kanji: "大",
+            meanings: ["big"],
+            readings: { on: ["ダイ", "タイ"], kun: ["おお", "おおきい"] },
+            romaji: { on: ["dai", "tai"], kun: ["oo", "ookii"] },
+            examples: [
+                { word: "大学", reading: "だいがく", romaji: "daigaku", meaning: "university" },
+                { word: "大人", reading: "おとな", romaji: "otona", meaning: "adult" },
+                { word: "大切", reading: "たいせつ", romaji: "taisetsu", meaning: "important" }
+            ]
+        },
+        {
+            kanji: "十",
+            meanings: ["ten"],
+            readings: { on: ["ジュウ", "ジッ"], kun: ["とお"] },
+            romaji: { on: ["juu", "ji"], kun: ["too"] },
+            examples: [
+                { word: "十分", reading: "じゅうぶん", romaji: "juubun", meaning: "sufficient" },
+                { word: "十月", reading: "じゅうがつ", romaji: "juugatsu", meaning: "October" },
+                { word: "二十歳", reading: "はたち", romaji: "hatachi", meaning: "twenty years old" }
+            ]
+        },
+        {
+            kanji: "二",
+            meanings: ["two"],
+            readings: { on: ["ニ"], kun: ["ふた", "ふたつ"] },
+            romaji: { on: ["ni"], kun: ["futa", "futatsu"] },
+            examples: [
+                { word: "二人", reading: "ふたり", romaji: "futari", meaning: "two people" },
+                { word: "二月", reading: "にがつ", romaji: "nigatsu", meaning: "February" },
+                { word: "二回", reading: "にかい", romaji: "nikai", meaning: "twice" }
+            ]
+        },
+        {
+            kanji: "本",
+            meanings: ["book", "origin"],
+            readings: { on: ["ホン"], kun: ["もと"] },
+            romaji: { on: ["hon"], kun: ["moto"] },
+            examples: [
+                { word: "日本", reading: "にほん", romaji: "nihon", meaning: "Japan" },
+                { word: "本当", reading: "ほんとう", romaji: "hontou", meaning: "truth; really" },
+                { word: "本屋", reading: "ほんや", romaji: "honya", meaning: "bookstore" }
+            ],
+            sentences: [
+                { japanese: "本を読みます。", reading: "ほん を よみます。", romaji: "Hon o yomimasu.", meaning: "I read a book." }
+            ]
+        },
+        {
+            kanji: "中",
+            meanings: ["middle", "inside"],
+            readings: { on: ["チュウ"], kun: ["なか"] },
+            romaji: { on: ["chuu"], kun: ["naka"] },
+            examples: [
+                { word: "中国", reading: "ちゅうごく", romaji: "chuugoku", meaning: "China" },
+                { word: "中学校", reading: "ちゅうがっこう", romaji: "chuugakkou", meaning: "junior high school" },
+                { word: "一日中", reading: "いちにちじゅう", romaji: "ichinichijuu", meaning: "all day" }
+            ]
+        },
+        {
+            kanji: "長",
+            meanings: ["long", "leader"],
+            readings: { on: ["チョウ"], kun: ["ながい"] },
+            romaji: { on: ["chou"], kun: ["nagai"] },
+            examples: [
+                { word: "社長", reading: "しゃちょう", romaji: "shachou", meaning: "company president" },
+                { word: "長い", reading: "ながい", romaji: "nagai", meaning: "long" },
+                { word: "成長", reading: "せいちょう", romaji: "seichou", meaning: "growth" }
+            ]
+        },
+        {
+            kanji: "出",
+            meanings: ["exit", "emerge"],
+            readings: { on: ["シュツ", "スイ"], kun: ["でる", "だす"] },
+            romaji: { on: ["shutsu", "sui"], kun: ["deru", "dasu"] },
+            examples: [
+                { word: "出口", reading: "でぐち", romaji: "deguchi", meaning: "exit" },
+                { word: "出来る", reading: "できる", romaji: "dekiru", meaning: "can; be able" },
+                { word: "出発", reading: "しゅっぱつ", romaji: "shuppatsu", meaning: "departure" }
+            ]
+        },
+        {
+            kanji: "三",
+            meanings: ["three"],
+            readings: { on: ["サン"], kun: ["み", "みつ", "みっつ"] },
+            romaji: { on: ["san"], kun: ["mi", "mitsu", "mittsu"] },
+            examples: [
+                { word: "三人", reading: "さんにん", romaji: "sannin", meaning: "three people" },
+                { word: "三月", reading: "さんがつ", romaji: "sangatsu", meaning: "March" },
+                { word: "三回", reading: "さんかい", romaji: "sankai", meaning: "three times" }
+            ]
+        },
+        {
+            kanji: "時",
+            meanings: ["time", "hour"],
+            readings: { on: ["ジ"], kun: ["とき"] },
+            romaji: { on: ["ji"], kun: ["toki"] },
+            examples: [
+                { word: "時間", reading: "じかん", romaji: "jikan", meaning: "time" },
+                { word: "時計", reading: "とけい", romaji: "tokei", meaning: "clock" },
+                { word: "時々", reading: "ときどき", romaji: "tokidoki", meaning: "sometimes" }
+            ]
+        },
+        {
+            kanji: "行",
+            meanings: ["go", "conduct"],
+            readings: { on: ["コウ", "ギョウ"], kun: ["いく", "ゆく", "おこなう"] },
+            romaji: { on: ["kou", "gyou"], kun: ["iku", "yuku", "okonau"] },
+            examples: [
+                { word: "行く", reading: "いく", romaji: "iku", meaning: "go" },
+                { word: "銀行", reading: "ぎんこう", romaji: "ginkou", meaning: "bank" },
+                { word: "旅行", reading: "りょこう", romaji: "ryokou", meaning: "travel" }
+            ],
+            sentences: [
+                { japanese: "学校へ行きます。", reading: "がっこう へ いきます。", romaji: "Gakkou e ikimasu.", meaning: "I go to school." }
+            ]
+        },
+        {
+            kanji: "見",
+            meanings: ["see"],
+            readings: { on: ["ケン"], kun: ["みる", "みえる", "みせる"] },
+            romaji: { on: ["ken"], kun: ["miru", "mieru", "miseru"] },
+            examples: [
+                { word: "見る", reading: "みる", romaji: "miru", meaning: "see" },
+                { word: "意見", reading: "いけん", romaji: "iken", meaning: "opinion" },
+                { word: "見物", reading: "けんぶつ", romaji: "kenbutsu", meaning: "sightseeing" }
+            ]
+        },
+        {
+            kanji: "月",
+            meanings: ["moon", "month"],
+            readings: { on: ["ゲツ", "ガツ"], kun: ["つき"] },
+            romaji: { on: ["getsu", "gatsu"], kun: ["tsuki"] },
+            examples: [
+                { word: "今月", reading: "こんげつ", romaji: "kongetsu", meaning: "this month" },
+                { word: "月曜日", reading: "げつようび", romaji: "getsuyoubi", meaning: "Monday" },
+                { word: "月", reading: "つき", romaji: "tsuki", meaning: "moon" }
+            ]
+        },
+        {
+            kanji: "分",
+            meanings: ["part", "minute", "understand"],
+            readings: { on: ["ブン", "フン", "ブ"], kun: ["わかる", "わける"] },
+            romaji: { on: ["bun", "fun", "bu"], kun: ["wakaru", "wakeru"] },
+            examples: [
+                { word: "自分", reading: "じぶん", romaji: "jibun", meaning: "oneself" },
+                { word: "分かる", reading: "わかる", romaji: "wakaru", meaning: "understand" },
+                { word: "五分", reading: "ごふん", romaji: "gofun", meaning: "five minutes" }
+            ]
+        },
+        {
+            kanji: "後",
+            meanings: ["after", "behind"],
+            readings: { on: ["ゴ", "コウ"], kun: ["あと", "うしろ", "のち"] },
+            romaji: { on: ["go", "kou"], kun: ["ato", "ushiro", "nochi"] },
+            examples: [
+                { word: "午後", reading: "ごご", romaji: "gogo", meaning: "afternoon" },
+                { word: "最後", reading: "さいご", romaji: "saigo", meaning: "last" },
+                { word: "後で", reading: "あとで", romaji: "atode", meaning: "later" }
+            ]
+        },
+        {
+            kanji: "前",
+            meanings: ["before", "front"],
+            readings: { on: ["ゼン"], kun: ["まえ"] },
+            romaji: { on: ["zen"], kun: ["mae"] },
+            examples: [
+                { word: "午前", reading: "ごぜん", romaji: "gozen", meaning: "morning; AM" },
+                { word: "名前", reading: "なまえ", romaji: "namae", meaning: "name" },
+                { word: "前に", reading: "まえに", romaji: "mae ni", meaning: "before" }
+            ]
+        },
+        {
+            kanji: "生",
+            meanings: ["life", "birth"],
+            readings: { on: ["セイ", "ショウ"], kun: ["いきる", "うまれる", "なま"] },
+            romaji: { on: ["sei", "shou"], kun: ["ikiru", "umareru", "nama"] },
+            examples: [
+                { word: "学生", reading: "がくせい", romaji: "gakusei", meaning: "student" },
+                { word: "先生", reading: "せんせい", romaji: "sensei", meaning: "teacher" },
+                { word: "生活", reading: "せいかつ", romaji: "seikatsu", meaning: "daily life; living" },
+                { word: "生まれる", reading: "うまれる", romaji: "umareru", meaning: "to be born" },
+                { word: "人生", reading: "じんせい", romaji: "jinsei", meaning: "life" },
+                { word: "生徒", reading: "せいと", romaji: "seito", meaning: "pupil" },
+                { word: "一生", reading: "いっしょう", romaji: "isshou", meaning: "lifetime" },
+                { word: "生きる", reading: "いきる", romaji: "ikiru", meaning: "to live" }
+            ],
+            sentences: [
+                { japanese: "学生は学校へ行きます。", reading: "がくせい は がっこう へ いきます。", romaji: "Gakusei wa gakkou e ikimasu.", meaning: "The student goes to school." }
+            ]
+        },
+        {
+            kanji: "五",
+            meanings: ["five"],
+            readings: { on: ["ゴ"], kun: ["いつ", "いつつ"] },
+            romaji: { on: ["go"], kun: ["itsu", "itsutsu"] },
+            examples: [
+                { word: "五月", reading: "ごがつ", romaji: "gogatsu", meaning: "May" },
+                { word: "五人", reading: "ごにん", romaji: "gonin", meaning: "five people" },
+                { word: "五分", reading: "ごふん", romaji: "gofun", meaning: "five minutes" }
+            ]
+        },
+        {
+            kanji: "間",
+            meanings: ["interval", "space"],
+            readings: { on: ["カン", "ケン"], kun: ["あいだ", "ま"] },
+            romaji: { on: ["kan", "ken"], kun: ["aida", "ma"] },
+            examples: [
+                { word: "時間", reading: "じかん", romaji: "jikan", meaning: "time" },
+                { word: "人間", reading: "にんげん", romaji: "ningen", meaning: "human" },
+                { word: "間に合う", reading: "まにあう", romaji: "maniau", meaning: "be in time" }
+            ]
+        },
+        {
+            kanji: "上",
+            meanings: ["up", "above"],
+            readings: { on: ["ジョウ", "ショウ"], kun: ["うえ", "あがる", "あげる"] },
+            romaji: { on: ["jou", "shou"], kun: ["ue", "agaru", "ageru"] },
+            examples: [
+                { word: "上手", reading: "じょうず", romaji: "jouzu", meaning: "skillful" },
+                { word: "以上", reading: "いじょう", romaji: "ijou", meaning: "more than; above" },
+                { word: "上がる", reading: "あがる", romaji: "agaru", meaning: "rise" }
+            ]
+        },
+        {
+            kanji: "東",
+            meanings: ["east"],
+            readings: { on: ["トウ"], kun: ["ひがし"] },
+            romaji: { on: ["tou"], kun: ["higashi"] },
+            examples: [
+                { word: "東京", reading: "とうきょう", romaji: "toukyou", meaning: "Tokyo" },
+                { word: "東口", reading: "ひがしぐち", romaji: "higashiguchi", meaning: "east exit" },
+                { word: "関東", reading: "かんとう", romaji: "kantou", meaning: "Kanto" }
+            ]
+        },
+        {
+            kanji: "四",
+            meanings: ["four"],
+            readings: { on: ["シ"], kun: ["よん", "よ", "よつ", "よっつ"] },
+            romaji: { on: ["shi"], kun: ["yon", "yo", "yotsu", "yottsu"] },
+            examples: [
+                { word: "四月", reading: "しがつ", romaji: "shigatsu", meaning: "April" },
+                { word: "四人", reading: "よにん", romaji: "yonin", meaning: "four people" },
+                { word: "四つ", reading: "よっつ", romaji: "yottsu", meaning: "four things" }
+            ]
+        },
+        {
+            kanji: "今",
+            meanings: ["now"],
+            readings: { on: ["コン", "キン"], kun: ["いま"] },
+            romaji: { on: ["kon", "kin"], kun: ["ima"] },
+            examples: [
+                { word: "今日", reading: "きょう", romaji: "kyou", meaning: "today" },
+                { word: "今月", reading: "こんげつ", romaji: "kongetsu", meaning: "this month" },
+                { word: "今度", reading: "こんど", romaji: "kondo", meaning: "next time" }
+            ],
+            sentences: [
+                { japanese: "今日は雨です。", reading: "きょう は あめ です。", romaji: "Kyou wa ame desu.", meaning: "It is rainy today." }
+            ]
+        },
+        {
+            kanji: "金",
+            meanings: ["gold", "money"],
+            readings: { on: ["キン", "コン"], kun: ["かね", "かな"] },
+            romaji: { on: ["kin", "kon"], kun: ["kane", "kana"] },
+            examples: [
+                { word: "お金", reading: "おかね", romaji: "okane", meaning: "money" },
+                { word: "金曜日", reading: "きんようび", romaji: "kinyoubi", meaning: "Friday" },
+                { word: "金額", reading: "きんがく", romaji: "kingaku", meaning: "amount of money" }
+            ]
+        },
+        {
+            kanji: "九",
+            meanings: ["nine"],
+            readings: { on: ["キュウ", "ク"], kun: ["ここの", "ここのつ"] },
+            romaji: { on: ["kyuu", "ku"], kun: ["kokono", "kokonotsu"] },
+            examples: [
+                { word: "九月", reading: "くがつ", romaji: "kugatsu", meaning: "September" },
+                { word: "九人", reading: "きゅうにん", romaji: "kyuunin", meaning: "nine people" },
+                { word: "九時", reading: "くじ", romaji: "kuji", meaning: "nine o'clock" }
+            ]
+        },
+        {
+            kanji: "入",
+            meanings: ["enter"],
+            readings: { on: ["ニュウ"], kun: ["はいる", "いれる"] },
+            romaji: { on: ["nyuu"], kun: ["hairu", "ireru"] },
+            examples: [
+                { word: "入る", reading: "はいる", romaji: "hairu", meaning: "enter" },
+                { word: "入口", reading: "いりぐち", romaji: "iriguchi", meaning: "entrance" },
+                { word: "入学", reading: "にゅうがく", romaji: "nyuugaku", meaning: "school admission" }
+            ]
+        },
+        {
+            kanji: "学",
+            meanings: ["study"],
+            readings: { on: ["ガク"], kun: ["まなぶ"] },
+            romaji: { on: ["gaku"], kun: ["manabu"] },
+            examples: [
+                { word: "学校", reading: "がっこう", romaji: "gakkou", meaning: "school" },
+                { word: "学生", reading: "がくせい", romaji: "gakusei", meaning: "student" },
+                { word: "大学", reading: "だいがく", romaji: "daigaku", meaning: "university" }
+            ],
+            sentences: [
+                { japanese: "学校へ行きます。", reading: "がっこう へ いきます。", romaji: "Gakkou e ikimasu.", meaning: "I go to school." }
+            ]
+        },
+        {
+            kanji: "高",
+            meanings: ["high", "expensive"],
+            readings: { on: ["コウ"], kun: ["たかい", "たかまる", "たかめる"] },
+            romaji: { on: ["kou"], kun: ["takai", "takamaru", "takameru"] },
+            examples: [
+                { word: "高い", reading: "たかい", romaji: "takai", meaning: "high; expensive" },
+                { word: "高校", reading: "こうこう", romaji: "koukou", meaning: "high school" },
+                { word: "最高", reading: "さいこう", romaji: "saikou", meaning: "highest; best" }
+            ]
+        },
+        {
+            kanji: "円",
+            meanings: ["yen", "circle"],
+            readings: { on: ["エン"], kun: ["まるい"] },
+            romaji: { on: ["en"], kun: ["marui"] },
+            examples: [
+                { word: "百円", reading: "ひゃくえん", romaji: "hyakuen", meaning: "100 yen" },
+                { word: "円形", reading: "えんけい", romaji: "enkei", meaning: "circular shape" },
+                { word: "円い", reading: "まるい", romaji: "marui", meaning: "round" }
+            ]
+        },
+        {
+            kanji: "子",
+            meanings: ["child"],
+            readings: { on: ["シ", "ス"], kun: ["こ"] },
+            romaji: { on: ["shi", "su"], kun: ["ko"] },
+            examples: [
+                { word: "子供", reading: "こども", romaji: "kodomo", meaning: "child" },
+                { word: "女子", reading: "じょし", romaji: "joshi", meaning: "girl; female" },
+                { word: "椅子", reading: "いす", romaji: "isu", meaning: "chair" }
+            ]
+        },
+        {
+            kanji: "外",
+            meanings: ["outside"],
+            readings: { on: ["ガイ", "ゲ"], kun: ["そと", "ほか", "はずす"] },
+            romaji: { on: ["gai", "ge"], kun: ["soto", "hoka", "hazusu"] },
+            examples: [
+                { word: "外国", reading: "がいこく", romaji: "gaikoku", meaning: "foreign country" },
+                { word: "外出", reading: "がいしゅつ", romaji: "gaishutsu", meaning: "going out" },
+                { word: "海外", reading: "かいがい", romaji: "kaigai", meaning: "overseas" }
+            ]
+        },
+        {
+            kanji: "八",
+            meanings: ["eight"],
+            readings: { on: ["ハチ"], kun: ["や", "やつ", "やっつ"] },
+            romaji: { on: ["hachi"], kun: ["ya", "yatsu", "yattsu"] },
+            examples: [
+                { word: "八月", reading: "はちがつ", romaji: "hachigatsu", meaning: "August" },
+                { word: "八人", reading: "はちにん", romaji: "hachinin", meaning: "eight people" },
+                { word: "八つ", reading: "やっつ", romaji: "yattsu", meaning: "eight things" }
+            ]
+        },
+        {
+            kanji: "六",
+            meanings: ["six"],
+            readings: { on: ["ロク"], kun: ["む", "むつ", "むっつ"] },
+            romaji: { on: ["roku"], kun: ["mu", "mutsu", "muttsu"] },
+            examples: [
+                { word: "六月", reading: "ろくがつ", romaji: "rokugatsu", meaning: "June" },
+                { word: "六人", reading: "ろくにん", romaji: "rokunin", meaning: "six people" },
+                { word: "六時", reading: "ろくじ", romaji: "rokuji", meaning: "six o'clock" }
+            ]
+        },
+        {
+            kanji: "下",
+            meanings: ["below", "down"],
+            readings: { on: ["カ", "ゲ"], kun: ["した", "さがる", "さげる", "くだる"] },
+            romaji: { on: ["ka", "ge"], kun: ["shita", "sagaru", "sageru", "kudaru"] },
+            examples: [
+                { word: "下さい", reading: "ください", romaji: "kudasai", meaning: "please" },
+                { word: "地下", reading: "ちか", romaji: "chika", meaning: "underground" },
+                { word: "下がる", reading: "さがる", romaji: "sagaru", meaning: "go down" }
+            ]
+        },
+        {
+            kanji: "来",
+            meanings: ["come"],
+            readings: { on: ["ライ"], kun: ["くる", "きたる"] },
+            romaji: { on: ["rai"], kun: ["kuru", "kitaru"] },
+            examples: [
+                { word: "来る", reading: "くる", romaji: "kuru", meaning: "come" },
+                { word: "来年", reading: "らいねん", romaji: "rainen", meaning: "next year" },
+                { word: "将来", reading: "しょうらい", romaji: "shourai", meaning: "future" }
+            ]
+        },
+        {
+            kanji: "気",
+            meanings: ["spirit", "feeling"],
+            readings: { on: ["キ", "ケ"], kun: [] },
+            romaji: { on: ["ki", "ke"], kun: [] },
+            examples: [
+                { word: "元気", reading: "げんき", romaji: "genki", meaning: "healthy; energetic" },
+                { word: "天気", reading: "てんき", romaji: "tenki", meaning: "weather" },
+                { word: "気持ち", reading: "きもち", romaji: "kimochi", meaning: "feeling" }
+            ]
+        },
+        {
+            kanji: "小",
+            meanings: ["small"],
+            readings: { on: ["ショウ"], kun: ["ちいさい", "こ", "お"] },
+            romaji: { on: ["shou"], kun: ["chiisai", "ko", "o"] },
+            examples: [
+                { word: "小さい", reading: "ちいさい", romaji: "chiisai", meaning: "small" },
+                { word: "小学校", reading: "しょうがっこう", romaji: "shougakkou", meaning: "elementary school" },
+                { word: "小鳥", reading: "ことり", romaji: "kotori", meaning: "small bird" }
+            ],
+            sentences: [
+                { japanese: "小鳥が木にいます。", reading: "ことり が き に います。", romaji: "Kotori ga ki ni imasu.", meaning: "There is a small bird in the tree." }
+            ]
+        },
+        {
+            kanji: "七",
+            meanings: ["seven"],
+            readings: { on: ["シチ"], kun: ["なな", "なの", "ななつ"] },
+            romaji: { on: ["shichi"], kun: ["nana", "nano", "nanatsu"] },
+            examples: [
+                { word: "七月", reading: "しちがつ", romaji: "shichigatsu", meaning: "July" },
+                { word: "七人", reading: "ななにん", romaji: "nananin", meaning: "seven people" },
+                { word: "七時", reading: "しちじ", romaji: "shichiji", meaning: "seven o'clock" }
+            ]
+        },
+        {
+            kanji: "山",
+            meanings: ["mountain"],
+            readings: { on: ["サン"], kun: ["やま"] },
+            romaji: { on: ["san"], kun: ["yama"] },
+            examples: [
+                { word: "富士山", reading: "ふじさん", romaji: "fujisan", meaning: "Mount Fuji" },
+                { word: "山道", reading: "やまみち", romaji: "yamamichi", meaning: "mountain road" },
+                { word: "火山", reading: "かざん", romaji: "kazan", meaning: "volcano" }
+            ]
+        },
+        {
+            kanji: "話",
+            meanings: ["talk", "story"],
+            readings: { on: ["ワ"], kun: ["はなす", "はなし"] },
+            romaji: { on: ["wa"], kun: ["hanasu", "hanashi"] },
+            examples: [
+                { word: "話す", reading: "はなす", romaji: "hanasu", meaning: "speak" },
+                { word: "電話", reading: "でんわ", romaji: "denwa", meaning: "telephone" },
+                { word: "会話", reading: "かいわ", romaji: "kaiwa", meaning: "conversation" }
+            ]
+        },
+        {
+            kanji: "女",
+            meanings: ["woman"],
+            readings: { on: ["ジョ", "ニョ", "ニョウ"], kun: ["おんな", "め"] },
+            romaji: { on: ["jo", "nyo", "nyou"], kun: ["onna", "me"] },
+            examples: [
+                { word: "女性", reading: "じょせい", romaji: "josei", meaning: "woman; female" },
+                { word: "女子", reading: "じょし", romaji: "joshi", meaning: "girl; female" },
+                { word: "女の子", reading: "おんなのこ", romaji: "onnanoko", meaning: "girl" }
+            ]
+        },
+        {
+            kanji: "北",
+            meanings: ["north"],
+            readings: { on: ["ホク"], kun: ["きた"] },
+            romaji: { on: ["hoku"], kun: ["kita"] },
+            examples: [
+                { word: "北海道", reading: "ほっかいどう", romaji: "hokkaidou", meaning: "Hokkaido" },
+                { word: "北口", reading: "きたぐち", romaji: "kitaguchi", meaning: "north exit" },
+                { word: "東北", reading: "とうほく", romaji: "touhoku", meaning: "Tohoku" }
+            ]
+        },
+        {
+            kanji: "午",
+            meanings: ["noon"],
+            readings: { on: ["ゴ"], kun: [] },
+            romaji: { on: ["go"], kun: [] },
+            examples: [
+                { word: "午前", reading: "ごぜん", romaji: "gozen", meaning: "AM; morning" },
+                { word: "午後", reading: "ごご", romaji: "gogo", meaning: "PM; afternoon" },
+                { word: "正午", reading: "しょうご", romaji: "shougo", meaning: "noon" }
+            ]
+        },
+        {
+            kanji: "百",
+            meanings: ["hundred"],
+            readings: { on: ["ヒャク"], kun: [] },
+            romaji: { on: ["hyaku"], kun: [] },
+            examples: [
+                { word: "百円", reading: "ひゃくえん", romaji: "hyakuen", meaning: "100 yen" },
+                { word: "百人", reading: "ひゃくにん", romaji: "hyakunin", meaning: "100 people" },
+                { word: "数百", reading: "すうひゃく", romaji: "suuhyaku", meaning: "several hundred" }
+            ]
+        },
+        {
+            kanji: "書",
+            meanings: ["write", "book"],
+            readings: { on: ["ショ"], kun: ["かく"] },
+            romaji: { on: ["sho"], kun: ["kaku"] },
+            examples: [
+                { word: "書く", reading: "かく", romaji: "kaku", meaning: "write" },
+                { word: "図書館", reading: "としょかん", romaji: "toshokan", meaning: "library" },
+                { word: "辞書", reading: "じしょ", romaji: "jisho", meaning: "dictionary" }
+            ]
+        },
+        {
+            kanji: "先",
+            meanings: ["ahead", "previous"],
+            readings: { on: ["セン"], kun: ["さき", "まず"] },
+            romaji: { on: ["sen"], kun: ["saki", "mazu"] },
+            examples: [
+                { word: "先生", reading: "せんせい", romaji: "sensei", meaning: "teacher" },
+                { word: "先週", reading: "せんしゅう", romaji: "senshuu", meaning: "last week" },
+                { word: "先に", reading: "さきに", romaji: "saki ni", meaning: "first; ahead" }
+            ]
+        },
+        {
+            kanji: "名",
+            meanings: ["name"],
+            readings: { on: ["メイ", "ミョウ"], kun: ["な"] },
+            romaji: { on: ["mei", "myou"], kun: ["na"] },
+            examples: [
+                { word: "名前", reading: "なまえ", romaji: "namae", meaning: "name" },
+                { word: "有名", reading: "ゆうめい", romaji: "yuumei", meaning: "famous" },
+                { word: "名字", reading: "みょうじ", romaji: "myouji", meaning: "surname" }
+            ]
+        },
+        {
+            kanji: "川",
+            meanings: ["river"],
+            readings: { on: ["セン"], kun: ["かわ"] },
+            romaji: { on: ["sen"], kun: ["kawa"] },
+            examples: [
+                { word: "川", reading: "かわ", romaji: "kawa", meaning: "river" },
+                { word: "河川", reading: "かせん", romaji: "kasen", meaning: "rivers; waterways" },
+                { word: "川口", reading: "かわぐち", romaji: "kawaguchi", meaning: "river mouth" }
+            ]
+        },
+        {
+            kanji: "千",
+            meanings: ["thousand"],
+            readings: { on: ["セン"], kun: ["ち"] },
+            romaji: { on: ["sen"], kun: ["chi"] },
+            examples: [
+                { word: "千円", reading: "せんえん", romaji: "sen'en", meaning: "1,000 yen" },
+                { word: "千人", reading: "せんにん", romaji: "sennin", meaning: "1,000 people" },
+                { word: "数千", reading: "すうせん", romaji: "suusen", meaning: "several thousand" }
+            ]
+        },
+        {
+            kanji: "水",
+            meanings: ["water"],
+            readings: { on: ["スイ"], kun: ["みず"] },
+            romaji: { on: ["sui"], kun: ["mizu"] },
+            examples: [
+                { word: "水", reading: "みず", romaji: "mizu", meaning: "water" },
+                { word: "水曜日", reading: "すいようび", romaji: "suiyoubi", meaning: "Wednesday" },
+                { word: "水泳", reading: "すいえい", romaji: "suiei", meaning: "swimming" }
+            ],
+            sentences: [
+                { japanese: "水を飲みます。", reading: "みず を のみます。", romaji: "Mizu o nomimasu.", meaning: "I drink water." }
+            ]
+        },
+        {
+            kanji: "半",
+            meanings: ["half"],
+            readings: { on: ["ハン"], kun: ["なかば"] },
+            romaji: { on: ["han"], kun: ["nakaba"] },
+            examples: [
+                { word: "半分", reading: "はんぶん", romaji: "hanbun", meaning: "half" },
+                { word: "一時半", reading: "いちじはん", romaji: "ichijihan", meaning: "1:30" },
+                { word: "半年", reading: "はんとし", romaji: "hantoshi", meaning: "half a year" }
+            ]
+        },
+        {
+            kanji: "男",
+            meanings: ["man"],
+            readings: { on: ["ダン", "ナン"], kun: ["おとこ"] },
+            romaji: { on: ["dan", "nan"], kun: ["otoko"] },
+            examples: [
+                { word: "男性", reading: "だんせい", romaji: "dansei", meaning: "man; male" },
+                { word: "男の子", reading: "おとこのこ", romaji: "otokonoko", meaning: "boy" },
+                { word: "男女", reading: "だんじょ", romaji: "danjo", meaning: "men and women" }
+            ]
+        },
+        {
+            kanji: "西",
+            meanings: ["west"],
+            readings: { on: ["セイ", "サイ"], kun: ["にし"] },
+            romaji: { on: ["sei", "sai"], kun: ["nishi"] },
+            examples: [
+                { word: "西口", reading: "にしぐち", romaji: "nishiguchi", meaning: "west exit" },
+                { word: "関西", reading: "かんさい", romaji: "kansai", meaning: "Kansai" },
+                { word: "西日本", reading: "にしにほん", romaji: "nishinihon", meaning: "western Japan" }
+            ]
+        },
+        {
+            kanji: "電",
+            meanings: ["electricity"],
+            readings: { on: ["デン"], kun: [] },
+            romaji: { on: ["den"], kun: [] },
+            examples: [
+                { word: "電話", reading: "でんわ", romaji: "denwa", meaning: "telephone" },
+                { word: "電車", reading: "でんしゃ", romaji: "densha", meaning: "train" },
+                { word: "電気", reading: "でんき", romaji: "denki", meaning: "electricity" }
+            ]
+        },
+        {
+            kanji: "校",
+            meanings: ["school"],
+            readings: { on: ["コウ"], kun: [] },
+            romaji: { on: ["kou"], kun: [] },
+            examples: [
+                { word: "学校", reading: "がっこう", romaji: "gakkou", meaning: "school" },
+                { word: "高校", reading: "こうこう", romaji: "koukou", meaning: "high school" },
+                { word: "校長", reading: "こうちょう", romaji: "kouchou", meaning: "principal" }
+            ]
+        },
+        {
+            kanji: "語",
+            meanings: ["language", "word"],
+            readings: { on: ["ゴ"], kun: ["かたる", "かたらう"] },
+            romaji: { on: ["go"], kun: ["kataru", "katarau"] },
+            examples: [
+                { word: "日本語", reading: "にほんご", romaji: "nihongo", meaning: "Japanese language" },
+                { word: "英語", reading: "えいご", romaji: "eigo", meaning: "English" },
+                { word: "単語", reading: "たんご", romaji: "tango", meaning: "vocabulary word" }
+            ]
+        },
+        {
+            kanji: "土",
+            meanings: ["earth", "soil"],
+            readings: { on: ["ド", "ト"], kun: ["つち"] },
+            romaji: { on: ["do", "to"], kun: ["tsuchi"] },
+            examples: [
+                { word: "土曜日", reading: "どようび", romaji: "doyoubi", meaning: "Saturday" },
+                { word: "土地", reading: "とち", romaji: "tochi", meaning: "land" },
+                { word: "土", reading: "つち", romaji: "tsuchi", meaning: "soil" }
+            ]
+        },
+        {
+            kanji: "木",
+            meanings: ["tree", "wood"],
+            readings: { on: ["モク", "ボク"], kun: ["き", "こ"] },
+            romaji: { on: ["moku", "boku"], kun: ["ki", "ko"] },
+            examples: [
+                { word: "木曜日", reading: "もくようび", romaji: "mokuyoubi", meaning: "Thursday" },
+                { word: "木", reading: "き", romaji: "ki", meaning: "tree" },
+                { word: "木材", reading: "もくざい", romaji: "mokuzai", meaning: "lumber" }
+            ]
+        },
+        {
+            kanji: "聞",
+            meanings: ["hear", "ask"],
+            readings: { on: ["ブン", "モン"], kun: ["きく", "きこえる"] },
+            romaji: { on: ["bun", "mon"], kun: ["kiku", "kikoeru"] },
+            examples: [
+                { word: "聞く", reading: "きく", romaji: "kiku", meaning: "hear; ask" },
+                { word: "新聞", reading: "しんぶん", romaji: "shinbun", meaning: "newspaper" },
+                { word: "聞こえる", reading: "きこえる", romaji: "kikoeru", meaning: "be audible" }
+            ]
+        },
+        {
+            kanji: "食",
+            meanings: ["eat", "food"],
+            readings: { on: ["ショク", "ジキ"], kun: ["たべる", "くう"] },
+            romaji: { on: ["shoku", "jiki"], kun: ["taberu", "kuu"] },
+            examples: [
+                { word: "食べる", reading: "たべる", romaji: "taberu", meaning: "eat" },
+                { word: "食事", reading: "しょくじ", romaji: "shokuji", meaning: "meal" },
+                { word: "食品", reading: "しょくひん", romaji: "shokuhin", meaning: "food product" }
+            ]
+        },
+        {
+            kanji: "車",
+            meanings: ["vehicle"],
+            readings: { on: ["シャ"], kun: ["くるま"] },
+            romaji: { on: ["sha"], kun: ["kuruma"] },
+            examples: [
+                { word: "電車", reading: "でんしゃ", romaji: "densha", meaning: "train" },
+                { word: "車", reading: "くるま", romaji: "kuruma", meaning: "car" },
+                { word: "自転車", reading: "じてんしゃ", romaji: "jitensha", meaning: "bicycle" }
+            ]
+        },
+        {
+            kanji: "何",
+            meanings: ["what"],
+            readings: { on: ["カ"], kun: ["なに", "なん"] },
+            romaji: { on: ["ka"], kun: ["nani", "nan"] },
+            examples: [
+                { word: "何", reading: "なに", romaji: "nani", meaning: "what" },
+                { word: "何時", reading: "なんじ", romaji: "nanji", meaning: "what time" },
+                { word: "何人", reading: "なんにん", romaji: "nannin", meaning: "how many people" }
+            ]
+        },
+        {
+            kanji: "南",
+            meanings: ["south"],
+            readings: { on: ["ナン", "ナ"], kun: ["みなみ"] },
+            romaji: { on: ["nan", "na"], kun: ["minami"] },
+            examples: [
+                { word: "南口", reading: "みなみぐち", romaji: "minamiguchi", meaning: "south exit" },
+                { word: "東南", reading: "とうなん", romaji: "tounan", meaning: "southeast" },
+                { word: "南米", reading: "なんべい", romaji: "nanbei", meaning: "South America" }
+            ]
+        },
+        {
+            kanji: "万",
+            meanings: ["ten thousand"],
+            readings: { on: ["マン", "バン"], kun: [] },
+            romaji: { on: ["man", "ban"], kun: [] },
+            examples: [
+                { word: "一万", reading: "いちまん", romaji: "ichiman", meaning: "ten thousand" },
+                { word: "万円", reading: "まんえん", romaji: "man'en", meaning: "10,000 yen" },
+                { word: "万人", reading: "まんにん", romaji: "mannin", meaning: "ten thousand people" }
+            ]
+        },
+        {
+            kanji: "毎",
+            meanings: ["every"],
+            readings: { on: ["マイ"], kun: [] },
+            romaji: { on: ["mai"], kun: [] },
+            examples: [
+                { word: "毎日", reading: "まいにち", romaji: "mainichi", meaning: "every day" },
+                { word: "毎週", reading: "まいしゅう", romaji: "maishuu", meaning: "every week" },
+                { word: "毎年", reading: "まいとし", romaji: "maitoshi", meaning: "every year" }
+            ]
+        },
+        {
+            kanji: "白",
+            meanings: ["white"],
+            readings: { on: ["ハク", "ビャク"], kun: ["しろ", "しろい"] },
+            romaji: { on: ["haku", "byaku"], kun: ["shiro", "shiroi"] },
+            examples: [
+                { word: "白い", reading: "しろい", romaji: "shiroi", meaning: "white" },
+                { word: "面白い", reading: "おもしろい", romaji: "omoshiroi", meaning: "interesting" },
+                { word: "白紙", reading: "はくし", romaji: "hakushi", meaning: "blank paper" }
+            ]
+        },
+        {
+            kanji: "天",
+            meanings: ["heaven", "sky"],
+            readings: { on: ["テン"], kun: ["あめ", "あま"] },
+            romaji: { on: ["ten"], kun: ["ame", "ama"] },
+            examples: [
+                { word: "天気", reading: "てんき", romaji: "tenki", meaning: "weather" },
+                { word: "天国", reading: "てんごく", romaji: "tengoku", meaning: "heaven" },
+                { word: "天才", reading: "てんさい", romaji: "tensai", meaning: "genius" }
+            ]
+        },
+        {
+            kanji: "母",
+            meanings: ["mother"],
+            readings: { on: ["ボ"], kun: ["はは"] },
+            romaji: { on: ["bo"], kun: ["haha"] },
+            examples: [
+                { word: "母", reading: "はは", romaji: "haha", meaning: "one's mother" },
+                { word: "お母さん", reading: "おかあさん", romaji: "okaasan", meaning: "mother" },
+                { word: "母国", reading: "ぼこく", romaji: "bokoku", meaning: "mother country" }
+            ]
+        },
+        {
+            kanji: "火",
+            meanings: ["fire"],
+            readings: { on: ["カ"], kun: ["ひ", "ほ"] },
+            romaji: { on: ["ka"], kun: ["hi", "ho"] },
+            examples: [
+                { word: "火曜日", reading: "かようび", romaji: "kayoubi", meaning: "Tuesday" },
+                { word: "火事", reading: "かじ", romaji: "kaji", meaning: "fire" },
+                { word: "花火", reading: "はなび", romaji: "hanabi", meaning: "fireworks" }
+            ]
+        },
+        {
+            kanji: "右",
+            meanings: ["right"],
+            readings: { on: ["ウ", "ユウ"], kun: ["みぎ"] },
+            romaji: { on: ["u", "yuu"], kun: ["migi"] },
+            examples: [
+                { word: "右", reading: "みぎ", romaji: "migi", meaning: "right" },
+                { word: "右手", reading: "みぎて", romaji: "migite", meaning: "right hand" },
+                { word: "左右", reading: "さゆう", romaji: "sayuu", meaning: "left and right" }
+            ]
+        },
+        {
+            kanji: "読",
+            meanings: ["read"],
+            readings: { on: ["ドク", "トク", "トウ"], kun: ["よむ"] },
+            romaji: { on: ["doku", "toku", "tou"], kun: ["yomu"] },
+            examples: [
+                { word: "読む", reading: "よむ", romaji: "yomu", meaning: "read" },
+                { word: "読書", reading: "どくしょ", romaji: "dokusho", meaning: "reading" },
+                { word: "読者", reading: "どくしゃ", romaji: "dokusha", meaning: "reader" }
+            ],
+            sentences: [
+                { japanese: "本を読みます。", reading: "ほん を よみます。", romaji: "Hon o yomimasu.", meaning: "I read a book." }
+            ]
+        },
+        {
+            kanji: "友",
+            meanings: ["friend"],
+            readings: { on: ["ユウ"], kun: ["とも"] },
+            romaji: { on: ["yuu"], kun: ["tomo"] },
+            examples: [
+                { word: "友達", reading: "ともだち", romaji: "tomodachi", meaning: "friend" },
+                { word: "友人", reading: "ゆうじん", romaji: "yuujin", meaning: "friend" },
+                { word: "親友", reading: "しんゆう", romaji: "shinyuu", meaning: "close friend" }
+            ],
+            sentences: [
+                { japanese: "友達に会います。", reading: "ともだち に あいます。", romaji: "Tomodachi ni aimasu.", meaning: "I meet a friend." }
+            ]
+        },
+        {
+            kanji: "左",
+            meanings: ["left"],
+            readings: { on: ["サ"], kun: ["ひだり"] },
+            romaji: { on: ["sa"], kun: ["hidari"] },
+            examples: [
+                { word: "左", reading: "ひだり", romaji: "hidari", meaning: "left" },
+                { word: "左手", reading: "ひだりて", romaji: "hidarite", meaning: "left hand" },
+                { word: "左右", reading: "さゆう", romaji: "sayuu", meaning: "left and right" }
+            ]
+        },
+        {
+            kanji: "休",
+            meanings: ["rest"],
+            readings: { on: ["キュウ"], kun: ["やすむ", "やすまる", "やすめる"] },
+            romaji: { on: ["kyuu"], kun: ["yasumu", "yasumaru", "yasumeru"] },
+            examples: [
+                { word: "休む", reading: "やすむ", romaji: "yasumu", meaning: "rest" },
+                { word: "休日", reading: "きゅうじつ", romaji: "kyuujitsu", meaning: "holiday" },
+                { word: "夏休み", reading: "なつやすみ", romaji: "natsuyasumi", meaning: "summer vacation" }
+            ]
+        },
+        {
+            kanji: "父",
+            meanings: ["father"],
+            readings: { on: ["フ"], kun: ["ちち"] },
+            romaji: { on: ["fu"], kun: ["chichi"] },
+            examples: [
+                { word: "父", reading: "ちち", romaji: "chichi", meaning: "one's father" },
+                { word: "お父さん", reading: "おとうさん", romaji: "otousan", meaning: "father" },
+                { word: "父親", reading: "ちちおや", romaji: "chichioya", meaning: "father" }
+            ]
+        },
+        {
+            kanji: "雨",
+            meanings: ["rain"],
+            readings: { on: ["ウ"], kun: ["あめ", "あま"] },
+            romaji: { on: ["u"], kun: ["ame", "ama"] },
+            examples: [
+                { word: "雨", reading: "あめ", romaji: "ame", meaning: "rain" },
+                { word: "大雨", reading: "おおあめ", romaji: "ooame", meaning: "heavy rain" },
+                { word: "梅雨", reading: "つゆ", romaji: "tsuyu", meaning: "rainy season" }
+            ],
+            sentences: [
+                { japanese: "今日は雨です。", reading: "きょう は あめ です。", romaji: "Kyou wa ame desu.", meaning: "It is rainy today." }
+            ]
+        },
+        {
+            kanji: "会",
+            meanings: ["meet", "association"],
+            readings: { on: ["カイ", "エ"], kun: ["あう"] },
+            romaji: { on: ["kai", "e"], kun: ["au"] },
+            examples: [
+                { word: "会う", reading: "あう", romaji: "au", meaning: "meet" },
+                { word: "会社", reading: "かいしゃ", romaji: "kaisha", meaning: "company" },
+                { word: "会話", reading: "かいわ", romaji: "kaiwa", meaning: "conversation" }
+            ]
+        },
+        {
+            kanji: "同",
+            meanings: ["same"],
+            readings: { on: ["ドウ"], kun: ["おなじ"] },
+            romaji: { on: ["dou"], kun: ["onaji"] },
+            examples: [
+                { word: "同じ", reading: "おなじ", romaji: "onaji", meaning: "same" },
+                { word: "同時", reading: "どうじ", romaji: "douji", meaning: "simultaneous" },
+                { word: "同意", reading: "どうい", romaji: "doui", meaning: "agreement" }
+            ]
+        },
+        {
+            kanji: "事",
+            meanings: ["thing", "matter"],
+            readings: { on: ["ジ", "ズ"], kun: ["こと"] },
+            romaji: { on: ["ji", "zu"], kun: ["koto"] },
+            examples: [
+                { word: "仕事", reading: "しごと", romaji: "shigoto", meaning: "work" },
+                { word: "大事", reading: "だいじ", romaji: "daiji", meaning: "important" },
+                { word: "食事", reading: "しょくじ", romaji: "shokuji", meaning: "meal" }
+            ]
+        },
+        {
+            kanji: "自",
+            meanings: ["self"],
+            readings: { on: ["ジ", "シ"], kun: ["みずから"] },
+            romaji: { on: ["ji", "shi"], kun: ["mizukara"] },
+            examples: [
+                { word: "自分", reading: "じぶん", romaji: "jibun", meaning: "oneself" },
+                { word: "自動", reading: "じどう", romaji: "jidou", meaning: "automatic" },
+                { word: "自由", reading: "じゆう", romaji: "jiyuu", meaning: "freedom" }
+            ]
+        },
+        {
+            kanji: "社",
+            meanings: ["company", "shrine", "society"],
+            readings: { on: ["シャ"], kun: ["やしろ"] },
+            romaji: { on: ["sha"], kun: ["yashiro"] },
+            examples: [
+                { word: "会社", reading: "かいしゃ", romaji: "kaisha", meaning: "company" },
+                { word: "社会", reading: "しゃかい", romaji: "shakai", meaning: "society" },
+                { word: "神社", reading: "じんじゃ", romaji: "jinja", meaning: "shrine" }
+            ]
+        },
+        {
+            kanji: "発",
+            meanings: ["departure", "emit"],
+            readings: { on: ["ハツ", "ホツ"], kun: ["たつ"] },
+            romaji: { on: ["hatsu", "hotsu"], kun: ["tatsu"] },
+            examples: [
+                { word: "出発", reading: "しゅっぱつ", romaji: "shuppatsu", meaning: "departure" },
+                { word: "発見", reading: "はっけん", romaji: "hakken", meaning: "discovery" },
+                { word: "発音", reading: "はつおん", romaji: "hatsuon", meaning: "pronunciation" }
+            ]
+        },
+        {
+            kanji: "者",
+            meanings: ["person"],
+            readings: { on: ["シャ"], kun: ["もの"] },
+            romaji: { on: ["sha"], kun: ["mono"] },
+            examples: [
+                { word: "医者", reading: "いしゃ", romaji: "isha", meaning: "doctor" },
+                { word: "若者", reading: "わかもの", romaji: "wakamono", meaning: "young person" },
+                { word: "読者", reading: "どくしゃ", romaji: "dokusha", meaning: "reader" }
+            ]
+        },
+        {
+            kanji: "地",
+            meanings: ["ground", "place"],
+            readings: { on: ["チ", "ジ"], kun: [] },
+            romaji: { on: ["chi", "ji"], kun: [] },
+            examples: [
+                { word: "地図", reading: "ちず", romaji: "chizu", meaning: "map" },
+                { word: "地下", reading: "ちか", romaji: "chika", meaning: "underground" },
+                { word: "地球", reading: "ちきゅう", romaji: "chikyuu", meaning: "Earth" }
+            ]
+        },
+        {
+            kanji: "業",
+            meanings: ["work", "business"],
+            readings: { on: ["ギョウ", "ゴウ"], kun: ["わざ"] },
+            romaji: { on: ["gyou", "gou"], kun: ["waza"] },
+            examples: [
+                { word: "授業", reading: "じゅぎょう", romaji: "jugyou", meaning: "class; lesson" },
+                { word: "工業", reading: "こうぎょう", romaji: "kougyou", meaning: "industry" },
+                { word: "営業", reading: "えいぎょう", romaji: "eigyou", meaning: "business; sales" }
+            ]
+        },
+        {
+            kanji: "方",
+            meanings: ["direction", "way", "person"],
+            readings: { on: ["ホウ"], kun: ["かた"] },
+            romaji: { on: ["hou"], kun: ["kata"] },
+            examples: [
+                { word: "方法", reading: "ほうほう", romaji: "houhou", meaning: "method" },
+                { word: "地方", reading: "ちほう", romaji: "chihou", meaning: "region" },
+                { word: "方", reading: "かた", romaji: "kata", meaning: "person; way" }
+            ]
+        },
+        {
+            kanji: "新",
+            meanings: ["new"],
+            readings: { on: ["シン"], kun: ["あたらしい", "あらた", "にい"] },
+            romaji: { on: ["shin"], kun: ["atarashii", "arata", "nii"] },
+            examples: [
+                { word: "新しい", reading: "あたらしい", romaji: "atarashii", meaning: "new" },
+                { word: "新聞", reading: "しんぶん", romaji: "shinbun", meaning: "newspaper" },
+                { word: "新年", reading: "しんねん", romaji: "shinnen", meaning: "New Year" }
+            ]
+        },
+        {
+            kanji: "場",
+            meanings: ["place"],
+            readings: { on: ["ジョウ"], kun: ["ば"] },
+            romaji: { on: ["jou"], kun: ["ba"] },
+            examples: [
+                { word: "場所", reading: "ばしょ", romaji: "basho", meaning: "place" },
+                { word: "工場", reading: "こうじょう", romaji: "koujou", meaning: "factory" },
+                { word: "会場", reading: "かいじょう", romaji: "kaijou", meaning: "venue" }
+            ]
+        },
+        {
+            kanji: "員",
+            meanings: ["member", "employee"],
+            readings: { on: ["イン"], kun: [] },
+            romaji: { on: ["in"], kun: [] },
+            examples: [
+                { word: "会社員", reading: "かいしゃいん", romaji: "kaishain", meaning: "company employee" },
+                { word: "店員", reading: "てんいん", romaji: "ten'in", meaning: "clerk" },
+                { word: "全員", reading: "ぜんいん", romaji: "zen'in", meaning: "everyone" }
+            ]
+        },
+        {
+            kanji: "立",
+            meanings: ["stand"],
+            readings: { on: ["リツ", "リュウ"], kun: ["たつ", "たてる"] },
+            romaji: { on: ["ritsu", "ryuu"], kun: ["tatsu", "tateru"] },
+            examples: [
+                { word: "立つ", reading: "たつ", romaji: "tatsu", meaning: "stand" },
+                { word: "国立", reading: "こくりつ", romaji: "kokuritsu", meaning: "national" },
+                { word: "立場", reading: "たちば", romaji: "tachiba", meaning: "standpoint" }
+            ]
+        },
+        {
+            kanji: "開",
+            meanings: ["open"],
+            readings: { on: ["カイ"], kun: ["ひらく", "あく", "あける"] },
+            romaji: { on: ["kai"], kun: ["hiraku", "aku", "akeru"] },
+            examples: [
+                { word: "開く", reading: "ひらく", romaji: "hiraku", meaning: "open" },
+                { word: "開始", reading: "かいし", romaji: "kaishi", meaning: "start" },
+                { word: "開発", reading: "かいはつ", romaji: "kaihatsu", meaning: "development" }
+            ]
+        },
+        {
+            kanji: "手",
+            meanings: ["hand"],
+            readings: { on: ["シュ"], kun: ["て", "た"] },
+            romaji: { on: ["shu"], kun: ["te", "ta"] },
+            examples: [
+                { word: "手", reading: "て", romaji: "te", meaning: "hand" },
+                { word: "上手", reading: "じょうず", romaji: "jouzu", meaning: "skillful" },
+                { word: "相手", reading: "あいて", romaji: "aite", meaning: "partner; opponent" }
+            ]
+        },
+        {
+            kanji: "力",
+            meanings: ["power"],
+            readings: { on: ["リョク", "リキ"], kun: ["ちから"] },
+            romaji: { on: ["ryoku", "riki"], kun: ["chikara"] },
+            examples: [
+                { word: "力", reading: "ちから", romaji: "chikara", meaning: "strength" },
+                { word: "能力", reading: "のうりょく", romaji: "nouryoku", meaning: "ability" },
+                { word: "努力", reading: "どりょく", romaji: "doryoku", meaning: "effort" }
+            ]
+        },
+        {
+            kanji: "問",
+            meanings: ["question", "problem"],
+            readings: { on: ["モン"], kun: ["とう", "とい"] },
+            romaji: { on: ["mon"], kun: ["tou", "toi"] },
+            examples: [
+                { word: "問題", reading: "もんだい", romaji: "mondai", meaning: "problem" },
+                { word: "質問", reading: "しつもん", romaji: "shitsumon", meaning: "question" },
+                { word: "問う", reading: "とう", romaji: "tou", meaning: "ask; question" }
+            ]
+        },
+        {
+            kanji: "代",
+            meanings: ["generation", "substitute"],
+            readings: { on: ["ダイ", "タイ"], kun: ["かわる", "かえる"] },
+            romaji: { on: ["dai", "tai"], kun: ["kawaru", "kaeru"] },
+            examples: [
+                { word: "時代", reading: "じだい", romaji: "jidai", meaning: "era" },
+                { word: "代わり", reading: "かわり", romaji: "kawari", meaning: "substitute" },
+                { word: "現代", reading: "げんだい", romaji: "gendai", meaning: "modern era" }
+            ]
+        },
+        {
+            kanji: "明",
+            meanings: ["bright", "clear"],
+            readings: { on: ["メイ", "ミョウ"], kun: ["あかるい", "あける", "あく"] },
+            romaji: { on: ["mei", "myou"], kun: ["akarui", "akeru", "aku"] },
+            examples: [
+                { word: "明日", reading: "あした", romaji: "ashita", meaning: "tomorrow" },
+                { word: "説明", reading: "せつめい", romaji: "setsumei", meaning: "explanation" },
+                { word: "明るい", reading: "あかるい", romaji: "akarui", meaning: "bright" }
+            ],
+            sentences: [
+                { japanese: "明日は学校へ行きます。", reading: "あした は がっこう へ いきます。", romaji: "Ashita wa gakkou e ikimasu.", meaning: "I will go to school tomorrow." }
+            ]
+        }
+    ];
+
+    const appWindow = /** @type {KanjiPiPWindow} */ (window);
+
+    Object.defineProperty(appWindow, "KANJI_DATA", {
+        value: deepFreeze(data),
+        writable: false,
+        configurable: false,
+        enumerable: false
+    });
+})();
+(() => {
+    "use strict";
+
+    /** @type {Readonly<Record<string, Phase>>} */
+    const PHASES = Object.freeze({
+        KANJI: "KANJI",
+        KANJI_READING: "KANJI_READING",
+        KANJI_MEANING: "KANJI_MEANING",
+        WORD_1: "WORD_1",
+        WORD_1_READING: "WORD_1_READING",
+        WORD_1_MEANING: "WORD_1_MEANING",
+        WORD_2: "WORD_2",
+        WORD_2_ANSWER: "WORD_2_ANSWER",
+        TRANSITION: "TRANSITION"
+    });
+
+    /** @type {readonly PhaseRange[]} */
+    const PHASE_RANGES = Object.freeze([
+        Object.freeze({ phase: "KANJI", start: 0.00, end: 0.20 }),
+        Object.freeze({ phase: "KANJI_READING", start: 0.20, end: 0.35 }),
+        Object.freeze({ phase: "KANJI_MEANING", start: 0.35, end: 0.45 }),
+        Object.freeze({ phase: "WORD_1", start: 0.45, end: 0.60 }),
+        Object.freeze({ phase: "WORD_1_READING", start: 0.60, end: 0.72 }),
+        Object.freeze({ phase: "WORD_1_MEANING", start: 0.72, end: 0.82 }),
+        Object.freeze({ phase: "WORD_2", start: 0.82, end: 0.91 }),
+        Object.freeze({ phase: "WORD_2_ANSWER", start: 0.91, end: 0.96 }),
+        Object.freeze({ phase: "TRANSITION", start: 0.96, end: 1.00 })
+    ]);
+
+    /**
+     * @param {number} value
+     * @param {number} min
+     * @param {number} max
+     * @returns {number}
+     */
+    function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+    }
+
+    /**
+     * @param {number} value
+     * @returns {number}
+     */
+    function smoothstep(value) {
+        const t = clamp(value, 0, 1);
+        return t * t * (3 - 2 * t);
+    }
+
+    /**
+     * @param {number} progress
+     * @returns {Phase}
+     */
+    function getPhase(progress) {
+        const p = clamp(progress, 0, 1);
+
+        for (const range of PHASE_RANGES) {
+            if (p < range.end || range.end === 1) {
+                return range.phase;
+            }
+        }
+
+        return "TRANSITION";
+    }
+
+    /**
+     * @param {Phase} phase
+     * @returns {PhaseRange}
+     */
+    function getPhaseRange(phase) {
+        return PHASE_RANGES.find((range) => range.phase === phase) ?? PHASE_RANGES[PHASE_RANGES.length - 1];
+    }
+
+    /**
+     * @param {number} now
+     * @param {number} startedAt
+     * @param {number} durationMs
+     * @returns {number}
+     */
+    function getProgress(now, startedAt, durationMs) {
+        if (!Number.isFinite(durationMs) || durationMs <= 0) {
+            throw new RangeError("durationMs must be greater than zero.");
+        }
+
+        return clamp((now - startedAt) / durationMs, 0, 1);
+    }
+
+    /**
+     * Fisher-Yates shuffle that never mutates the source array.
+     * @template T
+     * @param {readonly T[]} items
+     * @param {RandomSource} [random=Math.random]
+     * @returns {T[]}
+     */
+    function shuffle(items, random = Math.random) {
+        const copy = [...items];
+
+        for (let index = copy.length - 1; index > 0; index -= 1) {
+            const randomIndex = Math.floor(clamp(random(), 0, 0.9999999999999999) * (index + 1));
+            const current = copy[index];
+            const replacement = copy[randomIndex];
+            copy[index] = replacement;
+            copy[randomIndex] = current;
+        }
+
+        return copy;
+    }
+
+    /**
+     * @param {readonly KanjiCard[]} cards
+     * @param {string | null} [previousKanji=null]
+     * @param {RandomSource} [random=Math.random]
+     * @returns {KanjiCard[]}
+     */
+    function createShuffledDeck(cards, previousKanji = null, random = Math.random) {
+        const deck = shuffle(cards, random);
+
+        if (deck.length > 1 && previousKanji && deck[deck.length - 1]?.kanji === previousKanji) {
+            const swapIndex = deck.findIndex((card) => card.kanji !== previousKanji);
+            if (swapIndex >= 0) {
+                const tailIndex = deck.length - 1;
+                const tailCard = deck[tailIndex];
+                const swapCard = deck[swapIndex];
+                if (tailCard && swapCard) {
+                    deck[swapIndex] = tailCard;
+                    deck[tailIndex] = swapCard;
+                }
+            }
+        }
+
+        return deck;
+    }
+
+    /**
+     * @param {readonly VocabularyExample[]} examples
+     * @returns {string}
+     */
+    function exampleSignature(examples) {
+        return examples.map((example) => example.word).sort().join("|");
+    }
+
+    /**
+     * @param {readonly VocabularyExample[]} examples
+     * @param {number} count
+     * @param {string} [previousSignature=""]
+     * @param {RandomSource} [random=Math.random]
+     * @returns {readonly VocabularyExample[]}
+     */
+    function selectExamples(examples, count, previousSignature = "", random = Math.random) {
+        if (!Array.isArray(examples) || examples.length === 0) {
+            return Object.freeze([]);
+        }
+
+        const requestedCount = clamp(Math.trunc(count), 1, examples.length);
+        let selected = shuffle(examples, random).slice(0, requestedCount);
+
+        if (
+            examples.length > requestedCount &&
+            previousSignature &&
+            exampleSignature(selected) === previousSignature
+        ) {
+            const selectedWords = new Set(selected.map((example) => example.word));
+            const alternative = examples.find((example) => !selectedWords.has(example.word));
+
+            if (alternative) {
+                selected = [...selected.slice(0, -1), alternative];
+            }
+        }
+
+        return Object.freeze(selected);
+    }
+
+    /**
+     * @param {number} length
+     * @param {number} [previousIndex=-1]
+     * @param {RandomSource} [random=Math.random]
+     * @returns {number}
+     */
+    function chooseDifferentIndex(length, previousIndex = -1, random = Math.random) {
+        if (length <= 0) {
+            return -1;
+        }
+
+        if (length === 1) {
+            return 0;
+        }
+
+        let index = Math.floor(clamp(random(), 0, 0.9999999999999999) * length);
+        if (index === previousIndex) {
+            index = (index + 1) % length;
+        }
+
+        return index;
+    }
+
+    /**
+     * @param {Date} date
+     * @param {boolean} [showSeconds=false]
+     * @returns {string}
+     */
+    function formatClock(date, showSeconds = false) {
+        const hours = String(date.getHours()).padStart(2, "0");
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+
+        if (!showSeconds) {
+            return `${hours}:${minutes}`;
+        }
+
+        const seconds = String(date.getSeconds()).padStart(2, "0");
+        return `${hours}:${minutes}:${seconds}`;
+    }
+
+    /**
+     * @param {number} nowMs
+     * @param {boolean} [showSeconds=false]
+     * @returns {number}
+     */
+    function millisecondsUntilNextClockBoundary(nowMs, showSeconds = false) {
+        const unit = showSeconds ? 1000 : 60000;
+        const remainder = nowMs % unit;
+        return remainder === 0 ? unit : unit - remainder;
+    }
+
+    /**
+     * @param {KanjiCard} card
+     * @returns {Readonly<PrimaryReading>}
+     */
+    function getPrimaryReading(card) {
+        if (card.readings.kun.length > 0) {
+            return Object.freeze({
+                kana: card.readings.kun[0] ?? "",
+                romaji: card.romaji.kun[0] ?? ""
+            });
+        }
+
+        return Object.freeze({
+            kana: card.readings.on[0] ?? "",
+            romaji: card.romaji.on[0] ?? ""
+        });
+    }
+
+    /**
+     * Validates all runtime assumptions the renderer makes about corpus structure.
+     * @param {readonly KanjiCard[]} cards
+     * @returns {true}
+     */
+    function validateCorpus(cards) {
+        if (!Array.isArray(cards) || cards.length !== 100) {
+            throw new Error(`Expected exactly 100 kanji entries; received ${Array.isArray(cards) ? cards.length : 0}.`);
+        }
+
+        const seen = new Set();
+
+        for (const [index, card] of cards.entries()) {
+            if (!card || typeof card.kanji !== "string" || [...card.kanji].length !== 1) {
+                throw new Error(`Invalid kanji at corpus index ${index}.`);
+            }
+
+            if (seen.has(card.kanji)) {
+                throw new Error(`Duplicate kanji in corpus: ${card.kanji}`);
+            }
+            seen.add(card.kanji);
+
+            if (!Array.isArray(card.meanings) || card.meanings.length === 0) {
+                throw new Error(`Missing meanings for ${card.kanji}.`);
+            }
+
+            if (!card.readings || !Array.isArray(card.readings.on) || !Array.isArray(card.readings.kun)) {
+                throw new Error(`Invalid readings for ${card.kanji}.`);
+            }
+
+            if (!card.romaji || !Array.isArray(card.romaji.on) || !Array.isArray(card.romaji.kun)) {
+                throw new Error(`Invalid romaji readings for ${card.kanji}.`);
+            }
+
+            if (card.readings.on.length !== card.romaji.on.length || card.readings.kun.length !== card.romaji.kun.length) {
+                throw new Error(`Kana/romaji reading count mismatch for ${card.kanji}.`);
+            }
+
+            if (card.readings.on.length + card.readings.kun.length === 0) {
+                throw new Error(`No readings available for ${card.kanji}.`);
+            }
+
+            if (!Array.isArray(card.examples) || card.examples.length < 2) {
+                throw new Error(`At least two examples are required for ${card.kanji}.`);
+            }
+
+            const exampleWords = new Set();
+            for (const example of card.examples) {
+                for (const key of /** @type {const} */ (["word", "reading", "romaji", "meaning"])) {
+                    if (typeof example[key] !== "string" || example[key].trim() === "") {
+                        throw new Error(`Invalid ${key} example data for ${card.kanji}.`);
+                    }
+                }
+
+                if (exampleWords.has(example.word)) {
+                    throw new Error(`Duplicate example word for ${card.kanji}: ${example.word}`);
+                }
+                exampleWords.add(example.word);
+            }
+
+            if (card.sentences !== undefined) {
+                if (!Array.isArray(card.sentences)) {
+                    throw new Error(`Invalid sentences array for ${card.kanji}.`);
+                }
+
+                for (const sentence of card.sentences) {
+                    for (const key of /** @type {const} */ (["japanese", "reading", "romaji", "meaning"])) {
+                        if (typeof sentence[key] !== "string" || sentence[key].trim() === "") {
+                            throw new Error(`Invalid sentence ${key} for ${card.kanji}.`);
+                        }
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /** @type {Readonly<KanjiPiPCoreApi>} */
+    const api = Object.freeze({
+        PHASES,
+        PHASE_RANGES,
+        clamp,
+        smoothstep,
+        getPhase,
+        getPhaseRange,
+        getProgress,
+        shuffle,
+        createShuffledDeck,
+        exampleSignature,
+        selectExamples,
+        chooseDifferentIndex,
+        formatClock,
+        millisecondsUntilNextClockBoundary,
+        getPrimaryReading,
+        validateCorpus
+    });
+
+    const appWindow = /** @type {KanjiPiPWindow} */ (window);
+
+    Object.defineProperty(appWindow, "KanjiPiPCore", {
+        value: api,
+        writable: false,
+        configurable: false,
+        enumerable: false
+    });
+})();
+(() => {
+    "use strict";
+
+    const appWindow = /** @type {KanjiPiPWindow} */ (window);
+    const Core = appWindow.KanjiPiPCore;
+    const KANJI_DATA = appWindow.KANJI_DATA;
+
+    if (!Core || !KANJI_DATA) {
+        throw new Error("Kanji PiP dependencies did not load correctly.");
+    }
+
+    const CONFIG = Object.freeze({
+        CANVAS_WIDTH: 480,
+        CANVAS_HEIGHT: 270,
+        CARD_DURATION_MINUTES: 20,
+        EXAMPLES_PER_CARD: 2,
+        CAPTURE_FPS: 10,
+        SHOW_SECONDS_IN_CLOCK: false,
+        SENTENCE_CHANCE: 0.28,
+        MAIN_ENTRANCE_MS: 4000,
+        ANSWER_FADE_MS: 3000,
+        VOCAB_ENTRANCE_MS: 4000,
+        ANNOTATION_MS: 3000,
+        TRANSITION_FADE_MS: 4000,
+        BACKGROUND_SHIFT_MS: 10000,
+        CLOCK_SAFE_PADDING: 20
+    });
+
+    const CARD_DURATION_MS = CONFIG.CARD_DURATION_MINUTES * 60 * 1000;
+    const FRAME_INTERVAL_MS = 1000 / CONFIG.CAPTURE_FPS;
+
+    const MINCHO_FONT = 'ui-serif, "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif CJK JP", serif';
+    const SANS_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif';
+
+    /** @type {readonly Theme[]} */
+    const THEMES = Object.freeze([
+        Object.freeze({ name: "Midnight", background: [12, 30, 58], foreground: "#d6ecff", star: [165, 207, 255] }),
+        Object.freeze({ name: "Matcha", background: [14, 44, 30], foreground: "#d7f2d5", star: [166, 220, 173] }),
+        Object.freeze({ name: "Sakura", background: [55, 18, 32], foreground: "#f3d4df", star: [235, 178, 200] }),
+        Object.freeze({ name: "Ember", background: [52, 25, 15], foreground: "#f1d0a3", star: [235, 178, 112] }),
+        Object.freeze({ name: "Fuji", background: [34, 25, 57], foreground: "#e0d8f5", star: [194, 181, 232] }),
+        Object.freeze({ name: "Moon", background: [29, 37, 48], foreground: "#e1e5ea", star: [196, 205, 218] }),
+        Object.freeze({ name: "Ocean", background: [8, 43, 47], foreground: "#c9eff2", star: [150, 217, 224] }),
+        Object.freeze({ name: "Ink", background: [24, 22, 19], foreground: "#eee9df", star: [211, 203, 188] })
+    ]);
+
+    /** @type {Readonly<Record<Phase, number>>} */
+    const PHASE_ANIMATION_MS = Object.freeze({
+        KANJI: CONFIG.MAIN_ENTRANCE_MS,
+        KANJI_READING: CONFIG.ANSWER_FADE_MS,
+        KANJI_MEANING: CONFIG.ANSWER_FADE_MS,
+        WORD_1: CONFIG.VOCAB_ENTRANCE_MS,
+        WORD_1_READING: CONFIG.ANNOTATION_MS,
+        WORD_1_MEANING: CONFIG.ANNOTATION_MS,
+        WORD_2: CONFIG.VOCAB_ENTRANCE_MS,
+        WORD_2_ANSWER: CONFIG.ANNOTATION_MS,
+        TRANSITION: CONFIG.TRANSITION_FADE_MS
+    });
+
+    /**
+     * @param {string} id
+     * @returns {HTMLElement}
+     */
+    function requireElement(id) {
+        const element = document.getElementById(id);
+        if (!element) {
+            throw new Error(`Required element #${id} is missing.`);
+        }
+        return element;
+    }
+
+    /**
+     * @param {HTMLCanvasElement} target
+     * @returns {CanvasRenderingContext2D}
+     */
+    function require2dContext(target) {
+        const context = target.getContext("2d", { alpha: false });
+        if (!context) {
+            throw new Error("A 2D canvas context is required.");
+        }
+        return context;
+    }
+
+    const canvasElement = requireElement("studyCanvas");
+    const videoElement = requireElement("pipVideo");
+    const pipButtonElement = requireElement("pipButton");
+    const statusElement = requireElement("statusMessage");
+
+    if (!(canvasElement instanceof HTMLCanvasElement)) {
+        throw new TypeError("#studyCanvas must be a canvas element.");
+    }
+    if (!(videoElement instanceof HTMLVideoElement)) {
+        throw new TypeError("#pipVideo must be a video element.");
+    }
+    if (!(pipButtonElement instanceof HTMLButtonElement)) {
+        throw new TypeError("#pipButton must be a button element.");
+    }
+
+    const canvas = canvasElement;
+    const video = videoElement;
+    const pipButton = pipButtonElement;
+    const statusMessage = statusElement;
+    const ctx = require2dContext(canvas);
+
+    canvas.width = CONFIG.CANVAS_WIDTH;
+    canvas.height = CONFIG.CANVAS_HEIGHT;
+
+    const backgroundCanvas = document.createElement("canvas");
+    backgroundCanvas.width = CONFIG.CANVAS_WIDTH;
+    backgroundCanvas.height = CONFIG.CANVAS_HEIGHT;
+
+    const previousBackgroundCanvas = document.createElement("canvas");
+    previousBackgroundCanvas.width = CONFIG.CANVAS_WIDTH;
+    previousBackgroundCanvas.height = CONFIG.CANVAS_HEIGHT;
+
+    const backgroundCtx = require2dContext(backgroundCanvas);
+    const previousBackgroundCtx = require2dContext(previousBackgroundCanvas);
+
+    const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    /** @type {AppState} */
+    const state = {
+        deck: [],
+        card: null,
+        examples: [],
+        secondaryPrompt: null,
+        cardStartedAt: performance.now(),
+        previousKanji: null,
+        exampleHistory: new Map(),
+        sentenceHistory: new Map(),
+        themeIndex: -1,
+        previousBackgroundAvailable: false,
+        backgroundAvailable: false,
+        backgroundBlendStartedAt: performance.now(),
+        timerId: 0,
+        mediaStream: null,
+        mediaReady: false,
+        captureAvailable: typeof canvas.captureStream === "function",
+        pipSupported: false,
+        initialized: false
+    };
+
+    /** @returns {number} */
+    function randomFloat() {
+        if (window.crypto && typeof window.crypto.getRandomValues === "function") {
+            const values = new Uint32Array(1);
+            window.crypto.getRandomValues(values);
+            return values[0] / 0x100000000;
+        }
+
+        return Math.random();
+    }
+
+    /** @returns {number} */
+    function randomUint32() {
+        if (window.crypto && typeof window.crypto.getRandomValues === "function") {
+            const values = new Uint32Array(1);
+            window.crypto.getRandomValues(values);
+            return values[0];
+        }
+
+        return Math.floor(Math.random() * 0x100000000) >>> 0;
+    }
+
+    /**
+     * @param {number} seed
+     * @returns {RandomSource}
+     */
+    function mulberry32(seed) {
+        let value = seed >>> 0;
+        return () => {
+            value += 0x6d2b79f5;
+            let result = value;
+            result = Math.imul(result ^ (result >>> 15), result | 1);
+            result ^= result + Math.imul(result ^ (result >>> 7), result | 61);
+            return ((result ^ (result >>> 14)) >>> 0) / 0x100000000;
+        };
+    }
+
+    /**
+     * @param {readonly number[]} rgb
+     * @param {number} alpha
+     * @returns {string}
+     */
+    function rgba(rgb, alpha) {
+        return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`;
+    }
+
+    /**
+     * @param {string} [message=""]
+     * @param {string} [kind=""]
+     */
+    function setStatus(message = "", kind = "") {
+        statusMessage.textContent = message;
+        if (kind) {
+            statusMessage.dataset.kind = kind;
+        } else {
+            delete statusMessage.dataset.kind;
+        }
+    }
+
+    /**
+     * @param {string} context
+     * @param {unknown} error
+     */
+    function reportError(context, error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error(`[Kanji PiP] ${context}`, error);
+        setStatus(`${context}: ${message}`, "error");
+    }
+
+    /**
+     * @param {number} seed
+     * @param {Theme} theme
+     */
+    function createBackground(seed, theme) {
+        const random = mulberry32(seed);
+        const width = CONFIG.CANVAS_WIDTH;
+        const height = CONFIG.CANVAS_HEIGHT;
+
+        backgroundCtx.save();
+        backgroundCtx.globalAlpha = 1;
+        backgroundCtx.fillStyle = "#000000";
+        backgroundCtx.fillRect(0, 0, width, height);
+
+        const centerX = width * (0.22 + random() * 0.56);
+        const centerY = height * (0.20 + random() * 0.48);
+        const radius = width * (0.42 + random() * 0.18);
+        const glow = backgroundCtx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+        glow.addColorStop(0, rgba(theme.background, 0.20));
+        glow.addColorStop(0.48, rgba(theme.background, 0.08));
+        glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+        backgroundCtx.fillStyle = glow;
+        backgroundCtx.fillRect(0, 0, width, height);
+
+        for (let index = 0; index < 7; index += 1) {
+            const x = 22 + random() * (width - 44);
+            const y = 18 + random() * (height - 58);
+            const radiusValue = 0.45 + random() * 0.75;
+            const alpha = 0.055 + random() * 0.085;
+
+            backgroundCtx.beginPath();
+            backgroundCtx.arc(x, y, radiusValue, 0, Math.PI * 2);
+            backgroundCtx.fillStyle = rgba(theme.star, alpha);
+            backgroundCtx.fill();
+        }
+
+        const vignette = backgroundCtx.createRadialGradient(
+            width / 2,
+            height / 2,
+            Math.min(width, height) * 0.12,
+            width / 2,
+            height / 2,
+            Math.max(width, height) * 0.62
+        );
+        vignette.addColorStop(0, "rgba(0, 0, 0, 0)");
+        vignette.addColorStop(0.74, "rgba(0, 0, 0, 0.08)");
+        vignette.addColorStop(1, "rgba(0, 0, 0, 0.40)");
+        backgroundCtx.fillStyle = vignette;
+        backgroundCtx.fillRect(0, 0, width, height);
+        backgroundCtx.restore();
+    }
+
+    /** @param {number} now */
+    function prepareBackground(now) {
+        if (state.backgroundAvailable) {
+            previousBackgroundCtx.save();
+            previousBackgroundCtx.globalAlpha = 1;
+            previousBackgroundCtx.drawImage(backgroundCanvas, 0, 0);
+            previousBackgroundCtx.restore();
+            state.previousBackgroundAvailable = true;
+        }
+
+        state.themeIndex = Core.chooseDifferentIndex(THEMES.length, state.themeIndex, randomFloat);
+        createBackground(randomUint32(), THEMES[state.themeIndex]);
+        state.backgroundAvailable = true;
+        state.backgroundBlendStartedAt = now;
+    }
+
+    /** @param {number} now */
+    function drawBackground(now) {
+        ctx.save();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+
+        const motionReduced = reducedMotionQuery.matches;
+        const blendProgress = motionReduced
+            ? 1
+            : Core.smoothstep((now - state.backgroundBlendStartedAt) / CONFIG.BACKGROUND_SHIFT_MS);
+
+        if (state.previousBackgroundAvailable && blendProgress < 1) {
+            ctx.globalAlpha = 1 - blendProgress;
+            ctx.drawImage(previousBackgroundCanvas, 0, 0);
+            ctx.globalAlpha = blendProgress;
+            ctx.drawImage(backgroundCanvas, 0, 0);
+        } else {
+            ctx.globalAlpha = 1;
+            ctx.drawImage(backgroundCanvas, 0, 0);
+        }
+
+        ctx.restore();
+    }
+
+    /** Ensures there is at least one card available for pop-based selection. */
+    function ensureDeck() {
+        if (state.deck.length === 0) {
+            state.deck = Core.createShuffledDeck(KANJI_DATA, state.previousKanji, randomFloat);
+        }
+    }
+
+    /**
+     * @param {KanjiCard} card
+     * @returns {SentenceExample | null}
+     */
+    function chooseSentence(card) {
+        if (!Array.isArray(card.sentences) || card.sentences.length === 0 || randomFloat() >= CONFIG.SENTENCE_CHANCE) {
+            return null;
+        }
+
+        const previousIndex = state.sentenceHistory.get(card.kanji) ?? -1;
+        const index = Core.chooseDifferentIndex(card.sentences.length, previousIndex, randomFloat);
+        state.sentenceHistory.set(card.kanji, index);
+        return card.sentences[index];
+    }
+
+    /** @param {number} now */
+    function startNextCard(now) {
+        const outgoingKanji = state.card?.kanji ?? state.previousKanji;
+        if (outgoingKanji) {
+            state.previousKanji = outgoingKanji;
+        }
+
+        ensureDeck();
+        const nextCard = state.deck.pop();
+
+        if (!nextCard) {
+            throw new Error("The kanji deck unexpectedly became empty.");
+        }
+
+        const previousSignature = state.exampleHistory.get(nextCard.kanji) ?? "";
+        const selectedExamples = Core.selectExamples(
+            nextCard.examples,
+            CONFIG.EXAMPLES_PER_CARD,
+            previousSignature,
+            randomFloat
+        );
+
+        state.exampleHistory.set(nextCard.kanji, Core.exampleSignature(selectedExamples));
+        state.card = nextCard;
+        state.examples = selectedExamples;
+
+        const selectedSentence = chooseSentence(nextCard);
+        const fallbackExample = selectedExamples[1] ?? selectedExamples[0];
+        if (!fallbackExample) {
+            throw new Error(`No vocabulary example is available for ${nextCard.kanji}.`);
+        }
+
+        state.secondaryPrompt = selectedSentence
+            ? Object.freeze({ type: "sentence", data: selectedSentence })
+            : Object.freeze({ type: "vocabulary", data: fallbackExample });
+
+        state.cardStartedAt = now;
+        prepareBackground(now);
+    }
+
+    /**
+     * @param {number} now
+     * @param {Phase} phase
+     * @returns {number}
+     */
+    function phaseReveal(now, phase) {
+        if (reducedMotionQuery.matches) {
+            return 1;
+        }
+
+        const range = Core.getPhaseRange(phase);
+        const phaseStartedAt = state.cardStartedAt + range.start * CARD_DURATION_MS;
+        const duration = PHASE_ANIMATION_MS[phase] ?? 0;
+
+        if (duration <= 0) {
+            return 1;
+        }
+
+        return Core.smoothstep((now - phaseStartedAt) / duration);
+    }
+
+    /** @param {TextConfiguration} options */
+    function configureText({ size, family = SANS_FONT, weight = 400, align = "center" }) {
+        ctx.font = `${weight} ${size}px ${family}`;
+        ctx.textAlign = align;
+        ctx.textBaseline = "middle";
+    }
+
+    /**
+     * @param {string} text
+     * @param {number} maxSize
+     * @param {number} minSize
+     * @param {number} maxWidth
+     * @param {string} family
+     * @param {number} [weight=400]
+     * @returns {number}
+     */
+    function fitFontSize(text, maxSize, minSize, maxWidth, family, weight = 400) {
+        let size = maxSize;
+
+        while (size > minSize) {
+            configureText({ size, family, weight });
+            if (ctx.measureText(text).width <= maxWidth) {
+                break;
+            }
+            size -= 1;
+        }
+
+        return size;
+    }
+
+    /**
+     * @param {string} text
+     * @param {DrawTextOptions} options
+     */
+    function drawText(text, {
+        x = CONFIG.CANVAS_WIDTH / 2,
+        y,
+        size,
+        minSize = size,
+        maxWidth = CONFIG.CANVAS_WIDTH - 64,
+        family = SANS_FONT,
+        weight = 400,
+        color = "#ffffff",
+        alpha = 1,
+        shadowBlur = 0,
+        shadowColor = color
+    }) {
+        const fittedSize = fitFontSize(text, size, minSize, maxWidth, family, weight);
+
+        ctx.save();
+        ctx.globalAlpha = Core.clamp(alpha, 0, 1);
+        configureText({ size: fittedSize, family, weight });
+        ctx.fillStyle = color;
+        ctx.shadowBlur = shadowBlur;
+        ctx.shadowColor = shadowColor;
+        ctx.fillText(text, x, y);
+        ctx.restore();
+    }
+
+    /** Draws the persistent 24-hour ambient clock. */
+    function drawClock() {
+        const text = Core.formatClock(new Date(), CONFIG.SHOW_SECONDS_IN_CLOCK);
+
+        ctx.save();
+        ctx.globalAlpha = 0.72;
+        configureText({ size: 15, family: SANS_FONT, weight: 500, align: "right" });
+        ctx.fillStyle = "#b3b6ba";
+        ctx.fillText(
+            text,
+            CONFIG.CANVAS_WIDTH - CONFIG.CLOCK_SAFE_PADDING,
+            CONFIG.CANVAS_HEIGHT - CONFIG.CLOCK_SAFE_PADDING
+        );
+        ctx.restore();
+    }
+
+    /**
+     * @param {number} now
+     * @param {Phase} phase
+     */
+    function drawKanjiQuestion(now, phase) {
+        const card = state.card;
+        if (!card) return;
+        const theme = THEMES[state.themeIndex] ?? THEMES[0];
+        const entrance = phase === Core.PHASES.KANJI ? phaseReveal(now, phase) : 1;
+        const readingReveal = phase === Core.PHASES.KANJI_READING
+            ? phaseReveal(now, phase)
+            : phase === Core.PHASES.KANJI_MEANING ? 1 : 0;
+        const meaningReveal = phase === Core.PHASES.KANJI_MEANING ? phaseReveal(now, phase) : 0;
+        const detailProgress = Math.max(readingReveal, meaningReveal);
+        const mainSize = 110 - 24 * detailProgress;
+        const mainY = 128 - 31 * detailProgress;
+        const mainAlpha = phase === Core.PHASES.KANJI ? entrance : 1;
+        const drift = phase === Core.PHASES.KANJI ? (1 - entrance) * 3 : 0;
+        const glow = phase === Core.PHASES.KANJI && !reducedMotionQuery.matches ? (1 - entrance) * 18 : 0;
+
+        drawText(card.kanji, {
+            y: mainY + drift,
+            size: mainSize,
+            minSize: 72,
+            maxWidth: 220,
+            family: MINCHO_FONT,
+            weight: 500,
+            color: theme.foreground,
+            alpha: mainAlpha,
+            shadowBlur: glow,
+            shadowColor: theme.foreground
+        });
+
+        if (readingReveal > 0) {
+            const primaryReading = Core.getPrimaryReading(card);
+            drawText(primaryReading.kana, {
+                y: 160 + (1 - readingReveal) * -4,
+                size: 26,
+                minSize: 20,
+                maxWidth: 340,
+                family: SANS_FONT,
+                weight: 500,
+                color: "#e2e4e6",
+                alpha: readingReveal
+            });
+            drawText(primaryReading.romaji, {
+                y: 189,
+                size: 18,
+                minSize: 15,
+                maxWidth: 340,
+                family: SANS_FONT,
+                weight: 450,
+                color: "#aeb4ba",
+                alpha: readingReveal * 0.95
+            });
+        }
+
+        if (meaningReveal > 0) {
+            drawText(card.meanings[0] ?? "", {
+                y: 218 + (1 - meaningReveal) * 4,
+                size: 19,
+                minSize: 14,
+                maxWidth: 360,
+                family: SANS_FONT,
+                weight: 500,
+                color: "#d7d9db",
+                alpha: meaningReveal
+            });
+        }
+    }
+
+    /**
+     * @param {VocabularyExample} example
+     * @param {Phase} phase
+     * @param {number} now
+     * @param {boolean} [isSecond=false]
+     */
+    function drawVocabulary(example, phase, now, isSecond = false) {
+        const theme = THEMES[state.themeIndex] ?? THEMES[0];
+        const promptPhase = isSecond ? Core.PHASES.WORD_2 : Core.PHASES.WORD_1;
+        const readingPhase = isSecond ? Core.PHASES.WORD_2_ANSWER : Core.PHASES.WORD_1_READING;
+        const meaningPhase = isSecond ? Core.PHASES.WORD_2_ANSWER : Core.PHASES.WORD_1_MEANING;
+
+        const promptReveal = phase === promptPhase ? phaseReveal(now, phase) : 1;
+        const readingReveal = phase === readingPhase
+            ? phaseReveal(now, phase)
+            : (!isSecond && phase === Core.PHASES.WORD_1_MEANING) ? 1 : 0;
+        const meaningReveal = phase === meaningPhase ? phaseReveal(now, phase) : 0;
+        const annotationVisible = readingReveal > 0 || meaningReveal > 0;
+        const driftX = phase === promptPhase ? (1 - promptReveal) * 5 : 0;
+
+        drawText(example.word, {
+            x: CONFIG.CANVAS_WIDTH / 2 + driftX,
+            y: annotationVisible ? 125 : 132,
+            size: annotationVisible ? 66 : 76,
+            minSize: 44,
+            maxWidth: 390,
+            family: MINCHO_FONT,
+            weight: 500,
+            color: theme.foreground,
+            alpha: promptReveal
+        });
+
+        if (readingReveal > 0) {
+            drawText(example.reading, {
+                y: 78 + (1 - readingReveal) * -5,
+                size: 24,
+                minSize: 17,
+                maxWidth: 390,
+                family: SANS_FONT,
+                weight: 500,
+                color: "#e2e4e6",
+                alpha: readingReveal
+            });
+            drawText(example.romaji, {
+                y: 173,
+                size: 18,
+                minSize: 14,
+                maxWidth: 390,
+                family: SANS_FONT,
+                weight: 450,
+                color: "#aeb4ba",
+                alpha: readingReveal * 0.95
+            });
+        }
+
+        if (meaningReveal > 0) {
+            drawText(example.meaning, {
+                y: 207 + (1 - meaningReveal) * 5,
+                size: 18,
+                minSize: 13,
+                maxWidth: 390,
+                family: SANS_FONT,
+                weight: 500,
+                color: "#d7d9db",
+                alpha: meaningReveal
+            });
+        }
+    }
+
+    /**
+     * @param {SentenceExample} sentence
+     * @param {Phase} phase
+     * @param {number} now
+     */
+    function drawSentence(sentence, phase, now) {
+        const theme = THEMES[state.themeIndex] ?? THEMES[0];
+        const promptReveal = phase === Core.PHASES.WORD_2 ? phaseReveal(now, phase) : 1;
+        const answerReveal = phase === Core.PHASES.WORD_2_ANSWER ? phaseReveal(now, phase) : 0;
+        const driftX = phase === Core.PHASES.WORD_2 ? (1 - promptReveal) * 5 : 0;
+
+        if (answerReveal <= 0) {
+            drawText(sentence.japanese, {
+                x: CONFIG.CANVAS_WIDTH / 2 + driftX,
+                y: 132,
+                size: 38,
+                minSize: 25,
+                maxWidth: 410,
+                family: MINCHO_FONT,
+                weight: 500,
+                color: theme.foreground,
+                alpha: promptReveal
+            });
+            return;
+        }
+
+        drawText(sentence.reading, {
+            y: 65 + (1 - answerReveal) * -5,
+            size: 20,
+            minSize: 14,
+            maxWidth: 420,
+            family: SANS_FONT,
+            weight: 500,
+            color: "#e2e4e6",
+            alpha: answerReveal
+        });
+        drawText(sentence.japanese, {
+            y: 108,
+            size: 35,
+            minSize: 23,
+            maxWidth: 420,
+            family: MINCHO_FONT,
+            weight: 500,
+            color: theme.foreground,
+            alpha: 1
+        });
+        drawText(sentence.romaji, {
+            y: 154,
+            size: 17,
+            minSize: 13,
+            maxWidth: 420,
+            family: SANS_FONT,
+            weight: 450,
+            color: "#aeb4ba",
+            alpha: answerReveal * 0.95
+        });
+        drawText(sentence.meaning, {
+            y: 198 + (1 - answerReveal) * 5,
+            size: 17,
+            minSize: 12,
+            maxWidth: 420,
+            family: SANS_FONT,
+            weight: 500,
+            color: "#d7d9db",
+            alpha: answerReveal
+        });
+    }
+
+    /** @param {number} now */
+    function drawTransition(now) {
+        const card = state.card;
+        if (!card) return;
+        const fade = 1 - phaseReveal(now, Core.PHASES.TRANSITION);
+        if (fade <= 0.001) {
+            return;
+        }
+
+        const theme = THEMES[state.themeIndex] ?? THEMES[0];
+        drawText(card.kanji, {
+            y: 126,
+            size: 88,
+            minSize: 70,
+            maxWidth: 220,
+            family: MINCHO_FONT,
+            weight: 500,
+            color: theme.foreground,
+            alpha: fade * 0.55
+        });
+    }
+
+    /** @param {number} [now=performance.now()] */
+    function render(now = performance.now()) {
+        if (!state.card) {
+            return;
+        }
+
+        drawBackground(now);
+
+        const progress = Core.getProgress(now, state.cardStartedAt, CARD_DURATION_MS);
+        const phase = Core.getPhase(progress);
+        const primaryExample = state.examples[0];
+        const secondaryPrompt = state.secondaryPrompt;
+
+        switch (phase) {
+            case Core.PHASES.KANJI:
+            case Core.PHASES.KANJI_READING:
+            case Core.PHASES.KANJI_MEANING:
+                drawKanjiQuestion(now, phase);
+                break;
+
+            case Core.PHASES.WORD_1:
+            case Core.PHASES.WORD_1_READING:
+            case Core.PHASES.WORD_1_MEANING:
+                if (primaryExample) drawVocabulary(primaryExample, phase, now, false);
+                break;
+
+            case Core.PHASES.WORD_2:
+            case Core.PHASES.WORD_2_ANSWER:
+                if (!secondaryPrompt) break;
+                if (secondaryPrompt.type === "sentence") {
+                    drawSentence(secondaryPrompt.data, phase, now);
+                } else {
+                    drawVocabulary(secondaryPrompt.data, phase, now, true);
+                }
+                break;
+
+            case Core.PHASES.TRANSITION:
+                drawTransition(now);
+                break;
+
+            default:
+                break;
+        }
+
+        drawClock();
+    }
+
+    /**
+     * @param {number} now
+     * @returns {number}
+     */
+    function getNextDelay(now) {
+        const progress = Core.getProgress(now, state.cardStartedAt, CARD_DURATION_MS);
+        const phase = Core.getPhase(progress);
+        const phaseRange = Core.getPhaseRange(phase);
+        const phaseStartedAt = state.cardStartedAt + phaseRange.start * CARD_DURATION_MS;
+        const phaseEndsAt = state.cardStartedAt + phaseRange.end * CARD_DURATION_MS;
+        const phaseAnimationDuration = reducedMotionQuery.matches ? 0 : PHASE_ANIMATION_MS[phase] ?? 0;
+        const phaseAnimationEndsAt = phaseStartedAt + phaseAnimationDuration;
+        const backgroundAnimationEndsAt = state.backgroundBlendStartedAt + (reducedMotionQuery.matches ? 0 : CONFIG.BACKGROUND_SHIFT_MS);
+        const animationActive = now < phaseAnimationEndsAt || now < backgroundAnimationEndsAt;
+
+        if (animationActive) {
+            return FRAME_INTERVAL_MS;
+        }
+
+        const untilPhaseBoundary = Math.max(16, phaseEndsAt - now);
+        const untilClockBoundary = Core.millisecondsUntilNextClockBoundary(Date.now(), CONFIG.SHOW_SECONDS_IN_CLOCK);
+        return Math.max(16, Math.min(untilPhaseBoundary, untilClockBoundary));
+    }
+
+    /** Schedules the next required redraw without polling static phases. */
+    function scheduleNextRender() {
+        window.clearTimeout(state.timerId);
+        const now = performance.now();
+        state.timerId = window.setTimeout(tick, getNextDelay(now));
+    }
+
+    /** Advances expired cards, renders, and schedules the next meaningful update. */
+    function tick() {
+        const now = performance.now();
+
+        if (now - state.cardStartedAt >= CARD_DURATION_MS) {
+            startNextCard(now);
+        }
+
+        render(now);
+        scheduleNextRender();
+    }
+
+    /** @returns {boolean} */
+    function isStandardPiPSupported() {
+        return Boolean(
+            state.captureAvailable &&
+            document.pictureInPictureEnabled &&
+            typeof video.requestPictureInPicture === "function" &&
+            typeof document.exitPictureInPicture === "function"
+        );
+    }
+
+    /** Synchronizes the single user-facing control with media/PiP state. */
+    function updatePiPControl() {
+        state.pipSupported = isStandardPiPSupported();
+
+        if (!state.captureAvailable) {
+            pipButton.disabled = true;
+            pipButton.textContent = "Picture-in-Picture unavailable";
+            return;
+        }
+
+        if (!state.pipSupported) {
+            pipButton.disabled = true;
+            pipButton.textContent = "Picture-in-Picture unavailable";
+            return;
+        }
+
+        if (document.pictureInPictureElement === video) {
+            pipButton.disabled = false;
+            pipButton.textContent = "Exit Picture-in-Picture";
+            return;
+        }
+
+        pipButton.disabled = !state.mediaReady;
+        pipButton.textContent = state.mediaReady
+            ? "Enter Picture-in-Picture"
+            : "Preparing Picture-in-Picture";
+    }
+
+    /** @returns {Promise<void>} */
+    async function ensureVideoPlaying() {
+        video.muted = true;
+        await video.play();
+    }
+
+    /** Connects the canvas stream to the muted transport video. */
+    function setupMedia() {
+        if (!state.captureAvailable) {
+            setStatus("Canvas video capture is unavailable in this browser. The study preview will continue normally.", "error");
+            updatePiPControl();
+            return;
+        }
+
+        try {
+            state.mediaStream = canvas.captureStream(CONFIG.CAPTURE_FPS);
+            video.srcObject = state.mediaStream;
+        } catch (error) {
+            state.captureAvailable = false;
+            reportError("Canvas video capture failed", error);
+            updatePiPControl();
+            return;
+        }
+
+        video.addEventListener("loadedmetadata", () => {
+            state.mediaReady = true;
+            updatePiPControl();
+        }, { once: true });
+
+        video.addEventListener("error", () => {
+            const mediaError = video.error;
+            const detail = mediaError ? `Media error code ${mediaError.code}` : "Unknown video error";
+            reportError("Generated video playback failed", new Error(detail));
+        });
+
+        void ensureVideoPlaying().catch((error) => {
+            reportError("Generated video could not autoplay", error);
+            updatePiPControl();
+        });
+
+        updatePiPControl();
+    }
+
+    /** @returns {Promise<void>} */
+    async function togglePictureInPicture() {
+        if (!state.pipSupported) {
+            setStatus("Picture-in-Picture is unavailable in this browser. The canvas preview remains active.", "error");
+            return;
+        }
+
+        try {
+            if (document.pictureInPictureElement === video) {
+                await document.exitPictureInPicture();
+                setStatus("");
+                return;
+            }
+
+            await ensureVideoPlaying();
+            await video.requestPictureInPicture();
+            setStatus("");
+        } catch (error) {
+            reportError("Picture-in-Picture request failed", error);
+        } finally {
+            updatePiPControl();
+        }
+    }
+
+    /** Binds the small set of lifecycle and PiP events used by the application. */
+    function bindEvents() {
+        pipButton.addEventListener("click", () => {
+            void togglePictureInPicture();
+        });
+
+        video.addEventListener("enterpictureinpicture", () => {
+            updatePiPControl();
+            render(performance.now());
+        });
+
+        video.addEventListener("leavepictureinpicture", () => {
+            updatePiPControl();
+            render(performance.now());
+        });
+
+        reducedMotionQuery.addEventListener("change", () => {
+            render(performance.now());
+            scheduleNextRender();
+        });
+
+        window.addEventListener("pagehide", () => {
+            window.clearTimeout(state.timerId);
+        });
+
+        window.addEventListener("pageshow", () => {
+            if (state.initialized) {
+                render(performance.now());
+                scheduleNextRender();
+            }
+        });
+    }
+
+    /** Validates source data and starts rendering/media initialization. */
+    function initialize() {
+        try {
+            Core.validateCorpus(KANJI_DATA);
+        } catch (error) {
+            reportError("Kanji corpus validation failed", error);
+            pipButton.disabled = true;
+            pipButton.textContent = "Picture-in-Picture unavailable";
+            return;
+        }
+
+        bindEvents();
+        startNextCard(performance.now());
+        render(performance.now());
+        setupMedia();
+        state.initialized = true;
+        scheduleNextRender();
+    }
+
+    initialize();
+})();
+</script>
+</body>
+</html>
