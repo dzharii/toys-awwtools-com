@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Skill Language Editor</title>
+  <meta name="description" content="A browser-based editor for structured skill-language documents with lightweight syntax highlighting, local autosave, file import and export, and offline PWA support.">
+  <meta name="theme-color" content="#ebe9e3">
+  <link rel="canonical" href="https://toys.awwtools.com/public/2026-09-13-300K-stars-skill-language-editor/">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Skill Language Editor">
+  <meta property="og:description" content="A browser-based editor for structured skill-language documents with lightweight syntax highlighting, local autosave, file import and export, and offline PWA support.">
+  <meta property="og:url" content="https://toys.awwtools.com/public/2026-09-13-300K-stars-skill-language-editor/">
+  <meta property="og:image" content="https://toys.awwtools.com/public/2026-09-13-300K-stars-skill-language-editor/assets/social/skill-language-editor-og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Skill Language Editor application icon, title, and a sample structured document.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Skill Language Editor">
+  <meta name="twitter:description" content="A browser-based editor for structured skill-language documents with lightweight syntax highlighting, local autosave, file import and export, and offline PWA support.">
+  <meta name="twitter:image" content="https://toys.awwtools.com/public/2026-09-13-300K-stars-skill-language-editor/assets/social/skill-language-editor-og.jpg">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="document-bar" aria-label="Document toolbar">
+      <div class="document-identity">
+        <svg class="document-icon" aria-hidden="true" viewBox="0 0 24 24">
+          <path d="M6.5 2.75h7l4 4v14.5h-11zM13.5 2.75v4h4"/>
+        </svg>
+        <label class="visually-hidden" for="filename-input">Filename</label>
+        <input id="filename-input" class="filename-input" value="untitled-skill.md" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Filename">
+        <span class="document-state" id="document-state" role="status" aria-live="polite">Loading...</span>
+      </div>
+
+      <nav class="toolbar-actions" aria-label="Document actions">
+        <button class="toolbar-button" id="new-button" type="button" title="Create a new skill document">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6.5 2.75h8l3 3v15.5h-11zM14.5 2.75v3h3M12 9v7M8.5 12.5h7"/></svg>
+          <span>New</span>
+        </button>
+        <button class="toolbar-button" id="open-button" type="button" title="Open one local text file">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3.25 7.5h6l1.6 2h9.9l-2 9.25H4.6zM4.5 7.5V5.25h5l1.5 2h7.5v2.25"/></svg>
+          <span>Open</span>
+        </button>
+        <button class="toolbar-button toolbar-button-primary" id="save-button" type="button" title="Save a revision to Downloads (Ctrl+S)">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 3.25h13.5l2.5 2.5v15H4zM7.25 3.25v6h8v-6M7.5 20.75v-7h9v7M9.5 6.25h3.5"/></svg>
+          <span>Save</span>
+        </button>
+        <button class="toolbar-button" id="install-button" type="button" hidden>
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 14.5v5.25h16V14.5M12 2.75v12M7.5 10.25 12 14.75l4.5-4.5"/></svg>
+          <span>Install app</span>
+        </button>
+      </nav>
+    </header>
+
+    <section class="replacement-bar" id="replacement-bar" aria-live="polite" hidden>
+      <p id="replacement-message"></p>
+      <div class="replacement-actions">
+        <button id="replace-button" class="replacement-button replacement-button-danger" type="button">Replace draft</button>
+        <button id="keep-button" class="replacement-button replacement-button-safe" type="button">Keep current</button>
+      </div>
+    </section>
+
+    <div class="notice" id="notice" role="status" aria-live="polite" hidden></div>
+
+    <section class="editor-frame" id="editor-frame" aria-label="Skill document editor">
+      <pre id="highlight-layer" class="highlight-layer" aria-hidden="true"></pre>
+      <textarea
+        id="editor"
+        aria-label="Skill document source"
+        aria-describedby="editor-status"
+        spellcheck="true"
+        autocorrect="off"
+        autocapitalize="off"
+        autocomplete="off"
+        wrap="soft"
+      ></textarea>
+      <div class="drop-indicator" aria-hidden="true">Drop one skill file to open it</div>
+    </section>
+
+    <footer class="status-bar" id="editor-status">
+      <span id="caret-status">Ln 1, Col 1</span>
+      <span class="status-divider" aria-hidden="true"></span>
+      <span id="indent-status">Spaces: 2</span>
+      <span class="status-divider" aria-hidden="true"></span>
+      <span id="line-status">1 line</span>
+      <span class="status-divider" aria-hidden="true"></span>
+      <span id="footer-state">Loading...</span>
+    </footer>
+  </main>
+
+  <input id="file-input" class="visually-hidden" type="file" accept=".md,.txt,text/plain,text/markdown" tabindex="-1">
+  <noscript><p class="noscript-message">Skill Language Editor requires JavaScript to provide editing and local file features.</p></noscript>
+</body>
+</html>
