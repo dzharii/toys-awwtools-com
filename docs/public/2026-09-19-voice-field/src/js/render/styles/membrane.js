@@ -1,0 +1,1 @@
+export const MEMBRANE_STYLE = Object.freeze({ id: "membrane", label: "Membrane", shaderIndex: 1, material: "continuous elastic surface", voiceResponse: "localized pressure rings and broad displacement" });

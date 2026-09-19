@@ -1,0 +1,1 @@
+export const PARTICLES_STYLE = Object.freeze({ id: "particles", label: "Particles", shaderIndex: 5, material: "coherent orbital flow field", voiceResponse: "flow compression and traveling clusters" });

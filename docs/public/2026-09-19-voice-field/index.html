@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#080b11">
+    <meta name="description" content="A visual instrument that turns spoken voice into animated fields, flowing motion, and responsive voice traces in real time.">
+    <title>voice-field - Voice-Reactive Visual Instrument</title>
+
+    <link rel="canonical" href="https://toys.awwtools.com/public/2026-09-19-voice-field/dist/">
+    <link rel="icon" type="image/jpeg" sizes="16x16" href="./assets/favicon-16x16.jpg">
+    <link rel="icon" type="image/jpeg" sizes="32x32" href="./assets/favicon-32x32.jpg">
+    <link rel="icon" type="image/jpeg" sizes="48x48" href="./assets/favicon-48x48.jpg">
+    <link rel="icon" type="image/jpeg" sizes="96x96" href="./assets/favicon-96x96.jpg">
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon-180.jpg">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="voice-field">
+    <meta property="og:url" content="https://toys.awwtools.com/public/2026-09-19-voice-field/dist/">
+    <meta property="og:title" content="voice-field - Voice-Reactive Visual Instrument">
+    <meta property="og:description" content="A visual instrument that turns spoken voice into animated fields, flowing motion, and responsive voice traces in real time.">
+    <meta property="og:image" content="https://toys.awwtools.com/public/2026-09-19-voice-field/dist/assets/social-open-graph-1200x630.jpg">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="An abstract field responding to voice with flowing waves and a visual voice trace.">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="voice-field - Voice-Reactive Visual Instrument">
+    <meta name="twitter:description" content="A visual instrument that turns spoken voice into animated fields, flowing motion, and responsive voice traces in real time.">
+    <meta name="twitter:image" content="https://toys.awwtools.com/public/2026-09-19-voice-field/dist/assets/social-x-1200x675.jpg">
+    <meta name="twitter:image:alt" content="An abstract field responding to voice with flowing waves and a visual voice trace.">
+
+    <link rel="stylesheet" href="./src/css/app.css">
+  </head>
+  <body>
+    <div class="app-shell" id="app-shell" data-mobile-mode="compose">
+      <header class="app-header">
+        <a class="brand" href="./" aria-label="voice-field home">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span><strong>voice-field</strong><small>voice into motion</small></span>
+        </a>
+
+        <fieldset class="ratio-control" aria-label="Stage aspect ratio">
+          <button class="ratio-button is-active" type="button" data-ratio="16:9" aria-pressed="true">16:9</button>
+          <button class="ratio-button" type="button" data-ratio="9:16" aria-pressed="false">9:16</button>
+          <button class="ratio-button" type="button" data-ratio="1:1" aria-pressed="false">1:1</button>
+        </fieldset>
+
+        <div class="mic-cluster">
+          <div class="mic-state" id="mic-state" role="status" aria-live="polite">
+            <span class="status-orb" aria-hidden="true"></span>
+            <span><strong>Microphone off</strong><small>Idle Motion is active</small></span>
+          </div>
+          <div class="level-meter" id="level-meter" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <button class="button button-primary" id="mic-button" type="button">Enable mic</button>
+        </div>
+      </header>
+
+      <main class="instrument-grid">
+        <aside class="panel primary-panel" aria-label="Creative controls">
+          <div class="panel-heading">
+            <span class="eyebrow">Create</span>
+            <button class="icon-button" id="reset-button" type="button" title="Reset to preset" aria-label="Reset controls to preset values">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8v5h5M5.4 15a7 7 0 1 0 .3-6.4L4 10"/></svg>
+            </button>
+          </div>
+
+          <label class="select-field">
+            <span>Preset</span>
+            <select id="preset-select" aria-label="Preset"></select>
+          </label>
+          <label class="select-field style-field">
+            <span>Style</span>
+            <select id="style-select" aria-label="Visual style"></select>
+          </label>
+          <label class="select-field">
+            <span>Palette</span>
+            <span class="select-with-swatches"><span class="mini-swatches" id="active-swatches" aria-hidden="true"></span><select id="palette-select" aria-label="Palette"></select></span>
+          </label>
+
+          <div class="control-divider"></div>
+          <div class="slider-list" id="creative-sliders">
+            <label class="slider-field" data-control="energy"><span><span>Energy</span><output>0.64</output></span><input id="energy" type="range" min="0" max="1" step="0.01" value="0.64"></label>
+            <label class="slider-field" data-control="motion"><span><span>Motion</span><output>0.47</output></span><input id="motion" type="range" min="0" max="1" step="0.01" value="0.47"></label>
+            <label class="slider-field detail-control" data-control="detail"><span><span>Detail</span><output>0.66</output></span><input id="detail" type="range" min="0" max="1" step="0.01" value="0.66"></label>
+          </div>
+
+          <button class="button mobile-performance-button" id="performance-button" type="button">Enter Performance</button>
+        </aside>
+
+        <aside class="panel preset-panel wide-panel" aria-label="Preset browser">
+          <span class="eyebrow">Visual presets</span>
+          <div class="preset-list" id="preset-list"></div>
+        </aside>
+
+        <section class="stage-column" aria-label="Stage workspace">
+          <div class="stage-wrap" id="stage-wrap" data-ratio="16:9">
+            <div class="stage" id="stage" role="img" aria-label="Animated voice-reactive visual Stage">
+              <canvas id="field-canvas"></canvas>
+              <canvas id="trace-canvas"></canvas>
+              <div class="stage-vignette" aria-hidden="true"></div>
+            </div>
+          </div>
+          <div class="compatibility-notice" id="compatibility-notice" hidden>
+            <strong>WebGPU is unavailable</strong>
+            <span>Use a current WebGPU-capable browser. The interface remains usable and Idle Motion continues in a reduced preview.</span>
+          </div>
+          <p class="stage-guidance"><span class="live-dot"></span><strong>Live Stage</strong><span>Capture only the bordered Stage with external recording software.</span></p>
+        </section>
+
+        <aside class="panel reactive-panel" aria-label="Reactive audio and Voice Trace controls">
+          <span class="eyebrow">Reactive audio</span>
+          <div class="slider-list">
+            <label class="slider-field" data-control="voiceInfluence"><span><span>Voice Influence</span><output>0.82</output></span><input id="voiceInfluence" type="range" min="0" max="1" step="0.01" value="0.82"></label>
+            <label class="slider-field" data-control="excitationDrift"><span><span>Excitation Drift</span><output>0.34</output></span><input id="excitationDrift" type="range" min="0" max="1" step="0.01" value="0.34"></label>
+            <label class="slider-field" data-control="idleMotion"><span><span>Idle Motion</span><output>0.25</output></span><input id="idleMotion" type="range" min="0" max="1" step="0.01" value="0.25"></label>
+          </div>
+
+          <div class="control-divider"></div>
+          <span class="eyebrow">Voice Trace</span>
+          <label class="toggle-field"><span>Show Voice Trace</span><input id="trace-enabled" type="checkbox" checked><span class="toggle" aria-hidden="true"></span></label>
+          <label class="select-field compact-select"><span>Trace Style</span><select id="trace-style"><option value="bars">Bars</option><option value="soft-bars">Soft Bars</option><option value="poles">Poles</option><option value="minimal">Minimal</option></select></label>
+          <label class="slider-field trace-slider"><span><span>Smoothing</span><output>0.76</output></span><input id="trace-smoothing" type="range" min="0" max="1" step="0.01" value="0.76"></label>
+          <label class="slider-field trace-slider"><span><span>Intensity</span><output>0.76</output></span><input id="trace-intensity" type="range" min="0" max="1" step="0.01" value="0.76"></label>
+
+          <div class="privacy-note">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a5 5 0 0 0-5 5v3a5 5 0 0 0 10 0V8a5 5 0 0 0-5-5Zm-8 8a8 8 0 0 0 16 0M12 19v3m-4 0h8"/></svg>
+            <span><strong>Local analysis</strong><small>Your voice never leaves this browser.</small></span>
+          </div>
+        </aside>
+
+        <aside class="panel advanced-panel wide-panel" aria-label="Scene controls">
+          <span class="eyebrow">Scene controls</span>
+          <div class="readout-row"><span>Renderer</span><strong>WebGPU</strong></div>
+          <div class="readout-row"><span>Transition</span><strong>2.2 sec</strong></div>
+          <div class="readout-row"><span>Render scale</span><strong id="render-scale-readout">Adaptive</strong></div>
+          <label class="select-field compact-select"><span>Quality</span><select id="quality-select"><option value="auto">Adaptive</option><option value="high">High</option><option value="balanced">Balanced</option></select></label>
+          <div class="control-divider"></div>
+          <span class="eyebrow">Signal model</span>
+          <div class="feature-readouts" aria-label="Derived audio features">
+            <span>Envelope<i id="feature-envelope"></i></span>
+            <span>Low<i id="feature-low"></i></span>
+            <span>Mid<i id="feature-mid"></i></span>
+            <span>High<i id="feature-high"></i></span>
+            <span>Phrase<i id="feature-phrase"></i></span>
+          </div>
+        </aside>
+      </main>
+
+      <footer class="palette-tray">
+        <div class="live-summary"><span class="live-ring" aria-hidden="true"></span><span><strong>Live preview</strong><small>WebGPU + local Web Audio</small></span></div>
+        <span class="eyebrow">Palettes</span>
+        <div class="palette-list" id="palette-list" aria-label="Quick palette selection"></div>
+        <button class="button mobile-performance-button footer-performance" id="footer-performance-button" type="button">Performance</button>
+      </footer>
+
+      <button class="performance-exit" id="performance-exit" type="button" aria-label="Return to Compose Mode">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span>Compose</span>
+      </button>
+    </div>
+    <script type="module" src="./src/js/main.js"></script>
+  </body>
+</html>
