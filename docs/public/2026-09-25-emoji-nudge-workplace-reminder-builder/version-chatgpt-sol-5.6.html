@@ -1,0 +1,1376 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Emoji Character Builder</title>
+
+  <style>
+    :root {
+      color-scheme: light;
+
+      --bg: #f5f6f8;
+      --panel: #fff;
+      --text: #18181b;
+      --muted: #71717a;
+      --line: #d9dce3;
+      --accent: #6754f5;
+      --accent-soft: #efedff;
+
+      --radius: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--bg);
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      color: var(--text);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 8px;
+      background: var(--bg);
+    }
+
+    button,
+    select {
+      font: inherit;
+    }
+
+    button {
+      color: inherit;
+    }
+
+    .version-cloud {
+      width: min(760px, 100%);
+      margin: 0 auto 10px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 9px;
+      font-size: 12px;
+    }
+
+    .version-cloud-note,
+    .version-cloud-link {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 48px;
+      padding: 8px 13px;
+      border: 2px solid #ddd5fb;
+      border-radius: 25px 31px 24px 33px;
+      background: #f7f4ff;
+      box-shadow: 0 5px 0 #e2def5, 0 10px 24px rgb(73 58 132 / 0.12);
+    }
+
+    .version-cloud-note {
+      color: #5d5479;
+      transform: rotate(-1deg);
+    }
+
+    .version-cloud-link {
+      position: relative;
+      padding-right: 17px;
+      border-color: #bfe5dc;
+      background: #ecfff8;
+      color: #205f55;
+      text-decoration: none;
+      transform: rotate(0.8deg);
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    .version-cloud-link:hover {
+      background: #dcfaef;
+      box-shadow: 0 7px 0 #d6ebe5, 0 14px 28px rgb(32 95 85 / 0.14);
+      transform: translateY(-2px) rotate(-0.4deg);
+    }
+
+    .version-cloud-link:focus-visible {
+      outline: 3px solid rgb(103 84 245 / 0.35);
+      outline-offset: 4px;
+    }
+
+    .version-cloud strong,
+    .version-cloud small {
+      display: block;
+    }
+
+    .version-cloud strong {
+      font-size: 13px;
+    }
+
+    .version-cloud small {
+      margin-top: 2px;
+      color: inherit;
+      opacity: 0.72;
+      font-size: 11px;
+    }
+
+    .version-cloud-sparkle,
+    .version-cloud-emoji {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .version-cloud-arrow {
+      font-size: 16px;
+      transition: transform 160ms ease;
+    }
+
+    .version-cloud-link:hover .version-cloud-arrow {
+      transform: translate(2px, -2px);
+    }
+
+    .app {
+      width: min(760px, 100%);
+      margin: 0 auto;
+
+      display: grid;
+      grid-template-columns: minmax(250px, 300px) minmax(0, 1fr);
+      grid-template-areas: "controls preview";
+      gap: 8px;
+      align-items: start;
+    }
+
+    .controls,
+    .preview {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+
+    .controls {
+      grid-area: controls;
+      padding: 9px;
+    }
+
+    .preview {
+      grid-area: preview;
+      position: sticky;
+      top: 8px;
+      overflow: hidden;
+    }
+
+    .field + .field {
+      margin-top: 7px;
+    }
+
+    .field-label {
+      display: block;
+      margin: 0 0 3px 2px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    select {
+      width: 100%;
+      height: 43px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      outline: none;
+      background: #fff;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    select:hover {
+      border-color: #b9bdc7;
+    }
+
+    select:focus-visible {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgb(103 84 245 / 0.12);
+    }
+
+    .preview-top {
+      display: flex;
+      justify-content: flex-end;
+      padding: 7px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .size-select {
+      width: 118px;
+      height: 34px;
+      font-size: 11px;
+    }
+
+    .character-wrap {
+      display: grid;
+      min-height: 326px;
+      place-items: center;
+      padding: 8px 12px;
+      overflow: auto;
+      background: #fff;
+    }
+
+    .character {
+      display: inline-block;
+      min-width: 86px;
+      outline: none;
+      cursor: text;
+      user-select: all;
+      -webkit-user-select: all;
+    }
+
+    .character:focus-visible {
+      border-radius: 8px;
+      outline: 2px solid rgb(103 84 245 / 0.35);
+      outline-offset: 8px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 0.75fr;
+      gap: 6px;
+      padding: 7px;
+      border-top: 1px solid var(--line);
+    }
+
+    .action {
+      min-height: 36px;
+      padding: 7px 9px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .action:hover {
+      background: #f8f8fa;
+    }
+
+    .action:active {
+      transform: translateY(1px);
+    }
+
+    .action.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .action.primary:hover {
+      background: #5846ec;
+    }
+
+    .status {
+      height: 20px;
+      padding: 1px 8px 6px;
+      color: var(--muted);
+      font-size: 9px;
+      line-height: 13px;
+      text-align: center;
+    }
+
+    @supports (appearance: base-select) {
+      .wysiwyg-select,
+      .wysiwyg-select::picker(select) {
+        appearance: base-select;
+      }
+
+      .wysiwyg-select {
+        padding: 4px 9px;
+      }
+
+      .wysiwyg-select > button {
+        width: 100%;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: inherit;
+        text-align: left;
+      }
+
+      selectedcontent {
+        display: flex;
+        min-width: 0;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .wysiwyg-select::picker-icon {
+        color: #8b8f98;
+        transition: transform 140ms ease;
+      }
+
+      .wysiwyg-select:open::picker-icon {
+        transform: rotate(180deg);
+      }
+
+      .wysiwyg-select::picker(select) {
+        max-height: min(350px, 65vh);
+        margin-top: 4px;
+        padding: 5px;
+        overflow-y: auto;
+
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+
+        box-shadow:
+          0 12px 30px rgb(0 0 0 / 0.14),
+          0 2px 5px rgb(0 0 0 / 0.06);
+      }
+
+      .wysiwyg-select option {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+
+        min-height: 45px;
+        padding: 5px 8px;
+        border-radius: 8px;
+      }
+
+      .wysiwyg-select option:hover,
+      .wysiwyg-select option:focus {
+        background: #f6f5ff;
+      }
+
+      .wysiwyg-select option:checked {
+        background: var(--accent-soft);
+      }
+
+      .wysiwyg-select option::checkmark {
+        margin-left: auto;
+        color: var(--accent);
+      }
+
+      .opt-emoji {
+        display: grid;
+        flex: none;
+
+        width: 34px;
+        height: 34px;
+        place-items: center;
+
+        border-radius: 9px;
+        background: #f5f5f6;
+
+        font-family:
+          "Segoe UI Emoji",
+          "Apple Color Emoji",
+          "Noto Color Emoji",
+          sans-serif;
+        font-size: 23px;
+        line-height: 1;
+      }
+
+      selectedcontent .opt-emoji {
+        width: 29px;
+        height: 29px;
+        background: transparent;
+        font-size: 22px;
+      }
+
+      .opt-label {
+        min-width: 0;
+        overflow: hidden;
+
+        font-size: 12px;
+        font-weight: 650;
+
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .preset-emojis {
+        min-width: 112px;
+        flex: none;
+
+        font-family:
+          "Segoe UI Emoji",
+          "Apple Color Emoji",
+          "Noto Color Emoji",
+          sans-serif;
+        font-size: 17px;
+        letter-spacing: 1px;
+        white-space: nowrap;
+      }
+
+      selectedcontent .preset-emojis {
+        min-width: auto;
+        font-size: 16px;
+      }
+
+      .preset-select option {
+        min-height: 48px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      body {
+        padding: 5px;
+      }
+
+      .version-cloud {
+        justify-content: center;
+        margin-bottom: 8px;
+      }
+
+      .version-cloud-note,
+      .version-cloud-link {
+        flex: 1 1 220px;
+      }
+
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "preview"
+          "controls";
+        gap: 5px;
+      }
+
+      .preview {
+        position: static;
+      }
+
+      .controls,
+      .preview {
+        border-radius: 11px;
+      }
+
+      .character-wrap {
+        min-height: 245px;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+        padding: 7px;
+      }
+
+      .field + .field {
+        margin-top: 0;
+      }
+
+      .field:first-child {
+        grid-column: 1 / -1;
+      }
+
+      select {
+        height: 41px;
+      }
+    }
+
+    @media (max-width: 370px) {
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .field:first-child {
+        grid-column: auto;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .version-cloud-link,
+      .version-cloud-arrow {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <aside class="version-cloud" aria-label="Project versions">
+    <span class="version-cloud-note">
+      <span class="version-cloud-sparkle" aria-hidden="true">&#x1F9F8;</span>
+      <span><strong>Original doodle</strong><small>Built with ChatGPT Sol 5.6</small></span>
+    </span>
+    <a class="version-cloud-link" href="index.html">
+      <span class="version-cloud-emoji" aria-hidden="true">&#x2728;</span>
+      <span><strong>Float to the current version</strong><small>Built with GPT-6 Astra Medium</small></span>
+      <span class="version-cloud-arrow" aria-hidden="true">&#x2197;</span>
+    </a>
+  </aside>
+  <main class="app">
+    <section class="controls">
+      <div class="field">
+        <label class="field-label" for="preset">Preset</label>
+
+        <select
+          class="wysiwyg-select preset-select"
+          id="preset"
+        >
+          <option
+            value="classic"
+            data-label="Classic"
+            data-outfit="&#x1F9E2;|&#x1F97A;|&#x1F64F;|&#x1FA73;|&#x1FA70;"
+            selected
+          >
+            &#x1F9E2;&#x1F97A;&#x1F64F;&#x1FA73;&#x1FA70; Classic
+          </option>
+
+          <option
+            value="formal"
+            data-label="Formal"
+            data-outfit="&#x1F3A9;|&#x1F97A;|&#x1F64F;|&#x1F454;|&#x1F45E;"
+          >
+            &#x1F3A9;&#x1F97A;&#x1F64F;&#x1F454;&#x1F45E; Formal
+          </option>
+
+          <option
+            value="winter"
+            data-label="Winter"
+            data-outfit="&#x1F9E3;|&#x1F976;|&#x1F64F;|&#x1F9E5;|&#x1F97E;"
+          >
+            &#x1F9E3;&#x1F976;&#x1F64F;&#x1F9E5;&#x1F97E; Winter
+          </option>
+
+          <option
+            value="academic"
+            data-label="Academic"
+            data-outfit="&#x1F393;|&#x1F913;|&#x1F932;|&#x1F456;|&#x1F45E;"
+          >
+            &#x1F393;&#x1F913;&#x1F932;&#x1F456;&#x1F45E; Academic
+          </option>
+
+          <option
+            value="ceremonial"
+            data-label="Ceremonial"
+            data-outfit="&#x1F451;|&#x1F979;|&#x1FAF6;|&#x1F457;|&#x1F460;"
+          >
+            &#x1F451;&#x1F979;&#x1FAF6;&#x1F457;&#x1F460; Ceremonial
+          </option>
+
+          <option
+            value="worksite"
+            data-label="Worksite"
+            data-outfit="&#x26D1;&#xFE0F;|&#x1F62C;|&#x1F64F;|&#x1F9BA;|&#x1F97E;"
+          >
+            &#x26D1;&#xFE0F;&#x1F62C;&#x1F64F;&#x1F9BA;&#x1F97E; Worksite
+          </option>
+
+          <option
+            value="casual"
+            data-label="Casual"
+            data-outfit="&#x1F9E2;|&#x1F60E;|&#x1F91D;|&#x1F456;|&#x1F45F;"
+          >
+            &#x1F9E2;&#x1F60E;&#x1F91D;&#x1F456;&#x1F45F; Casual
+          </option>
+
+          <option
+            value="performance"
+            data-label="Performance"
+            data-outfit="&#x1F451;|&#x1F607;|&#x1F64F;|&#x1F457;|&#x1FA70;"
+          >
+            &#x1F451;&#x1F607;&#x1F64F;&#x1F457;&#x1FA70; Performance
+          </option>
+
+          <option
+            value="custom"
+            data-label="Custom"
+          >
+            &#x2728; Custom
+          </option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="head">Head</label>
+
+        <select
+          class="wysiwyg-select slot"
+          id="head"
+        >
+          <option
+            value=""
+            data-emoji="&#x2212;"
+            data-label="None"
+          >
+            &#x2212; None
+          </option>
+
+          <option
+            value="&#x1F9E2;"
+            data-emoji="&#x1F9E2;"
+            data-label="Cap"
+            selected
+          >
+            &#x1F9E2; Cap
+          </option>
+
+          <option
+            value="&#x1F452;"
+            data-emoji="&#x1F452;"
+            data-label="Sun hat"
+          >
+            &#x1F452; Sun hat
+          </option>
+
+          <option
+            value="&#x1F3A9;"
+            data-emoji="&#x1F3A9;"
+            data-label="Top hat"
+          >
+            &#x1F3A9; Top hat
+          </option>
+
+          <option
+            value="&#x1F393;"
+            data-emoji="&#x1F393;"
+            data-label="Graduation"
+          >
+            &#x1F393; Graduation
+          </option>
+
+          <option
+            value="&#x1F451;"
+            data-emoji="&#x1F451;"
+            data-label="Crown"
+          >
+            &#x1F451; Crown
+          </option>
+
+          <option
+            value="&#x26D1;&#xFE0F;"
+            data-emoji="&#x26D1;&#xFE0F;"
+            data-label="Safety helmet"
+          >
+            &#x26D1;&#xFE0F; Safety helmet
+          </option>
+
+          <option
+            value="&#x1FA96;"
+            data-emoji="&#x1FA96;"
+            data-label="Field helmet"
+          >
+            &#x1FA96; Field helmet
+          </option>
+
+          <option
+            value="&#x1F9E3;"
+            data-emoji="&#x1F9E3;"
+            data-label="Scarf"
+          >
+            &#x1F9E3; Scarf
+          </option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="face">Expression</label>
+
+        <select
+          class="wysiwyg-select slot"
+          id="face"
+        >
+          <option
+            value="&#x1F97A;"
+            data-emoji="&#x1F97A;"
+            data-label="Request"
+            selected
+          >
+            &#x1F97A; Request
+          </option>
+
+          <option
+            value="&#x1F979;"
+            data-emoji="&#x1F979;"
+            data-label="Appreciative"
+          >
+            &#x1F979; Appreciative
+          </option>
+
+          <option
+            value="&#x1F62D;"
+            data-emoji="&#x1F62D;"
+            data-label="Emotional"
+          >
+            &#x1F62D; Emotional
+          </option>
+
+          <option
+            value="&#x1F622;"
+            data-emoji="&#x1F622;"
+            data-label="Concerned"
+          >
+            &#x1F622; Concerned
+          </option>
+
+          <option
+            value="&#x1F605;"
+            data-emoji="&#x1F605;"
+            data-label="Relieved"
+          >
+            &#x1F605; Relieved
+          </option>
+
+          <option
+            value="&#x1F607;"
+            data-emoji="&#x1F607;"
+            data-label="Positive"
+          >
+            &#x1F607; Positive
+          </option>
+
+          <option
+            value="&#x1F913;"
+            data-emoji="&#x1F913;"
+            data-label="Studious"
+          >
+            &#x1F913; Studious
+          </option>
+
+          <option
+            value="&#x1F60E;"
+            data-emoji="&#x1F60E;"
+            data-label="Confident"
+          >
+            &#x1F60E; Confident
+          </option>
+
+          <option
+            value="&#x1F62C;"
+            data-emoji="&#x1F62C;"
+            data-label="Unsure"
+          >
+            &#x1F62C; Unsure
+          </option>
+
+          <option
+            value="&#x1F976;"
+            data-emoji="&#x1F976;"
+            data-label="Cold"
+          >
+            &#x1F976; Cold
+          </option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="hands">Gesture</label>
+
+        <select
+          class="wysiwyg-select slot"
+          id="hands"
+        >
+          <option
+            value=""
+            data-emoji="&#x2212;"
+            data-label="None"
+          >
+            &#x2212; None
+          </option>
+
+          <option
+            value="&#x1F64F;"
+            data-emoji="&#x1F64F;"
+            data-label="Request"
+            selected
+          >
+            &#x1F64F; Request
+          </option>
+
+          <option
+            value="&#x1F932;"
+            data-emoji="&#x1F932;"
+            data-label="Open palms"
+          >
+            &#x1F932; Open palms
+          </option>
+
+          <option
+            value="&#x1FAF6;"
+            data-emoji="&#x1FAF6;"
+            data-label="Appreciation"
+          >
+            &#x1FAF6; Appreciation
+          </option>
+
+          <option
+            value="&#x1F91D;"
+            data-emoji="&#x1F91D;"
+            data-label="Handshake"
+          >
+            &#x1F91D; Handshake
+          </option>
+
+          <option
+            value="&#x1F64C;"
+            data-emoji="&#x1F64C;"
+            data-label="Celebrate"
+          >
+            &#x1F64C; Celebrate
+          </option>
+
+          <option
+            value="&#x1F91E;"
+            data-emoji="&#x1F91E;"
+            data-label="Hopeful"
+          >
+            &#x1F91E; Hopeful
+          </option>
+
+          <option
+            value="&#x270C;&#xFE0F;"
+            data-emoji="&#x270C;&#xFE0F;"
+            data-label="Peace"
+          >
+            &#x270C;&#xFE0F; Peace
+          </option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="clothes">Clothing</label>
+
+        <select
+          class="wysiwyg-select slot"
+          id="clothes"
+        >
+          <option
+            value=""
+            data-emoji="&#x2212;"
+            data-label="None"
+          >
+            &#x2212; None
+          </option>
+
+          <option
+            value="&#x1FA73;"
+            data-emoji="&#x1FA73;"
+            data-label="Shorts"
+            selected
+          >
+            &#x1FA73; Shorts
+          </option>
+
+          <option
+            value="&#x1F456;"
+            data-emoji="&#x1F456;"
+            data-label="Jeans"
+          >
+            &#x1F456; Jeans
+          </option>
+
+          <option
+            value="&#x1F455;"
+            data-emoji="&#x1F455;"
+            data-label="T-shirt"
+          >
+            &#x1F455; T-shirt
+          </option>
+
+          <option
+            value="&#x1F454;"
+            data-emoji="&#x1F454;"
+            data-label="Business"
+          >
+            &#x1F454; Business
+          </option>
+
+          <option
+            value="&#x1F9E5;"
+            data-emoji="&#x1F9E5;"
+            data-label="Coat"
+          >
+            &#x1F9E5; Coat
+          </option>
+
+          <option
+            value="&#x1F9BA;"
+            data-emoji="&#x1F9BA;"
+            data-label="Safety vest"
+          >
+            &#x1F9BA; Safety vest
+          </option>
+
+          <option
+            value="&#x1F97C;"
+            data-emoji="&#x1F97C;"
+            data-label="Lab coat"
+          >
+            &#x1F97C; Lab coat
+          </option>
+
+          <option
+            value="&#x1F457;"
+            data-emoji="&#x1F457;"
+            data-label="Dress"
+          >
+            &#x1F457; Dress
+          </option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="shoes">Footwear</label>
+
+        <select
+          class="wysiwyg-select slot"
+          id="shoes"
+        >
+          <option
+            value=""
+            data-emoji="&#x2212;"
+            data-label="None"
+          >
+            &#x2212; None
+          </option>
+
+          <option
+            value="&#x1FA70;"
+            data-emoji="&#x1FA70;"
+            data-label="Ballet shoes"
+            selected
+          >
+            &#x1FA70; Ballet shoes
+          </option>
+
+          <option
+            value="&#x1F45F;"
+            data-emoji="&#x1F45F;"
+            data-label="Sneakers"
+          >
+            &#x1F45F; Sneakers
+          </option>
+
+          <option
+            value="&#x1F97E;"
+            data-emoji="&#x1F97E;"
+            data-label="Boots"
+          >
+            &#x1F97E; Boots
+          </option>
+
+          <option
+            value="&#x1F45E;"
+            data-emoji="&#x1F45E;"
+            data-label="Formal shoes"
+          >
+            &#x1F45E; Formal shoes
+          </option>
+
+          <option
+            value="&#x1F460;"
+            data-emoji="&#x1F460;"
+            data-label="Heels"
+          >
+            &#x1F460; Heels
+          </option>
+
+          <option
+            value="&#x1F461;"
+            data-emoji="&#x1F461;"
+            data-label="Sandals"
+          >
+            &#x1F461; Sandals
+          </option>
+
+          <option
+            value="&#x1F97F;"
+            data-emoji="&#x1F97F;"
+            data-label="Flats"
+          >
+            &#x1F97F; Flats
+          </option>
+
+          <option
+            value="&#x1FA74;"
+            data-emoji="&#x1FA74;"
+            data-label="Flip-flops"
+          >
+            &#x1FA74; Flip-flops
+          </option>
+        </select>
+      </div>
+    </section>
+
+    <section class="preview">
+      <div class="preview-top">
+        <select
+          class="size-select"
+          id="size"
+          aria-label="Emoji size"
+        >
+          <option value="32">32 pt</option>
+          <option value="38">38 pt</option>
+          <option value="44" selected>44 pt</option>
+          <option value="50">50 pt</option>
+          <option value="56">56 pt</option>
+        </select>
+      </div>
+
+      <div class="character-wrap">
+        <div
+          class="character"
+          id="character"
+          tabindex="0"
+          aria-label="Emoji character. Select and copy directly if needed."
+          title="Select and copy this character directly."
+        ></div>
+      </div>
+
+      <div class="actions">
+        <button
+          class="action primary"
+          id="copy"
+          type="button"
+        >
+          Copy
+        </button>
+
+        <button
+          class="action"
+          id="select"
+          type="button"
+        >
+          Select
+        </button>
+      </div>
+
+      <div
+        class="status"
+        id="status"
+        aria-live="polite"
+      ></div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const slotIds = [
+        "head",
+        "face",
+        "hands",
+        "clothes",
+        "shoes"
+      ];
+
+      const slots = slotIds.map(
+        id => document.getElementById(id)
+      );
+
+      const preset = document.getElementById("preset");
+      const size = document.getElementById("size");
+      const character = document.getElementById("character");
+      const copyButton = document.getElementById("copy");
+      const selectButton = document.getElementById("select");
+      const status = document.getElementById("status");
+
+      let statusTimer;
+
+      const richSelects =
+        CSS.supports?.("appearance", "base-select") === true;
+
+      function enhanceSelect(select) {
+        if (!richSelects) {
+          return;
+        }
+
+        const button = document.createElement("button");
+        const selectedContent =
+          document.createElement("selectedcontent");
+
+        button.type = "button";
+        button.append(selectedContent);
+        select.prepend(button);
+
+        for (const option of select.options) {
+          if (option.dataset.outfit) {
+            const emojis = document.createElement("span");
+            const label = document.createElement("span");
+
+            emojis.className = "preset-emojis";
+            emojis.textContent =
+              option.dataset.outfit
+                .split("|")
+                .filter(Boolean)
+                .join(" ");
+
+            label.className = "opt-label";
+            label.textContent =
+              option.dataset.label || option.textContent;
+
+            option.replaceChildren(emojis, label);
+            continue;
+          }
+
+          if (option.dataset.emoji) {
+            const emoji = document.createElement("span");
+            const label = document.createElement("span");
+
+            emoji.className = "opt-emoji";
+            emoji.textContent = option.dataset.emoji;
+
+            label.className = "opt-label";
+            label.textContent =
+              option.dataset.label || option.textContent;
+
+            option.replaceChildren(emoji, label);
+            continue;
+          }
+
+          if (option.dataset.label) {
+            const emoji = document.createElement("span");
+            const label = document.createElement("span");
+
+            emoji.className = "opt-emoji";
+            emoji.innerHTML = "&#x2728;";
+
+            label.className = "opt-label";
+            label.textContent = option.dataset.label;
+
+            option.replaceChildren(emoji, label);
+          }
+        }
+      }
+
+      document
+        .querySelectorAll(".wysiwyg-select")
+        .forEach(enhanceSelect);
+
+      function values() {
+        return slots.map(select => select.value);
+      }
+
+      function visibleValues() {
+        return values().filter(Boolean);
+      }
+
+      function pointSize() {
+        return Number(size.value) || 44;
+      }
+
+      function lineHeight() {
+        return Math.round(pointSize() * 1.12);
+      }
+
+      function lineStyle() {
+        return [
+          "margin:0",
+          "padding:0",
+          `min-height:${lineHeight()}pt`,
+          "font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji','Segoe UI',sans-serif",
+          `font-size:${pointSize()}pt`,
+          "font-weight:400",
+          `line-height:${lineHeight()}pt`,
+          "mso-line-height-rule:exactly",
+          "text-align:center",
+          "white-space:nowrap"
+        ].join(";");
+      }
+
+      function wrapperStyle() {
+        return [
+          "display:inline-block",
+          "margin:0",
+          "padding:0",
+          "font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji','Segoe UI',sans-serif",
+          "text-align:center"
+        ].join(";");
+      }
+
+      function render() {
+        character.replaceChildren();
+
+        character.setAttribute(
+          "style",
+          wrapperStyle()
+        );
+
+        for (const emoji of visibleValues()) {
+          const line = document.createElement("div");
+
+          line.setAttribute("style", lineStyle());
+          line.textContent = emoji;
+
+          character.append(line);
+        }
+
+        syncPreset();
+      }
+
+      function syncPreset() {
+        const current = values().join("|");
+
+        const matching = Array.from(preset.options).find(
+          option =>
+            option.dataset.outfit === current
+        );
+
+        preset.value =
+          matching ? matching.value : "custom";
+      }
+
+      function applyPreset() {
+        const option =
+          preset.options[preset.selectedIndex];
+
+        if (!option?.dataset.outfit) {
+          return;
+        }
+
+        const outfit =
+          option.dataset.outfit.split("|");
+
+        slots.forEach((select, index) => {
+          select.value = outfit[index] ?? "";
+        });
+
+        render();
+      }
+
+      function plainText() {
+        return visibleValues().join("\n");
+      }
+
+      function richHtml() {
+        const lines = visibleValues()
+          .map(
+            emoji =>
+              `<div style="${lineStyle()}">${escapeHtml(emoji)}</div>`
+          )
+          .join("");
+
+        return (
+          `<div style="${wrapperStyle()}">` +
+          lines +
+          "</div>"
+        );
+      }
+
+      function escapeHtml(value) {
+        return value
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function selectCharacter() {
+        character.focus();
+
+        const range = document.createRange();
+        range.selectNodeContents(character);
+
+        const selection = window.getSelection();
+
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+
+      async function copyCharacter() {
+        if (!visibleValues().length) {
+          showStatus("Nothing to copy");
+          return;
+        }
+
+        try {
+          if (
+            navigator.clipboard?.write &&
+            window.ClipboardItem
+          ) {
+            const item = new ClipboardItem({
+              "text/html": new Blob(
+                [richHtml()],
+                { type: "text/html" }
+              ),
+
+              "text/plain": new Blob(
+                [plainText()],
+                { type: "text/plain" }
+              )
+            });
+
+            await navigator.clipboard.write([item]);
+
+            showStatus("Copied");
+            return;
+          }
+        } catch {
+          /* Use the selection fallback below. */
+        }
+
+        selectCharacter();
+
+        try {
+          if (document.execCommand("copy")) {
+            showStatus("Copied");
+            return;
+          }
+        } catch {
+          /* Leave the character selected for manual copying. */
+        }
+
+        showStatus("Selected - press Ctrl+C or Cmd+C");
+      }
+
+      function showStatus(message) {
+        clearTimeout(statusTimer);
+
+        status.textContent = message;
+
+        statusTimer = setTimeout(() => {
+          status.textContent = "";
+        }, 2200);
+      }
+
+      preset.addEventListener(
+        "change",
+        applyPreset
+      );
+
+      for (const select of slots) {
+        select.addEventListener(
+          "change",
+          render
+        );
+      }
+
+      size.addEventListener(
+        "change",
+        render
+      );
+
+      copyButton.addEventListener(
+        "click",
+        copyCharacter
+      );
+
+      selectButton.addEventListener(
+        "click",
+        () => {
+          selectCharacter();
+          showStatus("Selected - copy normally");
+        }
+      );
+
+      character.addEventListener(
+        "dblclick",
+        selectCharacter
+      );
+
+      render();
+    })();
+  </script>
+</body>
+</html>
