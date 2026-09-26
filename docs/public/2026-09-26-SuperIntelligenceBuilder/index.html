@@ -124,6 +124,9 @@
                 align-items: center;
             }
             .page-tabs a {
+                display: inline-flex;
+                align-items: center;
+                min-height: 24px;
                 text-decoration: none;
                 padding: 3px 0;
                 border-bottom: 2px solid transparent;
@@ -229,7 +232,8 @@
                 padding-top: 32px;
             }
             h1,
-            h2 {
+            h2,
+            h3 {
                 color: var(--ink);
                 font-weight: 550;
                 line-height: 1.25;
@@ -242,6 +246,12 @@
             }
             h2 {
                 font-size: 23px;
+            }
+            h3 {
+                font-size: 17px;
+                letter-spacing: -0.015em;
+                margin-top: 24px;
+                margin-bottom: 9px;
             }
             h2 .section-code {
                 display: inline-block;
@@ -321,6 +331,10 @@
                 letter-spacing: 0.04em;
             }
             .copy {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 24px;
                 border: 0;
                 background: none;
                 font: 10px var(--mono);
@@ -439,14 +453,14 @@
                 .rail-note {
                     display: none;
                 }
-                nav {
+                .rail nav {
                     display: grid;
                     grid-template-columns: 1fr 1fr;
                     gap: 2px 10px;
                     padding-bottom: 14px;
                     border-bottom: 1px solid var(--line);
                 }
-                nav a {
+                .rail nav a {
                     padding: 5px 3px;
                     font-size: 11px;
                     grid-template-columns: 28px 1fr;
@@ -532,12 +546,10 @@
         <a class="skip" href="#content">Skip to documentation</a>
         <header class="masthead">
             <strong>SIB / source manual</strong>
-            <div class="page-tabs" aria-label="Pages">
+            <nav class="page-tabs" aria-label="Pages">
                 <a href="index.html" aria-current="page">Manual</a
-                ><a href="examples/">Examples</a
-                ><a href="guardrails.html">Guardrails</a
-                ><a href="about.html">About</a>
-            </div>
+                ><a href="examples/">Examples</a><a href="about.html">About</a>
+            </nav>
             <span>Version 1.0 / .NET 10 / C# 14</span>
         </header>
         <div class="layout">
@@ -560,11 +572,11 @@
                     ><a href="#e"><span>E01</span>How it works</a
                     ><a href="#f"><span>F00</span>Write useful instructions</a
                     ><a href="#g"><span>G00</span>Configure a run</a
-                    ><a href="#h"><span>H02</span>Permissions and completion</a
+                    ><a href="#h"><span>H02</span>Execution and completion</a
                     ><a href="#i"><span>I01</span>Diagnose failures</a
-                    ><a href="#j"><span>J00</span>Harness catalog</a
+                    ><a href="#j"><span>J00</span>Other coding tools</a
                     ><a href="#k"><span>K00</span>Limits and verification</a
-                    ><a href="#l"><span>L01</span>Sources and page design</a>
+                    ><a href="#l"><span>L01</span>Sources</a>
                 </nav>
                 <p id="empty" class="filter-empty" hidden>
                     No matching section.
@@ -574,7 +586,6 @@
                         >Single-file source</a
                     ><a href="readme.md">Project README</a
                     ><a href="examples/">Runnable examples</a
-                    ><a href="guardrails.html">Confirmation guardrail</a
                     ><a href="VALIDATION.md">Validation record</a
                     ><a href="editorial/line-review.md"
                         >135-line editorial review</a
@@ -591,8 +602,8 @@
                         One real method. An imaginary API. A real coding agent.
                     </p>
                     <p class="lede">
-                        A single C# file that turns a fluent chain into
-                        instructions for an installed coding agent.
+                        A single C# file that sends one source-defined task to
+                        an installed command-line coding agent.
                     </p>
                     <p class="specs">
                         No NuGet packages. .NET 10. C# 14. Three built-in
@@ -616,8 +627,12 @@
     .<span class="fake">WithConciseOutput</span>();</code></pre>
                     </div>
                     <p>
-                        Those last two methods do not exist. The agent reads
-                        their meaning from this source.
+                        Only <code>WithFile</code> is implemented. It gives the
+                        coding agent the exact source statement; the agent
+                        interprets the invented method names and literal
+                        arguments as instructions. When C# execution resumes,
+                        the returned dynamic object accepts those invented calls
+                        without performing the named work again.
                     </p>
                 </section>
                 <section id="b" data-title="Run the sample">
@@ -627,10 +642,15 @@
                         <a
                             href="https://dotnet.microsoft.com/download/dotnet/10.0"
                             >.NET 10 SDK</a
-                        >. To execute the task, also install and authenticate
-                        one supported agent.
+                        >. A dry run needs only the SDK. A live run also needs
+                        one installed and authenticated coding agent.
                     </p>
-                    <p>Open a terminal in the extracted project folder.</p>
+                    <p>
+                        Open a terminal in the complete project checkout, in the
+                        folder containing
+                        <code>SuperIntelligenceBuilder.csproj</code>.
+                    </p>
+                    <h3>Build and inspect</h3>
                     <div class="codebox">
                         <div class="codebar">
                             <span>sh</span
@@ -643,26 +663,54 @@
                             </button>
                         </div>
                         <pre tabindex="0"><code>dotnet build
-dotnet run
-dotnet run -- --yes,please,proceed</code></pre>
+dotnet run</code></pre>
                     </div>
                     <p>
-                        The default dry run selects the same harness as a live
-                        run and prints the exact fluent statement, but does not
-                        probe, launch, create, or edit anything.
+                        The default is a dry run. It reads the caller and
+                        instruction file, identifies the coding-agent executable
+                        it would use when one is discoverable, and prints the
+                        exact fluent statement. It does not test the
+                        agent&#x27;s authentication or CLI compatibility, launch
+                        a process, create a file, or edit the workspace.
                     </p>
+                    <h3>Permit a live run</h3>
+                    <div class="codebox">
+                        <div class="codebar">
+                            <span>sh</span
+                            ><button
+                                type="button"
+                                class="copy"
+                                aria-label="Copy live-run command"
+                            >
+                                Copy
+                            </button>
+                        </div>
+                        <pre
+                            tabindex="0"
+                        ><code>dotnet run -- --yes,please,proceed</code></pre>
+                    </div>
                     <p>
-                        The real run asks the agent to write
+                        This explicit flag permits the live execution path. The
+                        sample asks the coding agent to write
                         <code>generated/hello.txt</code> with Hello, super
                         intelligence! followed by a newline.
+                    </p>
+                    <p>
+                        If <code>AGENTS.md</code> already exists, there is a
+                        second gate before agent discovery: type exactly
+                        <code>yes, please proceed</code> to continue or
+                        <code>no</code> to stop. The comma-bearing CLI flag and
+                        the spaced terminal reply are different inputs. See
+                        <a href="#h">Execution and completion</a> for the full
+                        state table.
                     </p>
                     <p>
                         A successful run prints the agent summary and the path
                         to its JSON completion report.
                     </p>
                     <p>
-                        If no agent is installed, dry-run output says so. An
-                        explicitly enabled live run returns
+                        If no coding agent is installed, dry-run output says so.
+                        A permitted live run returns
                         <code>AgentNotFound</code> and exits with code 3.
                     </p>
                 </section>
@@ -670,7 +718,10 @@ dotnet run -- --yes,please,proceed</code></pre>
                     <h2>
                         <span class="section-code">C00</span>Install an agent
                     </h2>
-                    <p>Choose one adapter. You do not need all three.</p>
+                    <p>
+                        Install one supported command-line coding agent. You do
+                        not need all three; the builder contains the adapters.
+                    </p>
                     <div
                         class="table-wrap"
                         role="region"
@@ -693,8 +744,12 @@ dotnet run -- --yes,please,proceed</code></pre>
                                             >Codex</a
                                         >
                                     </th>
-                                    <td>npm install -g @openai/codex</td>
-                                    <td>Run codex and sign in.</td>
+                                    <td>
+                                        <code
+                                            >npm install -g @openai/codex</code
+                                        >
+                                    </td>
+                                    <td>Run <code>codex</code> and sign in.</td>
                                 </tr>
                                 <tr>
                                     <th scope="row">
@@ -703,8 +758,13 @@ dotnet run -- --yes,please,proceed</code></pre>
                                             >Claude Code</a
                                         >
                                     </th>
-                                    <td>Use the official native installer</td>
-                                    <td>Run claude and sign in.</td>
+                                    <td>
+                                        Use the linked official native
+                                        installer.
+                                    </td>
+                                    <td>
+                                        Run <code>claude</code> and sign in.
+                                    </td>
                                 </tr>
                                 <tr>
                                     <th scope="row">
@@ -713,10 +773,15 @@ dotnet run -- --yes,please,proceed</code></pre>
                                             >GitHub Copilot CLI</a
                                         >
                                     </th>
-                                    <td>npm install -g @github/copilot</td>
                                     <td>
-                                        Run copilot and sign in; npm
-                                        installation requires Node.js 22+.
+                                        With Node.js 22 or later:
+                                        <code
+                                            >npm install -g
+                                            @github/copilot</code
+                                        >
+                                    </td>
+                                    <td>
+                                        Run <code>copilot</code> and sign in.
                                     </td>
                                 </tr>
                             </tbody>
@@ -728,8 +793,8 @@ dotnet run -- --yes,please,proceed</code></pre>
                         options.
                     </p>
                     <p>
-                        The builder never installs software, logs in, or changes
-                        your selected agent after a task starts.
+                        The builder never installs software, signs in, or
+                        switches to another coding agent after a task starts.
                     </p>
                 </section>
                 <section id="d" data-title="Copy the dependency">
@@ -737,9 +802,9 @@ dotnet run -- --yes,please,proceed</code></pre>
                         <span class="section-code">D00</span>Copy the dependency
                     </h2>
                     <p>
-                        Copy only <code>SuperIntelligenceBuilder.cs</code> into
-                        an SDK-style .NET 10 project; it is included
-                        automatically.
+                        To use the builder in another SDK-style .NET 10 project,
+                        copy <code>SuperIntelligenceBuilder.cs</code> into that
+                        project. The SDK includes the source file automatically.
                     </p>
                     <p>
                         The sample&#x27;s <code>Program.cs</code>, project file
@@ -747,57 +812,70 @@ dotnet run -- --yes,please,proceed</code></pre>
                         dependencies.
                     </p>
                     <p>
-                        Keep the file&#x27;s opening comment: it contains the
-                        portable installation guide, API contract and harness
-                        catalog.
+                        Keep the file&#x27;s opening comment. It is the portable
+                        offline reference for installation, behavior, limits,
+                        and supported coding agents.
                     </p>
                     <p>
-                        Run from the original development checkout.
-                        <code>CallerFilePath</code> records where the caller was
-                        compiled.
-                    </p>
-                    <p>
-                        Rebuild after moving or changing the caller; a deployed
-                        binary does not contain its source file.
+                        Run from the original source checkout.
+                        <code>CallerFilePath</code> stores the caller&#x27;s
+                        path at compile time, and the builder reads that source
+                        file at runtime. The original source must still exist.
+                        Rebuild after moving it; a deployed binary alone cannot
+                        reconstruct the fluent statement.
                     </p>
                 </section>
                 <section id="e" data-title="How it works">
                     <h2><span class="section-code">E01</span>How it works</h2>
+                    <ol>
+                        <li>
+                            <code>WithFile</code> locates the caller&#x27;s
+                            source, resolves the workspace and Markdown
+                            instruction path, rejects unsafe paths, and reads
+                            both files.
+                        </li>
+                        <li>
+                            Unless execution was explicitly permitted, it
+                            identifies a candidate coding-agent executable and
+                            returns the dry-run plan. No child process or output
+                            file is created.
+                        </li>
+                        <li>
+                            On the live path, an existing instruction file
+                            requires the exact terminal reply before agent
+                            discovery continues.
+                        </li>
+                        <li>
+                            The builder discovers the selected coding agent,
+                            probes its version and required CLI switches, and
+                            confirms the caller source has not changed.
+                        </li>
+                        <li>
+                            It acquires the workspace lock and atomically
+                            creates a missing instruction file. The builder
+                            itself never truncates an existing file, although
+                            the fluent task may explicitly ask the coding agent
+                            to replace it.
+                        </li>
+                        <li>
+                            It sends the coding agent the call-site path, line,
+                            member, source snapshot, instruction contents,
+                            permissions, and a unique run ID over UTF-8 standard
+                            input.
+                        </li>
+                        <li>
+                            The builder reports completion only when the child
+                            process exits with code 0 and writes a valid
+                            run-specific report whose status is
+                            <code>completed</code>.
+                        </li>
+                    </ol>
                     <p>
-                        <code>WithFile</code> validates the call and defaults to
-                        a side-effect-free plan before the rest of the chain
-                        executes.
-                    </p>
-                    <p>
-                        The dry run reads the source and instruction file,
-                        applies normal harness discovery, and prints the exact
-                        statement without probing or launching the harness.
-                    </p>
-                    <p>
-                        Only <code>Options.Proceed = true</code> enables the
-                        live path, which checks CLI switches and takes the
-                        workspace lock.
-                    </p>
-                    <p>
-                        It creates the requested Markdown instruction file if
-                        missing. The runner preserves an existing file; the DSL
-                        can explicitly ask the agent to edit it.
-                    </p>
-                    <p>
-                        It sends the agent the caller path, line, member, source
-                        snapshot, instruction contents and a unique run ID.
-                    </p>
-                    <p>
-                        The prompt requires the agent to read the real source
-                        and interpret only the chain at that call site.
-                    </p>
-                    <p>
-                        A real success requires exit code 0 and a valid report
-                        marked completed for that run.
-                    </p>
-                    <p>
-                        The returned dynamic object accepts the made-up calls
-                        and returns itself.
+                        The location of <code>WithFile</code> is the call site.
+                        The coding agent interprets only the fluent statement at
+                        that location. After <code>WithFile</code> returns, the
+                        dynamic result accepts the invented method and property
+                        calls without performing the named work a second time.
                     </p>
                 </section>
                 <section id="f" data-title="Write useful instructions">
@@ -807,7 +885,8 @@ dotnet run -- --yes,please,proceed</code></pre>
                     </h2>
                     <p>
                         Use legal C# identifiers, literal arguments and an
-                        explicit output path.
+                        explicit output path. The invented method names are
+                        instructions, not members of a fixed API.
                     </p>
                     <div class="codebox">
                         <div class="codebar">
@@ -829,25 +908,29 @@ dotnet run -- --yes,please,proceed</code></pre>
     .DoNotModifySourceCode();</code></pre>
                     </div>
                     <p>
-                        Use precise requests. The wrapper cannot make an
+                        Use precise requests. The builder cannot make an
                         ambiguous instruction deterministic.
                     </p>
                     <p>
                         Do not pass runtime secrets, computed values or
-                        side-effecting expressions.
+                        side-effecting expressions. The coding agent receives
+                        source text, not the runtime values those expressions
+                        might produce.
                     </p>
                     <p>
-                        C# still evaluates method arguments after the agent has
-                        finished.
+                        Ordinary C# argument expressions still execute locally
+                        after <code>WithFile</code> returns. An argument that
+                        writes a file, calls a service, or reads a secret would
+                        still perform that action even though its surrounding
+                        fluent method is invented.
                     </p>
                     <p>
-                        Unknown methods and property reads are swallowed; real
+                        The returned dynamic object accepts unknown method and
+                        property calls without performing their names. Real
                         object members retain their normal behavior.
-                    </p>
-                    <p>
-                        <code>Execution</code> is reserved for the structured
-                        result. Awaiting the sink and arithmetic on it are
-                        unsupported.
+                        <code>Execution</code> returns the structured run
+                        result; awaiting the dynamic object or using arithmetic
+                        on it is unsupported.
                     </p>
                 </section>
                 <section id="g" data-title="Configure a run">
@@ -867,14 +950,13 @@ dotnet run -- --yes,please,proceed</code></pre>
                         </div>
                         <pre
                             tabindex="0"
-                        ><code><span class="kw">using</span> <span class="kw">var</span> cancel = <span class="kw">new</span> System.Threading.CancellationTokenSource();
-<span class="kw">var</span> options = <span class="kw">new</span> SuperIntelligenceBuilder.Options
+                        ><code><span class="kw">var</span> options = <span class="kw">new</span> SuperIntelligenceBuilder.Options
 {
     Agent = SuperIntelligenceBuilder.AgentKind.Codex,
     Proceed = true,
     Timeout = System.TimeSpan.FromMinutes(5)
 };
-<span class="kw">dynamic</span> task = SuperIntelligenceBuilder.<span class="real">WithFile</span>(<span class="str">&quot;AGENTS.md&quot;</span>, options, cancel.Token)
+<span class="kw">dynamic</span> task = SuperIntelligenceBuilder.<span class="real">WithFile</span>(<span class="str">&quot;AGENTS.md&quot;</span>, options)
     .<span class="fake">CreateOrReplaceUtf8File</span>(<span class="str">&quot;generated/note.txt&quot;</span>, <span class="str">&quot;Done.\n&quot;</span>);
 SuperIntelligenceBuilder.RunResult result = task.Execution;
 System.Console.WriteLine(result.Summary);</code></pre>
@@ -896,9 +978,11 @@ System.Console.WriteLine(result.Summary);</code></pre>
                                 <tr>
                                     <th scope="row"><code>Agent</code></th>
                                     <td>
-                                        Explicit adapter; otherwise
+                                        Selects an adapter explicitly. Without
+                                        it, the builder checks
                                         <code>SUPER_INTELLIGENCE_AGENT</code>,
-                                        then Codex, Claude, Copilot discovery.
+                                        then discovers the first available CLI
+                                        in Codex, Claude, Copilot order.
                                     </td>
                                 </tr>
                                 <tr>
@@ -906,9 +990,10 @@ System.Console.WriteLine(result.Summary);</code></pre>
                                         <code>ExecutablePath</code>
                                     </th>
                                     <td>
-                                        Absolute executable or JS entry file;
-                                        requires an explicit adapter.
-                                        Environment:
+                                        Absolute executable or JavaScript entry
+                                        file. An explicit <code>Agent</code> is
+                                        required because its adapter determines
+                                        the CLI arguments. Environment:
                                         <code
                                             >SUPER_INTELLIGENCE_EXECUTABLE</code
                                         >.
@@ -919,25 +1004,29 @@ System.Console.WriteLine(result.Summary);</code></pre>
                                         <code>WorkingDirectory</code>
                                     </th>
                                     <td>
-                                        Defaults to the nearest
-                                        project/repository marker above the
-                                        caller; source and instructions must
-                                        remain inside it.
+                                        Defaults to the nearest ancestor with a
+                                        project, solution,
+                                        <code>global.json</code>, or Git marker.
+                                        Source and instruction paths must stay
+                                        inside that workspace.
                                     </td>
                                 </tr>
                                 <tr>
                                     <th scope="row"><code>Model</code></th>
                                     <td>
-                                        Provider-supported model ID; otherwise
+                                        Model identifier supported by the
+                                        selected coding agent. Otherwise uses
                                         <code>SUPER_INTELLIGENCE_MODEL</code> or
-                                        the CLI&#x27;s own default.
+                                        the CLI&#x27;s default.
                                     </td>
                                 </tr>
                                 <tr>
                                     <th scope="row"><code>Timeout</code></th>
                                     <td>
-                                        Task deadline, 10 minutes by default;
-                                        allowed range is 1 millisecond to 1 day.
+                                        Coding-agent task deadline, 10 minutes
+                                        by default. It does not time the
+                                        interactive confirmation. Allowed range:
+                                        1 millisecond to 1 day.
                                     </td>
                                 </tr>
                                 <tr>
@@ -945,17 +1034,20 @@ System.Console.WriteLine(result.Summary);</code></pre>
                                         <code>ProbeTimeout</code>
                                     </th>
                                     <td>
-                                        Deadline per version/help probe, 15
-                                        seconds by default; same allowed range.
+                                        Deadline for each version/help probe, 15
+                                        seconds by default. Allowed range: 1
+                                        millisecond to 1 day.
                                     </td>
                                 </tr>
                                 <tr>
                                     <th scope="row"><code>Proceed</code></th>
                                     <td>
                                         Defaults to <code>false</code>. Only
-                                        <code>true</code> permits CLI probes,
-                                        file creation, or an agent launch. The
-                                        sample maps
+                                        <code>true</code> permits the live path,
+                                        including probes, file creation, and an
+                                        agent launch. It does not bypass the
+                                        existing-file confirmation. The sample
+                                        maps
                                         <code>--yes,please,proceed</code> to
                                         this option.
                                     </td>
@@ -963,73 +1055,194 @@ System.Console.WriteLine(result.Summary);</code></pre>
                                 <tr>
                                     <th scope="row"><code>Preview</code></th>
                                     <td>
-                                        Explicitly force the default dry-run
-                                        behavior even when
-                                        <code>Proceed</code> is true.
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">
-                                        <code>CancellationToken</code>
-                                    </th>
-                                    <td>
-                                        Pass it to <code>WithFile</code>; the
-                                        sample connects Ctrl+C to cancellation.
+                                        Forces dry-run behavior and takes
+                                        priority over <code>Proceed</code>.
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                     <p>
-                        Windows npm command shims are resolved through the
-                        installed package manifest and node.exe; no command
-                        shell is used.
+                        <code>CancellationToken</code> is a
+                        <code>WithFile</code> argument rather than an option.
+                        The root sample connects Ctrl+C to that token; library
+                        callers choose their own cancellation source.
                     </p>
                     <p>
-                        Only absolute PATH entries are searched. Aliases, shell
-                        functions, relative PATH entries and nonstandard Windows
-                        shims are not supported.
+                        Windows npm command shims are resolved through the
+                        installed package manifest and <code>node.exe</code>; no
+                        command shell is used.
+                    </p>
+                    <p>
+                        Only absolute <code>PATH</code> entries are searched.
+                        Aliases, shell functions, relative entries, and
+                        nonstandard Windows shims are not supported. Set an
+                        explicit executable path when normal discovery cannot
+                        see the installation.
                     </p>
                 </section>
-                <section id="h" data-title="Permissions and completion">
+                <section id="h" data-title="Execution and completion">
                     <h2>
-                        <span class="section-code">H02</span>Permissions and
+                        <span class="section-code">H02</span>Execution and
                         completion
                     </h2>
+                    <h3>Two gates before an agent can run</h3>
                     <p>
-                        Codex uses workspace-write with approval set to never
-                        and sandbox command networking disabled.
+                        A live run first requires <code>Proceed=true</code>. The
+                        supplied command-line programs set it only for the exact
+                        flag <code>--yes,please,proceed</code>. If the Markdown
+                        instruction file already exists, the terminal then asks
+                        for one exact reply before agent discovery.
                     </p>
+                    <div class="codebox">
+                        <div class="codebar"><span>terminal reply</span></div>
+                        <pre
+                            tabindex="0"
+                        ><code>To continue exactly: yes, please proceed
+To stop exactly:     no</code></pre>
+                    </div>
                     <p>
-                        Claude is limited to Read, Glob, Grep, Edit and Write
-                        tools and explicitly denies MCP tools. The adapter also
-                        requests empty MCP configuration; managed policy can
-                        take precedence.
+                        <code>y</code>, <code>yes</code>, capitalization
+                        changes, extra whitespace, and other approximations do
+                        not continue. End-of-input fails closed with
+                        <code>ConfirmationRequired</code>. The dry run never
+                        asks for this reply.
                     </p>
+                    <div
+                        class="table-wrap"
+                        role="region"
+                        aria-label="Execution state reference"
+                        tabindex="0"
+                    >
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">State</th>
+                                    <th scope="col">Result</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row">Default dry run</th>
+                                    <td>
+                                        Reads and reports the plan; no probe,
+                                        launch, file creation, or edit occurs.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">
+                                        Live run, missing instruction file
+                                    </th>
+                                    <td>
+                                        Continues after the execution flag and
+                                        creates the missing Markdown file
+                                        atomically after preflight checks.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">
+                                        Live run, existing instruction file
+                                    </th>
+                                    <td>
+                                        Waits for the exact interactive reply
+                                        before discovering or probing an agent.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Reply <code>no</code></th>
+                                    <td>
+                                        Returns a declined result without an
+                                        agent launch or new run report.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">End-of-input</th>
+                                    <td>
+                                        Fails closed with
+                                        <code>ConfirmationRequired</code>; no
+                                        agent is launched.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                     <p>
-                        Copilot receives a file-tool allowlist, read/write
-                        permissions, shell/URL denials and disabled built-in MCP
-                        servers.
+                        Approval permits this one run to begin and acknowledges
+                        that the source-defined task may amend the instruction
+                        file and other workspace files. It does not approve
+                        every eventual edit, provide rollback, or replace review
+                        of the resulting diff and validation evidence.
                     </p>
+                    <h3>Coding-agent permissions</h3>
+                    <div
+                        class="table-wrap"
+                        role="region"
+                        aria-label="Coding agent permissions"
+                        tabindex="0"
+                    >
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Coding agent</th>
+                                    <th scope="col">Requested permissions</th>
+                                    <th scope="col">Consequence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row">Codex</th>
+                                    <td>
+                                        Workspace-write sandbox, approval set to
+                                        never, command networking disabled.
+                                    </td>
+                                    <td>
+                                        May use local commands within the
+                                        coding-agent sandbox.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Claude Code</th>
+                                    <td>
+                                        Read, Glob, Grep, Edit, and Write only;
+                                        empty MCP configuration and MCP denial.
+                                    </td>
+                                    <td>
+                                        A task that requires shell or network
+                                        tools cannot be completed with this
+                                        adapter configuration.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">GitHub Copilot CLI</th>
+                                    <td>
+                                        File-tool allowlist; read/write allowed;
+                                        shell, URL, and built-in MCP access
+                                        denied.
+                                    </td>
+                                    <td>
+                                        A task that requires shell or network
+                                        tools cannot be completed with this
+                                        adapter configuration.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                     <p>
-                        Claude and Copilot tasks that need shell commands or
-                        network tools should report blocked.
+                        Existing CLI settings, managed policy, and hooks still
+                        apply. The builder is not an operating-system sandbox
+                        for untrusted code. Prompts travel through UTF-8
+                        standard input, and paths and source snapshots are JSON
+                        data rather than shell commands. This avoids shell
+                        interpolation; it does not prevent prompt injection from
+                        untrusted source.
                     </p>
-                    <p>
-                        Existing CLI settings and hooks still matter. This
-                        wrapper is not an OS sandbox for untrusted code.
-                    </p>
-                    <p>
-                        Prompts travel through UTF-8 stdin; paths and source
-                        snapshots are JSON data, not shell commands.
-                    </p>
-                    <p>
-                        This avoids shell interpolation, but it does not prevent
-                        model prompt injection from untrusted source.
-                    </p>
+                    <h3>Completion reports</h3>
                     <p>
                         Reports are stored under
-                        .superintelligence/runs/&lt;run-id&gt;/result.json.
+                        <code
+                            >.superintelligence/runs/&lt;run-id&gt;/result.json</code
+                        >.
                     </p>
                     <div class="codebox">
                         <div class="codebar">
@@ -1087,9 +1300,10 @@ System.Console.WriteLine(result.Summary);</code></pre>
                                         <code>AgentNotFound</code>
                                     </th>
                                     <td>
-                                        Install an adapter, sign in, reopen the
-                                        terminal and verify its executable is on
-                                        PATH.
+                                        Install and sign in to a supported
+                                        coding agent, reopen the terminal, and
+                                        verify its executable is on
+                                        <code>PATH</code>.
                                     </td>
                                 </tr>
                                 <tr>
@@ -1098,8 +1312,9 @@ System.Console.WriteLine(result.Summary);</code></pre>
                                     </th>
                                     <td>
                                         Update the selected CLI and inspect
-                                        --help; required switches were absent or
-                                        a probe failed.
+                                        <code>--help</code>. A compatibility
+                                        probe failed or a required switch was
+                                        not advertised.
                                     </td>
                                 </tr>
                                 <tr>
@@ -1108,8 +1323,8 @@ System.Console.WriteLine(result.Summary);</code></pre>
                                     </th>
                                     <td>
                                         Check executable permissions, Node.js
-                                        for JS entry points and whether the CLI
-                                        accepts piped input.
+                                        for JavaScript entry points, and whether
+                                        the CLI accepts piped input.
                                     </td>
                                 </tr>
                                 <tr>
@@ -1117,9 +1332,9 @@ System.Console.WriteLine(result.Summary);</code></pre>
                                         <code>AgentFailed</code>
                                     </th>
                                     <td>
-                                        Read the inherited console diagnostics;
-                                        check login, model access and provider
-                                        availability.
+                                        Read the coding agent&#x27;s terminal
+                                        output; check sign-in state, model
+                                        access, and provider availability.
                                     </td>
                                 </tr>
                                 <tr>
@@ -1131,11 +1346,23 @@ System.Console.WriteLine(result.Summary);</code></pre>
                                 </tr>
                                 <tr>
                                     <th scope="row">
+                                        <code>ConfirmationRequired</code>
+                                    </th>
+                                    <td>
+                                        Standard input ended before the exact
+                                        existing-file reply. Run in an
+                                        interactive terminal and type
+                                        <code>yes, please proceed</code> or
+                                        <code>no</code>. No agent was launched.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">
                                         <code>TaskBlocked / TaskFailed</code>
                                     </th>
                                     <td>
                                         Read the report&#x27;s explanation. The
-                                        wrapper does not retry or switch agents.
+                                        builder does not retry or switch agents.
                                     </td>
                                 </tr>
                                 <tr>
@@ -1151,8 +1378,9 @@ System.Console.WriteLine(result.Summary);</code></pre>
                                 <tr>
                                     <th scope="row"><code>Busy</code></th>
                                     <td>
-                                        Another builder may own the workspace
-                                        lock, or its directory is not writable.
+                                        Wait for the active run to finish. If no
+                                        run is active, check write permissions
+                                        for the workspace lock directory.
                                     </td>
                                 </tr>
                                 <tr>
@@ -1160,17 +1388,21 @@ System.Console.WriteLine(result.Summary);</code></pre>
                                         <code>InvalidInput / FileAccess</code>
                                     </th>
                                     <td>
-                                        Check UTF-8 files, .md instruction
-                                        extension, workspace paths and
-                                        filesystem permissions.
+                                        Check UTF-8 encoding, the
+                                        <code>.md</code> instruction extension,
+                                        workspace paths, and filesystem
+                                        permissions.
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th scope="row"><code>Cancelled</code></th>
+                                    <th scope="row">Cancellation</th>
                                     <td>
-                                        Ctrl+C returns 130. Process-tree
-                                        termination is attempted; detached or
-                                        remote jobs may survive.
+                                        Library callers receive
+                                        <code>OperationCanceledException</code>.
+                                        The root sample maps Ctrl+C to exit code
+                                        130. Process-tree termination is
+                                        attempted; detached or remote jobs may
+                                        survive.
                                     </td>
                                 </tr>
                             </tbody>
@@ -1178,30 +1410,33 @@ System.Console.WriteLine(result.Summary);</code></pre>
                     </div>
                     <p>
                         Library failures use <code>BuilderException</code> with
-                        Error and optional <code>AgentExitCode</code>.
-                        Cancellation uses
+                        a typed <code>Error</code> property and optional
+                        <code>AgentExitCode</code>. Cancellation uses
                         <code>OperationCanceledException</code>; callers choose
                         how to handle both.
                     </p>
                 </section>
-                <section id="j" data-title="Harness catalog">
+                <section id="j" data-title="Other coding tools">
                     <h2>
-                        <span class="section-code">J00</span>Harness catalog
+                        <span class="section-code">J00</span>Other coding tools
                     </h2>
                     <p>
                         Only Codex, Claude Code and GitHub Copilot CLI have
-                        built-in adapters in this release.
+                        built-in adapters in this release. The tools below are a
+                        research catalog: this builder cannot launch them, does
+                        not fall back to them, and does not treat their
+                        permission models as interchangeable.
                     </p>
                     <div
                         class="table-wrap"
                         role="region"
-                        aria-label="Harness catalog reference"
+                        aria-label="Unsupported coding tools reference"
                         tabindex="0"
                     >
                         <table>
                             <thead>
                                 <tr>
-                                    <th scope="col">Harness</th>
+                                    <th scope="col">Coding tool</th>
                                     <th scope="col">Workflow</th>
                                 </tr>
                             </thead>
@@ -1226,7 +1461,7 @@ System.Console.WriteLine(result.Summary);</code></pre>
                                     </th>
                                     <td>
                                         Terminal agent with noninteractive
-                                        opencode run.
+                                        <code>opencode run</code>.
                                     </td>
                                 </tr>
                                 <tr>
@@ -1237,8 +1472,9 @@ System.Console.WriteLine(result.Summary);</code></pre>
                                         >
                                     </th>
                                     <td>
-                                        Scripted repository edits with --message
-                                        or --message-file.
+                                        Scripted repository edits with
+                                        <code>--message</code> or
+                                        <code>--message-file</code>.
                                     </td>
                                 </tr>
                                 <tr>
@@ -1272,7 +1508,10 @@ System.Console.WriteLine(result.Summary);</code></pre>
                                             >Continue CLI</a
                                         >
                                     </th>
-                                    <td>Noninteractive tasks with cn -p.</td>
+                                    <td>
+                                        Noninteractive tasks with
+                                        <code>cn -p</code>.
+                                    </td>
                                 </tr>
                                 <tr>
                                     <th scope="row">
@@ -1293,7 +1532,10 @@ System.Console.WriteLine(result.Summary);</code></pre>
                                             >Pi</a
                                         >
                                     </th>
-                                    <td>Extensible terminal coding harness.</td>
+                                    <td>
+                                        Extensible terminal coding-agent
+                                        toolkit.
+                                    </td>
                                 </tr>
                                 <tr>
                                     <th scope="row">
@@ -1322,8 +1564,9 @@ System.Console.WriteLine(result.Summary);</code></pre>
                         </table>
                     </div>
                     <p>
-                        These are catalog entries, not fallback executables or a
-                        popularity ranking.
+                        Adding an adapter requires a separate review of
+                        discovery, arguments, working-directory behavior,
+                        permissions, cancellation, and completion reporting.
                     </p>
                 </section>
                 <section id="k" data-title="Limits and verification">
@@ -1337,8 +1580,9 @@ System.Console.WriteLine(result.Summary);</code></pre>
                     </p>
                     <p>
                         Symlinks and reparse points within the selected
-                        workspace path are rejected, but path checks are not a
-                        race-proof sandbox.
+                        workspace path are rejected. These containment checks
+                        validate inputs; they are not an operating-system
+                        filesystem sandbox and cannot eliminate path races.
                     </p>
                     <p>
                         The lock coordinates only the same workspace;
@@ -1346,46 +1590,49 @@ System.Console.WriteLine(result.Summary);</code></pre>
                         coordination.
                     </p>
                     <p>
-                        The inherited recursion guard suppresses builder calls
-                        made by the agent&#x27;s child processes.
+                        Child processes launched by the coding agent inherit a
+                        recursion guard. If they run this builder again, the
+                        nested call returns without launching another agent.
                     </p>
                     <p>
-                        Use normal JIT builds. NativeAOT, trimming and
-                        source-free deployment are outside this design.
+                        Use ordinary JIT-compiled .NET builds. NativeAOT,
+                        trimming, and deployments without the caller&#x27;s
+                        source file are outside this design.
                     </p>
                     <p>
-                        Provider execution is nondeterministic. No wrapper can
+                        Provider execution is nondeterministic. No builder can
                         guarantee that natural-language requests produce correct
                         code.
                     </p>
                     <p>
                         Build and runtime verification status is recorded in
                         <a href="VALIDATION.md"><code>VALIDATION.md</code></a
-                        >; no tests or binaries are shipped.
+                        >. No test binaries are distributed, but the record
+                        lists the builds, browser checks, guardrail cases, and
+                        authenticated agent runs that were actually performed.
                     </p>
                 </section>
-                <section id="l" data-title="Sources and page design">
-                    <h2>
-                        <span class="section-code">L01</span>Sources and page
-                        design
-                    </h2>
+                <section id="l" data-title="Sources">
+                    <h2><span class="section-code">L01</span>Sources</h2>
                     <p>
                         CLI switches and installation guidance were checked
                         against official vendor documentation on 2026-09-26.
                     </p>
                     <p>
-                        The page uses
-                        <a href="https://www.sqlite.org/docs.html">SQLite</a
-                        >&#x27;s compact topic navigation,
-                        <a href="https://docs.python.org/3/">Python</a>&#x27;s
-                        guide/reference distinction and
-                        <a href="https://diataxis.fr/">Diataxis</a>&#x27;s
-                        task-oriented organization as design references.
+                        The exact-phrase confirmation and civil diagnostic voice
+                        are inspired by Christian Hofstede-Kuhn&#x27;s
+                        <a
+                            href="https://blog.hofstede.it/bespoke-a-programming-language-for-people-who-say-please/"
+                            >Bespoke: A Programming Language for People Who Say
+                            Please</a
+                        >. This project remains ordinary C# and borrows the
+                        polite tone, not Bespoke syntax or semantics.
                     </p>
                     <p>
-                        This page works offline: its styles, scripts and
-                        illustrations are embedded; only external reference
-                        links require a connection.
+                        The manual renders offline because its styles and
+                        scripts are embedded. External documentation links and
+                        live coding-agent execution still require whatever
+                        network access their providers need.
                     </p>
                 </section>
                 <footer class="colophon">
@@ -1400,7 +1647,7 @@ System.Console.WriteLine(result.Summary);</code></pre>
             aria-live="polite"
         ></p>
         <script>
-            const sectionLinks = [...document.querySelectorAll("nav a")];
+            const sectionLinks = [...document.querySelectorAll(".rail nav a")];
             const filter = document.querySelector("#section-filter");
             filter.addEventListener("input", () => {
                 const q = filter.value.trim().toLocaleLowerCase();
