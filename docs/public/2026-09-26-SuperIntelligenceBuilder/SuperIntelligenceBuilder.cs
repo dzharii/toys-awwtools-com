@@ -10,20 +10,34 @@ required: dynamic dispatch is not a NativeAOT/trimming-friendly contract.
         .WithConciseOutput()
         .MakeItActuallyGood();
 
-Only WithFile performs work. It creates an empty instruction file if missing,
-launches an installed coding agent, and waits for it to read the CALLER'S C#
-source. The agent interprets the fluent chain as natural-language instructions
-and edits the workspace. The CLR then swallows the imaginary calls. There is
-no parser for the DSL and no attempt to implement its fictitious members.
-This is a deliberately absurd interface with a real process runner underneath.
+Only WithFile can perform work. By default it runs in dry-run mode: it resolves
+the same installed coding harness a live run would select, reads the caller and
+instruction file, and prints the exact fluent statement plus a plain-text plan.
+It does not probe or launch the harness, create files, or edit the workspace.
+Only Options.Proceed=true permits execution. The sample maps that deliberate
+choice to the exact CLI flag `--yes,please,proceed`. During a live run the agent
+interprets the fluent chain as natural-language instructions and edits the
+workspace; the CLR then swallows the imaginary calls. There is no parser for
+the DSL and no attempt to implement its fictitious members.
+
+If the instruction file already exists, execution pauses before agent discovery
+and explains the risk. Only the exact reply `yes, please proceed` continues;
+`no` stops without launching an agent. Shortcuts such as `y` or `yes` are
+politely rejected. Preview remains non-interactive. This confirmation ceremony
+and the diagnostic voice are inspired by Christian Hofstede-Kuhn's Bespoke:
+https://blog.hofstede.it/bespoke-a-programming-language-for-people-who-say-please/
+SuperIntelligenceBuilder remains ordinary C#; it borrows the civilised tone,
+not Bespoke syntax, semantics, branding, or source text.
 
 B00 - Quick start and distribution
 
 Install the .NET 10 SDK: https://dotnet.microsoft.com/download/dotnet/10.0
 Unzip the sample, enter its directory, run `dotnet build`, then `dotnet run`.
-`dotnet run -- --help` lists the sample's options. `dotnet run -- --preview`
-prints the complete planned prompt without an agent, file creation, or probes.
-For an explicit adapter: `dotnet run -- --agent codex` (or claude / copilot).
+The default is a dry run. Review its plan, then deliberately execute with
+`dotnet run -- --yes,please,proceed`. `dotnet run -- --help` lists the sample's
+options. `--preview` remains a compatible explicit name for dry-run mode.
+For an executing explicit adapter: `dotnet run -- --agent codex --yes,please,proceed`
+(or claude / copilot).
 Copy ONLY SuperIntelligenceBuilder.cs into another SDK-style .NET 10 project;
 the SDK includes it automatically. You can instead link the file with a
 Compile Include/Link item. Its explicit using directives do not require
@@ -108,7 +122,7 @@ report, not invented requirements. A report can say completed, blocked, failed.
 
 The returned dynamic object reserves the REAL property Execution (RunResult).
 Read it after chaining to inspect agent/version/paths/summary/changed files.
-Preview and recursion suppression set the corresponding ResultState. A real
+Dry-run preview and recursion suppression set the corresponding ResultState. A real
 success needs BOTH exit code 0 and a valid matching completed report. The report
 is the agent's assertion, not a proof of functional correctness. ChangedFiles
 is self-reported and validated for workspace-relative paths, not a full diff.
@@ -133,6 +147,13 @@ creating AGENTS.md. Existing instructions are not truncated. Concurrent runs
 in the SAME workspace fail Busy; overlapping parent/child workspaces require
 external coordination. A child environment recursion guard makes nested calls
 no-ops, preventing an agent's `dotnet run` from launching another agent.
+
+An existing instruction file is a consequential boundary. The runner asks the
+person at the console to type `yes, please proceed` exactly, or `no` to retire
+the request. End-of-input fails closed. This ceremony confirms only that a run
+may begin; it is not approval of each eventual agent edit and is not a substitute
+for reviewing the diff. Automated callers must deliberately provide the exact
+phrase on standard input when they intend to update an existing workspace.
 
 G00 - Important boundaries
 
@@ -225,11 +246,12 @@ public static class SuperIntelligenceBuilder
         ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 
     public enum AgentKind { Codex, Claude, Copilot }
-    public enum ResultState { Completed, Preview, RecursionSuppressed }
+    public enum ResultState { Completed, Preview, RecursionSuppressed, Declined }
     public enum ErrorCode
     {
         InvalidInput, AgentNotFound, IncompatibleAgent, LaunchFailed, AgentFailed,
-        TimedOut, Busy, FileAccess, InvalidReport, TaskBlocked, TaskFailed
+        TimedOut, Busy, FileAccess, InvalidReport, TaskBlocked, TaskFailed,
+        ConfirmationRequired
     }
 
     public sealed record Options
@@ -241,6 +263,7 @@ public static class SuperIntelligenceBuilder
         public TimeSpan Timeout { get; init; } = TimeSpan.FromMinutes(10);
         public TimeSpan ProbeTimeout { get; init; } = TimeSpan.FromSeconds(15);
         public bool Preview { get; init; }
+        public bool Proceed { get; init; }
     }
 
     public sealed record RunResult(
@@ -253,14 +276,14 @@ public static class SuperIntelligenceBuilder
         public ErrorCode Error { get; }
         public int? AgentExitCode { get; }
         internal BuilderException(ErrorCode error, string message, Exception? inner = null,
-            int? exitCode = null) : base(message, inner)
+            int? exitCode = null) : base(Civilise(error, message), inner)
         {
             Error = error;
             AgentExitCode = exitCode;
         }
     }
 
-    /// <summary>Run the agent now, then return a sink accepting imaginary fluent calls.</summary>
+    /// <summary>Plan by default, or run when explicitly permitted, then return a fluent sink.</summary>
     public static dynamic WithFile(
         string fileName,
         Options? options = null,
@@ -271,7 +294,9 @@ public static class SuperIntelligenceBuilder
     {
         if (Environment.GetEnvironmentVariable(Guard) == "1")
             return new FluentVoid(new RunResult(ResultState.RecursionSuppressed, "", null,
-                null, "", "", null, "Nested agent launch suppressed.", Array.Empty<string>()));
+                null, "", "", null,
+                "The companion agent was courteously spared a recursive engagement.",
+                Array.Empty<string>()));
         try
         {
             return new FluentVoid(ExecuteAsync(fileName, options ?? new Options(),
@@ -327,14 +352,24 @@ public static class SuperIntelligenceBuilder
         var reportFile = Path.Combine(stateDirectory, "runs", id, "result.json");
         RejectLinks(workspace, reportFile);
 
-        if (options.Preview)
+        if (options.Preview || !options.Proceed)
         {
-            var preview = BuildPrompt(id, requested, workspace, sourceFile, sourceLine,
-                sourceMember, source, instructions, instructionText, reportFile);
-            return new RunResult(ResultState.Preview, id, requested, null, workspace,
-                instructions, null, "Preview only; no agent was probed or launched.",
-                Array.Empty<string>(), preview);
+            Launch? plannedLaunch = null;
+            try { plannedLaunch = ResolveAgent(requested, executable); }
+            catch (BuilderException ex) when (ex.Error == ErrorCode.AgentNotFound) { }
+            var plan = BuildDryRunPlan(plannedLaunch, requested, model, workspace,
+                sourceFile, sourceLine, sourceMember, source, instructions,
+                File.Exists(instructions));
+            return new RunResult(ResultState.Preview, id,
+                plannedLaunch?.Kind ?? requested, null, workspace, instructions, null,
+                "Dry run only; no harness was probed or launched and no files were changed.",
+                Array.Empty<string>(), plan);
         }
+
+        var instructionFileExisted = File.Exists(instructions);
+        if (instructionFileExisted &&
+            !await CeremonialConsent.RequestForExistingFileAsync(instructions, cancellation).ConfigureAwait(false))
+            return DeclinedResult(id, requested, workspace, instructions);
 
         var launch = ResolveAgent(requested, executable);
         var version = await ProbeAsync(launch, ["--version"], workspace, options.ProbeTimeout, cancellation).ConfigureAwait(false);
@@ -354,6 +389,9 @@ public static class SuperIntelligenceBuilder
         RejectLinks(workspace, lockPath);
         using var workspaceLock = AcquireLock(lockPath);
         Directory.CreateDirectory(Path.GetDirectoryName(instructions)!);
+        if (!instructionFileExisted && File.Exists(instructions) &&
+            !await CeremonialConsent.RequestForExistingFileAsync(instructions, cancellation).ConfigureAwait(false))
+            return DeclinedResult(id, launch.Kind, workspace, instructions);
         RejectLinks(workspace, instructions);
         // CreateNew is atomic and never truncates a file created by another process.
         if (!File.Exists(instructions))
@@ -376,6 +414,51 @@ public static class SuperIntelligenceBuilder
                 $"{launch.Kind} exited with code {exit.ExitCode}. See its console diagnostics; verify login, model access and CLI version. Partial edits may remain. Run: {id}",
                 exitCode: exit.ExitCode);
         return ReadReport(id, launch.Kind, version.Trim(), workspace, instructions, reportFile);
+    }
+
+    private static RunResult DeclinedResult(string id, AgentKind? agent, string workspace,
+        string instructions) => new(ResultState.Declined, id, agent, null, workspace,
+            instructions, null,
+            "The respected user declined the proposed engagement; no coding agent was launched.",
+            Array.Empty<string>());
+
+    private static class CeremonialConsent
+    {
+        private const string Proceed = "yes, please proceed";
+        private const string Stop = "no";
+
+        public static async Task<bool> RequestForExistingFileAsync(string path,
+            CancellationToken cancellation)
+        {
+            Console.WriteLine($$"""
+
+                Dear Respected User,
+
+                The instruction file already exists:
+                  {{path}}
+
+                Proceeding permits the coding agent to read it and, when the fluent task
+                expressly requests it, to amend or replace it alongside other workspace files.
+
+                To grant this consequential request, reply exactly:
+                  yes, please proceed
+
+                To stop without launching an agent, reply exactly:
+                  no
+                """);
+            while (true)
+            {
+                Console.Write("Your considered reply: ");
+                var reply = await Console.In.ReadLineAsync(cancellation).ConfigureAwait(false);
+                if (reply is null)
+                    throw Failure(ErrorCode.ConfirmationRequired,
+                        "The existing instruction file requires explicit consent, but standard input concluded before a reply was received. No agent was launched.");
+                if (string.Equals(reply, Proceed, StringComparison.Ordinal)) return true;
+                if (string.Equals(reply, Stop, StringComparison.Ordinal)) return false;
+                Console.WriteLine("Pardon me, but that reply is insufficiently explicit. " +
+                    "Please type exactly `yes, please proceed` or `no`.");
+            }
+        }
     }
 
     private sealed record Launch(AgentKind Kind, string FileName, string[] Prefix);
@@ -411,6 +494,128 @@ public static class SuperIntelligenceBuilder
             "Install and sign in to Codex (npm install -g @openai/codex), Claude Code (https://code.claude.com/docs/en/setup), " +
             "or Copilot CLI (npm install -g @github/copilot), then reopen your terminal. " +
             "Alternatively set Options.Agent and Options.ExecutablePath.");
+    }
+
+    private static string BuildDryRunPlan(Launch? launch, AgentKind? requested,
+        string? model, string workspace, string sourceFile, int sourceLine,
+        string sourceMember, string source, string instructions, bool instructionExists)
+    {
+        var harness = launch?.Kind.ToString()
+            ?? (requested is null ? "Not found (searched Codex, Claude, Copilot)"
+                : $"{requested} not found");
+        var executable = launch?.FileName ?? "-";
+        var statement = ExtractFluentStatement(source, sourceLine);
+        var paddedStatement = string.Join('\n', statement.Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Split('\n').Select(line => "    " + line.TrimEnd()));
+        static string Row(string label, string value) => $"  {label.PadRight(19)}{value}";
+
+        return string.Join('\n', new[]
+        {
+            "HYPER INTELLIGENCE / DRY-RUN MODE",
+            "=================================",
+            "Hyper Intelligence is running in dry-run mode.",
+            "",
+            Row("Harness", harness),
+            Row("Executable", executable),
+            Row("Model", model ?? "Harness default"),
+            Row("Workspace", workspace),
+            Row("Instruction file", instructions),
+            Row("Instruction state", instructionExists ? "Already exists" : "Would be created"),
+            Row("Source", $"{sourceFile}:{sourceLine} ({sourceMember})"),
+            "",
+            launch is null
+                ? "The following statement is ready, but no supported harness was found:"
+                : $"The following statement will be processed by {harness}:",
+            "",
+            paddedStatement,
+            "",
+            "No harness was probed or launched. No files were created or changed.",
+            "",
+            "To process this statement, run:",
+            "    dotnet run -- --yes,please,proceed",
+            "",
+            "If the instruction file already exists, the additional interactive reply",
+            "`yes, please proceed` is still required before the harness may be launched."
+        });
+    }
+
+    private static string ExtractFluentStatement(string source, int sourceLine)
+    {
+        var lineStart = 0;
+        for (var line = 1; line < sourceLine; line++)
+        {
+            lineStart = source.IndexOf('\n', lineStart);
+            if (lineStart < 0) return "[The fluent statement could not be isolated from the caller source.]";
+            lineStart++;
+        }
+        var withFile = source.IndexOf("WithFile", lineStart, StringComparison.Ordinal);
+        if (withFile < 0) return "[The fluent statement could not be isolated from the caller source.]";
+        var start = withFile;
+        while (start > 0 && (char.IsLetterOrDigit(source[start - 1]) || source[start - 1] is '_' or '.')) start--;
+
+        var inString = false;
+        var verbatimString = false;
+        var inCharacter = false;
+        var rawQuoteCount = 0;
+        var escaped = false;
+        var inLineComment = false;
+        var inBlockComment = false;
+        for (var i = start; i < source.Length; i++)
+        {
+            var current = source[i];
+            var next = i + 1 < source.Length ? source[i + 1] : '\0';
+            if (rawQuoteCount > 0)
+            {
+                if (current == '"')
+                {
+                    var quoteCount = 1;
+                    while (i + quoteCount < source.Length && source[i + quoteCount] == '"') quoteCount++;
+                    if (quoteCount >= rawQuoteCount)
+                    {
+                        var delimiterLength = rawQuoteCount;
+                        rawQuoteCount = 0;
+                        i += delimiterLength - 1;
+                    }
+                }
+                continue;
+            }
+            if (inLineComment)
+            {
+                if (current == '\n') inLineComment = false;
+                continue;
+            }
+            if (inBlockComment)
+            {
+                if (current == '*' && next == '/') { inBlockComment = false; i++; }
+                continue;
+            }
+            if (escaped) { escaped = false; continue; }
+            if ((inString && !verbatimString || inCharacter) && current == '\\') { escaped = true; continue; }
+            if (inString && verbatimString && current == '"')
+            {
+                if (next == '"') { i++; continue; }
+                inString = false;
+                verbatimString = false;
+                continue;
+            }
+            if (!inString && !inCharacter && current == '"')
+            {
+                var quoteCount = 1;
+                while (i + quoteCount < source.Length && source[i + quoteCount] == '"') quoteCount++;
+                if (quoteCount >= 3) { rawQuoteCount = quoteCount; i += quoteCount - 1; continue; }
+                inString = true;
+                verbatimString = i > 0 && source[i - 1] == '@'
+                    || i > 1 && source[i - 2] == '@' && source[i - 1] == '$';
+                continue;
+            }
+            if (inString && current == '"') { inString = false; continue; }
+            if (!inString && current == '\'') { inCharacter = !inCharacter; continue; }
+            if (inString || inCharacter) continue;
+            if (current == '/' && next == '/') { inLineComment = true; i++; continue; }
+            if (current == '/' && next == '*') { inBlockComment = true; i++; continue; }
+            if (current == ';') return source[start..(i + 1)].Trim();
+        }
+        return "[The fluent statement could not be isolated from the caller source.]";
     }
 
     private static string? FindOnPath(string command, bool allowNpmShim)
@@ -781,6 +986,12 @@ public static class SuperIntelligenceBuilder
     }
 
     private static BuilderException Failure(ErrorCode code, string message) => new(code, message);
+
+    private static string Civilise(ErrorCode code, string message) => $$"""
+        Diagnostic SIB-{{(int)code + 101}} (A Regrettable Circumstance)
+        Pardon the intrusion, but the builder cannot proceed: {{message}}
+        The request has been respectfully declined without disguising the technical cause.
+        """;
 
     private sealed class FluentVoid(RunResult execution) : DynamicObject
     {

@@ -29,22 +29,29 @@ internal static class Program
                 {
                     case "--help" or "-h":
                         Console.WriteLine("""
-                            SuperIntelligenceBuilder - a real runner for an imaginary API
+                            SuperIntelligenceBuilder - a civilised runner for an imaginary API
 
                             dotnet run -- [options]
-                              --preview             Print the prompt; create nothing, run nothing.
+                              --yes,please,proceed  Permit agent execution after reviewing the dry run.
+                              --preview             Explicitly request dry-run mode (the default).
                               --agent NAME          codex, claude, or copilot (default: discover).
                               --executable PATH     Absolute native executable or JS entry point.
                               --model ID            Model identifier supported by that agent.
                               --timeout SECONDS     Task deadline, from 1 to 86400 (default: 600).
                               --help                Show this help.
 
+                            With no options, Hyper Intelligence prints a dry-run plan and
+                            the exact fluent statement. No harness is probed or launched.
                             The sample asks the agent to create generated/hello.txt.
                             Existing AGENTS.md is preserved. See index.html or the header in
                             SuperIntelligenceBuilder.cs for setup, policies and integration.
+
+                            If AGENTS.md already exists, please reply exactly
+                            `yes, please proceed` to continue, or `no` to stop.
                             """);
                         return 0;
                     case "--preview": options = options with { Preview = true }; break;
+                    case "--yes,please,proceed": options = options with { Proceed = true }; break;
                     case "--agent":
                         options = options with { Agent = Value().ToLowerInvariant() switch
                         {
@@ -77,12 +84,12 @@ internal static class Program
             Builder.RunResult result = task.Execution;
             Console.WriteLine(result.PreviewPrompt ?? result.Summary);
             if (result.State == Builder.ResultState.Completed)
-                Console.WriteLine($"Agent: {result.Agent}\nReport: {result.ReportFile}");
+                Console.WriteLine($"Esteemed agent: {result.Agent}\nFormal report: {result.ReportFile}");
             return 0;
         }
         catch (Builder.BuilderException ex)
         {
-            Console.Error.WriteLine($"{ex.Error}: {ex.Message}");
+            Console.Error.WriteLine($"{ex.Message}\nClassification: {ex.Error}");
             return ex.Error switch
             {
                 Builder.ErrorCode.AgentNotFound => 3,
@@ -93,12 +100,12 @@ internal static class Program
         }
         catch (OperationCanceledException)
         {
-            Console.Error.WriteLine("Cancelled. Process termination was attempted; partial edits may remain.");
+            Console.Error.WriteLine("A formal invitation to retire was received. Process termination was attempted; partial edits may remain.");
             return 130;
         }
         catch (ArgumentException ex)
         {
-            Console.Error.WriteLine($"Invalid arguments: {ex.Message}");
+            Console.Error.WriteLine($"Pardon me, but the proposed arguments are not in order: {ex.Message}");
             return 2;
         }
         finally { Console.CancelKeyPress -= cancelHandler; }

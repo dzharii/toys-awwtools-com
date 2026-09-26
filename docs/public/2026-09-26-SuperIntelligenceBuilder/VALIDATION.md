@@ -1,47 +1,56 @@
-# A01 Validation record
+# Validation record
 
-This archive contains a completed implementation and documentation, with the verification limits below. It is not presented as an end-to-end certified production release.
+Validated on 2026-09-26 in Linux x64 with .NET SDK 10.0.101, .NET runtime 10.0.1, Node.js 22.21.0, and authenticated Codex CLI 0.155.1. Runtime-generated reports and compiled outputs are intentionally ignored; the useful generated project files are tracked.
+
+## Completed checks
 
 | Check | Result |
 | --- | --- |
-| C# syntax parsing | Both source files parse without error nodes using the C# tree-sitter grammar. This is not a compiler or type check. |
-| Project configuration | Targets net10.0 and C# 14; nullable analysis, .NET analyzers, deterministic builds and warnings-as-errors enabled. No PackageReference items. |
-| .NET SDK | Official SDK 10.0.401 and runtime 10.0.12 downloaded and extracted into the build workspace. Archive ownership restoration failed, so this is not recorded as a clean installation. Not included in this archive. |
-| Actual dotnet build | Blocked before compilation: CoreCLR initialization fails with HRESULT 0x8007000E in the execution environment. No successful compilation is claimed. |
-| Runtime/process tests | Not executed because CoreCLR cannot start. Missing-agent handling, process timeout/cancellation, locks, report validation and dynamic dispatch were source-reviewed, not runtime-verified. |
-| Authenticated provider runs | Not executed. Codex, Claude and Copilot were absent from PATH and no provider authentication was configured for this task. |
-| Windows/macOS | Not executed. In particular, Windows native/npm-shim resolution still needs platform validation. |
-| Documentation editorial review | Initial draft retained. Every one of its 135 physical lines has a quoted review and an accepted decision. Interface copy has a separate 21-line review. The About page adds 89 reviewed lines and six reviewed navigation labels. |
-| HTML structure | Local links and fragment targets checked; unique IDs; reviewed code snippets match the rendered HTML. |
-| Offline dependencies | CSS and JavaScript are inline. No external scripts, fonts, stylesheets, images or network requests are required to render the page. Reference links intentionally lead to external sites. |
-| JavaScript | Syntax checked with Node.js. Clipboard, section filtering and browser intersection behavior were not interactively tested. |
-| Visual review | Static, non-JavaScript rendering inspected for desktop and narrow layouts, with narrow-screen CSS explicitly applied because the renderer does not evaluate browser viewport media queries. Browser local-file navigation was rejected by the browser's URL policy; no browser rendering claim is made. |
-| Distribution | ZIP inventory checked: only source, configuration, HTML and Markdown/JSON editorial records. No SDK, binaries, bin/obj directories, tests or generated runtime reports. |
+| Main build | `dotnet build --configuration Release` passed with 0 warnings and 0 errors. The root project now explicitly includes only `Program.cs` and `SuperIntelligenceBuilder.cs`, so nested example sources are not accidentally compiled into it. |
+| Example builds | All three example projects restored and built in Release with 0 warnings and 0 errors. |
+| Help and default dry run | Main help ran. The root and all three examples defaulted to a plain-text `HYPER INTELLIGENCE / DRY-RUN MODE` plan. Each used normal harness discovery, displayed the selected harness and exact fluent statement, emitted no ANSI color, created no files or reports, requested no confirmation, and performed no CLI probe or launch. With Codex removed from `PATH`, dry run still exited 0 and reported that no supported harness was found. |
+| Explicit execution gate | The main program and all examples pass `Options.Proceed = true` only for the exact `--yes,please,proceed` option. A live-path test with the flag and Codex removed from `PATH` reached `AgentNotFound` without creating the missing instruction file. |
+| Authenticated agent integration | Three independent calls through `SuperIntelligenceBuilder.WithFile` launched Codex CLI 0.155.1 using its workspace-write adapter. Every process exited 0 and produced a matching `super-intelligence-builder/v1` completed report. |
+| Specification example | Generated `AGENTS.md`, constitution, index, product specification, plan, and tasks. The agent validated 12 local Markdown links and traceability across 17 requirements, 15 acceptance criteria, 8 plan decisions, 11 named tests, and 12 ordered tasks. |
+| Static-design example | Generated agent policy, five design documents, and a working local HTML/CSS/JavaScript site. HTML structure, local links, anchors, ARIA references, JavaScript syntax, CSS balance, responsive/reduced-motion rules, and remote-dependency absence passed. A detected 3.64:1 color pairing was corrected and the core palette rechecked at 4.72:1 or higher. |
+| Enterprise C# example | Generated `AGENTS.md`, `.editorconfig`, `Directory.Build.props`, and four engineering guides. XML, EditorConfig structure, Markdown links, internal consistency, and a no-warning build passed. |
+| Existing-file refusal | Inputs `y` and `yes` were rejected as insufficient. A following exact `no` returned `ResultState.Declined`, exited 0, launched no agent, and created no run directory. |
+| Existing-file approval | Exact `yes, please proceed` advanced past confirmation to agent resolution. Codex was intentionally removed from that test process's `PATH`, so it then failed safely with `AgentNotFound` without launching an agent. |
+| Fail-closed input | End-of-input at the confirmation prompt returned `ConfirmationRequired`, exited nonzero, and launched no agent. |
+| Civilised diagnostics | Builder failures retained their typed `ErrorCode` and technical cause while being wrapped in the Bespoke-inspired `A Regrettable Circumstance` format. |
+| Browser behavior | Playwright 1.55 with Chromium loaded the manual, guardrails, examples landing page, three example pages, and generated repair-cafe site at 1440×900 and 390×844. All 16 checks passed: HTTP responses, titles, headings, no page/console errors, no horizontal overflow, manual filtering, social-image metadata/response, and generated-site interaction. |
+| Social preview | The 1200×630 SVG was rendered to PNG with ImageMagick, dimensions were verified, and the raster was visually inspected. Open Graph and X/Twitter metadata reference the PNG. The final description has a committed draft/five-alternatives/recommendation review. |
+| Parent index and RSS | Local href targets, iframe preview targets, RSS XML, project/RSS item counts, RSS discovery link, newest-first feed entry, and `lastBuildDate` were checked from `docs/`. |
+| Repository hygiene | `bin/`, `obj/`, and `.superintelligence/` are ignored. Agent-authored `AGENTS.md`, constitutions, specifications, configuration, and website source are not ignored. |
 
-# B00 Before relying on this in production
+## Real agent outputs
 
-On a normal development machine with the .NET 10 SDK, run these commands from the extracted folder:
+The generated files in these folders are the results of real builder-driven Codex runs, not manually substituted fixtures:
+
+- `examples/specification-workflow/`
+- `examples/static-web-design/`
+- `examples/enterprise-csharp/`
+
+The builder launched Codex with approval policy `never`, sandbox `workspace-write`, shell-command networking disabled, the task prompt on UTF-8 standard input, and a required run-specific JSON report. The observed child model was `gpt-5.6-sol`; no model was forced by the examples.
+
+## Remaining platform limits
+
+- Claude Code and GitHub Copilot CLI adapters were source-reviewed and help-contract logic compiled, but no authenticated run was performed with those providers.
+- Native Windows and macOS execution were not available. Windows npm-shim resolution remains untested on Windows.
+- Agent completion reports are assertions from the editing process, not independent proof of semantic correctness. The committed files and their validation evidence still require normal human review.
+
+## Reproduce
+
+From this project directory:
 
 ```sh
 dotnet build --configuration Release
-dotnet run -- --help
-dotnet run -- --preview
+dotnet run
+dotnet run -- --yes,please,proceed
+
+dotnet build examples/specification-workflow/SpecificationWorkflow.csproj --configuration Release
+dotnet build examples/static-web-design/StaticWebDesign.csproj --configuration Release
+dotnet build examples/enterprise-csharp/EnterpriseCSharp.csproj --configuration Release
 ```
 
-Preview should print a source snapshot and a task contract without creating AGENTS.md or launching an agent. The SDK itself can create ordinary bin/obj build output.
-
-Install and authenticate the chosen provider, then run:
-
-```sh
-dotnet run -- --agent codex
-```
-
-Use `claude` or `copilot` instead for the other built-in adapters. Confirm that generated/hello.txt contains `Hello, super intelligence!` followed by a newline, the process exits successfully, and the reported JSON has the matching run ID and `completed` status. Review actual filesystem changes; a model-authored completion report does not prove correctness.
-
-For an installation-error check independent of PATH, choose an absolute nonexistent executable path for your OS and pass it with `--agent codex --executable`. The expected sample exit code is 3, with AgentNotFound. Check cancellation, timeouts and permissions against the exact CLI versions and operating systems you intend to deploy.
-
-# C00 Research and maintenance
-
-CLI switches and installation guidance were researched from official vendor documentation on 2026-09-26. The source header contains the reference URLs and exact argument forms. Runtime version/help probes check for required interface switches, but are not a guarantee of future CLI compatibility. The harness catalog distinguishes implemented adapters from documentation-only entries.
-
-Source review covered stdin-only prompt transport, ArgumentList use, instruction-file preservation, path containment and reparse checks, bounded file/probe reads, cancellation cleanup, no task retries, same-workspace locking, recursion suppression, caller context, and completion identity/status checks. These checks reduce implementation risks; they do not replace the unperformed build and runtime checks above.
+Run an example from its own folder. The default prints a dry-run plan. Pass `--yes,please,proceed` to enable execution. On an executing first run, the missing `AGENTS.md` is created atomically. On later executing runs, reply exactly `yes, please proceed` to continue or `no` to stop.
