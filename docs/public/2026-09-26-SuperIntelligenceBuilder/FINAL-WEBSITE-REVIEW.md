@@ -2,6 +2,8 @@
 
 > Status: complete. The audit and action list were written before implementation; the final outcome was appended after validation.
 
+> Later addition: `llm-recipes.html` and its four-item global navigation were reviewed in `editorial/llm-recipes-line-review.md` and validated in `VALIDATION.md`. This file preserves the decisions from the earlier whole-site pass.
+
 ## Review contract
 
 Kind: descriptive review record. Audience: the project maintainer and a future editing agent. Purpose: decide whether each visible content unit should be kept, rewritten, removed, or rearranged. Non-goals: redesign `about.html`, restyle the generated repair-cafe demonstration to match the documentation shell, or repeat facts that already have an authoritative home.

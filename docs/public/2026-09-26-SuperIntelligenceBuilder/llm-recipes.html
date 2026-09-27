@@ -1,0 +1,1463 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta
+            name="description"
+            content="A reusable, evidence-led method for researching, building, documenting, and validating agent-assisted software projects."
+        />
+        <title>LLM Recipes | SuperIntelligenceBuilder</title>
+        <link rel="stylesheet" href="examples/style.css" />
+        <style>
+            button,
+            input {
+                font: inherit;
+            }
+            button {
+                cursor: pointer;
+            }
+            button:focus-visible,
+            input:focus-visible {
+                outline: 3px solid var(--accent);
+                outline-offset: 4px;
+            }
+            .filter {
+                margin-bottom: 16px;
+            }
+            .filter label {
+                display: block;
+                margin-bottom: 5px;
+                color: var(--muted);
+                font-size: 11px;
+            }
+            input {
+                width: 100%;
+                border: 1px solid var(--line);
+                border-radius: 0;
+                padding: 8px;
+                background: transparent;
+                color: var(--ink);
+                font-size: 12px;
+            }
+            .rail nav a[hidden] {
+                display: none;
+            }
+            .filter-empty {
+                color: var(--accent);
+                font-size: 12px;
+            }
+            .codebar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 16px;
+            }
+            .copy {
+                min-width: 48px;
+                min-height: 28px;
+                border: 0;
+                border-bottom: 1px solid var(--muted);
+                padding: 2px 4px;
+                background: transparent;
+                color: var(--ink);
+                font: 10px var(--mono);
+                text-transform: uppercase;
+            }
+            .copy:hover {
+                color: var(--accent);
+                border-color: var(--accent);
+            }
+            .source-list {
+                margin: 16px 0;
+                padding: 0;
+                list-style: none;
+            }
+            .source-list li {
+                padding: 13px 0;
+                border-top: 1px solid var(--line);
+            }
+            .source-list li:last-child {
+                border-bottom: 1px solid var(--line);
+            }
+            .source-list strong {
+                display: block;
+                color: var(--ink);
+                font-weight: 550;
+            }
+            .source-meta {
+                display: block;
+                margin-top: 3px;
+                color: var(--muted);
+                font: 11px/1.7 var(--mono);
+                overflow-wrap: anywhere;
+            }
+            .decision-list strong {
+                color: var(--ink);
+            }
+            .pseudo-keyword {
+                color: #8b301f;
+                font-weight: 650;
+            }
+            .pseudo-call {
+                color: #1d5b55;
+            }
+            .pseudo-name {
+                color: #5a3d82;
+            }
+            .pseudo-string {
+                color: #87561d;
+            }
+            .pseudo-comment {
+                color: #66716c;
+                font-style: italic;
+            }
+            .check-grid {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 0 26px;
+                margin: 16px 0;
+                padding: 0;
+                list-style: none;
+                counter-reset: review-question;
+            }
+            .check-grid li {
+                position: relative;
+                margin: 0;
+                padding: 10px 0 10px 31px;
+                border-top: 1px solid var(--line);
+                counter-increment: review-question;
+            }
+            .check-grid li::before {
+                position: absolute;
+                left: 0;
+                color: var(--accent);
+                font: 10px/1.8 var(--mono);
+                content: counter(review-question, decimal-leading-zero);
+            }
+            .sr-only {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                padding: 0;
+                margin: -1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                white-space: nowrap;
+                border: 0;
+            }
+            @media (max-width: 620px) {
+                .check-grid {
+                    grid-template-columns: 1fr;
+                }
+                .source-meta {
+                    font-size: 10px;
+                }
+            }
+            @media (max-width: 420px) {
+                .page-tabs {
+                    width: 100%;
+                    justify-content: space-between;
+                    gap: 8px;
+                }
+                .page-tabs a {
+                    min-height: 32px;
+                }
+                .codebox pre {
+                    white-space: pre-wrap;
+                }
+                .codebox pre code {
+                    overflow-wrap: anywhere;
+                }
+            }
+            @media print {
+                .filter,
+                .copy {
+                    display: none;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <a class="skip" href="#content">Skip to recipes</a>
+        <header class="masthead">
+            <strong>SIB / LLM recipes</strong>
+            <nav class="page-tabs" aria-label="Pages">
+                <a href="index.html">Manual</a><a href="examples/">Examples</a
+                ><a href="llm-recipes.html" aria-current="page">Recipes</a
+                ><a href="about.html">About</a>
+            </nav>
+            <span>Version 1.0 / method record</span>
+        </header>
+        <div class="layout">
+            <aside class="rail" aria-label="Recipe navigation">
+                <p class="rail-label">Contents / R00-R12</p>
+                <div class="filter">
+                    <label for="section-filter">Find a recipe</label
+                    ><input
+                        id="section-filter"
+                        type="search"
+                        placeholder="e.g. validation"
+                        autocomplete="off"
+                    />
+                </div>
+                <nav aria-label="Sections">
+                    <a href="#r0"><span>R00</span>Purpose</a
+                    ><a href="#r1"><span>R01</span>Reference shelf</a
+                    ><a href="#r2"><span>R02</span>Clone convention</a
+                    ><a href="#r3"><span>R03</span>Work contract</a
+                    ><a href="#r4"><span>R04</span>Research and planning</a
+                    ><a href="#r5"><span>R05</span>Safe execution</a
+                    ><a href="#r6"><span>R06</span>Example design</a
+                    ><a href="#r7"><span>R07</span>Editorial pipeline</a
+                    ><a href="#r8"><span>R08</span>Documentation system</a
+                    ><a href="#r9"><span>R09</span>Rendered review</a
+                    ><a href="#r10"><span>R10</span>Validation ladder</a
+                    ><a href="#r11"><span>R11</span>Tools and evidence</a
+                    ><a href="#r12"><span>R12</span>Reusable recipe</a>
+                </nav>
+                <p id="empty" class="filter-empty" hidden>
+                    No matching recipe.
+                </p>
+                <div class="rail-note">
+                    <a href="editorial/llm-recipes-draft.md">Expansive draft</a
+                    ><a href="editorial/llm-recipes-line-review.md"
+                        >Sentence review</a
+                    ><a href="CHANGE-REQUEST-WEBSITE-COHERENCE.md"
+                        >Website change request</a
+                    ><a href="FINAL-WEBSITE-REVIEW.md">Final site review</a
+                    ><a href="VALIDATION.md">Validation record</a>
+                </div>
+            </aside>
+            <main id="content">
+                <section id="r0" data-title="Purpose">
+                    <h1><span class="section-code">R00</span>LLM recipes</h1>
+                    <p class="tagline">
+                        A reusable method for agent-assisted project work.
+                    </p>
+                    <p class="lede">
+                        This page records how SuperIntelligenceBuilder moved
+                        from an unvalidated C# experiment to a runnable project
+                        with guarded execution, three examples, connected
+                        documentation, and browser-tested pages.
+                    </p>
+                    <p class="specs">
+                        Research / implementation / editorial review / rendered
+                        evidence / validation
+                    </p>
+                    <p>
+                        It converts the useful decisions from the work into a
+                        reference that can be reused. Each recipe names the
+                        input, action, evidence, and stopping condition that
+                        made the result dependable.
+                    </p>
+                    <p>
+                        Project details remain where they make the method
+                        concrete. Rules that transfer to another repository are
+                        stated separately. The
+                        <a href="editorial/llm-recipes-draft.md"
+                            >expansive draft</a
+                        > and
+                        <a href="editorial/llm-recipes-line-review.md"
+                            >sentence review</a
+                        > preserve the two editorial stages that produced this
+                        page.
+                    </p>
+                </section>
+
+                <section id="r1" data-title="Reference shelf">
+                    <h2><span class="section-code">R01</span>Reference shelf</h2>
+                    <p>
+                        Four skill repositories supplied discovery and review
+                        criteria. They were shallow-cloned as temporary reading
+                        material, not added as project dependencies. Their rules
+                        did not replace source or test evidence.
+                    </p>
+                    <ul class="source-list">
+                        <li>
+                            <strong
+                                ><a
+                                    href="https://github.com/riekelt/technical-writer"
+                                    >riekelt/technical-writer</a
+                                ></strong
+                            >
+                            <span class="source-meta"
+                                >85e53729dd959a2795d593d6769068e342cf3486</span
+                            >
+                            <p>
+                                The document checkpoint established kind,
+                                audience, reader task, and non-goals before
+                                drafting. Its truth rules separated source facts,
+                                test observations, agent reports, and reviewer
+                                conclusions. Read-aloud, remove-the-name, claim,
+                                link, terminology, outline, and cold-read checks
+                                shaped the final edit.
+                            </p>
+                            <p class="source-meta">
+                                Files: technical-writing/SKILL.md;
+                                technical-writing/references/style.md;
+                                technical-writing/references/truth.md;
+                                reviewing-technical-prose/SKILL.md
+                            </p>
+                        </li>
+                        <li>
+                            <strong
+                                ><a href="https://github.com/cursor/plugins"
+                                    >cursor/plugins</a
+                                ></strong
+                            >
+                            <span class="source-meta"
+                                >ecc249f1e306fc64ddf83c7bed16cacf7c2239db</span
+                            >
+                            <p>
+                                The technical-writing skill separated tutorial,
+                                how-to, reference, and explanation jobs. Its
+                                sentence rules favored direct actors, conditions
+                                before actions, exact symbols, and stable terms.
+                                The unslop pass removed filler, generic claims,
+                                synonym cycling, decorative conclusions, and
+                                wording that could describe any project.
+                            </p>
+                            <p class="source-meta">
+                                Files: pstack/skills/technical-writing/SKILL.md;
+                                pstack/skills/unslop/SKILL.md
+                            </p>
+                        </li>
+                        <li>
+                            <strong
+                                ><a
+                                    href="https://github.com/vercel-labs/agent-skills"
+                                    >vercel-labs/agent-skills</a
+                                ></strong
+                            >
+                            <span class="source-meta"
+                                >063bee94c3f4df8453406c830b0a7df0f2860278</span
+                            >
+                            <p>
+                                The web review prompted checks for semantic
+                                controls, keyboard and visible focus, navigation
+                                state, target size, responsive overflow, and
+                                honest empty or loading states. The writing rules
+                                reinforced descriptive headings, direct link
+                                labels, compact prose, and consistent naming.
+                            </p>
+                            <p class="source-meta">
+                                Files: skills/web-design-guidelines/SKILL.md;
+                                skills/writing-guidelines/SKILL.md
+                            </p>
+                        </li>
+                        <li>
+                            <strong
+                                ><a
+                                    href="https://github.com/addyosmani/web-quality-skills"
+                                    >addyosmani/web-quality-skills</a
+                                ></strong
+                            >
+                            <span class="source-meta"
+                                >afa8da942115f2961fdbfa80807ea0b232ff6c00</span
+                            >
+                            <p>
+                                The useful audit order was evidence-led: choose
+                                representative routes and states, measure the
+                                rendered page, localize failures in source, fix
+                                the source, and rerun the same checks. The
+                                accessibility references supplied concrete
+                                reflow, contrast, target-size, semantics, label,
+                                focus-order, and consistent-navigation checks.
+                            </p>
+                            <p class="source-meta">
+                                Files: skills/web-quality-audit/SKILL.md;
+                                skills/accessibility/SKILL.md;
+                                accessibility/references/A11Y-PATTERNS.md;
+                                accessibility/references/WCAG.md
+                            </p>
+                        </li>
+                    </ul>
+                    <h3>Project and voice references</h3>
+                    <p>
+                        <a href="https://skills.sh/">skills.sh</a> exposed
+                        candidate skills and adoption signals. Popularity chose
+                        what to inspect first; source quality, license, scope,
+                        and applicability determined what was used.
+                    </p>
+                    <p>
+                        <a
+                            href="https://blog.hofstede.it/bespoke-a-programming-language-for-people-who-say-please/"
+                            >Bespoke: A Programming Language for People Who Say
+                            Please</a
+                        > supplied the civil diagnostic voice and exact
+                        confirmation phrase. The implementation remains ordinary
+                        C#; it borrows tone, not Bespoke syntax or semantics.
+                    </p>
+                    <p>
+                        <a href="https://github.com/gabenugget/DreamBerd"
+                            >DreamBerd</a
+                        >,
+                        <a href="https://codewithrockstar.com/docs/">Rockstar</a
+                        >, and an
+                        <a href="https://passo.uno/experiment-humour-documentation/"
+                            >English programming-language documentation
+                            experiment</a
+                        > demonstrated the same useful boundary: the premise can
+                        be playful while setup, behavior, errors, and limits stay
+                        literal.
+                    </p>
+                    <div
+                        class="table-wrap"
+                        role="region"
+                        aria-label="Example research sources"
+                        tabindex="0"
+                    >
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Source</th>
+                                    <th scope="col">What transferred</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row">
+                                        <a href="https://github.com/github/spec-kit"
+                                            >GitHub Spec Kit</a
+                                        > and
+                                        <a
+                                            href="https://skills.sh/warpdotdev/common-skills/write-product-spec"
+                                            >Warp write-product-spec</a
+                                        >
+                                    </th>
+                                    <td>
+                                        Separation of constitution,
+                                        user-visible specification, technical
+                                        plan, and dependency-ordered tasks.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">
+                                        <a
+                                            href="https://skills.sh/anthropics/skills/frontend-design"
+                                            >Anthropic frontend-design</a
+                                        > and
+                                        <a
+                                            href="https://skills.sh/vercel-labs/agent-skills/web-design-guidelines"
+                                            >Vercel web-design-guidelines</a
+                                        >
+                                    </th>
+                                    <td>
+                                        A specific visual direction followed by
+                                        semantic, responsive, and interaction
+                                        review.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">
+                                        <a
+                                            href="https://learn.microsoft.com/dotnet/csharp/fundamentals/coding-style/coding-conventions"
+                                            >Microsoft C# conventions</a
+                                        > and
+                                        <a
+                                            href="https://learn.microsoft.com/dotnet/standard/modern-web-apps-azure-architecture/architectural-principles"
+                                            >architectural principles</a
+                                        >
+                                    </th>
+                                    <td>
+                                        The technical authority for the
+                                        enterprise C# example. GitHub's
+                                        <a
+                                            href="https://skills.sh/github/awesome-copilot/dotnet-best-practices"
+                                            >dotnet-best-practices skill</a
+                                        > supplied additional review prompts.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="note">
+                        Official vendor documentation remained authoritative for
+                        .NET, Codex, Claude Code, GitHub Copilot CLI, and every
+                        cataloged command-line tool.
+                    </p>
+                </section>
+
+                <section id="r2" data-title="Clone convention">
+                    <h2><span class="section-code">R02</span>Clone convention</h2>
+                    <p>
+                        Keep research repositories outside the product checkout.
+                        Use a disposable root whose name identifies the research
+                        task, such as
+                        <code>${TMPDIR:-/tmp}/sib-llm-references</code>.
+                    </p>
+                    <p>
+                        Name skill collections
+                        <code>skills__OWNER__REPOSITORY</code>. The prefix groups
+                        research by purpose; the owner and repository preserve
+                        provenance in file searches and shell history.
+                    </p>
+                    <div class="codebox">
+                        <div class="codebar">
+                            <span>sh / shallow clone</span
+                            ><button type="button" class="copy">Copy</button>
+                        </div>
+                        <pre tabindex="0"><code>research_root=&quot;${TMPDIR:-/tmp}/sib-llm-references&quot;
+mkdir -p &quot;$research_root&quot;
+
+git clone --depth 1 https://github.com/riekelt/technical-writer.git \
+  &quot;$research_root/skills__riekelt__technical-writer&quot;
+git clone --depth 1 https://github.com/cursor/plugins.git \
+  &quot;$research_root/skills__cursor__plugins&quot;
+git clone --depth 1 https://github.com/vercel-labs/agent-skills.git \
+  &quot;$research_root/skills__vercel-labs__agent-skills&quot;
+git clone --depth 1 https://github.com/addyosmani/web-quality-skills.git \
+  &quot;$research_root/skills__addyosmani__web-quality-skills&quot;</code></pre>
+                    </div>
+                    <p>
+                        <code>--depth 1</code> fetches the current commit without
+                        older history. Record that commit before a rule enters a
+                        durable decision record.
+                    </p>
+                    <div class="codebox">
+                        <div class="codebar">
+                            <span>sh / record revisions and find instructions</span
+                            ><button type="button" class="copy">Copy</button>
+                        </div>
+                        <pre tabindex="0"><code>for repo in &quot;$research_root&quot;/skills__*; do
+  printf '%s\t' &quot;$(basename &quot;$repo&quot;)&quot;
+  git -C &quot;$repo&quot; rev-parse HEAD
+done
+
+find &quot;$research_root&quot; \
+  \( -name SKILL.md -o -path '*/references/*.md' \) \
+  -print | sort</code></pre>
+                    </div>
+                    <p>
+                        Read only the skills and references that answer the
+                        current task, and read each selected instruction file
+                        completely. These repositories supply guidance, so they
+                        share no project run command.
+                    </p>
+                </section>
+
+                <section id="r3" data-title="Work contract">
+                    <h2><span class="section-code">R03</span>Work contract</h2>
+                    <p>
+                        Convert the request into an explicit contract before
+                        installation or editing. Record the objective, editable
+                        files, preserved files, permitted tools, required
+                        artifacts, destructive boundaries, and proof of
+                        completion.
+                    </p>
+                    <ol class="decision-list">
+                        <li>
+                            <strong>Read instructions.</strong> Start with the
+                            nearest <code>AGENTS.md</code>, then applicable parent
+                            instructions.
+                        </li>
+                        <li>
+                            <strong>Preserve sequence.</strong> Turn “first,”
+                            “only after,” and “do not skip” into checklist
+                            dependencies.
+                        </li>
+                        <li>
+                            <strong>Separate diagnosis from change.</strong>
+                            Collect evidence before a proposed fix can alter it.
+                        </li>
+                        <li>
+                            <strong>Name exceptions.</strong> Record files or
+                            behavior that must survive unchanged.
+                        </li>
+                        <li>
+                            <strong>Define readers by task.</strong> Replace the
+                            generic word “users” with the person deciding whether
+                            to run, integrate, inspect, or maintain the project.
+                        </li>
+                    </ol>
+                    <h3>Inventory before editing</h3>
+                    <p>
+                        Map the entry point, reusable source, project files,
+                        instructions, generated outputs, documentation, ignored
+                        artifacts, and parent-site integration. Read the
+                        implementation behind every public behavior claim.
+                    </p>
+                    <div class="codebox">
+                        <div class="codebar">
+                            <span>sh / repository inventory</span
+                            ><button type="button" class="copy">Copy</button>
+                        </div>
+                        <pre tabindex="0"><code>rg --files
+rg -n &quot;WithFile|Proceed|Preview|ConfirmationRequired|AgentKind&quot; .
+git status --short</code></pre>
+                    </div>
+                    <p>
+                        In this project, source tracing covered the caller read,
+                        dry-run return, existing-file confirmation, adapter
+                        discovery, compatibility probes, workspace lock, process
+                        launch, and completion-report parser. It also separated
+                        writes performed by the builder from edits requested of
+                        the coding agent.
+                    </p>
+                    <p>
+                        Track reader-facing source artifacts—such as
+                        <code>AGENTS.md</code>, specifications, decisions,
+                        policies, HTML, CSS, and JavaScript. Ignore reproducible
+                        build output, runtime reports, workspace locks, and
+                        binary screenshots when a manifest preserves their
+                        evidence.
+                    </p>
+                </section>
+
+                <section id="r4" data-title="Research and planning">
+                    <h2>
+                        <span class="section-code">R04</span>Research and planning
+                    </h2>
+                    <p>
+                        Begin research with questions. For each unstable or
+                        unfamiliar claim, record the question, preferred source,
+                        observed answer, project decision, and verification date.
+                    </p>
+                    <ul>
+                        <li>
+                            Use primary sources for installation commands, CLI
+                            flags, framework behavior, language versions, and
+                            accessibility standards.
+                        </li>
+                        <li>
+                            Use skills and example projects for review
+                            heuristics, structure, and vocabulary. Verify product
+                            behavior in its source, tests, or primary
+                            documentation.
+                        </li>
+                        <li>
+                            Use popularity to choose what to inspect first, then
+                            decide which exact rule transfers.
+                        </li>
+                        <li>
+                            Link each external source and state the borrowed idea
+                            and project-specific application.
+                        </li>
+                        <li>
+                            Date facts that can change. Tie stable implementation
+                            facts to source or tests.
+                        </li>
+                    </ul>
+                    <h3>Plan observable outcomes</h3>
+                    <p>
+                        For work spanning design, copy, behavior, and validation,
+                        write a change request before implementation. Each item
+                        names where to look, the question to ask, the decision to
+                        make, the file to change, and the check that proves the
+                        outcome.
+                    </p>
+                    <p>
+                        Give independent defects separate checklist items, even
+                        when one patch can change both. Freeze the issue list
+                        before editing, record non-goals, and mark an item
+                        complete only after its matching validation passes.
+                    </p>
+                    <p>
+                        The website plan covered visual-system drift, navigation
+                        order, Guardrails ownership, joke-forward copy, hidden
+                        tasks, incomplete output descriptions, incorrect
+                        first-run instructions, mobile layout, and evidence
+                        handling. The
+                        <a href="CHANGE-REQUEST-WEBSITE-COHERENCE.md"
+                            >change request</a
+                        > preserves those decisions.
+                    </p>
+                </section>
+
+                <section id="r5" data-title="Safe execution">
+                    <h2><span class="section-code">R05</span>Safe execution</h2>
+                    <p>
+                        Make the default command observational when an agent can
+                        edit a workspace. The default SuperIntelligenceBuilder
+                        path reads the caller and instruction file, identifies a
+                        harness candidate when possible, and prints the exact
+                        statement. It does not probe the CLI, launch a child
+                        process, create a file, or edit the workspace.
+                    </p>
+                    <p>
+                        Plain, aligned output names the selected harness,
+                        executable, model choice, workspace, instruction state,
+                        source location, statement, non-actions, and live-run
+                        command. Logs remain readable without terminal colors.
+                    </p>
+                    <div
+                        class="table-wrap"
+                        role="region"
+                        aria-label="Execution guardrail gates"
+                        tabindex="0"
+                    >
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Gate</th>
+                                    <th scope="col">Accepted input</th>
+                                    <th scope="col">Effect</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row">Live execution</th>
+                                    <td><code>--yes,please,proceed</code></td>
+                                    <td>
+                                        Passed into the core
+                                        <code>Proceed</code> option so the sample
+                                        and builder share one authorization
+                                        state.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Existing instruction file</th>
+                                    <td><code>yes, please proceed</code></td>
+                                    <td>
+                                        Continues one run that may edit workspace
+                                        files.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Refusal</th>
+                                    <td><code>no</code></td>
+                                    <td>Stops before agent discovery or probing.</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Near match or end-of-input</th>
+                                    <td>Anything else</td>
+                                    <td>
+                                        Declines the request; abbreviations,
+                                        capitalization changes, and added
+                                        whitespace are not approval.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        The prompt states the scope: approval covers one run,
+                        does not approve every edit, and provides no rollback.
+                        Human diagnostics keep the civil voice while stable error
+                        codes remain machine-readable.
+                    </p>
+                    <p>
+                        A zero process exit and a valid run-specific completion
+                        report are required protocol evidence. The report remains
+                        the agent's assertion; inspect the resulting files before
+                        claiming that the task succeeded.
+                    </p>
+                </section>
+
+                <section id="r6" data-title="Example design">
+                    <h2><span class="section-code">R06</span>Example design</h2>
+                    <p>
+                        Give each example a distinct reader job and deliverable.
+                        Each project references the same reusable source, shows
+                        its real fluent statement, and keeps useful generated
+                        outputs available for inspection.
+                    </p>
+                    <div
+                        class="table-wrap"
+                        role="region"
+                        aria-label="Example structures"
+                        tabindex="0"
+                    >
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Example</th>
+                                    <th scope="col">Deliberate separation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row">
+                                        <a href="examples/specification-workflow/"
+                                            >Specification workflow</a
+                                        >
+                                    </th>
+                                    <td>
+                                        Project principles, user-visible
+                                        behavior, technical decisions, and
+                                        dependency-ordered work.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">
+                                        <a href="examples/static-web-design/"
+                                            >Static web design</a
+                                        >
+                                    </th>
+                                    <td>
+                                        Brief, competing directions, recorded
+                                        decision, visual system, review
+                                        checklist, and generated site.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">
+                                        <a href="examples/enterprise-csharp/"
+                                            >Enterprise C# practices</a
+                                        >
+                                    </th>
+                                    <td>
+                                        Compiler and analyzer defaults,
+                                        architecture, coding, testing, migration,
+                                        rollback, and review guidance.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        Describe every output by its reader purpose; keep its
+                        filename as the linked identifier. Shared execution
+                        behavior belongs on the examples landing page and in the
+                        manual. Workflow-specific paths, warnings, and adoption
+                        advice belong on the detail page.
+                    </p>
+                    <p>
+                        When authenticated execution is part of the claim, run
+                        the example through the builder, then build and inspect
+                        its files independently after the agent reports
+                        completion.
+                    </p>
+                </section>
+
+                <section id="r7" data-title="Editorial pipeline">
+                    <h2>
+                        <span class="section-code">R07</span>Three-pass editorial
+                        pipeline
+                    </h2>
+                    <ol>
+                        <li>
+                            <strong>Write expansively.</strong> Capture every
+                            verified fact, decision, command, caveat, and route a
+                            reader may need.
+                        </li>
+                        <li>
+                            <strong>Review analytically.</strong> Quote each
+                            sentence or logical unit in a separate file and
+                            decide whether to keep, rewrite, remove, combine,
+                            move, or extend it.
+                        </li>
+                        <li>
+                            <strong>Publish selectively.</strong> Apply only
+                            accepted decisions to the reader-facing page.
+                        </li>
+                    </ol>
+                    <p>Ask five questions of every content unit:</p>
+                    <ol>
+                        <li>What reader task does this support?</li>
+                        <li>
+                            What new fact, instruction, constraint, choice, or
+                            route does it add?
+                        </li>
+                        <li>What source or observed behavior supports it?</li>
+                        <li>Is this the correct page and position?</li>
+                        <li>Should it stay, change, move, or disappear?</li>
+                    </ol>
+                    <h3>Language decisions</h3>
+                    <ul>
+                        <li>
+                            Keep a sentence only when its usefulness answer is
+                            specific.
+                        </li>
+                        <li>
+                            Use one term per concept: “coding agent” for the
+                            external CLI, “adapter” for its integration,
+                            “builder” for the C# file, and “dry run” for the
+                            non-executing path.
+                        </li>
+                        <li>
+                            Put conditions before actions. Use exact filenames,
+                            flags, replies, error codes, and expected outputs.
+                        </li>
+                        <li>
+                            Remove importance words without consequences,
+                            popularity claims after discovery, and conclusions
+                            that add no instruction.
+                        </li>
+                        <li>
+                            Let the invented API and civil diagnostics carry the
+                            humor without labeling the project for the reader.
+                        </li>
+                        <li>
+                            Use descriptive headings wherever readers scan for
+                            an answer. End on the last useful fact.
+                        </li>
+                    </ul>
+                </section>
+
+                <section id="r8" data-title="Documentation system">
+                    <h2>
+                        <span class="section-code">R08</span>Documentation system
+                    </h2>
+                    <p>Give each fact one canonical owner.</p>
+                    <div
+                        class="table-wrap"
+                        role="region"
+                        aria-label="Documentation ownership"
+                        tabindex="0"
+                    >
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Page</th>
+                                    <th scope="col">Owns</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row"><a href="index.html">Manual</a></th>
+                                    <td>
+                                        Setup, behavior, configuration,
+                                        permissions, failure handling, and
+                                        limits.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">
+                                        <a href="examples/">Examples</a>
+                                    </th>
+                                    <td>
+                                        Shared example prerequisites and run
+                                        steps; each detail page owns its task,
+                                        output guide, warnings, and evidence.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">
+                                        <a href="about.html">About</a>
+                                    </th>
+                                    <td>
+                                        Historical environment and development
+                                        decisions.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">LLM Recipes</th>
+                                    <td>
+                                        The reusable method and external review
+                                        sources.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        When content moves, make the old URL a small redirect
+                        with a visible fallback link. Keep the full prose at its
+                        canonical destination. Update the parent project index
+                        and RSS feed together whenever the public project listing
+                        changes.
+                    </p>
+                    <h3>Reuse the established page shell</h3>
+                    <p>
+                        Start from the established page shell so a new page
+                        inherits the site's design tokens, masthead, global
+                        navigation, desktop grid, contents rail, section codes,
+                        code panels, tables, focus treatment, mobile
+                        transformation, and print behavior. Add only styles
+                        required by new content.
+                    </p>
+                    <ul>
+                        <li>
+                            Prefer native headings, links, buttons, tables, and
+                            landmarks; add ARIA only where it supplies missing
+                            semantics.
+                        </li>
+                        <li>
+                            Use one descriptive <code>h1</code>, ordered
+                            headings, descriptive links, a skip link, visible
+                            focus, and <code>aria-current="page"</code>.
+                        </li>
+                        <li>
+                            Allow prose and inline code to wrap. Preserve
+                            command whitespace when line breaks change meaning.
+                        </li>
+                        <li>
+                            Wrap illustrative source excerpts and stack dense
+                            comparison rows at narrow widths when scrolling
+                            would hide the instruction.
+                        </li>
+                    </ul>
+                    <h3>Social preview</h3>
+                    <p>
+                        Draft one accurate description, write five alternatives,
+                        compare clarity, specificity, length, and social-preview
+                        fit, then record the winner. Use it consistently in the
+                        standard, Open Graph, and X descriptions.
+                    </p>
+                    <p>
+                        Create a 1200-by-630 local image with the project name,
+                        central mechanism, and enough empty space for small
+                        previews. Render the SVG with ImageMagick, verify its
+                        dimensions, and inspect the raster output.
+                    </p>
+                    <div class="codebox">
+                        <div class="codebar">
+                            <span>sh / social image check</span
+                            ><button type="button" class="copy">Copy</button>
+                        </div>
+                        <pre tabindex="0"><code>magick social-card.svg social-card.png
+identify social-card.png</code></pre>
+                    </div>
+                </section>
+
+                <section id="r9" data-title="Rendered review">
+                    <h2><span class="section-code">R09</span>Rendered review</h2>
+                    <ol>
+                        <li>
+                            Capture deployed and local pages before changing
+                            them. Crawl every important link and interaction so
+                            the review covers the complete site.
+                        </li>
+                        <li>
+                            Save full-page desktop and mobile screenshots. Read
+                            them directly and compare related pages side by side.
+                        </li>
+                        <li>
+                            Define what a first-time visitor must understand,
+                            decide, and do.
+                        </li>
+                        <li>
+                            Ask for independent read-only opinions after evidence
+                            collection. Supply screenshots, source, audience,
+                            quality bar, and exact questions.
+                        </li>
+                        <li>
+                            Separate observations from interpretations. Turn each
+                            finding into one decision: expand, rewrite, remove,
+                            rearrange, research further, or keep.
+                        </li>
+                        <li>
+                            Write the change request before editing. Afterward,
+                            capture the same routes, viewports, and states.
+                        </li>
+                    </ol>
+                    <p class="specs">
+                        Desktop 1440 × 900 / mobile 390 × 844 / reflow 320 × 720
+                    </p>
+                    <p>
+                        Binary screenshots remain ignored in this source-only
+                        project. A tracked manifest records target, viewport,
+                        browser, purpose, and result.
+                    </p>
+                    <h3>Questions for every page and breakpoint</h3>
+                    <ol class="check-grid">
+                        <li>
+                            Does the first viewport identify the page, its
+                            purpose, and the next useful route?
+                        </li>
+                        <li>
+                            Are global navigation, local navigation, and current
+                            state consistent?
+                        </li>
+                        <li>
+                            Does the content column remain readable without dead
+                            space or cramped measures?
+                        </li>
+                        <li>
+                            Do headings, spacing, rules, tables, and code panels
+                            match neighboring pages?
+                        </li>
+                        <li>
+                            Does a breakpoint create overflow, hidden source, a
+                            stranded label, or a visual-system change?
+                        </li>
+                        <li>
+                            Can a keyboard user see focus and reach controls in
+                            visual order?
+                        </li>
+                        <li>
+                            Do links remain distinguishable without color alone?
+                        </li>
+                        <li>
+                            Are non-inline targets large enough and spaced
+                            safely?
+                        </li>
+                        <li>
+                            Does any copy sound interchangeable with another
+                            project?
+                        </li>
+                        <li>
+                            Does the page repeat behavior owned by a canonical
+                            source?
+                        </li>
+                        <li>
+                            Is every visual difference explained by the
+                            artifact's purpose?
+                        </li>
+                        <li>
+                            Are applicable loading, empty, error, long-content,
+                            no-JavaScript, and reduced-motion states usable?
+                        </li>
+                    </ol>
+                    <p class="note">
+                        Automated accessibility output finds issues; it does not
+                        certify accessibility. Fix the named source node, then
+                        rerun the equivalent browser, keyboard, and visual checks.
+                    </p>
+                </section>
+
+                <section id="r10" data-title="Validation ladder">
+                    <h2>
+                        <span class="section-code">R10</span>Validation ladder
+                    </h2>
+                    <p>
+                        Run inexpensive deterministic checks before expensive or
+                        state-changing checks.
+                    </p>
+                    <ol>
+                        <li>Inspect the diff and run whitespace checks.</li>
+                        <li>
+                            Parse HTML, XML, JavaScript, CSS, Markdown links, and
+                            project configuration.
+                        </li>
+                        <li>
+                            Build the root project and every example with
+                            warnings treated as errors.
+                        </li>
+                        <li>
+                            Run the root project and examples in default dry-run
+                            mode.
+                        </li>
+                        <li>
+                            Test exact live flags, refusal, approval, near
+                            matches, and end-of-input. Use a controlled failure
+                            when it can prove a gate without launching a paid
+                            agent.
+                        </li>
+                        <li>
+                            Run authenticated integration only when the claim
+                            requires real provider execution.
+                        </li>
+                        <li>
+                            Inspect generated files and validate format, links,
+                            and traceability independently of the agent report.
+                        </li>
+                        <li>
+                            Serve the site over local HTTP and test rendered
+                            routes with Playwright.
+                        </li>
+                        <li>
+                            Run axe, keyboard flows, forms, copy controls,
+                            anchors, redirects, console checks, and overflow
+                            assertions.
+                        </li>
+                        <li>
+                            Capture and inspect the same viewports used for the
+                            baseline.
+                        </li>
+                        <li>
+                            Run the parent index, preview-target, RSS XML, and
+                            item-count checks.
+                        </li>
+                        <li>
+                            Record observed results and remaining platform limits.
+                        </li>
+                    </ol>
+                    <div class="codebox">
+                        <div class="codebar">
+                            <span>sh / project and local website</span
+                            ><button type="button" class="copy">Copy</button>
+                        </div>
+                        <pre tabindex="0"><code>dotnet build --configuration Release
+dotnet run
+dotnet run -- --yes,please,proceed
+
+python3 -m http.server 4173 --bind 127.0.0.1</code></pre>
+                    </div>
+                    <p>
+                        Use a disposable browser harness when Playwright and axe
+                        are review tools rather than project dependencies.
+                    </p>
+                    <div class="codebox">
+                        <div class="codebar">
+                            <span>sh / disposable browser harness</span
+                            ><button type="button" class="copy">Copy</button>
+                        </div>
+                        <pre tabindex="0"><code>browser_root=&quot;${TMPDIR:-/tmp}/sib-browser-audit&quot;
+mkdir -p &quot;$browser_root&quot;
+cd &quot;$browser_root&quot;
+npm init -y
+npm install --no-save @playwright/test@1.55.0 @axe-core/playwright@4.10.2
+npx playwright install chromium</code></pre>
+                    </div>
+                    <p>
+                        Validate editable HTML with explicit local style
+                        exceptions instead of reformatting the repository around
+                        a validator's defaults.
+                    </p>
+                    <div class="codebox">
+                        <div class="codebar">
+                            <span>sh / structural HTML validation</span
+                            ><button type="button" class="copy">Copy</button>
+                        </div>
+                        <pre tabindex="0"><code>npx --yes html-validate@10.4.0 \
+  --rule doctype-style:off \
+  --rule void-style:off \
+  --rule prefer-native-element:off \
+  index.html llm-recipes.html examples/index.html</code></pre>
+                    </div>
+                    <p>
+                        Keep <code>git diff --check</code>, local link resolution,
+                        <code>node --check</code>, XML parsing, checksum comparison,
+                        and parent-repository checks as separate evidence.
+                    </p>
+                </section>
+
+                <section id="r11" data-title="Tools and evidence">
+                    <h2>
+                        <span class="section-code">R11</span>Tools and evidence
+                    </h2>
+                    <div
+                        class="table-wrap"
+                        role="region"
+                        aria-label="Tool roles"
+                        tabindex="0"
+                    >
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Tool</th>
+                                    <th scope="col">Observed role</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row">.NET SDK</th>
+                                    <td>
+                                        Built the builder and examples; ran dry
+                                        runs and guardrail paths.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Codex CLI</th>
+                                    <td>
+                                        Ran the authenticated coding-agent tasks
+                                        that produced checked-in example outputs.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">git + ripgrep</th>
+                                    <td>
+                                        Exposed state, diffs, revisions,
+                                        preservation checks, files, symbols,
+                                        links, and stale terms.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Node.js + Python</th>
+                                    <td>
+                                        Ran repository assertions and browser
+                                        tools; served HTTP and parsed XML.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Playwright Chromium</th>
+                                    <td>
+                                        Exercised routes and controls, measured
+                                        overflow and targets, and captured
+                                        screenshots.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">axe-core + html-validate</th>
+                                    <td>
+                                        Localized rendered accessibility issues
+                                        and invalid or unnecessary ARIA.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">ImageMagick</th>
+                                    <td>
+                                        Rendered and inspected the social image
+                                        and verified its dimensions.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">sha256sum</th>
+                                    <td>
+                                        Proved byte-for-byte preservation when a
+                                        scoped redesign protected a file.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Read-only reviewers</th>
+                                    <td>
+                                        Supplied independent editorial and visual
+                                        opinions from shared evidence and
+                                        constraints. The primary reviewer checked
+                                        accepted findings against source or
+                                        rendered behavior.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <h3>Keep evidence records separate</h3>
+                    <ul>
+                        <li>
+                            The <strong>change request</strong> records the issue,
+                            decision, files, and planned proof.
+                        </li>
+                        <li>
+                            The <strong>sentence review</strong> records why each
+                            content unit stayed, changed, moved, or disappeared.
+                        </li>
+                        <li>
+                            The <strong>validation record</strong> states commands,
+                            environment, observations, and limits.
+                        </li>
+                        <li>
+                            The <strong>screenshot manifest</strong> describes
+                            ignored binary evidence by route, viewport, browser,
+                            purpose, and result.
+                        </li>
+                    </ul>
+                    <p>
+                        Generated output files are deliverables. Build products,
+                        locks, screenshots, and transient run reports are
+                        reproducible evidence and remain ignored. Agent completion
+                        reports record provenance, not independent validation.
+                    </p>
+                    <p>
+                        Name a count's method and scope. Keep “not tested”
+                        separate from “failed.” Preserve historical material when
+                        its integrity is part of the task; change only the shared
+                        navigation when a later request explicitly requires it.
+                    </p>
+                </section>
+
+                <section id="r12" data-title="Reusable recipe">
+                    <h2><span class="section-code">R12</span>Reusable recipe</h2>
+                    <p>
+                        The pseudo-language below compresses the method while
+                        preserving order, evidence boundaries, and the optional
+                        live-agent branch. Highlighting is local CSS; the text is
+                        understandable without color or JavaScript.
+                    </p>
+                    <div class="codebox">
+                        <div class="codebar">
+                            <span>recipe / pseudocode</span
+                            ><button type="button" class="copy">Copy</button>
+                        </div>
+                        <pre tabindex="0"><code><span class="pseudo-keyword">recipe</span> <span class="pseudo-name">DeliverAgentAssistedProject</span>(request, repository):
+    contract := <span class="pseudo-call">read_instructions_and_define_scope</span>(request, repository)
+    inventory := <span class="pseudo-call">map_source_docs_outputs_and_ignored_artifacts</span>(repository)
+    questions := <span class="pseudo-call">list_unstable_unfamiliar_and_high_risk_claims</span>(inventory)
+    sources := <span class="pseudo-call">research_primary_sources_and_selected_skills</span>(questions)
+    plan := <span class="pseudo-call">write_evidence_linked_checklist</span>(contract, inventory, sources)
+
+    <span class="pseudo-call">validate_existing_state</span>(plan)
+    <span class="pseudo-call">implement_one_bounded_change_at_a_time</span>(plan)
+    <span class="pseudo-call">build_and_run_default_dry_paths</span>()
+
+    <span class="pseudo-keyword">if</span> real_agent_output_is_part_of_the_claim:
+        <span class="pseudo-call">require_explicit_execution_flag</span>(<span class="pseudo-string">&quot;--yes,please,proceed&quot;</span>)
+        <span class="pseudo-call">require_exact_existing_file_confirmation_when_applicable</span>()
+        <span class="pseudo-call">run_authenticated_agent</span>()
+        <span class="pseudo-call">inspect_outputs_independently_of_agent_report</span>()
+
+    draft := <span class="pseudo-call">write_complete_reader_facing_content</span>()
+    review := <span class="pseudo-call">quote_and_decide_every_content_unit</span>(draft)
+    page := <span class="pseudo-call">apply_only_accepted_editorial_decisions</span>(review)
+
+    before := <span class="pseudo-call">capture_routes_viewports_states</span>()
+    <span class="pseudo-call">implement_documentation_shell_and_content</span>(page)
+    after := <span class="pseudo-call">capture_equivalent_routes_viewports_states</span>()
+    <span class="pseudo-call">compare</span>(before, after)
+
+    <span class="pseudo-call">run_static_build_runtime_browser_accessibility_and_parent_checks</span>()
+    <span class="pseudo-call">record_observed_results_and_limits</span>()
+    <span class="pseudo-call">keep_temporary_tools_outside_the_product_checkout</span>()
+
+    <span class="pseudo-keyword">return</span> source_files, generated_outputs, documentation,
+           review_records, validation_record</code></pre>
+                    </div>
+                    <p class="note">
+                        Completion requires every requested artifact to exist,
+                        every planned check to have a recorded result, every
+                        accepted issue to map to a change, and every behavior
+                        claim to map to source or observation.
+                    </p>
+                </section>
+                <footer class="colophon">
+                    SuperIntelligenceBuilder / LLM recipes / reviewed method
+                </footer>
+            </main>
+        </div>
+        <p
+            id="copy-status"
+            class="sr-only"
+            role="status"
+            aria-live="polite"
+        ></p>
+        <script>
+            const sectionLinks = [...document.querySelectorAll(".rail nav a")];
+            const filter = document.querySelector("#section-filter");
+            filter.addEventListener("input", () => {
+                const query = filter.value.trim().toLocaleLowerCase();
+                let shown = 0;
+                sectionLinks.forEach((link) => {
+                    link.hidden = !link.textContent
+                        .toLocaleLowerCase()
+                        .includes(query);
+                    if (!link.hidden) shown++;
+                });
+                document.querySelector("#empty").hidden = shown !== 0;
+            });
+
+            if ("IntersectionObserver" in window) {
+                const observer = new IntersectionObserver(
+                    (entries) => {
+                        const current = entries
+                            .filter((entry) => entry.isIntersecting)
+                            .sort(
+                                (a, b) =>
+                                    a.boundingClientRect.top -
+                                    b.boundingClientRect.top,
+                            )[0];
+                        if (!current) return;
+                        sectionLinks.forEach((link) => {
+                            if (link.hash === "#" + current.target.id)
+                                link.setAttribute("aria-current", "location");
+                            else link.removeAttribute("aria-current");
+                        });
+                    },
+                    { rootMargin: "-5% 0px -70% 0px" },
+                );
+                document
+                    .querySelectorAll("main section")
+                    .forEach((section) => observer.observe(section));
+            }
+
+            document.querySelectorAll(".copy").forEach((button) => {
+                button.addEventListener("click", async () => {
+                    const code = button
+                        .closest(".codebox")
+                        .querySelector("pre code");
+                    try {
+                        if (!navigator.clipboard?.writeText)
+                            throw new Error("Clipboard unavailable");
+                        await navigator.clipboard.writeText(code.textContent);
+                        button.textContent = "Copied";
+                        document.querySelector("#copy-status").textContent =
+                            "Code copied.";
+                    } catch {
+                        const range = document.createRange();
+                        range.selectNodeContents(code);
+                        const selection = window.getSelection();
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                        button.textContent = "Selected";
+                        document.querySelector("#copy-status").textContent =
+                            "Code selected. Use your keyboard to copy.";
+                    }
+                    setTimeout(() => {
+                        button.textContent = "Copy";
+                    }, 1800);
+                });
+            });
+        </script>
+    </body>
+</html>

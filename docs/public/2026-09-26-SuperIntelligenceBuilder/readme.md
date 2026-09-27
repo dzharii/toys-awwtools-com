@@ -32,6 +32,7 @@ Each example is a standalone SDK project that links the same `SuperIntelligenceB
 
 - [Source manual](index.html)
 - [Examples](examples/)
+- [LLM Recipes](llm-recipes.html), the reusable research, implementation, editorial, and validation method behind this project
 - [Design and development record](about.html)
 - [Validation record](VALIDATION.md)
 - [Social description review](editorial/social-description-review.md)
