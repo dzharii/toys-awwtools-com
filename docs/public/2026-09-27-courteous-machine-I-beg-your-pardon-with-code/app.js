@@ -21,6 +21,33 @@ const statusNames={ready:'Ready to adapt',context:'Use with context',avoid:'Coun
 const kindNames={phrase:'Phrase',example:'Example',pattern:'Pattern',avoid:'Counterexample',passage:'Passage'};
 // Two brackets around a small sign of making: the mark for "write this as code".
 const codeIcon='<svg class="codegen-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7.6 6.5 3.2 11.4a.9.9 0 0 0 0 1.2l4.4 4.9"/><path d="M16.4 6.5 20.8 11.4a.9.9 0 0 1 0 1.2l-4.4 4.9"/><path d="M12 8.6c.3 1.9 1.2 2.8 3.1 3.1-1.9.3-2.8 1.2-3.1 3.1-.3-1.9-1.2-2.8-3.1-3.1 1.9-.3 2.8-1.2 3.1-3.1Z"/></svg>';
+// One sheet laid over another, and the tick that briefly replaces it. Both are
+// present in the button at once; which one shows is settled in the stylesheet,
+// so a successful copy changes nothing about the button's size or position.
+const copyMark='<svg class="copy-glyph copy-glyph-rest" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15.6 8.4V6.1a1.7 1.7 0 0 0-1.7-1.7H6.1A1.7 1.7 0 0 0 4.4 6.1v7.8a1.7 1.7 0 0 0 1.7 1.7h2.3"/><rect x="8.4" y="8.4" width="11.2" height="11.2" rx="1.7"/></svg><svg class="copy-glyph copy-glyph-done" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m5.2 12.6 4.6 4.6L18.8 7.4"/></svg>';
+/* A compact control placed beside the text it has authority over. The visible
+ * mark is small; the button around it is not, so it stays comfortable to hit. */
+function copyControl(id, what, label){
+  return `<button type="button" class="copy-icon" data-copy="${esc(id)}" data-copy-what="${esc(what)}" aria-label="${esc(label)}" title="Copy">${copyMark}</button>`;
+}
+/* The example is a specimen, not decoration, so it is presented as one: a
+ * header naming it, a fine rule, and the text itself in a read-only field.
+ *
+ * A native readonly textarea is used deliberately. The browser already gives a
+ * caret, word-wise movement, keyboard selection, Select All and copy, and
+ * already refuses typing, deletion, cutting, pasting and dropping - none of
+ * which we could imitate as well by intercepting keys. Its default wrapping is
+ * also exactly what these specimens need: every deliberate space and line break
+ * is kept, and a line is folded only when the measure is genuinely too narrow.
+ */
+function specimen(label, text, copyId, what, copyLabel){
+  const rows=Math.max(1,String(text).split('\n').length);
+  // The parser discards a single newline immediately after the opening tag, so
+  // one is supplied deliberately. Everything after it - including the leading
+  // spaces that align the small tables in many of these specimens - survives
+  // exactly as stored, whatever the text happens to begin with.
+  return `<section class="card-example"><div class="example-head"><span class="example-label">${esc(label)}</span>${copyControl(copyId,what,copyLabel)}</div><textarea class="example-text" readonly rows="${rows}" spellcheck="false" autocomplete="off" aria-label="${esc(label)}">\n${esc(text)}</textarea></section>`;
+}
 function toast(message){$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(timer);timer=setTimeout(()=>$('toast').classList.remove('show'),3000)}
 function navigate(target){view=target;document.querySelectorAll('.view').forEach(el=>el.hidden=el.id!=='view-'+target);document.querySelectorAll('.top-tab').forEach(el=>{const on=el.dataset.view===target;el.classList.toggle('active',on);el.setAttribute('aria-pressed',String(on))});}
 function nav(){ $('category-nav').innerHTML=groups.map((g,i)=>{const count=catalog.filter(x=>(g.id==='all'||g.cats.includes(x.category))&&x.status!=='avoid').length;return `<button class="category-button ${group===g.id?'active':''}" data-group="${g.id}" aria-pressed="${group===g.id}"><span class="num">${String(i).padStart(2,'0')}</span><span>${g.title}</span><span class="count">${count}</span></button>`}).join('');}
@@ -34,12 +61,65 @@ function passageCard(x){const P=window.CourtesyPassage,blanks=P.blanks(x.passage
 // The announcement repeats the folio for most passages, so it is printed only
 // where it says something the folio does not.
 const occasion=x.announcement.toLowerCase()===x.category?esc(x.summary):`<span class="passage-announcement">${esc(x.announcement)}</span> ${esc(x.summary)}`;
-return `<article class="phrase-card passage-card" id="phrase-${esc(x.id)}"><button class="codegen-open" data-codegen="${esc(x.id)}" title="Generate code for this message" aria-label="Generate code for entry ${esc(x.id)}">${codeIcon}</button><div class="card-meta"><span class="folio">${esc(x.category.replace(/-/g,' '))}</span><span>${esc(kindNames[x.kind])}</span><span>${esc(x.register)}</span>${x.origin==='new'?'<span>NEW</span>':''}</div><p class="passage-occasion">${occasion}</p><div class="phrase-passage">${passageBody(x.passage)}</div>${blanks.length?`<details class="card-sample"><summary>Read it with sample values (${blanks.length} ${blanks.length===1?'blank':'blanks'})</summary><pre>${esc(P.fill(x.passage))}</pre></details>`:''}<details class="card-note"><summary>${statusNames[x.status]}</summary><p>${esc(x.editorialNote)}</p></details><div class="card-actions"><button class="copy-button" data-copy="${esc(x.id)}" aria-label="Copy ${esc(x.id)}">Copy wording</button><span class="source-ref">${esc(x.sources.join(', '))}</span><button class="use-button" data-use="${esc(x.id)}">Compose with this &gt;</button></div></article>`;}
-function card(x){if(x.kind==='passage')return passageCard(x);let note=x.editorialNote;if(x.status==='ready'&&note.startsWith('Suitable when the described fact'))note=x.kind==='phrase'?'Pair this phrase with a specific fact and, where useful, a next step.':x.note;if(note==='Source draft; retained for editorial selection.')note='Adapt the particulars to the observed situation.';return `<article class="phrase-card" id="phrase-${esc(x.id)}">${x.kind!=='avoid'?`<button class="codegen-open" data-codegen="${esc(x.id)}" title="Generate code for this message" aria-label="Generate code for entry ${esc(x.id)}">${codeIcon}</button>`:''}<div class="card-meta"><span class="folio">${esc(x.category.replace(/-/g,' '))}</span><span>${esc(kindNames[x.kind])}</span><span>${esc(x.register)}</span>${x.origin==='new'?'<span>NEW</span>':''}</div><p class="phrase-text ${x.text.length>200?'long ':''}${x.kind==='pattern'?'pattern':''}">${esc(x.text)}</p>${x.example?`<div class="card-example"><span class="example-label">${x.kind==='avoid'?'Preferred instead':'Example in use'}</span><pre>${esc(x.example)}</pre></div>`:''}<details class="card-note"><summary>${statusNames[x.status]}</summary><p>${esc(note)}</p></details>${x.edited?`<details class="original"><summary>View original draft wording</summary><p>${esc(x.originalText)}</p></details>`:''}<div class="card-actions"><button class="copy-button" data-copy="${esc(x.id)}" aria-label="Copy ${esc(x.id)}">Copy wording</button><span class="source-ref">${esc(x.sources.join(', '))}</span>${x.kind!=='avoid'?`<button class="use-button" data-use="${esc(x.id)}">Compose with this &gt;</button>`:''}</div></article>`;}
-function render(){filtered=filter();$('result-count').textContent=`${filtered.length} ${filtered.length===1?'entry':'entries'}${group==='all'?' in the reference':' in this collection'}`;$('cards').innerHTML=filtered.slice(0,limit).map(card).join('');$('empty').hidden=!!filtered.length;$('load-more').hidden=limit>=filtered.length;$('shown-count').textContent=filtered.length?`Showing ${Math.min(limit,filtered.length)} of ${filtered.length}`:'';}
+return `<article class="phrase-card passage-card" id="phrase-${esc(x.id)}"><button class="codegen-open" data-codegen="${esc(x.id)}" title="Generate code for this message" aria-label="Generate code for entry ${esc(x.id)}">${codeIcon}</button><div class="card-meta"><span class="folio">${esc(x.category.replace(/-/g,' '))}</span><span>${esc(kindNames[x.kind])}</span><span>${esc(x.register)}</span>${x.origin==='new'?'<span>NEW</span>':''}</div><div class="passage-head"><p class="passage-occasion">${occasion}</p>${copyControl(x.id,'phrase','Copy passage')}</div><div class="phrase-passage">${passageBody(x.passage)}</div>${blanks.length?`<details class="card-sample"><summary>Read it with sample values (${blanks.length} ${blanks.length===1?'blank':'blanks'})</summary>${specimen('With sample values',P.fill(x.passage),x.id,'sample','Copy passage with sample values')}</details>`:''}<details class="card-note"><summary>${statusNames[x.status]}</summary><p>${esc(x.editorialNote)}</p></details><div class="card-actions"><span class="source-ref">${esc(x.sources.join(', '))}</span><button class="use-button" data-use="${esc(x.id)}">Compose with this &gt;</button></div></article>`;}
+function card(x){if(x.kind==='passage')return passageCard(x);let note=x.editorialNote;if(x.status==='ready'&&note.startsWith('Suitable when the described fact'))note=x.kind==='phrase'?'Pair this phrase with a specific fact and, where useful, a next step.':x.note;if(note==='Source draft; retained for editorial selection.')note='Adapt the particulars to the observed situation.';const preferred=x.kind==='avoid';return `<article class="phrase-card" id="phrase-${esc(x.id)}">${x.kind!=='avoid'?`<button class="codegen-open" data-codegen="${esc(x.id)}" title="Generate code for this message" aria-label="Generate code for entry ${esc(x.id)}">${codeIcon}</button>`:''}<div class="card-meta"><span class="folio">${esc(x.category.replace(/-/g,' '))}</span><span>${esc(kindNames[x.kind])}</span><span>${esc(x.register)}</span>${x.origin==='new'?'<span>NEW</span>':''}</div><div class="phrase-line"><p class="phrase-text ${x.text.length>200?'long ':''}${x.kind==='pattern'?'pattern':''}">${esc(x.text)}</p>${copyControl(x.id,'phrase','Copy phrase')}</div>${x.example?specimen(preferred?'Preferred instead':'Example in use',x.example,x.id,'example',preferred?'Copy preferred wording':'Copy example message'):''}<details class="card-note"><summary>${statusNames[x.status]}</summary><p>${esc(note)}</p></details>${x.edited?`<details class="original"><summary>View original draft wording</summary><p>${esc(x.originalText)}</p></details>`:''}<div class="card-actions"><span class="source-ref">${esc(x.sources.join(', '))}</span>${x.kind!=='avoid'?`<button class="use-button" data-use="${esc(x.id)}">Compose with this &gt;</button>`:''}</div></article>`;}
+/* A specimen should show all of itself. The rows attribute gets the height
+ * roughly right before paint; this settles it exactly, allowing for whatever
+ * wrapping the current measure has imposed. */
+function autosize(box){if(!box||!box.isConnected)return;box.style.height='auto';const chrome=box.offsetHeight-box.clientHeight;box.style.height=(box.scrollHeight+chrome)+'px';}
+function autosizeAll(root){(root||document).querySelectorAll('.example-text').forEach(box=>{if(box.clientWidth)autosize(box);});}
+function render(){filtered=filter();$('result-count').textContent=`${filtered.length} ${filtered.length===1?'entry':'entries'}${group==='all'?' in the reference':' in this collection'}`;$('cards').innerHTML=filtered.slice(0,limit).map(card).join('');$('empty').hidden=!!filtered.length;$('load-more').hidden=limit>=filtered.length;$('shown-count').textContent=filtered.length?`Showing ${Math.min(limit,filtered.length)} of ${filtered.length}`:'';autosizeAll($('cards'));}
 function reset(){['search','kind','register','origin','editorial'].forEach(id=>$(id).value='');limit=30;selectGroup('all');}
-async function copyText(text){try{if(!navigator.clipboard)throw Error();await navigator.clipboard.writeText(text);toast('Wording copied.');}catch(e){const area=document.createElement('textarea');area.value=text;area.style.position='fixed';area.style.top='-999px';document.body.appendChild(area);area.select();let ok=false;try{ok=document.execCommand('copy')}catch(e){}area.remove();toast(ok?'Wording copied.':'Clipboard unavailable. Select the wording and copy it manually.');}}
-document.addEventListener('click',e=>{const target=e.target.closest('button');if(!target)return;if(target.dataset.view){navigate(target.dataset.view);window.scrollTo({top:0});}if(target.dataset.group)selectGroup(target.dataset.group);if(target.dataset.copy){const x=catalog.find(x=>x.id===target.dataset.copy);copyText(x.text);}if(target.dataset.codegen){const x=catalog.find(x=>x.id===target.dataset.codegen);if(x&&window.CourtesyCodegen)window.CourtesyCodegen.open({text:x.text,id:x.id,category:x.category,register:x.register,kind:x.kind,example:x.example,passage:x.passage});}if(target.dataset.use){const x=catalog.find(x=>x.id===target.dataset.use);navigate('constructor');window.CourtesyConstructor.load(x.text);$('ctor-status').textContent=x.status==='context'?'Usage note: '+x.editorialNote:'Library wording loaded. Fill the placeholders or adapt the draft.';window.scrollTo({top:0});}});
+/* The clipboard arrangements are unchanged in substance: the asynchronous API
+ * where it is available, the selection-and-execCommand fallback where it is
+ * not. Two things are new. It now reports whether it succeeded, so that a
+ * control never claims an operation it did not perform; and it puts focus back
+ * where it found it, since the fallback has to borrow the selection. */
+async function copyText(text){
+  const returnTo=document.activeElement;
+  try{
+    if(!navigator.clipboard)throw Error();
+    await navigator.clipboard.writeText(text);
+    return true;
+  }catch(e){
+    const area=document.createElement('textarea');
+    area.value=text;area.setAttribute('readonly','');
+    area.style.position='fixed';area.style.top='-999px';
+    document.body.appendChild(area);area.select();
+    let ok=false;
+    try{ok=document.execCommand('copy')}catch(e){}
+    area.remove();
+    if(returnTo&&returnTo.focus)returnTo.focus();
+    return ok;
+  }
+}
+/* The success is shown on the control that performed it, so there is never a
+ * question of which text was copied. The announcement is separate and silent,
+ * for readers who cannot see the mark change; focus is not disturbed. */
+function announce(message){const node=$('copy-status');if(!node)return;node.textContent='';window.requestAnimationFrame(()=>{node.textContent=message;});}
+function copyFrom(button){
+  const entry=catalog.find(x=>x.id===button.dataset.copy);
+  if(!entry)return;
+  // A specimen is copied from the field the reader can see, so the control and
+  // the visible text can never disagree about what was taken.
+  const panel=button.closest('.card-example');
+  const box=panel&&panel.querySelector('.example-text');
+  const text=box?box.value:entry.text;
+  const what=button.dataset.copyWhat==='phrase'?'Wording':'Example';
+  copyText(text).then(ok=>{
+    if(!ok){toast('Clipboard unavailable. Select the wording and copy it manually.');return;}
+    button.classList.add('copied');
+    clearTimeout(button.copyTimer);
+    button.copyTimer=setTimeout(()=>button.classList.remove('copied'),1500);
+    announce(what+' copied.');
+  });
+}
+document.addEventListener('click',e=>{const target=e.target.closest('button');if(!target)return;if(target.dataset.view){navigate(target.dataset.view);window.scrollTo({top:0});}if(target.dataset.group)selectGroup(target.dataset.group);if(target.dataset.copy){copyFrom(target);}if(target.dataset.codegen){const x=catalog.find(x=>x.id===target.dataset.codegen);if(x&&window.CourtesyCodegen)window.CourtesyCodegen.open({text:x.text,id:x.id,category:x.category,register:x.register,kind:x.kind,example:x.example,passage:x.passage});}if(target.dataset.use){const x=catalog.find(x=>x.id===target.dataset.use);navigate('constructor');window.CourtesyConstructor.load(x.text);$('ctor-status').textContent=x.status==='context'?'Usage note: '+x.editorialNote:'Library wording loaded. Fill the placeholders or adapt the draft.';window.scrollTo({top:0});}});
+// A specimen inside a closed disclosure has no height to measure, so it is
+// measured when the disclosure opens. The toggle event does not bubble.
+document.addEventListener('toggle',e=>{if(e.target.open)autosizeAll(e.target);},true);
+// The measure changes with the viewport, and so does the wrapping.
+let sizeTimer;window.addEventListener('resize',()=>{clearTimeout(sizeTimer);sizeTimer=setTimeout(()=>autosizeAll($('cards')),120);});
 ['search','kind','register','origin','editorial'].forEach(id=>$(id).addEventListener(id==='search'?'input':'change',()=>{if(id==='kind'&&$('kind').value==='avoid')$('editorial').value='all';limit=30;render();}));
 $('clear').addEventListener('click',reset);$('empty-reset').addEventListener('click',reset);$('load-more').addEventListener('click',()=>{limit+=30;render();});
 $('print').addEventListener('click',()=>{limit=filtered.length;render();window.print();});
