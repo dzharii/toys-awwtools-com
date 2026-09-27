@@ -77,6 +77,7 @@ Theatrical apology remains available, including the exaggerated forgiveness fami
 | File or folder | Purpose |
 | --- | --- |
 | `index.html` | Single-page reference, constructor container and writing guide |
+| `about.html` | Standalone essay on what software owes its reader, with 27 specimens |
 | `styles.css` | Responsive letterpress-inspired layout and print styling |
 | `app.js` | Search, filters, navigation, pagination, copying and printing |
 | `passage.js` | Reads the marks in a multi-paragraph passage: runs, plain text, blanks and sample values |
