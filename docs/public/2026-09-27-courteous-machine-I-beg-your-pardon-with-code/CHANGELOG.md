@@ -1,3 +1,18 @@
+# CHG04 - Version 6
+
+Gave the example its own panel. The worked example was previously a labelled block of text beneath the phrase; it is now an enclosed specimen with a fine rule, a faintly differentiated paper tone, a compact header naming it, and its own copy control in that header. It is plainly a transcription belonging to the card rather than a second column of editorial prose.
+
+Set the specimens in Consolas, with Cascadia Mono and the usual cross-platform faces behind it. The stack is now a single variable used by the specimens, the inline literals in a passage, and the code panel alike, so the machine-set text of the site has one voice. Headings and editorial matter keep their serif.
+
+Made the specimen a text field, and proved it could not be altered. A reader may put the caret in it, move by character, word or line, extend a selection from the keyboard, select with the pointer, use their own Select All, and copy with their own keyboard shortcut. Typing, deletion, cut, paste, a dropped payload, a composed character and undo are all refused. A plain `readonly` field was tried first and abandoned: Chrome will not move the caret inside one, which would have cost the reader most of the repertoire the specimen exists to offer. The refusal is therefore a single rule at the input level rather than a list of intercepted keystrokes, which is both shorter and harder to get round.
+
+Sized every specimen to its contents, so none presents an internal scrollbar, and re-measured them when the viewport changes or a disclosure opens.
+
+Replaced the footer "Copy wording" button with two compact marks, one beside the phrase and one in the example header, so that each control plainly governs the text beside it. A successful copy turns the mark into a checkmark in place, without moving anything around it, and returns to rest a moment later; the change is announced silently for readers who cannot see it, and suppressed entirely if the copy did not actually succeed. The visible mark is small; the target under it is not. Reduced-motion preferences are respected.
+
+Settled the catalogue at two columns. The three-column arrangement above 1450 pixels compressed the examples too severely and has been removed; the existing single-column rule below 1050 pixels was already right and was left alone. Cards no longer stretch to match their tallest neighbour, so none reserves more sheet than it needs.
+
+Re-ran the whole verification suite: 4,068 snippets rendered without failure, 226 of 226 under the Python comparison, 904 positional renders, 594 highlighted snippets without drift, the code editor and its mirror still identical across seventy-two renders, seventy-nine interface checks, and sixty-seven further measurements taken in a real browser.
 # CHG03 - Version 5
 
 Added 104 complete passages, taking the catalog from 122 entries to 226. A passage is a larger form than anything the collection held before: three or four paragraphs that open in a chosen register, state the particulars, name one limit plainly, and close with an instruction referring to controls by name. 108 were supplied; four were set aside because another entry already taught the same lesson, and the rest were published word for word.

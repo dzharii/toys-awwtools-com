@@ -31,14 +31,25 @@ function copyControl(id, what, label){
   return `<button type="button" class="copy-icon" data-copy="${esc(id)}" data-copy-what="${esc(what)}" aria-label="${esc(label)}" title="Copy">${copyMark}</button>`;
 }
 /* The example is a specimen, not decoration, so it is presented as one: a
- * header naming it, a fine rule, and the text itself in a read-only field.
+ * header naming it, a fine rule, and the text itself in a native text field.
  *
- * A native readonly textarea is used deliberately. The browser already gives a
- * caret, word-wise movement, keyboard selection, Select All and copy, and
- * already refuses typing, deletion, cutting, pasting and dropping - none of
- * which we could imitate as well by intercepting keys. Its default wrapping is
- * also exactly what these specimens need: every deliberate space and line break
- * is kept, and a line is folded only when the measure is genuinely too narrow.
+ * A textarea is used deliberately, because only a real text control gives the
+ * reader a caret, word-wise movement, keyboard selection, Select All and the
+ * platform's own copy command. Its default wrapping is also exactly what these
+ * specimens need: every deliberate space and line break is kept, and a line is
+ * folded only when the measure is genuinely too narrow.
+ *
+ * It is not marked `readonly`, though it behaves as if it were. Chrome, tested
+ * directly, refuses to move the caret inside a readonly textarea at all: the
+ * field takes focus and Select All works, but arrow keys, Home, and Shift-
+ * selection do nothing. That would cost the reader most of the repertoire the
+ * specimen exists to offer. So the field is left editable to the browser and
+ * every attempted change is refused in one place instead - see the beforeinput
+ * rule below - which is a single semantic veto rather than a catalogue of
+ * individual keystrokes, and so survives other keyboards, layouts, input
+ * methods and assistive technologies. `aria-readonly` tells the same story to
+ * anything reading the page, and `inputmode="none"` keeps the on-screen
+ * keyboard away on touch devices while leaving the caret and selection intact.
  */
 function specimen(label, text, copyId, what, copyLabel){
   const rows=Math.max(1,String(text).split('\n').length);
@@ -46,7 +57,7 @@ function specimen(label, text, copyId, what, copyLabel){
   // one is supplied deliberately. Everything after it - including the leading
   // spaces that align the small tables in many of these specimens - survives
   // exactly as stored, whatever the text happens to begin with.
-  return `<section class="card-example"><div class="example-head"><span class="example-label">${esc(label)}</span>${copyControl(copyId,what,copyLabel)}</div><textarea class="example-text" readonly rows="${rows}" spellcheck="false" autocomplete="off" aria-label="${esc(label)}">\n${esc(text)}</textarea></section>`;
+  return `<section class="card-example"><div class="example-head"><span class="example-label">${esc(label)}</span>${copyControl(copyId,what,copyLabel)}</div><textarea class="example-text" rows="${rows}" aria-readonly="true" inputmode="none" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" aria-label="${esc(label)}">\n${esc(text)}</textarea></section>`;
 }
 function toast(message){$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(timer);timer=setTimeout(()=>$('toast').classList.remove('show'),3000)}
 function navigate(target){view=target;document.querySelectorAll('.view').forEach(el=>el.hidden=el.id!=='view-'+target);document.querySelectorAll('.top-tab').forEach(el=>{const on=el.dataset.view===target;el.classList.toggle('active',on);el.setAttribute('aria-pressed',String(on))});}
@@ -118,6 +129,16 @@ document.addEventListener('click',e=>{const target=e.target.closest('button');if
 // A specimen inside a closed disclosure has no height to measure, so it is
 // measured when the disclosure opens. The toggle event does not bubble.
 document.addEventListener('toggle',e=>{if(e.target.open)autosizeAll(e.target);},true);
+/* Every way of altering a specimen - typing, deletion, cut, paste, a dropped
+ * payload, autocorrect, undo, a composed character from an input method -
+ * arrives as one beforeinput event, and one refusal covers them all. Nothing
+ * here looks at which key was pressed, so no keyboard, layout or input method
+ * can find a way round it. */
+document.addEventListener('beforeinput',e=>{if(e.target.classList&&e.target.classList.contains('example-text'))e.preventDefault();},true);
+/* A few input methods commit text through an event that cannot be refused.
+ * The stored text is the element's own default value, which editing never
+ * touches, so it can always be put back. */
+document.addEventListener('input',e=>{const box=e.target;if(box.classList&&box.classList.contains('example-text')&&box.value!==box.defaultValue)box.value=box.defaultValue;},true);
 // The measure changes with the viewport, and so does the wrapping.
 let sizeTimer;window.addEventListener('resize',()=>{clearTimeout(sizeTimer);sizeTimer=setTimeout(()=>autosizeAll($('cards')),120);});
 ['search','kind','register','origin','editorial'].forEach(id=>$(id).addEventListener(id==='search'?'input':'change',()=>{if(id==='kind'&&$('kind').value==='avoid')$('editorial').value='all';limit=30;render();}));

@@ -188,3 +188,5 @@ Preserve purposeful courtesy when editing for concision. Remove duplicated expla
 The finished work should convey a cultivated eighteenth-century intelligence attending carefully to a modern task and to the person who must understand its result.
 
 With due regard for the work and those who depend upon it.
+
+This letter of appointment was inspired by [Bespoke: A Programming Language for People Who Say Please](https://blog.hofstede.it/bespoke-a-programming-language-for-people-who-say-please/).
