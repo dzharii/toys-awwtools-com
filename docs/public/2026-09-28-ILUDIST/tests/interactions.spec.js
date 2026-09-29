@@ -1,0 +1,111 @@
+import {test,expect} from '@playwright/test';
+const selected=name=>!process.env.APP||process.env.APP===name;
+test('Folio: indexed subjects, page turning, keyboard and swipe',async({page})=>{
+  test.skip(!selected('01-folio'));
+  await page.goto('/01-folio/');await page.waitForSelector('html.ready');
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.locator('[data-tab="images"]').click();
+  await expect(page.locator('#paper h2')).toHaveText('See fewer generated images');
+  await page.locator('#next').click();
+  await expect(page.locator('#paper h2')).toHaveText('Find images with a traceable source');
+  await page.locator('#main').focus();await page.keyboard.press('ArrowLeft');
+  await expect(page.locator('#paper h2')).toHaveText('See fewer generated images');
+  await page.locator('#paper h2').scrollIntoViewIfNeeded();
+  const box=await page.locator('#paper h2').boundingBox();
+  await page.mouse.move(box.x+box.width*.8,box.y+10);
+  await page.mouse.down();await page.mouse.move(box.x+20,box.y+10,{steps:8});await page.mouse.up();
+  await expect(page.locator('#paper h2')).toHaveText('Find images with a traceable source');
+});
+test('Guide: changing intent resets dependent choices and phone filtering works',async({page})=>{
+ test.skip(!selected('07-guide'));
+ await page.goto('/07-guide/');await page.waitForSelector('html.ready');await page.emulateMedia({reducedMotion:'reduce'});
+ await page.locator('[data-concern="2"]').click();await expect(page.locator('#result-content h2')).toHaveText('See fewer generated images');
+ await page.locator('[data-activity="writing"]').click();await page.locator('#phone-only').check();
+ await expect(page.locator('#result-content h2')).toHaveText('Stop your keyboard finishing your thoughts');
+ await page.locator('#restart').click();await expect(page.locator('#phone-only')).not.toBeChecked();await expect(page.locator('#result-content h2')).toHaveText('Search without AI summaries');
+});
+test('Cabinet: instruments, lower drawer, cycling and pinned notes',async({page})=>{
+ test.skip(!selected('08-cabinet'));
+ await page.goto('/08-cabinet/');await page.waitForSelector('html.ready');await page.emulateMedia({reducedMotion:'reduce'});
+ await page.locator('[data-tool="social"]').click();await expect(page.locator('#bench-content h2')).toHaveText('See the people you actually follow');
+ await page.locator('#next-fix').click();await expect(page.locator('#bench-content h2')).toHaveText('Choose a community-led social home');
+ await page.locator('#drawer-toggle').click();await page.locator('[data-tool="weather"]').click();await expect(page.locator('#bench-content h2')).toHaveText('Go straight to the forecast');
+ await page.locator('#bench-content [data-fix]').click();await page.locator('[data-save]').click();await page.locator('[data-close]').click();
+ await expect(page.locator('#pinned-notes [data-fix="weather-gov"]')).toBeVisible();await expect(page.locator('#saved-count')).toHaveText('1');
+});
+test('Doors: opening, closing and remembering a room',async({page})=>{
+ test.skip(!selected('09-doors'));
+ await page.goto('/09-doors/');await page.waitForSelector('html.ready');await page.emulateMedia({reducedMotion:'reduce'});
+ await expect(page.locator('#room-avoid')).toBeVisible();await page.locator('#door-off').click();await expect(page.locator('#room-avoid')).toBeHidden();
+ await page.locator('#room-off [data-category="writing"]').click();await expect(page.locator('#room-off [data-fix="docs-compose"]')).toBeVisible();
+ await page.locator('#door-replace').click();await expect(page.locator('#room-replace')).toBeVisible();await page.locator('#door-off').click();
+ await expect(page.locator('#room-off [data-category="writing"]')).toHaveAttribute('aria-pressed','true');
+ await page.locator('#door-off').click();await expect(page.locator('#room-off')).toBeHidden();await expect(page.locator('#door-off')).toHaveAttribute('aria-expanded','false');
+});
+test('Current: illuminated paths, keyboard lantern and pointer travel',async({page})=>{
+ test.skip(!selected('10-current'));
+ await page.goto('/10-current/');await page.waitForSelector('html.ready');await page.emulateMedia({reducedMotion:'reduce'});
+ await page.locator('[data-node="images"]').click();await expect(page.locator('#destination-content h2')).toHaveText('See fewer generated images');
+ await page.locator('#next-fix').click();await expect(page.locator('#destination-content [data-fix="commons"]')).toBeVisible();
+ await page.locator('#lantern').focus();await page.keyboard.press('Home');await expect(page.locator('[data-node="search"]')).toHaveAttribute('aria-pressed','true');
+ await page.locator('.river-map').scrollIntoViewIfNeeded();
+ const a=await page.locator('#lantern').boundingBox(),b=await page.locator('[data-node="social"] .node-orb').boundingBox();
+ await page.mouse.move(a.x+a.width/2,a.y+a.height/2);await page.mouse.down();await page.mouse.move(b.x+b.width/2,b.y+b.height/2,{steps:10});await page.mouse.up();
+ await expect(page.locator('[data-node="social"]')).toHaveAttribute('aria-pressed','true');await expect(page.locator('#drag-thread')).toHaveAttribute('d','');
+ await expect(page.locator('#active-path')).toHaveAttribute('d',/^M.+C/);
+});
+test('Lens: accessible reveal and comparison scenarios',async({page})=>{
+ test.skip(!selected('06-lens'));
+ await page.goto('/06-lens/');await page.waitForSelector('html.ready');
+ await page.locator('#show-after').click();await expect(page.locator('#reveal')).toHaveValue('0');
+ await page.locator('#show-before').click();await expect(page.locator('#reveal')).toHaveValue('100');
+ await page.locator('#reveal').focus();await page.keyboard.press('ArrowLeft');await expect(page.locator('#reveal')).toHaveValue('99');
+ await page.locator('[data-scenario="2"]').click();await expect(page.locator('#remedy h2')).toHaveText('See fewer generated images');
+ await expect(page.locator('#reveal')).toHaveValue('50');
+ await page.locator('#remedy [data-fix]').click();await expect(page.locator('dialog h2')).toHaveText('See fewer generated images');
+});
+test('Journal: chapter index and page turning',async({page})=>{
+ test.skip(!selected('05-journal'));
+ await page.goto('/05-journal/');await page.waitForSelector('html.ready');await page.emulateMedia({reducedMotion:'reduce'});
+ await page.locator('[data-chapter="3"]').click();await expect(page.locator('#feature h1')).toHaveText('See fewer generated images');
+ await page.locator('#next-chapter').click();await expect(page.locator('#feature h1')).toHaveText('Check who actually made the thing');
+ await page.locator('#prev-chapter').click();await expect(page.locator('#chapter-position')).toContainText('04');
+ await page.locator('#editorial-list [data-fix]').first().click();await expect(page.locator('dialog')).toBeVisible();
+});
+test('Routes: line switching, station ticket, filtering and empty route',async({page})=>{
+ test.skip(!selected('04-routes'));
+ await page.goto('/04-routes/');await page.waitForSelector('html.ready');await page.emulateMedia({reducedMotion:'reduce'});
+ await page.locator('[data-line="off"]').click();await expect(page.locator('#line-title')).toHaveText('An off switch.');
+ await page.locator('#activity').selectOption('writing');
+ await page.locator('#departures [data-stop="word-copilot"]').click();await expect(page.locator('#ticket h2')).toHaveText('Turn off Copilot in Word');
+ await page.locator('#activity').selectOption('maps');await expect(page.locator('#departures .empty-state')).toBeVisible();
+ await page.locator('#reset-route').click();await expect(page.locator('#departures .departure')).not.toHaveCount(0);
+});
+test('Atlas: destinations, alternate chart, zoom and bounded panning',async({page})=>{
+ test.skip(!selected('03-atlas'));
+ await page.goto('/03-atlas/');await page.waitForSelector('html.ready');await page.emulateMedia({reducedMotion:'reduce'});
+ await page.locator('[data-island="3"]').click();await expect(page.locator('#island-title')).toHaveText('Images');
+ await page.locator('[data-sea="1"]').click();await expect(page.locator('#island-title')).toHaveText('Video');
+ await page.locator('#zoom-in').click();await expect(page.locator('#reset-map')).toContainText('125%');
+ await page.locator('#viewport').scrollIntoViewIfNeeded();const b=await page.locator('#viewport').boundingBox();
+ await page.mouse.move(b.x+b.width*.5,b.y+b.height*.5);await page.mouse.down();await page.mouse.move(b.x+b.width*.6,b.y+b.height*.55,{steps:6});await page.mouse.up();
+ expect(await page.locator('#chart').evaluate(e=>e.style.transform)).not.toBe('translate(0px, 0px) scale(1.25)');
+ await page.locator('#reset-map').click();await expect(page.locator('#zoom-out')).toBeDisabled();
+});
+test('Dial: detents, keyboard, alternate bank and dragging',async({page})=>{
+  test.skip(!selected('02-dial'));
+  await page.goto('/02-dial/');await page.waitForSelector('html.ready');await page.emulateMedia({reducedMotion:'reduce'});
+  await page.locator('#clockwise').click();
+  await expect(page.locator('#dial')).toHaveAttribute('aria-valuetext','Social');
+  await page.locator('#dial').focus();await page.keyboard.press('ArrowRight');
+  await expect(page.locator('#dial')).toHaveAttribute('aria-valuetext','Writing');
+  await page.locator('[data-bank="1"]').click();
+  await expect(page.locator('#dial')).toHaveAttribute('aria-valuetext','Video');
+  await page.locator('[data-index="4"]').click();
+  await expect(page.locator('#dial')).toHaveAttribute('aria-valuetext','Weather');
+  await page.locator('#dial').scrollIntoViewIfNeeded();
+  const box=await page.locator('#dial').boundingBox();
+  await page.mouse.move(box.x+box.width*.5,box.y+box.height*.12);await page.mouse.down();
+  await page.mouse.move(box.x+box.width*.88,box.y+box.height*.5,{steps:12});await page.mouse.up();
+  await expect(page.locator('#dial')).not.toHaveAttribute('aria-valuetext','Weather');
+});

@@ -1,0 +1,20 @@
+import{test,expect}from'@playwright/test';
+import{readdirSync}from'node:fs';
+import path from'node:path';
+const apps=process.env.APP?[process.env.APP]:['',...readdirSync('.',{withFileTypes:true}).filter(e=>e.isDirectory()&&/^\d{2}-[a-z]+$/.test(e.name)).map(e=>e.name)];
+for(const app of apps)test(`${app||'collection'}: unobtrusive, accessible maker credit`,async({page})=>{
+ await page.emulateMedia({reducedMotion:'reduce'});await page.goto(app?`/${app}/`:'/');
+ if(app)await page.waitForSelector('html.ready');
+ const credit=page.locator('.maker-credit');await expect(credit).toHaveCount(1);
+ await expect(credit.locator('summary')).toContainText('Proudly made by');
+ await expect(credit.locator('summary')).toContainText('OpenAI GPT-6 Astra');
+ await expect(credit.locator('summary')).toContainText('Powered by Microsoft GitHub Copilot');
+ expect(await credit.evaluate(e=>getComputedStyle(e).position)).toBe('relative');
+ expect(await credit.locator('.maker-orbit').evaluate(e=>getComputedStyle(e).animationName)).toBe('none');
+ await credit.locator('summary').focus();await page.keyboard.press('Enter');await expect(credit).toHaveAttribute('open','');
+ await expect(credit.locator('p')).toBeVisible();await expect(credit.locator('p')).toContainText('I am GPT-6 Astra');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBeTruthy();
+ await page.addScriptTag({path:path.resolve('node_modules','axe-core','axe.min.js')});
+ const issues=await page.evaluate(async()=>{const r=await axe.run('.maker-credit',{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}});return r.violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>v.id);});
+ expect(issues).toEqual([]);await page.keyboard.press('Enter');await expect(credit).not.toHaveAttribute('open','');
+});
