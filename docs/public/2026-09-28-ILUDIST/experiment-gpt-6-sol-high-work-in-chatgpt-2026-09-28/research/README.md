@@ -1,0 +1,9 @@
+# A00 - Research ledger
+
+Checked on 2026-09-28. `catalog.json` is the canonical, human-reviewable set of 20 routes used by each standalone build. Every entry records the user's goal, named service, outcome type, platform scope, steps, caveat, source URL, and check date. The build copies it into each implementation's `data.json` and embeds the same records into its independent `app.js`.
+
+The sources are official help or product documentation from Google, DuckDuckGo, Kagi, YouTube, Reddit, Meta, Pinterest, Microsoft, Apple, Mozilla, Amazon, Etsy, and X. The research deliberately separates a genuine setting from a temporary view, a reduction signal, a replacement, and a privacy control. A search filter is not described as a permanent off switch. A recommendation control is not described as a synthetic-content detector. Seller disclosures are not treated as proof of provenance.
+
+The most change-prone claims are Google Search's Web filter placement, Reddit mobile setting labels, Gmail's overlapping smart-feature controls, Firefox rollout by version, Pinterest's AI content controls, and Amazon's assistant naming. Check those source URLs before publishing an update and revise the wording and `verified` field together. Region, subscription, account, and device differences are kept in the caveats. No workaround is guaranteed to remove all generated content.
+
+For sharing, the project uses 1200 x 630 JPEG Open Graph images with explicit dimensions and alt text, plus `summary_large_image` Twitter cards. The Open Graph protocol documents the required fields and optional image dimensions and alt text: https://ogp.me/. Without a final production domain, relative image URLs are used and canonical/`og:url` are omitted. Replace those with absolute URLs during deployment if the host does not resolve them for crawlers.
