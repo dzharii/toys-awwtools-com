@@ -584,3 +584,180 @@ If something technically satisfies the brief but feels generic, unfinished, conf
 Do not wait for the user to prescribe ordinary product, design, research, or engineering decisions. The selected primary model is at the steering wheel for this development and is expected to exercise judgment.
 
 The user's requirements establish the destination and important boundaries. You decide the best route to get there.
+
+
+
+=====================================
+
+Appendix. This is a previous discussion with ChatGPT, and in case the specification just omit or miss some detail, you can find user and AI conversation. 
+Maybe you can find some missing detail from the missing details from the specifically user request here. This is raw content. This is not specification and only provided here in case it may help to resolve some inconsistencies and what the user actually insisted on.
+
+=====================================
+
+i want to build static web app. vdry simple. catalog where we put no ai or ai workaround services
+
+for instance,vif u english spkr put tkn -хуй at th end of srch qry and goog will not incld ai slp blk. i wnt the app lyt to be insprd by iphone app scrn, search kbd nav, ctgry, what else?
+I would make it feel less like a normal website and more like a tiny native utility app.
+
+Top area: iPhone-style status/header treatment, app name, compact search field, and maybe a single "+" button for "Submit workaround." The search should be the primary interaction, with instant filtering as you type.
+
+The home screen could have a horizontal category strip directly under search: Search, Writing, Images, Video, Coding, Shopping, Social, Browsers, Mobile, Other. Below that, show compact "app cards" rather than big website cards.
+
+Each workaround card should answer the useful questions immediately: what it fixes, where it works, how hard it is, and whether it still works. For example:
+
+Google Search
+Hide AI Overview
+Add -хуй to the end of an English-language query
+Search Free No extension
+Verified Sep 2026
+
+Tapping it opens an iOS-style detail sheet rather than navigating to a completely different-looking page. That detail view can contain the exact steps, copyable example, why it works, platform/browser compatibility, caveats, source, and "last verified" date.
+
+I would add a bottom tab bar with only 3-4 destinations: Browse, Search, Saved, About. If Saved requires persistence, it can just use localStorage, so the project stays fully static.
+
+The most important extra concept is a strong classification system. I would distinguish between Disable AI, Avoid AI, Replace AI, and Use non-AI alternative. Those are materially different. You could also tag entries as Setting, Search syntax, Browser extension, Userscript, DNS/blocklist, Alternative service, or Manual workaround.
+
+Also add compatibility/status badges such as Works, Partial, Broken, and especially Last verified. This kind of catalog will decay quickly as companies change products, so freshness should be visually prominent.
+
+For keyboard navigation, I would make / focus search, arrows move through results, Enter opens a card, Esc closes it, and maybe Cmd/Ctrl+K opens a command-palette version of search. On mobile, search can expand into a dedicated iOS Spotlight-like screen.
+
+Since it is static, I would store every entry as Markdown/MDX or JSON in the repo. Then the whole site can be generated at build time. Submissions could simply point to a GitHub issue template rather than requiring accounts or a database.
+
+Visually, I would borrow from iOS Settings + App Store rather than literally cloning the home screen: rounded grouped surfaces, large title, subtle separators, SF-like typography, bottom tab bar, sheets, native-feeling search, restrained use of icons. The actual content should stay extremely dense and utilitarian.
+
+design 10 difrnt prompts for 10 dfrnt uniq scrnshots of this app featrng 10 diffrnt ways how it can be impl in 10 difrnt universes
+"iOS Utility Catalog" universe
+Create a polished mobile web app screenshot for a static catalog of "No AI / AI Workaround" services, designed as if Apple shipped it as a native iPhone utility. Screen: Browse home. Large title "No AI", compact iOS search field, horizontal category chips: Search, Writing, Images, Video, Coding, Shopping. Below, grouped rounded cards for workarounds. Featured card: "Google Search - Hide AI Overview" with instruction "Add -хуй to the end of an English-language query", tags "Search syntax", "No extension", status "Works", last verified "Sep 2026". Bottom tab bar: Browse, Search, Saved, About. White background, subtle gray grouped sections, SF Pro-like typography, monochrome icons, realistic iPhone viewport, extremely clean spacing, no gradients, no marketing hero, screenshot should look like a real production app.
+
+"Cyberpunk Anti-AI Terminal" universe
+Create a mobile screenshot of the same catalog reimagined as a cyberpunk underground utility called "NO//AI". Screen: search results after typing "google". Black OLED background, phosphor green text, thin terminal borders, monospaced typography, tiny system diagnostics. Each workaround is rendered as a terminal command card with status lines like "[ACTIVE]", "[PATCH]", "[LAST VERIFIED 2026-09]". Main result: "Google Search / remove AI overview / append -хуй". Include keyboard-first hints: "/" search, "J/K" navigate, "ENTER" open. Bottom navigation resembles hardware soft keys instead of iOS tabs. Dense, functional, slightly hackerish but highly legible, no decorative sci-fi clutter, realistic mobile web UI.
+
+"Wikipedia for AI Avoidance" universe
+Create a mobile web screenshot for an austere, knowledge-base version of the app, as if Wikipedia and a Unix man page had a child. Screen: detail page for "Google Search: Exclude AI Overview". Plain white page, serif article title, small metadata table with "Type: Search syntax", "Platform: Web", "Cost: Free", "Status: Working", "Last verified: September 2026". Then sections "Method", "Example", "Why it works", "Limitations", "Sources", "Alternatives". Include the example query in a gray monospace code block. Tiny breadcrumb at top and compact text-only search box. No rounded cards, no app-store aesthetic, no illustrations. It should feel credible, archival, fast, and almost aggressively simple.
+
+"Game Boy Workaround Pokédex" universe
+Create a playful mobile screenshot where the No-AI catalog is presented like a retro handheld creature index. Screen: catalog browser. Pixel-art UI, four-shade green LCD palette, chunky bitmap typography, but still readable. Each workaround is an indexed "entry" with number, category icon, name, compatibility, and status. Selected entry: "#042 Google AI Overview Bypass", method: "append -хуй", status meter: "WORKING", difficulty: 1/5. Top has tiny search field disguised as an inventory filter. Bottom navigation uses pixel buttons: INDEX, FIND, SAVED, INFO. Nostalgic 1990s handheld design translated into a useful mobile app, no copyrighted characters or logos.
+
+"Brutalist Internet Directory" universe
+Create a mobile screenshot of a deliberately brutalist static web directory called "NO AI INDEX". Screen: all entries list. Raw black text on off-white background, 1px black borders, blue underlined links, system font, zero border radius, almost no spacing. Header contains text logo, search input, and "SUBMIT A FIX". Entries appear as dense table-like rows: service name, workaround, type, status, verified date. One row reads "Google Search | append -хуй | query syntax | WORKS | 2026-09". Category navigation is plain inline links separated by slashes. Add a tiny footer saying "Static site. No accounts. No tracking." Make it look intentionally anti-design yet expertly typeset and easy to scan.
+
+"Luxury Swiss Design Catalog" universe
+Create a refined editorial mobile screenshot for a No-AI workaround catalog using high-end Swiss graphic design. Screen: curated category page "SEARCH". Huge typographic heading, strict grid, lots of negative space, black, white, and one restrained accent color. Workarounds appear as numbered editorial entries rather than cards: "01 Google Search", "02 Bing", "03 Brave Search". Each has a one-line workaround, a small geometric status marker, and compact metadata aligned to a baseline grid. Search is a thin line input at the top. Bottom navigation is minimal text only. The page should feel like a premium architecture magazine or design-system specimen, not a conventional app.
+
+"iMessage / Chat-Based Catalog" universe
+Create a mobile screenshot where the entire static catalog behaves visually like a messaging interface. Screen: user has searched "How do I avoid Google AI answers?" The interface responds with compact message bubbles containing verified workaround cards. A result bubble says "Try adding -хуй at the end of your English query." Under it are small inline actions: Copy, Save, Details. Another bubble shows tags "Google", "Search syntax", "Works", "Verified Sep 2026". Top bar has the app title "No AI Directory" and a search icon. Bottom composer is not for chatting with AI; it is explicitly labeled "Search the catalog..." Include a small note "Local static search. No AI used." Design should resemble a calm modern messaging app without copying any specific brand exactly.
+
+"Map of the AI-Free Internet" universe
+Create a mobile screenshot where the catalog is visualized as a navigable "map" of digital services. Dark navy background, each category appears as a connected cluster of nodes: Search, Writing, Images, Video, Coding. The Search cluster is expanded, showing nodes for Google, Bing, DuckDuckGo, Brave. Selecting Google opens a bottom sheet containing "Hide AI Overview", instruction "append -хуй", status "Works", type "Search syntax", last verified "Sep 2026", plus Copy and Save buttons. The map is abstract and diagrammatic, not geographic. It should feel like a network explorer combined with an iOS bottom sheet, visually rich but still believable as a static web app.
+
+"Minimal Command Palette" universe
+Create a screenshot of an ultra-minimal command-palette-first implementation. Entire mobile screen is dominated by a centered search interface similar to a launcher. User typed "google ai". Below, five keyboard-selectable results appear with icons and metadata. Highlighted result: "Google Search - Hide AI Overview", subtitle "Append -хуй to the query", right-side badges "WORKS" and "Sep 2026". Tiny shortcut hints appear beside results. No conventional navigation; pressing search with an empty query reveals categories and recent entries. Bottom corner has subtle text links "About" and "Submit workaround". Soft off-white background, charcoal text, razor-sharp typography, almost no chrome, designed for users who want the answer in two seconds.
+
+"Analog Field Manual" universe
+Create a mobile screenshot of the app reimagined as a photographed field manual for surviving an AI-saturated internet, while remaining clearly usable as a digital interface. Warm paper texture, dark ink, stamped status labels, red pencil annotations, index-tab categories along the right edge: SEARCH, WRITE, IMAGE, CODE, SHOP. Screen shows a detail card titled "FIELD NOTE 017 - GOOGLE SEARCH". Under "Procedure": "Add -хуй to the end of an English-language search query." Under "Effect": "AI overview is not returned." Under "Status": a stamped "VERIFIED SEP 2026". Include compact Copy and Save controls styled like mechanical labels. Avoid fake handwriting except for tiny annotation marks. The result should feel like a Cold War technical manual translated into a highly polished mobile web app.
+
+-хуй is just an e,ple how we avoid ai. wi dont wan to show user this technicalities. will iphone users be bored by it?
+Yes. If the app exposes the mechanics too early, it can feel like a database of hacks, which will get boring quickly.
+
+For an iPhone-style experience, the primary unit should be the problem the user wants solved, not the workaround itself.
+
+Instead of:
+
+"Google Search - append X to query"
+
+show:
+
+"Search without AI summaries"
+
+Then the user taps it and gets a single obvious action such as "Open in Google", "Copy fix", "Enable", or "See options". The technical workaround can stay behind "How it works" or be completely hidden when possible.
+
+The home screen could feel closer to an App Store / Shortcuts hybrid:
+
+"Browse ways to use the internet without AI"
+
+Then large visual categories like:
+
+Search without AI
+Write without AI assistance
+Remove AI from social feeds
+Find human-made images
+Shop without AI recommendations
+Use non-AI alternatives
+
+Below that, show things like "Popular", "Newly verified", "Works on iPhone", "No install required", and "1-tap fixes". That creates discovery rather than presenting a technical directory.
+
+I would also avoid making Search the whole product. Search is useful once the catalog is large, but on first launch the user needs something to browse. Think:
+
+large title
+featured workaround
+category carousel
+popular fixes
+recently added
+bottom navigation
+
+The detail screen can be extremely simple:
+
+"Hide AI summaries in Google"
+
+"Works on Safari and Chrome"
+
+[Use this fix]
+
+Then perhaps "What changes", "Compatibility", and "How it works" farther down.
+
+The strongest distinction could be between three user-facing actions rather than technical categories:
+
+"Turn it off" - an actual setting exists
+"Avoid it" - there is a workaround
+"Use something else" - an alternative service exists
+
+That is much easier to understand than "search syntax", "userscript", "extension", etc.
+
+And I would probably not make the visual concept literally "iPhone Settings". That aesthetic is familiar, but it also communicates configuration and chores. Borrow iOS interaction patterns - sheets, search, large titles, haptics-like transitions, tab bar, contextual menus - while making the content more visual and discovery-oriented.
+
+The core product should feel like: "I tell it what AI thing annoys me, and it gives me the cleanest way around it." Not: "Here is a catalog of technical tricks."
+
+so now, pragmatical app. convinient and understood by users. give me 10 prompts for screenshot
+Create a realistic iPhone screenshot of a simple mobile web app called "No AI". The home screen should immediately communicate its purpose: "Use the internet with less AI." Show a large native-style search field with placeholder "What do you want to avoid?", followed by large tappable categories: Search, Social Media, Writing, Images, Shopping, Browsing. Below, show a section called "Popular fixes" with cards such as "Search without AI summaries", "See fewer AI posts", and "Find human-made images". Use familiar iOS visual language, large readable text, rounded cards, generous spacing, white background, subtle gray surfaces, and a bottom tab bar with Home, Search, Saved, About. The interface must feel practical, obvious, and usable within seconds.
+
+Create a realistic iPhone screenshot of the "No AI" app showing the Search category. Large title "Search without AI". Under it, show simple user-facing options such as "Hide AI summaries", "Use a search engine without AI answers", "Search only human-written pages", and "Reduce AI-generated results". Each card should explain the outcome in one short sentence and show a simple compatibility label such as "Works on iPhone" or "No install needed". Do not expose technical implementation details. Use clean iOS-inspired design, compact cards, clear hierarchy, and a persistent bottom navigation bar.
+
+Create a realistic iPhone screenshot of a workaround detail screen in the "No AI" app. Title: "Hide AI summaries in Google". Subtitle: "Keep normal search results without the AI answer box." Show a prominent primary button labeled "Use this fix". Below it, show three simple sections: "What changes", "Works with", and "Good to know". Use plain language such as "Your normal search results stay the same." Add small compatibility pills for Safari, Chrome, iPhone, and Desktop. Put technical explanation behind a small secondary link labeled "How this works". The screen should feel as simple as enabling an iPhone feature.
+
+Create a realistic iPhone screenshot of the "No AI" app search experience. The user has typed "youtube" into a large search field. Show instant results grouped by intent rather than technology: "Watch without AI recommendations", "Reduce AI-generated videos", "Turn off AI features", and "Try a simpler alternative". Each result should have a recognizable generic icon, a one-line explanation, and a label such as "Easy", "No install", or "Alternative". Make the search experience feel like iOS Spotlight: extremely fast, minimal, readable, and focused on getting the user to an answer quickly.
+
+Create a realistic iPhone screenshot of the "No AI" app showing a curated "Works on iPhone" page. Large title "Easy fixes for iPhone". Show a vertical list of useful actions such as "Search without AI summaries", "Browse Reddit without AI answers", "Find human-made images", "Turn off AI writing suggestions", and "Use a simpler search engine". Each item should have a short benefit statement and a single obvious action button such as "Open", "Try", or "View". No technical jargon, no code, no complex settings. The page should feel like a practical recommendations screen inside a native iOS app.
+
+Create a realistic iPhone screenshot of the "No AI" app home screen designed around discovery. Large title "No AI". Under the search field, show a featured card: "Want normal search results again?" with button "See fixes". Below, show horizontally scrollable collections called "No install needed", "Takes under a minute", and "Popular this week". Cards should describe outcomes such as "Remove AI answers", "See human-made images", "Avoid AI shopping recommendations", and "Turn off writing assistance". Use a polished App Store-inspired layout without marketing clutter.
+
+Create a realistic iPhone screenshot of the "No AI" app showing a choice screen after the user selects "AI in Google Search". Ask: "What would you like to do?" Show three large options: "Hide the AI parts", "Use another search engine", and "Keep Google but reduce AI". Each option should have a short plain-language explanation and a simple icon. The interface should guide a non-technical user toward the right solution without exposing how any workaround is implemented. Use familiar iOS cards, native spacing, and a clear back button.
+
+Create a realistic iPhone screenshot of the "No AI" app Saved tab. Large title "Saved". Show a small collection of saved solutions: "Search without AI summaries", "Find human-made images", "Turn off AI writing suggestions", and "Use a non-AI search engine". Each saved item should show the service name, what it accomplishes, and a simple "Use" button. Include a subtle status such as "Still works" or "Updated recently". The design should feel useful for repeated everyday actions, not like a technical bookmark manager.
+
+Create a realistic iPhone screenshot of the "No AI" app showing an alternatives page. Large title "Use something else". Subtitle: "Services with less or no built-in AI." Show categories such as Search, Writing, Images, Email, and Social. Under Search, show several clean cards with alternative services described only by user benefit: "Simple web search", "Privacy-focused search", "Search without generated answers". Include buttons like "Visit" and "Save". Avoid ideological language and avoid technical comparisons. Make the screen feel like a trustworthy consumer guide.
+
+Create a realistic iPhone screenshot showing the complete mature version of the "No AI" app. The screen should look like a polished production product, not a concept. Large title "No AI", search field "What do you want to avoid?", a row of category icons, a featured section "Quick fixes", and three cards: "Search without AI summaries", "Reduce AI in social feeds", and "Find human-made content". Add a smaller section "Recently verified" and bottom navigation with Home, Browse, Saved, About. Prioritize immediate comprehension, one-tap actions, plain language, accessibility, large touch targets, realistic iOS typography, restrained visual design, and absolutely no visible code, hacks, query syntax, browser internals, or technical workaround details.
+
+call it everywhere ilud. then inside expand to iludist fix my grammar, give me 10 scrn screenshot prmpts
+Create a realistic iPhone screenshot of a simple mobile web app called "ILUD". On the home screen, expand the name subtly as "ILUDIST" in a small secondary label or brand mark. The main message should immediately explain the purpose: "Use the internet with less AI." Show a large native-style search field with the placeholder "What do you want to avoid?", followed by large tappable categories: Search, Social, Writing, Images, Shopping, Browsing. Below, show "Popular fixes" with cards such as "Search without AI summaries", "See fewer AI-generated posts", and "Find human-made images". Use familiar iOS visual language, large readable text, rounded cards, generous spacing, white background, subtle gray surfaces, and a bottom tab bar with Home, Search, Saved, About.
+
+Create a realistic iPhone screenshot of ILUD showing the Search category. Use "ILUDIST" as the expanded brand name in a subtle header detail. Large title: "Search without AI". Show practical options such as "Hide AI summaries", "Use search without generated answers", "Find human-written pages", and "Reduce AI-generated results". Each card should explain the outcome in one short sentence and include a simple label such as "Works on iPhone" or "No install needed". Do not expose technical implementation details. Use a clean iOS-inspired layout with compact cards and clear hierarchy.
+
+Create a realistic iPhone screenshot of an ILUD fix detail screen. Show the small ILUDIST brand at the top. Title: "Hide AI summaries in Google". Subtitle: "Keep normal search results without the AI answer box." Add a large primary button labeled "Use this fix". Below it, show simple sections: "What changes", "Works with", and "Good to know". Include compatibility pills for Safari, Chrome, iPhone, and Desktop. Put any technical explanation behind a small link labeled "How this works". The interface should make the fix feel simple and safe rather than technical.
+
+Create a realistic iPhone screenshot of ILUD's search experience. The user has typed "YouTube" into a large search field. Display ILUDIST subtly beneath the ILUD logo. Show instant results grouped by what the user wants to accomplish: "Watch with fewer AI recommendations", "Reduce AI-generated videos", "Turn off AI features", and "Try a simpler alternative". Each result should have a small icon, one-line explanation, and a label such as "Easy", "No install", or "Alternative". Make the interface feel like iOS Spotlight: fast, minimal, and immediately understandable.
+
+Create a realistic iPhone screenshot of ILUD showing a page titled "Easy fixes for iPhone". Use ILUDIST as the expanded identity in the navigation header. Show a vertical list of useful actions such as "Search without AI summaries", "See fewer AI answers on Reddit", "Find human-made images", "Turn off AI writing suggestions", and "Use a simpler search engine". Each item should have a short benefit statement and one obvious button such as "Open", "Try", or "View". Avoid code, jargon, or technical configuration language.
+
+Create a realistic iPhone screenshot of the ILUD home screen focused on discovery. Show the ILUD logo prominently and the expanded name ILUDIST in smaller text underneath. Below the search field, include a featured card reading "Want normal search results again?" with a button labeled "See fixes". Add horizontally scrollable sections called "No install needed", "Takes under a minute", and "Popular now". Cards should describe outcomes such as "Remove AI answers", "See human-made images", "Reduce AI shopping recommendations", and "Turn off writing assistance". Make it feel like a practical App Store-style catalog rather than a technical directory.
+
+Create a realistic iPhone screenshot of ILUD after the user selects "AI in Google Search". Include a subtle ILUDIST brand mark. Ask: "What would you like to do?" Show three large options: "Hide the AI parts", "Use another search engine", and "Keep Google but reduce AI". Each option should have a clear icon and a short plain-language explanation. Do not reveal the underlying workaround yet. The screen should guide a non-technical user toward the right solution in one tap.
+
+Create a realistic iPhone screenshot of the ILUD Saved tab. Show ILUDIST subtly in the top navigation. Large title: "Saved". Display saved fixes such as "Search without AI summaries", "Find human-made images", "Turn off AI writing suggestions", and "Use a non-AI search engine". Each item should show what it accomplishes and include a simple "Use" button. Add understated freshness labels such as "Still works" or "Recently verified". Make it feel like a practical collection of reusable everyday fixes.
+
+Create a realistic iPhone screenshot of ILUD showing an alternatives page. Small header branding should read "ILUDIST". Large title: "Use something else". Subtitle: "Services with less or no built-in AI." Show categories such as Search, Writing, Images, Email, and Social. Under Search, display several simple cards described by user benefit: "Simple web search", "Privacy-focused search", and "Search without generated answers". Include actions such as "Visit" and "Save". Keep the language neutral, useful, and non-technical.
+
+Create a realistic iPhone screenshot of the mature production version of ILUD. Show the ILUD logo at the top with "ILUDIST" as its expanded brand name in smaller text. Include a large search field reading "What do you want to avoid?", a row of category icons, a featured "Quick fixes" section, and cards for "Search without AI summaries", "Reduce AI in social feeds", and "Find human-made content". Add a smaller "Recently verified" section and bottom navigation with Home, Browse, Saved, About. Prioritize immediate comprehension, one-tap actions, plain language, accessibility, large touch targets, realistic iOS typography, restrained visual design, and no visible code, query syntax, browser internals, or technical workaround details.
+
+
+

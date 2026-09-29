@@ -1,6 +1,9 @@
 You are not allowed. You are not allowed to look into the folders that starts from "experiment-". Because they contain resources that may poison your judgment and fail our experiment. Those are resources from previous experiments that has failed.
 
-Please read this letter addressed to a large language model AI agent, the implementers:`
+The folder `.spec-images` contains all 10 approved refernce images to inspire the 10 separate applications development. Each of these 10 applications folder should be nested as a child folder here, near AGENTS.md
+
+
+Please read this letter addressed to a large language model AI agent, the implementers:
 
 My Dear Sir AI Agent,
 
