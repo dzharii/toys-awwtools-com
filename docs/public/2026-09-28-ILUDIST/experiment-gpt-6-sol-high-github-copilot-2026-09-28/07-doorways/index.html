@@ -1,0 +1,32 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#100f10"><title>The Doorways — ILUD</title><meta name="description" content="Open the door to a calmer web: turn features off, avoid them, or choose another tool.">
+<link rel="canonical" href="https://toys.awwtools.com/public/2026-09-28-ILUDIST/07-doorways/"><meta property="og:type" content="website"><meta property="og:title" content="The Doorways — ILUD"><meta property="og:description" content="Open the door to a calmer web."><meta property="og:image" content="https://toys.awwtools.com/public/2026-09-28-ILUDIST/07-doorways/social.jpg"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="https://toys.awwtools.com/public/2026-09-28-ILUDIST/07-doorways/social.jpg"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="stylesheet" href="base.css">
+<style>
+:root{--bg:#121112;--surface:#251d18;--ink:#f3e6d0;--muted:#c8b8a4;--accent:#e0b67b;--line:#71533b}
+body{background:radial-gradient(ellipse at top,#34302b,#100f10 62%)}
+.hall{max-width:890px;margin:auto;padding:calc(26px + env(safe-area-inset-top)) 18px calc(60px + env(safe-area-inset-bottom))}
+.hall header{text-align:center;position:relative}.hall header a{font:normal clamp(4rem,13vw,7rem)/.9 Georgia,serif;color:var(--accent);text-decoration:none;letter-spacing:-.08em}.hall header small{display:block;font:11px Arial,sans-serif;letter-spacing:.42em;margin:12px 0 35px;color:var(--muted)}
+.hall h1{text-align:center;font:normal clamp(2.3rem,6vw,4rem)/1.1 Georgia,serif;margin:15px auto 40px}
+.doors{display:grid;gap:17px}
+.door{border:1px solid #8c6b4f;border-radius:45% 45% 4px 4px / 38px 38px 4px 4px;padding:7px;background:linear-gradient(130deg,#8a623d,#2c241e 12%,#171514 50%,#513a27);box-shadow:0 9px 23px #000b;overflow:hidden}
+.door:first-child{animation:enter-hall .5s ease both}@keyframes enter-hall{from{opacity:.5;filter:brightness(.5)}to{opacity:1;filter:brightness(1)}}
+.door-handle{width:100%;min-height:146px;display:flex;justify-content:space-between;align-items:center;text-align:left;border:1px solid #76563b;border-radius:40% 40% 0 0 / 30px 30px 0 0;background:linear-gradient(160deg,#23201d,#171513);color:var(--ink);padding:18px clamp(16px,5vw,45px);transition:transform .5s,background .3s;transform-origin:left}
+.door-handle span{display:grid;gap:8px}.door-handle small{color:var(--accent);font:12px Arial,sans-serif;letter-spacing:.17em}.door-handle strong{font:normal clamp(2.5rem,8vw,5rem)/.9 Georgia,serif;letter-spacing:-.05em}.door-handle i{font:normal 2rem Georgia,serif;color:var(--accent)}
+.door.active .door-handle{background:linear-gradient(90deg,#3d2a1c,#201a16);transform:perspective(700px) rotateY(-8deg)}
+.inside{display:none;background:radial-gradient(at top,#45321e,#1d1714 80%);padding:22px clamp(14px,5vw,35px) 30px;border:1px solid #76563b}
+.door.active .inside{display:block;animation:open .35s ease}@keyframes open{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+.inside p{color:var(--muted);font:1.1rem/1.45 Georgia,serif}.inside nav{display:flex;gap:9px;overflow-x:auto;padding:10px 0 17px}
+.inside nav button{flex:none;border:1px solid var(--line);background:transparent;color:var(--ink);padding:10px 13px;min-height:48px}
+.inside nav button.selected{background:var(--accent);color:#241a13}
+.inside h2{font:normal clamp(1.8rem,5vw,2.5rem) Georgia,serif;margin:16px 0 4px}
+.inside .apply{background:var(--accent);color:#241a13;border:0;border-radius:32px;padding:13px 25px;min-height:52px;font:1.1rem Georgia,serif}
+.footer{display:flex;justify-content:space-between;gap:10px;margin-top:25px}.footer button{border:1px solid var(--line);background:none;color:var(--ink);min-height:48px;padding:10px 15px}
+</style></head><body><main class="hall"><header><a href="../">ILUD</a><small>THREE WAYS THROUGH / 07</small></header><h1>Which door feels right?</h1>
+<section class="doors" id="doors" aria-label="Ways to use less AI"></section><nav class="footer"><button data-browse>Find a particular service ⌕</button><button data-saved>My saved doors ☆</button></nav></main>
+<script src="catalog.js"></script><script src="core.js"></script><script>
+ILUD.init();const doors=[{name:"Turn it off",lead:"Keep your familiar tool; change a setting.",kind:"setting",icon:"◉"},{name:"Avoid it",lead:"Take another path through the same service.",kind:"workaround",icon:"↝"},{name:"Use something else",lead:"Choose a simpler tool for the same job.",kind:"alternative",icon:"✦"}];
+const host=document.getElementById("doors");host.innerHTML=doors.map((d,i)=>`<article class="door ${i===0?"active":""}" data-door="${i}"><button type="button" class="door-handle" aria-expanded="${i===0}"><span><small>0${i+1} / ${d.icon}</small><strong>${d.name}</strong></span><i aria-hidden="true">⌄</i></button><div class="inside"><p>${d.lead}</p><nav aria-label="Choose a service category"></nav><div class="selection" aria-live="polite"></div></div></article>`).join("");
+function fill(door,category="Search"){const config=doors[Number(door.dataset.door)],matches=ILUD.entries.filter(e=>e.kind===config.kind);const cats=[...new Set(matches.map(e=>e.category))];const chosen=cats.includes(category)?category:cats[0];door.querySelector("nav").innerHTML=cats.map(c=>`<button data-category="${c}" class="${c===chosen?"selected":""}">${c}</button>`).join("");const entry=matches.find(e=>e.category===chosen);door.querySelector(".selection").innerHTML=`<span class="eyebrow">${entry.service} / ${chosen}</span><h2>${entry.title}</h2><p>${entry.summary}</p><button class="apply" data-open="${entry.id}">See this route →</button><p><button style="background:none;color:inherit;border:0;text-decoration:underline;min-height:44px" data-browse="${chosen}">All ${chosen.toLowerCase()} routes ↗</button></p>`}
+host.querySelectorAll(".door").forEach(fill);
+host.addEventListener("click",e=>{const handle=e.target.closest(".door-handle");if(handle){const d=handle.closest(".door");host.querySelectorAll(".door").forEach(other=>{other.classList.toggle("active",other===d);other.querySelector(".door-handle").setAttribute("aria-expanded",String(other===d))});}const tab=e.target.closest("[data-category]");if(tab)fill(tab.closest(".door"),tab.dataset.category)});
+</script></body></html>
