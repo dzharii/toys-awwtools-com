@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=5">
+<meta name="theme-color" content="#060504">
+<meta name="color-scheme" content="dark">
+<title>ILUD Transit — the network of ways around AI</title>
+<meta name="description" content="A transit map of 87 checked ways to use everyday internet services with less artificial intelligence. Four lines, eight interchanges, one plainer internet.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ILUD Transit">
+<meta property="og:description" content="Four lines. Eighty-seven stops. Every one of them a way to use an ordinary internet service with less AI.">
+<meta property="og:image" content="og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ILUD Transit">
+<meta name="twitter:description" content="A network map of practical ways around unwanted AI.">
+<meta name="twitter:image" content="og.jpg">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="transit.css">
+</head>
+<body>
+
+<!-- ══ splash ══════════════════════════════════════════════════ -->
+<div class="splash" id="splash">
+  <div class="splash__in">
+    <svg class="splash__rail" viewBox="0 0 120 200" aria-hidden="true">
+      <path class="sr sr1" d="M45 8v36L18 71v129"/>
+      <path class="sr sr2" d="M55 8v52L40 75v125"/>
+      <path class="sr sr3" d="M65 8v52l15 15v125"/>
+      <path class="sr sr4" d="M75 8v36l27 27v129"/>
+      <circle class="sd sd1" cx="18" cy="132" r="5"/>
+      <circle class="sd sd2" cx="40" cy="132" r="5"/>
+      <circle class="sd sd3" cx="80" cy="132" r="5"/>
+      <circle class="sd sd4" cx="102" cy="132" r="5"/>
+    </svg>
+    <h1 class="splash__mark">ILUD</h1>
+    <p class="splash__sub">ILUDIST</p>
+    <p class="splash__line">Different routes.<br>Same freer internet.</p>
+    <button class="splash__go" id="splashGo" type="button">
+      <span>Open the network</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15"/><path d="m13 6 6 6-6 6"/></svg>
+    </button>
+    <p class="splash__foot"><span id="splashN">87</span> checked stops &middot; four lines</p>
+  </div>
+</div>
+
+<!-- ══ brand ══════════════════════════════════════════════════ -->
+<header class="brand" id="brand">
+  <div class="brand__mark">
+    <svg viewBox="0 0 240 64" class="wm" role="img" aria-label="ILUD">
+      <defs>
+        <linearGradient id="goldv" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#f4dca2"/>
+          <stop offset=".42" stop-color="#c79a4e"/>
+          <stop offset=".58" stop-color="#8e6526"/>
+          <stop offset="1" stop-color="#e5c489"/>
+        </linearGradient>
+      </defs>
+      <text x="120" y="46" class="wm__t">ILUD</text>
+    </svg>
+    <p class="brand__sub">ILUDIST</p>
+  </div>
+</header>
+
+<!-- ══ line selector ══════════════════════════════════════════ -->
+<div class="lines" id="lines" role="tablist" aria-label="Lines"></div>
+
+<!-- ══ the map ════════════════════════════════════════════════ -->
+<main class="stage" id="stage">
+  <svg class="map" id="map" role="application" aria-label="Network map. Use the line buttons above, or tab to a station."></svg>
+  <p class="corner corner--tr" aria-hidden="true">A human internet<br>is still here</p>
+  <p class="corner corner--bl" aria-hidden="true">Different paths<br>a brighter web</p>
+  <div class="hud" id="hud">
+    <button class="hud__b" id="zIn" type="button" aria-label="Zoom in"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button class="hud__b" id="zOut" type="button" aria-label="Zoom out"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+    <button class="hud__b" id="zFit" type="button" aria-label="Show the whole network"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+  </div>
+  <p class="hint" id="hint">Drag the map. Tap a stop.</p>
+</main>
+
+<!-- ══ ride controls ══════════════════════════════════════════ -->
+<div class="ride" id="ride" hidden>
+  <button class="ride__b" id="ridePrev" type="button" aria-label="Previous stop"><svg viewBox="0 0 24 24"><path d="m14 6-6 6 6 6"/></svg></button>
+  <button class="ride__play" id="ridePlay" type="button" aria-label="Ride the line"><svg viewBox="0 0 24 24" class="pIco"><path d="M8 5.6 19 12 8 18.4Z"/></svg><svg viewBox="0 0 24 24" class="sIco"><path d="M8.6 5.6h2.6v12.8H8.6zM12.8 5.6h2.6v12.8h-2.6z"/></svg></button>
+  <button class="ride__b" id="rideNext" type="button" aria-label="Next stop"><svg viewBox="0 0 24 24"><path d="m10 6 6 6-6 6"/></svg></button>
+  <span class="ride__n" id="rideN"></span>
+  <button class="ride__x" id="rideX" type="button" aria-label="Leave the line">Leave</button>
+</div>
+
+<!-- ══ station card ═══════════════════════════════════════════ -->
+<section class="card" id="card" hidden aria-live="polite"></section>
+
+<!-- ══ dock ═══════════════════════════════════════════════════ -->
+<nav class="dock" id="dock" aria-label="Main">
+  <button class="dock__b" id="dFind" type="button">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.4"/><path d="m15.8 15.8 4.4 4.4"/></svg><span>Find</span>
+  </button>
+  <button class="dock__b" id="dPlan" type="button">
+    <svg viewBox="0 0 24 24"><path d="M7 20V8.5a3.5 3.5 0 0 1 3.5-3.5H17"/><path d="m14 2 3.4 3L14 8"/><circle cx="7" cy="20" r="2.2" fill="currentColor" stroke="none"/></svg><span>Plan</span>
+  </button>
+  <button class="dock__b" id="dCard" type="button">
+    <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2.4"/><path d="M3 10.4h18"/></svg><span>Travelcard</span>
+    <b class="dock__n" id="dockN" hidden>0</b>
+  </button>
+  <button class="dock__b" id="dInfo" type="button">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M12 11v5.4"/><circle cx="12" cy="7.9" r="1.1" fill="currentColor" stroke="none"/></svg><span>Notices</span>
+  </button>
+</nav>
+
+<!-- ══ panel ══════════════════════════════════════════════════ -->
+<div class="dim" id="dim" hidden></div>
+<section class="panel" id="panel" role="dialog" aria-modal="true" aria-label="Details" hidden>
+  <div class="panel__top">
+    <span class="panel__grab" id="panelGrab" aria-hidden="true"></span>
+    <p class="panel__kicker" id="panelKicker"></p>
+    <button class="panel__x" id="panelX" type="button" aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></svg></button>
+  </div>
+  <div class="panel__body" id="panelBody"></div>
+</section>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="data.js"></script>
+<script src="transit.js"></script>
+<script src="network.js"></script>
+<script src="panels.js"></script>
+</body>
+</html>

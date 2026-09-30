@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" data-app="instrument">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<title>ILUD Instrument — a dial for turning the AI down</title>
+<meta name="description" content="A precision dial for everyday digital life. Turn the ring to a part of your day, turn the hub to a remedy, and use it. Practical ways to switch off, avoid or replace unwanted AI.">
+<meta name="theme-color" content="#0b0a09">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ILUD Instrument">
+<meta property="og:description" content="Turn the ring. Choose what you want less of. Use the fix.">
+<meta property="og:image" content="og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ILUD Instrument">
+<meta name="twitter:description" content="Turn the ring. Choose what you want less of. Use the fix.">
+<meta name="twitter:image" content="og.jpg">
+<link rel="stylesheet" href="instrument.css">
+</head>
+<body>
+
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ─── splash ──────────────────────────────────────────────────── -->
+<div class="splash" id="splash">
+  <div class="splash__inner">
+    <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
+      <defs>
+        <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#f6e3b6"/><stop offset=".45" stop-color="#c39a58"/>
+          <stop offset=".72" stop-color="#8a6630"/><stop offset="1" stop-color="#e2c68e"/>
+        </linearGradient>
+      </defs>
+      <circle cx="60" cy="60" r="52" fill="none" stroke="url(#sg)" stroke-width="1.6"/>
+      <circle class="mark__tk" cx="60" cy="60" r="44" fill="none" stroke="url(#sg)" stroke-width="8"
+              stroke-dasharray="1.1 7.2" opacity=".75"/>
+      <circle cx="60" cy="60" r="24" fill="none" stroke="url(#sg)" stroke-width="1.1" opacity=".8"/>
+      <path d="M60 4 66 17H54Z" fill="url(#sg)"/>
+      <path d="M60 36v24" stroke="url(#sg)" stroke-width="2.4" stroke-linecap="round"/>
+    </svg>
+    <h1 class="splash__word">ILUD</h1>
+    <p class="splash__sub">ILUDIST</p>
+    <p class="splash__line">A precision dial for the quieter use<br>of ordinary digital tools.</p>
+    <button class="begin" id="splashGo">Begin</button>
+    <p class="splash__foot">Turns, clicks and settles. Best with sound on.</p>
+  </div>
+</div>
+
+<!-- ─── faceplate ───────────────────────────────────────────────── -->
+<main class="face" id="face" hidden>
+  <span class="screw screw--tl" aria-hidden="true"></span>
+  <span class="screw screw--tr" aria-hidden="true"></span>
+
+  <header class="head">
+    <div class="brand">
+      <span class="brand__word">ILUD</span>
+      <span class="brand__rule" aria-hidden="true"></span>
+      <span class="brand__sub">ILUDIST</span>
+    </div>
+    <nav class="tools" aria-label="Instrument controls">
+      <button class="ibtn" id="btnFind" aria-label="Find a fix" title="Find">
+        <svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.4"/><path d="M15.4 15.4 21 21"/></svg>
+      </button>
+      <button class="ibtn" id="btnKept" aria-label="Kept fixes" title="Kept">
+        <svg viewBox="0 0 24 24"><path d="M6 3.6h12v16.8L12 16l-6 4.4Z"/></svg>
+        <span class="ibtn__n" id="keptN" hidden>0</span>
+      </button>
+      <button class="ibtn" id="btnAbout" aria-label="About this instrument" title="About">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.8"/><path d="M12 11v6"/><path d="M12 7.4v.9"/></svg>
+      </button>
+    </nav>
+  </header>
+
+  <section class="stage">
+    <div class="dialbox" id="dialbox">
+      <svg class="dial" id="dial" viewBox="0 0 440 440" role="group"
+           aria-label="Category and remedy selector"></svg>
+
+      <!-- the engraved readout in the middle of the hub -->
+      <div class="hub" id="hub">
+        <div class="hub__rest" id="hubRest">
+          <span>What do</span><span>you want</span><span>less of?</span>
+          <i class="hub__rule" aria-hidden="true"></i>
+        </div>
+        <div class="hub__live" id="hubLive" hidden>
+          <span class="hub__cat" id="hubCat">Search</span>
+          <i class="hub__rule" aria-hidden="true"></i>
+          <span class="hub__pos"><b id="hubN">01</b><em>/</em><span id="hubT">14</span></span>
+        </div>
+      </div>
+
+      <!-- invisible, keyboard-reachable sector buttons -->
+      <div class="sectors" id="sectors"></div>
+    </div>
+
+    <p class="nudge" id="nudge"><span>Turn the outer ring</span></p>
+  </section>
+
+  <section class="plaque" id="plaque" aria-live="polite">
+    <span class="screw screw--p1" aria-hidden="true"></span>
+    <span class="screw screw--p2" aria-hidden="true"></span>
+    <span class="screw screw--p3" aria-hidden="true"></span>
+    <span class="screw screw--p4" aria-hidden="true"></span>
+
+    <div class="plaque__body" id="plaqueBody">
+      <p class="plaque__eyebrow"><span id="pService">—</span><i aria-hidden="true">·</i><span id="pApproach">—</span></p>
+      <h2 class="plaque__title" id="pTitle">Choose a part of your day</h2>
+      <p class="plaque__sum" id="pSum">Turn the ring above to Search, Social, Images, Writing, Shopping, Browsing, Video or Reading. The plate will show you what can be done.</p>
+    </div>
+
+    <div class="plaque__ctl">
+      <button class="step" id="prevFix" aria-label="Previous remedy"><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg></button>
+      <button class="use" id="useFix"><span id="useLabel">Use fix</span><svg viewBox="0 0 24 24"><path d="M4 12h15"/><path d="m13 6 6 6-6 6"/></svg></button>
+      <button class="step" id="nextFix" aria-label="Next remedy"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>
+    </div>
+
+    <ul class="facts" id="facts"></ul>
+  </section>
+</main>
+
+<!-- ─── drawers ─────────────────────────────────────────────────── -->
+<div class="veil" id="veil" hidden></div>
+
+<section class="drawer drawer--tall" id="spec" hidden aria-labelledby="specTitle" role="dialog" aria-modal="true">
+  <div class="drawer__grip" aria-hidden="true"></div>
+  <header class="drawer__head">
+    <p class="drawer__kicker">Specification</p>
+    <button class="shut" data-shut="spec" aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+  </header>
+  <div class="drawer__body" id="specBody"></div>
+</section>
+
+<section class="drawer drawer--tall" id="find" hidden aria-labelledby="findTitle" role="dialog" aria-modal="true">
+  <div class="drawer__grip" aria-hidden="true"></div>
+  <header class="drawer__head">
+    <p class="drawer__kicker" id="findTitle">Find a fix</p>
+    <button class="shut" data-shut="find" aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+  </header>
+  <div class="slot">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.4"/><path d="M15.4 15.4 21 21"/></svg>
+    <input id="findIn" type="search" placeholder="A service, or what is bothering you" autocomplete="off" enterkeyhint="search" aria-label="Search the catalogue">
+    <button class="slot__x" id="findClear" aria-label="Clear" hidden><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="drawer__body" id="findBody"></div>
+</section>
+
+<section class="drawer" id="kept" hidden aria-labelledby="keptTitle" role="dialog" aria-modal="true">
+  <div class="drawer__grip" aria-hidden="true"></div>
+  <header class="drawer__head">
+    <p class="drawer__kicker" id="keptTitle">Kept fixes</p>
+    <button class="shut" data-shut="kept" aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+  </header>
+  <div class="drawer__body" id="keptBody"></div>
+</section>
+
+<section class="drawer" id="about" hidden aria-labelledby="aboutTitle" role="dialog" aria-modal="true">
+  <div class="drawer__grip" aria-hidden="true"></div>
+  <header class="drawer__head">
+    <p class="drawer__kicker" id="aboutTitle">About the instrument</p>
+    <button class="shut" data-shut="about" aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+  </header>
+  <div class="drawer__body" id="aboutBody"></div>
+</section>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="data.js"></script>
+<script src="instrument.js"></script>
+<script src="dial.js"></script>
+<script src="panels.js"></script>
+</body>
+</html>
