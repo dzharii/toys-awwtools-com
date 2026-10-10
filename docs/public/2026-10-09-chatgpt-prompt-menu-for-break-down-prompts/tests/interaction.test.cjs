@@ -11,20 +11,26 @@ function boot({storage = new Map(), blocked = false, clipboard = true} = {}) {
   const inputs = [];
   let copied = null;
   class Element {
-    constructor(tag) { this.tagName = tag.toUpperCase(); this.children = []; this.events = {}; this.value = ''; this.name = ''; this.type = ''; this.checked = false; this.readOnly = false; this.hidden = false; this.textContent = ''; this.files = []; }
+    constructor(tag) { this.tagName = tag.toUpperCase(); this.children = []; this.events = {}; this.value = ''; this.name = ''; this.type = ''; this.checked = false; this.readOnly = false; this.hidden = false; this.textContent = ''; this.files = []; this.style = {}; this.dataset = {}; this.scrollTop = 0; this.classList = {toggle() {}, remove() {}}; }
     setAttribute(key, value) { if (key === 'id') ids.set(value, this); this[key === 'readonly' ? 'readOnly' : key] = key === 'readonly' ? true : value; }
-    append(...children) { for (const child of children) { child.parent = this; this.children.push(child); } }
+    append(...children) { for (const child of children) { child.remove(); child.parent = this; this.children.push(child); } }
     replaceChildren(...children) { this.children = []; this.append(...children); }
     addEventListener(name, fn) { (this.events[name] ||= []).push(fn); }
     async fire(name, target = this) { for (const fn of this.events[name] || []) await fn({target, preventDefault() {}}); }
-    querySelectorAll(name) { assert.equal(name, 'input'); return inputs.filter(x => x.name); }
-    focus() { this.focused = true; }
+    querySelectorAll(name) { if (name === '.diff-added') return []; assert.equal(name, 'input'); return inputs.filter(x => x.name); }
+    focus() { this.focused = true; document.activeElement = this; }
     select() { this.selected = true; }
     click() { return this.fire('click'); }
     remove() { if (this.parent) this.parent.children = this.parent.children.filter(x => x !== this); }
+    get parentElement() { return this.parent; }
+    insertAdjacentElement(position, node) { assert.equal(position, 'afterend'); node.remove(); node.parent = this.parent; this.parent.children.splice(this.parent.children.indexOf(this) + 1, 0, node); }
+    contains(node) { return node === this || this.children.some(child => child.contains(node)); }
+    getBoundingClientRect() { return {top: 3000, bottom: 3440, height: 440, left: 0, width: 420}; }
+    scrollIntoView() {}
   }
   const document = {
     createElement(tag) { const node = new Element(tag); if (tag === 'input') inputs.push(node); return node; },
+    createElementNS(namespace, tag) { return this.createElement(tag); },
     getElementById(id) { assert.ok(ids.has(id), 'Missing element ' + id); return ids.get(id); },
     body: new Element('body'), execCommand() { return false; }
   };
@@ -35,32 +41,32 @@ function boot({storage = new Map(), blocked = false, clipboard = true} = {}) {
   }
   for (const value of ['why', 'code', 'trace']) { const node = document.createElement('input'); node.name = 'structure'; node.type = 'radio'; node.value = value; }
   const localStorage = {getItem(key) { if (blocked) throw Error('blocked'); return storage.get(key); }, setItem(key, value) { if (blocked) throw Error('blocked'); storage.set(key, value); }, removeItem(key) { if (blocked) throw Error('blocked'); storage.delete(key); }};
-  const sandbox = {window: {PromptMenu: P}, document, localStorage, navigator: clipboard ? {clipboard: {async writeText(value) { copied = value; }}} : {}, setTimeout() { return 1; }, clearTimeout() {}, URL: {createObjectURL() { return 'blob:local'; }, revokeObjectURL() {}}, Blob};
+  const sandbox = {window: {PromptMenu: P, innerWidth: 1440, innerHeight: 1000, getSelection() { return null; }, addEventListener() {}, matchMedia() { return {matches: false}; }, confirm() { return true; }}, document, localStorage, navigator: clipboard ? {clipboard: {async writeText(value) { copied = value; }}} : {}, setTimeout() { return 1; }, clearTimeout() {}, URL: {createObjectURL() { return 'blob:local'; }, revokeObjectURL() {}}, Blob, IntersectionObserver: class {observe() {}}};
   vm.createContext(sandbox);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/app.js'), 'utf8'), sandbox);
   const get = id => document.getElementById(id);
-  async function choose(name, value) { const node = inputs.find(x => x.name === name && x.value === value); assert.ok(node); node.checked = true; await get('settings').fire('change', node); }
+  async function choose(name, value) { const node = inputs.find(x => x.name === name && x.value === value); assert.ok(node); node.checked = true; await get(name === 'preset' ? 'preset' : 'settings').fire('change', node); }
   return {get, choose, inputs, storage, copied: () => copied};
 }
 
-test('application initializes all controls and preserves manual edits across setting changes', async () => {
+test('application keeps generated output read-only and preserves independent clones across menu changes', async () => {
   const app = boot();
   assert.equal(app.get('prompt').value, P.buildPrompt(P.defaults));
   assert.equal(app.inputs.filter(x => x.name === 'focus' && x.checked).length, 5);
   assert.equal(app.get('prompt').readOnly, true);
   await app.get('edit').click();
-  app.get('prompt').value = 'My edited prompt';
-  await app.get('prompt').fire('input');
-  await app.get('edit').click();
+  const draft = app.get('clone-list').children[0].children[2];
+  draft.value = 'My edited prompt';
+  await draft.fire('input');
   await app.choose('verbosity', 'compact');
-  assert.equal(app.get('prompt').value, 'My edited prompt');
-  assert.equal(app.get('prompt').readOnly, true);
-  assert.match(app.get('manual-message').textContent, /Settings changed/);
-  await app.get('copy').click();
-  assert.equal(app.copied(), 'My edited prompt');
-  await app.get('rebuild').click();
   assert.match(app.get('prompt').value, /Use concise prose/);
-  assert.equal(app.get('manual-notice').hidden, true);
+  assert.equal(draft.value, 'My edited prompt');
+  assert.equal(app.get('prompt').readOnly, true);
+  await app.get('copy').click();
+  assert.equal(app.copied(), app.get('prompt').value);
+  await app.choose('preset', 'implementation');
+  await app.get('reset').click();
+  assert.equal(draft.value, 'My edited prompt');
 });
 
 test('browser persistence is opt-in, restores validated state, and can be removed', async () => {

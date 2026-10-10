@@ -97,3 +97,53 @@ test('warnings explain empty assignments and combinations without silently chang
   assert.equal(s.visuals, 'none');
   assert.match(P.buildPrompt(s), /Do not include diagrams/);
 });
+
+test('word diff reconstructs both versions exactly, including repeated words and whitespace', () => {
+  const pairs = [
+    ['', 'new prompt'], ['old prompt', ''], ['same\n text', 'same\n text'],
+    ['one two one two', 'one one two three'], ['A\n\nB\nold\n', 'A\n\nB\nnew\n'],
+    [P.buildPrompt(P.defaults), P.buildPrompt(P.applyPreset('implementation', P.defaults))],
+    ['a '.repeat(15000), 'b '.repeat(15000)]
+  ];
+  let seed = 42;
+  const random = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+  for (let i = 0; i < 300; i++) {
+    const text = () => Array.from({length: Math.floor(random() * 30)}, () => ['a', 'b', 'c', ' ', '\n'][Math.floor(random() * 5)]).join('');
+    pairs.push([text(), text()]);
+  }
+  for (const [before, after] of pairs) {
+    const diff = P.diffText(before, after);
+    assert.equal(diff.filter(op => op.type !== 'added').map(op => op.text).join(''), before);
+    assert.equal(diff.filter(op => op.type !== 'removed').map(op => op.text).join(''), after);
+  }
+  assert.deepEqual(P.diffText('keep old ending', 'keep new ending').map(op => op.type), ['equal', 'removed', 'added', 'equal']);
+});
+
+test('workspace validates drafts/preferences and migrates old manual output without changing generation', () => {
+  const draft = {id: 'note', title: 'My note', text: '<script>literal text</script>', createdAt: '2026-10-10T12:00:00.000Z'};
+  const raw = {...P.defaults, promptClones: [draft], previewPreferences: {...P.previewDefaults, textSize: 'large'}, manualPrompt: 'Old authored prompt'};
+  const workspace = P.validateWorkspace(raw);
+  assert.equal(workspace.settings.manualPrompt, null);
+  assert.equal(workspace.promptClones[0].text, draft.text);
+  assert.equal(workspace.promptClones[1].text, raw.manualPrompt);
+  assert.equal(workspace.previewPreferences.textSize, 'large');
+  assert.equal(P.buildPrompt(workspace.settings), P.buildPrompt(P.defaults));
+  for (const bad of [
+    {...raw, promptClones: {}}, {...raw, promptClones: [draft, draft]},
+    {...raw, promptClones: [{...draft, createdAt: 'not a date'}]},
+    {...raw, promptClones: [{...draft, text: 'a'.repeat(100001)}]},
+    {...raw, previewPreferences: {highlight: 'yes'}}, {...raw, previewPreferences: {textSize: 'tiny'}}
+  ]) assert.throws(() => P.validateWorkspace(bad));
+  assert.equal(P.validateWorkspace(P.defaults).promptClones.length, 0);
+});
+
+test('preset metadata is complete and restored selection cannot misrepresent its settings', () => {
+  for (const info of [...Object.values(P.presets), P.customPreset]) {
+    for (const key of ['label', 'icon', 'summary', 'description']) assert.ok(typeof info[key] === 'string' && info[key].trim(), key);
+  }
+  const state = P.applyPreset('implementation', P.defaults);
+  assert.equal(P.validateWorkspace({...state, selectedPreset: 'implementation'}).selectedPreset, 'implementation');
+  assert.throws(() => P.validateWorkspace({...state, selectedPreset: 'insight'}), /does not match/);
+  assert.throws(() => P.validateWorkspace({...state, selectedPreset: 'unknown'}), /Invalid selected/);
+  assert.equal(P.validateWorkspace({...state, selectedPreset: 'custom'}).selectedPreset, 'custom');
+});

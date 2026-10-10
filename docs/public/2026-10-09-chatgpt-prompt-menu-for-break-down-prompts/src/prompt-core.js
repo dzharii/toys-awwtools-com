@@ -63,9 +63,25 @@
     exclusions: Object.keys(exclusions), special: '', manualPrompt: null
   };
   const presets = {
-    insight: {label: 'Technical insight', settings: {}},
-    implementation: {label: 'Implementation review', settings: {structure: 'code', depth: 'rigorous', knowledge: 'systems', compression: 'minimal', visuals: 'none', deliverable: 'library', focus: ['invariants', 'ownership', 'boundaries', 'validation']}},
-    walkthrough: {label: 'Algorithm walkthrough', settings: {structure: 'trace', verbosity: 'expanded', depth: 'deep', compression: 'guided', visuals: 'detailed', focus: ['invariants', 'complexity', 'boundaries']}}
+    insight: {
+      label: 'Technical insight', icon: 'p-insight', summary: 'Understand why the design works.',
+      description: 'Start with causes and invariants, then complete C code. Spend focused prose on the difficult decisions, assuming you already know C.',
+      settings: {}
+    },
+    implementation: {
+      label: 'Implementation review', icon: 'p-review', summary: 'Inspect correctness and failure paths.',
+      description: 'Lead with a complete reusable library. Examine correctness, ownership, boundary cases, and implementation checks with rigorous systems-level reasoning.',
+      settings: {structure: 'code', depth: 'rigorous', knowledge: 'systems', compression: 'minimal', visuals: 'none', deliverable: 'library', focus: ['invariants', 'ownership', 'boundaries', 'validation']}
+    },
+    walkthrough: {
+      label: 'Algorithm walkthrough', icon: 'p-walkthrough', summary: 'Follow operations step by step.',
+      description: 'Walk through insertion and extraction before the code. Use expanded, connected explanations and labeled diagrams to expose every comparison, swap, and stopping condition.',
+      settings: {structure: 'trace', verbosity: 'expanded', depth: 'deep', compression: 'guided', visuals: 'detailed', focus: ['invariants', 'complexity', 'boundaries']}
+    }
+  };
+  const customPreset = {
+    label: 'Custom settings', icon: 'p-custom', summary: 'Keep this mix; tune it below.',
+    description: 'These are your current menu choices, not a saved preset. Selecting this tile changes nothing; adjust any control below to shape your own answer.'
   };
   const clone = value => JSON.parse(JSON.stringify(value));
   function validate(raw) {
@@ -119,7 +135,107 @@
     if (s.special.trim()) notes.push('Special instructions are included verbatim. Check that they agree with the selected settings.');
     return notes;
   }
-  const api = {choices, focus, exclusions, defaults, presets, clone, validate, buildPrompt, applyPreset, warnings};
+  const previewDefaults = {highlight: true, follow: true, autoHide: true, textSize: 'normal', collapsed: false};
+  function validateWorkspace(raw) {
+    const settings = validate(raw);
+    const promptClones = [];
+    const ids = new Set();
+    if ('promptClones' in raw) {
+      if (!Array.isArray(raw.promptClones)) throw new Error('Invalid prompt clones.');
+      for (const draft of raw.promptClones) {
+        if (!draft || typeof draft !== 'object' || typeof draft.id !== 'string' || !draft.id || draft.id.length > 100 ||
+            ids.has(draft.id) || typeof draft.title !== 'string' || draft.title.length > 120 ||
+            typeof draft.text !== 'string' || draft.text.length > 100000 ||
+            typeof draft.createdAt !== 'string' || !/^\d{4}-\d\d-\d\dT/.test(draft.createdAt) || !Number.isFinite(Date.parse(draft.createdAt))) {
+          throw new Error('Invalid prompt clone.');
+        }
+        ids.add(draft.id);
+        promptClones.push({id: draft.id, title: draft.title, text: draft.text, createdAt: new Date(draft.createdAt).toISOString()});
+      }
+    }
+    if (settings.manualPrompt !== null) {
+      let id = 'legacy-manual';
+      while (ids.has(id)) id += '-copy';
+      promptClones.push({id, title: 'Imported manual prompt', text: settings.manualPrompt, createdAt: new Date().toISOString()});
+      settings.manualPrompt = null;
+    }
+    const previewPreferences = {...previewDefaults};
+    if ('previewPreferences' in raw) {
+      const prefs = raw.previewPreferences;
+      if (!prefs || typeof prefs !== 'object' || Array.isArray(prefs)) throw new Error('Invalid preview preferences.');
+      for (const key of ['highlight', 'follow', 'autoHide', 'collapsed']) {
+        if (key in prefs) {
+          if (typeof prefs[key] !== 'boolean') throw new Error('Invalid preview preference: ' + key);
+          previewPreferences[key] = prefs[key];
+        }
+      }
+      if ('textSize' in prefs) {
+        if (!['normal', 'large'].includes(prefs.textSize)) throw new Error('Invalid preview text size.');
+        previewPreferences.textSize = prefs.textSize;
+      }
+    }
+    const selectedPreset = 'selectedPreset' in raw ? raw.selectedPreset : 'custom';
+    if (selectedPreset !== 'custom') {
+      if (typeof selectedPreset !== 'string' || !Object.hasOwn(presets, selectedPreset)) throw new Error('Invalid selected preset.');
+      const presetState = applyPreset(selectedPreset, settings);
+      for (const key of [...Object.keys(choices), 'focus', 'exclusions']) {
+        if (JSON.stringify(settings[key]) !== JSON.stringify(presetState[key])) throw new Error('Selected preset does not match its settings.');
+      }
+    }
+    return {settings, promptClones, previewPreferences, selectedPreset};
+  }
+  function diffText(before, after) {
+    const a = before.match(/\s+|[^\s]+/gu) || [];
+    const b = after.match(/\s+|[^\s]+/gu) || [];
+    let start = 0, end = 0;
+    while (start < a.length && start < b.length && a[start] === b[start]) start++;
+    while (end < a.length - start && end < b.length - start && a[a.length - end - 1] === b[b.length - end - 1]) end++;
+    const left = a.slice(start, a.length - end), right = b.slice(start, b.length - end);
+    let operations = [];
+    if (!left.length || !right.length) {
+      operations = [...left.map(text => ({type: 'removed', text})), ...right.map(text => ({type: 'added', text}))];
+    } else {
+      // Myers' shortest edit path, with a work bound for long pasted assignments.
+      let frontier = new Map([[1, 0]]), work = 0, found = false;
+      const trace = [];
+      search: for (let d = 0; d <= left.length + right.length; d++) {
+        trace.push(new Map(frontier));
+        for (let k = -d; k <= d; k += 2) {
+          if (++work > 30000) break search;
+          let x = k === -d || (k !== d && (frontier.get(k - 1) ?? -1) < (frontier.get(k + 1) ?? -1))
+            ? frontier.get(k + 1) ?? 0 : (frontier.get(k - 1) ?? 0) + 1;
+          let y = x - k;
+          while (x < left.length && y < right.length && left[x] === right[y]) { x++; y++; }
+          frontier.set(k, x);
+          if (x >= left.length && y >= right.length) {
+            found = true;
+            for (let step = d; step >= 0; step--) {
+              const previous = trace[step], diagonal = x - y;
+              const previousK = diagonal === -step || (diagonal !== step && (previous.get(diagonal - 1) ?? -1) < (previous.get(diagonal + 1) ?? -1))
+                ? diagonal + 1 : diagonal - 1;
+              const previousX = previous.get(previousK) ?? 0, previousY = previousX - previousK;
+              while (x > previousX && y > previousY) { operations.push({type: 'equal', text: left[--x]}); y--; }
+              if (step > 0) {
+                if (x === previousX) operations.push({type: 'added', text: right[--y]});
+                else operations.push({type: 'removed', text: left[--x]});
+              }
+            }
+            operations.reverse();
+            break search;
+          }
+        }
+      }
+      if (!found) operations = [{type: 'removed', text: left.join('')}, {type: 'added', text: right.join('')}];
+    }
+    const result = [];
+    for (const op of [{type: 'equal', text: a.slice(0, start).join('')}, ...operations, {type: 'equal', text: end ? a.slice(a.length - end).join('') : ''}]) {
+      if (!op.text) continue;
+      if (result.length && result[result.length - 1].type === op.type) result[result.length - 1].text += op.text;
+      else result.push({...op});
+    }
+    return result;
+  }
+  const api = {choices, focus, exclusions, defaults, presets, customPreset, clone, validate, buildPrompt, applyPreset, warnings, previewDefaults, validateWorkspace, diffText};
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.PromptMenu = api;
 })(typeof globalThis === 'undefined' ? this : globalThis);
