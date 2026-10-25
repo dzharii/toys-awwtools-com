@@ -35,6 +35,95 @@ function Show-Note([string]$label, [string]$value) {
     Write-Host $value -ForegroundColor White
 }
 
+# Drafts live outside the repository. Only answers affecting published output are stored.
+$script:draft = @{}
+$script:draftPath = $null
+$script:currentStyle = 'general'
+$script:activeFile = ''
+
+function Set-DraftValue([string]$key, [string]$value) {
+    if (-not $script:draftPath) { return }
+    $script:draft[$key] = $value
+    Save-Draft
+}
+
+function Save-Draft {
+    if (-not $script:draftPath -or $script:draft.Count -eq 0) { return }
+    $json = ConvertTo-Json -InputObject $script:draft -Depth 6
+    $temp = $script:draftPath + '.tmp'
+    try {
+        [IO.File]::WriteAllText($temp, $json, [Text.UTF8Encoding]::new($false))
+        Move-Item -LiteralPath $temp -Destination $script:draftPath -Force
+    } finally {
+        if (Test-Path -LiteralPath $temp) { Remove-Item -LiteralPath $temp -Force }
+    }
+}
+
+function Initialize-Draft([string]$projectDir) {
+    $normalized = [IO.Path]::GetFullPath($projectDir).TrimEnd([char[]]@('/', '\')).ToLowerInvariant()
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = $sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($normalized))
+    } finally { $sha.Dispose() }
+    $key = ([BitConverter]::ToString($bytes)).Replace('-', '').Substring(0, 24).ToLowerInvariant()
+    $script:draftPath = Join-Path ([IO.Path]::GetTempPath()) ('add-project-' + $key + '.json')
+    if (Test-Path -LiteralPath $script:draftPath) {
+        try {
+            $saved = Get-Content -LiteralPath $script:draftPath -Raw -Encoding UTF8 | ConvertFrom-Json
+            foreach ($property in $saved.PSObject.Properties) {
+                $script:draft[$property.Name] = [string]$property.Value
+            }
+            Show-Note 'Recovered draft' $script:draftPath
+        } catch {
+            throw ('Cannot read saved draft: ' + $script:draftPath + '. ' + $_.Exception.Message)
+        }
+    } else {
+        Show-Note 'Draft location' $script:draftPath
+    }
+}
+
+function Get-Context([string]$file, [string]$token) {
+    $lines = [IO.File]::ReadAllLines($file)
+    for ($i = 0; $i -lt $lines.Length; $i++) {
+        if ($lines[$i].Contains($token)) {
+            $start = [Math]::Max(0, $i - 1)
+            $end = [Math]::Min($lines.Length - 1, $i + 1)
+            $result = @()
+            for ($j = $start; $j -le $end; $j++) {
+                $result += ('  {0,4}: {1}' -f ($j + 1), $lines[$j].TrimEnd())
+            }
+            return ($result -join [Environment]::NewLine)
+        }
+    }
+    return '  Expected text not found: ' + $token
+}
+
+function Assert-Preflight([string]$category, [string]$markerKey, [string]$projectName, [datetime]$projectDate) {
+    Show-Heading 'Preflight validation' 'Checking existing files and insertion points before requesting content.'
+    $html = Get-Document $indexPath
+    $rss = Get-Document $rssPath
+    $script:activeFile = $indexPath
+    $escapedName = [regex]::Escape((Escape-Xml $projectName))
+    if ([regex]::IsMatch($html.Text, 'data-project="' + $escapedName + '"', 'IgnoreCase')) {
+        throw ('Duplicate HTML project: ' + $projectName + '. Remove it or use a different folder.')
+    }
+    $htmlTest = Update-Html $html.Text $html.Newline $category $markerKey '<li class="project-item"></li>'
+    $script:activeFile = $rssPath
+    $url = $siteUrl + '/public/' + (Encode-Path $projectName) + '/'
+    if ($rss.Text.Contains($url)) { throw ('Duplicate RSS project URL: ' + $url) }
+    $rssTest = Update-Rss $rss.Text $rss.Newline $projectDate '<item></item>'
+    # Verify the existing feed is XML and that the tested insertion also leaves valid XML.
+    foreach ($content in @($rss.Text, $rssTest)) {
+        $doc = [xml]$content
+        if (-not $doc.rss.channel) { throw 'RSS must contain an rss/channel element.' }
+    }
+    $script:activeFile = ''
+    Show-Note 'HTML' 'OK: section and insertion point'
+    Show-Note 'RSS' 'OK: date, marker, chronology, and XML'
+    Show-Note 'Project' 'OK: not already published'
+    return [pscustomobject]@{ Html = $html; Rss = $rss }
+}
+
 function Ask-Choice([string]$question, [string[]]$allowed, [string]$default) {
     while ($true) {
         Write-Host ('  ' + $question) -ForegroundColor Yellow
@@ -46,6 +135,8 @@ function Ask-Choice([string]$question, [string[]]$allowed, [string]$default) {
 }
 
 function Ask-Text([string]$name, [string]$hint, [string]$example, [string]$default = '') {
+    $key = 'field:' + $script:currentStyle + ':' + $name
+    if ($script:draft -and $script:draft.ContainsKey($key)) { $default = [string]$script:draft[$key] }
     while ($true) {
         Write-Host ''
         Write-Host ('  ' + $name) -ForegroundColor Yellow
@@ -56,7 +147,11 @@ function Ask-Text([string]$name, [string]$hint, [string]$example, [string]$defau
         }
         $answer = (Read-Host '    >').Trim()
         if (-not $answer) { $answer = $default }
-        if ($answer) { return $answer.Trim().TrimEnd('.') }
+        if ($answer) {
+            $answer = $answer.Trim().TrimEnd('.')
+            Set-DraftValue $key $answer
+            return $answer
+        }
         Write-Host '    This field is required.' -ForegroundColor Red
     }
 }
@@ -157,7 +252,7 @@ function Put-Document([string]$path, [string]$content, [bool]$bom) {
 function Require-SingleMatch([string]$content, [string]$expression, [string]$label) {
     $matches = [regex]::Matches($content, $expression)
     if ($matches.Count -ne 1) {
-        throw ('Expected exactly one ' + $label + ', found ' + $matches.Count + '. No files were changed.')
+        throw ('Expected exactly one ' + $label + ', found ' + $matches.Count + '. Check the corresponding element or comment marker in the file. No files were changed.')
     }
     return $matches[0]
 }
@@ -221,6 +316,7 @@ function Get-Landing([string]$projectDir, [string]$readmeName, [string]$rootHref
         $candidate = 'demo/'
     }
 
+    if ($script:draft.ContainsKey('landingPath')) { $candidate = $script:draft['landingPath'] }
     while ($true) {
         Show-Heading 'Landing page' 'Choose where the main project link points.'
         Show-Note 'Suggested path' $candidate
@@ -251,6 +347,7 @@ function Get-Landing([string]$projectDir, [string]$readmeName, [string]$rootHref
             }
             $encoded = ''
             if ($relative) { $encoded = (Encode-Path $relative) + '/' }
+            Set-DraftValue 'landingPath' $(if ($relative) { $relative + '/' } else { './' })
             return [pscustomobject]@{ Href = $rootHref + $encoded; PreviewHref = $rootHref + $encoded }
         }
 
@@ -263,6 +360,7 @@ function Get-Landing([string]$projectDir, [string]$readmeName, [string]$rootHref
                 $preview = $rootHref + (Encode-Path $directory.TrimEnd('/'))
                 if (-not $preview.EndsWith('/')) { $preview += '/' }
             }
+            Set-DraftValue 'landingPath' $relative
             return [pscustomobject]@{ Href = $rootHref + $encoded; PreviewHref = $preview }
         }
         Write-Host ('  Path does not exist: ' + $absolute) -ForegroundColor Red
@@ -275,7 +373,7 @@ function Update-Html([string]$source, [string]$newline, [string]$category,
                       [regex]::Escape($category) + '\s*</h1>\s*<ul\b[^>]*class="project-list"[^>]*>(?<body>.*?)' +
                       '(?<close>^[ \t]*</ul>)'
     $sectionMatches = [regex]::Matches($source, $sectionPattern, [Text.RegularExpressions.RegexOptions]::Multiline)
-    if ($sectionMatches.Count -ne 1) { throw ('Cannot uniquely locate the ' + $category + ' project list.') }
+    if ($sectionMatches.Count -ne 1) { throw ('Expected exactly one project section named ' + $category + ' in index.html, found ' + $sectionMatches.Count + '. Check its <section>, <h1>, and <ul class="project-list"> markup.') }
     $marker = '<!-- ADD-PROJECT:' + $markerKey + ' -->'
     $allMarkers = [regex]::Matches($source, [regex]::Escape($marker))
     if ($allMarkers.Count -gt 1) { throw ('Duplicate HTML marker: ' + $marker) }
@@ -301,7 +399,7 @@ function Update-Html([string]$source, [string]$newline, [string]$category,
 
 function Update-Rss([string]$source, [string]$newline, [datetime]$newDate,
                     [string]$newItem) {
-    $datePattern = '(?m)^(?<indent>[ \t]*)<lastBuildDate>[^<]*</lastBuildDate>[ \t]*$'
+    $datePattern = '(?m)^(?<indent>[ \t]*)<lastBuildDate>[^<]*</lastBuildDate>[ \t]*\r?$'
     $dateNode = Require-SingleMatch $source $datePattern 'RSS lastBuildDate'
     $marker = '<!-- ADD-PROJECT:RSS -->'
     $markerMatches = [regex]::Matches($source, [regex]::Escape($marker))
@@ -361,40 +459,58 @@ try {
     $project = Confirm-Project $ProjectPath
     $projectName = $project.Name
     $projectDate = Get-ProjectDate $projectName
-    $title = Ask-Text 'Display title' 'Shown as the index link and RSS title. Enter to use the folder name.' 'JSON Formatter' $projectName
+    Initialize-Draft $project.FullName
 
     Show-Heading 'Category' 'Choose the target section in index.html (and the RSS category).'
     $categories = @('Toys', 'Games', 'Docs', 'Browser Extensions', 'Experiments')
     for ($i = 0; $i -lt $categories.Count; $i++) {
         Write-Host ('    [{0}] {1}' -f ($i + 1), $categories[$i]) -ForegroundColor White
     }
-    $sectionChoice = Ask-Choice 'Section number [1 = Toys]' @('1', '2', '3', '4', '5', 'Q') '1'
+    $sectionDefault = '1'
+    if ($script:draft.ContainsKey('category') -and $categories -contains $script:draft['category']) {
+        $sectionDefault = [string]([array]::IndexOf($categories, $script:draft['category']) + 1)
+    }
+    $sectionChoice = Ask-Choice ('Section number [default: ' + $sectionDefault + ']') @('1', '2', '3', '4', '5', 'Q') $sectionDefault
     if ($sectionChoice -eq 'Q') { throw 'Cancelled; no files changed.' }
     $category = $categories[[int]$sectionChoice - 1]
     $markerKeys = @('TOYS', 'GAMES', 'DOCS', 'BROWSER-EXTENSIONS', 'EXPERIMENTS')
     $markerKey = $markerKeys[[int]$sectionChoice - 1]
+    Set-DraftValue 'category' $category
+
+    $preflight = Assert-Preflight $category $markerKey $projectName $projectDate
+    $script:currentStyle = 'general'
+    $title = Ask-Text 'Display title' 'Shown as the index link and RSS title. Enter to use the folder name.' 'JSON Formatter' $projectName
 
     while ($true) {
         Show-TemplateMenu
-        $style = Ask-Choice 'Description style [1-5]   [Q] Quit' @('1', '2', '3', '4', '5', 'Q') '1'
+        $styleDefault = '1'
+        if ($script:draft.ContainsKey('style') -and $script:draft['style'] -match '^[1-5]$') { $styleDefault = $script:draft['style'] }
+        $style = Ask-Choice ('Description style [1-5] [default: ' + $styleDefault + '] [Q] Quit') @('1', '2', '3', '4', '5', 'Q') $styleDefault
         if ($style -eq 'Q') { throw 'Cancelled; no files changed.' }
+        if ($script:draft.ContainsKey('style') -and $script:draft['style'] -ne $style) { $null = $script:draft.Remove('finalDescription') }
+        Set-DraftValue 'style' $style
+        $script:currentStyle = 'style-' + $style
         while ($true) {
             $description = Get-Description $style
             $description = [regex]::Replace($description.Trim(), '\s+', ' ')
+            if ($script:draft.ContainsKey('finalDescription') -and $script:draft['style'] -eq $style) {
+                $description = $script:draft['finalDescription']
+            }
             Show-Heading 'Description preview' 'This exact sentence will be used in both index.html and rss.xml.'
             Write-Host ('  ' + $description) -ForegroundColor Green
             Write-Host ''
             $decision = Ask-Choice '[A] Accept   [E] Edit complete sentence   [R] Retry style   [T] Change style   [Q] Quit' @('A', 'E', 'R', 'T', 'Q') 'A'
-            if ($decision -eq 'A') { break }
+            if ($decision -eq 'A') { Set-DraftValue 'finalDescription' $description; break }
             if ($decision -eq 'Q') { throw 'Cancelled; no files changed.' }
             if ($decision -eq 'T') { break }
             if ($decision -eq 'E') {
+                $script:currentStyle = 'final-style-' + $style
                 $description = Ask-Text 'Final one-sentence description' 'Rewrite or paste the exact sentence you want to publish.' 'A tool that validates JSON and displays readable results.' $description
                 $description = [regex]::Replace($description.Trim(), '\s+', ' ')
                 if ($description -notmatch '[.!?]$') { $description += '.' }
                 Show-Note 'Final description' $description
                 $ok = Ask-Choice 'Use this description? [Y/n]' @('Y', 'N') 'Y'
-                if ($ok -eq 'Y') { $decision = 'A'; break }
+                if ($ok -eq 'Y') { Set-DraftValue 'finalDescription' $description; $decision = 'A'; break }
             }
         }
         if ($decision -eq 'A') { break }
@@ -428,6 +544,9 @@ try {
 
     $indexDoc = Get-Document $indexPath
     $rssDoc = Get-Document $rssPath
+    if ($indexDoc.Text -cne $preflight.Html.Text -or $rssDoc.Text -cne $preflight.Rss.Text) {
+        throw 'index.html or rss.xml changed since preflight. Restart to validate the current versions.'
+    }
     $existingHtmlCount = [regex]::Matches($indexDoc.Text, '<li class="project-item"').Count
     $existingRssCount = [regex]::Matches($rssDoc.Text, '<item>').Count
     if ($existingHtmlCount -ne $existingRssCount) {
@@ -465,9 +584,12 @@ try {
         '    </item>'
     ) -join $rssDoc.Newline
 
+    $script:activeFile = $indexPath
     $newHtml = Update-Html $indexDoc.Text $indexDoc.Newline $category $markerKey $htmlEntry
+    $script:activeFile = $rssPath
     $newRss = Update-Rss $rssDoc.Text $rssDoc.Newline $projectDate $rssEntry
 
+    $script:activeFile = ''
     Show-Heading 'Review changes' 'No files have been modified yet.'
     Show-Note 'Project' $projectName
     Show-Note 'Title' $title
@@ -518,13 +640,21 @@ try {
     Show-Note 'HTML marker' ('ADD-PROJECT:' + $markerKey)
     Show-Note 'RSS marker' 'ADD-PROJECT:RSS'
     Write-Host '  Review the diff with git diff before committing.' -ForegroundColor Green
-} catch {
+ } catch {
     Write-Host ''
     $message = $_.Exception.Message
+    if ($script:activeFile -and (Test-Path -LiteralPath $script:activeFile)) {
+        Write-Host ('  File: ' + $script:activeFile) -ForegroundColor Yellow
+        $token = if ($script:activeFile -eq $rssPath) { 'lastBuildDate' } else { '<h1>' }
+        Write-Host (Get-Context $script:activeFile $token) -ForegroundColor DarkGray
+    }
     if ($message.StartsWith('Cancelled')) {
         Write-Host ('  ' + $message) -ForegroundColor Yellow
-        exit 0
+        return
     }
     Write-Host ('  ERROR: ' + $message) -ForegroundColor Red
-    exit 1
+    throw
+} finally {
+    # Keep drafts on both success and failure; technical confirmations are excluded.
+    Save-Draft
 }
