@@ -1,0 +1,6 @@
+import {el,button,icon,emit}from '../dom.js';
+export class SovSidebar extends HTMLElement{
+ connectedCallback(){if(this.ready)return;this.ready=true;this.setAttribute('aria-label','Разговоры');this.append(el('div',{class:'sidebar-brand'},el('span',{class:'brand-mark','aria-hidden':'true'},'С'),el('span',{},'СоветРДТЛ'),button('Закрыть меню','close',()=>emit(this,'menu-close'), 'icon-button mobile-only')),el('button',{class:'new-chat',type:'button',onclick:()=>emit(this,'new-chat')},icon('plus'),'Новый чат'));this.list=el('nav',{'aria-label':'История разговоров',class:'chat-list'});this.clear=el('button',{class:'clear-history',type:'button',onclick:()=>emit(this,'clear-history')},icon('trash'),'Очистить историю');this.append(this.list,this.clear);}
+ update(state){this.list.replaceChildren(...state.chats.map(chat=>el('div',{class:'chat-row'+(state.selectedChatId===chat.id?' selected':'')},el('button',{class:'chat-link',type:'button','aria-current':state.selectedChatId===chat.id?'page':null,onclick:()=>emit(this,'select-chat',chat.id)},chat.title),button('Удалить '+chat.title,'trash',()=>emit(this,'delete-chat',chat.id)))));this.clear.hidden=state.chats.length===0;}
+}
+customElements.define('sov-sidebar',SovSidebar);

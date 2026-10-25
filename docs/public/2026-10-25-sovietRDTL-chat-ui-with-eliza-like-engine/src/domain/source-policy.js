@@ -1,0 +1,1 @@
+export function allowedSourceUrl(value){try{const u=new URL(value),h=u.hostname.toLowerCase();return u.protocol==='https:'&&(h==='wikipedia.org'||h.endsWith('.wikipedia.org')||!(h==='ru'||h.endsWith('.ru')||h.startsWith('ru.')));}catch{return false;}}
