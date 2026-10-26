@@ -1,0 +1,1453 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>GTL — UI and engineering reference kit</title><style>
+:root{color-scheme:dark;--bg:#101113;--panel:#15171a;--surface:#202227;--text:#ece9e5;--muted:#adb1ba;--line:#34383e;--accent:#cfa66d;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);line-height:1.68}
+a{color:#d7b989;text-underline-offset:3px}nav{position:fixed;inset:0 auto 0 0;width:260px;overflow:auto;background:#0d0e10;border-right:1px solid #2c2e34;padding:27px 16px;z-index:5}
+nav strong{display:block;letter-spacing:.04em;font-size:17px;margin:0 8px 19px;color:#f4f0e7}nav small{display:block;margin:0 8px 22px;color:var(--muted);font-size:12px;line-height:1.6}nav a{display:block;padding:11px 10px;color:#c8c7cd;text-decoration:none;font-size:13px;border-radius:8px}nav a:hover,nav a:focus{background:#272a31;color:white}
+main{margin-left:260px;padding:36px clamp(18px,4vw,64px);max-width:1460px}.content-section{max-width:1030px;margin:0 auto 75px;border-bottom:1px solid var(--line);padding-bottom:58px}.eyebrow{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.15em;margin:8px 0}
+h1{font-size:clamp(30px,4vw,43px);line-height:1.2;letter-spacing:-.025em;margin:12px 0 22px}h2{font-size:25px;margin-top:44px;border-top:1px solid #2b2e34;padding-top:28px;line-height:1.25}h3{font-size:18px;margin-top:34px}h4{font-size:16px}p,li{font-size:15px}p{margin:13px 0 18px}strong{font-weight:680}blockquote{border-left:3px solid var(--accent);margin:22px 0;padding:10px 20px;background:#202027}code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#e9cf9e;font-size:.92em}pre{background:#1a1c22;border:1px solid #373941;border-radius:10px;padding:17px 18px;overflow-x:auto;font-size:13px;line-height:1.6}pre code{color:#e4e5eb}table{border-collapse:collapse;width:100%;font-size:13px;display:block;overflow-x:auto;margin:23px 0}th,td{border-bottom:1px solid #33363e;padding:10px 12px;vertical-align:top;text-align:left}th{background:#202226;color:#f1e8d8}img{max-width:100%;height:auto;border-radius:10px;border:1px solid #343840;margin:12px 0 15px}hr{border:0;border-top:1px solid #33363e}ul{padding-left:24px}::selection{background:#7e6849;color:white}
+@media(max-width:850px){nav{position:relative;width:100%;height:auto;max-height:170px;padding:15px;display:flex;gap:8px;flex-wrap:wrap;align-content:start;overflow:auto}nav strong{width:100%;margin:0}nav small{display:none}nav a{padding:6px 9px;border:1px solid #33363c;font-size:11px}main{margin-left:0;padding:26px 18px}h2{margin-top:30px}}
+</style></head><body><nav><strong>GTL reference kit</strong><small>Two source-code reviews and six editable diagrams.<br/>A design handoff, not a running application.</small><a href="#section-0">Overview</a>
+<a href="#section-1">Combined reference</a>
+<a href="#section-2">UI/UX source analysis</a>
+<a href="#section-3">Extension architecture analysis</a>
+<a href="#section-4">Application brief</a>
+<a href="#section-5">Source file map</a>
+<a href="#section-6">Assets and licenses</a>
+<a href="#section-7">Prototypes and tests</a><a href="#section-8">Original CLI wizard</a></nav><main><section id="section-0" class="content-section"><div class="eyebrow">SECTION 01</div><h1>Guided Document Editor — UI and Engineering Reference Kit</h1>
+<p><strong>Reference pack v0.1 | assembled October 25, 2026</strong></p>
+<p>This is a <strong>reference and design handoff</strong>, not a working application or a finalized implementation specification. It combines two successive reviews from this conversation:</p>
+<ol>
+<li>An analysis of <code>sovet-rdtl-0.13.1-source(1).zip</code> as inspiration for a dark, document-centered, chat-history-style interface.</li>
+<li>An analysis of <code>browser-extension-src.zip</code> as inspiration for TypeScript, Bun, vendored JavaScript, Dexie/IndexedDB, typed messaging, live settings, Shadow DOM components, and feature-oriented worker dispatch.</li>
+</ol>
+<p>It also records the reset in product direction: <strong>the document is the interface</strong>. Templates describe text, placeholders, hints, examples, and alternate versions. The UI supplies interactivity; we do not recreate a procedural questionnaire DSL.</p>
+<h2>Start here</h2>
+<ul>
+<li><a href="docs/INDEX.md">Documentation index</a></li>
+<li><a href="docs/00-combined-reference.md">Combined reference guide</a> — one continuous handoff linking both reviews</li>
+<li><a href="docs/01-chat-ui-ux-analysis.md">UI/UX source review</a> — detailed visual, interaction, and state insights</li>
+<li><a href="docs/02-extension-engineering-analysis.md">Extension architecture source review</a> — exact source paths and recommended adaptations</li>
+<li><a href="docs/03-proposed-app-brief.md">Product and architectural brief</a> — shared design direction, explicit exclusions, open questions</li>
+<li><a href="docs/04-source-map.md">Source file map</a> — exact extracted paths, why each file matters, and copy/adapt guidance</li>
+<li><a href="docs/05-assets-and-licenses.md">Asset inventory</a> — copied backgrounds, vendored runtimes, provenance and notices</li>
+<li><a href="docs/06-prototypes-and-tests.md">Implementation experiments</a> — sequence of proofs before committing to architecture</li>
+<li><a href="docs/07-original-wizard-and-recovery.md">PowerShell wizard origin</a> — the five description styles and recovery motivation</li>
+<li><a href="index.html">Visual reference</a> — open as a local file; readable reports with inline SVG diagrams</li>
+</ul>
+<h2>Directory map</h2>
+<pre><code class="language-text">README.md
+index.html                    Static dark documentation viewer; not the application
+ docs/                        Full design discussions and synthesis
+ diagrams/                    Editable SVG architecture and interaction diagrams
+ assets/                      UI background references and contact sheet
+ examples/                    Minimal sample templates and JSON manifest
+ library/                     Vendored JS distributions copied from the extension
+ reference/
+   sovet-rdtl/                Selected original UI code, CSS, MIT LICENSE, and specs
+   browser-extension-src/     Selected original settings/worker/UI/types source files
+   powershell/                Earlier Add-Project.ps1 script as optional inspiration
+ manifest/                    Machine-readable provenance and SHA-256 hashes
+</code></pre>
+<h2>Important source and architecture distinctions</h2>
+<ul>
+<li><code>sovet-rdtl</code> uses <strong>Custom Elements with light DOM</strong>, not Shadow DOM. Its eventing, sidebar, reader layout, modal source panel, and background image loader are reusable <em>patterns</em>; the editor is new work.</li>
+<li><code>browser-extension-src</code> is a <strong>Chrome Manifest V3 extension</strong>. Its background worker is an extension service worker and uses Chrome APIs. A static website cannot copy those APIs unchanged. Proposed site architecture uses a <strong>Dedicated Worker</strong> for processing/IndexedDB, with a separate optional service worker for offline caching.</li>
+<li>The extension's <code>Dexie 4.2.0</code> file is <strong>UMD</strong>, designed to expose <code>globalThis.Dexie</code>. It is included unmodified, but loading it inside a Bun-built <strong>module worker</strong> must be tested. It is not an ESM module by itself.</li>
+<li>The supplied extension archive does not contain a project-wide root LICENSE. Referenced first-party extension code is copied from the user's archive for implementation study. Review redistribution rights before publishing a derivative package.</li>
+<li>UI backgrounds included here are <strong>reference assets</strong>, not approved final product graphics. The chat project's LICENSE describes its code as MIT-licensed and separately flags corpus/third-party materials.</li>
+<li>Build/runtime code is not bundled into a working app here. Bun, TypeScript, and web-component integration decisions are recommendations until exercised in prototypes.</li>
+</ul>
+<h2>Recommended baseline</h2>
+<p>TypeScript (pin an explicitly verified stable version when implementing), Bun for development/bundling, no npm <em>runtime</em> dependencies, explicitly checked-in vendored runtime distributions, browser-native Web Components, Dexie/IndexedDB behind a storage adapter, a feature-scoped worker router, and a deliberately small document-template format.</p>
+<h2>Provenance</h2>
+<ul>
+<li>Input: <code>sovet-rdtl-0.13.1-source(1).zip</code> → <code>reference/sovet-rdtl/sovet-rdtl/...</code>.</li>
+<li>Input: <code>browser-extension-src.zip</code> → <code>reference/browser-extension-src/src/...</code>.</li>
+<li>Vendored libs: <code>browser-extension-src.zip</code> → <code>library/...</code> (exact bytes).</li>
+<li>Background contact sheet: supplied in the prior conversation, copied to <code>assets/background_contact_sheet.jpg</code>.</li>
+<li>The diagrams in <code>diagrams/</code> were redrawn for this kit from the ideas and diagrams in the prior reviews; they are not screenshots or source assets.</li>
+</ul>
+<p>See <code>manifest/sha256sum.txt</code> and <code>manifest/provenance.json</code> for verification.</p>
+</section><section id="section-1" class="content-section"><div class="eyebrow">SECTION 02</div><h1>Combined reference — GTL document editor, UX + implementation patterns</h1>
+<p>This combined briefing joins two earlier source reviews. The complete, separately readable analyses are <a href="docs/01-chat-ui-ux-analysis.md">Report 1: UI/UX</a> and <a href="docs/02-extension-engineering-analysis.md">Report 2: extension architecture</a>. Their diagrams have been redrawn as editable SVGs and their cited source files copied into <code>../reference/</code> with original paths preserved.</p>
+<p><strong>Not a finished application specification.</strong> Observations about the archives are labeled separately from recommendations for the new application. Decisions not yet accepted should remain reviewable.</p>
+<h2>Purpose and product model</h2>
+<p>The new product is a <strong>guided text-document editor</strong>, not a chat client, spreadsheet, or step-by-step questionnaire wizard. Every historical entry resembles a chat item visually, but represents one persistent <strong>document</strong>. The selected document is immediately editable. Its whole text is visible, with named inline placeholders and context-sensitive hints. A rendered, copyable result appears lower in the same document. A user can fill placeholders in any order, edit ordinary text, switch template versions, preserve previous answers, revisit earlier documents, and use revision history to recover past edits.</p>
+<p>The template DSL should stay minimal. The latest working design sketch is:</p>
+<pre><code class="language-text">TEMPLATE: Input + processing + output
+
+TEXT:
+  Takes {{$input}}, {{$processing}}, and produces {{$result}}.
+
+$input: What does the user provide?
+  HINT: Describe the original data or information.
+  EXAMPLE: pasted JSON
+
+$processing: What happens to the input?
+  HINT: Describe the main operation.
+  EXAMPLE: checks it for syntax errors
+
+$result: What does the application produce?
+  HINT: Describe the final output.
+  EXAMPLE: a readable formatted version
+</code></pre>
+<p>Optional <code>VERSION</code> blocks would choose between a handful of static alternative text structures. <strong>Do not import the old imperative GTL design's <code>COMPOSE</code>, <code>WHEN</code>, <code>FOR EACH</code>, <code>FRAGMENT</code>, policy options, or catalog registry without a concrete new requirement.</strong> The previous specification grew too complicated, and the user deliberately restarted from a document-centric model.</p>
+<h2>Joined diagram: user experience</h2>
+<p><img src="diagrams/01-desktop-layout.svg" alt="Desktop editor"></p>
+<p>A dark desktop shell holds: (1) a vertical document history and New Document command, (2) a generous central editing column, and (3) a nonmodal contextual guidance dock. The right panel tracks the focused placeholder, can be pinned, and lets the user copy example text without hiding the document. On narrow screens, navigation becomes a drawer and guidance becomes a compact panel that does not obscure the caret.</p>
+<p><img src="diagrams/02-document-workflow.svg" alt="Document lifecycle"></p>
+<p>The user selects a template/style <strong>inside</strong> a new document; its complete text appears immediately. The application handles field focus, live result, retained values across version switches, undo/redo, autosave, revision history, and copy/export. These are app services, not DSL instructions.</p>
+<h2>What the chat-source project contributes</h2>
+<p>Source: <code>sovet-rdtl-0.13.1-source(1).zip</code>.</p>
+<ul>
+<li><code>sovet-rdtl/styles.css</code>: restrained black palette, 256px sidebar, readable center column, responsive drawer, focus/accessibility conventions.</li>
+<li><code>sovet-rdtl/src/ui/components/sov-sidebar.js</code>: vertical history, current selection, create/select/delete events.</li>
+<li><code>sovet-rdtl/src/ui/components/sov-app.js</code>: app shell and UI coordination.</li>
+<li><code>sovet-rdtl/src/ui/components/sov-message.js</code>: prominent readable message treatment and contextual info affordance.</li>
+<li><code>sovet-rdtl/src/ui/components/sov-origin-panel.js</code>: async contextual information, stale-request protection, focus return; <strong>adapt into nonmodal pinned guidance</strong>.</li>
+<li><code>sovet-rdtl/src/ui/components/sov-backdrop.js</code>: responsive decorative WebP backgrounds, small image cache, failure handling.</li>
+<li><code>sovet-rdtl/src/ui/dom.js</code>: light utility code, SVG icons, <code>CustomEvent</code> with bubbling/composed.</li>
+<li><code>sovet-rdtl/src/adapters/local-storage.js</code> and <code>src/app/chat-service.js</code>: state isolation, storage errors, concurrency safeguards.</li>
+</ul>
+<p>The chat application uses <strong>Custom Elements with light DOM</strong>, not Shadow DOM. The document editor is new implementation work; no existing source component can simply be renamed into a robust rich-text editor.</p>
+<p><img src="assets/background_contact_sheet.jpg" alt="Background contact sheet"></p>
+<h2>What the extension-source project contributes</h2>
+<p>Source: <code>browser-extension-src.zip</code>.</p>
+<ul>
+<li><code>src/content/libs/dexie-4.2.0.js</code>: vendored Dexie UMD distribution included in this package under <code>library/</code>.</li>
+<li><code>src/background/tab_trail_service.ts</code>: repository/store abstraction with Dexie and memory implementations.</li>
+<li><code>src/content/runtime_messaging.ts</code>: typed message envelopes, request correlation, structured failures.</li>
+<li><code>src/settings/settings_runtime.ts</code> and <code>src/settings/settings.ts</code>: schema-driven settings, defaults/overrides, reset behavior, dynamic controls.</li>
+<li><code>src/background/service_worker.ts</code>: example of worker routing and DB ownership, <strong>also an example of a monolith to avoid</strong>.</li>
+<li><code>src/vendor/retroos-ui-v001/src/components/field.ts</code> and <code>src/core/styles.ts</code>: real TypeScript Shadow DOM component patterns and style adoption.</li>
+<li><code>src/vendor/retroos-ui-v001/tsconfig.json</code>, <code>scripts/build.mts</code>: TypeScript/Bun strict-build conventions.</li>
+<li><code>src/content/atools/session-snapshot-v001/js/session_snapshot_zip.ts</code> and Markdown conversion utilities: export pipeline references.</li>
+</ul>
+<p><img src="diagrams/03-feature-architecture.svg" alt="Feature architecture"></p>
+<p>The source is a <strong>Chrome extension</strong>. For the static website, replace extension messaging with browser Worker <code>postMessage</code>, favor a Dedicated Worker for Dexie/processing, and reserve an optional website service worker for offline assets. Use feature folders to own coherent domain capabilities rather than putting all logic into one worker file. Keep the main-thread editor reactive without per-keystroke worker RPC.</p>
+<p><img src="diagrams/04-worker-message-flow.svg" alt="Worker messaging"></p>
+<h2>Proposed system boundaries</h2>
+<table>
+<thead>
+<tr>
+<th>Subsystem</th>
+<th>Responsibility</th>
+<th>Execution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Document editor</td>
+<td>Caret, selections, inline placeholder UI, undo/redo, immediate updates</td>
+<td>Main thread</td>
+</tr>
+<tr>
+<td>Document state/model</td>
+<td>Semantic text/placeholder nodes, current values, active version</td>
+<td>Main thread; serializable</td>
+</tr>
+<tr>
+<td>Guidance</td>
+<td>Questions, examples, pin/focus behavior</td>
+<td>Main thread</td>
+</tr>
+<tr>
+<td>Templates</td>
+<td>Static file loading, minimal DSL parse, cached definitions</td>
+<td>Worker or main thread depending on cost</td>
+</tr>
+<tr>
+<td>Documents feature</td>
+<td>Create/list/load/save/delete</td>
+<td>UI + feature worker handler</td>
+</tr>
+<tr>
+<td>History feature</td>
+<td>Recoverable revision snapshots, restore</td>
+<td>UI + feature worker handler</td>
+</tr>
+<tr>
+<td>Settings feature</td>
+<td>Schema/defaults, live updates, persistence choice</td>
+<td>Main thread; worker notification</td>
+</tr>
+<tr>
+<td>Export feature</td>
+<td>Plain/rich HTML/Markdown/ZIP</td>
+<td>Main + optional worker</td>
+</tr>
+<tr>
+<td>Data platform</td>
+<td>Repository interfaces, IndexedDB/Dexie initializer</td>
+<td>Worker; optional main-thread adapters</td>
+</tr>
+<tr>
+<td>Navigation</td>
+<td>Vertical document history, New Document</td>
+<td>Main thread</td>
+</tr>
+</tbody>
+</table>
+<p>A feature may contain <code>ui/</code>, <code>worker/</code>, and <code>storage/</code>, but <strong>only when needed</strong>. Keep schema migrations centrally coordinated, with feature repositories owning their operations.</p>
+<p><img src="diagrams/05-settings-flow.svg" alt="Settings propagation"></p>
+<h2>Deployment and libraries</h2>
+<p>Build with Bun; use modern TypeScript with strict checks; keep npm runtime dependencies out of the deployed app. Vendor required runtime JS explicitly, retaining license notices. Copy static HTML, compiled bundles, selected assets, <code>.gtl</code> template files, and a generated manifest into <code>dist/</code>. Host as ordinary files on static hosting.</p>
+<p><code>Dexie 4.2.0</code> is included exactly as supplied; its <strong>UMD module-worker loading must be proved</strong>. <code>JSZip 3.10.1</code>, <code>markdown-it 14.2.0</code>, and <code>Turndown 7.0.0</code> are available as optional vendor files for export/conversion. They need not be loaded in the first release.</p>
+<h2>First prototype / acceptance scenario</h2>
+<p>A user opens the static site, creates a document, chooses one of the five description patterns, sees the whole sentence at once, selects a placeholder, sees a stable question/hint/example, types an answer, edits surrounding prose, switches versions and back without losing values, scrolls to the final result, copies plain/rich text, leaves the document, and reopens it with edits intact when persistence is enabled.</p>
+<p>No chat composer, agent backend, dynamic condition language, extensible runtime plugin system, or large settings panel is needed for this prototype.</p>
+<h2>Handoff to the next specification</h2>
+<p>Use this kit as <strong>evidence and reference</strong>, not as an instruction to implement every possible feature. Specific implementation decisions still require experiments: selection/caret/IME in the editor, Shadow DOM boundary, Dexie in a Bun module worker, atomic document+history saves, concurrency, clipboard fidelity, settings cross-tab changes, and storage migration.</p>
+<p><strong>Full detailed reviews:</strong> <a href="docs/01-chat-ui-ux-analysis.md">01 UI/UX</a> and <a href="docs/02-extension-engineering-analysis.md">02 extension architecture</a>.</p>
+<h2>Original CLI inspiration</h2>
+<p>The user-supplied revised PowerShell helper is copied to <code>../reference/powershell/Add-Project.ps1</code> as a third, optional source. Its guided five-style descriptions, examples, preview-before-accept workflow, and draft-recovery concerns motivated the document editor. See <a href="docs/07-original-wizard-and-recovery.md">07-original-wizard-and-recovery.md</a>.</p>
+</section><section id="section-2" class="content-section"><div class="eyebrow">SECTION 03</div><h1>Report 1 — UI/UX source analysis: SovietRDTL as the editor's visual reference</h1>
+<p><strong>Source archive:</strong> <code>sovet-rdtl-0.13.1-source(1).zip</code><br>
+<strong>Extracted references:</strong> <code>../reference/sovet-rdtl/sovet-rdtl/</code><br>
+<strong>Origin:</strong> Reconstruction and extension of the earlier conversation's detailed UI/UX analysis.<br>
+<strong>Scope:</strong> UX, visual components, events, state, accessibility, layout. The chat engine's language/corpus behavior is <strong>not</strong> proposed for reuse.</p>
+<p>The strongest reusable pattern is a <em>conversation-history layout with document-centered reading</em>. The GTL application would display multiple editable documents in vertical navigation; each document is presented as a readable, editable message-like page, not a chat conversation. There is <strong>no conversation composer</strong>. Its central editing surface contains full text, inline placeholders, a nearby nonmodal guidance area, and a rendered/copyable result below.</p>
+<p><img src="diagrams/01-desktop-layout.svg" alt="Proposed document workspace"></p>
+<h2>1. Observed reference architecture</h2>
+<p>The application is a small dependency-light ES-module frontend using browser Custom Elements, shared CSS, a service for conversational state, and localStorage persistence.</p>
+<table>
+<thead>
+<tr>
+<th>Original file / element</th>
+<th>Observed responsibility</th>
+<th>Proposed application counterpart</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/ui/components/sov-app.js</code> / <code>sov-app</code></td>
+<td>Application shell, UI coordination, menu/dialog events</td>
+<td>App shell and document coordinator</td>
+</tr>
+<tr>
+<td><code>src/ui/components/sov-sidebar.js</code> / <code>sov-sidebar</code></td>
+<td>New chat, history list, current selection, deletion</td>
+<td>Vertical document navigation</td>
+</tr>
+<tr>
+<td><code>src/ui/components/sov-chat.js</code> / <code>sov-chat</code></td>
+<td>Scrollable message list, incremental updates, scroll positioning</td>
+<td>Scrollable document workspace; <strong>not</strong> a chat log</td>
+</tr>
+<tr>
+<td><code>src/ui/components/sov-message.js</code> / <code>sov-message</code></td>
+<td>Readable message body, role/tone styling, contextual info</td>
+<td>Individual document/message-like content treatment</td>
+</tr>
+<tr>
+<td><code>src/ui/components/sov-origin-panel.js</code> / <code>sov-origin-panel</code></td>
+<td>Modal explanatory content, async load, focus restoration</td>
+<td>Pinned or docked placeholder guidance; <strong>not</strong> modal</td>
+</tr>
+<tr>
+<td><code>src/ui/components/sov-backdrop.js</code> / <code>sov-backdrop</code></td>
+<td>Responsive background images, loading and cache</td>
+<td>Decorative workspace backgrounds</td>
+</tr>
+<tr>
+<td><code>src/ui/components/sov-composer.js</code> / <code>sov-composer</code></td>
+<td>New message, per-chat draft, attachment/media</td>
+<td>No direct counterpart; only draft-awareness inspiration</td>
+</tr>
+<tr>
+<td><code>src/ui/dom.js</code></td>
+<td>Element builders, SVG icons, bubbling CustomEvents</td>
+<td>Native UI/event helper principles</td>
+</tr>
+<tr>
+<td><code>src/adapters/local-storage.js</code></td>
+<td>Persistent state, validation, concurrent-tab conflict detection</td>
+<td>One possible storage adapter, not primary database</td>
+</tr>
+<tr>
+<td><code>src/app/chat-service.js</code></td>
+<td>Observable chat service and state operations</td>
+<td>Reactive document store/service</td>
+</tr>
+<tr>
+<td><code>styles.css</code></td>
+<td>Dark tokens, layout, responsive behavior</td>
+<td>Design token and layout reference</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Technical accuracy:</strong> these components use <em>Custom Elements rendering into light DOM</em>. The inspected files use <code>replaceChildren()</code> / <code>append()</code> and a global <code>styles.css</code>; they do <strong>not</strong> call <code>attachShadow()</code>. The new app can use Shadow DOM selectively, but should not describe it as an observed property of this archive.</p>
+<h2>2. Visual model</h2>
+<p>Observed CSS facts in <code>sovet-rdtl/styles.css</code>:</p>
+<ul>
+<li>Sidebar width: <code>256px</code> desktop.</li>
+<li>Reading area: centered message column with maximum width around <code>840px</code>.</li>
+<li>Dark palette: <code>--bg: #101113</code>, <code>--sidebar: #0d0e10</code>, <code>--surface: #27282b</code>, <code>--text: #f2f1ef</code>, <code>--muted: #b2b2b7</code>, <code>--line: #343539</code>, <code>--focus: #d1d9ec</code>.</li>
+<li>Large, comfortable message text: approximately 20px desktop / 19px mobile, with larger opening text and differentiated tone surfaces.</li>
+<li>Responsive navigation: sidebar shifts to off-canvas treatment below approximately <code>767px</code>, with overlay and accessible focus management.</li>
+</ul>
+<p>The target design should preserve the <em>quiet reading column</em>, understated dark surfaces, prominent current document, and clean typography. Add a third region to the right on sufficiently wide screens for persistent guidance.</p>
+<p>The reference's assistant/user-aligned message bubbles should <strong>not</strong> be transferred literally: one GTL history item represents one document; the document editor is not a sequence of alternating speakers.</p>
+<h3>Proposed desktop regions</h3>
+<ol>
+<li><strong>Left sidebar:</strong> New Document at the top, vertical document history, active item, renaming, deletion, optional history and settings links.</li>
+<li><strong>Center document:</strong> Template/style selector near top, whole editable text, inline placeholders, optional document metadata, final rendered output further down, copy/export affordances.</li>
+<li><strong>Right guidance dock:</strong> Always-readable question, hint, grammatical form, example text, keyboard actions, and a pin/collapse control.</li>
+</ol>
+<p>A new document is created <em>from</em> a template. <strong>New Document</strong> should be the principal action, while <strong>Edit Template</strong> denotes authoring the reusable definition. This avoids conflating user documents and template sources.</p>
+<h2>3. Vertical document history</h2>
+<p><code>src/ui/components/sov-sidebar.js</code> renders a New Chat button and a list of chat items. Selection sets the CSS class <code>.selected</code> and <code>aria-current=&quot;page&quot;</code>. UI actions emit <code>new-chat</code>, <code>select-chat</code>, <code>delete-chat</code>, and <code>clear-history</code> through the shared <code>emit()</code> helper.</p>
+<p>Reuse these interaction concepts, but rename the domain:</p>
+<table>
+<thead>
+<tr>
+<th>Chat project</th>
+<th>GTL application</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Chat</td>
+<td>Document</td>
+</tr>
+<tr>
+<td>New chat</td>
+<td>New document</td>
+</tr>
+<tr>
+<td>Chat title</td>
+<td>Document title</td>
+</tr>
+<tr>
+<td>Chat history</td>
+<td>Document list/history</td>
+</tr>
+<tr>
+<td>Selected chat</td>
+<td>Active document</td>
+</tr>
+<tr>
+<td>Message body</td>
+<td>Current editable content</td>
+</tr>
+<tr>
+<td>Composer draft</td>
+<td>Unsaved document edits</td>
+</tr>
+<tr>
+<td>Clear history</td>
+<td>Manage/clear documents</td>
+</tr>
+</tbody>
+</table>
+<p>A document needs a stable identifier, selected template/version, placeholder values, modified prose, created/edited timestamps, and recoverable historical revisions. Switching the sidebar selection should restore the document exactly rather than start a wizard.</p>
+<p>Search, rename, duplicate, sort by activity, delete, and restore are reasonable future navigation actions. <strong>Do not</strong> put any of them into the template DSL.</p>
+<h2>4. New document creation</h2>
+<p><img src="diagrams/02-document-workflow.svg" alt="Document lifecycle"></p>
+<p><strong>Proposed interaction:</strong> Click <strong>New Document</strong> in the sidebar; a document opens immediately. At its top, select one of the five original description patterns, each illustrated by its purpose and example. Once chosen, the complete text appears <em>in place</em>, with placeholders already visible and selectable.</p>
+<p>The original five styles:</p>
+<ol>
+<li>Purpose + function: <code>A [tool] that [action] to [benefit].</code></li>
+<li>Problem + solution: <code>Helps [audience] [problem] by [approach].</code></li>
+<li>Input + processing + output: <code>Takes [input], [operation], and produces [output].</code></li>
+<li>Features + technology: <code>A [tool] built with [technology], featuring [feature 1] and [feature 2].</code></li>
+<li>Structured project profile: <code>A [tool] for [audience], providing [workflow] through [detail].</code></li>
+</ol>
+<p>All questions and answers are accessible in any order. A user may fill <code>$result</code> before <code>$input</code>, edit surrounding prose, or change the version later. An answer stored under a shared placeholder name should remain available when the corresponding version is reselected. Inactive version-specific values are retained but need not be displayed in the current document.</p>
+<p>This is deliberately <strong>not</strong> a step-by-step question wizard and <strong>not</strong> a chat input interface.</p>
+<h2>5. Contextual hints and placeholder focus</h2>
+<p>The original <code>sov-origin-panel.js</code> demonstrates a contextual information panel. It opens from an info button in eligible <code>sov-message</code> nodes, fetches explanatory information, guards against stale async responses using a request counter, restores keyboard focus after closing, and contains link-policy checks.</p>
+<p>Adapt the interaction, not its modal behavior. In GTL, guidance should be <strong>nonmodal, nonintrusive, and stable</strong> while the user types:</p>
+<ul>
+<li>Focus an inline placeholder → show its question, hints, expected grammatical form, and examples in the guidance panel.</li>
+<li>Clicking or selecting hint/example text should not clear the editor value, move the document caret, or close the panel.</li>
+<li>Support modes: <strong>Follow focused placeholder</strong>, <strong>Pin one placeholder</strong>, <strong>Collapse panel</strong>.</li>
+<li>Keep the active editing location visible; never cover it with a popover if room exists for a docked panel.</li>
+<li>Maintain independent panel scrolling on desktop.</li>
+<li>On mobile, use a compact bottom panel or dedicated auxiliary view that respects the on-screen keyboard and visible caret.</li>
+<li>Examples are selectable and copyable; &quot;Use example&quot; can fill the placeholder, but never automatically replace the user's answer.</li>
+</ul>
+<p>Example guidance payload:</p>
+<pre><code class="language-text">What does the application produce?
+Expected form: noun phrase
+Hint: Describe the final artifact, not another complete sentence.
+Example: a readable formatted version
+</code></pre>
+<h2>6. Placeholder appearance and editor interaction</h2>
+<p>A filled placeholder should read as text with <em>subtle</em> affordances (e.g. underline, slight color shift); an unfilled one can display its identifier in a more visible style. The selected placeholder receives a stronger focus indicator. Avoid giant embedded form controls that turn prose into a spreadsheet.</p>
+<p>The center must support genuine editing of ordinary text. For example, the author can change <code>Takes</code> to <code>Accepts</code>, delete a clause, or insert a placeholder directly at the caret without altering the reusable template definition.</p>
+<p>A proposed internal document structure is:</p>
+<pre><code class="language-text">Document
+  Text(&quot;Takes &quot;)
+  Placeholder(input)
+  Text(&quot;, &quot;)
+  Placeholder(processing)
+  Text(&quot;, and produces &quot;)
+  Placeholder(result)
+  Text(&quot;.&quot;)
+</code></pre>
+<p>This permits repeated placeholders to reference one shared value. It also separates ordinary text edits from placeholder identity.</p>
+<p>A first test may use <code>contenteditable</code> plus stable, isolated placeholder nodes and a distinct value editor. <strong>Do not assume this is already solved.</strong> Test selection, keyboard navigation, paste, undo/redo, IME composition, newline handling, and selection preservation before choosing an editor strategy. Rebuilding the editor DOM on each keystroke is likely to break caret position.</p>
+<h2>7. Same-page final result and clipboard</h2>
+<p>The final rendered result belongs below the editable content, in the <strong>same document</strong>, not in a separate modal or chat message. A compact copy command may also live in the document header.</p>
+<p>Supported outputs should ultimately include:</p>
+<ul>
+<li><code>text/plain</code> for paste into terminals, source editors, and generic text fields.</li>
+<li><code>text/html</code> for rich text, preserving semantic paragraphs, emphasis, headings, and lists.</li>
+<li>Optional export as Markdown, HTML file, plain text, or ZIP.</li>
+</ul>
+<p>The exported material should come from the semantic document model. Never copy sidebar chrome, hints, placeholder outlines, artificial dark background, or interactive editor controls. Rich output must remain readable when pasted into light-themed applications.</p>
+<p>Clipboard access should have a plain-text fallback when rich clipboard APIs are unavailable.</p>
+<h2>8. Backgrounds and visual atmosphere</h2>
+<p>The chat project includes <strong>20 room compositions</strong> and desktop/mobile WebP variants. <code>src/ui/components/sov-backdrop.js</code> keeps a small cache (at most three decoded entries), uses a <code>&lt;picture&gt;</code>/<code>&lt;source&gt;</code> pair for mobile imagery, loads asynchronously, and falls back to a plain background after failures. The decoration does not capture pointer interactions.</p>
+<p><img src="assets/background_contact_sheet.jpg" alt="Contact sheet of source backgrounds"></p>
+<p>Recommended new-application directions: dark writing desk, quiet library, dim workstation, and neutral charcoal texture. Start with plain black plus a <em>small</em> set of optional images, and do not make backgrounds mandatory for readability.</p>
+<p>A small subset of <strong>actual source WebP images</strong> is included in <code>../assets/source-backgrounds/</code>, including paired desktop/mobile images for room-04-desk, room-07-study, room-17-balcony, and room-20-workshop. These are aesthetic reference assets, not finalized GTL artwork.</p>
+<h2>9. Component communication and Shadow DOM</h2>
+<p>The chat reference uses <code>src/ui/dom.js</code> to construct nodes and emit <code>CustomEvent(type, { detail, bubbles: true, composed: true })</code>. Child components declare semantic user actions; <code>sov-app</code> coordinates state changes; services notify listeners.</p>
+<p>A proposed GTL component outline:</p>
+<pre><code class="language-text">&lt;template-app&gt;
+  &lt;document-sidebar&gt;
+  &lt;document-workspace&gt;
+    &lt;document-header&gt;
+    &lt;template-selector&gt;
+    &lt;document-editor&gt;
+    &lt;document-result&gt;
+  &lt;guidance-panel&gt;
+  &lt;settings-panel&gt;
+</code></pre>
+<p>Proposed events: <code>document-create</code>, <code>document-select</code>, <code>template-select</code>, <code>placeholder-focus</code>, <code>placeholder-change</code>, <code>document-change</code>, <code>copy-result</code>. Prefer a central application state/service over uncontrolled component-to-component event chatter.</p>
+<p>Use Shadow DOM for <strong>well-isolated UI widgets</strong> such as navigation, settings, guidance, and simple inputs. Experiment before forcing the <em>rich document editor</em> into Shadow DOM; selection and clipboard behavior are more complicated across boundaries. Public component theming can use CSS custom properties and selected <code>::part()</code> hooks.</p>
+<h2>10. Editing history, autosave, and storage</h2>
+<p><code>src/adapters/local-storage.js</code> performs state validation, JSON serialization, read/write error handling, and optimistic concurrency checks by comparing the expected stored snapshot. It explicitly preserves the current in-memory conversation when persistence fails.</p>
+<p>GTL should distinguish:</p>
+<ul>
+<li><strong>Immediate editing state</strong>: changes appear in the center instantly.</li>
+<li><strong>Autosave</strong>: persist current working state asynchronously when enabled.</li>
+<li><strong>Undo/redo</strong>: fine-grained local editing operations.</li>
+<li><strong>Revision history</strong>: timestamped recoverable checkpoints, not a new revision for every keystroke.</li>
+</ul>
+<p>For persistence, the earlier direction was no persistence, localStorage, or IndexedDB (Dexie); a shared persistence contract is preferable. Switching storage modes raises a migration/copy question to resolve in the application specification.</p>
+<p>The original PowerShell recovery request also motivates saving enough document state to recover from failures. Autosave and durable history are separate concerns.</p>
+<h2>11. Mobile and accessibility</h2>
+<p>The reference shifts navigation below ~767px and uses mobile menu focus trapping, focus restoration, reduced-motion support, and viewport/safe-area handling. Adapt those principles, not its chat-specific &quot;scroll to latest&quot; behavior.</p>
+<p>For a document editor:</p>
+<ul>
+<li>Keep active caret visible when mobile keyboard appears.</li>
+<li>Do not forcibly scroll to the final result after each edit.</li>
+<li>Focus movement between placeholders must be keyboard-accessible.</li>
+<li>Present hint text without covering the active paragraph.</li>
+<li>Ensure status is not communicated by color alone.</li>
+<li>Keep the full document readable without an always-open side panel.</li>
+</ul>
+<p><img src="diagrams/06-mobile-layout.svg" alt="Mobile document concept"></p>
+<h2>12. What to reuse, adapt, or exclude</h2>
+<table>
+<thead>
+<tr>
+<th>Reference behavior</th>
+<th>GTL treatment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dark shell and typography</td>
+<td>Reuse design principles</td>
+</tr>
+<tr>
+<td>Vertical conversation history</td>
+<td>Convert into vertical document history</td>
+</tr>
+<tr>
+<td>Readable message cards</td>
+<td>Adapt to document display</td>
+</tr>
+<tr>
+<td>Contextual origin dialog</td>
+<td>Adapt to persistent guidance</td>
+</tr>
+<tr>
+<td>Background cache/layering</td>
+<td>Reuse idea</td>
+</tr>
+<tr>
+<td>Custom Elements/event emitters</td>
+<td>Reuse principle</td>
+</tr>
+<tr>
+<td>localStorage state service</td>
+<td>Study for fallback adapter and conflict errors</td>
+</tr>
+<tr>
+<td>Per-chat drafts</td>
+<td>Adapt to per-document editing state</td>
+</tr>
+<tr>
+<td>Chat message composer</td>
+<td><strong>Exclude</strong></td>
+</tr>
+<tr>
+<td>AI response engine and emotional tones</td>
+<td><strong>Exclude</strong></td>
+</tr>
+<tr>
+<td>Typing animations and auto-scroll</td>
+<td><strong>Exclude</strong></td>
+</tr>
+<tr>
+<td>Audio attachments and recording</td>
+<td><strong>Exclude initially</strong></td>
+</tr>
+</tbody>
+</table>
+<h2>13. The key UX prototype</h2>
+<p>Build one short but realistic flow before designing many components: create a document; choose Input + processing + output; see the full sentence immediately; click a placeholder and view stable guidance; enter values in any order; edit ordinary words; change the version while retaining entered values; scroll to the rendered result; copy plain and rich text; leave and reopen the document.</p>
+<p>The test is successful only if this experience <strong>feels like editing a document</strong>, not completing a questionnaire.</p>
+</section><section id="section-3" class="content-section"><div class="eyebrow">SECTION 04</div><h1>Report 2 — Extension engineering source analysis: TypeScript, vendoring, settings, and workers</h1>
+<p><strong>Source archive:</strong> <code>browser-extension-src.zip</code><br>
+<strong>Extracted references:</strong> <code>../reference/browser-extension-src/src/</code><br>
+<strong>Origin:</strong> Reconstruction and extension of the earlier conversation's detailed extension review.<br>
+<strong>Scope:</strong> reusable engineering approaches for a <strong>static website</strong> written in TypeScript and built with Bun. The extension is not itself a deployable web application.</p>
+<p>The archive gives concrete working examples of runtime vendoring, Dexie persistence, typed messaging, schema-driven settings, Shadow DOM widgets, and services extracted from a central worker. A new GTL app should reuse these techniques <em>selectively</em> and simplify the domain boundaries.</p>
+<p><img src="diagrams/03-feature-architecture.svg" alt="Proposed feature architecture"></p>
+<h2>1. Target technology stack and compatibility boundary</h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Proposed technology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Language</td>
+<td>Modern strict TypeScript; previous discussion referenced TypeScript 7.0.2 — <strong>verify currently supported stable version before implementation</strong></td>
+</tr>
+<tr>
+<td>Build, tests, development</td>
+<td>Bun, plus compiler/typechecker as a development dependency</td>
+</tr>
+<tr>
+<td>Runtime</td>
+<td>Browser ES modules, no CDN or npm-installed runtime dependencies</td>
+</tr>
+<tr>
+<td>UI</td>
+<td>Browser Custom Elements; Shadow DOM for suitable widgets</td>
+</tr>
+<tr>
+<td>Data</td>
+<td>IndexedDB through vendored Dexie with repository interfaces</td>
+</tr>
+<tr>
+<td>Background processing</td>
+<td>Dedicated Web Worker with typed feature-owned handlers</td>
+</tr>
+<tr>
+<td>Offline</td>
+<td>Optional service worker strictly for assets/cache/update logic</td>
+</tr>
+<tr>
+<td>Built-in templates</td>
+<td><code>.gtl</code> static files with a generated, explicit manifest</td>
+</tr>
+<tr>
+<td>Rich text and export</td>
+<td>Plain text, HTML, Markdown; optional ZIP packaging</td>
+</tr>
+<tr>
+<td>Deployment</td>
+<td>Static hosting (e.g. GitHub Pages)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Critical difference:</strong> <code>src/background/service_worker.ts</code> is a <strong>Chrome extension Manifest V3 service worker</strong> using <code>chrome.runtime</code>, <code>chrome.storage.local</code>, and <code>importScripts</code>. On a website, these APIs and lifetime semantics are not available. A website's service worker is lifecycle-driven and not a continuously running domain backend. Propose a <strong>Dedicated Worker</strong> for database access, parsing, and other processing. Keep main-thread editing responsive without waiting for worker round trips.</p>
+<h2>2. Vendored runtime libraries</h2>
+<p>Observed prebuilt files in the extension:</p>
+<table>
+<thead>
+<tr>
+<th>Exact source path</th>
+<th>Library</th>
+<th>Decision for reference kit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/content/libs/dexie-4.2.0.js</code></td>
+<td>Dexie 4.2.0</td>
+<td><strong>Included unmodified in <code>library/</code></strong></td>
+</tr>
+<tr>
+<td><code>src/content/libs/jszip-3.10.1.js</code></td>
+<td>JSZip 3.10.1</td>
+<td><strong>Included</strong> as optional export library</td>
+</tr>
+<tr>
+<td><code>src/content/libs/markdown-it-14.2.0.js</code></td>
+<td>markdown-it 14.2.0</td>
+<td><strong>Included</strong> as optional Markdown processor</td>
+</tr>
+<tr>
+<td><code>src/content/libs/turndown-7.0.0.js</code></td>
+<td>Turndown 7.0.0</td>
+<td><strong>Included</strong> as optional HTML→Markdown processor</td>
+</tr>
+<tr>
+<td><code>src/content/libs/readability-0.6.0.js</code></td>
+<td>Readability 0.6.0</td>
+<td>Not copied; content extraction not part of first app</td>
+</tr>
+<tr>
+<td><code>src/content/libs/microlight-0.0.7-mod-2026-05-24.js</code></td>
+<td>Modified syntax highlighter</td>
+<td>Not copied; out of initial scope</td>
+</tr>
+</tbody>
+</table>
+<p>Dexie 4.2.0's banner identifies its Apache-2.0 license and its UMD distribution. The UMD wrapper normally sets <code>globalThis.Dexie</code> when loaded as a classic script. In the extension service worker it is loaded through:</p>
+<pre><code class="language-ts">importScripts('../settings/settings_runtime.js');
+importScripts('../content/libs/dexie-4.2.0.js');
+</code></pre>
+<p><strong>Do not assume this same UMD file works as an ESM <code>import</code> in a Bun-built module worker.</strong> Prototype the loading path. If necessary, choose a separately verified vendored ESM distribution, keeping the no-runtime-npm-dependency policy intact.</p>
+<p>The original bundled library headers are retained in the copied files. The kit is not a license audit; consult <code>05-assets-and-licenses.md</code> and supply any missing third-party license texts before redistributing the final app.</p>
+<h2>3. Vendored editable component framework</h2>
+<p><code>src/vendor/retroos-ui-v001/</code> is more than a minified binary. It contains TypeScript Custom Elements source, core styling helpers, themes, icons, build scripts, and a strict TS config.</p>
+<p>The archive's comments explicitly differentiate:</p>
+<ul>
+<li>Generic, reusable edits inside the vendored framework.</li>
+<li>Application-specific adapters and bridges <strong>outside</strong> the vendored framework.</li>
+</ul>
+<p>Key source files (preserved in the reference kit):</p>
+<ul>
+<li><code>src/vendor/retroos-ui-v001/src/components/field.ts</code>: help/error/required attributes, slots, CSS tokens.</li>
+<li><code>.../components/input.ts</code>: encapsulated inputs.</li>
+<li><code>.../components/textarea.ts</code>: multiline entry.</li>
+<li><code>.../components/tabs.ts</code>: selection state and accessible tabs.</li>
+<li><code>.../components/listbox.ts</code>: choice UI.</li>
+<li><code>.../components/dialog.ts</code>: dialog mechanics.</li>
+<li><code>.../components/toast.ts</code>: notifications.</li>
+<li><code>.../core/styles.ts</code>: cached constructed stylesheets with fallback <code>&lt;style&gt;</code> insertion.</li>
+<li><code>.../core/define.ts</code>: idempotent <code>customElements.define()</code> helpers.</li>
+<li><code>.../core/sanitize.ts</code>: escaping/sanitization helpers.</li>
+<li><code>.../tsconfig.json</code> and <code>.../scripts/build.mts</code>: strict TypeScript + Bun build patterns.</li>
+</ul>
+<p>A typical component in <code>field.ts</code> calls <code>attachShadow({mode: 'open'})</code> and uses shared CSS custom properties. The library uses <code>adoptedStyleSheets</code> where available and style tags otherwise.</p>
+<p><strong>Recommendation:</strong> do not pull its whole window-manager/minibuffer into GTL. Extract component conventions and only necessary widgets. The editor itself needs experiments before choosing whether to place its editable text in Shadow DOM.</p>
+<h2>4. Dexie schemas and repository isolation</h2>
+<p>Observed <code>src/background/service_worker.ts</code> creates Dexie database <code>lpBookmarksDb</code> and declares schema versions to hold bookmarks, labels, usage data, tab trails, and related records. That database domain is not relevant; the important reference is versioned IndexedDB schema ownership.</p>
+<p>The cleaner separation exists in <code>src/background/tab_trail_service.ts</code>, which defines store operations in an interface and supplies Dexie plus memory implementations. Example operations include <code>getFlow()</code>, <code>putFlow()</code>, and <code>listFlows()</code>.</p>
+<p>For the new app, use interfaces such as:</p>
+<pre><code class="language-ts">export interface DocumentRepository {
+  get(id: string): Promise&lt;DocumentRecord | undefined&gt;;
+  list(): Promise&lt;DocumentRecord[]&gt;;
+  save(record: DocumentRecord): Promise&lt;void&gt;;
+  delete(id: string): Promise&lt;void&gt;;
+}
+</code></pre>
+<p>Implement <code>DexieDocumentRepository</code>, <code>MemoryDocumentRepository</code>, and perhaps <code>LocalStorageDocumentRepository</code>. Features should depend on these interfaces, <strong>not</strong> on global Dexie state or on direct IndexedDB calls.</p>
+<p>Proposed tables: <code>documents</code>, <code>revisions</code>, <code>templates</code>, <code>settings</code>, <code>metadata</code>. This is a <strong>proposal</strong>, not an existing schema in the archive.</p>
+<p>Keep <strong>schema version assembly</strong> centralized. Individual features may contribute table definitions, but only one central database initializer should own the complete database version/migration path. Save current document and revision atomically where necessary.</p>
+<h2>5. Settings: schema, default overrides, immediate propagation</h2>
+<p>Observed file: <code>src/settings/settings_runtime.ts</code>.</p>
+<p>It describes a settings document with categories and setting definitions, including fields such as <code>keyPath</code>, <code>label</code>, <code>description</code>, <code>type</code>, <code>defaultValue</code>, <code>allowedValues</code>, and <code>uiControl</code>.</p>
+<p>The runtime contains logic named:</p>
+<ul>
+<li><code>DEFAULT_SETTINGS_DOCUMENT</code></li>
+<li><code>computeMinimalOverrides()</code></li>
+<li><code>buildEffectiveDocument()</code></li>
+<li><code>loadSettingsDocument()</code></li>
+<li><code>saveOverrides()</code></li>
+<li><code>setSetting()</code></li>
+<li><code>resetSetting()</code></li>
+<li><code>resetAllSettings()</code></li>
+</ul>
+<p>The extension stores <strong>overrides relative to defaults</strong> rather than a complete duplicate of all default values. This lets new defaults apply to users who never overrode the setting.</p>
+<p>The settings UI in <code>src/settings/settings.ts</code> uses definitions to build suitable controls. The worker subscribes to <code>chrome.storage.onChanged</code> and applies relevant changes, with checks to avoid redundant work.</p>
+<p><strong>Adaptation for GTL:</strong> define a browser settings service that publishes immediate in-process updates; forward worker-relevant settings to the Dedicated Worker; optionally notify other open tabs using <code>BroadcastChannel</code>. Do not copy <code>chrome.storage</code> calls.</p>
+<p>Candidate settings: chosen background, guidance panel dock/pin state, font scale, autosave interval, persistence mode (memory, localStorage, IndexedDB), revision retention, export defaults, and reduced-motion preference. Do not build an enormous settings panel in the MVP.</p>
+<p><img src="diagrams/05-settings-flow.svg" alt="Settings propagation"></p>
+<p><strong>Worker API constraint:</strong> <code>localStorage</code> is unavailable inside Dedicated Workers. If the product supports localStorage as a mode, implement that adapter in the main thread, while Dexie/IndexedDB may run in the worker. A storage coordinator hides those differences from consumers.</p>
+<h2>6. Worker routing: from monolith to feature-owned handlers</h2>
+<p>Observed file: <code>src/background/service_worker.ts</code>, ~135 KB. It handles startup, DB schema, settings changes, browser events, and message routing. It imports some extracted service modules (<code>tab_trail_service.ts</code>, <code>session_snapshot_runtime.ts</code>, etc.), but still knows too much about individual features.</p>
+<p>Observed routing example:</p>
+<pre><code class="language-ts">const tabTrailType = getTabTrailMessageType(request);
+if (tabTrailType) {
+  initBookmarksDb()
+    .then(() =&gt; tabTrailService.handleMessage(
+      { type: tabTrailType, payload: request?.payload || request || {} },
+      sender
+    ))
+    .then(sendResponse);
+  return true;
+}
+</code></pre>
+<p>A new GTL worker should be a <strong>thin router</strong>. It statically registers handler modules exported by feature folders, dispatches typed requests, and normalizes results/errors.</p>
+<pre><code class="language-ts">export interface WorkerFeature {
+  readonly scope: string;
+  handle(type: string, payload: unknown): Promise&lt;unknown&gt;;
+}
+
+const features = [
+  createDocumentWorkerFeature(),
+  createHistoryWorkerFeature(),
+  createTemplateWorkerFeature()
+];
+
+const handlers = new Map(features.map(f =&gt; [f.scope, f]));
+</code></pre>
+<p>This is <strong>proposed example code</strong>, not a copy from the extension. Use static imports, not a dynamic plugin loader. Small features should not be required to create worker/storage/UI layers if they don't need them.</p>
+<p><img src="diagrams/04-worker-message-flow.svg" alt="Request/response boundary"></p>
+<h2>7. Typed runtime messaging</h2>
+<p>Observed file: <code>src/content/runtime_messaging.ts</code> defines generic envelopes:</p>
+<pre><code class="language-ts">export type RuntimeEnvelope&lt;TPayload&gt; = {
+  scope: string;
+  type: string;
+  requestId: string;
+  payload: TPayload;
+};
+
+export type RuntimeResponseEnvelope&lt;TResult&gt; = {
+  ok: boolean;
+  requestId: string;
+  result?: TResult;
+  error?: { code?: string; message?: string; details?: unknown };
+};
+</code></pre>
+<p>It creates request IDs and validates matched responses. The source transport is Chrome messaging; the proposed GTL transport is <code>worker.postMessage()</code> plus <code>message</code> events.</p>
+<p>Preserve request IDs, correlated responses, structured errors, and a consistent envelope. Consider a protocol version, request timeout, and cancel/ignore-stale-result behavior. Runtime validation is still needed at message boundaries: TypeScript types do not enforce values arriving through browser structured cloning.</p>
+<p>Avoid message round trips for each keypress. The main thread owns immediate editing state; the worker handles persistence and potentially heavier parsing/export operations.</p>
+<h2>8. Feature-based directory organization</h2>
+<p>Proposed, not copied verbatim from the archive:</p>
+<pre><code class="language-text">src/
+  app/
+    main.ts
+    shell.ts
+    state.ts
+  features/
+    documents/
+      model.ts
+      service.ts
+      protocol.ts
+      ui/
+      worker/
+      storage/
+    history/
+      model.ts
+      service.ts
+      ui/
+      worker/
+      storage/
+    templates/
+      model.ts
+      loader.ts
+      parser.ts
+      ui/
+      worker/
+    settings/
+      model.ts
+      defaults.ts
+      service.ts
+      ui/
+    export/
+      service.ts
+      ui/
+      worker/
+  platform/
+    messaging/
+    storage/
+    clipboard/
+    ui/
+  worker/
+    main.ts
+  vendor/
+    dexie/
+    markdown-it/
+    jszip/
+  types/
+</code></pre>
+<p>A feature is a coherent <strong>domain capability</strong>. Do not create identical boilerplate layers for tiny features. Shared platform code is for low-level transport/storage/UI primitives, not a dumping ground for all domain logic. Cross-feature calls should use small public contracts/events rather than private imports.</p>
+<h2>9. Built-in templates in a static web app</h2>
+<p>Following the simplified document-centric language direction, bundled templates can be plain <code>.gtl</code> files. The app needs an explicit manifest to know what to offer at startup.</p>
+<pre><code class="language-json">{
+  &quot;templates&quot;: [
+    {&quot;id&quot;: &quot;purpose-function&quot;, &quot;file&quot;: &quot;project-descriptions/purpose-function.gtl&quot;},
+    {&quot;id&quot;: &quot;input-processing-output&quot;, &quot;file&quot;: &quot;project-descriptions/input-processing-output.gtl&quot;}
+  ]
+}
+</code></pre>
+<p>Build-time code can generate the manifest from the source folder. At runtime, fetch the manifest once, then load chosen template files on demand. Cache results. User templates, if supported later, can live in IndexedDB rather than static files. Keep template language logic independent of external filesystem/package resolution.</p>
+<h2>10. TypeScript and Bun build</h2>
+<p>Observed strict TS reference: <code>src/vendor/retroos-ui-v001/tsconfig.json</code>, using <code>target: ES2025</code>, <code>module: Preserve</code>, <code>moduleResolution: bundler</code>, <code>strict</code>, <code>noEmit</code>, <code>verbatimModuleSyntax</code>, <code>isolatedModules</code>, and <code>noUncheckedIndexedAccess</code>.</p>
+<p>Observed Bun script reference: <code>src/vendor/retroos-ui-v001/scripts/build.mts</code>.</p>
+<p>Suggested initial common TS compiler options (illustrative, not a complete final project config):</p>
+<pre><code class="language-json">{
+  &quot;compilerOptions&quot;: {
+    &quot;target&quot;: &quot;ES2025&quot;,
+    &quot;module&quot;: &quot;Preserve&quot;,
+    &quot;moduleResolution&quot;: &quot;bundler&quot;,
+    &quot;strict&quot;: true,
+    &quot;noEmit&quot;: true,
+    &quot;verbatimModuleSyntax&quot;: true,
+    &quot;isolatedModules&quot;: true,
+    &quot;noUncheckedIndexedAccess&quot;: true,
+    &quot;useUnknownInCatchVariables&quot;: true,
+    &quot;forceConsistentCasingInFileNames&quot;: true,
+    &quot;skipLibCheck&quot;: true
+  }
+}
+</code></pre>
+<p>Use <strong>separate DOM and worker type-checking projects</strong> so DOM-only APIs are not accidentally allowed in worker logic. Keep generated assets and vendored JS out of checks unless explicitly adapted.</p>
+<p>Suggested Bun entrypoints: <code>src/app/main.ts</code> and <code>src/worker/main.ts</code>, <code>target: 'browser'</code>, ESM output and external source maps during development. A build script should also copy HTML, backgrounds, manifest, and template text files.</p>
+<p><strong>Archive limitation:</strong> the extension ZIP contains the nested RetroOS UI package/build configuration but not the entire extension's top-level build system. It is incorrect to infer a complete end-to-end extension build from the supplied ZIP.</p>
+<h2>11. Exporting documents, persistence history, and privacy</h2>
+<p>Relevant observed sources:</p>
+<ul>
+<li><code>src/content/atools/session-snapshot-v001/js/session_snapshot_zip.ts</code> — JSZip-based export packaging.</li>
+<li><code>src/content/atools/markdown-to-html-v001/js/markdown-to-html-core.ts</code> — Markdown processing isolated from UI.</li>
+<li><code>src/content/atools/rich-text-to-markdown-v001/js/rich-text-to-markdown.ts</code> — HTML/rich to Markdown transformation.</li>
+<li><code>src/content/text_expander_minibuffer_model.ts</code> — rich question/parameter metadata, examples, allowed values, validation; useful <em>conceptually</em>, but deliberately overfeatured for a minimal GTL template format.</li>
+</ul>
+<p>For GTL, keep one semantic document model and add exporters for plain text, HTML, Markdown, and eventually ZIP. Do not export editor chrome or transient guidance decorations. Autosave and durable revision history are separate responsibilities.</p>
+<p>The extension's comments around usage data emphasize avoiding sensitive text, URLs, clipboard data, and generated content in telemetry. Apply the same principle to GTL diagnostics; default to local processing and avoid storing document contents in logs.</p>
+<h2>12. Explicit exclusions and implementation experiment list</h2>
+<p><strong>Do not copy unchanged:</strong> <code>chrome.runtime.*</code>, <code>chrome.storage.*</code>, Manifest V3 event listeners, <code>importScripts()</code> loading conventions for a new module worker, central monolithic service worker, extension permissions/manifest mutation, full RetroOS window manager, or extensive text-expander minibuffer command machinery.</p>
+<p><strong>Validate experimentally:</strong></p>
+<ol>
+<li>Vendored Dexie UMD file in a Bun-produced browser module worker.</li>
+<li>Worker typed message correlation and error recovery, including worker crashes/restarts.</li>
+<li>Main-thread editor responsiveness while background saves occur.</li>
+<li>Shared value updates across repeated placeholders without caret jumps.</li>
+<li>Rich text and plain text clipboard output from the semantic document, not the visible DOM.</li>
+<li>Settings changes broadcasting to main UI and worker without page reload.</li>
+<li>Cross-tab persistence conflicts, migration, and saving disabled.</li>
+</ol>
+<p>The recommended foundation is <strong>static TypeScript + Bun + vendored JavaScript + native Web Components + a Dedicated Worker + feature-scoped repositories/handlers</strong>, with the document itself remaining the center of the UX.</p>
+</section><section id="section-4" class="content-section"><div class="eyebrow">SECTION 05</div><h1>Working application brief and boundaries</h1>
+<p>This is <strong>not</strong> a frozen build specification. It condenses user intent and recommendations from the recent discussion without reintroducing the overgrown prior DSL.</p>
+<h2>Product direction</h2>
+<p>A static, offline-capable (later) browser application for creating and editing text documents from helpful templates. Visually inspired by chat history, interactionally inspired by an unconstrained document editor. The user sees and edits the entire document rather than stepping through a series of questions. Placeholders are first-class editable nodes. Hints/examples appear in an unobtrusive panel. A rendered result lives in the same document and can be copied as text or formatted HTML.</p>
+<h2>Accepted product constraints from the conversation</h2>
+<ul>
+<li>A dark/black default look, with restrained atmospheric backgrounds and a readable center column.</li>
+<li>Vertical document navigation/history, with a New Document action at top.</li>
+<li>Fully visible, freely editable text with inline placeholder guidance.</li>
+<li>Stable contextual hints; selectable/copyable examples; do not cover current editing location.</li>
+<li>Answers can be entered out of order. Switching versions preserves values previously entered.</li>
+<li>Same-page result and rich/plain copy.</li>
+<li>Native Web Components; mainly Shadow DOM where it is suitable, with editor-specific caution.</li>
+<li>Strict, current TypeScript and Bun build; no npm-installed runtime dependencies.</li>
+<li>Vendored runtime libraries including Dexie from supplied extension archive.</li>
+<li>Prefer vertical/domain-feature organization to a monolithic worker.</li>
+<li>Static website with a known template manifest and on-demand template loading.</li>
+<li>Persistence options for memory-only, browser localStorage, or Dexie/IndexedDB; settings should apply without a full reload.</li>
+<li>Document recovery/history as a separate concern from autosave (the earlier PowerShell failure is a motivating case).</li>
+</ul>
+<h2>Distinguish user requirements from proposed implementation</h2>
+<table>
+<thead>
+<tr>
+<th>Domain/UX requirement</th>
+<th>Proposed implementation (not yet fixed)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Editable placeholders in complete document</td>
+<td>Structured document nodes, perhaps contenteditable with isolated placeholder nodes</td>
+</tr>
+<tr>
+<td>Contextual stable guidance</td>
+<td>Docked/right-side Web Component; pin and collapse affordances</td>
+</tr>
+<tr>
+<td>Vertical history</td>
+<td>Sidebar feature with documents store/subscriptions</td>
+</tr>
+<tr>
+<td>Dynamic live values</td>
+<td>Main-thread reactive document model</td>
+</tr>
+<tr>
+<td>Local persistence</td>
+<td>Worker-based IndexedDB via Dexie; main-thread localStorage fallback</td>
+</tr>
+<tr>
+<td>Cross-feature processing</td>
+<td>Static feature-worker handler registry with typed request envelopes</td>
+</tr>
+<tr>
+<td>Settings apply immediately</td>
+<td>Schema-driven settings service + subscriptions + worker message + optional BroadcastChannel</td>
+</tr>
+<tr>
+<td>Bundled templates</td>
+<td><code>.gtl</code> files + generated manifest JSON fetched on demand</td>
+</tr>
+<tr>
+<td>Plain and rich copy</td>
+<td>Semantic export + <code>text/plain</code> and <code>text/html</code> clipboard data</td>
+</tr>
+<tr>
+<td>History</td>
+<td>Revision snapshots with separate undo/redo</td>
+</tr>
+</tbody>
+</table>
+<h2>Minimal template sketch</h2>
+<pre><code class="language-text">TEMPLATE: Project description
+
+VERSION: Input + processing + output
+  TEXT:
+    Takes {{$input}}, {{$processing}}, and produces {{$result}}.
+
+VERSION: Problem + solution
+  TEXT:
+    Helps {{$audience}} {{$problem}} by {{$solution}}.
+
+$input: What does the user provide?
+  HINT: Name the data or information being supplied.
+  EXAMPLE: pasted JSON
+
+$processing: What happens to the input?
+  EXAMPLE: checks it for syntax errors
+
+$result: What is produced?
+  EXAMPLE: a readable formatted version
+
+$audience: Who is it for?
+  EXAMPLE: developers
+
+$problem: What are they trying to do?
+  EXAMPLE: inspect messy JSON
+
+$solution: How does the tool help?
+  EXAMPLE: validating syntax and formatting the result
+</code></pre>
+<p>This is illustrative design syntax, not a committed grammar or compiled fixture.</p>
+<h2>What should <em>not</em> grow back into this language without evidence</h2>
+<ul>
+<li>Procedural <code>ASK</code> / <code>WHEN</code> / <code>ELSE</code> / <code>COMPOSE</code> / <code>FOR EACH</code> graph semantics.</li>
+<li>A global template registry/catalog dependency resolution language.</li>
+<li>Variable static types and expression evaluation.</li>
+<li>UI-specific commands such as <code>ALLOW EDIT</code>, <code>ALLOW RETRY</code>.</li>
+<li>Missing-variable policy scripting.</li>
+</ul>
+<p>Those were explored in a prior specification, but the user explicitly reset the product approach to keep template creation ergonomic and declarative.</p>
+<h2>Open questions for app specification</h2>
+<ol>
+<li>How do user edits to the document surrounding the placeholders survive a template version switch?</li>
+<li>What is the precise distinction between <strong>template definition</strong>, <strong>document instance</strong>, and <strong>edited rendered output</strong>?</li>
+<li>Can rich formatting be entered directly, or are rich styles only produced on export?</li>
+<li>How do repeated placeholders behave when one occurrence is edited?</li>
+<li>What does copying a document with unfilled placeholders produce? Is there a confirmation warning?</li>
+<li>Should a template version switch create a history revision?</li>
+<li>What are the persistence semantics when switching between memory, localStorage, and IndexedDB?</li>
+<li>What should happen when a user has the same document open in multiple tabs?</li>
+<li>Should the right guidance pane pin to a placeholder or pin to a document location?</li>
+<li>Which background assets are licensed for reuse and which are only visual references?</li>
+<li>Can a bundled template be changed in a later app release without altering existing documents?</li>
+<li>What is the security model for imported templates and copied rich HTML?</li>
+</ol>
+<p>Resolve these through a tiny working editor prototype and concrete scenarios; do not invent a general-purpose template programming language to anticipate them all.</p>
+</section><section id="section-5" class="content-section"><div class="eyebrow">SECTION 06</div><h1>Source file map — original paths and reuse guidance</h1>
+<p>This is an implementation-agent index. Paths below are <strong>exact paths inside the uploaded archives</strong>. Copies in the reference kit preserve the same relative path under a source archive name. No names were anonymized.</p>
+<h2>Chat UI reference: <code>sovet-rdtl-0.13.1-source(1).zip</code></h2>
+<p>Prefix for extracted copies: <code>reference/sovet-rdtl/</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Original path</th>
+<th>Evidence / why inspect</th>
+<th>Approach</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sovet-rdtl/src/ui/components/sov-app.js</code></td>
+<td>App shell, subscriptions, navigation, dialogs, event coordination</td>
+<td>Adapt shell logic, not chat engine</td>
+</tr>
+<tr>
+<td><code>sovet-rdtl/src/ui/components/sov-sidebar.js</code></td>
+<td>Vertical history, selected state, new/remove</td>
+<td>Reuse UI behavior with Document semantics</td>
+</tr>
+<tr>
+<td><code>sovet-rdtl/src/ui/components/sov-chat.js</code></td>
+<td>Efficient message updates, scroll position</td>
+<td>Study; do not copy chat auto-scroll into editor</td>
+</tr>
+<tr>
+<td><code>sovet-rdtl/src/ui/components/sov-message.js</code></td>
+<td>Message typography, info affordance, content boundaries</td>
+<td>Adapt visual treatment only</td>
+</tr>
+<tr>
+<td><code>sovet-rdtl/src/ui/components/sov-origin-panel.js</code></td>
+<td>Async guidance loading, request invalidation, focus restoration</td>
+<td>Convert modal dialog into nonmodal dock</td>
+</tr>
+<tr>
+<td><code>sovet-rdtl/src/ui/components/sov-backdrop.js</code></td>
+<td>Picture mobile source, cache, image fallback</td>
+<td>Reuse approach for dark atmospheric backgrounds</td>
+</tr>
+<tr>
+<td><code>sovet-rdtl/src/ui/components/sov-composer.js</code></td>
+<td>Draft preservation, viewport and input focus</td>
+<td>Use only as input/viewport reference; no chat composer</td>
+</tr>
+<tr>
+<td><code>sovet-rdtl/src/ui/dom.js</code></td>
+<td><code>el</code>, <code>button</code>, <code>emit</code>, icon SVG</td>
+<td>Adapt tiny utilities and event conventions</td>
+</tr>
+<tr>
+<td><code>sovet-rdtl/src/adapters/local-storage.js</code></td>
+<td>JSON state persistence, conflict/error handling</td>
+<td>Adapt adapter contract; not primary Dexie store</td>
+</tr>
+<tr>
+<td><code>sovet-rdtl/src/app/chat-service.js</code></td>
+<td>Observable state subscriptions and mutations</td>
+<td>Study event-to-state separation</td>
+</tr>
+<tr>
+<td><code>sovet-rdtl/src/domain/chat-state.js</code></td>
+<td>Validation of persisted conversation state</td>
+<td>Adapt validation principle only</td>
+</tr>
+<tr>
+<td><code>sovet-rdtl/src/domain/persistent-state.js</code></td>
+<td>Persisted state shape</td>
+<td>Study serialization boundary</td>
+</tr>
+<tr>
+<td><code>sovet-rdtl/src/config/backgrounds.js</code></td>
+<td>Background image manifest</td>
+<td>Reuse asset registry concept</td>
+</tr>
+<tr>
+<td><code>sovet-rdtl/src/main.js</code></td>
+<td>Browser composition/bootstrapping</td>
+<td>Study startup responsibilities</td>
+</tr>
+<tr>
+<td><code>sovet-rdtl/styles.css</code></td>
+<td>Exact dark tokens, sidebar sizing, mobile layout and focus</td>
+<td>Visual reference</td>
+</tr>
+<tr>
+<td><code>sovet-rdtl/README.md</code> / <code>.specs/</code></td>
+<td>Original project architecture and behavior framing</td>
+<td>Original-source evidence</td>
+</tr>
+<tr>
+<td><code>sovet-rdtl/LICENSE</code></td>
+<td>MIT license for code with corpus caveat</td>
+<td>Preserve</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Original file availability:</strong> exact extracted file copies are under <code>reference/sovet-rdtl/sovet-rdtl/...</code>. The kit does not include the conversation corpus, unrelated sound/media, or the original full application distribution.</p>
+<h2>Extension engineering reference: <code>browser-extension-src.zip</code></h2>
+<p>Prefix for extracted copies: <code>reference/browser-extension-src/</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Original path</th>
+<th>Evidence / why inspect</th>
+<th>Approach</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/background/service_worker.ts</code></td>
+<td>Central MV3 worker, Dexie init, message router, settings subscriptions</td>
+<td><strong>Architecture anti-example</strong> for monolithic worker; inspect specific mechanisms</td>
+</tr>
+<tr>
+<td><code>src/background/tab_trail_service.ts</code></td>
+<td>Store abstraction with Dexie and in-memory alternatives</td>
+<td>Main repository pattern reference</td>
+</tr>
+<tr>
+<td><code>src/content/runtime_messaging.ts</code></td>
+<td>Typed request/response envelopes, correlation and errors</td>
+<td>Port to Worker <code>postMessage</code> transport</td>
+</tr>
+<tr>
+<td><code>src/settings/settings_runtime.ts</code></td>
+<td>Settings definitions, defaults/overrides, normalization, reset</td>
+<td>Main settings schema reference</td>
+</tr>
+<tr>
+<td><code>src/settings/settings.ts</code></td>
+<td>Dynamic settings controls and interaction</td>
+<td>Adapt to native Web Components</td>
+</tr>
+<tr>
+<td><code>src/settings/settings.html</code> / <code>settings.css</code></td>
+<td>Existing settings layout/markup</td>
+<td>UI reference</td>
+</tr>
+<tr>
+<td><code>src/types/globals.d.ts</code></td>
+<td>UMD-global library typing</td>
+<td>Replace with more encapsulated vendor adapters</td>
+</tr>
+<tr>
+<td><code>src/content/text_expander_minibuffer_model.ts</code></td>
+<td>Questions, examples, completions, allowed values</td>
+<td>Inspiration only: much too broad for new minimal DSL</td>
+</tr>
+<tr>
+<td><code>src/vendor/retroos-ui-v001/src/components/field.ts</code></td>
+<td>Shadow DOM, help and error states</td>
+<td>Reuse component conventions</td>
+</tr>
+<tr>
+<td><code>src/vendor/retroos-ui-v001/src/components/input.ts</code></td>
+<td>Custom native input wrapper</td>
+<td>Reuse conventions</td>
+</tr>
+<tr>
+<td><code>src/vendor/retroos-ui-v001/src/components/textarea.ts</code></td>
+<td>Custom textarea wrapper</td>
+<td>Reuse conventions</td>
+</tr>
+<tr>
+<td><code>src/vendor/retroos-ui-v001/src/components/tabs.ts</code></td>
+<td>Accessible choice navigation</td>
+<td>UI inspiration</td>
+</tr>
+<tr>
+<td><code>src/vendor/retroos-ui-v001/src/components/listbox.ts</code></td>
+<td>Selection components</td>
+<td>UI inspiration</td>
+</tr>
+<tr>
+<td><code>src/vendor/retroos-ui-v001/src/components/dialog.ts</code></td>
+<td>Dialog semantics</td>
+<td>UI inspiration</td>
+</tr>
+<tr>
+<td><code>src/vendor/retroos-ui-v001/src/components/toast.ts</code></td>
+<td>Feedback notifications</td>
+<td>UI inspiration</td>
+</tr>
+<tr>
+<td><code>src/vendor/retroos-ui-v001/src/core/styles.ts</code></td>
+<td>Constructed stylesheet caching and fallback</td>
+<td>Reuse approach</td>
+</tr>
+<tr>
+<td><code>src/vendor/retroos-ui-v001/src/core/define.ts</code></td>
+<td>Define custom elements once</td>
+<td>Reuse approach</td>
+</tr>
+<tr>
+<td><code>src/vendor/retroos-ui-v001/src/core/sanitize.ts</code></td>
+<td>Content sanitization helpers</td>
+<td>Validate capabilities for HTML export</td>
+</tr>
+<tr>
+<td><code>src/vendor/retroos-ui-v001/tsconfig.json</code></td>
+<td>Strict ES2025 + bundler TS config</td>
+<td>Configuration reference</td>
+</tr>
+<tr>
+<td><code>src/vendor/retroos-ui-v001/scripts/build.mts</code></td>
+<td>Bun-based build script</td>
+<td>Configuration reference</td>
+</tr>
+<tr>
+<td><code>src/content/atools/session-snapshot-v001/js/session_snapshot_zip.ts</code></td>
+<td>JSZip export packaging</td>
+<td>Adapt export logic</td>
+</tr>
+<tr>
+<td><code>src/content/atools/markdown-to-html-v001/js/markdown-to-html-core.ts</code></td>
+<td>Markdown→HTML core without UI</td>
+<td>Adapt export isolation</td>
+</tr>
+<tr>
+<td><code>src/content/atools/rich-text-to-markdown-v001/js/rich-text-to-markdown.ts</code></td>
+<td>Rich HTML→Markdown conversion</td>
+<td>Reference optional export path</td>
+</tr>
+<tr>
+<td><code>src/content/libs/dexie-4.2.0.js</code></td>
+<td>Dexie UMD 4.2.0, Apache 2.0 header</td>
+<td>Copied byte-for-byte to <code>library/</code> and source mirror</td>
+</tr>
+<tr>
+<td><code>src/content/libs/jszip-3.10.1.js</code></td>
+<td>JSZip UMD</td>
+<td>Copied as optional vendor</td>
+</tr>
+<tr>
+<td><code>src/content/libs/markdown-it-14.2.0.js</code></td>
+<td>Markdown parser UMD</td>
+<td>Copied as optional vendor</td>
+</tr>
+<tr>
+<td><code>src/content/libs/turndown-7.0.0.js</code></td>
+<td>Rich HTML→Markdown UMD</td>
+<td>Copied as optional vendor</td>
+</tr>
+</tbody>
+</table>
+<p>For the vendored UI framework, the kit includes all its <code>src/</code> TypeScript source and its <code>scripts/</code> tools, but excludes <code>node_modules</code>, generated distributions and archived build outputs. This is a <strong>reference subset</strong>, not a standalone reinstall of the original framework.</p>
+<h2>Mapping from reference to proposed feature module</h2>
+<table>
+<thead>
+<tr>
+<th>New feature</th>
+<th>Best reference(s)</th>
+<th>Additional new work</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Documents</td>
+<td><code>sov-sidebar.js</code>, <code>chat-service.js</code>, <code>tab_trail_service.ts</code></td>
+<td>Document model, editor semantics, create/load/save APIs</td>
+</tr>
+<tr>
+<td>Placeholder guidance</td>
+<td><code>sov-origin-panel.js</code>, RetroOS <code>field.ts</code></td>
+<td>Nonmodal, focus-safe dock and pinned hint state</td>
+</tr>
+<tr>
+<td>Template parser/loader</td>
+<td><code>text_expander_minibuffer_model.ts</code> (concepts only)</td>
+<td>Minimal <code>.gtl</code> parser; manifest/cache</td>
+</tr>
+<tr>
+<td>History</td>
+<td><code>local-storage.js</code>, Tab Trail store</td>
+<td>Revision snapshots, restore and retention</td>
+</tr>
+<tr>
+<td>Settings</td>
+<td><code>settings_runtime.ts</code>, <code>settings.ts</code></td>
+<td>Browser transport, feature notifications, mode migration</td>
+</tr>
+<tr>
+<td>Worker transport</td>
+<td><code>runtime_messaging.ts</code>, <code>service_worker.ts</code></td>
+<td>Dedicated Worker router, retry/error/timeout handling</td>
+</tr>
+<tr>
+<td>Export</td>
+<td><code>session_snapshot_zip.ts</code>, markdown conversion</td>
+<td>Semantic text/HTML/Markdown/ZIP export</td>
+</tr>
+<tr>
+<td>Theme/backgrounds</td>
+<td><code>styles.css</code>, <code>sov-backdrop.js</code>, <code>backgrounds.js</code></td>
+<td>Responsive image themes, accessibility and contrast</td>
+</tr>
+</tbody>
+</table>
+</section><section id="section-6" class="content-section"><div class="eyebrow">SECTION 07</div><h1>Assets, vendored libraries, provenance, and licenses</h1>
+<p>The kit carries selected source code and binary dependencies from user-supplied archives. These are <strong>references</strong>, not a new blanket grant of third-party intellectual-property rights.</p>
+<h2>Library files (byte-for-byte copies)</h2>
+<table>
+<thead>
+<tr>
+<th>Kit path</th>
+<th>Original archive path</th>
+<th>Purpose</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>library/dexie-4.2.0.js</code></td>
+<td><code>browser-extension-src.zip:src/content/libs/dexie-4.2.0.js</code></td>
+<td>IndexedDB adapter</td>
+<td>Required reference vendor</td>
+</tr>
+<tr>
+<td><code>library/jszip-3.10.1.js</code></td>
+<td><code>...:src/content/libs/jszip-3.10.1.js</code></td>
+<td>ZIP export</td>
+<td>Optional reference vendor</td>
+</tr>
+<tr>
+<td><code>library/markdown-it-14.2.0.js</code></td>
+<td><code>...:src/content/libs/markdown-it-14.2.0.js</code></td>
+<td>Markdown rendering</td>
+<td>Optional reference vendor</td>
+</tr>
+<tr>
+<td><code>library/turndown-7.0.0.js</code></td>
+<td><code>...:src/content/libs/turndown-7.0.0.js</code></td>
+<td>HTML to Markdown</td>
+<td>Optional reference vendor</td>
+</tr>
+</tbody>
+</table>
+<p>They are <em>not</em> imported automatically by the documentation preview or any shipped app. <code>index.html</code> is a static visual guide.</p>
+<ul>
+<li>Dexie banner: <strong>Apache License 2.0</strong>, Version 4.2.0. The source ZIP does not separately bundle Dexie's full license text.</li>
+<li>JSZip banner: <strong>MIT or GPLv3</strong> and a note about its internal pako dependency; refer to upstream licensing and preserve any applicable notices.</li>
+<li>markdown-it banner: <strong>MIT</strong>, version 14.2.0.</li>
+<li>Turndown: the copied distribution's opening does not present a clear full license statement; verify its license and include the correct notice before shipping it in a released product.</li>
+</ul>
+<p>For released software, the implementation team should obtain/verify the applicable full license files; this reference kit preserves the distribution banners, source provenance, and an inventory rather than fabricating license content.</p>
+<h2>Source code licensing</h2>
+<p>The copied chat UI code is accompanied by <code>reference/sovet-rdtl/sovet-rdtl/LICENSE</code>: MIT License, 2026 SovietRDTL contributors. That license explicitly states that corpus texts and third-party materials have separate terms. The kit excludes conversation corpus text and unrelated media.</p>
+<p>The extension ZIP does not include a project-wide root LICENSE. Its <code>retroos-ui-v001</code> files label themselves as vendored, editable framework source. Treat the included extension and vendored framework files as <strong>user-supplied study references</strong>; check authority and applicable licenses before redistributing them beyond the intended development context.</p>
+<h2>Background images</h2>
+<p>The chat archive has 20 background compositions, with desktop and mobile variants. The kit includes <strong>only eight source WebPs</strong> (four desktop/mobile pairs):</p>
+<ul>
+<li>room-04-desk</li>
+<li>room-07-study</li>
+<li>room-17-balcony</li>
+<li>room-20-workshop</li>
+</ul>
+<p>All are under <code>assets/source-backgrounds/</code> with original hashed filenames. <code>assets/background_contact_sheet.jpg</code> is the contact sheet generated during the earlier exploration; it shows the entire set of 20 scene variants as low-resolution visual references.</p>
+<p>These backgrounds demonstrate layering, responsiveness, and mood. Do not assume the underlying image-generation or third-party usage rights follow the MIT <em>code</em> license. Plan original, clearly licensed artwork for production.</p>
+<h2>Editable SVG diagrams</h2>
+<p>These drawings were created for this reference kit from the earlier assistant's layouts and architectural explanations:</p>
+<ul>
+<li><code>diagrams/01-desktop-layout.svg</code>: sidebar + document + nonmodal guidance.</li>
+<li><code>diagrams/02-document-workflow.svg</code>: new document → template version → inline editing → result/history.</li>
+<li><code>diagrams/03-feature-architecture.svg</code>: UI/app state → worker router → vertical features → repository/adapters.</li>
+<li><code>diagrams/04-worker-message-flow.svg</code>: request envelope, correlation, response/errors.</li>
+<li><code>diagrams/05-settings-flow.svg</code>: settings state updates UI/worker/tabs and persistence.</li>
+<li><code>diagrams/06-mobile-layout.svg</code>: mobile drawer and compact guidance layout.</li>
+</ul>
+<p>These are schematic proposals, <strong>not screenshots</strong> of either source project. SVG is editable, scalable, and self-contained (no external fonts or image resources).</p>
+<h2>Package verification</h2>
+<ul>
+<li><code>manifest/provenance.json</code>: original path, copied path, size and SHA-256 for selected originals.</li>
+<li><code>manifest/sha256sum.txt</code>: SHA-256 for every included file except itself.</li>
+</ul>
+<p>A mismatch signals damage or modification. There is intentionally no vendored <code>node_modules</code> directory and no npm runtime installation instruction.</p>
+</section><section id="section-7" class="content-section"><div class="eyebrow">SECTION 08</div><h1>Experiments, acceptance tests, and build handoff</h1>
+<p>This is a <strong>prioritized experiment plan</strong>, not an instruction to implement every subsystem before proving the document-centered editing experience.</p>
+<h2>Phase 1: verify the central UX</h2>
+<ol>
+<li>Start a blank document in a dark shell with vertical history.</li>
+<li>Select &quot;Input + processing + output&quot; and display the whole sentence immediately.</li>
+<li>Focus <code>$processing</code>: a stable hint with example appears without overlapping the text.</li>
+<li>Enter an answer and observe <strong>immediate</strong> replacement of every occurrence.</li>
+<li>Change ordinary words around the placeholder without changing its identity.</li>
+<li>Undo/redo and paste text. Confirm caret and selected range remain stable, including IME input.</li>
+<li>Switch to another version and back; retained answers remain intact.</li>
+<li>Render final text below the editor; copy as <code>text/plain</code> and <code>text/html</code> with no UI decoration.</li>
+<li>Navigate away and back; retained content appears when selected storage mode persists it.</li>
+</ol>
+<p>Test the real browser behaviors; static screenshots cannot validate caret correctness.</p>
+<h2>Phase 2: vendor and worker feasibility</h2>
+<ul>
+<li>Build two browser entrypoints with Bun: main app and dedicated worker.</li>
+<li>Load the exact <code>library/dexie-4.2.0.js</code> UMD distribution into the module worker. Confirm it actually initializes; do <strong>not</strong> infer compatibility from classic <code>importScripts</code> usage.</li>
+<li>Create an IndexedDB database and roundtrip a small document record through the worker message router.</li>
+<li>Run an in-memory store using the same repository interface.</li>
+<li>Simulate unexpected worker errors and missing responses; fail with actionable diagnostics and preserve main-thread editing state.</li>
+<li>Test schema upgrade and document+revision atomicity.</li>
+</ul>
+<h2>Phase 3: live settings and alternate storage</h2>
+<ul>
+<li>Change guidance visibility and background; apply without reload.</li>
+<li>Change persistence preference; specify whether old records are copied or left in the previous store.</li>
+<li>Verify memory-only mode never calls a persistent adapter.</li>
+<li>Verify localStorage adapter runs in the main thread; Dexie adapter uses worker or separately approved context.</li>
+<li>Simulate two tabs editing the same document: decide conflict/merge behavior before claiming robust synchronization.</li>
+<li>Ensure storage quota errors do not erase current editor state.</li>
+</ul>
+<h2>Phase 4: export and bundled templates</h2>
+<ul>
+<li>Manifest generation at build time; on-demand fetch of exact <code>.gtl</code> files from static hosting.</li>
+<li>Plain output copies with literal source newlines as expected.</li>
+<li>Rich copy uses sanitized semantic HTML with no dark application chrome.</li>
+<li>Markdown export preserves supported semantic structures.</li>
+<li>ZIP export includes useful metadata; does not embed private diagnostic logs.</li>
+<li>Imported templates never execute arbitrary JS/PowerShell.</li>
+</ul>
+<h2>Tests to automate</h2>
+<table>
+<thead>
+<tr>
+<th>Test domain</th>
+<th>Key assertions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Template parser</td>
+<td>Reads literal <code>TEXT</code>, placeholders, optional guidance and VERSION blocks</td>
+</tr>
+<tr>
+<td>Document model</td>
+<td>Text and placeholders remain distinct; repeated placeholders share one value</td>
+</tr>
+<tr>
+<td>Editor selection</td>
+<td>Focus, paste, undo, IME, selection and caret survive reactive updates</td>
+</tr>
+<tr>
+<td>Version switching</td>
+<td>Retains previous placeholder answers; does not silently discard edited prose</td>
+</tr>
+<tr>
+<td>Worker messaging</td>
+<td>Correlates <code>requestId</code>; typed errors on unsupported scope, timeouts, worker failures</td>
+</tr>
+<tr>
+<td>Storage</td>
+<td>Save/load, schema migration, no-persist mode, quota failure, cross-tab conflict</td>
+</tr>
+<tr>
+<td>History</td>
+<td>Autosave distinct from revisions; restore is explicit and testable</td>
+</tr>
+<tr>
+<td>Settings</td>
+<td>Defaults/overrides/reset; live UI and worker updates</td>
+</tr>
+<tr>
+<td>Clipboard</td>
+<td><code>text/plain</code> and <code>text/html</code> contain only final content</td>
+</tr>
+<tr>
+<td>A11y</td>
+<td>Keyboard navigation, focus indicators, labels, nonmodal guidance, reduced motion</td>
+</tr>
+</tbody>
+</table>
+<h2>Implementation-agent constraints</h2>
+<ul>
+<li><strong>Ground implementation in the exact copied sources</strong>; use <code>docs/04-source-map.md</code> as the lookup table.</li>
+<li>Keep extension-only APIs in a porting layer; never call <code>chrome.runtime</code> in static-site code.</li>
+<li>Preserve Third-party banners and obtain missing full licenses before release.</li>
+<li>Avoid adding design decisions to the DSL just to make programming easier.</li>
+<li>Keep feature boundaries proportional to feature complexity; no empty architecture boilerplate.</li>
+<li>No npm-installed runtime dependencies. Development and test dependencies are allowed. TypeScript/Bun versions should be pinned and reverified when work begins.</li>
+<li>Be explicit when a source file is only a reference and cannot be compiled stand-alone.</li>
+<li>Use web-server hosting for testing <code>fetch()</code> of <code>.gtl</code> and worker files; opening the static reference <code>index.html</code> locally is only for reading the documentation, not testing the application.</li>
+</ul>
+</section><section id="section-8" class="content-section"><div class="eyebrow">SECTION 09</div><h1>Optional third reference: original PowerShell guided publisher</h1>
+<p>The project concept originated from a CLI publisher that guided a user through selecting a project folder, category, description style, answering example-driven questions, accepting the final sentence, and writing HTML/RSS entries.</p>
+<p>Reference copy in this kit: <code>../reference/powershell/Add-Project.ps1</code>, copied from the user-supplied <code>/mnt/data/Add-Project(2).ps1</code>. This is <strong>not</strong> used by, and should not be automatically executed by, the GTL web app.</p>
+<h2>What to retain</h2>
+<ul>
+<li>Five narrative templates with title, explanation, pattern, finished example, and targeted questions.</li>
+<li>Input guidance that tells users whether to enter a noun phrase, verb phrase, or final artifact.</li>
+<li>The ability to preview the sentence before accepting it.</li>
+<li>Editing the finished sentence without losing the original answers.</li>
+<li>Recovering previously entered publication values after failure.</li>
+<li>Separating technical preflight validation from user-authored publication values.</li>
+</ul>
+<h2>What changes in the web application</h2>
+<p>The old CLI presents questions sequentially. The new app makes the entire document visible and editable immediately. Clicking a placeholder brings its hint and example into a stable contextual panel. A change updates the rendered result without requiring a wizard restart.</p>
+<p>The prior PowerShell recovery idea proposed a hashed temporary JSON draft for a given project path. In the web app, the analogous requirement is <strong>per-document autosave plus recoverable revision history</strong>, not a temp-file cache. Use IndexedDB/other configured storage behind a repository API, keep in-memory editing state on failure, and do not store unrelated technical confirmations as user content.</p>
+<h2>Failure-mode reminder</h2>
+<p>An earlier transcript described a PowerShell RSS update failure, reported as <code>Expected exactly one RSS lastBuildDate, found 0</code> after the user had already entered a complete description. The earlier analysis attributed this to CRLF-sensitive regular expression handling and suggested preflight validation before requesting content. The browser app should carry forward the general UX principle: validate known structural prerequisites early, preserve draft answers continuously, and emit actionable errors without discarding work. This document is not a fresh rerun or independent verification of that specific PowerShell diagnosis.</p>
+</section></main></body></html>
