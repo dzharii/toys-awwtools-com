@@ -27,7 +27,7 @@ Prefer modern HTML, CSS, Web Components, and browser APIs when they can satisfy 
 - Use Web Components and their modern platform capabilities as the preferred component approach.
 - Prefer native HTML/CSS behavior over a custom JavaScript equivalent when it meets the functional and accessibility requirements.
 - Target current Chromium-based browsers, especially Chrome, first. Support current Firefox where practical.
-- Safari support is best effort, not a default release requirement. Add narrowly scoped compatibility handling when an important workflow warrants it; do not reject useful modern features solely for Safari or older browsers.
+- Safari is a low-priority browser. Spend effort only on compatibility fixes essential to critical functionality. Otherwise, avoid Safari-specific work and do not compromise modern features for Safari support.
 - Preserve accessibility, correctness, and maintainability. Use feature detection and targeted fallbacks where warranted, not broad legacy-browser compatibility machinery.
 
 ---
