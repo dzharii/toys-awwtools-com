@@ -1,7 +1,7 @@
 /** Focus-safe nonmodal guidance. Rebuild only on field changes, not on each keystroke. */
 import { answerFor } from "../../documents/model";
 import { fieldNavigation } from "../../documents/keyboard";
-import { placeholderNames, fieldLabel } from "../model";
+import { placeholderNames } from "../model";
 import type { TemplateDefinition, TemplateVersion } from "../model";
 import { button, el, emit, shadow } from "../../../platform/ui/dom";
 export class GuidancePanel extends HTMLElement {
@@ -22,6 +22,9 @@ export class GuidancePanel extends HTMLElement {
     .navigation{display:flex;gap:7px;margin-top:15px}.navigation button{flex:1}
     .empty{font-size:13px;color:var(--muted);line-height:1.8}
     @media(max-width:1100px){.heading{display:none}.tag{margin-bottom:8px}h2{font-size:16px;line-height:1.4;margin-bottom:8px}.hint{margin-bottom:13px;font-size:12px;line-height:1.7}.examples{margin-top:18px}.keyboard{margin-top:18px}.navigation{margin-top:10px}}
+    .hint,.example,input,textarea,select{font-size:calc(14px * var(--field-scale,1))}
+    h2{font-size:calc(18px * var(--field-scale,1))}
+    :host>label{margin-bottom:18px} :host>label select{width:auto;margin-left:10px}
   `,
   );
   private body = el("div");
@@ -29,9 +32,39 @@ export class GuidancePanel extends HTMLElement {
   private control: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null = null;
   private error = el("p", "required-error");
   private composing = false;
+  private suggestions = true;
+  private size = el("select");
   constructor() {
     super();
-    this.root.append(this.body);
+    this.size.setAttribute("aria-label", "Field editor text size");
+    this.size.dataset.testid = "guided-field-editor-main-select-text-size";
+    for (const value of ["normal", "large"]) {
+      const option = el("option", "", value === "normal" ? "Normal" : "Large");
+      option.value = value;
+      this.size.append(option);
+    }
+    this.size.addEventListener("change", () =>
+      emit(this, "setting-change", { id: "fieldTextSize", value: this.size.value }),
+    );
+    this.root.append(el("label", "", "Text size", this.size), this.body);
+  }
+  preferences(suggestions: boolean, size: "normal" | "large"): void {
+    this.suggestions = suggestions;
+    this.size.value = size;
+    this.style.setProperty("--field-scale", size === "large" ? "1.25" : "1");
+    if (this.control && !(this.control instanceof HTMLSelectElement)) {
+      if (suggestions) this.control.removeAttribute("autocomplete");
+      else this.control.autocomplete = "off";
+    }
+  }
+  connectedCallback(): void {
+    this.dataset.testid = "guided-field-editor-main-panel-root";
+  }
+  clear(message = "Select a field in your document to see its guidance."): void {
+    this.currentKey = "";
+    this.control = null;
+    this.composing = false;
+    this.body.replaceChildren(el("p", "empty", message));
   }
   update(
     template: TemplateDefinition,
@@ -52,10 +85,20 @@ export class GuidancePanel extends HTMLElement {
       );
       return;
     }
-    const key = `${template.source}:${version.id}:${active}:${keyboardHelp}:${disabled}`;
+    const key = `${template.source}:${version.id}:${active}`;
     const value = answerFor(answers, active);
     if (key === this.currentKey && this.control) {
       if (this.control.value !== value) this.control.value = value;
+      this.control.disabled = disabled;
+      this.body
+        .querySelectorAll<HTMLButtonElement>(
+          '[data-testid="guided-field-editor-examples-button-use"]',
+        )
+        .forEach((use) => {
+          use.disabled = disabled;
+        });
+      const keyboard = this.body.querySelector<HTMLElement>(".keyboard");
+      if (keyboard) keyboard.hidden = !keyboardHelp;
       this.error.hidden = !field.required || !!value.trim();
       this.control.setAttribute("aria-invalid", String(field.required && !value.trim()));
       return;
@@ -68,6 +111,13 @@ export class GuidancePanel extends HTMLElement {
         ? el("textarea")
         : el("input");
     input.id = "answer";
+    input.dataset.testid =
+      input instanceof HTMLSelectElement
+        ? "guided-field-editor-main-select-answer"
+        : input instanceof HTMLTextAreaElement
+          ? "guided-field-editor-main-textarea-answer"
+          : "guided-field-editor-main-input-answer";
+    input.dataset.placeholderName = active;
     input.disabled = disabled;
     if (input instanceof HTMLInputElement) input.type = "text";
     if (input instanceof HTMLSelectElement) {
@@ -81,12 +131,14 @@ export class GuidancePanel extends HTMLElement {
       }
     }
     input.value = value;
-    input.setAttribute("aria-label", field.question);
+    if (!(input instanceof HTMLSelectElement) && !this.suggestions) input.autocomplete = "off";
+    input.setAttribute("aria-label", `$${active}: ${field.question}`);
     input.setAttribute("aria-required", String(field.required));
     input.setAttribute("aria-invalid", String(field.required && !value.trim()));
     input.setAttribute("aria-describedby", "field-hint field-error");
-    this.error = el("p", "required-error", `${fieldLabel(active)} is required.`);
+    this.error = el("p", "required-error", `$${active} is required.`);
     this.error.id = "field-error";
+    this.error.dataset.testid = "guided-field-editor-main-status-validation";
     this.error.hidden = !field.required || !!value.trim();
     const hint = el(
       "p",
@@ -121,17 +173,25 @@ export class GuidancePanel extends HTMLElement {
         event.preventDefault();
         emit(this, "placeholder-focus", { name: names[navigation.index], caret: navigation.caret });
       });
-    const examples = el("div", "examples", el("div", "label", "A little inspiration"));
+    const examples = el("div", "examples", el("div", "label", "Examples"));
     for (const example of field.examples) {
       const tools = el(
         "div",
         "example-tools",
-        button("Copy example", () => emit(this, "copy-example", example)),
+        button(
+          "Copy example",
+          () => emit(this, "copy-example", example),
+          "",
+          "guided-field-editor-examples-button-copy",
+        ),
       );
       if (!field.options.length)
         tools.append(
-          button("Use example ↗", () =>
-            emit(this, "placeholder-change", { name: active, value: example }),
+          button(
+            "Use example ↗",
+            () => emit(this, "placeholder-change", { name: active, value: example }),
+            "",
+            "guided-field-editor-examples-button-use",
           ),
         );
       examples.append(el("div", "example", el("span", "", example), tools));
@@ -142,19 +202,21 @@ export class GuidancePanel extends HTMLElement {
       "action",
     );
     previous.disabled = currentIndex <= 0;
+    previous.dataset.testid = "guided-field-editor-main-button-previous";
     const next = button(
       "Next →",
       () => emit(this, "placeholder-focus", { name: names[currentIndex + 1], caret: "start" }),
       "action",
     );
     next.disabled = currentIndex >= names.length - 1;
+    next.dataset.testid = "guided-field-editor-main-button-next";
     const label = el("label", "", `Your answer${field.required ? "" : " · optional"}`);
     label.htmlFor = input.id;
     this.body.replaceChildren(
       el(
         "div",
         "heading",
-        el("span", "label", "Field notes"),
+        el("span", "label", "Field editor"),
         el("span", "step", `${currentIndex + 1} / ${names.length}`),
       ),
       el("div", "tag", `$${active}`),
@@ -165,25 +227,40 @@ export class GuidancePanel extends HTMLElement {
       this.error,
       el("div", "navigation", previous, next),
       ...(field.examples.length ? [examples] : []),
-      ...(keyboardHelp
-        ? [
-            el(
-              "div",
-              "keyboard",
-              "← → Move between fields at text edges.",
-              el("br"),
-              "↑ ↓ Previous / next field. Tab moves normally.",
-              el("br"),
-              "Multiline fields keep native ↑ ↓ movement.",
-            ),
-          ]
-        : []),
+      ...[
+        el(
+          "div",
+          "keyboard",
+          "← → Move between fields at text edges.",
+          el("br"),
+          "↑ ↓ Previous / next field. Tab moves normally.",
+          el("br"),
+          "Multiline fields keep native ↑ ↓ movement.",
+        ),
+      ],
     );
+    this.body
+      .querySelector(".tag")!
+      .setAttribute("data-testid", "guided-field-editor-main-label-identifier");
+    this.body
+      .querySelector(".keyboard")
+      ?.setAttribute("data-testid", "guided-field-editor-main-region-keyboard-help");
+    this.body.querySelector<HTMLElement>(".keyboard")!.hidden = !keyboardHelp;
     this.control = input;
+    this.body
+      .querySelectorAll<HTMLButtonElement>(
+        '[data-testid="guided-field-editor-examples-button-use"]',
+      )
+      .forEach((use) => {
+        use.disabled = disabled;
+      });
   }
-  focusEditor(caret: "start" | "end" = "end"): void {
+  focusEditor(caret?: "start" | "end"): void {
     this.control?.focus({ preventScroll: true });
-    if (this.control instanceof HTMLInputElement || this.control instanceof HTMLTextAreaElement) {
+    if (
+      caret &&
+      (this.control instanceof HTMLInputElement || this.control instanceof HTMLTextAreaElement)
+    ) {
       const offset = caret === "end" ? this.control.value.length : 0;
       this.control.setSelectionRange(offset, offset);
     }

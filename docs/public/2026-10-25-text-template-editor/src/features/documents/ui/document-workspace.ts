@@ -3,9 +3,22 @@ import { button, el, emit } from "../../../platform/ui/dom";
 import { displayedAnswer, renderTemplate } from "../../templates/renderer";
 import { placeholderNames } from "../../templates/model";
 import type { WorkingDocument } from "../model";
+import { VersionPicker } from "../../templates/ui/version-picker";
 export class DocumentWorkspace extends HTMLElement {
-  private titleInput = el("input", "document-title");
-  private styleSelect = el("select", "style-select");
+  private titleInput = el("h2", "document-title");
+  private styles = new VersionPicker();
+  private size = el("select");
+  private archived = button(
+    "Archived · Restore",
+    () => emit(this, "document-archive", { working: this.current, archived: false }),
+    "secondary",
+  );
+  private rename = button(
+    "Rename",
+    () => emit(this, "document-request-rename", this.current),
+    "text-button",
+    "guided-documents-main-button-rename",
+  );
   private guided = el("div", "guided-prose");
   private result = el("div", "result-text");
   private progress = el("span", "progress");
@@ -18,63 +31,88 @@ export class DocumentWorkspace extends HTMLElement {
   private current: WorkingDocument | null = null;
   constructor() {
     super();
-    this.titleInput.setAttribute("aria-label", "Document title");
-    this.titleInput.addEventListener("input", () =>
-      emit(this, "document-rename", this.titleInput.value),
-    );
-    this.styleSelect.setAttribute("aria-label", "Writing style");
-    this.styleSelect.addEventListener("change", () =>
-      emit(this, "template-version-select", this.styleSelect.value),
+    for (const [element, id] of [
+      [this.titleInput, "guided-documents-main-label-title"],
+      [this.guided, "guided-documents-main-region-guided-text"],
+      [this.result, "guided-documents-result-region-content"],
+      [this.progress, "guided-documents-main-status-progress"],
+      [this.count, "guided-documents-result-status-word-count"],
+      [this.save, "guided-documents-main-status-save"],
+      [this.gate, "guided-documents-result-status-validation"],
+      [this.copy, "guided-documents-result-button-copy-text"],
+      [this.rich, "guided-documents-result-button-copy-rich"],
+    ] as const)
+      element.dataset.testid = id;
+    this.size.setAttribute("aria-label", "Document text size");
+    this.size.dataset.testid = "guided-documents-main-select-text-size";
+    this.archived.dataset.testid = "guided-documents-main-button-restore";
+    for (const value of ["normal", "large"]) {
+      const option = el("option", "", value === "normal" ? "Normal" : "Large");
+      option.value = value;
+      this.size.append(option);
+    }
+    this.size.addEventListener("change", () =>
+      emit(this, "setting-change", { id: "documentTextSize", value: this.size.value }),
     );
     this.guided.setAttribute("aria-label", "Guided document");
     this.result.setAttribute("aria-label", "Generated result");
     this.save.setAttribute("role", "status");
-    const exportMenu = el("details", "export-menu", el("summary", "secondary", "Export ↓"));
+    const exportMenu = el("div", "export-menu");
+    exportMenu.dataset.testid = "guided-documents-result-region-export";
+    const exportOptions = el("div", "export-options");
+    exportOptions.id = "result-export-options";
+    exportOptions.popover = "auto";
+    exportOptions.setAttribute("role", "group");
+    exportOptions.setAttribute("aria-label", "Export formats");
+    const exportTrigger = el("button", "secondary export-trigger", "Export ↓");
+    exportTrigger.type = "button";
+    exportTrigger.dataset.testid = "guided-documents-result-button-export";
+    exportTrigger.popoverTargetElement = exportOptions;
+    exportTrigger.popoverTargetAction = "toggle";
+    exportMenu.append(exportTrigger, exportOptions);
     for (const format of ["txt", "md", "html"] as const) {
       const action = button(
         format === "txt" ? "Text (.txt)" : format === "md" ? "Markdown (.md)" : "HTML (.html)",
         () => {
-          exportMenu.open = false;
+          exportOptions.hidePopover();
           emit(this, "result-export", format);
         },
       );
+      action.dataset.testid = `guided-documents-result-button-export-${format}`;
       this.exports.push(action);
-      exportMenu.append(action);
+      exportOptions.append(action);
     }
     this.append(
       el(
         "div",
         "document-heading",
-        this.titleInput,
-        el("div", "document-metadata", this.save, el("span", "metadata-divider", "·"), this.count),
+        el("div", "document-title-row", this.titleInput, this.rename, this.archived),
+        el("div", "document-metadata", this.save, this.count),
       ),
-      el("div", "style-row", el("label", "eyebrow", "Writing style"), this.styleSelect),
+      this.styles,
+      el("label", "reading-control", "Document text size", this.size),
       el(
         "section",
         "writing-section",
-        el("div", "section-heading", el("span", "eyebrow", "01 / Shape your words"), this.progress),
-        el(
-          "p",
-          "section-description",
-          "Select a highlighted field. A few thoughtful answers make it yours.",
-        ),
+        el("div", "section-heading", el("span", "eyebrow", "Template fields"), this.progress),
+        el("p", "section-description", "Select a field to edit its answer."),
         this.guided,
       ),
       el(
         "section",
         "result-section",
-        el(
-          "div",
-          "section-heading",
-          el("span", "eyebrow", "02 / Your finished words"),
-          el("span", "result-label", "LIVE PREVIEW"),
-        ),
+        el("div", "section-heading", el("span", "eyebrow", "Generated result")),
         this.result,
         this.gate,
         el("div", "result-actions", this.copy, this.rich, exportMenu),
       ),
-      el("div", "document-footnote", "No blank-page pressure. Just one field at a time."),
     );
+  }
+  connectedCallback(): void {
+    this.dataset.testid = "guided-documents-main-region-workspace";
+  }
+  preferences(size: "normal" | "large"): void {
+    this.size.value = size;
   }
   update(working: WorkingDocument, mode: string): void {
     const record = working.record;
@@ -82,21 +120,12 @@ export class DocumentWorkspace extends HTMLElement {
     const version = template.versions.find((item) => item.id === record.templateVersionId)!;
     const names = placeholderNames(version);
     const generated = renderTemplate(template, version, record.answers);
-    const changed = this.current !== working;
     this.current = working;
-    if (this.titleInput.value !== record.title) this.titleInput.value = record.title;
-    this.titleInput.disabled = working.origin !== mode;
-    if (changed) {
-      this.styleSelect.replaceChildren(
-        ...template.versions.map((item) => {
-          const option = el("option", "", item.name);
-          option.value = item.id;
-          return option;
-        }),
-      );
-    }
-    this.styleSelect.value = record.templateVersionId;
-    this.styleSelect.disabled = working.origin !== mode;
+    this.titleInput.textContent = record.title;
+    this.styles.update(template, record.templateVersionId, working.origin !== mode);
+    this.archived.hidden = !record.archivedAt;
+    this.archived.disabled = working.origin !== mode;
+    this.rename.disabled = working.origin !== mode;
     const completion = names.filter(
       (name) => displayedAnswer(template.placeholders[name]!, record.answers[name]) !== undefined,
     ).length;
@@ -111,17 +140,19 @@ export class DocumentWorkspace extends HTMLElement {
         const field = template.placeholders[part.name]!;
         const value = displayedAnswer(field, record.answers[part.name]);
         const token = button(
-          value ?? part.name.replaceAll("-", " "),
+          value ?? `$${part.name}`,
           () => emit(this, "placeholder-focus", { name: part.name }),
           "placeholder",
         );
         token.dataset.name = part.name;
+        token.dataset.testid = "guided-documents-main-button-placeholder";
+        token.dataset.placeholderName = part.name;
         token.classList.toggle("active", working.activePlaceholder === part.name);
         token.classList.toggle("filled", value !== undefined);
         token.classList.toggle("missing", field.required && value === undefined);
         token.setAttribute(
           "aria-label",
-          `Edit ${part.name}: ${value ?? (field.required ? "required" : "optional")}`,
+          `Edit $${part.name}: ${value ?? (field.required ? "required" : "optional")}`,
         );
         token.setAttribute("aria-pressed", String(working.activePlaceholder === part.name));
         token.title = `${field.question}${field.required && !value ? " Required." : ""}`;
@@ -135,9 +166,20 @@ export class DocumentWorkspace extends HTMLElement {
     this.rich.setAttribute("aria-describedby", "result-gate");
     for (const action of this.exports) action.disabled = !generated.canCopy;
     this.gate.id = "result-gate";
-    this.gate.textContent = generated.canCopy
-      ? "Ready when you are. Copy it, or take a file with you."
-      : `Fill ${generated.unresolved.length === 1 ? "the remaining required field" : `the ${generated.unresolved.length} remaining required fields`} to copy or export.`;
+    this.gate.replaceChildren(
+      generated.canCopy
+        ? "Ready to copy or export."
+        : `Complete ${generated.unresolved.length} required ${generated.unresolved.length === 1 ? "field" : "fields"} to copy or export. `,
+    );
+    if (!generated.canCopy)
+      this.gate.append(
+        button(
+          "Go to first unresolved field",
+          () => emit(this, "placeholder-focus", { name: generated.unresolved[0] }),
+          "text-button",
+          "guided-documents-result-button-first-unresolved",
+        ),
+      );
     this.count.textContent = `${generated.text.trim().split(/\s+/).filter(Boolean).length} words`;
     const statuses = {
       temporary: "No draft yet",

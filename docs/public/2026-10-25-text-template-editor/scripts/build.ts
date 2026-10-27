@@ -1,6 +1,7 @@
 /** Reproducible static build. Templates are validated before any output is replaced. */
-import { cp, mkdir, rm } from "node:fs/promises";
-import { resolve } from "node:path";
+import { cp, mkdir, rm, readdir, readFile } from "node:fs/promises";
+import { relative, resolve, sep } from "node:path";
+import { createHash } from "node:crypto";
 import { parseTemplate } from "../src/features/templates/parser";
 import { validateManifest } from "../src/features/templates/loader";
 
@@ -45,5 +46,48 @@ await cp(
 await cp(
   resolve(root, "src", "vendor", "microlight", "LICENSE"),
   resolve(outdir, "licenses", "microlight-LICENSE.txt"),
+);
+async function inputFiles(directory: string): Promise<string[]> {
+  const entries = await readdir(directory, { withFileTypes: true });
+  return (
+    await Promise.all(
+      entries.map((entry) => {
+        const path = resolve(directory, entry.name);
+        return entry.isDirectory() ? inputFiles(path) : [path];
+      }),
+    )
+  ).flat();
+}
+const inputs: Record<string, string> = {};
+const files = [
+  ...(
+    await Promise.all(
+      ["src", "templates", "assets", "scripts"].map((name) => inputFiles(resolve(root, name))),
+    )
+  ).flat(),
+  ...[
+    "index.html",
+    "package.json",
+    "bun.lock",
+    "tsconfig.json",
+    "tsconfig.worker.json",
+    "tsconfig.tools.json",
+    "THIRD-PARTY-NOTICES.md",
+  ].map((name) => resolve(root, name)),
+].sort();
+for (const file of files) {
+  inputs[relative(root, file).split(sep).join("/")] = createHash("sha256")
+    .update(await readFile(file))
+    .digest("hex");
+}
+const outputs: Record<string, string> = {};
+for (const file of (await inputFiles(outdir)).sort()) {
+  outputs[relative(outdir, file).split(sep).join("/")] = createHash("sha256")
+    .update(await readFile(file))
+    .digest("hex");
+}
+await Bun.write(
+  resolve(outdir, "build-info.json"),
+  JSON.stringify({ format: 1, builtAt: new Date().toISOString(), inputs, outputs }, null, 2) + "\n",
 );
 console.info(`Built ${manifest.length} templates and browser/worker bundles in dist.`);

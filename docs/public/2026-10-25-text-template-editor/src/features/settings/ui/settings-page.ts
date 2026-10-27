@@ -15,12 +15,19 @@ export class SettingsPage extends HTMLElement {
   `,
   );
   private controls = new Map<keyof Settings, HTMLInputElement | HTMLSelectElement>();
-  constructor() {
+  constructor(private compact = false) {
     super();
-    for (const category of new Set(settingsSchema.map((item) => item.category))) {
+    const definitions = settingsSchema.filter(
+      (item) =>
+        !compact ||
+        ["theme", "density", "browserSuggestions", "documentTextSize", "fieldTextSize"].includes(
+          item.id,
+        ),
+    );
+    for (const category of new Set(definitions.map((item) => item.category))) {
       const section = el("section", "category", el("h2", "", category));
-      for (const definition of settingsSchema.filter((item) => item.category === category)) {
-        const id = `setting-${definition.id}`;
+      for (const definition of definitions.filter((item) => item.category === category)) {
+        const id = `setting-${compact ? "compact-" : ""}${definition.id}`;
         const label = el(
           "label",
           "",
@@ -30,6 +37,8 @@ export class SettingsPage extends HTMLElement {
         label.htmlFor = id;
         const control = definition.control === "select" ? el("select") : el("input");
         control.id = id;
+        const name = definition.id.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+        control.dataset.testid = `guided-settings-${compact ? "compact" : "main"}-${definition.control === "select" ? "select" : "input"}-${name}`;
         control.setAttribute("aria-label", definition.title);
         if (control instanceof HTMLInputElement) {
           control.type = definition.control === "checkbox" ? "checkbox" : "number";
@@ -46,6 +55,7 @@ export class SettingsPage extends HTMLElement {
         }
         const error = el("span", "error");
         error.id = `${id}-error`;
+        error.dataset.testid = "guided-settings-main-status-validation";
         control.setAttribute("aria-describedby", error.id);
         control.addEventListener("change", () => {
           if (!control.checkValidity()) {
@@ -68,6 +78,9 @@ export class SettingsPage extends HTMLElement {
       }
       this.root.append(section);
     }
+  }
+  connectedCallback(): void {
+    this.dataset.testid = `guided-settings-${this.compact ? "compact" : "main"}-panel-root`;
   }
   update(settings: Settings): void {
     for (const [id, control] of this.controls) {

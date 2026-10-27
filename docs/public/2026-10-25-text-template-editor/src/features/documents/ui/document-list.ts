@@ -1,6 +1,7 @@
 /** Shadow-DOM navigation emits intentions; it never accesses persistence. */
 import { button, el, emit, shadow } from "../../../platform/ui/dom";
 import type { WorkingDocument } from "../model";
+import type { DocumentFilter } from "../filter";
 export class DocumentList extends HTMLElement {
   private root = shadow(
     this,
@@ -26,6 +27,9 @@ export class DocumentList extends HTMLElement {
     .footer-button:hover,.footer-button.active{background:var(--selected);color:var(--text)}
     .privacy{font-size:10px;color:var(--muted);padding:17px 14px 0;display:flex;gap:7px;align-items:center}.dot{width:5px;height:5px;border-radius:50%;background:var(--accent)}
     @media(hover:none){.remove{opacity:1}}
+    .row{flex-wrap:wrap}.row>.link{flex-basis:100%}.row-actions{display:flex;gap:2px;padding:0 7px 7px;width:100%}
+    .row-actions button{font-size:11px;min-height:32px;padding:5px 7px;opacity:1;width:auto}
+    .filter{width:100%;margin:8px 0 10px;font-size:12px}
   `,
   );
   private list = el("nav");
@@ -37,48 +41,61 @@ export class DocumentList extends HTMLElement {
       title: HTMLSpanElement;
       metadata: HTMLSpanElement;
       remove: HTMLButtonElement;
+      archive: HTMLButtonElement;
+      rename: HTMLButtonElement;
     }
   >();
-  private empty = el(
-    "div",
-    "empty",
-    "Your words will live here.",
-    el("br"),
-    "Start with a template. Make it yours.",
-  );
+  private empty = el("div", "empty", "No documents in this filter.");
   private count = el("span");
-  private author = button(
-    "Template Authoring",
-    () => emit(this, "open-authoring"),
-    "footer-button",
-  );
+  private filterSelect = el("select", "filter");
+  private author = button("Template drafts", () => emit(this, "open-authoring"), "footer-button");
   private settings = button("Settings", () => emit(this, "open-settings"), "footer-button");
   constructor() {
     super();
+    this.list.dataset.testid = "guided-documents-navigation-list-documents";
+    this.author.dataset.testid = "guided-authoring-navigation-button-open";
+    this.settings.dataset.testid = "guided-settings-navigation-button-open";
     this.list.setAttribute("aria-label", "Document history");
+    this.filterSelect.setAttribute("aria-label", "Document filter");
+    this.filterSelect.dataset.testid = "guided-documents-navigation-select-filter";
+    for (const value of ["active", "archived", "recent"]) {
+      const option = el("option", "", value[0]!.toUpperCase() + value.slice(1));
+      option.value = value;
+      this.filterSelect.append(option);
+    }
+    this.filterSelect.addEventListener("change", () =>
+      emit(this, "document-filter-change", this.filterSelect.value),
+    );
     const brand = el("div", "brand", el("span", "mark", "[g]"), "Guided");
     this.root.append(
       brand,
-      el("div", "edition", "A little structure for your thoughts."),
-      button("+   New Document", () => emit(this, "new-document"), "new"),
-      el("div", "section-label label", el("span", "", "Your documents"), this.count),
-      this.list,
-      el(
-        "footer",
-        "",
-        this.author,
-        this.settings,
-        el("div", "privacy", el("span", "dot"), "Private. Local. Yours."),
+      button(
+        "+   New Document",
+        () => emit(this, "new-document"),
+        "new",
+        "guided-documents-main-button-new",
       ),
+      el("div", "section-label label", el("span", "", "Your documents"), this.count),
+      this.filterSelect,
+      this.list,
+      el("footer", "", this.author, this.settings),
     );
+  }
+  connectedCallback(): void {
+    this.dataset.testid = "guided-documents-navigation-region-root";
   }
   update(
     documents: WorkingDocument[],
     active: WorkingDocument | null,
     page: string,
     mode: string,
+    filter: DocumentFilter = "active",
   ): void {
+    this.filterSelect.value = filter;
     this.count.textContent = String(documents.length);
+    const titleCounts = new Map<string, number>();
+    for (const { record } of documents)
+      titleCounts.set(record.title, (titleCounts.get(record.title) ?? 0) + 1);
     const focused = this.root.activeElement;
     for (const [working, entry] of this.rows) {
       if (!documents.includes(working)) {
@@ -94,11 +111,35 @@ export class DocumentList extends HTMLElement {
         const title = el("span", "title");
         const metadata = el("span", "meta");
         open.append(title, metadata);
-        const remove = button("×", () => emit(this, "document-delete", working), "remove");
-        entry = { row: el("div", "row", open, remove), open, title, metadata, remove };
+        const archive = button("Archive", () =>
+          emit(this, "document-archive", { working, archived: !working.record.archivedAt }),
+        );
+        const rename = button("Rename", () => emit(this, "document-request-rename", working));
+        const remove = button(
+          "Delete",
+          () => emit(this, "document-delete", working),
+          "remove danger",
+        );
+        archive.dataset.testid = "guided-documents-navigation-button-archive";
+        rename.dataset.testid = "guided-documents-navigation-button-rename";
+        open.dataset.testid = "guided-documents-navigation-button-open";
+        title.dataset.testid = "guided-documents-navigation-label-title";
+        remove.dataset.testid = "guided-documents-navigation-button-delete";
+        entry = {
+          row: el("div", "row", open, el("div", "row-actions", archive, rename, remove)),
+          open,
+          title,
+          metadata,
+          remove,
+          archive,
+          rename,
+        };
+        entry.row.dataset.testid = "guided-documents-navigation-list-item-document";
         this.rows.set(working, entry);
       }
       const selected = page === "document" && active === working;
+      entry.row.dataset.documentId = working.record.id;
+      entry.row.dataset.storageMode = working.origin;
       entry.row.classList.toggle("active", selected);
       if (selected) entry.open.setAttribute("aria-current", "page");
       else entry.open.removeAttribute("aria-current");
@@ -108,11 +149,24 @@ export class DocumentList extends HTMLElement {
           month: "short",
           day: "numeric",
         }) +
+        ((titleCounts.get(working.record.title) ?? 0) > 1
+          ? ` · ${new Date(working.record.createdAt).toLocaleTimeString()} · ${working.record.id.slice(0, 8)}`
+          : "") +
         (working.origin !== mode ? ` · ${working.origin}` : "") +
+        (working.record.archivedAt ? " · Archived" : "") +
         (["dirty", "failed", "conflict"].includes(working.status) ? " · Unsaved" : "");
       entry.remove.setAttribute(
         "aria-label",
         `Delete ${working.record.title || "Untitled document"}`,
+      );
+      entry.archive.textContent = working.record.archivedAt ? "Restore" : "Archive";
+      entry.remove.disabled =
+        entry.archive.disabled =
+        entry.rename.disabled =
+          working.origin !== mode;
+      entry.archive.setAttribute(
+        "aria-label",
+        `${working.record.archivedAt ? "Restore" : "Archive"} ${working.record.title}`,
       );
       if (this.list.children[index] !== entry.row) {
         this.list.insertBefore(entry.row, this.list.children[index] ?? null);

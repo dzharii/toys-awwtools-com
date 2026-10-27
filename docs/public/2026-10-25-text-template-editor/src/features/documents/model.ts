@@ -16,6 +16,7 @@ export interface DocumentRecord extends StoredRecord {
   templateSnapshot: TemplateDefinition;
   answers: Record<string, string>;
   relatedGroupId: string;
+  archivedAt?: string;
 }
 export type SaveStatus = "temporary" | "dirty" | "saving" | "saved" | "failed" | "conflict";
 export interface WorkingDocument {
@@ -54,6 +55,8 @@ export function decodeDocument(value: unknown): DocumentRecord {
     typeof value.templateId !== "string" ||
     typeof value.templateVersionId !== "string" ||
     typeof value.relatedGroupId !== "string" ||
+    (value.archivedAt !== undefined &&
+      (typeof value.archivedAt !== "string" || !Number.isFinite(Date.parse(value.archivedAt)))) ||
     !isRecord(value.answers) ||
     !Object.values(value.answers).every((answer) => typeof answer === "string") ||
     !isRecord(value.templateSnapshot) ||
@@ -85,6 +88,7 @@ export function decodeDocument(value: unknown): DocumentRecord {
     relatedGroupId: value.relatedGroupId,
     templateSnapshot: parsed.template,
     answers: Object.fromEntries(Object.entries(value.answers)) as Record<string, string>,
+    ...(typeof value.archivedAt === "string" ? { archivedAt: value.archivedAt } : {}),
   };
 }
 export function hasMeaningfulUserInput(record: DocumentRecord): boolean {

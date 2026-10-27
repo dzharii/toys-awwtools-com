@@ -11,6 +11,7 @@ import { logger } from "../../platform/diagnostics/logger";
 import type { Repository } from "../../platform/storage/repository";
 import { hasMeaningfulUserInput } from "./model";
 import type { DocumentRecord, WorkingDocument } from "./model";
+import { localCopyTitle, validatedTitle } from "../../platform/ui/titles";
 export type DocumentChange = "navigation" | "content" | "state";
 export class DocumentService {
   active: WorkingDocument | null = null;
@@ -19,6 +20,10 @@ export class DocumentService {
   loadError = "";
   private listeners = new Set<(change: DocumentChange) => void>();
   private inFlight = new Map<WorkingDocument, Promise<void>>();
+  private operations = new WeakSet<WorkingDocument>();
+  private deleted = new WeakSet<WorkingDocument>();
+  private mutationEpoch = 0;
+  private loadRequest = 0;
   private timer: ReturnType<typeof setInterval> | undefined;
   constructor(
     private repository: (mode: StorageMode) => Repository<DocumentRecord>,
@@ -38,23 +43,45 @@ export class DocumentService {
   get documents(): WorkingDocument[] {
     return [...this.working.values()]
       .filter((item) => item.record.revision > 0 || hasMeaningfulUserInput(item.record))
-      .sort((a, b) => b.record.updatedAt.localeCompare(a.record.updatedAt));
+      .sort(
+        (a, b) =>
+          b.record.updatedAt.localeCompare(a.record.updatedAt) ||
+          a.record.id.localeCompare(b.record.id),
+      );
   }
   async load(mode: StorageMode): Promise<void> {
     this.mode = mode;
+    const request = ++this.loadRequest;
+    const epoch = this.mutationEpoch;
     try {
       const records = await this.repository(mode).list();
       // Do not let a slow old-store load replace the user's current store choice.
-      if (this.mode !== mode) return;
+      if (this.mode !== mode || request !== this.loadRequest) return;
+      if (epoch !== this.mutationEpoch) return this.load(mode);
+      const ids = new Set(records.map((record) => record.id));
+      for (const [key, working] of this.working) {
+        if (working.origin !== mode || ids.has(working.record.id) || working.record.revision === 0)
+          continue;
+        if (working.status === "saved") {
+          this.deleted.add(working);
+          this.working.delete(key);
+          if (this.active === working) this.active = null;
+        } else if (!this.operations.has(working) && !this.inFlight.has(working)) {
+          working.status = "conflict";
+          working.error =
+            "This document was deleted in another tab. Preserve a local copy to keep your edits.";
+        }
+      }
       for (const record of records) {
         const key = this.key(mode, record.id);
         const existing = this.working.get(key);
         if (!existing) this.working.set(key, this.fromRecord(record, mode));
-        else if (existing.status === "saved") existing.record = record;
+        else if (existing.status === "saved" && record.revision >= existing.record.revision)
+          existing.record = record;
       }
       this.loadError = "";
     } catch (error) {
-      if (this.mode !== mode) return;
+      if (this.mode !== mode || request !== this.loadRequest) return;
       this.loadError = errorMessage(error);
       logger.error("documents.load.failed", { storageMode: mode });
     }
@@ -67,12 +94,7 @@ export class DocumentService {
       status: "saved",
       error: "",
       changeId: 0,
-      activePlaceholder:
-        placeholderNames(
-          record.templateSnapshot.versions.find(
-            (version) => version.id === record.templateVersionId,
-          )!,
-        )[0] ?? "",
+      activePlaceholder: "",
     };
   }
   configureAutosave(seconds: number): void {
@@ -113,7 +135,7 @@ export class DocumentService {
       status: "temporary",
       changeId: 0,
       error: "",
-      activePlaceholder: placeholderNames(version)[0] ?? "",
+      activePlaceholder: "",
     };
     this.working.set(this.key(working.origin, record.id), working);
     this.active = working;
@@ -153,13 +175,16 @@ export class DocumentService {
         "UNKNOWN_PLACEHOLDER",
         "This field does not belong to the active writing style.",
       );
+    if (working.record.answers[name] === value) return;
     working.record.answers = { ...working.record.answers, [name]: value };
     this.changed(working);
   }
-  rename(title: string): void {
-    if (!this.active || this.active.origin !== this.mode) return;
-    this.active.record.title = title;
-    this.changed(this.active);
+  rename(title: string, working = this.active): void {
+    if (!working || working.origin !== this.mode || this.deleted.has(working)) return;
+    const normalized = validatedTitle(title);
+    if (working.record.title === normalized) return;
+    working.record.title = normalized;
+    this.changed(working);
   }
   private changed(working: WorkingDocument): void {
     working.changeId++;
@@ -179,6 +204,7 @@ export class DocumentService {
     await Promise.all([...this.working.values()].map((item) => this.flush(item)));
   }
   async flush(working: WorkingDocument): Promise<void> {
+    if (this.operations.has(working) || this.deleted.has(working)) return;
     const existing = this.inFlight.get(working);
     if (existing) {
       await existing;
@@ -198,6 +224,7 @@ export class DocumentService {
     this.inFlight.delete(working);
   }
   private async saveSnapshot(working: WorkingDocument): Promise<void> {
+    this.mutationEpoch++;
     const changeId = working.changeId;
     const snapshot = structuredClone(working.record);
     working.status = "saving";
@@ -221,6 +248,7 @@ export class DocumentService {
         conflict: working.status === "conflict",
       });
     }
+    this.mutationEpoch++;
     this.emit("state");
   }
   async delete(working: WorkingDocument): Promise<void> {
@@ -229,12 +257,61 @@ export class DocumentService {
         "INACTIVE_STORE",
         "Switch to this document's storage mode before deleting it.",
       );
-    await this.inFlight.get(working);
-    if (working.record.revision > 0)
-      await this.repository(working.origin).delete(working.record.id, working.record.revision);
-    this.working.delete(this.key(working.origin, working.record.id));
-    if (this.active === working) this.active = null;
-    this.emit("navigation");
+    this.beginOperation(working);
+    try {
+      await this.inFlight.get(working);
+      if (working.record.revision > 0)
+        await this.repository(working.origin).delete(working.record.id, working.record.revision);
+      this.deleted.add(working);
+      this.working.delete(this.key(working.origin, working.record.id));
+      if (this.active === working) this.active = null;
+      this.emit("navigation");
+    } finally {
+      this.operations.delete(working);
+      this.mutationEpoch++;
+    }
+  }
+  private beginOperation(working: WorkingDocument): void {
+    if (this.operations.has(working) || this.deleted.has(working))
+      throw new AppError(
+        "DOCUMENT_BUSY",
+        "This document is already being changed. Wait and retry.",
+      );
+    this.operations.add(working);
+    this.mutationEpoch++;
+  }
+  async setArchived(working: WorkingDocument, archived: boolean): Promise<void> {
+    if (working.origin !== this.mode)
+      throw new AppError("INACTIVE_STORE", "Switch to this document's storage mode first.");
+    this.beginOperation(working);
+    try {
+      await this.inFlight.get(working);
+      if (working.status === "conflict")
+        throw new AppError(
+          "SAVE_CONFLICT",
+          "Resolve the save conflict before archiving or restoring.",
+        );
+      if (!!working.record.archivedAt === archived) return;
+      const changeId = working.changeId;
+      const snapshot = structuredClone(working.record);
+      if (archived) snapshot.archivedAt = this.now();
+      else delete snapshot.archivedAt;
+      const saved = await this.repository(working.origin).save(snapshot, snapshot.revision);
+      working.record.revision = saved.revision;
+      if (saved.archivedAt) working.record.archivedAt = saved.archivedAt;
+      else delete working.record.archivedAt;
+      working.status = changeId === working.changeId ? "saved" : "dirty";
+      working.error = "";
+    } catch (error) {
+      working.status =
+        error instanceof AppError && error.code === "SAVE_CONFLICT" ? "conflict" : "failed";
+      working.error = errorMessage(error);
+      throw error;
+    } finally {
+      this.operations.delete(working);
+      this.mutationEpoch++;
+      this.emit("state");
+    }
   }
   preserveLocalCopy(): void {
     const current = this.active;
@@ -243,7 +320,7 @@ export class DocumentService {
     record.id = this.id();
     record.relatedGroupId = this.id();
     record.revision = 0;
-    record.title = `${record.title || "Untitled"} (local copy)`;
+    record.title = localCopyTitle(record.title);
     record.createdAt = this.now();
     record.updatedAt = record.createdAt;
     const working = { ...this.fromRecord(record, this.mode), status: "dirty" as const };

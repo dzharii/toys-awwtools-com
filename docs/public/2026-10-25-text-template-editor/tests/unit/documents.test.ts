@@ -6,6 +6,8 @@ import { MemoryRepository } from "../../src/platform/storage/repository";
 import type { Repository } from "../../src/platform/storage/repository";
 import { AppError } from "../../src/platform/errors";
 import { parseTemplate } from "../../src/features/templates/parser";
+import { validatedTitle } from "../../src/platform/ui/titles";
+import { filteredDocuments } from "../../src/features/documents/filter";
 const template = parseTemplate(
   "TEMPLATE: Shared\nVERSION: One\n  TEXT:\n    {{$name}}\nVERSION: Two\n  TEXT:\n    Hello {{$name}}\n$name: Name?",
 ).template!;
@@ -28,6 +30,112 @@ describe("document lifecycle", () => {
     await service.flushAll();
     expect(await repository.list()).toHaveLength(0);
     expect(service.documents).toHaveLength(0);
+  });
+
+  test("rename validates Unicode code points, preserves internal spaces and avoids no-op writes", async () => {
+    const { service, repository } = setup();
+    const title = "\u{1F600}".repeat(200);
+    service.rename(title);
+    await service.flushAll();
+    const revision = service.active!.record.revision;
+    service.rename(`  ${title}  `);
+    await service.flushAll();
+    expect(service.active!.record.revision).toBe(revision);
+    expect((await repository.list())[0]!.title).toBe(title);
+    expect(validatedTitle("  A  B: C  ")).toBe("A  B: C");
+    expect(() => service.rename(title + "a")).toThrow("200");
+    expect(() => service.rename(" \t ")).toThrow("nonempty");
+  });
+  test("archive and restore persist latest answers without masquerading as content edits", async () => {
+    const { service, repository } = setup();
+    service.updateAnswer("name", "Latest");
+    const working = service.active!;
+    const updatedAt = working.record.updatedAt;
+    await service.setArchived(working, true);
+    expect((await repository.list())[0]).toMatchObject({
+      id: working.record.id,
+      updatedAt,
+      answers: { name: "Latest" },
+    });
+    expect(working.record.archivedAt).toBeDefined();
+    expect(filteredDocuments(service.documents, "active", 10)).toHaveLength(0);
+    expect(filteredDocuments(service.documents, "archived", 10)).toHaveLength(1);
+    await service.setArchived(working, false);
+    expect(working.record.archivedAt).toBeUndefined();
+    expect(working.record.updatedAt).toBe(updatedAt);
+  });
+  test("archive waits for an older save and captures newer coherent answers", async () => {
+    const repository = new MemoryRepository<DocumentRecord>();
+    let release!: () => void,
+      writes = 0;
+    const { service } = setup({
+      list: () => repository.list(),
+      get: (id) => repository.get(id),
+      delete: (id, revision) => repository.delete(id, revision),
+      save: async (record, revision) => {
+        if (++writes === 1)
+          await new Promise<void>((resolve) => {
+            release = resolve;
+          });
+        return repository.save(record, revision);
+      },
+    });
+    service.updateAnswer("name", "Older");
+    const first = service.flushAll();
+    const archive = service.setArchived(service.active!, true);
+    service.updateAnswer("name", "Newest");
+    release();
+    await Promise.all([first, archive]);
+    expect((await repository.list())[0]!.answers.name).toBe("Newest");
+    expect((await repository.list())[0]!.archivedAt).toBeDefined();
+  });
+  test("delete blocks queued autosaves from reviving the same identity", async () => {
+    const repository = new MemoryRepository<DocumentRecord>();
+    let release!: () => void,
+      writes = 0;
+    const { service } = setup({
+      list: () => repository.list(),
+      get: (id) => repository.get(id),
+      delete: (id, revision) => repository.delete(id, revision),
+      save: async (record, revision) => {
+        if (++writes === 1)
+          await new Promise<void>((resolve) => {
+            release = resolve;
+          });
+        return repository.save(record, revision);
+      },
+    });
+    service.updateAnswer("name", "Older");
+    const working = service.active!;
+    const first = service.flushAll();
+    service.updateAnswer("name", "Newer");
+    const queued = service.flushAll();
+    const deletion = service.delete(working);
+    release();
+    await Promise.all([first, queued, deletion]);
+    await service.flush(working);
+    expect(await repository.list()).toHaveLength(0);
+    expect(writes).toBe(1);
+    expect(service.active).toBeNull();
+  });
+  test("refresh reconciles deleted clean documents but retains dirty deleted work as a conflict", async () => {
+    const { service, repository } = setup();
+    service.rename("Saved");
+    await service.flushAll();
+    const working = service.active!;
+    await repository.delete(working.record.id, working.record.revision);
+    await service.load("indexeddb");
+    expect(service.active).toBeNull();
+    expect(service.documents).toHaveLength(0);
+    service.create("shared", template);
+    service.rename("Dirty");
+    await service.flushAll();
+    const dirty = service.active!;
+    service.updateAnswer("name", "Retain me");
+    await repository.delete(dirty.record.id, dirty.record.revision);
+    await service.load("indexeddb");
+    expect(dirty.status).toBe("conflict");
+    expect(dirty.record.answers.name).toBe("Retain me");
   });
   test("repeated saves update one identity and existing empty documents are retained", async () => {
     const { service, repository } = setup();
@@ -157,6 +265,7 @@ describe("document lifecycle", () => {
   test("competing revision saves conflict and retain the losing tab's local answers", async () => {
     const { service, repository } = setup();
     service.updateAnswer("name", "Initial");
+    service.rename("\u{1f642}".repeat(200));
     await service.flushAll();
     const other = new DocumentService(() => repository);
     await other.load("indexeddb");
@@ -168,6 +277,11 @@ describe("document lifecycle", () => {
     expect(other.active!.status).toBe("conflict");
     expect(other.active!.record.answers.name).toBe("Local");
     expect((await repository.list())[0]?.answers.name).toBe("Winner");
+    other.preserveLocalCopy();
+    expect([...other.active!.record.title]).toHaveLength(200);
+    expect(other.active!.record.title.endsWith(" (local copy)")).toBe(true);
+    await other.flushAll();
+    expect(await repository.list()).toHaveLength(2);
   });
   test("store switching preserves memory and never silently writes to another store", async () => {
     const first = new MemoryRepository<DocumentRecord>(),

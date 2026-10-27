@@ -4,7 +4,10 @@ export interface Settings {
   theme: "dark" | "light";
   background: "plain" | "sage" | "dusk";
   density: "comfortable" | "compact";
-  guidance: boolean;
+  browserSuggestions: boolean;
+  documentTextSize: "normal" | "large";
+  fieldTextSize: "normal" | "large";
+  recentLimit: number;
   keyboardHelp: boolean;
   storageMode: StorageMode;
   autosaveSeconds: number;
@@ -62,12 +65,35 @@ export const settingsSchema: SettingDefinition[] = [
     ]),
   },
   {
-    id: "guidance",
+    id: "browserSuggestions",
     category: "Editing",
-    title: "Show guidance",
-    description: "Keep questions and examples open beside your document.",
+    title: "Browser input suggestions",
+    description:
+      "On uses browser-controlled suggestions. Off requests autocomplete off for answers and names; browsers and extensions may still offer suggestions.",
     control: "checkbox",
     default: true,
+  },
+  ...(["documentTextSize", "fieldTextSize"] as const).map((id) => ({
+    id,
+    category: "Reading",
+    title: id === "documentTextSize" ? "Document text size" : "Field editor text size",
+    description: "Large uses 25% larger reading text. Source and exports are unchanged.",
+    control: "select" as const,
+    default: "normal",
+    options: options([
+      ["normal", "Normal"],
+      ["large", "Large"],
+    ]),
+  })),
+  {
+    id: "recentLimit",
+    category: "Documents",
+    title: "Recent document limit",
+    description: "Number of active documents shown in Recent. This does not delete documents.",
+    control: "number",
+    default: 10,
+    min: 1,
+    max: 100,
   },
   {
     id: "keyboardHelp",

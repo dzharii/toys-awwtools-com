@@ -53,6 +53,7 @@ export class SettingsService {
     const definition = settingsSchema.find((item) => item.id === id)!;
     if (!isValidSetting(definition, value))
       throw new AppError("INVALID_SETTING", `Choose a valid value for ${definition.title}.`);
+    if (this.value[id] === value && !this.error) return;
     const proposed = { ...this.value, [id]: value };
     if (!isSettings(proposed))
       throw new AppError("INVALID_SETTINGS", "These preferences are invalid.");

@@ -9,9 +9,15 @@ export function el<K extends keyof HTMLElementTagNameMap>(
   element.append(...children);
   return element;
 }
-export function button(text: string, action: () => void, className = ""): HTMLButtonElement {
+export function button(
+  text: string,
+  action: () => void,
+  className = "",
+  testId?: string,
+): HTMLButtonElement {
   const element = el("button", className, text);
   element.type = "button";
+  if (testId) element.dataset.testid = testId;
   element.addEventListener("click", action);
   return element;
 }

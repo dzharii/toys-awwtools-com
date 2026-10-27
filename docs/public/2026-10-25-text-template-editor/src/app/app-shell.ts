@@ -10,10 +10,18 @@ import { DocumentList } from "../features/documents/ui/document-list";
 import { DocumentWorkspace } from "../features/documents/ui/document-workspace";
 import { GuidancePanel } from "../features/templates/ui/guidance-panel";
 import { TemplateLoader } from "../features/templates/loader";
+import { TemplateCatalog } from "../features/templates/ui/template-catalog";
+import type { TemplateDefinition } from "../features/templates/model";
 import { placeholderNames } from "../features/templates/model";
 import { parseTemplate } from "../features/templates/parser";
 import { displayedAnswer, renderTemplate } from "../features/templates/renderer";
 import { AuthoringService } from "../features/template-authoring/service";
+import type { WorkingAuthoringDraft } from "../features/template-authoring/service";
+import { AuthoringNavigation } from "../features/template-authoring/ui/authoring-navigation";
+import {
+  replaceTemplateName,
+  templateNameLocation,
+} from "../features/template-authoring/template-name";
 import { SourceEditor } from "../features/template-authoring/ui/source-editor";
 import { SettingsService } from "../features/settings/service";
 import { SettingsPage } from "../features/settings/ui/settings-page";
@@ -29,64 +37,188 @@ import { StorageCoordinator } from "../platform/storage/coordinator";
 import { AppError, errorMessage } from "../platform/errors";
 import { logger } from "../platform/diagnostics/logger";
 import { button, el } from "../platform/ui/dom";
+import { PanelManager } from "../platform/ui/panels/panel-manager";
+import { renameDialog } from "../platform/ui/rename-dialog";
+import { documentFilterKey, filteredDocuments } from "../features/documents/filter";
+import type { DocumentFilter } from "../features/documents/filter";
 
 export class GuidedApp extends HTMLElement {
   private storage = new StorageCoordinator();
   private settings = new SettingsService();
   private templates = new TemplateLoader();
+  private catalog = new TemplateCatalog();
   private documents = new DocumentService((mode) => this.storage.documents(mode));
   private authoring = new AuthoringService((mode) => this.storage.authoring(mode));
   private page: "document" | "settings" | "authoring" = "document";
+  private context: "document" | "authoring" = "document";
   private ready = false;
+  private operationError = "";
   private navigationId = 0;
   private sidebar = new DocumentList();
   private documentWorkspace = new DocumentWorkspace();
   private guidance = new GuidancePanel();
-  private previewGuidance = new GuidancePanel();
   private settingsPage = new SettingsPage();
+  private compactSettings = new SettingsPage(true);
+  private panels!: PanelManager;
+  private historyNavigation = new AuthoringNavigation();
+  private documentFilter: DocumentFilter = "active";
+  private filterError = "";
+  private inspectedCheckpoint = "";
+  private bundledInspection?: { id: string; template: TemplateDefinition };
+  private inspectionEditor = new SourceEditor("guided-authoring-history-source");
+  private authorTitle = el("h2");
+  private authorName = el("span", "muted");
+  private nameSource = button(
+    "Go to source",
+    () => this.activeSourceEditor().focusLocation(1, 1),
+    "text-button",
+    "guided-authoring-main-button-go-to-source",
+  );
+  private authorHistorical = el("p", "history-state");
+  private authorNameButton = button(
+    "Edit template name",
+    () => void this.renameTemplateName(),
+    "text-button",
+    "guided-authoring-main-button-template-name",
+  );
+  private authorRename = button(
+    "Rename",
+    () => {
+      if (this.authoring.active) void this.renameDraft(this.authoring.active);
+    },
+    "text-button",
+    "guided-authoring-main-button-rename",
+  );
+  private authorSave = button(
+    "Save now",
+    () =>
+      void this.run(async () => {
+        this.dismissNotice();
+        const draft = this.authoring.active;
+        const created = await this.authoring.saveNow(draft);
+        this.notify(
+          draft?.status === "dirty"
+            ? `${created ? "Checkpoint created" : "No new checkpoint"}. Newer current edits remain unsaved.`
+            : created
+              ? "Source saved and checkpoint created."
+              : "Source saved. No new checkpoint: source is unchanged.",
+        );
+      }),
+    "secondary",
+    "guided-authoring-main-button-save",
+  );
+  private authorBack = button(
+    "Back to current",
+    () => this.backToCurrent(),
+    "secondary",
+    "guided-authoring-main-button-current",
+  );
+  private authorRestore = button(
+    "Restore this version",
+    () =>
+      void this.run(async () => {
+        this.dismissNotice();
+        const draft = this.authoring.active;
+        const checkpoint = this.inspectedCheckpoint;
+        const applied = await this.authoring.restoreCheckpoint(checkpoint, draft);
+        if (this.authoring.active === draft && this.inspectedCheckpoint === checkpoint)
+          this.backToCurrent();
+        this.notify(
+          applied
+            ? "Version restored. Previous source is retained in history."
+            : "Newer current edits were retained and remain unsaved.",
+        );
+      }),
+    "primary",
+    "guided-authoring-history-button-restore",
+  );
+  private authorCopy = button(
+    "Create editable copy",
+    () => {
+      const bundled = this.bundledInspection;
+      if (!bundled) return;
+      this.bundledInspection = undefined;
+      this.authoring.create(bundled.template.source, bundled.id, `${bundled.template.name} (copy)`);
+      this.sourceEditor.textarea.focus({ preventScroll: true });
+    },
+    "primary",
+    "guided-authoring-main-button-editable-copy",
+  );
   private sourceEditor = new SourceEditor();
-  private navHost = el("aside", "navigation");
-  private drawer = el("dialog", "navigation-drawer");
   private main = el("main", "main-region");
   private scrollRegion = el("div", "workspace-scroll");
   private workspace = el("div", "workspace");
   private right = el("aside", "context-region");
   private rightBody = el("div", "context-body");
-  private issues = el("details", "issues");
+  private fieldNeutral = el("p", "muted", "Open a document or template preview to edit fields.");
+  private issues = el("section", "issues");
   private issueList = el("div", "issue-list");
-  private issueSummary = el("summary");
+  private issueSummary = button("Issues", () => this.panels.open("issues"), "text-button");
   private crumb = el("span", "breadcrumb");
   private modeLabel = el("span", "mode-label");
   private notice = el("div", "notice");
   private banner = el("div", "error-banner");
-  private guidanceToggle = button("Hide", () => this.toggleGuidance(), "text-button");
   private preview = el("div", "authoring-preview");
   private sourceDiagnostics = el("div", "source-diagnostics");
   private authorStatus = el("span", "save-status");
-  private draftSelect = el("select", "draft-select");
-  private draftOptionsKey = "";
   private previewAnswers: Record<string, string> = {};
   private previewVersion = "";
   private previewField = "";
-  private mobile = matchMedia("(max-width: 760px)");
   private noticeTimer: ReturnType<typeof setTimeout> | undefined;
 
   connectedCallback(): void {
     if (this.ready || this.contains(this.main)) return;
+    this.dataset.testid = "guided-app-main-region-root";
+    for (const [element, id] of [
+      [this.workspace, "guided-app-main-region-workspace"],
+      [this.right, "guided-workspace-main-region-guidance"],
+      [this.rightBody, "guided-workspace-main-region-context-body"],
+      [this.issues, "guided-issues-main-panel-root"],
+      [this.issueSummary, "guided-issues-main-button-toggle"],
+      [this.issueList, "guided-issues-main-list-items"],
+      [this.notice, "guided-app-main-status-notice"],
+      [this.banner, "guided-app-main-alert-error"],
+      [this.crumb, "guided-app-main-label-location"],
+      [this.modeLabel, "guided-app-main-label-storage"],
+      [this.authorStatus, "guided-authoring-main-status-save"],
+      [this.sourceDiagnostics, "guided-authoring-source-region-diagnostics"],
+      [this.preview, "guided-authoring-preview-region-root"],
+    ] as const)
+      element.dataset.testid = id;
     this.workspace.id = "workspace";
     this.workspace.tabIndex = -1;
     this.main.setAttribute("aria-label", "Document workspace");
-    this.right.setAttribute("aria-label", "Guidance and unresolved issues");
-    this.drawer.setAttribute("aria-label", "Document navigation");
-    this.drawer.append(button("Close navigation ×", () => this.drawer.close(), "drawer-close"));
-    const menu = button("☰", () => this.drawer.showModal(), "menu-button");
+    this.right.setAttribute("aria-label", "Field editor");
+    this.rightBody.tabIndex = 0;
+    this.rightBody.setAttribute("role", "region");
+    this.rightBody.setAttribute("aria-label", "Context and editing guidance");
+    const menu = button(
+      "Navigation",
+      () =>
+        this.panels.open(this.context === "authoring" ? "history" : "documents", undefined, true),
+      "text-button",
+    );
+    menu.dataset.testid = "guided-documents-navigation-button-menu";
     menu.setAttribute("aria-label", "Open document navigation");
-    const contextButton = button("Field notes", () => this.toggleGuidance(), "context-button");
+    const contextButton = button("Field editor", () => this.toggleGuidance(), "context-button");
+    contextButton.dataset.testid = "guided-workspace-main-button-open-guidance";
     const header = el(
       "header",
       "topbar",
       el("div", "topbar-path", menu, el("span", "workspace-symbol", "▤"), this.crumb),
-      el("div", "topbar-tools", this.modeLabel, contextButton),
+      el(
+        "div",
+        "topbar-tools",
+        this.modeLabel,
+        this.issueSummary,
+        contextButton,
+        button(
+          "Settings",
+          () => this.panels.open("settings"),
+          "text-button",
+          "guided-settings-compact-button-open",
+        ),
+      ),
     );
     this.notice.setAttribute("role", "status");
     this.notice.setAttribute("aria-live", "polite");
@@ -94,24 +226,39 @@ export class GuidedApp extends HTMLElement {
     this.banner.hidden = true;
     this.scrollRegion.append(this.workspace);
     this.main.append(header, this.banner, this.scrollRegion);
-    this.issues.open = false;
-    this.issues.append(this.issueSummary, this.issueList);
-    this.right.append(
-      el("div", "context-topbar", el("span", "eyebrow", "A little guidance"), this.guidanceToggle),
-      this.rightBody,
-      this.issues,
+    this.issues.append(this.issueList);
+    this.fieldNeutral.hidden = true;
+    this.rightBody.append(this.guidance, this.fieldNeutral);
+    this.right.append(this.rightBody);
+    this.replaceChildren(el("div", "app-layout", this.main), this.notice);
+    const compact = el(
+      "div",
+      "compact-settings",
+      this.compactSettings,
+      button(
+        "Reset workspace layout",
+        () => this.panels.reset(),
+        "secondary",
+        "guided-settings-compact-button-reset-layout",
+      ),
+      button(
+        "Open full Settings",
+        () => this.navigate("settings"),
+        "secondary",
+        "guided-settings-compact-button-open-full",
+      ),
     );
-    this.replaceChildren(
-      el("div", "app-layout", this.navHost, this.main, this.right),
-      this.drawer,
-      this.notice,
-    );
-    this.positionNavigation();
-    this.mobile.addEventListener("change", () => this.positionNavigation());
-    this.drawer.addEventListener("click", (event) => {
-      if (event.target === this.drawer && event.clientX > this.drawer.getBoundingClientRect().right)
-        this.drawer.close();
+    this.panels = new PanelManager(this, this.main, {
+      documents: this.sidebar,
+      history: this.historyNavigation,
+      field: this.right,
+      issues: this.issues,
+      settings: compact,
     });
+    this.panels.onError = () => {
+      if (this.ready) this.renderIssues();
+    };
+    header.querySelector(".topbar-tools")!.append(this.panels.trigger);
     const resize = () =>
       document.documentElement.style.setProperty(
         "--app-height",
@@ -130,14 +277,33 @@ export class GuidedApp extends HTMLElement {
     this.authoring.onChange = (navigation) => {
       if (!this.ready) return;
       if (this.page === "authoring") {
-        if (navigation) this.renderPage();
-        else {
+        if (navigation) {
+          this.inspectedCheckpoint = "";
+          this.bundledInspection = undefined;
+          this.renderPage();
+        } else {
           this.renderAuthoringLive();
           this.renderIssues();
         }
       }
     };
     this.settings.subscribe(() => this.applySettings());
+    this.storage.subscribe((scope, mode) => {
+      if (mode !== this.settings.value.storageMode) return;
+      if (scope === "documents") void this.documents.load(mode);
+      else void this.authoring.load(mode);
+    });
+    window.addEventListener("focus", () => {
+      if (!this.ready) return;
+      void this.documents.load(this.settings.value.storageMode);
+      void this.authoring.load(this.settings.value.storageMode);
+    });
+    window.addEventListener("storage", (event) => {
+      if (event.key === "gtl.documents.v1" && this.settings.value.storageMode === "local")
+        void this.documents.load("local");
+      if (event.key === "gtl.authoring.v1" && this.settings.value.storageMode === "local")
+        void this.authoring.load("local");
+    });
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         void this.documents.flushAll();
@@ -160,23 +326,76 @@ export class GuidedApp extends HTMLElement {
     });
     void this.initialize();
   }
-  private positionNavigation(): void {
-    if (this.mobile.matches) {
-      this.drawer.append(this.sidebar);
-    } else {
-      this.drawer.close();
-      this.navHost.append(this.sidebar);
-    }
-  }
   private bindEvents(): void {
     const on = <T>(name: string, handler: (detail: T) => void) =>
       this.addEventListener(name, (event) => handler((event as CustomEvent<T>).detail));
     on("new-document", () => {
-      this.drawer.close();
+      this.panels.dismissNavigation();
       void this.run(() => this.newDocument());
     });
+    on<{ templateId: string; versionId?: string }>(
+      "template-select",
+      (detail) => void this.run(() => this.newDocument(detail.templateId, detail.versionId)),
+    );
+    on<DocumentFilter>("document-filter-change", (filter) => {
+      this.documentFilter = filter;
+      try {
+        localStorage.setItem(documentFilterKey, filter);
+        this.filterError = "";
+      } catch {
+        this.filterError = "The document filter applies in this tab but could not be remembered.";
+      }
+      this.renderLive();
+    });
+    on<WorkingDocument>(
+      "document-request-rename",
+      (working) =>
+        void this.run(async () => {
+          if (working.origin !== this.settings.value.storageMode)
+            throw new AppError(
+              "INACTIVE_STORE",
+              "Switch to this document's storage mode to rename it.",
+            );
+          const title = await renameDialog(
+            this,
+            "Rename document",
+            working.record.title,
+            this.settings.value.browserSuggestions,
+          );
+          if (title !== null) this.documents.rename(title, working);
+        }),
+    );
+    on<{ working: WorkingDocument; archived: boolean }>(
+      "document-archive",
+      (detail) =>
+        void this.run(async () => {
+          const wasActive = this.documents.active === detail.working;
+          await this.documents.setArchived(detail.working, detail.archived);
+          if (wasActive && this.documents.active === detail.working && detail.archived) {
+            const next = this.visibleDocuments().find(
+              (item) => !item.record.archivedAt && item.origin === this.settings.value.storageMode,
+            );
+            if (next) this.documents.select(next);
+            else {
+              this.documents.active = null;
+              this.renderPage();
+            }
+          }
+          this.notify(
+            detail.archived ? "Document archived." : "Document restored.",
+            detail.archived
+              ? () =>
+                  void this.run(async () => {
+                    await this.documents.setArchived(detail.working, false);
+                    this.documents.select(detail.working);
+                    this.notify("Document restored.");
+                  })
+              : undefined,
+          );
+        }),
+    );
     on<WorkingDocument>("document-select", (working) => {
-      this.drawer.close();
+      this.panels.dismissNavigation();
       this.navigationId++;
       this.documents.select(working);
       this.workspace.focus({ preventScroll: true });
@@ -188,7 +407,7 @@ export class GuidedApp extends HTMLElement {
           if (
             await this.confirm(
               "Delete document?",
-              `“${working.record.title || "Untitled document"}” will be permanently deleted. Other documents are not affected.`,
+              `“${working.record.title || "Untitled document"}” will be permanently deleted. Created ${working.record.createdAt}; ID ${working.record.id}. Other documents are not affected.`,
               "Delete document",
             )
           ) {
@@ -199,7 +418,34 @@ export class GuidedApp extends HTMLElement {
     );
     on("open-settings", () => this.navigate("settings"));
     on("open-authoring", () => this.navigate("authoring"));
-    on<string>("document-rename", (title) => this.documents.rename(title));
+    on("open-documents", () => {
+      this.panels.dismissNavigation();
+      this.page = "document";
+      this.renderPage();
+    });
+    on("authoring-new", () => {
+      this.panels.dismissNavigation();
+      this.navigationId++;
+      this.page = "authoring";
+      this.authoring.create();
+      this.sourceEditor.textarea.focus({ preventScroll: true });
+    });
+    on<WorkingAuthoringDraft>("authoring-select", (draft) => {
+      this.panels.dismissNavigation();
+      this.page = "authoring";
+      this.authoring.select(draft);
+    });
+    on<WorkingAuthoringDraft>("authoring-rename", (draft) => void this.renameDraft(draft));
+    on<WorkingAuthoringDraft>("authoring-delete", (draft) => void this.deleteDraft(draft));
+    on<string>("authoring-inspect", (id) => {
+      this.inspectedCheckpoint = id;
+      this.bundledInspection = undefined;
+      this.previewAnswers = {};
+      this.renderAuthoringLive();
+      this.renderIssues();
+      this.inspectionEditor.textarea.focus({ preventScroll: true });
+    });
+    on("authoring-current", () => this.backToCurrent());
     on<string>("template-version-select", (version) => this.documents.switchVersion(version));
     on<{ name: string; value: string }>("placeholder-change", (detail) => {
       if (this.page === "authoring") {
@@ -246,6 +492,28 @@ export class GuidedApp extends HTMLElement {
     this.workspace.replaceChildren(el("p", "muted", "Opening your writing space…"));
     try {
       await this.templates.initialize();
+      const navigationId = this.navigationId;
+      const indexing = this.catalog.initialize(this.templates);
+      // Background indexing must not dismiss an unrelated operation's failure.
+      void this.run(async () => {
+        await indexing;
+        if (
+          this.ready &&
+          this.navigationId === navigationId &&
+          this.page === "document" &&
+          !this.documents.active &&
+          this.catalog.firstAvailable
+        )
+          await this.newDocument();
+      }, false);
+      try {
+        const filter = localStorage.getItem(documentFilterKey);
+        if (filter === "active" || filter === "archived" || filter === "recent")
+          this.documentFilter = filter;
+      } catch {
+        this.filterError =
+          "The document filter could not be read. Active is selected for this session.";
+      }
       await Promise.all([
         this.documents.load(this.settings.value.storageMode),
         this.authoring.load(this.settings.value.storageMode),
@@ -254,10 +522,13 @@ export class GuidedApp extends HTMLElement {
       this.applySettings();
       // Restore the most recently edited saved document; untouched previews never enter history.
       const recent = this.documents.documents.find(
-        (item) => item.origin === this.settings.value.storageMode,
+        (item) => item.origin === this.settings.value.storageMode && !item.record.archivedAt,
       );
       if (recent) this.documents.select(recent);
-      else await this.newDocument();
+      else {
+        this.renderPage();
+        if (!this.catalog.isIndexing && this.catalog.firstAvailable) await this.newDocument();
+      }
     } catch {
       this.workspace.replaceChildren(
         el("h1", "", "Your writing space could not open."),
@@ -266,7 +537,12 @@ export class GuidedApp extends HTMLElement {
           "muted",
           "The template files could not be loaded. Check the static deployment, then try again.",
         ),
-        button("Try again", () => void this.initialize(), "primary"),
+        button(
+          "Try again",
+          () => void this.initialize(),
+          "primary",
+          "guided-app-main-button-retry-initialization",
+        ),
       );
     }
   }
@@ -275,11 +551,22 @@ export class GuidedApp extends HTMLElement {
     document.documentElement.dataset.theme = settings.theme;
     document.documentElement.dataset.background = settings.background;
     document.documentElement.dataset.density = settings.density;
-    this.classList.toggle("guidance-collapsed", !settings.guidance);
-    this.guidanceToggle.textContent = settings.guidance ? "Hide" : "Show";
-    this.guidanceToggle.setAttribute("aria-expanded", String(settings.guidance));
+    document.documentElement.style.setProperty(
+      "--document-scale",
+      settings.documentTextSize === "large" ? "1.25" : "1",
+    );
+    this.guidance.preferences(settings.browserSuggestions, settings.fieldTextSize);
+    this.documentWorkspace.preferences(settings.documentTextSize);
+    for (const input of this.querySelectorAll<HTMLInputElement>("[data-browser-suggestions]")) {
+      if (settings.browserSuggestions) input.removeAttribute("autocomplete");
+      else input.autocomplete = "off";
+    }
     this.modeLabel.textContent =
-      settings.storageMode === "memory" ? "Memory only" : "Local to this browser";
+      settings.storageMode === "memory"
+        ? "Memory only"
+        : settings.storageMode === "indexeddb"
+          ? "IndexedDB"
+          : "localStorage";
     this.documents.configureAutosave(settings.autosaveSeconds);
     this.authoring.configureAutosave(settings.autosaveSeconds);
     if (this.documents.mode !== settings.storageMode) {
@@ -294,12 +581,18 @@ export class GuidedApp extends HTMLElement {
         );
       });
     this.settingsPage.update(settings);
+    this.compactSettings.update(settings);
     if (this.ready) this.renderLive();
   }
   private toggleGuidance(): void {
-    this.settings.set("guidance", !this.settings.value.guidance);
+    this.panels.open("field");
+    if (this.page === "document") this.guidance.focusEditor();
+    else if (this.page === "authoring") this.guidance.focusEditor();
   }
-  private async newDocument(templateId = this.templates.entries[0]!.id): Promise<void> {
+  private async newDocument(
+    templateId = this.catalog.firstAvailable ?? this.templates.entries[0]!.id,
+    versionId?: string,
+  ): Promise<void> {
     const navigationId = ++this.navigationId;
     void this.documents.flushAll();
     void this.authoring.flushAll();
@@ -310,7 +603,7 @@ export class GuidedApp extends HTMLElement {
       const template = await this.templates.load(templateId);
       if (navigationId !== this.navigationId) return;
       this.page = "document";
-      this.documents.create(templateId, template);
+      this.documents.create(templateId, template, versionId);
       this.workspace.focus({ preventScroll: true });
     } finally {
       if (navigationId === this.navigationId) {
@@ -322,46 +615,41 @@ export class GuidedApp extends HTMLElement {
   }
   private navigate(page: "settings" | "authoring"): void {
     this.navigationId++;
-    this.drawer.close();
+    this.panels.dismissNavigation();
     void this.documents.flushAll();
     void this.authoring.flushAll();
     this.page = page;
     if (page === "authoring" && !this.authoring.active) this.authoring.create();
     this.renderPage();
+    if (page === "authoring") this.activeSourceEditor().textarea.focus({ preventScroll: true });
+    else this.workspace.focus({ preventScroll: true });
   }
   private renderPage(): void {
+    if (this.page !== "settings") this.context = this.page;
+    this.panels.setContext(this.context);
     const preserveDocumentSurface =
       this.page === "document" && this.workspace.contains(this.documentWorkspace);
     this.workspace.inert = false;
     this.rightBody.inert = false;
     this.main.removeAttribute("aria-busy");
     this.banner.hidden = true;
+    this.fieldNeutral.hidden = this.page !== "settings";
     this.workspace.className = `workspace ${this.page}-workspace`;
+    this.workspace.dataset.testid =
+      this.page === "authoring"
+        ? "guided-authoring-main-region-workspace"
+        : "guided-app-main-region-workspace";
     if (this.page === "document") {
       const current = this.documents.active;
-      this.crumb.textContent =
-        "Workspace / " + (current?.record.templateSnapshot.name ?? "New document");
+      this.crumb.textContent = "Documents / " + (current?.record.title ?? "New document");
       if (!current) {
         this.workspace.replaceChildren(
-          el(
-            "div",
-            "intro",
-            el("div", "eyebrow", "A fresh start"),
-            el("h1", "", "What would you like to write?"),
-          ),
+          el("div", "intro", el("h1", "", "Documents")),
           this.templatePicker(),
         );
-      } else if (preserveDocumentSurface) {
-        this.workspace.querySelector(".template-picker")?.replaceWith(this.templatePicker());
-      } else {
+      } else if (!preserveDocumentSurface) {
         this.workspace.replaceChildren(
-          el(
-            "div",
-            "intro",
-            el("div", "eyebrow", "Your writing space"),
-            el("h1", "", "A little structure. Your own words."),
-            el("p", "muted", "Start with a template, then make it unmistakably yours."),
-          ),
+          el("div", "intro", el("h1", "", "Documents")),
           this.templatePicker(),
           this.documentWorkspace,
         );
@@ -372,9 +660,8 @@ export class GuidedApp extends HTMLElement {
         el(
           "div",
           "intro",
-          el("div", "eyebrow", "Make yourself at home"),
-          el("h1", "", "Your space, your preferences."),
-          el("p", "muted", "Changes apply right away. Everything stays in your browser."),
+          el("h1", "", "Settings"),
+          el("p", "muted", "Changes apply immediately."),
         ),
         this.settingsPage,
       );
@@ -387,46 +674,36 @@ export class GuidedApp extends HTMLElement {
     this.renderLive();
   }
   private templatePicker(): HTMLElement {
-    const picker = el("div", "template-picker");
-    const current = this.documents.active?.record.templateId;
-    picker.append(
-      el(
-        "div",
-        "template-picker-heading",
-        el("span", "eyebrow", "Choose a starting point"),
-        el("span", "small muted", `${this.templates.entries.length} templates · 7 writing styles`),
-      ),
+    this.catalog.select(this.documents.active?.record.templateId ?? "");
+    return this.catalog;
+  }
+  private visibleDocuments(): WorkingDocument[] {
+    return filteredDocuments(
+      this.documents.documents,
+      this.documentFilter,
+      this.settings.value.recentLimit,
     );
-    const cards = el("div", "template-cards");
-    const marks = ["[  ]", "≡", "↗"];
-    for (const [index, entry] of this.templates.entries.entries()) {
-      const card = button(
-        "",
-        () => void this.run(() => this.newDocument(entry.id)),
-        "template-card",
-      );
-      card.setAttribute("aria-pressed", String(current === entry.id));
-      card.classList.toggle("selected", current === entry.id);
-      card.append(
-        el("span", "template-mark", marks[index] ?? "[ ]"),
-        el("span", "template-card-title", entry.name),
-        el("span", "template-card-description", entry.description),
-        el("span", "card-corner", current === entry.id ? "✓" : "↗"),
-      );
-      cards.append(card);
-    }
-    picker.append(cards);
-    return picker;
   }
   private renderLive(): void {
+    if (
+      this.page === "document" &&
+      !this.documents.active &&
+      this.workspace.contains(this.documentWorkspace)
+    ) {
+      this.renderPage();
+      return;
+    }
     this.banner.hidden = true;
+    this.catalog.select(this.documents.active?.record.templateId ?? "");
     this.sidebar.update(
-      this.documents.documents,
+      this.visibleDocuments(),
       this.documents.active,
       this.page,
       this.settings.value.storageMode,
+      this.documentFilter,
     );
     if (this.page === "document" && this.documents.active) {
+      this.guidance.hidden = false;
       const working = this.documents.active;
       this.documentWorkspace.update(working, this.settings.value.storageMode);
       const version = working.record.templateSnapshot.versions.find(
@@ -440,42 +717,25 @@ export class GuidedApp extends HTMLElement {
         this.settings.value.keyboardHelp,
         working.origin !== this.settings.value.storageMode,
       );
-      if (this.guidance.parentElement !== this.rightBody)
-        this.rightBody.replaceChildren(this.guidance);
+      this.crumb.textContent = `Documents / ${working.record.title}`;
+    } else if (this.page === "document") {
+      this.guidance.hidden = false;
+      this.guidance.clear();
     } else if (this.page === "settings") {
-      this.rightBody.replaceChildren(
-        el(
-          "div",
-          "settings-note",
-          el("div", "tag", "GOOD TO KNOW"),
-          el("h2", "", "Yours, by design."),
-          el(
-            "p",
-            "",
-            "Your documents are processed on this device. No account, no cloud, no telemetry.",
-          ),
-          el(
-            "p",
-            "",
-            "IndexedDB is the recommended storage mode. Browser storage can be cleared by your browser; export important work.",
-          ),
-          el(
-            "p",
-            "",
-            "Memory-only mode never persists document or template source. General preferences can still be saved.",
-          ),
-        ),
-      );
+      this.guidance.hidden = true;
     } else if (this.page === "authoring") this.renderAuthoringLive();
     this.renderIssues();
   }
-  private focusPlaceholder(name: string, caret: "start" | "end" = "end"): void {
+  private focusPlaceholder(name: string, caret?: "start" | "end"): void {
     if (!name) return;
-    if (!this.settings.value.guidance) this.settings.set("guidance", true);
+    const token = [...this.workspace.querySelectorAll<HTMLElement>("[data-placeholder-name]")].find(
+      (item) => item.dataset.placeholderName === name,
+    );
+    this.panels.open("field", token?.getBoundingClientRect());
     if (this.page === "authoring") {
       this.previewField = name;
       this.renderAuthoringPreview();
-      this.previewGuidance.focusEditor(caret);
+      this.guidance.focusEditor(caret);
     } else if (this.documents.active) {
       this.documents.active.activePlaceholder = name;
       this.documentWorkspace.highlight(name);
@@ -497,6 +757,10 @@ export class GuidedApp extends HTMLElement {
   }
   private renderIssues(): void {
     const issues: { message: string; action?: () => void }[] = [];
+    if (this.filterError) issues.push({ message: this.filterError });
+    if (this.storage.warning) issues.push({ message: this.storage.warning });
+    if (this.panels.error)
+      issues.push({ message: this.panels.error, action: () => this.panels.retry() });
     if (this.settings.error) issues.push({ message: this.settings.error });
     if (this.documents.loadError)
       issues.push({ message: this.documents.loadError, action: () => void this.retryStorage() });
@@ -533,7 +797,7 @@ export class GuidedApp extends HTMLElement {
         working.record.answers,
       ).unresolved) {
         issues.push({
-          message: `${name.replaceAll("-", " ")} needs a valid answer.`,
+          message: `$${name} needs a valid answer.`,
           action: () => this.focusPlaceholder(name),
         });
       }
@@ -550,6 +814,7 @@ export class GuidedApp extends HTMLElement {
       if (this.authoring.error)
         issues.push({ message: this.authoring.error, action: () => void this.retryStorage() });
       const draft = this.authoring.active;
+      if (draft?.checkpointError) issues.push({ message: draft.checkpointError });
       if (draft?.error)
         issues.push({
           message: draft.error,
@@ -561,31 +826,38 @@ export class GuidedApp extends HTMLElement {
           action: () => this.settings.set("storageMode", draft.origin),
         });
       if (draft)
-        for (const diagnostic of parseTemplate(draft.record.source).diagnostics)
+        for (const diagnostic of parseTemplate(this.authoringSource()).diagnostics)
           issues.push({
             message: `${diagnostic.severity === "error" ? "Error" : "Warning"} · ${diagnostic.line}:${diagnostic.column} ${diagnostic.message}`,
-            action: () => this.sourceEditor.focusLocation(diagnostic.line, diagnostic.column),
+            action: () =>
+              this.activeSourceEditor().focusLocation(diagnostic.line, diagnostic.column),
           });
     }
     this.issueSummary.replaceChildren(
-      el("span", "eyebrow", "Unresolved issues"),
+      el("span", "", "Issues"),
       el("span", "issue-count", String(issues.length)),
     );
     this.issueList.replaceChildren(
       ...issues.map((issue) =>
         issue.action
-          ? button(issue.message, issue.action, "issue")
+          ? button(issue.message, issue.action, "issue", "guided-issues-main-button-action")
           : el("p", "issue", issue.message),
       ),
     );
-    if (!issues.length)
-      this.issueList.append(el("p", "muted small", "Everything is in good shape."));
+    if (!issues.length) this.issueList.append(el("p", "muted small", "No issues."));
     if (
       working &&
       this.page === "document" &&
       (working.status === "failed" || working.status === "conflict")
     ) {
-      this.issueList.append(button("Retry storage", () => void this.retryStorage(), "secondary"));
+      this.issueList.append(
+        button(
+          "Retry storage",
+          () => void this.retryStorage(),
+          "secondary",
+          "guided-issues-main-button-retry-storage",
+        ),
+      );
       this.issueList.append(
         button(
           "Download recovery file",
@@ -597,11 +869,17 @@ export class GuidedApp extends HTMLElement {
             );
           },
           "secondary",
+          "guided-issues-main-button-download-recovery",
         ),
       );
       if (working.status === "conflict") {
         this.issueList.append(
-          button("Preserve local copy", () => this.documents.preserveLocalCopy(), "secondary"),
+          button(
+            "Preserve local copy",
+            () => this.documents.preserveLocalCopy(),
+            "secondary",
+            "guided-issues-main-button-preserve-copy",
+          ),
           button(
             "Reopen latest saved document",
             () =>
@@ -616,14 +894,19 @@ export class GuidedApp extends HTMLElement {
                   await this.documents.reopenLatest();
               }),
             "secondary",
+            "guided-issues-main-button-reopen-latest",
           ),
         );
       }
-      this.issues.open = true;
     }
     if (this.authoring.active?.status === "conflict" && this.page === "authoring") {
       this.issueList.append(
-        button("Preserve local template copy", () => this.authoring.preserveCopy(), "secondary"),
+        button(
+          "Preserve local template copy",
+          () => this.authoring.preserveCopy(),
+          "secondary",
+          "guided-authoring-main-button-preserve-copy",
+        ),
         button(
           "Reopen latest template draft",
           () =>
@@ -638,17 +921,19 @@ export class GuidedApp extends HTMLElement {
                 await this.authoring.reopenLatest();
             }),
           "secondary",
+          "guided-authoring-main-button-reopen-latest",
         ),
       );
-      this.issues.open = true;
     }
     const critical =
       this.documents.loadError ||
       this.settings.error ||
       this.documents.documents.find((item) => item.error)?.error ||
       this.authoring.drafts.find((item) => item.error)?.error ||
+      this.authoring.drafts.find((item) => item.checkpointError)?.checkpointError ||
       (this.page === "authoring" ? this.authoring.error : "");
-    if (critical) this.showError(critical);
+    if (critical || this.operationError) this.showError(critical || this.operationError, false);
+    else this.banner.hidden = true;
   }
   private async retryStorage(): Promise<void> {
     this.storage.worker.restart();
@@ -657,6 +942,7 @@ export class GuidedApp extends HTMLElement {
       this.authoring.load(this.settings.value.storageMode),
     ]);
     await Promise.all([this.documents.flushAll(), this.authoring.flushAll()]);
+    this.operationError = "";
     this.renderLive();
   }
   private generatedResult() {
@@ -683,6 +969,7 @@ export class GuidedApp extends HTMLElement {
     this.previewField = "";
     this.previewVersion = "";
     const open = el("select", "bundled-select");
+    open.dataset.testid = "guided-authoring-main-select-bundled";
     open.setAttribute("aria-label", "Open bundled template");
     const blank = el("option", "", "Open a bundled template…");
     blank.value = "";
@@ -697,76 +984,72 @@ export class GuidedApp extends HTMLElement {
       () =>
         void this.run(async () => {
           if (!open.value) return;
-          const template = await this.templates.load(open.value);
-          this.authoring.create(template.source, open.value);
+          const id = open.value;
+          const request = ++this.navigationId;
+          const template = await this.templates.load(id);
+          if (request !== this.navigationId || this.page !== "authoring") return;
+          this.bundledInspection = { id, template };
+          this.inspectedCheckpoint = "";
+          this.previewAnswers = {};
+          this.renderAuthoringLive();
+          this.inspectionEditor.textarea.focus({ preventScroll: true });
         }),
     );
-    this.draftSelect = el("select", "draft-select");
-    this.draftOptionsKey = "";
-    this.draftSelect.setAttribute("aria-label", "Saved template drafts");
-    this.draftSelect.addEventListener("change", () => {
-      const item = this.authoring.drafts.find(
-        (entry) => `${entry.origin}:${entry.record.id}` === this.draftSelect.value,
-      );
-      if (item) this.authoring.select(item);
-    });
+    open.value = this.bundledInspection?.id ?? "";
     this.sourceEditor.value = draft?.record.source ?? "";
+    this.inspectionEditor.textarea.readOnly = true;
     const downloadSource = button(
       "Download .gtl ↓",
       () => {
-        const record = this.authoring.active?.record;
-        if (record)
-          download(record.source, `${filename(record.title)}.gtl`, "text/plain;charset=utf-8");
+        const title = this.bundledInspection?.template.name ?? this.authoring.active?.record.title;
+        if (title)
+          download(
+            this.authoringSource(),
+            `${filename(title)}${this.inspectedCheckpoint ? "-checkpoint" : ""}.gtl`,
+            "text/plain;charset=utf-8",
+          );
       },
       "primary",
+      "guided-authoring-main-button-download",
     );
     const remove = button(
       "Delete draft",
-      () =>
-        void this.run(async () => {
-          const current = this.authoring.active;
-          if (
-            current &&
-            (await this.confirm(
-              "Delete template draft?",
-              `“${current.record.title}” will be deleted. Bundled template files are not affected.`,
-              "Delete draft",
-            ))
-          )
-            await this.authoring.delete(current);
-        }),
+      () => {
+        if (this.authoring.active) void this.deleteDraft(this.authoring.active);
+      },
       "text-button danger",
+      "guided-authoring-main-button-delete",
     );
     this.workspace.replaceChildren(
-      el(
-        "div",
-        "intro",
-        el("div", "eyebrow", "Template workshop"),
-        el("h1", "", "Give your next idea a head start."),
-        el("p", "muted", "Write a little structure. Add a few good questions. Reuse it."),
-      ),
+      el("div", "intro", el("h1", "", "Template authoring")),
       el(
         "div",
         "authoring-toolbar",
-        button("+ New template", () => this.authoring.create(), "secondary"),
+        button(
+          "+ New template",
+          () => {
+            this.authoring.create();
+            this.sourceEditor.textarea.focus({ preventScroll: true });
+          },
+          "secondary",
+          "guided-authoring-main-button-new",
+        ),
         open,
-        this.draftSelect,
       ),
+      el("div", "document-title-row", this.authorTitle, this.authorRename),
+      el("div", "template-name-row", this.authorName, this.authorNameButton, this.nameSource),
+      this.authorHistorical,
+      el("div", "authoring-actions", this.authorBack, this.authorRestore, this.authorCopy),
       el(
         "div",
         "section-heading",
         el("span", "eyebrow", "Template source / GTL"),
         this.authorStatus,
       ),
-      ...(draft ? [this.sourceEditor] : [el("p", "muted", "Create or open a template to begin.")]),
+      this.sourceEditor,
+      this.inspectionEditor,
       this.sourceDiagnostics,
-      el(
-        "div",
-        "authoring-actions",
-        downloadSource,
-        button("Save now", () => void this.authoring.flushAll(), "secondary"),
-        remove,
-      ),
+      el("div", "authoring-actions", downloadSource, this.authorSave, remove),
       el(
         "p",
         "small muted",
@@ -777,10 +1060,69 @@ export class GuidedApp extends HTMLElement {
   }
   private renderAuthoringLive(): void {
     const draft = this.authoring.active;
+    this.historyNavigation.update(
+      this.authoring.drafts,
+      draft,
+      this.settings.value.storageMode,
+      this.inspectedCheckpoint,
+    );
+    const readOnly = !!this.inspectedCheckpoint || !!this.bundledInspection;
+    const source = this.authoringSource();
     // Reloads may advance the revision; the editor must display that same source snapshot.
     if (draft && this.sourceEditor.value !== draft.record.source)
       this.sourceEditor.value = draft.record.source;
+    this.sourceEditor.hidden = readOnly || !draft;
+    this.inspectionEditor.hidden = !readOnly;
+    if (readOnly) this.inspectionEditor.value = source;
     this.sourceEditor.disabled = !!draft && draft.origin !== this.settings.value.storageMode;
+    this.authorTitle.textContent =
+      this.bundledInspection?.template.name ?? draft?.record.title ?? "No template draft selected";
+    this.authorTitle.dataset.testid = "guided-authoring-main-label-title";
+    this.authorName.dataset.testid = "guided-authoring-main-label-template-name";
+    this.authorHistorical.dataset.testid = "guided-authoring-history-status-inspection";
+    this.crumb.dataset.testid = "guided-workspace-main-label-breadcrumb";
+    this.crumb.textContent = `Template Authoring / ${this.authorTitle.textContent}${this.bundledInspection ? " / Bundled read-only" : this.inspectedCheckpoint ? " / Historical version" : ""}`;
+    const location = templateNameLocation(source);
+    this.authorName.textContent = `GTL template name: ${location?.name ?? "unavailable; edit the source"}`;
+    this.nameSource.hidden = !!location;
+    this.authorNameButton.disabled =
+      readOnly || !location || !draft || draft.origin !== this.settings.value.storageMode;
+    this.authorRename.disabled =
+      readOnly || !draft || draft.origin !== this.settings.value.storageMode;
+    this.authorSave.disabled =
+      readOnly ||
+      !draft ||
+      draft.origin !== this.settings.value.storageMode ||
+      this.authoring.isBusy(draft);
+    this.authorBack.hidden = !readOnly;
+    this.authorCopy.hidden = !this.bundledInspection;
+    this.authorRestore.hidden = !this.inspectedCheckpoint;
+    const checkpoint = draft?.record.checkpoints.find(
+      (item) => item.id === this.inspectedCheckpoint,
+    );
+    this.authorRestore.disabled =
+      !checkpoint ||
+      draft?.origin !== this.settings.value.storageMode ||
+      this.authoring.isBusy(draft);
+    const remove = this.workspace.querySelector<HTMLButtonElement>(
+      '[data-testid="guided-authoring-main-button-delete"]',
+    );
+    if (remove)
+      remove.disabled =
+        !!this.bundledInspection ||
+        !draft ||
+        draft.origin !== this.settings.value.storageMode ||
+        this.authoring.isBusy(draft);
+    this.authorHistorical.hidden = !readOnly;
+    const downloadSource = this.workspace.querySelector<HTMLButtonElement>(
+      '[data-testid="guided-authoring-main-button-download"]',
+    );
+    if (downloadSource) downloadSource.disabled = !draft && !this.bundledInspection;
+    this.authorHistorical.textContent = this.bundledInspection
+      ? "Bundled template · read-only inspection. Create an editable copy to change it."
+      : checkpoint
+        ? `Historical version · ${new Date(checkpoint.createdAt).toLocaleString()} · read only`
+        : "Historical version unavailable. Current source has not been changed; return to current or refresh history.";
     const statuses = {
       temporary: "No draft yet",
       dirty: "Unsaved changes",
@@ -790,47 +1132,99 @@ export class GuidedApp extends HTMLElement {
       conflict: "Save conflict",
     };
     this.authorStatus.setAttribute("role", "status");
-    const statusText = draft ? statuses[draft.status] : "";
+    const statusText = readOnly ? "Read-only inspection" : draft ? statuses[draft.status] : "";
     if (this.authorStatus.textContent !== statusText) this.authorStatus.textContent = statusText;
-    const visibleDrafts = this.authoring.drafts.filter(
-      (item) => item.record.revision > 0 || item.status !== "temporary",
-    );
-    const optionsKey =
-      JSON.stringify(
-        visibleDrafts.map((item) => [item.origin, item.record.id, item.record.title]),
-      ) + this.settings.value.storageMode;
-    if (this.draftOptionsKey !== optionsKey) {
-      this.draftOptionsKey = optionsKey;
-      this.draftSelect.replaceChildren(
-        el("option", "", "Local template drafts…"),
-        ...visibleDrafts.map((item) => {
-          const option = el(
-            "option",
-            "",
-            `${item.record.title}${item.origin !== this.settings.value.storageMode ? ` (${item.origin})` : ""}`,
-          );
-          option.value = `${item.origin}:${item.record.id}`;
-          return option;
-        }),
-      );
-    }
-    if (draft) this.draftSelect.value = `${draft.origin}:${draft.record.id}`;
     this.sourceDiagnostics.replaceChildren(
-      ...(draft ? parseTemplate(draft.record.source).diagnostics : [])
+      ...(draft || this.bundledInspection ? parseTemplate(source).diagnostics : [])
         .filter((item) => item.severity === "error")
         .map((item) =>
           button(
             `Line ${item.line}:${item.column} · ${item.message}`,
-            () => this.sourceEditor.focusLocation(item.line, item.column),
+            () => this.activeSourceEditor().focusLocation(item.line, item.column),
             "source-diagnostic",
+            "guided-authoring-source-button-diagnostic",
           ),
         ),
     );
     this.renderAuthoringPreview();
   }
+  private authoringSource(): string {
+    if (this.bundledInspection) return this.bundledInspection.template.source;
+    if (this.inspectedCheckpoint)
+      return (
+        this.authoring.active?.record.checkpoints.find(
+          (item) => item.id === this.inspectedCheckpoint,
+        )?.source ?? ""
+      );
+    return this.authoring.active?.record.source ?? "";
+  }
+  private activeSourceEditor(): SourceEditor {
+    return this.inspectedCheckpoint || this.bundledInspection
+      ? this.inspectionEditor
+      : this.sourceEditor;
+  }
+  private backToCurrent(): void {
+    this.inspectedCheckpoint = "";
+    this.bundledInspection = undefined;
+    this.previewAnswers = {};
+    this.renderAuthoringLive();
+    this.renderIssues();
+    this.sourceEditor.textarea.focus({ preventScroll: true });
+  }
+  private async renameDraft(draft: WorkingAuthoringDraft): Promise<void> {
+    await this.run(async () => {
+      if (draft.origin !== this.settings.value.storageMode)
+        throw new AppError("INACTIVE_STORE", "Switch to this draft's storage mode to rename it.");
+      const title = await renameDialog(
+        this,
+        "Rename template draft",
+        draft.record.title,
+        this.settings.value.browserSuggestions,
+      );
+      if (title !== null) this.authoring.rename(title, draft);
+    });
+  }
+  private async renameTemplateName(): Promise<void> {
+    await this.run(async () => {
+      const draft = this.authoring.active;
+      const location = draft && templateNameLocation(draft.record.source);
+      if (!draft || !location)
+        throw new AppError(
+          "AMBIGUOUS_TEMPLATE_NAME",
+          "Edit the source: a unique TEMPLATE: directive is required.",
+        );
+      const source = draft.record.source;
+      const name = await renameDialog(
+        this,
+        "Edit GTL template name",
+        location.name,
+        this.settings.value.browserSuggestions,
+      );
+      if (name === null) return;
+      if (draft !== this.authoring.active || source !== draft.record.source)
+        throw new AppError(
+          "SOURCE_CHANGED",
+          "The source changed while naming it. Review the latest source and retry.",
+        );
+      this.sourceEditor.editValue(replaceTemplateName(source, name));
+    });
+  }
+  private async deleteDraft(draft: WorkingAuthoringDraft): Promise<void> {
+    await this.run(async () => {
+      if (
+        await this.confirm(
+          "Delete template draft?",
+          `“${draft.record.title}” and its ${draft.record.checkpoints.length} checkpoints will be permanently deleted. Created ${draft.record.createdAt}; ID ${draft.record.id}. Bundled templates and documents are not affected.`,
+          "Delete draft",
+        )
+      )
+        await this.authoring.delete(draft);
+    });
+  }
   private renderAuthoringPreview(): void {
+    this.guidance.hidden = false;
     const draft = this.authoring.active;
-    const parsed = parseTemplate(draft?.record.source ?? "");
+    const parsed = parseTemplate(this.authoringSource());
     this.preview.replaceChildren(
       el(
         "div",
@@ -847,29 +1241,7 @@ export class GuidedApp extends HTMLElement {
           "Fix source errors to preview this template. Your source can still be saved and downloaded.",
         ),
       );
-      this.rightBody.replaceChildren(
-        el(
-          "div",
-          "settings-note",
-          el("div", "tag", "GTL QUICK REFERENCE"),
-          el("h2", "", "Text, with a little guidance."),
-          el(
-            "p",
-            "",
-            "TEMPLATE names your definition. TEXT contains the fixed prose. Write {{$name}} where an answer belongs.",
-          ),
-          el(
-            "p",
-            "",
-            "$name: Question adds guidance. Indent HINT:, EXAMPLE:, INPUT: multiline, or OPTION key: Label beneath it.",
-          ),
-          el(
-            "p",
-            "",
-            "Use $notes OPTIONAL: Question for optional fields. Or VERSION: Name with an indented TEXT: block for alternative structures.",
-          ),
-        ),
-      );
+      this.guidance.clear("Fix source errors to edit preview fields.");
       return;
     }
     const template = parsed.template;
@@ -877,6 +1249,7 @@ export class GuidedApp extends HTMLElement {
       template.versions.find((item) => item.id === this.previewVersion) ?? template.versions[0]!;
     this.previewVersion = version.id;
     const select = el("select", "style-select");
+    select.dataset.testid = "guided-authoring-preview-select-version";
     select.setAttribute("aria-label", "Preview writing style");
     for (const item of template.versions) {
       const option = el("option", "", item.name);
@@ -891,8 +1264,9 @@ export class GuidedApp extends HTMLElement {
       this.renderAuthoringPreview();
     });
     const names = placeholderNames(version);
-    if (!names.includes(this.previewField)) this.previewField = names[0] ?? "";
+    if (!names.includes(this.previewField)) this.previewField = "";
     const prose = el("div", "guided-prose author-preview-prose");
+    prose.dataset.testid = "guided-authoring-preview-region-guided-text";
     for (const part of version.parts) {
       if (part.kind === "literal") prose.append(part.text);
       else {
@@ -900,42 +1274,51 @@ export class GuidedApp extends HTMLElement {
           displayedAnswer(
             template.placeholders[part.name]!,
             answerFor(this.previewAnswers, part.name),
-          ) ?? part.name,
+          ) ?? `$${part.name}`,
           () => this.focusPlaceholder(part.name),
           "placeholder",
         );
         token.classList.toggle("active", this.previewField === part.name);
+        token.setAttribute("aria-label", `Edit $${part.name}: ${token.textContent}`);
+        token.dataset.testid = "guided-authoring-preview-button-placeholder";
+        token.dataset.placeholderName = part.name;
         prose.append(token);
       }
     }
     const result = renderTemplate(template, version, this.previewAnswers);
+    const previewResult = el("div", "result-text", result.text);
+    previewResult.dataset.testid = "guided-authoring-preview-region-result";
     this.preview.append(
       select,
       prose,
-      el("div", "result-text", result.text),
+      previewResult,
       el(
         "p",
         "small muted",
         "Preview answers are temporary. They are not part of your template draft.",
       ),
     );
-    this.previewGuidance.update(
+    this.guidance.update(
       template,
       version,
       this.previewAnswers,
       this.previewField,
       this.settings.value.keyboardHelp,
     );
-    if (this.previewGuidance.parentElement !== this.rightBody)
-      this.rightBody.replaceChildren(this.previewGuidance);
   }
   private async confirm(title: string, message: string, action: string): Promise<boolean> {
     const dialog = el("dialog", "confirm-dialog");
+    dialog.dataset.testid = "guided-confirmation-main-dialog-root";
     const heading = el("h2", "", title);
     heading.id = "confirmation-title";
     dialog.setAttribute("aria-labelledby", heading.id);
     let accepted = false;
-    const cancel = button("Cancel", () => dialog.close(), "secondary");
+    const cancel = button(
+      "Cancel",
+      () => dialog.close(),
+      "secondary",
+      "guided-confirmation-main-button-cancel",
+    );
     dialog.append(
       heading,
       el("p", "muted", message),
@@ -950,6 +1333,7 @@ export class GuidedApp extends HTMLElement {
             dialog.close();
           },
           "primary",
+          "guided-confirmation-main-button-confirm",
         ),
       ),
     );
@@ -967,29 +1351,43 @@ export class GuidedApp extends HTMLElement {
       ),
     );
   }
-  private notify(message: string): void {
+  private dismissNotice(): void {
     clearTimeout(this.noticeTimer);
-    this.notice.textContent = message;
-    this.noticeTimer = setTimeout(() => {
-      this.notice.textContent = "";
-    }, 3500);
+    this.notice.replaceChildren();
   }
-  private showError(message: string): void {
+  private notify(message: string, undo?: () => void): void {
+    clearTimeout(this.noticeTimer);
+    this.notice.replaceChildren(el("span", "", message));
+    if (undo)
+      this.notice.append(button("Undo", undo, "text-button", "guided-app-main-button-undo"));
+    this.noticeTimer = setTimeout(
+      () => {
+        this.notice.textContent = "";
+      },
+      undo ? 8000 : 3500,
+    );
+  }
+  private showError(message: string, transient = true): void {
+    if (transient) this.operationError = message;
     this.banner.hidden = false;
     this.banner.replaceChildren(
       el("span", "", message),
       button(
         "Dismiss",
         () => {
+          this.operationError = "";
           this.banner.hidden = true;
         },
         "text-button",
+        "guided-app-main-button-dismiss-error",
       ),
     );
   }
-  private async run(action: () => Promise<void>): Promise<void> {
+  private async run(action: () => Promise<void>, clearOperationError = true): Promise<void> {
     try {
       await action();
+      if (clearOperationError) this.operationError = "";
+      this.renderIssues();
     } catch (error) {
       this.showError(errorMessage(error));
       logger.warn("ui.operation.failed", {
