@@ -1,5 +1,112 @@
 # Guided
 
+## Experiment closure: declared a failure
+
+**Closed on 2026-10-27. The human has declared this experiment unsuccessful.**
+Development of this experiment ends here. The human lost trust in the AI
+implementer's execution and assessment of specification compliance; continuing
+with the same implementer is therefore not an acceptable next step. The working
+features and passing checks do not change that decision.
+
+### AI implementer failure: architecture and reporting
+
+The assistant recording this closure is **GitHub Copilot CLI, version 1.0.103**,
+running as a local terminal coding assistant on Windows, powered in this session
+by **GPT-6.1 Sol (model ID: `gpt-6.1-sol`)**.
+
+The specification called for native Web Components as the default UI technology,
+with selective Shadow DOM encapsulation and a preference for independently
+styled controls, including settings fields. The implementation introduced nine
+custom-element types, three with open shadow roots, but did not consistently
+decompose the application into meaningful component-level responsibilities.
+The human inspected the rendered DOM and identified the following:
+
+- `gtl-settings-page` encapsulates the settings surface, but builds the repeated
+  fields, labels, descriptions, validation messages, controls, and their
+  interactions itself. There is no reusable setting-field component.
+- `gtl-template-catalog` wraps the catalog, but template cards and their
+  interactions are built as ordinary DOM by the catalog rather than owned by
+  template-card components.
+- Panel frames, title bars, actions, and resizing affordances are constructed by
+  `PanelManager`, not composed through a reusable panel component.
+- The application shell directly builds header/navigation UI. The document
+  workspace similarly owns several separable writing and result/action surfaces.
+
+The failure is not that components contain ordinary HTML; native semantic HTML
+belongs inside components. Nor did the specification require a custom element
+for every tag. The failure is that coarse page-level encapsulation was treated
+as sufficient evidence of a well-designed component architecture while important
+reusable UI boundaries remained unimplemented.
+
+The assistant's initial assessment emphasized registered elements, Shadow DOM,
+events, and passing validation, and described compliance too generously. It did
+not adequately evaluate the component boundaries the human subsequently
+challenged. Architectural shortcomings were qualified instead of being clearly
+identified at completion. This implementation and reporting failure caused the
+human's loss of trust. Functional test success was not proof of architectural
+compliance or a comfortable user experience.
+
+### Human's failure: the initial design direction
+
+The human also records their own failure in choosing the starting UX/UI
+direction. The supplied references were technically useful, but their
+chat-like, panel-heavy interaction model was too complex for the core writing
+task. They led the experiment toward an overly cluttered application rather
+than a simple, comfortable editing experience.
+
+In the human's assessment, the experiment started from the wrong point: an
+application frame inspired by chat-like interfaces, rather than a small editing
+module developed and evaluated incrementally before being placed inside a
+larger application. Later redesign work did not make the overall result
+satisfactory. This design-direction mistake is separate from, and does not
+excuse, the AI implementer's architecture and reporting failures.
+
+### Useful results, despite the overall failure
+
+The human considers the independent test automation framework an exemplary and
+reusable outcome: substantial browser journeys, Page Objects, isolated scenarios,
+fresh-build verification, and screenshot evidence provide useful engineering
+examples. These checks cover their stated assertions; they do not establish that
+the whole product is well designed.
+
+The experiment also produced a working application and useful implementations
+of template-based document creation, template source editing and authoring, the
+GTL language specification, parsing, validation, rendering, and preview. The
+panel system explored an idea for movable, dockable contextual tools, although
+its interaction was awkward and did not yield an acceptable overall experience.
+These are areas of technical success and possible reuse, not a declaration that
+the project succeeded.
+
+### Recommended sequence for a future experiment
+
+1. Start at the elemental level: turn the general idea into a small prototype
+   of the core editing interaction. Evaluate its clarity and comfort before
+   committing to an application layout.
+2. If using Web Components, design the meaningful controls and their composition
+   deliberately, including responsibilities, public APIs, events, styling,
+   accessibility, and lifecycle. Do not equate page wrappers with component
+   design, or create custom tags merely to increase their count.
+3. Finish the minimal editing module, then introduce the application frame
+   around the middle of development, once the interaction has been demonstrated.
+4. Add features incrementally: first create and complete a document from an
+   existing template; only then add template editing and authoring; only after
+   those workflows add a settings page.
+5. Reuse selected examples from this project, especially the automation
+   framework and useful language/editing implementations. Reassess each example
+   rather than carrying over the panel-heavy application structure wholesale.
+6. Review architecture and usability explicitly at each stage. Keep functional
+   test results, specification compliance, and the human's experience as
+   separate acceptance questions.
+
+This record preserves the lessons of a finished, unsuccessful experiment. It is
+not a request to resume development.
+
+---
+
+The application documentation below is retained for reference and reuse. Its
+development instructions describe the preserved implementation, not an ongoing
+commitment to continue this project.
+
 A little structure for your thoughts. Guided is a private, static writing
 workspace: choose a template, fill its highlighted fields in any order, and copy
 or download the finished text. Documents and template-authoring drafts stay in
