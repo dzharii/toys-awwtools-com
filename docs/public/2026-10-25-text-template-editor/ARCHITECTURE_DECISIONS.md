@@ -50,7 +50,8 @@ Each Page Object declares minimal structural `expectedControls()` separately fro
 normal absence without broad catch-and-false behavior. Failures identify the
 surface, control/property, expected/observed state, and relevant diagnostics.
 
-SM01/SM02 gate deeper acceptance through Playwright project dependencies.
+SM01/SM02 and the seven registry-generated cases gate deeper acceptance through
+Playwright project dependencies.
 Unexpected uncaught errors, page crashes, critical resource failures, and
 explicitly critical console errors fail readiness/scenario teardown.
 Ordinary handled warnings remain evidence rather than automatic failures.
@@ -127,3 +128,27 @@ AC13 repeats one archive/identity lifecycle across three actual stores.
 AC14-AC16 cover protected restoration, partial checkpoint failure, and focused
 interval autosave. These are coherent user journeys, not per-control tests.
 Detailed geometry/ranking/retention/race cases stay product-owned unit tests.
+
+## GUIDED-E2E-012 - Explicit surface inventory and independent actions
+
+One statically declared registry resolves GuidedApp-owned Page Objects. Concrete
+constructor metadata supports compiler-based completeness across exported
+inheritance/aliases/namespaces without runtime discovery or duplicate instances.
+Each entry generates an independent fresh-context test. The shared executor
+delegates readiness, validates applicable fresh defaults, checks reopening once,
+then executes ordered typed actions with stage-specific failures and diagnostics.
+
+Foundational application startup does not validate document-only controls before
+another surface's test can run. It does wait for common initialization to finish,
+so storage observation cannot create an empty IndexedDB database before the
+worker establishes its schema. FW01 exercises a deliberately stalled manifest.
+A native Documents return action preserves the
+working document when leaving Settings, independent of history filtering.
+Guidance reopening preserves an already active non-first field. These contracts
+are protected by FW01, not by forcing/resetting product DOM state.
+
+Screenshot capture is an observational action in a separate project, not a
+dependency of acceptance or part of test:all. It uses test-specific full-page
+PNG output without changing focus, settings or content. All generated evidence
+and scratch work belongs under ignored project-root `temp`; captures have a
+separate output directory so mandatory runs do not remove them.

@@ -489,7 +489,9 @@ export class GuidedApp extends HTMLElement {
     on<string>("source-change", (source) => this.authoring.update(source));
   }
   private async initialize(): Promise<void> {
-    this.workspace.replaceChildren(el("p", "muted", "Opening your writing space…"));
+    const startup = el("p", "muted", "Opening your writing space…");
+    startup.dataset.testid = "guided-app-main-status-startup";
+    this.workspace.replaceChildren(startup);
     try {
       await this.templates.initialize();
       const navigationId = this.navigationId;

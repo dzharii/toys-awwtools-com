@@ -1,5 +1,11 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import type { BrowserDiagnostics } from "../framework/diagnostics";
+
+interface StalledTemplateResource {
+  waitUntilRequested(): Promise<void>;
+  resume(): Promise<void>;
+  dispose(): Promise<void>;
+}
 
 /** Faults affect only this scenario's browser environment, never production hooks. */
 export class BrowserFaults {
@@ -105,8 +111,10 @@ export class BrowserFaults {
       route.fulfill({ contentType: "text/plain", body: source }),
     );
   }
-  async stallTemplateResource(): Promise<() => Promise<void>> {
-    const pattern = "**/templates/blank-note.gtl";
+  async stallTemplateResource(
+    asset: "blank-note.gtl" | "manifest.json" = "blank-note.gtl",
+  ): Promise<StalledTemplateResource> {
+    const pattern = `**/templates/${asset}`;
     let resume!: () => void;
     const gate = new Promise<void>((resolve) => {
       resume = resolve;
@@ -117,10 +125,22 @@ export class BrowserFaults {
       pending.push(handled);
       return handled;
     });
-    return async () => {
+    const release = async () => {
       resume();
       await Promise.all(pending);
-      await this.page.unroute(pattern);
+    };
+    return {
+      waitUntilRequested: async () => {
+        await expect
+          .poll(() => pending.length, { message: `${asset} must reach the stalled route` })
+          .toBeGreaterThan(0);
+      },
+      resume: release,
+      dispose: async () => {
+        await release();
+        // Removing interception during startup can strand concurrent worker fetches.
+        await this.page.unroute(pattern);
+      },
     };
   }
 

@@ -103,6 +103,10 @@ Read the suite's `README.md`, `COVERAGE.md`, and `VALIDATION.md`, and the root
 
 ### Browser lifecycle, evidence, and validation
 
+- Store generated screenshots, reports, scratch fixtures, and other temporary
+  work in the project-root `temp/` folder. It is Git-ignored; do not commit its
+  contents or create new artifact folders elsewhere in the project.
+
 - Use the common Guided fixture. Reuse Chromium per worker, with a fresh isolated
   context per independent scenario. Keep the same context across persistence
   reloads and intentionally shared tabs. Do not depend on test order or leftover
@@ -125,6 +129,16 @@ Read the suite's `README.md`, `COVERAGE.md`, and `VALIDATION.md`, and the root
   Never mutate the user's live source or use destructive Git resets. Rebuild
   each injected copy, run unchanged tests, classify Caught/Missed/Unverified, and
   restore, rebuild, and revalidate the clean copy after every case.
+
+### Universal Page Object coverage
+
+Every concrete exported `PageObject` subclass must have one explicit entry in
+`ui-regression-test-suite/src/framework/surface-registry.ts`, resolving an
+existing GuidedApp-owned instance. Maintain nondestructive, idempotent `open()`,
+meaningful required controls, and an explicit default-state policy. The compiler
+completeness check and registry-generated smoke tests are mandatory; capture is
+an optional post-validation action, not an acceptance prerequisite. See the
+suite's `docs/page-object-smoke-framework.md` before extending these contracts.
 
 ## References
 

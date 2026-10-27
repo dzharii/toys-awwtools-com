@@ -3,6 +3,8 @@ import { PageObject } from "../framework/page-object";
 import type { AppContext } from "../framework/app-context";
 import { AnswerControl } from "../page-components/answer-control";
 import type { WorkspacePanelsPage } from "./workspace-panels.page";
+import type { DocumentWorkspacePage } from "./document-workspace.page";
+import { PanelControls } from "../page-components/panel-controls";
 
 export class FieldEditorPage extends PageObject {
   readonly root: Locator;
@@ -14,6 +16,7 @@ export class FieldEditorPage extends PageObject {
   constructor(
     app: AppContext,
     private readonly panels: WorkspacePanelsPage,
+    private readonly documents: DocumentWorkspacePage,
   ) {
     super(app, "Field editor");
     this.root = app.page.getByTestId("guided-field-editor-main-panel-root");
@@ -27,6 +30,8 @@ export class FieldEditorPage extends PageObject {
     return [
       { name: "Active answer", locator: this.answer.locator },
       { name: "Field identity", locator: this.identifier },
+      { name: "Previous field", locator: this.previous },
+      { name: "Next field", locator: this.next },
     ];
   }
 
@@ -35,7 +40,26 @@ export class FieldEditorPage extends PageObject {
   }
 
   async open(): Promise<void> {
-    if (!(await this.exists())) await this.panels.restoreGuidance();
+    if (!(await this.answer.locator.isVisible())) await this.panels.restoreGuidance();
+    if (!(await this.answer.locator.isVisible()) || (await this.answer.locator.isDisabled())) {
+      await this.documents.open();
+      if (!(await this.answer.locator.isVisible())) await this.panels.restoreGuidance();
+      if (!(await this.answer.locator.isVisible()) || (await this.answer.locator.isDisabled())) {
+        let token = this.documents.root
+          .getByTestId("guided-documents-main-button-placeholder")
+          .first();
+        if (!(await token.isVisible()) || (await this.documents.renameButton().isDisabled())) {
+          await this.documents.newDocument();
+          token = this.documents.root
+            .getByTestId("guided-documents-main-button-placeholder")
+            .first();
+        }
+        await expect(token, "An editable document must provide a field").toBeVisible();
+        await PanelControls.expose(this.app.page, token);
+        await token.click();
+      }
+    }
+    if (!(await this.answer.locator.isVisible())) await this.panels.restoreGuidance();
     await this.expectReady();
   }
 

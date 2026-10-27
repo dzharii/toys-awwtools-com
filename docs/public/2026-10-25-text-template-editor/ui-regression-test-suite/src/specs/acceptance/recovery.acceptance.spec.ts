@@ -65,9 +65,10 @@ test("AC07 · recoverable failures preserve latest work and never report false s
   await test.step("An unrelated stalled search asset never blocks reopening independently saved work", async () => {
     await app.settings().open();
     await app.navigation().selectDocument("Recovery work");
-    const resume = await faults.stallTemplateResource();
+    const stalled = await faults.stallTemplateResource();
     try {
       await app.reload();
+      await stalled.waitUntilRequested();
       await expect(app.documents().result).toHaveJSProperty("textContent", expected);
       await expect(app.templates().searchStatus).toContainText("Indexing templates");
       await app.documents().selectField("tool");
@@ -75,12 +76,13 @@ test("AC07 · recoverable failures preserve latest work and never report false s
       await faults.deniedClipboard();
       await app.documents().copy();
       await expect(app.panels().error).toContainText("Clipboard access was denied");
+      await stalled.resume();
+      await expect(app.templates().searchStatus).not.toContainText("Indexing templates");
+      await expect(app.panels().error).toBeVisible();
+      await expect(app.panels().error).toContainText("Clipboard access was denied");
     } finally {
-      await resume();
+      await stalled.dispose();
     }
-    await expect(app.templates().searchStatus).not.toContainText("Indexing templates");
-    await expect(app.panels().error).toBeVisible();
-    await expect(app.panels().error).toContainText("Clipboard access was denied");
   });
   await test.step("Clipboard denial and a failed template request report actionable errors without losing unrelated work", async () => {
     await faults.deniedClipboard();

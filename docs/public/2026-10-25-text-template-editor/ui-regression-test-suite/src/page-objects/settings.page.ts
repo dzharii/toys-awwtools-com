@@ -42,6 +42,11 @@ export class SettingsPage extends PageObject {
       { name: "Theme", locator: this.control("theme") },
       { name: "Storage mode", locator: this.control("storageMode") },
       { name: "Autosave interval", locator: this.control("autosaveSeconds") },
+      { name: "Document reading size", locator: this.control("documentTextSize") },
+      { name: "Field reading size", locator: this.control("fieldTextSize") },
+      { name: "Browser suggestions", locator: this.control("browserSuggestions") },
+      { name: "Recent document limit", locator: this.control("recentLimit") },
+      { name: "Diagnostic level", locator: this.control("logLevel") },
     ];
   }
 

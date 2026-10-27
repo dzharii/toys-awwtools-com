@@ -19,7 +19,26 @@ export class NavigationPage extends PageObject {
   }
 
   expectedControls() {
-    return [{ name: "New Document", locator: this.newButton }];
+    return [
+      { name: "New Document", locator: this.newButton },
+      {
+        name: "Return to Documents",
+        locator: this.root.getByTestId("guided-documents-navigation-button-workspace"),
+      },
+      { name: "Document filter", locator: this.filterControl() },
+      {
+        name: "Document history",
+        locator: this.root.getByTestId("guided-documents-navigation-list-documents"),
+      },
+      {
+        name: "Template drafts",
+        locator: this.root.getByTestId("guided-authoring-navigation-button-open"),
+      },
+      {
+        name: "Settings",
+        locator: this.root.getByTestId("guided-settings-navigation-button-open"),
+      },
+    ];
   }
 
   async open(): Promise<void> {
@@ -62,6 +81,16 @@ export class NavigationPage extends PageObject {
     await this.open();
     await this.newButton.click();
     await expect(this.app.page.getByTestId("guided-documents-main-region-workspace")).toBeVisible();
+  }
+
+  async openDocumentWorkspace(): Promise<void> {
+    await this.open();
+    const workspace = this.app.page.getByTestId("guided-documents-main-region-workspace");
+    if (!(await workspace.isVisible())) {
+      await this.root.getByTestId("guided-documents-navigation-button-workspace").click();
+      if (!(await workspace.isVisible())) await this.newDocument();
+    }
+    await expect(workspace).toBeVisible();
   }
 
   async selectDocument(title: string): Promise<void> {

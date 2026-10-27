@@ -1,9 +1,11 @@
 # Guided browser acceptance
 
 An independent external acceptance application for Guided, including the major
-UX change request. Two grouped smoke tests gate 18 substantial acceptance cases
-across AC01-AC16 (three storage variants of AC13). Seven infrastructure unit tests
-protect import isolation and build verification. See [COVERAGE](COVERAGE.md) for
+UX change request. Seven registry-generated surface tests and two grouped smoke
+tests gate 19 acceptance cases: AC01-AC16 (three storage variants of AC13) and
+FW01's nondestructive opening/action-isolation contract. Twenty-eight infrastructure
+tests protect isolation, provenance, registry completeness, and orchestration.
+Seven optional capture cases use the same registry/runner. See [COVERAGE](COVERAGE.md) for
 actual assertions, domain-test counterparts, and remaining verification limits.
 
 ## Install and run
@@ -26,17 +28,18 @@ an AST/module-resolution library because TypeScript 7's default export no longer
 provides the stable compiler API. The typecheck command explicitly invokes the
 7.0.2 compiler to avoid the aliased package's competing `tsc` binary.
 
-| Command                    | Purpose                                                                                   |
-| -------------------------- | ----------------------------------------------------------------------------------------- |
-| `bun run typecheck`        | Two-way source/configuration boundary audit and strict TypeScript                         |
-| `bun run test:unit`        | Infrastructure failure cases, without a browser                                           |
-| `bun run test:smoke`       | SM01 and SM02 readiness/default-state gate                                                |
-| `bun run test:acceptance`  | Smoke dependencies, then all AC01-AC16 cases                                              |
-| `bun run test:all`         | Boundary/type checks, infrastructure tests, smoke and acceptance                          |
-| `bun run test:headed`      | Smoke and acceptance in visible Chromium                                                  |
-| `bun run test:debug`       | Playwright interactive debugging                                                          |
-| `bun run test:sensitivity` | Nine isolated single-defect injections, each followed by clean restoration/rebuild/retest |
-| `bun run format:check`     | Suite-owned formatting check                                                              |
+| Command                    | Purpose                                                                                       |
+| -------------------------- | --------------------------------------------------------------------------------------------- |
+| `bun run typecheck`        | Two-way boundaries, compiler-based registry completeness, and strict TypeScript               |
+| `bun run test:unit`        | Infrastructure failure cases, without a browser                                               |
+| `bun run test:smoke`       | Seven universal Page Object cases plus SM01/SM02                                              |
+| `bun run test:acceptance`  | Smoke dependencies, then AC01-AC16 and FW01                                                   |
+| `bun run test:all`         | Boundary/type/registry checks, infrastructure, smoke and acceptance; no optional capture      |
+| `bun run test:capture`     | Seven independent full-page PNG captures after the same validation pipeline                   |
+| `bun run test:headed`      | Smoke and acceptance in visible Chromium                                                      |
+| `bun run test:debug`       | Playwright interactive debugging                                                              |
+| `bun run test:sensitivity` | Ten isolated defects, including universal smoke isolation/acceptance gating, with restoration |
+| `bun run format:check`     | Suite-owned formatting check                                                                  |
 
 The root `bun run test:browser` delegates to `test:all`. Do not run old root-level
 Playwright commands; the previous 23 browser tests have been consolidated into
@@ -46,12 +49,14 @@ For focused work, for example:
 
 ```powershell
 bunx playwright test --project acceptance --grep 'SM0|AC05'
-bunx playwright test --workers 2 --fully-parallel --repeat-each 2
-bunx playwright show-report
+bunx playwright test --project smoke --project acceptance --workers 2 --fully-parallel --repeat-each 2
+bunx playwright show-report ..\temp\ui-regression-test-suite\playwright-report
 ```
 
 Keep smoke selected when using grep; `--no-deps` is not a release-validation gate.
 Retries default to zero. A repeated failure must be investigated, not hidden.
+A bare `playwright test` now includes the optional capture project; prefer the
+documented scripts for the mandatory gate.
 
 ## Built SUT and server
 
@@ -89,6 +94,12 @@ or claimed as validated by this Chromium suite.
 
 ## Architecture and contracts
 
+See [Universal Page Object smoke and capture](docs/page-object-smoke-framework.md)
+for registration, opening dependencies, completeness enforcement, action authoring,
+failure stages, and artifact paths. Every concrete exported Page Object must be
+registered. Optional actions run only after successful validation; capture never
+modifies product state to improve an image.
+
 `framework/guided-test.ts` uses Playwright's worker-scoped browser and fresh
 scenario context/page. It owns additional same-context tabs and independent
 contexts, attaches diagnostics, and disposes additional contexts. Playwright owns
@@ -124,19 +135,19 @@ values. Repeated document rows expose separate `data-document-id` /
 `data-storage-mode`; placeholders expose separate `data-placeholder-name`.
 The Page Objects are the exact selector inventory.
 
-| Surface                              | Adopted contract groups                                                                               |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| Application and feedback             | `guided-app-main-region-*`, `...-status-notice`, `...-alert-error`, `...-button-retry-initialization` |
-| Document editing                     | `guided-documents-main-*`, `guided-templates-version-{select,group,radio}-*`                          |
-| Results and exports                  | `guided-documents-result-*`                                                                           |
-| Template catalog and samples         | `guided-templates-{main,preview}-*`                                                                   |
-| Document navigation/drawer           | `guided-documents-navigation-*`, settings/authoring navigation buttons                                |
-| Answer guidance/examples             | `guided-field-editor-main-*`, `guided-field-editor-examples-*`                                        |
-| Persistent panels and geometry       | `guided-panels-*`, `guided-workspace-main-*`, `guided-issues-main-*`                                  |
-| Settings schema controls             | `guided-settings-{main,compact}-{select,input}-<stable-setting-name>` and validation                  |
-| Authoring current/inspection/history | `guided-authoring-{main,source,preview,navigation,history}-*`                                         |
-| Rename                               | `guided-rename-main-*`                                                                                |
-| Confirmation                         | `guided-confirmation-main-*`                                                                          |
+| Surface                              | Adopted contract groups                                                                                                     |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| Application and feedback             | `guided-app-main-region-*`, `...-status-startup`, `...-status-notice`, `...-alert-error`, `...-button-retry-initialization` |
+| Document editing                     | `guided-documents-main-*`, `guided-templates-version-{select,group,radio}-*`                                                |
+| Results and exports                  | `guided-documents-result-*`                                                                                                 |
+| Template catalog and samples         | `guided-templates-{main,preview}-*`                                                                                         |
+| Document navigation/drawer           | `guided-documents-navigation-*`, settings/authoring navigation buttons                                                      |
+| Answer guidance/examples             | `guided-field-editor-main-*`, `guided-field-editor-examples-*`                                                              |
+| Persistent panels and geometry       | `guided-panels-*`, `guided-workspace-main-*`, `guided-issues-main-*`                                                        |
+| Settings schema controls             | `guided-settings-{main,compact}-{select,input}-<stable-setting-name>` and validation                                        |
+| Authoring current/inspection/history | `guided-authoring-{main,source,preview,navigation,history}-*`                                                               |
+| Rename                               | `guided-rename-main-*`                                                                                                      |
+| Confirmation                         | `guided-confirmation-main-*`                                                                                                |
 
 Repeated draft/checkpoint identities use separate data attributes. Test IDs
 supplement, never replace, labels and native accessibility. Panel helpers expose
@@ -146,8 +157,11 @@ operations independently of product code.
 
 ## Diagnostics, artifacts, and privacy
 
-HTML reports are in `playwright-report`; failure traces/screenshots/videos are in
-`test-results`. Named business steps and Page Object errors identify the failed
+All generated work belongs in the Git-ignored project-root `temp` folder.
+Under `temp\ui-regression-test-suite`, HTML reports are in `playwright-report`,
+failure evidence in `test-results`, and optional ID-named PNGs in the separate
+`captures` test-specific directories. Previous generated files were preserved
+under `temp\previous-runs`. Named business steps and Page Object errors identify the failed
 surface/action. `ui-timings.json` and `browser-diagnostics.json` are per-scenario
 attachments, with worker/context/page identities. Timings retain at most 100
 operations; recent diagnostics at most 80
@@ -173,7 +187,8 @@ mutates one behavior, rebuilds, and runs unchanged smoke/relevant acceptance.
 It checks actual failed-test symptoms rather than counting a tooling error as
 Caught. Every case restores exact source bytes, rebuilds, and verifies a passing
 clean baseline. The live checkout and acceptance expectations are never edited.
-Ignored `artifacts/sensitivity-*` preserves JSON reports/logs and classification.
+Ignored `temp\ui-regression-test-suite\sensitivity-*` under the project root
+preserves JSON reports/logs and classification.
 
 Before a user-facing change, review relevant objects/Flows and
 [COVERAGE](COVERAGE.md), extend the existing journey, build/test the product,
@@ -181,4 +196,4 @@ then run smoke and affected/full acceptance. Add a new browser test only for a
 genuinely distinct workflow or failure precondition. Record contract changes and
 actual validation in [VALIDATION](VALIDATION.md). See `AGENTS.md` and
 `GUIDED-E2E-001` through `007` and `GUIDED-UX-008` through `011` in the root
-architecture register.
+architecture register, together with `GUIDED-E2E-012` for universal smoke/capture.

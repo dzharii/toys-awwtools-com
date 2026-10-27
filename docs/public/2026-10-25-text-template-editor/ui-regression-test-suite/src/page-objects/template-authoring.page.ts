@@ -34,6 +34,12 @@ export class TemplateAuthoringPage extends PageObject {
         name: "Download source",
         locator: this.root.getByTestId("guided-authoring-main-button-download"),
       },
+      { name: "New template", locator: this.root.getByTestId("guided-authoring-main-button-new") },
+      {
+        name: "Bundled inspection",
+        locator: this.root.getByTestId("guided-authoring-main-select-bundled"),
+      },
+      { name: "Save state", locator: this.saveStatus },
     ];
   }
 
@@ -43,6 +49,7 @@ export class TemplateAuthoringPage extends PageObject {
 
   async open(): Promise<void> {
     if (!(await this.exists())) await this.navigation.openAuthoring();
+    if (await this.inspectedSource.isVisible()) await this.backToCurrent();
     await this.expectReady();
   }
 

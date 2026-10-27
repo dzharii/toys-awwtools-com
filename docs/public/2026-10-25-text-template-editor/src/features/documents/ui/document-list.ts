@@ -70,6 +70,12 @@ export class DocumentList extends HTMLElement {
     this.root.append(
       brand,
       button(
+        "Documents",
+        () => emit(this, "open-documents"),
+        "footer-button",
+        "guided-documents-navigation-button-workspace",
+      ),
+      button(
         "+   New Document",
         () => emit(this, "new-document"),
         "new",

@@ -20,11 +20,17 @@ export class TemplateCatalogPage extends PageObject {
   }
 
   expectedControls() {
-    return [{ name: "Bundled template cards", locator: this.cards.first() }];
+    return [
+      { name: "Template search", locator: this.searchInput },
+      { name: "Search status", locator: this.searchStatus },
+      { name: "Bundled template cards", locator: this.cards.first() },
+    ];
   }
 
   async open(): Promise<void> {
     if (!(await this.exists())) await this.documents.open();
+    if ((await this.searchInput.inputValue()).trim() && !(await this.cards.first().isVisible()))
+      await this.clearSearch();
     await this.expectReady();
   }
 

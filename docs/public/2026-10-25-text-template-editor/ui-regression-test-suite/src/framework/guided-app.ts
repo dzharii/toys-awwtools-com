@@ -24,7 +24,7 @@ export class GuidedApp {
     this.documentPage = new DocumentWorkspacePage(context, this.navigationPage);
     this.templatePage = new TemplateCatalogPage(context, this.documentPage);
     this.panelPage = new WorkspacePanelsPage(context);
-    this.editorPage = new FieldEditorPage(context, this.panelPage);
+    this.editorPage = new FieldEditorPage(context, this.panelPage, this.documentPage);
     this.authoringPage = new TemplateAuthoringPage(context, this.navigationPage);
     this.settingsPage = new SettingsPage(context, this.navigationPage);
     this.confirmation = new Confirmation(context.page);
@@ -51,13 +51,22 @@ export class GuidedApp {
   settings() {
     return this.settingsPage;
   }
+  get startupStatus() {
+    return this.context.page.getByTestId("guided-app-main-status-startup");
+  }
 
   async start(path = ""): Promise<void> {
     await this.context.timings.measure(
       "app:navigate",
       async () => {
         await this.context.page.goto(new URL(path, this.context.baseURL).href);
-        await this.expectReady();
+        // A document-only regression must not preempt unrelated surface tests.
+        await expect(this.context.page.getByTestId("guided-app-main-region-root")).toBeVisible();
+        await expect(
+          this.context.page.getByTestId("guided-app-main-region-workspace"),
+        ).toBeVisible();
+        await expect(this.startupStatus).toBeHidden();
+        this.context.diagnostics.assertHealthy("Application startup");
       },
       this.context.identity,
     );

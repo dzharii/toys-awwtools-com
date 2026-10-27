@@ -41,14 +41,19 @@ Prettier, and Bun types are product development dependencies only. Playwright an
 axe belong exclusively to the independent regression-suite package. The deployed
 application uses the vendored Dexie and microlight distributions.
 
-The browser suite contains two grouped smoke tests and 18 comprehensive
-acceptance cases (AC01-AC16, including three storage variants of AC13).
+The browser suite contains seven registry-generated Page Object smoke cases,
+two grouped smoke journeys, and 19 acceptance cases (AC01-AC16, including three
+storage variants of AC13, plus the framework contract journey FW01).
 Smoke gates acceptance; fresh contexts isolate scenarios
 while preserving real storage across reloads and intentionally shared tabs.
 It rejects absent, stale, or modified build artifacts and mismatched preview
 servers. See the [suite guide](ui-regression-test-suite/README.md),
 [coverage and product gaps](ui-regression-test-suite/COVERAGE.md), and
 [validation evidence](ui-regression-test-suite/VALIDATION.md).
+Optional `bun run --cwd ui-regression-test-suite test:capture` captures all seven
+surfaces through the same validation pipeline. Generated screenshots, reports,
+and scratch work stay in the Git-ignored project-root `temp` folder; capture
+PNGs are under `temp\ui-regression-test-suite\captures`.
 
 ## Writing
 

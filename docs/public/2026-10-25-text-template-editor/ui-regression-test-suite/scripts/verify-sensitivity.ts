@@ -1,18 +1,18 @@
 /** Mutate an isolated SUT copy, never live product source or acceptance expectations. */
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const suiteRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const sourceRoot = resolve(suiteRoot, "..");
 const artifactRoot = resolve(
-  suiteRoot,
-  "artifacts",
+  sourceRoot,
+  "temp",
+  "ui-regression-test-suite",
   `sensitivity-${new Date().toISOString().replace(/[:.]/g, "-")}`,
 );
-const isolatedRoot = await mkdtemp(resolve(tmpdir(), "guided-acceptance-sensitivity-"));
 await mkdir(artifactRoot, { recursive: true });
+const isolatedRoot = await mkdtemp(resolve(artifactRoot, "guided-acceptance-sensitivity-"));
 
 interface Defect {
   id: string;
@@ -22,9 +22,27 @@ interface Defect {
   project: "smoke" | "acceptance";
   grep: string;
   symptom: RegExp;
+  passedSurfaces?: string[];
+  blocksAcceptance?: boolean;
 }
 
 const defects: Defect[] = [
+  {
+    id: "universal-required-id",
+    file: "src/features/documents/ui/document-workspace.ts",
+    before: '"guided-documents-result-button-copy-rich"',
+    after: '"guided-documents-result-button-copy-rich-broken"',
+    project: "acceptance",
+    grep: "^PO |AC01",
+    symptom: /document-workspace: opening failure/,
+    passedSurfaces: [
+      "PO document-navigation:",
+      "PO template-authoring:",
+      "PO settings:",
+      "PO workspace-panels:",
+    ],
+    blocksAcceptance: true,
+  },
   {
     id: "missing-id",
     file: "src/features/templates/ui/guidance-panel.ts",
@@ -160,8 +178,26 @@ function errorMessages(value: unknown): string[] {
         record(error) && typeof error.message === "string" ? [error.message] : [],
       );
     }
+
     return typeof nested === "object" ? errorMessages(nested) : [];
   });
+}
+
+function passedTitles(value: unknown): string[] {
+  if (Array.isArray(value)) return value.flatMap(passedTitles);
+  if (!record(value)) return [];
+  if (
+    typeof value.title === "string" &&
+    Array.isArray(value.tests) &&
+    value.tests.some(
+      (test: unknown) =>
+        record(test) &&
+        Array.isArray(test.results) &&
+        test.results.some((result: unknown) => record(result) && result.status === "passed"),
+    )
+  )
+    return [value.title];
+  return Object.values(value).flatMap(passedTitles);
 }
 
 async function browserRun(defect: Defect, phase: "injected" | "restored") {
@@ -213,6 +249,8 @@ async function browserRun(defect: Defect, phase: "injected" | "restored") {
     ...execution,
     unexpected: parsed.stats.unexpected,
     messages: errorMessages(parsed).join("\n"),
+    passed: passedTitles(parsed),
+    skipped: parsed.stats.skipped,
   };
 }
 
@@ -272,6 +310,14 @@ try {
           `${defect.id}: execution failed without the expected defect symptom; classification is Unverified.`,
         );
       }
+      for (const title of defect.passedSurfaces ?? []) {
+        if (!injected.passed.some((passed) => passed.startsWith(title)))
+          throw new Error(
+            `${defect.id}: unrelated surface ${title} did not pass; isolation is unverified.`,
+          );
+      }
+      if (defect.blocksAcceptance && (typeof injected.skipped !== "number" || injected.skipped < 1))
+        throw new Error(`${defect.id}: acceptance was not demonstrably blocked by smoke.`);
       result.classification = "Caught";
     } finally {
       await writeFile(file, original);
@@ -296,7 +342,7 @@ try {
     JSON.stringify({ results, artifactRoot }, null, 2) + "\n",
   );
   if (
-    dirname(isolatedRoot) !== resolve(tmpdir()) ||
+    dirname(isolatedRoot) !== artifactRoot ||
     !basename(isolatedRoot).startsWith("guided-acceptance-sensitivity-")
   ) {
     throw new Error("Refusing unsafe temporary-product cleanup.");

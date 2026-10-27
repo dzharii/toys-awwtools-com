@@ -20,7 +20,21 @@ export class WorkspacePanelsPage extends PageObject {
   }
 
   expectedControls() {
-    return [{ name: "Guidance toggle", locator: this.toggle }];
+    return [
+      { name: "Guidance toggle", locator: this.toggle },
+      {
+        name: "Guidance actions",
+        locator: this.root.getByTestId("guided-panels-field-button-actions"),
+      },
+      {
+        name: "Close guidance",
+        locator: this.root.getByTestId("guided-panels-field-button-close"),
+      },
+      {
+        name: "Panel access",
+        locator: this.app.page.getByTestId("guided-panels-main-button-open"),
+      },
+    ];
   }
 
   async open(): Promise<void> {

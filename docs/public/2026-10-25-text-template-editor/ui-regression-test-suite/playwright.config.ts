@@ -8,13 +8,19 @@ const productRoot = resolve(
 );
 const port = process.env.GUIDED_PORT ?? "4187";
 const baseURL = process.env.GUIDED_BASE_URL ?? `http://127.0.0.1:${port}/`;
+const artifactRoot = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "temp",
+  "ui-regression-test-suite",
+);
 
 await verifyBuild(productRoot);
 
 export default defineConfig({
   testDir: "./src/specs",
   testIgnore: "**/unit/**",
-  outputDir: "./test-results",
+  outputDir: resolve(artifactRoot, "test-results"),
   fullyParallel: false,
   workers: process.env.CI ? 2 : 1,
   retries: 0,
@@ -22,7 +28,10 @@ export default defineConfig({
   expect: { timeout: 8_000 },
   forbidOnly: !!process.env.CI,
   globalSetup: "./scripts/verify-build.ts",
-  reporter: [["list"], ["html", { outputFolder: "playwright-report", open: "never" }]],
+  reporter: [
+    ["list"],
+    ["html", { outputFolder: resolve(artifactRoot, "playwright-report"), open: "never" }],
+  ],
   use: {
     browserName: "chromium",
     baseURL,
@@ -42,6 +51,11 @@ export default defineConfig({
   projects: [
     { name: "smoke", testMatch: "**/smoke/*.spec.ts" },
     { name: "acceptance", testMatch: "**/acceptance/*.spec.ts", dependencies: ["smoke"] },
+    {
+      name: "capture",
+      testMatch: "**/capture/*.spec.ts",
+      outputDir: resolve(artifactRoot, "captures"),
+    },
   ],
   webServer: process.env.GUIDED_BASE_URL
     ? undefined

@@ -45,11 +45,20 @@ export class DocumentWorkspacePage extends PageObject {
         locator: this.root.getByTestId("guided-documents-main-region-guided-text"),
       },
       { name: "Generated result", locator: this.result },
+      { name: "Document title", locator: this.title },
+      { name: "Save state", locator: this.saveStatus },
+      { name: "Export", locator: this.exportButton },
+      {
+        name: "Reading size",
+        locator: this.root.getByTestId("guided-documents-main-select-text-size"),
+      },
+      { name: "Copy text", locator: this.copyButton },
+      { name: "Copy rich text", locator: this.richCopyButton },
     ];
   }
 
   async open(): Promise<void> {
-    if (!(await this.exists())) await this.navigation.newDocument();
+    if (!(await this.exists())) await this.navigation.openDocumentWorkspace();
     await this.expectReady();
   }
 

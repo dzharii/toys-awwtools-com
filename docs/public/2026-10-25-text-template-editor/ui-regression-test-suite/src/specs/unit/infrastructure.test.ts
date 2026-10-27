@@ -1,13 +1,22 @@
 import { afterEach, expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import ts from "typescript-compiler-api";
 import { auditTree, checkBoundaries } from "../../../scripts/check-boundaries";
 import { verifyBuild, verifyServedBuild } from "../../../scripts/verify-build";
 
 const temporaryRoots: string[] = [];
+const temporaryParent = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "..",
+  "..",
+  "temp",
+  "infrastructure",
+);
 
 afterEach(async () => {
   for (const root of temporaryRoots.splice(0)) {
@@ -18,7 +27,8 @@ afterEach(async () => {
 });
 
 async function fixtureRoot(): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), "guided-acceptance-infra-"));
+  await mkdir(temporaryParent, { recursive: true });
+  const root = await mkdtemp(join(temporaryParent, "guided-acceptance-infra-"));
   temporaryRoots.push(root);
   return root;
 }
