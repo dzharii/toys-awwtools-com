@@ -18,10 +18,12 @@ export class DocumentWorkspacePage extends PageObject {
   readonly exportButton: Locator;
   readonly mainViewport: Locator;
   readonly wordCount: Locator;
+  readonly progress: Locator;
 
   constructor(
     app: AppContext,
     private readonly navigation: NavigationPage,
+    private readonly selectDefault: () => Promise<void>,
   ) {
     super(app, "Document workspace");
     this.root = app.page.getByTestId("guided-documents-main-region-workspace");
@@ -36,6 +38,7 @@ export class DocumentWorkspacePage extends PageObject {
     this.exportButton = this.root.getByTestId("guided-documents-result-button-export");
     this.mainViewport = app.page.getByRole("main", { name: "Document workspace", exact: true });
     this.wordCount = this.root.getByTestId("guided-documents-result-status-word-count");
+    this.progress = this.root.getByTestId("guided-documents-main-status-progress");
   }
 
   expectedControls() {
@@ -59,24 +62,59 @@ export class DocumentWorkspacePage extends PageObject {
 
   async open(): Promise<void> {
     if (!(await this.exists())) await this.navigation.openDocumentWorkspace();
+    if (!(await this.exists())) await this.selectDefault();
     await this.expectReady();
   }
 
   async newDocument(): Promise<void> {
     await this.navigation.newDocument();
+    await this.selectDefault();
     await this.expectReady();
   }
 
   async selectWritingStyle(label: string): Promise<void> {
+    if ((await this.style.getByRole("option", { includeHidden: true }).count()) === 1) {
+      await expect(
+        this.style.getByRole("option", { name: label, exact: true, includeHidden: true }),
+      ).toHaveCount(1);
+      return;
+    }
+    await this.openWritingStyles();
     const radio = this.styleRadio(label);
     if (await radio.isVisible()) {
       await PanelControls.expose(this.app.page, radio);
       await radio.check();
     } else await this.style.selectOption({ label });
+    await this.root.getByTestId("guided-templates-version-button-confirm").click();
     await this.expectReady();
   }
+  async openTemplateCatalog(): Promise<void> {
+    const disclosure = this.root.getByTestId("guided-documents-main-details-template");
+    if ((await disclosure.getAttribute("open")) === null) {
+      const summary = this.root.getByTestId("guided-documents-main-button-change-template");
+      await PanelControls.expose(this.app.page, summary);
+      await summary.click();
+    }
+  }
+  async openWritingStyles(): Promise<void> {
+    const disclosure = this.root.getByTestId("guided-documents-main-details-style");
+    if ((await disclosure.getAttribute("open")) === null) {
+      const summary = this.root.getByTestId("guided-documents-main-button-change-style");
+      await PanelControls.expose(this.app.page, summary);
+      await summary.click();
+    }
+  }
+  templateDisclosure(): Locator {
+    return this.root.getByTestId("guided-documents-main-details-template");
+  }
+  styleDisclosure(): Locator {
+    return this.root.getByTestId("guided-documents-main-details-style");
+  }
+  confirmStyle(): Locator {
+    return this.root.getByTestId("guided-templates-version-button-confirm");
+  }
   styleRadio(label: string): Locator {
-    return this.root.getByRole("radio", { name: label, exact: true });
+    return this.root.getByRole("radio", { name: label, exact: true, includeHidden: true });
   }
   writingStyleGroup(): Locator {
     return this.root.getByTestId("guided-templates-version-group-writing-style");

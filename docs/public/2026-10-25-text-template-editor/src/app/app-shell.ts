@@ -52,6 +52,7 @@ export class GuidedApp extends HTMLElement {
   private page: "document" | "settings" | "authoring" = "document";
   private context: "document" | "authoring" = "document";
   private ready = false;
+  private startup?: HTMLElement;
   private operationError = "";
   private navigationId = 0;
   private sidebar = new DocumentList();
@@ -209,6 +210,12 @@ export class GuidedApp extends HTMLElement {
       el(
         "div",
         "topbar-tools",
+        button(
+          "+ New document",
+          () => this.showTemplateDiscovery(),
+          "secondary",
+          "guided-workspace-main-button-new-document",
+        ),
         this.modeLabel,
         this.issueSummary,
         contextButton,
@@ -331,7 +338,7 @@ export class GuidedApp extends HTMLElement {
       this.addEventListener(name, (event) => handler((event as CustomEvent<T>).detail));
     on("new-document", () => {
       this.panels.dismissNavigation();
-      void this.run(() => this.newDocument());
+      this.showTemplateDiscovery();
     });
     on<{ templateId: string; versionId?: string }>(
       "template-select",
@@ -446,7 +453,10 @@ export class GuidedApp extends HTMLElement {
       this.inspectionEditor.textarea.focus({ preventScroll: true });
     });
     on("authoring-current", () => this.backToCurrent());
-    on<string>("template-version-select", (version) => this.documents.switchVersion(version));
+    on<string>("template-version-select", (version) => {
+      this.documentWorkspace.finishStyleSelection();
+      this.documents.switchVersion(version);
+    });
     on<{ name: string; value: string }>("placeholder-change", (detail) => {
       if (this.page === "authoring") {
         this.previewAnswers[detail.name] = detail.value;
@@ -489,12 +499,13 @@ export class GuidedApp extends HTMLElement {
     on<string>("source-change", (source) => this.authoring.update(source));
   }
   private async initialize(): Promise<void> {
+    const navigationId = this.navigationId;
     const startup = el("p", "muted", "Opening your writing space…");
     startup.dataset.testid = "guided-app-main-status-startup";
+    this.startup = startup;
     this.workspace.replaceChildren(startup);
     try {
       await this.templates.initialize();
-      const navigationId = this.navigationId;
       const indexing = this.catalog.initialize(this.templates);
       // Background indexing must not dismiss an unrelated operation's failure.
       void this.run(async () => {
@@ -521,7 +532,13 @@ export class GuidedApp extends HTMLElement {
         this.authoring.load(this.settings.value.storageMode),
       ]);
       this.ready = true;
+      this.startup = undefined;
+      startup.remove();
       this.applySettings();
+      if (this.navigationId !== navigationId) {
+        this.renderPage();
+        return;
+      }
       // Restore the most recently edited saved document; untouched previews never enter history.
       const recent = this.documents.documents.find(
         (item) => item.origin === this.settings.value.storageMode && !item.record.archivedAt,
@@ -532,6 +549,7 @@ export class GuidedApp extends HTMLElement {
         if (!this.catalog.isIndexing && this.catalog.firstAvailable) await this.newDocument();
       }
     } catch {
+      this.startup = undefined;
       this.workspace.replaceChildren(
         el("h1", "", "Your writing space could not open."),
         el(
@@ -591,6 +609,16 @@ export class GuidedApp extends HTMLElement {
     if (this.page === "document") this.guidance.focusEditor();
     else if (this.page === "authoring") this.guidance.focusEditor();
   }
+  private showTemplateDiscovery(): void {
+    this.navigationId++;
+    this.panels.dismissNavigation();
+    void this.documents.flushAll();
+    void this.authoring.flushAll();
+    this.documents.active = null;
+    this.page = "document";
+    this.renderPage();
+    this.workspace.focus({ preventScroll: true });
+  }
   private async newDocument(
     templateId = this.catalog.firstAvailable ?? this.templates.entries[0]!.id,
     versionId?: string,
@@ -606,6 +634,8 @@ export class GuidedApp extends HTMLElement {
       if (navigationId !== this.navigationId) return;
       this.page = "document";
       this.documents.create(templateId, template, versionId);
+      this.documentWorkspace.finishTemplateSelection();
+      if (!versionId) this.documentWorkspace.chooseStyle();
       this.workspace.focus({ preventScroll: true });
     } finally {
       if (navigationId === this.navigationId) {
@@ -650,11 +680,8 @@ export class GuidedApp extends HTMLElement {
           this.templatePicker(),
         );
       } else if (!preserveDocumentSurface) {
-        this.workspace.replaceChildren(
-          el("div", "intro", el("h1", "", "Documents")),
-          this.templatePicker(),
-          this.documentWorkspace,
-        );
+        this.documentWorkspace.attachCatalog(this.templatePicker());
+        this.workspace.replaceChildren(this.documentWorkspace);
       }
     } else if (this.page === "settings") {
       this.crumb.textContent = "Workspace / Settings";
@@ -672,6 +699,7 @@ export class GuidedApp extends HTMLElement {
       this.crumb.textContent = "Workspace / Template Authoring";
       this.renderAuthoringPage();
     }
+    if (this.startup) this.workspace.prepend(this.startup);
     if (!preserveDocumentSurface) this.scrollRegion.scrollTop = 0;
     this.renderLive();
   }
@@ -719,12 +747,15 @@ export class GuidedApp extends HTMLElement {
         this.settings.value.keyboardHelp,
         working.origin !== this.settings.value.storageMode,
       );
+      this.panels.setFieldContext(placeholderNames(version).includes(working.activePlaceholder));
       this.crumb.textContent = `Documents / ${working.record.title}`;
     } else if (this.page === "document") {
       this.guidance.hidden = false;
       this.guidance.clear();
+      this.panels.setFieldContext(false);
     } else if (this.page === "settings") {
       this.guidance.hidden = true;
+      this.panels.setFieldContext(false);
     } else if (this.page === "authoring") this.renderAuthoringLive();
     this.renderIssues();
   }
@@ -733,6 +764,7 @@ export class GuidedApp extends HTMLElement {
     const token = [...this.workspace.querySelectorAll<HTMLElement>("[data-placeholder-name]")].find(
       (item) => item.dataset.placeholderName === name,
     );
+    this.panels.setFieldContext(true);
     this.panels.open("field", token?.getBoundingClientRect());
     if (this.page === "authoring") {
       this.previewField = name;
@@ -758,7 +790,7 @@ export class GuidedApp extends HTMLElement {
     }
   }
   private renderIssues(): void {
-    const issues: { message: string; action?: () => void }[] = [];
+    const issues: { message: string; action?: () => void; incomplete?: boolean }[] = [];
     if (this.filterError) issues.push({ message: this.filterError });
     if (this.storage.warning) issues.push({ message: this.storage.warning });
     if (this.panels.error)
@@ -800,6 +832,7 @@ export class GuidedApp extends HTMLElement {
       ).unresolved) {
         issues.push({
           message: `$${name} needs a valid answer.`,
+          incomplete: true,
           action: () => this.focusPlaceholder(name),
         });
       }
@@ -842,10 +875,23 @@ export class GuidedApp extends HTMLElement {
     this.issueList.replaceChildren(
       ...issues.map((issue) =>
         issue.action
-          ? button(issue.message, issue.action, "issue", "guided-issues-main-button-action")
+          ? button(
+              issue.message,
+              issue.action,
+              issue.incomplete ? "issue incomplete" : "issue",
+              "guided-issues-main-button-action",
+            )
           : el("p", "issue", issue.message),
       ),
     );
+    if (issues.length && issues.every((issue) => issue.incomplete))
+      this.issueList.prepend(
+        el(
+          "p",
+          "small muted",
+          "Your document is in progress. Complete these required fields when ready.",
+        ),
+      );
     if (!issues.length) this.issueList.append(el("p", "muted small", "No issues."));
     if (
       working &&
@@ -1038,15 +1084,51 @@ export class GuidedApp extends HTMLElement {
         ),
         open,
       ),
+      el("div", "eyebrow", "Draft title"),
       el("div", "document-title-row", this.authorTitle, this.authorRename),
       el("div", "template-name-row", this.authorName, this.authorNameButton, this.nameSource),
+      el(
+        "p",
+        "small muted",
+        "The draft title names your local file. The GTL name identifies the reusable template.",
+      ),
       this.authorHistorical,
       el("div", "authoring-actions", this.authorBack, this.authorRestore, this.authorCopy),
       el(
         "div",
         "section-heading",
         el("span", "eyebrow", "Template source / GTL"),
-        this.authorStatus,
+        el(
+          "div",
+          "source-tools",
+          this.authorStatus,
+          button(
+            "View live preview ↓",
+            () => {
+              this.preview.scrollIntoView({ block: "start" });
+              this.preview.focus({ preventScroll: true });
+            },
+            "text-button",
+            "guided-authoring-source-button-view-preview",
+          ),
+          el(
+            "div",
+            "source-height-controls",
+            el("span", "small muted", "Source height"),
+            button(
+              "−",
+              () => this.activeSourceEditor().resizeBy(-80),
+              "secondary",
+              "guided-authoring-source-button-shorter",
+            ),
+            button(
+              "+",
+              () => this.activeSourceEditor().resizeBy(80),
+              "secondary",
+              "guided-authoring-source-button-taller",
+            ),
+          ),
+        ),
       ),
       this.sourceEditor,
       this.inspectionEditor,
@@ -1059,6 +1141,18 @@ export class GuidedApp extends HTMLElement {
       ),
       this.preview,
     );
+    this.preview.tabIndex = -1;
+    this.preview.setAttribute("aria-label", "Live template preview");
+    for (const [id, label] of [
+      ["shorter", "Shorter source editor"],
+      ["taller", "Taller source editor"],
+    ] as const) {
+      const control = this.workspace.querySelector<HTMLButtonElement>(
+        `[data-testid="guided-authoring-source-button-${id}"]`,
+      )!;
+      control.setAttribute("aria-label", label);
+      control.title = label;
+    }
   }
   private renderAuthoringLive(): void {
     const draft = this.authoring.active;
@@ -1233,6 +1327,16 @@ export class GuidedApp extends HTMLElement {
         "section-heading",
         el("span", "eyebrow", "Live template preview"),
         el("span", "result-label", parsed.template ? "VALID GTL" : "NEEDS ATTENTION"),
+        button(
+          "Back to source ↑",
+          () => {
+            const editor = this.activeSourceEditor();
+            editor.scrollIntoView({ block: "nearest" });
+            editor.textarea.focus({ preventScroll: true });
+          },
+          "text-button",
+          "guided-authoring-preview-button-back-to-source",
+        ),
       ),
     );
     if (!parsed.template) {
@@ -1244,6 +1348,7 @@ export class GuidedApp extends HTMLElement {
         ),
       );
       this.guidance.clear("Fix source errors to edit preview fields.");
+      this.panels.setFieldContext(false);
       return;
     }
     const template = parsed.template;
@@ -1307,6 +1412,7 @@ export class GuidedApp extends HTMLElement {
       this.previewField,
       this.settings.value.keyboardHelp,
     );
+    this.panels.setFieldContext(!!this.previewField);
   }
   private async confirm(title: string, message: string, action: string): Promise<boolean> {
     const dialog = el("dialog", "confirm-dialog");

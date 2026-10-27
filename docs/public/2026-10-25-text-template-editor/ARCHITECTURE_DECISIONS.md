@@ -152,3 +152,27 @@ dependency of acceptance or part of test:all. It uses test-specific full-page
 PNG output without changing focus, settings or content. All generated evidence
 and scratch work belongs under ignored project-root `temp`; captures have a
 separate output directory so mandatory runs do not remove them.
+
+## GUIDED-UX-013 - Writing-first setup with explicit style commitment
+
+Accepted 2026-10-27 for `suggestions003-01-mojor-ux-redesign-again.md`.
+Global New Document deliberately opens unselected discovery; ordinary startup
+may still restore recent work or choose a default when no user navigation has
+intervened. The initialization indicator survives navigation until storage and
+templates are actually initialized.
+
+Native template/style disclosures compact setup after commitment. Native radios
+and select browse a candidate; **Use this writing style** commits through the
+existing version service. This supports deliberate confirmation of the already
+selected first option without changing radio semantics. Status updates do not
+close an explicitly opened chooser, and a new record resets uncommitted choices.
+Saved versions retain independent answers and identity.
+
+Automatic guidance geometry follows neutral/active context, including workspace
+transitions; deliberate user geometry remains authoritative. Native editors stay
+mounted. Each highlighter resets only its own instance, preventing microlight
+from restoring vendor colors in another mounted editor.
+
+Existing journeys protect interaction/data invariants. AC17 has twelve isolated
+appearance preconditions and independently measures rendered source contrast;
+its five captures per appearance reuse the existing observational action.

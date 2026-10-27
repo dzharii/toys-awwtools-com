@@ -113,4 +113,17 @@ export class SettingsPage extends PageObject {
       density: document.documentElement.dataset.density,
     }));
   }
+  async rowLayout(name: keyof typeof controls, compact = false) {
+    return (compact ? this.compactControl(name) : this.control(name)).evaluate((control) => {
+      const row = control.closest(".setting");
+      if (!row) throw new Error("Settings control needs its associated row.");
+      const label = row.querySelector("label")!,
+        description = row.querySelector(".description")!;
+      const rect = (element: Element) => {
+        const { x, y, width, bottom } = element.getBoundingClientRect();
+        return { x, y, width, bottom };
+      };
+      return { label: rect(label), control: rect(control), description: rect(description) };
+    });
+  }
 }

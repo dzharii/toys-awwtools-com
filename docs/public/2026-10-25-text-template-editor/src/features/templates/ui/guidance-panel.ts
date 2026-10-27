@@ -8,23 +8,26 @@ export class GuidancePanel extends HTMLElement {
   private root = shadow(
     this,
     `
-    :host{display:block} .heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:32px}
-    .step{font-size:11px;color:var(--muted)}.tag{display:inline-block;color:var(--accent);border:1px solid var(--accent-line);background:var(--accent-soft);border-radius:5px;font:11px ui-monospace,monospace;padding:3px 7px;margin-bottom:16px}
+    :host{display:block;container-type:inline-size} .heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .step{font-size:12px;color:var(--muted)}.tag{display:inline-block;color:var(--accent);border:1px solid var(--accent-line);background:var(--accent-soft);border-radius:5px;font:12px ui-monospace,monospace;padding:3px 7px}
     h2{font-size:18px;line-height:1.5;font-weight:500;letter-spacing:-.25px;margin:0 0 12px}
-    .hint{font-size:13px;line-height:1.85;color:var(--muted);margin-bottom:25px}
+    .hint{font-size:13px;line-height:1.6;color:var(--muted);margin-bottom:12px}
     label{font-size:12px;display:block;margin-bottom:7px;color:var(--muted)}
     input,textarea,select{width:100%;font-size:13px;line-height:1.6;background:var(--input);border-radius:7px}
-    textarea{resize:vertical;min-height:145px;max-height:40dvh}
+    textarea{resize:vertical;min-height:clamp(160px,calc(var(--field-panel-height,600px) - 350px),600px)}
     .required-error{color:var(--danger);font-size:11px;margin-top:7px}
-    .examples{margin-top:26px}.example{border-left:2px solid var(--line);padding:8px 0 8px 12px;margin:12px 0;color:var(--muted);font-size:13px;line-height:1.7;white-space:pre-wrap}
-    .example-tools{display:flex;gap:8px;margin-top:7px}.example-tools button{font-size:11px;color:var(--accent);padding:4px 6px}
+    .examples{margin-top:16px}.example{border-left:2px solid var(--line);padding:6px 0 6px 12px;margin:8px 0;color:var(--muted);font-size:13px;line-height:1.6;white-space:pre-wrap}
+    .example-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:7px}.example-tools button{font-size:13px;color:var(--accent);padding:4px 6px;min-height:32px}
     .keyboard{border-top:1px solid var(--line);margin-top:28px;padding-top:17px;font-size:10px;line-height:1.9;color:var(--muted)}
     .navigation{display:flex;gap:7px;margin-top:15px}.navigation button{flex:1}
     .empty{font-size:13px;color:var(--muted);line-height:1.8}
-    @media(max-width:1100px){.heading{display:none}.tag{margin-bottom:8px}h2{font-size:16px;line-height:1.4;margin-bottom:8px}.hint{margin-bottom:13px;font-size:12px;line-height:1.7}.examples{margin-top:18px}.keyboard{margin-top:18px}.navigation{margin-top:10px}}
     .hint,.example,input,textarea,select{font-size:calc(14px * var(--field-scale,1))}
     h2{font-size:calc(18px * var(--field-scale,1))}
-    :host>label{margin-bottom:18px} :host>label select{width:auto;margin-left:10px}
+    .size-control{display:flex;align-items:center;gap:10px;margin:18px 0 0;padding-top:12px;border-top:1px solid var(--line)}
+    .size-control select{font-size:12px;width:auto;margin-left:auto}
+    .answer-heading{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .examples-jump{color:var(--accent);font-size:12px;min-height:32px;padding:4px 6px}
+    .keyboard{font-size:12px;margin-top:18px}
   `,
   );
   private body = el("div");
@@ -34,6 +37,7 @@ export class GuidancePanel extends HTMLElement {
   private composing = false;
   private suggestions = true;
   private size = el("select");
+  private sizeRow = el("label", "size-control", "Text size", this.size);
   constructor() {
     super();
     this.size.setAttribute("aria-label", "Field editor text size");
@@ -46,7 +50,7 @@ export class GuidancePanel extends HTMLElement {
     this.size.addEventListener("change", () =>
       emit(this, "setting-change", { id: "fieldTextSize", value: this.size.value }),
     );
-    this.root.append(el("label", "", "Text size", this.size), this.body);
+    this.root.append(this.body, this.sizeRow);
   }
   preferences(suggestions: boolean, size: "normal" | "large"): void {
     this.suggestions = suggestions;
@@ -63,6 +67,7 @@ export class GuidancePanel extends HTMLElement {
   clear(message = "Select a field in your document to see its guidance."): void {
     this.currentKey = "";
     this.control = null;
+    this.sizeRow.hidden = true;
     this.composing = false;
     this.body.replaceChildren(el("p", "empty", message));
   }
@@ -79,6 +84,7 @@ export class GuidancePanel extends HTMLElement {
     if (!field) {
       this.currentKey = "";
       this.control = null;
+      this.sizeRow.hidden = true;
       this.composing = false;
       this.body.replaceChildren(
         el("p", "empty", "Select a field in your document to see its guidance."),
@@ -98,12 +104,13 @@ export class GuidancePanel extends HTMLElement {
           use.disabled = disabled;
         });
       const keyboard = this.body.querySelector<HTMLElement>(".keyboard");
-      if (keyboard) keyboard.hidden = !keyboardHelp;
+      if (keyboard) keyboard.hidden = !keyboardHelp || names.length < 2;
       this.error.hidden = !field.required || !!value.trim();
       this.control.setAttribute("aria-invalid", String(field.required && !value.trim()));
       return;
     }
     this.currentKey = key;
+    this.sizeRow.hidden = false;
     const currentIndex = names.indexOf(active);
     const input = field.options.length
       ? el("select")
@@ -216,17 +223,30 @@ export class GuidancePanel extends HTMLElement {
       el(
         "div",
         "heading",
-        el("span", "label", "Field editor"),
-        el("span", "step", `${currentIndex + 1} / ${names.length}`),
+        el("div", "tag", `$${active}`),
+        ...(names.length > 1 ? [el("span", "step", `${currentIndex + 1} / ${names.length}`)] : []),
       ),
-      el("div", "tag", `$${active}`),
       el("h2", "", field.question),
       hint,
-      label,
+      el(
+        "div",
+        "answer-heading",
+        label,
+        ...(field.examples.length
+          ? [
+              button(
+                "Examples ↓",
+                () => examples.scrollIntoView({ block: "nearest" }),
+                "examples-jump",
+                "guided-field-editor-examples-button-show",
+              ),
+            ]
+          : []),
+      ),
       input,
       this.error,
-      el("div", "navigation", previous, next),
       ...(field.examples.length ? [examples] : []),
+      ...(names.length > 1 ? [el("div", "navigation", previous, next)] : []),
       ...[
         el(
           "div",
@@ -245,7 +265,7 @@ export class GuidancePanel extends HTMLElement {
     this.body
       .querySelector(".keyboard")
       ?.setAttribute("data-testid", "guided-field-editor-main-region-keyboard-help");
-    this.body.querySelector<HTMLElement>(".keyboard")!.hidden = !keyboardHelp;
+    this.body.querySelector<HTMLElement>(".keyboard")!.hidden = !keyboardHelp || names.length < 2;
     this.control = input;
     this.body
       .querySelectorAll<HTMLButtonElement>(

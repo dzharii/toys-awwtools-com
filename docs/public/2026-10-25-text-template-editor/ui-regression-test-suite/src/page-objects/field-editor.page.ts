@@ -30,8 +30,6 @@ export class FieldEditorPage extends PageObject {
     return [
       { name: "Active answer", locator: this.answer.locator },
       { name: "Field identity", locator: this.identifier },
-      { name: "Previous field", locator: this.previous },
-      { name: "Next field", locator: this.next },
     ];
   }
 
@@ -59,7 +57,7 @@ export class FieldEditorPage extends PageObject {
         await token.click();
       }
     }
-    if (!(await this.answer.locator.isVisible())) await this.panels.restoreGuidance();
+    await this.panels.restoreGuidance();
     await this.expectReady();
   }
 

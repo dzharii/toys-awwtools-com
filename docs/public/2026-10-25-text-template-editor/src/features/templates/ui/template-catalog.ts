@@ -184,8 +184,12 @@ export class TemplateCatalog extends HTMLElement {
       "div",
       "template-entry",
       select,
-      ...(reason ? [el("p", "template-match-reason", reason)] : []),
-      preview,
+      el(
+        "div",
+        "template-card-footer",
+        ...(reason ? [el("p", "template-match-reason", reason)] : []),
+        preview,
+      ),
     );
     row.addEventListener("pointerenter", (event) => {
       if (event.pointerType !== "mouse") return;
@@ -246,6 +250,7 @@ export class TemplateCatalog extends HTMLElement {
     this.popup.style.width = `${width}px`;
     this.popup.style.left = `${x}px`;
     this.popup.style.top = `${Math.max(72, Math.min(rect.bottom + 8, innerHeight - 400))}px`;
+    this.popup.style.maxHeight = `${Math.max(100, innerHeight - parseFloat(this.popup.style.top) - 8)}px`;
     if (!this.popup.matches(":popover-open")) this.popup.showPopover({ source: anchor });
     try {
       const template = await this.loader.load(entry.id);

@@ -5,8 +5,14 @@ import { placeholderNames } from "../../templates/model";
 import type { WorkingDocument } from "../model";
 import { VersionPicker } from "../../templates/ui/version-picker";
 export class DocumentWorkspace extends HTMLElement {
-  private titleInput = el("h2", "document-title");
+  private titleInput = el("h1", "document-title");
   private styles = new VersionPicker();
+  private templateDisclosure = el("details", "template-disclosure");
+  private templateSummary = el("summary");
+  private styleDisclosure = el("details", "style-disclosure");
+  private styleSummary = el("summary");
+  private explicitStyle = false;
+  private recordId = "";
   private size = el("select");
   private archived = button(
     "Archived · Restore",
@@ -57,6 +63,16 @@ export class DocumentWorkspace extends HTMLElement {
     this.guided.setAttribute("aria-label", "Guided document");
     this.result.setAttribute("aria-label", "Generated result");
     this.save.setAttribute("role", "status");
+    this.templateDisclosure.dataset.testid = "guided-documents-main-details-template";
+    this.templateSummary.dataset.testid = "guided-documents-main-button-change-template";
+    this.templateDisclosure.append(this.templateSummary);
+    this.styleDisclosure.dataset.testid = "guided-documents-main-details-style";
+    this.styleSummary.dataset.testid = "guided-documents-main-button-change-style";
+    this.styleSummary.addEventListener("click", () => {
+      this.explicitStyle = !this.styleDisclosure.open;
+      this.styles.resetSelection();
+    });
+    this.styleDisclosure.append(this.styleSummary, this.styles);
     const exportMenu = el("div", "export-menu");
     exportMenu.dataset.testid = "guided-documents-result-region-export";
     const exportOptions = el("div", "export-options");
@@ -89,7 +105,8 @@ export class DocumentWorkspace extends HTMLElement {
         el("div", "document-title-row", this.titleInput, this.rename, this.archived),
         el("div", "document-metadata", this.save, this.count),
       ),
-      this.styles,
+      this.templateDisclosure,
+      this.styleDisclosure,
       el("label", "reading-control", "Document text size", this.size),
       el(
         "section",
@@ -114,6 +131,24 @@ export class DocumentWorkspace extends HTMLElement {
   preferences(size: "normal" | "large"): void {
     this.size.value = size;
   }
+  attachCatalog(catalog: HTMLElement): void {
+    if (!this.templateDisclosure.contains(catalog)) this.templateDisclosure.append(catalog);
+  }
+  chooseStyle(): void {
+    this.explicitStyle = false;
+    this.styles.resetSelection();
+    this.templateDisclosure.open = false;
+    this.styleDisclosure.open = !this.styleDisclosure.hidden;
+  }
+  finishStyleSelection(): void {
+    const focused = this.styleDisclosure.contains(document.activeElement);
+    this.styleDisclosure.open = false;
+    this.explicitStyle = false;
+    if (focused) this.styleSummary.focus({ preventScroll: true });
+  }
+  finishTemplateSelection(): void {
+    this.templateDisclosure.open = false;
+  }
   update(working: WorkingDocument, mode: string): void {
     const record = working.record;
     const template = record.templateSnapshot;
@@ -121,7 +156,19 @@ export class DocumentWorkspace extends HTMLElement {
     const names = placeholderNames(version);
     const generated = renderTemplate(template, version, record.answers);
     this.current = working;
+    if (this.recordId !== record.id) {
+      this.recordId = record.id;
+      this.templateDisclosure.open = false;
+      this.styleDisclosure.open = false;
+      this.explicitStyle = false;
+      this.styles.resetSelection();
+    }
     this.titleInput.textContent = record.title;
+    this.templateSummary.textContent = `Template: ${template.name} · Change template`;
+    this.styleSummary.textContent = `Writing style: ${version.name} · Change style`;
+    this.styleDisclosure.hidden = template.versions.length < 2;
+    if (Object.values(record.answers).some((value) => value.trim()) && !this.explicitStyle)
+      this.styleDisclosure.open = false;
     this.styles.update(template, record.templateVersionId, working.origin !== mode);
     this.archived.hidden = !record.archivedAt;
     this.archived.disabled = working.origin !== mode;
@@ -129,7 +176,7 @@ export class DocumentWorkspace extends HTMLElement {
     const completion = names.filter(
       (name) => displayedAnswer(template.placeholders[name]!, record.answers[name]) !== undefined,
     ).length;
-    this.progress.textContent = `${completion} of ${names.length} fields filled`;
+    this.progress.textContent = `${completion} of ${names.length} ${names.length === 1 ? "field" : "fields"} filled`;
     this.progress.style.setProperty(
       "--progress",
       `${names.length ? (completion / names.length) * 100 : 100}%`,
@@ -180,7 +227,7 @@ export class DocumentWorkspace extends HTMLElement {
           "guided-documents-result-button-first-unresolved",
         ),
       );
-    this.count.textContent = `${generated.text.trim().split(/\s+/).filter(Boolean).length} words`;
+    this.count.textContent = `${generated.wordCount} ${generated.wordCount === 1 ? "word" : "words"}`;
     const statuses = {
       temporary: "No draft yet",
       dirty: "Unsaved changes",

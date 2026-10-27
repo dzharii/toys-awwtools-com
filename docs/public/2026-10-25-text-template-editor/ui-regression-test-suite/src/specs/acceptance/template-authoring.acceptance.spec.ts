@@ -39,6 +39,17 @@ test("AC04 · invalid and valid GTL source is preserved independently from previ
     await app.authoring().selectDraft("Broken draft");
     await expect(app.authoring().source).toHaveValue(authoringExamples.invalid);
     await app.authoring().editSource(authoringExamples.greeting);
+    const height = (await app.authoring().source.boundingBox())!.height;
+    await app.authoring().resizeSource("taller");
+    expect((await app.authoring().source.boundingBox())!.height).toBeGreaterThan(height);
+    await app.authoring().source.press("Control+Home");
+    await app.authoring().source.press("Shift+ArrowRight");
+    const position = await app.authoring().sourcePosition();
+    await app.authoring().viewLivePreview();
+    await expect(app.authoring().result).toBeInViewport();
+    await app.authoring().returnToSource();
+    await expect(app.authoring().source).toBeFocused();
+    expect(await app.authoring().sourcePosition()).toEqual(position);
     await app.authoring().source.press("Control+End");
     await app.authoring().source.pressSequentially(" ");
     await app.authoring().source.press("Control+z");

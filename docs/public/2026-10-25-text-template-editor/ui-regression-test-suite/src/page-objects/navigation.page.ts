@@ -78,9 +78,14 @@ export class NavigationPage extends PageObject {
   }
 
   async newDocument(): Promise<void> {
-    await this.open();
-    await this.newButton.click();
-    await expect(this.app.page.getByTestId("guided-documents-main-region-workspace")).toBeVisible();
+    await this.workspaceNewButton().click();
+    await expect(this.app.page.getByTestId("guided-templates-main-region-catalog")).toBeVisible();
+  }
+  workspaceNewButton(): Locator {
+    return this.app.page.getByTestId("guided-workspace-main-button-new-document");
+  }
+  toolbar(): Locator {
+    return this.workspaceNewButton().locator("..").locator("..");
   }
 
   async openDocumentWorkspace(): Promise<void> {
@@ -88,9 +93,7 @@ export class NavigationPage extends PageObject {
     const workspace = this.app.page.getByTestId("guided-documents-main-region-workspace");
     if (!(await workspace.isVisible())) {
       await this.root.getByTestId("guided-documents-navigation-button-workspace").click();
-      if (!(await workspace.isVisible())) await this.newDocument();
     }
-    await expect(workspace).toBeVisible();
   }
 
   async selectDocument(title: string): Promise<void> {

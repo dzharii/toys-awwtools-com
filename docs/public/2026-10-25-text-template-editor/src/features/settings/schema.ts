@@ -19,6 +19,7 @@ export interface SettingDefinition {
   category: string;
   title: string;
   description: string;
+  help?: string;
   control: "select" | "number" | "checkbox";
   default: string | number | boolean;
   options?: { value: string; label: string }[];
@@ -47,7 +48,7 @@ export const settingsSchema: SettingDefinition[] = [
     control: "select",
     default: "plain",
     options: options([
-      ["plain", "Plain charcoal"],
+      ["plain", "Plain"],
       ["sage", "Quiet garden"],
       ["dusk", "Evening light"],
     ]),
@@ -68,8 +69,8 @@ export const settingsSchema: SettingDefinition[] = [
     id: "browserSuggestions",
     category: "Editing",
     title: "Browser input suggestions",
-    description:
-      "On uses browser-controlled suggestions. Off requests autocomplete off for answers and names; browsers and extensions may still offer suggestions.",
+    description: "Allow browser-controlled suggestions for answers and names.",
+    help: "Off requests autocomplete off. Browsers and extensions may still offer suggestions.",
     control: "checkbox",
     default: true,
   },

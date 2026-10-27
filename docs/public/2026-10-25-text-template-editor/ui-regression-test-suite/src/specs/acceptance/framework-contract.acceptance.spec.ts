@@ -22,6 +22,8 @@ test("FW01 · Page Object opening preserves work across workspaces and extension
       await expect(app.startupStatus).toBeVisible();
       await app.navigation().expectReady();
       expect(completed).toBe(false);
+      await app.navigation().newDocument();
+      await expect(app.startupStatus).toBeVisible();
     } finally {
       await stalled.resume();
       try {
@@ -31,6 +33,8 @@ test("FW01 · Page Object opening preserves work across workspaces and extension
       }
     }
     expect(await state.records()).toEqual([]);
+    await app.templates().expectReady();
+    await expect(app.documents().root).toBeHidden();
   });
   await app.documents().open();
   await app.templates().selectTemplate("Project description");

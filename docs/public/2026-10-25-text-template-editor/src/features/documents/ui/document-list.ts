@@ -13,7 +13,7 @@ export class DocumentList extends HTMLElement {
     .new{border:1px solid var(--line);padding:11px 13px;text-align:left;font-size:13px;margin:0 5px 29px;display:flex;gap:10px;align-items:center}
     .new:hover{background:var(--surface)}.plus{font-size:20px;font-weight:300}
     .section-label{padding:0 15px;display:flex;justify-content:space-between}
-    nav{flex:1;overflow:auto;min-height:0;margin-top:14px}
+    nav{flex:1;overflow:auto;min-height:120px;margin-top:14px}
     .row{display:flex;border-radius:8px;margin:3px 0;align-items:center}
     .row.active,.row:hover{background:var(--selected)}
     .link{flex:1;min-width:0;text-align:left;padding:11px 13px}
@@ -30,6 +30,7 @@ export class DocumentList extends HTMLElement {
     .row{flex-wrap:wrap}.row>.link{flex-basis:100%}.row-actions{display:flex;gap:2px;padding:0 7px 7px;width:100%}
     .row-actions button{font-size:11px;min-height:32px;padding:5px 7px;opacity:1;width:auto}
     .filter{width:100%;margin:8px 0 10px;font-size:12px}
+    @media(max-height:650px){:host{padding:12px 15px}.brand{display:none}.new{margin-bottom:14px}footer{padding-top:8px}.footer-button{padding:8px 14px}}
   `,
   );
   private list = el("nav");

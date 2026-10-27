@@ -149,6 +149,19 @@ export function initialRect(anchor: Rect | undefined, rect: Rect, bounds: Rect):
   }
   return clampRect({ ...rect, x: bounds.x + bounds.width - rect.width, y: bounds.y + 16 }, bounds);
 }
+export function initialFieldRect(active: boolean, anchor: Rect | undefined, bounds: Rect): Rect {
+  const rect = { x: bounds.x, y: bounds.y, width: active ? 380 : 320, height: active ? 600 : 180 };
+  return active
+    ? initialRect(anchor, rect, bounds)
+    : clampRect(
+        {
+          ...rect,
+          x: bounds.x + bounds.width - rect.width,
+          y: bounds.y + bounds.height - rect.height,
+        },
+        bounds,
+      );
+}
 export function dockAllocation(
   layout: WorkspaceLayout,
   applicable: PanelId[],

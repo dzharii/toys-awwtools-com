@@ -85,6 +85,14 @@ test("AC08 · real panel manipulation preserves native editing and recovers shar
   expect((await field.root.boundingBox())!.x).toBeCloseTo(keyboard.x - 10, 0);
   await field.grip().press("Alt+ArrowRight");
   expect((await field.root.boundingBox())!.width).toBeCloseTo(keyboard.width + 10, 0);
+  const alternative = (await field.root.boundingBox())!;
+  const alternativeSelection = await answer.selection();
+  await field.step("left");
+  expect((await field.root.boundingBox())!.x).toBeCloseTo(alternative.x - 20, 0);
+  await field.step("right", true);
+  expect((await field.root.boundingBox())!.width).toBeCloseTo(alternative.width + 20, 0);
+  expect(await answer.sameIdentity(identity)).toBe(true);
+  expect(await answer.selection()).toEqual(alternativeSelection);
   await field.drag(-5000, -5000);
   const clamped = (await field.root.boundingBox())!;
   expect(clamped.x).toBeGreaterThanOrEqual(0);
@@ -133,6 +141,13 @@ test("AC09 · desired layouts survive responsive clamping, reload, and scoped re
     await app.documents().expectNoHorizontalOverflow();
     expect(await state.layoutBytes()).toBe(stored);
   }
+  const restore = app.panels().panel("documents").restoreButton();
+  await expect(restore).toHaveAccessibleName("Restore Documents");
+  const restoreBounds = (await restore.boundingBox())!;
+  expect(restoreBounds.width).toBeLessThanOrEqual(44);
+  expect((await app.documents().title.boundingBox())!.x).toBeGreaterThanOrEqual(
+    restoreBounds.x + restoreBounds.width,
+  );
   await page.screenshot({ path: testInfo.outputPath("320px-field-editor.png") });
   await page.setViewportSize({ width: 1440, height: 1000 });
   expect(await field.root.boundingBox()).toEqual(desktop);

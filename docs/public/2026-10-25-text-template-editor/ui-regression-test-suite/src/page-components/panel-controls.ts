@@ -20,6 +20,8 @@ export class PanelControls {
     await this.root.getByTestId(`guided-panels-${this.name}-button-command-${action}`).click();
   }
   async collapse(): Promise<void> {
+    if ((await this.root.getAttribute("data-visibility")) === "collapsed") return;
+    await this.open();
     await this.root.getByTestId(`guided-panels-${this.name}-button-collapse`).click();
     await expect(this.root).toHaveAttribute("data-visibility", "collapsed");
   }
@@ -54,6 +56,15 @@ export class PanelControls {
   grip(): Locator {
     return this.root.getByTestId(`guided-panels-${this.name}-button-move`);
   }
+  async step(direction: "left" | "right" | "up" | "down", resize = false): Promise<void> {
+    await this.root.getByTestId(`guided-panels-${this.name}-button-actions`).click();
+    await this.root
+      .getByTestId(
+        `guided-panels-${this.name}-button-step-${resize ? "resize" : "move"}-${direction}`,
+      )
+      .click();
+    await this.page.keyboard.press("Escape");
+  }
   async tab(edge: "left" | "right"): Promise<void> {
     await this.page.getByTestId(`guided-panels-${this.name}-tab-${edge}`).click();
   }
@@ -61,7 +72,10 @@ export class PanelControls {
     return this.page.getByTestId(`guided-panels-${this.name}-tab-${edge}`);
   }
   async restoreAtEdge(): Promise<void> {
-    await this.page.getByTestId(`guided-panels-${this.name}-button-restore`).click();
+    await this.restoreButton().click();
+  }
+  restoreButton(): Locator {
+    return this.page.getByTestId(`guided-panels-${this.name}-button-restore`);
   }
   static async resetWorkspace(page: Page): Promise<void> {
     await page.getByTestId("guided-panels-main-button-open").click();

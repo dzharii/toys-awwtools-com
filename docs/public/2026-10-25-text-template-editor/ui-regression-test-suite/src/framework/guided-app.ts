@@ -21,7 +21,9 @@ export class GuidedApp {
 
   constructor(readonly context: AppContext) {
     this.navigationPage = new NavigationPage(context);
-    this.documentPage = new DocumentWorkspacePage(context, this.navigationPage);
+    this.documentPage = new DocumentWorkspacePage(context, this.navigationPage, () =>
+      this.templatePage.selectTemplate("Project description"),
+    );
     this.templatePage = new TemplateCatalogPage(context, this.documentPage);
     this.panelPage = new WorkspacePanelsPage(context);
     this.editorPage = new FieldEditorPage(context, this.panelPage, this.documentPage);

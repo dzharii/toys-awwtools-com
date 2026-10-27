@@ -55,7 +55,7 @@ export class TemplateAuthoringPage extends PageObject {
 
   async newTemplate(): Promise<void> {
     await this.open();
-    await this.root.getByTestId("guided-authoring-main-button-new").click();
+    await this.activate("guided-authoring-main-button-new");
     await this.expectReady();
   }
   async openFullSettings(): Promise<void> {
@@ -73,14 +73,14 @@ export class TemplateAuthoringPage extends PageObject {
   }
 
   async save(memory = false): Promise<void> {
-    await this.root.getByTestId("guided-authoring-main-button-save").click();
+    await this.activate("guided-authoring-main-button-save");
     await expect(this.saveStatus).toHaveText(memory ? "In memory · this tab" : "Saved", {
       timeout: timeouts.persistence,
     });
   }
 
   async requestSave(): Promise<void> {
-    await this.root.getByTestId("guided-authoring-main-button-save").click();
+    await this.activate("guided-authoring-main-button-save");
   }
 
   async selectDraft(title: string): Promise<void> {
@@ -114,7 +114,7 @@ export class TemplateAuthoringPage extends PageObject {
 
   async downloadSource() {
     const pending = this.app.page.waitForEvent("download");
-    await this.root.getByTestId("guided-authoring-main-button-download").click();
+    await this.activate("guided-authoring-main-button-download");
     return pending;
   }
 
@@ -126,7 +126,7 @@ export class TemplateAuthoringPage extends PageObject {
   }
 
   async deleteDraft(): Promise<void> {
-    await this.root.getByTestId("guided-authoring-main-button-delete").click();
+    await this.activate("guided-authoring-main-button-delete");
   }
   async rename(title: string): Promise<void> {
     const trigger = this.root.getByTestId("guided-authoring-main-button-rename");
@@ -137,7 +137,7 @@ export class TemplateAuthoringPage extends PageObject {
     await dialog.save();
   }
   async createEditableCopy(): Promise<void> {
-    await this.root.getByTestId("guided-authoring-main-button-editable-copy").click();
+    await this.activate("guided-authoring-main-button-editable-copy");
   }
   get inspectedSource(): Locator {
     return this.root.getByTestId("guided-authoring-history-source-textarea-content");
@@ -151,10 +151,10 @@ export class TemplateAuthoringPage extends PageObject {
     await this.checkpoints.nth(index).click();
   }
   async backToCurrent(): Promise<void> {
-    await this.root.getByTestId("guided-authoring-main-button-current").click();
+    await this.activate("guided-authoring-main-button-current");
   }
   async restoreInspected(): Promise<void> {
-    await this.root.getByTestId("guided-authoring-history-button-restore").click();
+    await this.activate("guided-authoring-history-button-restore");
   }
   async inspectOldest(): Promise<void> {
     if (!(await this.checkpoints.last().isVisible()))
@@ -162,7 +162,7 @@ export class TemplateAuthoringPage extends PageObject {
     await this.checkpoints.last().click();
   }
   async renameTemplateName(name: string): Promise<void> {
-    await this.root.getByTestId("guided-authoring-main-button-template-name").click();
+    await this.activate("guided-authoring-main-button-template-name");
     const dialog = new RenameDialog(this.app.page);
     await dialog.enter(name);
     await dialog.save();
@@ -180,5 +180,40 @@ export class TemplateAuthoringPage extends PageObject {
   }
   get breadcrumb(): Locator {
     return this.app.page.getByTestId("guided-workspace-main-label-breadcrumb");
+  }
+  get highlight(): Locator {
+    return this.root.getByTestId("guided-authoring-source-region-highlight");
+  }
+  async viewLivePreview(): Promise<void> {
+    const control = this.root.getByTestId("guided-authoring-source-button-view-preview");
+    await PanelControls.expose(this.app.page, control);
+    await control.click();
+  }
+  async returnToSource(): Promise<void> {
+    const control = this.root.getByTestId("guided-authoring-preview-button-back-to-source");
+    await PanelControls.expose(this.app.page, control);
+    await control.click();
+  }
+  async resizeSource(direction: "shorter" | "taller"): Promise<void> {
+    const control = this.root.getByTestId(`guided-authoring-source-button-${direction}`);
+    await PanelControls.expose(this.app.page, control);
+    await control.click();
+  }
+  async sourcePosition() {
+    return this.source.evaluate((element) => {
+      if (!(element instanceof HTMLTextAreaElement))
+        throw new Error("Source must remain a native textarea.");
+      return {
+        start: element.selectionStart,
+        end: element.selectionEnd,
+        top: element.scrollTop,
+        left: element.scrollLeft,
+      };
+    });
+  }
+  private async activate(id: string): Promise<void> {
+    const control = this.root.getByTestId(id);
+    await PanelControls.expose(this.app.page, control);
+    await control.click();
   }
 }

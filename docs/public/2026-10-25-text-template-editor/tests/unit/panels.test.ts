@@ -5,6 +5,7 @@ import {
   defaultLayout,
   dockAllocation,
   initialRect,
+  initialFieldRect,
 } from "../../src/platform/ui/panels/layout";
 
 test("layout validation isolates corrupt entries and unsupported versions", () => {
@@ -14,6 +15,16 @@ test("layout validation isolates corrupt entries and unsupported versions", () =
   expect(decodeLayout(value).workspaces.document.panels.field.rect.width).toBe(360);
   expect(decodeLayout(value).workspaces.document.panels.issues.placement).toBe("right");
   expect(decodeLayout({ schemaVersion: 99 })).toEqual(defaultLayout());
+});
+test("neutral guidance is compact and outside initial choices while active guidance fits the viewport", () => {
+  const bounds = { x: 8, y: 72, width: 1424, height: 920 };
+  const neutral = initialFieldRect(false, undefined, bounds);
+  expect(neutral).toEqual({ x: 1112, y: 812, width: 320, height: 180 });
+  const active = initialFieldRect(true, { x: 500, y: 350, width: 80, height: 40 }, bounds);
+  expect(active).toEqual({ x: 596, y: 350, width: 380, height: 600 });
+  const narrow = initialFieldRect(true, undefined, { x: 8, y: 100, width: 304, height: 412 });
+  expect(narrow.width).toBe(304);
+  expect(narrow.y + narrow.height).toBeLessThanOrEqual(512);
 });
 test("clamping keeps titlebars reachable without mutating desired rectangles", () => {
   const rect = { x: 99999, y: -9000, width: 1200, height: 800 };

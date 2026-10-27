@@ -4,12 +4,13 @@ import { BrowserState } from "../../support/browser-state";
 import { downloadedText } from "../../support/downloads";
 import { CreateGuidedDocument } from "../../flows/create-guided-document.flow";
 import { projectDescription } from "../../support/test-data";
+import { captureSurface } from "../../support/capture-surface";
 
 test("AC07 · recoverable failures preserve latest work and never report false success", async ({
   app,
   page,
   isolatedSession,
-}) => {
+}, testInfo) => {
   const faults = new BrowserFaults(page);
   const state = new BrowserState(page);
   const expected = "A newer partial answer that protects drafts to keep writing.";
@@ -36,6 +37,7 @@ test("AC07 · recoverable failures preserve latest work and never report false s
     await expect(app.documents().exportOption("txt")).toBeDisabled();
     await page.keyboard.press("Escape");
     const recovery = await app.panels().downloadRecovery();
+    await captureSurface(page, "save-failure-issues", testInfo);
     expect(recovery.suggestedFilename()).toBe("Recovery work.recovery.json");
     const exported: unknown = JSON.parse(await downloadedText(recovery));
     expect(exported).toMatchObject({

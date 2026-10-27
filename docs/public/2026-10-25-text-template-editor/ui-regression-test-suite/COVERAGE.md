@@ -3,8 +3,10 @@
 This is an assertion register, not a line-coverage percentage or a claim that
 unimplemented features pass. The product implements `suggestions001-01` and the
 major UX change request `suggestions001-02`, plus universal smoke specification
-`suggestions002-02-02`. Nine smoke tests gate 19 acceptance cases across
-AC01-AC16 (AC13 runs in three stores) and FW01. Seven capture cases are optional.
+`suggestions002-02-02`, and UX remediation `suggestions003-01`.
+Nine smoke tests gate 31 acceptance cases across AC01-AC17
+(AC13 runs in three stores; AC17 runs twelve appearances) and FW01.
+Seven registry capture cases remain optional.
 Assertions below distinguish
 browser proof, product-domain coverage, and remaining manual/environment limits.
 Migration implementation and migration-specific tests are **not applicable** under
@@ -37,6 +39,40 @@ the overriding dated development-mode directive in `AGENTS.md`.
 | AC16                  | Controlled one-second authoring autosave stores newest source, preserves semantic draft-navigation focus, and creates no extra checkpoint; New template from persistent Authoring navigation on full Settings opens/focuses a fresh editor                                                                                                                                                                                                                                                                                                                                   | A06, A09; authoring navigation continuity                                                                 |
 | Infrastructure        | Aliased/static/dynamic/type/re-export/require source escapes rejected; computed loads rejected; internal cycles allowed; product-to-suite imports rejected; source junction rejected; configuration inheritance/includes/aliases/linked dependencies rejected; absent/stale/new-input builds rejected; empty worker and changed compiled bytes rejected; stale served GTL rejected despite matching metadata/core bundles                                                                                                                                                    | Framework independence/build provenance, seven Bun tests                                                  |
 
+### UX remediation additions
+
+The original substantial journeys retain their lifecycle, failure, exact-byte,
+focus and concurrency assertions. Intentional contracts now distinguish global
+unselected creation, template selection, candidate style inspection and explicit
+style confirmation. Page Objects establish those real prerequisites rather than
+manufacturing product state or repairing focus.
+
+| Journey               | Added observable protection                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FW01                  | New Document during a deliberately stalled manifest retains the startup indicator until initialization completes, then stays genuinely unselected rather than being replaced by automatic startup selection.                                                                                                                                                                                                                                                                            |
+| AC04                  | Source-height action; live-preview/back navigation preserves native selection and both internal scroll offsets. Source actions expose legitimate floating-panel occlusion through public panel controls.                                                                                                                                                                                                                                                                                |
+| AC06                  | Blank note reports 0 words, 1 word and 4 words; singular field completion; no Previous/Next for one field; native style browsing is explicitly confirmed.                                                                                                                                                                                                                                                                                                                               |
+| AC08                  | Public pointer alternatives move/resize while the same native input, focus and selected range survive.                                                                                                                                                                                                                                                                                                                                                                                  |
+| AC09                  | Narrow restore controls remain accessibly named and at most 44px wide; the workspace reserves a gutter so they cannot cover its text. Existing deliberate-geometry persistence remains unchanged.                                                                                                                                                                                                                                                                                       |
+| AC12                  | Actual ~300px shared-dock Settings stack label, control and description; exact Large answer scaling and native input identity/selection remain protected.                                                                                                                                                                                                                                                                                                                               |
+| AC17 (12 appearances) | Dark/light × Plain/Quiet garden/Evening light × Comfortable/Compact. Five primary captures per appearance: Settings, unselected discovery/neutral guidance, all-five-style choice, compact composition/active guidance and native source. Assertions require neutral height ≤200px, no manufactured document, explicit chooser completion, visible result/copy route, focused answer and readable rendered source. Authoring → New Document must also restore compact neutral geometry. |
+
+AC17 independently measures every actually rendered syntax class against its
+composited local background, including alpha and otherwise unclassified text.
+It requires directive, placeholder, punctuation and value classes, unrounded
+contrast ≥4.5:1 and font size ≥14px. PNGs and per-appearance JSON measurements use
+the existing fixture/capture action and test-owned output paths. Sixty original
+matrix PNGs are not 120 screenshots merely because Playwright attaches copies.
+The new matrix needs distinct isolated appearance preconditions; it is not a
+test per individual button. Detailed word-count and geometry cases remain
+product-owned units.
+
+Supplementary ignored editorial probes cover real native Chromium 200% zoom,
+320px Settings/source/confirmation, large multiline geometry, completed Blank
+note, ordinary Issues and rename. Their method, exact evidence paths and
+limitations are recorded in [the remediation report](../docs/ux-redesign-validation.md);
+they are not additional mandatory suite cases.
+
 AC01 also checks the displayed 14-word count. AC02 uses a controlled shared-context
 clock to verify that a newly selected one-second autosave interval leaves the edit
 unsaved at 999 milliseconds and saves it after the next millisecond. The clock
@@ -52,7 +88,7 @@ product-domain tests. Geometry corruption/isolation, allocation, deterministic
 ranking, samples, and raw/native source mapping also have focused unit coverage.
 
 The old 23 browser tests were consolidated rather than retained as a duplicate
-runner. There are now 75 product-owned Bun tests, plus 28 suite infrastructure
+runner. There are now 77 product-owned Bun tests, plus 28 suite infrastructure
 tests. Tests do not import product parsers/renderers to generate expected text.
 
 The 21 new infrastructure cases protect registry omissions (including indirect,
@@ -86,9 +122,9 @@ The register is not a claim that every Z01 row has a separate browser assertion.
 - Composition events verify the application's navigation guard; they do not
   emulate a complete OS IME candidate/commit interaction.
 - Viewport resizing and measurable geometry are real browser checks, not proof
-  of physical-phone virtual-keyboard behavior or a native browser-toolbar 200%
-  zoom run. Narrow reflow is exercised down to 320px; no native zoom certification
-  or every-device/browser claim is made.
+  of physical-phone virtual-keyboard behavior. Narrow reflow is exercised down
+  to 320px. A separate current-Chromium native 200% zoom probe is documented;
+  this is not every-device/browser certification.
 - axe scans supplement focus/keyboard/geometry assertions; they are not a full
   screen-reader/manual accessibility certification.
 - Hidden/page-close saves remain best effort. The suite does not guarantee

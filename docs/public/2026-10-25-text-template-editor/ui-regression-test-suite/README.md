@@ -2,7 +2,8 @@
 
 An independent external acceptance application for Guided, including the major
 UX change request. Seven registry-generated surface tests and two grouped smoke
-tests gate 19 acceptance cases: AC01-AC16 (three storage variants of AC13) and
+tests gate 31 acceptance cases: AC01-AC17 (three storage variants of AC13 and
+twelve isolated appearance variants of AC17) and
 FW01's nondestructive opening/action-isolation contract. Twenty-eight infrastructure
 tests protect isolation, provenance, registry completeness, and orchestration.
 Seven optional capture cases use the same registry/runner. See [COVERAGE](COVERAGE.md) for
@@ -33,7 +34,7 @@ provides the stable compiler API. The typecheck command explicitly invokes the
 | `bun run typecheck`        | Two-way boundaries, compiler-based registry completeness, and strict TypeScript               |
 | `bun run test:unit`        | Infrastructure failure cases, without a browser                                               |
 | `bun run test:smoke`       | Seven universal Page Object cases plus SM01/SM02                                              |
-| `bun run test:acceptance`  | Smoke dependencies, then AC01-AC16 and FW01                                                   |
+| `bun run test:acceptance`  | Smoke dependencies, then AC01-AC17 and FW01                                                   |
 | `bun run test:all`         | Boundary/type/registry checks, infrastructure, smoke and acceptance; no optional capture      |
 | `bun run test:capture`     | Seven independent full-page PNG captures after the same validation pipeline                   |
 | `bun run test:headed`      | Smoke and acceptance in visible Chromium                                                      |

@@ -6,6 +6,7 @@ import {
   defaults,
   dockAllocation,
   initialRect,
+  initialFieldRect,
   layoutKey,
   panelIds,
   panelTitles,
@@ -52,6 +53,7 @@ export class PanelManager {
   private failed = false;
   private tabKey = "";
   private restoreKey = "";
+  private fieldActive = false;
   error = "";
   onError: (message: string) => void = () => {};
 
@@ -139,6 +141,8 @@ export class PanelManager {
     if (context === this.context) return;
     this.finish();
     this.context = context;
+    this.fieldActive = false;
+    this.updateAutomaticFieldGeometry();
     this.forced.clear();
     this.tabKey = "";
     this.restoreKey = "";
@@ -150,7 +154,10 @@ export class PanelManager {
   private bounds(): Rect {
     const viewport = visualViewport;
     const x = (viewport?.offsetLeft ?? 0) + 8;
-    const y = (viewport?.offsetTop ?? 0) + Math.min(72, (viewport?.height ?? innerHeight) / 3);
+    const toolbarBottom = this.main.querySelector(".topbar")?.getBoundingClientRect().bottom ?? 64;
+    const y =
+      (viewport?.offsetTop ?? 0) +
+      Math.min(toolbarBottom + 8, (viewport?.height ?? innerHeight) / 3);
     return {
       x,
       y,
@@ -165,7 +172,10 @@ export class PanelManager {
     const state = this.layout.workspaces[this.context].panels[id];
     const key = `${this.context}:${id}`;
     if (!state.userGeometry && !this.initiallyPlaced.has(key)) {
-      state.rect = initialRect(anchor, state.rect, this.bounds());
+      state.rect =
+        id === "field"
+          ? initialFieldRect(this.fieldActive, anchor, this.bounds())
+          : initialRect(anchor, state.rect, this.bounds());
       this.initiallyPlaced.add(key);
     }
     if (id === "documents" || id === "history") this.forced.add(id);
@@ -185,6 +195,19 @@ export class PanelManager {
       target.focus({ preventScroll: true });
     }
   }
+  setFieldContext(active: boolean): void {
+    if (this.fieldActive === active) return;
+    this.fieldActive = active;
+    this.updateAutomaticFieldGeometry();
+    this.render();
+  }
+  private updateAutomaticFieldGeometry(): void {
+    const state = this.layout.workspaces[this.context].panels.field;
+    if (!state.userGeometry && state.placement === "floating") {
+      state.rect = initialFieldRect(this.fieldActive, undefined, this.bounds());
+      this.initiallyPlaced.delete(`${this.context}:field`);
+    }
+  }
   isExpanded(id: PanelId): boolean {
     return (
       !this.panels.get(id)!.host.hidden &&
@@ -195,6 +218,7 @@ export class PanelManager {
     const returnFocus = this.layer.contains(document.activeElement);
     this.finish();
     this.layout.workspaces[this.context] = defaults(this.context);
+    this.updateAutomaticFieldGeometry();
     this.forced.clear();
     this.initiallyPlaced.clear();
     const retry = this.failed;
@@ -238,7 +262,7 @@ export class PanelManager {
     commands.popoverTargetElement = menu;
     commands.setAttribute("aria-label", `${panelTitles[id]} actions`);
     const collapse = button(
-      "Collapse",
+      "−",
       () => {
         const state = this.layout.workspaces[this.context].panels[id];
         if (state.visibility === "collapsed") this.open(id, undefined, true);
@@ -248,11 +272,13 @@ export class PanelManager {
       `guided-panels-${id}-button-collapse`,
     );
     const close = button(
-      "Close",
+      "×",
       () => this.change(id, "close"),
       "panel-action",
       `guided-panels-${id}-button-close`,
     );
+    close.setAttribute("aria-label", `Close ${panelTitles[id]}`);
+    close.title = `Close ${panelTitles[id]}`;
     const header = el("div", "panel-titlebar", grip, collapse, commands, close);
     const handles = ["e", "s", "se", "dock"].map((axis) => {
       const handle = el("div", `panel-resize panel-resize-${axis}`);
@@ -576,11 +602,11 @@ export class PanelManager {
   private render(structure = true): void {
     const workspace = this.layout.workspaces[this.context];
     const applicable = this.applicable();
-    const bounds = this.bounds();
     const width = visualViewport?.width ?? innerWidth;
     const allocation = dockAllocation(workspace, applicable, width);
     this.main.style.marginLeft = `${allocation.left}px`;
     this.main.style.marginRight = `${allocation.right}px`;
+    const bounds = this.bounds();
     const active: Partial<Record<"left" | "right", PanelId>> = {};
     for (const edge of ["left", "right"] as const) {
       const members = applicable.filter(
@@ -590,12 +616,16 @@ export class PanelManager {
       active[edge] = members.includes(workspace.active[edge]) ? workspace.active[edge] : members[0];
       this.tabs[edge].hidden = !allocation[edge] || members.length < 2;
       this.tabs[edge].style.width = `${allocation[edge]}px`;
+      this.tabs[edge].style.top = `${bounds.y}px`;
     }
     for (const [id, panel] of this.panels) {
       const state = workspace.panels[id];
       const navigation = id === "documents" || id === "history";
       const autoCollapsed = width < 900 && navigation && !this.forced.has(id);
       const docked = state.placement !== "floating" && allocation[state.placement] > 0;
+      panel.host.dataset.sharedDock = String(
+        docked && !this.tabs[state.placement as "left" | "right"].hidden,
+      );
       const collapsed = state.visibility === "collapsed" || autoCollapsed;
       const visible =
         applicable.includes(id) &&
@@ -619,9 +649,15 @@ export class PanelManager {
       panel.grip.title = panel.grip.disabled
         ? "Use Actions to change panel placement."
         : "Arrow keys move; Alt+arrow keys resize. Hold Shift for larger steps.";
-      panel.host.querySelector<HTMLButtonElement>(
+      const collapse = panel.host.querySelector<HTMLButtonElement>(
         `[data-testid="guided-panels-${id}-button-collapse"]`,
-      )!.textContent = collapsed ? "Restore" : "Collapse";
+      )!;
+      collapse.textContent = collapsed ? "+" : "−";
+      collapse.setAttribute(
+        "aria-label",
+        `${collapsed ? "Restore" : "Collapse"} ${panelTitles[id]}`,
+      );
+      collapse.title = `${collapsed ? "Restore" : "Collapse"} ${panelTitles[id]}`;
       let rect: Rect;
       if (docked && !collapsed) {
         const edge = state.placement as "left" | "right";
@@ -646,6 +682,7 @@ export class PanelManager {
         width: `${rect.width}px`,
         height: `${rect.height}px`,
       });
+      if (id === "field") panel.host.style.setProperty("--field-panel-height", `${rect.height}px`);
       for (const handle of panel.handles)
         handle.hidden =
           collapsed ||
@@ -745,12 +782,18 @@ export class PanelManager {
             "panel-edge-restore",
             `guided-panels-${id}-button-restore`,
           );
+          restore.setAttribute("aria-label", `Restore ${panelTitles[id]}`);
+          restore.title = `Restore ${panelTitles[id]}`;
+          restore.dataset.edge = edge;
           restore.style.left = edge === "left" ? "3px" : "auto";
           restore.style.right = edge === "right" ? "3px" : "auto";
-          restore.style.top = `${115 + offsets[edge]++ * 44}px`;
+          restore.dataset.offset = String(offsets[edge]++ * 44);
+          restore.style.top = `${bounds.y + 43 + Number(restore.dataset.offset)}px`;
           return restore;
         }),
       );
     }
+    for (const restore of this.restore.querySelectorAll<HTMLElement>(".panel-edge-restore"))
+      restore.style.top = `${bounds.y + 43 + Number(restore.dataset.offset)}px`;
   }
 }

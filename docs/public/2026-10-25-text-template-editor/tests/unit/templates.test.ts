@@ -15,8 +15,23 @@ describe("GTL parsing and rendering", () => {
       text: "Hello Alex and Alex.",
       unresolved: [],
       canCopy: true,
+      wordCount: 4,
     });
     expect(template).toEqual(before);
+  });
+  test("word count excludes unresolved decoration but preserves resolved repetitions and authored marker-like text", () => {
+    const note = parseTemplate("TEMPLATE: Note\nTEXT:\n  {{$body}}").template!;
+    const version = note.versions[0]!;
+    expect(renderTemplate(note, version, {}).wordCount).toBe(0);
+    expect(renderTemplate(note, version, { body: " \n\t" }).wordCount).toBe(0);
+    expect(renderTemplate(note, version, { body: "Hello" }).wordCount).toBe(1);
+    expect(renderTemplate(note, version, { body: "this is\na test" }).wordCount).toBe(4);
+    expect(renderTemplate(note, version, { body: "[body] $body" }).wordCount).toBe(2);
+    const repeated = parseTemplate(greeting).template!;
+    expect(renderTemplate(repeated, repeated.versions[0]!, {}).wordCount).toBe(2);
+    expect(renderTemplate(repeated, repeated.versions[0]!, { name: "Alex Smith" }).wordCount).toBe(
+      6,
+    );
   });
   test("normalizes CRLF and preserves internal blank lines and relative indentation", () => {
     const template = parseTemplate(

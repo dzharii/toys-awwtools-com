@@ -1,6 +1,7 @@
 import { test, expect } from "../../framework/guided-test";
 import { BrowserState } from "../../support/browser-state";
 import { downloadedText } from "../../support/downloads";
+import { captureSurface } from "../../support/capture-surface";
 
 test("AC11 · ranked discovery and rendered previews never mutate the working document", async ({
   app,
@@ -62,7 +63,7 @@ test("AC11 · ranked discovery and rendered previews never mutate the working do
 test("AC12 · compact, full, and local reading preferences share state without rewriting content", async ({
   app,
   page,
-}) => {
+}, testInfo) => {
   await app.templates().selectTemplate("Blank note");
   await app.documents().selectField("body");
   await app.fieldEditor().enterAnswer("A readable first line.\nA second line stays intact.");
@@ -80,6 +81,13 @@ test("AC12 · compact, full, and local reading preferences share state without r
   await settings.open();
   await app.settings().compactControl("fieldTextSize").selectOption("large");
   await app.settings().compactControl("browserSuggestions").uncheck();
+  await settings.command("left");
+  await settings.resize(-50, 0, "dock");
+  const row = await app.settings().rowLayout("browserSuggestions", true);
+  expect(row.control.y).toBeGreaterThanOrEqual(row.label.bottom);
+  expect(row.description.y).toBeGreaterThanOrEqual(row.control.bottom);
+  expect(row.control.x + row.control.width).toBeLessThanOrEqual(300);
+  await captureSurface(page, "narrow-shared-settings-large-field", testInfo);
   expect((await answer.fontSize()) / normalAnswer).toBeCloseTo(1.25, 2);
   await expect(answer.locator).toHaveAttribute("autocomplete", "off");
   expect(await answer.sameIdentity(identity)).toBe(true);

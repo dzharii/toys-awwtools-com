@@ -1,4 +1,49 @@
-# Universal Page Object framework validation
+# Current UX remediation validation
+
+Validated **2026-10-27** after implementing
+`suggestions003-01-mojor-ux-redesign-again.md` in the canonical checkout below.
+The [implementation/evidence report](../docs/ux-redesign-validation.md) maps
+UX-A01–A07 and UX-M01–M12 to actual changes, source files, baseline findings,
+regression maintenance, screenshots, contrast and explicit limitations.
+
+| Final command                                | Actual result                                                                                                                                                                                         |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Product: `bun test tests\unit`               | 77 passed; 263 assertions.                                                                                                                                                                            |
+| Product: `bun run build`                     | Three TypeScript contexts and fresh deployment passed.                                                                                                                                                |
+| Suite: `bun run test:all`                    | Independent boundaries, seven registered surfaces, strict types; 28 infrastructure tests / 76 assertions; **all 40 browser cases passed in 3.4 minutes**, nine smoke and 31 acceptance, zero retries. |
+| Suite: supplementary editorial configuration | Two substantial probes passed after final corrections: actual native Chromium 200% zoom and narrow/multiline/source/dialog review.                                                                    |
+| Product and suite: `bun run format:check`    | Passed; historical generated audit evidence is excluded, not rewritten.                                                                                                                               |
+
+Final full command, from the suite:
+
+```powershell
+bun run test:all
+```
+
+Its complete log is `temp\ux-redesign\final-ui-regression.log`. The default HTML
+report is `temp\ui-regression-test-suite\playwright-report\index.html`.
+The complete gate ran **after** the final model-assisted review and original-image
+editorial corrections, including the startup navigation race, stale neutral
+geometry, narrow restore obstruction and singular completion wording.
+
+AC17 runs twelve independent theme/background/density journeys and produces
+**60 original primary PNGs**, plus twelve contrast JSONs containing 48 class
+measurements. The worst actual unrounded source contrast is
+**6.572045918906317:1**, with all four meaningful syntax classes at **14px**.
+Original matrix screenshots were visually inspected in all twelve appearances;
+latest supplementary completed-note, ordinary-Issues, rename, confirmation,
+320px and native-zoom originals were also inspected.
+
+The native zoom probe uses full Chromium's actual appearance Settings control
+in a clean owned persistent profile: DPR 1→2, layout viewport
+1440×1000→720×500. It is not CSS zoom or only a viewport simulation.
+This remains named-version Chromium evidence, not Firefox/Safari, physical
+software-keyboard, full OS IME, screen-reader or full WCAG certification.
+Detailed commands, intermediate failure classifications and local image paths
+are in the report. Historical counts and sensitivity results below remain
+historical, not newly executed remediation claims.
+
+## Historical universal Page Object framework validation
 
 Validated **2026-10-27** in
 `D:\my-github\toys-awwtools-com\docs\public\2026-10-25-text-template-editor`.

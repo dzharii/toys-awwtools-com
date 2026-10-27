@@ -42,8 +42,9 @@ axe belong exclusively to the independent regression-suite package. The deployed
 application uses the vendored Dexie and microlight distributions.
 
 The browser suite contains seven registry-generated Page Object smoke cases,
-two grouped smoke journeys, and 19 acceptance cases (AC01-AC16, including three
-storage variants of AC13, plus the framework contract journey FW01).
+two grouped smoke journeys, and 31 acceptance cases (AC01-AC17, including three
+storage variants of AC13 and twelve appearance variants of AC17, plus the
+framework contract journey FW01).
 Smoke gates acceptance; fresh contexts isolate scenarios
 while preserving real storage across reloads and intentionally shared tabs.
 It rejects absent, stale, or modified build artifacts and mismatched preview
@@ -56,6 +57,10 @@ and scratch work stay in the Git-ignored project-root `temp` folder; capture
 PNGs are under `temp\ui-regression-test-suite\captures`.
 
 ## Writing
+
+**New document** opens unselected template discovery. Choose a template, inspect
+its styles, then select **Use this writing style**. Template/style disclosures
+remain available without dominating active writing.
 
 Select a field in the document to open its question, hint, examples, and answer
 control. The prose around the fields stays fixed. Use the arrow keys to move

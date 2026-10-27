@@ -10,7 +10,7 @@ test("SM01 · writing surfaces, real editing focus, Issues, and transient export
   await test.step("Fresh workspace has structural readiness without forced answer focus", async () => {
     await app.documents().expectReady();
     await app.navigation().expectReady();
-    await app.templates().expectReady();
+    await app.templates().open();
     await expect(app.templates().cards).toHaveCount(3);
     await expect(app.documents().writingStyleGroup()).toBeVisible();
     await expect(app.documents().styleRadio("Purpose + function")).toBeChecked();

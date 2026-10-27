@@ -11,8 +11,11 @@ export class SourceEditor extends HTMLElement {
   readonly textarea = el("textarea", "source-input");
   private scheduled = 0;
   private raw = "";
+  private highlightClass = `gtl-highlight-${crypto.randomUUID()}`;
+  private initialHeight = true;
   constructor(private testPrefix = "guided-authoring-source") {
     super();
+    this.highlight.classList.add(this.highlightClass);
     this.highlight.setAttribute("aria-hidden", "true");
     this.textarea.setAttribute("aria-label", "Template source");
     this.textarea.dataset.testid = `${testPrefix}-textarea-content`;
@@ -34,6 +37,10 @@ export class SourceEditor extends HTMLElement {
   }
   set value(value: string) {
     this.raw = value;
+    if (this.initialHeight) {
+      this.initialHeight = false;
+      this.style.height = `${Math.max(200, Math.min(360, value.split(/\r\n?|\n/).length * 24 + 38))}px`;
+    }
     const normalized = value.replace(/\r\n?/g, "\n");
     if (this.textarea.value !== normalized) this.textarea.value = value;
     this.highlightSource();
@@ -80,7 +87,9 @@ export class SourceEditor extends HTMLElement {
     cancelAnimationFrame(this.scheduled);
     this.scheduled = requestAnimationFrame(() => {
       this.highlight.textContent = this.textarea.value + "\n";
-      microlight.reset("gtl-source-highlight");
+      // Microlight resets every node of the supplied class. A shared class lets
+      // the inspection editor reapply vendor colors to the current editor.
+      microlight.reset(this.highlightClass);
       for (const span of this.highlight.querySelectorAll("span")) {
         const text = span.textContent ?? "";
         span.removeAttribute("style");
@@ -88,6 +97,7 @@ export class SourceEditor extends HTMLElement {
           span.className = "syntax-directive";
         else if (text.startsWith("$") || text === "{" || text === "}")
           span.className = "syntax-placeholder";
+        else span.className = /^\W+$/.test(text) ? "syntax-punctuation" : "syntax-value";
       }
       this.syncScroll();
     });
@@ -102,6 +112,9 @@ export class SourceEditor extends HTMLElement {
     const lineHeight = parseFloat(getComputedStyle(this.textarea).lineHeight);
     this.textarea.scrollTop = Math.max(0, (line - 3) * lineHeight);
     this.syncScroll();
+  }
+  resizeBy(amount: number): void {
+    this.style.height = `${Math.max(180, Math.min(900, this.getBoundingClientRect().height + amount))}px`;
   }
   disconnectedCallback(): void {
     cancelAnimationFrame(this.scheduled);

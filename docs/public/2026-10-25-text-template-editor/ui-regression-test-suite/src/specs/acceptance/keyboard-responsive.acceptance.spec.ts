@@ -9,9 +9,12 @@ test("AC06 · native keyboard editing, literal multiline output, light dismissal
   await app.start("/editor/");
   await test.step("Keyboard version changes and boundary navigation preserve focus, selections, modifiers, and composition guards", async () => {
     await expectAccessible(page);
+    await app.documents().openWritingStyles();
     await app.documents().styleRadio("Purpose + function").press("ArrowDown");
     await expect(app.documents().styleRadio("Problem + solution")).toBeFocused();
     await expect(app.documents().style).toHaveValue("version-2");
+    await expect(app.documents().styleDisclosure()).toHaveAttribute("open", "");
+    await app.documents().confirmStyle().click();
     await app.documents().selectWritingStyle("Input + processing + output");
     await app.documents().selectField("input");
     await app.fieldEditor().expectField("input");
@@ -57,8 +60,15 @@ test("AC06 · native keyboard editing, literal multiline output, light dismissal
   });
   await test.step("Blank notes and email preserve real newlines and choice labels without rendering authored HTML", async () => {
     await app.templates().selectTemplate("Blank note");
+    await expect(app.documents().wordCount).toHaveText("0 words");
     await app.documents().selectField("body");
+    await expect(app.fieldEditor().previous).toHaveCount(0);
+    await expect(app.fieldEditor().next).toHaveCount(0);
+    await app.fieldEditor().enterAnswer("Hello");
+    await expect(app.documents().wordCount).toHaveText("1 word");
+    await expect(app.documents().progress).toHaveText("1 of 1 field filled");
     await app.fieldEditor().enterAnswer("First line\n\nLast line");
+    await expect(app.documents().wordCount).toHaveText("4 words");
     await expect(app.fieldEditor().answer.locator).toHaveJSProperty("tagName", "TEXTAREA");
     await app.fieldEditor().answer.locator.press("Home");
     await app.fieldEditor().answer.locator.press("ArrowUp");

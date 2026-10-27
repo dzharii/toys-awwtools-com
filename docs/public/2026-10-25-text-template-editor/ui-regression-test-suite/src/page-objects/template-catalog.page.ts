@@ -29,6 +29,7 @@ export class TemplateCatalogPage extends PageObject {
 
   async open(): Promise<void> {
     if (!(await this.exists())) await this.documents.open();
+    if (!(await this.exists())) await this.documents.openTemplateCatalog();
     if ((await this.searchInput.inputValue()).trim() && !(await this.cards.first().isVisible()))
       await this.clearSearch();
     await this.expectReady();
@@ -58,7 +59,7 @@ export class TemplateCatalogPage extends PageObject {
   async retryStartup(): Promise<void> {
     await this.retry.click();
     await this.documents.expectReady();
-    await this.expectReady();
+    await this.open();
   }
   get searchInput(): Locator {
     return this.root.getByTestId("guided-templates-main-input-search");
@@ -79,12 +80,14 @@ export class TemplateCatalogPage extends PageObject {
     return this.root.getByRole("button", { name: `Preview ${name}`, exact: true });
   }
   async search(value: string): Promise<void> {
+    await this.open();
     await this.searchInput.fill(value);
   }
   async clearSearch(): Promise<void> {
     await this.root.getByTestId("guided-templates-main-button-clear-search").click();
   }
   async previewTemplate(name: string): Promise<void> {
+    await this.open();
     const preview = this.root.getByRole("button", { name: `Preview ${name}`, exact: true });
     await PanelControls.expose(this.app.page, preview);
     await preview.click();

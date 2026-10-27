@@ -26,12 +26,25 @@ export function renderTemplate(
       displayedAnswer(field, answer) === undefined;
     return invalidChoice || (field.required && displayedAnswer(field, answer) === undefined);
   });
-  const text = version.parts
-    .map((part) => {
-      if (part.kind === "literal") return part.text;
-      const field = template.placeholders[part.name]!;
-      return displayedAnswer(field, answers[part.name]) ?? (field.required ? `[${part.name}]` : "");
+  const resolvedParts = version.parts.map((part) =>
+    part.kind === "literal"
+      ? part.text
+      : displayedAnswer(template.placeholders[part.name]!, answers[part.name]),
+  );
+  const text = resolvedParts
+    .map((value, index) => {
+      if (value !== undefined) return value;
+      const part = version.parts[index]!;
+      return part.kind === "placeholder" && template.placeholders[part.name]!.required
+        ? `[${part.name}]`
+        : "";
     })
     .join("");
-  return { text, unresolved, canCopy: unresolved.length === 0 };
+  // Count generated content, not the unresolved markers used only for display.
+  // Authored marker-like text remains ordinary content.
+  const wordCount = resolvedParts
+    .join("")
+    .split(/\s+/)
+    .filter((word) => /[\p{L}\p{N}]/u.test(word)).length;
+  return { text, unresolved, canCopy: unresolved.length === 0, wordCount };
 }
